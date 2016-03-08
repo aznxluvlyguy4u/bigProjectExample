@@ -76,10 +76,6 @@ snc_redis:
             dsn: redis://localhost
             logging: %kernel.debug%
     doctrine:
-        metadata_cache:
-            client: default
-            entity_manager: default
-            document_manager: default
         result_cache:
             client: default
             entity_manager: [default]
