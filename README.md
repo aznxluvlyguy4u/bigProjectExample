@@ -1,4 +1,32 @@
-nsfo-api
-========
+# NSFO API
+## Installation
+Install Redis
 
-A Symfony project created on March 8, 2016, 11:32 am.
+```
+$ sudo apt-get install redis
+```
+
+Install Postgres
+
+```
+$ sudo apt-get install postgres-9.3
+```
+
+Install PHP postgres pdo driver
+
+```
+$ sudo apt-get install php5-pgsql
+```
+
+## Configuration
+Install composer dependencies
+
+```
+$ composer install
+```
+
+## Run
+
+```
+$ php bin/console server:start
+```
