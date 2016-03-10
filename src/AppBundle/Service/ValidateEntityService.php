@@ -4,7 +4,7 @@ namespace AppBundle\Service;
 
 use Symfony\Component\HttpFoundation\Request;
 
-class ValidateEntity
+class ValidateEntityService
 {
     private $validator;
     private $serializer;

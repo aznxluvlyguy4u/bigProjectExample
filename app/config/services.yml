@@ -5,5 +5,5 @@ parameters:
 
 services:
     api.entity.validate:
-        class: AppBundle\Service\ValidateEntity
+        class: AppBundle\Service\ValidateEntityService
         arguments: ['@validator', '@jms_serializer']
