@@ -7,8 +7,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use AppBundle\Component\HttpFoundation\JsonResponse;
 
 /**
  * @Route("/api/v1")
@@ -19,20 +18,11 @@ class AnimalApiController extends Controller
      * @Route("/animal")
      * @Method("GET")
      */
-    public function getIndexAction(Request $request)
+    public function getIndexAction()
     {
-        $ss = $this->get('jms_serializer');
+        $animals = $this->getDoctrine()->getRepository('AppBundle:Animal')->findAll();
 
-        $data = $this->getDoctrine()->getRepository('AppBundle:Animal')->findAll();
-
-        $data = $ss->serialize($data, 'json');
-
-        $response = new Response();
-        $response->setStatusCode(Response::HTTP_OK);
-        $response->setContent($data);
-        $response->headers->set('Content-Type', 'application/json');
-
-        return $response;
+        return new JsonResponse($animals);
     }
 
     /**
@@ -40,17 +30,9 @@ class AnimalApiController extends Controller
      * @ParamConverter("animal", class="AppBundle:Animal")
      * @Method("GET")
      */
-    public function getAnimalAction(Request $request, $animal)
+    public function getAnimalAction($animal)
     {
-        $ss = $this->get('jms_serializer');
-        $data = $ss->serialize($animal, 'json');
-
-        $response = new Response();
-        $response->setStatusCode(Response::HTTP_OK);
-        $response->setContent($data);
-        $response->headers->set('Content-Type', 'application/json');
-
-        return $response;
+        return new JsonResponse($animal);
     }
 
     /**
@@ -59,29 +41,15 @@ class AnimalApiController extends Controller
      */
     public function postAnimalAction(Request $request)
     {
-        $ss = $this->get('jms_serializer');
-        $vs = $this->get('validator');
-        $eps = $this->get('api.error_parsing');
-        $em = $this->getDoctrine()->getManager();
+        $ev = $this->get('api.entity.validate');
+        $animal = $ev->validate($request, 'AppBundle\Entity\Animal');
 
-        $animal = $ss->deserialize($request->getContent(), 'AppBundle\Entity\Animal', 'json');
-        $errors = $vs->validate($animal);
-        $json_errors = $eps->parse($errors);
-
-        if ($json_errors) {
-            return new JsonResponse($json_errors);
+        if (!$animal) {
+            return new JsonResponse($ev->getErrors(), 400);
         }
 
-        $em->persist($animal);
-        $em->flush();
+        $em = $this->getDoctrine()->getRepository('AppBundle:Animal')->persist($animal);
 
-        $animal = $ss->serialize($animal, 'json');
-
-        $response = new Response();
-        $response->setStatusCode(Response::HTTP_OK);
-        $response->setContent($animal);
-        $response->headers->set('Content-Type', 'application/json');
-
-        return $response;
+        return new JsonResponse($animal);
     }
 }
