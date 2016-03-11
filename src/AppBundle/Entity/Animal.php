@@ -7,7 +7,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\AnimalRepository")
  */
 class Animal
 {
@@ -21,6 +21,7 @@ class Animal
     /**
      * @ORM\Column(type="string")
      * @Assert\Regex("/([A-Z]{2}[0-9]{12})\b/")
+     * @Assert\NotBlank
      * @JMS\Type("string")
      */
     protected $uln;
@@ -33,7 +34,8 @@ class Animal
 
     /**
      * @ORM\Column(type="date")
-     * @Assert\Date()
+     * @Assert\Date
+     * @Assert\NotBlank
      * @JMS\Type("DateTime")
      */
     protected $date_of_birth;

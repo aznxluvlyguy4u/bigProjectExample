@@ -4,9 +4,6 @@ parameters:
 #    parameter_name: value
 
 services:
-    api.error_parsing:
-        class: AppBundle\Service\ErrorParsingService
-        
-#    service_name:
-#        class: AppBundle\Directory\ClassName
-#        arguments: ["@another_service_name", "plain_value", "%parameter_name%"]
+    api.entity.validate:
+        class: AppBundle\Service\ValidateEntityService
+        arguments: ['@validator', '@jms_serializer']
