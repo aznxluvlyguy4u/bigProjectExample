@@ -8,14 +8,9 @@ services:
         class: AppBundle\Service\ValidateEntityService
         arguments: ['@validator', '@jms_serializer']
 
- app.aws_sqs.client:
-        class: Aws\SqS\SqsClient
-        factory_class: Aws\SqS\SqsClient
-        factory_method: 'factory'
+    app.arrivals:
+        class: AppBundle\Service\ArrivalAPIService
         arguments:
-          -
-            credentials:
-                key: %aws_access_key_id%
-                secret: %aws_secrect_key%
-            region: %aws_sqs_region%
-            version: %aws_sqs_version%
+          - credentials: ['%aws_access_key_id%', '%aws_secrect_key%']
+          - region: %aws_sqs_region%
+          - version: %aws_sqs_version%
