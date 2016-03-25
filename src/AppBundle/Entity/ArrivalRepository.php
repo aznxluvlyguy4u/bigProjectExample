@@ -3,10 +3,10 @@
 namespace AppBundle\Entity;
 
 /**
- * Class AnimalRepository
+ * Class ArrivalRepository
  * @package AppBundle\Entity
  */
-class AnimalRepository extends BaseRepository
+class ArrivalRepository extends BaseRepository
 {
 
 }
