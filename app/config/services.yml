@@ -7,3 +7,15 @@ services:
     api.entity.validate:
         class: AppBundle\Service\ValidateEntityService
         arguments: ['@validator', '@jms_serializer']
+
+ app.aws_sqs.client:
+        class: Aws\SqS\SqsClient
+        factory_class: Aws\SqS\SqsClient
+        factory_method: 'factory'
+        arguments:
+          -
+            credentials:
+                key: %aws_access_key_id%
+                secret: %aws_secrect_key%
+            region: %aws_sqs_region%
+            version: %aws_sqs_version%

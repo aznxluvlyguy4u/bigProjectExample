@@ -85,20 +85,3 @@ snc_redis:
         second_level_cache:
             client: default
             entity_manager: default
-
-# AWS Configuration
-aws:
-    version: latest
-    region: eu-west-1
-    credentials:
-        key: "%aws_access_key_id%"
-        secret: "%aws_secrect_key%"
-    Sqs:
-        credentials: "@a_service"
-
-services:
-    a_service:
-        class: Aws\Credentials\Credentials
-        arguments:
-            - "%aws_access_key_id%"
-            - "%aws_secrect_key%"
