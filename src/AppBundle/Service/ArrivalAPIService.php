@@ -2,8 +2,6 @@
 
 namespace AppBundle\Service;
 
-require 'vendor/autoload.php';
-
 use Aws\Sqs\SqsClient;
 
 /**
@@ -15,7 +13,7 @@ class ArrivalAPIService
   /**
    * @var string
    */
-  private $region;
+  protected $region;
 
   /**
    * @var string
@@ -23,9 +21,14 @@ class ArrivalAPIService
   private $version;
 
   /**
-   * @var Array
+   * @var string
    */
-  private $credentials;
+  private $accessKeyId;
+
+  /**
+   * @var string
+   */
+  private $secrectKey;
 
   /**
    * @var SqsClient
@@ -33,40 +36,59 @@ class ArrivalAPIService
   private $queueService;
 
   /**
-   * @var \SqsClient
+   * @var string
    */
-  private $queueService;
+  protected $queueURL;
 
-  private $queueURL;
-
-  public function __construct(array $credentials = Array(), $region, $version)
+  /**
+   * ArrivalAPIService constructor.
+   *
+   * @param array $credentials
+   * @param $region
+   * @param $version
+   */
+  public function __construct($credentials = array(), $region, $version)
   {
-    $this.credentials = $credentials;
-    $this.version = $version;
-    $this.region = $region;
+    $this->accessKeyId = $credentials[0];
+    $this->secretKey = $credentials[1];
+    $this->region = $region;
+    $this->version = $version;
 
-
-    $this.queueService = new SqsClient([
-      'region'  => $this.region,
-      'version' => $this.version
+    $this->queueService = new SqsClient([
+      'region'  => $this->region,
+      'version' => $this->version,
       'credentials' => [
-        'key'    => $credentials[0],
-        'secret' => $credentials[1]
+        'key'    => $this->accessKeyId,
+        'secret' => $this->secrectKey
       ]
     ]);
 
-    $this.queueURL = '';
+    //TODO
+    $this->queueURL = '';
   }
 
-
+  /**
+   *
+   * @param $messageBody
+   */
   public function send($messageBody)
   {
+    //TODO
+    $messageBod = 'an awesome message.';
 
-    $sqs->sendMessage(array(
-      'QueueUrl'    => $this.queueUrl,
-      'MessageBody' => 'an awesome message.',
+    $this->queueService->sendMessage(array(
+      'QueueUrl'    => $this->queueUrl,
+      'MessageBody' => $messageBody,
     ));
 
+  }
+
+  /**
+   * @return string
+   */
+  public function getQueueService()
+  {
+    return $this->queueService;
   }
 
 }

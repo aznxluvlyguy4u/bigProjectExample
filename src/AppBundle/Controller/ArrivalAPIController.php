@@ -26,7 +26,7 @@ class ArrivalAPIController extends Controller
    * @ParamConverter("Id", class="AppBundle\Entity\ArrivalRepository")
    * @Method("GET")
    */
-  public function getArrivalByIdAction($Id)
+  public function getArrivalById($Id)
   {
     $arrival = $this->getDoctrine()->getRepository('AppBundle:Arrival')->find($Id);
     return new JsonResponse($arrival);
@@ -37,10 +37,10 @@ class ArrivalAPIController extends Controller
    * Get a list of DeclareArrivals with a given state:{OPEN, CLOSED, DECLINED}.
    *
    *
-   * @Route("/arrival")
+   * @Route("/arrival/new/open")
    * @Method("GET")
    */
-  public function getArrivalByStateAction()
+  public function getArrivalByState()
   {
     $entityManager = $this->getDoctrine()->getManager();
 
@@ -72,6 +72,10 @@ class ArrivalAPIController extends Controller
 
     $entityManager->persist($declareArrival);
 
+    $queueService =  $this->get('app.arrivals')->getQueueService();
+
+    $queueService->sendMessage('dd');
+
     //$declareArrival = $this->getDoctrine()->getRepository('AppBundle:Arrival')->find;
 
     return new JsonResponse($declareArrival);
@@ -84,7 +88,7 @@ class ArrivalAPIController extends Controller
    * @Route("/arrival")
    * @Method("POST")
    */
-  public function postNewArrivalAction(Request $request)
+  public function postNewArrival(Request $request)
   {
     $entityValidator = $this->get('api.entity.validate');
     $arrival = $entityValidator->validate($request, 'AppBundle\Entity\Arrival');
