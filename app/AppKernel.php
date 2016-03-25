@@ -18,7 +18,6 @@ class AppKernel extends Kernel
             new AppBundle\AppBundle(),
             new Snc\RedisBundle\SncRedisBundle(),
             new JMS\SerializerBundle\JMSSerializerBundle(),
-            new AmazonWebServicesBundle\ThePhalconsAmazonWebServicesBundle()
         ];
 
         if (in_array($this->getEnvironment(), ['dev', 'test'], true)) {
