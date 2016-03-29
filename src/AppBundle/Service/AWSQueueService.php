@@ -3,13 +3,13 @@
 namespace AppBundle\Service;
 
 use Aws\Sqs\SqsClient;
-use Aws\Credentials as AWSCredentials;
+use  Aws\Credentials\Credentials;
 
 /**
- * Class ArrivalAPIService
+ * Class AWSQueueService
  * @package AppBundle\Service
  */
-class ArrivalAPIService
+class AWSQueueService
 {
   /**
    * @var string
@@ -42,51 +42,65 @@ class ArrivalAPIService
   protected $queueURL;
 
   /**
-   *
+   * @var Credentials
    */
   private $awsCredentials;
 
   /**
-   * ArrivalAPIService constructor.
-   *
-   * @param array $credentials
-   * @param $region
-   * @param $version
+   * @var array
    */
-  public function __construct($credentials = array(), $region, $version)
+  private $queueIds;
+
+  /**
+   * ArrivalAPIService constructor, intialize SQS configm
+   *
+   * @param $credentials array containing AWS accessKey and secretKey.
+   * @param $region of the Queue.
+   * @param $version API version to use.
+   */
+  public function __construct($credentials = array(), $region, $version, $queueIds = array())
   {
     $this->accessKeyId = $credentials[0];
     $this->secretKey = $credentials[1];
 
-    $this->awsCredentials =  new AWSCredentials($this->accessKeyId, $this->secretKey);
+    $this->awsCredentials =  new Credentials($this->accessKeyId, $this->secretKey);
     $this->region = $region;
     $this->version = $version;
+    $this->queueIds = $queueIds;
+    $queueId = $queueIds[2];
 
-    $this->queueService = new SqsClient([
+    $sqsConfig = array(
       'region'  => $this->region,
       'version' => $this->version,
-
       'credentials' => $this->awsCredentials
-    ]);
+    );
 
-    //TODO
-    $this->queueURL = '';
+    $this->queueService = new SqsClient($sqsConfig);
+
+    $result = $this->queueService->createQueue(array('QueueName' => $queueId));
+    $this->queueURL = $result->get('QueueUrl');
   }
 
   /**
+   * Send a request message to given Queue.
    *
    * @param $messageBody
    */
   public function send($messageBody)
   {
-    //TODO
-    $messageBod = 'an awesome message.';
-
     $this->queueService->sendMessage(array(
-      'QueueUrl'    => $this->queueUrl,
+      'QueueUrl'    => $this->queueURL,
       'MessageBody' => $messageBody,
     ));
 
+  }
+
+  public function getNextMessage() {
+    $result = $this->queueService->receiveMessage(array(
+      'QueueUrl' => $this->queueURL
+    ));
+
+    return $result;
   }
 
   /**
