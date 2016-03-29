@@ -67,6 +67,8 @@ class AWSQueueService
     $this->region = $region;
     $this->version = $version;
     $this->queueIds = $queueIds;
+
+    //0 = prod-, 1 = dev-, 2 = testQueue
     $queueId = $queueIds[2];
 
     $sqsConfig = array(
@@ -88,14 +90,20 @@ class AWSQueueService
    */
   public function send($messageBody)
   {
-    $this->queueService->sendMessage(array(
-      'QueueUrl'    => $this->queueURL,
+    if($messageBody == null){
+
+      return null;
+    }
+    $response = $this->queueService->sendMessage(array (
+      'QueueUrl' => $this->queueURL,
       'MessageBody' => $messageBody,
     ));
 
+    return $this->responseHandler($response,$messageBody);
   }
 
-  public function getNextMessage() {
+  public function getNextMessage()
+  {
     $result = $this->queueService->receiveMessage(array(
       'QueueUrl' => $this->queueURL
     ));
@@ -111,4 +119,9 @@ class AWSQueueService
     return $this->queueService;
   }
 
+  private function responseHandler($response, $messageBody){
+    $statusCode = $response['@metadata']['statusCode'];
+    $result = array('messageBody' => $messageBody, 'statusCode' => $statusCode);
+    return $result;
+  }
 }

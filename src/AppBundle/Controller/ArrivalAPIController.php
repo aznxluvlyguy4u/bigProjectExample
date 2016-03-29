@@ -11,6 +11,10 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+
 
 /**
  * @Route("/api/v1")
@@ -72,12 +76,19 @@ class ArrivalAPIController extends Controller
 
     $entityManager->persist($declareArrival);
 
-    $queueService =  $this->get('app.aws.queueservice')->getQueueService();
+    $queueService =  $this->get('app.aws.queueservice');
+    $queueService->getQueueService();
 
-    $queueService->send($declareArrival);
+    //TODO move to Service class
+    $encoders = array(new JsonEncoder());
+    $normalizers = array(new ObjectNormalizer());
+
+    $serializer = new Serializer($normalizers, $encoders);
+
+    $declareArrivaljson = $serializer->serialize($declareArrival, 'json');
 
     //TODO
-    return new JsonResponse('');
+    return new JsonResponse($queueService->send($declareArrivaljson));
   }
 
   /**
