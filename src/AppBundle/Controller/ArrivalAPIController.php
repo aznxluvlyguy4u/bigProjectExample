@@ -72,13 +72,12 @@ class ArrivalAPIController extends Controller
 
     $entityManager->persist($declareArrival);
 
-    $queueService =  $this->get('app.arrivals')->getQueueService();
+    $queueService =  $this->get('app.aws.queueservice')->getQueueService();
 
-    $queueService->sendMessage('dd');
+    $queueService->send($declareArrival);
 
-    //$declareArrival = $this->getDoctrine()->getRepository('AppBundle:Arrival')->find;
-
-    return new JsonResponse($declareArrival);
+    //TODO
+    return new JsonResponse('');
   }
 
   /**
