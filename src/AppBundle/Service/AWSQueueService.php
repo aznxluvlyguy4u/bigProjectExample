@@ -3,6 +3,7 @@
 namespace AppBundle\Service;
 
 use Aws\Sqs\SqsClient;
+use Aws\Credentials as AWSCredentials;
 
 /**
  * Class ArrivalAPIService
@@ -41,6 +42,11 @@ class ArrivalAPIService
   protected $queueURL;
 
   /**
+   *
+   */
+  private $awsCredentials;
+
+  /**
    * ArrivalAPIService constructor.
    *
    * @param array $credentials
@@ -51,16 +57,16 @@ class ArrivalAPIService
   {
     $this->accessKeyId = $credentials[0];
     $this->secretKey = $credentials[1];
+
+    $this->awsCredentials =  new AWSCredentials($this->accessKeyId, $this->secretKey);
     $this->region = $region;
     $this->version = $version;
 
     $this->queueService = new SqsClient([
       'region'  => $this->region,
       'version' => $this->version,
-      'credentials' => [
-        'key'    => $this->accessKeyId,
-        'secret' => $this->secrectKey
-      ]
+
+      'credentials' => $this->awsCredentials
     ]);
 
     //TODO
