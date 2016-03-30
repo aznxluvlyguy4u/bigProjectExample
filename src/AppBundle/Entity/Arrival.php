@@ -12,8 +12,7 @@ use \AppBundle\Entity\Animal;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\ArrivalRepository")
  * @package AppBundle\Entity
  */
-class Arrival
-{
+class Arrival {
   /**
    * @ORM\Column(type="integer")
    * @ORM\Id
@@ -54,7 +53,7 @@ class Arrival
 
   /**
    * @Assert\NotBlank
-   * @ORM\ManyToOne(targetEntity="Animal")
+   * @ORM\ManyToOne(targetEntity="Animal", cascade={"persist"})
    * @JMS\Type("AppBundle\Entity\Animal")
    */
   private $animal;
@@ -65,7 +64,7 @@ class Arrival
    * @Assert\NotBlank
    * @JMS\Type("string")
    */
-  private $requestID;
+  private $requestId;
 
   /**
    * @ORM\Column(type="string")
@@ -94,16 +93,10 @@ class Arrival
 
   /**
    * @Assert\NotBlank
-   * @ORM\ManyToOne(targetEntity="Location")
+   * @ORM\ManyToOne(targetEntity="Location", cascade={"persist"})
    * @JMS\Type("AppBundle\Entity\Location")
    */
   private $location;
-
-
-  public function __construct()
-  {
-
-  }
 
     /**
      * Get id
@@ -212,27 +205,27 @@ class Arrival
     }
 
     /**
-     * Set requestID
+     * Set requestId
      *
-     * @param string $requestID
+     * @param string $requestId
      *
      * @return Arrival
      */
-    public function setRequestID($requestID)
+    public function setRequestId($requestId)
     {
-        $this->requestID = $requestID;
+        $this->requestId = $requestId;
 
         return $this;
     }
 
     /**
-     * Get requestID
+     * Get requestId
      *
      * @return string
      */
-    public function getRequestID()
+    public function getRequestId()
     {
-        return $this->requestID;
+        return $this->requestId;
     }
 
     /**
