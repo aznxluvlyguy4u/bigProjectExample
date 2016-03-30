@@ -7,22 +7,16 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Arrival;
 use AppBundle\Entity\Sheep;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Serializer\Serializer;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use JMS\Serializer\Annotation as JMS;
-
 
 /**
  * @Route("/api/v1")
  */
-class ArrivalAPIController extends Controller
+class ArrivalAPIController extends APIController
 {
 
   /**
@@ -99,53 +93,26 @@ class ArrivalAPIController extends Controller
    * Create a DeclareArrival Request.
    *
    * @Route("/arrival")
-   * @Method("GET")
+   * @Method("POST")
    */
-  public function postNewArrival()
+  public function postNewArrival(Request $request)
   {
-    //$entityValidator = $this->get('api.entity.validate');
+    //Validate requestBody
+    $entityValidator = $this->get('api.entity.validate');
+
+    //Parse to ArrivalEntity
     //$arrival = $entityValidator->validate($request, 'AppBundle\Entity\Arrival');
+    $declareArrival = $this->deserializeToObject($request->getContent(),'AppBundle\Entity\Arrival');
 
-    //TODO move to Service class
-    $serializer = $this->get('jms_serializer');
+    $declareArrivalJSON = $this->serializeToJSON($declareArrival);
 
-    $arrival = new Arrival();
-    $arrival->setLogDate(new \DateTime("now"));
-    $arrival->setArrivalDate(new \DateTime("now"));
-    $arrival->setUbn("1111");
-    $arrival->setUbnPreviousOwner("12344");
-    $arrival->setRequestID("12313");
-    $arrival->setRelationNumberKeeper("123123133");
-    $arrival->setAction("C");
-    $arrival->setRecoveryIndicator("N");
+    //Send serialized message to Queue
+    $result = $this->getQueueService()->send($declareArrivalJSON);
 
-    $location = new Location();
-    $location->setUbn("11111");
+    //TODO - Add logic for success/failure sending to Q, add request state to object
 
-    $ram = new Ram();
-    $ram->setPedigreeCountryCode("NL");
-    $ram->setPedigreeNumber("1111111");
-    $ram->setUlnCountryCode("NL");
-    $ram->setUlnNumber("8888888");
-    $ram->setName("Molly");
-    $ram->setDateOfBirth(new \DateTime("now"));
-    $ram->setAnimalType(1);
-    $ram->setAnimalCategory(1);
-
-    $arrival->setLocation($location);
-    $arrival->setAnimal($ram);
-
-
-    $declareArrivaljson = $serializer->serialize($arrival, 'json');
-    //dump($declareArrivaljson);
-    //die();
-
-    //$declareArrivalObj = $serializer->deserialize($declareArrivaljson,'AppBundle\Entity\Arrival','json');
-    //dump($declareArrivalObj);
-
-    //die();
-
-    //$arrival = $this->getDoctrine()->getRepository('AppBundle:Arrival')->persist($arrival);
+    //Persist object to Database
+    $arrival = $this->getDoctrine()->getRepository('AppBundle:Arrival')->persist($declareArrival);
 
     return new JsonResponse($arrival);
   }
