@@ -29,7 +29,7 @@ class AWSQueueService
   /**
    * @var string
    */
-  private $secrectKey;
+  private $secretKey;
 
   /**
    * @var SqsClient
