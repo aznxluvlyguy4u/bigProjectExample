@@ -153,7 +153,7 @@ abstract class Animal
     /**
      * @var array
      *
-     * @ORM\OneToMany(targetEntity="Arrival", mappedBy="animal")
+     * @ORM\OneToMany(targetEntity="Arrival", mappedBy="animal", cascade={"persist"})
      */
     protected $arrivals;
 
