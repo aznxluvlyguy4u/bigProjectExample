@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use \AppBundle\Entity\Animal;
 
 /**
  * Class Arrival
@@ -45,9 +46,8 @@ class Arrival
   private $ubn;
 
   /**
-   * @ORM\Column(type="string")
+   * @ORM\Column(type="string", nullable=true)
    * @Assert\Length(max = 10)
-   * @Assert\NotBlank
    * @JMS\Type("string")
    */
   private $ubnPreviousOwner;
@@ -55,6 +55,7 @@ class Arrival
   /**
    * @Assert\NotBlank
    * @ORM\ManyToOne(targetEntity="Animal")
+   * @JMS\Type("AppBundle\Entity\Animal")
    */
   private $animal;
 
@@ -91,11 +92,18 @@ class Arrival
    */
   private $recoveryIndicator;
 
-
   /**
+   * @Assert\NotBlank
    * @ORM\ManyToOne(targetEntity="Location")
+   * @JMS\Type("AppBundle\Entity\Location")
    */
   private $location;
+
+
+  public function __construct()
+  {
+
+  }
 
     /**
      * Get id

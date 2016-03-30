@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class Animal
@@ -119,23 +120,24 @@ abstract class Animal
     /**
      * @var Animal
      *
-     * @ORM\OneToMany(targetEntity="Animal", mappedBy="parent")
+     * @ORM\ManyToOne(targetEntity="Ram", inversedBy="children")
+     * @JMS\Type("AppBundle\Entity\Animal")
      */
-    protected $children;
+    protected $parentFather;
 
     /**
      * @var Animal
      *
-     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="children")
-     * @ORM\JoinColumn(name="parent_id", referencedColumnName="id")
+     * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="children")
+     * @JMS\Type("AppBundle\Entity\Animal")
      */
-    protected $parentFather;
+    protected $parentMother;
 
     /**
      * @var integer
      *
      * @ORM\Column(type="integer")
-     * @Assert\NotBlank§
+     * @Assert\NotBlank
      * @JMS\Type("integer")
      */
     protected $animalType;
@@ -149,10 +151,24 @@ abstract class Animal
     protected $animalCategory;
 
     /**
+     * @var array
+     *
+     * @ORM\OneToMany(targetEntity="Arrival", mappedBy="animal")
+     */
+    protected $arrivals;
+
+    /**
+     * @var array
+     * @JMS\Type("array")
+     */
+    public $children;
+
+    /**
      * Animal constructor.
      */
     public function __construct() {
-        $this->children = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->arrivals = new ArrayCollection();
+        $this->children = new ArrayCollection();
     }
 
     /**
@@ -406,47 +422,13 @@ abstract class Animal
     }
 
     /**
-     * Add child
-     *
-     * @param \AppBundle\Entity\Animal $child
-     *
-     * @return Animal
-     */
-    public function addChild(\AppBundle\Entity\Animal $child)
-    {
-        $this->children[] = $child;
-
-        return $this;
-    }
-
-    /**
-     * Remove child
-     *
-     * @param \AppBundle\Entity\Animal $child
-     */
-    public function removeChild(\AppBundle\Entity\Animal $child)
-    {
-        $this->children->removeElement($child);
-    }
-
-    /**
-     * Get children
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getChildren()
-    {
-        return $this->children;
-    }
-
-    /**
      * Set parentFather
      *
-     * @param \AppBundle\Entity\Animal $parentFather
+     * @param \AppBundle\Entity\Ram $parentFather
      *
      * @return Animal
      */
-    public function setParentFather(\AppBundle\Entity\Animal $parentFather = null)
+    public function setParentFather(\AppBundle\Entity\Ram $parentFather = null)
     {
         $this->parentFather = $parentFather;
 
@@ -456,10 +438,68 @@ abstract class Animal
     /**
      * Get parentFather
      *
-     * @return \AppBundle\Entity\Animal
+     * @return \AppBundle\Entity\Ram
      */
     public function getParentFather()
     {
         return $this->parentFather;
+    }
+
+    /**
+     * Set parentMother
+     *
+     * @param \AppBundle\Entity\Ewe $parentMother
+     *
+     * @return Animal
+     */
+    public function setParentMother(\AppBundle\Entity\Ewe $parentMother = null)
+    {
+        $this->parentMother = $parentMother;
+
+        return $this;
+    }
+
+    /**
+     * Get parentMother
+     *
+     * @return \AppBundle\Entity\Ewe
+     */
+    public function getParentMother()
+    {
+        return $this->parentMother;
+    }
+
+    /**
+     * Add arrival
+     *
+     * @param \AppBundle\Entity\Arrival $arrival
+     *
+     * @return Animal
+     */
+    public function addArrival(\AppBundle\Entity\Arrival $arrival)
+    {
+        $this->arrivals[] = $arrival;
+
+        return $this;
+    }
+
+    /**
+     * Remove arrival
+     *
+     * @param \AppBundle\Entity\Arrival $arrival
+     */
+    public function removeArrival(\AppBundle\Entity\Arrival $arrival)
+    {
+        $this->arrivals->removeElement($arrival);
+    }
+
+    /**
+     * Get arrivals
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getArrivals()
+    {
+        return $this->arrivals;
     }
 }

@@ -2,9 +2,11 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Arrival;
+use AppBundle\Entity\Sheep;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -14,6 +16,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use JMS\Serializer\Annotation as JMS;
 
 
 /**
@@ -96,18 +99,53 @@ class ArrivalAPIController extends Controller
    * Create a DeclareArrival Request.
    *
    * @Route("/arrival")
-   * @Method("POST")
+   * @Method("GET")
    */
-  public function postNewArrival(Request $request)
+  public function postNewArrival()
   {
-    $entityValidator = $this->get('api.entity.validate');
-    $arrival = $entityValidator->validate($request, 'AppBundle\Entity\Arrival');
+    //$entityValidator = $this->get('api.entity.validate');
+    //$arrival = $entityValidator->validate($request, 'AppBundle\Entity\Arrival');
 
-    if (!$arrival) {
-      return new JsonResponse($entityValidator->getErrors(), 400);
-    }
+    //TODO move to Service class
+    $serializer = $this->get('jms_serializer');
 
-    $arrival = $this->getDoctrine()->getRepository('AppBundle:Arrival')->persist($arrival);
+    $arrival = new Arrival();
+    $arrival->setLogDate(new \DateTime("now"));
+    $arrival->setArrivalDate(new \DateTime("now"));
+    $arrival->setUbn("1111");
+    $arrival->setUbnPreviousOwner("12344");
+    $arrival->setRequestID("12313");
+    $arrival->setRelationNumberKeeper("123123133");
+    $arrival->setAction("C");
+    $arrival->setRecoveryIndicator("N");
+
+    $location = new Location();
+    $location->setUbn("11111");
+
+    $ram = new Ram();
+    $ram->setPedigreeCountryCode("NL");
+    $ram->setPedigreeNumber("1111111");
+    $ram->setUlnCountryCode("NL");
+    $ram->setUlnNumber("8888888");
+    $ram->setName("Molly");
+    $ram->setDateOfBirth(new \DateTime("now"));
+    $ram->setAnimalType(1);
+    $ram->setAnimalCategory(1);
+
+    $arrival->setLocation($location);
+    $arrival->setAnimal($ram);
+
+
+    $declareArrivaljson = $serializer->serialize($arrival, 'json');
+    //dump($declareArrivaljson);
+    //die();
+
+    //$declareArrivalObj = $serializer->deserialize($declareArrivaljson,'AppBundle\Entity\Arrival','json');
+    //dump($declareArrivalObj);
+
+    //die();
+
+    //$arrival = $this->getDoctrine()->getRepository('AppBundle:Arrival')->persist($arrival);
 
     return new JsonResponse($arrival);
   }

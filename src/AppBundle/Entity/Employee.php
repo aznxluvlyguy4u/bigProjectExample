@@ -5,13 +5,23 @@ namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use AppBundle\Entity\Person as BasePerson;
 
 /**
  * Class Employee
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\PersonRepository")
  * @package AppBundle\Entity
  */
-class Employee extends BasePerson
+class Employee extends Person
 {
 
+
+    /**
+     * Get id
+     *
+     * @return integer
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
 }

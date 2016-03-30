@@ -6,25 +6,30 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
-use AppBundle\Entity\Sheep as BaseSheep;
-
 
 /**
  * Class Ram
- * @ORM\Entity(repositoryClass="AppBundle\Entity\AnimalRepository")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\RamRepository")
  * @package AppBundle\Entity
  */
-class Ram extends BaseSheep
+class Ram extends Animal
 {
   /**
    * @ORM\OneToMany(targetEntity="Animal", mappedBy="parentFather")
+   * @JMS\Type("AppBundle\Entity\Ram")
    */
   protected $childeren;
 
 
-  //
+  /**
+   * Ram constructor.
+   */
   public function __construct() {
-    $this->children = new \Doctrine\Common\Collections\ArrayCollection();
+    //Call super constructor first
+    parent::__construct();
+
+    //Create childrens array
+    $this->children = new ArrayCollection();
   }
 
     /**

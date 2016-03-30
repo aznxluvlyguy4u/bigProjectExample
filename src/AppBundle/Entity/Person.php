@@ -8,6 +8,7 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class Person
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\PersonRepository")
  * @package AppBundle\Entity
  */
 abstract class Person
@@ -33,4 +34,14 @@ abstract class Person
    * @var
    */
   protected $emailAddress;
+
+    /**
+     * Get id
+     *
+     * @return integer
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
 }

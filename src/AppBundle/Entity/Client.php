@@ -5,13 +5,12 @@ namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use AppBundle\Entity\Person as BasePerson;
 
 /**
  * Class Client
  * @package AppBundle\Entity
  */
-class Client extends BasePerson
+class Client extends Person
 {
 
   /**

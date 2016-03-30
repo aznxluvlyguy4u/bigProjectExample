@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class Location
@@ -32,11 +33,24 @@ class Location
    */
   private $ubn;
 
+  /**
+   * @var array
+   *
+   * @ORM\OneToMany(targetEntity="Arrival", mappedBy="location")
+   */
+  protected $arrivals;
 
   //private $company;
 
-  //private $client;
+  private $client;
 
+  /**
+   * Constructor
+   */
+  public function __construct()
+  {
+    $this->arrivals = new ArrayCollection();
+  }
 
     /**
      * Get id
@@ -70,5 +84,39 @@ class Location
     public function getUbn()
     {
         return $this->ubn;
+    }
+
+    /**
+     * Add arrival
+     *
+     * @param \AppBundle\Entity\Arrival $arrival
+     *
+     * @return Location
+     */
+    public function addArrival(\AppBundle\Entity\Arrival $arrival)
+    {
+        $this->arrivals[] = $arrival;
+
+        return $this;
+    }
+
+    /**
+     * Remove arrival
+     *
+     * @param \AppBundle\Entity\Arrival $arrival
+     */
+    public function removeArrival(\AppBundle\Entity\Arrival $arrival)
+    {
+        $this->arrivals->removeElement($arrival);
+    }
+
+    /**
+     * Get arrivals
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getArrivals()
+    {
+        return $this->arrivals;
     }
 }
