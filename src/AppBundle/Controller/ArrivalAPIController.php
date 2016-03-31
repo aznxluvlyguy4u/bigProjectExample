@@ -109,23 +109,29 @@ class ArrivalAPIController extends APIController
     /**
      * Create additional request properties.
      *
-     * Strategy: get below user details based on token passed,
+     * Strategy: get below User details based on token passed,
      * filter database to get user belonging to the given token.
      */
+
+    //Mock additional details
     $declareArrival->setUbn("00001");
     $declareArrival->setRequestId("1111");
     $declareArrival->setRelationNumberKeeper("22222222");
     $declareArrival->setRecoveryIndicator("N");
     $declareArrival->setAction("C");
+
+    //Mock additional location
     $location = new Location();
     $location->setUbn("9999999999");
 
     $declareArrival->setLocation($location);
 
+    //Mock additional animal details
     $animal = $declareArrival->getAnimal();
     $animal->setAnimalType(1);
     $animal->setAnimalCategory(1);
 
+    //Serialize to JSON
     $declareArrivalJSON = $this->serializeToJSON($declareArrival);
 
     //Send serialized message to Queue
