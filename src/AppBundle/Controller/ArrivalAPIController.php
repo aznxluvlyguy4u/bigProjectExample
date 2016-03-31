@@ -98,11 +98,33 @@ class ArrivalAPIController extends APIController
   public function postNewArrival(Request $request)
   {
     //Validate requestBody
-    $entityValidator = $this->get('api.entity.validate');
+    //$entityValidator = $this->get('api.entity.validate');
+
 
     //Parse to ArrivalEntity
     //$arrival = $entityValidator->validate($request, 'AppBundle\Entity\Arrival');
     $declareArrival = $this->deserializeToObject($request->getContent(),'AppBundle\Entity\Arrival');
+
+    //
+    /**
+     * Create additional request properties.
+     *
+     * Strategy: get below user details based on token passed,
+     * filter database to get user belonging to the given token.
+     */
+    $declareArrival->setUbn("00001");
+    $declareArrival->setRequestId("1111");
+    $declareArrival->setRelationNumberKeeper("22222222");
+    $declareArrival->setRecoveryIndicator("N");
+    $declareArrival->setAction("C");
+    $location = new Location();
+    $location->setUbn("9999999999");
+
+    $declareArrival->setLocation($location);
+
+    $animal = $declareArrival->getAnimal();
+    $animal->setAnimalType(1);
+    $animal->setAnimalCategory(1);
 
     $declareArrivalJSON = $this->serializeToJSON($declareArrival);
 
