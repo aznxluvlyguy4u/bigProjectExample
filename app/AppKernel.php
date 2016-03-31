@@ -19,6 +19,7 @@ class AppKernel extends Kernel
             new Snc\RedisBundle\SncRedisBundle(),
             new JMS\SerializerBundle\JMSSerializerBundle(),
             new \Aws\Symfony\AwsBundle(),
+            new Nelmio\CorsBundle\NelmioCorsBundle()
         ];
 
         if (in_array($this->getEnvironment(), ['dev', 'test'], true)) {
