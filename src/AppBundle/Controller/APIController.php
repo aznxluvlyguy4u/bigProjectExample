@@ -67,4 +67,14 @@ class APIController extends Controller
     return $this->getSerializer()->deserialize($json, $entity, $this->jsonNamespace);
   }
 
+  /**
+   * Return a psuedo random generated requestId
+   *
+   * @return string
+   */
+  protected function getNewRequestId()
+  {
+    return "-1";
+  }
+
 }
