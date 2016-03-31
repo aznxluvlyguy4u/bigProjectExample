@@ -12,12 +12,14 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * @Route("/api/v1")
  */
 class ArrivalAPIController extends APIController
 {
+  const REQUEST_TYPE = 'DECLARE_ARRIVAL';
 
   /**
    *
@@ -44,6 +46,8 @@ class ArrivalAPIController extends APIController
   public function getArrivalByState()
   {
     $entityManager = $this->getDoctrine()->getManager();
+
+    $user = $this->getDoctrine()->getRepository('AppBundle:Arrival')->findBy(['id' => 1]);
 
     //Create location
     $location = new Location();
@@ -97,51 +101,77 @@ class ArrivalAPIController extends APIController
    */
   public function postNewArrival(Request $request)
   {
-    //Validate requestBody
-    //$entityValidator = $this->get('api.entity.validate');
+    //Get content to array
+    $content = $this->getContentAsArray($request);
 
-
-    //Parse to ArrivalEntity
-    //$arrival = $entityValidator->validate($request, 'AppBundle\Entity\Arrival');
-    $declareArrival = $this->deserializeToObject($request->getContent(),'AppBundle\Entity\Arrival');
-
-    //
     /**
      * Create additional request properties.
      *
      * Strategy: get below User details based on token passed,
      * filter database to get user belonging to the given token.
      */
+    //$user = $this->getUserByToken($request)[0];
+    //$ubn = ($user->getLocations()->get(0)->getUbn());
+    //$relationNumberKeeper = $user->getRelationNumberKeeper();
 
-    //Mock additional details
-    $declareArrival->setUbn("00001");
-    $declareArrival->setRequestId("1111");
-    $declareArrival->setRelationNumberKeeper("22222222");
-    $declareArrival->setRecoveryIndicator("N");
-    $declareArrival->setAction("C");
+    //Generate new requestId
+    $requestId = $this->getNewRequestId();
 
-    //Mock additional location
-    $location = new Location();
-    $location->setUbn("9999999999");
+    $content->set('request_state', 'open');
+    $content->set('request_id', $requestId);
+    $content->set('message_id', $requestId);
+    $content->set('log_date', new \DateTime("now"));
+    $content->set('relation_number_keeper', '191919191');
+    $content->set('action', "C");
+    $content->set('recovery_indicator', "N");
+    $content->set('location', array('ubn' => '11111111'));
 
-    $declareArrival->setLocation($location);
+    $animal = $content['animal'];
 
-    //Mock additional animal details
-    $animal = $declareArrival->getAnimal();
-    $animal->setAnimalType(1);
-    $animal->setAnimalCategory(1);
+    $newAnimalDetails = array_merge($animal,
+      array('type' => 'ram',
+            'animal_type' => '1',
+      ));
 
-    //Serialize to JSON
-    $declareArrivalJSON = $this->serializeToJSON($declareArrival);
+    $content->set('animal', $newAnimalDetails);
+
+    //Serialize after added properties to JSON
+    $declareArrivalJSON = $this->serializeToJSON($content);
+
+    //Deserialize to Arrival
+    $declareArrival = $this->deserializeToObject($declareArrivalJSON,'AppBundle\Entity\Arrival');
 
     //Send serialized message to Queue
-    $result = $this->getQueueService()->send($declareArrivalJSON);
+    $result = $this->getQueueService()->send($requestId, $declareArrivalJSON, $this::REQUEST_TYPE);
 
     //TODO - Add logic for success/failure sending to Q, add request state to object
 
     //Persist object to Database
     $arrival = $this->getDoctrine()->getRepository('AppBundle:Arrival')->persist($declareArrival);
 
-    return new JsonResponse($arrival);
+    return new JsonResponse($declareArrival);
   }
+
+  /**
+   *
+   * Debug endpoint
+   *
+   * @Route("/arrival/test/foo")
+   * @Method("GET")
+   */
+  public function debugAPI(Request $request)
+  {
+
+    $user = $this->getUserByToken($request)[0];
+
+    dump($user);
+    die();
+
+    $ubn = ($user->getLocations()->get(0)->getUbn());
+
+
+
+    return new JsonResponse($user);
+  }
+
 }
