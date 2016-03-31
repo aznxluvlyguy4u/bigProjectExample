@@ -9,6 +9,8 @@ use JMS\Serializer\Annotation as JMS;
 /**
  * Class Person
  * @ORM\Entity(repositoryClass="AppBundle\Entity\PersonRepository")
+ * @ORM\InheritanceType("JOINED")
+ * @ORM\DiscriminatorColumn(name="type", type="string")
  * @package AppBundle\Entity
  */
 abstract class Person
@@ -21,17 +23,29 @@ abstract class Person
   protected $id;
 
   /**
-   * @var
+   * @var string
+   *
+   * @ORM\Column(type="string")
+   * @Assert\NotBlank
+   * @JMS\Type("string")
    */
   protected $firstName;
 
   /**
-   * @var
+   * @var string
+   *
+   * @ORM\Column(type="string")
+   * @Assert\NotBlank
+   * @JMS\Type("string")
    */
   protected $lastName;
 
   /**
-   * @var
+   * @var string
+   *
+   * @ORM\Column(type="string")
+   * @Assert\NotBlank
+   * @JMS\Type("string")
    */
   protected $emailAddress;
 
@@ -43,5 +57,77 @@ abstract class Person
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * Set firstName
+     *
+     * @param string $firstName
+     *
+     * @return Person
+     */
+    public function setFirstName($firstName)
+    {
+        $this->firstName = $firstName;
+
+        return $this;
+    }
+
+    /**
+     * Get firstName
+     *
+     * @return string
+     */
+    public function getFirstName()
+    {
+        return $this->firstName;
+    }
+
+    /**
+     * Set lastName
+     *
+     * @param string $lastName
+     *
+     * @return Person
+     */
+    public function setLastName($lastName)
+    {
+        $this->lastName = $lastName;
+
+        return $this;
+    }
+
+    /**
+     * Get lastName
+     *
+     * @return string
+     */
+    public function getLastName()
+    {
+        return $this->lastName;
+    }
+
+    /**
+     * Set emailAddress
+     *
+     * @param string $emailAddress
+     *
+     * @return Person
+     */
+    public function setEmailAddress($emailAddress)
+    {
+        $this->emailAddress = $emailAddress;
+
+        return $this;
+    }
+
+    /**
+     * Get emailAddress
+     *
+     * @return string
+     */
+    public function getEmailAddress()
+    {
+        return $this->emailAddress;
     }
 }

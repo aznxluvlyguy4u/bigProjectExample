@@ -92,9 +92,8 @@ abstract class Animal
     /**
      * @var string
      *
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
-     * @Assert\NotBlank
      * @JMS\Type("DateTime")
      */
     protected $dateOfBirth;
@@ -111,8 +110,7 @@ abstract class Animal
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
-     * @Assert\NotBlank
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      */
     protected $gender;

@@ -37,14 +37,6 @@ class Arrival {
   private $arrivalDate;
 
   /**
-   * @ORM\Column(type="string")
-   * @Assert\Length(max = 10)
-   * @Assert\NotBlank
-   * @JMS\Type("string")
-   */
-  private $ubn;
-
-  /**
    * @ORM\Column(type="string", nullable=true)
    * @Assert\Length(max = 10)
    * @JMS\Type("string")
@@ -72,7 +64,7 @@ class Arrival {
    * @Assert\NotBlank
    * @JMS\Type("string")
    */
-  private $relationNumberKeeper;
+  private $messageId;
 
   /**
    * @ORM\Column(type="string")
@@ -97,6 +89,19 @@ class Arrival {
    * @JMS\Type("AppBundle\Entity\Location")
    */
   private $location;
+
+  /**
+   * @ORM\Column(type="boolean")
+   * @JMS\Type("boolean")
+   */
+  private $importAnimal;
+
+  /**
+   * @ORM\Column(type="string")
+   * @Assert\NotBlank
+   * @JMS\Type("string")
+   */
+  private $requestState;
 
     /**
      * Get id
@@ -157,30 +162,6 @@ class Arrival {
     }
 
     /**
-     * Set ubn
-     *
-     * @param string $ubn
-     *
-     * @return Arrival
-     */
-    public function setUbn($ubn)
-    {
-        $this->ubn = $ubn;
-
-        return $this;
-    }
-
-    /**
-     * Get ubn
-     *
-     * @return string
-     */
-    public function getUbn()
-    {
-        return $this->ubn;
-    }
-
-    /**
      * Set ubnPreviousOwner
      *
      * @param string $ubnPreviousOwner
@@ -226,6 +207,30 @@ class Arrival {
     public function getRequestId()
     {
         return $this->requestId;
+    }
+
+    /**
+     * Set messageId
+     *
+     * @param string $messageId
+     *
+     * @return Arrival
+     */
+    public function setMessageId($messageId)
+    {
+        $this->messageId = $messageId;
+
+        return $this;
+    }
+
+    /**
+     * Get messageId
+     *
+     * @return string
+     */
+    public function getMessageId()
+    {
+        return $this->messageId;
     }
 
     /**
@@ -301,6 +306,30 @@ class Arrival {
     }
 
     /**
+     * Set importAnimal
+     *
+     * @param boolean $importAnimal
+     *
+     * @return Arrival
+     */
+    public function setImportAnimal($importAnimal)
+    {
+        $this->importAnimal = $importAnimal;
+
+        return $this;
+    }
+
+    /**
+     * Get importAnimal
+     *
+     * @return boolean
+     */
+    public function getImportAnimal()
+    {
+        return $this->importAnimal;
+    }
+
+    /**
      * Set animal
      *
      * @param \AppBundle\Entity\Animal $animal
@@ -346,5 +375,29 @@ class Arrival {
     public function getLocation()
     {
         return $this->location;
+    }
+
+    /**
+     * Set requestState
+     *
+     * @param string $requestState
+     *
+     * @return Arrival
+     */
+    public function setRequestState($requestState)
+    {
+        $this->requestState = $requestState;
+
+        return $this;
+    }
+
+    /**
+     * Get requestState
+     *
+     * @return string
+     */
+    public function getRequestState()
+    {
+        return $this->requestState;
     }
 }

@@ -40,6 +40,12 @@ class Location
    */
   protected $arrivals;
 
+  /**
+   * @Assert\NotBlank
+   * @ORM\ManyToOne(targetEntity="Person", cascade={"persist"})
+   * @JMS\Type("AppBundle\Entity\Person")
+   */
+  protected $owners;
   //private $company;
 
   private $client;
@@ -118,5 +124,29 @@ class Location
     public function getArrivals()
     {
         return $this->arrivals;
+    }
+
+    /**
+     * Set owners
+     *
+     * @param \AppBundle\Entity\Person $owners
+     *
+     * @return Location
+     */
+    public function setOwners(\AppBundle\Entity\Person $owners = null)
+    {
+        $this->owners = $owners;
+
+        return $this;
+    }
+
+    /**
+     * Get owners
+     *
+     * @return \AppBundle\Entity\Person
+     */
+    public function getOwners()
+    {
+        return $this->owners;
     }
 }
