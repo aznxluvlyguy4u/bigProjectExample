@@ -2,7 +2,13 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\Client;
+use AppBundle\Entity\Location;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\Validator;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class APIController
@@ -68,13 +74,49 @@ class APIController extends Controller
   }
 
   /**
-   * Return a psuedo random generated requestId
+   * Generate a psuedo random requestId of MAX length 20
    *
    * @return string
    */
   protected function getNewRequestId()
   {
-    return "-1";
+    $maxLengthRequestId = 20;
+    return join('', array_map(function($value) { return $value == 1 ? mt_rand(1, 9) :
+      mt_rand(0, 9); }, range(1, $maxLengthRequestId)));
+  }
+
+  protected function getContentAsArray(Request $request){
+    $content = $request->getContent();
+
+    if(empty($content)){
+      throw new BadRequestHttpException("Content is empty");
+    }
+
+    return new ArrayCollection(json_decode($content, true));
+  }
+
+  protected function getUserByToken(Request $request) {
+
+    $user = $this->getDoctrine()->getRepository('AppBundle:Client')->findBy(['id' => 1]);
+
+    if($user == null){
+
+
+      $user = new Client();
+      $user->setFirstName("Frank");
+      $user->setLastName("de Boer");
+      $user->setEmailAddress("frank@deboer.com");
+      $user->setRelationNumberKeeper("9991111");
+
+      $location = new Location();
+      $location->setUbn("9999999");
+      $user->addLocation($location);
+
+      $user = $this->getDoctrine()->getRepository('AppBundle:Person')->persist($user);
+
+    }
+
+    return $user;
   }
 
 }
