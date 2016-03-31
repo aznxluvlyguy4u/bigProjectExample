@@ -88,15 +88,21 @@ class AWSQueueService
    *
    * @param $messageBody
    */
-  public function send($messageBody)
+  public function send($requestId, $messageBody, $requestType)
   {
-    if($messageBody == null){
-
+    if($requestId == null && $messageBody == null){
       return null;
     }
+
     $response = $this->queueService->sendMessage(array (
       'QueueUrl' => $this->queueURL,
       'MessageBody' => $messageBody,
+      'MessageAttributes' => [
+        'cmd' => [
+          'StringValue' => $requestType,
+          'DataType' => 'String',
+        ],
+      ],
     ));
 
     return $this->responseHandler($response,$messageBody);
@@ -121,7 +127,7 @@ class AWSQueueService
 
   private function responseHandler($response, $messageBody){
     $statusCode = $response['@metadata']['statusCode'];
-    $result = array('messageBody' => $messageBody, 'statusCode' => $statusCode);
+    $result = array('statusCode' => $statusCode);
     return $result;
   }
 }
