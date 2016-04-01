@@ -6,6 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use \AppBundle\Entity\Animal;
+use \DateTime;
 
 /**
  * Class Arrival
@@ -21,7 +22,7 @@ class Arrival {
   protected $id;
 
   /**
-   * @ORM\Column(type="date")
+   * @ORM\Column(type="datetime")
    * @Assert\Date
    * @Assert\NotBlank
    * @JMS\Type("DateTime")
@@ -29,7 +30,9 @@ class Arrival {
   private $logDate;
 
   /**
-   * @ORM\Column(type="date")
+   * 2016-04-01T22:00:48.131Z
+   *
+   * @ORM\Column(type="datetime")
    * @Assert\Date
    * @Assert\NotBlank
    * @JMS\Type("DateTime")
@@ -234,30 +237,6 @@ class Arrival {
     }
 
     /**
-     * Set relationNumberKeeper
-     *
-     * @param string $relationNumberKeeper
-     *
-     * @return Arrival
-     */
-    public function setRelationNumberKeeper($relationNumberKeeper)
-    {
-        $this->relationNumberKeeper = $relationNumberKeeper;
-
-        return $this;
-    }
-
-    /**
-     * Get relationNumberKeeper
-     *
-     * @return string
-     */
-    public function getRelationNumberKeeper()
-    {
-        return $this->relationNumberKeeper;
-    }
-
-    /**
      * Set action
      *
      * @param string $action
@@ -330,6 +309,30 @@ class Arrival {
     }
 
     /**
+     * Set requestState
+     *
+     * @param string $requestState
+     *
+     * @return Arrival
+     */
+    public function setRequestState($requestState)
+    {
+        $this->requestState = $requestState;
+
+        return $this;
+    }
+
+    /**
+     * Get requestState
+     *
+     * @return string
+     */
+    public function getRequestState()
+    {
+        return $this->requestState;
+    }
+
+    /**
      * Set animal
      *
      * @param \AppBundle\Entity\Animal $animal
@@ -375,29 +378,5 @@ class Arrival {
     public function getLocation()
     {
         return $this->location;
-    }
-
-    /**
-     * Set requestState
-     *
-     * @param string $requestState
-     *
-     * @return Arrival
-     */
-    public function setRequestState($requestState)
-    {
-        $this->requestState = $requestState;
-
-        return $this;
-    }
-
-    /**
-     * Get requestState
-     *
-     * @return string
-     */
-    public function getRequestState()
-    {
-        return $this->requestState;
     }
 }

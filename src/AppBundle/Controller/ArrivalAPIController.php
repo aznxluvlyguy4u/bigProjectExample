@@ -69,7 +69,8 @@ class ArrivalAPIController extends APIController
    */
   public function postNewArrival(Request $request)
   {
-    $contents = $this->getContentAsArray($request);
+    //Get content to array
+    $content = $this->getContentAsArray($request);
 
     /**
      * Create additional request properties.
@@ -83,49 +84,43 @@ class ArrivalAPIController extends APIController
 
     //Generate new requestId
     $requestId = $this->getNewRequestId();
-    $results = new ArrayCollection();
 
-    if (is_array($contents) || is_object($contents)) {
+    $content->set('request_state', 'open');
+    $content->set('request_id', $requestId);
+    $content->set('message_id', $requestId);
+    $content->set('log_date', new \DateTime());
+    $content->set('relation_number_keeper', '191919191');
+    $content->set('action', "C");
+    $content->set('recovery_indicator', "N");
+    $content->set('location', array('ubn' => '11111111'));
 
-      foreach ($contents as $arrival) {
-        $arrival['request_id'] = $requestId;
-        $arrival['message_id'] = $requestId;
-        $arrival['log_date']  = new \DateTime("now");
-        $arrival['relation_number_keeper'] = '191919191';
-        $arrival['action'] =  "C";
-        $arrival['recovery_indicator'] = "N";
-        $arrival['location'] = array('ubn' => '11111111');
+    $animal = $content['animal'];
+    $newAnimalDetails = array_merge($animal,
+      array('type' => 'ram',
+        'animal_type' => '1',
+      ));
 
-        $animal = $arrival['animal'];
-        $newAnimalDetails = array_merge($animal,
-          array('type' => 'ram',
-            'animal_type' => '1',
-          ));
-        $arrival['animal'] = $newAnimalDetails;
+    $content->set('animal', $newAnimalDetails);
 
-        //Serialize after added properties to JSON
-        $declareArrivalJSON = $this->serializeToJSON($arrival);
 
-        //Deserialize to Arrival
-        $declareArrival = $this->deserializeToObject($declareArrivalJSON,'AppBundle\Entity\Arrival');
+    //Serialize after added properties to JSON
+    $declareArrivalJSON = $this->serializeToJSON($content);
 
-        //Send serialized message to Queue
-        $sendToQresult = $this->getQueueService()->send($requestId, $declareArrivalJSON, $this::REQUEST_TYPE);
+    //Deserialize to Arrival
+    $declareArrival = $this->deserializeToObject($declareArrivalJSON,'AppBundle\Entity\Arrival');
 
-        //TODO - Add logic for success/failure sending to Q, add request state to object
-        if($sendToQresult['statusCode'] == 200) {
-          $arrival['request_state'] = 'open';
-        } else {
-          $arrival['request_state'] = 'failed';
-        }
+    //Send serialized message to Queue
+    $sendToQresult = $this->getQueueService()->send($requestId, $declareArrivalJSON, $this::REQUEST_TYPE);
 
-        //Persist object to Database
-        $arrival = $this->getDoctrine()->getRepository('AppBundle:Arrival')->persist($declareArrival);
-        $results->add($arrival);
-      }
+    //If send to Queue, failed, it needs to be resend, set state to failed
+    if($sendToQresult['statusCode'] != '200') {
+      $arrival['request_state'] = 'failed';
     }
 
-    return new JsonResponse($results);
+    //Persist object to Database
+    $arrival = $this->getDoctrine()->getRepository('AppBundle:Arrival')->persist($declareArrival);
+
+    return new JsonResponse($content);
   }
 
   /**
