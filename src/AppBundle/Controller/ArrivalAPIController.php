@@ -13,6 +13,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * @Route("/api/v1")
@@ -23,9 +24,32 @@ class ArrivalAPIController extends APIController
 
   /**
    *
+   * Get a list of DeclareArrivals with a given state:{OPEN, CLOSED, DECLINED}.
+   *
+   *
+   * @Route("/arrivals/status")
+   * @Method("GET")
+   */
+  public function getArrivalByState(Request $request)
+  {
+    $state = '';
+
+    if(!$request->query->has('state')) {
+      return new BadRequestHttpException("State type: OPEN / FAILED / CLOSED not set.");
+    }
+
+    $state = $request->query->get('state');
+    $user = $this->getDoctrine()->getRepository('AppBundle:Arrival')->findBy(['requestState' => $state]);
+
+
+    return new JsonResponse($user);
+  }
+
+  /**
+   *
    * Get a DeclareArrival, found by it's ID.
    *
-   * @Route("/arrival/{Id}")
+   * @Route("/arrivals/{Id}")
    * @ParamConverter("Id", class="AppBundle\Entity\ArrivalRepository")
    * @Method("GET")
    */
@@ -37,66 +61,9 @@ class ArrivalAPIController extends APIController
 
   /**
    *
-   * Get a list of DeclareArrivals with a given state:{OPEN, CLOSED, DECLINED}.
-   *
-   *
-   * @Route("/arrival/new/open")
-   * @Method("GET")
-   */
-  public function getArrivalByState()
-  {
-    $entityManager = $this->getDoctrine()->getManager();
-
-    $user = $this->getDoctrine()->getRepository('AppBundle:Arrival')->findBy(['id' => 1]);
-
-    //Create location
-    $location = new Location();
-    $location->setUbn("11111111");
-
-    $entityManager->persist($location);
-
-    //Create Animal
-    $animal = new Ram();
-    $animal->setDateOfBirth(new \DateTime('tomorrow'));
-    $animal->setAnimalCategory(1);
-    $animal->setAnimalType(3);
-    $animal->setGender("male");
-    $animal->setName("brian");
-    $animal->setPedigreeCountryCode("NL");
-    $animal->setPedigreeNumber("111111111");
-    $animal->setUlnCountryCode("NL");
-    $animal->setUlnNumber("1123333");
-
-    //Create DeclareArrival
-    $declareArrival = new Arrival();
-    $declareArrival->setAction("C");
-    $declareArrival->setAnimal($animal);
-    $declareArrival->setArrivalDate(new \DateTime('tomorrow'));
-    $declareArrival->setLocation($location);
-    $declareArrival->setLogDate(new \DateTime('tomorrow'));
-
-    $entityManager->persist($declareArrival);
-
-    $queueService =  $this->get('app.aws.queueservice');
-    $queueService->getQueueService();
-
-    //TODO move to Service class
-    $encoders = array(new JsonEncoder());
-    $normalizers = array(new ObjectNormalizer());
-
-    $serializer = new Serializer($normalizers, $encoders);
-
-    $declareArrivaljson = $serializer->serialize($declareArrival, 'json');
-
-    //TODO
-    return new JsonResponse($queueService->send($declareArrivaljson));
-  }
-
-  /**
-   *
    * Create a DeclareArrival Request.
    *
-   * @Route("/arrival")
+   * @Route("/arrivals")
    * @Method("POST")
    */
   public function postNewArrival(Request $request)
@@ -156,22 +123,12 @@ class ArrivalAPIController extends APIController
    *
    * Debug endpoint
    *
-   * @Route("/arrival/test/foo")
+   * @Route("/arrivals/test/foo")
    * @Method("GET")
    */
   public function debugAPI(Request $request)
   {
-
-    $user = $this->getUserByToken($request)[0];
-
-    dump($user);
-    die();
-
-    $ubn = ($user->getLocations()->get(0)->getUbn());
-
-
-
-    return new JsonResponse($user);
+    return new JsonResponse('ok');
   }
 
 }
