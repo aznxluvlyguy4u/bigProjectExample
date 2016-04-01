@@ -13,6 +13,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
@@ -68,8 +69,7 @@ class ArrivalAPIController extends APIController
    */
   public function postNewArrival(Request $request)
   {
-    //Get content to array
-    $content = $this->getContentAsArray($request);
+    $contents = $this->getContentAsArray($request);
 
     /**
      * Create additional request properties.
@@ -83,40 +83,49 @@ class ArrivalAPIController extends APIController
 
     //Generate new requestId
     $requestId = $this->getNewRequestId();
+    $results = new ArrayCollection();
 
-    $content->set('request_state', 'open');
-    $content->set('request_id', $requestId);
-    $content->set('message_id', $requestId);
-    $content->set('log_date', new \DateTime("now"));
-    $content->set('relation_number_keeper', '191919191');
-    $content->set('action', "C");
-    $content->set('recovery_indicator', "N");
-    $content->set('location', array('ubn' => '11111111'));
+    if (is_array($contents) || is_object($contents)) {
 
-    $animal = $content['animal'];
+      foreach ($contents as $arrival) {
+        $arrival['request_id'] = $requestId;
+        $arrival['message_id'] = $requestId;
+        $arrival['log_date']  = new \DateTime("now");
+        $arrival['relation_number_keeper'] = '191919191';
+        $arrival['action'] =  "C";
+        $arrival['recovery_indicator'] = "N";
+        $arrival['location'] = array('ubn' => '11111111');
 
-    $newAnimalDetails = array_merge($animal,
-      array('type' => 'ram',
+        $animal = $arrival['animal'];
+        $newAnimalDetails = array_merge($animal,
+          array('type' => 'ram',
             'animal_type' => '1',
-      ));
+          ));
+        $arrival['animal'] = $newAnimalDetails;
 
-    $content->set('animal', $newAnimalDetails);
+        //Serialize after added properties to JSON
+        $declareArrivalJSON = $this->serializeToJSON($arrival);
 
-    //Serialize after added properties to JSON
-    $declareArrivalJSON = $this->serializeToJSON($content);
+        //Deserialize to Arrival
+        $declareArrival = $this->deserializeToObject($declareArrivalJSON,'AppBundle\Entity\Arrival');
 
-    //Deserialize to Arrival
-    $declareArrival = $this->deserializeToObject($declareArrivalJSON,'AppBundle\Entity\Arrival');
+        //Send serialized message to Queue
+        $sendToQresult = $this->getQueueService()->send($requestId, $declareArrivalJSON, $this::REQUEST_TYPE);
 
-    //Send serialized message to Queue
-    $result = $this->getQueueService()->send($requestId, $declareArrivalJSON, $this::REQUEST_TYPE);
+        //TODO - Add logic for success/failure sending to Q, add request state to object
+        if($sendToQresult['statusCode'] == 200) {
+          $arrival['request_state'] = 'open';
+        } else {
+          $arrival['request_state'] = 'failed';
+        }
 
-    //TODO - Add logic for success/failure sending to Q, add request state to object
+        //Persist object to Database
+        $arrival = $this->getDoctrine()->getRepository('AppBundle:Arrival')->persist($declareArrival);
+        $results->add($arrival);
+      }
+    }
 
-    //Persist object to Database
-    $arrival = $this->getDoctrine()->getRepository('AppBundle:Arrival')->persist($declareArrival);
-
-    return new JsonResponse($declareArrival);
+    return new JsonResponse($results);
   }
 
   /**
@@ -128,7 +137,7 @@ class ArrivalAPIController extends APIController
    */
   public function debugAPI(Request $request)
   {
-    return new JsonResponse('ok');
+    return new JsonResponse("OK");
   }
 
 }
