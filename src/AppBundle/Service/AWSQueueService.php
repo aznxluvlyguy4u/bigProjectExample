@@ -98,7 +98,7 @@ class AWSQueueService
       'QueueUrl' => $this->queueURL,
       'MessageBody' => $messageBody,
       'MessageAttributes' => [
-        'cmd' => [
+        'TaskType' => [
           'StringValue' => $requestType,
           'DataType' => 'String',
         ],
