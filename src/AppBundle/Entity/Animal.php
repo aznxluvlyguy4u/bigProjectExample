@@ -151,7 +151,7 @@ abstract class Animal
     /**
      * @var array
      *
-     * @ORM\OneToMany(targetEntity="Arrival", mappedBy="animal", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="animal", cascade={"persist"})
      */
     protected $arrivals;
 
@@ -470,11 +470,11 @@ abstract class Animal
     /**
      * Add arrival
      *
-     * @param \AppBundle\Entity\Arrival $arrival
+     * @param \AppBundle\Entity\DeclareArrival $arrival
      *
      * @return Animal
      */
-    public function addArrival(\AppBundle\Entity\Arrival $arrival)
+    public function addArrival(\AppBundle\Entity\DeclareArrival $arrival)
     {
         $this->arrivals[] = $arrival;
 
@@ -484,9 +484,9 @@ abstract class Animal
     /**
      * Remove arrival
      *
-     * @param \AppBundle\Entity\Arrival $arrival
+     * @param \AppBundle\Entity\DeclareArrival $arrival
      */
-    public function removeArrival(\AppBundle\Entity\Arrival $arrival)
+    public function removeArrival(\AppBundle\Entity\DeclareArrival $arrival)
     {
         $this->arrivals->removeElement($arrival);
     }

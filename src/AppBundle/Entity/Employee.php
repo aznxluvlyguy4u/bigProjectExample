@@ -13,8 +13,6 @@ use JMS\Serializer\Annotation as JMS;
  */
 class Employee extends Person
 {
-
-
     /**
      * Get id
      *

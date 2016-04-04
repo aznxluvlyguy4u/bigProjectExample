@@ -6,6 +6,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
+use AppBundle\Entity\Person;
+use AppBundle\Entity\DeclareArrival;
 
 /**
  * Class Location
@@ -36,7 +38,7 @@ class Location
   /**
    * @var array
    *
-   * @ORM\OneToMany(targetEntity="Arrival", mappedBy="location")
+   * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="location")
    */
   protected $arrivals;
 
@@ -95,11 +97,11 @@ class Location
     /**
      * Add arrival
      *
-     * @param \AppBundle\Entity\Arrival $arrival
+     * @param \AppBundle\Entity\DeclareArrival $arrival
      *
      * @return Location
      */
-    public function addArrival(\AppBundle\Entity\Arrival $arrival)
+    public function addArrival(DeclareArrival $arrival)
     {
         $this->arrivals[] = $arrival;
 
@@ -109,9 +111,9 @@ class Location
     /**
      * Remove arrival
      *
-     * @param \AppBundle\Entity\Arrival $arrival
+     * @param \AppBundle\Entity\DeclareArrival $arrival
      */
-    public function removeArrival(\AppBundle\Entity\Arrival $arrival)
+    public function removeArrival(DeclareArrival $arrival)
     {
         $this->arrivals->removeElement($arrival);
     }
@@ -133,7 +135,7 @@ class Location
      *
      * @return Location
      */
-    public function setOwners(\AppBundle\Entity\Person $owners = null)
+    public function setOwners(Person $owners = null)
     {
         $this->owners = $owners;
 

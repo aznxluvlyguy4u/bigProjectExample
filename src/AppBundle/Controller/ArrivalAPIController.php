@@ -40,7 +40,7 @@ class ArrivalAPIController extends APIController
     }
 
     $state = $request->query->get('state');
-    $user = $this->getDoctrine()->getRepository('AppBundle:Arrival')->findBy(['requestState' => $state]);
+    $user = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->findBy(['requestState' => $state]);
 
 
     return new JsonResponse($user);
@@ -56,7 +56,7 @@ class ArrivalAPIController extends APIController
    */
   public function getArrivalById($Id)
   {
-    $arrival = $this->getDoctrine()->getRepository('AppBundle:Arrival')->find($Id);
+    $arrival = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->find($Id);
     return new JsonResponse($arrival);
   }
 
@@ -107,7 +107,7 @@ class ArrivalAPIController extends APIController
     $declareArrivalJSON = $this->serializeToJSON($content);
 
     //Deserialize to Arrival
-    $declareArrival = $this->deserializeToObject($declareArrivalJSON,'AppBundle\Entity\Arrival');
+    $declareArrival = $this->deserializeToObject($declareArrivalJSON,'AppBundle\Entity\DeclareArrival');
 
     //Send serialized message to Queue
     $sendToQresult = $this->getQueueService()->send($requestId, $declareArrivalJSON, $this::REQUEST_TYPE);
@@ -118,7 +118,7 @@ class ArrivalAPIController extends APIController
     }
 
     //Persist object to Database
-    $arrival = $this->getDoctrine()->getRepository('AppBundle:Arrival')->persist($declareArrival);
+    $arrival = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->persist($declareArrival);
 
     return new JsonResponse($content);
   }

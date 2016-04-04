@@ -9,11 +9,11 @@ use \AppBundle\Entity\Animal;
 use \DateTime;
 
 /**
- * Class Arrival
- * @ORM\Entity(repositoryClass="AppBundle\Entity\ArrivalRepository")
+ * Class DeclareArrival
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareArrivalRepository")
  * @package AppBundle\Entity
  */
-class Arrival {
+class DeclareArrival {
   /**
    * @ORM\Column(type="integer")
    * @ORM\Id
