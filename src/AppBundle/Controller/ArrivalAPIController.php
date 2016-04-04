@@ -89,15 +89,15 @@ class ArrivalAPIController extends APIController
     $content->set('request_id', $requestId);
     $content->set('message_id', $requestId);
     $content->set('log_date', new \DateTime());
-    $content->set('relation_number_keeper', '191919191');
+    $content->set('relation_number_keeper', '123456789');
     $content->set('action', "C");
     $content->set('recovery_indicator', "N");
-    $content->set('location', array('ubn' => '11111111'));
+    $content->set('location', array('ubn' => '1234567'));
 
     $animal = $content['animal'];
     $newAnimalDetails = array_merge($animal,
       array('type' => 'ram',
-        'animal_type' => '1',
+        'animal_type' => 3,
       ));
 
     $content->set('animal', $newAnimalDetails);
