@@ -121,12 +121,14 @@ class ArrivalAPIController extends APIController
     //If send to Queue, failed, it needs to be resend, set state to failed
     if($sendToQresult['statusCode'] != '200') {
       $arrival['request_state'] = 'failed';
+
+      return new JsonResponse(array('status'=> 'failure','errorMessage' => 'Failed to send message to Queue'));
     }
 
     //Persist object to Database
     $arrival = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->persist($declareArrival);
 
-    return new JsonResponse($content);
+    return new JsonResponse(array('status' => '200 OK'));
   }
 
   /**
