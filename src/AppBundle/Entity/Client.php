@@ -39,6 +39,31 @@ class Client extends Person
         $this->locations = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
+
+    /**
+     * Set relationNumberKeeper
+     *
+     * @param string $relationNumberKeeper
+     *
+     * @return Client
+     */
+    public function setRelationNumberKeeper($relationNumberKeeper)
+    {
+        $this->relationNumberKeeper = $relationNumberKeeper;
+
+        return $this;
+    }
+
+    /**
+     * Get relationNumberKeeper
+     *
+     * @return string
+     */
+    public function getRelationNumberKeeper()
+    {
+        return $this->relationNumberKeeper;
+    }
+
     /**
      * Get id
      *
@@ -47,78 +72,6 @@ class Client extends Person
     public function getId()
     {
         return $this->id;
-    }
-
-    /**
-     * Set firstName
-     *
-     * @param string $firstName
-     *
-     * @return Client
-     */
-    public function setFirstName($firstName)
-    {
-        $this->firstName = $firstName;
-
-        return $this;
-    }
-
-    /**
-     * Get firstName
-     *
-     * @return string
-     */
-    public function getFirstName()
-    {
-        return $this->firstName;
-    }
-
-    /**
-     * Set lastName
-     *
-     * @param string $lastName
-     *
-     * @return Client
-     */
-    public function setLastName($lastName)
-    {
-        $this->lastName = $lastName;
-
-        return $this;
-    }
-
-    /**
-     * Get lastName
-     *
-     * @return string
-     */
-    public function getLastName()
-    {
-        return $this->lastName;
-    }
-
-    /**
-     * Set emailAddress
-     *
-     * @param string $emailAddress
-     *
-     * @return Client
-     */
-    public function setEmailAddress($emailAddress)
-    {
-        $this->emailAddress = $emailAddress;
-
-        return $this;
-    }
-
-    /**
-     * Get emailAddress
-     *
-     * @return string
-     */
-    public function getEmailAddress()
-    {
-        return $this->emailAddress;
     }
 
     /**
@@ -153,29 +106,5 @@ class Client extends Person
     public function getLocations()
     {
         return $this->locations;
-    }
-
-    /**
-     * Set relationNumberKeeper
-     *
-     * @param string $relationNumberKeeper
-     *
-     * @return Client
-     */
-    public function setRelationNumberKeeper($relationNumberKeeper)
-    {
-        $this->relationNumberKeeper = $relationNumberKeeper;
-
-        return $this;
-    }
-
-    /**
-     * Get relationNumberKeeper
-     *
-     * @return string
-     */
-    public function getRelationNumberKeeper()
-    {
-        return $this->relationNumberKeeper;
     }
 }

@@ -48,9 +48,6 @@ class Location
    * @JMS\Type("AppBundle\Entity\Person")
    */
   protected $owners;
-  //private $company;
-
-  private $client;
 
   /**
    * Constructor
@@ -59,6 +56,8 @@ class Location
   {
     $this->arrivals = new ArrayCollection();
   }
+
+
 
     /**
      * Get id
@@ -101,7 +100,7 @@ class Location
      *
      * @return Location
      */
-    public function addArrival(DeclareArrival $arrival)
+    public function addArrival(\AppBundle\Entity\DeclareArrival $arrival)
     {
         $this->arrivals[] = $arrival;
 
@@ -113,7 +112,7 @@ class Location
      *
      * @param \AppBundle\Entity\DeclareArrival $arrival
      */
-    public function removeArrival(DeclareArrival $arrival)
+    public function removeArrival(\AppBundle\Entity\DeclareArrival $arrival)
     {
         $this->arrivals->removeElement($arrival);
     }
@@ -135,7 +134,7 @@ class Location
      *
      * @return Location
      */
-    public function setOwners(Person $owners = null)
+    public function setOwners(\AppBundle\Entity\Person $owners = null)
     {
         $this->owners = $owners;
 

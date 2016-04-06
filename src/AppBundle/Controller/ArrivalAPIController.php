@@ -33,17 +33,22 @@ class ArrivalAPIController extends APIController
    */
   public function getArrivalByState(Request $request)
   {
-    $state = '';
+    $declareArrivalRequests = $this->getDoctrine()->getRepository('AppBundle:DeclareArrivalResponse')->findAll();
+    $filteredResults = new ArrayCollection();
 
     if(!$request->query->has('state')) {
-      return new BadRequestHttpException("State type: OPEN / FAILED / CLOSED not set.");
+      return new JsonResponse($declareArrivalRequests);
+    } else {
+      $state = $request->query->get('state');
+
+      foreach($declareArrivalRequests as $arrivalRequest) {
+        if($arrivalRequest->getDeclareArrivalRequestMessage()->getRequestState() == $state){
+          $filteredResults->add($arrivalRequest);
+        }
+      }
     }
 
-    $state = $request->query->get('state');
-    $user = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->findBy(['requestState' => $state]);
-
-
-    return new JsonResponse($user);
+    return new JsonResponse($filteredResults);
   }
 
   /**
@@ -96,8 +101,9 @@ class ArrivalAPIController extends APIController
 
     $animal = $content['animal'];
     $newAnimalDetails = array_merge($animal,
-      array('type' => 'ram',
+      array('type' => 'Ram',
         'animal_type' => 3,
+        'animal_category' => 1,
       ));
 
     $content->set('animal', $newAnimalDetails);

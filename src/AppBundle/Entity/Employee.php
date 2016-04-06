@@ -8,11 +8,13 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class Employee
- * @ORM\Entity(repositoryClass="AppBundle\Entity\PersonRepository")
+ * @ORM\Entity
  * @package AppBundle\Entity
  */
 class Employee extends Person
 {
+
+
     /**
      * Get id
      *
@@ -21,77 +23,5 @@ class Employee extends Person
     public function getId()
     {
         return $this->id;
-    }
-
-    /**
-     * Set firstName
-     *
-     * @param string $firstName
-     *
-     * @return Employee
-     */
-    public function setFirstName($firstName)
-    {
-        $this->firstName = $firstName;
-
-        return $this;
-    }
-
-    /**
-     * Get firstName
-     *
-     * @return string
-     */
-    public function getFirstName()
-    {
-        return $this->firstName;
-    }
-
-    /**
-     * Set lastName
-     *
-     * @param string $lastName
-     *
-     * @return Employee
-     */
-    public function setLastName($lastName)
-    {
-        $this->lastName = $lastName;
-
-        return $this;
-    }
-
-    /**
-     * Get lastName
-     *
-     * @return string
-     */
-    public function getLastName()
-    {
-        return $this->lastName;
-    }
-
-    /**
-     * Set emailAddress
-     *
-     * @param string $emailAddress
-     *
-     * @return Employee
-     */
-    public function setEmailAddress($emailAddress)
-    {
-        $this->emailAddress = $emailAddress;
-
-        return $this;
-    }
-
-    /**
-     * Get emailAddress
-     *
-     * @return string
-     */
-    public function getEmailAddress()
-    {
-        return $this->emailAddress;
     }
 }

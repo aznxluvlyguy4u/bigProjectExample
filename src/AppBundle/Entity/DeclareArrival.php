@@ -7,6 +7,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use \AppBundle\Entity\Animal;
 use \DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class DeclareArrival
@@ -106,277 +107,372 @@ class DeclareArrival {
    */
   private $requestState;
 
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
+  /**
+   * @ORM\OneToMany(targetEntity="DeclareArrivalResponse", mappedBy="declareArrivalRequestMessage", cascade={"persist"})
+   * @ORM\JoinColumn(name="declare_arrival_request_message_id", referencedColumnName="id")
+   * @JMS\Type("array")
+   */
+  private $responses;
+
+  /**
+   * @ORM\Column(type="string")
+   * @Assert\Length(max = 20)
+   * @Assert\NotBlank
+   * @JMS\Type("string")
+   */
+  private $relationNumberKeeper;
+
+  /**
+   * DeclareArrival constructor.
+   */
+  public function __construct() {
+    //Create responses array
+    $this->responses = new ArrayCollection();
+  }
+
+  /**
+   * Get id
+   *
+   * @return integer
+   */
+  public function getId()
+  {
+    return $this->id;
+  }
+
+  /**
+   * Set logDate
+   *
+   * @param \DateTime $logDate
+   *
+   * @return DeclareArrival
+   */
+  public function setLogDate($logDate)
+  {
+    $this->logDate = $logDate;
+
+    return $this;
+  }
+
+  /**
+   * Get logDate
+   *
+   * @return \DateTime
+   */
+  public function getLogDate()
+  {
+    return $this->logDate;
+  }
+
+  /**
+   * Set arrivalDate
+   *
+   * @param \DateTime $arrivalDate
+   *
+   * @return DeclareArrival
+   */
+  public function setArrivalDate($arrivalDate)
+  {
+    $this->arrivalDate = $arrivalDate;
+
+    return $this;
+  }
+
+  /**
+   * Get arrivalDate
+   *
+   * @return \DateTime
+   */
+  public function getArrivalDate()
+  {
+    return $this->arrivalDate;
+  }
+
+  /**
+   * Set ubnPreviousOwner
+   *
+   * @param string $ubnPreviousOwner
+   *
+   * @return DeclareArrival
+   */
+  public function setUbnPreviousOwner($ubnPreviousOwner)
+  {
+    $this->ubnPreviousOwner = $ubnPreviousOwner;
+
+    return $this;
+  }
+
+  /**
+   * Get ubnPreviousOwner
+   *
+   * @return string
+   */
+  public function getUbnPreviousOwner()
+  {
+    return $this->ubnPreviousOwner;
+  }
+
+  /**
+   * Set requestId
+   *
+   * @param string $requestId
+   *
+   * @return DeclareArrival
+   */
+  public function setRequestId($requestId)
+  {
+    $this->requestId = $requestId;
+
+    return $this;
+  }
+
+  /**
+   * Get requestId
+   *
+   * @return string
+   */
+  public function getRequestId()
+  {
+    return $this->requestId;
+  }
+
+  /**
+   * Set messageId
+   *
+   * @param string $messageId
+   *
+   * @return DeclareArrival
+   */
+  public function setMessageId($messageId)
+  {
+    $this->messageId = $messageId;
+
+    return $this;
+  }
+
+  /**
+   * Get messageId
+   *
+   * @return string
+   */
+  public function getMessageId()
+  {
+    return $this->messageId;
+  }
+
+  /**
+   * Set action
+   *
+   * @param string $action
+   *
+   * @return DeclareArrival
+   */
+  public function setAction($action)
+  {
+    $this->action = $action;
+
+    return $this;
+  }
+
+  /**
+   * Get action
+   *
+   * @return string
+   */
+  public function getAction()
+  {
+    return $this->action;
+  }
+
+  /**
+   * Set recoveryIndicator
+   *
+   * @param string $recoveryIndicator
+   *
+   * @return DeclareArrival
+   */
+  public function setRecoveryIndicator($recoveryIndicator)
+  {
+    $this->recoveryIndicator = $recoveryIndicator;
+
+    return $this;
+  }
+
+  /**
+   * Get recoveryIndicator
+   *
+   * @return string
+   */
+  public function getRecoveryIndicator()
+  {
+    return $this->recoveryIndicator;
+  }
+
+  /**
+   * Set importAnimal
+   *
+   * @param boolean $importAnimal
+   *
+   * @return DeclareArrival
+   */
+  public function setImportAnimal($importAnimal)
+  {
+    $this->importAnimal = $importAnimal;
+
+    return $this;
+  }
+
+  /**
+   * Get importAnimal
+   *
+   * @return boolean
+   */
+  public function getImportAnimal()
+  {
+    return $this->importAnimal;
+  }
+
+  /**
+   * Set requestState
+   *
+   * @param string $requestState
+   *
+   * @return DeclareArrival
+   */
+  public function setRequestState($requestState)
+  {
+    $this->requestState = $requestState;
+
+    return $this;
+  }
+
+  /**
+   * Get requestState
+   *
+   * @return string
+   */
+  public function getRequestState()
+  {
+    return $this->requestState;
+  }
+
+  /**
+   * Set animal
+   *
+   * @param \AppBundle\Entity\Animal $animal
+   *
+   * @return DeclareArrival
+   */
+  public function setAnimal(\AppBundle\Entity\Animal $animal = null)
+  {
+    $this->animal = $animal;
+
+    return $this;
+  }
+
+  /**
+   * Get animal
+   *
+   * @return \AppBundle\Entity\Animal
+   */
+  public function getAnimal()
+  {
+    return $this->animal;
+  }
+
+  /**
+   * Set location
+   *
+   * @param \AppBundle\Entity\Location $location
+   *
+   * @return DeclareArrival
+   */
+  public function setLocation(\AppBundle\Entity\Location $location = null)
+  {
+    $this->location = $location;
+
+    return $this;
+  }
+
+  /**
+   * Get location
+   *
+   * @return \AppBundle\Entity\Location
+   */
+  public function getLocation()
+  {
+    return $this->location;
+  }
 
     /**
-     * Set logDate
+     * Add response
      *
-     * @param \DateTime $logDate
+     * @param \AppBundle\Entity\DeclareArrivalResponse $response
      *
-     * @return Arrival
+     * @return DeclareArrival
      */
-    public function setLogDate($logDate)
+    public function addResponse(\AppBundle\Entity\DeclareArrivalResponse $response)
     {
-        $this->logDate = $logDate;
+        $this->responses[] = $response;
 
         return $this;
     }
 
     /**
-     * Get logDate
+     * Remove response
      *
-     * @return \DateTime
+     * @param \AppBundle\Entity\DeclareArrivalResponse $response
      */
-    public function getLogDate()
+    public function removeResponse(\AppBundle\Entity\DeclareArrivalResponse $response)
     {
-        return $this->logDate;
+        $this->responses->removeElement($response);
     }
 
     /**
-     * Set arrivalDate
+     * Get responses
      *
-     * @param \DateTime $arrivalDate
-     *
-     * @return Arrival
+     * @return \Doctrine\Common\Collections\Collection
      */
-    public function setArrivalDate($arrivalDate)
+    public function getResponses()
     {
-        $this->arrivalDate = $arrivalDate;
+        return $this->responses;
+    }
+
+    /**
+     * Set relationNumberKeeper
+     *
+     * @param string $relationNumberKeeper
+     *
+     * @return DeclareArrival
+     */
+    public function setRelationNumberKeeper($relationNumberKeeper)
+    {
+        $this->relationNumberKeeper = $relationNumberKeeper;
 
         return $this;
     }
 
     /**
-     * Get arrivalDate
-     *
-     * @return \DateTime
-     */
-    public function getArrivalDate()
-    {
-        return $this->arrivalDate;
-    }
-
-    /**
-     * Set ubnPreviousOwner
-     *
-     * @param string $ubnPreviousOwner
-     *
-     * @return Arrival
-     */
-    public function setUbnPreviousOwner($ubnPreviousOwner)
-    {
-        $this->ubnPreviousOwner = $ubnPreviousOwner;
-
-        return $this;
-    }
-
-    /**
-     * Get ubnPreviousOwner
+     * Get relationNumberKeeper
      *
      * @return string
      */
-    public function getUbnPreviousOwner()
+    public function getRelationNumberKeeper()
     {
-        return $this->ubnPreviousOwner;
+        return $this->relationNumberKeeper;
     }
 
     /**
-     * Set requestId
+     * Set responses
      *
-     * @param string $requestId
+     * @param array $responses
      *
-     * @return Arrival
+     * @return DeclareArrival
      */
-    public function setRequestId($requestId)
+    public function setResponses($responses)
     {
-        $this->requestId = $requestId;
+        $this->responses = $responses;
 
         return $this;
-    }
-
-    /**
-     * Get requestId
-     *
-     * @return string
-     */
-    public function getRequestId()
-    {
-        return $this->requestId;
-    }
-
-    /**
-     * Set messageId
-     *
-     * @param string $messageId
-     *
-     * @return Arrival
-     */
-    public function setMessageId($messageId)
-    {
-        $this->messageId = $messageId;
-
-        return $this;
-    }
-
-    /**
-     * Get messageId
-     *
-     * @return string
-     */
-    public function getMessageId()
-    {
-        return $this->messageId;
-    }
-
-    /**
-     * Set action
-     *
-     * @param string $action
-     *
-     * @return Arrival
-     */
-    public function setAction($action)
-    {
-        $this->action = $action;
-
-        return $this;
-    }
-
-    /**
-     * Get action
-     *
-     * @return string
-     */
-    public function getAction()
-    {
-        return $this->action;
-    }
-
-    /**
-     * Set recoveryIndicator
-     *
-     * @param string $recoveryIndicator
-     *
-     * @return Arrival
-     */
-    public function setRecoveryIndicator($recoveryIndicator)
-    {
-        $this->recoveryIndicator = $recoveryIndicator;
-
-        return $this;
-    }
-
-    /**
-     * Get recoveryIndicator
-     *
-     * @return string
-     */
-    public function getRecoveryIndicator()
-    {
-        return $this->recoveryIndicator;
-    }
-
-    /**
-     * Set importAnimal
-     *
-     * @param boolean $importAnimal
-     *
-     * @return Arrival
-     */
-    public function setImportAnimal($importAnimal)
-    {
-        $this->importAnimal = $importAnimal;
-
-        return $this;
-    }
-
-    /**
-     * Get importAnimal
-     *
-     * @return boolean
-     */
-    public function getImportAnimal()
-    {
-        return $this->importAnimal;
-    }
-
-    /**
-     * Set requestState
-     *
-     * @param string $requestState
-     *
-     * @return Arrival
-     */
-    public function setRequestState($requestState)
-    {
-        $this->requestState = $requestState;
-
-        return $this;
-    }
-
-    /**
-     * Get requestState
-     *
-     * @return string
-     */
-    public function getRequestState()
-    {
-        return $this->requestState;
-    }
-
-    /**
-     * Set animal
-     *
-     * @param \AppBundle\Entity\Animal $animal
-     *
-     * @return Arrival
-     */
-    public function setAnimal(\AppBundle\Entity\Animal $animal = null)
-    {
-        $this->animal = $animal;
-
-        return $this;
-    }
-
-    /**
-     * Get animal
-     *
-     * @return \AppBundle\Entity\Animal
-     */
-    public function getAnimal()
-    {
-        return $this->animal;
-    }
-
-    /**
-     * Set location
-     *
-     * @param \AppBundle\Entity\Location $location
-     *
-     * @return Arrival
-     */
-    public function setLocation(\AppBundle\Entity\Location $location = null)
-    {
-        $this->location = $location;
-
-        return $this;
-    }
-
-    /**
-     * Get location
-     *
-     * @return \AppBundle\Entity\Location
-     */
-    public function getLocation()
-    {
-        return $this->location;
     }
 }

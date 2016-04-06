@@ -54,9 +54,9 @@ abstract class Person
      *
      * @return integer
      */
-    public function getId()
+    public function getPersonId()
     {
-        return $this->id;
+        return $this->personId;
     }
 
     /**
@@ -129,5 +129,15 @@ abstract class Person
     public function getEmailAddress()
     {
         return $this->emailAddress;
+    }
+
+    /**
+     * Get id
+     *
+     * @return integer
+     */
+    public function getId()
+    {
+        return $this->id;
     }
 }
