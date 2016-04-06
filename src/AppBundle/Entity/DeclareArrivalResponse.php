@@ -22,6 +22,14 @@ class DeclareArrivalResponse {
   protected $id;
 
   /**
+   * @ORM\Column(type="string")
+   * @Assert\Length(max = 20)
+   * @Assert\NotBlank
+   * @JMS\Type("string")
+   */
+  private $messageId;
+
+  /**
    * @var string
    *
    * @ORM\Column(type="datetime", nullable=true)
@@ -225,5 +233,29 @@ class DeclareArrivalResponse {
     public function getDeclareArrivalRequestMessage()
     {
         return $this->declareArrivalRequestMessage;
+    }
+
+    /**
+     * Set messageId
+     *
+     * @param string $messageId
+     *
+     * @return DeclareArrivalResponse
+     */
+    public function setMessageId($messageId)
+    {
+        $this->messageId = $messageId;
+
+        return $this;
+    }
+
+    /**
+     * Get messageId
+     *
+     * @return string
+     */
+    public function getMessageId()
+    {
+        return $this->messageId;
     }
 }
