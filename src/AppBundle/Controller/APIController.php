@@ -20,7 +20,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
  */
 class APIController extends Controller
 {
-  const AUTHORIZATION_HEADER_NAMESPACE = 'Authorization';
+  const AUTHORIZATION_HEADER_NAMESPACE = 'AccessToken';
 
   /**
    * @var \JMS\Serializer\Serializer
@@ -110,19 +110,16 @@ class APIController extends Controller
 
     }
 
-    $token = $request->headers->get('Authorization');
-    $token = str_replace('Basic ', '', $token);
-    $token = base64_decode($token);
+    $token = $request->headers->get('AccessToken');
+    //$token = str_replace('Basic ', '', $token);
+    //$token = base64_decode($token);
 
-    list($key, $secret,) = explode(":", $token);
+    //list($key, $secret,) = explode(":", $token);
     $em = $this->getDoctrine()->getEntityManager();
-    $user = $em->getRepository('AppBundle:Person')->findOneByAccessToken($key, $secret);
+    $user = $em->getRepository('AppBundle:Person')->findOneByAccessToken($token);
 
     if($user == null) {
-        return new JsonResponse(
-          array("errorCode" => 403,
-                "errorMessage"=>"Unauthorized"),
-          403);
+      return new JsonResponse(array("errorCode" => 403, "errorMessage"=>"Unauthorized"), 403);
     }
 
     return $user;

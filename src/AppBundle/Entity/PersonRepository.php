@@ -14,7 +14,7 @@ use JMS\Serializer\Annotation as JMS;
 class PersonRepository extends BaseRepository
 {
 
-  public function findOneByAccessToken($key, $secret)
+  public function findOneByAccessToken($accessToken)
   {
     $queryBuilder = $this->getEntityManager()->createQueryBuilder();
 
@@ -22,10 +22,8 @@ class PersonRepository extends BaseRepository
 
     ->from('AppBundle:Person', 'person')
       ->select('person')
-      ->andWhere('person.firstName = :firstName')
       ->andWhere('person.accessToken = :accessToken')
-      ->setParameter('firstName',$key)
-      ->setParameter('accessToken',$secret);
+      ->setParameter('accessToken',$accessToken);
 
     return $queryBuilder->getQuery()->getResult();
   }

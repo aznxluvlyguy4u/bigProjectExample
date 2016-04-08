@@ -45,7 +45,7 @@ class ArrivalAPIController extends APIController
     $filteredResults = new ArrayCollection();
 
     if(!$request->query->has('state')) {
-      return new JsonResponse($declareArrivalRequests);
+      return new JsonResponse($declareArrivalRequests, 200);
     } else {
       $state = $request->query->get('state');
 
@@ -56,7 +56,7 @@ class ArrivalAPIController extends APIController
       }
     }
 
-    return new JsonResponse($filteredResults);
+    return new JsonResponse($filteredResults, 200);
   }
 
   /**
