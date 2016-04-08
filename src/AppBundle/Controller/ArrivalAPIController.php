@@ -24,6 +24,10 @@ class ArrivalAPIController extends APIController
   const REQUEST_TYPE = 'DECLARE_ARRIVAL';
 
   /**
+   * @var Client
+   */
+  private $user;
+  /**
    *
    * Get a list of DeclareArrivals with a given state:{OPEN, CLOSED, DECLINED}.
    *
@@ -122,7 +126,6 @@ class ArrivalAPIController extends APIController
 
     $content->set('animal', $newAnimalDetails);
 
-
     //Serialize after added properties to JSON
     $declareArrivalJSON = $this->serializeToJSON($content);
 
@@ -154,7 +157,6 @@ class ArrivalAPIController extends APIController
    */
   public function debugAPI(Request $request)
   {
-
     $user = new Client();
     $user->setFirstName("Frank");
     $user->setLastName("de Boer");

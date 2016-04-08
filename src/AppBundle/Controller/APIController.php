@@ -106,8 +106,7 @@ class APIController extends Controller
   {
     //Get auth header to read token
     if(!$request->headers->has($this::AUTHORIZATION_HEADER_NAMESPACE)) {
-      return new JsonResponse(array("errorCode" => 403, "errorMessage"=>"Unauthorized"), 403);
-
+      return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
     }
 
     $token = $request->headers->get('AccessToken');
@@ -119,7 +118,7 @@ class APIController extends Controller
     $user = $em->getRepository('AppBundle:Person')->findOneByAccessToken($token);
 
     if($user == null) {
-      return new JsonResponse(array("errorCode" => 403, "errorMessage"=>"Unauthorized"), 403);
+      return new JsonResponse(array("errorCode" => 403, "errorMessage"=>"Forbidden"), 403);
     }
 
     return $user;
