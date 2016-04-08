@@ -49,95 +49,124 @@ abstract class Person
    */
   protected $emailAddress;
 
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getPersonId()
-    {
-        return $this->personId;
-    }
+  /**
+   * @var string
+   *
+   * @ORM\Column(type="string",  unique=true)
+   * @Assert\NotBlank
+   * @JMS\Type("string")
+   */
+  protected $accessToken;
+
+  public function __construct()
+  {
+    $this->setAccessToken(sha1(uniqid(rand(), true)));
+  }
+
+  /**
+   * Get id
+   *
+   * @return integer
+   */
+  public function getId()
+  {
+    return $this->id;
+  }
+
+  /**
+   * Set firstName
+   *
+   * @param string $firstName
+   *
+   * @return Person
+   */
+  public function setFirstName($firstName)
+  {
+    $this->firstName = $firstName;
+
+    return $this;
+  }
+
+  /**
+   * Get firstName
+   *
+   * @return string
+   */
+  public function getFirstName()
+  {
+    return $this->firstName;
+  }
+
+  /**
+   * Set lastName
+   *
+   * @param string $lastName
+   *
+   * @return Person
+   */
+  public function setLastName($lastName)
+  {
+    $this->lastName = $lastName;
+
+    return $this;
+  }
+
+  /**
+   * Get lastName
+   *
+   * @return string
+   */
+  public function getLastName()
+  {
+    return $this->lastName;
+  }
+
+  /**
+   * Set emailAddress
+   *
+   * @param string $emailAddress
+   *
+   * @return Person
+   */
+  public function setEmailAddress($emailAddress)
+  {
+    $this->emailAddress = $emailAddress;
+
+    return $this;
+  }
+
+  /**
+   * Get emailAddress
+   *
+   * @return string
+   */
+  public function getEmailAddress()
+  {
+    return $this->emailAddress;
+  }
+
 
     /**
-     * Set firstName
+     * Set accessToken
      *
-     * @param string $firstName
+     * @param string $accessToken
      *
      * @return Person
      */
-    public function setFirstName($firstName)
+    private function setAccessToken($accessToken)
     {
-        $this->firstName = $firstName;
+        $this->accessToken = $accessToken;
 
         return $this;
     }
 
     /**
-     * Get firstName
+     * Get accessToken
      *
      * @return string
      */
-    public function getFirstName()
+    public function getAccessToken()
     {
-        return $this->firstName;
-    }
-
-    /**
-     * Set lastName
-     *
-     * @param string $lastName
-     *
-     * @return Person
-     */
-    public function setLastName($lastName)
-    {
-        $this->lastName = $lastName;
-
-        return $this;
-    }
-
-    /**
-     * Get lastName
-     *
-     * @return string
-     */
-    public function getLastName()
-    {
-        return $this->lastName;
-    }
-
-    /**
-     * Set emailAddress
-     *
-     * @param string $emailAddress
-     *
-     * @return Person
-     */
-    public function setEmailAddress($emailAddress)
-    {
-        $this->emailAddress = $emailAddress;
-
-        return $this;
-    }
-
-    /**
-     * Get emailAddress
-     *
-     * @return string
-     */
-    public function getEmailAddress()
-    {
-        return $this->emailAddress;
-    }
-
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId()
-    {
-        return $this->id;
+        return $this->accessToken;
     }
 }

@@ -24,4 +24,28 @@ class Employee extends Person
     {
         return $this->id;
     }
+
+    /**
+     * Set accessToken
+     *
+     * @param string $accessToken
+     *
+     * @return Employee
+     */
+    public function setAccessToken($accessToken)
+    {
+        $this->accessToken = $accessToken;
+
+        return $this;
+    }
+
+    /**
+     * Get accessToken
+     *
+     * @return string
+     */
+    public function getAccessToken()
+    {
+        return $this->accessToken;
+    }
 }

@@ -20,7 +20,7 @@ class Client extends Person
    * @ORM\OneToMany(targetEntity="Location", mappedBy="owners",cascade={"persist"})
    */
   private $locations;
-  
+
   /**
    * @ORM\Column(type="string")
    * @Assert\Length(max = 20)
@@ -31,80 +31,106 @@ class Client extends Person
 
   //private $companies;
 
-    /**
-     * Constructor
-     */
-    public function __construct()
-    {
-        $this->locations = new \Doctrine\Common\Collections\ArrayCollection();
-    }
+  /**
+   * Constructor
+   */
+  public function __construct()
+  {
+    //Call super constructor first
+    parent::__construct();
+    $this->locations = new \Doctrine\Common\Collections\ArrayCollection();
+  }
 
 
+  /**
+   * Set relationNumberKeeper
+   *
+   * @param string $relationNumberKeeper
+   *
+   * @return Client
+   */
+  public function setRelationNumberKeeper($relationNumberKeeper)
+  {
+    $this->relationNumberKeeper = $relationNumberKeeper;
+
+    return $this;
+  }
+
+  /**
+   * Get relationNumberKeeper
+   *
+   * @return string
+   */
+  public function getRelationNumberKeeper()
+  {
+    return $this->relationNumberKeeper;
+  }
+
+  /**
+   * Get id
+   *
+   * @return integer
+   */
+  public function getId()
+  {
+    return $this->id;
+  }
+
+  /**
+   * Add location
+   *
+   * @param \AppBundle\Entity\Location $location
+   *
+   * @return Client
+   */
+  public function addLocation(\AppBundle\Entity\Location $location)
+  {
+    $this->locations[] = $location;
+
+    return $this;
+  }
+
+  /**
+   * Remove location
+   *
+   * @param \AppBundle\Entity\Location $location
+   */
+  public function removeLocation(\AppBundle\Entity\Location $location)
+  {
+    $this->locations->removeElement($location);
+  }
+
+  /**
+   * Get locations
+   *
+   * @return \Doctrine\Common\Collections\Collection
+   */
+  public function getLocations()
+  {
+    return $this->locations;
+  }
+
     /**
-     * Set relationNumberKeeper
+     * Set accessToken
      *
-     * @param string $relationNumberKeeper
+     * @param string $accessToken
      *
      * @return Client
      */
-    public function setRelationNumberKeeper($relationNumberKeeper)
+    public function setAccessToken($accessToken)
     {
-        $this->relationNumberKeeper = $relationNumberKeeper;
+        $this->accessToken = $accessToken;
 
         return $this;
     }
 
     /**
-     * Get relationNumberKeeper
+     * Get accessToken
      *
      * @return string
      */
-    public function getRelationNumberKeeper()
+    public function getAccessToken()
     {
-        return $this->relationNumberKeeper;
-    }
-
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * Add location
-     *
-     * @param \AppBundle\Entity\Location $location
-     *
-     * @return Client
-     */
-    public function addLocation(\AppBundle\Entity\Location $location)
-    {
-        $this->locations[] = $location;
-
-        return $this;
-    }
-
-    /**
-     * Remove location
-     *
-     * @param \AppBundle\Entity\Location $location
-     */
-    public function removeLocation(\AppBundle\Entity\Location $location)
-    {
-        $this->locations->removeElement($location);
-    }
-
-    /**
-     * Get locations
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getLocations()
-    {
-        return $this->locations;
+        return $this->accessToken;
     }
 }
