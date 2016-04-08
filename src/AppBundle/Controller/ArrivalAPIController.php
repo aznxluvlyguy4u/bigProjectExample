@@ -7,6 +7,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Arrival;
 use AppBundle\Entity\Sheep;
+use AppBundle\Entity\Client;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -15,6 +16,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 
 /**
  * @Route("/api/v1")
@@ -33,6 +35,12 @@ class ArrivalAPIController extends APIController
    */
   public function getArrivalByState(Request $request)
   {
+    $result = $this->isTokenValid($request);
+
+    if($result instanceof JsonResponse){
+      return $result;
+    }
+
     $declareArrivalRequests = $this->getDoctrine()->getRepository('AppBundle:DeclareArrivalResponse')->findAll();
     $filteredResults = new ArrayCollection();
 
@@ -74,6 +82,13 @@ class ArrivalAPIController extends APIController
    */
   public function postNewArrival(Request $request)
   {
+
+    $result = $this->isTokenValid($request);
+
+    if($result instanceof JsonResponse){
+      return $result;
+    }
+
     //Get content to array
     $content = $this->getContentAsArray($request);
 
@@ -97,6 +112,7 @@ class ArrivalAPIController extends APIController
     $content->set('relation_number_keeper', '123456789');
     $content->set('action', "C");
     $content->set('recovery_indicator', "N");
+
     $content->set('location', array('ubn' => '1234567'));
 
     $animal = $content['animal'];
@@ -122,13 +138,13 @@ class ArrivalAPIController extends APIController
     if($sendToQresult['statusCode'] != '200') {
       $arrival['request_state'] = 'failed';
 
-      return new JsonResponse(array('status'=> 'failure','errorMessage' => 'Failed to send message to Queue'));
+      return new JsonResponse(array('status'=> 'failure','errorMessage' => 'Failed to send message to Queue'), 500);
     }
 
     //Persist object to Database
     $arrival = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->persist($declareArrival);
 
-    return new JsonResponse(array('status' => '200 OK'));
+    return new JsonResponse(array('status' => '200 OK'), 200);
   }
 
   /**
@@ -140,7 +156,31 @@ class ArrivalAPIController extends APIController
    */
   public function debugAPI(Request $request)
   {
-    return new JsonResponse("OK");
+
+    $user = $this->isTokenValid($request, $this);
+    /*$user = new Client();
+    $user->setFirstName("Frank");
+    $user->setLastName("de Boer");
+    $user->setEmailAddress("frank@deboer.com");
+    $user->setRelationNumberKeeper("9991111");
+
+    $location = new Location();
+    $location->setUbn("9999999");
+    $user->addLocation($location);
+
+    $user = $this->getDoctrine()->getRepository('AppBundle:Person')->persist($user);*/
+
+    return new JsonResponse($user);
   }
 
+  private function getUserDetails(Request $request){
+
+    $result = $this->isTokenValid($request);
+
+    if($result instanceof JsonResponse){
+      return $result;
+    }
+
+    return $result;
+  }
 }

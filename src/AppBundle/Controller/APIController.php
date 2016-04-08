@@ -7,8 +7,12 @@ use AppBundle\Entity\Location;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
+use AppBundle\Component\HttpFoundation\JsonResponse;
+
 
 /**
  * Class APIController
@@ -16,6 +20,8 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class APIController extends Controller
 {
+  const AUTHORIZATION_HEADER_NAMESPACE = 'Authorization';
+
   /**
    * @var \JMS\Serializer\Serializer
    */
@@ -85,7 +91,8 @@ class APIController extends Controller
       mt_rand(0, 9); }, range(1, $maxLengthRequestId)));
   }
 
-  protected function getContentAsArray(Request $request){
+  protected function getContentAsArray(Request $request)
+  {
     $content = $request->getContent();
 
     if(empty($content)){
@@ -95,28 +102,29 @@ class APIController extends Controller
     return new ArrayCollection(json_decode($content, true));
   }
 
-  protected function getUserByToken(Request $request) {
+  public function isTokenValid($request)
+  {
+    //Get auth header to read token
+    if(!$request->headers->has($this::AUTHORIZATION_HEADER_NAMESPACE)) {
+      return new JsonResponse(array("errorCode" => 403, "errorMessage"=>"Unauthorized"), 403);
 
-    $user = $this->getDoctrine()->getRepository('AppBundle:Client')->findBy(['id' => 1]);
+    }
 
-    if($user == null){
+    $token = $request->headers->get('Authorization');
+    $token = str_replace('Basic ', '', $token);
+    $token = base64_decode($token);
 
+    list($key, $secret,) = explode(":", $token);
+    $em = $this->getDoctrine()->getEntityManager();
+    $user = $em->getRepository('AppBundle:Person')->findOneByAccessToken($key, $secret);
 
-      $user = new Client();
-      $user->setFirstName("Frank");
-      $user->setLastName("de Boer");
-      $user->setEmailAddress("frank@deboer.com");
-      $user->setRelationNumberKeeper("9991111");
-
-      $location = new Location();
-      $location->setUbn("9999999");
-      $user->addLocation($location);
-
-      $user = $this->getDoctrine()->getRepository('AppBundle:Person')->persist($user);
-
+    if($user == null) {
+        return new JsonResponse(
+          array("errorCode" => 403,
+                "errorMessage"=>"Unauthorized"),
+          403);
     }
 
     return $user;
   }
-
 }
