@@ -5,8 +5,6 @@ namespace AppBundle\Controller;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Ram;
-use AppBundle\Entity\Arrival;
-use AppBundle\Entity\Sheep;
 use AppBundle\Entity\Client;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -70,7 +68,7 @@ class ArrivalAPIController extends APIController
   public function getArrivalById($Id)
   {
     $arrival = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->find($Id);
-    return new JsonResponse($arrival);
+    return new JsonResponse($arrival, 200);
   }
 
   /**
@@ -157,8 +155,7 @@ class ArrivalAPIController extends APIController
   public function debugAPI(Request $request)
   {
 
-    $user = $this->isTokenValid($request, $this);
-    /*$user = new Client();
+    $user = new Client();
     $user->setFirstName("Frank");
     $user->setLastName("de Boer");
     $user->setEmailAddress("frank@deboer.com");
@@ -168,19 +165,8 @@ class ArrivalAPIController extends APIController
     $location->setUbn("9999999");
     $user->addLocation($location);
 
-    $user = $this->getDoctrine()->getRepository('AppBundle:Person')->persist($user);*/
+    $user = $this->getDoctrine()->getRepository('AppBundle:Person')->persist($user);
 
-    return new JsonResponse($user);
-  }
-
-  private function getUserDetails(Request $request){
-
-    $result = $this->isTokenValid($request);
-
-    if($result instanceof JsonResponse){
-      return $result;
-    }
-
-    return $result;
+    return new JsonResponse($user, 200);
   }
 }
