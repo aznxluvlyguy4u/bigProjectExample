@@ -10,6 +10,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Doctrine\Common\Collections\ArrayCollection;
+use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 
 /**
  * @Route("/api/v1")
@@ -22,11 +23,59 @@ class ArrivalAPIController extends APIController
    * @var Client
    */
   private $user;
+
   /**
+   * Retrieve a DeclareArrival, found by it's ID.
    *
-   * Get a list of DeclareArrivals with a given state:{OPEN, CLOSED, DECLINED}.
+   * @ApiDoc(
+   *   resource = true,
+   *   description = "Retrieve a DeclareArrival by given ID",
+   *   output = "AppBundle\Entity\DeclareArrival"
+   * )
    *
    *
+   * @param int $Id Id of the DeclareArrival to be returned
+   *
+   * @return JsonResponse
+   *
+   *
+   * @Route("/arrival/{Id}")
+   * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
+   * @Method("GET")
+   */
+  public function getArrivalById($Id)
+  {
+    $arrival = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->find($Id);
+    return new JsonResponse($arrival, 200);
+  }
+
+  /**
+   * Retrieve either a list of all DeclareArrivals or a sublist of DeclareArrivals with a given state-type:
+   * {
+   *    OPEN,
+   *    FINISHED,
+   *    FAILED,
+   *    DECLINED,
+   *    ON_HOLD,
+   *    CANCELED
+   * },
+   * @ApiDoc(
+   *   parameters={
+   *      {
+   *        "name"="state",
+   *        "dataType"="string",
+   *        "required"=false,
+   *        "description"=" DeclareArrivals to filter on",
+   *        "format"="?state=state-type"
+   *      }
+   *   },
+   *   resource = true,
+   *   description = "Retrieve a a list of DeclareArrivals",
+   *   output = "AppBundle\Entity\DeclareArrival"
+   * )
+   * @param Request $request the request object
+   * @param string $state
+   * @return JsonResponse
    * @Route("/arrivals/status")
    * @Method("GET")
    */
@@ -57,22 +106,16 @@ class ArrivalAPIController extends APIController
   }
 
   /**
+   * Create a new DeclareArrival request
    *
-   * Get a DeclareArrival, found by it's ID.
-   *
-   * @Route("/arrivals/{Id}")
-   * @ParamConverter("Id", class="AppBundle\Entity\ArrivalRepository")
-   * @Method("GET")
-   */
-  public function getArrivalById($Id)
-  {
-    $arrival = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->find($Id);
-    return new JsonResponse($arrival, 200);
-  }
-
-  /**
-   *
-   * Create a DeclareArrival Request.
+   * @ApiDoc(
+   *   resource = true,
+   *   description = "Post a DeclareArrival request",
+   *   input = "AppBundle\Entity\DeclareArrival",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
    *
    * @Route("/arrivals")
    * @Method("POST")
