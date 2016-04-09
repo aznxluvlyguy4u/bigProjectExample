@@ -9,7 +9,9 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
-
+/**
+ * @Route("/api/v1")
+ */
 class BirthAPIController extends APIController {
 
   const REQUEST_TYPE = 'DECLARE_BIRTH';
@@ -28,11 +30,11 @@ class BirthAPIController extends APIController {
    */
   public function getBirthByState(Request $request)
   {
-    $result = $this->isTokenValid($request);
+    /*$result = $this->isTokenValid($request);
 
     if($result instanceof JsonResponse){
       return $result;
-    }
+    }*/
 
 
     return new JsonResponse("ok", 200);
@@ -43,16 +45,16 @@ class BirthAPIController extends APIController {
    * Get a DeclareBirth, found by it's ID.
    *
    * @Route("/births/{Id}")
-   * @ParamConverter("Id", class="AppBundle\Entity\BirthRepository")
+   * @ParamConverter("Id", class="AppBundle\Entity\DeclareBirthRepository")
    * @Method("GET")
    */
   public function getBirthById(Request $request,$Id)
   {
-    $result = $this->isTokenValid($request);
+   /* $result = $this->isTokenValid($request);
 
     if($result instanceof JsonResponse){
       return $result;
-    }
+    }*/
 
 
     return new JsonResponse("ok", 200);
@@ -67,11 +69,11 @@ class BirthAPIController extends APIController {
    */
   public function postNewBirth(Request $request)
   {
-    $result = $this->isTokenValid($request);
+    /*$result = $this->isTokenValid($request);
 
     if($result instanceof JsonResponse){
       return $result;
-    }
+    }*/
 
 
     return new JsonResponse("ok", 200);
@@ -86,11 +88,11 @@ class BirthAPIController extends APIController {
    */
   public function debugAPI(Request $request)
   {
-    $result = $this->isTokenValid($request);
+   /* $result = $this->isTokenValid($request);
 
     if($result instanceof JsonResponse){
       return $result;
-    }
+    }*/
 
 
     return new JsonResponse("ok", 200);

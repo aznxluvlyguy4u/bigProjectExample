@@ -2,9 +2,7 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Entity\Animal;
 use AppBundle\Entity\Location;
-use AppBundle\Entity\Ram;
 use AppBundle\Entity\Client;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -12,9 +10,6 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Doctrine\Common\Collections\ArrayCollection;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 
 /**
  * @Route("/api/v1")
@@ -152,7 +147,7 @@ class ArrivalAPIController extends APIController
    *
    * Debug endpoint
    *
-   * @Route("/arrivals/test/foo")
+   * @Route("/arrivals/debug")
    * @Method("GET")
    */
   public function debugAPI(Request $request)

@@ -9,6 +9,9 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
+/**
+ * @Route("/api/v1")
+ */
 class MateAPIController extends APIController {
 
   const REQUEST_TYPE = 'DECLARE_BIRTH';
@@ -27,11 +30,11 @@ class MateAPIController extends APIController {
    */
   public function getMateByState(Request $request)
   {
-    $result = $this->isTokenValid($request);
+   /* $result = $this->isTokenValid($request);
 
     if($result instanceof JsonResponse){
       return $result;
-    }
+    }*/
 
 
     return new JsonResponse("ok", 200);
@@ -42,16 +45,16 @@ class MateAPIController extends APIController {
    * Get a DeclareMate, found by it's ID.
    *
    * @Route("/mates/{Id}")
-   * @ParamConverter("Id", class="AppBundle\Entity\MateRepository")
+   * @ParamConverter("Id", class="AppBundle\Entity\DeclareMateRepository")
    * @Method("GET")
    */
   public function getMateById(Request $request,$Id)
   {
-    $result = $this->isTokenValid($request);
+  /*  $result = $this->isTokenValid($request);
 
     if($result instanceof JsonResponse){
       return $result;
-    }
+    }*/
 
 
     return new JsonResponse("ok", 200);
@@ -66,11 +69,11 @@ class MateAPIController extends APIController {
    */
   public function postNewMate(Request $request)
   {
-    $result = $this->isTokenValid($request);
+   /* $result = $this->isTokenValid($request);
 
     if($result instanceof JsonResponse){
       return $result;
-    }
+    }*/
 
 
     return new JsonResponse("ok", 200);
@@ -85,11 +88,11 @@ class MateAPIController extends APIController {
    */
   public function debugAPI(Request $request)
   {
-    $result = $this->isTokenValid($request);
+   /* $result = $this->isTokenValid($request);
 
     if($result instanceof JsonResponse){
       return $result;
-    }
+    }*/
 
 
     return new JsonResponse("ok", 200);

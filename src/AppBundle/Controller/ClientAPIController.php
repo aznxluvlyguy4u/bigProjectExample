@@ -9,6 +9,9 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
+/**
+ * @Route("/api/v1")
+ */
 class ClientAPIController extends APIController {
 
   const REQUEST_TYPE = 'DECLARE_BIRTH';
@@ -28,11 +31,11 @@ class ClientAPIController extends APIController {
    */
   public function getBirthByState(Request $request)
   {
-    $result = $this->isTokenValid($request);
+  /*  $result = $this->isTokenValid($request);
 
     if($result instanceof JsonResponse){
       return $result;
-    }
+    }*/
 
 
     return new JsonResponse("ok", 200);

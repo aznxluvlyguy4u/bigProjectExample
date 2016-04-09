@@ -9,6 +9,9 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
+/**
+ * @Route("/api/v1")
+ */
 class LossAPIController extends APIController {
 
   const REQUEST_TYPE = 'DECLARE_BIRTH';
@@ -28,11 +31,11 @@ class LossAPIController extends APIController {
    */
   public function getLossByState(Request $request)
   {
-    $result = $this->isTokenValid($request);
+  /*  $result = $this->isTokenValid($request);
 
     if($result instanceof JsonResponse){
       return $result;
-    }
+    }*/
 
 
     return new JsonResponse("ok", 200);
@@ -43,16 +46,16 @@ class LossAPIController extends APIController {
    * Get a DeclareLoss, found by it's ID.
    *
    * @Route("/losses/{Id}")
-   * @ParamConverter("Id", class="AppBundle\Entity\LossRepository")
+   * @ParamConverter("Id", class="AppBundle\Entity\DeclareLossRepository")
    * @Method("GET")
    */
   public function getLossById(Request $request,$Id)
   {
-    $result = $this->isTokenValid($request);
+    /*$result = $this->isTokenValid($request);
 
     if($result instanceof JsonResponse){
       return $result;
-    }
+    }*/
 
 
     return new JsonResponse("ok", 200);
@@ -67,11 +70,11 @@ class LossAPIController extends APIController {
    */
   public function postNewLoss(Request $request)
   {
-    $result = $this->isTokenValid($request);
+  /*  $result = $this->isTokenValid($request);
 
     if($result instanceof JsonResponse){
       return $result;
-    }
+    }*/
 
 
     return new JsonResponse("ok", 200);
@@ -86,11 +89,11 @@ class LossAPIController extends APIController {
    */
   public function debugAPI(Request $request)
   {
-    $result = $this->isTokenValid($request);
+  /*  $result = $this->isTokenValid($request);
 
     if($result instanceof JsonResponse){
       return $result;
-    }
+    }*/
 
 
     return new JsonResponse("ok", 200);

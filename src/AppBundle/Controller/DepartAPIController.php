@@ -9,6 +9,9 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
+/**
+ * @Route("/api/v1")
+ */
 class DepartAPIController extends APIController {
 
   const REQUEST_TYPE = 'DECLARE_BIRTH';
@@ -27,11 +30,11 @@ class DepartAPIController extends APIController {
    */
   public function getDepartByState(Request $request)
   {
-    $result = $this->isTokenValid($request);
+   /* $result = $this->isTokenValid($request);
 
     if($result instanceof JsonResponse){
       return $result;
-    }
+    }*/
 
 
     return new JsonResponse("ok", 200);
@@ -42,16 +45,16 @@ class DepartAPIController extends APIController {
    * Get a DeclareBirth, found by it's ID.
    *
    * @Route("/departs/{Id}")
-   * @ParamConverter("Id", class="AppBundle\Entity\DepartRepository")
+   * @ParamConverter("Id", class="AppBundle\Entity\DeclareDepartRepository")
    * @Method("GET")
    */
   public function getDepartById(Request $request,$Id)
   {
-    $result = $this->isTokenValid($request);
+    /*$result = $this->isTokenValid($request);
 
     if($result instanceof JsonResponse){
       return $result;
-    }
+    }*/
 
 
     return new JsonResponse("ok", 200);
@@ -66,11 +69,11 @@ class DepartAPIController extends APIController {
    */
   public function postNewDepart(Request $request)
   {
-    $result = $this->isTokenValid($request);
+   /* $result = $this->isTokenValid($request);
 
     if($result instanceof JsonResponse){
       return $result;
-    }
+    }*/
 
 
     return new JsonResponse("ok", 200);
@@ -85,11 +88,11 @@ class DepartAPIController extends APIController {
    */
   public function debugAPI(Request $request)
   {
-    $result = $this->isTokenValid($request);
+    /*$result = $this->isTokenValid($request);
 
     if($result instanceof JsonResponse){
       return $result;
-    }
+    }*/
 
 
     return new JsonResponse("ok", 200);
