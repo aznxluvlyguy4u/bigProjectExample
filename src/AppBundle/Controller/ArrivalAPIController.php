@@ -66,11 +66,17 @@ class ArrivalAPIController extends APIController
    * Get a DeclareArrival, found by it's ID.
    *
    * @Route("/arrivals/{Id}")
-   * @ParamConverter("Id", class="AppBundle\Entity\ArrivalRepository")
+   * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
    * @Method("GET")
    */
-  public function getArrivalById($Id)
+  public function getArrivalById(Request $request, $Id)
   {
+    $result = $this->isTokenValid($request);
+
+    if($result instanceof JsonResponse){
+      return $result;
+    }
+
     $arrival = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->find($Id);
     return new JsonResponse($arrival, 200);
   }
@@ -157,6 +163,12 @@ class ArrivalAPIController extends APIController
    */
   public function debugAPI(Request $request)
   {
+    $result = $this->isTokenValid($request);
+
+    if($result instanceof JsonResponse){
+      return $result;
+    }
+
     $user = new Client();
     $user->setFirstName("Frank");
     $user->setLastName("de Boer");
