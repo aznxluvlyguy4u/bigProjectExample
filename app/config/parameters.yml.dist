@@ -17,3 +17,10 @@ parameters:
 
     # A secret key that's used to generate certain security-related tokens
     secret:            ThisTokenIsNotSoSecretChangeIt
+    aws_access_key_id: ~
+    aws_secrect_key: ~
+    aws_sqs_region: ~
+    aws_sqs_version: ~
+    aws_sqs_queue-id-prod: ~
+    aws_sqs_queue-id-dev: ~
+    aws_sqs_queue-id-test: ~
