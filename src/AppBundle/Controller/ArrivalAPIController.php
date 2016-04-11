@@ -39,7 +39,7 @@ class ArrivalAPIController extends APIController
    * @return JsonResponse
    *
    *
-   * @Route("/arrival/{Id}")
+   * @Route("/arrivals/{Id}")
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
    * @Method("GET")
    */
