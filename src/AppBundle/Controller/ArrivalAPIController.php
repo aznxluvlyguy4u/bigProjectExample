@@ -116,6 +116,7 @@ class ArrivalAPIController extends APIController
    * )
    * @param Request $request the request object
    * @return JsonResponse
+
    *
    * @Route("/arrivals")
    * @Method("POST")
@@ -195,6 +196,12 @@ class ArrivalAPIController extends APIController
    */
   public function debugAPI(Request $request)
   {
+    $result = $this->isTokenValid($request);
+
+    if($result instanceof JsonResponse){
+      return $result;
+    }
+
     $user = new Client();
     $user->setFirstName("Frank");
     $user->setLastName("de Boer");
