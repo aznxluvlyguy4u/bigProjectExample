@@ -14,6 +14,18 @@ use Symfony\Component\HttpFoundation\Response;
 class CountryAPIController extends APIController {
 
   /**
+   * Retrieve a list of Country codes and corresponding full Country name.
+   *
+   * @ApiDoc(
+   *   resource = true,
+   *   description = "Retrieve a DeclareArrival by given ID",
+   *   output = "AppBundle\Entity\Country"
+   * )
+   *
+   *
+   * @return Response
+   *
+   *
    * @Route("/countries")
    * @Method("GET")
    */
