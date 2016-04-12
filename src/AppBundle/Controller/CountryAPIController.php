@@ -7,6 +7,8 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use AppBundle\Component\HttpFoundation\JsonResponse;
 
 /**
  * @Route("/api/v1")
@@ -30,7 +32,20 @@ class CountryAPIController extends APIController {
    * @Method("GET")
    */
   public function getCountryCodes(Request $request) {
-    $countries = $this->getDoctrine()->getRepository('AppBundle:Country')->findAll();
+
+    $result = $this->isTokenValid($request);
+
+    if($result instanceof JsonResponse){
+      return $result;
+    }
+
+    if(!$request->query->has('continent')) {
+      $countries = $this->getDoctrine()->getRepository('AppBundle:Country')->findAll();
+    } else {
+      $continent = ucfirst($request->query->get('continent'));
+      $countries = $this->getDoctrine()->getRepository('AppBundle:Country')->findBy(array('continent' => $continent));
+    }
+
     $countries = $this->serializeToJSON(array("countries" => $countries));
 
     return new Response($countries);

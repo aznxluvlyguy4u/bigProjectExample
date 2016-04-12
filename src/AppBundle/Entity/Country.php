@@ -41,6 +41,14 @@ class Country {
    */
   private $name;
 
+  /**
+   * @var string
+   *
+   * @ORM\Column(type="string")
+   * @JMS\Type("string")
+   */
+  private $continent;
+
     /**
      * Get id
      *
@@ -97,5 +105,29 @@ class Country {
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * Set continent
+     *
+     * @param string $continent
+     *
+     * @return Country
+     */
+    public function setContinent($continent)
+    {
+        $this->continent = $continent;
+
+        return $this;
+    }
+
+    /**
+     * Get continent
+     *
+     * @return string
+     */
+    public function getContinent()
+    {
+        return $this->continent;
     }
 }
