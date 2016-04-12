@@ -116,8 +116,6 @@ class ArrivalAPIController extends APIController
    * )
    * @param Request $request the request object
    * @return JsonResponse
-
-   *
    * @Route("/arrivals")
    * @Method("POST")
    */
