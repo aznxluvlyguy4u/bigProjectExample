@@ -191,16 +191,16 @@ class ArrivalAPIController extends APIController
    *
    * Debug endpoint
    *
-   * @Route("/arrivals/debug")
+   * @Route("/arrivals/test/debug")
    * @Method("GET")
    */
   public function debugAPI(Request $request)
   {
-    $result = $this->isTokenValid($request);
-
-    if($result instanceof JsonResponse){
-      return $result;
-    }
+//    $result = $this->isTokenValid($request);
+//
+//    if($result instanceof JsonResponse){
+//      return $result;
+//    }
 
     $user = new Client();
     $user->setFirstName("Frank");
