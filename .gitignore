@@ -99,3 +99,6 @@ app/*.cache
 
 # IntelliJ
 /out/
+
+# Shell
+*.sh
