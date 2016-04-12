@@ -191,7 +191,7 @@ class ArrivalAPIController extends APIController
    *
    * Debug endpoint
    *
-   * @Route("/arrivals/debug")
+   * @Route("/arrivals/test/foo")
    * @Method("GET")
    */
   public function debugAPI(Request $request)
