@@ -20,7 +20,7 @@ class CountryAPIController extends APIController {
    *
    * @ApiDoc(
    *   resource = true,
-   *   description = "Retrieve a DeclareArrival by given ID",
+   *   description = "Retrieve a list of countries with ISO 3166-1 two letter codes",
    *   output = "AppBundle\Entity\Country"
    * )
    *
