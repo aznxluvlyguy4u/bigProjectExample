@@ -99,3 +99,9 @@ app/*.cache
 
 # IntelliJ
 /out/
+
+# (s)hell scripts
+
+*.sh
+
+
