@@ -55,8 +55,6 @@ class ArrivalAPIController extends APIController
    *    OPEN,
    *    FINISHED,
    *    FAILED,
-   *    DECLINED,
-   *    ON_HOLD,
    *    CANCELED
    * },
    * @ApiDoc(
