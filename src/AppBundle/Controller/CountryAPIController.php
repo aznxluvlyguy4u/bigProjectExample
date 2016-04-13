@@ -16,11 +16,20 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 class CountryAPIController extends APIController {
 
   /**
-   * Retrieve a list of Country codes and corresponding full Country name.
+   * Retrieve a list of Country codes and corresponding full Country name, with default continent Europe.
    *
    * @ApiDoc(
+   *   parameters={
+   *      {
+   *        "name"="continent",
+   *        "dataType"="string",
+   *        "required"=false,
+   *        "description"=" Continent to filter on",
+   *        "format"="?continent=continent-name"
+   *      }
+   *   },
    *   resource = true,
-   *   description = "Retrieve a list of countries with ISO 3166-1 two letter codes",
+   *   description = "Retrieve a list of countries with ISO 3166-1 two letter codes, default continent is Europe",
    *   output = "AppBundle\Entity\Country"
    * )
    *
@@ -40,10 +49,14 @@ class CountryAPIController extends APIController {
     }
 
     if(!$request->query->has('continent')) {
-      $countries = $this->getDoctrine()->getRepository('AppBundle:Country')->findAll();
+      $countries = $this->getDoctrine()->getRepository('AppBundle:Country')->findBy(array('continent' => 'Europe'));
     } else {
       $continent = ucfirst($request->query->get('continent'));
-      $countries = $this->getDoctrine()->getRepository('AppBundle:Country')->findBy(array('continent' => $continent));
+      if($continent == 'all'){
+        $countries = $this->getDoctrine()->getRepository('AppBundle:Country')->findAll();
+      } else {
+        $countries = $this->getDoctrine()->getRepository('AppBundle:Country')->findBy(array('continent' => $continent));
+      }
     }
 
     $countries = $this->serializeToJSON(array("countries" => $countries));
