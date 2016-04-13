@@ -58,7 +58,7 @@ class AWSQueueService
    * @param $region of the Queue.
    * @param $version API version to use.
    */
-  public function __construct($credentials = array(), $region, $version, $queueIds = array())
+  public function __construct($credentials = array(), $region, $version, $queueIds = array(), $currentEnvironment = null)
   {
     $this->accessKeyId = $credentials[0];
     $this->secretKey = $credentials[1];
@@ -68,8 +68,27 @@ class AWSQueueService
     $this->version = $version;
     $this->queueIds = $queueIds;
 
-    //0 = prod-, 1 = dev-, 2 = testQueue
-    $queueId = $queueIds[2];
+    /**
+     * Get current environment, set queueId based on environment.
+     *
+     * 0 = (prod)uction
+     * 1 = (dev)elopment
+     * 2 = test
+     */
+    switch($currentEnvironment) {
+      case 'prod':
+        $queueId = $queueIds[0];
+        break;
+      case 'dev':
+        $queueId = $queueIds[1];
+        break;
+      case 'test':
+        $queueId = $queueIds[2];
+        break;
+      default; //dev
+        $queueId = $queueIds[1];
+        break;
+    }
 
     $sqsConfig = array(
       'region'  => $this->region,
