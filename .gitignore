@@ -100,5 +100,5 @@ app/*.cache
 # IntelliJ
 /out/
 
-# Shell
+# (s)hell scripts
 *.sh

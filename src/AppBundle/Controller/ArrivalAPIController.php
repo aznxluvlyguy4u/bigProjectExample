@@ -55,9 +55,7 @@ class ArrivalAPIController extends APIController
    *    OPEN,
    *    FINISHED,
    *    FAILED,
-   *    DECLINED,
-   *    ON_HOLD,
-   *    CANCELED
+   *    CANCELLED
    * },
    * @ApiDoc(
    *   parameters={
@@ -189,16 +187,16 @@ class ArrivalAPIController extends APIController
    *
    * Debug endpoint
    *
-   * @Route("/arrivals/test/foo")
+   * @Route("/arrivals/test/debug")
    * @Method("GET")
    */
   public function debugAPI(Request $request)
   {
-    $result = $this->isTokenValid($request);
-
-    if($result instanceof JsonResponse){
-      return $result;
-    }
+//    $result = $this->isTokenValid($request);
+//
+//    if($result instanceof JsonResponse){
+//      return $result;
+//    }
 
     $user = new Client();
     $user->setFirstName("Frank");

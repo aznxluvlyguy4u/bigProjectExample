@@ -11,7 +11,8 @@ services:
     app.aws.queueservice:
         class: AppBundle\Service\AWSQueueService
         arguments:
-          credentials: ['%aws_access_key_id%', '%aws_secrect_key%']
+          credentials: ['%aws_access_key_id%', '%aws_secret_key%']
           region: %aws_sqs_region%
           version: %aws_sqs_version%
-          queueIds: ['%aws_sqs_queue-id-prod%', '%aws_sqs_queue-id-dev%', '%aws_sqs_queue-id-test%']
+          queueIds: ['%aws_sqs_queue_prod%', '%aws_sqs_queue_dev%', '%aws_sqs_queue_test%']
+          currentEnv: %kernel.environment%
