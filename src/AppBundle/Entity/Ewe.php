@@ -9,7 +9,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class Ewe
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\EweRepository")
  * @package AppBundle\Entity
  */
 class Ewe extends Animal
