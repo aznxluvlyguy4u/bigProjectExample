@@ -11,8 +11,13 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class DeclareBase
+ * @ORM\Table(name="declare_base")
  * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareBaseRepository")
- * @package AppBundle\Entity
+ * @ORM\InheritanceType("JOINED")
+ * @ORM\DiscriminatorColumn(name="type", type="string")
+ * //TODO add new child classes to the DiscriminatorMap
+ * @ORM\DiscriminatorMap({"DeclareArrival" = "DeclareArrival"})
+ * @package AppBundle\Entity\DeclareBase
  */
 abstract class DeclareBase
 {

@@ -9,10 +9,17 @@ use \DateTime;
 
 /**
  * Class DeclareBaseResponse
- * @ORM\Entity
- * @package AppBundle\Entity
+ *
+ * @ORM\Table(name="declare_base_response")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareBaseResponseRepository")
+ * @ORM\InheritanceType("JOINED")
+ * @ORM\DiscriminatorColumn(name="type", type="string")
+ * //TODO add new child classes to the DiscriminatorMap
+ * @ORM\DiscriminatorMap({"DeclareArrivalResponse" = "DeclareArrivalResponse"})
+ *
+ * @package AppBundle\Entity\DeclareBaseResponse
  */
-class DeclareBaseResponse
+abstract class DeclareBaseResponse
 {
     /**
      * @ORM\Column(type="integer")
