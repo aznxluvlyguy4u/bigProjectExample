@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by IntelliJ IDEA.
- * User: c0d3
- * Date: 14/04/16
- * Time: 00:17
- */
 
 namespace AppBundle\Controller;
 
@@ -17,7 +11,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 
 /**
- * @Route("/api/v1")
+ * @Route("/api/v1/auth")
  */
 class AuthAPIContoller extends APIController {
 
@@ -47,20 +41,30 @@ class AuthAPIContoller extends APIController {
    * Retrieve a valid access token.
    *
    * @ApiDoc(
+   *   parameters={
+   *      {
+   *        "name"="Authorization",
+   *        "dataType"="string",
+   *        "required"=true,
+   *        "description"=" Basic Authentication header - Base64 encoded, concatenated key & secret, with delimiter",
+   *        "format"="Authorization: Basic xxxxxxx=="
+   *      }
+   *   },
    *   resource = true,
-   *   description = "Retrieve a valid access token",
-   *   input = "AppBundle\Entity\Client",
+   *   description = "Retrieve a valid access token for a registered and activated user",
    *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
    * )
    * @param Request $request the request object
    * @return JsonResponse
 
    *
-   * @Route("/login")
+   * @Route("/authorize")
    * @Method("GET")
    */
-  public function loginUser(Request $request)
+  public function authorizeUser(Request $request)
   {
+    $this->loginUser($request);
+
     return new JsonResponse("OK", 200);
   }
 }
