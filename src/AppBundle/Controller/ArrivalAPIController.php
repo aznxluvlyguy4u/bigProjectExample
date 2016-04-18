@@ -127,7 +127,7 @@ class ArrivalAPIController extends APIController
     $result = $this->isTokenValid($request);
 
     if($result instanceof JsonResponse) {
-        return $result;
+      return $result;
     }
 
     //Generate new requestId
@@ -161,7 +161,6 @@ class ArrivalAPIController extends APIController
   public function debugAPI(Request $request)
   {
 
-
     $message = '{
    "import_animal": true,
    "ubn_previous_owner": "7654321",
@@ -178,15 +177,12 @@ class ArrivalAPIController extends APIController
    "arrival_date": "2016-04-04T12:55:43-05:00",
    "log_date": "2016-04-04T12:55:43-05:00",
    "type":"DeclareArrival"
-}';
-
+  }';
 
     $content = new ArrayCollection(json_decode($message, true));
     $message = $this->serializeToJSON($content);
 
-
-   $request = $this->deserializeToObject($message, 'AppBundle\Entity\DeclareArrival');
-
+    $request = $this->deserializeToObject($message, 'AppBundle\Entity\DeclareArrival');
 
     //Generate new requestId
     $requestId = $this->getNewRequestId();
@@ -194,19 +190,17 @@ class ArrivalAPIController extends APIController
     //Build the complete message and get it back in JSON
     $jsonMessage = $this->getRequestMessageBuilder()->build("DeclareArrival", $content, $requestId);
 
-    //dump($jsonMessage); die();
+    //First Persist object to Database, before sending it to the queue
+    $messageObject = $this->persist($jsonMessage, $this::MESSAGE_CLASS);
 
-//    //First Persist object to Database, before sending it to the queue
-//    $messageObject = $this->persist($jsonMessage, $this::MESSAGE_CLASS);
-//
-//    //Send serialized message to Queue
-//    $sendToQresult = $this->getQueueService()->send($requestId, $jsonMessage, $this::REQUEST_TYPE);
-//
-//    //If send to Queue, failed, it needs to be resend, set state to failed
-//    if($sendToQresult['statusCode'] == '200') {
-//      $messageObject->setRequestState('failed');
-//      $messageObject = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->persist($messageObject);
-//    }
+    //Send serialized message to Queue
+    $sendToQresult = $this->getQueueService()->send($requestId, $jsonMessage, $this::REQUEST_TYPE);
+
+    //If send to Queue, failed, it needs to be resend, set state to failed
+    if($sendToQresult['statusCode'] == '200') {
+      $messageObject->setRequestState('failed');
+      $messageObject = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->persist($messageObject);
+    }
 
     return new JsonResponse(array('status' => $jsonMessage), 200);
   }
@@ -219,21 +213,21 @@ class ArrivalAPIController extends APIController
    * @Method("POST")
    *
    */
-   public function testingStuff(Request $request)
-   {
-     //Authentication
-     $result = $this->isTokenValid($request);
+  public function testingStuff(Request $request)
+  {
+    //Authentication
+    $result = $this->isTokenValid($request);
 
-     if($result instanceof JsonResponse) {
-       return $result;
-     }
+    if($result instanceof JsonResponse) {
+      return $result;
+    }
 
 
-     $requestMessage = $this->getMessageBuilder()->build("declareArrival", $request);
+    $requestMessage = $this->getMessageBuilder()->build("declareArrival", $request);
 
-     return new JsonResponse("OK", 200);
+    return new JsonResponse("OK", 200);
 
-   }
+  }
 
 
   /**
