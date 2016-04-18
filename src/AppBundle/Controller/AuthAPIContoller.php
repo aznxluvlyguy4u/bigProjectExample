@@ -2,6 +2,8 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\Client;
+use AppBundle\Entity\Employee;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -9,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Doctrine\Common\Collections\ArrayCollection;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @Route("/api/v1/auth")
@@ -38,6 +41,31 @@ class AuthAPIContoller extends APIController {
   }
 
   /**
+   * Validate whether an accesstoken is valid or not.
+   *
+   * @ApiDoc(
+   *   resource = true,
+   *   description = "Validate whether an accesstoken is valid or not.",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   *
+   * @Route("/validate-token")
+   * @Method("GET")
+   */
+  public function validateToken(Request $request)
+  {
+    $result = $this->isTokenValid($request);
+    if($result instanceof Client || $result instanceof Employee ) {
+
+      return new Response(array("valid"=>true));
+    }
+
+    return $result;
+  }
+
+  /**
    * Retrieve a valid access token.
    *
    * @ApiDoc(
@@ -56,7 +84,6 @@ class AuthAPIContoller extends APIController {
    * )
    * @param Request $request the request object
    * @return JsonResponse
-
    *
    * @Route("/authorize")
    * @Method("GET")
