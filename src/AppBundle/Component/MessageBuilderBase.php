@@ -21,14 +21,14 @@ class MessageBuilderBase
      * @param $requestId a unique ID used to identify individual messages
      * @return ArrayCollection the base message
      */
-    protected function buildBaseMessageArray(Request $request, $requestId)
+    protected function buildBaseMessageArray($request, $requestId)
     {
         //Convert front-end message into an array
-        $content = $this->getContentAsArray($request);
+        //$content = $this->getContentAsArray($request);
 
         //Add general message data to the array
-        $content = $this->addGeneralMessageData($content, $requestId);
-        $content = $this->addRelationNumberKeeper($content, $request);
+        $content = $this->addGeneralMessageData($request, $requestId);
+        //$content = $this->addRelationNumberKeeper($request, $request);
 
         return $content;
     }
@@ -47,6 +47,8 @@ class MessageBuilderBase
         $content->set('log_date', new \DateTime());
         $content->set('action', $this::action);
         $content->set('recovery_indicator', $this::recoveryIndicator);
+        $content->set('relation_number_keeper', "123332");
+
 
         return $content;
     }

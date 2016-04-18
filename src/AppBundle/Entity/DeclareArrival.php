@@ -91,6 +91,7 @@ class DeclareArrival extends DeclareBase {
     public function __construct() {
         parent::__construct();
 
+        $this->setLogDate(new \DateTime());
         //Create responses array
         $this->responses = new ArrayCollection();
     }

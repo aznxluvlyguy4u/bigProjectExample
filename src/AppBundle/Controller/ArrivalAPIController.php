@@ -161,6 +161,7 @@ class ArrivalAPIController extends APIController
   public function debugAPI(Request $request)
   {
 
+
     $message = '{
    "import_animal": true,
    "ubn_previous_owner": "7654321",
@@ -168,23 +169,32 @@ class ArrivalAPIController extends APIController
      "pedigree_country_code": "NL",
      "pedigree_number": "12345",
      "uln_country_code": "UK",
-     "uln_number": "0123456789"
+     "uln_number": "0123456789",
+     "type":"Ram"
    },
    "location" : {
      "ubn" : "0031079"
    },
-   "arrival_date": "2016-04-04T12:55:43-05:00"
+   "arrival_date": "2016-04-04T12:55:43-05:00",
+   "log_date": "2016-04-04T12:55:43-05:00",
+   "type":"DeclareArrival"
 }';
 
-    $message = $this->serializeToJSON($message);
-    $request = $this->deserializeToObject($message, 'AppBundle\Entity\DeclareArrival');
 
-    dump($request); die();
+    $content = new ArrayCollection(json_decode($message, true));
+    $message = $this->serializeToJSON($content);
+
+
+   $request = $this->deserializeToObject($message, 'AppBundle\Entity\DeclareArrival');
+
+
     //Generate new requestId
     $requestId = $this->getNewRequestId();
 
     //Build the complete message and get it back in JSON
-    $jsonMessage = $this->getRequestMessageBuilder()->build("DeclareArrival", $request, $requestId);
+    $jsonMessage = $this->getRequestMessageBuilder()->build("DeclareArrival", $content, $requestId);
+
+    //dump($jsonMessage); die();
 
 //    //First Persist object to Database, before sending it to the queue
 //    $messageObject = $this->persist($jsonMessage, $this::MESSAGE_CLASS);
@@ -198,7 +208,7 @@ class ArrivalAPIController extends APIController
 //      $messageObject = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->persist($messageObject);
 //    }
 
-    return new JsonResponse(array('status' => '200 OK'), 200);
+    return new JsonResponse(array('status' => $jsonMessage), 200);
   }
 
   /**

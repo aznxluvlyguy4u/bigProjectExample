@@ -30,7 +30,7 @@ class ArrivalMessageBuilder extends MessageBuilderBase
      * @param $requestId
      * @return ArrayCollection
      */
-    public function buildMessage(Request $request, $requestId)
+    public function buildMessage($request, $requestId)
     {
         $content = $this->buildBaseMessageArray($request, $requestId);
 

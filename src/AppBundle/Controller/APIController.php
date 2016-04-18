@@ -45,27 +45,14 @@ class APIController extends Controller
    */
   private $queueService;
 
-  public function __construct()
-  {
-
-
-   // $this->getSerializer();
-   // $this->messageBuilderBase = new RequestMessageBuilder($this->serializer);
-  }
-
-  public function setSerializer($serializer) {
-    $this->serializer = $serializer;
-
-  }
-
   /**
    * @return \JMS\Serializer\Serializer
    */
   private function getSerializer()
   {
-//    if($this->serializer == null){
-//      $this->serializer = $this->get('jms_serializer');
-//    }
+    if($this->serializer == null){
+      $this->serializer = $this->get('jms_serializer');
+    }
 
     return $this->serializer;
   }
@@ -73,8 +60,7 @@ class APIController extends Controller
   protected function getRequestMessageBuilder()
   {
     $this->requestMessageBuilder = new RequestMessageBuilder($this->getSerializer());
-//    dump($this->requestMessageBuilder); die();
-      return $this->requestMessageBuilder;
+    return $this->requestMessageBuilder;
   }
 
   /**
@@ -119,7 +105,7 @@ class APIController extends Controller
       mt_rand(0, 9); }, range(1, $maxLengthRequestId)));
   }
 
-  protected function getContentAsArray(Request $request)
+  protected function getContentAsArray($request)
   {
     $content = $request->getContent();
 
