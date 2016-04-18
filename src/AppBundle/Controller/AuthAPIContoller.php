@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Employee;
+use AppBundle\Entity\Person;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -57,12 +58,12 @@ class AuthAPIContoller extends APIController {
   public function validateToken(Request $request)
   {
     $result = $this->isTokenValid($request);
-    if($result instanceof Client || $result instanceof Employee ) {
-
-      return new Response(array("valid"=>true));
+    if($result instanceof JsonResponse) {
+      return new Response($this->serializeToJSON($result));
+    } else {
+      return new Response($this->serializeToJSON(array("valid"=>true)));
     }
 
-    return $result;
   }
 
   /**
