@@ -4,6 +4,8 @@ namespace AppBundle\Controller;
 
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\Ram;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -11,13 +13,15 @@ use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Doctrine\Common\Collections\ArrayCollection;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 /**
  * @Route("/api/v1")
  */
-class ArrivalAPIController extends APIController
+class ArrivalAPIController extends ArrivalMessageBuilderAPIController
 {
   const REQUEST_TYPE = 'DECLARE_ARRIVAL';
+  const MESSAGE_CLASS = 'DeclareArrival';
 
   /**
    * @var Client
@@ -119,66 +123,31 @@ class ArrivalAPIController extends APIController
    */
   public function postNewArrival(Request $request)
   {
-
+    //Authentication
     $result = $this->isTokenValid($request);
 
-    if($result instanceof JsonResponse){
-      return $result;
+    if($result instanceof JsonResponse) {
+        return $result;
     }
-
-    //Get content to array
-    $content = $this->getContentAsArray($request);
-
-    /**
-     * Create additional request properties.
-     *
-     * Strategy: get below User details based on token passed,
-     * filter database to get user belonging to the given token.
-     */
-    //$user = $this->getUserByToken($request)[0];
-    //$ubn = ($user->getLocations()->get(0)->getUbn());
-    //$relationNumberKeeper = $user->getRelationNumberKeeper();
 
     //Generate new requestId
     $requestId = $this->getNewRequestId();
 
-    $content->set('request_state', 'open');
-    $content->set('request_id', $requestId);
-    $content->set('message_id', $requestId);
-    $content->set('log_date', new \DateTime());
-    $content->set('relation_number_keeper', '123456789');
-    $content->set('action', "C");
-    $content->set('recovery_indicator', "N");
+    //Build the complete message and get it back in JSON
+    $jsonMessage = $this->buildMessage($request, $requestId);
 
-    $content->set('location', array('ubn' => '1234567'));
-
-    $animal = $content['animal'];
-    $newAnimalDetails = array_merge($animal,
-      array('type' => 'Ram',
-        'animal_type' => 3,
-        'animal_category' => 1,
-      ));
-
-    $content->set('animal', $newAnimalDetails);
-
-    //Serialize after added properties to JSON
-    $declareArrivalJSON = $this->serializeToJSON($content);
-
-    //Deserialize to Arrival
-    $declareArrival = $this->deserializeToObject($declareArrivalJSON,'AppBundle\Entity\DeclareArrival');
+    //First Persist object to Database, before sending it to the queue
+    $this->persist($jsonMessage, $this::MESSAGE_CLASS);
 
     //Send serialized message to Queue
-    $sendToQresult = $this->getQueueService()->send($requestId, $declareArrivalJSON, $this::REQUEST_TYPE);
+    $sendToQresult = $this->getQueueService()->send($requestId, $jsonMessage, $this::REQUEST_TYPE);
 
     //If send to Queue, failed, it needs to be resend, set state to failed
     if($sendToQresult['statusCode'] != '200') {
-      $arrival['request_state'] = 'failed';
+      $message['request_state'] = 'failed';
 
       return new JsonResponse(array('status'=> 'failure','errorMessage' => 'Failed to send message to Queue'), 500);
     }
-
-    //Persist object to Database
-    $arrival = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->persist($declareArrival);
 
     return new JsonResponse(array('status' => '200 OK'), 200);
   }
@@ -192,12 +161,41 @@ class ArrivalAPIController extends APIController
    */
   public function debugAPI(Request $request)
   {
-//    $result = $this->isTokenValid($request);
-//
-//    if($result instanceof JsonResponse){
-//      return $result;
-//    }
 
+    return new JsonResponse("OK", 200);
+  }
+
+  /**
+   *
+   * Temporary route for testing code
+   *
+   * @Route("/arrivals/test/code")
+   * @Method("POST")
+   *
+   */
+   public function testingStuff(Request $request)
+   {
+     //Authentication
+     $result = $this->isTokenValid($request);
+
+     if($result instanceof JsonResponse) {
+       return $result;
+     }
+     
+     return new JsonResponse("OK", 200);
+
+   }
+
+
+  /**
+   *
+   * Add a mock client to the database
+   *
+   * @Route("/arrivals/test/client")
+   * @Method("GET")
+   */
+  public function addAClient()
+  {
     $user = new Client();
     $user->setFirstName("Frank");
     $user->setLastName("de Boer");

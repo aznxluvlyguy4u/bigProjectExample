@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Component\HttpFoundation\JsonResponse;
@@ -102,25 +103,48 @@ class APIController extends Controller
     return new ArrayCollection(json_decode($content, true));
   }
 
-  public function isTokenValid($request)
+  public function persist($jsonMessage, $messageClassNameSpace)
+  {
+    //Set the string values
+    $messageClassPathNameSpace = "AppBundle\Entity\\$messageClassNameSpace";
+    $repositoryEntityNameSpace = "AppBundle:$messageClassNameSpace";
+
+    //Deserialize to Object
+    $messageObject = $this->deserializeToObject($jsonMessage, $messageClassPathNameSpace);
+
+    //Persist to database
+    $messageObject = $this->getDoctrine()->getRepository($repositoryEntityNameSpace)->persist($messageObject);
+
+    return $messageObject;
+  }
+
+  public function getToken(Request $request)
   {
     //Get auth header to read token
     if(!$request->headers->has($this::AUTHORIZATION_HEADER_NAMESPACE)) {
       return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
     }
 
-    $token = $request->headers->get('AccessToken');
-    //$token = str_replace('Basic ', '', $token);
-    //$token = base64_decode($token);
+    return $request->headers->get('AccessToken');
+  }
 
-    //list($key, $secret,) = explode(":", $token);
+  public function isTokenValid($request)
+  {
+    $token = $this->getToken($request);
+
     $em = $this->getDoctrine()->getEntityManager();
-    $user = $em->getRepository('AppBundle:Person')->findOneByAccessToken($token);
-
-    if($user == null) {
+    $person = $em->getRepository('AppBundle:Person')
+        ->findOneBy(array('accessToken' => $token));
+    if($person == null) {
       return new JsonResponse(array("errorCode" => 403, "errorMessage"=>"Forbidden"), 403);
     }
 
-    return $user;
+    return $person;
   }
+
+  public function getPerson(Request $request)
+  {
+    return $this->isTokenValid($request);
+  }
+
 }
