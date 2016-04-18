@@ -1,0 +1,84 @@
+<?php
+
+namespace AppBundle\Component;
+
+use Symfony\Component\HttpFoundation\Request;
+use Doctrine\Common\Collections\ArrayCollection;
+
+/**
+ * Class MessageBuilderBaseAPIController
+ * @package AppBundle\Controller
+ */
+class MessageBuilderBase
+{
+    const requestState = 'open';
+    const action = "C";
+    const recoveryIndicator = "N";
+    const relationNumberKeeperNameSpace = "relation_number_keeper";
+
+    /**
+     * @param Request $request the message received from the front-end
+     * @param $requestId a unique ID used to identify individual messages
+     * @return ArrayCollection the base message
+     */
+    protected function buildBaseMessageArray(Request $request, $requestId)
+    {
+        //Convert front-end message into an array
+        $content = $this->getContentAsArray($request);
+
+        //Add general message data to the array
+        $content = $this->addGeneralMessageData($content, $requestId);
+        $content = $this->addRelationNumberKeeper($content, $request);
+
+        return $content;
+    }
+
+    /**
+     * @param ArrayCollection $content array to which the extra data should be added to.
+     * @param $requestId a unique ID used to identify individual messages
+     * @return ArrayCollection the base message
+     */
+    private function addGeneralMessageData(ArrayCollection $content, $requestId)
+    {
+        //Add general data to content
+        $content->set('request_state', $this::requestState);
+        $content->set('request_id', $requestId);
+        $content->set('message_id', $requestId);
+        $content->set('log_date', new \DateTime());
+        $content->set('action', $this::action);
+        $content->set('recovery_indicator', $this::recoveryIndicator);
+
+        return $content;
+    }
+
+    /**
+     * @param ArrayCollection $content array to which the extra data should be added to.
+     * @param Request $request the message received from the front-end
+     * @return ArrayCollection the input message to which the relationNumberKeeper has been added.
+     */
+    private function addRelationNumberKeeper(ArrayCollection $content, Request $request)
+    {
+        //Use token to retrieve the correct client from the database
+        $client = $this->getClient($request);
+        $relationNumberKeeper = $client->getRelationNumberKeeper();
+        $content->set($this::relationNumberKeeperNameSpace, $relationNumberKeeper);
+
+        return $content;
+    }
+
+    //TODO Check: It is assumed the token is already verified in the prehook so no "if" checks are used here.
+    /**
+     * @param Request $request the message received from the front-end
+     * @return \AppBundle\Entity\Client the client who belongs the token in the request.
+     */
+    private function getClient(Request $request)
+    {
+        $token = $this->getToken($request);
+
+        $em = $this->getDoctrine()->getEntityManager();
+        $client = $em->getRepository('AppBundle:Client')->getByToken($token);
+
+        return $client;
+    }
+
+}

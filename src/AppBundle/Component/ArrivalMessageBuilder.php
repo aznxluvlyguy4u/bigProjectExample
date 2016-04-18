@@ -1,6 +1,6 @@
 <?php
 
-namespace AppBundle\Controller;
+namespace AppBundle\Component;
 
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -9,36 +9,43 @@ use Doctrine\Common\Collections\ArrayCollection;
  * Class ArrivalMessageBuilderAPIController
  * @package AppBundle\Controller
  */
-class ArrivalMessageBuilderAPIController extends MessageBuilderBaseAPIController
+class ArrivalMessageBuilder extends MessageBuilderBase
 {
+
+    /**
+     * @var \JMS\Serializer\Serializer
+     */
+    private $serializer;
+
+    public function __construct($serializer)
+    {
+        $this->serializer = $serializer;
+    }
 
     /**
      *
      * Accept front-end input and create a complete NSFO+IenR Message.
      *
-     * @param Request $request
+     * @param Request $request, the message received from the front-end
      * @param $requestId
      * @return ArrayCollection
      */
     public function buildMessage(Request $request, $requestId)
     {
-        //Convert front-end message into an array
-        $content = $this->getContentAsArray($request);
-//        $content = new ArrayCollection();
+        $content = $this->buildBaseMessageArray($request, $requestId);
 
-        //Add general message data to the array
-        $content = $this->addGeneralMessageData($content, $requestId);
-        $content = $this->addRelationNumberKeeper($content, $request);
-
-        //Add DeclareArrival specific data to the array
         $content = $this->addDeclareArrivalData($content);
 
-        //Serialize after added properties to JSON
-        $jsonMessage = $this->serializeToJSON($content);
+//        $jsonMessage = $this->serializeToJSON($content);
+        $jsonMessage = $this->serializer->serialize($content, 'json');
 
         return $jsonMessage;
     }
 
+    /**
+     * @param ArrayCollection $content
+     * @return ArrayCollection
+     */
     private function addDeclareArrivalData(ArrayCollection $content)
     {
 

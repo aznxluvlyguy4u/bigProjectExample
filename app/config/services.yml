@@ -8,6 +8,11 @@ services:
         class: AppBundle\Service\ValidateEntityService
         arguments: ['@validator', '@jms_serializer']
 
+    app.controller.api:
+        class: AppBundle\Controller\APIController
+        calls:
+           - [ setSerializer, ["'@jms_serializer'"]]
+
     app.aws.queueservice:
         class: AppBundle\Service\AWSQueueService
         arguments:

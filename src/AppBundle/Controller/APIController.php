@@ -2,8 +2,10 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
+use AppBundle\Component\MessageBuilderBase;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -24,6 +26,11 @@ class APIController extends Controller
   const AUTHORIZATION_HEADER_NAMESPACE = 'AccessToken';
 
   /**
+   * @var RequestMessageBuilder
+   */
+  private $requestMessageBuilder;
+
+  /**
    * @var \JMS\Serializer\Serializer
    */
   private $serializer;
@@ -38,16 +45,36 @@ class APIController extends Controller
    */
   private $queueService;
 
+  public function __construct()
+  {
+
+
+   // $this->getSerializer();
+   // $this->messageBuilderBase = new RequestMessageBuilder($this->serializer);
+  }
+
+  public function setSerializer($serializer) {
+    $this->serializer = $serializer;
+
+  }
+
   /**
    * @return \JMS\Serializer\Serializer
    */
   private function getSerializer()
   {
-    if($this->serializer == null){
-      $this->serializer = $this->get('jms_serializer');
-    }
+//    if($this->serializer == null){
+//      $this->serializer = $this->get('jms_serializer');
+//    }
 
     return $this->serializer;
+  }
+
+  protected function getRequestMessageBuilder()
+  {
+    $this->requestMessageBuilder = new RequestMessageBuilder($this->getSerializer());
+//    dump($this->requestMessageBuilder); die();
+      return $this->requestMessageBuilder;
   }
 
   /**
