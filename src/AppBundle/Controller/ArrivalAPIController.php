@@ -194,6 +194,9 @@ class ArrivalAPIController extends APIController
    */
   public function debugAPI(Request $request)
   {
+
+    dump($this->getParameter('kernel.environment')); die();
+
 //    $result = $this->isTokenValid($request);
 //
 //    if($result instanceof JsonResponse){

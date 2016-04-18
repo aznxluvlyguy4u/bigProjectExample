@@ -59,7 +59,7 @@ class AuthAPIContoller extends APIController {
   {
     $result = $this->isTokenValid($request);
     if($result instanceof JsonResponse) {
-      return new Response($this->serializeToJSON($result));
+      return $result;
     } else {
       return new Response($this->serializeToJSON(array("valid"=>true)));
     }
