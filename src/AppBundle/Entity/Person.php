@@ -11,6 +11,7 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\PersonRepository")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
+ * @ORM\DiscriminatorMap({"Client" = "Client", "Employee" = "Employee"})
  * @package AppBundle\Entity
  */
 abstract class Person

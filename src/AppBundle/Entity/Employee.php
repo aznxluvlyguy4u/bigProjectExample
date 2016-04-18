@@ -8,7 +8,7 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class Employee
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\EmployeeRepository")
  * @package AppBundle\Entity
  */
 class Employee extends Person
