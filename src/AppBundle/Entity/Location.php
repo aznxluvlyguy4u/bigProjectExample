@@ -44,10 +44,10 @@ class Location
 
   /**
    * @Assert\NotBlank
-   * @ORM\ManyToOne(targetEntity="Person", cascade={"persist"})
-   * @JMS\Type("AppBundle\Entity\Person")
+   * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"})
+   * @JMS\Type("AppBundle\Entity\Company")
    */
-  protected $owners;
+  protected $company;
 
   /**
    * Constructor
@@ -57,95 +57,95 @@ class Location
     $this->arrivals = new ArrayCollection();
   }
 
-  /**
-   * Get id
-   *
-   * @return integer
-   */
-  public function getId()
-  {
-    return $this->id;
-  }
+    /**
+     * Get id
+     *
+     * @return integer
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
 
-  /**
-   * Set ubn
-   *
-   * @param string $ubn
-   *
-   * @return Location
-   */
-  public function setUbn($ubn)
-  {
-    $this->ubn = $ubn;
+    /**
+     * Set ubn
+     *
+     * @param string $ubn
+     *
+     * @return Location
+     */
+    public function setUbn($ubn)
+    {
+        $this->ubn = $ubn;
 
-    return $this;
-  }
+        return $this;
+    }
 
-  /**
-   * Get ubn
-   *
-   * @return string
-   */
-  public function getUbn()
-  {
-    return $this->ubn;
-  }
+    /**
+     * Get ubn
+     *
+     * @return string
+     */
+    public function getUbn()
+    {
+        return $this->ubn;
+    }
 
-  /**
-   * Add arrival
-   *
-   * @param \AppBundle\Entity\DeclareArrival $arrival
-   *
-   * @return Location
-   */
-  public function addArrival(\AppBundle\Entity\DeclareArrival $arrival)
-  {
-    $this->arrivals[] = $arrival;
+    /**
+     * Add arrival
+     *
+     * @param \AppBundle\Entity\DeclareArrival $arrival
+     *
+     * @return Location
+     */
+    public function addArrival(\AppBundle\Entity\DeclareArrival $arrival)
+    {
+        $this->arrivals[] = $arrival;
 
-    return $this;
-  }
+        return $this;
+    }
 
-  /**
-   * Remove arrival
-   *
-   * @param \AppBundle\Entity\DeclareArrival $arrival
-   */
-  public function removeArrival(\AppBundle\Entity\DeclareArrival $arrival)
-  {
-    $this->arrivals->removeElement($arrival);
-  }
+    /**
+     * Remove arrival
+     *
+     * @param \AppBundle\Entity\DeclareArrival $arrival
+     */
+    public function removeArrival(\AppBundle\Entity\DeclareArrival $arrival)
+    {
+        $this->arrivals->removeElement($arrival);
+    }
 
-  /**
-   * Get arrivals
-   *
-   * @return \Doctrine\Common\Collections\Collection
-   */
-  public function getArrivals()
-  {
-    return $this->arrivals;
-  }
+    /**
+     * Get arrivals
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getArrivals()
+    {
+        return $this->arrivals;
+    }
 
-  /**
-   * Set owners
-   *
-   * @param \AppBundle\Entity\Person $owners
-   *
-   * @return Location
-   */
-  public function setOwners(\AppBundle\Entity\Person $owners = null)
-  {
-    $this->owners = $owners;
+    /**
+     * Set company
+     *
+     * @param \AppBundle\Entity\Company $company
+     *
+     * @return Location
+     */
+    public function setCompany(\AppBundle\Entity\Company $company = null)
+    {
+        $this->company = $company;
 
-    return $this;
-  }
+        return $this;
+    }
 
-  /**
-   * Get owners
-   *
-   * @return \AppBundle\Entity\Person
-   */
-  public function getOwners()
-  {
-    return $this->owners;
-  }
+    /**
+     * Get company
+     *
+     * @return \AppBundle\Entity\Company
+     */
+    public function getCompany()
+    {
+        return $this->company;
+    }
 }

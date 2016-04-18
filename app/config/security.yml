@@ -1,6 +1,10 @@
 # To get started with security, check out the documentation:
 # http://symfony.com/doc/current/book/security.html
 security:
+    encoders:
+        AppBundle\Entity\Person:
+            algorithm: bcrypt
+
 
     # http://symfony.com/doc/current/book/security.html#where-do-users-come-from-user-providers
     providers:
@@ -15,6 +19,7 @@ security:
 
         main:
             anonymous: ~
+            stateless:  true
             # activate different ways to authenticate
 
             # http_basic: ~
