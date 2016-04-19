@@ -162,15 +162,6 @@ class APIController extends Controller
     return $client;
   }
 
-  /**
-   * @param Request $request
-   * @return string relationNumberKeeper retrieved based on client linked to the request
-   */
-  public function getRelationNumberKeeper(Request $request)
-  {
-    return $this->getClient($request)->getRelationNumberKeeper();
-  }
-
   protected function buildMessageObject(Request $request, $messageClassNameSpace)
   {
     //Set the string values
@@ -185,7 +176,7 @@ class APIController extends Controller
     //FIXME instead of content array use entities
     //Build the complete message and get it back in JSON
     $content = $this->getRequestMessageBuilder()->build(
-        $messageClassNameSpace, $content, $this->getRelationNumberKeeper($request)); //TODO send client instead of relationnumber
+        $messageClassNameSpace, $content, $this->getClient($request));
 
     return $messageObject;
   }

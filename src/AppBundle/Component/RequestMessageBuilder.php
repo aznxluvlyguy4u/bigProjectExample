@@ -1,7 +1,9 @@
 <?php
 
 namespace AppBundle\Component;
+
 use Symfony\Component\HttpFoundation\Request;
+use AppBundle\Entity\Client as Client;
 
 /**
  * Class RequestMessageBuilder
@@ -20,12 +22,12 @@ class RequestMessageBuilder
         $this->arrivalMessageBuilder = new ArrivalMessageBuilder();
     }
 
-    public function build($requestType, $content, $relationNumberKeeper) {
+    public function build($requestType, $content, Client $client) {
 
         $message = null;
         switch($requestType) {
             case "DeclareArrival":
-                $content = $this->arrivalMessageBuilder->buildMessage($content, $relationNumberKeeper);
+                $content = $this->arrivalMessageBuilder->buildMessage($content, $client);
                 break;
             case " ";
                 break;

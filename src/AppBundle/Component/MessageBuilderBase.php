@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Entity\Client as Client;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
 
@@ -21,7 +22,7 @@ class MessageBuilderBase
      * @param string $relationNumberKeeper
      * @return ArrayCollection the base message
      */
-    protected function buildBaseMessageArray($content, $relationNumberKeeper)
+    protected function buildBaseMessageArray($content, Client $client)
     {
         //Generate new requestId
         $requestId = $this->getNewRequestId();
@@ -35,6 +36,7 @@ class MessageBuilderBase
         $content->set('recovery_indicator', $this::recoveryIndicator);
 
         //Add relationNumberKeeper to content
+        $relationNumberKeeper = $client->getRelationNumberKeeper();
         $content->set($this::relationNumberKeeperNameSpace, $relationNumberKeeper);
 
         return $content;

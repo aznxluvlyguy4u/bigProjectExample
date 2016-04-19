@@ -3,6 +3,7 @@
 namespace AppBundle\Component;
 
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\Client as Client;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
 
@@ -21,9 +22,9 @@ class ArrivalMessageBuilder extends MessageBuilderBase
      * @param string $relationNumberKeeper
      * @return ArrayCollection
      */
-    public function buildMessage($content, $relationNumberKeeper)
+    public function buildMessage($content, Client $client)
     {
-        $content = $this->buildBaseMessageArray($content, $relationNumberKeeper);
+        $content = $this->buildBaseMessageArray($content, $client);
         $content = $this->addDeclareArrivalData($content);
 
         return $content;
