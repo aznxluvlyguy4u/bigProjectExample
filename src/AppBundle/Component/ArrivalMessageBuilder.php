@@ -33,7 +33,6 @@ class ArrivalMessageBuilder extends MessageBuilderBase
     public function buildMessage($content, $relationNumberKeeper)
     {
         $content = $this->buildBaseMessageArray($content, $relationNumberKeeper);
-
         $content = $this->addDeclareArrivalData($content);
 
 //        $jsonMessage = $this->serializeToJSON($content);

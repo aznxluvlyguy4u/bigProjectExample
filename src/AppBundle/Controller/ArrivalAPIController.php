@@ -162,6 +162,7 @@ class ArrivalAPIController extends APIController
   public function debugAPI(Request $request)
   {
 
+    //Setup mock message as JSON
     $message = '{
    "import_animal": true,
    "ubn_previous_owner": "7654321",
@@ -180,22 +181,19 @@ class ArrivalAPIController extends APIController
    "type":"DeclareArrival"
   }';
 
+    //Mock message as ArrayCollection
     $content = new ArrayCollection(json_decode($message, true));
 
 
-    //TODO remove requestId
-    //Generate new requestId
-    $requestId = $this->getNewRequestId();
-
     //Build the complete message and get it back in JSON
-    $jsonMessage = $this->getRequestMessageBuilder()->build("DeclareArrival", $content, $requestId);
+    $jsonMessage = $this->getRequestMessageBuilder()->build(
+        $this::MESSAGE_CLASS, $content, $this->getRelationNumberKeeper($request));
 
-    dump($jsonMessage);die();
     //First Persist object to Database, before sending it to the queue
     $messageObject = $this->persist($jsonMessage, $this::MESSAGE_CLASS);
 
     //Send serialized message to Queue
-    $sendToQresult = $this->getQueueService()->send($requestId, $jsonMessage, $this::REQUEST_TYPE);
+    $sendToQresult = $this->getQueueService()->send($messageObject->getRequestId(), $jsonMessage, $this::REQUEST_TYPE);
 
     //If send to Queue, failed, it needs to be resend, set state to failed
     if($sendToQresult['statusCode'] == '200') {
@@ -222,9 +220,7 @@ class ArrivalAPIController extends APIController
     if($result instanceof JsonResponse) {
       return $result;
     }
-
-
-    $requestMessage = $this->getMessageBuilder()->build("declareArrival", $request);
+    
 
     return new JsonResponse("OK", 200);
 
