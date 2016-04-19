@@ -29,9 +29,9 @@ class ArrivalMessageBuilder extends MessageBuilderBase
      * @param Request $request, the message received from the front-end
      * @return ArrayCollection
      */
-    public function buildMessage($request)
+    public function buildMessage($request, $relationNumberKeeper)
     {
-        $content = $this->buildBaseMessageArray($request);
+        $content = $this->buildBaseMessageArray($request, $relationNumberKeeper);
 
         $content = $this->addDeclareArrivalData($content);
 

@@ -131,7 +131,8 @@ class ArrivalAPIController extends APIController
     }
 
     //Build the complete message and get it back in JSON
-    $jsonMessage = $this->getRequestMessageBuilder()->build("DeclareArrival", $request);
+    $jsonMessage = $this->getRequestMessageBuilder()->build(
+        "DeclareArrival", $request, $this->getRelationNumberKeeper($request));
 
     //First Persist object to Database, before sending it to the queue
     $messageObject = $this->persist($jsonMessage, $this::MESSAGE_CLASS);

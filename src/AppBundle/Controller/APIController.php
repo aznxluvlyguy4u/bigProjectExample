@@ -148,4 +148,28 @@ class APIController extends Controller
     return $this->isTokenValid($request);
   }
 
+  //TODO Check: It is assumed the token is already verified in the prehook so no "if" checks are used here.
+  /**
+   * @param Request $request the message received from the front-end
+   * @return \AppBundle\Entity\Client the client who belongs the token in the request.
+   */
+  public function getClient(Request $request)
+  {
+    $token = $this->getToken($request);
+
+    $em = $this->getDoctrine()->getEntityManager();
+    $client = $em->getRepository('AppBundle:Client')->getByToken($token);
+
+    return $client;
+  }
+
+  /**
+   * @param Request $request
+   * @return string relationNumberKeeper retrieved based on client linked to the request
+   */
+  public function getRelationNumberKeeper(Request $request)
+  {
+    return $this->getClient($request)->getRelationNumberKeeper();
+  }
+
 }
