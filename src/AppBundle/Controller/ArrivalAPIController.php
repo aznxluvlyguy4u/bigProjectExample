@@ -16,7 +16,7 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 /**
- * @Route("/api/v1")
+ * @Route("/api/v1/arrivals")
  */
 class ArrivalAPIController extends APIController
 {
@@ -43,7 +43,7 @@ class ArrivalAPIController extends APIController
    * @return JsonResponse
    *
    *
-   * @Route("/arrivals/{Id}")
+   * @Route("/{Id}")
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
    * @Method("GET")
    */
@@ -78,7 +78,7 @@ class ArrivalAPIController extends APIController
    * @param Request $request the request object
    * @param string $state
    * @return JsonResponse
-   * @Route("/arrivals/status")
+   * @Route("/status")
    * @Method("GET")
    */
   public function getArrivalByState(Request $request)
@@ -118,7 +118,7 @@ class ArrivalAPIController extends APIController
    * )
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/arrivals")
+   * @Route("")
    * @Method("POST")
    */
   public function postNewArrival(Request $request)
@@ -130,8 +130,7 @@ class ArrivalAPIController extends APIController
       return $result;
     }
 
-    //Generate new requestId
-    $requestId = $this->getNewRequestId();
+
 
     //Build the complete message and get it back in JSON
     $jsonMessage = $this->getRequestMessageBuilder()->build("DeclareArrival", $request, $requestId);
@@ -155,7 +154,7 @@ class ArrivalAPIController extends APIController
    *
    * Debug endpoint
    *
-   * @Route("/arrivals/test/debug")
+   * @Route("/test/debug")
    * @Method("GET")
    */
   public function debugAPI(Request $request)
@@ -209,7 +208,7 @@ class ArrivalAPIController extends APIController
    *
    * Temporary route for testing code
    *
-   * @Route("/arrivals/test/code")
+   * @Route("/test/code")
    * @Method("POST")
    *
    */
@@ -234,12 +233,11 @@ class ArrivalAPIController extends APIController
    *
    * Add a mock client to the database
    *
-   * @Route("/arrivals/test/client")
+   * @Route("/test/client")
    * @Method("GET")
    */
-  public function addAClient()
+  public function addAMockClient()
   {
-
 
     $user = new Client();
     $user->setFirstName("Frank");
