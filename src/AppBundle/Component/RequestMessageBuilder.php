@@ -10,29 +10,22 @@ use Symfony\Component\HttpFoundation\Request;
 class RequestMessageBuilder
 {
 
-//    /**
-//     * @var \JMS\Serializer\Serializer
-//     */
-//    private $serializer;
-//
-//    /**
-//     * @var ArrivalMessageBuilder
-//     */
-//    private $arrivalMessageBuilder;
-//
-//    public function __construct($serializer)
-//    {
-//        $this->serializer = $serializer;
-//        $this->arrivalMessageBuilder = new ArrivalMessageBuilder($serializer);
-//    }
+    /**
+     * @var ArrivalMessageBuilder
+     */
+    private $arrivalMessageBuilder;
+
+    public function __construct()
+    {
+        $this->arrivalMessageBuilder = new ArrivalMessageBuilder();
+    }
 
     public function build($requestType, $content, $relationNumberKeeper) {
 
         $message = null;
         switch($requestType) {
             case "DeclareArrival":
-                $arrivalMessageBuilder = new ArrivalMessageBuilder();
-                $content = $arrivalMessageBuilder->buildMessage($content, $relationNumberKeeper);
+                $content = $this->arrivalMessageBuilder->buildMessage($content, $relationNumberKeeper);
                 break;
             case " ";
                 break;

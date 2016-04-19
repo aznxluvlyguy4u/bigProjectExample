@@ -59,7 +59,10 @@ class APIController extends Controller
 
   protected function getRequestMessageBuilder()
   {
-    $this->requestMessageBuilder = new RequestMessageBuilder($this->getSerializer());
+    if($this->requestMessageBuilder == null) {
+      $this->requestMessageBuilder = new RequestMessageBuilder($this->getSerializer());
+    }
+
     return $this->requestMessageBuilder;
   }
 
@@ -176,12 +179,13 @@ class APIController extends Controller
     //Convert front-end message into an array
     $content = $this->getContentAsArray($request);
 
-    //Build the complete message and get it back in JSON
-    $content = $this->getRequestMessageBuilder()->build(
-        $messageClassNameSpace, $content, $this->getRelationNumberKeeper($request));
-
     $jsonMessage = $this->serializeToJSON($content);
     $messageObject = $this->deserializeToObject($jsonMessage, $messageClassPathNameSpace);
+
+    //FIXME instead of content array use entities
+    //Build the complete message and get it back in JSON
+    $content = $this->getRequestMessageBuilder()->build(
+        $messageClassNameSpace, $content, $this->getRelationNumberKeeper($request)); //TODO send client instead of relationnumber
 
     return $messageObject;
   }

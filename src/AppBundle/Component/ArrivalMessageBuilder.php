@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Entity\DeclareArrival;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
 
@@ -11,24 +12,6 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class ArrivalMessageBuilder extends MessageBuilderBase
 {
-
-// TODO: If JSON Serializer is not needed in any message builder, delete this.
-//
-//    /**
-//     * @var \JMS\Serializer\Serializer
-//     */
-//    private $serializer;
-//
-//    public function __construct($serializer)
-//    {
-//        $this->serializer = $serializer;
-//    }
-//
-//    public function jsonSerializerExample($content)
-//    {
-//        $jsonMessage = $this->serializer->serialize($content, 'json');
-//        return $jsonMessage;
-//    }
 
     /**
      *
@@ -53,6 +36,13 @@ class ArrivalMessageBuilder extends MessageBuilderBase
     private function addDeclareArrivalData(ArrayCollection $content)
     {
 
+        //TODO filter on ULN or Pedigree code
+        //Get whole animal from database
+        //if Pedigree code > add ULN
+
+        //animal = doctrineget....
+
+        //FIXME
         $animal = $content['animal'];
         $newAnimalDetails = array_merge($animal,
             array('type' => 'Ram',
@@ -61,6 +51,9 @@ class ArrivalMessageBuilder extends MessageBuilderBase
             ));
 
         $content->set('animal', $newAnimalDetails);
+
+
+
 
         return $content;
     }
