@@ -93,7 +93,7 @@ class APIController extends Controller
     return $this->getSerializer()->deserialize($json, $entity, $this->jsonNamespace);
   }
 
-  protected function getContentAsArray($request)
+  protected function getContentAsArray(Request $request)
   {
     $content = $request->getContent();
 
@@ -104,14 +104,10 @@ class APIController extends Controller
     return new ArrayCollection(json_decode($content, true));
   }
 
-  public function persist($jsonMessage, $messageClassNameSpace)
+  public function persist($messageObject, $messageClassNameSpace)
   {
     //Set the string values
-    $messageClassPathNameSpace = "AppBundle\Entity\\$messageClassNameSpace";
     $repositoryEntityNameSpace = "AppBundle:$messageClassNameSpace";
-
-    //Deserialize to Object
-    $messageObject = $this->deserializeToObject($jsonMessage, $messageClassPathNameSpace);
 
     //Persist to database
     $messageObject = $this->getDoctrine()->getRepository($repositoryEntityNameSpace)->persist($messageObject);
@@ -172,4 +168,41 @@ class APIController extends Controller
     return $this->getClient($request)->getRelationNumberKeeper();
   }
 
+  protected function buildMessageObject(Request $request, $messageClassNameSpace)
+  {
+    //Set the string values
+    $messageClassPathNameSpace = "AppBundle\Entity\\$messageClassNameSpace";
+
+    //Convert front-end message into an array
+    $content = $this->getContentAsArray($request);
+
+    //Build the complete message and get it back in JSON
+    $content = $this->getRequestMessageBuilder()->build(
+        $messageClassNameSpace, $content, $this->getRelationNumberKeeper($request));
+
+    $jsonMessage = $this->serializeToJSON($content);
+    $messageObject = $this->deserializeToObject($jsonMessage, $messageClassPathNameSpace);
+
+    return $messageObject;
+  }
+
+  //TODO Reassess this function
+  protected function sendMessageObjectToQueue($messageObject, $requestTypeNameSpace)
+  {
+    $requestId = $messageObject->getRequestId();
+    $jsonMessage = $this->serializeToJSON($messageObject);
+
+    //Send serialized message to Queue
+    $sendToQresult = $this->getQueueService()->send($requestId, $jsonMessage, $requestTypeNameSpace);
+
+    //If send to Queue, failed, it needs to be resend, set state to failed
+    if($sendToQresult['statusCode'] != '200') {
+      $messageObject->setRequestState('failed');
+
+      //Update this state to the database
+      $messageObject = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->persist($messageObject);
+    }
+
+    return $messageObject;
+  }
 }

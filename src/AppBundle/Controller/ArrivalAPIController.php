@@ -130,24 +130,13 @@ class ArrivalAPIController extends APIController
       return $result;
     }
 
-    //Convert front-end message into an array
-    $content = $this->getContentAsArray($request);
-
-    //Build the complete message and get it back in JSON
-    $jsonMessage = $this->getRequestMessageBuilder()->build(
-        $this::MESSAGE_CLASS, $content, $this->getRelationNumberKeeper($request));
+    $messageObject = $this->buildMessageObject($request, $this::MESSAGE_CLASS);
 
     //First Persist object to Database, before sending it to the queue
-    $messageObject = $this->persist($jsonMessage, $this::MESSAGE_CLASS);
+    $this->persist($messageObject, $this::MESSAGE_CLASS);
 
-    //Send serialized message to Queue
-    $sendToQresult = $this->getQueueService()->send($messageObject->getRequestId(), $jsonMessage, $this::REQUEST_TYPE);
-
-    //If send to Queue, failed, it needs to be resend, set state to failed
-    if($sendToQresult['statusCode'] == '200') {
-      $messageObject->setRequestState('failed');
-      $messageObject = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->persist($messageObject);
-    }
+    //Send it to the queue and persist/update any changed state to the database
+    $this->sendMessageObjectToQueue($messageObject, $this::REQUEST_TYPE);
 
     return new JsonResponse(array('status' => '200 OK'), 200);
   }
@@ -220,7 +209,7 @@ class ArrivalAPIController extends APIController
     if($result instanceof JsonResponse) {
       return $result;
     }
-    
+
 
     return new JsonResponse("OK", 200);
 

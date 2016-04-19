@@ -12,15 +12,23 @@ use Doctrine\Common\Collections\ArrayCollection;
 class ArrivalMessageBuilder extends MessageBuilderBase
 {
 
-    /**
-     * @var \JMS\Serializer\Serializer
-     */
-    private $serializer;
-
-    public function __construct($serializer)
-    {
-        $this->serializer = $serializer;
-    }
+// TODO: If JSON Serializer is not needed in any message builder, delete this.
+//
+//    /**
+//     * @var \JMS\Serializer\Serializer
+//     */
+//    private $serializer;
+//
+//    public function __construct($serializer)
+//    {
+//        $this->serializer = $serializer;
+//    }
+//
+//    public function jsonSerializerExample($content)
+//    {
+//        $jsonMessage = $this->serializer->serialize($content, 'json');
+//        return $jsonMessage;
+//    }
 
     /**
      *
@@ -35,10 +43,7 @@ class ArrivalMessageBuilder extends MessageBuilderBase
         $content = $this->buildBaseMessageArray($content, $relationNumberKeeper);
         $content = $this->addDeclareArrivalData($content);
 
-//        $jsonMessage = $this->serializeToJSON($content);
-        $jsonMessage = $this->serializer->serialize($content, 'json');
-
-        return $jsonMessage;
+        return $content;
     }
 
     /**
