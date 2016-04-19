@@ -26,12 +26,12 @@ class RequestMessageBuilder
         $this->arrivalMessageBuilder = new ArrivalMessageBuilder($serializer);
     }
 
-    public function build($requestType, $request, $relationNumberKeeper) {
+    public function build($requestType, $content, $relationNumberKeeper) {
 
         $message = null;
         switch($requestType) {
             case "DeclareArrival":
-                $message = $this->arrivalMessageBuilder->buildMessage($request, $relationNumberKeeper);
+                $message = $this->arrivalMessageBuilder->buildMessage($content, $relationNumberKeeper);
 
                 break;
             case " ";

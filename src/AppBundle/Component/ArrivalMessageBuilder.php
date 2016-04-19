@@ -26,12 +26,13 @@ class ArrivalMessageBuilder extends MessageBuilderBase
      *
      * Accept front-end input and create a complete NSFO+IenR Message.
      *
-     * @param Request $request, the message received from the front-end
+     * @param ArrayCollection $content, the message received from the front-end
+     * @param string $relationNumberKeeper
      * @return ArrayCollection
      */
-    public function buildMessage($request, $relationNumberKeeper)
+    public function buildMessage($content, $relationNumberKeeper)
     {
-        $content = $this->buildBaseMessageArray($request, $relationNumberKeeper);
+        $content = $this->buildBaseMessageArray($content, $relationNumberKeeper);
 
         $content = $this->addDeclareArrivalData($content);
 

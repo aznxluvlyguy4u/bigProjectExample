@@ -17,27 +17,11 @@ class MessageBuilderBase
     const relationNumberKeeperNameSpace = "relation_number_keeper";
 
     /**
-     * @param Request $request the message received from the front-end
+     * @param ArrayCollection $content the message received from the front-end
      * @param string $relationNumberKeeper
      * @return ArrayCollection the base message
      */
-    protected function buildBaseMessageArray($request, $relationNumberKeeper)
-    {
-        //Convert front-end message into an array
-        //$content = $this->getContentAsArray($request);
-
-        //Add general message data to the array
-        $content = $this->addGeneralMessageData($request, $relationNumberKeeper);
-
-        return $content;
-    }
-
-    /**
-     * @param ArrayCollection $content array to which the extra data should be added to.
-     * @param string $relationNumberKeeper
-     * @return ArrayCollection the base message
-     */
-    private function addGeneralMessageData(ArrayCollection $content, $relationNumberKeeper)
+    protected function buildBaseMessageArray($content, $relationNumberKeeper)
     {
         //Generate new requestId
         $requestId = $this->getNewRequestId();
