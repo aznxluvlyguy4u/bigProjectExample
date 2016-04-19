@@ -9,7 +9,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class Ram
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\RamRepository")
  * @package AppBundle\Entity
  */
 class Ram extends Animal

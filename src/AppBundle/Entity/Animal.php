@@ -119,7 +119,7 @@ abstract class Animal
     /**
      * @var Animal
      *
-     * @ORM\ManyToOne(targetEntity="Ram", inversedBy="children")
+     * @ORM\ManyToOne(targetEntity="Ram", inversedBy="children", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     protected $parentFather;
@@ -127,7 +127,7 @@ abstract class Animal
     /**
      * @var Animal
      *
-     * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="children")
+     * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="children", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     protected $parentMother;
