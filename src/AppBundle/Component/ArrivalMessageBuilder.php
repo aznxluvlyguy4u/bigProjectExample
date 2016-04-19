@@ -44,6 +44,8 @@ class ArrivalMessageBuilder extends MessageBuilderBase
         //animal = doctrineget....
 
         //FIXME
+        //This is a simulation of retrieving animal data from the database.
+        //Change this part by using the AnimalAPIController.php to send mock animal objects to the database, and retrieving that data.
         $animal = $content['animal'];
         $newAnimalDetails = array_merge($animal,
             array('type' => 'Ram',
