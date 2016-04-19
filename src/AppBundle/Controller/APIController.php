@@ -93,18 +93,6 @@ class APIController extends Controller
     return $this->getSerializer()->deserialize($json, $entity, $this->jsonNamespace);
   }
 
-  /**
-   * Generate a psuedo random requestId of MAX length 20
-   *
-   * @return string
-   */
-  protected function getNewRequestId()
-  {
-    $maxLengthRequestId = 20;
-    return join('', array_map(function($value) { return $value == 1 ? mt_rand(1, 9) :
-      mt_rand(0, 9); }, range(1, $maxLengthRequestId)));
-  }
-
   protected function getContentAsArray($request)
   {
     $content = $request->getContent();

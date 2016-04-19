@@ -21,13 +21,13 @@ class MessageBuilderBase
      * @param $requestId a unique ID used to identify individual messages
      * @return ArrayCollection the base message
      */
-    protected function buildBaseMessageArray($request, $requestId)
+    protected function buildBaseMessageArray($request)
     {
         //Convert front-end message into an array
         //$content = $this->getContentAsArray($request);
 
         //Add general message data to the array
-        $content = $this->addGeneralMessageData($request, $requestId);
+        $content = $this->addGeneralMessageData($request);
         //$content = $this->addRelationNumberKeeper($request, $request);
 
         return $content;
@@ -35,11 +35,14 @@ class MessageBuilderBase
 
     /**
      * @param ArrayCollection $content array to which the extra data should be added to.
-     * @param $requestId a unique ID used to identify individual messages
+     * @param string $requestId a unique ID used to identify individual messages
      * @return ArrayCollection the base message
      */
-    private function addGeneralMessageData(ArrayCollection $content, $requestId)
+    private function addGeneralMessageData(ArrayCollection $content)
     {
+        //Generate new requestId
+        $requestId = $this->getNewRequestId();
+
         //Add general data to content
         $content->set('request_state', $this::requestState);
         $content->set('request_id', $requestId);
@@ -84,4 +87,15 @@ class MessageBuilderBase
         return $client;
     }
 
+    /**
+     * Generate a pseudo random requestId of MAX length 20
+     *
+     * @return string
+     */
+    private function getNewRequestId()
+    {
+        $maxLengthRequestId = 20;
+        return join('', array_map(function($value) { return $value == 1 ? mt_rand(1, 9) :
+            mt_rand(0, 9); }, range(1, $maxLengthRequestId)));
+    }
 }

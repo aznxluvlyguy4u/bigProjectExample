@@ -130,16 +130,14 @@ class ArrivalAPIController extends APIController
       return $result;
     }
 
-
-
     //Build the complete message and get it back in JSON
-    $jsonMessage = $this->getRequestMessageBuilder()->build("DeclareArrival", $request, $requestId);
+    $jsonMessage = $this->getRequestMessageBuilder()->build("DeclareArrival", $request);
 
     //First Persist object to Database, before sending it to the queue
     $messageObject = $this->persist($jsonMessage, $this::MESSAGE_CLASS);
 
     //Send serialized message to Queue
-    $sendToQresult = $this->getQueueService()->send($requestId, $jsonMessage, $this::REQUEST_TYPE);
+    $sendToQresult = $this->getQueueService()->send($messageObject->getRequestId(), $jsonMessage, $this::REQUEST_TYPE);
 
     //If send to Queue, failed, it needs to be resend, set state to failed
     if($sendToQresult['statusCode'] == '200') {
