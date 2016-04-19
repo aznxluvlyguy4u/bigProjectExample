@@ -47,6 +47,7 @@ class MessageBuilderBase
         $content->set('log_date', new \DateTime());
         $content->set('action', $this::action);
         $content->set('recovery_indicator', $this::recoveryIndicator);
+        //FIXME
         $content->set('relation_number_keeper', "123332");
 
 

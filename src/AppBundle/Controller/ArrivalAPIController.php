@@ -180,16 +180,16 @@ class ArrivalAPIController extends APIController
   }';
 
     $content = new ArrayCollection(json_decode($message, true));
-    $message = $this->serializeToJSON($content);
 
-    $request = $this->deserializeToObject($message, 'AppBundle\Entity\DeclareArrival');
 
+    //TODO remove requestId
     //Generate new requestId
     $requestId = $this->getNewRequestId();
 
     //Build the complete message and get it back in JSON
     $jsonMessage = $this->getRequestMessageBuilder()->build("DeclareArrival", $content, $requestId);
 
+    dump($jsonMessage);die();
     //First Persist object to Database, before sending it to the queue
     $messageObject = $this->persist($jsonMessage, $this::MESSAGE_CLASS);
 
