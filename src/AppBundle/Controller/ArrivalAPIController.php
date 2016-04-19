@@ -13,7 +13,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 
 /**
- * @Route("/api/v1")
+ * @Route("/api/v1/arrivals")
  */
 class ArrivalAPIController extends APIController
 {
@@ -39,7 +39,7 @@ class ArrivalAPIController extends APIController
    * @return JsonResponse
    *
    *
-   * @Route("/arrivals/{Id}")
+   * @Route("/{Id}")
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
    * @Method("GET")
    */
@@ -74,7 +74,7 @@ class ArrivalAPIController extends APIController
    * @param Request $request the request object
    * @param string $state
    * @return JsonResponse
-   * @Route("/arrivals/status")
+   * @Route("")
    * @Method("GET")
    */
   public function getArrivalByState(Request $request)
@@ -116,7 +116,7 @@ class ArrivalAPIController extends APIController
    * @return JsonResponse
 
    *
-   * @Route("/arrivals")
+   * @Route("")
    * @Method("POST")
    */
   public function postNewArrival(Request $request)
@@ -189,7 +189,7 @@ class ArrivalAPIController extends APIController
    *
    * Debug endpoint
    *
-   * @Route("/arrivals/test/debug")
+   * @Route("/debug")
    * @Method("GET")
    */
   public function debugAPI(Request $request)
