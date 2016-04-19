@@ -133,12 +133,12 @@ class ArrivalAPIController extends APIController
     $messageObject = $this->buildMessageObject($request, $this::MESSAGE_CLASS);
 
     //First Persist object to Database, before sending it to the queue
-    $this->persist($messageObject, $this::MESSAGE_CLASS);
+    //$this->persist($messageObject, $this::MESSAGE_CLASS);
 
     //Send it to the queue and persist/update any changed state to the database
-    $this->sendMessageObjectToQueue($messageObject, $this::REQUEST_TYPE);
+   // $this->sendMessageObjectToQueue($messageObject, $this::REQUEST_TYPE);
 
-    return new JsonResponse(array('status' => '200 OK'), 200);
+    return new JsonResponse(array('status' => $messageObject), 200);
   }
 
   /**

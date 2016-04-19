@@ -35,7 +35,7 @@ abstract class DeclareBase
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      */
-    private $logDate;
+    protected $logDate;
 
     /**
      * @ORM\Column(type="string")
@@ -43,7 +43,7 @@ abstract class DeclareBase
      * @Assert\NotBlank
      * @JMS\Type("string")
      */
-    private $requestId;
+    protected $requestId;
 
     /**
      * @ORM\Column(type="string")
@@ -51,20 +51,48 @@ abstract class DeclareBase
      * @Assert\NotBlank
      * @JMS\Type("string")
      */
-    private $messageId;
+    protected $messageId;
 
     /**
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
      */
-    private $requestState;
+    protected $requestState;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\Length(max = 1)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    protected $action;
+
+    /**
+     *
+     * @ORM\Column(type="string")
+     * @Assert\Length(max = 1)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    protected $recoveryIndicator;
+
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\Length(max = 20)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    protected $relationNumberKeeper;
 
     /**
      * DeclareArrival constructor.
      */
     public function __construct() {
 
+        $this->action = "C";
+        $this->recoveryIndicator = "N";
         $this->requestState = 'open';
         $this->logDate = new \DateTime();
 
@@ -174,5 +202,77 @@ abstract class DeclareBase
     public function getRequestState()
     {
         return $this->requestState;
+    }
+
+    /**
+     * Set action
+     *
+     * @param string $action
+     *
+     * @return DeclareArrival
+     */
+    public function setAction($action)
+    {
+        $this->action = $action;
+
+        return $this;
+    }
+
+    /**
+     * Get action
+     *
+     * @return string
+     */
+    public function getAction()
+    {
+        return $this->action;
+    }
+
+    /**
+     * Set recoveryIndicator
+     *
+     * @param string $recoveryIndicator
+     *
+     * @return DeclareArrival
+     */
+    public function setRecoveryIndicator($recoveryIndicator)
+    {
+        $this->recoveryIndicator = $recoveryIndicator;
+
+        return $this;
+    }
+
+    /**
+     * Get recoveryIndicator
+     *
+     * @return string
+     */
+    public function getRecoveryIndicator()
+    {
+        return $this->recoveryIndicator;
+    }
+
+    /**
+     * Set relationNumberKeeper
+     *
+     * @param string $relationNumberKeeper
+     *
+     * @return DeclareArrival
+     */
+    public function setRelationNumberKeeper($relationNumberKeeper)
+    {
+        $this->relationNumberKeeper = $relationNumberKeeper;
+
+        return $this;
+    }
+
+    /**
+     * Get relationNumberKeeper
+     *
+     * @return string
+     */
+    public function getRelationNumberKeeper()
+    {
+        return $this->relationNumberKeeper;
     }
 }

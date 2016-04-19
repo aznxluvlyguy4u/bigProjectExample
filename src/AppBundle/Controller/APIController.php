@@ -169,14 +169,19 @@ class APIController extends Controller
 
     //Convert front-end message into an array
     $content = $this->getContentAsArray($request);
+//    $animal = $content['animal'];
+//    $newAnimalDetails = array_merge($animal, array('type' => 'Ram')  );
+//    $content->set('animal', $newAnimalDetails);
+//    $content['animal'] = $newAnimalDetails;
+    //$content->add($newAnimalDetails);
 
     $jsonMessage = $this->serializeToJSON($content);
     $messageObject = $this->deserializeToObject($jsonMessage, $messageClassPathNameSpace);
 
     //FIXME instead of content array use entities
     //Build the complete message and get it back in JSON
-    $content = $this->getRequestMessageBuilder()->build(
-        $messageClassNameSpace, $content, $this->getClient($request));
+    $messageObject = $this->getRequestMessageBuilder()->build(
+        $messageClassNameSpace, $messageObject, $this->getClient($request));
 
     return $messageObject;
   }

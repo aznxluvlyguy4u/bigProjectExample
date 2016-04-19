@@ -3,6 +3,7 @@
 namespace AppBundle\Component;
 
 use AppBundle\Entity\Client as Client;
+use AppBundle\Entity\DeclareBase as DeclareBase;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
 
@@ -12,34 +13,29 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class MessageBuilderBase
 {
-    const requestState = 'open';
-    const action = "C";
-    const recoveryIndicator = "N";
-    const relationNumberKeeperNameSpace = "relation_number_keeper";
-
     /**
-     * @param ArrayCollection $content the message received from the front-end
+     * Most of the default values are set in the constructor of DeclareBase.
+     * Here the values are set for the variables that could not easily
+     * be set in the constructor.
+     *
+     * @param object $messageObject the message received from the front-end as an entity from a class that is extended from DeclareBase.
      * @param string $relationNumberKeeper
      * @return ArrayCollection the base message
      */
-    protected function buildBaseMessageArray($content, Client $client)
+    protected function buildBaseMessageObject($messageObject, Client $client)
     {
         //Generate new requestId
         $requestId = $this->getNewRequestId();
 
         //Add general data to content
-        $content->set('request_state', $this::requestState);
-        $content->set('request_id', $requestId);
-        $content->set('message_id', $requestId);
-        $content->set('log_date', new \DateTime());
-        $content->set('action', $this::action);
-        $content->set('recovery_indicator', $this::recoveryIndicator);
+        $messageObject->setRequestId($requestId);
+        $messageObject->setMessageId($requestId);;
 
         //Add relationNumberKeeper to content
         $relationNumberKeeper = $client->getRelationNumberKeeper();
-        $content->set($this::relationNumberKeeperNameSpace, $relationNumberKeeper);
+        $messageObject->setRecoveryIndicator($relationNumberKeeper);
 
-        return $content;
+        return $messageObject;
     }
 
     /**

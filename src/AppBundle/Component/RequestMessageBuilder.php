@@ -22,12 +22,12 @@ class RequestMessageBuilder
         $this->arrivalMessageBuilder = new ArrivalMessageBuilder();
     }
 
-    public function build($requestType, $content, Client $client) {
+    public function build($requestType, $messageObject, Client $client) {
 
         $message = null;
         switch($requestType) {
             case "DeclareArrival":
-                $content = $this->arrivalMessageBuilder->buildMessage($content, $client);
+                $content = $this->arrivalMessageBuilder->buildMessage($messageObject, $client);
                 break;
             case " ";
                 break;

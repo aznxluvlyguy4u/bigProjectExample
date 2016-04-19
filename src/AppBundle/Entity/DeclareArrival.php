@@ -41,23 +41,6 @@ class DeclareArrival extends DeclareBase {
     private $ubnPreviousOwner;
 
     /**
-     * @ORM\Column(type="string")
-     * @Assert\Length(max = 1)
-     * @Assert\NotBlank
-     * @JMS\Type("string")
-     */
-    private $action;
-
-    /**
-     *
-     * @ORM\Column(type="string")
-     * @Assert\Length(max = 1)
-     * @Assert\NotBlank
-     * @JMS\Type("string")
-     */
-    private $recoveryIndicator;
-
-    /**
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Location", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
@@ -78,20 +61,11 @@ class DeclareArrival extends DeclareBase {
     private $responses;
 
     /**
-     * @ORM\Column(type="string")
-     * @Assert\Length(max = 20)
-     * @Assert\NotBlank
-     * @JMS\Type("string")
-     */
-    private $relationNumberKeeper;
-
-    /**
      * DeclareArrival constructor.
      */
     public function __construct() {
         parent::__construct();
 
-        $this->setLogDate(new \DateTime());
         //Create responses array
         $this->responses = new ArrayCollection();
     }
@@ -144,53 +118,6 @@ class DeclareArrival extends DeclareBase {
         return $this->ubnPreviousOwner;
     }
 
-    /**
-     * Set action
-     *
-     * @param string $action
-     *
-     * @return DeclareArrival
-     */
-    public function setAction($action)
-    {
-        $this->action = $action;
-
-        return $this;
-    }
-
-    /**
-     * Get action
-     *
-     * @return string
-     */
-    public function getAction()
-    {
-        return $this->action;
-    }
-
-    /**
-     * Set recoveryIndicator
-     *
-     * @param string $recoveryIndicator
-     *
-     * @return DeclareArrival
-     */
-    public function setRecoveryIndicator($recoveryIndicator)
-    {
-        $this->recoveryIndicator = $recoveryIndicator;
-
-        return $this;
-    }
-
-    /**
-     * Get recoveryIndicator
-     *
-     * @return string
-     */
-    public function getRecoveryIndicator()
-    {
-        return $this->recoveryIndicator;
-    }
 
     /**
      * Set importAnimal
@@ -214,30 +141,6 @@ class DeclareArrival extends DeclareBase {
     public function getImportAnimal()
     {
         return $this->importAnimal;
-    }
-
-    /**
-     * Set relationNumberKeeper
-     *
-     * @param string $relationNumberKeeper
-     *
-     * @return DeclareArrival
-     */
-    public function setRelationNumberKeeper($relationNumberKeeper)
-    {
-        $this->relationNumberKeeper = $relationNumberKeeper;
-
-        return $this;
-    }
-
-    /**
-     * Get relationNumberKeeper
-     *
-     * @return string
-     */
-    public function getRelationNumberKeeper()
-    {
-        return $this->relationNumberKeeper;
     }
 
     /**
