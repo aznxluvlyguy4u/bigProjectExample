@@ -69,10 +69,19 @@ abstract class Person implements UserInterface
    */
   protected $password;
 
+  /**
+   * @var string
+   *
+   * @ORM\Column(type="string", nullable=true)
+   * @JMS\Type("string")
+   */
+  protected $username;
+
   public function __construct()
   {
     $this->setAccessToken(sha1(uniqid(rand(), true)));
-    $this->isActive = true;
+    $this->setPassword('');
+    $this->setIsActive(true);
   }
 
   /**
@@ -282,6 +291,20 @@ abstract class Person implements UserInterface
     public function setPassword($password)
     {
         $this->password = $password;
+
+        return $this;
+    }
+
+    /**
+     * Set username
+     *
+     * @param string $username
+     *
+     * @return Person
+     */
+    public function setUsername($username)
+    {
+        $this->username = $username;
 
         return $this;
     }

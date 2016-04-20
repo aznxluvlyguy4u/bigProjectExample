@@ -48,6 +48,22 @@ class Company
   protected $owner;
 
   /**
+   * @var CompanyAddress
+   *
+   * @Assert\NotBlank
+   * @ORM\OneToOne(targetEntity="CompanyAddress", cascade={"persist"})
+   * @JMS\Type("AppBundle\Entity\CompanyAddress")
+   */
+  private $address;
+
+  /**
+   * @var BillingAddress
+   * @ORM\OneToOne(targetEntity="BillingAddress", cascade={"persist"})
+   * @JMS\Type("AppBundle\Entity\BillingAddress")
+   */
+  private $billingAddress;
+
+  /**
    * Company constructor.
    */
   public function __construct()
@@ -146,5 +162,53 @@ class Company
     public function getOwner()
     {
         return $this->owner;
+    }
+
+    /**
+     * Set address
+     *
+     * @param \AppBundle\Entity\CompanyAddress $address
+     *
+     * @return Company
+     */
+    public function setAddress(\AppBundle\Entity\CompanyAddress $address = null)
+    {
+        $this->address = $address;
+
+        return $this;
+    }
+
+    /**
+     * Get address
+     *
+     * @return \AppBundle\Entity\CompanyAddress
+     */
+    public function getAddress()
+    {
+        return $this->address;
+    }
+
+    /**
+     * Set billingAddress
+     *
+     * @param \AppBundle\Entity\BillingAddress $billingAddress
+     *
+     * @return Company
+     */
+    public function setBillingAddress(\AppBundle\Entity\BillingAddress $billingAddress = null)
+    {
+        $this->billingAddress = $billingAddress;
+
+        return $this;
+    }
+
+    /**
+     * Get billingAddress
+     *
+     * @return \AppBundle\Entity\BillingAddress
+     */
+    public function getBillingAddress()
+    {
+        return $this->billingAddress;
     }
 }

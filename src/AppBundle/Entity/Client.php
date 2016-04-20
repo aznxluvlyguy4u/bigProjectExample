@@ -98,4 +98,18 @@ class Client extends Person
     {
         return $this->companies;
     }
+
+    /**
+     * Set username
+     *
+     * @param string $username
+     *
+     * @return Client
+     */
+    public function setUsername($username)
+    {
+        $this->username = $username;
+
+        return $this;
+    }
 }

@@ -50,6 +50,14 @@ class Location
   protected $company;
 
   /**
+   * @var LocationAddress
+   *
+   * @ORM\OneToOne(targetEntity="LocationAddress", cascade={"persist"})
+   * @JMS\Type("AppBundle\Entity\LocationAddress")
+   */
+  private $address;
+
+  /**
    * Constructor
    */
   public function __construct()
@@ -147,5 +155,31 @@ class Location
     public function getCompany()
     {
         return $this->company;
+    }
+
+
+
+    /**
+     * Set address
+     *
+     * @param \AppBundle\Entity\LocationAddress $address
+     *
+     * @return Location
+     */
+    public function setAddress(\AppBundle\Entity\LocationAddress $address = null)
+    {
+        $this->address = $address;
+
+        return $this;
+    }
+
+    /**
+     * Get address
+     *
+     * @return \AppBundle\Entity\LocationAddress
+     */
+    public function getAddress()
+    {
+        return $this->address;
     }
 }

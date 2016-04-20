@@ -14,4 +14,18 @@ use JMS\Serializer\Annotation as JMS;
 class Employee extends Person
 {
 
+
+    /**
+     * Set username
+     *
+     * @param string $username
+     *
+     * @return Employee
+     */
+    public function setUsername($username)
+    {
+        $this->username = $username;
+
+        return $this;
+    }
 }
