@@ -9,6 +9,7 @@ use Symfony\Component\Security\Http\Authentication\SimplePreAuthenticatorInterfa
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Core\Authentication\Token\PreAuthenticatedToken;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
+use Symfony\Component\Security\Http\HttpUtils;
 
 /**
  * Class TokenAuthenticator
@@ -17,6 +18,22 @@ use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationExc
 class TokenAuthenticator implements SimplePreAuthenticatorInterface {
 
   const ACCESS_TOKEN_HEADER_NAMESPACE = 'AccessToken';
+
+  /**
+   * @var HttpUtils
+   */
+  protected $httpUtils;
+
+  /**
+   * @var array
+   */
+  private $unAuthedPaths;
+
+  public function __construct(HttpUtils $httpUtils, $unAuthedPaths)
+  {
+    $this->httpUtils = $httpUtils;
+    $this->$unAuthedPaths = $unAuthedPaths;
+  }
 
   /**
    * @param TokenInterface $token
@@ -60,6 +77,14 @@ class TokenAuthenticator implements SimplePreAuthenticatorInterface {
    * @return PreAuthenticatedToken
    */
   public function createToken(Request $request, $providerKey) {
+
+    foreach($this->unAuthedPaths as $unAuthedPath) {
+
+      if($this->httpUtils->checkRequestPath($request, $unAuthedPath)) {
+        return;
+      }
+    }
+
     //Get AccessToken header value
     if(!$request->headers->has($this::ACCESS_TOKEN_HEADER_NAMESPACE)) {
       throw new BadCredentialsException('AccessToken header was found');
