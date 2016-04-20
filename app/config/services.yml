@@ -16,3 +16,11 @@ services:
           version: %aws_sqs_version%
           queueIds: ['%aws_sqs_queue_prod%', '%aws_sqs_queue_dev%', '%aws_sqs_queue_test%']
           currentEnv: %kernel.environment%
+
+    app.authenticator.token:
+        class: AppBundle\Component\Authentication\TokenAuthenticator
+        arguments:
+          httpUtil: '@security.http_utils'
+          #register public API paths here
+          unauthedPaths: ['auth/register', 'auth/authorize']
+        public: false
