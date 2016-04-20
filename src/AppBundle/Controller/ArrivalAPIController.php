@@ -214,30 +214,4 @@ class ArrivalAPIController extends APIController
     return new JsonResponse("OK", 200);
 
   }
-
-
-  /**
-   *
-   * Add a mock client to the database
-   *
-   * @Route("/test/client")
-   * @Method("GET")
-   */
-  public function addAMockClient()
-  {
-
-    $user = new Client();
-    $user->setFirstName("Frank");
-    $user->setLastName("de Boer");
-    $user->setEmailAddress("frank@deboer.com");
-    $user->setRelationNumberKeeper("9991111");
-
-    $location = new Location();
-    $location->setUbn("9999999");
-    $user->addLocation($location);
-
-    $user = $this->getDoctrine()->getRepository('AppBundle:Person')->persist($user);
-
-    return new JsonResponse($user, 200);
-  }
 }
