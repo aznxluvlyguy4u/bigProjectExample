@@ -91,11 +91,6 @@ abstract class DeclareBase
      */
     public function __construct() {
 
-        $this->action = "C";
-        $this->recoveryIndicator = "N";
-        $this->requestState = 'open';
-        $this->logDate = new \DateTime();
-
     }
 
     /**

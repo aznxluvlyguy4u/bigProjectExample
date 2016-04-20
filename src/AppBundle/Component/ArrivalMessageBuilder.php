@@ -4,9 +4,10 @@ namespace AppBundle\Component;
 
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\DeclareArrival;
-use AppBundle\Entity\Client as Client;
+use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
+use AppBundle\Entity\Person;
 
 /**
  * Class ArrivalMessageBuilderAPIController
@@ -14,6 +15,11 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class ArrivalMessageBuilder extends MessageBuilderBase
 {
+
+    public function __construct(EntityManager $em)
+    {
+        parent::__construct($em);
+    }
 
     /**
      *
@@ -23,9 +29,9 @@ class ArrivalMessageBuilder extends MessageBuilderBase
      * @param string $relationNumberKeeper
      * @return ArrayCollection
      */
-    public function buildMessage(DeclareArrival $messageObject, Client $client)
+    public function buildMessage(DeclareArrival $messageObject, Person $person)
     {
-        $messageObject = $this->buildBaseMessageObject($messageObject, $client);
+        $messageObject = $this->buildBaseMessageObject($messageObject, $person);
         $messageObject = $this->addDeclareArrivalData($messageObject);
 
         return $messageObject;
@@ -59,11 +65,9 @@ class ArrivalMessageBuilder extends MessageBuilderBase
 //        $content->set('animal', $newAnimalDetails);
 
 
-        $animal = new Ram();
+        $animal = $messageObject->getAnimal();
         $animal->setAnimalType(3);
         $animal->setAnimalCategory(1);
-
-        $messageObject->setAnimal($animal);
 
         return $messageObject;
     }

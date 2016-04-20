@@ -2,10 +2,14 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Controller\APIController;
 use AppBundle\Entity\Client as Client;
 use AppBundle\Entity\DeclareBase as DeclareBase;
+use AppBundle\Service\EntityGetter;
+use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
+use AppBundle\Entity\Person;
 
 /**
  * Class MessageBuilderBaseAPIController
@@ -13,6 +17,23 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class MessageBuilderBase
 {
+
+    /**
+     * @var EntityManager
+     */
+    protected $em;
+
+    /**
+     * @var EntityGetter
+     */
+    protected $entityGetter;
+
+    public function __construct(EntityManager $em)
+    {
+        $this->em = $em;
+        $this->entityGetter = new EntityGetter($em);
+    }
+
     /**
      * Most of the default values are set in the constructor of DeclareBase.
      * Here the values are set for the variables that could not easily
@@ -22,7 +43,7 @@ class MessageBuilderBase
      * @param string $relationNumberKeeper
      * @return ArrayCollection the base message
      */
-    protected function buildBaseMessageObject($messageObject, Client $client)
+    protected function buildBaseMessageObject($messageObject, Person $person)
     {
         //Generate new requestId
         $requestId = $this->getNewRequestId();
@@ -31,9 +52,28 @@ class MessageBuilderBase
         $messageObject->setRequestId($requestId);
         $messageObject->setMessageId($requestId);;
 
+//        //FIXME
+//        $this->action = "C";
+//        $this->recoveryIndicator = "N";
+//        $this->requestState = 'open';
+//        $this->logDate = new \DateTime();
+
+        $messageObject->setAction("C");
+        $messageObject->setLogDate(new \DateTime());
+        $messageObject->setRequestState("open");
+        $messageObject->setRecoveryIndicator("N");
+
+
+
         //Add relationNumberKeeper to content
-        $relationNumberKeeper = $client->getRelationNumberKeeper();
-        $messageObject->setRecoveryIndicator($relationNumberKeeper);
+
+        if($person instanceof Client) {
+            $relationNumberKeeper = $person->getRelationNumberKeeper();
+        } else { //TODO what if an employee does a DA request?
+            $relationNumberKeeper = ""; // mandatory for I&R
+        }
+
+        $messageObject->setRelationNumberKeeper($relationNumberKeeper);
 
         return $messageObject;
     }

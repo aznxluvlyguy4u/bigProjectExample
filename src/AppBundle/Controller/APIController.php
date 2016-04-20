@@ -31,14 +31,9 @@ class APIController extends Controller
   private $requestMessageBuilder;
 
   /**
-   * @var \JMS\Serializer\Serializer
+   * @var
    */
   private $serializer;
-
-  /**
-   * @var string
-   */
-  private $jsonNamespace  = 'json';
 
   /**
    * @var \AppBundle\Service\AWSQueueService
@@ -46,12 +41,28 @@ class APIController extends Controller
   private $queueService;
 
   /**
-   * @return \JMS\Serializer\Serializer
+   * @var \AppBundle\Service\EntityGetter
    */
-  private function getSerializer()
+  private $entityGetter;
+
+
+
+  protected function getEntityGetter()
+  {
+    if($this->entityGetter == null){
+      $this->entityGetter = $this->get('app.doctrine.entitygetter');
+    }
+
+    return $this->entityGetter;
+  }
+
+  /**
+   * @return
+   */
+  protected function getSerializer()
   {
     if($this->serializer == null){
-      $this->serializer = $this->get('jms_serializer');
+      $this->serializer = $this->get('app.serializer.decrappifier');
     }
 
     return $this->serializer;
@@ -60,7 +71,9 @@ class APIController extends Controller
   protected function getRequestMessageBuilder()
   {
     if($this->requestMessageBuilder == null) {
-      $this->requestMessageBuilder = new RequestMessageBuilder($this->getSerializer());
+      $serializer = $this->getSerializer();
+      $em = $this->getDoctrine()->getEntityManager();
+      $this->requestMessageBuilder = new RequestMessageBuilder($em, $serializer);
     }
 
     return $this->requestMessageBuilder;
@@ -77,24 +90,7 @@ class APIController extends Controller
     return $this->queueService;
   }
 
-  /**
-   * @param $object
-   * @return mixed|string
-   */
-  protected function serializeToJSON($object)
-  {
-    return $this->getSerializer()->serialize($object, $this->jsonNamespace);
-  }
 
-  /**
-   * @param $json
-   * @param $entity
-   * @return array|\JMS\Serializer\scalar|mixed|object
-   */
-  protected function deserializeToObject($json, $entity)
-  {
-    return $this->getSerializer()->deserialize($json, $entity, $this->jsonNamespace);
-  }
 
   protected function getContentAsArray(Request $request)
   {
@@ -105,17 +101,6 @@ class APIController extends Controller
     }
 
     return new ArrayCollection(json_decode($content, true));
-  }
-
-  public function persist($messageObject, $messageClassNameSpace)
-  {
-    //Set the string values
-    $repositoryEntityNameSpace = "AppBundle:$messageClassNameSpace";
-
-    //Persist to database
-    $messageObject = $this->getDoctrine()->getRepository($repositoryEntityNameSpace)->persist($messageObject);
-
-    return $messageObject;
   }
 
   public function getToken(Request $request)
@@ -142,55 +127,30 @@ class APIController extends Controller
     return $person;
   }
 
-  public function getPerson(Request $request)
+  protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user)
   {
-    return $this->isTokenValid($request);
-  }
-
-  //TODO Check: It is assumed the token is already verified in the prehook so no "if" checks are used here.
-  /**
-   * @param Request $request the message received from the front-end
-   * @return \AppBundle\Entity\Client the client who belongs the token in the request.
-   */
-  public function getClient(Request $request)
-  {
-    $token = $this->getToken($request);
-
-    $em = $this->getDoctrine()->getEntityManager();
-    $client = $em->getRepository('AppBundle:Client')->getByToken($token);
-
-    return $client;
-  }
-
-  protected function buildMessageObject(Request $request, $messageClassNameSpace)
-  {
-    //Set the string values
-    $messageClassPathNameSpace = "AppBundle\Entity\\$messageClassNameSpace";
-
-    //Convert front-end message into an array
-    $content = $this->getContentAsArray($request);
-//    $animal = $content['animal'];
-//    $newAnimalDetails = array_merge($animal, array('type' => 'Ram')  );
-//    $content->set('animal', $newAnimalDetails);
-//    $content['animal'] = $newAnimalDetails;
-    //$content->add($newAnimalDetails);
-
-    $jsonMessage = $this->serializeToJSON($content);
-    $messageObject = $this->deserializeToObject($jsonMessage, $messageClassPathNameSpace);
-
-    //FIXME instead of content array use entities
-    //Build the complete message and get it back in JSON
-    $messageObject = $this->getRequestMessageBuilder()->build(
-        $messageClassNameSpace, $messageObject, $this->getClient($request));
+    $messageObject = $this->getRequestMessageBuilder()
+        ->build($messageClassNameSpace, $contentArray, $user);
 
     return $messageObject;
   }
 
-  //TODO Reassess this function
+  public function persist($messageObject, $messageClassNameSpace)
+  {
+    //Set the string values
+    $repositoryEntityNameSpace = "AppBundle:$messageClassNameSpace";
+
+    //Persist to database
+    $messageObject = $this->getDoctrine()->getRepository($repositoryEntityNameSpace)->persist($messageObject);
+
+    return $messageObject;
+  }
+
+  //TODO It works but better reassess this function
   protected function sendMessageObjectToQueue($messageObject, $requestTypeNameSpace)
   {
     $requestId = $messageObject->getRequestId();
-    $jsonMessage = $this->serializeToJSON($messageObject);
+    $jsonMessage = $this->getSerializer()->serializeToJSON($messageObject);
 
     //Send serialized message to Queue
     $sendToQresult = $this->getQueueService()->send($requestId, $jsonMessage, $requestTypeNameSpace);
@@ -199,6 +159,7 @@ class APIController extends Controller
     if($sendToQresult['statusCode'] != '200') {
       $messageObject->setRequestState('failed');
 
+      //TODO Generalize path to send to database
       //Update this state to the database
       $messageObject = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->persist($messageObject);
     }

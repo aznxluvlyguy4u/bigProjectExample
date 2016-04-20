@@ -17,3 +17,18 @@ services:
           version: %aws_sqs_version%
           queueIds: ['%aws_sqs_queue_prod%', '%aws_sqs_queue_dev%', '%aws_sqs_queue_test%']
           currentEnv: %kernel.environment%
+
+
+    app.doctrine.entitygetter:
+        class: AppBundle\Service\EntityGetter
+        arguments: ['@doctrine.orm.entity_manager']
+
+
+    app.messagebuilder.base:
+        class: AppBundle\Component\MessageBuilderBase
+        arguments: ['@doctrine.orm.entity_manager']
+
+
+    app.serializer.decrappifier:
+        class: AppBundle\Service\Decrappifier
+        arguments: ['@jms_serializer', '@doctrine.orm.entity_manager']
