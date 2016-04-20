@@ -102,58 +102,7 @@ class APIController extends Controller
 
     return new ArrayCollection(json_decode($content, true));
   }
-
-  public function loginUser($request)
-  {
-    //Get auth header to read token
-    if(!$request->headers->has($this::AUTHORIZATION_HEADER_NAMESPACE)) {
-      return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
-    }
-
-    $credentials = $request->headers->get($this::AUTHORIZATION_HEADER_NAMESPACE);
-    $credentials = str_replace('Basic ', '', $credentials);
-    $credentials = base64_decode($credentials);
-
-    list($key, $secret) = explode(":", $credentials);
-
-   /* {
-        "ubn":"123",
-        "email_address": "",
-        "postal_code":"1234AB",
-        "home_number":"12"
-    }*/
-
-    //Get content to array
-    $content = $this->getContentAsArray($request);
-
-
-    $ubn = $content['ubn'];
-    $emailAddress = $content['email_address'];
-    $postal_code = $content['postal_code'];
-    $home_number = $content['home_number'];
-
-    $client = new Client();
-    $client->setPassword($secret);
-    $client->setEmailAddress($emailAddress);
-    $client->setRelationNumberKeeper("123233");
-
-    $encoder = $this->container->get('security.password_encoder');
-    $encoded = $encoder->encodePassword($user, $plainPassword);
-
-    $user->setPassword($encoded);
-
-    return $key . $secret;
-    $em = $this->getDoctrine()->getEntityManager();
-    $user = $em->getRepository('AppBundle:Person')->findBy(array("emailAddress"=>$key,"password"=>$secret));
-//
-//    if($user == null) {
-//      return new JsonResponse(array("errorCode" => 403, "errorMessage"=>"Forbidden"), 403);
-//    }
-//
-//    $accessToken = null;//$user->getAccessToken();
-//    return $accessToken;
-  }
-
+  
   public function isTokenValid($request)
   {
     //Get auth header to read token
@@ -162,12 +111,8 @@ class APIController extends Controller
     }
 
     $token = $request->headers->get('AccessToken');
-    //$token = str_replace('Basic ', '', $token);
-    //$token = base64_decode($token);
-
-    //list($key, $secret,) = explode(":", $token);
     $em = $this->getDoctrine()->getEntityManager();
-    $user = $em->getRepository('AppBundle:Person')->findOneByAccessToken($token);
+    $user = $em->getRepository('AppBundle:Person')->findOneBy(array("accessToken"=>$token));
 
     if($user == null) {
       return new JsonResponse(array("errorCode" => 403, "errorMessage"=>"Forbidden"), 403);
