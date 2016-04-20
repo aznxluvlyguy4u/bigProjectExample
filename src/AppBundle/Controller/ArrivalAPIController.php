@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\Company;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Client;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -18,6 +19,10 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 class ArrivalAPIController extends APIController
 {
   const REQUEST_TYPE = 'DECLARE_ARRIVAL';
+  const STATE_NAMESPACE = 'state';
+  const REQUEST_STATE_NAMESPACE = 'requestState';
+  const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';
+  const DECLARE_ARRIVAL_RESULT_NAMESPACE = "result";
 
   /**
    * @var Client
@@ -45,7 +50,7 @@ class ArrivalAPIController extends APIController
    */
   public function getArrivalById($Id)
   {
-    $arrival = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->find($Id);
+    $arrival = $this->getDoctrine()->getRepository($this::DECLARE_ARRIVAL_REPOSITORY)->find($Id);
     return new JsonResponse($arrival, 200);
   }
 
@@ -79,28 +84,25 @@ class ArrivalAPIController extends APIController
    */
   public function getArrivalByState(Request $request)
   {
-    $result = $this->isTokenValid($request);
 
+    // Token validation
+    $result = $this->isTokenValid($request);
     if($result instanceof JsonResponse){
       return $result;
     }
 
-    $declareArrivalRequests = $this->getDoctrine()->getRepository('AppBundle:DeclareArrivalResponse')->findAll();
-    $filteredResults = new ArrayCollection();
+    //Initialize default state to filter on declare arrivals
+    $state = 'open';
 
-    if(!$request->query->has('state')) {
-      return new JsonResponse($declareArrivalRequests, 200);
-    } else {
-      $state = $request->query->get('state');
-
-      foreach($declareArrivalRequests as $arrivalRequest) {
-        if($arrivalRequest->getDeclareArrivalRequestMessage()->getRequestState() == $state){
-          $filteredResults->add($arrivalRequest);
-        }
-      }
+    //No explicit filter given, thus use default state to filter on
+    if(!$request->query->has($this::STATE_NAMESPACE)) {
+      $declareArrivals = $this->getDoctrine()->getRepository($this::DECLARE_ARRIVAL_REPOSITORY)->findBy(array($this::REQUEST_STATE_NAMESPACE => $state));
+    } else { //A state parameter was given, use custom filter
+      $state = $request->query->get($this::STATE_NAMESPACE);
+      $declareArrivals = $this->getDoctrine()->getRepository($this::DECLARE_ARRIVAL_REPOSITORY)->findBy(array($this::REQUEST_STATE_NAMESPACE => $state));
     }
 
-    return new JsonResponse($filteredResults, 200);
+    return new JsonResponse(array($this::DECLARE_ARRIVAL_RESULT_NAMESPACE => $declareArrivals), 200);
   }
 
   /**
@@ -122,8 +124,8 @@ class ArrivalAPIController extends APIController
   public function postNewArrival(Request $request)
   {
 
+    // Token validation
     $result = $this->isTokenValid($request);
-
     if($result instanceof JsonResponse){
       return $result;
     }
@@ -189,35 +191,34 @@ class ArrivalAPIController extends APIController
    *
    * Debug endpoint
    *
-   * @Route("/debug")
+   * @Route("/test/debug")
    * @Method("GET")
    */
   public function debugAPI(Request $request)
   {
+    // Token validation
+    $result = $this->isTokenValid($request);
+    if($result instanceof JsonResponse){
+      return $result;
+    }
 
-    dump($this->getParameter('kernel.environment')); die();
-
-//    $result = $this->isTokenValid($request);
-//
-//    if($result instanceof JsonResponse){
-//      return $result;
-//    }
-
-    $user = new Client();
-    $user->setFirstName("Frank");
-    $user->setLastName("de Boer");
-    $user->setEmailAddress("frank@deboer.com");
-    $user->setRelationNumberKeeper("9991111");
-
-
-
+    $client = new Client();
+    $client->setFirstName("Frank");
+    $client->setLastName("de Boer");
+    $client->setEmailAddress("frank@deboer.com");
+    $client->setRelationNumberKeeper("9991111");
 
     $location = new Location();
     $location->setUbn("9999999");
-    $user->addLocation($location);
 
-    $user = $this->getDoctrine()->getRepository('AppBundle:Person')->persist($user);
+    $company = new Company();
+    $company->setOwner($client);
+    $company->setCompanyName("Foo bar");
+    $company->addLocation($location);
+    $client->addCompany($company);
 
-    return new JsonResponse($user, 200);
+    $client = $this->getDoctrine()->getRepository('AppBundle:Person')->persist($client);
+
+    return new JsonResponse($client, 200);
   }
 }
