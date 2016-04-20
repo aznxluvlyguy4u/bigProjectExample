@@ -12,6 +12,12 @@ security:
             memory: ~
 
     firewalls:
+        secured_area:
+            pattern: ^/api/v1
+            stateless: true
+            simple_preauth:
+                authenticator: app.authenticator.token
+            provider: token_user_provider
         # disables authentication for assets and the profiler, adapt it according to your needs
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
@@ -27,3 +33,7 @@ security:
 
             # form_login: ~
             # http://symfony.com/doc/current/cookbook/security/form_login_setup.html
+
+    providers:
+        token_user_provider:
+            id: token_user_provider
