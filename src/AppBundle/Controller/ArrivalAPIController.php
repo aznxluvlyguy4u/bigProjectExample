@@ -146,11 +146,7 @@ class ArrivalAPIController extends APIController
     //Send it to the queue and persist/update any changed state to the database
     $this->sendMessageObjectToQueue($messageObject, $this::MESSAGE_CLASS, $this::REQUEST_TYPE);
 
-    return new JsonResponse(array('status' => "OK",
-        $this::MESSAGE_CLASS => $messageObject,
-        'sent to queue with request type' => $this::REQUEST_TYPE), 200);
-
-//    return new JsonResponse("OK", 200);
+    return new JsonResponse(null, 200);
   }
 
   /**
@@ -166,18 +162,18 @@ class ArrivalAPIController extends APIController
     //Setup mock message as JSON
     $content = '{
    "import_animal": true,
-   "ubn_previous_owner": "7654321",
+   "ubn_previous_owner": "123456",
    "animal": {
      "pedigree_country_code": "NL",
      "pedigree_number": "12345",
-     "uln_country_code": "NL",
-     "uln_number": "1234566"
+     "uln_country_code": "UK",
+     "uln_number": "12345"
    },
    "location" : {
      "ubn" : "0031079"
    },
-   "arrival_date": "2016-04-04T12:55:43-05:00",
-   "type":"DeclareArrival"
+   "arrival_date": "2016-04-04T12:55:43-05:00"
+
   }';
 
     $entityManager = $this->getDoctrine()->getEntityManager();
@@ -195,7 +191,7 @@ class ArrivalAPIController extends APIController
     $this->persist($messageObject, $this::MESSAGE_CLASS);
 
     //Send it to the queue and persist/update any changed state to the database
-    $this->sendMessageObjectToQueue($messageObject, $this::REQUEST_TYPE);
+    $this->sendMessageObjectToQueue($messageObject, $this::MESSAGE_CLASS, $this::REQUEST_TYPE);
 
     return new JsonResponse(array('status' => "OK",
         $this::MESSAGE_CLASS => $messageObject,

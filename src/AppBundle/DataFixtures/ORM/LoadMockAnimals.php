@@ -28,8 +28,10 @@ class LoadMockAnimals implements FixtureInterface
         $mother->setAnimalType(2);
 
         $child = new Ram();
-        $child->setUlnCountryCode("NL");
-        $child->setUlnNumber("1234566");
+        $child->setUlnCountryCode("UK");
+        $child->setUlnNumber("12345");
+        $child->setPedigreeNumber("12345");
+        $child->setPedigreeCountryCode("NL");
         $child->setAnimalType(1);
         $child->setDateOfBirth(new \DateTime());
         $child->setParentFather($father);
