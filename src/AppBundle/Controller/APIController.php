@@ -147,7 +147,7 @@ class APIController extends Controller
   }
 
   //TODO It works but better reassess this function
-  protected function sendMessageObjectToQueue($messageObject, $requestTypeNameSpace)
+  protected function sendMessageObjectToQueue($messageObject, $messageClassNameSpace, $requestTypeNameSpace)
   {
     $requestId = $messageObject->getRequestId();
     $jsonMessage = $this->getSerializer()->serializeToJSON($messageObject);
@@ -159,9 +159,9 @@ class APIController extends Controller
     if($sendToQresult['statusCode'] != '200') {
       $messageObject->setRequestState('failed');
 
-      //TODO Generalize path to send to database
       //Update this state to the database
-      $messageObject = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->persist($messageObject);
+      $repositoryEntityNameSpace = "AppBundle:$messageClassNameSpace";
+      $messageObject = $this->getDoctrine()->getRepository($repositoryEntityNameSpace)->persist($messageObject);
     }
 
     return $messageObject;
