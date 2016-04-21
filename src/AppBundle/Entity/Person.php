@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -79,7 +80,7 @@ abstract class Person implements UserInterface
 
   public function __construct()
   {
-    $this->setAccessToken(sha1(uniqid(rand(), true)));
+    $this->accessToken = sha1(uniqid(rand(), true));
     $this->setPassword('');
     $this->setIsActive(true);
   }
@@ -167,20 +168,6 @@ abstract class Person implements UserInterface
   }
 
   /**
-   * Set accessToken
-   *
-   * @param string $accessToken
-   *
-   * @return Person
-   */
-  private function setAccessToken($accessToken)
-  {
-    $this->accessToken = $accessToken;
-
-    return $this;
-  }
-
-  /**
    * Get accessToken
    *
    * @return string
@@ -232,7 +219,7 @@ abstract class Person implements UserInterface
    * @return string|null The salt
    */
   public function getSalt() {
-    //hashing the password is done by bcrypt!
+    //hashing the password is done by bcrypt, thus return null!
     return null;
   }
 
