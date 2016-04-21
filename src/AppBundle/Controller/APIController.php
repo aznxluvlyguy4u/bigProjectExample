@@ -20,7 +20,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
  * Class APIController
  * @package AppBundle\Controller
  */
-class APIController extends Controller
+class APIController extends Controller implements APIControllerInterface
 {
   const AUTHORIZATION_HEADER_NAMESPACE = 'Authorization';
   const ACCESS_TOKEN_HEADER_NAMESPACE = 'AccessToken';
@@ -104,24 +104,6 @@ class APIController extends Controller
 
     return new ArrayCollection(json_decode($content, true));
   }
-  
-  public function isTokenValid($request)
-  {
-    //Get auth header to read token
-    if(!$request->headers->has($this::ACCESS_TOKEN_HEADER_NAMESPACE)) {
-      return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
-    }
-
-    $token = $request->headers->get('AccessToken');
-    $em = $this->getDoctrine()->getEntityManager();
-    $user = $em->getRepository('AppBundle:Person')->findOneBy(array("accessToken"=>$token));
-
-    if($user == null) {
-      return new JsonResponse(array("errorCode" => 403, "errorMessage"=>"Forbidden"), 403);
-    }
-
-    return $user;
-  }
 
   /**
    * Redirect to API docs when root is requested
@@ -133,4 +115,10 @@ class APIController extends Controller
   {
     return new RedirectResponse('/api/v1/doc');
   }
+
+  public function getAuthenticatedUser(Request $request) {
+    $token = $request->headers->get('AccessToken');
+    $em = $this->getDoctrine()->getEntityManager();
+
+    return $em->getRepository('AppBundle:Person')->findOneBy(array("accessToken"=>$token));  }
 }
