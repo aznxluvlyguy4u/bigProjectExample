@@ -182,29 +182,8 @@ class ArrivalAPIController extends APIController
    */
   public function debugAPI(Request $request)
   {
-    // Token validation
-    $result = $this->isTokenValid($request);
-    if($result instanceof JsonResponse){
-      return $result;
-    }
+    $user = $this->getAuthenticatedUser($request);
 
-    $client = new Client();
-    $client->setFirstName("Frank");
-    $client->setLastName("de Boer");
-    $client->setEmailAddress("frank@deboer.com");
-    $client->setRelationNumberKeeper("9991111");
-
-    $location = new Location();
-    $location->setUbn("9999999");
-
-    $company = new Company();
-    $company->setOwner($client);
-    $company->setCompanyName("Foo bar");
-    $company->addLocation($location);
-    $client->addCompany($company);
-
-    $client = $this->getDoctrine()->getRepository('AppBundle:Person')->persist($client);
-
-    return new JsonResponse($client, 200);
+    return new JsonResponse($user, 200);
   }
 }
