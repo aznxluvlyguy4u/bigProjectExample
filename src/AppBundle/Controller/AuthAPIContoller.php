@@ -67,8 +67,8 @@ class AuthAPIContoller extends APIController {
     $homeNumber = $content['home_number'];
 
     $client = new Client();
-    $client->setFirstName("");
-    $client->setLastName("");
+    $client->setFirstName("Jane");
+    $client->setLastName("Doe");
     $client->setRelationNumberKeeper("");
     $client->setEmailAddress($emailAddress);
     $client->setUsername($username);
@@ -126,13 +126,7 @@ class AuthAPIContoller extends APIController {
    */
   public function validateToken(Request $request)
   {
-    $result = $this->isTokenValid($request);
-    if($result instanceof JsonResponse) {
-      return $result;
-    } else {
-      return new Response($this->serializeToJSON(array("valid"=>true)));
-    }
-
+    return $this->isAccessTokenValid($request);
   }
 
   /**
