@@ -22,7 +22,7 @@ security:
             security: false
 
         secured_area:
-            pattern: ^/api/v1
+            pattern: ^(?:(?!doc|register|authorize|validate-token).)*$
             security: true
             stateless: true
 
