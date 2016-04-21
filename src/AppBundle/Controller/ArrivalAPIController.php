@@ -243,7 +243,7 @@ class ArrivalAPIController extends APIController
 
     //$messageObject = $this->buildMessageObject($request, $this::MESSAGE_CLASS, null);
 
-    $messageObject = $this->get('app.serializer.decrappifier');
+    $messageObject = $this->get('app.serializer.custom');
 
     $x =  $messageObject->serializeToJSON($message);
     $x = $this->getContentAsArray($x);

@@ -29,6 +29,6 @@ services:
         arguments: ['@doctrine.orm.entity_manager']
 
 
-    app.serializer.decrappifier:
-        class: AppBundle\Service\Decrappifier
+    app.serializer.custom:
+        class: AppBundle\Service\CustomSerializer
         arguments: ['@jms_serializer', '@doctrine.orm.entity_manager']

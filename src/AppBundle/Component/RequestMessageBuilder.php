@@ -2,7 +2,7 @@
 
 namespace AppBundle\Component;
 
-use AppBundle\Service\Decrappifier;
+use AppBundle\Service\CustomSerializer;
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Entity\Client as Client;
@@ -15,16 +15,13 @@ use AppBundle\Entity\Person;
  */
 class RequestMessageBuilder
 {
-    const decrappify = true;
-    const dontDecrappify = false;
-
     /**
      * @var ArrivalMessageBuilder
      */
     private $arrivalMessageBuilder;
 
     /**
-     * @var Decrappifier
+     * @var CustomSerializer
      */
     private $serializer;
 
@@ -47,11 +44,11 @@ class RequestMessageBuilder
         $message = null;
         switch($messageClassNameSpace) {
             case 'DeclareArrival':
-                $frontEndMessageObject = $this->serializer->denormalizeToObject($messageClassNameSpace, $contentArray, $this::decrappify);
+                $frontEndMessageObject = $this->serializer->denormalizeToObject($messageClassNameSpace, $contentArray);
                 $messageObject = $this->arrivalMessageBuilder->buildMessage($frontEndMessageObject, $person);
                 break;
 
-            case " ";
+            case " ":
                 break;
 
             default:

@@ -52,18 +52,10 @@ class MessageBuilderBase
         $messageObject->setRequestId($requestId);
         $messageObject->setMessageId($requestId);;
 
-//        //FIXME
-//        $this->action = "C";
-//        $this->recoveryIndicator = "N";
-//        $this->requestState = 'open';
-//        $this->logDate = new \DateTime();
-
         $messageObject->setAction("C");
         $messageObject->setLogDate(new \DateTime());
         $messageObject->setRequestState("open");
         $messageObject->setRecoveryIndicator("N");
-
-
 
         //Add relationNumberKeeper to content
 
