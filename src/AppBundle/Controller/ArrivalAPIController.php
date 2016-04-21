@@ -7,6 +7,8 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\Ram;
+use AppBundle\Enumerator\MessageClass;
+use AppBundle\Enumerator\RequestType;
 use AppBundle\Service\EntityGetter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -22,8 +24,7 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
  */
 class ArrivalAPIController extends APIController
 {
-  const REQUEST_TYPE = 'DECLARE_ARRIVAL';
-  const MESSAGE_CLASS = 'DeclareArrival';
+  const MESSAGE_CLASS = MessageClass::DeclareArrival;
 
   /**
    * @var Client
@@ -138,13 +139,13 @@ class ArrivalAPIController extends APIController
     $content = $this->getContentAsArray($request);
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $messageObject = $this->buildMessageObject($this::MESSAGE_CLASS, $content, $user);
+    $messageObject = $this->buildMessageObject(MessageClass::DeclareArrival, $content, $user);
 
     //First Persist object to Database, before sending it to the queue
-    $this->persist($messageObject, $this::MESSAGE_CLASS);
+    $this->persist($messageObject, MessageClass::DeclareArrival);
 
     //Send it to the queue and persist/update any changed state to the database
-    $this->sendMessageObjectToQueue($messageObject, $this::MESSAGE_CLASS, $this::REQUEST_TYPE);
+    $this->sendMessageObjectToQueue($messageObject, MessageClass::DeclareArrival, RequestType::DECLARE_ARRIVAL);
 
     return new JsonResponse(null, 200);
   }
@@ -185,17 +186,17 @@ class ArrivalAPIController extends APIController
     //Convert mock message into an array
     $content = new ArrayCollection(json_decode($content, true));
 
-    $messageObject = $this->buildMessageObject($this::MESSAGE_CLASS, $content, $user);
+    $messageObject = $this->buildMessageObject(MessageClass::DeclareArrival, $content, $user);
 
     //First Persist object to Database, before sending it to the queue
-    $this->persist($messageObject, $this::MESSAGE_CLASS);
+    $this->persist($messageObject, MessageClass::DeclareArrival);
 
     //Send it to the queue and persist/update any changed state to the database
-    $this->sendMessageObjectToQueue($messageObject, $this::MESSAGE_CLASS, $this::REQUEST_TYPE);
+    $this->sendMessageObjectToQueue($messageObject, MessageClass::DeclareArrival, RequestType::DECLARE_ARRIVAL);
 
     return new JsonResponse(array('status' => "OK",
-        $this::MESSAGE_CLASS => $messageObject,
-        'sent to queue with request type' => $this::REQUEST_TYPE), 200);
+        MessageClass::DeclareArrival => $messageObject,
+        'sent to queue with request type' => RequestType::DECLARE_ARRIVAL), 200);
 
 //    return new JsonResponse("OK", 200);
   }

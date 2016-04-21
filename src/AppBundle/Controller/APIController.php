@@ -62,7 +62,7 @@ class APIController extends Controller
   protected function getSerializer()
   {
     if($this->serializer == null){
-      $this->serializer = $this->get('app.serializer.custom');
+      $this->serializer = $this->get('app.serializer.ir');
     }
 
     return $this->serializer;

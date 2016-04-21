@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Enumerator\AnimalType;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\DeclareArrival;
 use Doctrine\ORM\EntityManager;
@@ -31,10 +32,10 @@ class ArrivalMessageBuilder extends MessageBuilderBase
      */
     public function buildMessage(DeclareArrival $messageObject, Person $person)
     {
-        $messageObject = $this->buildBaseMessageObject($messageObject, $person);
-        $messageObject = $this->addDeclareArrivalData($messageObject);
+        $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
+        $completeMessageObject = $this->addDeclareArrivalData($baseMessageObject);
 
-        return $messageObject;
+        return $completeMessageObject;
     }
 
     /**
@@ -43,30 +44,11 @@ class ArrivalMessageBuilder extends MessageBuilderBase
      */
     private function addDeclareArrivalData(DeclareArrival $messageObject)
     {
-
-        //TODO if sheep exists retrieve, if it does not create ne
+        //TODO if sheep exists retrieve, if it does not create new sheep
 
         //TODO filter on ULN or Pedigree code
-        //Get whole animal from database
-        //if Pedigree code > add ULN
-
-        //animal = doctrineget....
-
-        //FIXME
-        //This is a simulation of retrieving animal data from the database.
-        //Change this part by using the AnimalAPIController.php to send mock animal objects to the database, and retrieving that data.
-//        $content = new ArrayCollection();
-//        $animal = $content['animal'];
-//        $newAnimalDetails = array_merge($animal,
-//            array('type' => 'Ram',
-//                'animal_type' => 3,
-//                'animal_category' => 1,
-//            ));
-//        $content->set('animal', $newAnimalDetails);
-
-
         $animal = $messageObject->getAnimal();
-        $animal->setAnimalType(3);
+        $animal->setAnimalType(AnimalType::sheep);
         $animal->setAnimalCategory(1);
 
         return $messageObject;

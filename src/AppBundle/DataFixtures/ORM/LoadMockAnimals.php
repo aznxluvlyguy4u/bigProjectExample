@@ -2,6 +2,7 @@
 
 namespace AppBundle\DataFixtures\ORM;
 
+use AppBundle\Enumerator\AnimalType;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
 use AppBundle\Entity\Ram;
@@ -20,19 +21,19 @@ class LoadMockAnimals implements FixtureInterface
         $father = new Ram();
         $father->setUlnCountryCode("NL");
         $father->setUlnNumber("00001");
-        $father->setAnimalType(1);
+        $father->setAnimalType(AnimalType::sheep);
 
         $mother = new Ewe();
         $mother->setUlnCountryCode("NL");
         $mother->setUlnNumber("00002");
-        $mother->setAnimalType(2);
+        $mother->setAnimalType(AnimalType::sheep);
 
         $child = new Ram();
         $child->setUlnCountryCode("UK");
         $child->setUlnNumber("12345");
         $child->setPedigreeNumber("12345");
         $child->setPedigreeCountryCode("NL");
-        $child->setAnimalType(1);
+        $child->setAnimalType(AnimalType::sheep);
         $child->setDateOfBirth(new \DateTime());
         $child->setParentFather($father);
         $child->setParentMother($mother);

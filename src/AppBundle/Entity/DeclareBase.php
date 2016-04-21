@@ -87,7 +87,7 @@ abstract class DeclareBase
     protected $relationNumberKeeper;
 
     /**
-     * DeclareArrival constructor.
+     * DeclareBase constructor.
      */
     public function __construct() {
 
