@@ -2,34 +2,34 @@
 
 namespace AppBundle\Entity;
 
-//FIXME
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
- * Class Ram
- * @ORM\Entity(repositoryClass="AppBundle\Entity\RamRepository")
+ * Class Neuter
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\NeuterRepository")
  * @package AppBundle\Entity
  */
-class Ram extends Animal
+class Neuter extends Animal
 {
+    //FIXME Should a neuter have registered children
     /**
-     * @ORM\OneToMany(targetEntity="Animal", mappedBy="parentFather")
-     * @JMS\Type("AppBundle\Entity\Ram")
+     * @ORM\OneToMany(targetEntity="Animal", mappedBy="parentNeuter")
+     * @JMS\Type("AppBundle\Entity\Neuter")
      */
     public $children;
 
 
     /**
-     * Ram constructor.
+     * Neuter constructor.
      */
     public function __construct() {
         //Call super constructor first
         parent::__construct();
 
-        //Create childrens array
+        //Create children array
         $this->children = new ArrayCollection();
     }
 
@@ -48,7 +48,7 @@ class Ram extends Animal
      *
      * @param string $pedigreeCountryCode
      *
-     * @return Ram
+     * @return Neuter
      */
     public function setPedigreeCountryCode($pedigreeCountryCode)
     {
@@ -72,7 +72,7 @@ class Ram extends Animal
      *
      * @param string $pedigreeNumber
      *
-     * @return Ram
+     * @return Neuter
      */
     public function setPedigreeNumber($pedigreeNumber)
     {
@@ -96,7 +96,7 @@ class Ram extends Animal
      *
      * @param string $ulnCountryCode
      *
-     * @return Ram
+     * @return Neuter
      */
     public function setUlnCountryCode($ulnCountryCode)
     {
@@ -120,7 +120,7 @@ class Ram extends Animal
      *
      * @param string $ulnNumber
      *
-     * @return Ram
+     * @return Neuter
      */
     public function setUlnNumber($ulnNumber)
     {
@@ -144,7 +144,7 @@ class Ram extends Animal
      *
      * @param string $name
      *
-     * @return Ram
+     * @return Neuter
      */
     public function setName($name)
     {
@@ -168,7 +168,7 @@ class Ram extends Animal
      *
      * @param \DateTime $dateOfBirth
      *
-     * @return Ram
+     * @return Neuter
      */
     public function setDateOfBirth($dateOfBirth)
     {
@@ -192,7 +192,7 @@ class Ram extends Animal
      *
      * @param \DateTime $dateOfDeath
      *
-     * @return Ram
+     * @return Neuter
      */
     public function setDateOfDeath($dateOfDeath)
     {
@@ -216,7 +216,7 @@ class Ram extends Animal
      *
      * @param string $gender
      *
-     * @return Ram
+     * @return Neuter
      */
     public function setGender($gender)
     {
@@ -240,7 +240,7 @@ class Ram extends Animal
      *
      * @param integer $animalType
      *
-     * @return Ram
+     * @return Neuter
      */
     public function setAnimalType($animalType)
     {
@@ -264,7 +264,7 @@ class Ram extends Animal
      *
      * @param integer $animalCategory
      *
-     * @return Ram
+     * @return Neuter
      */
     public function setAnimalCategory($animalCategory)
     {
@@ -288,7 +288,7 @@ class Ram extends Animal
      *
      * @param \AppBundle\Entity\Animal $child
      *
-     * @return Ram
+     * @return Neuter
      */
     public function addChild(\AppBundle\Entity\Animal $child)
     {
@@ -322,7 +322,7 @@ class Ram extends Animal
      *
      * @param \AppBundle\Entity\Ram $parentFather
      *
-     * @return Ram
+     * @return Neuter
      */
     public function setParentFather(\AppBundle\Entity\Ram $parentFather = null)
     {
@@ -346,7 +346,7 @@ class Ram extends Animal
      *
      * @param \AppBundle\Entity\Ewe $parentMother
      *
-     * @return Ram
+     * @return Neuter
      */
     public function setParentMother(\AppBundle\Entity\Ewe $parentMother = null)
     {
@@ -370,7 +370,7 @@ class Ram extends Animal
      *
      * @param \AppBundle\Entity\DeclareArrival $arrival
      *
-     * @return Ram
+     * @return Neuter
      */
     public function addArrival(\AppBundle\Entity\DeclareArrival $arrival)
     {
