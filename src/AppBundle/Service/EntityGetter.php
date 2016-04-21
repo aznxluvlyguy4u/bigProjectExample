@@ -2,8 +2,11 @@
 
 namespace AppBundle\Service;
 
+use AppBundle\Entity\Neuter;
+use AppBundle\Enumerator\AnimalType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
+use Symfony\Component\CssSelector\Node\NegationNode;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
@@ -25,7 +28,7 @@ class EntityGetter
         $retrievedAnimal = $animal;
         $insertUlnManually = false;
 
-        //Filter op pedigree of uln!
+        //The front-end should give at least a uln or pedigree number + country code combination
         if(array_key_exists('uln_number', $animal) && array_key_exists('uln_country_code', $animal)){
 
             $ulnNumber = $animal['uln_number'];
@@ -33,6 +36,10 @@ class EntityGetter
 
             $filterArray = array("ulnNumber" => $ulnNumber, "ulnCountryCode" => $ulnCountryCode);
             $retrievedAnimal = $this->entityManager->getRepository('AppBundle:Animal')->findOneBy($filterArray);
+
+            if($retrievedAnimal == null) {
+                $retrievedAnimal = $this->createANewNeuter($animal);
+            }
 
         } else if (array_key_exists('pedigree_number', $animal) && array_key_exists('pedigree_country_code', $animal)){
 
@@ -43,15 +50,39 @@ class EntityGetter
             $retrievedAnimal = $this->entityManager->getRepository('AppBundle:Animal')->findOneBy($filterArray);
 
             $insertUlnManually = true;
-        }
 
-        //TODO if sheep doesn't exist persist it here
-        //Onzijdig schaap aanmaken
-        //Persisten
-        //Onzijdig schaap als object teruggeven.
+            if($retrievedAnimal == null) {
+                $retrievedAnimal = $this->createANewNeuter($animal);
+            }
+        }
 
         return array("retrievedAnimal" => $retrievedAnimal,
                     "insertUlnManually" => $insertUlnManually);
+    }
+
+    private function createANewNeuter($animal)
+    {
+        $neuter = new Neuter();
+
+        if (array_key_exists('uln_number', $animal)) {
+            $neuter->setUlnNumber($animal['uln_number']); }
+
+        if (array_key_exists('uln_country_code', $animal)) {
+            $neuter->setUlnCountryCode($animal['uln_country_code']); }
+
+        if (array_key_exists('pedigree_number', $animal)) {
+            $neuter->setPedigreeNumber($animal['pedigree_number']); }
+
+        if (array_key_exists('pedigree_country_code', $animal)) {
+            $neuter->setPedigreeCountryCode($animal['pedigree_country_code']); }
+
+        $neuter->setAnimalType(AnimalType::sheep);
+
+        //Persist the new neuter
+        $this->entityManager->persist($neuter);
+        $this->entityManager->flush();
+
+        return $neuter;
     }
 
 }

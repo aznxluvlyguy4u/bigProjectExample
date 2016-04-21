@@ -141,8 +141,10 @@ class ArrivalAPIController extends APIController
     //Convert the array into an object and add the mandatory values retrieved from the database
     $messageObject = $this->buildMessageObject(MessageClass::DeclareArrival, $content, $user);
 
+
+    //FIXME issue with persisting to the db not working because cascade is missing
     //First Persist object to Database, before sending it to the queue
-    //$this->persist($messageObject, MessageClass::DeclareArrival);
+//    $this->persist($messageObject, MessageClass::DeclareArrival);
 
     //Send it to the queue and persist/update any changed state to the database
     $this->sendMessageObjectToQueue($messageObject, MessageClass::DeclareArrival, RequestType::DECLARE_ARRIVAL);
@@ -159,13 +161,12 @@ class ArrivalAPIController extends APIController
    */
   public function debugAPI()
   {
-
     //Setup mock message as JSON
     $content = '{
    "import_animal": true,
    "ubn_previous_owner": "123456",
    "animal": {
-     "pedigree_country_code": "NL",
+    "pedigree_country_code": "NL",
      "pedigree_number": "12345",
      "uln_country_code": "UK",
      "uln_number": "333333333"
@@ -189,7 +190,7 @@ class ArrivalAPIController extends APIController
     $messageObject = $this->buildMessageObject(MessageClass::DeclareArrival, $content, $user);
 
     //First Persist object to Database, before sending it to the queue
-//    $this->persist($messageObject, MessageClass::DeclareArrival);
+    $this->persist($messageObject, MessageClass::DeclareArrival);
 
     //Send it to the queue and persist/update any changed state to the database
     $this->sendMessageObjectToQueue($messageObject, MessageClass::DeclareArrival, RequestType::DECLARE_ARRIVAL);

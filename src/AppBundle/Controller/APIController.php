@@ -142,7 +142,7 @@ class APIController extends Controller
     $repositoryEntityNameSpace = "AppBundle:$messageClassNameSpace";
 
     //Persist to database
-    $messageObject = $this->getDoctrine()->getRepository($repositoryEntityNameSpace)->persist($messageObject);
+    $this->getDoctrine()->getRepository($repositoryEntityNameSpace)->persist($messageObject);
 
     return $messageObject;
   }

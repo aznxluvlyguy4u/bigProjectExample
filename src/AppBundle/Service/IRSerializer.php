@@ -5,10 +5,11 @@ namespace AppBundle\Service;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Ram;
+use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Neuter;
 use AppBundle\Enumerator\MessageClass;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
-use Proxies\__CG__\AppBundle\Entity\Ewe;
 
 /**
  * Class IRSerializer.
@@ -105,8 +106,11 @@ class IRSerializer implements IRSerializerInterface
             $animalGender = "Ram";
         } else if ($retrievedAnimal instanceof Ewe) {
             $animalGender = "Ewe";
-        } //TODO if instanceof neuter ..
+        } else if ($retrievedAnimal instanceof Neuter) {
+            $animalGender = "Neuter";
+        }
 
+//TODO check if all animal data is transfered
         $updatedAnimalArray = null;
         if($insertUlnManually) {
             $updatedAnimalArray = array('type' => $animalGender,
