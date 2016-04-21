@@ -28,7 +28,7 @@ class Ram extends Animal
     //Call super constructor first
     parent::__construct();
 
-    //Create childrens array
+    //Create children array
     $this->children = new ArrayCollection();
   }
 
