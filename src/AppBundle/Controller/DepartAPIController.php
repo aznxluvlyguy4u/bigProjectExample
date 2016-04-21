@@ -30,13 +30,6 @@ class DepartAPIController extends APIController {
    */
   public function getDepartByState(Request $request)
   {
-   /* $result = $this->isTokenValid($request);
-
-    if($result instanceof JsonResponse){
-      return $result;
-    }*/
-
-
     return new JsonResponse("ok", 200);
   }
 
@@ -50,13 +43,6 @@ class DepartAPIController extends APIController {
    */
   public function getDepartById(Request $request,$Id)
   {
-    /*$result = $this->isTokenValid($request);
-
-    if($result instanceof JsonResponse){
-      return $result;
-    }*/
-
-
     return new JsonResponse("ok", 200);
   }
 
@@ -69,13 +55,6 @@ class DepartAPIController extends APIController {
    */
   public function postNewDepart(Request $request)
   {
-   /* $result = $this->isTokenValid($request);
-
-    if($result instanceof JsonResponse){
-      return $result;
-    }*/
-
-
     return new JsonResponse("ok", 200);
   }
 
@@ -88,13 +67,6 @@ class DepartAPIController extends APIController {
    */
   public function debugAPI(Request $request)
   {
-    /*$result = $this->isTokenValid($request);
-
-    if($result instanceof JsonResponse){
-      return $result;
-    }*/
-
-
     return new JsonResponse("ok", 200);
   }
 }

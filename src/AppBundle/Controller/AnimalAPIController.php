@@ -43,7 +43,7 @@ class AnimalAPIController extends Controller
    * @param Request $request the request object
    * @param string $state
    * @return JsonResponse
-   * @Route("/")
+   * @Route("")
    * @Method("GET")
    */
   public function getAllAnimalsByType()
@@ -65,8 +65,8 @@ class AnimalAPIController extends Controller
    * @param int $Id Id of the Animal to be returned
    *
    * @return JsonResponse
-   *
-   * @ParamConverter("animal", class="AppBundle:Animal")
+   * @Route("/{Id}")
+   * @ParamConverter("Id", class="AppBundle:Animal")
    * @Method("GET")
    */
   public function getAnimalById($animal)
@@ -87,7 +87,7 @@ class AnimalAPIController extends Controller
    * @return JsonResponse
 
    *
-   * @Route("/")
+   * @Route("")
    * @Method("POST")
    */
   public function postNewAnimal(Request $request)

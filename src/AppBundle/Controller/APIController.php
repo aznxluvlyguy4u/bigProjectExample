@@ -119,7 +119,7 @@ class APIController extends Controller implements APIControllerInterface
   public function getAuthenticatedUser(Request $request, $token = null)
   {
     if($token == null) {
-      $token = $request->headers->get('AccessToken');
+      $token = $request->headers->get($this::ACCESS_TOKEN_HEADER_NAMESPACE);
     }
     $em = $this->getDoctrine()->getEntityManager();
 

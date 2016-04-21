@@ -21,26 +21,6 @@ class ClientAPIController extends APIController {
    */
   private $user;
 
-  /**
-   *
-   * Get a list of Clients
-   *
-   *
-   * @Route("/clients")
-   * @Method("GET")
-   */
-  public function getBirthByState(Request $request)
-  {
-  /*  $result = $this->isTokenValid($request);
-
-    if($result instanceof JsonResponse){
-      return $result;
-    }*/
-
-
-    return new JsonResponse("ok", 200);
-  }
-
 
   /**
    *
@@ -51,13 +31,6 @@ class ClientAPIController extends APIController {
    * @Method("GET")
    */
   public function getClientById(Request $request, $Id) {
-    $result = $this->isTokenValid($request);
-
-    if ($result instanceof JsonResponse) {
-      return $result;
-    }
-
-
     return new JsonResponse("ok", 200);
   }
 
@@ -69,13 +42,6 @@ class ClientAPIController extends APIController {
    * @Method("POST")
    */
   public function postNewClient(Request $request) {
-    $result = $this->isTokenValid($request);
-
-    if ($result instanceof JsonResponse) {
-      return $result;
-    }
-
-
     return new JsonResponse("ok", 200);
   }
 
@@ -87,13 +53,6 @@ class ClientAPIController extends APIController {
    * @Method("GET")
    */
   public function debugAPI(Request $request) {
-    $result = $this->isTokenValid($request);
-
-    if ($result instanceof JsonResponse) {
-      return $result;
-    }
-
-
     return new JsonResponse("ok", 200);
   }
 }

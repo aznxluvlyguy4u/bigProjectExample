@@ -42,12 +42,6 @@ class CountryAPIController extends APIController {
    */
   public function getCountryCodes(Request $request) {
 
-    $result = $this->isTokenValid($request);
-
-    if($result instanceof JsonResponse){
-      return $result;
-    }
-
     if(!$request->query->has('continent')) {
       $countries = $this->getDoctrine()->getRepository('AppBundle:Country')->findBy(array('continent' => 'Europe'));
     } else {
