@@ -9,10 +9,6 @@ use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
-use Symfony\Component\Security\Http\Authentication\SimplePreAuthenticatorInterface;
-use Symfony\Component\Security\Core\Exception\BadCredentialsException;
-use Symfony\Component\Security\Core\Authentication\Token\PreAuthenticatedToken;
-use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Http\HttpUtils;
 use Symfony\Component\Security\Guard\AbstractGuardAuthenticator;
 use AppBundle\Component\HttpFoundation\JsonResponse;
@@ -24,7 +20,6 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 class TokenAuthenticator extends AbstractGuardAuthenticator  {
 
   const ACCESS_TOKEN_HEADER_NAMESPACE = 'AccessToken';
-  //const AUTHORIZATION_HEADER_NAMESPACE = 'Authorization';
   const PERSON_SHORT_ENTITY_PATH = 'AppBundle:Person';
 
   /**
@@ -68,19 +63,21 @@ class TokenAuthenticator extends AbstractGuardAuthenticator  {
    * @return Response
    */
   public function start(Request $request, AuthenticationException $authException = null) {
-    foreach($this->unAuthedPaths as $unAuthedPath) {
-      if($this->httpUtils->checkRequestPath($request, $unAuthedPath)) {
-        //return null;
-      }
+    $response = null;
+
+    if(!$request->headers->has($this::ACCESS_TOKEN_HEADER_NAMESPACE)) {
+      $response = array(
+        'errorCode' => 401,
+        'errorMessage' => 'Unauthorized, no AccessToken provided'
+      );
+    } else {
+      $response = array(
+        'errorCode' => 401,
+        'errorMessage' => 'Unauthorized, AccessToken invalid'
+      );
     }
 
-
-    $data = array(
-      'errorCode' => 401,
-      'errorMessage' => 'TEST Authentication Required'
-    );
-
-    return new JsonResponse($data, 401);
+    return new JsonResponse($response, 401);
   }
 
   /**
@@ -116,9 +113,7 @@ class TokenAuthenticator extends AbstractGuardAuthenticator  {
       );
     }
 
-    return array(
-      'accessToken' => '',
-    );
+    return null;
   }
 
   /**
@@ -180,22 +175,12 @@ class TokenAuthenticator extends AbstractGuardAuthenticator  {
    * @return Response|null
    */
   public function onAuthenticationFailure(Request $request, AuthenticationException $exception) {
-    foreach($this->unAuthedPaths as $unAuthedPath) {
-
-      $x = $this->httpUtils->checkRequestPath($request, $unAuthedPath);
-      dump($unAuthedPath, $x);
-
-      if($this->httpUtils->checkRequestPath($request, $unAuthedPath)) {
-        return null;
-      }
-    }
-
-    $data = array(
+    $response = array(
       'errorCode'=> 403,
-      'errorMessage' => strtr($exception->getMessageKey(), $exception->getMessageData())
+      'errorMessage' => 'Forbidden, invalid AccessToken provided'
     );
 
-    return new JsonResponse($data, 403);
+    return new JsonResponse($response, 403);
   }
 
   /**
