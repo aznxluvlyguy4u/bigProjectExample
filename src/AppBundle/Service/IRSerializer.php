@@ -3,6 +3,7 @@
 namespace AppBundle\Service;
 
 use AppBundle\Enumerator\AnimalType;
+use AppBundle\Constant\Constant;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\MessageClass;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -27,8 +28,6 @@ use Proxies\__CG__\AppBundle\Entity\Ewe;
  */
 class IRSerializer implements IRSerializerInterface
 {
-    const jsonNamespace  = 'json';
-
     /**
      * @var EntityManager
      */
@@ -57,7 +56,7 @@ class IRSerializer implements IRSerializerInterface
      */
     public function serializeToJSON($object)
     {
-        return $this->serializer->serialize($object, $this::jsonNamespace);
+        return $this->serializer->serialize($object, Constant::jsonNamespace);
     }
 
     /**
@@ -69,7 +68,7 @@ class IRSerializer implements IRSerializerInterface
     {
         $messageClassPathNameSpace = "AppBundle\Entity\\$messageClassNameSpace";
 
-        $messageObject = $this->serializer->deserialize($json, $messageClassPathNameSpace, $this::jsonNamespace);
+        $messageObject = $this->serializer->deserialize($json, $messageClassPathNameSpace, Constant::jsonNamespace);
 
         return $messageObject;
     }
@@ -96,7 +95,9 @@ class IRSerializer implements IRSerializerInterface
     function parseDeclareArrival(ArrayCollection $contentArray)
     {
         $animal = $contentArray['animal'];
-        $retrievedAnimal = $this->entityGetter->retrieveAnimal($animal);
+        $retrievedAnimalResult = $this->entityGetter->retrieveAnimal($animal);
+        $retrievedAnimal = $retrievedAnimalResult["retrievedAnimal"];
+        $insertUlnManually = $retrievedAnimalResult["insertUlnManually"];
 
         $animalGender = null;
 
@@ -104,9 +105,19 @@ class IRSerializer implements IRSerializerInterface
             $animalGender = "Ram";
         } else if ($retrievedAnimal instanceof Ewe) {
             $animalGender = "Ewe";
+        } //TODO if instanceof neuter ..
+
+        $updatedAnimalArray = null;
+        if($insertUlnManually) {
+            $updatedAnimalArray = array('type' => $animalGender,
+                'uln_country_code'=>$retrievedAnimal->getUlnCountryCode(),
+                "uln_number"=> $retrievedAnimal->getUlnNumber()
+            );
+        } else {
+            $updatedAnimalArray = array('type' => $animalGender);
         }
 
-        $newAnimalDetails = array_merge($animal, array('type' => $animalGender));
+        $newAnimalDetails = array_merge($animal, $updatedAnimalArray);
 
         $contentArray['animal'] = $newAnimalDetails;
 

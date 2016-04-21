@@ -142,12 +142,12 @@ class ArrivalAPIController extends APIController
     $messageObject = $this->buildMessageObject(MessageClass::DeclareArrival, $content, $user);
 
     //First Persist object to Database, before sending it to the queue
-    $this->persist($messageObject, MessageClass::DeclareArrival);
+    //$this->persist($messageObject, MessageClass::DeclareArrival);
 
     //Send it to the queue and persist/update any changed state to the database
     $this->sendMessageObjectToQueue($messageObject, MessageClass::DeclareArrival, RequestType::DECLARE_ARRIVAL);
 
-    return new JsonResponse(null, 200);
+    return new JsonResponse($messageObject, 200);
   }
 
   /**
@@ -168,7 +168,7 @@ class ArrivalAPIController extends APIController
      "pedigree_country_code": "NL",
      "pedigree_number": "12345",
      "uln_country_code": "UK",
-     "uln_number": "12345"
+     "uln_number": "333333333"
    },
    "location" : {
      "ubn" : "0031079"
@@ -189,7 +189,7 @@ class ArrivalAPIController extends APIController
     $messageObject = $this->buildMessageObject(MessageClass::DeclareArrival, $content, $user);
 
     //First Persist object to Database, before sending it to the queue
-    $this->persist($messageObject, MessageClass::DeclareArrival);
+//    $this->persist($messageObject, MessageClass::DeclareArrival);
 
     //Send it to the queue and persist/update any changed state to the database
     $this->sendMessageObjectToQueue($messageObject, MessageClass::DeclareArrival, RequestType::DECLARE_ARRIVAL);

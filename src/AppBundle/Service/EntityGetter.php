@@ -9,8 +9,6 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 
 class EntityGetter
 {
-    const AUTHORIZATION_HEADER_NAMESPACE = 'AccessToken';
-
     /**
      * @var EntityManager
      */
@@ -25,25 +23,35 @@ class EntityGetter
     {
         //By default just return the original animal
         $retrievedAnimal = $animal;
+        $insertUlnManually = false;
 
-        $ulnNumber = $animal['uln_number'];
-        $ulnCountryCode = $animal['uln_country_code'];
+        //Filter op pedigree of uln!
+        if(array_key_exists('uln_number', $animal) && array_key_exists('uln_country_code', $animal)){
 
-        $pedigreeNumber = $animal['pedigree_number'];
-        $pedigreeCountryCode = $animal['pedigree_country_code'];
-
-        if ($ulnNumber != null && $ulnCountryCode != null){
+            $ulnNumber = $animal['uln_number'];
+            $ulnCountryCode = $animal['uln_country_code'];
 
             $filterArray = array("ulnNumber" => $ulnNumber, "ulnCountryCode" => $ulnCountryCode);
             $retrievedAnimal = $this->entityManager->getRepository('AppBundle:Animal')->findOneBy($filterArray);
 
-        } else if ($pedigreeNumber != null && $pedigreeCountryCode != null){
+        } else if (array_key_exists('pedigree_number', $animal) && array_key_exists('pedigree_country_code', $animal)){
+
+            $pedigreeNumber = $animal['pedigree_number'];
+            $pedigreeCountryCode = $animal['pedigree_country_code'];
 
             $filterArray = array("pedigreeNumber" => $pedigreeNumber, "pedigreeCountryCode" => $pedigreeCountryCode);
             $retrievedAnimal = $this->entityManager->getRepository('AppBundle:Animal')->findOneBy($filterArray);
+
+            $insertUlnManually = true;
         }
 
-        return $retrievedAnimal;
+        //TODO if sheep doesn't exist persist it here
+        //Onzijdig schaap aanmaken
+        //Persisten
+        //Onzijdig schaap als object teruggeven.
+
+        return array("retrievedAnimal" => $retrievedAnimal,
+                    "insertUlnManually" => $insertUlnManually);
     }
 
 }

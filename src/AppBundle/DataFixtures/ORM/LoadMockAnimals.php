@@ -20,17 +20,17 @@ class LoadMockAnimals implements FixtureInterface
     public function load(ObjectManager $manager){
         $father = new Ram();
         $father->setUlnCountryCode("NL");
-        $father->setUlnNumber("00001");
+        $father->setUlnNumber("11111111");
         $father->setAnimalType(AnimalType::sheep);
 
         $mother = new Ewe();
         $mother->setUlnCountryCode("NL");
-        $mother->setUlnNumber("00002");
+        $mother->setUlnNumber("222222222");
         $mother->setAnimalType(AnimalType::sheep);
 
         $child = new Ram();
         $child->setUlnCountryCode("UK");
-        $child->setUlnNumber("12345");
+        $child->setUlnNumber("333333333");
         $child->setPedigreeNumber("12345");
         $child->setPedigreeCountryCode("NL");
         $child->setAnimalType(AnimalType::sheep);

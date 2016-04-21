@@ -18,7 +18,7 @@ class DeclareArrival extends DeclareBase {
 
     /**
      * @Assert\NotBlank
-     * @ORM\ManyToOne(targetEntity="Animal", cascade={"persist"})
+     * @ORM\ManyToOne(targetEntity="Animal", cascade={})
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     private $animal;

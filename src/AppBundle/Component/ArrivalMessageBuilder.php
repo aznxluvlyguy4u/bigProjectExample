@@ -44,12 +44,8 @@ class ArrivalMessageBuilder extends MessageBuilderBase
      */
     private function addDeclareArrivalData(DeclareArrival $messageObject)
     {
-        //TODO if sheep exists retrieve, if it does not create new sheep
-
-        //TODO filter on ULN or Pedigree code
         $animal = $messageObject->getAnimal();
         $animal->setAnimalType(AnimalType::sheep);
-        $animal->setAnimalCategory(1);
 
         return $messageObject;
     }
