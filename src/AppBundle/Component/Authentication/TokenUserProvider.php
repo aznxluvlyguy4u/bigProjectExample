@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component\Authentication;
 
+use AppBundle\Entity\Person;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
@@ -15,8 +16,14 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationFailureHandlerI
  * Class TokenUserProvider
  * @package AppBundle\Component\Authentication
  */
-class TokenUserProvider implements UserProviderInterface, AuthenticationFailureHandlerInterface
+class TokenUserProvider extends Person implements UserProviderInterface, AuthenticationFailureHandlerInterface
 {
+
+  public function __construct()
+  {
+    parent::__construct();
+  }
+
   public function getUsernameForApiKey($apiKey)
   {
     // Look up the username based on the token in the database, via
@@ -48,7 +55,7 @@ class TokenUserProvider implements UserProviderInterface, AuthenticationFailureH
 
   public function supportsClass($class)
   {
-    return 'Symfony\Component\Security\Core\User\User' === $class;
+    return $class === 'AppBundle\Entity\Person';
   }
 
   /**
