@@ -116,9 +116,51 @@ class APIController extends Controller implements APIControllerInterface
     return new RedirectResponse('/api/v1/doc');
   }
 
-  public function getAuthenticatedUser(Request $request) {
-    $token = $request->headers->get('AccessToken');
+  public function getAuthenticatedUser(Request $request, $token = null)
+  {
+    if($token == null) {
+      $token = $request->headers->get('AccessToken');
+    }
     $em = $this->getDoctrine()->getEntityManager();
 
-    return $em->getRepository('AppBundle:Person')->findOneBy(array("accessToken"=>$token));  }
+    return $em->getRepository('AppBundle:Person')->findOneBy(array("accessToken" => $token));
+  }
+
+  /**
+   * @param Request $request
+   * @return JsonResponse
+   */
+  public function isAccessTokenValid(Request $request)
+  {
+    $token = null;
+    $response = null;
+
+    //Get token header to read token value
+    if($request->headers->has($this::ACCESS_TOKEN_HEADER_NAMESPACE)) {
+      $token = $request->headers->get($this::ACCESS_TOKEN_HEADER_NAMESPACE);
+
+      // A user was found with given token
+      if($this->getAuthenticatedUser($request, $token) != null) {
+        $response = array(
+          'token_status' => 'valid',
+          'token' => $token
+        );
+
+        return new JsonResponse($response, 200);
+      } else { // No user found for given token
+        $response = array(
+          'error'=> 401,
+          'errorMessage'=> 'No AccessToken provided'
+        );
+      }
+    }
+
+    //Mandatory AccessToken was not provided
+    $response = array(
+      'error'=> 401,
+      'errorMessage'=> 'Mandatory AccessToken header was not provided'
+    );
+
+    return new JsonResponse($response, 401);
+  }
 }

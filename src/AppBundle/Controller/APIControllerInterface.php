@@ -8,5 +8,16 @@ use Symfony\Component\HttpFoundation\Request;
  * @package AppBundle\Controller
  */
 interface APIControllerInterface {
-  public function getAuthenticatedUser(Request $request);
+  /**
+   * @param Request $request
+   * @param $token
+   * @return mixed
+   */
+  public function getAuthenticatedUser(Request $request, $token);
+
+  /**
+   * @param Request $request
+   * @return mixed
+   */
+  public function isAccessTokenValid(Request $request);
 }
