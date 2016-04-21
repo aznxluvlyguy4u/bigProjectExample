@@ -84,13 +84,6 @@ class ArrivalAPIController extends APIController
    */
   public function getArrivalByState(Request $request)
   {
-
-    // Token validation
-    $result = $this->isTokenValid($request);
-    if($result instanceof JsonResponse){
-      return $result;
-    }
-
     //Initialize default state to filter on declare arrivals
     $state = 'open';
 
@@ -123,13 +116,6 @@ class ArrivalAPIController extends APIController
    */
   public function postNewArrival(Request $request)
   {
-
-    // Token validation
-    $result = $this->isTokenValid($request);
-    if($result instanceof JsonResponse){
-      return $result;
-    }
-
     //Get content to array
     $content = $this->getContentAsArray($request);
 
