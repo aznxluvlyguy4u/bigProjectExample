@@ -20,7 +20,10 @@ services:
     app.authenticator.token:
         class: AppBundle\Component\Authentication\TokenAuthenticator
         arguments:
+          entityManager: '@doctrine.orm.entity_manager'
           httpUtil: '@security.http_utils'
-          #register public API paths here
-          unauthedPaths: ['auth/register', 'auth/authorize']
+          unauthedPaths: ['/api/v1/doc', '/api/v1/auth/register', '/api/v1/auth/authorize']
         public: false
+
+    app.authenticator.provider:
+            class: AppBundle\Component\Authentication\TokenUserProvider
