@@ -41,11 +41,6 @@ class AuthAPIContoller extends APIController {
    */
   public function registerUser(Request $request)
   {
-    //Get auth header to read token
-    if(!$request->headers->has($this::AUTHORIZATION_HEADER_NAMESPACE)) {
-      return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
-    }
-
     $credentials = $request->headers->get($this::AUTHORIZATION_HEADER_NAMESPACE);
     $credentials = str_replace('Basic ', '', $credentials);
     $credentials = base64_decode($credentials);
@@ -54,12 +49,14 @@ class AuthAPIContoller extends APIController {
 
     $encoder = $this->get('security.password_encoder');
 
-    /* {
+    /*
+    {
         "ubn":"123",
         "email_address": "",
         "postal_code":"1234AB",
         "home_number":"12"
-    }*/
+    }
+    */
 
     //Get content to array
     $content = $this->getContentAsArray($request);
@@ -163,11 +160,6 @@ class AuthAPIContoller extends APIController {
    */
   public function authorizeUser(Request $request)
   {
-    //Get auth header to read token
-    if(!$request->headers->has($this::AUTHORIZATION_HEADER_NAMESPACE)) {
-      return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
-    }
-
     $credentials = $request->headers->get($this::AUTHORIZATION_HEADER_NAMESPACE);
     $credentials = str_replace('Basic ', '', $credentials);
     $credentials = base64_decode($credentials);
