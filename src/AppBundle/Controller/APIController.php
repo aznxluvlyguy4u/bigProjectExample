@@ -12,7 +12,9 @@ use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 
 /**
  * Class APIController
@@ -119,5 +121,16 @@ class APIController extends Controller
     }
 
     return $user;
+  }
+
+  /**
+   * Redirect to API docs when root is requested
+   *
+   * @Route("")
+   * @Method("GET")
+   */
+  public function redirectRootToAPIDoc()
+  {
+    return new RedirectResponse('/api/v1/doc');
   }
 }
