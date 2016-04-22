@@ -17,15 +17,14 @@ security:
     firewalls:
         # disables authentication for assets and the profiler, adapt it according to your needs
         dev:
-            pattern: ^/(_(profiler|wdt)|css|images|js)/
-            stateless: true
+            pattern: ^/*
             security: false
+            stateless: true
 
         secured_area:
             pattern: ^(?:(?!doc|register|authorize|validate-token).)*$
             security: true
             stateless: true
-
             guard:
                 authenticators:
                     - app.authenticator.token
