@@ -105,25 +105,28 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareArrival(ArrayCollection $animalContentArray)
+    function parseDeclareArrival(ArrayCollection $declareArrivalContentArray)
     {
         //Retrieve animal entity
-        $retrievedAnimal = $this->entityGetter->retrieveAnimal($animalContentArray);
+        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray['animal']);
+
         //Parse to json
         $retrievedAnimalJson = $this->serializeToJSON($retrievedAnimal);
-
         //Parse json to content array to add additional 'animal type' property
         $retrievedAnimalContentArray = json_decode($retrievedAnimalJson, true);
 
         //Add animal type to content array
-        $retrievedAnimalContentArray[$this::DISCRIMINATOR_TYPE_NAMESPACE] =
-          $this->getGenderType($retrievedAnimal);
+        $retrievedAnimalContentArray['type'] = $this->getAnimalType($retrievedAnimal);
+
+        // FIXME
+        unset( $retrievedAnimalContentArray['arrivals']);
+        unset( $retrievedAnimalContentArray['children']);
 
         //Add retrieved animal properties including type to initial animalContentArray
-        $animalContentArray['animal'] = $retrievedAnimalContentArray;
+        $declareArrivalContentArray['animal'] =  $retrievedAnimalContentArray;
 
         //denormalize the content to an object
-        $json = $this->serializeToJSON($animalContentArray);
+        $json = $this->serializeToJSON($declareArrivalContentArray);
         $messageObject = $this->deserializeToObject($json, MessageClass::DeclareArrival);
 
         return $messageObject;
@@ -223,7 +226,7 @@ class IRSerializer implements IRSerializerInterface
      * @param $animal
      * @return null|string
      */
-    private function getGenderType($animal)
+    private function getAnimalType($animal)
     {
         $animalGender = null;
 
