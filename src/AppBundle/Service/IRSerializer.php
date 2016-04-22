@@ -2,6 +2,7 @@
 
 namespace AppBundle\Service;
 
+use AppBundle\Entity\Employee;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Ram;
@@ -10,25 +11,30 @@ use AppBundle\Entity\Neuter;
 use AppBundle\Enumerator\MessageClass;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
+use Symfony\Bundle\FrameworkBundle\Client;
 
 /**
  * Class IRSerializer.
  *
- * There is an issue with the discriminator maps for joined tables.
- * During deserialization to an object the data for the discriminator maps is lost.
- * In this class we are trying to rectify that problem by inserting the necessary
- * information in a hardcoded way, before the JSON is deserialize into an object.
- *
- * Doctrine hasn't fixed this in more than a few years, eventhough a pull request
- * with the solution has already been offered for more than 1,5 years.
- * And this is a core functionality of Doctrine.
- *
- * Therefore we need to customize the serializer to deal with this.
+ * There is an issue with the JMS Deserializing process, when we want to deserialize with an entity that has an
+ * abstract base class with join table inheritance, the discriminator-type cannot be inferred/determined
+ * during deserialization to an object, the data for the discriminator maps is lost.
+ * This Serializer class adds the 'type' of the object to be deserialized explicitly to a
+ * content array, which in turn can be serialized to JSON and then be deserialized to a given Entity
+ * Though there is a 'Discriminator' annotation, see http://jmsyst.com/libs/serializer/master/reference/annotations#discriminator &
+ * https://gist.github.com/h4cc/8313723 & for letting the (de)serializer know the base class, it does not work.
+ * See issue: https://github.com/schmittjoh/JMSSerializerBundle/issues/292 & https://github.com/schmittjoh/JMSSerializerBundle/issues/299
+ * Note that there has been effort of fixing the discriminator problem, a pull request
+ * with a solution has already been opened, but up till now no communication or has been given on the given
+ * pull request, see https://github.com/schmittjoh/serializer/pull/382
+ * Therefore we need to customize the serializer to deal with this, thus this class will handle custom steps needed before the deserializing process.
  *
  * @package AppBundle\Service
  */
 class IRSerializer implements IRSerializerInterface
 {
+    const DISCRIMINATOR_TYPE_NAMESPACE = "type";
+
     /**
      * @var EntityManager
      */
@@ -74,7 +80,9 @@ class IRSerializer implements IRSerializerInterface
         return $messageObject;
     }
 
-
+    /**
+     * @inheritdoc
+     */
     function parseDeclarationDetail(ArrayCollection $contentArray)
     {
         // TODO: Implement parseDeclarationDetail() method.
@@ -83,7 +91,9 @@ class IRSerializer implements IRSerializerInterface
         return $messageObject;
     }
 
-
+    /**
+     * @inheritdoc
+     */
     function parseDeclareAnimalFlag(ArrayCollection $contentArray)
     {
         // TODO: Implement parseDeclareAnimalFlag() method.
@@ -92,47 +102,36 @@ class IRSerializer implements IRSerializerInterface
         return $messageObject;
     }
 
-
-    function parseDeclareArrival(ArrayCollection $contentArray)
+    /**
+     * @inheritdoc
+     */
+    function parseDeclareArrival(ArrayCollection $animalContentArray)
     {
-        $animal = $contentArray['animal'];
-        $retrievedAnimalResult = $this->entityGetter->retrieveAnimal($animal);
-        $retrievedAnimal = $retrievedAnimalResult["retrievedAnimal"];
-        $insertUlnManually = $retrievedAnimalResult["insertUlnManually"];
+        //Retrieve animal entity
+        $retrievedAnimal = $this->entityGetter->retrieveAnimal($animalContentArray);
+        //Parse to json
+        $retrievedAnimalJson = $this->serializeToJSON($retrievedAnimal);
 
-        $animalGender = null;
+        //Parse json to content array to add additional 'animal type' property
+        $retrievedAnimalContentArray = json_decode($retrievedAnimalJson, true);
 
-        if ($retrievedAnimal instanceof Ram) {
-            $animalGender = "Ram";
-        } else if ($retrievedAnimal instanceof Ewe) {
-            $animalGender = "Ewe";
-        } else if ($retrievedAnimal instanceof Neuter) {
-            $animalGender = "Neuter";
-        }
+        //Add animal type to content array
+        $retrievedAnimalContentArray[$this::DISCRIMINATOR_TYPE_NAMESPACE] =
+          $this->getGenderType($retrievedAnimal);
 
-//TODO check if all animal data is transfered
-        $updatedAnimalArray = null;
-        if($insertUlnManually) {
-            $updatedAnimalArray = array('type' => $animalGender,
-                'uln_country_code'=>$retrievedAnimal->getUlnCountryCode(),
-                "uln_number"=> $retrievedAnimal->getUlnNumber()
-            );
-        } else {
-            $updatedAnimalArray = array('type' => $animalGender);
-        }
-
-        $newAnimalDetails = array_merge($animal, $updatedAnimalArray);
-
-        $contentArray['animal'] = $newAnimalDetails;
+        //Add retrieved animal properties including type to initial animalContentArray
+        $animalContentArray['animal'] = $retrievedAnimalContentArray;
 
         //denormalize the content to an object
-        $json = $this->serializeToJSON($contentArray);
+        $json = $this->serializeToJSON($animalContentArray);
         $messageObject = $this->deserializeToObject($json, MessageClass::DeclareArrival);
 
         return $messageObject;
     }
 
-
+    /**
+     * @inheritdoc
+     */
     function parseDeclareBirth(ArrayCollection $contentArray)
     {
         // TODO: Implement parseDeclareBirth() method.
@@ -141,7 +140,9 @@ class IRSerializer implements IRSerializerInterface
         return $messageObject;
     }
 
-
+    /**
+     * @inheritdoc
+     */
     function parseDeclareDepart(ArrayCollection $contentArray)
     {
         // TODO: Implement parseDeclareDepart() method.
@@ -150,7 +151,9 @@ class IRSerializer implements IRSerializerInterface
         return $messageObject;
     }
 
-
+    /**
+     * @inheritdoc
+     */
     function parseDeclareEartagsTransfer(ArrayCollection $contentArray)
     {
         // TODO: Implement parseDeclareEartagsTransfer() method.
@@ -159,7 +162,9 @@ class IRSerializer implements IRSerializerInterface
         return $messageObject;
     }
 
-
+    /**
+     * @inheritdoc
+     */
     function parseDeclareLoss(ArrayCollection $contentArray)
     {
         // TODO: Implement parseDeclareLoss() method.
@@ -168,7 +173,9 @@ class IRSerializer implements IRSerializerInterface
         return $messageObject;
     }
 
-
+    /**
+     * @inheritdoc
+     */
     function parseDeclareExport(ArrayCollection $contentArray)
     {
         // TODO: Implement parseDeclareExport() method.
@@ -177,7 +184,9 @@ class IRSerializer implements IRSerializerInterface
         return $messageObject;
     }
 
-
+    /**
+     * @inheritdoc
+     */
     function parseDeclareImport(ArrayCollection $contentArray)
     {
         // TODO: Implement parseDeclareImport() method.
@@ -186,7 +195,9 @@ class IRSerializer implements IRSerializerInterface
         return $messageObject;
     }
 
-
+    /**
+     * @inheritdoc
+     */
     function parseRetrieveEartags(ArrayCollection $contentArray)
     {
         // TODO: Implement parseRetrieveEartags() method.
@@ -195,12 +206,77 @@ class IRSerializer implements IRSerializerInterface
         return $messageObject;
     }
 
-
+    /**
+     * @inheritdoc
+     */
     function parseRevokeDeclaration(ArrayCollection $contentArray)
     {
         // TODO: Implement parseRevokeDeclaration() method.
         $messageObject = null;
 
         return $messageObject;
+    }
+
+    /**
+     * Determine Animal type, needed for the discriminator type.
+     *
+     * @param $animal
+     * @return null|string
+     */
+    private function getGenderType($animal)
+    {
+        $animalGender = null;
+
+        if ($animal instanceof Ram) {
+            $animalGender = "Ram";
+        } else if ($animal instanceof Ewe) {
+            $animalGender = "Ewe";
+        } else if ($animal instanceof Neuter) {
+            $animalGender = "Neuter";
+        }
+
+        return $animalGender;
+    }
+
+    /**
+     * Determine Address type, needed for the discriminator type.
+     *
+     * @param $address
+     * @return null|string
+     */
+    private function getAddressType($address)
+    {
+        $addressType = null;
+
+        /*
+        if ($address instanceof BillingAddress) {
+            $addressType = "BillingAddress";
+        } else if ($address instanceof LocationAddress) {
+            $addressType = "LocationAddress";
+        } else if ($address instanceof CompanyAddress) {
+            $addressType = "CompanyAddress";
+        }
+        */
+
+        return $addressType;
+    }
+
+    /**
+     * Determine Person type, needed for the discriminator type.
+     *
+     * @param $person
+     * @return null|string
+     */
+    private function getPersonType($person)
+    {
+        $personType = null;
+
+        if ($person instanceof Client) {
+            $personType = "Client";
+        } else if ($person instanceof Employee) {
+            $personType = "Employee";
+        }
+
+        return $personType;
     }
 }
