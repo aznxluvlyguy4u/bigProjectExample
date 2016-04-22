@@ -118,28 +118,4 @@ class Location
   {
     return $this->arrivals;
   }
-
-  /**
-   * Set owners
-   *
-   * @param \AppBundle\Entity\Person $owners
-   *
-   * @return Location
-   */
-  public function setOwners(\AppBundle\Entity\Person $owners = null)
-  {
-    $this->owners = $owners;
-
-    return $this;
-  }
-
-  /**
-   * Get owners
-   *
-   * @return \AppBundle\Entity\Person
-   */
-  public function getOwners()
-  {
-    return $this->owners;
-  }
 }

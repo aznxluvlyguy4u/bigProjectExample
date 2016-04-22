@@ -7,8 +7,11 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\Ram;
+use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Neuter;
 use AppBundle\Enumerator\MessageClass;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Enumerator\AnimalType;
 use AppBundle\Service\EntityGetter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -161,6 +164,8 @@ class ArrivalAPIController extends APIController
    */
   public function debugAPI()
   {
+    $entityManager = $this->getDoctrine()->getEntityManager();
+
     //Setup mock message as JSON
     $content = '{
    "import_animal": true,
@@ -177,8 +182,6 @@ class ArrivalAPIController extends APIController
    "arrival_date": "2016-04-04T12:55:43-05:00"
 
   }';
-
-    $entityManager = $this->getDoctrine()->getEntityManager();
 
     //Get the first dude in the db
     $user = $entityManager->getRepository('AppBundle:Person')
@@ -225,5 +228,54 @@ class ArrivalAPIController extends APIController
         'User' => $user), 200);
 
 //    return new JsonResponse("OK", 200);
+  }
+
+  /**
+   *
+   * Temporary route for testing code
+   *
+   * @Route("/test/setup")
+   * @Method("GET")
+   *
+   */
+  public function setupTest(Request $request)
+  {
+    $entityManager = $this->getDoctrine()->getEntityManager();
+
+    $mockClient = new Client();
+    $mockClient->setFirstName("Bart");
+    $mockClient->setLastName("de Boer");
+    $mockClient->setEmailAddress("bart@deboer.com");
+    $mockClient->setRelationNumberKeeper("77777444");
+
+    $this->persist($mockClient, "Person" );
+
+
+    $father = new Ram();
+    $father->setUlnCountryCode("NL");
+    $father->setUlnNumber("11111111");
+    $father->setAnimalType(AnimalType::sheep);
+
+    $mother = new Ewe();
+    $mother->setUlnCountryCode("NL");
+    $mother->setUlnNumber("222222222");
+    $mother->setAnimalType(AnimalType::sheep);
+
+    $child = new Ram();
+    $child->setUlnCountryCode("UK");
+    $child->setUlnNumber("333333333");
+    $child->setPedigreeNumber("12345");
+    $child->setPedigreeCountryCode("NL");
+    $child->setAnimalType(AnimalType::sheep);
+    $child->setDateOfBirth(new \DateTime());
+    $child->setParentFather($father);
+    $child->setParentMother($mother);
+
+
+    $this->persist($father, "Ram");
+    $this->persist($mother, "Ewe");
+    $this->persist($child, "Neuter");
+
+    return new JsonResponse("MOCK ENTITIES LOADED IN THE DB", 200);
   }
 }
