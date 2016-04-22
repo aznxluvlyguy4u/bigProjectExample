@@ -168,7 +168,7 @@ abstract class Animal
      * @var array
      * @JMS\Type("array")
      */
-    public $children;
+    protected $children;
 
     /**
      * Animal constructor.

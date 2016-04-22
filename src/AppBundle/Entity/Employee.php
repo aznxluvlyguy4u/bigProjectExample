@@ -14,6 +14,25 @@ use JMS\Serializer\Annotation as JMS;
 class Employee extends Person
 {
 
+    /**
+     * @var string
+     *
+     * @Assert\NotBlank
+     * @ORM\Column(type="string")
+     * @JMS\Type("string")
+     */
+    private $objectType;
+
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        //Call super constructor first
+        parent::__construct();
+
+        $this->objectType = "Employee";
+    }
 
     /**
      * Get id
@@ -47,5 +66,29 @@ class Employee extends Person
     public function getAccessToken()
     {
         return $this->accessToken;
+    }
+
+    /**
+     * Set objectType
+     *
+     * @param string $objectType
+     *
+     * @return Employee
+     */
+    public function setObjectType($objectType)
+    {
+        $this->objectType = $objectType;
+
+        return $this;
+    }
+
+    /**
+     * Get objectType
+     *
+     * @return string
+     */
+    public function getObjectType()
+    {
+        return $this->objectType;
     }
 }

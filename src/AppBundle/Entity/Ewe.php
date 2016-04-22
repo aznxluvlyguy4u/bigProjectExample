@@ -18,7 +18,7 @@ class Ewe extends Animal
    * @ORM\OneToMany(targetEntity="Animal", mappedBy="parentMother")
    * @JMS\Type("AppBundle\Entity\Ewe")
    */
-  public $children;
+  protected $children;
 
     /**
      * @var string

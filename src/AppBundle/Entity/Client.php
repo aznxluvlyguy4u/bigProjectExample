@@ -22,6 +22,15 @@ class Client extends Person
    */
   private $relationNumberKeeper;
 
+  /**
+   * @var string
+   *
+   * @Assert\NotBlank
+   * @ORM\Column(type="string")
+   * @JMS\Type("string")
+   */
+  private $objectType;
+
   //private $companies;
 
   /**
@@ -31,6 +40,8 @@ class Client extends Person
   {
     //Call super constructor first
     parent::__construct();
+
+    $this->objectType = "Client";
   }
 
 
@@ -90,5 +101,29 @@ class Client extends Person
     public function getAccessToken()
     {
         return $this->accessToken;
+    }
+
+    /**
+     * Set objectType
+     *
+     * @param string $objectType
+     *
+     * @return Client
+     */
+    public function setObjectType($objectType)
+    {
+        $this->objectType = $objectType;
+
+        return $this;
+    }
+
+    /**
+     * Get objectType
+     *
+     * @return string
+     */
+    public function getObjectType()
+    {
+        return $this->objectType;
     }
 }

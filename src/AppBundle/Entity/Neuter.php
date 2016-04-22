@@ -14,12 +14,11 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class Neuter extends Animal
 {
-    //FIXME Should a neuter have registered children
     /**
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="parentNeuter")
      * @JMS\Type("AppBundle\Entity\Neuter")
      */
-    public $children;
+    protected $children;
 
     /**
      * @var string
@@ -28,7 +27,7 @@ class Neuter extends Animal
      * @ORM\Column(type="string")
      * @JMS\Type("string")
      */
-    protected $objectType;
+    private $objectType;
 
 
     /**
