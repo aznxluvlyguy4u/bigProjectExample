@@ -116,7 +116,7 @@ class IRSerializer implements IRSerializerInterface
         $retrievedAnimalContentArray = json_decode($retrievedAnimalJson, true);
 
         //Add animal type to content array
-        $retrievedAnimalContentArray['type'] = $this->getAnimalType($retrievedAnimal);
+        $retrievedAnimalContentArray['type'] = $retrievedAnimal->getObjectType();
 
         // FIXME
         unset( $retrievedAnimalContentArray['arrivals']);
@@ -221,27 +221,6 @@ class IRSerializer implements IRSerializerInterface
         $messageObject = null;
 
         return $messageObject;
-    }
-
-    /**
-     * Determine Animal type, needed for the discriminator type.
-     *
-     * @param $animal
-     * @return null|string
-     */
-    private function getAnimalType($animal)
-    {
-        $animalGender = null;
-
-        if ($animal instanceof Ram) {
-            $animalGender = "Ram";
-        } else if ($animal instanceof Ewe) {
-            $animalGender = "Ewe";
-        } else if ($animal instanceof Neuter) {
-            $animalGender = "Neuter";
-        }
-
-        return $animalGender;
     }
 
     /**
