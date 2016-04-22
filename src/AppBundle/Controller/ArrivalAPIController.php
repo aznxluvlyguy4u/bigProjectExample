@@ -25,30 +25,29 @@ class ArrivalAPIController extends APIController
   const DECLARE_ARRIVAL_RESULT_NAMESPACE = "result";
 
   /**
-   * @var Client
-   */
-  private $user;
-
-  /**
    * Retrieve a DeclareArrival, found by it's ID.
    *
    * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
    *   resource = true,
    *   description = "Retrieve a DeclareArrival by given ID",
    *   output = "AppBundle\Entity\DeclareArrival"
    * )
-   *
-   *
+   * @param Request $request the request object
    * @param int $Id Id of the DeclareArrival to be returned
-   *
    * @return JsonResponse
-   *
-   *
    * @Route("/{Id}")
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
    * @Method("GET")
    */
-  public function getArrivalById($Id)
+  public function getArrivalById(Request $request, $Id)
   {
     $arrival = $this->getDoctrine()->getRepository($this::DECLARE_ARRIVAL_REPOSITORY)->find($Id);
     return new JsonResponse($arrival, 200);
@@ -61,8 +60,17 @@ class ArrivalAPIController extends APIController
    *    FINISHED,
    *    FAILED,
    *    CANCELLED
-   * },
+   * }
+   *
    * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
    *   parameters={
    *      {
    *        "name"="state",
@@ -102,6 +110,14 @@ class ArrivalAPIController extends APIController
    * Create a new DeclareArrival request
    *
    * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
    *   resource = true,
    *   description = "Post a DeclareArrival request",
    *   input = "AppBundle\Entity\DeclareArrival",
@@ -109,8 +125,6 @@ class ArrivalAPIController extends APIController
    * )
    * @param Request $request the request object
    * @return JsonResponse
-
-   *
    * @Route("")
    * @Method("POST")
    */

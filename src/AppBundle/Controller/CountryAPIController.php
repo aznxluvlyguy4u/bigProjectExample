@@ -19,6 +19,14 @@ class CountryAPIController extends APIController {
    * Retrieve a list of Country codes and corresponding full Country name, with default continent Europe.
    *
    * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
    *   parameters={
    *      {
    *        "name"="continent",
@@ -32,11 +40,8 @@ class CountryAPIController extends APIController {
    *   description = "Retrieve a list of countries with ISO 3166-1 two letter codes, default continent is Europe",
    *   output = "AppBundle\Entity\Country"
    * )
-   *
-   *
+   * @param Request $request the request object
    * @return Response
-   *
-   *
    * @Route("/countries")
    * @Method("GET")
    */

@@ -27,6 +27,14 @@ class AuthAPIContoller extends APIController {
    * Register a user
    *
    * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="Authorization header",
+   *       "dataType"="string",
+   *       "requirement"="Base64 encoded",
+   *       "description"="Basic Authentication header with a Base64 encoded secret, semicolon seperated value, with delimiter"
+   *     }
+   *   },
    *   resource = true,
    *   description = "Register a user",
    *   input = "AppBundle\Entity\Client",
@@ -34,8 +42,6 @@ class AuthAPIContoller extends APIController {
    * )
    * @param Request $request the request object
    * @return JsonResponse
-
-   *
    * @Route("/register")
    * @Method("POST")
    */
@@ -114,13 +120,20 @@ class AuthAPIContoller extends APIController {
    * Validate whether an accesstoken is valid or not.
    *
    * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
    *   resource = true,
    *   description = "Validate whether an accesstoken is valid or not.",
    *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
    * )
    * @param Request $request the request object
    * @return JsonResponse
-   *
    * @Route("/validate-token")
    * @Method("GET")
    */
@@ -148,7 +161,6 @@ class AuthAPIContoller extends APIController {
    * )
    * @param Request $request the request object
    * @return JsonResponse
-   *
    * @Route("/authorize")
    * @Method("GET")
    */
