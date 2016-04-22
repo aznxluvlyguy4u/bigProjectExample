@@ -11,7 +11,7 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
 /**
- * @Route("/api/v1")
+ * @Route("/api/v1/countries")
  */
 class CountryAPIController extends APIController {
 
@@ -42,7 +42,7 @@ class CountryAPIController extends APIController {
    * )
    * @param Request $request the request object
    * @return Response
-   * @Route("/countries")
+   * @Route("")
    * @Method("GET")
    */
   public function getCountryCodes(Request $request) {
