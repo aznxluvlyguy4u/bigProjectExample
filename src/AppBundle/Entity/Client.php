@@ -15,13 +15,6 @@ class Client extends Person
 {
 
   /**
-   * @var Company
-   *
-   * @ORM\OneToMany(targetEntity="Location", mappedBy="owners",cascade={"persist"})
-   */
-  private $locations;
-
-  /**
    * @ORM\Column(type="string")
    * @Assert\Length(max = 20)
    * @Assert\NotBlank
@@ -38,7 +31,6 @@ class Client extends Person
   {
     //Call super constructor first
     parent::__construct();
-    $this->locations = new \Doctrine\Common\Collections\ArrayCollection();
   }
 
 
@@ -74,40 +66,6 @@ class Client extends Person
   public function getId()
   {
     return $this->id;
-  }
-
-  /**
-   * Add location
-   *
-   * @param \AppBundle\Entity\Location $location
-   *
-   * @return Client
-   */
-  public function addLocation(\AppBundle\Entity\Location $location)
-  {
-    $this->locations[] = $location;
-
-    return $this;
-  }
-
-  /**
-   * Remove location
-   *
-   * @param \AppBundle\Entity\Location $location
-   */
-  public function removeLocation(\AppBundle\Entity\Location $location)
-  {
-    $this->locations->removeElement($location);
-  }
-
-  /**
-   * Get locations
-   *
-   * @return \Doctrine\Common\Collections\Collection
-   */
-  public function getLocations()
-  {
-    return $this->locations;
   }
 
     /**
