@@ -26,7 +26,6 @@ class EntityGetter
     {
         //By default just return the original animal
         $retrievedAnimal = $animal;
-        $insertUlnManually = false;
 
         //The front-end should give at least a uln or pedigree number + country code combination
         if(array_key_exists('uln_number', $animal) && array_key_exists('uln_country_code', $animal)){
@@ -49,15 +48,12 @@ class EntityGetter
             $filterArray = array("pedigreeNumber" => $pedigreeNumber, "pedigreeCountryCode" => $pedigreeCountryCode);
             $retrievedAnimal = $this->entityManager->getRepository('AppBundle:Animal')->findOneBy($filterArray);
 
-            $insertUlnManually = true;
-
             if($retrievedAnimal == null) {
                 $retrievedAnimal = $this->createANewNeuter($animal);
             }
         }
 
-        return array("retrievedAnimal" => $retrievedAnimal,
-                    "insertUlnManually" => $insertUlnManually);
+        return $retrievedAnimal;
     }
 
     private function createANewNeuter($animal)
