@@ -127,9 +127,12 @@ class IRSerializer implements IRSerializerInterface
 
         //denormalize the content to an object
         $json = $this->serializeToJSON($declareArrivalContentArray);
-        $messageObject = $this->deserializeToObject($json, MessageClass::DeclareArrival);
+        $declareArrivalRequest = $this->deserializeToObject($json, MessageClass::DeclareArrival);
 
-        return $messageObject;
+        //Add retrieved animal to DeclareArrival
+        $declareArrivalRequest->setAnimal($retrievedAnimal);
+
+        return $declareArrivalRequest;
     }
 
     /**
