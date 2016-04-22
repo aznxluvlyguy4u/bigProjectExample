@@ -16,7 +16,17 @@ use Doctrine\Common\Collections\ArrayCollection;
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * //TODO add new child classes to the DiscriminatorMap
- * @ORM\DiscriminatorMap({"DeclareArrival" = "DeclareArrival"})
+ * @ORM\DiscriminatorMap({  "DeclarationDetail" = "DeclarationDetail",
+ *                          "DeclareAnimalFlag" = "DeclareAnimalFlag",
+ *                          "DeclareArrival" = "DeclareArrival",
+ *                          "DeclareBirth" = "DeclareBirth",
+ *                          "DeclareDepart" = "DeclareDepart",
+ *                          "DeclareEartagsTransfer" = "DeclareEartagsTransfer",
+ *                          "DeclareLoss" = "DeclareLoss",
+ *                          "DeclareExport" = "DeclareExport",
+ *                          "DeclareImport" = "DeclareImport",
+ *                          "RetrieveEartags" = "RetrieveEartags",
+ *                          "RevokeDeclaration" = "RevokeDeclaration"})
  * @package AppBundle\Entity\DeclareBase
  */
 abstract class DeclareBase
