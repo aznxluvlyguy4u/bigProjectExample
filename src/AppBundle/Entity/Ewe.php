@@ -397,4 +397,28 @@ class Ewe extends Animal
     {
         return $this->arrivals;
     }
+
+    /**
+     * Set parentNeuter
+     *
+     * @param \AppBundle\Entity\Neuter $parentNeuter
+     *
+     * @return Ewe
+     */
+    public function setParentNeuter(\AppBundle\Entity\Neuter $parentNeuter = null)
+    {
+        $this->parentNeuter = $parentNeuter;
+
+        return $this;
+    }
+
+    /**
+     * Get parentNeuter
+     *
+     * @return \AppBundle\Entity\Neuter
+     */
+    public function getParentNeuter()
+    {
+        return $this->parentNeuter;
+    }
 }

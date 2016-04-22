@@ -21,6 +21,7 @@ class Ram extends Animal
   public $children;
 
 
+
   /**
    * Ram constructor.
    */
@@ -396,5 +397,29 @@ class Ram extends Animal
     public function getArrivals()
     {
         return $this->arrivals;
+    }
+
+    /**
+     * Set parentNeuter
+     *
+     * @param \AppBundle\Entity\Neuter $parentNeuter
+     *
+     * @return Ram
+     */
+    public function setParentNeuter(\AppBundle\Entity\Neuter $parentNeuter = null)
+    {
+        $this->parentNeuter = $parentNeuter;
+
+        return $this;
+    }
+
+    /**
+     * Get parentNeuter
+     *
+     * @return \AppBundle\Entity\Neuter
+     */
+    public function getParentNeuter()
+    {
+        return $this->parentNeuter;
     }
 }
