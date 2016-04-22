@@ -166,6 +166,14 @@ class ArrivalAPIController extends APIController
   {
     $entityManager = $this->getDoctrine()->getEntityManager();
 
+    $mockClient = new Client();
+    $mockClient->setFirstName("Bart");
+    $mockClient->setLastName("de Boer");
+    $mockClient->setEmailAddress("bart@deboer.com");
+    $mockClient->setRelationNumberKeeper("77777444");
+
+    $entityManager->persist($mockClient, "Person" );
+
     //Setup mock message as JSON
     $content = '{
    "import_animal": true,
@@ -183,14 +191,10 @@ class ArrivalAPIController extends APIController
 
   }';
 
-    //Get the first dude in the db
-    $user = $entityManager->getRepository('AppBundle:Person')
-        ->findOneBy(array('id' => 1));
-
     //Convert mock message into an array
     $content = new ArrayCollection(json_decode($content, true));
 
-    $messageObject = $this->buildMessageObject(MessageClass::DeclareArrival, $content, $user);
+    $messageObject = $this->buildMessageObject(MessageClass::DeclareArrival, $content, $mockClient);
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($messageObject, MessageClass::DeclareArrival);
