@@ -20,7 +20,14 @@ class Ram extends Animal
    */
   public $children;
 
-
+    /**
+     * @var string
+     *
+     * @Assert\NotBlank
+     * @ORM\Column(type="string")
+     * @JMS\Type("string")
+     */
+    protected $objectType;
 
   /**
    * Ram constructor.
@@ -28,6 +35,8 @@ class Ram extends Animal
   public function __construct() {
     //Call super constructor first
     parent::__construct();
+
+      $this->objectType = "Ram";
 
     //Create children array
     $this->children = new ArrayCollection();
@@ -421,5 +430,29 @@ class Ram extends Animal
     public function getParentNeuter()
     {
         return $this->parentNeuter;
+    }
+
+    /**
+     * Set objectType
+     *
+     * @param string $objectType
+     *
+     * @return Ram
+     */
+    public function setObjectType($objectType)
+    {
+        $this->objectType = $objectType;
+
+        return $this;
+    }
+
+    /**
+     * Get objectType
+     *
+     * @return string
+     */
+    public function getObjectType()
+    {
+        return $this->objectType;
     }
 }

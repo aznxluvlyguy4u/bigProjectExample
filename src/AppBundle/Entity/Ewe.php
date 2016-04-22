@@ -14,19 +14,30 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class Ewe extends Animal
 {
-
   /**
    * @ORM\OneToMany(targetEntity="Animal", mappedBy="parentMother")
    * @JMS\Type("AppBundle\Entity\Ewe")
    */
   public $children;
 
-  /**
+    /**
+     * @var string
+     *
+     * @Assert\NotBlank
+     * @ORM\Column(type="string")
+     * @JMS\Type("string")
+     */
+    protected $objectType;
+
+
+    /**
    * Ewe constructor.
    */
   public function __construct() {
     //Call super constructor first
     parent::__construct();
+
+    $this->objectType = "Ewe";
 
     $this->children = new ArrayCollection();
   }
@@ -420,5 +431,29 @@ class Ewe extends Animal
     public function getParentNeuter()
     {
         return $this->parentNeuter;
+    }
+
+    /**
+     * Set objectType
+     *
+     * @param string $objectType
+     *
+     * @return Ewe
+     */
+    public function setObjectType($objectType)
+    {
+        $this->objectType = $objectType;
+
+        return $this;
+    }
+
+    /**
+     * Get objectType
+     *
+     * @return string
+     */
+    public function getObjectType()
+    {
+        return $this->objectType;
     }
 }

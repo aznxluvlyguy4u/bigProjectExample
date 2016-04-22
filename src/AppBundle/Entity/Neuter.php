@@ -21,6 +21,15 @@ class Neuter extends Animal
      */
     public $children;
 
+    /**
+     * @var string
+     *
+     * @Assert\NotBlank
+     * @ORM\Column(type="string")
+     * @JMS\Type("string")
+     */
+    protected $objectType;
+
 
     /**
      * Neuter constructor.
@@ -28,6 +37,8 @@ class Neuter extends Animal
     public function __construct() {
         //Call super constructor first
         parent::__construct();
+
+        $this->objectType = "Neuter";
 
         //Create children array
         $this->children = new ArrayCollection();
@@ -421,5 +432,29 @@ class Neuter extends Animal
     public function getParentNeuter()
     {
         return $this->parentNeuter;
+    }
+
+    /**
+     * Set objectType
+     *
+     * @param string $objectType
+     *
+     * @return Neuter
+     */
+    public function setObjectType($objectType)
+    {
+        $this->objectType = $objectType;
+
+        return $this;
+    }
+
+    /**
+     * Get objectType
+     *
+     * @return string
+     */
+    public function getObjectType()
+    {
+        return $this->objectType;
     }
 }
