@@ -133,6 +133,14 @@ abstract class Animal
     protected $parentMother;
 
     /**
+     * @var Animal
+     *
+     * @ORM\ManyToOne(targetEntity="Neuter", inversedBy="children", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Animal")
+     */
+    protected $parentNeuter;
+
+    /**
      * @var integer
      *
      * @ORM\Column(type="integer")

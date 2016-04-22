@@ -18,7 +18,7 @@ class DeclareArrival extends DeclareBase {
 
     /**
      * @Assert\NotBlank
-     * @ORM\ManyToOne(targetEntity="Animal", cascade={})
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="arrivals", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     private $animal;
@@ -42,7 +42,7 @@ class DeclareArrival extends DeclareBase {
 
     /**
      * @Assert\NotBlank
-     * @ORM\ManyToOne(targetEntity="Location", cascade={"persist"})
+     * @ORM\ManyToOne(targetEntity="Location", inversedBy="arrivals", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
      */
     private $location;

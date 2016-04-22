@@ -42,12 +42,6 @@ class Location
    */
   protected $arrivals;
 
-  /**
-   * @Assert\NotBlank
-   * @ORM\ManyToOne(targetEntity="Person", cascade={"persist"})
-   * @JMS\Type("AppBundle\Entity\Person")
-   */
-  protected $owners;
 
   /**
    * Constructor
