@@ -222,46 +222,4 @@ class IRSerializer implements IRSerializerInterface
 
         return $messageObject;
     }
-
-    /**
-     * Determine Address type, needed for the discriminator type.
-     *
-     * @param $address
-     * @return null|string
-     */
-    private function getAddressType($address)
-    {
-        $addressType = null;
-
-        /*
-        if ($address instanceof BillingAddress) {
-            $addressType = "BillingAddress";
-        } else if ($address instanceof LocationAddress) {
-            $addressType = "LocationAddress";
-        } else if ($address instanceof CompanyAddress) {
-            $addressType = "CompanyAddress";
-        }
-        */
-
-        return $addressType;
-    }
-
-    /**
-     * Determine Person type, needed for the discriminator type.
-     *
-     * @param $person
-     * @return null|string
-     */
-    private function getPersonType($person)
-    {
-        $personType = null;
-
-        if ($person instanceof Client) {
-            $personType = "Client";
-        } else if ($person instanceof Employee) {
-            $personType = "Employee";
-        }
-
-        return $personType;
-    }
 }
