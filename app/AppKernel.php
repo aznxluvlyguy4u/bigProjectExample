@@ -5,6 +5,16 @@ use Symfony\Component\Config\Loader\LoaderInterface;
 
 class AppKernel extends Kernel
 {
+    public function __construct($environment, $debug)
+    {
+        /**
+         * CI needs to have default timezone, otherwise ContextException is thrown
+         * see http://stackoverflow.com/questions/24251793/warning-date-default-timezone-get-installing-symfony
+         */
+        date_default_timezone_set('Europe/Amsterdam');
+        parent::__construct($environment, $debug);
+    }
+
     public function registerBundles()
     {
         $bundles = [
