@@ -30,5 +30,4 @@ script:
     - ./bin/behat --format=progress --out=std --format=junit --out=shippable/testresults -n
 
 after_script:
-    - ./bin/console server:stop -n
     - cp -r ./var/logs/test.log shippable/logs
