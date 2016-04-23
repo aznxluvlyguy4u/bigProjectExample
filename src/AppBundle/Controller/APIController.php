@@ -184,7 +184,7 @@ class APIController extends Controller implements APIControllerInterface
     return new RedirectResponse('/api/v1/doc');
   }
 
-  public function getAuthenticatedUser(Request $request, $token = null)
+  public function getAuthenticatedUser(Request $request= null, $token = null)
   {
     if($token == null) {
       $token = $request->headers->get($this::ACCESS_TOKEN_HEADER_NAMESPACE);

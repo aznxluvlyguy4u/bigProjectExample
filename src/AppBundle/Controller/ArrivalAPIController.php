@@ -144,15 +144,6 @@ class ArrivalAPIController extends APIController
    */
   public function postNewArrival(Request $request)
   {
-    //Authentication
-    $result = $this->isTokenValid($request);
-
-    if($result instanceof JsonResponse) {
-      return $result;
-    } else {
-      $user = $result;
-    }
-
     //Convert front-end message into an array
     //Get content to array
     $content = $this->getContentAsArray($request);
@@ -160,10 +151,8 @@ class ArrivalAPIController extends APIController
     //Convert the array into an object and add the mandatory values retrieved from the database
     $messageObject = $this->buildMessageObject(MessageClass::DeclareArrival, $content, $user);
 
-
-    //FIXME issue with persisting to the db not working because cascade is missing
     //First Persist object to Database, before sending it to the queue
-//    $this->persist($messageObject, MessageClass::DeclareArrival);
+    $this->persist($messageObject, MessageClass::DeclareArrival);
 
     //Send it to the queue and persist/update any changed state to the database
     $this->sendMessageObjectToQueue($messageObject, MessageClass::DeclareArrival, RequestType::DECLARE_ARRIVAL);
@@ -172,24 +161,14 @@ class ArrivalAPIController extends APIController
   }
 
   /**
-   *
+   * Run /test/setup, lookup stored user in DB, copy token, set variable token hardcoded
    * Debug endpoint
    *
    * @Route("/test/debug")
    * @Method("GET")
    */
-  public function debugAPI()
+  public function debugAPI(Request $request)
   {
-    $entityManager = $this->getDoctrine()->getEntityManager();
-
-    $mockClient = new Client();
-    $mockClient->setFirstName("Bart");
-    $mockClient->setLastName("de Boer");
-    $mockClient->setEmailAddress("bart@deboer.com");
-    $mockClient->setRelationNumberKeeper("77777444");
-
-    $entityManager->persist($mockClient, "Person" );
-
     //Setup mock message as JSON
     $content = '{
    "import_animal": true,
@@ -207,10 +186,12 @@ class ArrivalAPIController extends APIController
 
   }';
 
+    $token = "HARCODED_TOKEN"; // Lookup a user in DB, copy paste token
+
     //Convert mock message into an array
     $content = new ArrayCollection(json_decode($content, true));
 
-    $messageObject = $this->buildMessageObject(MessageClass::DeclareArrival, $content, $mockClient);
+    $messageObject = $this->buildMessageObject(MessageClass::DeclareArrival, $content, $this->getAuthenticatedUser($request, $token));
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($messageObject, MessageClass::DeclareArrival);
@@ -221,31 +202,6 @@ class ArrivalAPIController extends APIController
     return new JsonResponse(array('status' => "OK",
         MessageClass::DeclareArrival => $messageObject,
         'sent to queue with request type' => RequestType::DECLARE_ARRIVAL), 200);
-
-//    return new JsonResponse("OK", 200);
-  }
-
-  /**
-   *
-   * Temporary route for testing code
-   *
-   * @Route("/test/code")
-   * @Method("GET")
-   *
-   */
-  public function testingStuff(Request $request)
-  {
-    //Authentication
-    $result = $this->isTokenValid($request);
-
-    if($result instanceof JsonResponse) {
-      return $result;
-    } else {
-      $user = $result;
-    }
-
-    return new JsonResponse(array('status' => "OK",
-        'User' => $user), 200);
 
 //    return new JsonResponse("OK", 200);
   }
