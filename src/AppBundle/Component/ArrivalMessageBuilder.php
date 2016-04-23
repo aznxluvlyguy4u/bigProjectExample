@@ -16,6 +16,10 @@ use AppBundle\Entity\Person;
  */
 class ArrivalMessageBuilder extends MessageBuilderBase
 {
+    /**
+     * @var Person
+     */
+    private $person;
 
     public function __construct(EntityManager $em)
     {
@@ -32,6 +36,7 @@ class ArrivalMessageBuilder extends MessageBuilderBase
      */
     public function buildMessage(DeclareArrival $messageObject, Person $person)
     {
+        $this->person = $person;
         $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
         $completeMessageObject = $this->addDeclareArrivalData($baseMessageObject);
 
@@ -47,6 +52,7 @@ class ArrivalMessageBuilder extends MessageBuilderBase
         $animal = $messageObject->getAnimal();
         $animal->setAnimalType(AnimalType::sheep);
 
+        $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
         return $messageObject;
     }
 
