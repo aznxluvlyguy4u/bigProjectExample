@@ -24,8 +24,8 @@ before_script:
 
 script:
     - phpunit --log-junit shippable/testresults/junit.xml --coverage-xml shippable/codecoverage
-    - ./app/console doctrine:schema:create -n
-    - ./app/console s:r -n
+    - ./bin/phpspec run -fpretty --verbose -n
+    - ./bin/console server:start -n
     - ./bin/behat --format=progress --out=std --format=junit --out=shippable/testresults -n
 
 after_script:
