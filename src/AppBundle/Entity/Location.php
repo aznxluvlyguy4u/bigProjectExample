@@ -44,11 +44,60 @@ class Location
 
 
   /**
-   * Constructor
+   * @Assert\NotBlank
+   * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"})
+   * @JMS\Type("AppBundle\Entity\Company")
    */
+  protected $company;
+
+  /**
+   * @var LocationAddress
+   *
+   * @ORM\OneToOne(targetEntity="LocationAddress", cascade={"persist"})
+   * @JMS\Type("AppBundle\Entity\LocationAddress")
+   */
+  private $address;
+
+  /*
+  * Constructor
+  */
   public function __construct()
   {
     $this->arrivals = new ArrayCollection();
+  }
+
+  /**
+   * Add arrival
+   *
+   * @param \AppBundle\Entity\DeclareArrival $arrival
+   *
+   * @return Location
+   */
+  public function addArrival(\AppBundle\Entity\DeclareArrival $arrival)
+  {
+    $this->arrivals[] = $arrival;
+
+    return $this;
+  }
+
+  /**
+   * Remove arrival
+   *
+   * @param \AppBundle\Entity\DeclareArrival $arrival
+   */
+  public function removeArrival(\AppBundle\Entity\DeclareArrival $arrival)
+  {
+    $this->arrivals->removeElement($arrival);
+  }
+
+  /**
+   * Get arrivals
+   *
+   * @return \Doctrine\Common\Collections\Collection
+   */
+  public function getArrivals()
+  {
+    return $this->arrivals;
   }
 
   /**
@@ -86,36 +135,50 @@ class Location
   }
 
   /**
-   * Add arrival
+   * Set company
    *
-   * @param \AppBundle\Entity\DeclareArrival $arrival
+   * @param \AppBundle\Entity\Company $company
    *
    * @return Location
    */
-  public function addArrival(\AppBundle\Entity\DeclareArrival $arrival)
+  public function setCompany(\AppBundle\Entity\Company $company = null)
   {
-    $this->arrivals[] = $arrival;
+    $this->company = $company;
 
     return $this;
   }
 
   /**
-   * Remove arrival
+   * Get company
    *
-   * @param \AppBundle\Entity\DeclareArrival $arrival
+   * @return \AppBundle\Entity\Company
    */
-  public function removeArrival(\AppBundle\Entity\DeclareArrival $arrival)
+  public function getCompany()
   {
-    $this->arrivals->removeElement($arrival);
+    return $this->company;
   }
 
   /**
-   * Get arrivals
+   * Set address
    *
-   * @return \Doctrine\Common\Collections\Collection
+   * @param \AppBundle\Entity\LocationAddress $address
+   *
+   * @return Location
    */
-  public function getArrivals()
+  public function setAddress(\AppBundle\Entity\LocationAddress $address = null)
   {
-    return $this->arrivals;
+    $this->address = $address;
+
+    return $this;
+  }
+
+  /**
+   * Get address
+   *
+   * @return \AppBundle\Entity\LocationAddress
+   */
+  public function getAddress()
+  {
+    return $this->address;
   }
 }

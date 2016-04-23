@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use \Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class Client
@@ -31,7 +32,13 @@ class Client extends Person
    */
   private $objectType;
 
-  //private $companies;
+  /**
+   * @var ArrayCollection
+   *
+   * @ORM\OneToMany(targetEntity="Company", mappedBy="owner", cascade={"persist"})
+   * @JMS\Type("array")
+   */
+  private $companies;
 
   /**
    * Constructor
@@ -42,8 +49,8 @@ class Client extends Person
     parent::__construct();
 
     $this->objectType = "Client";
+    $this->companies = new ArrayCollection();
   }
-
 
   /**
    * Set relationNumberKeeper
@@ -79,51 +86,99 @@ class Client extends Person
     return $this->id;
   }
 
-    /**
-     * Set accessToken
-     *
-     * @param string $accessToken
-     *
-     * @return Client
-     */
-    public function setAccessToken($accessToken)
-    {
-        $this->accessToken = $accessToken;
+  /**
+   * Add company
+   *
+   * @param \AppBundle\Entity\Company $company
+   *
+   * @return Client
+   */
+  public function addCompany(\AppBundle\Entity\Company $company)
+  {
+    $this->companies[] = $company;
 
-        return $this;
-    }
+    return $this;
+  }
 
-    /**
-     * Get accessToken
-     *
-     * @return string
-     */
-    public function getAccessToken()
-    {
-        return $this->accessToken;
-    }
+  /**
+   * Remove company
+   *
+   * @param \AppBundle\Entity\Company $company
+   */
+  public function removeCompany(\AppBundle\Entity\Company $company)
+  {
+    $this->companies->removeElement($company);
+  }
 
-    /**
-     * Set objectType
-     *
-     * @param string $objectType
-     *
-     * @return Client
-     */
-    public function setObjectType($objectType)
-    {
-        $this->objectType = $objectType;
+  /**
+   * Get companies
+   *
+   * @return \Doctrine\Common\Collections\Collection
+   */
+  public function getCompanies()
+  {
+    return $this->companies;
+  }
 
-        return $this;
-    }
+  /**
+   * Set username
+   *
+   * @param string $username
+   *
+   * @return Client
+   */
+  public function setUsername($username)
+  {
+    $this->username = $username;
 
-    /**
-     * Get objectType
-     *
-     * @return string
-     */
-    public function getObjectType()
-    {
-        return $this->objectType;
-    }
+    return $this;
+  }
+
+  /**
+   * Set accessToken
+   *
+   * @param string $accessToken
+   *
+   * @return Client
+   */
+  public function setAccessToken($accessToken)
+  {
+    $this->accessToken = $accessToken;
+
+    return $this;
+  }
+
+  /**
+   * Get accessToken
+   *
+   * @return string
+   */
+  public function getAccessToken()
+  {
+    return $this->accessToken;
+  }
+
+  /**
+   * Set objectType
+   *
+   * @param string $objectType
+   *
+   * @return Client
+   */
+  public function setObjectType($objectType)
+  {
+    $this->objectType = $objectType;
+
+    return $this;
+  }
+
+  /**
+   * Get objectType
+   *
+   * @return string
+   */
+  public function getObjectType()
+  {
+    return $this->objectType;
+  }
 }

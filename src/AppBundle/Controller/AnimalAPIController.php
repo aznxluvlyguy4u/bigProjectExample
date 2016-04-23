@@ -20,13 +20,17 @@ class AnimalAPIController extends Controller
 {
 
   /**
-   * Retrieve a list of animals.
-   *
-   * Animal-types = { Ram, Ewe }
-   *
-   *
+   * Retrieve a list of animals. Animal-types are: Sheep { Ram, Ewe, Neuter }
    *
    * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
    *   parameters={
    *      {
    *        "name"="type",
@@ -41,12 +45,11 @@ class AnimalAPIController extends Controller
    *   output = "AppBundle\Entity\Animal"
    * )
    * @param Request $request the request object
-   * @param string $state
    * @return JsonResponse
-   * @Route("/")
+   * @Route("")
    * @Method("GET")
    */
-  public function getAllAnimalsByType()
+  public function getAllAnimalsByType(Request $request)
   {
     $animals = $this->getDoctrine()->getRepository('AppBundle:Animal')->findAll();
 
@@ -57,19 +60,26 @@ class AnimalAPIController extends Controller
    * Retrieve an animal, found by it's Id.
    *
    * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
    *   resource = true,
    *   description = "Retrieve an Animal by given ID",
    *   output = "AppBundle\Entity\Animal"
    * )
-   *
-   * @param int $Id Id of the Animal to be returned
-   *
+   * @param Request $request the request object
+   * @param $animal
    * @return JsonResponse
-   *
-   * @ParamConverter("animal", class="AppBundle:Animal")
+   * @Route("/{Id}")
+   * @ParamConverter("Id", class="AppBundle:Animal")
    * @Method("GET")
    */
-  public function getAnimalById($animal)
+  public function getAnimalById(Request $request, $animal)
   {
     return new JsonResponse($animal, 200);
   }
@@ -78,6 +88,14 @@ class AnimalAPIController extends Controller
    * Save a new animal.
    *
    * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
    *   resource = true,
    *   description = "Save a new animal",
    *   input = "AppBundle\Entity\Animal",
@@ -85,9 +103,7 @@ class AnimalAPIController extends Controller
    * )
    * @param Request $request the request object
    * @return JsonResponse
-
-   *
-   * @Route("/")
+   * @Route("")
    * @Method("POST")
    */
   public function postNewAnimal(Request $request)

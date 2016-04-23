@@ -3,8 +3,10 @@
 namespace AppBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * Class Person
@@ -14,7 +16,7 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\DiscriminatorMap({"Client" = "Client", "Employee" = "Employee"})
  * @package AppBundle\Entity
  */
-abstract class Person
+abstract class Person implements UserInterface
 {
   /**
    * @ORM\Column(type="integer")
@@ -59,9 +61,29 @@ abstract class Person
    */
   protected $accessToken;
 
+  /**
+   * @ORM\Column(name="is_active", type="boolean")
+   */
+  private $isActive;
+
+  /**
+   * @ORM\Column(type="string", length=64)
+   */
+  protected $password;
+
+  /**
+   * @var string
+   *
+   * @ORM\Column(type="string", nullable=true)
+   * @JMS\Type("string")
+   */
+  protected $username;
+
   public function __construct()
   {
-    $this->setAccessToken(sha1(uniqid(rand(), true)));
+    $this->accessToken = sha1(uniqid(rand(), true));
+    $this->setPassword('');
+    $this->setIsActive(true);
   }
 
   /**
@@ -146,28 +168,132 @@ abstract class Person
     return $this->emailAddress;
   }
 
+  /**
+   * Get accessToken
+   *
+   * @return string
+   */
+  public function getAccessToken()
+  {
+    return $this->accessToken;
+  }
+
+  /**
+   * Returns the roles granted to the user.
+   *
+   * <code>
+   * public function getRoles()
+   * {
+   *     return array('ROLE_USER');
+   * }
+   * </code>
+   *
+   * Alternatively, the roles might be stored on a ``roles`` property,
+   * and populated in any number of different ways when the user object
+   * is created.
+   *
+   * @return (Role|string)[] The user roles
+   */
+  public function getRoles()
+  {
+    return array('ROLE_USER');
+  }
+
+  /**
+   * Returns the password used to authenticate the user.
+   *
+   * This should be the encoded password. On authentication, a plain-text
+   * password will be salted, encoded, and then compared to this value.
+   *
+   * @return string The password
+   */
+  public function getPassword()
+  {
+    return $this->password;
+  }
+
+  /**
+   * Returns the salt that was originally used to encode the password.
+   *
+   * Note: hashing the password is done by bcrypt!
+   *
+   * @return string|null The salt
+   */
+  public function getSalt() {
+    //hashing the password is done by bcrypt, thus return null!
+    return null;
+  }
+
+  /**
+   * Returns the username used to authenticate the user.
+   *
+   * @return string The username
+   */
+  public function getUsername()
+  {
+    return $this->firstName . ' ' . $this->lastName;
+  }
+
+  /**
+   * Removes sensitive data from the user.
+   *
+   * This is important if, at any given point, sensitive information like
+   * the plain-text password is stored on this object.
+   */
+  public function eraseCredentials()
+  {
+
+  }
 
     /**
-     * Set accessToken
+     * Set isActive
      *
-     * @param string $accessToken
+     * @param boolean $isActive
      *
      * @return Person
      */
-    private function setAccessToken($accessToken)
+    public function setIsActive($isActive)
     {
-        $this->accessToken = $accessToken;
+        $this->isActive = $isActive;
 
         return $this;
     }
 
     /**
-     * Get accessToken
+     * Get isActive
      *
-     * @return string
+     * @return boolean
      */
-    public function getAccessToken()
+    public function getIsActive()
     {
-        return $this->accessToken;
+        return $this->isActive;
+    }
+
+    /**
+     * Set password
+     *
+     * @param string $password
+     *
+     * @return Person
+     */
+    public function setPassword($password)
+    {
+        $this->password = $password;
+
+        return $this;
+    }
+
+    /**
+     * Set username
+     *
+     * @param string $username
+     *
+     * @return Person
+     */
+    public function setUsername($username)
+    {
+        $this->username = $username;
+
+        return $this;
     }
 }

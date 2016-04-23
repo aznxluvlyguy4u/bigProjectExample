@@ -35,25 +35,15 @@ class Employee extends Person
     }
 
     /**
-     * Get id
+     * Set username
      *
-     * @return integer
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * Set accessToken
-     *
-     * @param string $accessToken
+     * @param string $username
      *
      * @return Employee
      */
-    public function setAccessToken($accessToken)
+    public function setUsername($username)
     {
-        $this->accessToken = $accessToken;
+        $this->username = $username;
 
         return $this;
     }

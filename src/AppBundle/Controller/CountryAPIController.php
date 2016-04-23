@@ -11,7 +11,7 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
 /**
- * @Route("/api/v1")
+ * @Route("/api/v1/countries")
  */
 class CountryAPIController extends APIController {
 
@@ -19,6 +19,14 @@ class CountryAPIController extends APIController {
    * Retrieve a list of Country codes and corresponding full Country name, with default continent Europe.
    *
    * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
    *   parameters={
    *      {
    *        "name"="continent",
@@ -32,21 +40,12 @@ class CountryAPIController extends APIController {
    *   description = "Retrieve a list of countries with ISO 3166-1 two letter codes, default continent is Europe",
    *   output = "AppBundle\Entity\Country"
    * )
-   *
-   *
+   * @param Request $request the request object
    * @return Response
-   *
-   *
-   * @Route("/countries")
+   * @Route("")
    * @Method("GET")
    */
   public function getCountryCodes(Request $request) {
-
-    $result = $this->isTokenValid($request);
-
-    if($result instanceof JsonResponse){
-      return $result;
-    }
 
     if(!$request->query->has('continent')) {
       $countries = $this->getDoctrine()->getRepository('AppBundle:Country')->findBy(array('continent' => 'Europe'));

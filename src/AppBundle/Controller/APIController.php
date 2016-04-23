@@ -16,15 +16,18 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 
 /**
  * Class APIController
  * @package AppBundle\Controller
  */
-class APIController extends Controller
+class APIController extends Controller implements APIControllerInterface
 {
-  const AUTHORIZATION_HEADER_NAMESPACE = 'AccessToken';
+  const AUTHORIZATION_HEADER_NAMESPACE = 'Authorization';
+  const ACCESS_TOKEN_HEADER_NAMESPACE = 'AccessToken';
 
   /**
    * @var RequestMessageBuilder
@@ -148,23 +151,84 @@ class APIController extends Controller
   }
 
   //TODO It works but better reassess this function
-  protected function sendMessageObjectToQueue($messageObject, $messageClassNameSpace, $requestTypeNameSpace)
-  {
+  protected function sendMessageObjectToQueue($messageObject, $messageClassNameSpace, $requestTypeNameSpace) {
     $requestId = $messageObject->getRequestId();
     $jsonMessage = $this->getSerializer()->serializeToJSON($messageObject);
 
     //Send serialized message to Queue
-    $sendToQresult = $this->getQueueService()->send($requestId, $jsonMessage, $requestTypeNameSpace);
+    $sendToQresult = $this->getQueueService()
+      ->send($requestId, $jsonMessage, $requestTypeNameSpace);
 
     //If send to Queue, failed, it needs to be resend, set state to failed
-    if($sendToQresult['statusCode'] != '200') {
+    if ($sendToQresult['statusCode'] != '200') {
       $messageObject->setRequestState('failed');
 
       //Update this state to the database
       $repositoryEntityNameSpace = "AppBundle:$messageClassNameSpace";
-      $messageObject = $this->getDoctrine()->getRepository($repositoryEntityNameSpace)->persist($messageObject);
+      $messageObject = $this->getDoctrine()
+        ->getRepository($repositoryEntityNameSpace)
+        ->persist($messageObject);
     }
 
     return $messageObject;
+  }
+
+  /**
+   * Redirect to API docs when root is requested
+   *
+   * @Route("")
+   * @Method("GET")
+   */
+  public function redirectRootToAPIDoc()
+  {
+    return new RedirectResponse('/api/v1/doc');
+  }
+
+  public function getAuthenticatedUser(Request $request, $token = null)
+  {
+    if($token == null) {
+      $token = $request->headers->get($this::ACCESS_TOKEN_HEADER_NAMESPACE);
+    }
+    $em = $this->getDoctrine()->getEntityManager();
+
+    return $em->getRepository('AppBundle:Person')->findOneBy(array("accessToken" => $token));
+  }
+
+  /**
+   * @param Request $request
+   * @return JsonResponse
+   */
+  public function isAccessTokenValid(Request $request)
+  {
+    $token = null;
+    $response = null;
+
+    //Get token header to read token value
+    if($request->headers->has($this::ACCESS_TOKEN_HEADER_NAMESPACE)) {
+      $token = $request->headers->get($this::ACCESS_TOKEN_HEADER_NAMESPACE);
+
+      // A user was found with given token
+      if($this->getAuthenticatedUser($request, $token) != null) {
+        $response = array(
+          'token_status' => 'valid',
+          'token' => $token
+        );
+
+        return new JsonResponse($response, 200);
+      } else { // No user found for given token
+        $response = array(
+          'error'=> 401,
+          'errorMessage'=> 'No AccessToken provided'
+        );
+      }
+    }
+
+    //Mandatory AccessToken was not provided
+    $response = array(
+      'error'=> 401,
+      'errorMessage'=> 'Mandatory AccessToken header was not provided'
+    );
+
+    return new JsonResponse($response, 401);
   }
 }

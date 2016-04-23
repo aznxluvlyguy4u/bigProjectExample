@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Component\MessageBuilderBase;
+use AppBundle\Entity\Company;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
@@ -28,34 +29,38 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 class ArrivalAPIController extends APIController
 {
   const MESSAGE_CLASS = MessageClass::DeclareArrival;
-
-  /**
-   * @var Client
-   */
-  private $user;
+  const REQUEST_TYPE = 'DECLARE_ARRIVAL';
+  const STATE_NAMESPACE = 'state';
+  const REQUEST_STATE_NAMESPACE = 'requestState';
+  const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';
+  const DECLARE_ARRIVAL_RESULT_NAMESPACE = "result";
 
   /**
    * Retrieve a DeclareArrival, found by it's ID.
    *
    * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
    *   resource = true,
    *   description = "Retrieve a DeclareArrival by given ID",
    *   output = "AppBundle\Entity\DeclareArrival"
    * )
-   *
-   *
+   * @param Request $request the request object
    * @param int $Id Id of the DeclareArrival to be returned
-   *
    * @return JsonResponse
-   *
-   *
    * @Route("/{Id}")
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
    * @Method("GET")
    */
-  public function getArrivalById($Id)
+  public function getArrivalById(Request $request, $Id)
   {
-    $arrival = $this->getDoctrine()->getRepository('AppBundle:DeclareArrival')->find($Id);
+    $arrival = $this->getDoctrine()->getRepository($this::DECLARE_ARRIVAL_REPOSITORY)->find($Id);
     return new JsonResponse($arrival, 200);
   }
 
@@ -66,8 +71,17 @@ class ArrivalAPIController extends APIController
    *    FINISHED,
    *    FAILED,
    *    CANCELLED
-   * },
+   * }
+   *
    * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
    *   parameters={
    *      {
    *        "name"="state",
@@ -89,34 +103,32 @@ class ArrivalAPIController extends APIController
    */
   public function getArrivalByState(Request $request)
   {
-    $result = $this->isTokenValid($request);
+    //Initialize default state to filter on declare arrivals
+    $state = 'open';
 
-    if($result instanceof JsonResponse){
-      return $result;
+    //No explicit filter given, thus use default state to filter on
+    if(!$request->query->has($this::STATE_NAMESPACE)) {
+      $declareArrivals = $this->getDoctrine()->getRepository($this::DECLARE_ARRIVAL_REPOSITORY)->findBy(array($this::REQUEST_STATE_NAMESPACE => $state));
+    } else { //A state parameter was given, use custom filter
+      $state = $request->query->get($this::STATE_NAMESPACE);
+      $declareArrivals = $this->getDoctrine()->getRepository($this::DECLARE_ARRIVAL_REPOSITORY)->findBy(array($this::REQUEST_STATE_NAMESPACE => $state));
     }
 
-    $declareArrivalRequests = $this->getDoctrine()->getRepository('AppBundle:DeclareArrivalResponse')->findAll();
-    $filteredResults = new ArrayCollection();
-
-    if(!$request->query->has('state')) {
-      return new JsonResponse($declareArrivalRequests, 200);
-    } else {
-      $state = $request->query->get('state');
-
-      foreach($declareArrivalRequests as $arrivalRequest) {
-        if($arrivalRequest->getDeclareArrivalRequestMessage()->getRequestState() == $state){
-          $filteredResults->add($arrivalRequest);
-        }
-      }
-    }
-
-    return new JsonResponse($filteredResults, 200);
+    return new JsonResponse(array($this::DECLARE_ARRIVAL_RESULT_NAMESPACE => $declareArrivals), 200);
   }
 
   /**
    * Create a new DeclareArrival request
    *
    * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
    *   resource = true,
    *   description = "Post a DeclareArrival request",
    *   input = "AppBundle\Entity\DeclareArrival",
@@ -139,6 +151,7 @@ class ArrivalAPIController extends APIController
     }
 
     //Convert front-end message into an array
+    //Get content to array
     $content = $this->getContentAsArray($request);
 
     //Convert the array into an object and add the mandatory values retrieved from the database

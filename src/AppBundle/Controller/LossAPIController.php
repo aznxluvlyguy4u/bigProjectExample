@@ -31,13 +31,6 @@ class LossAPIController extends APIController {
    */
   public function getLossByState(Request $request)
   {
-  /*  $result = $this->isTokenValid($request);
-
-    if($result instanceof JsonResponse){
-      return $result;
-    }*/
-
-
     return new JsonResponse("ok", 200);
   }
 
@@ -51,13 +44,6 @@ class LossAPIController extends APIController {
    */
   public function getLossById(Request $request,$Id)
   {
-    /*$result = $this->isTokenValid($request);
-
-    if($result instanceof JsonResponse){
-      return $result;
-    }*/
-
-
     return new JsonResponse("ok", 200);
   }
 
@@ -70,13 +56,6 @@ class LossAPIController extends APIController {
    */
   public function postNewLoss(Request $request)
   {
-  /*  $result = $this->isTokenValid($request);
-
-    if($result instanceof JsonResponse){
-      return $result;
-    }*/
-
-
     return new JsonResponse("ok", 200);
   }
 
@@ -89,13 +68,6 @@ class LossAPIController extends APIController {
    */
   public function debugAPI(Request $request)
   {
-  /*  $result = $this->isTokenValid($request);
-
-    if($result instanceof JsonResponse){
-      return $result;
-    }*/
-
-
     return new JsonResponse("ok", 200);
   }
 
