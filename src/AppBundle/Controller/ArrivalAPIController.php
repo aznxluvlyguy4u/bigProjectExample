@@ -5,6 +5,9 @@ namespace AppBundle\Controller;
 use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationAddress;
+use AppBundle\Entity\BillingAddress;
+use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\Ram;
@@ -258,15 +261,55 @@ class ArrivalAPIController extends APIController
   public function setupTest(Request $request)
   {
     $entityManager = $this->getDoctrine()->getEntityManager();
+    $encoder = $this->get('security.password_encoder');
 
     $mockClient = new Client();
     $mockClient->setFirstName("Bart");
     $mockClient->setLastName("de Boer");
     $mockClient->setEmailAddress("bart@deboer.com");
     $mockClient->setRelationNumberKeeper("77777444");
+    $mockClient->setUsername("Bartje");
+    $mockClient->setPassword($encoder->encodePassword($mockClient, "blauwetexelaar"));
 
-    $this->persist($mockClient, "Person" );
+    $locationAddress = new LocationAddress();
+    $locationAddress->setAddressNumber("1");
+    $locationAddress->setCity("Den Haag");
+    $locationAddress->setPostalCode("1111AZ");
+    $locationAddress->setState("ZH");
+    $locationAddress->setStreetName("Boederij");
+    $locationAddress->setCountry("Nederland");
 
+    $billingAddress = new BillingAddress();
+    $billingAddress->setAddressNumber("2");
+    $billingAddress->setCity("Den Haag");
+    $billingAddress->setPostalCode("2222GG");
+    $billingAddress->setState("ZH");
+    $billingAddress->setStreetName("Raamweg");
+    $billingAddress->setCountry("Nederland");
+
+    $companyAddress = new CompanyAddress();
+    $companyAddress->setAddressNumber("3");
+    $companyAddress->setCity("Rotterdam");
+    $companyAddress->setPostalCode("3333XX");
+    $companyAddress->setState("ZH");
+    $companyAddress->setStreetName("Papierengeldweg");
+    $companyAddress->setCountry("Nederland");
+
+    $company = new Company();
+    $company->setAddress($companyAddress);
+    $company->setBillingAddress($billingAddress);
+    $company->setCompanyName("Boederij de weiland");
+    $company->setOwner($mockClient);
+
+    $location = new Location();
+    $location->setAddress($locationAddress);
+    $location->setCompany($company);
+    $location->setUbn("98989898");
+
+    $company->addLocation($location);
+    $mockClient->addCompany($company);
+
+    $entityManager->persist($mockClient);
 
     $father = new Ram();
     $father->setUlnCountryCode("NL");
