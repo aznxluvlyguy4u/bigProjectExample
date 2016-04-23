@@ -296,4 +296,18 @@ abstract class Person implements UserInterface
 
         return $this;
     }
+
+    /**
+     * Set accessToken
+     *
+     * @param string $accessToken
+     *
+     * @return Person
+     */
+    public function setAccessToken($accessToken)
+    {
+        $this->accessToken = $accessToken;
+
+        return $this;
+    }
 }
