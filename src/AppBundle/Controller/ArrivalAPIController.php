@@ -171,20 +171,17 @@ class ArrivalAPIController extends APIController
   {
     //Setup mock message as JSON
     $content = '{
-   "import_animal": true,
-   "ubn_previous_owner": "123456",
-   "animal": {
-    "pedigree_country_code": "NL",
-     "pedigree_number": "12345",
-     "uln_country_code": "UK",
-     "uln_number": "333333333"
-   },
-   "location" : {
-     "ubn" : "0031079"
-   },
-   "arrival_date": "2016-04-04T12:55:43-05:00"
+    "import_animal": true,
+    "ubn_previous_owner": "123456",
+    "animal": {
+      "pedigree_country_code": "NL",
+      "pedigree_number": "12345",
+      "uln_country_code": "UK",
+      "uln_number": "333333333"
+    },
+    "arrival_date": "2016-04-04T12:55:43-05:00"
 
-  }';
+    }';
 
     $token = "HARCODED_TOKEN"; // Lookup a user in DB, copy paste token
 
@@ -203,7 +200,7 @@ class ArrivalAPIController extends APIController
         MessageClass::DeclareArrival => $messageObject,
         'sent to queue with request type' => RequestType::DECLARE_ARRIVAL), 200);
 
-//    return new JsonResponse("OK", 200);
+    //return new JsonResponse("OK", 200);
   }
 
   /**
@@ -286,7 +283,6 @@ class ArrivalAPIController extends APIController
     $child->setDateOfBirth(new \DateTime());
     $child->setParentFather($father);
     $child->setParentMother($mother);
-
 
     $this->persist($father, "Ram");
     $this->persist($mother, "Ewe");
