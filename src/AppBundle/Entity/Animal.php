@@ -159,7 +159,7 @@ abstract class Animal
 
     /**
      * @var array
-     *
+     * @JMS\Type("AppBundle\Entity\DeclareArrival")
      * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="animal", cascade={"persist"})
      */
     protected $arrivals;
