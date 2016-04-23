@@ -1,5 +1,5 @@
 {
-    "name": "brian/nsfo.api",
+    "name": "jongensvantechniek/nsfo-api",
     "license": "proprietary",
     "type": "project",
     "autoload": {
@@ -13,7 +13,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/"
+            "Tests\\": "src/AppBundle/Tests/Controller/"
         }
     },
     "require": {
@@ -68,7 +68,7 @@
         "symfony-bin-dir": "bin",
         "symfony-var-dir": "var",
         "symfony-web-dir": "web",
-        "symfony-tests-dir": "tests",
+        "symfony-tests-dir": "src/AppBundle/Tests/Controller",
         "symfony-assets-install": "relative",
         "incenteev-parameters": {
             "file": "app/config/parameters.yml"
