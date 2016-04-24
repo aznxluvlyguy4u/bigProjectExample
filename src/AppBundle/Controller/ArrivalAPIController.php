@@ -149,7 +149,7 @@ class ArrivalAPIController extends APIController
     $content = $this->getContentAsArray($request);
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $messageObject = $this->buildMessageObject(MessageClass::DeclareArrival, $content, $user);
+    $messageObject = $this->buildMessageObject(MessageClass::DeclareArrival, $content, $this->getAuthenticatedUser($request));
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($messageObject, MessageClass::DeclareArrival);
