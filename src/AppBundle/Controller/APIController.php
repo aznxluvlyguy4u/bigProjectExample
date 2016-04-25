@@ -4,15 +4,11 @@ namespace AppBundle\Controller;
 
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Constant\Constant;
-use AppBundle\Entity\Client;
-use AppBundle\Entity\Location;
-use AppBundle\Component\MessageBuilderBase;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Component\HttpFoundation\JsonResponse;

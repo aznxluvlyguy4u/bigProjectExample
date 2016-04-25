@@ -14,7 +14,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
  */
 class LossAPIController extends APIController {
 
-  const REQUEST_TYPE = 'DECLARE_BIRTH';
+  const REQUEST_TYPE = 'DECLARE_LOSS';
 
   /**
    * @var Client

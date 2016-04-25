@@ -116,7 +116,7 @@ class IRSerializer implements IRSerializerInterface
         $retrievedAnimalContentArray = json_decode($retrievedAnimalJson, true);
 
         //Add animal type to content array
-        $retrievedAnimalContentArray['type'] = $retrievedAnimal->getObjectType();
+        $retrievedAnimalContentArray[$this::DISCRIMINATOR_TYPE_NAMESPACE] = $retrievedAnimal->getObjectType();
 
         // FIXME
         unset( $retrievedAnimalContentArray['arrivals']);

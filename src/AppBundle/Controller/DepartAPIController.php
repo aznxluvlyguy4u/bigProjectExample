@@ -14,7 +14,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
  */
 class DepartAPIController extends APIController {
 
-  const REQUEST_TYPE = 'DECLARE_BIRTH';
+  const REQUEST_TYPE = 'DECLARE_DEPART';
 
   /**
    * @var Client

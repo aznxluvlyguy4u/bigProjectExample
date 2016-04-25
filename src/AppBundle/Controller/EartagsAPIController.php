@@ -14,7 +14,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
  */
 class EartagsAPIController extends APIController {
 
-  const REQUEST_TYPE = 'DECLARE_BIRTH';
+  const REQUEST_TYPE = 'RETRIEVE_EARTAGS';
 
   /**
    * @var Client
@@ -53,7 +53,7 @@ class EartagsAPIController extends APIController {
    * @Route("")
    * @Method("POST")
    */
-  public function postNewBirth(Request $request)
+  public function postNewDeclareEartag(Request $request)
   {
     return new JsonResponse("ok", 200);
   }

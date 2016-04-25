@@ -14,8 +14,6 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
  */
 class ClientAPIController extends APIController {
 
-  const REQUEST_TYPE = 'DECLARE_BIRTH';
-
   /**
    * @var Client
    */

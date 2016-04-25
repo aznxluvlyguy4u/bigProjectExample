@@ -5,7 +5,6 @@ namespace AppBundle\Component;
 use AppBundle\Service\IRSerializer;
 use Doctrine\ORM\EntityManager;
 use AppBundle\Enumerator\MessageClass;
-use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Entity\Client as Client;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
