@@ -76,7 +76,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $this->loadFixtures($fixtures);
 
     //Get mocked Client
-    self::$mockedClient = MockedClient::$mockedClient;
+    self::$mockedClient = MockedClient::getMockedClient();
     $this->accessToken = self::$mockedClient->getAccessToken();
 
     //Get mocked Animals
