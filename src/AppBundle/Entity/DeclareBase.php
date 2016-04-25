@@ -214,7 +214,7 @@ abstract class DeclareBase
      *
      * @param string $action
      *
-     * @return DeclareArrival
+     * @return DeclareBase
      */
     public function setAction($action)
     {
@@ -238,7 +238,7 @@ abstract class DeclareBase
      *
      * @param string $recoveryIndicator
      *
-     * @return DeclareArrival
+     * @return DeclareBase
      */
     public function setRecoveryIndicator($recoveryIndicator)
     {
@@ -262,7 +262,7 @@ abstract class DeclareBase
      *
      * @param string $relationNumberKeeper
      *
-     * @return DeclareArrival
+     * @return DeclareBase
      */
     public function setRelationNumberKeeper($relationNumberKeeper)
     {
