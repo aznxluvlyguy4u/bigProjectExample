@@ -3,12 +3,13 @@
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Service\IRSerializer;
+use Doctrine\ORM\EntityManager;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client;
 
 class ArrivalAPIControllerTest extends WebTestCase {
 
-  const DECLARE_ARRRIVAL_ENDPOINT = "/ap/v1/arrivals";
+  const DECLARE_ARRRIVAL_ENDPOINT = "/api/v1/arrivals";
 
   /**
    * @var Client
@@ -20,15 +21,19 @@ class ArrivalAPIControllerTest extends WebTestCase {
    */
   private $serializer;
 
-
+  /**
+   * @var EntityManager
+   */
+  private $entityManager;
   /**
    * Runs on each testcase
    */
   public function setUp()
   {
-    $this->client = parent::createClient();
-    //$this->serializer = $this->get('app.serializer.ir');
 
+    $kernel = static::createKernel();
+    $this->client = parent::createClient();
+    $this->serializer = $kernel->getContainer()->get('app.serializer.ir');
   }
 
   /**
@@ -53,9 +58,9 @@ class ArrivalAPIControllerTest extends WebTestCase {
    */
   public function testGetDeclareArrivals()
   {
-    $client = $this->createClient();
-    $client->request('GET', $this::DECLARE_ARRRIVAL_ENDPOINT);
-    $response = $client->getResponse();
+
+    $this->client->request('GET', $this::DECLARE_ARRRIVAL_ENDPOINT);
+    $response = $this->client->getResponse();
 
     $data = json_decode($response->getContent(), true);
     $this->assertSame(null, $data['arrivals']);
