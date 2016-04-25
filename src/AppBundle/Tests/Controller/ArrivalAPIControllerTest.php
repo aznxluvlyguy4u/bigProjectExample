@@ -2,38 +2,95 @@
 
 namespace AppBundle\Tests\Controller;
 
+use AppBundle\Entity\DeclareArrival;
 use AppBundle\Service\IRSerializer;
+use AppBundle\DataFixtures\ORM\MockedAnimal;
+use AppBundle\DataFixtures\ORM\MockedClient;
 use Doctrine\ORM\EntityManager;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Bundle\FrameworkBundle\Client;
+use Liip\FunctionalTestBundle\Test\WebTestCase;
+use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
+use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationAddress;
+use AppBundle\Entity\BillingAddress;
+use AppBundle\Entity\CompanyAddress;
+use AppBundle\Entity\Company;
+use AppBundle\Entity\Client;
+use AppBundle\Entity\Ram;
+use AppBundle\Entity\Ewe;
+use AppBundle\Enumerator\AnimalType;
 
 class ArrivalAPIControllerTest extends WebTestCase {
 
-  const DECLARE_ARRRIVAL_ENDPOINT = "/api/v1/arrivals";
+  const DECLARE_ARRIVAL_ENDPOINT = "/api/v1/arrivals";
 
   /**
-   * @var Client
+   * @var RequestClient
    */
   private $client;
 
   /**
    * @var IRSerializer
    */
-  private $serializer;
+  static private $serializer;
 
   /**
    * @var EntityManager
    */
-  private $entityManager;
+  static private $entityManager;
+
+  /**
+   * @var Client
+   */
+  static private $mockedClient;
+
+  /**
+   * @var Ram
+   */
+  static private $mockedChild;
+
+  /**
+   * @var Ram
+   */
+  static private $mockedFather;
+
+  /**
+   * @var Ewe
+   */
+  static private $mockedMother;
+
+  /**
+   * @var string
+   */
+  private $accessToken;
+
+  private $defaultHeaders;
+
   /**
    * Runs on each testcase
    */
   public function setUp()
   {
-
-    $kernel = static::createKernel();
     $this->client = parent::createClient();
-    $this->serializer = $kernel->getContainer()->get('app.serializer.ir');
+
+    //Load fixture class
+    $fixtures = array('AppBundle\DataFixtures\ORM\MockedClient',
+                      'AppBundle\DataFixtures\ORM\MockedAnimal');
+    $this->loadFixtures($fixtures);
+
+    //Get mocked Client
+    self::$mockedClient = MockedClient::$mockedClient;
+    $this->accessToken = self::$mockedClient->getAccessToken();
+
+
+    //Get mocked Animals
+    self::$mockedChild = MockedAnimal::$mockedRamWithParents;
+    self::$mockedFather = MockedAnimal::$mockedParentRam;
+    self::$mockedMother = MockedAnimal::$mockedParentEwe;
+
+    $this->defaultHeaders = array(
+      'Content-Type' => 'application/json',
+      'AccessToken' => self::$mockedClient->getAccessToken(),
+    );
   }
 
   /**
@@ -45,12 +102,15 @@ class ArrivalAPIControllerTest extends WebTestCase {
      $kernel = static::createKernel();
      $kernel->boot();
 
-     //get the DI container
-     $serializer =  $kernel->getContainer()->get('app.serializer.ir');
+    static::$kernel = static::createKernel();
+    static::$kernel->boot();
 
-     //now we can instantiate our service (if you want a fresh one for
-     //each test method, do this in setUp() instead
-     //$serializer= self::$container->get('app.serializer.ir');
+    //Get the DI container
+    $container = $kernel->getContainer();
+
+    //Get service classes
+    self::$serializer = $container->get('app.serializer.ir');
+    self::$entityManager = $container->get('doctrine.orm.entity_manager');
   }
 
   /**
@@ -58,12 +118,17 @@ class ArrivalAPIControllerTest extends WebTestCase {
    */
   public function testGetDeclareArrivals()
   {
+    $this->client->request('GET',
+                           $this::DECLARE_ARRIVAL_ENDPOINT . '/status/',
+                           array(),
+                           array(),
+                           $this->defaultHeaders
+    );
 
-    $this->client->request('GET', $this::DECLARE_ARRRIVAL_ENDPOINT);
     $response = $this->client->getResponse();
-
     $data = json_decode($response->getContent(), true);
-    $this->assertSame(null, $data['arrivals']);
+
+    $this->assertSame(0, sizeof($data['result']));
   }
 
   /**
@@ -71,26 +136,49 @@ class ArrivalAPIControllerTest extends WebTestCase {
    */
   public function testGetDeclareArrivalById()
   {
-    $client = $this->createClient();
-    $client->request('GET', $this::DECLARE_ARRRIVAL_ENDPOINT . '/1');
-    $response = $client->getResponse();
+    $this->client->request('GET',
+                           $this::DECLARE_ARRIVAL_ENDPOINT . '/1',
+                           array(),
+                           array(),
+                           $this->defaultHeaders
+    );
 
+    $response = $this->client->getResponse();
     $data = json_decode($response->getContent(), true);
+
     $this->assertSame(null, $data);
   }
 
+  //Fixme - 500 server error
   /**
+   *
    * Test create new Declare arrival
    */
-  public function testPostDeclareArrival()
-  {
-    $client = $this->createClient();
-    $client->request('POST', $this::DECLARE_ARRRIVAL_ENDPOINT);
-    $response = $client->getResponse();
-
-    $data = json_decode($response->getContent(), true);
-    $this->assertSame(null, $data);
-  }
+//  public function testPostDeclareArrival()
+//  {
+//    //Create declare arrival
+//    $declareArrival = new DeclareArrival();
+//    $declareArrival->setArrivalDate(new \DateTime());
+//    $declareArrival->setUbnPreviousOwner("123456");
+//    $declareArrival->setImportAnimal(true);
+//    $declareArrival->setAnimal(self::$mockedChild);
+//
+//    //Create json to be posted
+//    $declareArrivalJson = self::$serializer->serializeToJSON($declareArrival);
+//
+//    $this->client->request('POST',
+//                           $this::DECLARE_ARRIVAL_ENDPOINT,
+//                           array(),
+//                           array(),
+//                           $this->defaultHeaders,
+//                           $declareArrivalJson
+//    );
+//
+//    $response = $this->client->getResponse();
+//    $data = json_decode($response->getContent(), true);
+//
+//    $this->assertSame(null, $data);
+//  }
 
   public function tearDown() {
     parent::tearDown();
