@@ -22,9 +22,6 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
  */
 class APIController extends Controller implements APIControllerInterface
 {
-  const AUTHORIZATION_HEADER_NAMESPACE = 'Authorization';
-  const ACCESS_TOKEN_HEADER_NAMESPACE = 'AccessToken';
-
   /**
    * @var RequestMessageBuilder
    */
@@ -106,7 +103,7 @@ class APIController extends Controller implements APIControllerInterface
   public function getToken(Request $request)
   {
     //Get auth header to read token
-    if(!$request->headers->has($this::AUTHORIZATION_HEADER_NAMESPACE)) {
+    if(!$request->headers->has(Constant::AUTHORIZATION_HEADER_NAMESPACE)) {
       return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
     }
 
@@ -183,7 +180,7 @@ class APIController extends Controller implements APIControllerInterface
   public function getAuthenticatedUser(Request $request= null, $token = null)
   {
     if($token == null) {
-      $token = $request->headers->get($this::ACCESS_TOKEN_HEADER_NAMESPACE);
+      $token = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
     }
     $em = $this->getDoctrine()->getEntityManager();
 
@@ -200,8 +197,8 @@ class APIController extends Controller implements APIControllerInterface
     $response = null;
 
     //Get token header to read token value
-    if($request->headers->has($this::ACCESS_TOKEN_HEADER_NAMESPACE)) {
-      $token = $request->headers->get($this::ACCESS_TOKEN_HEADER_NAMESPACE);
+    if($request->headers->has(Constant::ACCESS_TOKEN_HEADER_NAMESPACE)) {
+      $token = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
 
       // A user was found with given token
       if($this->getAuthenticatedUser($request, $token) != null) {
