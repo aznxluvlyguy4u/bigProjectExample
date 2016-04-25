@@ -1,0 +1,30 @@
+language: php
+
+php:
+    - 5.5
+    - 5.6
+
+archive: true
+
+services:
+    - postgres
+
+build:
+  ci:
+    - psql -c 'create role shippable with superuser;' -U postgres
+    - psql -c 'create database nsfo_test;' -U postgres
+
+before_install:
+    - echo "xdebug.max_nesting_level = 1000" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+    - echo 'variables_order = "EGPCS"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+
+before_script:
+    - composer self-update -n
+    - composer install --prefer-dist -n
+
+script:
+    - phpunit --log-junit shippable/testresults/junit.xml --coverage-xml shippable/codecoverage
+    - ./bin/console server:start -n
+
+after_script:
+    - cp -r ./var/logs/test.log shippable/logs

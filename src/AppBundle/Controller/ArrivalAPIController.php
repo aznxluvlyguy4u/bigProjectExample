@@ -183,7 +183,7 @@ class ArrivalAPIController extends APIController
 
     }';
 
-    $token = "HARCODED_TOKEN"; // Lookup a user in DB, copy paste token
+    $token = "7209331472fe1ff1b497ef91998af2275646234e"; // Lookup a user in DB, copy paste token
 
     //Convert mock message into an array
     $content = new ArrayCollection(json_decode($content, true));
@@ -288,6 +288,6 @@ class ArrivalAPIController extends APIController
     $this->persist($mother, "Ewe");
     $this->persist($child, "Neuter");
 
-    return new JsonResponse("MOCK ENTITIES LOADED IN THE DB", 200);
+    return new JsonResponse($mockClient, 200);
   }
 }
