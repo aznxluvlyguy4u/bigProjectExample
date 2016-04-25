@@ -1,8 +1,9 @@
 <?php
 
-namespace AppBundle\Tests\DataFixtures;
+namespace AppBundle\DataFixtures\ORM;
 
 use Doctrine\Common\DataFixtures\FixtureInterface;
+use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
@@ -10,7 +11,7 @@ use AppBundle\Enumerator\AnimalType;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class MockedAnimal implements FixtureInterface, ContainerAwareInterface  {
+class MockedAnimal implements FixtureInterface, ContainerAwareInterface, OrderedFixtureInterface  {
 
   /**
    * @var ContainerInterface
