@@ -44,15 +44,16 @@ class ArrivalMessageBuilder extends MessageBuilderBase
     }
 
     /**
-     * @param ArrayCollection $content
-     * @return ArrayCollection
+     * @param DeclareArrival $messageObject the message received from the front-end
+     * @param Person $person
+     * @return DeclareArrival
      */
     private function addDeclareArrivalData(DeclareArrival $messageObject)
     {
         $animal = $messageObject->getAnimal();
         $animal->setAnimalType(AnimalType::sheep);
 
-        //TODO retrieve location from database related to the correct person
+        //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
         $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
         return $messageObject;
     }
