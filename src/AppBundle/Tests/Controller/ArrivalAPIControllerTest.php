@@ -59,10 +59,8 @@ class ArrivalAPIControllerTest extends WebTestCase {
   static private $mockedMother;
 
   /**
-   * @var string
+   * @var array
    */
-  private $accessToken;
-
   private $defaultHeaders;
 
   /**
@@ -81,15 +79,14 @@ class ArrivalAPIControllerTest extends WebTestCase {
     self::$mockedClient = MockedClient::$mockedClient;
     $this->accessToken = self::$mockedClient->getAccessToken();
 
-
     //Get mocked Animals
     self::$mockedChild = MockedAnimal::$mockedRamWithParents;
     self::$mockedFather = MockedAnimal::$mockedParentRam;
     self::$mockedMother = MockedAnimal::$mockedParentEwe;
 
     $this->defaultHeaders = array(
-      'Content-Type' => 'application/json',
-      'AccessToken' => self::$mockedClient->getAccessToken(),
+      'CONTENT_TYPE' => 'application/json',
+      'HTTP_ACCESSTOKEN' => self::$mockedClient->getAccessToken(),
     );
   }
 
@@ -149,36 +146,35 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $this->assertSame(null, $data);
   }
 
-  //Fixme - 500 server error
   /**
    *
    * Test create new Declare arrival
    */
-//  public function testPostDeclareArrival()
-//  {
-//    //Create declare arrival
-//    $declareArrival = new DeclareArrival();
-//    $declareArrival->setArrivalDate(new \DateTime());
-//    $declareArrival->setUbnPreviousOwner("123456");
-//    $declareArrival->setImportAnimal(true);
-//    $declareArrival->setAnimal(self::$mockedChild);
-//
-//    //Create json to be posted
-//    $declareArrivalJson = self::$serializer->serializeToJSON($declareArrival);
-//
-//    $this->client->request('POST',
-//                           $this::DECLARE_ARRIVAL_ENDPOINT,
-//                           array(),
-//                           array(),
-//                           $this->defaultHeaders,
-//                           $declareArrivalJson
-//    );
-//
-//    $response = $this->client->getResponse();
-//    $data = json_decode($response->getContent(), true);
-//
-//    $this->assertSame(null, $data);
-//  }
+  public function testPostDeclareArrival()
+  {
+    //Create declare arrival
+    $declareArrival = new DeclareArrival();
+    $declareArrival->setArrivalDate(new \DateTime());
+    $declareArrival->setUbnPreviousOwner("123456");
+    $declareArrival->setImportAnimal(true);
+    $declareArrival->setAnimal(self::$mockedChild);
+
+    //Create json to be posted
+    $declareArrivalJson = self::$serializer->serializeToJSON($declareArrival);
+
+    $this->client->request('POST',
+                           $this::DECLARE_ARRIVAL_ENDPOINT,
+                           array(),
+                           array(),
+                           $this->defaultHeaders,
+                           $declareArrivalJson
+    );
+
+    $response = $this->client->getResponse();
+    $data = json_decode($response->getContent(), true);
+
+    $this->assertSame('open', $data['request_state']);
+  }
 
   public function tearDown() {
     parent::tearDown();
