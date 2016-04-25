@@ -22,9 +22,10 @@ use Doctrine\Common\Collections\ArrayCollection;
  *                          "DeclareBirth" = "DeclareBirth",
  *                          "DeclareDepart" = "DeclareDepart",
  *                          "DeclareEartagsTransfer" = "DeclareEartagsTransfer",
- *                          "DeclareLoss" = "DeclareLoss",
  *                          "DeclareExport" = "DeclareExport",
  *                          "DeclareImport" = "DeclareImport",
+ *                          "DeclareLoss" = "DeclareLoss",
+ *                          "DeclareMate" = "DeclareMate",
  *                          "RetrieveEartags" = "RetrieveEartags",
  *                          "RevokeDeclaration" = "RevokeDeclaration"})
  * @package AppBundle\Entity\DeclareBase
