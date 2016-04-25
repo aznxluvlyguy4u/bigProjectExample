@@ -2,7 +2,9 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\MessageClass;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -91,7 +93,7 @@ class ArrivalAPIController extends APIController
   public function getArrivalByState(Request $request)
   {
     //Initialize default state to filter on declare arrivals
-    $state = 'open';
+    $state = RequestStateType::OPEN;
 
     //No explicit filter given, thus use default state to filter on
     if(!$request->query->has($this::STATE_NAMESPACE)) {
