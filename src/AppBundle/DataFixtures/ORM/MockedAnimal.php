@@ -21,17 +21,17 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
   /**
    * @var Ram
    */
-  static public $mockedRamWithParents;
+  static private $mockedRamWithParents;
 
   /**
    * @var Ram
    */
-  static public $mockedParentRam;
+  static private $mockedParentRam;
 
   /**
    * @var Ewe
    */
-  static public $mockedParentEwe;
+  static private $mockedParentEwe;
 
   /**
    * Sets the container.
@@ -87,4 +87,29 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
   {
     return 2;
   }
+
+  /**
+   * @return Ram
+   */
+  public static function getMockedRamWithParents()
+  {
+    return self::$mockedRamWithParents;
+  }
+
+  /**
+   * @return Ram
+   */
+  public static function getMockedParentRam()
+  {
+    return self::$mockedParentRam;
+  }
+
+  /**
+   * @return Ewe
+   */
+  public static function getMockedParentEwe()
+  {
+    return self::$mockedParentEwe;
+  }
+  
 }
