@@ -52,6 +52,7 @@ class ArrivalMessageBuilder extends MessageBuilderBase
         $animal = $messageObject->getAnimal();
         $animal->setAnimalType(AnimalType::sheep);
 
+        //TODO retrieve location from database related to the correct person
         $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
         return $messageObject;
     }
