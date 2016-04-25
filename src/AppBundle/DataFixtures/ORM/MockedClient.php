@@ -1,8 +1,9 @@
 <?php
 
-namespace AppBundle\Tests\DataFixtures;
+namespace AppBundle\DataFixtures\ORM;
 
 use Doctrine\Common\DataFixtures\FixtureInterface;
+use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
@@ -13,7 +14,7 @@ use AppBundle\Entity\Client;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class MockedClient implements FixtureInterface, ContainerAwareInterface  {
+class MockedClient implements FixtureInterface, ContainerAwareInterface, OrderedFixtureInterface {
 
   /**
    * @var ContainerInterface
