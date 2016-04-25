@@ -16,4 +16,16 @@ class RequestType
     const DECLARE_IMPORT = 'DECLARE_IMPORT';
     const RETRIEVE_EARTAGS = 'RETRIEVE_EARTAGS';
     const REVOKE_DECLARATION = 'REVOKE_DECLARATION';
+
+    const DECLARATION_DETAIL_ENTITY = 'DeclarationDetail';
+    const DECLARE_ARRIVAL_ENTITY = 'DeclareArrival';
+    const DECLARE_BIRTH_ENTITY = 'DeclareBirth';
+    const DECLARE_ANIMAL_FLAG_ENTITY = 'DeclareAnimalFlag';
+    const DECLARE_DEPART_ENTITY = 'DeclareDepart';
+    const DECLARE_EARTAGS_TRANSFER_ENTITY = 'DeclareEartagsTransfer';
+    const DECLARE_LOSS_ENTITY = 'DeclareLoss';
+    const DECLARE_EXPORT_ENTITY = 'DeclareExport';
+    const DECLARE_IMPORT_ENTITY = 'DeclareImport';
+    const RETRIEVE_EARTAGS_ENTITY = 'RetrieveEartags';
+    const REVOKE_DECLARATION_ENTITY = 'RevokeDeclaration';
 }
