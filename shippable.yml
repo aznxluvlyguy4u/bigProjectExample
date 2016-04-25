@@ -13,10 +13,11 @@ build:
   ci:
     - psql -c 'create role shippable with superuser;' -U postgres
     - psql -c 'create database nsfo_test;' -U postgres
-
+ sudo apt-get install php5-pgsql
 before_install:
     - echo "xdebug.max_nesting_level = 1000" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
     - echo 'variables_order = "EGPCS"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+    - sudo apt-get install php5-pgsql
 
 before_script:
     - composer self-update -n
