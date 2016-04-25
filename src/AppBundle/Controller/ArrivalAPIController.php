@@ -101,7 +101,7 @@ class ArrivalAPIController extends APIController
    * @param Request $request the request object
    * @param string $state
    * @return JsonResponse
-   * @Route("/status")
+   * @Route("/status/")
    * @Method("GET")
    */
   public function getArrivalByState(Request $request)
