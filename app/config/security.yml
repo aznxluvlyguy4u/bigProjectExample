@@ -15,11 +15,14 @@ security:
                 property: username
 
     firewalls:
-        # disables authentication for assets and the profiler, adapt it according to your needs
+        # To disable authentication on dev mode, comment out below DEV section
         dev:
-            pattern: ^/*
+            pattern: ^(?:(?!doc|register|authorize|validate-token).)*$
             security: false
             stateless: true
+            guard:
+                authenticators:
+                    - app.authenticator.token
 
         secured_area:
             pattern: ^(?:(?!doc|register|authorize|validate-token).)*$
