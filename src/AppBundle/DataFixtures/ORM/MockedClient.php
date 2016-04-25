@@ -24,7 +24,7 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
   /**
    * @var Client
    */
-  static public $mockedClient;
+  static private $mockedClient;
 
   /**
    * Sets the container.
@@ -105,5 +105,13 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
   public function getOrder()
   {
     return 1;
+  }
+
+  /**
+   * @return Client
+   */
+  public static function getMockedClient()
+  {
+    return self::$mockedClient;
   }
 }

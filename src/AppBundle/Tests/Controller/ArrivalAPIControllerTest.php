@@ -76,13 +76,13 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $this->loadFixtures($fixtures);
 
     //Get mocked Client
-    self::$mockedClient = MockedClient::$mockedClient;
+    self::$mockedClient = MockedClient::getMockedClient();
     $this->accessToken = self::$mockedClient->getAccessToken();
 
     //Get mocked Animals
-    self::$mockedChild = MockedAnimal::$mockedRamWithParents;
-    self::$mockedFather = MockedAnimal::$mockedParentRam;
-    self::$mockedMother = MockedAnimal::$mockedParentEwe;
+    self::$mockedChild  = MockedAnimal::getMockedRamWithParents();
+    self::$mockedFather = MockedAnimal::getMockedParentRam();
+    self::$mockedMother = MockedAnimal::getMockedParentEwe();
 
     $this->defaultHeaders = array(
       'CONTENT_TYPE' => 'application/json',
