@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
 /**
- * @Route("/api/v1")
+ * @Route("/api/v1/births")
  */
 class BirthAPIController extends APIController {
 
@@ -25,7 +25,7 @@ class BirthAPIController extends APIController {
    * Get a list of DeclareBirths with a given state:{OPEN, CLOSED, DECLINED}.
    *
    *
-   * @Route("/births/status")
+   * @Route("/status")
    * @Method("GET")
    */
   public function getBirthByState(Request $request)
@@ -44,7 +44,7 @@ class BirthAPIController extends APIController {
    *
    * Get a DeclareBirth, found by it's ID.
    *
-   * @Route("/births/{Id}")
+   * @Route("/{Id}")
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareBirthRepository")
    * @Method("GET")
    */
@@ -64,7 +64,7 @@ class BirthAPIController extends APIController {
    *
    * Create a DeclareBirth Request.
    *
-   * @Route("/births")
+   * @Route("")
    * @Method("POST")
    */
   public function postNewBirth(Request $request)
@@ -83,7 +83,7 @@ class BirthAPIController extends APIController {
    *
    * Debug endpoint
    *
-   * @Route("/births/debug")
+   * @Route("/debug")
    * @Method("GET")
    */
   public function debugAPI(Request $request)

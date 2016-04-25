@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
 /**
- * @Route("/api/v1")
+ * @Route("/api/v1/losses")
  */
 class LossAPIController extends APIController {
 
@@ -26,7 +26,7 @@ class LossAPIController extends APIController {
    * losses when no state is given.
    *
    *
-   * @Route("/losses/status")
+   * @Route("/status")
    * @Method("GET")
    */
   public function getLossByState(Request $request)
@@ -38,7 +38,7 @@ class LossAPIController extends APIController {
    *
    * Get a DeclareLoss, found by it's ID.
    *
-   * @Route("/losses/{Id}")
+   * @Route("/{Id}")
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareLossRepository")
    * @Method("GET")
    */
@@ -51,7 +51,7 @@ class LossAPIController extends APIController {
    *
    * Create a DeclareLoss Request.
    *
-   * @Route("/losses")
+   * @Route("")
    * @Method("POST")
    */
   public function postNewLoss(Request $request)
@@ -63,7 +63,7 @@ class LossAPIController extends APIController {
    *
    * Debug endpoint
    *
-   * @Route("/losses/debug")
+   * @Route("/debug")
    * @Method("GET")
    */
   public function debugAPI(Request $request)

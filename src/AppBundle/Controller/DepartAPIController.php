@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
 /**
- * @Route("/api/v1")
+ * @Route("/api/v1/departs")
  */
 class DepartAPIController extends APIController {
 
@@ -25,7 +25,7 @@ class DepartAPIController extends APIController {
    * Get a list of DeclareDeparts with a given state:{OPEN, CLOSED, DECLINED}.
    *
    *
-   * @Route("/departs/status")
+   * @Route("/status")
    * @Method("GET")
    */
   public function getDepartByState(Request $request)
@@ -37,7 +37,7 @@ class DepartAPIController extends APIController {
    *
    * Get a DeclareBirth, found by it's ID.
    *
-   * @Route("/departs/{Id}")
+   * @Route("/{Id}")
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareDepartRepository")
    * @Method("GET")
    */
@@ -50,7 +50,7 @@ class DepartAPIController extends APIController {
    *
    * Create a DeclareDepart Request.
    *
-   * @Route("/departs")
+   * @Route("")
    * @Method("POST")
    */
   public function postNewDepart(Request $request)
@@ -62,7 +62,7 @@ class DepartAPIController extends APIController {
    *
    * Debug endpoint
    *
-   * @Route("/departs/debug")
+   * @Route("/debug")
    * @Method("GET")
    */
   public function debugAPI(Request $request)

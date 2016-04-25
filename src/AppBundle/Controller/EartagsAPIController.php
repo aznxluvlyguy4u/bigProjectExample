@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
 /**
- * @Route("/api/v1")
+ * @Route("/api/v1/eartags")
  */
 class EartagsAPIController extends APIController {
 
@@ -25,7 +25,7 @@ class EartagsAPIController extends APIController {
    * Get a list of DeclareEartags with a given state:{OPEN, CLOSED, DECLINED}.
    *
    *
-   * @Route("/eartags/status")
+   * @Route("/status")
    * @Method("GET")
    */
   public function getEartagByState(Request $request)
@@ -37,7 +37,7 @@ class EartagsAPIController extends APIController {
    *
    * Get a DeclareEartag, found by it's ID.
    *
-   * @Route("/eartags/{Id}")
+   * @Route("/{Id}")
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareEartagRepository")
    * @Method("GET")
    */
@@ -50,7 +50,7 @@ class EartagsAPIController extends APIController {
    *
    * Create a DeclareEartag Request.
    *
-   * @Route("/eartags")
+   * @Route("")
    * @Method("POST")
    */
   public function postNewBirth(Request $request)
@@ -62,7 +62,7 @@ class EartagsAPIController extends APIController {
    *
    * Debug endpoint
    *
-   * @Route("/eartags/debug")
+   * @Route("/debug")
    * @Method("GET")
    */
   public function debugAPI(Request $request)

@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
 /**
- * @Route("/api/v1")
+ * @Route("/api/v1/mates")
  */
 class MateAPIController extends APIController {
 
@@ -25,7 +25,7 @@ class MateAPIController extends APIController {
    * Get a list of DeclareMates with a given state:{OPEN, CLOSED, DECLINED}.
    *
    *
-   * @Route("/mates/status")
+   * @Route("/status")
    * @Method("GET")
    */
   public function getMateByState(Request $request)
@@ -37,7 +37,7 @@ class MateAPIController extends APIController {
    *
    * Get a DeclareMate, found by it's ID.
    *
-   * @Route("/mates/{Id}")
+   * @Route("/{Id}")
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareMateRepository")
    * @Method("GET")
    */
@@ -50,7 +50,7 @@ class MateAPIController extends APIController {
    *
    * Create a DeclareMate Request.
    *
-   * @Route("/mates")
+   * @Route("")
    * @Method("POST")
    */
   public function postNewMate(Request $request)
@@ -62,7 +62,7 @@ class MateAPIController extends APIController {
    *
    * Debug endpoint
    *
-   * @Route("/mates/debug")
+   * @Route("/debug")
    * @Method("GET")
    */
   public function debugAPI(Request $request)

@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
 /**
- * @Route("/api/v1")
+ * @Route("/api/v1/clients")
  */
 class ClientAPIController extends APIController {
 
@@ -26,7 +26,7 @@ class ClientAPIController extends APIController {
    *
    * Get Client, found by it's ID
    *
-   * @Route("/clients/{Id}")
+   * @Route("/{Id}")
    * @ParamConverter("Id", class="AppBundle\Entity\ClientRepository")
    * @Method("GET")
    */
@@ -38,7 +38,7 @@ class ClientAPIController extends APIController {
    *
    * Create a Client
    *
-   * @Route("/clients")
+   * @Route("")
    * @Method("POST")
    */
   public function postNewClient(Request $request) {
@@ -49,7 +49,7 @@ class ClientAPIController extends APIController {
    *
    * Debug endpoint
    *
-   * @Route("/clients/debug")
+   * @Route("/debug")
    * @Method("GET")
    */
   public function debugAPI(Request $request) {
