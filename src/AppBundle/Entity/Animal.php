@@ -120,6 +120,7 @@ abstract class Animal
      * @var Animal
      *
      * @ORM\ManyToOne(targetEntity="Ram", inversedBy="children", cascade={"persist"})
+     * @ORM\JoinColumn(name="parent_father_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     protected $parentFather;
@@ -128,6 +129,7 @@ abstract class Animal
      * @var Animal
      *
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="children", cascade={"persist"})
+     * @ORM\JoinColumn(name="parent_mother_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     protected $parentMother;
@@ -136,6 +138,7 @@ abstract class Animal
      * @var Animal
      *
      * @ORM\ManyToOne(targetEntity="Neuter", inversedBy="children", cascade={"persist"})
+     * @ORM\JoinColumn(name="parent_neuter_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     protected $parentNeuter;
