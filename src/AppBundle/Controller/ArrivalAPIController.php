@@ -2,29 +2,14 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Component\MessageBuilderBase;
-use AppBundle\Entity\Company;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\LocationAddress;
-use AppBundle\Entity\BillingAddress;
-use AppBundle\Entity\CompanyAddress;
-use AppBundle\Entity\Client;
-use AppBundle\Entity\DeclareArrival;
-use AppBundle\Entity\Ram;
-use AppBundle\Entity\Ewe;
-use AppBundle\Entity\Neuter;
 use AppBundle\Enumerator\MessageClass;
 use AppBundle\Enumerator\RequestType;
-use AppBundle\Enumerator\AnimalType;
-use AppBundle\Service\EntityGetter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use Doctrine\Common\Collections\ArrayCollection;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 /**
  * @Route("/api/v1/arrivals")
@@ -158,136 +143,5 @@ class ArrivalAPIController extends APIController
     $this->sendMessageObjectToQueue($messageObject, MessageClass::DeclareArrival, RequestType::DECLARE_ARRIVAL);
 
     return new JsonResponse($messageObject, 200);
-  }
-
-  /**
-   * Run /test/setup, lookup stored user in DB, copy token, set variable token hardcoded
-   * Debug endpoint
-   *
-   * @Route("/test/debug")
-   * @Method("GET")
-   */
-  public function debugAPI(Request $request)
-  {
-    //Setup mock message as JSON
-    $content = '{
-    "import_animal": true,
-    "ubn_previous_owner": "123456",
-    "animal": {
-      "pedigree_country_code": "NL",
-      "pedigree_number": "12345",
-      "uln_country_code": "UK",
-      "uln_number": "333333333"
-    },
-    "arrival_date": "2016-04-04T12:55:43-05:00"
-
-    }';
-
-    $token = "7209331472fe1ff1b497ef91998af2275646234e"; // Lookup a user in DB, copy paste token
-
-    //Convert mock message into an array
-    $content = new ArrayCollection(json_decode($content, true));
-
-    $messageObject = $this->buildMessageObject(MessageClass::DeclareArrival, $content, $this->getAuthenticatedUser($request, $token));
-
-    //First Persist object to Database, before sending it to the queue
-    $this->persist($messageObject, MessageClass::DeclareArrival);
-
-    //Send it to the queue and persist/update any changed state to the database
-    $this->sendMessageObjectToQueue($messageObject, MessageClass::DeclareArrival, RequestType::DECLARE_ARRIVAL);
-
-    return new JsonResponse(array('status' => "OK",
-        MessageClass::DeclareArrival => $messageObject,
-        'sent to queue with request type' => RequestType::DECLARE_ARRIVAL), 200);
-
-    //return new JsonResponse("OK", 200);
-  }
-
-  /**
-   *
-   * Temporary route for testing code
-   *
-   * @Route("/test/setup")
-   * @Method("GET")
-   *
-   */
-  public function setupTest(Request $request)
-  {
-    $entityManager = $this->getDoctrine()->getEntityManager();
-    $encoder = $this->get('security.password_encoder');
-
-    $mockClient = new Client();
-    $mockClient->setFirstName("Bart");
-    $mockClient->setLastName("de Boer");
-    $mockClient->setEmailAddress("bart@deboer.com");
-    $mockClient->setRelationNumberKeeper("77777444");
-    $mockClient->setUsername("Bartje");
-    $mockClient->setPassword($encoder->encodePassword($mockClient, "blauwetexelaar"));
-
-    $locationAddress = new LocationAddress();
-    $locationAddress->setAddressNumber("1");
-    $locationAddress->setCity("Den Haag");
-    $locationAddress->setPostalCode("1111AZ");
-    $locationAddress->setState("ZH");
-    $locationAddress->setStreetName("Boederij");
-    $locationAddress->setCountry("Nederland");
-
-    $billingAddress = new BillingAddress();
-    $billingAddress->setAddressNumber("2");
-    $billingAddress->setCity("Den Haag");
-    $billingAddress->setPostalCode("2222GG");
-    $billingAddress->setState("ZH");
-    $billingAddress->setStreetName("Raamweg");
-    $billingAddress->setCountry("Nederland");
-
-    $companyAddress = new CompanyAddress();
-    $companyAddress->setAddressNumber("3");
-    $companyAddress->setCity("Rotterdam");
-    $companyAddress->setPostalCode("3333XX");
-    $companyAddress->setState("ZH");
-    $companyAddress->setStreetName("Papierengeldweg");
-    $companyAddress->setCountry("Nederland");
-
-    $company = new Company();
-    $company->setAddress($companyAddress);
-    $company->setBillingAddress($billingAddress);
-    $company->setCompanyName("Boederij de weiland");
-    $company->setOwner($mockClient);
-
-    $location = new Location();
-    $location->setAddress($locationAddress);
-    $location->setCompany($company);
-    $location->setUbn("98989898");
-
-    $company->addLocation($location);
-    $mockClient->addCompany($company);
-
-    $entityManager->persist($mockClient);
-
-    $father = new Ram();
-    $father->setUlnCountryCode("NL");
-    $father->setUlnNumber("11111111");
-    $father->setAnimalType(AnimalType::sheep);
-
-    $mother = new Ewe();
-    $mother->setUlnCountryCode("NL");
-    $mother->setUlnNumber("222222222");
-    $mother->setAnimalType(AnimalType::sheep);
-
-    $child = new Ram();
-    $child->setUlnCountryCode("UK");
-    $child->setUlnNumber("333333333");
-    $child->setPedigreeNumber("12345");
-    $child->setPedigreeCountryCode("NL");
-    $child->setAnimalType(AnimalType::sheep);
-    $child->setDateOfBirth(new \DateTime());
-    $child->setParentFather($father);
-    $child->setParentMother($mother);
-
-    $this->persist($father, "Ram");
-    $this->persist($mother, "Ewe");
-    $this->persist($child, "Neuter");
-
-    return new JsonResponse($mockClient, 200);
   }
 }
