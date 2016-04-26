@@ -2,7 +2,6 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\MessageClass;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
@@ -12,6 +11,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use AppBundle\Entity\DeclareArrival;
 
 /**
  * @Route("/api/v1/arrivals")
@@ -144,5 +144,47 @@ class ArrivalAPIController extends APIController
     $this->sendMessageObjectToQueue($messageObject, MessageClass::DeclareArrival, RequestType::DECLARE_ARRIVAL);
 
     return new JsonResponse($messageObject, 200);
+  }
+
+  /**
+   * Update existing DeclareArrival request
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Update a DeclareArrival request",
+   *   input = "AppBundle\Entity\DeclareArrival",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/{Id}")
+   * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
+   * @Method("PUT")
+   */
+  public function editDeclareArrival(Request $request, $Id)
+  {
+    //Convert the array into an object and add the mandatory values retrieved from the database
+    $declareArrivalUpdate = $this->buildMessageObject(MessageClass::DeclareArrival,
+      $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+
+    $entityManager = $this->getDoctrine()->getEntityManager()->getRepository('AppBundle:DeclareArrival');
+    $declareArrival = $entityManager->findOneBy(array('requestId'=> $Id));
+
+    $declareArrival->setAnimal($declareArrivalUpdate->getAnimal());
+    $declareArrival->setArrivalDate(new \DateTime());
+    $declareArrival->setLocation($declareArrivalUpdate->getLocation());
+    $declareArrival->setImportAnimal($declareArrivalUpdate->getImportAnimal());
+
+    $declareArrival = $entityManager->update($declareArrival);
+
+    return new JsonResponse($declareArrival, 200);
   }
 }
