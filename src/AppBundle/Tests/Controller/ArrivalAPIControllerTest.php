@@ -9,16 +9,9 @@ use AppBundle\DataFixtures\ORM\MockedClient;
 use Doctrine\ORM\EntityManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\LocationAddress;
-use AppBundle\Entity\BillingAddress;
-use AppBundle\Entity\CompanyAddress;
-use AppBundle\Entity\Company;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
-use AppBundle\Enumerator\AnimalType;
-use AppBundle\Enumerator\RequestType;
 use Doctrine\Common\Collections\ArrayCollection;
 
 class ArrivalAPIControllerTest extends WebTestCase {
