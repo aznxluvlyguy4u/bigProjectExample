@@ -2,7 +2,7 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Enumerator\MessageClass;
+use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -18,8 +18,8 @@ use AppBundle\Entity\DeclareArrival;
  */
 class ArrivalAPIController extends APIController implements ArrivalAPIControllerInterface
 {
-  const MESSAGE_CLASS = MessageClass::DeclareArrival;
-  const REQUEST_TYPE = 'DECLARE_ARRIVAL';
+  const MESSAGE_CLASS = RequestType::DECLARE_ARRIVAL_ENTITY;
+  const REQUEST_TYPE = RequestType::DECLARE_ARRIVAL;
   const STATE_NAMESPACE = 'state';
   const REQUEST_STATE_NAMESPACE = 'requestState';
   const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';
@@ -135,13 +135,13 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $content = $this->getContentAsArray($request);
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $messageObject = $this->buildMessageObject(MessageClass::DeclareArrival, $content, $this->getAuthenticatedUser($request));
+    $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $this->getAuthenticatedUser($request));
 
     //First Persist object to Database, before sending it to the queue
-    $this->persist($messageObject, MessageClass::DeclareArrival);
+    $this->persist($messageObject, RequestType::DECLARE_ARRIVAL_ENTITY);
 
     //Send it to the queue and persist/update any changed state to the database
-    $this->sendMessageObjectToQueue($messageObject, MessageClass::DeclareArrival, RequestType::DECLARE_ARRIVAL);
+    $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_ARRIVAL);
 
     return new JsonResponse($messageObject, 200);
   }
@@ -172,10 +172,10 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
   public function editArrival(Request $request, $Id)
   {
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareArrivalUpdate = $this->buildMessageObject(MessageClass::DeclareArrival,
+    $declareArrivalUpdate = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY,
       $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
-    $entityManager = $this->getDoctrine()->getEntityManager()->getRepository('AppBundle:DeclareArrival');
+    $entityManager = $this->getDoctrine()->getEntityManager()->getRepository('AppBundle:' . RequestType::DECLARE_ARRIVAL_ENTITY);
     $declareArrival = $entityManager->findOneBy(array('requestId'=> $Id));
 
     $declareArrival->setAnimal($declareArrivalUpdate->getAnimal());

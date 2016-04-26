@@ -14,8 +14,6 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
  */
 class EartagsAPIController extends APIController {
 
-  const REQUEST_TYPE = 'RETRIEVE_EARTAGS';
-
   /**
    * @var Client
    */

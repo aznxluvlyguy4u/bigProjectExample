@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Entity\Client;
+use AppBundle\Enumerator\RequestType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -14,7 +15,8 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
  */
 class DepartAPIController extends APIController {
 
-  const REQUEST_TYPE = 'DECLARE_DEPART';
+  const REQUEST_TYPE  = RequestType::DECLARE_DEPART;
+  const MESSAGE_CLASS = RequestType::DECLARE_DEPART_ENTITY;
 
   /**
    * @var Client

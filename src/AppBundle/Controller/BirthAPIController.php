@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Entity\Client;
+use AppBundle\Enumerator\RequestType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -14,7 +15,8 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
  */
 class BirthAPIController extends APIController {
 
-  const REQUEST_TYPE = 'DECLARE_BIRTH';
+  const REQUEST_TYPE  = RequestType::DECLARE_BIRTH;
+  const MESSAGE_CLASS = RequestType::DECLARE_BIRTH_ENTITY;
 
   /**
    * @var Client

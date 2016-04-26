@@ -8,7 +8,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Neuter;
-use AppBundle\Enumerator\MessageClass;
+use AppBundle\Enumerator\RequestType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 use Symfony\Bundle\FrameworkBundle\Client;
@@ -127,7 +127,7 @@ class IRSerializer implements IRSerializerInterface
 
         //denormalize the content to an object
         $json = $this->serializeToJSON($declareArrivalContentArray);
-        $declareArrivalRequest = $this->deserializeToObject($json, MessageClass::DeclareArrival);
+        $declareArrivalRequest = $this->deserializeToObject($json, RequestType::DECLARE_ARRIVAL_ENTITY);
 
         //Add retrieved animal to DeclareArrival
         $declareArrivalRequest->setAnimal($retrievedAnimal);
