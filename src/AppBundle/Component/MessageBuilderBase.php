@@ -46,16 +46,24 @@ class MessageBuilderBase
     protected function buildBaseMessageObject($messageObject, Person $person)
     {
         //Generate new requestId
-        $requestId = $this->getNewRequestId();
 
-        //Add general data to content
-        $messageObject->setRequestId($requestId);
-        $messageObject->setMessageId($requestId);;
+        if($messageObject->getRequestId()== null) {
+            $requestId = $this->getNewRequestId();
+            //Add general data to content
+            $messageObject->setRequestId($requestId);
+            $messageObject->setMessageId($requestId);;
+        }
 
-        $messageObject->setAction("C");
+        if($messageObject->getAction() == null) {
+            $messageObject->setAction("C");
+        }
+
         $messageObject->setLogDate(new \DateTime());
         $messageObject->setRequestState("open");
-        $messageObject->setRecoveryIndicator("N");
+
+        if($messageObject->getRecoveryIndicator() == null) {
+            $messageObject->setRecoveryIndicator("N");
+        }
 
         //Add relationNumberKeeper to content
 

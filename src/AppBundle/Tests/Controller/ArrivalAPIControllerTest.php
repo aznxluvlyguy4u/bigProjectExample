@@ -9,15 +9,10 @@ use AppBundle\DataFixtures\ORM\MockedClient;
 use Doctrine\ORM\EntityManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\LocationAddress;
-use AppBundle\Entity\BillingAddress;
-use AppBundle\Entity\CompanyAddress;
-use AppBundle\Entity\Company;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
-use AppBundle\Enumerator\AnimalType;
+use Doctrine\Common\Collections\ArrayCollection;
 
 class ArrivalAPIControllerTest extends WebTestCase {
 
@@ -72,7 +67,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
 
     //Load fixture class
     $fixtures = array('AppBundle\DataFixtures\ORM\MockedClient',
-                      'AppBundle\DataFixtures\ORM\MockedAnimal');
+      'AppBundle\DataFixtures\ORM\MockedAnimal');
     $this->loadFixtures($fixtures);
 
     //Get mocked Client
@@ -96,8 +91,8 @@ class ArrivalAPIControllerTest extends WebTestCase {
   public static function setUpBeforeClass()
   {
     //start the symfony kernel
-     $kernel = static::createKernel();
-     $kernel->boot();
+    $kernel = static::createKernel();
+    $kernel->boot();
 
     static::$kernel = static::createKernel();
     static::$kernel->boot();
@@ -113,44 +108,44 @@ class ArrivalAPIControllerTest extends WebTestCase {
   /**
    * Test retrieving Declare arrivals list
    */
-  public function testGetDeclareArrivals()
+  public function testGetArrivals()
   {
     $this->client->request('GET',
-                           $this::DECLARE_ARRIVAL_ENDPOINT . '/status/',
-                           array(),
-                           array(),
-                           $this->defaultHeaders
+      $this::DECLARE_ARRIVAL_ENDPOINT . '/status/',
+      array(),
+      array(),
+      $this->defaultHeaders
     );
 
     $response = $this->client->getResponse();
     $data = json_decode($response->getContent(), true);
 
-    $this->assertSame(0, sizeof($data['result']));
+    $this->assertEquals(0, sizeof($data['result']));
   }
 
   /**
    * Test retrieving Declare arrival by id
    */
-  public function testGetDeclareArrivalById()
+  public function testGetArrivalById()
   {
     $this->client->request('GET',
-                           $this::DECLARE_ARRIVAL_ENDPOINT . '/1',
-                           array(),
-                           array(),
-                           $this->defaultHeaders
+      $this::DECLARE_ARRIVAL_ENDPOINT . '/1',
+      array(),
+      array(),
+      $this->defaultHeaders
     );
 
     $response = $this->client->getResponse();
     $data = json_decode($response->getContent(), true);
 
-    $this->assertSame(null, $data);
+    $this->assertEquals(null, $data);
   }
 
   /**
    *
    * Test create new Declare arrival
    */
-  public function testPostDeclareArrival()
+  public function testCreateArrival()
   {
     //Create declare arrival
     $declareArrival = new DeclareArrival();
@@ -163,19 +158,75 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $declareArrivalJson = self::$serializer->serializeToJSON($declareArrival);
 
     $this->client->request('POST',
-                           $this::DECLARE_ARRIVAL_ENDPOINT,
-                           array(),
-                           array(),
-                           $this->defaultHeaders,
-                           $declareArrivalJson
+      $this::DECLARE_ARRIVAL_ENDPOINT,
+      array(),
+      array(),
+      $this->defaultHeaders,
+      $declareArrivalJson
     );
 
     $response = $this->client->getResponse();
     $data = json_decode($response->getContent(), true);
 
-    $this->assertSame('open', $data['request_state']);
+    $this->assertEquals('open', $data['request_state']);
   }
 
+  /**
+   *
+   * Test create new Declare arrival
+   */
+  public function testUpdateArrival()
+  {
+    //Create declare arrival
+    $declareArrival = new DeclareArrival();
+    $declareArrival->setArrivalDate(new \DateTime());
+    $declareArrival->setUbnPreviousOwner("123456");
+    $declareArrival->setImportAnimal(true);
+    $declareArrival->setAnimal(self::$mockedChild);
+
+    //Create json to be posted
+    $declareArrivalJson = self::$serializer->serializeToJSON($declareArrival);
+
+    //Do POST declare arrival
+    $this->client->request('POST',
+      $this::DECLARE_ARRIVAL_ENDPOINT,
+      array(),
+      array(),
+      $this->defaultHeaders,
+      $declareArrivalJson
+    );
+
+    //Get response
+    $response = $this->client->getResponse()->getContent();
+    $declareArrivalResponse = new ArrayCollection(json_decode($response, true));
+
+    //Get requestId so we can do an update with PUT
+    $requestId = $declareArrivalResponse['request_id'];
+
+    //Update value
+    $declareArrivalUpdated = $declareArrival;
+    $declareArrivalUpdated->setUbnPreviousOwner("999991");
+    $declareArrivalUpdated->getAnimal()->setUlnNumber('123131');
+
+    //Create json to be putted
+    $declareArrivalUpdatedJson = self::$serializer->serializeToJSON($declareArrivalUpdated);
+
+    //PUT updated declare arrival
+    $this->client->request('PUT',
+      $this::DECLARE_ARRIVAL_ENDPOINT . '/'. $requestId,
+      array(),
+      array(),
+      $this->defaultHeaders,
+      $declareArrivalUpdatedJson
+    );
+
+    $updatedResponse = $this->client->getResponse()->getContent();
+    $updatedData = json_decode($updatedResponse, true);
+
+    $this->assertEquals($declareArrivalUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
+    $this->assertEquals($declareArrival->getImportAnimal(), $updatedData['import_animal']);
+  }
+  
   public function tearDown() {
     parent::tearDown();
   }
@@ -187,5 +238,4 @@ class ArrivalAPIControllerTest extends WebTestCase {
   {
 
   }
-
 }
