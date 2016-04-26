@@ -40,79 +40,69 @@ class RequestMessageBuilder
 
     public function build($messageClassNameSpace, ArrayCollection $contentArray, Person $person)
     {
-        $messageObject = null;
-        $message = null;
         switch($messageClassNameSpace) {
 
             case RequestType::DECLARATION_DETAIL_ENTITY:
-                $messageObjectFrontEnd = $this->irSerializer->parseDeclarationDetail($contentArray);
+                $declarationDetail = $this->irSerializer->parseDeclarationDetail($contentArray);
                 //TODO: only add the mininum required fields for this Message Type
-                $messageObject = $messageObjectFrontEnd;
-                break;
-
+                return $declarationDetail;
+                
             case RequestType::DECLARE_ANIMAL_FLAG_ENTITY:
-                $messageObjectFrontEnd = $this->irSerializer->parseDeclareAnimalFlag($contentArray);
+                $declareAnimalFlag = $this->irSerializer->parseDeclareAnimalFlag($contentArray);
                 //TODO: only add the mininum required fields for this Message Type
-                $messageObject = $messageObjectFrontEnd;
-                break;
-
+                return $declareAnimalFlag;
+                
             case RequestType::DECLARE_ARRIVAL_ENTITY:
-                $messageObjectFrontEnd = $this->irSerializer->parseDeclareArrival($contentArray);
-                $messageObject = $this->arrivalMessageBuilder->buildMessage($messageObjectFrontEnd, $person);
-                break;
-
+                $declareArrivalRequest = $this->irSerializer->parseDeclareArrival($contentArray);
+                return $this->arrivalMessageBuilder->buildMessage($declareArrivalRequest, $person);
+                
             case RequestType::DECLARE_BIRTH_ENTITY:
-                $messageObjectFrontEnd = $this->irSerializer->parseDeclareBirth($contentArray);
+                $declareBirth = $this->irSerializer->parseDeclareBirth($contentArray);
                 //TODO: only add the mininum required fields for this Message Type
-                $messageObject = $messageObjectFrontEnd;
-                break;
-
+                return $declareBirth;
+                
             case RequestType::DECLARE_DEPART_ENTITY:
-                $messageObjectFrontEnd = $this->irSerializer->parseDeclareDepart($contentArray);
+                $declareDepart = $this->irSerializer->parseDeclareDepart($contentArray);
                 //TODO: only add the mininum required fields for this Message Type
-                $messageObject = $messageObjectFrontEnd;
-                break;
-
+                return $declareDepart;
+                
             case RequestType::DECLARE_EARTAGS_TRANSFER_ENTITY:
-                $messageObjectFrontEnd = $this->irSerializer->parseDeclareEartagsTransfer($contentArray);
+                $declareEartagsTransfer = $this->irSerializer->parseDeclareEartagsTransfer($contentArray);
                 //TODO: only add the mininum required fields for this Message Type
-                $messageObject = $messageObjectFrontEnd;
-                break;
-
+                return $declareEartagsTransfer;
+                
             case RequestType::DECLARE_LOSS_ENTITY:
-                $messageObjectFrontEnd = $this->irSerializer->parseDeclareLoss($contentArray);
+                $declareLoss = $this->irSerializer->parseDeclareLoss($contentArray);
                 //TODO: only add the mininum required fields for this Message Type
-            $messageObject = $messageObjectFrontEnd;
-                break;
-
+            return $declareLoss;
+                
             case RequestType::DECLARE_EXPORT_ENTITY:
-                $messageObjectFrontEnd = $this->irSerializer->parseDeclareExport($contentArray);
+                $declareExport = $this->irSerializer->parseDeclareExport($contentArray);
                 //TODO: only add the mininum required fields for this Message Type
-            $messageObject = $messageObjectFrontEnd;
-                break;
-
+            return $declareExport;
+                
             case RequestType::DECLARE_IMPORT_ENTITY:
-                $messageObjectFrontEnd = $this->irSerializer->parseDeclareImport($contentArray);
+                $declareImport = $this->irSerializer->parseDeclareImport($contentArray);
                 //TODO: only add the mininum required fields for this Message Type
-            $messageObject = $messageObjectFrontEnd;
-                break;
-
+            return $declareImport;
+                
             case RequestType::RETRIEVE_EARTAGS_ENTITY:
-                $messageObjectFrontEnd = $this->irSerializer->parseRetrieveEartags($contentArray);
+                $retrieveEartags = $this->irSerializer->parseRetrieveEartags($contentArray);
                 //TODO: only add the mininum required fields for this Message Type
-            $messageObject = $messageObjectFrontEnd;
-                break;
-
+            return $retrieveEartags;
+                
             case RequestType::REVOKE_DECLARATION_ENTITY:
-                $messageObjectFrontEnd = $this->irSerializer->parseRevokeDeclaration($contentArray);
+                $revokeDeclaration = $this->irSerializer->parseRevokeDeclaration($contentArray);
                 //TODO: only add the mininum required fields for this Message Type
-            $messageObject = $messageObjectFrontEnd;
-                break;
-
+            return $revokeDeclaration;
+                
             default:
-                break;
+                if ($messageClassNameSpace == null){
+                    throw new \Exception('Cannot pass null into the RequestMessageBuilder');
+                } else {
+                    throw new \Exception('No valid message class passed into the RequestMessageBuilder');
+                }
+                
         }
-
-        return $messageObject;
     }
 }
