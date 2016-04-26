@@ -86,9 +86,9 @@ class IRSerializer implements IRSerializerInterface
     function parseDeclarationDetail(ArrayCollection $contentArray)
     {
         // TODO: Implement parseDeclarationDetail() method.
-        $messageObject = null;
+        $declarationDetail = null;
 
-        return $messageObject;
+        return $declarationDetail;
     }
 
     /**
@@ -97,9 +97,9 @@ class IRSerializer implements IRSerializerInterface
     function parseDeclareAnimalFlag(ArrayCollection $contentArray)
     {
         // TODO: Implement parseDeclareAnimalFlag() method.
-        $messageObject = null;
+        $declareAnimalFlag = null;
 
-        return $messageObject;
+        return $declareAnimalFlag;
     }
 
     /**
@@ -141,9 +141,9 @@ class IRSerializer implements IRSerializerInterface
     function parseDeclareBirth(ArrayCollection $contentArray)
     {
         // TODO: Implement parseDeclareBirth() method.
-        $messageObject = null;
+        $declareBirth = null;
 
-        return $messageObject;
+        return $declareBirth;
     }
 
     /**
@@ -152,9 +152,9 @@ class IRSerializer implements IRSerializerInterface
     function parseDeclareDepart(ArrayCollection $contentArray)
     {
         // TODO: Implement parseDeclareDepart() method.
-        $messageObject = null;
+        $declareDepart = null;
 
-        return $messageObject;
+        return $declareDepart;
     }
 
     /**
@@ -163,9 +163,9 @@ class IRSerializer implements IRSerializerInterface
     function parseDeclareEartagsTransfer(ArrayCollection $contentArray)
     {
         // TODO: Implement parseDeclareEartagsTransfer() method.
-        $messageObject = null;
+        $declareEartagsTransfer = null;
 
-        return $messageObject;
+        return $declareEartagsTransfer;
     }
 
     /**
@@ -174,9 +174,9 @@ class IRSerializer implements IRSerializerInterface
     function parseDeclareLoss(ArrayCollection $contentArray)
     {
         // TODO: Implement parseDeclareLoss() method.
-        $messageObject = null;
+        $declareLoss = null;
 
-        return $messageObject;
+        return $declareLoss;
     }
 
     /**
@@ -185,9 +185,9 @@ class IRSerializer implements IRSerializerInterface
     function parseDeclareExport(ArrayCollection $contentArray)
     {
         // TODO: Implement parseDeclareExport() method.
-        $messageObject = null;
+        $declareExport = null;
 
-        return $messageObject;
+        return $declareExport;
     }
 
     /**
@@ -196,9 +196,9 @@ class IRSerializer implements IRSerializerInterface
     function parseDeclareImport(ArrayCollection $contentArray)
     {
         // TODO: Implement parseDeclareImport() method.
-        $messageObject = null;
+        $declareImport = null;
 
-        return $messageObject;
+        return $declareImport;
     }
 
     /**
@@ -207,9 +207,9 @@ class IRSerializer implements IRSerializerInterface
     function parseRetrieveEartags(ArrayCollection $contentArray)
     {
         // TODO: Implement parseRetrieveEartags() method.
-        $messageObject = null;
+        $retrieveEartags = null;
 
-        return $messageObject;
+        return $retrieveEartags;
     }
 
     /**
@@ -218,8 +218,8 @@ class IRSerializer implements IRSerializerInterface
     function parseRevokeDeclaration(ArrayCollection $contentArray)
     {
         // TODO: Implement parseRevokeDeclaration() method.
-        $messageObject = null;
+        $revokeDeclaration = null;
 
-        return $messageObject;
+        return $revokeDeclaration;
     }
 }

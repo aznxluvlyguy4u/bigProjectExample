@@ -3,73 +3,84 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Entity\DeclarationDetail;
+use AppBundle\Entity\DeclareAnimalFlag;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareEartagsTransfer;
+use AppBundle\Entity\DeclareExport;
+use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareLoss;
+use AppBundle\Entity\RetrieveEartags;
+use AppBundle\Entity\RevokeDeclaration;
 use Doctrine\Common\Collections\ArrayCollection;
 
 interface IRSerializerInterface
 {
     /**
      * @param ArrayCollection $contentArray
-     * @return mixed
+     * @return DeclarationDetail
      */
     function parseDeclarationDetail(ArrayCollection $contentArray);
 
     /**
      * @param ArrayCollection $contentArray
-     * @return mixed
+     * @return DeclareAnimalFlag
      */
     function parseDeclareAnimalFlag(ArrayCollection $contentArray);
 
     /**
      * @param ArrayCollection $contentArray
-     * @return mixed
+     * @return DeclareArrival
      */
     function parseDeclareArrival(ArrayCollection $contentArray);
 
     /**
      * @param ArrayCollection $contentArray
-     * @return mixed
+     * @return DeclareBirth
      */
     function parseDeclareBirth(ArrayCollection $contentArray);
 
     /**
      * @param ArrayCollection $contentArray
-     * @return mixed
+     * @return DeclareDepart
      */
     function parseDeclareDepart(ArrayCollection $contentArray);
 
     /**
      * @param ArrayCollection $contentArray
-     * @return mixed
+     * @return DeclareEartagsTransfer
      */
     function parseDeclareEartagsTransfer(ArrayCollection $contentArray);
 
     /**
      * @param ArrayCollection $contentArray
-     * @return mixed
+     * @return DeclareLoss
      */
     function parseDeclareLoss(ArrayCollection $contentArray);
 
     /**
      * @param ArrayCollection $contentArray
-     * @return mixed
+     * @return DeclareExport
      */
     function parseDeclareExport(ArrayCollection $contentArray);
 
     /**
      * @param ArrayCollection $contentArray
-     * @return mixed
+     * @return DeclareImport
      */
     function parseDeclareImport(ArrayCollection $contentArray);
 
     /**
      * @param ArrayCollection $contentArray
-     * @return mixed
+     * @return RetrieveEartags
      */
     function parseRetrieveEartags(ArrayCollection $contentArray);
 
     /**
      * @param ArrayCollection $contentArray
-     * @return mixed
+     * @return RevokeDeclaration
      */
     function parseRevokeDeclaration(ArrayCollection $contentArray);
 }
