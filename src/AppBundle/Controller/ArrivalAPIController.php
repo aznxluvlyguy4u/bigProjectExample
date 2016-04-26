@@ -16,7 +16,7 @@ use AppBundle\Entity\DeclareArrival;
 /**
  * @Route("/api/v1/arrivals")
  */
-class ArrivalAPIController extends APIController
+class ArrivalAPIController extends APIController implements ArrivalAPIControllerInterface
 {
   const MESSAGE_CLASS = MessageClass::DeclareArrival;
   const REQUEST_TYPE = 'DECLARE_ARRIVAL';
@@ -128,7 +128,7 @@ class ArrivalAPIController extends APIController
    * @Route("")
    * @Method("POST")
    */
-  public function postNewArrival(Request $request)
+  public function createArrival(Request $request)
   {
     //Convert front-end message into an array
     //Get content to array
@@ -169,7 +169,7 @@ class ArrivalAPIController extends APIController
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
    * @Method("PUT")
    */
-  public function editDeclareArrival(Request $request, $Id)
+  public function editArrival(Request $request, $Id)
   {
     //Convert the array into an object and add the mandatory values retrieved from the database
     $declareArrivalUpdate = $this->buildMessageObject(MessageClass::DeclareArrival,
