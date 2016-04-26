@@ -40,7 +40,6 @@ class RequestMessageBuilder
 
     public function build($messageClassNameSpace, ArrayCollection $contentArray, Person $person)
     {
-        $message = null;
         switch($messageClassNameSpace) {
 
             case RequestType::DECLARATION_DETAIL_ENTITY:
@@ -98,7 +97,11 @@ class RequestMessageBuilder
             return $revokeDeclaration;
                 
             default:
-                return null;
+                if ($messageClassNameSpace == null){
+                    throw new \Exception('Cannot pass null into the RequestMessageBuilder');
+                } else {
+                    throw new \Exception('No valid message class passed into the RequestMessageBuilder');
+                }
                 
         }
     }
