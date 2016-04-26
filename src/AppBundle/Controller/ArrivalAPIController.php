@@ -179,7 +179,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $declareArrival = $entityManager->findOneBy(array('requestId'=> $Id));
 
     $declareArrival->setAnimal($declareArrivalUpdate->getAnimal());
-    $declareArrival->setArrivalDate(new \DateTime());
+    $declareArrival->setArrivalDate($declareArrivalUpdate->getArrivalDate());
     $declareArrival->setLocation($declareArrivalUpdate->getLocation());
     $declareArrival->setImportAnimal($declareArrivalUpdate->getImportAnimal());
 
