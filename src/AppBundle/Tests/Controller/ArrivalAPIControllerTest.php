@@ -230,6 +230,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $updatedData = json_decode($updatedResponse, true);
 
     $this->assertSame($declareArrivalUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
+    $this->assertSame($declareArrival->getImportAnimal(), $updatedData['import_animal']);
   }
 
   public function tearDown() {
