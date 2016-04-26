@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Entity\Client;
+use AppBundle\Enumerator\RequestType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -14,7 +15,8 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
  */
 class LossAPIController extends APIController {
 
-  const REQUEST_TYPE = 'DECLARE_LOSS';
+  const REQUEST_TYPE  = RequestType::DECLARE_LOSS;
+  const MESSAGE_CLASS = RequestType::DECLARE_LOSS_ENTITY;
 
   /**
    * @var Client
