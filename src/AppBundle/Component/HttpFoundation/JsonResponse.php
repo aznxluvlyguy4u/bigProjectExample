@@ -10,7 +10,7 @@ class JsonResponse extends Response
     protected $data;
     protected $json = false;
 
-    public function __construct($data = null, $status = 200, $headers = array())
+    public function __construct($data = null, $status, $headers = array())
     {
         parent::__construct(null, $status, $headers);
 

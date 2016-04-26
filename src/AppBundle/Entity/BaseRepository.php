@@ -4,6 +4,10 @@ namespace AppBundle\Entity;
 
 use Doctrine\ORM\EntityRepository;
 
+/**
+ * Class BaseRepository
+ * @package AppBundle\Entity
+ */
 class BaseRepository extends EntityRepository
 {
     public function persist($entity)

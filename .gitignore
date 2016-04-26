@@ -99,3 +99,10 @@ app/*.cache
 
 # IntelliJ
 /out/
+
+# (s)hell scripts
+*.sh
+
+# database dump files:
+*.gz
+nsfo_dev

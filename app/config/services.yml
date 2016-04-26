@@ -7,3 +7,33 @@ services:
     api.entity.validate:
         class: AppBundle\Service\ValidateEntityService
         arguments: ['@validator', '@jms_serializer']
+
+    app.aws.queueservice:
+        class: AppBundle\Service\AWSQueueService
+        arguments:
+          credentials: ['%aws_access_key_id%', '%aws_secret_key%']
+          region: %aws_sqs_region%
+          version: %aws_sqs_version%
+          queueIds: ['%aws_sqs_queue_prod%', '%aws_sqs_queue_dev%', '%aws_sqs_queue_test%']
+          currentEnv: %kernel.environment%
+
+    app.doctrine.entitygetter:
+        class: AppBundle\Service\EntityGetter
+        arguments: ['@doctrine.orm.entity_manager']
+
+
+    app.messagebuilder.base:
+        class: AppBundle\Component\MessageBuilderBase
+        arguments: ['@doctrine.orm.entity_manager']
+
+    app.serializer.ir:
+        class: AppBundle\Service\IRSerializer
+        arguments: ['@jms_serializer', '@doctrine.orm.entity_manager', '@app.doctrine.entitygetter']
+
+    app.authenticator.token:
+        class: AppBundle\Component\Authentication\TokenAuthenticator
+        arguments:
+          entityManager: '@doctrine.orm.entity_manager'
+          httpUtil: '@security.http_utils'
+          unauthedPaths: ['/api/v1/doc', '/api/v1/auth/register', '/api/v1/auth/authorize']
+        public: false
