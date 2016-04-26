@@ -19,6 +19,19 @@ class DepartAPIController extends APIController {
   const MESSAGE_CLASS = RequestType::DECLARE_DEPART_ENTITY;
 
   /**
+   *
+   * Get a DeclareBirth, found by it's ID.
+   *
+   * @Route("/{Id}")
+   * @ParamConverter("Id", class="AppBundle\Entity\DeclareDepartRepository")
+   * @Method("GET")
+   */
+  public function getDepartById(Request $request,$Id)
+  {
+    return new JsonResponse("ok", 200);
+  }
+
+  /**
    * @var Client
    */
   private $user;
@@ -35,18 +48,6 @@ class DepartAPIController extends APIController {
     return new JsonResponse("ok", 200);
   }
 
-  /**
-   *
-   * Get a DeclareBirth, found by it's ID.
-   *
-   * @Route("/{Id}")
-   * @ParamConverter("Id", class="AppBundle\Entity\DeclareDepartRepository")
-   * @Method("GET")
-   */
-  public function getDepartById(Request $request,$Id)
-  {
-    return new JsonResponse("ok", 200);
-  }
 
   /**
    *
@@ -55,7 +56,20 @@ class DepartAPIController extends APIController {
    * @Route("")
    * @Method("POST")
    */
-  public function postNewDepart(Request $request)
+  public function createDepart(Request $request)
+  {
+    return new JsonResponse("ok", 200);
+  }
+
+
+  /**
+   *
+   * Update existing DeclareDepart Request.
+   *
+   * @Route("")
+   * @Method("PUT")
+   */
+  public function editDepart(Request $request)
   {
     return new JsonResponse("ok", 200);
   }
