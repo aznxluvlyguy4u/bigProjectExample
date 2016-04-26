@@ -2,7 +2,6 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -11,15 +10,12 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
-use AppBundle\Entity\DeclareArrival;
 
 /**
  * @Route("/api/v1/arrivals")
  */
 class ArrivalAPIController extends APIController implements ArrivalAPIControllerInterface
 {
-  const MESSAGE_CLASS = RequestType::DECLARE_ARRIVAL_ENTITY;
-  const REQUEST_TYPE = RequestType::DECLARE_ARRIVAL;
   const STATE_NAMESPACE = 'state';
   const REQUEST_STATE_NAMESPACE = 'requestState';
   const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';
@@ -50,7 +46,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivalById(Request $request, $Id)
   {
-    $arrival = $this->getDoctrine()->getRepository($this::DECLARE_ARRIVAL_REPOSITORY)->find($Id);
+    $arrival = $this->getDoctrine()->getRepository(self::DECLARE_ARRIVAL_REPOSITORY)->find($Id);
     return new JsonResponse($arrival, 200);
   }
 
@@ -96,14 +92,14 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $state = RequestStateType::OPEN;
 
     //No explicit filter given, thus use default state to filter on
-    if(!$request->query->has($this::STATE_NAMESPACE)) {
-      $declareArrivals = $this->getDoctrine()->getRepository($this::DECLARE_ARRIVAL_REPOSITORY)->findBy(array($this::REQUEST_STATE_NAMESPACE => $state));
+    if(!$request->query->has(self::STATE_NAMESPACE)) {
+      $declareArrivals = $this->getDoctrine()->getRepository(self::DECLARE_ARRIVAL_REPOSITORY)->findBy(array(self::REQUEST_STATE_NAMESPACE => $state));
     } else { //A state parameter was given, use custom filter
-      $state = $request->query->get($this::STATE_NAMESPACE);
-      $declareArrivals = $this->getDoctrine()->getRepository($this::DECLARE_ARRIVAL_REPOSITORY)->findBy(array($this::REQUEST_STATE_NAMESPACE => $state));
+      $state = $request->query->get(self::STATE_NAMESPACE);
+      $declareArrivals = $this->getDoctrine()->getRepository(self::DECLARE_ARRIVAL_REPOSITORY)->findBy(array(self::REQUEST_STATE_NAMESPACE => $state));
     }
 
-    return new JsonResponse(array($this::DECLARE_ARRIVAL_RESULT_NAMESPACE => $declareArrivals), 200);
+    return new JsonResponse(array(self::DECLARE_ARRIVAL_RESULT_NAMESPACE => $declareArrivals), 200);
   }
 
   /**
@@ -175,7 +171,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $declareArrivalUpdate = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY,
       $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
-    $entityManager = $this->getDoctrine()->getEntityManager()->getRepository('AppBundle:' . RequestType::DECLARE_ARRIVAL_ENTITY);
+    $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(self::DECLARE_ARRIVAL_RESULT_NAMESPACE);
     $declareArrival = $entityManager->findOneBy(array('requestId'=> $Id));
 
     $declareArrival->setAnimal($declareArrivalUpdate->getAnimal());
