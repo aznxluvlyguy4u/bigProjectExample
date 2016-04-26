@@ -9,16 +9,9 @@ use AppBundle\DataFixtures\ORM\MockedClient;
 use Doctrine\ORM\EntityManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\LocationAddress;
-use AppBundle\Entity\BillingAddress;
-use AppBundle\Entity\CompanyAddress;
-use AppBundle\Entity\Company;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
-use AppBundle\Enumerator\AnimalType;
-use AppBundle\Enumerator\RequestType;
 use Doctrine\Common\Collections\ArrayCollection;
 
 class ArrivalAPIControllerTest extends WebTestCase {
@@ -127,7 +120,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $response = $this->client->getResponse();
     $data = json_decode($response->getContent(), true);
 
-    $this->assertSame(0, sizeof($data['result']));
+    $this->assertEquals(0, sizeof($data['result']));
   }
 
   /**
@@ -145,7 +138,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $response = $this->client->getResponse();
     $data = json_decode($response->getContent(), true);
 
-    $this->assertSame(null, $data);
+    $this->assertEquals(null, $data);
   }
 
   /**
@@ -175,7 +168,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $response = $this->client->getResponse();
     $data = json_decode($response->getContent(), true);
 
-    $this->assertSame('open', $data['request_state']);
+    $this->assertEquals('open', $data['request_state']);
   }
 
   /**
@@ -213,6 +206,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
     //Update value
     $declareArrivalUpdated = $declareArrival;
     $declareArrivalUpdated->setUbnPreviousOwner("999991");
+    $declareArrivalUpdated->getAnimal()->setUlnNumber('123131');
 
     //Create json to be putted
     $declareArrivalUpdatedJson = self::$serializer->serializeToJSON($declareArrivalUpdated);
@@ -229,10 +223,10 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $updatedResponse = $this->client->getResponse()->getContent();
     $updatedData = json_decode($updatedResponse, true);
 
-    $this->assertSame($declareArrivalUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
-    $this->assertSame($declareArrival->getImportAnimal(), $updatedData['import_animal']);
+    $this->assertEquals($declareArrivalUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
+    $this->assertEquals($declareArrival->getImportAnimal(), $updatedData['import_animal']);
   }
-
+  
   public function tearDown() {
     parent::tearDown();
   }
@@ -244,5 +238,4 @@ class ArrivalAPIControllerTest extends WebTestCase {
   {
 
   }
-
 }
