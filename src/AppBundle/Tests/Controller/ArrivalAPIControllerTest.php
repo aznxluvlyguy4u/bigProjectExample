@@ -186,7 +186,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
   {
     //Create declare arrival
     $declareArrival = new DeclareArrival();
-    $declareArrival->setArrivalDate(new \DateTime('2000-01-01'));
+    $declareArrival->setArrivalDate(new \DateTime());
     $declareArrival->setUbnPreviousOwner("123456");
     $declareArrival->setImportAnimal(true);
     $declareArrival->setAnimal(self::$mockedChild);
@@ -214,7 +214,6 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $declareArrivalUpdated = $declareArrival;
     $declareArrivalUpdated->setUbnPreviousOwner("999991");
     $declareArrivalUpdated->getAnimal()->setUlnNumber('123131');
-    $declareArrivalUpdated->setArrivalDate(new \DateTime());
 
     //Create json to be putted
     $declareArrivalUpdatedJson = self::$serializer->serializeToJSON($declareArrivalUpdated);
