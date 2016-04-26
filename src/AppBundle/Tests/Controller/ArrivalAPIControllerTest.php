@@ -127,7 +127,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $response = $this->client->getResponse();
     $data = json_decode($response->getContent(), true);
 
-    $this->assertSame(0, sizeof($data['result']));
+    $this->assertEquals(0, sizeof($data['result']));
   }
 
   /**
@@ -145,7 +145,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $response = $this->client->getResponse();
     $data = json_decode($response->getContent(), true);
 
-    $this->assertSame(null, $data);
+    $this->assertEquals(null, $data);
   }
 
   /**
@@ -175,7 +175,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $response = $this->client->getResponse();
     $data = json_decode($response->getContent(), true);
 
-    $this->assertSame('open', $data['request_state']);
+    $this->assertEquals('open', $data['request_state']);
   }
 
   /**
@@ -186,7 +186,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
   {
     //Create declare arrival
     $declareArrival = new DeclareArrival();
-    $declareArrival->setArrivalDate(new \DateTime());
+    $declareArrival->setArrivalDate(new \DateTime('2000-01-01'));
     $declareArrival->setUbnPreviousOwner("123456");
     $declareArrival->setImportAnimal(true);
     $declareArrival->setAnimal(self::$mockedChild);
@@ -213,6 +213,8 @@ class ArrivalAPIControllerTest extends WebTestCase {
     //Update value
     $declareArrivalUpdated = $declareArrival;
     $declareArrivalUpdated->setUbnPreviousOwner("999991");
+    $declareArrivalUpdated->getAnimal()->setUlnNumber('123131');
+    $declareArrivalUpdated->setArrivalDate(new \DateTime());
 
     //Create json to be putted
     $declareArrivalUpdatedJson = self::$serializer->serializeToJSON($declareArrivalUpdated);
@@ -229,10 +231,10 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $updatedResponse = $this->client->getResponse()->getContent();
     $updatedData = json_decode($updatedResponse, true);
 
-    $this->assertSame($declareArrivalUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
-    $this->assertSame($declareArrival->getImportAnimal(), $updatedData['import_animal']);
+    $this->assertEquals($declareArrivalUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
+    $this->assertEquals($declareArrival->getImportAnimal(), $updatedData['import_animal']);
   }
-
+  
   public function tearDown() {
     parent::tearDown();
   }
@@ -244,5 +246,4 @@ class ArrivalAPIControllerTest extends WebTestCase {
   {
 
   }
-
 }
