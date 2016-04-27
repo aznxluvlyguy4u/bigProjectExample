@@ -46,12 +46,12 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivalById(Request $request, $Id)
   {
-    $arrival = $this->getDoctrine()->getRepository(self::DECLARE_ARRIVAL_REPOSITORY)->find($Id);
+    $arrival = $this->getDoctrine()->getRepository(self::DECLARE_ARRIVAL_REPOSITORY)->findBy(array("requestId"=>$Id));
     return new JsonResponse($arrival, 200);
   }
 
   /**
-   * Retrieve either a list of all DeclareArrivals or a sublist of DeclareArrivals with a given state-type:
+   * Retrieve either a list of all DeclareArrivals or a subset of DeclareArrivals with a given state-type:
    * {
    *    OPEN,
    *    FINISHED,
@@ -83,18 +83,15 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * )
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/status/")
+   * @Route("")
    * @Method("GET")
    */
-  public function getArrivalByState(Request $request)
+  public function getArrivals(Request $request)
   {
-    //Initialize default state to filter on declare arrivals
-    $state = RequestStateType::OPEN;
-
-    //No explicit filter given, thus use default state to filter on
+    //No explicit filter given, thus find all
     if(!$request->query->has(self::STATE_NAMESPACE)) {
-      $declareArrivals = $this->getDoctrine()->getRepository(self::DECLARE_ARRIVAL_REPOSITORY)->findBy(array(self::REQUEST_STATE_NAMESPACE => $state));
-    } else { //A state parameter was given, use custom filter
+      $declareArrivals = $this->getDoctrine()->getRepository(self::DECLARE_ARRIVAL_REPOSITORY)->findAll();
+    } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(self::STATE_NAMESPACE);
       $declareArrivals = $this->getDoctrine()->getRepository(self::DECLARE_ARRIVAL_REPOSITORY)->findBy(array(self::REQUEST_STATE_NAMESPACE => $state));
     }
