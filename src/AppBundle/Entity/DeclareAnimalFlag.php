@@ -18,4 +18,28 @@ class DeclareAnimalFlag extends DeclareBase
 {
 //TODO
 
+
+    /**
+     * Set ubn
+     *
+     * @param string $ubn
+     *
+     * @return DeclareAnimalFlag
+     */
+    public function setUbn($ubn)
+    {
+        $this->ubn = $ubn;
+
+        return $this;
+    }
+
+    /**
+     * Get ubn
+     *
+     * @return string
+     */
+    public function getUbn()
+    {
+        return $this->ubn;
+    }
 }

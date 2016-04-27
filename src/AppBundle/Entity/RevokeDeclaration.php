@@ -18,4 +18,28 @@ class RevokeDeclaration extends DeclareBase
 {
 //TODO
 
+
+    /**
+     * Set ubn
+     *
+     * @param string $ubn
+     *
+     * @return RevokeDeclaration
+     */
+    public function setUbn($ubn)
+    {
+        $this->ubn = $ubn;
+
+        return $this;
+    }
+
+    /**
+     * Get ubn
+     *
+     * @return string
+     */
+    public function getUbn()
+    {
+        return $this->ubn;
+    }
 }
