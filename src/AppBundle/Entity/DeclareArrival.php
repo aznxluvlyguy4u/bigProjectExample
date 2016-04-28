@@ -5,17 +5,17 @@ namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use JMS\Serializer\Annotation\ExclusionPolicy;
-use JMS\Serializer\Annotation\Expose;
 use \AppBundle\Entity\Animal;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class DeclareArrival
  * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareArrivalRepository")
- * @ExclusionPolicy("all")
  * @package AppBundle\Entity
+ * @ExclusionPolicy("all")
  */
 class DeclareArrival extends DeclareBase {
 
@@ -161,7 +161,7 @@ class DeclareArrival extends DeclareBase {
     public function setLocation(\AppBundle\Entity\Location $location = null)
     {
         $this->location = $location;
-        parent::setUbn($location->getUbn());
+        $this->setUbn($this->location->getUbn());
 
         return $this;
     }

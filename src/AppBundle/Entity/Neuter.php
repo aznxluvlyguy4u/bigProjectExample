@@ -6,11 +6,14 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class Neuter
  * @ORM\Entity(repositoryClass="AppBundle\Entity\NeuterRepository")
  * @package AppBundle\Entity
+ * @ExclusionPolicy("all")
  */
 class Neuter extends Animal
 {
