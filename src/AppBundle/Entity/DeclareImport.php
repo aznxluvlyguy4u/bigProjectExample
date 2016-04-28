@@ -13,7 +13,7 @@ use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class DeclareImport
- * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareImport")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareImportRepository")
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
