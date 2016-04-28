@@ -43,7 +43,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivalById(Request $request, $Id)
   {
-    $arrival = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findBy(array(Constant::REQUEST_ID_NAMESPACE=>$Id));
+    $arrival = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findOneBy(array(Constant::REQUEST_ID_NAMESPACE=>$Id));
     return new JsonResponse($arrival, 200);
   }
 
