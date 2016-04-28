@@ -98,6 +98,16 @@ abstract class DeclareBase
     protected $relationNumberKeeper;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @Assert\Length(max = 12)
+     * @JMS\Type("string")
+     */
+    protected $ubn;
+
+    /**
      * DeclareBase constructor.
      */
     public function __construct() {
@@ -280,5 +290,29 @@ abstract class DeclareBase
     public function getRelationNumberKeeper()
     {
         return $this->relationNumberKeeper;
+    }
+
+    /**
+     * Set ubn
+     *
+     * @param string $ubn
+     *
+     * @return DeclareBase
+     */
+    public function setUbn($ubn)
+    {
+        $this->ubn = $ubn;
+
+        return $this;
+    }
+
+    /**
+     * Get ubn
+     *
+     * @return string
+     */
+    public function getUbn()
+    {
+        return $this->ubn;
     }
 }

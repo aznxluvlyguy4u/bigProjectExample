@@ -9,10 +9,14 @@ use \AppBundle\Entity\Animal;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Expose;
+
 /**
  * Class DeclareArrival
  * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareArrivalRepository")
  * @package AppBundle\Entity
+ * @ExclusionPolicy("all")
  */
 class DeclareArrival extends DeclareBase {
 
@@ -20,6 +24,7 @@ class DeclareArrival extends DeclareBase {
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="arrivals", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Animal")
+     * @Expose
      */
     private $animal;
 
@@ -30,6 +35,7 @@ class DeclareArrival extends DeclareBase {
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @Expose
      */
     private $arrivalDate;
 
@@ -37,6 +43,7 @@ class DeclareArrival extends DeclareBase {
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 10)
      * @JMS\Type("string")
+     * @Expose
      */
     private $ubnPreviousOwner;
 
@@ -50,6 +57,7 @@ class DeclareArrival extends DeclareBase {
     /**
      * @ORM\Column(type="boolean")
      * @JMS\Type("boolean")
+     * @Expose
      */
     private $importAnimal;
 
@@ -153,6 +161,7 @@ class DeclareArrival extends DeclareBase {
     public function setLocation(\AppBundle\Entity\Location $location = null)
     {
         $this->location = $location;
+        $this->setUbn($this->location->getUbn());
 
         return $this;
     }
