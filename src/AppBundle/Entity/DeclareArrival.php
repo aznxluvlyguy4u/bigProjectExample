@@ -153,6 +153,7 @@ class DeclareArrival extends DeclareBase {
     public function setLocation(\AppBundle\Entity\Location $location = null)
     {
         $this->location = $location;
+        $this->setUbn($this->location->getUbn());
 
         return $this;
     }
