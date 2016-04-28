@@ -111,7 +111,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
   public function testGetArrivals()
   {
     $this->client->request('GET',
-      $this::DECLARE_ARRIVAL_ENDPOINT . '/status/',
+      $this::DECLARE_ARRIVAL_ENDPOINT,
       array(),
       array(),
       $this->defaultHeaders
