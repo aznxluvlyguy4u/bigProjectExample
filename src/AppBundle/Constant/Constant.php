@@ -14,7 +14,8 @@ class Constant
     const RESULT_NAMESPACE = "result";
 
     //Request repositories
-    const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';
-    const DECLARE_IMPORT_REPOSITORY = 'AppBundle:DeclareImport';
+    const APP_BUNDLE = 'AppBundle';
+    const DECLARE_ARRIVAL_REPOSITORY = self::APP_BUNDLE . ':' . 'DeclareArrival';
+    const DECLARE_IMPORT_REPOSITORY = self::APP_BUNDLE . ':' . 'DeclareImport';
 
 }
