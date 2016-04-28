@@ -2,12 +2,14 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Constant\Constant;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use AppBundle\Enumerator\RequestType;
 
 /**
  * @Route("/api/v1/imports")
@@ -38,7 +40,8 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    * @Method("GET")
    */
   public function getImportById(Request $request, $Id) {
-    // TODO: Implement getImportById() method.
+    $arrival = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->findBy(array(Constant::REQUEST_ID_NAMESPACE=>$Id));
+    return new JsonResponse($arrival, 200);
   }
 
   /**
@@ -74,11 +77,19 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    * )
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/status/")
+   * @Route("")
    * @Method("GET")
    */
-  public function getImportByState(Request $request) {
-    // TODO: Implement getImportByState() method.
+  public function getImports(Request $request) {
+    //No explicit filter given, thus find all
+    if(!$request->query->has(Constant::STATE_NAMESPACE)) {
+      $declareImports = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->findAll();
+    } else { //A state parameter was given, use custom filter to find subset
+      $state = $request->query->get(Constant::STATE_NAMESPACE);
+      $declareImports = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->findBy(array(Constant::REQUEST_STATE_NAMESPACE => $state));
+    }
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareImports), 200);
   }
 
   /**
@@ -104,7 +115,20 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    * @Method("POST")
    */
   public function createImport(Request $request) {
-    // TODO: Implement postNewImport() method.
+    //Convert front-end message into an array
+    //Get content to array
+    $content = $this->getContentAsArray($request);
+
+    //Convert the array into an object and add the mandatory values retrieved from the database
+    $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $this->getAuthenticatedUser($request));
+
+    //First Persist object to Database, before sending it to the queue
+    $this->persist($messageObject, RequestType::DECLARE_IMPORT_ENTITY);
+
+    //Send it to the queue and persist/update any changed state to the database
+    $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_IMPORT_ENTITY, RequestType::DECLARE_IMPORT);
+
+    return new JsonResponse($messageObject, 200);
   }
 
   /**
@@ -131,6 +155,41 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    * @Method("PUT")
    */
   public function editImport(Request $request, $Id) {
-    // TODO: Implement editExistingImport() method.
+    //Convert the array into an object and add the mandatory values retrieved from the database
+    $declareImportUpdate = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY,
+      $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+
+    $entityManager = $this->getDoctrine()
+      ->getEntityManager()
+      ->getRepository(Constant::DECLARE_IMPORT_REPOSITORY);
+    $declareImport = $entityManager->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
+
+    if($declareImport == null) {
+      return new JsonResponse(array("message"=>"No DeclareImport found with request_id:" . $Id), 204);
+    }
+
+    if ($declareImportUpdate->getAnimal() != null) {
+      $declareImport->setAnimal($declareImportUpdate->getAnimal());
+    }
+
+    if ($declareImportUpdate->getImportDate() != null) {
+      $declareImport->setImportDate($declareImportUpdate->getImportDate());
+    }
+
+    if ($declareImportUpdate->getLocation() != null) {
+      $declareImport->setLocation($declareImportUpdate->getLocation());
+    }
+
+    if ($declareImportUpdate->getImportAnimal() != null) {
+      $declareImport->setImportAnimal($declareImportUpdate->getImportAnimal());
+    }
+
+    if($declareImportUpdate->getUbnPreviousOwner() != null) {
+      $declareImport->setUbnPreviousOwner($declareImportUpdate->getUbnPreviousOwner());
+    }
+
+    $declareImport = $entityManager->update($declareImport);
+
+    return new JsonResponse($declareImport, 200);
   }
 }
