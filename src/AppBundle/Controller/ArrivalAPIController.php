@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -16,10 +17,6 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
  */
 class ArrivalAPIController extends APIController implements ArrivalAPIControllerInterface
 {
-  const STATE_NAMESPACE = 'state';
-  const REQUEST_STATE_NAMESPACE = 'requestState';
-  const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';
-  const DECLARE_ARRIVAL_RESULT_NAMESPACE = "result";
 
   /**
    * Retrieve a DeclareArrival, found by it's ID.
@@ -46,7 +43,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivalById(Request $request, $Id)
   {
-    $arrival = $this->getDoctrine()->getRepository(self::DECLARE_ARRIVAL_REPOSITORY)->findBy(array("requestId"=>$Id));
+    $arrival = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findBy(array(Constant::REQUEST_ID_NAMESPACE=>$Id));
     return new JsonResponse($arrival, 200);
   }
 
@@ -89,14 +86,14 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
   public function getArrivals(Request $request)
   {
     //No explicit filter given, thus find all
-    if(!$request->query->has(self::STATE_NAMESPACE)) {
-      $declareArrivals = $this->getDoctrine()->getRepository(self::DECLARE_ARRIVAL_REPOSITORY)->findAll();
+    if(!$request->query->has(Constant::STATE_NAMESPACE)) {
+      $declareArrivals = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findAll();
     } else { //A state parameter was given, use custom filter to find subset
-      $state = $request->query->get(self::STATE_NAMESPACE);
-      $declareArrivals = $this->getDoctrine()->getRepository(self::DECLARE_ARRIVAL_REPOSITORY)->findBy(array(self::REQUEST_STATE_NAMESPACE => $state));
+      $state = $request->query->get(Constant::STATE_NAMESPACE);
+      $declareArrivals = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findBy(array(Constant::REQUEST_STATE_NAMESPACE => $state));
     }
 
-    return new JsonResponse(array(self::DECLARE_ARRIVAL_RESULT_NAMESPACE => $declareArrivals), 200);
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareArrivals), 200);
   }
 
   /**
@@ -169,8 +166,8 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     $entityManager = $this->getDoctrine()
       ->getEntityManager()
-      ->getRepository(self::DECLARE_ARRIVAL_REPOSITORY);
-    $declareArrival = $entityManager->findOneBy(array ('requestId' => $Id));
+      ->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
+    $declareArrival = $entityManager->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
 
     if($declareArrival == null) {
       return new JsonResponse(array("message"=>"No DeclareArrival found with request_id:" . $Id), 204);
