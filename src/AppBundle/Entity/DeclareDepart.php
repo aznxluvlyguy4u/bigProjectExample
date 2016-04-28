@@ -19,3 +19,26 @@ class DeclareDepart extends DeclareBase
 //TODO
 
 }
+
+//TODO Add these parameters
+//transportAfvoerGegevens
+//- afvoerdatum			        >25-03-2016
+//- meldingeenheidBestemming	>702511
+//- transKenteken			    >01-ABC-2
+//- transRelatienummerVervoerder
+//- transNaamVervoerder
+//- transTijdstipVertrek
+//- transVerwachteTransportduur
+//- dierCategorie
+//- aantalDieren
+//- aantalDierenOpBedrijf
+//- transportnummer
+//- groepsgegevens
+//
+//
+//diergegevensSelRequest
+//- selDierLandcode	    >NL
+//- selDierLevensnummer	>100004118556
+//- selDierWerknummer
+//- dierSoort		        >3
+//- meldingnummerOorsprong
