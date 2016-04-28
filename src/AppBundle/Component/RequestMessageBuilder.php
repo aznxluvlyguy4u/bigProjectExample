@@ -21,6 +21,11 @@ class RequestMessageBuilder
     private $arrivalMessageBuilder;
 
     /**
+     * @var ImportMessageBuilder
+     */
+    private $importMessageBuilder;
+
+    /**
      * @var IRSerializer
      */
     private $irSerializer;
@@ -36,6 +41,7 @@ class RequestMessageBuilder
         $this->irSerializer = $irSerializer;
 
         $this->arrivalMessageBuilder = new ArrivalMessageBuilder($em);
+        $this->importMessageBuilder = new ImportMessageBuilder($em);
     }
 
     public function build($messageClassNameSpace, ArrayCollection $contentArray, Person $person)
@@ -82,10 +88,9 @@ class RequestMessageBuilder
             return $declareExport;
                 
             case RequestType::DECLARE_IMPORT_ENTITY:
-                $declareImport = $this->irSerializer->parseDeclareImport($contentArray);
-                //TODO: only add the mininum required fields for this Message Type
-            return $declareImport;
-                
+                $declareImportRequest = $this->irSerializer->parseDeclareImport($contentArray);
+                return $this->importMessageBuilder->buildMessage($declareImportRequest, $person);
+
             case RequestType::RETRIEVE_EARTAGS_ENTITY:
                 $retrieveEartags = $this->irSerializer->parseRetrieveEartags($contentArray);
                 //TODO: only add the mininum required fields for this Message Type

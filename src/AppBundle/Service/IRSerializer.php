@@ -193,12 +193,34 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareImport(ArrayCollection $contentArray)
+    function parseDeclareImport(ArrayCollection $declareImportContentArray)
     {
-        // TODO: Implement parseDeclareImport() method.
-        $declareImport = null;
+        //Retrieve animal entity
+        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareImportContentArray['animal']);
 
-        return $declareImport;
+        //Parse to json
+        $retrievedAnimalJson = $this->serializeToJSON($retrievedAnimal);
+        //Parse json to content array to add additional 'animal type' property
+        $retrievedAnimalContentArray = json_decode($retrievedAnimalJson, true);
+
+        //Add animal type to content array
+        $retrievedAnimalContentArray[$this::DISCRIMINATOR_TYPE_NAMESPACE] = $retrievedAnimal->getObjectType();
+
+        // FIXME
+        unset( $retrievedAnimalContentArray['imports']);
+        unset( $retrievedAnimalContentArray['children']);
+
+        //Add retrieved animal properties including type to initial animalContentArray
+        $declareImportContentArray['animal'] =  $retrievedAnimalContentArray;
+
+        //denormalize the content to an object
+        $json = $this->serializeToJSON($declareImportContentArray);
+        $declareImportRequest = $this->deserializeToObject($json, RequestType::DECLARE_IMPORT_ENTITY);
+
+        //Add retrieved animal to DeclareArrival
+        $declareImportRequest->setAnimal($retrievedAnimal);
+
+        return $declareImportRequest;
     }
 
     /**
