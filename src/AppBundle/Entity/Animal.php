@@ -176,6 +176,13 @@ abstract class Animal
 
     /**
      * @var array
+     * @JMS\Type("AppBundle\Entity\DeclareImport")
+     * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="animal", cascade={"persist"})
+     */
+    protected $imports;
+
+    /**
+     * @var array
      * @JMS\Type("array")
      */
     protected $children;
@@ -542,5 +549,39 @@ abstract class Animal
     public function getParentNeuter()
     {
         return $this->parentNeuter;
+    }
+
+    /**
+     * Add import
+     *
+     * @param \AppBundle\Entity\DeclareImport $import
+     *
+     * @return Animal
+     */
+    public function addImport(\AppBundle\Entity\DeclareImport $import)
+    {
+        $this->imports[] = $import;
+
+        return $this;
+    }
+
+    /**
+     * Remove import
+     *
+     * @param \AppBundle\Entity\DeclareImport $import
+     */
+    public function removeImport(\AppBundle\Entity\DeclareImport $import)
+    {
+        $this->imports->removeElement($import);
+    }
+
+    /**
+     * Get imports
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getImports()
+    {
+        return $this->imports;
     }
 }

@@ -459,4 +459,38 @@ class Ewe extends Animal
     {
         return $this->objectType;
     }
+
+    /**
+     * Add import
+     *
+     * @param \AppBundle\Entity\DeclareImport $import
+     *
+     * @return Ewe
+     */
+    public function addImport(\AppBundle\Entity\DeclareImport $import)
+    {
+        $this->imports[] = $import;
+
+        return $this;
+    }
+
+    /**
+     * Remove import
+     *
+     * @param \AppBundle\Entity\DeclareImport $import
+     */
+    public function removeImport(\AppBundle\Entity\DeclareImport $import)
+    {
+        $this->imports->removeElement($import);
+    }
+
+    /**
+     * Get imports
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getImports()
+    {
+        return $this->imports;
+    }
 }

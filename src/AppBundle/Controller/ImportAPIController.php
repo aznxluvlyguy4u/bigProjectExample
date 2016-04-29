@@ -3,23 +3,21 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
-use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Enumerator\RequestType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use AppBundle\Enumerator\RequestType;
 
 /**
- * @Route("/api/v1/arrivals")
+ * @Route("/api/v1/imports")
  */
-class ArrivalAPIController extends APIController implements ArrivalAPIControllerInterface
-{
+class ImportAPIController extends APIController implements ImportAPIControllerInterface {
 
   /**
-   * Retrieve a DeclareArrival, found by it's ID.
+   * Retrieve a DeclareImport, found by it's ID.
    *
    * @ApiDoc(
    *   requirements={
@@ -31,24 +29,23 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve a DeclareArrival by given ID",
+   *   description = "Retrieve a DeclareImport by given ID",
    *   output = "AppBundle\Entity\DeclareArrival"
    * )
    * @param Request $request the request object
-   * @param int $Id Id of the DeclareArrival to be returned
+   * @param int $Id Id of the DeclareImport to be returned
    * @return JsonResponse
    * @Route("/{Id}")
-   * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
+   * @ParamConverter("Id", class="AppBundle\Entity\DeclareImportRepository")
    * @Method("GET")
    */
-  public function getArrivalById(Request $request, $Id)
-  {
-    $arrival = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findOneBy(array(Constant::REQUEST_ID_NAMESPACE=>$Id));
+  public function getImportById(Request $request, $Id) {
+    $arrival = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->findOneBy(array(Constant::REQUEST_ID_NAMESPACE=>$Id));
     return new JsonResponse($arrival, 200);
   }
 
   /**
-   * Retrieve either a list of all DeclareArrivals or a subset of DeclareArrivals with a given state-type:
+   * Retrieve either a list of all DeclareImports or a subset of DeclareImports with a given state-type:
    * {
    *    OPEN,
    *    FINISHED,
@@ -70,34 +67,33 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    *        "name"="state",
    *        "dataType"="string",
    *        "required"=false,
-   *        "description"=" DeclareArrivals to filter on",
+   *        "description"=" DeclareImports to filter on",
    *        "format"="?state=state-type"
    *      }
    *   },
    *   resource = true,
-   *   description = "Retrieve a a list of DeclareArrivals",
-   *   output = "AppBundle\Entity\DeclareArrival"
+   *   description = "Retrieve a a list of DeclareImports",
+   *   output = "AppBundle\Entity\DeclareImport"
    * )
    * @param Request $request the request object
    * @return JsonResponse
    * @Route("")
    * @Method("GET")
    */
-  public function getArrivals(Request $request)
-  {
+  public function getImports(Request $request) {
     //No explicit filter given, thus find all
     if(!$request->query->has(Constant::STATE_NAMESPACE)) {
-      $declareArrivals = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findAll();
+      $declareImports = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->findAll();
     } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareArrivals = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findBy(array(Constant::REQUEST_STATE_NAMESPACE => $state));
+      $declareImports = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->findBy(array(Constant::REQUEST_STATE_NAMESPACE => $state));
     }
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareArrivals), 200);
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareImports), 200);
   }
 
   /**
-   * Create a new DeclareArrival request
+   * Create a new DeclareImport request
    *
    * @ApiDoc(
    *   requirements={
@@ -109,8 +105,8 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    *     }
    *   },
    *   resource = true,
-   *   description = "Post a DeclareArrival request",
-   *   input = "AppBundle\Entity\DeclareArrival",
+   *   description = "Post a DeclareImport request",
+   *   input = "AppBundle\Entity\DeclareImport",
    *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
    * )
    * @param Request $request the request object
@@ -118,26 +114,25 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * @Route("")
    * @Method("POST")
    */
-  public function createArrival(Request $request)
-  {
+  public function createImport(Request $request) {
     //Convert front-end message into an array
     //Get content to array
     $content = $this->getContentAsArray($request);
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $this->getAuthenticatedUser($request));
+    $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $this->getAuthenticatedUser($request));
 
     //First Persist object to Database, before sending it to the queue
-    $this->persist($messageObject, RequestType::DECLARE_ARRIVAL_ENTITY);
+    $this->persist($messageObject, RequestType::DECLARE_IMPORT_ENTITY);
 
     //Send it to the queue and persist/update any changed state to the database
-    $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_ARRIVAL);
+    $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_IMPORT_ENTITY, RequestType::DECLARE_IMPORT);
 
     return new JsonResponse($messageObject, 200);
   }
 
   /**
-   * Update existing DeclareArrival request
+   * Update existing DeclareImport request
    *
    * @ApiDoc(
    *   requirements={
@@ -149,53 +144,52 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    *     }
    *   },
    *   resource = true,
-   *   description = "Update a DeclareArrival request",
-   *   input = "AppBundle\Entity\DeclareArrival",
+   *   description = "Update a DeclareImport request",
+   *   input = "AppBundle\Entity\DeclareImport",
    *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
    * )
    * @param Request $request the request object
    * @return JsonResponse
    * @Route("/{Id}")
-   * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
+   * @ParamConverter("Id", class="AppBundle\Entity\DeclareImportRepository")
    * @Method("PUT")
    */
-  public function editArrival(Request $request, $Id) {
+  public function editImport(Request $request, $Id) {
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareArrivalUpdate = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY,
+    $declareImportUpdate = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY,
       $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
     $entityManager = $this->getDoctrine()
       ->getEntityManager()
-      ->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
-    $declareArrival = $entityManager->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
+      ->getRepository(Constant::DECLARE_IMPORT_REPOSITORY);
+    $declareImport = $entityManager->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
 
-    if($declareArrival == null) {
-      return new JsonResponse(array("message"=>"No DeclareArrival found with request_id:" . $Id), 204);
+    if($declareImport == null) {
+      return new JsonResponse(array("message"=>"No DeclareImport found with request_id:" . $Id), 204);
     }
 
-
-    if ($declareArrivalUpdate->getAnimal() != null) {
-      $declareArrival->setAnimal($declareArrivalUpdate->getAnimal());
+    if ($declareImportUpdate->getAnimal() != null) {
+      $declareImport->setAnimal($declareImportUpdate->getAnimal());
     }
 
-    if ($declareArrivalUpdate->getArrivalDate() != null) {
-      $declareArrival->setArrivalDate($declareArrivalUpdate->getArrivalDate());
+    if ($declareImportUpdate->getImportDate() != null) {
+      $declareImport->setImportDate($declareImportUpdate->getImportDate());
     }
 
-    if ($declareArrivalUpdate->getLocation() != null) {
-      $declareArrival->setLocation($declareArrivalUpdate->getLocation());
+    if ($declareImportUpdate->getLocation() != null) {
+      $declareImport->setLocation($declareImportUpdate->getLocation());
     }
 
-    if ($declareArrivalUpdate->getImportAnimal() != null) {
-      $declareArrival->setImportAnimal($declareArrivalUpdate->getImportAnimal());
+    if ($declareImportUpdate->getImportAnimal() != null) {
+      $declareImport->setImportAnimal($declareImportUpdate->getImportAnimal());
     }
 
-    if($declareArrivalUpdate->getUbnPreviousOwner() != null) {
-      $declareArrival->setUbnPreviousOwner($declareArrivalUpdate->getUbnPreviousOwner());
+    if($declareImportUpdate->getUbnPreviousOwner() != null) {
+      $declareImport->setUbnPreviousOwner($declareImportUpdate->getUbnPreviousOwner());
     }
 
-    $declareArrival = $entityManager->update($declareArrival);
+    $declareImport = $entityManager->update($declareImport);
 
-    return new JsonResponse($declareArrival, 200);
+    return new JsonResponse($declareImport, 200);
   }
 }

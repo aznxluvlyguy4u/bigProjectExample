@@ -42,6 +42,12 @@ class Location
    */
   protected $arrivals;
 
+  /**
+   * @var array
+   *
+   * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="location")
+   */
+  protected $imports;
 
   /**
    * @Assert\NotBlank
@@ -181,4 +187,38 @@ class Location
   {
     return $this->address;
   }
+
+    /**
+     * Add import
+     *
+     * @param \AppBundle\Entity\DeclareImport $import
+     *
+     * @return Location
+     */
+    public function addImport(\AppBundle\Entity\DeclareImport $import)
+    {
+        $this->imports[] = $import;
+
+        return $this;
+    }
+
+    /**
+     * Remove import
+     *
+     * @param \AppBundle\Entity\DeclareImport $import
+     */
+    public function removeImport(\AppBundle\Entity\DeclareImport $import)
+    {
+        $this->imports->removeElement($import);
+    }
+
+    /**
+     * Get imports
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getImports()
+    {
+        return $this->imports;
+    }
 }

@@ -8,7 +8,6 @@ use JMS\Serializer\Annotation as JMS;
 use \AppBundle\Entity\Animal;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
-
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
 
@@ -65,6 +64,7 @@ class DeclareArrival extends DeclareBase {
      * @ORM\OneToMany(targetEntity="DeclareArrivalResponse", mappedBy="declareArrivalRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_arrival_request_message_id", referencedColumnName="id")
      * @JMS\Type("array")
+     * @Expose
      */
     private $responses;
 
@@ -242,5 +242,29 @@ class DeclareArrival extends DeclareBase {
     public function getAnimal()
     {
         return $this->animal;
+    }
+
+    /**
+     * Set ubn
+     *
+     * @param string $ubn
+     *
+     * @return DeclareArrival
+     */
+    public function setUbn($ubn)
+    {
+        $this->ubn = $ubn;
+
+        return $this;
+    }
+
+    /**
+     * Get ubn
+     *
+     * @return string
+     */
+    public function getUbn()
+    {
+        return $this->ubn;
     }
 }
