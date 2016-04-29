@@ -45,6 +45,13 @@ class Location
   /**
    * @var array
    *
+   * @ORM\OneToMany(targetEntity="DeclareDepart", mappedBy="location")
+   */
+  protected $departures;
+
+  /**
+   * @var array
+   *
    * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="location")
    */
   protected $imports;
