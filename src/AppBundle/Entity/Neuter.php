@@ -6,11 +6,14 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class Neuter
  * @ORM\Entity(repositoryClass="AppBundle\Entity\NeuterRepository")
  * @package AppBundle\Entity
+ * @ExclusionPolicy("all")
  */
 class Neuter extends Animal
 {
@@ -455,5 +458,39 @@ class Neuter extends Animal
     public function getObjectType()
     {
         return $this->objectType;
+    }
+
+    /**
+     * Add import
+     *
+     * @param \AppBundle\Entity\DeclareImport $import
+     *
+     * @return Neuter
+     */
+    public function addImport(\AppBundle\Entity\DeclareImport $import)
+    {
+        $this->imports[] = $import;
+
+        return $this;
+    }
+
+    /**
+     * Remove import
+     *
+     * @param \AppBundle\Entity\DeclareImport $import
+     */
+    public function removeImport(\AppBundle\Entity\DeclareImport $import)
+    {
+        $this->imports->removeElement($import);
+    }
+
+    /**
+     * Get imports
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getImports()
+    {
+        return $this->imports;
     }
 }

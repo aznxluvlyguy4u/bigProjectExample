@@ -2,7 +2,7 @@
 
 namespace AppBundle\Tests\Controller;
 
-use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareImport;
 use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedAnimal;
 use AppBundle\DataFixtures\ORM\MockedClient;
@@ -14,9 +14,10 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use Doctrine\Common\Collections\ArrayCollection;
 
-class ArrivalAPIControllerTest extends WebTestCase {
+class ImportAPIControllerTest extends WebTestCase {
 
-  const DECLARE_ARRIVAL_ENDPOINT = "/api/v1/arrivals";
+
+  const DECLARE_IMPORT_ENDPOINT = "/api/v1/imports";
 
   /**
    * @var RequestClient
@@ -106,12 +107,12 @@ class ArrivalAPIControllerTest extends WebTestCase {
   }
 
   /**
-   * Test retrieving Declare arrivals list
+   * Test retrieving Declare imports list
    */
-  public function testGetArrivals()
+  public function testGetImports()
   {
     $this->client->request('GET',
-      $this::DECLARE_ARRIVAL_ENDPOINT,
+      $this::DECLARE_IMPORT_ENDPOINT,
       array(),
       array(),
       $this->defaultHeaders
@@ -124,12 +125,12 @@ class ArrivalAPIControllerTest extends WebTestCase {
   }
 
   /**
-   * Test retrieving Declare arrival by id
+   * Test retrieving Declare import by id
    */
-  public function testGetArrivalById()
+  public function testGetImportById()
   {
     $this->client->request('GET',
-      $this::DECLARE_ARRIVAL_ENDPOINT . '/1',
+      $this::DECLARE_IMPORT_ENDPOINT . '/1',
       array(),
       array(),
       $this->defaultHeaders
@@ -143,26 +144,26 @@ class ArrivalAPIControllerTest extends WebTestCase {
 
   /**
    *
-   * Test create new Declare arrival
+   * Test create new Declare import
    */
-  public function testCreateArrival()
+  public function testCreateImport()
   {
-    //Create declare arrival
-    $declareArrival = new DeclareArrival();
-    $declareArrival->setArrivalDate(new \DateTime());
-    $declareArrival->setUbnPreviousOwner("123456");
-    $declareArrival->setImportAnimal(true);
-    $declareArrival->setAnimal(self::$mockedChild);
+    //Create declare import
+    $declareImport = new DeclareImport();
+    $declareImport->setImportDate(new \DateTime());
+    $declareImport->setUbnPreviousOwner("123456");
+    $declareImport->setImportAnimal(true);
+    $declareImport->setAnimal(self::$mockedChild);
 
     //Create json to be posted
-    $declareArrivalJson = self::$serializer->serializeToJSON($declareArrival);
+    $declareImportJson = self::$serializer->serializeToJSON($declareImport);
 
     $this->client->request('POST',
-      $this::DECLARE_ARRIVAL_ENDPOINT,
+      $this::DECLARE_IMPORT_ENDPOINT,
       array(),
       array(),
       $this->defaultHeaders,
-      $declareArrivalJson
+      $declareImportJson
     );
 
     $response = $this->client->getResponse();
@@ -173,60 +174,60 @@ class ArrivalAPIControllerTest extends WebTestCase {
 
   /**
    *
-   * Test create new Declare arrival
+   * Test create new Declare import
    */
-  public function testUpdateArrival()
+  public function testUpdateImport()
   {
-    //Create declare arrival
-    $declareArrival = new DeclareArrival();
-    $declareArrival->setArrivalDate(new \DateTime());
-    $declareArrival->setUbnPreviousOwner("123456");
-    $declareArrival->setImportAnimal(true);
-    $declareArrival->setAnimal(self::$mockedChild);
+    //Create declare import
+    $declareImport = new DeclareImport();
+    $declareImport->setImportDate(new \DateTime());
+    $declareImport->setUbnPreviousOwner("123456");
+    $declareImport->setImportAnimal(true);
+    $declareImport->setAnimal(self::$mockedChild);
 
     //Create json to be posted
-    $declareArrivalJson = self::$serializer->serializeToJSON($declareArrival);
+    $declareImportJson = self::$serializer->serializeToJSON($declareImport);
 
-    //Do POST declare arrival
+    //Do POST declare import
     $this->client->request('POST',
-      $this::DECLARE_ARRIVAL_ENDPOINT,
+      $this::DECLARE_IMPORT_ENDPOINT,
       array(),
       array(),
       $this->defaultHeaders,
-      $declareArrivalJson
+      $declareImportJson
     );
 
     //Get response
     $response = $this->client->getResponse()->getContent();
-    $declareArrivalResponse = new ArrayCollection(json_decode($response, true));
+    $declareImportResponse = new ArrayCollection(json_decode($response, true));
 
     //Get requestId so we can do an update with PUT
-    $requestId = $declareArrivalResponse['request_id'];
+    $requestId = $declareImportResponse['request_id'];
 
     //Update value
-    $declareArrivalUpdated = $declareArrival;
-    $declareArrivalUpdated->setUbnPreviousOwner("999991");
-    $declareArrivalUpdated->getAnimal()->setUlnNumber('123131');
+    $declareImportUpdated = $declareImport;
+    $declareImportUpdated->setUbnPreviousOwner("999991");
+    $declareImportUpdated->getAnimal()->setUlnNumber('123131');
 
     //Create json to be putted
-    $declareArrivalUpdatedJson = self::$serializer->serializeToJSON($declareArrivalUpdated);
+    $declareImportUpdatedJson = self::$serializer->serializeToJSON($declareImportUpdated);
 
-    //PUT updated declare arrival
+    //PUT updated declare import
     $this->client->request('PUT',
-      $this::DECLARE_ARRIVAL_ENDPOINT . '/'. $requestId,
+      $this::DECLARE_IMPORT_ENDPOINT . '/'. $requestId,
       array(),
       array(),
       $this->defaultHeaders,
-      $declareArrivalUpdatedJson
+      $declareImportUpdatedJson
     );
 
     $updatedResponse = $this->client->getResponse()->getContent();
     $updatedData = json_decode($updatedResponse, true);
 
-    $this->assertEquals($declareArrivalUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
-    $this->assertEquals($declareArrival->getImportAnimal(), $updatedData['import_animal']);
+    $this->assertEquals($declareImportUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
+    $this->assertEquals($declareImportUpdated->getImportAnimal(), $updatedData['import_animal']);
   }
-  
+
   public function tearDown() {
     parent::tearDown();
   }

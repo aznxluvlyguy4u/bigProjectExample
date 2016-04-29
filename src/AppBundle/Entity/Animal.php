@@ -6,6 +6,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class Animal
@@ -16,6 +18,7 @@ use Doctrine\Common\Collections\ArrayCollection;
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * @ORM\DiscriminatorMap({"Animal" = "Animal", "Ram" = "Ram", "Ewe" = "Ewe", "Neuter" = "Neuter"})
  * @package AppBundle\Entity\Animal
+ * @ExclusionPolicy("all")
  */
 abstract class Animal
 {
@@ -67,6 +70,7 @@ abstract class Animal
      * @Assert\Length(max = 2)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @Expose
      */
     protected $ulnCountryCode;
 
@@ -79,6 +83,7 @@ abstract class Animal
      * @Assert\Regex("/([0-9]{12})\b/")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @Expose
      */
     protected $ulnNumber;
 
@@ -149,6 +154,7 @@ abstract class Animal
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
      * @JMS\Type("integer")
+     * @Expose
      */
     protected $animalType;
 
@@ -157,6 +163,7 @@ abstract class Animal
      *
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Type("integer")
+     * @Expose
      */
     protected $animalCategory;
 
@@ -166,6 +173,13 @@ abstract class Animal
      * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="animal", cascade={"persist"})
      */
     protected $arrivals;
+
+    /**
+     * @var array
+     * @JMS\Type("AppBundle\Entity\DeclareImport")
+     * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="animal", cascade={"persist"})
+     */
+    protected $imports;
 
     /**
      * @var array
@@ -535,5 +549,39 @@ abstract class Animal
     public function getParentNeuter()
     {
         return $this->parentNeuter;
+    }
+
+    /**
+     * Add import
+     *
+     * @param \AppBundle\Entity\DeclareImport $import
+     *
+     * @return Animal
+     */
+    public function addImport(\AppBundle\Entity\DeclareImport $import)
+    {
+        $this->imports[] = $import;
+
+        return $this;
+    }
+
+    /**
+     * Remove import
+     *
+     * @param \AppBundle\Entity\DeclareImport $import
+     */
+    public function removeImport(\AppBundle\Entity\DeclareImport $import)
+    {
+        $this->imports->removeElement($import);
+    }
+
+    /**
+     * Get imports
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getImports()
+    {
+        return $this->imports;
     }
 }
