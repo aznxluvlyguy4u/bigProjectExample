@@ -493,4 +493,28 @@ class Neuter extends Animal
     {
         return $this->imports;
     }
+
+    /**
+     * Add departure
+     *
+     * @param \AppBundle\Entity\DeclareArrival $departure
+     *
+     * @return Neuter
+     */
+    public function addDeparture(\AppBundle\Entity\DeclareArrival $departure)
+    {
+        $this->departures[] = $departure;
+
+        return $this;
+    }
+
+    /**
+     * Remove departure
+     *
+     * @param \AppBundle\Entity\DeclareArrival $departure
+     */
+    public function removeDeparture(\AppBundle\Entity\DeclareArrival $departure)
+    {
+        $this->departures->removeElement($departure);
+    }
 }

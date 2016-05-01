@@ -228,4 +228,38 @@ class Location
     {
         return $this->imports;
     }
+
+    /**
+     * Add departure
+     *
+     * @param \AppBundle\Entity\DeclareDepart $departure
+     *
+     * @return Location
+     */
+    public function addDeparture(\AppBundle\Entity\DeclareDepart $departure)
+    {
+        $this->departures[] = $departure;
+
+        return $this;
+    }
+
+    /**
+     * Remove departure
+     *
+     * @param \AppBundle\Entity\DeclareDepart $departure
+     */
+    public function removeDeparture(\AppBundle\Entity\DeclareDepart $departure)
+    {
+        $this->departures->removeElement($departure);
+    }
+
+    /**
+     * Get departures
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getDepartures()
+    {
+        return $this->departures;
+    }
 }
