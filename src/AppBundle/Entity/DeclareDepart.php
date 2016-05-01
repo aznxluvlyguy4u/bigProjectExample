@@ -8,6 +8,8 @@ use JMS\Serializer\Annotation as JMS;
 use \AppBundle\Entity\Animal;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class DeclareDepart
