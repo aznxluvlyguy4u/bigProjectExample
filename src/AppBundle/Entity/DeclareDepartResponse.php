@@ -18,7 +18,7 @@ class DeclareDepartResponse extends DeclareBaseResponse {
    * @var DeclareDepart
    *
    * @Assert\NotBlank
-   * @ORM\ManyToOne(targetEntity="DeclareDepart", cascade={"persist"}, inversedBy="responses") TODO check this <-
+   * @ORM\ManyToOne(targetEntity="DeclareDepart", cascade={"persist"}, inversedBy="responses")
    * @JMS\Type("AppBundle\Entity\DeclareDepart")
    */
   private $DeclareDepartRequestMessage;
@@ -60,26 +60,26 @@ class DeclareDepartResponse extends DeclareBaseResponse {
     }
 
     /**
-     * Set date
+     * Set logDate
      *
-     * @param \DateTime $date
+     * @param \DateTime $logDate
      *
      * @return DeclareDepartResponse
      */
-    public function setDate($date)
+    public function setLogDate($logDate)
     {
-        $this->date = $date;
+        $this->logDate = $logDate;
 
         return $this;
     }
 
     /**
-     * Get date
+     * Get logDate
      *
      * @return \DateTime
      */
-    public function getDate()
+    public function getLogDate()
     {
-        return $this->date;
+        return $this->logDate;
     }
 }
