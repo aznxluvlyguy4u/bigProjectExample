@@ -16,7 +16,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 class DepartAPIControllerTest extends WebTestCase {
 
-  const DECLARE_DEPART_ENDPOINT = "/api/v1/arrivals";
+  const DECLARE_DEPART_ENDPOINT = "/api/v1/departs";
 
   /**
    * @var RequestClient
@@ -201,7 +201,6 @@ class DepartAPIControllerTest extends WebTestCase {
     //Get response
     $response = $this->client->getResponse()->getContent();
     $declareDepartResponse = new ArrayCollection(json_decode($response, true));
-    dump($response);die();
 
     //Get requestId so we can do an update with PUT
     $requestId = $declareDepartResponse['request_id'];

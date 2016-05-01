@@ -17,21 +17,22 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
  */
 class DepartAPIController extends APIController {
 
-  const REQUEST_TYPE  = RequestType::DECLARE_DEPART;
-  const MESSAGE_CLASS = RequestType::DECLARE_DEPART_ENTITY;
-
   /**
    *
    * Get a DeclareBirth, found by it's ID.
    *
+   * @param Request $request the request object
+   * @param int $Id Id of the DeclareArrival to be returned
+   * @return JsonResponse
    * @Route("/{Id}")
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareDepartRepository")
    * @Method("GET")
    */
-  public function getDepartById(Request $request,$Id)
+  public function getDepartById(Request $request, $Id)
   {
-    $depart = $this->getDoctrine()->getRepository(Constant::DECLARE_DEPART_REPOSITORY)->findOneBy(array(Constant::REQUEST_ID_NAMESPACE=>$Id));
-    return new JsonResponse($depart, 200);
+//    $depart = $this->getDoctrine()->getRepository(Constant::DECLARE_DEPART_REPOSITORY)->findOneBy(array(Constant::REQUEST_ID_NAMESPACE=>$Id));
+//    return new JsonResponse($depart, 200);
+    return new JsonResponse(null);
   }
 
   /**
@@ -90,17 +91,20 @@ class DepartAPIController extends APIController {
    *
    * Update existing DeclareDepart Request.
    *
-   * @Route("")
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/{Id}")
+   * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
    * @Method("PUT")
    */
-  public function editDepart(Request $request)
+  public function editDepart(Request $request, $Id)
   {
     //Convert the array into an object and add the mandatory values retrieved from the database
     $declareDepartUpdate = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY,
         $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
     $entityManager = $this->getDoctrine()
-        ->getEntityManager()
+        ->getManager()
         ->getRepository(Constant::DECLARE_DEPART_REPOSITORY);
     $declareDepart = $entityManager->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
 
