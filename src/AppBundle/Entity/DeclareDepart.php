@@ -31,7 +31,7 @@ class DeclareDepart extends DeclareBase
     /**
      * 2016-04-01T22:00:48.131Z
      *
-     * @ORM\Column(type="datetime", nullable=false)
+     * @ORM\Column(type="datetime")
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
@@ -40,7 +40,7 @@ class DeclareDepart extends DeclareBase
     private $departDate;
 
     /**
-     * @ORM\Column(type="string", nullable=false)
+     * @ORM\Column(type="string")
      * @Assert\Length(max = 10)
      * @Assert\NotBlank
      * @JMS\Type("string")
@@ -64,7 +64,7 @@ class DeclareDepart extends DeclareBase
 
 
     /**
-     * @ORM\Column(type="string", nullable=false)
+     * @ORM\Column(type="string")
      * @JMS\Type("string")
      * @Assert\NotBlank
      * @Expose
@@ -72,7 +72,7 @@ class DeclareDepart extends DeclareBase
     private $selectionUlnCountryCode;
 
     /**
-     * @ORM\Column(type="string", nullable=false)
+     * @ORM\Column(type="string")
      * @JMS\Type("string")
      * @Assert\NotBlank
      * @Expose
@@ -94,7 +94,7 @@ class DeclareDepart extends DeclareBase
     private $responses;
 
     /**
-     * DeclareArrival constructor.
+     * DeclareDepart constructor.
      */
     public function __construct() {
         parent::__construct();
@@ -142,7 +142,7 @@ class DeclareDepart extends DeclareBase
      *
      * @param string $ubn
      *
-     * @return DeclareArrival
+     * @return DeclareDepart
      */
     public function setUbn($ubn)
     {
