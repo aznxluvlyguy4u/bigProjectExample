@@ -172,7 +172,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @Expose
      */
-    private $animalWorkingNumber;
+    protected $animalWorkingNumber;
 
     /**
      * @var array
