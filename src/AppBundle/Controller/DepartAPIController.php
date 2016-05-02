@@ -18,11 +18,23 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 class DepartAPIController extends APIController {
 
   /**
+   * Get a DeclareDepart, found by it's ID.
    *
-   * Get a DeclareBirth, found by it's ID.
-   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Retrieve a DeclareDepart by given ID",
+   *   output = "AppBundle\Entity\DeclareDepart"
+   * )
    * @param Request $request the request object
-   * @param int $Id Id of the DeclareArrival to be returned
+   * @param int $Id Id of the DeclareDepart to be returned
    * @return JsonResponse
    * @Route("/{Id}")
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareDepartRepository")
@@ -30,9 +42,8 @@ class DepartAPIController extends APIController {
    */
   public function getDepartById(Request $request, $Id)
   {
-//    $depart = $this->getDoctrine()->getRepository(Constant::DECLARE_DEPART_REPOSITORY)->findOneBy(array(Constant::REQUEST_ID_NAMESPACE=>$Id));
-//    return new JsonResponse($depart, 200);
-    return new JsonResponse(null);
+    $depart = $this->getDoctrine()->getRepository(Constant::DECLARE_DEPART_REPOSITORY)->findOneBy(array(Constant::REQUEST_ID_NAMESPACE=>$Id));
+    return new JsonResponse($depart, 200);
   }
 
   /**
@@ -40,11 +51,39 @@ class DepartAPIController extends APIController {
    */
   private $user;
   /**
+   * Retrieve either a list of all DeclareDepartures or a subset of DeclareDepartures with a given state-type:
+   * {
+   *    OPEN,
+   *    FINISHED,
+   *    FAILED,
+   *    CANCELLED
+   * }
    *
-   * Get a list of DeclareDeparts with a given state:{OPEN, CLOSED, DECLINED}.
-   *
-   *
-   * @Route("/status")
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   parameters={
+   *      {
+   *        "name"="state",
+   *        "dataType"="string",
+   *        "required"=false,
+   *        "description"=" DeclareDepartures to filter on",
+   *        "format"="?state=state-type"
+   *      }
+   *   },
+   *   resource = true,
+   *   description = "Retrieve a a list of DeclareDepartures",
+   *   output = "AppBundle\Entity\DeclareDepart"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("")
    * @Method("GET")
    */
   public function getDepartByState(Request $request)
@@ -82,7 +121,6 @@ class DepartAPIController extends APIController {
 
     //Send it to the queue and persist/update any changed state to the database
     $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_DEPART_ENTITY, RequestType::DECLARE_DEPART);
-
     return new JsonResponse($messageObject, 200);
   }
 
@@ -94,7 +132,7 @@ class DepartAPIController extends APIController {
    * @param Request $request the request object
    * @return JsonResponse
    * @Route("/{Id}")
-   * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
+   * @ParamConverter("Id", class="AppBundle\Entity\DeclareDepartRepository")
    * @Method("PUT")
    */
   public function editDepart(Request $request, $Id)
@@ -138,7 +176,7 @@ class DepartAPIController extends APIController {
     }
 
     if($declareDepartUpdate->getUbnNewOwner() != null) {
-      $declareDepart->setUbnPreviousOwner($declareDepartUpdate->getUbnNewOwner());
+      $declareDepart->setUbnNewOwner($declareDepartUpdate->getUbnNewOwner());
     }
 
     $declareDepart = $entityManager->update($declareDepart);
