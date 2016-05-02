@@ -175,6 +175,14 @@ abstract class Animal
     protected $animalWorkingNumber;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    protected $animalHairColour;
+
+    /**
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareArrival")
      * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="animal", cascade={"persist"})
@@ -610,5 +618,21 @@ abstract class Animal
         $this->animalWorkingNumber = $animalWorkingNumber;
 
         return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAnimalHairColour()
+    {
+        return $this->animalHairColour;
+    }
+
+    /**
+     * @param string $animalHairColour
+     */
+    public function setAnimalHairColour($animalHairColour)
+    {
+        $this->animalHairColour = $animalHairColour;
     }
 }
