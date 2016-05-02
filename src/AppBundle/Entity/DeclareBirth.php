@@ -17,7 +17,13 @@ use Doctrine\Common\Collections\ArrayCollection;
 class DeclareBirth extends DeclareBase
 {
 //TODO
-
+    /**
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="births", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Animal")
+     * @Expose
+     */
+    private $animal;
 
     /**
      * Set ubn

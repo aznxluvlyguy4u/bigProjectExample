@@ -198,6 +198,13 @@ abstract class Animal
 
     /**
      * @var array
+     * @JMS\Type("AppBundle\Entity\DeclareBirth")
+     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="animal", cascade={"persist"})
+     */
+    protected $births;
+
+    /**
+     * @var array
      * @JMS\Type("array")
      */
     protected $children;
@@ -208,6 +215,7 @@ abstract class Animal
     public function __construct() {
         $this->arrivals = new ArrayCollection();
         $this->children = new ArrayCollection();
+        $this->births = new ArrayCollection();
     }
 
     /**
@@ -530,6 +538,40 @@ abstract class Animal
     public function removeArrival(\AppBundle\Entity\DeclareArrival $arrival)
     {
         $this->arrivals->removeElement($arrival);
+    }
+
+    /**
+     * Get births
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getBirths()
+    {
+        return $this->births;
+    }
+
+    /**
+     * Add birth
+     *
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     *
+     * @return Animal
+     */
+    public function addBirth(\AppBundle\Entity\DeclareBirth $birth)
+    {
+        $this->births[] = $birth;
+
+        return $this;
+    }
+
+    /**
+     * Remove birth
+     *
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     */
+    public function removeBirth(\AppBundle\Entity\DeclareBirth $birth)
+    {
+        $this->births->removeElement($birth);
     }
 
     /**
