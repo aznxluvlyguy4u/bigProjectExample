@@ -102,8 +102,24 @@ class DepartAPIController extends APIController {
 
   /**
    *
-   * Create a DeclareDepart Request.
+   * Create a new DeclareDepart Request.
    *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Post a DeclareDepart request",
+   *   input = "AppBundle\Entity\DeclareDepart",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
    * @Route("")
    * @Method("POST")
    */
@@ -129,6 +145,20 @@ class DepartAPIController extends APIController {
    *
    * Update existing DeclareDepart Request.
    *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Update a DeclareDepart request",
+   *   input = "AppBundle\Entity\DeclareDepart",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
    * @param Request $request the request object
    * @return JsonResponse
    * @Route("/{Id}")
