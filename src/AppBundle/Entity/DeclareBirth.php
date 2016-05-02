@@ -16,7 +16,6 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class DeclareBirth extends DeclareBase
 {
-//TODO
     /**
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="births", cascade={"persist"})
@@ -39,6 +38,24 @@ class DeclareBirth extends DeclareBase
      * @Expose
      */
     private $ubnPreviousOwner;
+
+    /**
+     * @ORM\OneToMany(targetEntity="DeclareBirthResponse", mappedBy="declareBirthRequestMessage", cascade={"persist"})
+     * @ORM\JoinColumn(name="declare_birth_request_message_id", referencedColumnName="id")
+     * @JMS\Type("array")
+     * @Expose
+     */
+    private $responses;
+
+    /**
+     * Constructor.
+     */
+    public function __construct() {
+        parent::__construct();
+
+        //Create responses array
+        $this->responses = new ArrayCollection();
+    }
 
     /**
      * Set ubn

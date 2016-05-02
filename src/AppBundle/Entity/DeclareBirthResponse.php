@@ -21,19 +21,18 @@ class DeclareBirthResponse extends DeclareBaseResponse {
    * @ORM\ManyToOne(targetEntity="DeclareBirth", cascade={"persist"}, inversedBy="responses")
    * @JMS\Type("AppBundle\Entity\DeclareBirth")
    */
-  private $DeclareBirthRequestMessage;
-//JColumn(name="declare_birth_request_message_id", referencedColumnName="id")
+  private $declareBirthRequestMessage;
 
     /**
      * Set DeclareBirthRequestMessage
      *
-     * @param \AppBundle\Entity\DeclareBirth $DeclareBirthRequestMessage
+     * @param \AppBundle\Entity\DeclareBirth $declareBirthRequestMessage
      *
      * @return DeclareBirthResponse
      */
-    public function setDeclareBirthRequestMessage(\AppBundle\Entity\DeclareBirth $DeclareBirthRequestMessage = null)
+    public function setDeclareBirthRequestMessage(\AppBundle\Entity\DeclareBirth $declareBirthRequestMessage = null)
     {
-        $this->DeclareBirthRequestMessage = $DeclareBirthRequestMessage;
+        $this->declareBirthRequestMessage = $declareBirthRequestMessage;
 
         return $this;
     }
@@ -45,7 +44,7 @@ class DeclareBirthResponse extends DeclareBaseResponse {
      */
     public function getDeclareBirthRequestMessage()
     {
-        return $this->DeclareBirthRequestMessage;
+        return $this->declareBirthRequestMessage;
     }
 
 
