@@ -48,4 +48,28 @@ class DeclareBirth extends DeclareBase
     {
         return $this->ubn;
     }
+
+    /**
+     * Set animal
+     *
+     * @param \AppBundle\Entity\Animal $animal
+     *
+     * @return DeclareBirth
+     */
+    public function setAnimal(\AppBundle\Entity\Animal $animal = null)
+    {
+        $this->animal = $animal;
+
+        return $this;
+    }
+
+    /**
+     * Get animal
+     *
+     * @return \AppBundle\Entity\Animal
+     */
+    public function getAnimal()
+    {
+        return $this->animal;
+    }
 }
