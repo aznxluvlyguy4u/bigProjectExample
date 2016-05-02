@@ -15,7 +15,7 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 /**
  * @Route("/api/v1/departs")
  */
-class DepartAPIController extends APIController {
+class DepartAPIController extends APIController implements DepartAPIControllerInterface {
 
   /**
    * Get a DeclareDepart, found by it's ID.
@@ -46,10 +46,7 @@ class DepartAPIController extends APIController {
     return new JsonResponse($depart, 200);
   }
 
-  /**
-   * @var Client
-   */
-  private $user;
+
   /**
    * Retrieve either a list of all DeclareDepartures or a subset of DeclareDepartures with a given state-type:
    * {
@@ -86,7 +83,7 @@ class DepartAPIController extends APIController {
    * @Route("")
    * @Method("GET")
    */
-  public function getDepartByState(Request $request)
+  public function getDepartures(Request $request)
   {
     //No explicit filter given, thus find all
     if(!$request->query->has(Constant::STATE_NAMESPACE)) {
