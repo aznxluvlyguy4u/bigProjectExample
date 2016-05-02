@@ -26,6 +26,13 @@ class DeclareBirth extends DeclareBase
     private $animal;
 
     /**
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="Location", inversedBy="births", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Location")
+     */
+    private $location;
+
+    /**
      * Set ubn
      *
      * @param string $ubn
@@ -71,5 +78,30 @@ class DeclareBirth extends DeclareBase
     public function getAnimal()
     {
         return $this->animal;
+    }
+
+    /**
+     * Set location
+     *
+     * @param \AppBundle\Entity\Location $location
+     *
+     * @return DeclareBirth
+     */
+    public function setLocation(\AppBundle\Entity\Location $location = null)
+    {
+        $this->location = $location;
+        $this->setUbn($this->location->getUbn());
+
+        return $this;
+    }
+
+    /**
+     * Get location
+     *
+     * @return \AppBundle\Entity\Location
+     */
+    public function getLocation()
+    {
+        return $this->location;
     }
 }
