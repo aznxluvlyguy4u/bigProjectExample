@@ -117,10 +117,10 @@ class DepartAPIControllerTest extends WebTestCase {
       $this->defaultHeaders
     );
 
-    $response = $this->client->getResponse();
-    $data = json_decode($response->getContent(), true);
+    $contentJson = $this->client->getResponse()->getContent();
+    $dataArray = json_decode($contentJson, true);
 
-    $this->assertEquals(0, sizeof($data['result']));
+    $this->assertEquals(0, sizeof($dataArray['result']));
   }
 
   /**
@@ -135,10 +135,10 @@ class DepartAPIControllerTest extends WebTestCase {
       $this->defaultHeaders
     );
 
-    $response = $this->client->getResponse();
-    $data = json_decode($response->getContent(), true);
+    $contentJson = $this->client->getResponse()->getContent();
+    $dataArray = json_decode($contentJson, true);
 
-    $this->assertEquals(null, $data);
+    $this->assertEquals(0, sizeof($dataArray['result']));
   }
 
   /**
@@ -150,10 +150,11 @@ class DepartAPIControllerTest extends WebTestCase {
     //Create declare depart
     $declareDepart = new DeclareDepart();
     $declareDepart->setDepartDate(new \DateTime());
+    $declareDepart->setUbn("987789");
     $declareDepart->setUbnNewOwner("654456");
-    $declareDepart->setAnimal(self::$mockedChild);
     $declareDepart->setSelectionUlnCountryCode("DE");
     $declareDepart->setSelectionUlnNumber("100004118556");
+    $declareDepart->setAnimal(self::$mockedChild);
 
     //Create json to be posted
     $declareDepartJson = self::$serializer->serializeToJSON($declareDepart);
@@ -166,25 +167,26 @@ class DepartAPIControllerTest extends WebTestCase {
       $declareDepartJson
     );
 
-    $response = $this->client->getResponse();
-    $data = json_decode($response->getContent(), true);
+    $contentJson = $this->client->getResponse()->getContent();
+    $dataArray = json_decode($contentJson, true);
 
-    $this->assertEquals('open', $data['request_state']);
+    $this->assertEquals('open', $dataArray['request_state']);
   }
 
   /**
    *
-   * Test create new Declare arrival
+   * Test create new Declare Depart
    */
-  public function testUpdateArrival()
+  public function testUpdateDepart()
   {
     //Create declare depart
     $declareDepart = new DeclareDepart();
     $declareDepart->setDepartDate(new \DateTime());
-    $declareDepart->setUbnNewOwner("123321");
+    $declareDepart->setUbn("321111");
+    $declareDepart->setUbnNewOwner("123333");
+    $declareDepart->setSelectionUlnCountryCode("NL");
+    $declareDepart->setSelectionUlnNumber("100007778999");
     $declareDepart->setAnimal(self::$mockedChild);
-    $declareDepart->setSelectionUlnCountryCode("UK");
-    $declareDepart->setSelectionUlnNumber("100004118556");
 
     //Create json to be posted
     $declareDepartJson = self::$serializer->serializeToJSON($declareDepart);
@@ -199,11 +201,11 @@ class DepartAPIControllerTest extends WebTestCase {
     );
 
     //Get response
-    $response = $this->client->getResponse()->getContent();
-    $declareDepartResponse = new ArrayCollection(json_decode($response, true));
+    $contentJson = $this->client->getResponse()->getContent();
+    $declareDepartResponseArray = new ArrayCollection(json_decode($contentJson, true));
 
     //Get requestId so we can do an update with PUT
-    $requestId = $declareDepartResponse['request_id'];
+    $requestId = $declareDepartResponseArray['request_id'];
 
     //Update value
     $declareDepartUpdated = $declareDepart;
@@ -222,11 +224,11 @@ class DepartAPIControllerTest extends WebTestCase {
       $declareDepartUpdatedJson
     );
 
-    $updatedResponse = $this->client->getResponse()->getContent();
-    $updatedData = json_decode($updatedResponse, true);
+    $updatedResponseJson = $this->client->getResponse()->getContent();
+    $updatedDataArray = json_decode($updatedResponseJson, true);
 
-    $this->assertEquals($declareDepartUpdated->getUbnNewOwner(), $updatedData['ubn_new_owner']);
-    $this->assertEquals($declareDepart->getSelectionUlnNumber(), $updatedData['selection_uln_number']);
+    $this->assertEquals($declareDepartUpdated->getUbnNewOwner(), $updatedDataArray['ubn_new_owner']);
+    $this->assertEquals($declareDepart->getSelectionUlnNumber(), $updatedDataArray['selection_uln_number']);
   }
 
   public function tearDown() {
