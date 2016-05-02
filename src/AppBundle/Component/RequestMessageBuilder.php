@@ -26,6 +26,11 @@ class RequestMessageBuilder
     private $importMessageBuilder;
 
     /**
+     * @var ImportMessageBuilder
+     */
+    private $birthMessageBuilder;
+
+    /**
      * @var IRSerializer
      */
     private $irSerializer;
@@ -42,6 +47,7 @@ class RequestMessageBuilder
 
         $this->arrivalMessageBuilder = new ArrivalMessageBuilder($em);
         $this->importMessageBuilder = new ImportMessageBuilder($em);
+        $this->birthMessageBuilder = new BirthMessageBuilder($em);
     }
 
     public function build($messageClassNameSpace, ArrayCollection $contentArray, Person $person)
@@ -63,9 +69,8 @@ class RequestMessageBuilder
                 return $this->arrivalMessageBuilder->buildMessage($declareArrivalRequest, $person);
                 
             case RequestType::DECLARE_BIRTH_ENTITY:
-                $declareBirth = $this->irSerializer->parseDeclareBirth($contentArray);
-                //TODO: only add the mininum required fields for this Message Type
-                return $declareBirth;
+                $declareBirthRequest = $this->irSerializer->parseDeclareBirth($contentArray);
+                return $this->birthMessageBuilder->buildMessage($declareBirthRequest, $person);
                 
             case RequestType::DECLARE_DEPART_ENTITY:
                 $declareDepart = $this->irSerializer->parseDeclareDepart($contentArray);
