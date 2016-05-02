@@ -541,7 +541,7 @@ abstract class Animal
      *
      * @return Animal
      */
-    public function addDepartures(\AppBundle\Entity\DeclareDepart $depart)
+    public function addDepart(\AppBundle\Entity\DeclareDepart $depart)
     {
         $this->departures[] = $depart;
 
@@ -624,29 +624,5 @@ abstract class Animal
     public function getImports()
     {
         return $this->imports;
-    }
-
-    /**
-     * Add departure
-     *
-     * @param \AppBundle\Entity\DeclareArrival $departure
-     *
-     * @return Animal
-     */
-    public function addDeparture(\AppBundle\Entity\DeclareArrival $departure)
-    {
-        $this->departures[] = $departure;
-
-        return $this;
-    }
-
-    /**
-     * Remove departure
-     *
-     * @param \AppBundle\Entity\DeclareArrival $departure
-     */
-    public function removeDeparture(\AppBundle\Entity\DeclareArrival $departure)
-    {
-        $this->departures->removeElement($departure);
     }
 }
