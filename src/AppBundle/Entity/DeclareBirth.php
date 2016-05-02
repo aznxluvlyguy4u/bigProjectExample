@@ -127,6 +127,40 @@ class DeclareBirth extends DeclareBase
     }
 
     /**
+     * Add response
+     *
+     * @param \AppBundle\Entity\DeclareBirthResponse $response
+     *
+     * @return DeclareBirth
+     */
+    public function addResponse(\AppBundle\Entity\DeclareBirthResponse $response)
+    {
+        $this->responses[] = $response;
+
+        return $this;
+    }
+
+    /**
+     * Remove response
+     *
+     * @param \AppBundle\Entity\DeclareBirthResponse $response
+     */
+    public function removeResponse(\AppBundle\Entity\DeclareBirthResponse $response)
+    {
+        $this->responses->removeElement($response);
+    }
+
+    /**
+     * Get responses
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getResponses()
+    {
+        return $this->responses;
+    }
+
+    /**
      * Set ubn
      *
      * @param string $ubn
