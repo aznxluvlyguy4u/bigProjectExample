@@ -13,13 +13,12 @@ use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class DeclareDepart
- * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareDepart")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareDepartRepository")
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
 class DeclareDepart extends DeclareBase
 {
-//TODO check the @Assert\NotBlank annotations
 
     /**
      * @Assert\NotBlank
@@ -32,7 +31,7 @@ class DeclareDepart extends DeclareBase
     /**
      * 2016-04-01T22:00:48.131Z
      *
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", nullable=false)
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
@@ -41,7 +40,7 @@ class DeclareDepart extends DeclareBase
     private $departDate;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=false)
      * @Assert\Length(max = 10)
      * @Assert\NotBlank
      * @JMS\Type("string")
@@ -57,7 +56,7 @@ class DeclareDepart extends DeclareBase
     private $location;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      * @Expose
      */
@@ -65,7 +64,7 @@ class DeclareDepart extends DeclareBase
 
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @Assert\NotBlank
      * @Expose
@@ -73,7 +72,7 @@ class DeclareDepart extends DeclareBase
     private $selectionUlnCountryCode;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @Assert\NotBlank
      * @Expose
@@ -81,7 +80,7 @@ class DeclareDepart extends DeclareBase
     private $selectionUlnNumber;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      * @Expose
      */
