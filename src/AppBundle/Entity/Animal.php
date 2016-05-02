@@ -535,15 +535,15 @@ abstract class Animal
     }
 
     /**
-     * Add arrival
+     * Add departure
      *
-     * @param \AppBundle\Entity\DeclareArrival $arrival
+     * @param \AppBundle\Entity\DeclareDepart $depart
      *
      * @return Animal
      */
-    public function addDepartures(\AppBundle\Entity\DeclareArrival $arrival)
+    public function addDepartures(\AppBundle\Entity\DeclareDepart $depart)
     {
-        $this->arrivals[] = $arrival;
+        $this->departures[] = $depart;
 
         return $this;
     }
@@ -565,7 +565,7 @@ abstract class Animal
      */
     public function getDepartures()
     {
-        return $this->arrivals;
+        return $this->departures;
     }
 
     /**
