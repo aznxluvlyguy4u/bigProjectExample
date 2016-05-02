@@ -33,6 +33,14 @@ class DeclareBirth extends DeclareBase
     private $location;
 
     /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 10)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ubnPreviousOwner;
+
+    /**
      * Set ubn
      *
      * @param string $ubn
@@ -103,5 +111,29 @@ class DeclareBirth extends DeclareBase
     public function getLocation()
     {
         return $this->location;
+    }
+
+    /**
+     * Set ubnPreviousOwner
+     *
+     * @param string $ubnPreviousOwner
+     *
+     * @return DeclareBirth
+     */
+    public function setUbnPreviousOwner($ubnPreviousOwner)
+    {
+        $this->ubnPreviousOwner = $ubnPreviousOwner;
+
+        return $this;
+    }
+
+    /**
+     * Get ubnPreviousOwner
+     *
+     * @return string
+     */
+    public function getUbnPreviousOwner()
+    {
+        return $this->ubnPreviousOwner;
     }
 }
