@@ -176,8 +176,8 @@ abstract class Animal
 
     /**
      * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareArrival")
-     * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="animal", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\DeclareDepart")
+     * @ORM\OneToMany(targetEntity="DeclareDepart", mappedBy="animal", cascade={"persist"})
      */
     protected $departures;
 
@@ -541,7 +541,7 @@ abstract class Animal
      *
      * @return Animal
      */
-    public function addDepart(\AppBundle\Entity\DeclareDepart $depart)
+    public function addDeparture(\AppBundle\Entity\DeclareDepart $depart)
     {
         $this->departures[] = $depart;
 
@@ -553,7 +553,7 @@ abstract class Animal
      *
      * @param \AppBundle\Entity\DeclareDepart $depart
      */
-    public function removeDepart(\AppBundle\Entity\DeclareDepart $depart)
+    public function removeDeparture(\AppBundle\Entity\DeclareDepart $depart)
     {
         $this->departures->removeElement($depart);
     }

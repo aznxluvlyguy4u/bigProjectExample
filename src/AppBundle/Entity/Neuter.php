@@ -497,11 +497,11 @@ class Neuter extends Animal
     /**
      * Add departure
      *
-     * @param \AppBundle\Entity\DeclareArrival $departure
+     * @param \AppBundle\Entity\DeclareDepart $departure
      *
      * @return Neuter
      */
-    public function addDeparture(\AppBundle\Entity\DeclareArrival $departure)
+    public function addDeparture(\AppBundle\Entity\DeclareDepart $departure)
     {
         $this->departures[] = $departure;
 
@@ -511,9 +511,9 @@ class Neuter extends Animal
     /**
      * Remove departure
      *
-     * @param \AppBundle\Entity\DeclareArrival $departure
+     * @param \AppBundle\Entity\DeclareDepart $departure
      */
-    public function removeDeparture(\AppBundle\Entity\DeclareArrival $departure)
+    public function removeDeparture(\AppBundle\Entity\DeclareDepart $departure)
     {
         $this->departures->removeElement($departure);
     }
