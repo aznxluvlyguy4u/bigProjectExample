@@ -29,8 +29,8 @@ class DepartMessageBuilder extends MessageBuilderBase
      * Accept front-end input and create a complete NSFO+IenR Message.
      *
      * @param DeclareDepart $messageObject the message received from the front-end
-     * @param string $relationNumberKeeper
-     * @return ArrayCollection
+     * @param Person $person
+     * @return DeclareDepart
      */
     public function buildMessage(DeclareDepart $messageObject, Person $person)
     {
