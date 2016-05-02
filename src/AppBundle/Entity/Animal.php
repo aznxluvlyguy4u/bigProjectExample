@@ -168,6 +168,13 @@ abstract class Animal
     protected $animalCategory;
 
     /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $animalWorkingNumber;
+
+    /**
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareArrival")
      * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="animal", cascade={"persist"})
@@ -624,5 +631,25 @@ abstract class Animal
     public function getImports()
     {
         return $this->imports;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAnimalWorkingNumber()
+    {
+        return $this->animalWorkingNumber;
+    }
+
+    /**
+     * @param string $animalWorkingNumber
+     *
+     * @return Animal
+     */
+    public function setAnimalWorkingNumber($animalWorkingNumber)
+    {
+        $this->animalWorkingNumber = $animalWorkingNumber;
+
+        return $this;
     }
 }

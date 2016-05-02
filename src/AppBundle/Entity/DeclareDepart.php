@@ -62,30 +62,6 @@ class DeclareDepart extends DeclareBase
      */
     private $transportationCode;
 
-
-    /**
-     * @ORM\Column(type="string")
-     * @JMS\Type("string")
-     * @Assert\NotBlank
-     * @Expose
-     */
-    private $selectionUlnCountryCode;
-
-    /**
-     * @ORM\Column(type="string")
-     * @JMS\Type("string")
-     * @Assert\NotBlank
-     * @Expose
-     */
-    private $selectionUlnNumber;
-
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
-     * @Expose
-     */
-    private $animalWorkingNumber; //TODO Should this be a property of Animal or keep it in this DeclareDepart class?
-
     /**
      * @ORM\OneToMany(targetEntity="DeclareDepartResponse", mappedBy="declareDepartRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_depart_request_message_id", referencedColumnName="id")
@@ -261,63 +237,4 @@ class DeclareDepart extends DeclareBase
         return $this;
     }
 
-    /**
-     * @return string
-     */
-    public function getSelectionUlnCountryCode()
-    {
-        return $this->selectionUlnCountryCode;
-    }
-
-    /**
-     * @param mixed $selectionUlnCountryCode
-     *
-     * @return \AppBundle\Entity\DeclareDepart
-     */
-    public function setSelectionUlnCountryCode($selectionUlnCountryCode)
-    {
-        $this->selectionUlnCountryCode = $selectionUlnCountryCode;
-
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getSelectionUlnNumber()
-    {
-        return $this->selectionUlnNumber;
-    }
-
-    /**
-     * @param string $selectionUlnNumber
-     *
-     * @return \AppBundle\Entity\DeclareDepart
-     */
-    public function setSelectionUlnNumber($selectionUlnNumber)
-    {
-        $this->selectionUlnNumber = $selectionUlnNumber;
-
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getAnimalWorkingNumber()
-    {
-        return $this->animalWorkingNumber;
-    }
-
-    /**
-     * @param string $animalWorkingNumber
-     *
-     * @return \AppBundle\Entity\DeclareDepart
-     */
-    public function setAnimalWorkingNumber($animalWorkingNumber)
-    {
-        $this->animalWorkingNumber = $animalWorkingNumber;
-
-        return $this;
-    }
 }
