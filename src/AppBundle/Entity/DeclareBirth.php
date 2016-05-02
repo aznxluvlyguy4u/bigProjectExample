@@ -8,11 +8,14 @@ use JMS\Serializer\Annotation as JMS;
 use \AppBundle\Entity\Animal;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class DeclareBirth
  * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareBirthRepository")
  * @package AppBundle\Entity
+ * @ExclusionPolicy("all")
  */
 class DeclareBirth extends DeclareBase
 {
@@ -38,6 +41,72 @@ class DeclareBirth extends DeclareBase
      * @Expose
      */
     private $ubnPreviousOwner;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 1)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $aborted;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 1)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $pseudoPregnancy;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 1)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $lambar;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\Length(max = 100)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $birthType;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     * @Assert\Length(max = 2)
+     * @JMS\Type("integer")
+     * @Expose
+     */
+    private $litterSize;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     * @Assert\Length(max = 3)
+     * @JMS\Type("integer")
+     * @Expose
+     */
+    private $animalWeight;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     * @Assert\Length(max = 4)
+     * @JMS\Type("integer")
+     * @Expose
+     */
+    private $tailLength;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 50)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $transportationCode;
+
 
     /**
      * @ORM\OneToMany(targetEntity="DeclareBirthResponse", mappedBy="declareBirthRequestMessage", cascade={"persist"})
@@ -152,5 +221,133 @@ class DeclareBirth extends DeclareBase
     public function getUbnPreviousOwner()
     {
         return $this->ubnPreviousOwner;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAborted()
+    {
+        return $this->aborted;
+    }
+
+    /**
+     * @param string $aborted
+     */
+    public function setAborted($aborted)
+    {
+        $this->aborted = $aborted;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPseudoPregnancy()
+    {
+        return $this->pseudoPregnancy;
+    }
+
+    /**
+     * @param string $pseudoPregnancy
+     */
+    public function setPseudoPregnancy($pseudoPregnancy)
+    {
+        $this->pseudoPregnancy = $pseudoPregnancy;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLambar()
+    {
+        return $this->lambar;
+    }
+
+    /**
+     * @param string $lambar
+     */
+    public function setLambar($lambar)
+    {
+        $this->lambar = $lambar;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBirthType()
+    {
+        return $this->birthType;
+    }
+
+    /**
+     * @param string $birthType
+     */
+    public function setBirthType($birthType)
+    {
+        $this->birthType = $birthType;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getLitterSize()
+    {
+        return $this->litterSize;
+    }
+
+    /**
+     * @param integer $litterSize
+     */
+    public function setLitterSize($litterSize)
+    {
+        $this->litterSize = $litterSize;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getAnimalWeight()
+    {
+        return $this->animalWeight;
+    }
+
+    /**
+     * @param integer $animalWeight
+     */
+    public function setAnimalWeight($animalWeight)
+    {
+        $this->animalWeight = $animalWeight;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getTailLength()
+    {
+        return $this->tailLength;
+    }
+
+    /**
+     * @param integer $tailLength
+     */
+    public function setTailLength($tailLength)
+    {
+        $this->tailLength = $tailLength;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTransportationCode()
+    {
+        return $this->transportationCode;
+    }
+
+    /**
+     * @param string $transportationCode
+     */
+    public function setTransportationCode($transportationCode)
+    {
+        $this->transportationCode = $transportationCode;
     }
 }
