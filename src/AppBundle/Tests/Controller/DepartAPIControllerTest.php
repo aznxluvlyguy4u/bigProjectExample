@@ -152,8 +152,6 @@ class DepartAPIControllerTest extends WebTestCase {
     $declareDepart->setDepartDate(new \DateTime());
     $declareDepart->setUbn("987789");
     $declareDepart->setUbnNewOwner("654456");
-    $declareDepart->setSelectionUlnCountryCode("DE");
-    $declareDepart->setSelectionUlnNumber("100004118556");
     $declareDepart->setAnimal(self::$mockedChild);
 
     //Create json to be posted
@@ -184,8 +182,6 @@ class DepartAPIControllerTest extends WebTestCase {
     $declareDepart->setDepartDate(new \DateTime());
     $declareDepart->setUbn("321111");
     $declareDepart->setUbnNewOwner("123333");
-    $declareDepart->setSelectionUlnCountryCode("NL");
-    $declareDepart->setSelectionUlnNumber("100007778999");
     $declareDepart->setAnimal(self::$mockedChild);
 
     //Create json to be posted
@@ -228,7 +224,7 @@ class DepartAPIControllerTest extends WebTestCase {
     $updatedDataArray = json_decode($updatedResponseJson, true);
 
     $this->assertEquals($declareDepartUpdated->getUbnNewOwner(), $updatedDataArray['ubn_new_owner']);
-    $this->assertEquals($declareDepart->getSelectionUlnNumber(), $updatedDataArray['selection_uln_number']);
+    $this->assertEquals($declareDepart->getUbn(), $updatedDataArray['ubn']);
   }
 
   public function tearDown() {

@@ -194,14 +194,6 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
       $declareDepart->setTransportationCode($declareDepartUpdate->getTransportationCode());
     }
 
-    if ($declareDepartUpdate->getSelectionUlnCountryCode() != null) {
-      $declareDepart->setSelectionUlnCountryCode($declareDepartUpdate->getSelectionUlnCountryCode());
-    }
-
-    if ($declareDepartUpdate->getSelectionUlnNumber() != null) {
-      $declareDepart->setSelectionUlnNumber($declareDepartUpdate->getSelectionUlnNumber());
-    }
-
     if($declareDepartUpdate->getUbnNewOwner() != null) {
       $declareDepart->setUbnNewOwner($declareDepartUpdate->getUbnNewOwner());
     }
