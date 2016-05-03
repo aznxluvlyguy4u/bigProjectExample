@@ -11,7 +11,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class RevokeDeclaration
- * @ORM\Entity(repositoryClass="AppBundle\Entity\RevokeDeclaration")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\RevokeDeclarationRepository")
  * @package AppBundle\Entity
  */
 class RevokeDeclaration extends DeclareBase

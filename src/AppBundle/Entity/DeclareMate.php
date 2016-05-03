@@ -11,7 +11,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class DeclareMate
- * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareMate")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareMateRepository")
  * @package AppBundle\Entity
  */
 class DeclareMate extends DeclareBase

@@ -11,7 +11,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class DeclareEartagsTransfer
- * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareEartagsTransfer")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareEartagsTransferRepository")
  * @package AppBundle\Entity
  */
 class DeclareEartagsTransfer extends DeclareBase
