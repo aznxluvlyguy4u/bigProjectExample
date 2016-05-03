@@ -84,6 +84,9 @@ class Location
   public function __construct()
   {
     $this->arrivals = new ArrayCollection();
+    $this->births = new ArrayCollection();
+    $this->departures = new ArrayCollection();
+    $this->imports = new ArrayCollection();
   }
 
   /**
