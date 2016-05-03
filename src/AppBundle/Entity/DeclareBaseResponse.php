@@ -16,8 +16,9 @@ use \DateTime;
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * //TODO add new child classes to the DiscriminatorMap
  * @ORM\DiscriminatorMap({"DeclareArrivalResponse" = "DeclareArrivalResponse",
- *                        "DeclareImportResponse" = "DeclareImportResponse",
- *                        "DeclareBirthResponse" = "DeclareBirthResponse"
+ *                        "DeclareBirthResponse" = "DeclareBirthResponse",
+ *                        "DeclareDepartResponse" = "DeclareDepartResponse",
+ *                        "DeclareImportResponse" = "DeclareImportResponse"
  *                        })
  * @package AppBundle\Entity\DeclareBaseResponse
  */
@@ -39,14 +40,12 @@ abstract class DeclareBaseResponse
     private $messageId;
 
     /**
-     * @var string
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime")
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      */
-    protected $date;
+    protected $logDate;
 
     /**
      * @var string;
@@ -114,27 +113,27 @@ abstract class DeclareBaseResponse
     }
 
     /**
-     * Set date
+     * Set logDate
      *
-     * @param \DateTime $date
+     * @param \DateTime $logDate
      *
      * @return DeclareBaseResponse
      */
-    public function setDate($date)
+    public function setLogDate($logDate)
     {
-        $this->date = $date;
+        $this->logDate = $logDate;
 
         return $this;
     }
 
     /**
-     * Get date
+     * Get logDate
      *
      * @return \DateTime
      */
-    public function getDate()
+    public function getLogDate()
     {
-        return $this->date;
+        return $this->logDate;
     }
 
     /**

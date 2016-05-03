@@ -60,26 +60,26 @@ class DeclareArrivalResponse extends DeclareBaseResponse {
     }
 
     /**
-     * Set date
+     * Set logDate
      *
-     * @param \DateTime $date
+     * @param \DateTime $logDate
      *
      * @return DeclareArrivalResponse
      */
-    public function setDate($date)
+    public function setLogDate($logDate)
     {
-        $this->date = $date;
+        $this->logDate = $logDate;
 
         return $this;
     }
 
     /**
-     * Get date
+     * Get logDate
      *
      * @return \DateTime
      */
-    public function getDate()
+    public function getLogDate()
     {
-        return $this->date;
+        return $this->logDate;
     }
 }

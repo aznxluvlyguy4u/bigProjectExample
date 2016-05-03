@@ -191,6 +191,13 @@ abstract class Animal
 
     /**
      * @var array
+     * @JMS\Type("AppBundle\Entity\DeclareDepart")
+     * @ORM\OneToMany(targetEntity="DeclareDepart", mappedBy="animal", cascade={"persist"})
+     */
+    protected $departures;
+
+    /**
+     * @var array
      * @JMS\Type("AppBundle\Entity\DeclareImport")
      * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="animal", cascade={"persist"})
      */
@@ -214,8 +221,10 @@ abstract class Animal
      */
     public function __construct() {
         $this->arrivals = new ArrayCollection();
-        $this->children = new ArrayCollection();
         $this->births = new ArrayCollection();
+        $this->children = new ArrayCollection();
+        $this->departures = new ArrayCollection();
+        $this->imports = new ArrayCollection();
     }
 
     /**
@@ -582,6 +591,40 @@ abstract class Animal
     public function getArrivals()
     {
         return $this->arrivals;
+    }
+
+    /**
+     * Add departure
+     *
+     * @param \AppBundle\Entity\DeclareDepart $depart
+     *
+     * @return Animal
+     */
+    public function addDeparture(\AppBundle\Entity\DeclareDepart $depart)
+    {
+        $this->departures[] = $depart;
+
+        return $this;
+    }
+
+    /**
+     * Remove depart
+     *
+     * @param \AppBundle\Entity\DeclareDepart $depart
+     */
+    public function removeDeparture(\AppBundle\Entity\DeclareDepart $depart)
+    {
+        $this->departures->removeElement($depart);
+    }
+
+    /**
+     * Get departures
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getDepartures()
+    {
+        return $this->departures;
     }
 
     /**
