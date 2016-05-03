@@ -171,8 +171,8 @@ class LossAPIControllerTest extends WebTestCase {
     $data = json_decode($response->getContent(), true);
 
     $this->assertEquals('open', $data['request_state']);
-    $this->assertEquals('Destiny', $data['reason_of_loss']);
-    $this->assertEquals('2299077', $data['ubn_processor']);
+    $this->assertEquals($declareLoss->getReasonOfLoss(), $data['reason_of_loss']);
+    $this->assertEquals($declareLoss->getUbnProcessor(), $data['ubn_processor']);
   }
 
   /**
@@ -237,7 +237,6 @@ class LossAPIControllerTest extends WebTestCase {
 
     //Verify some unchanged parameters
     $this->assertEquals($declareLoss->getAnimal()->getUlnCountryCode(), $updatedData['animal']['uln_country_code']);
-    $this->assertEquals($declareLoss->getUbn(), $updatedData['ubn']);
   }
   
   public function tearDown() {
