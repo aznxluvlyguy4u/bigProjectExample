@@ -212,6 +212,13 @@ abstract class Animal
 
     /**
      * @var array
+     * @JMS\Type("AppBundle\Entity\DeclareLoss")
+     * @ORM\OneToMany(targetEntity="DeclareLoss", mappedBy="animal", cascade={"persist"})
+     */
+    protected $losses;
+
+    /**
+     * @var array
      * @JMS\Type("array")
      */
     protected $children;
@@ -225,6 +232,7 @@ abstract class Animal
         $this->children = new ArrayCollection();
         $this->departures = new ArrayCollection();
         $this->imports = new ArrayCollection();
+        $this->losses = new ArrayCollection();
     }
 
     /**
@@ -683,6 +691,40 @@ abstract class Animal
     public function getImports()
     {
         return $this->imports;
+    }
+
+    /**
+     * Add loss
+     *
+     * @param \AppBundle\Entity\DeclareLoss $loss
+     *
+     * @return Animal
+     */
+    public function addLoss(\AppBundle\Entity\DeclareLoss $loss)
+    {
+        $this->losses[] = $loss;
+
+        return $this;
+    }
+
+    /**
+     * Remove loss
+     *
+     * @param \AppBundle\Entity\DeclareLoss $loss
+     */
+    public function removeLoss(\AppBundle\Entity\DeclareLoss $loss)
+    {
+        $this->losses->removeElement($loss);
+    }
+
+    /**
+     * Get losses
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getLosses()
+    {
+        return $this->losses;
     }
 
     /**

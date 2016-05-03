@@ -22,6 +22,14 @@ class DeclareLoss extends DeclareBase
 //TODO
 
     /**
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="losses", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Animal")
+     * @Expose
+     */
+    private $animal;
+
+    /**
      * @ORM\OneToMany(targetEntity="DeclareLossResponse", mappedBy="declareLossRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_loss_request_message_id", referencedColumnName="id")
      * @JMS\Type("array")
@@ -71,6 +79,30 @@ class DeclareLoss extends DeclareBase
     public function getResponses()
     {
         return $this->responses;
+    }
+
+    /**
+     * Set animal
+     *
+     * @param \AppBundle\Entity\Animal $animal
+     *
+     * @return DeclareLoss
+     */
+    public function setAnimal(\AppBundle\Entity\Animal $animal = null)
+    {
+        $this->animal = $animal;
+
+        return $this;
+    }
+
+    /**
+     * Get animal
+     *
+     * @return \AppBundle\Entity\Animal
+     */
+    public function getAnimal()
+    {
+        return $this->animal;
     }
 
     /**
