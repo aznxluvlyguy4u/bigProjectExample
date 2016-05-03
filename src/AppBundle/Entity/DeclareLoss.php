@@ -18,6 +18,57 @@ class DeclareLoss extends DeclareBase
 {
 //TODO
 
+    /**
+     * @ORM\OneToMany(targetEntity="DeclareLossResponse", mappedBy="declareLossRequestMessage", cascade={"persist"})
+     * @ORM\JoinColumn(name="declare_loss_request_message_id", referencedColumnName="id")
+     * @JMS\Type("array")
+     * @Expose
+     */
+    private $responses;
+
+    /**
+     * DeclareLoss constructor.
+     */
+    public function __construct() {
+        parent::__construct();
+
+        //Create responses array
+        $this->responses = new ArrayCollection();
+    }
+
+    /**
+     * Add response
+     *
+     * @param \AppBundle\Entity\DeclareLossResponse $response
+     *
+     * @return DeclareLoss
+     */
+    public function addResponse(\AppBundle\Entity\DeclareLossResponse $response)
+    {
+        $this->responses[] = $response;
+
+        return $this;
+    }
+
+    /**
+     * Remove response
+     *
+     * @param \AppBundle\Entity\DeclareLossResponse $response
+     */
+    public function removeResponse(\AppBundle\Entity\DeclareLossResponse $response)
+    {
+        $this->responses->removeElement($response);
+    }
+
+    /**
+     * Get responses
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getResponses()
+    {
+        return $this->responses;
+    }
 
     /**
      * Set ubn
