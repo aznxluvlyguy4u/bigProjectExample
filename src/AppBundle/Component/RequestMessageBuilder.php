@@ -26,7 +26,7 @@ class RequestMessageBuilder
     private $importMessageBuilder;
 
     /**
-     * @var ImportMessageBuilder
+     * @var BirthMessageBuilder
      */
     private $birthMessageBuilder;
 
