@@ -19,7 +19,6 @@ use JMS\Serializer\Annotation\Expose;
  */
 class DeclareDepart extends DeclareBase
 {
-
     /**
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="departures", cascade={"persist"})

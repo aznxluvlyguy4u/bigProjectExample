@@ -45,6 +45,13 @@ class Location
   /**
    * @var array
    *
+   * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="location")
+   */
+  protected $births;
+
+  /**
+   * @var array
+   *
    * @ORM\OneToMany(targetEntity="DeclareDepart", mappedBy="location")
    */
   protected $departures;
@@ -77,6 +84,9 @@ class Location
   public function __construct()
   {
     $this->arrivals = new ArrayCollection();
+    $this->births = new ArrayCollection();
+    $this->departures = new ArrayCollection();
+    $this->imports = new ArrayCollection();
   }
 
   /**
@@ -112,6 +122,41 @@ class Location
   {
     return $this->arrivals;
   }
+
+  /**
+   * Add birth
+   *
+   * @param \AppBundle\Entity\DeclareBirth $birth
+   *
+   * @return Location
+   */
+  public function addBirth(\AppBundle\Entity\DeclareBirth $birth)
+  {
+    $this->births[] = $birth;
+
+    return $this;
+  }
+
+  /**
+   * Remove birth
+   *
+   * @param \AppBundle\Entity\DeclareBirth $birth
+   */
+  public function removeBirth(\AppBundle\Entity\DeclareBirth $birth)
+  {
+    $this->births->removeElement($birth);
+  }
+
+  /**
+   * Get births
+   *
+   * @return \Doctrine\Common\Collections\Collection
+   */
+  public function getBirths()
+  {
+    return $this->births;
+  }
+
 
   /**
    * Get id

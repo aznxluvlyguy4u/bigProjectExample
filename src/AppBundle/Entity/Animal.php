@@ -175,6 +175,14 @@ abstract class Animal
     protected $animalWorkingNumber;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    protected $animalHairColour;
+
+    /**
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareArrival")
      * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="animal", cascade={"persist"})
@@ -197,6 +205,13 @@ abstract class Animal
 
     /**
      * @var array
+     * @JMS\Type("AppBundle\Entity\DeclareBirth")
+     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="animal", cascade={"persist"})
+     */
+    protected $births;
+
+    /**
+     * @var array
      * @JMS\Type("array")
      */
     protected $children;
@@ -206,6 +221,7 @@ abstract class Animal
      */
     public function __construct() {
         $this->arrivals = new ArrayCollection();
+        $this->births = new ArrayCollection();
         $this->children = new ArrayCollection();
         $this->departures = new ArrayCollection();
         $this->imports = new ArrayCollection();
@@ -534,6 +550,40 @@ abstract class Animal
     }
 
     /**
+     * Get births
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getBirths()
+    {
+        return $this->births;
+    }
+
+    /**
+     * Add birth
+     *
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     *
+     * @return Animal
+     */
+    public function addBirth(\AppBundle\Entity\DeclareBirth $birth)
+    {
+        $this->births[] = $birth;
+
+        return $this;
+    }
+
+    /**
+     * Remove birth
+     *
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     */
+    public function removeBirth(\AppBundle\Entity\DeclareBirth $birth)
+    {
+        $this->births->removeElement($birth);
+    }
+
+    /**
      * Get arrivals
      *
      * @return \Doctrine\Common\Collections\Collection
@@ -653,5 +703,21 @@ abstract class Animal
         $this->animalWorkingNumber = $animalWorkingNumber;
 
         return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAnimalHairColour()
+    {
+        return $this->animalHairColour;
+    }
+
+    /**
+     * @param string $animalHairColour
+     */
+    public function setAnimalHairColour($animalHairColour)
+    {
+        $this->animalHairColour = $animalHairColour;
     }
 }
