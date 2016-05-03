@@ -96,7 +96,7 @@ abstract class Animal
     protected $name;
 
     /**
-     * @var string
+     * @var DateTime
      *
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
@@ -106,7 +106,7 @@ abstract class Animal
     protected $dateOfBirth;
 
     /**
-     * @var string
+     * @var DateTime
      *
      * @ORM\Column(type="date", nullable=true)
      * @Assert\Date
