@@ -13,7 +13,7 @@ use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class DeclareLoss
- * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareLoss")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareLossRepository")
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
  */
