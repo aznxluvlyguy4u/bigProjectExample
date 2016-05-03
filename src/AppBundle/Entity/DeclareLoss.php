@@ -19,8 +19,6 @@ use JMS\Serializer\Annotation\Expose;
  */
 class DeclareLoss extends DeclareBase
 {
-//TODO
-
     /**
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="losses", cascade={"persist"})
@@ -28,6 +26,26 @@ class DeclareLoss extends DeclareBase
      * @Expose
      */
     private $animal;
+
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 20)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $reasonOfLoss;
+
+    /**
+     * Note from UXPIN:
+     * "Project Manager: Dierverwerker is per definitie Rendac Son B.V. 2299077"
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 12)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ubnProcessor;
 
     /**
      * @ORM\OneToMany(targetEntity="DeclareLossResponse", mappedBy="declareLossRequestMessage", cascade={"persist"})
@@ -127,5 +145,37 @@ class DeclareLoss extends DeclareBase
     public function getUbn()
     {
         return $this->ubn;
+    }
+
+    /**
+     * @return string
+     */
+    public function getReasonOfLoss()
+    {
+        return $this->reasonOfLoss;
+    }
+
+    /**
+     * @param string $reasonOfLoss
+     */
+    public function setReasonOfLoss($reasonOfLoss)
+    {
+        $this->reasonOfLoss = $reasonOfLoss;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUbnProcessor()
+    {
+        return $this->ubnProcessor;
+    }
+
+    /**
+     * @param string $ubnProcessor
+     */
+    public function setUbnProcessor($ubnProcessor)
+    {
+        $this->ubnProcessor = $ubnProcessor;
     }
 }
