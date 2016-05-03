@@ -206,7 +206,16 @@ class BirthAPIControllerTest extends WebTestCase {
     //Update value
     $declareBirthUpdated = $declareBirth;
     $declareBirthUpdated->setUbnPreviousOwner("999991");
-    $declareBirthUpdated->getAnimal()->setUlnNumber('123131');
+    $declareBirthUpdated->setBirthType("Painful but worth it");
+    $declareBirthUpdated->setAborted("N");
+    $declareBirthUpdated->setAnimalWeight(999);
+    $declareBirthUpdated->setLambar("N");
+    $declareBirthUpdated->setPseudoPregnancy("N");
+    $declareBirthUpdated->setLitterSize(6);
+    $declareBirthUpdated->setTailLength(1425);
+    $declareBirthUpdated->setAnimalWeight(842);
+    $declareBirthUpdated->setTransportationCode("565681SG65SDGSG");
+    $declareBirthUpdated->getAnimal()->setUlnNumber('123131181');
 
     //Create json to be putted
     $declareBirthUpdatedJson = self::$serializer->serializeToJSON($declareBirthUpdated);
@@ -223,8 +232,21 @@ class BirthAPIControllerTest extends WebTestCase {
     $updatedResponse = $this->client->getResponse()->getContent();
     $updatedData = json_decode($updatedResponse, true);
 
+    //Verify the updated parameters
     $this->assertEquals($declareBirthUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
-    $this->assertEquals($declareBirth->getBirthType(), $updatedData['birth_type']);
+    $this->assertEquals($declareBirthUpdated->getBirthType(), $updatedData['birth_type']);
+    $this->assertEquals($declareBirthUpdated->getAborted(), $updatedData['aborted']);
+    $this->assertEquals($declareBirthUpdated->getAnimalWeight(), $updatedData['animal_weight']);
+    $this->assertEquals($declareBirthUpdated->getLambar(), $updatedData['lambar']);
+    $this->assertEquals($declareBirthUpdated->getPseudoPregnancy(), $updatedData['pseudo_pregnancy']);
+    $this->assertEquals($declareBirthUpdated->getLitterSize(), $updatedData['litter_size']);
+    $this->assertEquals($declareBirthUpdated->getTailLength(), $updatedData['tail_length']);
+    $this->assertEquals($declareBirthUpdated->getAnimalWeight(), $updatedData['animal_weight']);
+    $this->assertEquals($declareBirthUpdated->getTransportationCode(), $updatedData['transportation_code']);
+    $this->assertEquals($declareBirthUpdated->getAnimal()->getUlnNumber(), $updatedData['animal']['uln_number']);
+
+    //Verify some unchanged parameters
+    $this->assertEquals($declareBirth->getAnimal()->getUlnCountryCode(), $updatedData['animal']['uln_country_code']);
   }
   
   public function tearDown() {
