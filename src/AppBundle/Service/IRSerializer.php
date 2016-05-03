@@ -218,12 +218,38 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareLoss(ArrayCollection $contentArray)
+    function parseDeclareLoss(ArrayCollection $declareLossContentArray)
     {
-        // TODO: Implement parseDeclareLoss() method.
-        $declareLoss = null;
+        //Retrieve animal entity
+        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareLossContentArray['animal']);
 
-        return $declareLoss;
+        //Parse to json
+        $retrievedAnimalJson = $this->serializeToJSON($retrievedAnimal);
+        //Parse json to content array to add additional 'animal type' property
+        $retrievedAnimalContentArray = json_decode($retrievedAnimalJson, true);
+
+        //Add animal type to content array
+        $retrievedAnimalContentArray[$this::DISCRIMINATOR_TYPE_NAMESPACE] = $retrievedAnimal->getObjectType();
+
+        // FIXME
+        unset( $retrievedAnimalContentArray['arrivals']);
+        unset( $retrievedAnimalContentArray['departures']);
+        unset( $retrievedAnimalContentArray['births']);
+        unset( $retrievedAnimalContentArray['imports']);
+        unset( $retrievedAnimalContentArray['losses']);
+        unset( $retrievedAnimalContentArray['children']);
+
+        //Add retrieved animal properties including type to initial animalContentArray
+        $declareLossContentArray['animal'] =  $retrievedAnimalContentArray;
+
+        //denormalize the content to an object
+        $json = $this->serializeToJSON($declareLossContentArray);
+        $declareLossRequest = $this->deserializeToObject($json, RequestType::DECLARE_LOSS_ENTITY);
+
+        //Add retrieved animal to DeclareLoss
+        $declareLossRequest->setAnimal($retrievedAnimal);
+
+        return $declareLossRequest;
     }
 
     /**
