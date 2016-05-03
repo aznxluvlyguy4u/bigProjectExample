@@ -8,11 +8,14 @@ use JMS\Serializer\Annotation as JMS;
 use \AppBundle\Entity\Animal;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class DeclareLoss
  * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareLoss")
  * @package AppBundle\Entity
+ * @ExclusionPolicy("all")
  */
 class DeclareLoss extends DeclareBase
 {
