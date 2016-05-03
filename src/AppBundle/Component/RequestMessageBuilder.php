@@ -41,6 +41,7 @@ class RequestMessageBuilder
         $this->irSerializer = $irSerializer;
 
         $this->arrivalMessageBuilder = new ArrivalMessageBuilder($em);
+        $this->departMessageBuilder = new DepartMessageBuilder($em);
         $this->importMessageBuilder = new ImportMessageBuilder($em);
     }
 
@@ -68,9 +69,8 @@ class RequestMessageBuilder
                 return $declareBirth;
                 
             case RequestType::DECLARE_DEPART_ENTITY:
-                $declareDepart = $this->irSerializer->parseDeclareDepart($contentArray);
-                //TODO: only add the mininum required fields for this Message Type
-                return $declareDepart;
+                $declareDepartRequest = $this->irSerializer->parseDeclareDepart($contentArray);
+                return $this->departMessageBuilder->buildMessage($declareDepartRequest, $person);
                 
             case RequestType::DECLARE_EARTAGS_TRANSFER_ENTITY:
                 $declareEartagsTransfer = $this->irSerializer->parseDeclareEartagsTransfer($contentArray);

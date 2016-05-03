@@ -168,11 +168,25 @@ abstract class Animal
     protected $animalCategory;
 
     /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    protected $animalWorkingNumber;
+
+    /**
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareArrival")
      * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="animal", cascade={"persist"})
      */
     protected $arrivals;
+
+    /**
+     * @var array
+     * @JMS\Type("AppBundle\Entity\DeclareDepart")
+     * @ORM\OneToMany(targetEntity="DeclareDepart", mappedBy="animal", cascade={"persist"})
+     */
+    protected $departures;
 
     /**
      * @var array
@@ -193,6 +207,8 @@ abstract class Animal
     public function __construct() {
         $this->arrivals = new ArrayCollection();
         $this->children = new ArrayCollection();
+        $this->departures = new ArrayCollection();
+        $this->imports = new ArrayCollection();
     }
 
     /**
@@ -528,6 +544,40 @@ abstract class Animal
     }
 
     /**
+     * Add departure
+     *
+     * @param \AppBundle\Entity\DeclareDepart $depart
+     *
+     * @return Animal
+     */
+    public function addDeparture(\AppBundle\Entity\DeclareDepart $depart)
+    {
+        $this->departures[] = $depart;
+
+        return $this;
+    }
+
+    /**
+     * Remove depart
+     *
+     * @param \AppBundle\Entity\DeclareDepart $depart
+     */
+    public function removeDeparture(\AppBundle\Entity\DeclareDepart $depart)
+    {
+        $this->departures->removeElement($depart);
+    }
+
+    /**
+     * Get departures
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getDepartures()
+    {
+        return $this->departures;
+    }
+
+    /**
      * Set parentNeuter
      *
      * @param \AppBundle\Entity\Neuter $parentNeuter
@@ -583,5 +633,25 @@ abstract class Animal
     public function getImports()
     {
         return $this->imports;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAnimalWorkingNumber()
+    {
+        return $this->animalWorkingNumber;
+    }
+
+    /**
+     * @param string $animalWorkingNumber
+     *
+     * @return Animal
+     */
+    public function setAnimalWorkingNumber($animalWorkingNumber)
+    {
+        $this->animalWorkingNumber = $animalWorkingNumber;
+
+        return $this;
     }
 }

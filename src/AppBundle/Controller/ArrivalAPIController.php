@@ -165,7 +165,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
     $entityManager = $this->getDoctrine()
-      ->getEntityManager()
+      ->getManager()
       ->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
     $declareArrival = $entityManager->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
 

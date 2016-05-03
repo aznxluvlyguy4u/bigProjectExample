@@ -17,5 +17,6 @@ class Constant
     const APP_BUNDLE = 'AppBundle';
     const DECLARE_ARRIVAL_REPOSITORY = self::APP_BUNDLE . ':' . 'DeclareArrival';
     const DECLARE_IMPORT_REPOSITORY = self::APP_BUNDLE . ':' . 'DeclareImport';
+    const DECLARE_DEPART_REPOSITORY = self::APP_BUNDLE . ':' . 'DeclareDepart';
 
 }

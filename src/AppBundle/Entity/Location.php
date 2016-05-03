@@ -45,6 +45,13 @@ class Location
   /**
    * @var array
    *
+   * @ORM\OneToMany(targetEntity="DeclareDepart", mappedBy="location")
+   */
+  protected $departures;
+
+  /**
+   * @var array
+   *
    * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="location")
    */
   protected $imports;
@@ -220,5 +227,39 @@ class Location
     public function getImports()
     {
         return $this->imports;
+    }
+
+    /**
+     * Add departure
+     *
+     * @param \AppBundle\Entity\DeclareDepart $departure
+     *
+     * @return Location
+     */
+    public function addDeparture(\AppBundle\Entity\DeclareDepart $departure)
+    {
+        $this->departures[] = $departure;
+
+        return $this;
+    }
+
+    /**
+     * Remove departure
+     *
+     * @param \AppBundle\Entity\DeclareDepart $departure
+     */
+    public function removeDeparture(\AppBundle\Entity\DeclareDepart $departure)
+    {
+        $this->departures->removeElement($departure);
+    }
+
+    /**
+     * Get departures
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getDepartures()
+    {
+        return $this->departures;
     }
 }
