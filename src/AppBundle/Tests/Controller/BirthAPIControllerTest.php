@@ -14,6 +14,11 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use Doctrine\Common\Collections\ArrayCollection;
 
+/**
+ * Class BirthAPIControllerTest
+ * @package AppBundle\Tests\Controller
+ * @group birth
+ */
 class BirthAPIControllerTest extends WebTestCase {
 
   const DECLARE_BIRTH_ENDPOINT = "/api/v1/births";

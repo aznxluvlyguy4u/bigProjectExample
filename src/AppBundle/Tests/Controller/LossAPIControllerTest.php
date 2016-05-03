@@ -14,6 +14,11 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use Doctrine\Common\Collections\ArrayCollection;
 
+/**
+ * Class LossAPIControllerTest
+ * @package AppBundle\Tests\Controller
+ * @group loss
+ */
 class LossAPIControllerTest extends WebTestCase {
 
   const DECLARE_LOSS_ENDPOINT = "/api/v1/losses";

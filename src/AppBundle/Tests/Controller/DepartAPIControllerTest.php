@@ -14,6 +14,11 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use Doctrine\Common\Collections\ArrayCollection;
 
+/**
+ * Class DepartAPIControllerTest
+ * @package AppBundle\Tests\Controller
+ * @group depart
+ */
 class DepartAPIControllerTest extends WebTestCase {
 
   const DECLARE_DEPART_ENDPOINT = "/api/v1/departs";

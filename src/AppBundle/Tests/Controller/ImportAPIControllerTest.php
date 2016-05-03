@@ -14,6 +14,11 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use Doctrine\Common\Collections\ArrayCollection;
 
+/**
+ * Class ImportAPIControllerTest
+ * @package AppBundle\Tests\Controller
+ * @group import
+ */
 class ImportAPIControllerTest extends WebTestCase {
 
 
