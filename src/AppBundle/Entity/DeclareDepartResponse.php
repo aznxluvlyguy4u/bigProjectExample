@@ -25,9 +25,9 @@ class DeclareDepartResponse extends DeclareBaseResponse {
 //JColumn(name="declare_depart_request_message_id", referencedColumnName="id")
 
     /**
-     * Set DeclareDepartRequestMessage
+     * Set declareDepartRequestMessage
      *
-     * @param \AppBundle\Entity\DeclareDepart $DeclareDepartRequestMessage
+     * @param \AppBundle\Entity\DeclareDepart $declareDepartRequestMessage
      *
      * @return DeclareDepartResponse
      */
@@ -39,7 +39,7 @@ class DeclareDepartResponse extends DeclareBaseResponse {
     }
 
     /**
-     * Get DeclareDepartRequestMessage
+     * Get declareDepartRequestMessage
      *
      * @return \AppBundle\Entity\DeclareDepart
      */
