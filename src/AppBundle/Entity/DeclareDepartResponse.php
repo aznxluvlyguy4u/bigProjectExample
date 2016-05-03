@@ -21,7 +21,7 @@ class DeclareDepartResponse extends DeclareBaseResponse {
    * @ORM\ManyToOne(targetEntity="DeclareDepart", cascade={"persist"}, inversedBy="responses")
    * @JMS\Type("AppBundle\Entity\DeclareDepart")
    */
-  private $DeclareDepartRequestMessage;
+  private $declareDepartRequestMessage;
 //JColumn(name="declare_depart_request_message_id", referencedColumnName="id")
 
     /**
@@ -31,9 +31,9 @@ class DeclareDepartResponse extends DeclareBaseResponse {
      *
      * @return DeclareDepartResponse
      */
-    public function setDeclareDepartRequestMessage(\AppBundle\Entity\DeclareDepart $DeclareDepartRequestMessage = null)
+    public function setDeclareDepartRequestMessage(\AppBundle\Entity\DeclareDepart $declareDepartRequestMessage = null)
     {
-        $this->DeclareDepartRequestMessage = $DeclareDepartRequestMessage;
+        $this->declareDepartRequestMessage = $declareDepartRequestMessage;
 
         return $this;
     }
@@ -45,7 +45,7 @@ class DeclareDepartResponse extends DeclareBaseResponse {
      */
     public function getDeclareDepartRequestMessage()
     {
-        return $this->DeclareDepartRequestMessage;
+        return $this->declareDepartRequestMessage;
     }
 
 
