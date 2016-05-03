@@ -101,6 +101,7 @@ abstract class Animal
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
+     * @Expose
      */
     protected $dateOfBirth;
 
@@ -110,6 +111,7 @@ abstract class Animal
      * @ORM\Column(type="date", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
+     * @Expose
      */
     protected $dateOfDeath;
 
@@ -205,20 +207,6 @@ abstract class Animal
 
     /**
      * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareBirth")
-     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="animal", cascade={"persist"})
-     */
-    protected $births;
-
-    /**
-     * @var array
-     * @JMS\Type("AppBundle\Entity\DeclareLoss")
-     * @ORM\OneToMany(targetEntity="DeclareLoss", mappedBy="animal", cascade={"persist"})
-     */
-    protected $losses;
-
-    /**
-     * @var array
      * @JMS\Type("array")
      */
     protected $children;
@@ -228,11 +216,9 @@ abstract class Animal
      */
     public function __construct() {
         $this->arrivals = new ArrayCollection();
-        $this->births = new ArrayCollection();
         $this->children = new ArrayCollection();
         $this->departures = new ArrayCollection();
         $this->imports = new ArrayCollection();
-        $this->losses = new ArrayCollection();
     }
 
     /**
@@ -558,40 +544,6 @@ abstract class Animal
     }
 
     /**
-     * Get births
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getBirths()
-    {
-        return $this->births;
-    }
-
-    /**
-     * Add birth
-     *
-     * @param \AppBundle\Entity\DeclareBirth $birth
-     *
-     * @return Animal
-     */
-    public function addBirth(\AppBundle\Entity\DeclareBirth $birth)
-    {
-        $this->births[] = $birth;
-
-        return $this;
-    }
-
-    /**
-     * Remove birth
-     *
-     * @param \AppBundle\Entity\DeclareBirth $birth
-     */
-    public function removeBirth(\AppBundle\Entity\DeclareBirth $birth)
-    {
-        $this->births->removeElement($birth);
-    }
-
-    /**
      * Get arrivals
      *
      * @return \Doctrine\Common\Collections\Collection
@@ -691,40 +643,6 @@ abstract class Animal
     public function getImports()
     {
         return $this->imports;
-    }
-
-    /**
-     * Add loss
-     *
-     * @param \AppBundle\Entity\DeclareLoss $loss
-     *
-     * @return Animal
-     */
-    public function addLoss(\AppBundle\Entity\DeclareLoss $loss)
-    {
-        $this->losses[] = $loss;
-
-        return $this;
-    }
-
-    /**
-     * Remove loss
-     *
-     * @param \AppBundle\Entity\DeclareLoss $loss
-     */
-    public function removeLoss(\AppBundle\Entity\DeclareLoss $loss)
-    {
-        $this->losses->removeElement($loss);
-    }
-
-    /**
-     * Get losses
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getLosses()
-    {
-        return $this->losses;
     }
 
     /**
