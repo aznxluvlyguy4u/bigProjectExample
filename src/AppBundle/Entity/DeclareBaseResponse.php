@@ -15,7 +15,7 @@ use \DateTime;
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * //TODO add new child classes to the DiscriminatorMap
- * @ORM\DiscriminatorMap({"DeclareArrivalResponse" = "DeclareArrivalResponse"})
+ * @ORM\DiscriminatorMap({"DeclareArrivalResponse" = "DeclareArrivalResponse", "DeclareImportResponse" = "DeclareImportResponse"})
  *
  * @package AppBundle\Entity\DeclareBaseResponse
  */

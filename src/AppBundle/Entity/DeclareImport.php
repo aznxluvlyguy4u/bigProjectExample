@@ -10,6 +10,7 @@ use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
+use AppBundle\Entity\DeclareImportResponse;
 
 /**
  * Class DeclareImport
@@ -49,7 +50,7 @@ class DeclareImport extends DeclareBase
 
   /**
    * @Assert\NotBlank
-   * @ORM\ManyToOne(targetEntity="Location", inversedBy="arrivals", cascade={"persist"})
+   * @ORM\ManyToOne(targetEntity="Location", inversedBy="imports", cascade={"persist"})
    * @JMS\Type("AppBundle\Entity\Location")
    */
   private $location;
@@ -62,8 +63,8 @@ class DeclareImport extends DeclareBase
   private $importAnimal;
 
   /**
-   * @ORM\OneToMany(targetEntity="DeclareArrivalResponse", mappedBy="declareArrivalRequestMessage", cascade={"persist"})
-   * @ORM\JoinColumn(name="declare_arrival_request_message_id", referencedColumnName="id")
+   * @ORM\OneToMany(targetEntity="DeclareImportResponse", mappedBy="declareImportRequestMessage", cascade={"persist"})
+   * @ORM\JoinColumn(name="declare_import_request_message_id", referencedColumnName="id")
    * @JMS\Type("array")
    * @Expose
    */
