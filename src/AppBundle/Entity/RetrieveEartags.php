@@ -11,7 +11,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class RetrieveEartags
- * @ORM\Entity(repositoryClass="AppBundle\Entity\RetrieveEartags")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\RetrieveEartagsRepository")
  * @package AppBundle\Entity
  */
 class RetrieveEartags extends DeclareBase

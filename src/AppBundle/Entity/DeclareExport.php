@@ -11,7 +11,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class DeclareExport
- * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareExport")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareExportRepository")
  * @package AppBundle\Entity
  */
 class DeclareExport extends DeclareBase
