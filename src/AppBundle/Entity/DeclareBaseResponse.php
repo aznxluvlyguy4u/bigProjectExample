@@ -16,8 +16,9 @@ use \DateTime;
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * //TODO add new child classes to the DiscriminatorMap
  * @ORM\DiscriminatorMap({"DeclareArrivalResponse" = "DeclareArrivalResponse",
- *                        "DeclareDepartResponse" = "DeclareDepartResponse"})
- *
+ *                        "DeclareDepartResponse" = "DeclareDepartResponse",
+ *                        "DeclareImportResponse" = "DeclareImportResponse",
+ *                       })
  * @package AppBundle\Entity\DeclareBaseResponse
  */
 abstract class DeclareBaseResponse
