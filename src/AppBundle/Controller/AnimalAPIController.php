@@ -124,11 +124,13 @@ class AnimalAPIController extends Controller
     $father->setUlnCountryCode("NL");
     $father->setUlnNumber("00001");
     $father->setAnimalType(1);
+    $father->setDateOfBirth(new \DateTime());
 
     $mother = new Ewe();
     $mother->setUlnCountryCode("NL");
     $mother->setUlnNumber("00002");
     $mother->setAnimalType(2);
+    $mother->setDateOfBirth(new \DateTime());
 
     $child = new Ram();
     $child->setUlnCountryCode("NL");

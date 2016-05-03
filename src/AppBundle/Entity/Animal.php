@@ -168,6 +168,21 @@ abstract class Animal
     protected $animalCategory;
 
     /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    protected $animalWorkingNumber;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    protected $animalHairColour;
+
+    /**
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareArrival")
      * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="animal", cascade={"persist"})
@@ -176,10 +191,24 @@ abstract class Animal
 
     /**
      * @var array
+     * @JMS\Type("AppBundle\Entity\DeclareDepart")
+     * @ORM\OneToMany(targetEntity="DeclareDepart", mappedBy="animal", cascade={"persist"})
+     */
+    protected $departures;
+
+    /**
+     * @var array
      * @JMS\Type("AppBundle\Entity\DeclareImport")
      * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="animal", cascade={"persist"})
      */
     protected $imports;
+
+    /**
+     * @var array
+     * @JMS\Type("AppBundle\Entity\DeclareBirth")
+     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="animal", cascade={"persist"})
+     */
+    protected $births;
 
     /**
      * @var array
@@ -192,7 +221,10 @@ abstract class Animal
      */
     public function __construct() {
         $this->arrivals = new ArrayCollection();
+        $this->births = new ArrayCollection();
         $this->children = new ArrayCollection();
+        $this->departures = new ArrayCollection();
+        $this->imports = new ArrayCollection();
     }
 
     /**
@@ -518,6 +550,40 @@ abstract class Animal
     }
 
     /**
+     * Get births
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getBirths()
+    {
+        return $this->births;
+    }
+
+    /**
+     * Add birth
+     *
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     *
+     * @return Animal
+     */
+    public function addBirth(\AppBundle\Entity\DeclareBirth $birth)
+    {
+        $this->births[] = $birth;
+
+        return $this;
+    }
+
+    /**
+     * Remove birth
+     *
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     */
+    public function removeBirth(\AppBundle\Entity\DeclareBirth $birth)
+    {
+        $this->births->removeElement($birth);
+    }
+
+    /**
      * Get arrivals
      *
      * @return \Doctrine\Common\Collections\Collection
@@ -525,6 +591,40 @@ abstract class Animal
     public function getArrivals()
     {
         return $this->arrivals;
+    }
+
+    /**
+     * Add departure
+     *
+     * @param \AppBundle\Entity\DeclareDepart $depart
+     *
+     * @return Animal
+     */
+    public function addDeparture(\AppBundle\Entity\DeclareDepart $depart)
+    {
+        $this->departures[] = $depart;
+
+        return $this;
+    }
+
+    /**
+     * Remove depart
+     *
+     * @param \AppBundle\Entity\DeclareDepart $depart
+     */
+    public function removeDeparture(\AppBundle\Entity\DeclareDepart $depart)
+    {
+        $this->departures->removeElement($depart);
+    }
+
+    /**
+     * Get departures
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getDepartures()
+    {
+        return $this->departures;
     }
 
     /**
@@ -583,5 +683,41 @@ abstract class Animal
     public function getImports()
     {
         return $this->imports;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAnimalWorkingNumber()
+    {
+        return $this->animalWorkingNumber;
+    }
+
+    /**
+     * @param string $animalWorkingNumber
+     *
+     * @return Animal
+     */
+    public function setAnimalWorkingNumber($animalWorkingNumber)
+    {
+        $this->animalWorkingNumber = $animalWorkingNumber;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAnimalHairColour()
+    {
+        return $this->animalHairColour;
+    }
+
+    /**
+     * @param string $animalHairColour
+     */
+    public function setAnimalHairColour($animalHairColour)
+    {
+        $this->animalHairColour = $animalHairColour;
     }
 }

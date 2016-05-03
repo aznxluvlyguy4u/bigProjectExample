@@ -138,23 +138,70 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareBirth(ArrayCollection $contentArray)
+    function parseDeclareBirth(ArrayCollection $declareBirthContentArray)
     {
-        // TODO: Implement parseDeclareBirth() method.
-        $declareBirth = null;
+        //Retrieve animal entity
+        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareBirthContentArray['animal']);
 
-        return $declareBirth;
+        //Parse to json
+        $retrievedAnimalJson = $this->serializeToJSON($retrievedAnimal);
+        //Parse json to content array to add additional 'animal type' property
+        $retrievedAnimalContentArray = json_decode($retrievedAnimalJson, true);
+
+        //Add animal type to content array
+        $retrievedAnimalContentArray[$this::DISCRIMINATOR_TYPE_NAMESPACE] = $retrievedAnimal->getObjectType();
+
+        // FIXME
+        unset( $retrievedAnimalContentArray['arrivals']);
+        unset( $retrievedAnimalContentArray['departures']);
+        unset( $retrievedAnimalContentArray['births']);
+        unset( $retrievedAnimalContentArray['imports']);
+        unset( $retrievedAnimalContentArray['children']);
+
+        //Add retrieved animal properties including type to initial animalContentArray
+        $declareBirthContentArray['animal'] =  $retrievedAnimalContentArray;
+
+        //denormalize the content to an object
+        $json = $this->serializeToJSON($declareBirthContentArray);
+        $declareBirthRequest = $this->deserializeToObject($json, RequestType::DECLARE_BIRTH_ENTITY);
+
+        //Add retrieved animal to DeclareBirth
+        $declareBirthRequest->setAnimal($retrievedAnimal);
+
+        return $declareBirthRequest;
     }
 
     /**
      * @inheritdoc
      */
-    function parseDeclareDepart(ArrayCollection $contentArray)
+    function parseDeclareDepart(ArrayCollection $declareDepartContentArray)
     {
-        // TODO: Implement parseDeclareDepart() method.
-        $declareDepart = null;
+        //Retrieve animal entity
+        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareDepartContentArray['animal']);
 
-        return $declareDepart;
+        //Parse to json
+        $retrievedAnimalJson = $this->serializeToJSON($retrievedAnimal);
+        //Parse json to content array to add additional 'animal type' property
+        $retrievedAnimalContentArray = json_decode($retrievedAnimalJson, true);
+
+        //Add animal type to content array
+        $retrievedAnimalContentArray[$this::DISCRIMINATOR_TYPE_NAMESPACE] = $retrievedAnimal->getObjectType();
+
+        // FIXME
+        unset( $retrievedAnimalContentArray['arrivals']);
+        unset( $retrievedAnimalContentArray['children']);
+
+        //Add retrieved animal properties including type to initial animalContentArray
+        $declareDepartContentArray['animal'] =  $retrievedAnimalContentArray;
+
+        //denormalize the content to an object
+        $json = $this->serializeToJSON($declareDepartContentArray);
+        $declareDepartRequest = $this->deserializeToObject($json, RequestType::DECLARE_DEPART_ENTITY);
+
+        //Add retrieved animal to DeclareArrival
+        $declareDepartRequest->setAnimal($retrievedAnimal);
+
+        return $declareDepartRequest;
     }
 
     /**

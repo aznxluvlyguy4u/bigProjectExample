@@ -16,7 +16,8 @@ class Constant
     //Request repositories
     const APP_BUNDLE = 'AppBundle';
     const DECLARE_ARRIVAL_REPOSITORY = self::APP_BUNDLE . ':' . 'DeclareArrival';
+    const DECLARE_BIRTH_REPOSITORY = self::APP_BUNDLE . ':' . 'DeclareBirth';
+    const DECLARE_DEPART_REPOSITORY = self::APP_BUNDLE . ':' . 'DeclareDepart';
     const DECLARE_IMPORT_REPOSITORY = self::APP_BUNDLE . ':' . 'DeclareImport';
     const DECLARE_LOSS_REPOSITORY = self::APP_BUNDLE . ':' . 'DeclareLoss';
-
 }
