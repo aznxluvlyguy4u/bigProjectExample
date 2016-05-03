@@ -66,7 +66,7 @@ class Location
   /**
    * @var array
    *
-   * @ORM\OneToMany(targetEntity="DeclareLosses", mappedBy="location")
+   * @ORM\OneToMany(targetEntity="DeclareLoss", mappedBy="location")
    */
   protected $losses;
 
