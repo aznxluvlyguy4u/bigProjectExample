@@ -120,6 +120,9 @@ class IRSerializer implements IRSerializerInterface
 
         // FIXME
         unset( $retrievedAnimalContentArray['arrivals']);
+        unset( $retrievedAnimalContentArray['departures']);
+        unset( $retrievedAnimalContentArray['births']);
+        unset( $retrievedAnimalContentArray['imports']);
         unset( $retrievedAnimalContentArray['children']);
 
         //Add retrieved animal properties including type to initial animalContentArray
@@ -189,6 +192,9 @@ class IRSerializer implements IRSerializerInterface
 
         // FIXME
         unset( $retrievedAnimalContentArray['arrivals']);
+        unset( $retrievedAnimalContentArray['departures']);
+        unset( $retrievedAnimalContentArray['births']);
+        unset( $retrievedAnimalContentArray['imports']);
         unset( $retrievedAnimalContentArray['children']);
 
         //Add retrieved animal properties including type to initial animalContentArray
@@ -280,6 +286,9 @@ class IRSerializer implements IRSerializerInterface
         $retrievedAnimalContentArray[$this::DISCRIMINATOR_TYPE_NAMESPACE] = $retrievedAnimal->getObjectType();
 
         // FIXME
+        unset( $retrievedAnimalContentArray['arrivals']);
+        unset( $retrievedAnimalContentArray['departures']);
+        unset( $retrievedAnimalContentArray['births']);
         unset( $retrievedAnimalContentArray['imports']);
         unset( $retrievedAnimalContentArray['children']);
 
