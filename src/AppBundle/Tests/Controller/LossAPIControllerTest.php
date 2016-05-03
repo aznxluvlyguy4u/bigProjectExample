@@ -158,7 +158,7 @@ class LossAPIControllerTest extends WebTestCase {
     $declareLoss->setUbnProcessor("2299077");
 
     //NOTE! The DateOfDeath is set on the Animal not the DeclareLoss entity.
-    self::$mockedChild->setDateOfDeath(new \DateTime());
+    self::$mockedChild->setDateOfDeath(new \DateTime("2024-02-24"));
     $declareLoss->setAnimal(self::$mockedChild);
 
     //Create json to be posted
@@ -192,7 +192,7 @@ class LossAPIControllerTest extends WebTestCase {
     $declareLoss->setUbnProcessor("666");
 
     //NOTE! The DateOfDeath is set on the Animal not the DeclareLoss entity.
-    self::$mockedChild->setDateOfDeath(new \DateTime());
+    self::$mockedChild->setDateOfDeath(new \DateTime("2036-03-01"));
     $declareLoss->setAnimal(self::$mockedChild);
 
     //Create json to be posted
