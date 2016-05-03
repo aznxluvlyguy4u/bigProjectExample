@@ -48,6 +48,13 @@ class DeclareLoss extends DeclareBase
     private $ubnProcessor;
 
     /**
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="Location", inversedBy="losses", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Location")
+     */
+    private $location;
+
+    /**
      * @ORM\OneToMany(targetEntity="DeclareLossResponse", mappedBy="declareLossRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_loss_request_message_id", referencedColumnName="id")
      * @JMS\Type("array")
@@ -121,6 +128,31 @@ class DeclareLoss extends DeclareBase
     public function getAnimal()
     {
         return $this->animal;
+    }
+
+    /**
+     * Set location
+     *
+     * @param \AppBundle\Entity\Location $location
+     *
+     * @return DeclareLoss
+     */
+    public function setLocation(\AppBundle\Entity\Location $location = null)
+    {
+        $this->location = $location;
+        $this->setUbn($this->location->getUbn());
+
+        return $this;
+    }
+
+    /**
+     * Get location
+     *
+     * @return \AppBundle\Entity\Location
+     */
+    public function getLocation()
+    {
+        return $this->location;
     }
 
     /**
