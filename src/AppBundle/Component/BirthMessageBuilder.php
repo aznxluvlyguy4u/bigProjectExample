@@ -32,7 +32,7 @@ class BirthMessageBuilder extends MessageBuilderBase
      *
      * @param DeclareBirth $messageObject the message received from the front-end
      * @param Person $person
-     * @return ArrayCollection
+     * @return DeclareBirth
      */
     public function buildMessage(DeclareBirth $messageObject, Person $person)
     {

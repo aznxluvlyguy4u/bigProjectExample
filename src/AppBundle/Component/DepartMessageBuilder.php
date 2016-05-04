@@ -43,7 +43,6 @@ class DepartMessageBuilder extends MessageBuilderBase
 
     /**
      * @param DeclareDepart $messageObject the message received from the front-end
-     * @param Person $person
      * @return DeclareDepart
      */
     private function addDeclareDepartData(DeclareDepart $messageObject)

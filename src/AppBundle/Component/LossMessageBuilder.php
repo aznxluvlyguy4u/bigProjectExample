@@ -32,7 +32,7 @@ class LossMessageBuilder extends MessageBuilderBase
      *
      * @param DeclareLoss $messageObject the message received from the front-end
      * @param Person $person
-     * @return ArrayCollection
+     * @return DeclareLoss
      */
     public function buildMessage(DeclareLoss $messageObject, Person $person)
     {

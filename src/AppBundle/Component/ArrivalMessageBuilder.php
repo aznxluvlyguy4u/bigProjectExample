@@ -32,7 +32,7 @@ class ArrivalMessageBuilder extends MessageBuilderBase
      *
      * @param DeclareArrival $messageObject the message received from the front-end
      * @param Person $person
-     * @return ArrayCollection
+     * @return DeclareArrival
      */
     public function buildMessage(DeclareArrival $messageObject, Person $person)
     {

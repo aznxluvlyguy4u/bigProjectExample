@@ -30,8 +30,8 @@ class ImportMessageBuilder extends MessageBuilderBase
    * Accept front-end input and create a complete NSFO+IenR Message.
    *
    * @param DeclareImport $messageObject the message received from the front-end
-   * @param string $relationNumberKeeper
-   * @return ArrayCollection
+   * @param Person $person
+   * @return DeclareImport
    */
   public function buildMessage(DeclareImport $messageObject, Person $person)
   {
@@ -44,7 +44,6 @@ class ImportMessageBuilder extends MessageBuilderBase
 
   /**
    * @param DeclareImport $messageObject the message received from the front-end
-   * @param Person $person
    * @return DeclareImport
    */
   private function addDeclareImportData(DeclareImport $messageObject)
