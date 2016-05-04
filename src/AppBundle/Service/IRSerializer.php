@@ -8,6 +8,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Neuter;
+use AppBundle\Entity\Animal;
 use AppBundle\Enumerator\RequestType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
@@ -81,6 +82,29 @@ class IRSerializer implements IRSerializerInterface
     }
 
     /**
+     * @param Animal $retrievedAnimal
+     * @return array
+     */
+    function returnAnimalArray(Animal $retrievedAnimal)
+    {
+        //Parse to json
+        $retrievedAnimalJson = $this->serializeToJSON($retrievedAnimal);
+        //Parse json to content array to add additional 'animal type' property
+        $retrievedAnimalContentArray = json_decode($retrievedAnimalJson, true);
+
+        //Add animal type to content array
+        $retrievedAnimalContentArray[$this::DISCRIMINATOR_TYPE_NAMESPACE] = $retrievedAnimal->getObjectType();
+
+        // FIXME
+        unset( $retrievedAnimalContentArray['arrivals']);
+        unset( $retrievedAnimalContentArray['departures']);
+        unset( $retrievedAnimalContentArray['imports']);
+        unset( $retrievedAnimalContentArray['children']);
+
+        return  $retrievedAnimalContentArray;
+    }
+
+    /**
      * @inheritdoc
      */
     function parseDeclarationDetail(ArrayCollection $contentArray)
@@ -110,20 +134,8 @@ class IRSerializer implements IRSerializerInterface
         //Retrieve animal entity
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray['animal']);
 
-        //Parse to json
-        $retrievedAnimalJson = $this->serializeToJSON($retrievedAnimal);
-        //Parse json to content array to add additional 'animal type' property
-        $retrievedAnimalContentArray = json_decode($retrievedAnimalJson, true);
-
-        //Add animal type to content array
-        $retrievedAnimalContentArray[$this::DISCRIMINATOR_TYPE_NAMESPACE] = $retrievedAnimal->getObjectType();
-
-        // FIXME
-        unset( $retrievedAnimalContentArray['arrivals']);
-        unset( $retrievedAnimalContentArray['children']);
-
         //Add retrieved animal properties including type to initial animalContentArray
-        $declareArrivalContentArray['animal'] =  $retrievedAnimalContentArray;
+        $declareArrivalContentArray['animal'] =  $this->returnAnimalArray($retrievedAnimal);
 
         //denormalize the content to an object
         $json = $this->serializeToJSON($declareArrivalContentArray);
@@ -143,23 +155,8 @@ class IRSerializer implements IRSerializerInterface
         //Retrieve animal entity
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareBirthContentArray['animal']);
 
-        //Parse to json
-        $retrievedAnimalJson = $this->serializeToJSON($retrievedAnimal);
-        //Parse json to content array to add additional 'animal type' property
-        $retrievedAnimalContentArray = json_decode($retrievedAnimalJson, true);
-
-        //Add animal type to content array
-        $retrievedAnimalContentArray[$this::DISCRIMINATOR_TYPE_NAMESPACE] = $retrievedAnimal->getObjectType();
-
-        // FIXME
-        unset( $retrievedAnimalContentArray['arrivals']);
-        unset( $retrievedAnimalContentArray['departures']);
-        unset( $retrievedAnimalContentArray['births']);
-        unset( $retrievedAnimalContentArray['imports']);
-        unset( $retrievedAnimalContentArray['children']);
-
         //Add retrieved animal properties including type to initial animalContentArray
-        $declareBirthContentArray['animal'] =  $retrievedAnimalContentArray;
+        $declareBirthContentArray['animal'] = $this->returnAnimalArray($retrievedAnimal);
 
         //denormalize the content to an object
         $json = $this->serializeToJSON($declareBirthContentArray);
@@ -179,20 +176,8 @@ class IRSerializer implements IRSerializerInterface
         //Retrieve animal entity
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareDepartContentArray['animal']);
 
-        //Parse to json
-        $retrievedAnimalJson = $this->serializeToJSON($retrievedAnimal);
-        //Parse json to content array to add additional 'animal type' property
-        $retrievedAnimalContentArray = json_decode($retrievedAnimalJson, true);
-
-        //Add animal type to content array
-        $retrievedAnimalContentArray[$this::DISCRIMINATOR_TYPE_NAMESPACE] = $retrievedAnimal->getObjectType();
-
-        // FIXME
-        unset( $retrievedAnimalContentArray['arrivals']);
-        unset( $retrievedAnimalContentArray['children']);
-
         //Add retrieved animal properties including type to initial animalContentArray
-        $declareDepartContentArray['animal'] =  $retrievedAnimalContentArray;
+        $declareDepartContentArray['animal'] =  $this->returnAnimalArray($retrievedAnimal);
 
         //denormalize the content to an object
         $json = $this->serializeToJSON($declareDepartContentArray);
@@ -245,20 +230,8 @@ class IRSerializer implements IRSerializerInterface
         //Retrieve animal entity
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareImportContentArray['animal']);
 
-        //Parse to json
-        $retrievedAnimalJson = $this->serializeToJSON($retrievedAnimal);
-        //Parse json to content array to add additional 'animal type' property
-        $retrievedAnimalContentArray = json_decode($retrievedAnimalJson, true);
-
-        //Add animal type to content array
-        $retrievedAnimalContentArray[$this::DISCRIMINATOR_TYPE_NAMESPACE] = $retrievedAnimal->getObjectType();
-
-        // FIXME
-        unset( $retrievedAnimalContentArray['imports']);
-        unset( $retrievedAnimalContentArray['children']);
-
         //Add retrieved animal properties including type to initial animalContentArray
-        $declareImportContentArray['animal'] =  $retrievedAnimalContentArray;
+        $declareImportContentArray['animal'] =  $this->returnAnimalArray($retrievedAnimal);
 
         //denormalize the content to an object
         $json = $this->serializeToJSON($declareImportContentArray);
