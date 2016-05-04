@@ -167,7 +167,7 @@ class AuthAPIContoller extends APIController {
    */
   public function authorizeUser(Request $request)
   {
-    $credentials = $request->headers->get($this::AUTHORIZATION_HEADER_NAMESPACE);
+    $credentials = $request->headers->get(Constant::AUTHORIZATION_HEADER_NAMESPACE);
     $credentials = str_replace('Basic ', '', $credentials);
     $credentials = base64_decode($credentials);
 
