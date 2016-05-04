@@ -14,10 +14,9 @@ class Constant
     const RESULT_NAMESPACE = "result";
 
     //Request repositories
-    const APP_BUNDLE = 'AppBundle';
-    const DECLARE_ARRIVAL_REPOSITORY = self::APP_BUNDLE . ':' . 'DeclareArrival';
-    const DECLARE_BIRTH_REPOSITORY = self::APP_BUNDLE . ':' . 'DeclareBirth';
-    const DECLARE_DEPART_REPOSITORY = self::APP_BUNDLE . ':' . 'DeclareDepart';
-    const DECLARE_IMPORT_REPOSITORY = self::APP_BUNDLE . ':' . 'DeclareImport';
-    const DECLARE_EARTAGS_TRANSFER_REPOSITORY = self::APP_BUNDLE . ':' . 'DeclareEartagsTransfer';
+    const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';
+    const DECLARE_BIRTH_REPOSITORY = 'AppBundle:DeclareBirth';
+    const DECLARE_DEPART_REPOSITORY = 'AppBundle:DeclareDepart';
+    const DECLARE_IMPORT_REPOSITORY ='AppBundle:DeclareImport';
+    const DECLARE_EARTAGS_TRANSFER_REPOSITORY = 'AppBundle:DeclareEartagsTransfer';
 }
