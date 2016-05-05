@@ -3,6 +3,7 @@
 namespace AppBundle\DataFixtures\ORM;
 
 use AppBundle\Constant\Constant;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -22,6 +23,10 @@ class MockedCountries implements FixtureInterface, ContainerAwareInterface, Orde
    */
   private $container;
 
+  /**
+   * @var array
+   */
+  static private $mockedCountries;
 
   /**
    * Sets the container.
@@ -38,7 +43,8 @@ class MockedCountries implements FixtureInterface, ContainerAwareInterface, Orde
    *
    * @param ObjectManager $manager
    */
-  public function load(ObjectManager $manager) {
+  public function load(ObjectManager $manager)
+  {
 
     $countries = null;
 
@@ -73,6 +79,18 @@ class MockedCountries implements FixtureInterface, ContainerAwareInterface, Orde
     }
 
     $manager->flush();
+
+    //Set countries list as mockedList
+    self::$mockedCountries = $countries;
+  }
+
+
+  /**
+   * @return array
+   */
+  public static function getMockedCountriesList()
+  {
+    return self::$mockedCountries;
   }
 
   /**
