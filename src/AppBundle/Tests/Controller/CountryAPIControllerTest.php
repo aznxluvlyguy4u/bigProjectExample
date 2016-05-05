@@ -22,11 +22,6 @@ class CountryAPIControllerTest extends WebTestCase {
   private $client;
 
   /**
-   * @var IRSerializer
-   */
-  static private $serializer;
-
-  /**
    * @var EntityManager
    */
   static private $entityManager;
@@ -87,7 +82,6 @@ class CountryAPIControllerTest extends WebTestCase {
     $container = $kernel->getContainer();
 
     //Get service classes
-    self::$serializer = $container->get('app.serializer.ir');
     self::$entityManager = $container->get('doctrine.orm.entity_manager');
   }
 
@@ -109,7 +103,8 @@ class CountryAPIControllerTest extends WebTestCase {
     $this->assertEquals(sizeof(self::$mockedCountries), sizeof($data['result']));
   }
 
-  public function tearDown() {
+  public function tearDown()
+  {
     parent::tearDown();
   }
 
