@@ -17,7 +17,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 class CountryAPIController extends APIController {
 
   /**
-   * Retrieve a list of Country codes and corresponding full Country name, with default continent Europe.
+   * Retrieve a list of Country codes and corresponding full Country name
    *
    * @ApiDoc(
    *   requirements={
@@ -33,12 +33,12 @@ class CountryAPIController extends APIController {
    *        "name"="continent",
    *        "dataType"="string",
    *        "required"=false,
-   *        "description"=" Continent to filter on",
+   *        "description"=" Continents to filter on: { Asia, Africa, Antarctica, Australia, Europe, North-America, South-America }, note that some countries are transcontinental",
    *        "format"="?continent=continent-name"
    *      }
    *   },
    *   resource = true,
-   *   description = "Retrieve a list of countries with ISO 3166-1 two letter codes, default continent is Europe",
+   *   description = "Retrieve a list of countries with ISO 3166-1 two letter codes and corresponding full country name",
    *   output = "AppBundle\Entity\Country"
    * )
    * @param Request $request the request object
