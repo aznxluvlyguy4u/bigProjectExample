@@ -67,11 +67,11 @@ class MockedCountries implements FixtureInterface, ContainerAwareInterface, Orde
       $country->setCode($countryItem[$this::LANDCODE_NAMESPACE]);
       $country->setName($countryItem[$this::LANDNAME_NAMESPACE]);
 
+      //persist mocked data
       $manager->persist($country);
 
     }
 
-    //persist mocked data
     $manager->flush();
   }
 
