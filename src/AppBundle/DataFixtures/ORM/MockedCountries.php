@@ -2,6 +2,7 @@
 
 namespace AppBundle\DataFixtures\ORM;
 
+use AppBundle\Constant\Constant;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -12,6 +13,10 @@ use AppBundle\Entity\Country;
 
 class MockedCountries implements FixtureInterface, ContainerAwareInterface, OrderedFixtureInterface {
 
+  const LANDCODE_NAMESPACE = 'code';
+  const LANDNAME_NAMESPACE = 'name';
+  const UNKNOWN_NAMESPACE = "Unknown";
+  const COUNTRIES_JSON_FILENAME = 'countries_v1.json';
   /**
    * @var ContainerInterface
    */
@@ -41,7 +46,7 @@ class MockedCountries implements FixtureInterface, ContainerAwareInterface, Orde
     $finder = new Finder();
     $finder->files()->in(__DIR__);
 
-    $finder->files()->name('countries_v1.json');
+    $finder->files()->name($this::COUNTRIES_JSON_FILENAME);
 
     //Decode json to array
     foreach ($finder as $file) {
@@ -53,14 +58,14 @@ class MockedCountries implements FixtureInterface, ContainerAwareInterface, Orde
     foreach($countries as $countryItem) {
       $country = new Country();
 
-      if (empty($countryItem['continent'])) {
-        $country->setContinent('Unknown');
+      if (empty($countryItem[Constant::CONTINENT_NAMESPACE])) {
+        $country->setContinent($this::UNKNOWN_NAMESPACE);
       }
       else {
-        $country->setContinent($countryItem['continent']);
+        $country->setContinent($countryItem[Constant::CONTINENT_NAMESPACE]);
       }
-      $country->setCode($countryItem['code']);
-      $country->setName($countryItem['name']);
+      $country->setCode($countryItem[$this::LANDCODE_NAMESPACE]);
+      $country->setName($countryItem[$this::LANDNAME_NAMESPACE]);
 
       $manager->persist($country);
 
