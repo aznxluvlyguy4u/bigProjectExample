@@ -27,6 +27,15 @@ class DeclareLoss extends DeclareBase
      */
     private $animal;
 
+    /**
+     * @var DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @Expose
+     */
+    protected $dateOfDeath;
 
     /**
      * @ORM\Column(type="string", nullable=true)
@@ -177,6 +186,30 @@ class DeclareLoss extends DeclareBase
     public function getUbn()
     {
         return $this->ubn;
+    }
+
+    /**
+     * Set dateOfDeath
+     *
+     * @param \DateTime $dateOfDeath
+     *
+     * @return DeclareLoss
+     */
+    public function setDateOfDeath($dateOfDeath)
+    {
+        $this->dateOfDeath = $dateOfDeath;
+
+        return $this;
+    }
+
+    /**
+     * Get dateOfDeath
+     *
+     * @return \DateTime
+     */
+    public function getDateOfDeath()
+    {
+        return $this->dateOfDeath;
     }
 
     /**

@@ -182,6 +182,10 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
       $declareLoss->setAnimal($declareLossUpdate->getAnimal());
     }
 
+    if ($declareLossUpdate->getDateOfDeath() != null) {
+      $declareLoss->setDateOfDeath($declareLossUpdate->getDateOfDeath());
+    }
+
     if ($declareLossUpdate->getLocation() != null) {
       $declareLoss->setLocation($declareLossUpdate->getLocation());
     }

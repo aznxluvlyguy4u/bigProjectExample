@@ -107,16 +107,6 @@ abstract class Animal
     protected $dateOfBirth;
 
     /**
-     * @var DateTime
-     *
-     * @ORM\Column(type="datetime", nullable=true)
-     * @Assert\Date
-     * @JMS\Type("DateTime")
-     * @Expose
-     */
-    protected $dateOfDeath;
-
-    /**
      * @var string
      *
      * @ORM\Column(type="string", nullable=true)
@@ -374,30 +364,6 @@ abstract class Animal
     public function getDateOfBirth()
     {
         return $this->dateOfBirth;
-    }
-
-    /**
-     * Set dateOfDeath
-     *
-     * @param \DateTime $dateOfDeath
-     *
-     * @return Animal
-     */
-    public function setDateOfDeath($dateOfDeath)
-    {
-        $this->dateOfDeath = $dateOfDeath;
-
-        return $this;
-    }
-
-    /**
-     * Get dateOfDeath
-     *
-     * @return \DateTime
-     */
-    public function getDateOfDeath()
-    {
-        return $this->dateOfDeath;
     }
 
     /**
