@@ -44,17 +44,18 @@ class BirthMessageBuilder extends MessageBuilderBase
     }
 
     /**
-     * @param DeclareBirth $messageObject the message received from the front-end
+     * @param DeclareBirth $declareBirth the message received from the front-end
      * @return DeclareBirth
      */
-    private function addDeclareBirthData(DeclareBirth $messageObject)
+    private function addDeclareBirthData(DeclareBirth $declareBirth)
     {
-        $animal = $messageObject->getAnimal();
+        $animal = $declareBirth->getAnimal();
         $animal->setAnimalType(AnimalType::sheep);
+        $animal->setDateOfBirth($declareBirth->getDateOfBirth());
 
         //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
-        $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
-        return $messageObject;
+        $declareBirth->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
+        return $declareBirth;
     }
 
 }

@@ -187,6 +187,26 @@ abstract class Animal
     protected $imports;
 
     /**
+     * @var DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @Expose
+     */
+    protected $dateOfBirth;
+
+    /**
+     * @var DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @Expose
+     */
+    protected $dateOfDeath;
+
+    /**
      * @var array
      * @JMS\Type("array")
      */
@@ -613,4 +633,53 @@ abstract class Animal
     {
         $this->animalHairColour = $animalHairColour;
     }
+
+    /**
+     * Set dateOfDeath
+     *
+     * @param \DateTime $dateOfDeath
+     *
+     * @return Animal
+     */
+    public function setDateOfDeath($dateOfDeath)
+    {
+        $this->dateOfDeath = $dateOfDeath;
+
+        return $this;
+    }
+
+    /**
+     * Get dateOfDeath
+     *
+     * @return \DateTime
+     */
+    public function getDateOfDeath()
+    {
+        return $this->dateOfDeath;
+    }
+
+    /**
+     * Set dateOfBirth
+     *
+     * @param \DateTime $dateOfBirth
+     *
+     * @return Animal
+     */
+    public function setDateOfBirth($dateOfBirth)
+    {
+        $this->dateOfBirth = $dateOfBirth;
+
+        return $this;
+    }
+
+    /**
+     * Get dateOfBirth
+     *
+     * @return \DateTime
+     */
+    public function getDateOfBirth()
+    {
+        return $this->dateOfBirth;
+    }
+
 }

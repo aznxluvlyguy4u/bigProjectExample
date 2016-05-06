@@ -227,6 +227,7 @@ class DeclareBirth extends DeclareBase
      */
     public function setDateOfBirth($dateOfBirth)
     {
+        $this->getAnimal()->setDateOfBirth();
         $this->dateOfBirth = $dateOfBirth;
 
         return $this;

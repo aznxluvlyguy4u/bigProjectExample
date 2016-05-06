@@ -44,17 +44,18 @@ class LossMessageBuilder extends MessageBuilderBase
     }
 
     /**
-     * @param DeclareLoss $messageObject the baseMessageObject
+     * @param DeclareLoss $declareLoss the baseMessageObject
      * @return DeclareLoss
      */
-    private function addDeclareLossData(DeclareLoss $messageObject)
+    private function addDeclareLossData(DeclareLoss $declareLoss)
     {
-        $animal = $messageObject->getAnimal();
+        $animal = $declareLoss->getAnimal();
         $animal->setAnimalType(AnimalType::sheep);
+        $animal->setDateOfDeath($declareLoss->getDateOfDeath());
 
         //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
-        $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
-        return $messageObject;
+        $declareLoss->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
+        return $declareLoss;
     }
 
 }
