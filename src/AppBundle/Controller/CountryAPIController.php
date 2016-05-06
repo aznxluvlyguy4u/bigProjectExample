@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Constant\Constant;
 use AppBundle\Entity\Country;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -16,7 +17,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 class CountryAPIController extends APIController {
 
   /**
-   * Retrieve a list of Country codes and corresponding full Country name, with default continent Europe.
+   * Retrieve a list of Country codes and corresponding full Country name
    *
    * @ApiDoc(
    *   requirements={
@@ -32,12 +33,12 @@ class CountryAPIController extends APIController {
    *        "name"="continent",
    *        "dataType"="string",
    *        "required"=false,
-   *        "description"=" Continent to filter on",
+   *        "description"=" Continents to filter on: { Asia, Africa, Antarctica, Australia, Europe, North-America, South-America }, note that some countries are transcontinental",
    *        "format"="?continent=continent-name"
    *      }
    *   },
    *   resource = true,
-   *   description = "Retrieve a list of countries with ISO 3166-1 two letter codes, default continent is Europe",
+   *   description = "Retrieve a list of countries with ISO 3166-1 two letter codes and corresponding full country name",
    *   output = "AppBundle\Entity\Country"
    * )
    * @param Request $request the request object
@@ -46,19 +47,18 @@ class CountryAPIController extends APIController {
    * @Method("GET")
    */
   public function getCountryCodes(Request $request) {
-
-    if(!$request->query->has('continent')) {
-      $countries = $this->getDoctrine()->getRepository('AppBundle:Country')->findBy(array('continent' => 'Europe'));
+    if(!$request->query->has(Constant::CONTINENT_NAMESPACE)) {
+      $countries = $this->getDoctrine()->getRepository(Constant::COUNTRY_REPOSITORY)->findAll();
     } else {
-      $continent = ucfirst($request->query->get('continent'));
-      if($continent == 'all'){
-        $countries = $this->getDoctrine()->getRepository('AppBundle:Country')->findAll();
+      $continent = ucfirst($request->query->get(Constant::CONTINENT_NAMESPACE));
+      if($continent == Constant::ALL_NAMESPACE){
+        $countries = $this->getDoctrine()->getRepository(Constant::COUNTRY_REPOSITORY)->findAll();
       } else {
-        $countries = $this->getDoctrine()->getRepository('AppBundle:Country')->findBy(array('continent' => $continent));
+        $countries = $this->getDoctrine()->getRepository(Constant::COUNTRY_REPOSITORY)->findBy(array(Constant::CONTINENT_NAMESPACE => $continent));
       }
     }
 
-    $countries = $this->serializeToJSON(array("countries" => $countries));
+    $countries = $this->getSerializer()->serializeToJSON(array(Constant::RESULT_NAMESPACE => $countries));
 
     return new Response($countries);
   }

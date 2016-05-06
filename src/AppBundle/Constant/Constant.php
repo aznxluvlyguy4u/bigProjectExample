@@ -12,6 +12,8 @@ class Constant
     const REQUEST_STATE_NAMESPACE = 'requestState';
     const REQUEST_ID_NAMESPACE = 'requestId';
     const RESULT_NAMESPACE = "result";
+    const CONTINENT_NAMESPACE = 'continent';
+    const ALL_NAMESPACE = 'all';
 
     //Request repositories
     const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';
@@ -20,4 +22,6 @@ class Constant
     const DECLARE_EARTAGS_TRANSFER_REPOSITORY = 'AppBundle:DeclareEartagsTransfer';
     const DECLARE_IMPORT_REPOSITORY ='AppBundle:DeclareImport';
     const DECLARE_LOSS_REPOSITORY = 'AppBundle:DeclareLoss';
+
+    const COUNTRY_REPOSITORY = 'AppBundle:Country';
 }
