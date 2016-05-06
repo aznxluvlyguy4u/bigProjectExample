@@ -157,6 +157,7 @@ class BirthAPIControllerTest extends WebTestCase {
     $declareBirth->setBirthType("keizersnee");
     $declareBirth->setUbnPreviousOwner("123456");
     $declareBirth->setUbn("777777");
+    $declareBirth->setDateOfBirth(new \DateTime("2018-05-06T11:46:01+0200"));
     $declareBirth->setAnimal(self::$mockedChild);
 
     //Create json to be posted
@@ -187,6 +188,7 @@ class BirthAPIControllerTest extends WebTestCase {
     $declareBirth->setBirthType("keizersnee");
     $declareBirth->setUbnPreviousOwner("123456");
     $declareBirth->setUbn("777777");
+    $declareBirth->setDateOfBirth(new \DateTime("2019-09-09T09:09:09+0900"));
     $declareBirth->setAnimal(self::$mockedChild);
 
     //Create json to be posted
@@ -212,6 +214,7 @@ class BirthAPIControllerTest extends WebTestCase {
     $declareBirthUpdated = $declareBirth;
     $declareBirthUpdated->setUbnPreviousOwner("999991");
     $declareBirthUpdated->setBirthType("Painful but worth it");
+    $declareBirthUpdated->setDateOfBirth(new \DateTime());
     $declareBirthUpdated->setAborted("N");
     $declareBirthUpdated->setAnimalWeight(999);
     $declareBirthUpdated->setLambar("N");
@@ -239,6 +242,7 @@ class BirthAPIControllerTest extends WebTestCase {
 
     //Verify the updated parameters
     $this->assertEquals($declareBirthUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
+    $this->assertEquals($declareBirthUpdated->getDateOfBirth(), new \DateTime($updatedData['date_of_birth']));
     $this->assertEquals($declareBirthUpdated->getBirthType(), $updatedData['birth_type']);
     $this->assertEquals($declareBirthUpdated->getAborted(), $updatedData['aborted']);
     $this->assertEquals($declareBirthUpdated->getAnimalWeight(), $updatedData['animal_weight']);

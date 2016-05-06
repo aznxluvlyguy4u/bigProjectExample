@@ -67,6 +67,16 @@ class DeclareBirth extends DeclareBase
     private $lambar;
 
     /**
+     * @var DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @Expose
+     */
+    protected $dateOfBirth;
+
+    /**
      * @ORM\Column(type="string")
      * @Assert\Length(max = 100)
      * @Assert\NotBlank
@@ -206,6 +216,30 @@ class DeclareBirth extends DeclareBase
     public function getAnimal()
     {
         return $this->animal;
+    }
+
+    /**
+     * Set dateOfBirth
+     *
+     * @param \DateTime $dateOfBirth
+     *
+     * @return DeclareBirth
+     */
+    public function setDateOfBirth($dateOfBirth)
+    {
+        $this->dateOfBirth = $dateOfBirth;
+
+        return $this;
+    }
+
+    /**
+     * Get dateOfBirth
+     *
+     * @return \DateTime
+     */
+    public function getDateOfBirth()
+    {
+        return $this->dateOfBirth;
     }
 
     /**

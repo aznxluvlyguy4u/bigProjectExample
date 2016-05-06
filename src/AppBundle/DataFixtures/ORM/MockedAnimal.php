@@ -56,13 +56,11 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedParentRam->setUlnCountryCode("NL");
     self::$mockedParentRam->setUlnNumber("11111111");
     self::$mockedParentRam->setAnimalType(AnimalType::sheep);
-    self::$mockedParentRam->setDateOfBirth(new \DateTime());
 
     self::$mockedParentEwe = new Ewe();
     self::$mockedParentEwe->setUlnCountryCode("NL");
     self::$mockedParentEwe->setUlnNumber("222222222");
     self::$mockedParentEwe->setAnimalType(AnimalType::sheep);
-    self::$mockedParentEwe->setDateOfBirth(new \DateTime());
 
     self::$mockedRamWithParents = new Ram();
     self::$mockedRamWithParents->setUlnCountryCode("UK");
@@ -70,7 +68,6 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedRamWithParents->setPedigreeNumber("12345");
     self::$mockedRamWithParents->setPedigreeCountryCode("NL");
     self::$mockedRamWithParents->setAnimalType(AnimalType::sheep);
-    self::$mockedRamWithParents->setDateOfBirth(new \DateTime());
     self::$mockedRamWithParents->setParentFather(self::$mockedParentRam);
     self::$mockedRamWithParents->setParentMother(self::$mockedParentEwe);
 

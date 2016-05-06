@@ -178,6 +178,10 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
       $declareBirth->setAnimal($declareBirthUpdate->getAnimal());
     }
 
+    if ($declareBirthUpdate->getDateOfBirth() != null) {
+      $declareBirth->setDateOfBirth($declareBirthUpdate->getDateOfBirth());
+    }
+
     if ($declareBirthUpdate->getBirthType() != null) {
       $declareBirth->setBirthType($declareBirthUpdate->getBirthType());
     }
