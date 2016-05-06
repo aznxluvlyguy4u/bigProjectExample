@@ -56,6 +56,7 @@ class EntityGetter
         return $retrievedAnimal;
     }
 
+    //TODO: Refactor a more elegant and maintainable solution
     private function createANewNeuter($animal)
     {
         $neuter = new Neuter();
