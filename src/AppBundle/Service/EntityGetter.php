@@ -76,12 +76,12 @@ class EntityGetter
             $neuter->setName($animal['name']); }
 
         //FIXME: if dateOfBirth is refactored out of Animal into the message, delete this
-        if (array_key_exists('date_of_birth', $animal)) { 
-            $neuter->setDateOfBirth($animal['date_of_birth']); }
+        if (array_key_exists('date_of_birth', $animal)) {
+            $neuter->setDateOfBirth(new \DateTime($animal['date_of_birth'])); }
 
         //FIXME: if dateOfDeath is refactored out of Animal into the message, delete this
         if (array_key_exists('date_of_death', $animal)) {
-            $neuter->setDateOfDeath($animal['date_of_death']); }
+            $neuter->setDateOfDeath(new \DateTime($animal['date_of_death'])); }
 
         if (array_key_exists('gender', $animal)) {
             $neuter->setGender($animal['gender']); }
