@@ -72,6 +72,47 @@ class EntityGetter
         if (array_key_exists('pedigree_country_code', $animal)) {
             $neuter->setPedigreeCountryCode($animal['pedigree_country_code']); }
 
+        if (array_key_exists('name', $animal)) {
+            $neuter->setName($animal['name']); }
+
+        //FIXME: if dateOfBirth is refactored out of Animal into the message, delete this
+        if (array_key_exists('date_of_birth', $animal)) { 
+            $neuter->setDateOfBirth($animal['date_of_birth']); }
+
+        //FIXME: if dateOfDeath is refactored out of Animal into the message, delete this
+        if (array_key_exists('date_of_death', $animal)) {
+            $neuter->setDateOfDeath($animal['date_of_death']); }
+
+        if (array_key_exists('gender', $animal)) {
+            $neuter->setGender($animal['gender']); }
+
+        if (array_key_exists('parent_father', $animal)) {
+            $neuter->setParentFather($animal['parent_father']); }
+
+        if (array_key_exists('parent_mother', $animal)) {
+            $neuter->setParentMother($animal['parent_mother']); }
+
+        if (array_key_exists('parent_neuter', $animal)) {
+            $neuter->setParentNeuter($animal['parent_neuter']); }
+
+        if (array_key_exists('animal_type', $animal)) {
+            $neuter->setAnimalType($animal['animal_type']); }
+
+        if (array_key_exists('animal_category', $animal)) {
+            $neuter->setAnimalCategory($animal['animal_category']); }
+
+        if (array_key_exists('animal_working_number', $animal)) {
+            $neuter->setAnimalWorkingNumber($animal['animal_working_number']); }
+
+        if (array_key_exists('animal_hair_colour', $animal)) {
+            $neuter->setAnimalHairColour($animal['animal_hair_colour']); }
+
+        //Note a newly created neuter cannot have any messages yet,
+        //(like arrivals, departures, imports)
+        //so it is not necessary to map them here.
+        //TODO Check again for all messages if this is correct: A newly created neuter is also not created with any children.
+
+
         $neuter->setAnimalType(AnimalType::sheep);
 
         //Persist the new neuter
