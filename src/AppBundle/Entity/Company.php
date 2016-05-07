@@ -150,6 +150,7 @@ class Company
     public function setOwner(\AppBundle\Entity\Client $owner = null)
     {
         $this->owner = $owner;
+        $owner->addCompany($this);
 
         return $this;
     }
