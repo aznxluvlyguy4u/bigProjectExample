@@ -59,6 +59,14 @@ class Location
   /**
    * @var array
    *
+   * @ORM\OneToMany(targetEntity="Animal", mappedBy="location")
+   * @JMS\Type("AppBundle\Entity\Animal")
+   */
+  protected $animals;
+
+  /**
+   * @var array
+   *
    * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="location")
    */
   protected $imports;
@@ -87,6 +95,7 @@ class Location
     $this->births = new ArrayCollection();
     $this->departures = new ArrayCollection();
     $this->imports = new ArrayCollection();
+    $this->animals = new ArrayCollection();
   }
 
   /**
@@ -306,5 +315,40 @@ class Location
     public function getDepartures()
     {
         return $this->departures;
+    }
+
+    /**
+     * Add animal
+     *
+     * @param \AppBundle\Entity\Animal $animal
+     *
+     * @return Location
+     */
+    public function addAnimal(\AppBundle\Entity\Animal $animal)
+    {
+        $animal->setLocation($this);
+        $this->animals[] = $animal;
+
+        return $this;
+    }
+
+    /**
+     * Remove animal
+     *
+     * @param \AppBundle\Entity\Animal $animal
+     */
+    public function removeAnimal(\AppBundle\Entity\Animal $animal)
+    {
+        $this->animals->removeElement($animal);
+    }
+
+    /**
+     * Get animals
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getAnimals()
+    {
+        return $this->animals;
     }
 }
