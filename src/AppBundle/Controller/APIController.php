@@ -42,8 +42,9 @@ class APIController extends Controller implements APIControllerInterface
    */
   private $entityGetter;
 
-
-
+  /**
+   * @return \AppBundle\Service\EntityGetter
+   */
   protected function getEntityGetter()
   {
     if($this->entityGetter == null){
@@ -54,7 +55,7 @@ class APIController extends Controller implements APIControllerInterface
   }
 
   /**
-   * @return
+   * @return \AppBundle\Service\IRSerializer
    */
   protected function getSerializer()
   {
@@ -65,6 +66,9 @@ class APIController extends Controller implements APIControllerInterface
     return $this->serializer;
   }
 
+  /**
+   * @return RequestMessageBuilder
+   */
   protected function getRequestMessageBuilder()
   {
     if($this->requestMessageBuilder == null) {
@@ -87,8 +91,10 @@ class APIController extends Controller implements APIControllerInterface
     return $this->queueService;
   }
 
-
-
+  /**
+   * @param Request $request
+   * @return ArrayCollection
+   */
   protected function getContentAsArray(Request $request)
   {
     $content = $request->getContent();
@@ -100,6 +106,10 @@ class APIController extends Controller implements APIControllerInterface
     return new ArrayCollection(json_decode($content, true));
   }
 
+  /**
+   * @param Request $request
+   * @return JsonResponse|array|string
+   */
   public function getToken(Request $request)
   {
     //Get auth header to read token
@@ -110,6 +120,10 @@ class APIController extends Controller implements APIControllerInterface
     return $request->headers->get('AccessToken');
   }
 
+  /**
+   * @param $request
+   * @return JsonResponse|\AppBundle\Entity\Person|null|object
+   */
   public function isTokenValid($request)
   {
     $token = $this->getToken($request);
@@ -124,6 +138,13 @@ class APIController extends Controller implements APIControllerInterface
     return $person;
   }
 
+  /**
+   * @param $messageClassNameSpace
+   * @param ArrayCollection $contentArray
+   * @param $user
+   * @return \AppBundle\Entity\RetrieveEartags|\AppBundle\Entity\RevokeDeclaration|null
+   * @throws \Exception
+   */
   protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user)
   {
     $messageObject = $this->getRequestMessageBuilder()
@@ -132,6 +153,11 @@ class APIController extends Controller implements APIControllerInterface
     return $messageObject;
   }
 
+  /**
+   * @param $messageObject
+   * @param $messageClassNameSpace
+   * @return mixed
+   */
   public function persist($messageObject, $messageClassNameSpace)
   {
     //Set the string values
@@ -143,6 +169,12 @@ class APIController extends Controller implements APIControllerInterface
     return $messageObject;
   }
 
+  /**
+   * @param $messageObject
+   * @param $messageClassNameSpace
+   * @param $requestTypeNameSpace
+   * @return mixed
+   */
   //TODO It works but better reassess this function
   protected function sendMessageObjectToQueue($messageObject, $messageClassNameSpace, $requestTypeNameSpace) {
     $requestId = $messageObject->getRequestId();
@@ -177,6 +209,11 @@ class APIController extends Controller implements APIControllerInterface
     return new RedirectResponse('/api/v1/doc');
   }
 
+  /**
+   * @param Request|null $request
+   * @param null $token
+   * @return \AppBundle\Entity\Person|null|object
+   */
   public function getAuthenticatedUser(Request $request= null, $token = null)
   {
     if($token == null) {
@@ -224,4 +261,7 @@ class APIController extends Controller implements APIControllerInterface
 
     return new JsonResponse($response, 401);
   }
+
+
+
 }
