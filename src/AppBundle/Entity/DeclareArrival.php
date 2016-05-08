@@ -58,7 +58,7 @@ class DeclareArrival extends DeclareBase {
      * @JMS\Type("boolean")
      * @Expose
      */
-    private $importAnimal;
+    private $isImportAnimal;
 
     /**
      * @ORM\OneToMany(targetEntity="DeclareArrivalResponse", mappedBy="declareArrivalRequestMessage", cascade={"persist"})
@@ -131,13 +131,13 @@ class DeclareArrival extends DeclareBase {
     /**
      * Set importAnimal
      *
-     * @param boolean $importAnimal
+     * @param boolean $isImportAnimal
      *
      * @return DeclareArrival
      */
-    public function setImportAnimal($importAnimal)
+    public function setIsImportAnimal($isImportAnimal)
     {
-        $this->importAnimal = $importAnimal;
+        $this->isImportAnimal = $isImportAnimal;
 
         return $this;
     }
@@ -147,9 +147,9 @@ class DeclareArrival extends DeclareBase {
      *
      * @return boolean
      */
-    public function getImportAnimal()
+    public function getIsImportAnimal()
     {
-        return $this->importAnimal;
+        return $this->isImportAnimal;
     }
 
     /**

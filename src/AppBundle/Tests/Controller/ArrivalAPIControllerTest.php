@@ -154,7 +154,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $declareArrival = new DeclareArrival();
     $declareArrival->setArrivalDate(new \DateTime());
     $declareArrival->setUbnPreviousOwner("123456");
-    $declareArrival->setImportAnimal(true);
+    $declareArrival->setIsImportAnimal(true);
     $declareArrival->setAnimal(self::$mockedChild);
 
     //Create json to be posted
@@ -185,7 +185,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $declareArrival = new DeclareArrival();
     $declareArrival->setArrivalDate(new \DateTime());
     $declareArrival->setUbnPreviousOwner("123456");
-    $declareArrival->setImportAnimal(true);
+    $declareArrival->setIsImportAnimal(true);
     $declareArrival->setAnimal(self::$mockedChild);
 
     //Create json to be posted
@@ -227,7 +227,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $updatedData = json_decode($updatedResponse, true);
 
     $this->assertEquals($declareArrivalUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
-    $this->assertEquals($declareArrival->getImportAnimal(), $updatedData['import_animal']);
+    $this->assertEquals($declareArrival->getIsImportAnimal(), $updatedData['import_animal']);
   }
 
   public function tearDown() {
