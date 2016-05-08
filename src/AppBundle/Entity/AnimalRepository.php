@@ -44,29 +44,26 @@ class AnimalRepository extends BaseRepository
   private function querier($countryCode, $ulnOrPedigreeCode){
 
     $animal = null;
+    $tagRepository = $this->getEntityManager()->getRepository('AppBundle:Tag');
 
-    $repository = $this->getEntityManager()->getRepository('AppBundle:Tag');
+    //Find animal through Tag ulnNumber
+    $tag = $tagRepository->findByUlnNumberAndCountryCode($countryCode,$ulnOrPedigreeCode);
 
-    $query = $repository->createQueryBuilder('tag')
-      ->where('tag.ulnNumber = :ulnNumber')
-      ->andWhere('tag.ulnCountryCode = :ulnCountryCode')
-      ->setParameter('ulnNumber', $ulnOrPedigreeCode)
-      ->setParameter('ulnCountryCode', $countryCode)
-      ->getQuery();
-    $tag = $query->getResult();
 
     if($tag != null) {
-      if(sizeof($tag) > 0) {
-        $animal = $tag[0]->getAnimal();
-      }
-    } else { //Find animal through pedigree
+        $animal = $tag->getAnimal();
+    } else { //Find animal through Animal pedigreeNumber
       $query = $this->getEntityManager()->getRepository(Constant::ANIMAL_REPOSITORY)->createQueryBuilder('animal')
         ->where('animal.pedigreeNumber = :pedigreeNumber')
         ->andWhere('animal.pedigreeCountryCode = :pedigreeCountryCode')
         ->setParameter('pedigreeNumber', $ulnOrPedigreeCode)
         ->setParameter('pedigreeCountryCode', $countryCode)
         ->getQuery();
-      $animal = $query->getResult();
+      $animals = $query->getResult();
+
+      if(sizeof($animals) > 0){
+        $animal = $animals[0];
+      }
     }
 
     return $animal;

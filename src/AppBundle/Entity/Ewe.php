@@ -32,33 +32,16 @@ class Ewe extends Animal
      protected $objectType;
 
     /**
-     * @var string
-     * @Expose
-     */
-    private $ulnNumber;
-
-    /**
-     * @var string
-     * @Expose
-     */
-    private $ulnCountryCode;
-
-    /**
-     * @var string
-     * @Expose
-     */
-    private $animalOrderNumber;
-
-    /**
      * Ewe constructor.
      */
      public function __construct() {
-       //Call super constructor first
-       parent::__construct();
+         //Call super constructor first
+         parent::__construct();
 
-       $this->objectType = "Ewe";
+         $this->objectType = "Ewe";
+         $this->setAnimalType(3);
 
-       $this->children = new ArrayCollection();
+         $this->children = new ArrayCollection();
      }
 
     /**
@@ -120,33 +103,6 @@ class Ewe extends Animal
     }
 
     /**
-    * @return string
-    */
-    public function getUlnCountryCode()
-    {
-        $this->ulnCountryCode = parent::getUlnCountryCode();
-        return $this->ulnCountryCode;
-    }
-
-    /**
-     * @return string
-     */
-    public function getUlnNumber()
-    {
-        $this->ulnNumber = parent::getUlnNumber();
-        return $this->ulnNumber;
-    }
-
-    /**
-     * @return string
-     */
-    public function getAnimalOrderNumber()
-    {
-        $this->animalOrderNumber = parent::getAnimalOrderNumber();
-        return $this->animalOrderNumber;
-    }
-
-    /**
      * Set isAlive
      *
      * @param boolean $isAlive
@@ -170,5 +126,69 @@ class Ewe extends Animal
         return $this->isAlive;
     }
 
+    /**
+     * Set birth
+     *
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     *
+     * @return Ewe
+     */
+    public function setBirth(\AppBundle\Entity\DeclareBirth $birth = null)
+    {
+        $this->birth = $birth;
 
+        return $this;
+    }
+
+    /**
+     * Get birth
+     *
+     * @return \AppBundle\Entity\DeclareBirth
+     */
+    public function getBirth()
+    {
+        return $this->birth;
+    }
+
+    /**
+     * Set ulnNumber
+     *
+     * @param string $ulnNumber
+     *
+     * @return Ewe
+     */
+    public function setUlnNumber($ulnNumber)
+    {
+        $this->ulnNumber = $ulnNumber;
+
+        return $this;
+    }
+
+    /**
+     * Set ulnCountryCode
+     *
+     * @param string $ulnCountryCode
+     *
+     * @return Ewe
+     */
+    public function setUlnCountryCode($ulnCountryCode)
+    {
+        $this->ulnCountryCode = $ulnCountryCode;
+
+        return $this;
+    }
+
+    /**
+     * Set animalOrderNumber
+     *
+     * @param string $animalOrderNumber
+     *
+     * @return Ewe
+     */
+    public function setAnimalOrderNumber($animalOrderNumber)
+    {
+        $this->animalOrderNumber = $animalOrderNumber;
+
+        return $this;
+    }
 }

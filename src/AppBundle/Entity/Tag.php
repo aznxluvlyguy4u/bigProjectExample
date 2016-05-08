@@ -117,11 +117,16 @@ class Tag {
    * @ORM\OneToOne(targetEntity="Animal", inversedBy="assignedTag", cascade={"persist"})
    * @ORM\JoinColumn(name="animal_id", referencedColumnName="id")
    * @JMS\Type("AppBundle\Entity\Animal")
+   * @Expose
    */
   private $animal;
 
   /**
    * @var boolean
+   * @ORM\Column(type="boolean")
+   * @Assert\NotBlank
+   * @JMS\Type("boolean")
+   * @Expose
    */
   private $isVerified;
 

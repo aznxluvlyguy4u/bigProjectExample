@@ -33,27 +33,6 @@ class Neuter extends Animal
     private $objectType;
 
     /**
-     * @var string
-     * @JMS\Type("string")
-     * @Expose
-     */
-    private $ulnNumber;
-
-    /**
-     * @var string
-     * @JMS\Type("string")
-     * @Expose
-     */
-    private $ulnCountryCode;
-
-    /**
-     * @var string
-     * @JMS\Type("string")
-     * @Expose
-     */
-    private $animalOrderNumber;
-
-    /**
      * Neuter constructor.
      */
     public function __construct() {
@@ -61,6 +40,7 @@ class Neuter extends Animal
         parent::__construct();
 
         $this->objectType = "Neuter";
+        $this->setAnimalType(3);
 
         //Create children array
         $this->children = new ArrayCollection();
@@ -125,33 +105,6 @@ class Neuter extends Animal
     }
 
     /**
-     * @return string
-     */
-    public function getUlnCountryCode()
-    {
-        $this->ulnCountryCode = parent::getUlnCountryCode();
-        return $this->ulnCountryCode;
-    }
-
-    /**
-     * @return string
-     */
-    public function getUlnNumber()
-    {
-        $this->ulnNumber = parent::getUlnNumber();
-        return $this->ulnNumber;
-    }
-
-    /**
-     * @return string
-     */
-    public function getAnimalOrderNumber()
-    {
-        $this->animalOrderNumber = parent::getAnimalOrderNumber();
-        return $this->animalOrderNumber;
-    }
-
-    /**
      * Set isAlive
      *
      * @param boolean $isAlive
@@ -173,5 +126,71 @@ class Neuter extends Animal
     public function getIsAlive()
     {
         return $this->isAlive;
+    }
+
+    /**
+     * Set birth
+     *
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     *
+     * @return Neuter
+     */
+    public function setBirth(\AppBundle\Entity\DeclareBirth $birth = null)
+    {
+        $this->birth = $birth;
+
+        return $this;
+    }
+
+    /**
+     * Get birth
+     *
+     * @return \AppBundle\Entity\DeclareBirth
+     */
+    public function getBirth()
+    {
+        return $this->birth;
+    }
+
+    /**
+     * Set ulnNumber
+     *
+     * @param string $ulnNumber
+     *
+     * @return Neuter
+     */
+    public function setUlnNumber($ulnNumber)
+    {
+        $this->ulnNumber = $ulnNumber;
+
+        return $this;
+    }
+
+    /**
+     * Set ulnCountryCode
+     *
+     * @param string $ulnCountryCode
+     *
+     * @return Neuter
+     */
+    public function setUlnCountryCode($ulnCountryCode)
+    {
+        $this->ulnCountryCode = $ulnCountryCode;
+
+        return $this;
+    }
+
+    /**
+     * Set animalOrderNumber
+     *
+     * @param string $animalOrderNumber
+     *
+     * @return Neuter
+     */
+    public function setAnimalOrderNumber($animalOrderNumber)
+    {
+        $this->animalOrderNumber = $animalOrderNumber;
+
+        return $this;
     }
 }

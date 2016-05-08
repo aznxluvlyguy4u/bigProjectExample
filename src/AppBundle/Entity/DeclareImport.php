@@ -76,6 +76,8 @@ class DeclareImport extends DeclareBase
   public function __construct() {
     parent::__construct();
 
+    $this->setRequestState('open');
+
     //Create responses array
     $this->responses = new ArrayCollection();
     $this->importAnimal = true;

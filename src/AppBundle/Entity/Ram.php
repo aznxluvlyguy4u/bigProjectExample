@@ -13,6 +13,7 @@ use JMS\Serializer\Annotation\Expose;
  * Class Ram
  * @ORM\Entity(repositoryClass="AppBundle\Entity\RamRepository")
  * @package AppBundle\Entity
+ *
  */
 class Ram extends Animal
 {
@@ -32,31 +33,17 @@ class Ram extends Animal
      private $objectType;
 
     /**
-     * @var string
-     */
-    private $ulnNumber;
-
-    /**
-     * @var string
-     */
-    private $ulnCountryCode;
-
-    /**
-     * @var string
-     */
-    private $animalOrderNumber;
-
-    /**
      * Ram constructor.
      */
      public function __construct() {
-        //Call super constructor first
-        parent::__construct();
+         //Call super constructor first
+         parent::__construct();
 
-        $this->objectType = "Ram";
+         $this->objectType = "Ram";
+         $this->setAnimalType(3);
 
-        //Create children array
-       $this->children = new ArrayCollection();
+         //Create children array
+         $this->children = new ArrayCollection();
     }
 
     /**
@@ -118,33 +105,6 @@ class Ram extends Animal
     }
 
     /**
-     * @return string
-     */
-    public function getUlnCountryCode()
-    {
-        $this->ulnCountryCode = parent::getUlnCountryCode();
-        return $this->ulnCountryCode;
-    }
-
-    /**
-     * @return string
-     */
-    public function getUlnNumber()
-    {
-        $this->ulnNumber = parent::getUlnNumber();
-        return $this->ulnNumber;
-    }
-
-    /**
-     * @return string
-     */
-    public function getAnimalOrderNumber()
-    {
-        $this->animalOrderNumber = parent::getAnimalOrderNumber();
-        return $this->animalOrderNumber;
-    }
-
-    /**
      * Set isAlive
      *
      * @param boolean $isAlive
@@ -166,5 +126,71 @@ class Ram extends Animal
     public function getIsAlive()
     {
         return $this->isAlive;
+    }
+
+    /**
+     * Set birth
+     *
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     *
+     * @return Ram
+     */
+    public function setBirth(\AppBundle\Entity\DeclareBirth $birth = null)
+    {
+        $this->birth = $birth;
+
+        return $this;
+    }
+
+    /**
+     * Get birth
+     *
+     * @return \AppBundle\Entity\DeclareBirth
+     */
+    public function getBirth()
+    {
+        return $this->birth;
+    }
+
+    /**
+     * Set ulnNumber
+     *
+     * @param string $ulnNumber
+     *
+     * @return Ram
+     */
+    public function setUlnNumber($ulnNumber)
+    {
+        $this->ulnNumber = $ulnNumber;
+
+        return $this;
+    }
+
+    /**
+     * Set ulnCountryCode
+     *
+     * @param string $ulnCountryCode
+     *
+     * @return Ram
+     */
+    public function setUlnCountryCode($ulnCountryCode)
+    {
+        $this->ulnCountryCode = $ulnCountryCode;
+
+        return $this;
+    }
+
+    /**
+     * Set animalOrderNumber
+     *
+     * @param string $animalOrderNumber
+     *
+     * @return Ram
+     */
+    public function setAnimalOrderNumber($animalOrderNumber)
+    {
+        $this->animalOrderNumber = $animalOrderNumber;
+
+        return $this;
     }
 }
