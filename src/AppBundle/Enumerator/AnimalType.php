@@ -10,4 +10,6 @@ class AnimalType
     const RAM = "ram";
     const EWE = "ewe";
     const NEUTER = "neuter";
+    const MALE = "male";
+    const FEMALE = "female";
 }

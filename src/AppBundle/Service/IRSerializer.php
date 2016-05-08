@@ -130,7 +130,7 @@ class IRSerializer implements IRSerializerInterface
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray);
 
         //Add retrieved animal properties including type to initial animalContentArray
-        $declareArrivalContentArray->set('animal', $this->returnAnimalArray($retrievedAnimal));
+        $declareArrivalContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
 
         //denormalize the content to an object
         $json = $this->serializeToJSON($declareArrivalContentArray);
@@ -153,33 +153,33 @@ class IRSerializer implements IRSerializerInterface
         //so the updated animal details will be persisted
         if($isEditMessage) {
             //denormalize the content to an object
-            $animal = $declareBirthContentArray->get('animal');
+            $animal = $declareBirthContentArray->get(Constant::ANIMAL_NAMESPACE);
             $animalObject = null;
 
             //Find registered tag, through given ulnCountryCode & ulnNumber, so we can assign the tag to this animal
-            $tag = $this->entityGetter->retrieveTag($animal['uln_country_code'], $animal['uln_number']);
+            $tag = $this->entityGetter->retrieveTag($animal[Constant::ULN_COUNTRY_CODE_NAMESPACE], $animal[Constant::ULN_NAMESPACE]);
 
             if($tag == null){
                 return null;
             }
 
-            //Create animalTpe based on gender
-            if(array_key_exists('gender', $animal)) {
-                if ($animal['gender'] == AnimalType::RAM) {
-                    $animalObject = new Ram();
-                }
-                else {
-                    if ($animal['gender'] == AnimalType::EWE) {
+            //Create animal-type based on gender
+            if(array_key_exists(Constant::GENDER_NAMESPACE, $animal)) {
+                switch($animal[Constant::GENDER_NAMESPACE]){
+                    case AnimalType::FEMALE:
                         $animalObject = new Ewe();
-                    }
-                    else {
+                        break;
+                    case AnimalType::MALE:
+                        $animalObject = new Ram();
+                        break;
+                    default:
                         $animalObject = new Neuter();
-                    }
+                        break;
                 }
+
             } else {
                 $animalObject = new Neuter();
             }
-
 
             //Assign tag to this animal
             $animalObject->setAssignedTag($tag);
@@ -187,13 +187,8 @@ class IRSerializer implements IRSerializerInterface
             //Convert to array pass animal into declareBirthContentArray
             $animalJson = $this->serializeToJSON($animalObject);
             $animalContentArray = json_decode($animalJson, true);
-
-            $declareBirthContentArray->set('animal', $animalContentArray);
-
-//            $animalObject = $this->deserializeToObject($animalJson, "Animal");
-
+            $declareBirthContentArray->set(Constant::ANIMAL_NAMESPACE, $animalContentArray);
             $json = $this->serializeToJSON($declareBirthContentArray->toArray());
-
             $declareBirthRequest = $this->deserializeToObject($json, RequestType::DECLARE_BIRTH_ENTITY);
 
             return $declareBirthRequest;
@@ -203,7 +198,7 @@ class IRSerializer implements IRSerializerInterface
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareBirthContentArray);
 
         //Add retrieved animal properties including type to initial animalContentArray
-        $declareBirthContentArray->set('animal', $this->returnAnimalArray($retrievedAnimal));
+        $declareBirthContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
 
         //denormalize the content to an object
         $json = $this->serializeToJSON($declareBirthContentArray);
@@ -224,7 +219,7 @@ class IRSerializer implements IRSerializerInterface
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareDepartContentArray);
 
         //Add retrieved animal properties including type to initial animalContentArray
-        $declareDepartContentArray->set('animal', $this->returnAnimalArray($retrievedAnimal));
+        $declareDepartContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
 
         //denormalize the content to an object
         $json = $this->serializeToJSON($declareDepartContentArray);
