@@ -4,21 +4,18 @@ namespace AppBundle\Service;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Neuter;
+use AppBundle\Entity\Ram;
 use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\AnimalType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
-use Symfony\Component\CssSelector\Node\NegationNode;
+use Proxies\__CG__\AppBundle\Entity\Ewe;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Validator\Constraints\DateTime;
 
 class EntityGetter
 {
-    const ULN_NAMESPACE = "uln_number";
-    const PEDIGREE_NAMESPACE = "pedigree_number";
-    const ULN_COUNTRY_CODE_NAMESPACE = "uln_country_code";
-    const PEDIGREE_COUNTRY_CODE_NAMESPACE = "pedigree_country_code";
 
     /**
      * @var EntityManager
@@ -35,33 +32,45 @@ class EntityGetter
     }
 
     /**
-     * @param $animal
+     * @param $ulnCountryCode
+     * @param $ulnNumber
+     * @return array|null
+     */
+    public function retrieveTag($ulnCountryCode, $ulnNumber)
+    {
+
+        $tagRepository = $this->entityManager->getRepository('AppBundle:Tag');
+        return $tagRepository->findByUlnNumberAndCountryCode($ulnCountryCode, $ulnNumber);
+    }
+
+    /**
+     * @param ArrayCollection $declareArrayContent
      * @return Neuter|array|null
      */
-    public function retrieveAnimal($animal)
+    public function retrieveAnimal($declareArrayContent)
     {
         //By default just return the original animal
-        $retrievedAnimal = $animal;
+        $retrievedAnimal = $declareArrayContent->get('animal');
 
         $animalRepository = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY);
 
         //At least a uln or pedigree number + country code combination must be given to find an Animal
-        if(array_key_exists($this::ULN_NAMESPACE, $animal) && array_key_exists($this::ULN_COUNTRY_CODE_NAMESPACE, $animal)){
-            $ulnNumber = $animal[$this::ULN_NAMESPACE];
-            $ulnCountryCode = $animal[$this::ULN_COUNTRY_CODE_NAMESPACE];
+        if(array_key_exists(Constant::ULN_NAMESPACE, $retrievedAnimal) && array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $retrievedAnimal)){
+            $ulnNumber = $retrievedAnimal[Constant::ULN_NAMESPACE];
+            $ulnCountryCode = $retrievedAnimal[Constant::ULN_COUNTRY_CODE_NAMESPACE];
             $retrievedAnimal = $animalRepository->findByCountryCodeAndUlnOrPedigree($ulnCountryCode, $ulnNumber);
 
             if($retrievedAnimal == null) {
-                $retrievedAnimal = $this->createANewNeuter($animal);
+                $retrievedAnimal = $this->createNewAnimal($declareArrayContent);
             }
 
-        } else if (array_key_exists($this::PEDIGREE_NAMESPACE, $animal) && array_key_exists($this::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animal)){
-            $pedigreeNumber = $animal[$this::PEDIGREE_NAMESPACE];
-            $pedigreeCountryCode = $animal[$this::PEDIGREE_COUNTRY_CODE_NAMESPACE];
+        } else if (array_key_exists(Constant::PEDIGREE_NAMESPACE, $retrievedAnimal) && array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $retrievedAnimal)){
+            $pedigreeNumber = $retrievedAnimal[Constant::PEDIGREE_NAMESPACE];
+            $pedigreeCountryCode = $retrievedAnimal[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
             $retrievedAnimal = $animalRepository->findByCountryCodeAndUlnOrPedigree($pedigreeCountryCode, $pedigreeNumber);
 
             if($retrievedAnimal == null) {
-                $retrievedAnimal = $this->createANewNeuter($animal);
+                $retrievedAnimal = $this->createNewAnimal($declareArrayContent);
             }
         }
 
@@ -69,47 +78,67 @@ class EntityGetter
     }
 
     /**
-     * @param $animal
+
      * @return Neuter
      */
-    private function createANewNeuter($animal)
+    private function createNewAnimal($declareContentArray)
     {
-        //Create an unregistered tag
-        $tag = new Tag();
-        $tag->setIsVerified(false);
-        $tag->setUlnNumber(Constant::UNKNOWN_NAMESPACE);
-        $tag->setUlnCountryCode(Constant::UNKNOWN_NAMESPACE);
-        $tag->setAnimalOrderNumber(Constant::UNKNOWN_NAMESPACE);
-        $tag->setOrderDate(new \DateTime());
+        $declareContentArray = $declareContentArray->toArray();
 
-        $neuter = new Neuter();
-        $tag->setAnimal($neuter);
-        $neuter->setIsAlive(true);
+        $gender = null;
+        $animal = null;
+        $animalContentArray = $declareContentArray['animal'];
 
-        if (array_key_exists($this::ULN_NAMESPACE, $animal)) {
-            $tag->setUlnNumber($animal[$this::ULN_NAMESPACE]);
+        if(array_key_exists('gender', $animalContentArray)) {
+            $gender = $animalContentArray['gender'];
         }
 
-        if (array_key_exists($this::ULN_COUNTRY_CODE_NAMESPACE, $animal)) {
-            $tag->setUlnCountryCode($animal[$this::ULN_COUNTRY_CODE_NAMESPACE]);
+        switch($gender) {
+            case AnimalType::RAM:
+                $animal = new Ram();
+                break;
+            case AnimalType::EWE:
+                $animal = new Ewe();
+                break;
+            case AnimalType::NEUTER:
+                $animal = new Neuter();
+                break;
+            default:
+                $animal = new Neuter();
+                break;
         }
 
-        if (array_key_exists($this::PEDIGREE_NAMESPACE, $animal)) {
-            $neuter->setPedigreeNumber($animal[$this::PEDIGREE_NAMESPACE]);
+        $ulnNumber = null;
+        $countryCode = null;
+        if (array_key_exists(Constant::ULN_NAMESPACE, $animalContentArray) && array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $animalContentArray)) {
+            $ulnNumber = $animalContentArray[Constant::ULN_NAMESPACE];
+            $countryCode = $animalContentArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
+
+        } else if(array_key_exists(Constant::PEDIGREE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalContentArray)) {
+            $ulnNumber = $animalContentArray[Constant::PEDIGREE_NAMESPACE];
+            $countryCode = $animalContentArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
         }
 
-        if (array_key_exists($this::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animal)) {
-            $neuter->setPedigreeCountryCode($animal[$this::PEDIGREE_COUNTRY_CODE_NAMESPACE]);
+        //Find registered tag, assign to this animal
+        $tag = $this->entityManager->getRepository('AppBundle:Tag')->findByUlnNumberAndCountryCode($countryCode, $ulnNumber);
+        $animal->setAssignedTag($tag);
+        $animal->setAnimalType(AnimalType::sheep);
+        $animal->setIsAlive(true);
+
+        if(array_key_exists('date_of_birth', $declareContentArray)){
+            $animal->setDateOfBirth(new \DateTime($declareContentArray['date_of_birth']));
         }
 
-        $neuter->setAnimalType(AnimalType::sheep);
+        if(array_key_exists('date_of_death', $declareContentArray)){
+            $animal->setDateOfDeath(new \DateTime($declareContentArray['date_of_death']));
+        }
 
         //Persist the new Neuter with an unregistered Tag
-        $this->entityManager->persist($neuter);
-        $this->entityManager->persist($tag);
+        $this->entityManager->persist($animal);
+        //$this->entityManager->persist($tag);
         $this->entityManager->flush();
 
-        return $neuter;
+        return $animal;
     }
 
 }
