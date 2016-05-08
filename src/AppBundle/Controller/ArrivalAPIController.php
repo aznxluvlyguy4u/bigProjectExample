@@ -120,7 +120,11 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function createArrival(Request $request)
   {
-    //Convert front-end message into an array
+    //Validate uln/pedigree code
+    if(!$this->isUlnOrPedigreeCodeValid($request)) {
+      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
+    }
+
     //Get content to array
     $content = $this->getContentAsArray($request);
 
@@ -160,6 +164,12 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * @Method("PUT")
    */
   public function editArrival(Request $request, $Id) {
+
+    //Validate uln/pedigree code
+    if(!$this->isUlnOrPedigreeCodeValid($request)) {
+      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
+    }
+
     //Convert the array into an object and add the mandatory values retrieved from the database
     $declareArrivalUpdate = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY,
       $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
@@ -172,7 +182,6 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     if($declareArrival == null) {
       return new JsonResponse(array("message"=>"No DeclareArrival found with request_id:" . $Id), 204);
     }
-
 
     if ($declareArrivalUpdate->getAnimal() != null) {
       $declareArrival->setAnimal($declareArrivalUpdate->getAnimal());
