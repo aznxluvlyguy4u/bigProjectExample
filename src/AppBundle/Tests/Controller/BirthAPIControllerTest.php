@@ -151,7 +151,6 @@ class BirthAPIControllerTest extends WebTestCase {
    */
   public function testCreateBirth()
   {
-
     //Create declare birth
     $declareBirth = new DeclareBirth();
     $declareBirth->setBirthType("keizersnee");
@@ -199,12 +198,10 @@ class BirthAPIControllerTest extends WebTestCase {
     $tag->setAnimal(self::$mockedChild);
     self::$mockedChild->setAssignedTag($tag);
 
-
     $declareBirth->setAnimal(self::$mockedChild);
 
     //Create json to be posted
     $declareBirthJson = self::$serializer->serializeToJSON($declareBirth);
-
 
     //Do POST declare birth
     $this->client->request('POST',
@@ -222,8 +219,6 @@ class BirthAPIControllerTest extends WebTestCase {
     //Get requestId so we can do an update with PUT
     $requestId = $declareBirthResponse['request_id'];
 
-//    dump($requestId); die();
-
     //Update value
     $declareBirthUpdated = $declareBirth;
     $declareBirthUpdated->setBirthType("Painful but worth it");
@@ -238,9 +233,6 @@ class BirthAPIControllerTest extends WebTestCase {
     //Create json to be putted
     $declareBirthUpdatedJson = self::$serializer->serializeToJSON($declareBirthUpdated);
 
-
-//    dump($declareBirthUpdatedJson); die();
-
     //PUT updated declare birth
     $this->client->request('PUT',
       $this::DECLARE_BIRTH_ENDPOINT . '/'. $requestId,
@@ -252,7 +244,6 @@ class BirthAPIControllerTest extends WebTestCase {
 
     $updatedResponse = $this->client->getResponse()->getContent();
 
-//    dump($updatedResponse); die();
     $updatedData = json_decode($updatedResponse, true);
     $tag = $updatedData['animal']['assigned_tag'];
 
