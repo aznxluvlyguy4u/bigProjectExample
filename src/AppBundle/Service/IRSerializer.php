@@ -273,7 +273,7 @@ class IRSerializer implements IRSerializerInterface
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareImportContentArray);
 
         //Add retrieved animal properties including type to initial animalContentArray
-        $declareImportContentArray->set('animal', $this->returnAnimalArray($retrievedAnimal));
+        $declareImportContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
 
         //denormalize the content to an object
         $json = $this->serializeToJSON($declareImportContentArray);
