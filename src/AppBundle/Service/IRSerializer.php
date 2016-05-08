@@ -124,10 +124,10 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareArrival(ArrayCollection $declareArrivalContentArray)
+    function parseDeclareArrival(ArrayCollection $declareArrivalContentArray, $isEditMessage)
     {
         //Retrieve animal entity
-        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray->get('animal'));
+        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray);
 
         //Add retrieved animal properties including type to initial animalContentArray
         $declareArrivalContentArray->set('animal', $this->returnAnimalArray($retrievedAnimal));

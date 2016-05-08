@@ -34,7 +34,7 @@ interface IRSerializerInterface
      * @param ArrayCollection $contentArray
      * @return DeclareArrival
      */
-    function parseDeclareArrival(ArrayCollection $contentArray);
+    function parseDeclareArrival(ArrayCollection $contentArray, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
