@@ -26,6 +26,8 @@ class Constant
     const ULN_COUNTRY_CODE_NAMESPACE = "uln_country_code";
     const PEDIGREE_COUNTRY_CODE_NAMESPACE = "pedigree_country_code";
     const GENDER_NAMESPACE = 'gender';
+    const DATE_OF_BIRTH_NAMESPACE  = 'date_of_birth';
+    const DATE_OF_DEATH_NAMESPACE  = 'date_of_death';
 
     //Request repositories
     const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';

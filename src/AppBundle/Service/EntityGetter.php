@@ -39,7 +39,7 @@ class EntityGetter
     public function retrieveTag($ulnCountryCode, $ulnNumber)
     {
 
-        $tagRepository = $this->entityManager->getRepository('AppBundle:Tag');
+        $tagRepository = $this->entityManager->getRepository(Constant::TAG_REPOSITORY);
         return $tagRepository->findByUlnNumberAndCountryCode($ulnCountryCode, $ulnNumber);
     }
 
@@ -50,7 +50,7 @@ class EntityGetter
     public function retrieveAnimal($declareArrayContent)
     {
         //By default just return the original animal
-        $retrievedAnimal = $declareArrayContent->get('animal');
+        $retrievedAnimal = $declareArrayContent->get(Constant::ANIMAL_NAMESPACE);
 
         $animalRepository = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY);
 
@@ -87,10 +87,10 @@ class EntityGetter
 
         $gender = null;
         $animal = null;
-        $animalContentArray = $declareContentArray['animal'];
+        $animalContentArray = $declareContentArray[Constant::ANIMAL_NAMESPACE];
 
-        if(array_key_exists('gender', $animalContentArray)) {
-            $gender = $animalContentArray['gender'];
+        if(array_key_exists(Constant::GENDER_NAMESPACE, $animalContentArray)) {
+            $gender = $animalContentArray[Constant::GENDER_NAMESPACE];
         }
 
         switch($gender) {
@@ -120,17 +120,17 @@ class EntityGetter
         }
 
         //Find registered tag, assign to this animal
-        $tag = $this->entityManager->getRepository('AppBundle:Tag')->findByUlnNumberAndCountryCode($countryCode, $ulnNumber);
+        $tag = $this->entityManager->getRepository(Constant::TAG_REPOSITORY)->findByUlnNumberAndCountryCode($countryCode, $ulnNumber);
         $animal->setAssignedTag($tag);
         $animal->setAnimalType(AnimalType::sheep);
         $animal->setIsAlive(true);
 
-        if(array_key_exists('date_of_birth', $declareContentArray)){
-            $animal->setDateOfBirth(new \DateTime($declareContentArray['date_of_birth']));
+        if(array_key_exists(Constant::DATE_OF_BIRTH_NAMESPACE, $declareContentArray)){
+            $animal->setDateOfBirth(new \DateTime($declareContentArray[Constant::DATE_OF_BIRTH_NAMESPACE]));
         }
 
-        if(array_key_exists('date_of_death', $declareContentArray)){
-            $animal->setDateOfDeath(new \DateTime($declareContentArray['date_of_death']));
+        if(array_key_exists(Constant::DATE_OF_DEATH_NAMESPACE, $declareContentArray)){
+            $animal->setDateOfDeath(new \DateTime($declareContentArray[Constant::DATE_OF_DEATH_NAMESPACE]));
         }
 
         //Persist the new Neuter with an unregistered Tag
