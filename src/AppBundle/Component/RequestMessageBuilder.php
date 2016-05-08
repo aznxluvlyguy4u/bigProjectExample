@@ -50,15 +50,15 @@ class RequestMessageBuilder
         $this->birthMessageBuilder = new BirthMessageBuilder($em);
     }
 
-    public function build($messageClassNameSpace, ArrayCollection $contentArray, Person $person,  $isEditMessage)
+    public function build($messageClassNameSpace, ArrayCollection $contentArray, Person $person, $isEditMessage)
     {
         switch($messageClassNameSpace) {
             case RequestType::DECLARATION_DETAIL_ENTITY:
-                $declarationDetail = $this->irSerializer->parseDeclarationDetail($contentArray);
+                $declarationDetail = $this->irSerializer->parseDeclarationDetail($contentArray, $isEditMessage);
                 //TODO: only add the mininum required fields for this Message Type
                 return $declarationDetail;
             case RequestType::DECLARE_ANIMAL_FLAG_ENTITY:
-                $declareAnimalFlag = $this->irSerializer->parseDeclareAnimalFlag($contentArray);
+                $declareAnimalFlag = $this->irSerializer->parseDeclareAnimalFlag($contentArray, $isEditMessage);
                 //TODO: only add the mininum required fields for this Message Type
                 return $declareAnimalFlag;
             case RequestType::DECLARE_ARRIVAL_ENTITY:
@@ -68,29 +68,29 @@ class RequestMessageBuilder
                 $declareBirthRequest = $this->irSerializer->parseDeclareBirth($contentArray, $isEditMessage);
                 return $this->birthMessageBuilder->buildMessage($declareBirthRequest, $person);
             case RequestType::DECLARE_DEPART_ENTITY:
-                $declareDepartRequest = $this->irSerializer->parseDeclareDepart($contentArray);
+                $declareDepartRequest = $this->irSerializer->parseDeclareDepart($contentArray, $isEditMessage);
                 return $this->departMessageBuilder->buildMessage($declareDepartRequest, $person);
             case RequestType::DECLARE_EARTAGS_TRANSFER_ENTITY:
-                $declareEartagsTransfer = $this->irSerializer->parseDeclareEartagsTransfer($contentArray);
+                $declareEartagsTransfer = $this->irSerializer->parseDeclareEartagsTransfer($contentArray, $isEditMessage);
                 //TODO: only add the mininum required fields for this Message Type
                 return $declareEartagsTransfer;
             case RequestType::DECLARE_LOSS_ENTITY:
-                $declareLoss = $this->irSerializer->parseDeclareLoss($contentArray);
+                $declareLoss = $this->irSerializer->parseDeclareLoss($contentArray, $isEditMessage);
                 //TODO: only add the mininum required fields for this Message Type
                 return $declareLoss;
             case RequestType::DECLARE_EXPORT_ENTITY:
-                $declareExport = $this->irSerializer->parseDeclareExport($contentArray);
+                $declareExport = $this->irSerializer->parseDeclareExport($contentArray, $isEditMessage);
                 //TODO: only add the mininum required fields for this Message Type
                 return $declareExport;
             case RequestType::DECLARE_IMPORT_ENTITY:
-                $declareImportRequest = $this->irSerializer->parseDeclareImport($contentArray);
+                $declareImportRequest = $this->irSerializer->parseDeclareImport($contentArray, $isEditMessage);
                 return $this->importMessageBuilder->buildMessage($declareImportRequest, $person);
             case RequestType::RETRIEVE_EARTAGS_ENTITY:
-                $retrieveEartags = $this->irSerializer->parseRetrieveEartags($contentArray);
+                $retrieveEartags = $this->irSerializer->parseRetrieveEartags($contentArray, $isEditMessage);
                 //TODO: only add the mininum required fields for this Message Type
                 return $retrieveEartags;
             case RequestType::REVOKE_DECLARATION_ENTITY:
-                $revokeDeclaration = $this->irSerializer->parseRevokeDeclaration($contentArray);
+                $revokeDeclaration = $this->irSerializer->parseRevokeDeclaration($contentArray, $isEditMessage);
                 //TODO: only add the mininum required fields for this Message Type
                 return $revokeDeclaration;
             default:

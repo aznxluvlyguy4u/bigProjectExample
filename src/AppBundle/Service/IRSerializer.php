@@ -102,7 +102,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclarationDetail(ArrayCollection $contentArray)
+    function parseDeclarationDetail(ArrayCollection $contentArray, $isEditMessage)
     {
         // TODO: Implement parseDeclarationDetail() method.
         $declarationDetail = null;
@@ -113,7 +113,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareAnimalFlag(ArrayCollection $contentArray)
+    function parseDeclareAnimalFlag(ArrayCollection $contentArray, $isEditMessage)
     {
         // TODO: Implement parseDeclareAnimalFlag() method.
         $declareAnimalFlag = null;
@@ -218,10 +218,10 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareDepart(ArrayCollection $declareDepartContentArray)
+    function parseDeclareDepart(ArrayCollection $declareDepartContentArray, $isEditMessage)
     {
         //Retrieve animal entity
-        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareDepartContentArray['animal']);
+        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareDepartContentArray);
 
         //Add retrieved animal properties including type to initial animalContentArray
         $declareDepartContentArray->set('animal', $this->returnAnimalArray($retrievedAnimal));
@@ -239,7 +239,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareEartagsTransfer(ArrayCollection $contentArray)
+    function parseDeclareEartagsTransfer(ArrayCollection $contentArray, $isEditMessage)
     {
         // TODO: Implement parseDeclareEartagsTransfer() method.
         $declareEartagsTransfer = null;
@@ -250,7 +250,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareLoss(ArrayCollection $contentArray)
+    function parseDeclareLoss(ArrayCollection $contentArray, $isEditMessage)
     {
         // TODO: Implement parseDeclareLoss() method.
         $declareLoss = null;
@@ -261,7 +261,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareExport(ArrayCollection $contentArray)
+    function parseDeclareExport(ArrayCollection $contentArray, $isEditMessage)
     {
         // TODO: Implement parseDeclareExport() method.
         $declareExport = null;
@@ -272,10 +272,10 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareImport(ArrayCollection $declareImportContentArray)
+    function parseDeclareImport(ArrayCollection $declareImportContentArray, $isEditMessage)
     {
         //Retrieve animal entity
-        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareImportContentArray['animal']);
+        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareImportContentArray);
 
         //Add retrieved animal properties including type to initial animalContentArray
         $declareImportContentArray->set('animal', $this->returnAnimalArray($retrievedAnimal));
@@ -293,7 +293,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseRetrieveEartags(ArrayCollection $contentArray)
+    function parseRetrieveEartags(ArrayCollection $contentArray, $isEditMessage)
     {
         // TODO: Implement parseRetrieveEartags() method.
         $retrieveEartags = null;
@@ -304,7 +304,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseRevokeDeclaration(ArrayCollection $contentArray)
+    function parseRevokeDeclaration(ArrayCollection $contentArray, $isEditMessage)
     {
         // TODO: Implement parseRevokeDeclaration() method.
         $revokeDeclaration = null;
