@@ -40,7 +40,7 @@ interface IRSerializerInterface
      * @param ArrayCollection $contentArray
      * @return DeclareBirth
      */
-    function parseDeclareBirth(ArrayCollection $contentArray);
+    function parseDeclareBirth(ArrayCollection $contentArray, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
