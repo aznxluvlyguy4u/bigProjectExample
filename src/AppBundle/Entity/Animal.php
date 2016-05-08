@@ -354,12 +354,13 @@ abstract class Animal
      */
     public function setAssignedTag(\AppBundle\Entity\Tag $assignedTag = null)
     {
-        $this->assignedTag = $assignedTag;
-        $assignedTag->setAnimal($this);
-
-        $this->setUlnNumber($assignedTag->getUlnNumber());
-        $this->setUlnCountryCode($assignedTag->getUlnCountryCode());
-        $this->setAnimalOrderNumber($assignedTag->getAnimalOrderNumber());
+        if($assignedTag != null){
+            $this->assignedTag = $assignedTag;
+            $assignedTag->setAnimal($this);
+            $this->setUlnNumber($assignedTag->getUlnNumber());
+            $this->setUlnCountryCode($assignedTag->getUlnCountryCode());
+            $this->setAnimalOrderNumber($assignedTag->getAnimalOrderNumber());
+        }
 
         return $this;
     }
