@@ -206,7 +206,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
     //Update value
     $declareArrivalUpdated = $declareArrival;
     $declareArrivalUpdated->setUbnPreviousOwner("999991");
-    $declareArrivalUpdated->getAnimal()->setUlnNumber('123131');
+    $declareArrivalUpdated->getAnimal()->getAssignedTag()->setUlnNumber('123131');
 
     //Create json to be putted
     $declareArrivalUpdatedJson = self::$serializer->serializeToJSON($declareArrivalUpdated);

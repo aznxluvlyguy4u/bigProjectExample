@@ -207,7 +207,7 @@ class ImportAPIControllerTest extends WebTestCase {
     //Update value
     $declareImportUpdated = $declareImport;
     $declareImportUpdated->setUbnPreviousOwner("999991");
-    $declareImportUpdated->getAnimal()->setUlnNumber('123131');
+    $declareImportUpdated->getAnimal()->getAssignedTag()->setUlnNumber('123131');
 
     //Create json to be putted
     $declareImportUpdatedJson = self::$serializer->serializeToJSON($declareImportUpdated);

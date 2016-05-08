@@ -206,7 +206,7 @@ class DepartAPIControllerTest extends WebTestCase {
     //Update value
     $declareDepartUpdated = $declareDepart;
     $declareDepartUpdated->setUbnNewOwner("444441");
-    $declareDepartUpdated->getAnimal()->setUlnNumber('555666');
+    $declareDepartUpdated->getAnimal()->getAssignedTag()->setUlnNumber('555666');
 
     //Create json to be putted
     $declareDepartUpdatedJson = self::$serializer->serializeToJSON($declareDepartUpdated);
