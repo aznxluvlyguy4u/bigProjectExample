@@ -111,7 +111,11 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
 
     self::$mockedRamWithParents = new Ram();
     self::$mockedRamWithParents->setIsAlive(true);
-    self::$mockedRamWithParents->setAssignedTag($tags->get(rand(1,$tagListSize)));
+
+    $tagToAssign = $tags->get(rand(1,$tagListSize));
+    $tagToAssign->setAnimal(self::$mockedRamWithParents);
+    self::$mockedRamWithParents->setAssignedTag($tagToAssign);
+
     self::$mockedRamWithParents->setPedigreeNumber("12345");
     self::$mockedRamWithParents->setPedigreeCountryCode("NL");
     self::$mockedRamWithParents->setAnimalType(AnimalType::sheep);
