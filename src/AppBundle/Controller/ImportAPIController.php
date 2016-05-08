@@ -115,6 +115,11 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    * @Method("POST")
    */
   public function createImport(Request $request) {
+    //Validate uln/pedigree code
+    if(!$this->isUlnOrPedigreeCodeValid($request)) {
+      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
+    }
+
     //Convert front-end message into an array
     //Get content to array
     $content = $this->getContentAsArray($request);
@@ -155,6 +160,11 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    * @Method("PUT")
    */
   public function editImport(Request $request, $Id) {
+    //Validate uln/pedigree code
+    if(!$this->isUlnOrPedigreeCodeValid($request)) {
+      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
+    }
+
     //Convert the array into an object and add the mandatory values retrieved from the database
     $declareImportUpdate = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY,
       $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
