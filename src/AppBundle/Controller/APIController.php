@@ -145,10 +145,27 @@ class APIController extends Controller implements APIControllerInterface
    * @return \AppBundle\Entity\RetrieveEartags|\AppBundle\Entity\RevokeDeclaration|null
    * @throws \Exception
    */
+  protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user)
+  {
+    $isEditMessage = true;
+    $messageObject = $this->getRequestMessageBuilder()
+      ->build($messageClassNameSpace, $contentArray, $user, $isEditMessage);
+
+    return $messageObject;
+  }
+
+  /**
+   * @param $messageClassNameSpace
+   * @param ArrayCollection $contentArray
+   * @param $user
+   * @return \AppBundle\Entity\RetrieveEartags|\AppBundle\Entity\RevokeDeclaration|null
+   * @throws \Exception
+   */
   protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user)
   {
+    $isEditMessage = false;
     $messageObject = $this->getRequestMessageBuilder()
-        ->build($messageClassNameSpace, $contentArray, $user);
+        ->build($messageClassNameSpace, $contentArray, $user, $isEditMessage);
 
     return $messageObject;
   }

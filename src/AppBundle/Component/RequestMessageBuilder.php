@@ -44,75 +44,62 @@ class RequestMessageBuilder
     {
         $this->entityManager = $em;
         $this->irSerializer = $irSerializer;
-
         $this->arrivalMessageBuilder = new ArrivalMessageBuilder($em);
         $this->departMessageBuilder = new DepartMessageBuilder($em);
         $this->importMessageBuilder = new ImportMessageBuilder($em);
         $this->birthMessageBuilder = new BirthMessageBuilder($em);
     }
 
-    public function build($messageClassNameSpace, ArrayCollection $contentArray, Person $person)
+    public function build($messageClassNameSpace, ArrayCollection $contentArray, Person $person,  $isEditMessage)
     {
         switch($messageClassNameSpace) {
-
             case RequestType::DECLARATION_DETAIL_ENTITY:
                 $declarationDetail = $this->irSerializer->parseDeclarationDetail($contentArray);
                 //TODO: only add the mininum required fields for this Message Type
                 return $declarationDetail;
-                
             case RequestType::DECLARE_ANIMAL_FLAG_ENTITY:
                 $declareAnimalFlag = $this->irSerializer->parseDeclareAnimalFlag($contentArray);
                 //TODO: only add the mininum required fields for this Message Type
                 return $declareAnimalFlag;
-                
             case RequestType::DECLARE_ARRIVAL_ENTITY:
                 $declareArrivalRequest = $this->irSerializer->parseDeclareArrival($contentArray);
                 return $this->arrivalMessageBuilder->buildMessage($declareArrivalRequest, $person);
-                
             case RequestType::DECLARE_BIRTH_ENTITY:
-                $declareBirthRequest = $this->irSerializer->parseDeclareBirth($contentArray);
+                $declareBirthRequest = $this->irSerializer->parseDeclareBirth($contentArray, $isEditMessage);
                 return $this->birthMessageBuilder->buildMessage($declareBirthRequest, $person);
-                
             case RequestType::DECLARE_DEPART_ENTITY:
                 $declareDepartRequest = $this->irSerializer->parseDeclareDepart($contentArray);
                 return $this->departMessageBuilder->buildMessage($declareDepartRequest, $person);
-                
             case RequestType::DECLARE_EARTAGS_TRANSFER_ENTITY:
                 $declareEartagsTransfer = $this->irSerializer->parseDeclareEartagsTransfer($contentArray);
                 //TODO: only add the mininum required fields for this Message Type
                 return $declareEartagsTransfer;
-                
             case RequestType::DECLARE_LOSS_ENTITY:
                 $declareLoss = $this->irSerializer->parseDeclareLoss($contentArray);
                 //TODO: only add the mininum required fields for this Message Type
-            return $declareLoss;
-                
+                return $declareLoss;
             case RequestType::DECLARE_EXPORT_ENTITY:
                 $declareExport = $this->irSerializer->parseDeclareExport($contentArray);
                 //TODO: only add the mininum required fields for this Message Type
-            return $declareExport;
-                
+                return $declareExport;
             case RequestType::DECLARE_IMPORT_ENTITY:
                 $declareImportRequest = $this->irSerializer->parseDeclareImport($contentArray);
                 return $this->importMessageBuilder->buildMessage($declareImportRequest, $person);
-
             case RequestType::RETRIEVE_EARTAGS_ENTITY:
                 $retrieveEartags = $this->irSerializer->parseRetrieveEartags($contentArray);
                 //TODO: only add the mininum required fields for this Message Type
-            return $retrieveEartags;
-                
+                return $retrieveEartags;
             case RequestType::REVOKE_DECLARATION_ENTITY:
                 $revokeDeclaration = $this->irSerializer->parseRevokeDeclaration($contentArray);
                 //TODO: only add the mininum required fields for this Message Type
-            return $revokeDeclaration;
-                
+                return $revokeDeclaration;
             default:
                 if ($messageClassNameSpace == null){
                     throw new \Exception('Cannot pass null into the RequestMessageBuilder');
                 } else {
                     throw new \Exception('No valid message class passed into the RequestMessageBuilder');
                 }
-                
+                break;
         }
     }
 }
