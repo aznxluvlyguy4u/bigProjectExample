@@ -2,7 +2,6 @@
 
 namespace AppBundle\Constant;
 
-
 class Constant
 {
     const jsonNamespace  = 'json';
@@ -15,11 +14,17 @@ class Constant
     const CONTINENT_NAMESPACE = 'continent';
     const LOCATION_NAMESPACE = 'location';
     const ANIMAL_TYPE_NAMESPACE = 'type';
+    const ANIMAL_NAMESPACE = 'animal';
     const ALL_NAMESPACE = 'all';
     const ALIVE_NAMESPACE = 'alive';
     const IS_ALIVE_NAMESPACE = 'isAlive';
     const BOOLEAN_TRUE_NAMESPACE = 'true';
     const UNKNOWN_NAMESPACE = 'unknown';
+    const CODE_NAMESPACE = 'code';
+    const ULN_NAMESPACE = "uln_number";
+    const PEDIGREE_NAMESPACE = "pedigree_number";
+    const ULN_COUNTRY_CODE_NAMESPACE = "uln_country_code";
+    const PEDIGREE_COUNTRY_CODE_NAMESPACE = "pedigree_country_code";
 
     //Request repositories
     const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';
@@ -29,8 +34,8 @@ class Constant
     const DECLARE_EARTAGS_TRANSFER_REPOSITORY = 'AppBundle:DeclareEartagsTransfer';
     const DECLARE_LOSS_REPOSITORY = 'AppBundle:DeclareLoss';
 
+    const TAG_REPOSITORY = 'AppBundle:Tag';
     const ANIMAL_REPOSITORY = 'AppBundle:Animal';
-
     const EWE_REPOSITORY = 'AppBundle:Ewe';
     const RAM_REPOSITORY = 'AppBundle:Ram';
     const NEUTER_REPOSITORY = 'AppBundle:Neuter';
@@ -43,4 +48,5 @@ class Constant
     const COMPANY_REPOSITORY = 'AppBundle:Company';
     const LOCATION_REPOSITORY = 'AppBundle:Location';
 
+    const RESPONSE_ULN_NOT_FOUND = array("code"=>428,"message"=>"Given Uln & Country code is invalid, it is not registered to a known Tag");
 }
