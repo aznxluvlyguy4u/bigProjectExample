@@ -69,13 +69,10 @@ class MockedTags implements FixtureInterface, ContainerAwareInterface, OrderedFi
 
       self::$mockedTags->add($tag);
 
-      //dump($tag);
       //Persist mocked data
       $manager->persist($tag);
-
     }
     $manager->flush();
-   // die();
   }
 
   /**
