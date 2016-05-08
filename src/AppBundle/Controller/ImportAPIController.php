@@ -159,7 +159,7 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareImportRepository")
    * @Method("PUT")
    */
-  public function editImport(Request $request, $Id) {
+  public function updateImport(Request $request, $Id) {
     //Validate uln/pedigree code
     if(!$this->isUlnOrPedigreeCodeValid($request)) {
       return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
@@ -169,36 +169,12 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
     $declareImportUpdate = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY,
       $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
-    $entityManager = $this->getDoctrine()
-      ->getEntityManager()
-      ->getRepository(Constant::DECLARE_IMPORT_REPOSITORY);
-    $declareImport = $entityManager->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
+    $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY);
+    $declareImport = $entityManager->updateDeclareImportMessage($declareImportUpdate, $Id);
 
     if($declareImport == null) {
       return new JsonResponse(array("message"=>"No DeclareImport found with request_id:" . $Id), 204);
     }
-
-    if ($declareImportUpdate->getAnimal() != null) {
-      $declareImport->setAnimal($declareImportUpdate->getAnimal());
-    }
-
-    if ($declareImportUpdate->getImportDate() != null) {
-      $declareImport->setImportDate($declareImportUpdate->getImportDate());
-    }
-
-    if ($declareImportUpdate->getLocation() != null) {
-      $declareImport->setLocation($declareImportUpdate->getLocation());
-    }
-
-    if ($declareImportUpdate->getImportAnimal() != null) {
-      $declareImport->setImportAnimal($declareImportUpdate->getImportAnimal());
-    }
-
-    if($declareImportUpdate->getUbnPreviousOwner() != null) {
-      $declareImport->setUbnPreviousOwner($declareImportUpdate->getUbnPreviousOwner());
-    }
-
-    $declareImport = $entityManager->update($declareImport);
 
     return new JsonResponse($declareImport, 200);
   }

@@ -8,5 +8,5 @@ interface ImportAPIControllerInterface {
   public function getImportById(Request $request, $Id);
   public function getImports(Request $request);
   public function createImport(Request $request);
-  public function editImport(Request $request, $Id);
+  public function updateImport(Request $request, $Id);
 }
