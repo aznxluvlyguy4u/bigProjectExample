@@ -8,5 +8,5 @@ interface BirthAPIControllerInterface {
   public function getBirthById(Request $request, $Id);
   public function getBirths(Request $request);
   public function createBirth(Request $request);
-  public function editBirth(Request $request, $Id);
+  public function updateBirth(Request $request, $Id);
 }

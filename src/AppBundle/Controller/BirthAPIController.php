@@ -163,7 +163,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareBirthRepository")
    * @Method("PUT")
    */
-  public function editBirth(Request $request, $Id) {
+  public function updateBirth(Request $request, $Id) {
 
     //Validate uln/pedigree code
     if(!$this->isUlnOrPedigreeCodeValid($request)) {
