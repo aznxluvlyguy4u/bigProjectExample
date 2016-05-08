@@ -8,6 +8,7 @@ use AppBundle\Enumerator\RequestType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
@@ -120,7 +121,10 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    */
   public function createBirth(Request $request)
   {
-    //Convert front-end message into an array
+    if(!$this->isUlnOrPedigreeCodeValid($request)) {
+      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
+    }
+
     //Get content to array
     $content = $this->getContentAsArray($request);
 
@@ -160,65 +164,22 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    * @Method("PUT")
    */
   public function editBirth(Request $request, $Id) {
+
+    //Validate uln/pedigree code
+    if(!$this->isUlnOrPedigreeCodeValid($request)) {
+      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
+    }
+
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareBirthUpdate = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY,
+    $declareBirthUpdate = $this->buildEditMessageObject(RequestType::DECLARE_BIRTH_ENTITY,
         $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
-    $entityManager = $this->getDoctrine()
-        ->getEntityManager()
-        ->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
-    $declareBirth = $entityManager->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
+    $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
+    $declareBirth = $entityManager->updateDeclareBirthMessage($declareBirthUpdate, $Id);
 
     if($declareBirth == null) {
       return new JsonResponse(array("message"=>"No DeclareBirth found with request_id:" . $Id), 204);
     }
-
-
-    if ($declareBirthUpdate->getAnimal() != null) {
-      $declareBirth->setAnimal($declareBirthUpdate->getAnimal());
-    }
-
-    if ($declareBirthUpdate->getBirthType() != null) {
-      $declareBirth->setBirthType($declareBirthUpdate->getBirthType());
-    }
-
-    if ($declareBirthUpdate->getLocation() != null) {
-      $declareBirth->setLocation($declareBirthUpdate->getLocation());
-    }
-
-    if ($declareBirthUpdate->getLambar() != null) {
-      $declareBirth->setLambar($declareBirthUpdate->getLambar());
-    }
-
-    if ($declareBirthUpdate->getAborted() != null) {
-      $declareBirth->setAborted($declareBirthUpdate->getAborted());
-    }
-
-    if($declareBirthUpdate->getUbnPreviousOwner() != null) {
-      $declareBirth->setUbnPreviousOwner($declareBirthUpdate->getUbnPreviousOwner());
-    }
-
-    if ($declareBirthUpdate->getPseudoPregnancy() != null) {
-      $declareBirth->setPseudoPregnancy($declareBirthUpdate->getPseudoPregnancy());
-    }
-
-    if ($declareBirthUpdate->getLitterSize() != null) {
-      $declareBirth->setLitterSize($declareBirthUpdate->getLitterSize());
-    }
-
-    if ($declareBirthUpdate->getAnimalWeight() != null) {
-      $declareBirth->setAnimalWeight($declareBirthUpdate->getAnimalWeight());
-    }
-
-    if ($declareBirthUpdate->getTailLength() != null) {
-      $declareBirth->setTailLength($declareBirthUpdate->getTailLength());
-    }
-
-    if ($declareBirthUpdate->getTransportationCode() != null) {
-      $declareBirth->setTransportationCode($declareBirthUpdate->getTransportationCode());
-    }
-
-    $declareBirth = $entityManager->update($declareBirth);
 
     return new JsonResponse($declareBirth, 200);
   }
