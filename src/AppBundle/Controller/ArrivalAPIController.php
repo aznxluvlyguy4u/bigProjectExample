@@ -163,7 +163,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
    * @Method("PUT")
    */
-  public function editArrival(Request $request, $Id) {
+  public function updateArrival(Request $request, $Id) {
 
     //Validate uln/pedigree code
     if(!$this->isUlnOrPedigreeCodeValid($request)) {
@@ -174,36 +174,12 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $declareArrivalUpdate = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY,
       $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
-    $entityManager = $this->getDoctrine()
-      ->getManager()
-      ->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
-    $declareArrival = $entityManager->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
+    $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
+    $declareArrival = $entityManager->updateDeclareArrivalMessage($declareArrivalUpdate, $Id);
 
     if($declareArrival == null) {
       return new JsonResponse(array("message"=>"No DeclareArrival found with request_id:" . $Id), 204);
     }
-
-    if ($declareArrivalUpdate->getAnimal() != null) {
-      $declareArrival->setAnimal($declareArrivalUpdate->getAnimal());
-    }
-
-    if ($declareArrivalUpdate->getArrivalDate() != null) {
-      $declareArrival->setArrivalDate($declareArrivalUpdate->getArrivalDate());
-    }
-
-    if ($declareArrivalUpdate->getLocation() != null) {
-      $declareArrival->setLocation($declareArrivalUpdate->getLocation());
-    }
-
-    if ($declareArrivalUpdate->getIsImportAnimal() != null) {
-      $declareArrival->setIsImportAnimal($declareArrivalUpdate->getIsImportAnimal());
-    }
-
-    if($declareArrivalUpdate->getUbnPreviousOwner() != null) {
-      $declareArrival->setUbnPreviousOwner($declareArrivalUpdate->getUbnPreviousOwner());
-    }
-
-    $declareArrival = $entityManager->update($declareArrival);
 
     return new JsonResponse($declareArrival, 200);
   }
