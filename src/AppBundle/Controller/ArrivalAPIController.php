@@ -195,8 +195,8 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       $declareArrival->setLocation($declareArrivalUpdate->getLocation());
     }
 
-    if ($declareArrivalUpdate->getImportAnimal() != null) {
-      $declareArrival->setImportAnimal($declareArrivalUpdate->getImportAnimal());
+    if ($declareArrivalUpdate->getIsImportAnimal() != null) {
+      $declareArrival->setIsImportAnimal($declareArrivalUpdate->getIsImportAnimal());
     }
 
     if($declareArrivalUpdate->getUbnPreviousOwner() != null) {
