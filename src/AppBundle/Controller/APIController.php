@@ -241,6 +241,52 @@ class APIController extends Controller implements APIControllerInterface
     return $em->getRepository('AppBundle:Person')->findOneBy(array("accessToken" => $token));
   }
 
+  public function isUlnOrPedigreeCodeValid(Request $request, $Id = null)
+  {
+    $countryCode = null;
+    $ulnOrPedigreeCode = null;
+    $tag = null;
+
+    $isValid = false;
+
+    //First check if supplied ulnNumber & ulnCountryCode exists by checking is a Tag exists
+    $tagRepository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY);
+
+    if($Id != null) {
+      //Strip countryCode
+      $countryCode = mb_substr($Id, 0, 2, 'utf-8');
+
+      //Strip ulnCode or pedigreeCode
+      $ulnOrPedigreeCode = mb_substr($Id, 2, strlen($Id));
+
+      $tag = $tagRepository->findByUlnNumberAndCountryCode($countryCode, $ulnOrPedigreeCode);
+    } else {
+      $contentArray = $this->getContentAsArray($request);
+
+      if (array_key_exists(Constant::ANIMAL_NAMESPACE, $contentArray->toArray())) {
+        $animalContentArray = $contentArray->get(Constant::ANIMAL_NAMESPACE);
+        if (array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::ULN_NAMESPACE, $animalContentArray)) {
+          $ulnOrPedigreeCode = $animalContentArray[Constant::ULN_NAMESPACE];
+          $countryCode = $animalContentArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
+        }
+        else {
+          if (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::PEDIGREE_NAMESPACE, $animalContentArray)) {
+            $ulnOrPedigreeCode = $animalContentArray[Constant::PEDIGREE_NAMESPACE];
+            $countryCode = $animalContentArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
+          }
+        }
+
+        $tag = $tagRepository->findByUlnNumberAndCountryCode($countryCode, $ulnOrPedigreeCode);
+      }
+    }
+
+    if($tag != null){
+      $isValid = true;
+    }
+
+    return $isValid;
+  }
+
   /**
    * @param Request $request
    * @return JsonResponse
