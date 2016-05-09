@@ -91,6 +91,8 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedParentRam->setAssignedTag($tags->get(rand(1,$tagListSize)));
     self::$mockedParentRam->setAnimalType(AnimalType::sheep);
     self::$mockedParentRam->setDateOfBirth(new \DateTime());
+    self::$mockedParentRam->setPedigreeNumber("35645");
+    self::$mockedParentRam->setPedigreeCountryCode("NL");
     $location->addAnimal(self::$mockedParentRam);
 
     self::$mockedParentEwe = new Ewe();
@@ -98,6 +100,8 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedParentEwe->setAssignedTag($tags->get(rand(1,$tagListSize)));
     self::$mockedParentEwe->setAnimalType(AnimalType::sheep);
     self::$mockedParentEwe->setDateOfBirth(new \DateTime());
+    self::$mockedParentEwe->setPedigreeNumber("79164");
+    self::$mockedParentEwe->setPedigreeCountryCode("NL");
     $location->addAnimal(self::$mockedParentEwe);
 
     self::$mockedNewBornRam = new Ram();
@@ -105,9 +109,12 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedNewBornRam->setAssignedTag($tags->get(rand(1,$tagListSize)));
     self::$mockedNewBornRam->setAnimalType(AnimalType::sheep);
     self::$mockedNewBornRam->setDateOfBirth(new \DateTime());
+    self::$mockedNewBornRam->setPedigreeNumber("65454");
+    self::$mockedNewBornRam->setPedigreeCountryCode("NL");
     self::$mockedNewBornRam->setParentFather(self::$mockedParentRam);
     self::$mockedNewBornRam->setParentMother(self::$mockedParentEwe);
     $location->addAnimal(self::$mockedNewBornRam);
+
 
     self::$mockedRamWithParents = new Ram();
     self::$mockedRamWithParents->setIsAlive(true);
