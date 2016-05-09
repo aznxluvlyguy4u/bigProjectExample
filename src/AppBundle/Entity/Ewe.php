@@ -40,6 +40,7 @@ class Ewe extends Animal
 
          $this->objectType = "Ewe";
          $this->setAnimalType(AnimalType::sheep);
+         $this->setGender(AnimalType::female);
 
          $this->children = new ArrayCollection();
      }

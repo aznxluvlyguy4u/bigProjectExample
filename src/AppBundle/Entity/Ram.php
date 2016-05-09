@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\Constant;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -41,6 +42,7 @@ class Ram extends Animal
 
          $this->objectType = "Ram";
          $this->setAnimalType(AnimalType::sheep);
+         $this->setGender(AnimalType::male);
 
          //Create children array
          $this->children = new ArrayCollection();
