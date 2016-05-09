@@ -158,7 +158,7 @@ class APIController extends Controller implements APIControllerInterface
    * @param $messageClassNameSpace
    * @param ArrayCollection $contentArray
    * @param $user
-   * @return \AppBundle\Entity\RetrieveEartags|\AppBundle\Entity\RevokeDeclaration|null
+   * @return object
    * @throws \Exception
    */
   protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user)
