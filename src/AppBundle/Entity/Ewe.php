@@ -39,7 +39,7 @@ class Ewe extends Animal
          parent::__construct();
 
          $this->objectType = "Ewe";
-         $this->setAnimalType(3);
+         $this->setAnimalType(AnimalType::sheep);
 
          $this->children = new ArrayCollection();
      }

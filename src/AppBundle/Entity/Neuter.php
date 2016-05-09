@@ -40,7 +40,7 @@ class Neuter extends Animal
         parent::__construct();
 
         $this->objectType = "Neuter";
-        $this->setAnimalType(3);
+        $this->setAnimalType(AnimalType::sheep);
 
         //Create children array
         $this->children = new ArrayCollection();

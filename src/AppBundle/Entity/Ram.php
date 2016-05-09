@@ -40,7 +40,7 @@ class Ram extends Animal
          parent::__construct();
 
          $this->objectType = "Ram";
-         $this->setAnimalType(3);
+         $this->setAnimalType(AnimalType::sheep);
 
          //Create children array
          $this->children = new ArrayCollection();

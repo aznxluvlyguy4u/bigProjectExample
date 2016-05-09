@@ -44,7 +44,7 @@ class AnimalRepository extends BaseRepository
   private function querier($countryCode, $ulnOrPedigreeCode){
 
     $animal = null;
-    $tagRepository = $this->getEntityManager()->getRepository('AppBundle:Tag');
+    $tagRepository = $this->getEntityManager()->getRepository(Constant::TAG_REPOSITORY);
 
     //Find animal through Tag ulnNumber
     $tag = $tagRepository->findByUlnNumberAndCountryCode($countryCode,$ulnOrPedigreeCode);
