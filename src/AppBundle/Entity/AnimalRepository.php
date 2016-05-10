@@ -10,7 +10,6 @@ use AppBundle\Enumerator\AnimalType;
  */
 class AnimalRepository extends BaseRepository
 {
-
   /**
    * @param $Id
    * @return array|null
@@ -49,22 +48,23 @@ class AnimalRepository extends BaseRepository
     //Find animal through Tag ulnNumber
     $tag = $tagRepository->findByUlnNumberAndCountryCode($countryCode,$ulnOrPedigreeCode);
 
-
     if($tag != null) {
         $animal = $tag->getAnimal();
     } else { //Find animal through Animal pedigreeNumber
-      $query = $this->getEntityManager()->getRepository(Constant::ANIMAL_REPOSITORY)->createQueryBuilder('animal')
-        ->where('animal.pedigreeNumber = :pedigreeNumber')
-        ->andWhere('animal.pedigreeCountryCode = :pedigreeCountryCode')
-        ->setParameter('pedigreeNumber', $ulnOrPedigreeCode)
-        ->setParameter('pedigreeCountryCode', $countryCode)
-        ->getQuery();
-      $animals = $query->getResult();
-
-      if(sizeof($animals) > 0){
-        $animal = $animals[0];
-      }
+      $animal = $this->findByCountryCodeAndPedigree($countryCode, $ulnOrPedigreeCode);
     }
+
+    return $animal;
+  }
+
+  /**
+   * @param $countryCode
+   * @param $pedigreeCode
+   * @return null|object
+   */
+  public function findByCountryCodeAndPedigree($countryCode, $pedigreeCode)
+  {
+    $animal = $this->findOneBy(array('pedigreeCountryCode'=>$countryCode, 'pedigreeNumber'=>$pedigreeCode));
 
     return $animal;
   }

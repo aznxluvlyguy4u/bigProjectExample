@@ -157,7 +157,7 @@ class IRSerializer implements IRSerializerInterface
             $animalObject = null;
 
             //Find registered tag, through given ulnCountryCode & ulnNumber, so we can assign the tag to this animal
-            $tag = $this->entityGetter->retrieveTag($animal[Constant::ULN_COUNTRY_CODE_NAMESPACE], $animal[Constant::ULN_NAMESPACE]);
+            $tag = $this->entityGetter->retrieveTag($animal[Constant::ULN_COUNTRY_CODE_NAMESPACE], $animal[Constant::ULN_NUMBER_NAMESPACE]);
 
             if($tag == null){
                 return null;

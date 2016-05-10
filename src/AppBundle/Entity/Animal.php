@@ -187,7 +187,6 @@ abstract class Animal
      *
      * @ORM\OneToOne(targetEntity="Tag", mappedBy="animal", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Tag")
-     * @Expose
      */
     protected $assignedTag;
 

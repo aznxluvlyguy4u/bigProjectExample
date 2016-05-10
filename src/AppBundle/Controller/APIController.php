@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\AnimalType;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -243,48 +244,108 @@ class APIController extends Controller implements APIControllerInterface
 
   public function isUlnOrPedigreeCodeValid(Request $request, $Id = null)
   {
-    $countryCode = null;
-    $ulnOrPedigreeCode = null;
+    $ulnCountryCode = null;
+    $pedigreeCountryCode = null;
+    $ulnCode = null;
+    $pedigreeCode = null;
     $tag = null;
+    $animal = null;
 
-    $isValid = false;
-
-    //First check if supplied ulnNumber & ulnCountryCode exists by checking is a Tag exists
+    //First check if supplied ulnNumber & ulnCountryCode exists by checking if a Tag exists
     $tagRepository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY);
 
+    //This repository class is used to verify if a pedigree code is valid
+    $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+
+
     if($Id != null) {
-      //Strip countryCode
-      $countryCode = mb_substr($Id, 0, 2, 'utf-8');
+      return $this->verifyUlnOrPedigreeCode($Id);
 
-      //Strip ulnCode or pedigreeCode
-      $ulnOrPedigreeCode = mb_substr($Id, 2, strlen($Id));
-
-      $tag = $tagRepository->findByUlnNumberAndCountryCode($countryCode, $ulnOrPedigreeCode);
     } else {
       $contentArray = $this->getContentAsArray($request);
+      $array = $contentArray->toArray();
 
-      if (array_key_exists(Constant::ANIMAL_NAMESPACE, $contentArray->toArray())) {
-        $animalContentArray = $contentArray->get(Constant::ANIMAL_NAMESPACE);
-        if (array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::ULN_NAMESPACE, $animalContentArray)) {
-          $ulnOrPedigreeCode = $animalContentArray[Constant::ULN_NAMESPACE];
-          $countryCode = $animalContentArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
-        }
-        else {
-          if (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::PEDIGREE_NAMESPACE, $animalContentArray)) {
-            $ulnOrPedigreeCode = $animalContentArray[Constant::PEDIGREE_NAMESPACE];
-            $countryCode = $animalContentArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
+      $objectsToBeVerified = array();
+      array_push($objectsToBeVerified, Constant::ANIMAL_NAMESPACE,
+         Constant::CHILDREN_NAMESPACE, Constant::FATHER_NAMESPACE, Constant::MOTHER_NAMESPACE);
+
+      //All objects containing a uln or pedigree code must have that code verified
+      foreach ($objectsToBeVerified as $objectToBeVerified) {
+
+        if (array_key_exists($objectToBeVerified, $array)) {
+          $animalContentArray = $contentArray->get($objectToBeVerified);
+
+          if (array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalContentArray)) {
+            $ulnCode = $animalContentArray[Constant::ULN_NUMBER_NAMESPACE];
+            $ulnCountryCode = $animalContentArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
+
+            $tag = $tagRepository->findByUlnNumberAndCountryCode($ulnCountryCode, $ulnCode);
+
+            if ($tag == null) {
+              return array("animalKind" => $objectToBeVerified,
+                  "keyType" => Constant::ULN_NAMESPACE,
+                  "isValid" => false);
+            }
+          }
+          else {
+            if (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalContentArray)) {
+              $pedigreeCode = $animalContentArray[Constant::PEDIGREE_NUMBER_NAMESPACE];
+              $pedigreeCountryCode = $animalContentArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
+            }
+
+            $animal = $animalRepository->findByCountryCodeAndPedigree($pedigreeCountryCode, $pedigreeCode);
+
+            if($animal == null){
+              return array("animalKind" => $objectToBeVerified,
+                  "keyType" => Constant::PEDIGREE_NAMESPACE,
+                  "isValid" => false);
+            }
           }
         }
+      }
+      $keyType = Constant::ULN_NAMESPACE . " and/or " . Constant::PEDIGREE_NAMESPACE;
 
-        $tag = $tagRepository->findByUlnNumberAndCountryCode($countryCode, $ulnOrPedigreeCode);
+      return array("animalKind" => "All objects",
+            "keyType" => $keyType,
+            "isValid" => true);
+    }
+
+  }
+
+  private function verifyUlnOrPedigreeCode($Id)
+  {
+    $isValid = false;
+    $keyType = Constant::ULN_NAMESPACE . " and/or " . Constant::PEDIGREE_NAMESPACE;
+
+    //First check if supplied ulnNumber & ulnCountryCode exists by checking if a Tag exists
+    $tagRepository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY);
+
+    //Strip countryCode
+    $countryCode = mb_substr($Id, 0, 2, 'utf-8');
+
+    //Strip ulnCode or pedigreeCode
+    $ulnOrPedigreeCode = mb_substr($Id, 2, strlen($Id));
+
+    $tag = $tagRepository->findByUlnNumberAndCountryCode($countryCode, $ulnOrPedigreeCode);
+
+    if ($tag != null) {
+      $isValid = true;
+      $keyType = Constant::ULN_NAMESPACE;
+    } else {
+      //Verify if id is a valid pedigreenumber
+
+      $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+      $animal = $animalRepository->findByCountryCodeAndPedigree($countryCode, $ulnOrPedigreeCode);
+
+      if ($animal != null) {
+        $isValid = true;
+        $keyType = Constant::PEDIGREE_NAMESPACE;
       }
     }
 
-    if($tag != null){
-      $isValid = true;
-    }
-
-    return $isValid;
+    return array("animalKind" => "Id",
+        "keyType" => $keyType,
+        "isValid" => $isValid);
   }
 
   /**

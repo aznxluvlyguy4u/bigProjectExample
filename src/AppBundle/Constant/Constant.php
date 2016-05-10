@@ -21,11 +21,16 @@ class Constant
     const BOOLEAN_TRUE_NAMESPACE = 'true';
     const UNKNOWN_NAMESPACE = 'unknown';
     const CODE_NAMESPACE = 'code';
-    const ULN_NAMESPACE = "uln_number";
-    const PEDIGREE_NAMESPACE = "pedigree_number";
+    const ULN_NUMBER_NAMESPACE = "uln_number";
+    const PEDIGREE_NUMBER_NAMESPACE = "pedigree_number";
     const ULN_COUNTRY_CODE_NAMESPACE = "uln_country_code";
     const PEDIGREE_COUNTRY_CODE_NAMESPACE = "pedigree_country_code";
+    const PEDIGREE_NAMESPACE = 'pedigree';
+    const ULN_NAMESPACE = 'uln';
     const GENDER_NAMESPACE = 'gender';
+    const FATHER_NAMESPACE = 'father';
+    const MOTHER_NAMESPACE = 'mother';
+    const CHILDREN_NAMESPACE = 'children';
 
     //Request repositories
     const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';

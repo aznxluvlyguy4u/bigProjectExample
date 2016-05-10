@@ -55,8 +55,8 @@ class EntityGetter
         $animalRepository = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY);
 
         //At least a uln or pedigree number + country code combination must be given to find an Animal
-        if(array_key_exists(Constant::ULN_NAMESPACE, $retrievedAnimal) && array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $retrievedAnimal)){
-            $ulnNumber = $retrievedAnimal[Constant::ULN_NAMESPACE];
+        if(array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $retrievedAnimal) && array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $retrievedAnimal)){
+            $ulnNumber = $retrievedAnimal[Constant::ULN_NUMBER_NAMESPACE];
             $ulnCountryCode = $retrievedAnimal[Constant::ULN_COUNTRY_CODE_NAMESPACE];
             $retrievedAnimal = $animalRepository->findByCountryCodeAndUlnOrPedigree($ulnCountryCode, $ulnNumber);
 
@@ -64,8 +64,8 @@ class EntityGetter
                 $retrievedAnimal = $this->createNewAnimal($declareArrayContent);
             }
 
-        } else if (array_key_exists(Constant::PEDIGREE_NAMESPACE, $retrievedAnimal) && array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $retrievedAnimal)){
-            $pedigreeNumber = $retrievedAnimal[Constant::PEDIGREE_NAMESPACE];
+        } else if (array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $retrievedAnimal) && array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $retrievedAnimal)){
+            $pedigreeNumber = $retrievedAnimal[Constant::PEDIGREE_NUMBER_NAMESPACE];
             $pedigreeCountryCode = $retrievedAnimal[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
             $retrievedAnimal = $animalRepository->findByCountryCodeAndUlnOrPedigree($pedigreeCountryCode, $pedigreeNumber);
 
@@ -110,12 +110,12 @@ class EntityGetter
 
         $ulnNumber = null;
         $countryCode = null;
-        if (array_key_exists(Constant::ULN_NAMESPACE, $animalContentArray) && array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $animalContentArray)) {
-            $ulnNumber = $animalContentArray[Constant::ULN_NAMESPACE];
+        if (array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalContentArray) && array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $animalContentArray)) {
+            $ulnNumber = $animalContentArray[Constant::ULN_NUMBER_NAMESPACE];
             $countryCode = $animalContentArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
 
-        } else if(array_key_exists(Constant::PEDIGREE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalContentArray)) {
-            $ulnNumber = $animalContentArray[Constant::PEDIGREE_NAMESPACE];
+        } else if(array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalContentArray) && array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalContentArray)) {
+            $ulnNumber = $animalContentArray[Constant::PEDIGREE_NUMBER_NAMESPACE];
             $countryCode = $animalContentArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
         }
 
