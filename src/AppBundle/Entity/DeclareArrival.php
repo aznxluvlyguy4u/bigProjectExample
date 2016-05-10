@@ -50,6 +50,8 @@ class DeclareArrival extends DeclareBase {
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="arrivals", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
+     * @Expose
+     *
      */
     private $location;
 
