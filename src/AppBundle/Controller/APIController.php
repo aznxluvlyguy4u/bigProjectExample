@@ -244,6 +244,58 @@ class APIController extends Controller implements APIControllerInterface
 
   public function isUlnOrPedigreeCodeValid(Request $request, $Id = null)
   {
+    if($Id != null) {
+      return $this->verifyUlnOrPedigreeCode($Id);
+
+    } else {
+      $contentArray = $this->getContentAsArray($request);
+      $array = $contentArray->toArray();
+
+      $objectsToBeVerified = array();
+      array_push($objectsToBeVerified, Constant::ANIMAL_NAMESPACE, Constant::FATHER_NAMESPACE, Constant::MOTHER_NAMESPACE);
+
+      //All objects containing a uln or pedigree code must have that code verified
+      foreach ($objectsToBeVerified as $objectToBeVerified) {
+
+        if (array_key_exists($objectToBeVerified, $array)) {
+          $animalContentArray = $contentArray->get($objectToBeVerified);
+
+          $verification = $this->verifyUlnOrPedigreeCodeInAnimal($animalContentArray, $objectToBeVerified);
+
+          if($verification["isValid"] == false) { return $verification; }
+        }
+      }
+
+      //Animals in a Children array need to be retrieved differently
+      if($contentArray->containsKey(Constant::CHILDREN_NAMESPACE)){
+        $children = $array[Constant::CHILDREN_NAMESPACE];
+
+        foreach($children as $child) {
+          $verification = $this->verifyUlnOrPedigreeCodeInAnimal($child, Constant::CHILDREN_NAMESPACE);
+
+          if($verification["isValid"] == false) { return $verification; }
+
+          //Also verify the surrogate of a child
+          if(array_key_exists(Constant::SURROGATE_NAMESPACE, $child)){
+            $verification = $this->verifyUlnOrPedigreeCodeInAnimal($child[Constant::SURROGATE_NAMESPACE], Constant::SURROGATE_NAMESPACE);
+
+            if($verification["isValid"] == false) { return $verification; }
+          }
+        }
+      }
+
+      $keyType = Constant::ULN_NAMESPACE . " and/or " . Constant::PEDIGREE_NAMESPACE;
+
+      //When all animals have passed the verification return this:
+      return array("animalKind" => "All objects",
+            "keyType" => $keyType,
+            "isValid" => true);
+    }
+
+  }
+
+  private function verifyUlnOrPedigreeCodeInAnimal($animalContentArray, $objectToBeVerified)
+  {
     $ulnCountryCode = null;
     $pedigreeCountryCode = null;
     $ulnCode = null;
@@ -257,59 +309,37 @@ class APIController extends Controller implements APIControllerInterface
     //This repository class is used to verify if a pedigree code is valid
     $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
 
+    if (array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalContentArray)) {
+      $ulnCode = $animalContentArray[Constant::ULN_NUMBER_NAMESPACE];
+      $ulnCountryCode = $animalContentArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
 
-    if($Id != null) {
-      return $this->verifyUlnOrPedigreeCode($Id);
+      $tag = $tagRepository->findByUlnNumberAndCountryCode($ulnCountryCode, $ulnCode);
 
-    } else {
-      $contentArray = $this->getContentAsArray($request);
-      $array = $contentArray->toArray();
-
-      $objectsToBeVerified = array();
-      array_push($objectsToBeVerified, Constant::ANIMAL_NAMESPACE,
-         Constant::CHILDREN_NAMESPACE, Constant::FATHER_NAMESPACE, Constant::MOTHER_NAMESPACE);
-
-      //All objects containing a uln or pedigree code must have that code verified
-      foreach ($objectsToBeVerified as $objectToBeVerified) {
-
-        if (array_key_exists($objectToBeVerified, $array)) {
-          $animalContentArray = $contentArray->get($objectToBeVerified);
-
-          if (array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalContentArray)) {
-            $ulnCode = $animalContentArray[Constant::ULN_NUMBER_NAMESPACE];
-            $ulnCountryCode = $animalContentArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
-
-            $tag = $tagRepository->findByUlnNumberAndCountryCode($ulnCountryCode, $ulnCode);
-
-            if ($tag == null) {
-              return array("animalKind" => $objectToBeVerified,
-                  "keyType" => Constant::ULN_NAMESPACE,
-                  "isValid" => false);
-            }
-          }
-          else {
-            if (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalContentArray)) {
-              $pedigreeCode = $animalContentArray[Constant::PEDIGREE_NUMBER_NAMESPACE];
-              $pedigreeCountryCode = $animalContentArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
-            }
-
-            $animal = $animalRepository->findByCountryCodeAndPedigree($pedigreeCountryCode, $pedigreeCode);
-
-            if($animal == null){
-              return array("animalKind" => $objectToBeVerified,
-                  "keyType" => Constant::PEDIGREE_NAMESPACE,
-                  "isValid" => false);
-            }
-          }
-        }
+      if ($tag == null) {
+        return array("animalKind" => $objectToBeVerified,
+            "keyType" => Constant::ULN_NAMESPACE,
+            "isValid" => false);
       }
-      $keyType = Constant::ULN_NAMESPACE . " and/or " . Constant::PEDIGREE_NAMESPACE;
-
-      return array("animalKind" => "All objects",
-            "keyType" => $keyType,
-            "isValid" => true);
     }
+    else {
+      if (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalContentArray)) {
+        $pedigreeCode = $animalContentArray[Constant::PEDIGREE_NUMBER_NAMESPACE];
+        $pedigreeCountryCode = $animalContentArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
+      }
 
+      $animal = $animalRepository->findByCountryCodeAndPedigree($pedigreeCountryCode, $pedigreeCode);
+
+      if($animal == null){
+        return array("animalKind" => $objectToBeVerified,
+            "keyType" => Constant::PEDIGREE_NAMESPACE,
+            "isValid" => false);
+      }
+    }
+    $keyType = Constant::ULN_NAMESPACE . " and/or " . Constant::PEDIGREE_NAMESPACE;
+
+    return array("animalKind" => $objectToBeVerified,
+        "keyType" => $keyType,
+        "isValid" => true);
   }
 
   private function verifyUlnOrPedigreeCode($Id)
