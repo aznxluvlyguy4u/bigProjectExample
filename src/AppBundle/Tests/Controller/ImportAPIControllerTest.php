@@ -153,7 +153,7 @@ class ImportAPIControllerTest extends WebTestCase {
     $declareImport = new DeclareImport();
     $declareImport->setImportDate(new \DateTime());
     $declareImport->setUbnPreviousOwner("123456");
-    $declareImport->setImportAnimal(true);
+    $declareImport->setIsImportAnimal(true);
     $declareImport->setAnimal(self::$mockedChild);
 
     //Create json to be posted
@@ -184,7 +184,7 @@ class ImportAPIControllerTest extends WebTestCase {
     $declareImport = new DeclareImport();
     $declareImport->setImportDate(new \DateTime());
     $declareImport->setUbnPreviousOwner("123456");
-    $declareImport->setImportAnimal(true);
+    $declareImport->setIsImportAnimal(true);
     $declareImport->setAnimal(self::$mockedChild);
 
     //Create json to be posted
@@ -226,7 +226,7 @@ class ImportAPIControllerTest extends WebTestCase {
     $updatedData = json_decode($updatedResponse, true);
 
     $this->assertEquals($declareImportUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
-    $this->assertEquals($declareImportUpdated->getImportAnimal(), $updatedData['import_animal']);
+    $this->assertEquals($declareImportUpdated->getIsImportAnimal(), $updatedData['is_import_animal']);
   }
 
   public function tearDown() {

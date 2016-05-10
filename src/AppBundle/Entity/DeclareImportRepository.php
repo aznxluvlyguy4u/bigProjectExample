@@ -34,8 +34,8 @@ class DeclareImportRepository extends BaseRepository {
       $declareImport->setLocation($declareImportUpdate->getLocation());
     }
 
-    if ($declareImportUpdate->getImportAnimal() != null) {
-      $declareImport->setImportAnimal($declareImportUpdate->getImportAnimal());
+    if ($declareImportUpdate->getIsImportAnimal() != null) {
+      $declareImport->setIsImportAnimal($declareImportUpdate->getIsImportAnimal());
     }
 
     if($declareImportUpdate->getUbnPreviousOwner() != null) {
