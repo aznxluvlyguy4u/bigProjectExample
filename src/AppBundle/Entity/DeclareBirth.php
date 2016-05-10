@@ -97,7 +97,7 @@ class DeclareBirth extends DeclareBase
      * @JMS\Type("integer")
      * @Expose
      */
-    private $tailLength;
+    private $birthTailLength;
 
     /**
      * @ORM\Column(type="string", nullable=true)
@@ -356,17 +356,17 @@ class DeclareBirth extends DeclareBase
     /**
      * @return integer
      */
-    public function getTailLength()
+    public function getBirthTailLength()
     {
-        return $this->tailLength;
+        return $this->birthTailLength;
     }
 
     /**
-     * @param integer $tailLength
+     * @param integer $birthTailLength
      */
-    public function setTailLength($tailLength)
+    public function setBirthTailLength($birthTailLength)
     {
-        $this->tailLength = $tailLength;
+        $this->birthTailLength = $birthTailLength;
     }
 
     /**

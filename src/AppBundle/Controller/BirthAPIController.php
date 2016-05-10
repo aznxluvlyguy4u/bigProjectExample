@@ -211,7 +211,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     }
 
     if ($declareBirthUpdate->getTailLength() != null) {
-      $declareBirth->setTailLength($declareBirthUpdate->getTailLength());
+      $declareBirth->setBirthTailLength($declareBirthUpdate->getTailLength());
     }
 
     if ($declareBirthUpdate->getTransportationCode() != null) {

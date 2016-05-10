@@ -212,7 +212,7 @@ class BirthAPIControllerTest extends WebTestCase {
     $declareBirthUpdated->setLambar("N");
     $declareBirthUpdated->setPseudoPregnancy("N");
     $declareBirthUpdated->setLitterSize(6);
-    $declareBirthUpdated->setTailLength(1425);
+    $declareBirthUpdated->setBirthTailLength(1425);
     $declareBirthUpdated->setAnimalWeight(842);
     $declareBirthUpdated->setTransportationCode("565681SG65SDGSG");
     $declareBirthUpdated->getAnimal()->setUlnNumber('123131181');
@@ -240,7 +240,7 @@ class BirthAPIControllerTest extends WebTestCase {
     $this->assertEquals($declareBirthUpdated->getLambar(), $updatedData['lambar']);
     $this->assertEquals($declareBirthUpdated->getPseudoPregnancy(), $updatedData['pseudo_pregnancy']);
     $this->assertEquals($declareBirthUpdated->getLitterSize(), $updatedData['litter_size']);
-    $this->assertEquals($declareBirthUpdated->getTailLength(), $updatedData['tail_length']);
+    $this->assertEquals($declareBirthUpdated->getBirthTailLength(), $updatedData['tail_length']);
     $this->assertEquals($declareBirthUpdated->getAnimalWeight(), $updatedData['animal_weight']);
     $this->assertEquals($declareBirthUpdated->getTransportationCode(), $updatedData['transportation_code']);
     $this->assertEquals($declareBirthUpdated->getAnimal()->getUlnNumber(), $updatedData['animal']['uln_number']);
