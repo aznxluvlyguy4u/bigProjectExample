@@ -58,15 +58,18 @@ class EntityGetter
         if(array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $retrievedAnimal) && array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $retrievedAnimal)){
             $ulnNumber = $retrievedAnimal[Constant::ULN_NUMBER_NAMESPACE];
             $ulnCountryCode = $retrievedAnimal[Constant::ULN_COUNTRY_CODE_NAMESPACE];
+
             $retrievedAnimal = $animalRepository->findByCountryCodeAndUlnOrPedigree($ulnCountryCode, $ulnNumber);
 
             if($retrievedAnimal == null) {
                 $retrievedAnimal = $this->createNewAnimal($declareArrayContent);
+         
             }
 
         } else if (array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $retrievedAnimal) && array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $retrievedAnimal)){
             $pedigreeNumber = $retrievedAnimal[Constant::PEDIGREE_NUMBER_NAMESPACE];
             $pedigreeCountryCode = $retrievedAnimal[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
+
             $retrievedAnimal = $animalRepository->findByCountryCodeAndUlnOrPedigree($pedigreeCountryCode, $pedigreeNumber);
 
             if($retrievedAnimal == null) {
@@ -94,14 +97,11 @@ class EntityGetter
         }
 
         switch($gender) {
-            case AnimalType::RAM:
+            case AnimalType::MALE:
                 $animal = new Ram();
                 break;
-            case AnimalType::EWE:
+            case AnimalType::FEMALE:
                 $animal = new Ewe();
-                break;
-            case AnimalType::NEUTER:
-                $animal = new Neuter();
                 break;
             default:
                 $animal = new Neuter();
