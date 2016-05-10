@@ -162,6 +162,14 @@ abstract class Animal
     protected $animalHairColour;
 
     /**
+     * @ORM\Column(type="integer", nullable=true)
+     * @Assert\Length(max = 4)
+     * @JMS\Type("integer")
+     * @Expose
+     */
+    protected $birthTailLength;
+
+    /**
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareArrival")
      * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="animal", cascade={"persist"})
@@ -668,6 +676,22 @@ abstract class Animal
     public function setAnimalHairColour($animalHairColour)
     {
         $this->animalHairColour = $animalHairColour;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getBirthTailLength()
+    {
+        return $this->birthTailLength;
+    }
+
+    /**
+     * @param integer $birthTailLength
+     */
+    public function setBirthTailLength($birthTailLength)
+    {
+        $this->birthTailLength = $birthTailLength;
     }
 
     /**
