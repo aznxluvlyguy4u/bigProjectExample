@@ -213,6 +213,7 @@ class DeclareDepart extends DeclareBase
     public function setLocation($location)
     {
         $this->location = $location;
+        $this->setUbn($this->location->getUbn());
 
         return $this;
     }
