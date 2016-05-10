@@ -152,7 +152,6 @@ class ImportAPIControllerTest extends WebTestCase {
     //Create declare import
     $declareImport = new DeclareImport();
     $declareImport->setImportDate(new \DateTime());
-    $declareImport->setUbnPreviousOwner("123456");
     $declareImport->setIsImportAnimal(true);
     $declareImport->setAnimal(self::$mockedChild);
 
@@ -183,7 +182,6 @@ class ImportAPIControllerTest extends WebTestCase {
     //Create declare import
     $declareImport = new DeclareImport();
     $declareImport->setImportDate(new \DateTime());
-    $declareImport->setUbnPreviousOwner("123456");
     $declareImport->setIsImportAnimal(true);
     $declareImport->setAnimal(self::$mockedChild);
 
@@ -206,10 +204,6 @@ class ImportAPIControllerTest extends WebTestCase {
     //Get requestId so we can do an update with PUT
     $requestId = $declareImportResponse['request_id'];
 
-    //Update value
-    $declareImportUpdated = $declareImport;
-    $declareImportUpdated->setUbnPreviousOwner("999991");
-
     //Create json to be putted
     $declareImportUpdatedJson = self::$serializer->serializeToJSON($declareImportUpdated);
 
@@ -225,7 +219,6 @@ class ImportAPIControllerTest extends WebTestCase {
     $updatedResponse = $this->client->getResponse()->getContent();
     $updatedData = json_decode($updatedResponse, true);
 
-    $this->assertEquals($declareImportUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
     $this->assertEquals($declareImportUpdated->getIsImportAnimal(), $updatedData['is_import_animal']);
   }
 
