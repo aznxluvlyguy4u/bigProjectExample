@@ -120,9 +120,16 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function createArrival(Request $request)
   {
-    //Validate uln/pedigree code
-    if(!$this->isUlnOrPedigreeCodeValid($request)) {
-      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
+    $validityCheckUlnOrPedigiree= $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
     }
 
     //Get content to array
@@ -164,10 +171,16 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * @Method("PUT")
    */
   public function updateArrival(Request $request, $Id) {
+    $validityCheckUlnOrPedigiree = $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigiree['isValid'];
 
-    //Validate uln/pedigree code
-    if(!$this->isUlnOrPedigreeCodeValid($request)) {
-      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
     }
 
     //Convert the array into an object and add the mandatory values retrieved from the database

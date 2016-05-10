@@ -115,9 +115,16 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    * @Method("POST")
    */
   public function createImport(Request $request) {
-    //Validate uln/pedigree code
-    if(!$this->isUlnOrPedigreeCodeValid($request)) {
-      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
+    $validityCheckUlnOrPedigiree= $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
     }
 
     //Convert front-end message into an array
@@ -160,9 +167,16 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    * @Method("PUT")
    */
   public function updateImport(Request $request, $Id) {
-    //Validate uln/pedigree code
-    if(!$this->isUlnOrPedigreeCodeValid($request)) {
-      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
+    $validityCheckUlnOrPedigiree= $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
     }
 
     //Convert the array into an object and add the mandatory values retrieved from the database
