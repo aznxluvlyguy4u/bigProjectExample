@@ -68,7 +68,8 @@ class ImportAPIControllerTest extends WebTestCase {
 
     //Load fixture class
     $fixtures = array('AppBundle\DataFixtures\ORM\MockedClient',
-      'AppBundle\DataFixtures\ORM\MockedAnimal');
+      'AppBundle\DataFixtures\ORM\MockedAnimal',
+      'AppBundle\DataFixtures\ORM\MockedTags');
     $this->loadFixtures($fixtures);
 
     //Get mocked Client
@@ -167,6 +168,7 @@ class ImportAPIControllerTest extends WebTestCase {
     );
 
     $response = $this->client->getResponse();
+
     $data = json_decode($response->getContent(), true);
 
     $this->assertEquals('open', $data['request_state']);
@@ -207,7 +209,6 @@ class ImportAPIControllerTest extends WebTestCase {
     //Update value
     $declareImportUpdated = $declareImport;
     $declareImportUpdated->setUbnPreviousOwner("999991");
-    $declareImportUpdated->getAnimal()->setUlnNumber('123131');
 
     //Create json to be putted
     $declareImportUpdatedJson = self::$serializer->serializeToJSON($declareImportUpdated);

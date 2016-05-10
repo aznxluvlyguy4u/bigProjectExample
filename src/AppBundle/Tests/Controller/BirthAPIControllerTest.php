@@ -2,7 +2,9 @@
 
 namespace AppBundle\Tests\Controller;
 
+use AppBundle\DataFixtures\ORM\MockedTags;
 use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\Tag;
 use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedAnimal;
 use AppBundle\DataFixtures\ORM\MockedClient;
@@ -66,8 +68,10 @@ class BirthAPIControllerTest extends WebTestCase {
     $this->client = parent::createClient();
 
     //Load fixture class
-    $fixtures = array('AppBundle\DataFixtures\ORM\MockedClient',
-      'AppBundle\DataFixtures\ORM\MockedAnimal');
+    $fixtures = array(
+      'AppBundle\DataFixtures\ORM\MockedClient',
+      'AppBundle\DataFixtures\ORM\MockedAnimal',
+      'AppBundle\DataFixtures\ORM\MockedTags');
     $this->loadFixtures($fixtures);
 
     //Get mocked Client
@@ -75,7 +79,7 @@ class BirthAPIControllerTest extends WebTestCase {
     $this->accessToken = self::$mockedClient->getAccessToken();
 
     //Get mocked Animals
-    self::$mockedChild  = MockedAnimal::getMockedRamWithParents();
+    self::$mockedChild  = MockedAnimal::getMockedNewBornRam();
     self::$mockedFather = MockedAnimal::getMockedParentRam();
     self::$mockedMother = MockedAnimal::getMockedParentEwe();
 
@@ -150,8 +154,14 @@ class BirthAPIControllerTest extends WebTestCase {
     //Create declare birth
     $declareBirth = new DeclareBirth();
     $declareBirth->setBirthType("keizersnee");
-    $declareBirth->setUbnPreviousOwner("123456");
-    $declareBirth->setUbn("777777");
+    $declareBirth->setDateOfBirth(self::$mockedChild->getDateOfBirth());
+
+    $unassignedTags = MockedTags::getMockedTags();
+    $tag = $unassignedTags->get(1);
+    $tag->setTagStatus('assigned');
+    $tag->setAnimal(self::$mockedChild);
+    self::$mockedChild->setAssignedTag($tag);
+
     $declareBirth->setAnimal(self::$mockedChild);
 
     //Create json to be posted
@@ -180,8 +190,14 @@ class BirthAPIControllerTest extends WebTestCase {
     //Create declare birth
     $declareBirth = new DeclareBirth();
     $declareBirth->setBirthType("keizersnee");
-    $declareBirth->setUbnPreviousOwner("123456");
-    $declareBirth->setUbn("777777");
+    $declareBirth->setDateOfBirth(self::$mockedChild->getDateOfBirth());
+
+    $unassignedTags = MockedTags::getMockedTags();
+    $tag = $unassignedTags->get(0);
+    $tag->setTagStatus('assigned');
+    $tag->setAnimal(self::$mockedChild);
+    self::$mockedChild->setAssignedTag($tag);
+
     $declareBirth->setAnimal(self::$mockedChild);
 
     //Create json to be posted
@@ -198,14 +214,13 @@ class BirthAPIControllerTest extends WebTestCase {
 
     //Get response
     $response = $this->client->getResponse()->getContent();
-    $declareBirthResponse = new ArrayCollection(json_decode($response, true));
+    $declareBirthResponse = json_decode($response, true);
 
     //Get requestId so we can do an update with PUT
     $requestId = $declareBirthResponse['request_id'];
 
     //Update value
     $declareBirthUpdated = $declareBirth;
-    $declareBirthUpdated->setUbnPreviousOwner("999991");
     $declareBirthUpdated->setBirthType("Painful but worth it");
     $declareBirthUpdated->setAborted("N");
     $declareBirthUpdated->setAnimalWeight(999);
@@ -214,8 +229,6 @@ class BirthAPIControllerTest extends WebTestCase {
     $declareBirthUpdated->setLitterSize(6);
     $declareBirthUpdated->setBirthTailLength(1425);
     $declareBirthUpdated->setAnimalWeight(842);
-    $declareBirthUpdated->setTransportationCode("565681SG65SDGSG");
-    $declareBirthUpdated->getAnimal()->setUlnNumber('123131181');
 
     //Create json to be putted
     $declareBirthUpdatedJson = self::$serializer->serializeToJSON($declareBirthUpdated);
@@ -230,10 +243,11 @@ class BirthAPIControllerTest extends WebTestCase {
     );
 
     $updatedResponse = $this->client->getResponse()->getContent();
+
     $updatedData = json_decode($updatedResponse, true);
+    $tag = $updatedData['animal']['assigned_tag'];
 
     //Verify the updated parameters
-    $this->assertEquals($declareBirthUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
     $this->assertEquals($declareBirthUpdated->getBirthType(), $updatedData['birth_type']);
     $this->assertEquals($declareBirthUpdated->getAborted(), $updatedData['aborted']);
     $this->assertEquals($declareBirthUpdated->getAnimalWeight(), $updatedData['animal_weight']);
@@ -242,11 +256,10 @@ class BirthAPIControllerTest extends WebTestCase {
     $this->assertEquals($declareBirthUpdated->getLitterSize(), $updatedData['litter_size']);
     $this->assertEquals($declareBirthUpdated->getBirthTailLength(), $updatedData['tail_length']);
     $this->assertEquals($declareBirthUpdated->getAnimalWeight(), $updatedData['animal_weight']);
-    $this->assertEquals($declareBirthUpdated->getTransportationCode(), $updatedData['transportation_code']);
-    $this->assertEquals($declareBirthUpdated->getAnimal()->getUlnNumber(), $updatedData['animal']['uln_number']);
+    $this->assertEquals($declareBirthUpdated->getAnimal()->getAssignedTag()->getUlnNumber(), $tag['uln_number']);
 
     //Verify some unchanged parameters
-    $this->assertEquals($declareBirth->getAnimal()->getUlnCountryCode(), $updatedData['animal']['uln_country_code']);
+    $this->assertEquals($declareBirth->getAnimal()->getAssignedTag()->getUlnCountryCode(), $tag['uln_country_code']);
   }
   
   public function tearDown() {

@@ -95,11 +95,6 @@ class IRSerializer implements IRSerializerInterface
         //Add animal type to content array
         $retrievedAnimalContentArray[$this::DISCRIMINATOR_TYPE_NAMESPACE] = $retrievedAnimal->getObjectType();
 
-        // FIXME
-        unset( $retrievedAnimalContentArray['arrivals']);
-        unset( $retrievedAnimalContentArray['departures']);
-        unset( $retrievedAnimalContentArray['imports']);
-        unset( $retrievedAnimalContentArray['children']);
 
         return  $retrievedAnimalContentArray;
     }
@@ -107,7 +102,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclarationDetail(ArrayCollection $contentArray)
+    function parseDeclarationDetail(ArrayCollection $contentArray, $isEditMessage)
     {
         // TODO: Implement parseDeclarationDetail() method.
         $declarationDetail = null;
@@ -118,7 +113,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareAnimalFlag(ArrayCollection $contentArray)
+    function parseDeclareAnimalFlag(ArrayCollection $contentArray, $isEditMessage)
     {
         // TODO: Implement parseDeclareAnimalFlag() method.
         $declareAnimalFlag = null;
@@ -129,13 +124,13 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareArrival(ArrayCollection $declareArrivalContentArray)
+    function parseDeclareArrival(ArrayCollection $declareArrivalContentArray, $isEditMessage)
     {
         //Retrieve animal entity
-        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray['animal']);
+        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray);
 
         //Add retrieved animal properties including type to initial animalContentArray
-        $declareArrivalContentArray['animal'] =  $this->returnAnimalArray($retrievedAnimal);
+        $declareArrivalContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
 
         //denormalize the content to an object
         $json = $this->serializeToJSON($declareArrivalContentArray);
@@ -150,13 +145,60 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareBirth(ArrayCollection $declareBirthContentArray)
+    function parseDeclareBirth(ArrayCollection $declareBirthContentArray, $isEditMessage)
     {
+        $declareBirthRequest = null;
+
+        //If it's not an edit message, just retrieve animal and set animal, otherwise don't setup
+        //so the updated animal details will be persisted
+        if($isEditMessage) {
+            //denormalize the content to an object
+            $animal = $declareBirthContentArray->get(Constant::ANIMAL_NAMESPACE);
+            $animalObject = null;
+
+            //Find registered tag, through given ulnCountryCode & ulnNumber, so we can assign the tag to this animal
+            $tag = $this->entityGetter->retrieveTag($animal[Constant::ULN_COUNTRY_CODE_NAMESPACE], $animal[Constant::ULN_NUMBER_NAMESPACE]);
+
+            if($tag == null){
+                return null;
+            }
+
+            //Create animal-type based on gender
+            if(array_key_exists(Constant::GENDER_NAMESPACE, $animal)) {
+                switch($animal[Constant::GENDER_NAMESPACE]){
+                    case AnimalType::FEMALE:
+                        $animalObject = new Ewe();
+                        break;
+                    case AnimalType::MALE:
+                        $animalObject = new Ram();
+                        break;
+                    default:
+                        $animalObject = new Neuter();
+                        break;
+                }
+
+            } else {
+                $animalObject = new Neuter();
+            }
+
+            //Assign tag to this animal
+            $animalObject->setAssignedTag($tag);
+
+            //Convert to array pass animal into declareBirthContentArray
+            $animalJson = $this->serializeToJSON($animalObject);
+            $animalContentArray = json_decode($animalJson, true);
+            $declareBirthContentArray->set(Constant::ANIMAL_NAMESPACE, $animalContentArray);
+            $json = $this->serializeToJSON($declareBirthContentArray->toArray());
+            $declareBirthRequest = $this->deserializeToObject($json, RequestType::DECLARE_BIRTH_ENTITY);
+
+            return $declareBirthRequest;
+        }
+
         //Retrieve animal entity
-        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareBirthContentArray['animal']);
+        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareBirthContentArray);
 
         //Add retrieved animal properties including type to initial animalContentArray
-        $declareBirthContentArray['animal'] = $this->returnAnimalArray($retrievedAnimal);
+        $declareBirthContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
 
         //denormalize the content to an object
         $json = $this->serializeToJSON($declareBirthContentArray);
@@ -171,13 +213,13 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareDepart(ArrayCollection $declareDepartContentArray)
+    function parseDeclareDepart(ArrayCollection $declareDepartContentArray, $isEditMessage)
     {
         //Retrieve animal entity
-        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareDepartContentArray['animal']);
+        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareDepartContentArray);
 
         //Add retrieved animal properties including type to initial animalContentArray
-        $declareDepartContentArray['animal'] =  $this->returnAnimalArray($retrievedAnimal);
+        $declareDepartContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
 
         //denormalize the content to an object
         $json = $this->serializeToJSON($declareDepartContentArray);
@@ -192,7 +234,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareEartagsTransfer(ArrayCollection $contentArray)
+    function parseDeclareEartagsTransfer(ArrayCollection $contentArray, $isEditMessage)
     {
         // TODO: Implement parseDeclareEartagsTransfer() method.
         $declareEartagsTransfer = null;
@@ -203,7 +245,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareLoss(ArrayCollection $contentArray)
+    function parseDeclareLoss(ArrayCollection $contentArray, $isEditMessage)
     {
         // TODO: Implement parseDeclareLoss() method.
         $declareLoss = null;
@@ -214,7 +256,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareExport(ArrayCollection $contentArray)
+    function parseDeclareExport(ArrayCollection $contentArray, $isEditMessage)
     {
         // TODO: Implement parseDeclareExport() method.
         $declareExport = null;
@@ -225,13 +267,13 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareImport(ArrayCollection $declareImportContentArray)
+    function parseDeclareImport(ArrayCollection $declareImportContentArray, $isEditMessage)
     {
         //Retrieve animal entity
-        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareImportContentArray['animal']);
+        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareImportContentArray);
 
         //Add retrieved animal properties including type to initial animalContentArray
-        $declareImportContentArray['animal'] =  $this->returnAnimalArray($retrievedAnimal);
+        $declareImportContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
 
         //denormalize the content to an object
         $json = $this->serializeToJSON($declareImportContentArray);
@@ -246,7 +288,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseRetrieveEartags(ArrayCollection $contentArray)
+    function parseRetrieveEartags(ArrayCollection $contentArray, $isEditMessage)
     {
         // TODO: Implement parseRetrieveEartags() method.
         $retrieveEartags = null;
@@ -257,7 +299,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseRevokeDeclaration(ArrayCollection $contentArray)
+    function parseRevokeDeclaration(ArrayCollection $contentArray, $isEditMessage)
     {
         // TODO: Implement parseRevokeDeclaration() method.
         $revokeDeclaration = null;

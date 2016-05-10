@@ -120,7 +120,18 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function createArrival(Request $request)
   {
-    //Convert front-end message into an array
+    $validityCheckUlnOrPedigiree= $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
+    }
+
     //Get content to array
     $content = $this->getContentAsArray($request);
 
@@ -159,42 +170,29 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
    * @Method("PUT")
    */
-  public function editArrival(Request $request, $Id) {
+  public function updateArrival(Request $request, $Id) {
+    $validityCheckUlnOrPedigiree = $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
+    }
+
     //Convert the array into an object and add the mandatory values retrieved from the database
     $declareArrivalUpdate = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY,
       $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
-    $entityManager = $this->getDoctrine()
-      ->getManager()
-      ->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
-    $declareArrival = $entityManager->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
+    $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
+    $declareArrival = $entityManager->updateDeclareArrivalMessage($declareArrivalUpdate, $Id);
 
     if($declareArrival == null) {
       return new JsonResponse(array("message"=>"No DeclareArrival found with request_id:" . $Id), 204);
     }
-
-
-    if ($declareArrivalUpdate->getAnimal() != null) {
-      $declareArrival->setAnimal($declareArrivalUpdate->getAnimal());
-    }
-
-    if ($declareArrivalUpdate->getArrivalDate() != null) {
-      $declareArrival->setArrivalDate($declareArrivalUpdate->getArrivalDate());
-    }
-
-    if ($declareArrivalUpdate->getLocation() != null) {
-      $declareArrival->setLocation($declareArrivalUpdate->getLocation());
-    }
-
-    if ($declareArrivalUpdate->getImportAnimal() != null) {
-      $declareArrival->setImportAnimal($declareArrivalUpdate->getImportAnimal());
-    }
-
-    if($declareArrivalUpdate->getUbnPreviousOwner() != null) {
-      $declareArrival->setUbnPreviousOwner($declareArrivalUpdate->getUbnPreviousOwner());
-    }
-
-    $declareArrival = $entityManager->update($declareArrival);
 
     return new JsonResponse($declareArrival, 200);
   }

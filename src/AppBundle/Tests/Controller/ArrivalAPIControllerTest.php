@@ -2,6 +2,7 @@
 
 namespace AppBundle\Tests\Controller;
 
+use AppBundle\DataFixtures\ORM\MockedTags;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedAnimal;
@@ -66,8 +67,10 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $this->client = parent::createClient();
 
     //Load fixture class
-    $fixtures = array('AppBundle\DataFixtures\ORM\MockedClient',
-      'AppBundle\DataFixtures\ORM\MockedAnimal');
+    $fixtures = array(
+      'AppBundle\DataFixtures\ORM\MockedClient',
+      'AppBundle\DataFixtures\ORM\MockedAnimal',
+      'AppBundle\DataFixtures\ORM\MockedTags');
     $this->loadFixtures($fixtures);
 
     //Get mocked Client
@@ -151,7 +154,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $declareArrival = new DeclareArrival();
     $declareArrival->setArrivalDate(new \DateTime());
     $declareArrival->setUbnPreviousOwner("123456");
-    $declareArrival->setImportAnimal(true);
+    $declareArrival->setIsImportAnimal(true);
     $declareArrival->setAnimal(self::$mockedChild);
 
     //Create json to be posted
@@ -166,6 +169,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
     );
 
     $response = $this->client->getResponse();
+
     $data = json_decode($response->getContent(), true);
 
     $this->assertEquals('open', $data['request_state']);
@@ -181,7 +185,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $declareArrival = new DeclareArrival();
     $declareArrival->setArrivalDate(new \DateTime());
     $declareArrival->setUbnPreviousOwner("123456");
-    $declareArrival->setImportAnimal(true);
+    $declareArrival->setIsImportAnimal(true);
     $declareArrival->setAnimal(self::$mockedChild);
 
     //Create json to be posted
@@ -206,7 +210,6 @@ class ArrivalAPIControllerTest extends WebTestCase {
     //Update value
     $declareArrivalUpdated = $declareArrival;
     $declareArrivalUpdated->setUbnPreviousOwner("999991");
-    $declareArrivalUpdated->getAnimal()->setUlnNumber('123131');
 
     //Create json to be putted
     $declareArrivalUpdatedJson = self::$serializer->serializeToJSON($declareArrivalUpdated);
@@ -224,9 +227,9 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $updatedData = json_decode($updatedResponse, true);
 
     $this->assertEquals($declareArrivalUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
-    $this->assertEquals($declareArrival->getImportAnimal(), $updatedData['import_animal']);
+    $this->assertEquals($declareArrival->getIsImportAnimal(), $updatedData['is_import_animal']);
   }
-  
+
   public function tearDown() {
     parent::tearDown();
   }

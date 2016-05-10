@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\AnimalType;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -42,8 +43,9 @@ class APIController extends Controller implements APIControllerInterface
    */
   private $entityGetter;
 
-
-
+  /**
+   * @return \AppBundle\Service\EntityGetter
+   */
   protected function getEntityGetter()
   {
     if($this->entityGetter == null){
@@ -54,7 +56,7 @@ class APIController extends Controller implements APIControllerInterface
   }
 
   /**
-   * @return
+   * @return \AppBundle\Service\IRSerializer
    */
   protected function getSerializer()
   {
@@ -65,6 +67,9 @@ class APIController extends Controller implements APIControllerInterface
     return $this->serializer;
   }
 
+  /**
+   * @return RequestMessageBuilder
+   */
   protected function getRequestMessageBuilder()
   {
     if($this->requestMessageBuilder == null) {
@@ -87,8 +92,10 @@ class APIController extends Controller implements APIControllerInterface
     return $this->queueService;
   }
 
-
-
+  /**
+   * @param Request $request
+   * @return ArrayCollection
+   */
   protected function getContentAsArray(Request $request)
   {
     $content = $request->getContent();
@@ -100,6 +107,10 @@ class APIController extends Controller implements APIControllerInterface
     return new ArrayCollection(json_decode($content, true));
   }
 
+  /**
+   * @param Request $request
+   * @return JsonResponse|array|string
+   */
   public function getToken(Request $request)
   {
     //Get auth header to read token
@@ -110,6 +121,10 @@ class APIController extends Controller implements APIControllerInterface
     return $request->headers->get('AccessToken');
   }
 
+  /**
+   * @param $request
+   * @return JsonResponse|\AppBundle\Entity\Person|null|object
+   */
   public function isTokenValid($request)
   {
     $token = $this->getToken($request);
@@ -124,14 +139,43 @@ class APIController extends Controller implements APIControllerInterface
     return $person;
   }
 
-  protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user)
+  /**
+   * @param $messageClassNameSpace
+   * @param ArrayCollection $contentArray
+   * @param $user
+   * @return mixed|null
+   * @throws \Exception
+   */
+  protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user)
   {
+    $isEditMessage = true;
     $messageObject = $this->getRequestMessageBuilder()
-        ->build($messageClassNameSpace, $contentArray, $user);
+      ->build($messageClassNameSpace, $contentArray, $user, $isEditMessage);
 
     return $messageObject;
   }
 
+  /**
+   * @param $messageClassNameSpace
+   * @param ArrayCollection $contentArray
+   * @param $user
+   * @return object
+   * @throws \Exception
+   */
+  protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user)
+  {
+    $isEditMessage = false;
+    $messageObject = $this->getRequestMessageBuilder()
+        ->build($messageClassNameSpace, $contentArray, $user, $isEditMessage);
+
+    return $messageObject;
+  }
+
+  /**
+   * @param $messageObject
+   * @param $messageClassNameSpace
+   * @return mixed
+   */
   public function persist($messageObject, $messageClassNameSpace)
   {
     //Set the string values
@@ -143,6 +187,12 @@ class APIController extends Controller implements APIControllerInterface
     return $messageObject;
   }
 
+  /**
+   * @param $messageObject
+   * @param $messageClassNameSpace
+   * @param $requestTypeNameSpace
+   * @return mixed
+   */
   //TODO It works but better reassess this function
   protected function sendMessageObjectToQueue($messageObject, $messageClassNameSpace, $requestTypeNameSpace) {
     $requestId = $messageObject->getRequestId();
@@ -177,6 +227,11 @@ class APIController extends Controller implements APIControllerInterface
     return new RedirectResponse('/api/v1/doc');
   }
 
+  /**
+   * @param Request|null $request
+   * @param null $token
+   * @return \AppBundle\Entity\Person|null|object
+   */
   public function getAuthenticatedUser(Request $request= null, $token = null)
   {
     if($token == null) {
@@ -185,6 +240,112 @@ class APIController extends Controller implements APIControllerInterface
     $em = $this->getDoctrine()->getEntityManager();
 
     return $em->getRepository('AppBundle:Person')->findOneBy(array("accessToken" => $token));
+  }
+
+  public function isUlnOrPedigreeCodeValid(Request $request, $Id = null)
+  {
+    $ulnCountryCode = null;
+    $pedigreeCountryCode = null;
+    $ulnCode = null;
+    $pedigreeCode = null;
+    $tag = null;
+    $animal = null;
+
+    //First check if supplied ulnNumber & ulnCountryCode exists by checking if a Tag exists
+    $tagRepository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY);
+
+    //This repository class is used to verify if a pedigree code is valid
+    $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+
+
+    if($Id != null) {
+      return $this->verifyUlnOrPedigreeCode($Id);
+
+    } else {
+      $contentArray = $this->getContentAsArray($request);
+      $array = $contentArray->toArray();
+
+      $objectsToBeVerified = array();
+      array_push($objectsToBeVerified, Constant::ANIMAL_NAMESPACE,
+         Constant::CHILDREN_NAMESPACE, Constant::FATHER_NAMESPACE, Constant::MOTHER_NAMESPACE);
+
+      //All objects containing a uln or pedigree code must have that code verified
+      foreach ($objectsToBeVerified as $objectToBeVerified) {
+
+        if (array_key_exists($objectToBeVerified, $array)) {
+          $animalContentArray = $contentArray->get($objectToBeVerified);
+
+          if (array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalContentArray)) {
+            $ulnCode = $animalContentArray[Constant::ULN_NUMBER_NAMESPACE];
+            $ulnCountryCode = $animalContentArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
+
+            $tag = $tagRepository->findByUlnNumberAndCountryCode($ulnCountryCode, $ulnCode);
+
+            if ($tag == null) {
+              return array("animalKind" => $objectToBeVerified,
+                  "keyType" => Constant::ULN_NAMESPACE,
+                  "isValid" => false);
+            }
+          }
+          else {
+            if (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalContentArray)) {
+              $pedigreeCode = $animalContentArray[Constant::PEDIGREE_NUMBER_NAMESPACE];
+              $pedigreeCountryCode = $animalContentArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
+            }
+
+            $animal = $animalRepository->findByCountryCodeAndPedigree($pedigreeCountryCode, $pedigreeCode);
+
+            if($animal == null){
+              return array("animalKind" => $objectToBeVerified,
+                  "keyType" => Constant::PEDIGREE_NAMESPACE,
+                  "isValid" => false);
+            }
+          }
+        }
+      }
+      $keyType = Constant::ULN_NAMESPACE . " and/or " . Constant::PEDIGREE_NAMESPACE;
+
+      return array("animalKind" => "All objects",
+            "keyType" => $keyType,
+            "isValid" => true);
+    }
+
+  }
+
+  private function verifyUlnOrPedigreeCode($Id)
+  {
+    $isValid = false;
+    $keyType = Constant::ULN_NAMESPACE . " and/or " . Constant::PEDIGREE_NAMESPACE;
+
+    //First check if supplied ulnNumber & ulnCountryCode exists by checking if a Tag exists
+    $tagRepository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY);
+
+    //Strip countryCode
+    $countryCode = mb_substr($Id, 0, 2, 'utf-8');
+
+    //Strip ulnCode or pedigreeCode
+    $ulnOrPedigreeCode = mb_substr($Id, 2, strlen($Id));
+
+    $tag = $tagRepository->findByUlnNumberAndCountryCode($countryCode, $ulnOrPedigreeCode);
+
+    if ($tag != null) {
+      $isValid = true;
+      $keyType = Constant::ULN_NAMESPACE;
+    } else {
+      //Verify if id is a valid pedigreenumber
+
+      $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+      $animal = $animalRepository->findByCountryCodeAndPedigree($countryCode, $ulnOrPedigreeCode);
+
+      if ($animal != null) {
+        $isValid = true;
+        $keyType = Constant::PEDIGREE_NAMESPACE;
+      }
+    }
+
+    return array("animalKind" => "Id",
+        "keyType" => $keyType,
+        "isValid" => $isValid);
   }
 
   /**
@@ -224,4 +385,7 @@ class APIController extends Controller implements APIControllerInterface
 
     return new JsonResponse($response, 401);
   }
+
+
+
 }

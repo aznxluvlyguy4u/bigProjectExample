@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\AnimalType;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -32,7 +33,6 @@ class Neuter extends Animal
      */
     private $objectType;
 
-
     /**
      * Neuter constructor.
      */
@@ -41,259 +41,34 @@ class Neuter extends Animal
         parent::__construct();
 
         $this->objectType = "Neuter";
+        $this->setAnimalType(AnimalType::sheep);
 
         //Create children array
         $this->children = new ArrayCollection();
     }
 
     /**
-     * Get id
+     * Set objectType
      *
-     * @return integer
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * Set pedigreeCountryCode
-     *
-     * @param string $pedigreeCountryCode
+     * @param string $objectType
      *
      * @return Neuter
      */
-    public function setPedigreeCountryCode($pedigreeCountryCode)
+    public function setObjectType($objectType)
     {
-        $this->pedigreeCountryCode = $pedigreeCountryCode;
+        $this->objectType = $objectType;
 
         return $this;
     }
 
     /**
-     * Get pedigreeCountryCode
+     * Get objectType
      *
      * @return string
      */
-    public function getPedigreeCountryCode()
+    public function getObjectType()
     {
-        return $this->pedigreeCountryCode;
-    }
-
-    /**
-     * Set pedigreeNumber
-     *
-     * @param string $pedigreeNumber
-     *
-     * @return Neuter
-     */
-    public function setPedigreeNumber($pedigreeNumber)
-    {
-        $this->pedigreeNumber = $pedigreeNumber;
-
-        return $this;
-    }
-
-    /**
-     * Get pedigreeNumber
-     *
-     * @return string
-     */
-    public function getPedigreeNumber()
-    {
-        return $this->pedigreeNumber;
-    }
-
-    /**
-     * Set ulnCountryCode
-     *
-     * @param string $ulnCountryCode
-     *
-     * @return Neuter
-     */
-    public function setUlnCountryCode($ulnCountryCode)
-    {
-        $this->ulnCountryCode = $ulnCountryCode;
-
-        return $this;
-    }
-
-    /**
-     * Get ulnCountryCode
-     *
-     * @return string
-     */
-    public function getUlnCountryCode()
-    {
-        return $this->ulnCountryCode;
-    }
-
-    /**
-     * Set ulnNumber
-     *
-     * @param string $ulnNumber
-     *
-     * @return Neuter
-     */
-    public function setUlnNumber($ulnNumber)
-    {
-        $this->ulnNumber = $ulnNumber;
-
-        return $this;
-    }
-
-    /**
-     * Get ulnNumber
-     *
-     * @return string
-     */
-    public function getUlnNumber()
-    {
-        return $this->ulnNumber;
-    }
-
-    /**
-     * Set name
-     *
-     * @param string $name
-     *
-     * @return Neuter
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
-
-        return $this;
-    }
-
-    /**
-     * Get name
-     *
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
-
-    /**
-     * Set dateOfBirth
-     *
-     * @param \DateTime $dateOfBirth
-     *
-     * @return Neuter
-     */
-    public function setDateOfBirth($dateOfBirth)
-    {
-        $this->dateOfBirth = $dateOfBirth;
-
-        return $this;
-    }
-
-    /**
-     * Get dateOfBirth
-     *
-     * @return \DateTime
-     */
-    public function getDateOfBirth()
-    {
-        return $this->dateOfBirth;
-    }
-
-    /**
-     * Set dateOfDeath
-     *
-     * @param \DateTime $dateOfDeath
-     *
-     * @return Neuter
-     */
-    public function setDateOfDeath($dateOfDeath)
-    {
-        $this->dateOfDeath = $dateOfDeath;
-
-        return $this;
-    }
-
-    /**
-     * Get dateOfDeath
-     *
-     * @return \DateTime
-     */
-    public function getDateOfDeath()
-    {
-        return $this->dateOfDeath;
-    }
-
-    /**
-     * Set gender
-     *
-     * @param string $gender
-     *
-     * @return Neuter
-     */
-    public function setGender($gender)
-    {
-        $this->gender = $gender;
-
-        return $this;
-    }
-
-    /**
-     * Get gender
-     *
-     * @return string
-     */
-    public function getGender()
-    {
-        return $this->gender;
-    }
-
-    /**
-     * Set animalType
-     *
-     * @param integer $animalType
-     *
-     * @return Neuter
-     */
-    public function setAnimalType($animalType)
-    {
-        $this->animalType = $animalType;
-
-        return $this;
-    }
-
-    /**
-     * Get animalType
-     *
-     * @return integer
-     */
-    public function getAnimalType()
-    {
-        return $this->animalType;
-    }
-
-    /**
-     * Set animalCategory
-     *
-     * @param integer $animalCategory
-     *
-     * @return Neuter
-     */
-    public function setAnimalCategory($animalCategory)
-    {
-        $this->animalCategory = $animalCategory;
-
-        return $this;
-    }
-
-    /**
-     * Get animalCategory
-     *
-     * @return integer
-     */
-    public function getAnimalCategory()
-    {
-        return $this->animalCategory;
+        return $this->objectType;
     }
 
     /**
@@ -331,179 +106,91 @@ class Neuter extends Animal
     }
 
     /**
-     * Set parentFather
+     * Set isAlive
      *
-     * @param \AppBundle\Entity\Ram $parentFather
+     * @param boolean $isAlive
      *
      * @return Neuter
      */
-    public function setParentFather(\AppBundle\Entity\Ram $parentFather = null)
+    public function setIsAlive($isAlive)
     {
-        $this->parentFather = $parentFather;
+        $this->isAlive = $isAlive;
 
         return $this;
     }
 
     /**
-     * Get parentFather
+     * Get isAlive
      *
-     * @return \AppBundle\Entity\Ram
+     * @return boolean
      */
-    public function getParentFather()
+    public function getIsAlive()
     {
-        return $this->parentFather;
+        return $this->isAlive;
     }
 
     /**
-     * Set parentMother
+     * Set birth
      *
-     * @param \AppBundle\Entity\Ewe $parentMother
+     * @param \AppBundle\Entity\DeclareBirth $birth
      *
      * @return Neuter
      */
-    public function setParentMother(\AppBundle\Entity\Ewe $parentMother = null)
+    public function setBirth(\AppBundle\Entity\DeclareBirth $birth = null)
     {
-        $this->parentMother = $parentMother;
+        $this->birth = $birth;
 
         return $this;
     }
 
     /**
-     * Get parentMother
+     * Get birth
      *
-     * @return \AppBundle\Entity\Ewe
+     * @return \AppBundle\Entity\DeclareBirth
      */
-    public function getParentMother()
+    public function getBirth()
     {
-        return $this->parentMother;
+        return $this->birth;
     }
 
     /**
-     * Add arrival
+     * Set ulnNumber
      *
-     * @param \AppBundle\Entity\DeclareArrival $arrival
+     * @param string $ulnNumber
      *
      * @return Neuter
      */
-    public function addArrival(\AppBundle\Entity\DeclareArrival $arrival)
+    public function setUlnNumber($ulnNumber)
     {
-        $this->arrivals[] = $arrival;
+        $this->ulnNumber = $ulnNumber;
 
         return $this;
     }
 
     /**
-     * Remove arrival
+     * Set ulnCountryCode
      *
-     * @param \AppBundle\Entity\DeclareArrival $arrival
-     */
-    public function removeArrival(\AppBundle\Entity\DeclareArrival $arrival)
-    {
-        $this->arrivals->removeElement($arrival);
-    }
-
-    /**
-     * Get arrivals
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getArrivals()
-    {
-        return $this->arrivals;
-    }
-
-    /**
-     * Set parentNeuter
-     *
-     * @param \AppBundle\Entity\Neuter $parentNeuter
+     * @param string $ulnCountryCode
      *
      * @return Neuter
      */
-    public function setParentNeuter(\AppBundle\Entity\Neuter $parentNeuter = null)
+    public function setUlnCountryCode($ulnCountryCode)
     {
-        $this->parentNeuter = $parentNeuter;
+        $this->ulnCountryCode = $ulnCountryCode;
 
         return $this;
     }
 
     /**
-     * Get parentNeuter
+     * Set animalOrderNumber
      *
-     * @return \AppBundle\Entity\Neuter
-     */
-    public function getParentNeuter()
-    {
-        return $this->parentNeuter;
-    }
-
-    /**
-     * Set objectType
-     *
-     * @param string $objectType
+     * @param string $animalOrderNumber
      *
      * @return Neuter
      */
-    public function setObjectType($objectType)
+    public function setAnimalOrderNumber($animalOrderNumber)
     {
-        $this->objectType = $objectType;
-
-        return $this;
-    }
-
-    /**
-     * Get objectType
-     *
-     * @return string
-     */
-    public function getObjectType()
-    {
-        return $this->objectType;
-    }
-
-    /**
-     * Add import
-     *
-     * @param \AppBundle\Entity\DeclareImport $import
-     *
-     * @return Neuter
-     */
-    public function addImport(\AppBundle\Entity\DeclareImport $import)
-    {
-        $this->imports[] = $import;
-
-        return $this;
-    }
-
-    /**
-     * Remove import
-     *
-     * @param \AppBundle\Entity\DeclareImport $import
-     */
-    public function removeImport(\AppBundle\Entity\DeclareImport $import)
-    {
-        $this->imports->removeElement($import);
-    }
-
-    /**
-     * Get imports
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getImports()
-    {
-        return $this->imports;
-    }
-
-    /**
-     * Add departure
-     *
-     * @param \AppBundle\Entity\DeclareDepart $departure
-     *
-     * @return Neuter
-     */
-    public function addDeparture(\AppBundle\Entity\DeclareDepart $departure)
-    {
-        $this->departures[] = $departure;
+        $this->animalOrderNumber = $animalOrderNumber;
 
         return $this;
     }

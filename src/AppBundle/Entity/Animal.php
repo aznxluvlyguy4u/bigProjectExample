@@ -43,6 +43,7 @@ abstract class Animal
      * @Assert\Regex("/([A-Z]{2})\b/")
      * @Assert\Length(max = 2)
      * @JMS\Type("string")
+     * @Expose
      */
     protected $pedigreeCountryCode;
 
@@ -54,44 +55,16 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 11)
      * @JMS\Type("string")
+     * @Expose
      */
     protected $pedigreeNumber;
 
     /**
      * @var string
      *
-     * Country code as defined by ISO 3166-1:
-     * {https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2}
-     *
-     * Example: NL(Netherlands), IE(Ireland), DK(Denmark), SE(Sweden)
-     *
-     * @ORM\Column(type="string")
-     * @Assert\Regex("/([A-Z]{2})\b/")
-     * @Assert\Length(max = 2)
-     * @Assert\NotBlank
-     * @JMS\Type("string")
-     * @Expose
-     */
-    protected $ulnCountryCode;
-
-    /**
-     * @var string
-     *
-     * Example: 000000012345
-     *
-     * @ORM\Column(type="string")
-     * @Assert\Regex("/([0-9]{12})\b/")
-     * @Assert\NotBlank
-     * @JMS\Type("string")
-     * @Expose
-     */
-    protected $ulnNumber;
-
-    /**
-     * @var string
-     *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @Expose
      */
     protected $name;
 
@@ -101,6 +74,7 @@ abstract class Animal
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
+     * @Expose
      */
     protected $dateOfBirth;
 
@@ -110,6 +84,7 @@ abstract class Animal
      * @ORM\Column(type="date", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
+     * @Expose
      */
     protected $dateOfDeath;
 
@@ -118,6 +93,7 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @Expose
      */
     protected $gender;
 
@@ -177,17 +153,11 @@ abstract class Animal
     protected $animalCategory;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
-     * @Expose
-     */
-    protected $animalWorkingNumber;
-
-    /**
      * @var string
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @Expose
      */
     protected $animalHairColour;
 
@@ -213,27 +183,75 @@ abstract class Animal
     protected $imports;
 
     /**
-     * @var array
+     * @var DeclareBirth
+     *
      * @JMS\Type("AppBundle\Entity\DeclareBirth")
-     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="animal", cascade={"persist"})
+     * @ORM\OneToOne(targetEntity="DeclareBirth", mappedBy="animal")
+     * @Expose
      */
-    protected $births;
+    protected $birth;
 
     /**
-     * @var array
-     * @JMS\Type("array")
+     * @var Tag
+     *
+     * @ORM\OneToOne(targetEntity="Tag", mappedBy="animal", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Tag")
      */
-    protected $children;
+    protected $assignedTag;
+
+    /**
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="Location", inversedBy="animals", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Location")
+     */
+    private $location;
+
+    /**
+     * @var boolean
+     * @Assert\NotBlank
+     * @ORM\Column(type="boolean")
+     * @JMS\Type("boolean")
+     * @Expose
+     */
+    protected $isAlive;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
+    protected $ulnNumber;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
+    protected $ulnCountryCode;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
+    protected $animalOrderNumber;
 
     /**
      * Animal constructor.
      */
     public function __construct() {
         $this->arrivals = new ArrayCollection();
-        $this->births = new ArrayCollection();
         $this->children = new ArrayCollection();
         $this->departures = new ArrayCollection();
         $this->imports = new ArrayCollection();
+        $this->isAlive = true;
+
+        $this->ulnCountryCode = '';
+        $this->ulnNumber = '';
+        $this->animalOrderNumber = '';
     }
 
     /**
@@ -294,19 +312,6 @@ abstract class Animal
         return $this->pedigreeNumber;
     }
 
-    /**
-     * Set ulnCountryCode
-     *
-     * @param string $ulnCountryCode
-     *
-     * @return Animal
-     */
-    public function setUlnCountryCode($ulnCountryCode)
-    {
-        $this->ulnCountryCode = $ulnCountryCode;
-
-        return $this;
-    }
 
     /**
      * Get ulnCountryCode
@@ -315,21 +320,11 @@ abstract class Animal
      */
     public function getUlnCountryCode()
     {
-        return $this->ulnCountryCode;
-    }
+        if($this->getAssignedTag() != null) {
+            return $this->getAssignedTag()->getUlnCountryCode();
+        }
 
-    /**
-     * Set ulnNumber
-     *
-     * @param string $ulnNumber
-     *
-     * @return Animal
-     */
-    public function setUlnNumber($ulnNumber)
-    {
-        $this->ulnNumber = $ulnNumber;
-
-        return $this;
+        return null;
     }
 
     /**
@@ -339,7 +334,53 @@ abstract class Animal
      */
     public function getUlnNumber()
     {
-        return $this->ulnNumber;
+        if($this->getAssignedTag() != null) {
+            return $this->getAssignedTag()->getUlnNumber();
+        }
+
+        return null;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAnimalOrderNumber()
+    {
+        if($this->getAssignedTag() != null){
+            $this->getAssignedTag()->getAnimalOrderNumber();
+        }
+
+        return null;
+    }
+
+    /**
+     * Set assignedTag
+     *
+     * @param \AppBundle\Entity\Tag $assignedTag
+     *
+     * @return Animal
+     */
+    public function setAssignedTag(\AppBundle\Entity\Tag $assignedTag = null)
+    {
+        if($assignedTag != null){
+            $this->assignedTag = $assignedTag;
+            $assignedTag->setAnimal($this);
+            $this->setUlnNumber($assignedTag->getUlnNumber());
+            $this->setUlnCountryCode($assignedTag->getUlnCountryCode());
+            $this->setAnimalOrderNumber($assignedTag->getAnimalOrderNumber());
+        }
+
+        return $this;
+    }
+
+    /**
+     * Get assignedTag
+     *
+     * @return \AppBundle\Entity\Tag
+     */
+    public function getAssignedTag()
+    {
+        return $this->assignedTag;
     }
 
     /**
@@ -487,54 +528,6 @@ abstract class Animal
     }
 
     /**
-     * Set parentFather
-     *
-     * @param \AppBundle\Entity\Ram $parentFather
-     *
-     * @return Animal
-     */
-    public function setParentFather(\AppBundle\Entity\Ram $parentFather = null)
-    {
-        $this->parentFather = $parentFather;
-
-        return $this;
-    }
-
-    /**
-     * Get parentFather
-     *
-     * @return \AppBundle\Entity\Ram
-     */
-    public function getParentFather()
-    {
-        return $this->parentFather;
-    }
-
-    /**
-     * Set parentMother
-     *
-     * @param \AppBundle\Entity\Ewe $parentMother
-     *
-     * @return Animal
-     */
-    public function setParentMother(\AppBundle\Entity\Ewe $parentMother = null)
-    {
-        $this->parentMother = $parentMother;
-
-        return $this;
-    }
-
-    /**
-     * Get parentMother
-     *
-     * @return \AppBundle\Entity\Ewe
-     */
-    public function getParentMother()
-    {
-        return $this->parentMother;
-    }
-
-    /**
      * Add arrival
      *
      * @param \AppBundle\Entity\DeclareArrival $arrival
@@ -556,40 +549,6 @@ abstract class Animal
     public function removeArrival(\AppBundle\Entity\DeclareArrival $arrival)
     {
         $this->arrivals->removeElement($arrival);
-    }
-
-    /**
-     * Get births
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getBirths()
-    {
-        return $this->births;
-    }
-
-    /**
-     * Add birth
-     *
-     * @param \AppBundle\Entity\DeclareBirth $birth
-     *
-     * @return Animal
-     */
-    public function addBirth(\AppBundle\Entity\DeclareBirth $birth)
-    {
-        $this->births[] = $birth;
-
-        return $this;
-    }
-
-    /**
-     * Remove birth
-     *
-     * @param \AppBundle\Entity\DeclareBirth $birth
-     */
-    public function removeBirth(\AppBundle\Entity\DeclareBirth $birth)
-    {
-        $this->births->removeElement($birth);
     }
 
     /**
@@ -697,26 +656,6 @@ abstract class Animal
     /**
      * @return string
      */
-    public function getAnimalWorkingNumber()
-    {
-        return $this->animalWorkingNumber;
-    }
-
-    /**
-     * @param string $animalWorkingNumber
-     *
-     * @return Animal
-     */
-    public function setAnimalWorkingNumber($animalWorkingNumber)
-    {
-        $this->animalWorkingNumber = $animalWorkingNumber;
-
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
     public function getAnimalHairColour()
     {
         return $this->animalHairColour;
@@ -728,6 +667,170 @@ abstract class Animal
     public function setAnimalHairColour($animalHairColour)
     {
         $this->animalHairColour = $animalHairColour;
+    }
+
+    /**
+     * Set parentFather
+     *
+     * @param \AppBundle\Entity\Ram $parentFather
+     *
+     * @return Animal
+     */
+    public function setParentFather(\AppBundle\Entity\Ram $parentFather = null)
+    {
+        $this->parentFather = $parentFather;
+        //$parentFather->getChildren()->add($this);
+
+        return $this;
+    }
+
+    /**
+     * Get parentFather
+     *
+     * @return \AppBundle\Entity\Ram
+     */
+    public function getParentFather()
+    {
+        return $this->parentFather;
+    }
+
+    /**
+     * Set parentMother
+     *
+     * @param \AppBundle\Entity\Ewe $parentMother
+     *
+     * @return Animal
+     */
+    public function setParentMother(\AppBundle\Entity\Ewe $parentMother = null)
+    {
+        $this->parentMother = $parentMother;
+        //$parentMother->getChildren()->add($this);
+
+        return $this;
+    }
+
+    /**
+     * Get parentMother
+     *
+     * @return \AppBundle\Entity\Ewe
+     */
+    public function getParentMother()
+    {
+        return $this->parentMother;
+    }
+    
+    /**
+     * Set location
+     *
+     * @param \AppBundle\Entity\Location $location
+     *
+     * @return Animal
+     */
+    public function setLocation(\AppBundle\Entity\Location $location = null)
+    {
+        $this->location = $location;
+
+        return $this;
+    }
+
+    /**
+     * Get location
+     *
+     * @return \AppBundle\Entity\Location
+     */
+    public function getLocation()
+    {
+        return $this->location;
+    }
+
+    /**
+     * Set isAlive
+     *
+     * @param boolean $isAlive
+     *
+     * @return Animal
+     */
+    public function setIsAlive($isAlive)
+    {
+        $this->isAlive = $isAlive;
+
+        return $this;
+    }
+
+    /**
+     * Get isAlive
+     *
+     * @return boolean
+     */
+    public function getIsAlive()
+    {
+        return $this->isAlive;
+    }
+
+    /**
+     * Set birth
+     *
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     *
+     * @return Animal
+     */
+    public function setBirth(\AppBundle\Entity\DeclareBirth $birth = null)
+    {
+        $this->birth = $birth;
+
+        return $this;
+    }
+
+    /**
+     * Get birth
+     *
+     * @return \AppBundle\Entity\DeclareBirth
+     */
+    public function getBirth()
+    {
+        return $this->birth;
+    }
+
+    /**
+     * Set ulnNumber
+     *
+     * @param string $ulnNumber
+     *
+     * @return Animal
+     */
+    public function setUlnNumber($ulnNumber)
+    {
+        $this->ulnNumber = $ulnNumber;
+
+        return $this;
+    }
+
+    /**
+     * Set ulnCountryCode
+     *
+     * @param string $ulnCountryCode
+     *
+     * @return Animal
+     */
+    public function setUlnCountryCode($ulnCountryCode)
+    {
+        $this->ulnCountryCode = $ulnCountryCode;
+
+        return $this;
+    }
+
+    /**
+     * Set animalOrderNumber
+     *
+     * @param string $animalOrderNumber
+     *
+     * @return Animal
+     */
+    public function setAnimalOrderNumber($animalOrderNumber)
+    {
+        $this->animalOrderNumber = $animalOrderNumber;
+
+        return $this;
     }
 
     /**

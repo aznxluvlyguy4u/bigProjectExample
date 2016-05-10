@@ -122,6 +122,18 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    */
   public function createDepart(Request $request)
   {
+    $validityCheckUlnOrPedigiree= $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
+    }
+
     //Convert front-end message into an array
     //Get content to array
     $content = $this->getContentAsArray($request);
@@ -162,43 +174,30 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareDepartRepository")
    * @Method("PUT")
    */
-  public function editDepart(Request $request, $Id)
+  public function updateDepart(Request $request, $Id)
   {
+    $validityCheckUlnOrPedigiree= $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
+    }
+
     //Convert the array into an object and add the mandatory values retrieved from the database
     $declareDepartUpdate = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY,
         $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
-    $entityManager = $this->getDoctrine()
-        ->getManager()
-        ->getRepository(Constant::DECLARE_DEPART_REPOSITORY);
-    $declareDepart = $entityManager->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
+    $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_DEPART_REPOSITORY);
+    $declareDepart = $entityManager->updateDeclareDepartMessage($declareDepartUpdate, $Id);
 
     if($declareDepart == null) {
-      return new JsonResponse(array("message"=>"No DeclareDepart found with request_id: " . $Id), 204);
+      return new JsonResponse(array("message"=>"No DeclareDepart found with request_id:" . $Id), 204);
     }
-
-    
-    if ($declareDepartUpdate->getAnimal() != null) {
-      $declareDepart->setAnimal($declareDepartUpdate->getAnimal());
-    }
-
-    if ($declareDepartUpdate->getDepartDate() != null) {
-      $declareDepart->setDepartDate($declareDepartUpdate->getDepartDate());
-    }
-
-    if ($declareDepartUpdate->getLocation() != null) {
-      $declareDepart->setLocation($declareDepartUpdate->getLocation());
-    }
-
-    if ($declareDepartUpdate->getTransportationCode() != null) {
-      $declareDepart->setTransportationCode($declareDepartUpdate->getTransportationCode());
-    }
-
-    if($declareDepartUpdate->getUbnNewOwner() != null) {
-      $declareDepart->setUbnNewOwner($declareDepartUpdate->getUbnNewOwner());
-    }
-
-    $declareDepart = $entityManager->update($declareDepart);
 
     return new JsonResponse($declareDepart, 200);
   }  
