@@ -516,4 +516,28 @@ class Ram extends Animal
     {
         $this->departures->removeElement($departure);
     }
+
+    /**
+     * Set surrogateMother
+     *
+     * @param \AppBundle\Entity\Ewe $surrogateMother
+     *
+     * @return Ram
+     */
+    public function setSurrogateMother(\AppBundle\Entity\Ewe $surrogateMother = null)
+    {
+        $this->surrogateMother = $surrogateMother;
+
+        return $this;
+    }
+
+    /**
+     * Get surrogateMother
+     *
+     * @return \AppBundle\Entity\Ewe
+     */
+    public function getSurrogateMother()
+    {
+        return $this->surrogateMother;
+    }
 }

@@ -149,6 +149,15 @@ abstract class Animal
     protected $parentNeuter;
 
     /**
+     * @var Animal
+     *
+     * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="surrogateChildren", cascade={"persist"})
+     * @ORM\JoinColumn(name="surrogate_mother_id", referencedColumnName="id", onDelete="set null")
+     * @JMS\Type("AppBundle\Entity\Animal")
+     */
+    protected $surrogateMother;
+
+    /**
      * @var integer
      *
      * @ORM\Column(type="integer")
@@ -719,5 +728,29 @@ abstract class Animal
     public function setAnimalHairColour($animalHairColour)
     {
         $this->animalHairColour = $animalHairColour;
+    }
+
+    /**
+     * Set surrogateMother
+     *
+     * @param \AppBundle\Entity\Ewe $surrogateMother
+     *
+     * @return Animal
+     */
+    public function setSurrogateMother(\AppBundle\Entity\Ewe $surrogateMother = null)
+    {
+        $this->surrogateMother = $surrogateMother;
+
+        return $this;
+    }
+
+    /**
+     * Get surrogateMother
+     *
+     * @return \AppBundle\Entity\Ewe
+     */
+    public function getSurrogateMother()
+    {
+        return $this->surrogateMother;
     }
 }

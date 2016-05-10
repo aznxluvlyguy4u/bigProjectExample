@@ -24,6 +24,12 @@ class Ewe extends Animal
   protected $children;
 
     /**
+     * @ORM\OneToMany(targetEntity="Animal", mappedBy="surrogateMother")
+     * @JMS\Type("AppBundle\Entity\Ewe")
+     */
+    protected $surrogateChildren;
+
+    /**
      * @var string
      *
      * @Assert\NotBlank
@@ -516,5 +522,63 @@ class Ewe extends Animal
     public function removeDeparture(\AppBundle\Entity\DeclareDepart $departure)
     {
         $this->departures->removeElement($departure);
+    }
+
+    /**
+     * Add surrogateChild
+     *
+     * @param \AppBundle\Entity\Animal $surrogateChild
+     *
+     * @return Ewe
+     */
+    public function addSurrogateChild(\AppBundle\Entity\Animal $surrogateChild)
+    {
+        $this->surrogateChildren[] = $surrogateChild;
+
+        return $this;
+    }
+
+    /**
+     * Remove surrogateChild
+     *
+     * @param \AppBundle\Entity\Animal $surrogateChild
+     */
+    public function removeSurrogateChild(\AppBundle\Entity\Animal $surrogateChild)
+    {
+        $this->surrogateChildren->removeElement($surrogateChild);
+    }
+
+    /**
+     * Get surrogateChildren
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getSurrogateChildren()
+    {
+        return $this->surrogateChildren;
+    }
+
+    /**
+     * Set surrogateMother
+     *
+     * @param \AppBundle\Entity\Ewe $surrogateMother
+     *
+     * @return Ewe
+     */
+    public function setSurrogateMother(\AppBundle\Entity\Ewe $surrogateMother = null)
+    {
+        $this->surrogateMother = $surrogateMother;
+
+        return $this;
+    }
+
+    /**
+     * Get surrogateMother
+     *
+     * @return \AppBundle\Entity\Ewe
+     */
+    public function getSurrogateMother()
+    {
+        return $this->surrogateMother;
     }
 }
