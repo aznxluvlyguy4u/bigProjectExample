@@ -197,7 +197,6 @@ class DeclareLoss extends DeclareBase
      */
     public function setDateOfDeath($dateOfDeath)
     {
-        $this->getAnimal()->setDateOfDeath($dateOfDeath);
         $this->dateOfDeath = $dateOfDeath;
 
         return $this;
