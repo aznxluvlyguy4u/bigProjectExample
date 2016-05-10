@@ -22,65 +22,65 @@ interface IRSerializerInterface
      * @param ArrayCollection $contentArray
      * @return DeclarationDetail
      */
-    function parseDeclarationDetail(ArrayCollection $contentArray);
+    function parseDeclarationDetail(ArrayCollection $contentArray, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
      * @return DeclareAnimalFlag
      */
-    function parseDeclareAnimalFlag(ArrayCollection $contentArray);
+    function parseDeclareAnimalFlag(ArrayCollection $contentArray, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
      * @return DeclareArrival
      */
-    function parseDeclareArrival(ArrayCollection $contentArray);
+    function parseDeclareArrival(ArrayCollection $contentArray, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
      * @return DeclareBirth
      */
-    function parseDeclareBirth(ArrayCollection $contentArray);
+    function parseDeclareBirth(ArrayCollection $contentArray, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
      * @return DeclareDepart
      */
-    function parseDeclareDepart(ArrayCollection $contentArray);
+    function parseDeclareDepart(ArrayCollection $contentArray, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
      * @return DeclareEartagsTransfer
      */
-    function parseDeclareEartagsTransfer(ArrayCollection $contentArray);
+    function parseDeclareEartagsTransfer(ArrayCollection $contentArray, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
      * @return DeclareLoss
      */
-    function parseDeclareLoss(ArrayCollection $contentArray);
+    function parseDeclareLoss(ArrayCollection $contentArray, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
      * @return DeclareExport
      */
-    function parseDeclareExport(ArrayCollection $contentArray);
+    function parseDeclareExport(ArrayCollection $contentArray, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
      * @return DeclareImport
      */
-    function parseDeclareImport(ArrayCollection $contentArray);
+    function parseDeclareImport(ArrayCollection $contentArray, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
      * @return RetrieveEartags
      */
-    function parseRetrieveEartags(ArrayCollection $contentArray);
+    function parseRetrieveEartags(ArrayCollection $contentArray, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
      * @return RevokeDeclaration
      */
-    function parseRevokeDeclaration(ArrayCollection $contentArray);
+    function parseRevokeDeclaration(ArrayCollection $contentArray, $isEditMessage);
 }

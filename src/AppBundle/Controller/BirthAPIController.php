@@ -8,6 +8,7 @@ use AppBundle\Enumerator\RequestType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
@@ -120,10 +121,21 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    */
   public function createBirth(Request $request)
   {
-    //Convert front-end message into an array
+    $validityCheckUlnOrPedigree = $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
+    }
+
     //Get content to array
     $content = $this->getContentAsArray($request);
-
+//TODO Split up the children in the array into seperate messages
     //Convert the array into an object and add the mandatory values retrieved from the database
     $messageObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $content, $this->getAuthenticatedUser($request));
 
@@ -159,15 +171,19 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareBirthRepository")
    * @Method("PUT")
    */
-  public function editBirth(Request $request, $Id) {
+  public function updateBirth(Request $request, $Id) {
+
+    //Validate uln/pedigree code
+    if(!$this->isUlnOrPedigreeCodeValid($request)) {
+      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
+    }
+
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareBirthUpdate = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY,
+    $declareBirthUpdate = $this->buildEditMessageObject(RequestType::DECLARE_BIRTH_ENTITY,
         $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
-    $entityManager = $this->getDoctrine()
-        ->getEntityManager()
-        ->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
-    $declareBirth = $entityManager->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
+    $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
+    $declareBirth = $entityManager->updateDeclareBirthMessage($declareBirthUpdate, $Id);
 
     if($declareBirth == null) {
       return new JsonResponse(array("message"=>"No DeclareBirth found with request_id:" . $Id), 204);

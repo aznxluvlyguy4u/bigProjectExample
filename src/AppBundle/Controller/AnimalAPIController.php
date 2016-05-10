@@ -2,13 +2,11 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Entity\Ewe;
-use AppBundle\Entity\Ram;
+use AppBundle\Constant\Constant;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
-use AppBundle\Entity\Animal;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
@@ -16,11 +14,11 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 /**
  * @Route("/api/v1/animals")
  */
-class AnimalAPIController extends Controller
+class AnimalAPIController extends APIController
 {
 
   /**
-   * Retrieve a list of animals. Animal-types are: Sheep { Ram, Ewe, Neuter }
+   * Retrieve a list of animals. Animal-types are: {ram, ewe, neuter}
    *
    * @ApiDoc(
    *   requirements={
@@ -36,8 +34,15 @@ class AnimalAPIController extends Controller
    *        "name"="type",
    *        "dataType"="string",
    *        "required"=false,
-   *        "description"=" animal type to retrieve",
+   *        "description"=" animal-type to retrieve: ram, ewe, neuter",
    *        "format"="?type=animal-type"
+   *      },
+   *      {
+   *        "name"="alive",
+   *        "dataType"="string",
+   *        "required"=false,
+   *        "description"="animal life-state to retrieve: true, false",
+   *        "format"="?alive=live-state"
    *      },
    *   },
    *   resource = true,
@@ -49,11 +54,40 @@ class AnimalAPIController extends Controller
    * @Route("")
    * @Method("GET")
    */
-  public function getAllAnimalsByType(Request $request)
+  public function getAllAnimalsByTypeOrState(Request $request)
   {
-    $animals = $this->getDoctrine()->getRepository('AppBundle:Animal')->findAll();
+    $animals = null;
+    $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+    $locationRepository = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY);
 
-    return new JsonResponse($animals, 200);
+    //Get locations of user
+    $locations = $locationRepository->findByUser($this->getAuthenticatedUser($request));
+
+    //Get animals on each location belonging to user
+    foreach($locations as $location) {
+      $filterArray = array (Constant::LOCATION_NAMESPACE => $location->getId());
+
+      if (!$request->query->has(Constant::ANIMAL_TYPE_NAMESPACE) && !$request->query->has(Constant::ALIVE_NAMESPACE)) {
+        //select all animals, belonging to user with no filters
+        $animals = $animalRepository->findByTypeOrState(null, $filterArray);
+      } else if (!$request->query->has(Constant::ANIMAL_TYPE_NAMESPACE) && $request->query->has(Constant::ALIVE_NAMESPACE)) {
+        //filter animals by given isAlive state:{true, false}, belonging to user
+        $isAlive = $request->query->get(Constant::ALIVE_NAMESPACE);
+        $filterArray = array (Constant::LOCATION_NAMESPACE => $location->getId(), Constant::IS_ALIVE_NAMESPACE => ($isAlive === Constant::BOOLEAN_TRUE_NAMESPACE));
+        $animals = $animalRepository->findByTypeOrState(null, $filterArray);
+      } else if ($request->query->has(Constant::ANIMAL_TYPE_NAMESPACE) && !$request->query->has(Constant::ALIVE_NAMESPACE)) {
+        $animalType = $request->query->get(Constant::ANIMAL_TYPE_NAMESPACE);
+        $animals = $animalRepository->findByTypeOrState($animalType, $filterArray);
+      } else {
+        //filter animals by given animal-type: {ram, ewe, neuter} and isAlive state: {true, false}, belonging to user
+        $animalType = $request->query->get(Constant::ANIMAL_TYPE_NAMESPACE);
+        $isAlive = $request->query->get(Constant::ALIVE_NAMESPACE);
+        $filterArray = array (Constant::LOCATION_NAMESPACE => $location->getId(), Constant::IS_ALIVE_NAMESPACE => ($isAlive === Constant::BOOLEAN_TRUE_NAMESPACE));
+        $animals = $animalRepository->findByTypeOrState($animalType, $filterArray);
+      }
+    }
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $animals), 200);
   }
 
   /**
@@ -76,72 +110,13 @@ class AnimalAPIController extends Controller
    * @param $animal
    * @return JsonResponse
    * @Route("/{Id}")
-   * @ParamConverter("Id", class="AppBundle:Animal")
    * @Method("GET")
    */
-  public function getAnimalById(Request $request, $animal)
+  public function getAnimalById(Request $request, $Id)
   {
+    $repository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+    $animal = $repository->findByUlnOrPedigree($Id);
+
     return new JsonResponse($animal, 200);
-  }
-
-  /**
-   * Save a new animal.
-   *
-   * @ApiDoc(
-   *   requirements={
-   *     {
-   *       "name"="AccessToken",
-   *       "dataType"="string",
-   *       "requirement"="",
-   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-   *     }
-   *   },
-   *   resource = true,
-   *   description = "Save a new animal",
-   *   input = "AppBundle\Entity\Animal",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
-   * )
-   * @param Request $request the request object
-   * @return JsonResponse
-   * @Route("")
-   * @Method("POST")
-   */
-  public function postNewAnimal(Request $request)
-  {
-    return new JsonResponse("OK", 200);
-  }
-
-  /**
-   *
-   * Debug endpoint
-   *
-   * @Route("/test/debug")
-   * @Method("GET")
-   */
-  public function debugAPI(Request $request)
-  {
-    $father = new Ram();
-    $father->setUlnCountryCode("NL");
-    $father->setUlnNumber("00001");
-    $father->setAnimalType(1);
-    $father->setDateOfBirth(new \DateTime());
-
-    $mother = new Ewe();
-    $mother->setUlnCountryCode("NL");
-    $mother->setUlnNumber("00002");
-    $mother->setAnimalType(2);
-    $mother->setDateOfBirth(new \DateTime());
-
-    $child = new Ram();
-    $child->setUlnCountryCode("NL");
-    $child->setUlnNumber("1234566");
-    $child->setAnimalType(1);
-    $child->setDateOfBirth(new \DateTime());
-    $child->setParentFather($father);
-    $child->setParentMother($mother);
-
-    $child = $this->getDoctrine()->getRepository('AppBundle:Ram')->persist($child);
-
-    return new JsonResponse($child, 200);
   }
 }

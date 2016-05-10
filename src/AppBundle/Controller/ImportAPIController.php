@@ -115,6 +115,18 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    * @Method("POST")
    */
   public function createImport(Request $request) {
+    $validityCheckUlnOrPedigiree= $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
+    }
+
     //Convert front-end message into an array
     //Get content to array
     $content = $this->getContentAsArray($request);
@@ -154,41 +166,29 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareImportRepository")
    * @Method("PUT")
    */
-  public function editImport(Request $request, $Id) {
+  public function updateImport(Request $request, $Id) {
+    $validityCheckUlnOrPedigiree= $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
+    }
+
     //Convert the array into an object and add the mandatory values retrieved from the database
     $declareImportUpdate = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY,
       $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
-    $entityManager = $this->getDoctrine()
-      ->getEntityManager()
-      ->getRepository(Constant::DECLARE_IMPORT_REPOSITORY);
-    $declareImport = $entityManager->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
+    $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY);
+    $declareImport = $entityManager->updateDeclareImportMessage($declareImportUpdate, $Id);
 
     if($declareImport == null) {
       return new JsonResponse(array("message"=>"No DeclareImport found with request_id:" . $Id), 204);
     }
-
-    if ($declareImportUpdate->getAnimal() != null) {
-      $declareImport->setAnimal($declareImportUpdate->getAnimal());
-    }
-
-    if ($declareImportUpdate->getImportDate() != null) {
-      $declareImport->setImportDate($declareImportUpdate->getImportDate());
-    }
-
-    if ($declareImportUpdate->getLocation() != null) {
-      $declareImport->setLocation($declareImportUpdate->getLocation());
-    }
-
-    if ($declareImportUpdate->getImportAnimal() != null) {
-      $declareImport->setImportAnimal($declareImportUpdate->getImportAnimal());
-    }
-
-    if($declareImportUpdate->getUbnPreviousOwner() != null) {
-      $declareImport->setUbnPreviousOwner($declareImportUpdate->getUbnPreviousOwner());
-    }
-
-    $declareImport = $entityManager->update($declareImport);
 
     return new JsonResponse($declareImport, 200);
   }

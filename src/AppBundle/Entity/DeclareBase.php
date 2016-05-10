@@ -158,6 +158,7 @@ abstract class DeclareBase
     public function setRequestId($requestId)
     {
         $this->requestId = $requestId;
+        $this->setMessageId($requestId);
 
         return $this;
     }

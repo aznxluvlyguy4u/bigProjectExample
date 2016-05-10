@@ -21,7 +21,8 @@ class DeclareBirth extends DeclareBase
 {
     /**
      * @Assert\NotBlank
-     * @ORM\OneToOne(targetEntity="Animal", cascade={"persist"})
+     * @ORM\OneToOne(targetEntity="Animal", inversedBy="birth", cascade={"persist"})
+     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Animal")
      * @Expose
      */
@@ -33,14 +34,6 @@ class DeclareBirth extends DeclareBase
      * @JMS\Type("AppBundle\Entity\Location")
      */
     private $location;
-
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     * @Assert\Length(max = 10)
-     * @JMS\Type("string")
-     * @Expose
-     */
-    private $ubnPreviousOwner;
 
     /**
      * @ORM\Column(type="string", nullable=true)
@@ -67,14 +60,17 @@ class DeclareBirth extends DeclareBase
     private $lambar;
 
     /**
+     * 2016-04-01T22:00:48.131Z
+     *
      * @var DateTime
      *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime")
      * @Assert\Date
+     * @Assert\NotBlank
      * @JMS\Type("DateTime")
      * @Expose
      */
-    protected $dateOfBirth;
+    private $dateOfBirth;
 
     /**
      * @ORM\Column(type="string")
@@ -117,7 +113,6 @@ class DeclareBirth extends DeclareBase
      */
     private $transportationCode;
 
-
     /**
      * @ORM\OneToMany(targetEntity="DeclareBirthResponse", mappedBy="declareBirthRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_birth_request_message_id", referencedColumnName="id")
@@ -131,6 +126,7 @@ class DeclareBirth extends DeclareBase
      */
     public function __construct() {
         parent::__construct();
+        $this->setRequestState('open');
 
         //Create responses array
         $this->responses = new ArrayCollection();
@@ -204,7 +200,6 @@ class DeclareBirth extends DeclareBase
     public function setAnimal(\AppBundle\Entity\Animal $animal = null)
     {
         $this->animal = $animal;
-
         return $this;
     }
 
@@ -265,30 +260,6 @@ class DeclareBirth extends DeclareBase
     public function getLocation()
     {
         return $this->location;
-    }
-
-    /**
-     * Set ubnPreviousOwner
-     *
-     * @param string $ubnPreviousOwner
-     *
-     * @return DeclareBirth
-     */
-    public function setUbnPreviousOwner($ubnPreviousOwner)
-    {
-        $this->ubnPreviousOwner = $ubnPreviousOwner;
-
-        return $this;
-    }
-
-    /**
-     * Get ubnPreviousOwner
-     *
-     * @return string
-     */
-    public function getUbnPreviousOwner()
-    {
-        return $this->ubnPreviousOwner;
     }
 
     /**
@@ -418,4 +389,5 @@ class DeclareBirth extends DeclareBase
     {
         $this->transportationCode = $transportationCode;
     }
+
 }

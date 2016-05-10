@@ -2,11 +2,18 @@
 
 namespace AppBundle\DataFixtures\ORM;
 
+use AppBundle\Constant\Constant;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
 use AppBundle\Entity\Ram;
+use AppBundle\Entity\Tag;
 use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Client;
+use AppBundle\Entity\Company;
+use AppBundle\Entity\CompanyAddress;
+use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationAddress;
 use AppBundle\Enumerator\AnimalType;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -34,6 +41,11 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
   static private $mockedParentEwe;
 
   /**
+   * @var Ram
+   */
+  static private $mockedNewBornRam;
+
+  /**
    * Sets the container.
    *
    * @param ContainerInterface|null $container A ContainerInterface instance or null
@@ -52,28 +64,77 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
    * @param ObjectManager $manager
    */
   public function load(ObjectManager $manager) {
+
+    //Get mocked person
+    $personRepository = $manager->getRepository(Constant::CLIENT_REPOSITORY);
+    $persons = $personRepository->findAll();
+    $companies = null;
+    $company = 0;
+
+    if(sizeof($persons) > 0) {
+      $person = $persons[0];
+      $companies = $person->getCompanies();
+      if(sizeof($companies) > 0){
+        $company = $companies->get(0);
+      }
+    }
+
+    //Get persons company location to add animals to.
+    $location = $company->getLocations()->get(0);
+
+    //Get mocked tags, assign it to mocked animals
+    $tags = MockedTags::getMockedTags();
+    $tagListSize = sizeof($tags);
+
     self::$mockedParentRam = new Ram();
-    self::$mockedParentRam->setUlnCountryCode("NL");
-    self::$mockedParentRam->setUlnNumber("11111111");
+    self::$mockedParentRam->setIsAlive(true);
+    self::$mockedParentRam->setAssignedTag($tags->get(rand(1,$tagListSize)));
     self::$mockedParentRam->setAnimalType(AnimalType::sheep);
+    self::$mockedParentRam->setDateOfBirth(new \DateTime());
+    self::$mockedParentRam->setPedigreeNumber("35645");
+    self::$mockedParentRam->setPedigreeCountryCode("NL");
+    $location->addAnimal(self::$mockedParentRam);
 
     self::$mockedParentEwe = new Ewe();
-    self::$mockedParentEwe->setUlnCountryCode("NL");
-    self::$mockedParentEwe->setUlnNumber("222222222");
+    self::$mockedParentEwe->setIsAlive(true);
+    self::$mockedParentEwe->setAssignedTag($tags->get(rand(1,$tagListSize)));
     self::$mockedParentEwe->setAnimalType(AnimalType::sheep);
+    self::$mockedParentEwe->setDateOfBirth(new \DateTime());
+    self::$mockedParentEwe->setPedigreeNumber("79164");
+    self::$mockedParentEwe->setPedigreeCountryCode("NL");
+    $location->addAnimal(self::$mockedParentEwe);
+
+    self::$mockedNewBornRam = new Ram();
+    self::$mockedNewBornRam->setIsAlive(true);
+    self::$mockedNewBornRam->setAssignedTag($tags->get(rand(1,$tagListSize)));
+    self::$mockedNewBornRam->setAnimalType(AnimalType::sheep);
+    self::$mockedNewBornRam->setDateOfBirth(new \DateTime());
+    self::$mockedNewBornRam->setPedigreeNumber("65454");
+    self::$mockedNewBornRam->setPedigreeCountryCode("NL");
+    self::$mockedNewBornRam->setParentFather(self::$mockedParentRam);
+    self::$mockedNewBornRam->setParentMother(self::$mockedParentEwe);
+    $location->addAnimal(self::$mockedNewBornRam);
+
 
     self::$mockedRamWithParents = new Ram();
-    self::$mockedRamWithParents->setUlnCountryCode("UK");
-    self::$mockedRamWithParents->setUlnNumber("333333333");
+    self::$mockedRamWithParents->setIsAlive(true);
+
+    $tagToAssign = $tags->get(rand(1,$tagListSize));
+    $tagToAssign->setAnimal(self::$mockedRamWithParents);
+    self::$mockedRamWithParents->setAssignedTag($tagToAssign);
+
     self::$mockedRamWithParents->setPedigreeNumber("12345");
     self::$mockedRamWithParents->setPedigreeCountryCode("NL");
     self::$mockedRamWithParents->setAnimalType(AnimalType::sheep);
     self::$mockedRamWithParents->setParentFather(self::$mockedParentRam);
     self::$mockedRamWithParents->setParentMother(self::$mockedParentEwe);
+    $location->addAnimal(self::$mockedRamWithParents);
 
     //Persist mocked data
     $manager->persist(self::$mockedRamWithParents);
+    $manager->persist(self::$mockedNewBornRam);
     $manager->flush();
+
   }
 
   /**
@@ -84,7 +145,7 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
    */
   public function getOrder()
   {
-    return 2;
+    return 3;
   }
 
   /**
@@ -110,5 +171,12 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
   {
     return self::$mockedParentEwe;
   }
-  
+
+  /**
+   * @return Ram
+   */
+  public static function getMockedNewBornRam()
+  {
+    return self::$mockedNewBornRam;
+  }
 }
