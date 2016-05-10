@@ -121,12 +121,12 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    */
   public function createBirth(Request $request)
   {
-    $validityCheckUlnOrPedigiree = $this->isUlnOrPedigreeCodeValid($request);
-    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+    $validityCheckUlnOrPedigree = $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigree['isValid'];
 
     if(!$isValid) {
-      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
-      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $keyType = $validityCheckUlnOrPedigree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigree['animalKind'];
       $message = $keyType . ' of ' . $animalKind . ' not found.';
       $messageArray = array('code'=>428, "message" => $message);
 
