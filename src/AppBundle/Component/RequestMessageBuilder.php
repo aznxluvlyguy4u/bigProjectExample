@@ -16,14 +16,19 @@ use AppBundle\Entity\Person;
 class RequestMessageBuilder
 {
     /**
-     * @var ArrivalMessageBuilder
-     */
-    private $arrivalMessageBuilder;
-
-    /**
      * @var ImportMessageBuilder
      */
     private $importMessageBuilder;
+
+    /**
+     * @var ExportMessageBuilder
+     */
+    private $exportMessageBuilder;
+
+    /**
+     * @var ArrivalMessageBuilder
+     */
+    private $arrivalMessageBuilder;
 
     /**
      * @var BirthMessageBuilder
@@ -48,6 +53,7 @@ class RequestMessageBuilder
         $this->departMessageBuilder = new DepartMessageBuilder($em);
         $this->importMessageBuilder = new ImportMessageBuilder($em);
         $this->birthMessageBuilder = new BirthMessageBuilder($em);
+        $this->exportMessageBuilder = new ExportMessageBuilder($em);
     }
 
     public function build($messageClassNameSpace, ArrayCollection $contentArray, Person $person, $isEditMessage)
@@ -79,9 +85,8 @@ class RequestMessageBuilder
                 //TODO: only add the mininum required fields for this Message Type
                 return $declareLoss;
             case RequestType::DECLARE_EXPORT_ENTITY:
-                $declareExport = $this->irSerializer->parseDeclareExport($contentArray, $isEditMessage);
-                //TODO: only add the mininum required fields for this Message Type
-                return $declareExport;
+                $declareExportRequest = $this->irSerializer->parseDeclareExport($contentArray, $isEditMessage);
+                return $this->exportMessageBuilder->buildMessage($declareExportRequest, $person);
             case RequestType::DECLARE_IMPORT_ENTITY:
                 $declareImportRequest = $this->irSerializer->parseDeclareImport($contentArray, $isEditMessage);
                 return $this->importMessageBuilder->buildMessage($declareImportRequest, $person);

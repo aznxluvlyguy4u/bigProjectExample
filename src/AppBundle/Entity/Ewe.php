@@ -191,4 +191,38 @@ class Ewe extends Animal
 
         return $this;
     }
+
+    /**
+     * Add export
+     *
+     * @param \AppBundle\Entity\DeclareExport $export
+     *
+     * @return Ewe
+     */
+    public function addExport(\AppBundle\Entity\DeclareExport $export)
+    {
+        $this->exports[] = $export;
+
+        return $this;
+    }
+
+    /**
+     * Remove export
+     *
+     * @param \AppBundle\Entity\DeclareExport $export
+     */
+    public function removeExport(\AppBundle\Entity\DeclareExport $export)
+    {
+        $this->exports->removeElement($export);
+    }
+
+    /**
+     * Get exports
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getExports()
+    {
+        return $this->exports;
+    }
 }

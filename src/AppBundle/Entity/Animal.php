@@ -147,6 +147,14 @@ abstract class Animal
     protected $imports;
 
     /**
+     * @var array
+     * @JMS\Type("AppBundle\Entity\DeclareExport")
+     * @ORM\OneToMany(targetEntity="DeclareExport", mappedBy="animal", cascade={"persist"})
+     */
+    protected $exports;
+
+
+    /**
      * @var DeclareBirth
      *
      * @JMS\Type("AppBundle\Entity\DeclareBirth")
@@ -239,6 +247,7 @@ abstract class Animal
         $this->children = new ArrayCollection();
         $this->departures = new ArrayCollection();
         $this->imports = new ArrayCollection();
+        $this->exports = new ArrayCollection();
         $this->isAlive = true;
 
         $this->ulnCountryCode = '';
@@ -823,5 +832,39 @@ abstract class Animal
         $this->animalOrderNumber = $animalOrderNumber;
 
         return $this;
+    }
+
+    /**
+     * Add export
+     *
+     * @param \AppBundle\Entity\DeclareExport $export
+     *
+     * @return Animal
+     */
+    public function addExport(\AppBundle\Entity\DeclareExport $export)
+    {
+        $this->exports[] = $export;
+
+        return $this;
+    }
+
+    /**
+     * Remove export
+     *
+     * @param \AppBundle\Entity\DeclareExport $export
+     */
+    public function removeExport(\AppBundle\Entity\DeclareExport $export)
+    {
+        $this->exports->removeElement($export);
+    }
+
+    /**
+     * Get exports
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getExports()
+    {
+        return $this->exports;
     }
 }

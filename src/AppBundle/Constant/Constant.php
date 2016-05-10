@@ -34,6 +34,7 @@ class Constant
     const DECLARE_BIRTH_REPOSITORY = 'AppBundle:DeclareBirth';
     const DECLARE_DEPART_REPOSITORY = 'AppBundle:DeclareDepart';
     const DECLARE_IMPORT_REPOSITORY ='AppBundle:DeclareImport';
+    const DECLARE_EXPORT_REPOSITORY ='AppBundle:DeclareExport';
     const DECLARE_EARTAGS_TRANSFER_REPOSITORY = 'AppBundle:DeclareEartagsTransfer';
     const DECLARE_LOSS_REPOSITORY = 'AppBundle:DeclareLoss';
 

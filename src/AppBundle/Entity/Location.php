@@ -78,6 +78,13 @@ class Location
   protected $imports;
 
   /**
+   * @var array
+   *
+   * @ORM\OneToMany(targetEntity="DeclareExport", mappedBy="location")
+   */
+  protected $exports;
+
+  /**
    * @Assert\NotBlank
    * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"})
    * @JMS\Type("AppBundle\Entity\Company")
@@ -101,6 +108,7 @@ class Location
     $this->births = new ArrayCollection();
     $this->departures = new ArrayCollection();
     $this->imports = new ArrayCollection();
+    $this->exports = new ArrayCollection();
     $this->animals = new ArrayCollection();
   }
 
@@ -356,5 +364,39 @@ class Location
     public function getAnimals()
     {
         return $this->animals;
+    }
+
+    /**
+     * Add export
+     *
+     * @param \AppBundle\Entity\DeclareExport $export
+     *
+     * @return Location
+     */
+    public function addExport(\AppBundle\Entity\DeclareExport $export)
+    {
+        $this->exports[] = $export;
+
+        return $this;
+    }
+
+    /**
+     * Remove export
+     *
+     * @param \AppBundle\Entity\DeclareExport $export
+     */
+    public function removeExport(\AppBundle\Entity\DeclareExport $export)
+    {
+        $this->exports->removeElement($export);
+    }
+
+    /**
+     * Get exports
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getExports()
+    {
+        return $this->exports;
     }
 }
