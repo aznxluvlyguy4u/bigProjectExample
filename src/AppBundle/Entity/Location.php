@@ -8,11 +8,15 @@ use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\DeclareArrival;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class Location
  * @ORM\Entity(repositoryClass="AppBundle\Entity\LocationRepository")
  * @package AppBundle\Entity
+ * @ExclusionPolicy("all")
+
  */
 class Location
 {
@@ -22,6 +26,7 @@ class Location
    * @ORM\Id
    * @ORM\Column(type="integer")
    * @ORM\GeneratedValue(strategy="AUTO")
+   * @Expose
    */
   protected $id;
 
@@ -32,6 +37,7 @@ class Location
    * @Assert\NotBlank
    * @Assert\Length(max = 12)
    * @JMS\Type("string")
+   * @Expose
    */
   protected $ubn;
 
