@@ -41,12 +41,12 @@ class DeclareImport extends DeclareBase
   private $importDate;
 
   /**
-   * @ORM\Column(type="string", nullable=true)
-   * @Assert\Length(max = 10)
+   * @ORM\Column(type="string")
+   * @Assert\NotBlank
    * @JMS\Type("string")
    * @Expose
    */
-  private $ubnPreviousOwner;
+  private $animalCountryOrigin;
 
   /**
    * @Assert\NotBlank
@@ -60,7 +60,7 @@ class DeclareImport extends DeclareBase
    * @JMS\Type("boolean")
    * @Expose
    */
-  private $importAnimal;
+  private $isImportAnimal;
 
   /**
    * @ORM\OneToMany(targetEntity="DeclareImportResponse", mappedBy="declareImportRequestMessage", cascade={"persist"})
@@ -80,7 +80,7 @@ class DeclareImport extends DeclareBase
 
     //Create responses array
     $this->responses = new ArrayCollection();
-    $this->importAnimal = true;
+    $this->isImportAnimal = true;
   }
 
 
@@ -109,39 +109,15 @@ class DeclareImport extends DeclareBase
     }
 
     /**
-     * Set ubnPreviousOwner
-     *
-     * @param string $ubnPreviousOwner
-     *
-     * @return DeclareImport
-     */
-    public function setUbnPreviousOwner($ubnPreviousOwner)
-    {
-        $this->ubnPreviousOwner = $ubnPreviousOwner;
-
-        return $this;
-    }
-
-    /**
-     * Get ubnPreviousOwner
-     *
-     * @return string
-     */
-    public function getUbnPreviousOwner()
-    {
-        return $this->ubnPreviousOwner;
-    }
-
-    /**
      * Set importAnimal
      *
-     * @param boolean $importAnimal
+     * @param boolean $isImportAnimal
      *
      * @return DeclareImport
      */
-    public function setImportAnimal($importAnimal)
+    public function setIsImportAnimal($isImportAnimal)
     {
-        $this->importAnimal = $importAnimal;
+        $this->isImportAnimal = $isImportAnimal;
 
         return $this;
     }
@@ -151,9 +127,9 @@ class DeclareImport extends DeclareBase
      *
      * @return boolean
      */
-    public function getImportAnimal()
+    public function getIsImportAnimal()
     {
-        return $this->importAnimal;
+        return $this->isImportAnimal;
     }
 
     /**
@@ -237,5 +213,29 @@ class DeclareImport extends DeclareBase
     public function getResponses()
     {
         return $this->responses;
+    }
+
+    /**
+     * Set animalCountryOrigin
+     *
+     * @param string $animalCountryOrigin
+     *
+     * @return DeclareImport
+     */
+    public function setAnimalCountryOrigin($animalCountryOrigin)
+    {
+        $this->animalCountryOrigin = $animalCountryOrigin;
+
+        return $this;
+    }
+
+    /**
+     * Get animalCountryOrigin
+     *
+     * @return string
+     */
+    public function getAnimalCountryOrigin()
+    {
+        return $this->animalCountryOrigin;
     }
 }
