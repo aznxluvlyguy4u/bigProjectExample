@@ -46,6 +46,11 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
   static private $mockedNewBornRam;
 
   /**
+   * @var Ewe
+   */
+  static private $anotherEwe;
+
+  /**
    * Sets the container.
    *
    * @param ContainerInterface|null $container A ContainerInterface instance or null
@@ -104,6 +109,15 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedParentEwe->setPedigreeCountryCode("NL");
     $location->addAnimal(self::$mockedParentEwe);
 
+    self::$anotherEwe = new Ewe();
+    self::$anotherEwe->setIsAlive(true);
+    self::$anotherEwe->setAssignedTag($tags->get(rand(1,$tagListSize)));
+    self::$anotherEwe->setAnimalType(AnimalType::sheep);
+    self::$anotherEwe->setDateOfBirth(new \DateTime());
+    self::$anotherEwe->setPedigreeNumber("52350");
+    self::$anotherEwe->setPedigreeCountryCode("NL");
+    $location->addAnimal(self::$anotherEwe);
+
     self::$mockedNewBornRam = new Ram();
     self::$mockedNewBornRam->setIsAlive(true);
     self::$mockedNewBornRam->setAssignedTag($tags->get(rand(1,$tagListSize)));
@@ -134,6 +148,7 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     //Persist mocked data
     $manager->persist(self::$mockedRamWithParents);
     $manager->persist(self::$mockedNewBornRam);
+    $manager->persist(self::$anotherEwe);
     $manager->flush();
 
   }
