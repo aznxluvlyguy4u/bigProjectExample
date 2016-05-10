@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -135,17 +136,32 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
     //Get content to array
     $content = $this->getContentAsArray($request);
-//TODO Split up the children in the array into seperate messages
-    //Convert the array into an object and add the mandatory values retrieved from the database
-    $messageObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $content, $this->getAuthenticatedUser($request));
 
-    //First Persist object to Database, before sending it to the queue
-    $this->persist($messageObject, RequestType::DECLARE_BIRTH_ENTITY);
+    //Split up the children in the array into separate messages
+    $children = $content->get("children"); 
+    $contentWithoutChildren = $content;
+    $contentWithoutChildren->remove("children");
 
-    //Send it to the queue and persist/update any changed state to the database
-    $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_BIRTH_ENTITY, RequestType::DECLARE_BIRTH);
+    $returnMessages = new ArrayCollection();
 
-    return new JsonResponse($messageObject, 200);
+    foreach($children as $child) {
+
+        $contentPerChild = $contentWithoutChildren;
+        $contentPerChild->set('animal', $child);
+
+        //Convert the array into an object and add the mandatory values retrieved from the database
+        $declareBirthObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $contentPerChild, $this->getAuthenticatedUser($request));
+
+        //First Persist object to Database, before sending it to the queue
+        $this->persist($declareBirthObject, RequestType::DECLARE_BIRTH_ENTITY);
+
+        //Send it to the queue and persist/update any changed state to the database
+        $this->sendMessageObjectToQueue($declareBirthObject, RequestType::DECLARE_BIRTH_ENTITY, RequestType::DECLARE_BIRTH);
+
+        $returnMessages->add($declareBirthObject);
+    }
+
+    return new JsonResponse($returnMessages, 200);
   }
 
   /**
@@ -173,21 +189,28 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    */
   public function updateBirth(Request $request, $Id) {
 
-    //Validate uln/pedigree code
-    if(!$this->isUlnOrPedigreeCodeValid($request)) {
-      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
-    }
+      $validityCheckUlnOrPedigree = $this->isUlnOrPedigreeCodeValid($request);
+      $isValid = $validityCheckUlnOrPedigree['isValid'];
 
-    //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareBirthUpdate = $this->buildEditMessageObject(RequestType::DECLARE_BIRTH_ENTITY,
-        $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+      if(!$isValid) {
+          $keyType = $validityCheckUlnOrPedigree['keyType']; // uln  of pedigree
+          $animalKind = $validityCheckUlnOrPedigree['animalKind'];
+          $message = $keyType . ' of ' . $animalKind . ' not found.';
+          $messageArray = array('code'=>428, "message" => $message);
 
-    $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
-    $declareBirth = $entityManager->updateDeclareBirthMessage($declareBirthUpdate, $Id);
+          return new JsonResponse($messageArray, 428);
+      }
 
-    if($declareBirth == null) {
-      return new JsonResponse(array("message"=>"No DeclareBirth found with request_id:" . $Id), 204);
-    }
+      //Convert the array into an object and add the mandatory values retrieved from the database
+      $declareBirthUpdate = $this->buildEditMessageObject(RequestType::DECLARE_BIRTH_ENTITY,
+          $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+
+      $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
+      $declareBirth = $entityManager->updateDeclareBirthMessage($declareBirthUpdate, $Id);
+
+        if($declareBirth == null) {
+          return new JsonResponse(array("message"=>"No DeclareBirth found with request_id:" . $Id), 204);
+        }
 
     return new JsonResponse($declareBirth, 200);
   }
