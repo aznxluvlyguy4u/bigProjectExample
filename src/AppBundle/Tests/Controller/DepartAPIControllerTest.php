@@ -206,8 +206,7 @@ class DepartAPIControllerTest extends WebTestCase {
 
     //Update value
     $declareDepartUpdated = $declareDepart;
-    $declareDepartUpdated->setUbnNewOwner("444441");
-    $declareDepartUpdated->getAnimal()->getAssignedTag()->setUlnNumber('555666');
+    $declareDepart->setUbnNewOwner("11111");
 
     //Create json to be putted
     $declareDepartUpdatedJson = self::$serializer->serializeToJSON($declareDepartUpdated);
@@ -225,7 +224,6 @@ class DepartAPIControllerTest extends WebTestCase {
     $updatedDataArray = json_decode($updatedResponseJson, true);
 
     $this->assertEquals($declareDepartUpdated->getUbnNewOwner(), $updatedDataArray['ubn_new_owner']);
-    $this->assertEquals($declareDepart->getUbn(), $updatedDataArray['ubn']);
   }
 
   public function tearDown() {
