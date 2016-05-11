@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Service\IRSerializer;
 use Doctrine\ORM\EntityManager;
@@ -36,6 +37,11 @@ class RequestMessageBuilder
     private $lossMessageBuilder;
 
     /**
+     * @var RevokeMessageBuilder
+     */
+    private $revokeMessageBuilder;
+
+    /**
      * @var IRSerializer
      */
     private $irSerializer;
@@ -54,6 +60,7 @@ class RequestMessageBuilder
         $this->importMessageBuilder = new ImportMessageBuilder($em);
         $this->birthMessageBuilder = new BirthMessageBuilder($em);
         $this->lossMessageBuilder = new LossMessageBuilder($em);
+        $this->revokeMessageBuilder = new RevokeMessageBuilder($em);
     }
 
     public function build($messageClassNameSpace, ArrayCollection $contentArray, Person $person, $isEditMessage)
@@ -95,9 +102,11 @@ class RequestMessageBuilder
                 //TODO: only add the mininum required fields for this Message Type
                 return $retrieveEartags;
             case RequestType::REVOKE_DECLARATION_ENTITY:
-                $revokeDeclaration = $this->irSerializer->parseRevokeDeclaration($contentArray, $isEditMessage);
-                //TODO: only add the mininum required fields for this Message Type
-                return $revokeDeclaration;
+                $revokeDeclaration = new RevokeDeclaration();
+                $revokeDeclaration->setMessageId($contentArray['message_id']);
+
+                return $this->revokeMessageBuilder->buildMessage($revokeDeclaration, $person);
+
             default:
                 if ($messageClassNameSpace == null){
                     throw new \Exception('Cannot pass null into the RequestMessageBuilder');

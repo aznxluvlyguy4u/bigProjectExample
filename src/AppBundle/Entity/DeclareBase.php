@@ -57,9 +57,8 @@ abstract class DeclareBase
     protected $requestId;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable = true)
      * @Assert\Length(max = 20)
-     * @Assert\NotBlank
      * @JMS\Type("string")
      */
     protected $messageId;
@@ -158,7 +157,6 @@ abstract class DeclareBase
     public function setRequestId($requestId)
     {
         $this->requestId = $requestId;
-        $this->setMessageId($requestId);
 
         return $this;
     }

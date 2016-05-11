@@ -417,4 +417,24 @@ class EntityGetter
         return $animal;
     }
 
+    /**
+     * @param $messageId
+     * @return \AppBundle\Entity\DeclareBaseResponse
+     */
+    public function getResponseDeclarationByMessageId($messageId)
+    {
+        $response = $this->entityManager->getRepository(Constant::DECLARE_BASE_RESPONSE_REPOSITORY)->findOneBy(array('messageId'=>$messageId));
+
+        return $response;
+    }
+
+    /**
+     * @param $id
+     * @return \AppBundle\Entity\DeclareBase
+     */
+    public function getResponseDeclarationByRequestId($requestId)
+    {
+        return $this->entityManager->getRepository(Constant::DECLARE_BASE_REPOSITORY)->findOneBy(array("request_id" => $requestId));
+    }
+
 }

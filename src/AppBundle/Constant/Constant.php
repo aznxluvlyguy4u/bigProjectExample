@@ -41,6 +41,8 @@ class Constant
     const DECLARE_EARTAGS_TRANSFER_REPOSITORY = 'AppBundle:DeclareEartagsTransfer';
     const DECLARE_IMPORT_REPOSITORY ='AppBundle:DeclareImport';
     const DECLARE_LOSS_REPOSITORY = 'AppBundle:DeclareLoss';
+    const DECLARE_BASE_REPOSITORY = 'AppBundle:DeclareBase';
+    const DECLARE_BASE_RESPONSE_REPOSITORY = 'AppBundle:DeclareBaseResponse';
 
     const TAG_REPOSITORY = 'AppBundle:Tag';
     const ANIMAL_REPOSITORY = 'AppBundle:Animal';
