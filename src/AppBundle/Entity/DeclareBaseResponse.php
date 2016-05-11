@@ -38,6 +38,14 @@ abstract class DeclareBaseResponse
      * @Assert\NotBlank
      * @JMS\Type("string")
      */
+    protected $requestId;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\Length(max = 20)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
     private $messageId;
 
     /**
@@ -232,4 +240,31 @@ abstract class DeclareBaseResponse
     {
         return $this->successIndicator;
     }
+
+    /**
+     * Get requestId
+     *
+     * @return string
+     */
+    public function getRequestId()
+    {
+        return $this->requestId;
+    }
+
+    /**
+     * Set requestId
+     *
+     * @param string $requestId
+     *
+     * @return DeclareBaseResponse
+     */
+    public function setRequestId($requestId)
+    {
+        $this->requestId = $requestId;
+        $this->setMessageId($requestId);
+
+        return $this;
+    }
+
+
 }
