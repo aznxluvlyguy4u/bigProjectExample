@@ -38,10 +38,6 @@ class DeclareImportRepository extends BaseRepository {
       $declareImport->setIsImportAnimal($declareImportUpdate->getIsImportAnimal());
     }
 
-    if($declareImportUpdate->getUbnPreviousOwner() != null) {
-      $declareImport->setUbnPreviousOwner($declareImportUpdate->getUbnPreviousOwner());
-    }
-
     return $declareImport;
   }
 }
