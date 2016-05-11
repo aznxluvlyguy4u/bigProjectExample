@@ -41,7 +41,7 @@ class DeclareBirth extends DeclareBase
      * @JMS\Type("string")
      * @Expose
      */
-    private $aborted;
+    private $is_aborted;
 
     /**
      * @ORM\Column(type="string", nullable=true)
@@ -49,7 +49,7 @@ class DeclareBirth extends DeclareBase
      * @JMS\Type("string")
      * @Expose
      */
-    private $pseudoPregnancy;
+    private $is_pseudoPregnancy;
 
     /**
      * @ORM\Column(type="string", nullable=true)
@@ -57,7 +57,7 @@ class DeclareBirth extends DeclareBase
      * @JMS\Type("string")
      * @Expose
      */
-    private $lambar;
+    private $is_lambar;
 
     /**
      * 2016-04-01T22:00:48.131Z
