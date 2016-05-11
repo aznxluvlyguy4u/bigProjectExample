@@ -5,11 +5,11 @@ namespace AppBundle\Service;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
+use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\AnimalType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
-use Proxies\__CG__\AppBundle\Entity\Ewe;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Validator\Constraints\DateTime;
@@ -81,8 +81,7 @@ class EntityGetter
     }
 
     /**
-
-     * @return Neuter
+     * @return Ram|Ewe|Neuter
      */
     private function createNewAnimal($declareContentArray)
     {
