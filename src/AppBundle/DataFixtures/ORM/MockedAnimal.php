@@ -88,21 +88,21 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
 
     self::$mockedParentRam = new Ram();
     self::$mockedParentRam->setIsAlive(true);
-    self::$mockedParentRam->setAssignedTag($tags->get(rand(1,$tagListSize)));
+    self::$mockedParentRam->setAssignedTag($tags->get(rand(1,$tagListSize-1)));
     self::$mockedParentRam->setAnimalType(AnimalType::sheep);
     self::$mockedParentRam->setDateOfBirth(new \DateTime());
     $location->addAnimal(self::$mockedParentRam);
 
     self::$mockedParentEwe = new Ewe();
     self::$mockedParentEwe->setIsAlive(true);
-    self::$mockedParentEwe->setAssignedTag($tags->get(rand(1,$tagListSize)));
+    self::$mockedParentEwe->setAssignedTag($tags->get(rand(1,$tagListSize-1)));
     self::$mockedParentEwe->setAnimalType(AnimalType::sheep);
     self::$mockedParentEwe->setDateOfBirth(new \DateTime());
     $location->addAnimal(self::$mockedParentEwe);
 
     self::$mockedNewBornRam = new Ram();
     self::$mockedNewBornRam->setIsAlive(true);
-    self::$mockedNewBornRam->setAssignedTag($tags->get(rand(1,$tagListSize)));
+    self::$mockedNewBornRam->setAssignedTag($tags->get(rand(1,$tagListSize-1)));
     self::$mockedNewBornRam->setAnimalType(AnimalType::sheep);
     self::$mockedNewBornRam->setDateOfBirth(new \DateTime());
     self::$mockedNewBornRam->setParentFather(self::$mockedParentRam);
@@ -112,7 +112,8 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedRamWithParents = new Ram();
     self::$mockedRamWithParents->setIsAlive(true);
 
-    $tagToAssign = $tags->get(rand(1,$tagListSize));
+    $randomIndex = rand(1, $tagListSize-1);
+    $tagToAssign = $tags->get($randomIndex);
     $tagToAssign->setAnimal(self::$mockedRamWithParents);
     self::$mockedRamWithParents->setAssignedTag($tagToAssign);
 
