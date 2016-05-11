@@ -151,6 +151,7 @@ class ImportAPIControllerTest extends WebTestCase {
   {
     //Create declare import
     $declareImport = new DeclareImport();
+    $declareImport->setAnimalCountryOrigin("AFG");
     $declareImport->setImportDate(new \DateTime());
     $declareImport->setIsImportAnimal(true);
     $declareImport->setAnimal(self::$mockedChild);
@@ -181,6 +182,7 @@ class ImportAPIControllerTest extends WebTestCase {
   {
     //Create declare import
     $declareImport = new DeclareImport();
+    $declareImport->setAnimalCountryOrigin("AFG");
     $declareImport->setImportDate(new \DateTime());
     $declareImport->setIsImportAnimal(true);
     $declareImport->setAnimal(self::$mockedChild);
@@ -199,11 +201,14 @@ class ImportAPIControllerTest extends WebTestCase {
 
     //Get response
     $response = $this->client->getResponse()->getContent();
-    $declareImportResponse = new ArrayCollection(json_decode($response, true));
+    $declareImportResponse = json_decode($response, true);
 
     //Get requestId so we can do an update with PUT
     $requestId = $declareImportResponse['request_id'];
 
+    $declareImportUpdated = $declareImport;
+    $updatedDateString = "1899-01-01T16:22:43-0500\"";
+    $declareImportUpdated->setImportDate(new \DateTime($updatedDateString));
     //Create json to be putted
     $declareImportUpdatedJson = self::$serializer->serializeToJSON($declareImportUpdated);
 
@@ -219,7 +224,7 @@ class ImportAPIControllerTest extends WebTestCase {
     $updatedResponse = $this->client->getResponse()->getContent();
     $updatedData = json_decode($updatedResponse, true);
 
-    $this->assertEquals($declareImportUpdated->getIsImportAnimal(), $updatedData['is_import_animal']);
+    $this->assertEquals($updatedDateString, $updatedData['import_date']);
   }
 
   public function tearDown() {

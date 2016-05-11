@@ -209,7 +209,7 @@ class DeclareExportAPIControllerTest extends  WebTestCase {
 
     self::$mockedChild->getAssignedTag()->setUlnCountryCode("NL");
     $updatedDateString = "2000-01-01T16:22:43-0500";
-    $declareExportUpdated->setExportDate(new \DateTime("2000-01-01T16:22:43-0500"));
+    $declareExportUpdated->setExportDate(new \DateTime($updatedDateString));
 
     //Create json to be putted
     $declareExportUpdatedJson = self::$serializer->serializeToJSON($declareExportUpdated);
