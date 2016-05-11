@@ -135,73 +135,92 @@ class EntityGetter
         }
 
         //Transfer values from the array to the newly created animal
-        if (array_key_exists('name', $declareContentArray)) {
-            $animal->setName($declareContentArray['name']); }
-
-        if (array_key_exists('date_of_birth', $declareContentArray)) {
-            $animal->setDateOfBirth(new \DateTime($declareContentArray['date_of_birth'])); }
-
-        if (array_key_exists('date_of_death', $declareContentArray)) {
-            $animal->setDateOfDeath(new \DateTime($declareContentArray['date_of_death'])); }
-
-        if (array_key_exists('gender', $declareContentArray)) {
-            $animal->setGender($declareContentArray['gender']); }
-
-        if (array_key_exists('parent_father', $declareContentArray)) {
-            $animal->setParentFather($declareContentArray['parent_father']); }
-
-        if (array_key_exists('parent_mother', $declareContentArray)) {
-            $animal->setParentMother($declareContentArray['parent_mother']); }
-
-        if (array_key_exists('parent_neuter', $declareContentArray)) {
-            $animal->setParentNeuter($declareContentArray['parent_neuter']); }
-
         if (array_key_exists('animal_type', $declareContentArray)) {
             $animal->setAnimalType($declareContentArray['animal_type']);
         } else { //by default it is a sheep
             $animal->setAnimalType(AnimalType::sheep);
         }
 
-        if (array_key_exists('animal_category', $declareContentArray)) {
-            $animal->setAnimalCategory($declareContentArray['animal_category']); }
 
-        if (array_key_exists('animal_order_number', $declareContentArray)) {
-            $animal->setAnimalOrderNumber($declareContentArray['animal_order_number']); }
-
-        if (array_key_exists('animal_hair_colour', $declareContentArray)) {
-            $animal->setAnimalHairColour($declareContentArray['animal_hair_colour']); }
 
         //Note a newly created animal cannot have any messages yet,
         //(like arrivals, departures, imports)
         //so it is not necessary to map them here.
         //TODO Check if it is necessary to also create an new animal including the children/parents/surrogateMother etc.
 
-
-        //TODO After the june2016 deadline organize the if statements above in this switch case
         switch($declareType) {
             case RequestType::DECLARATION_DETAIL_ENTITY:
                 //TODO: only add the mininum required fields for this Message Type
+                break;
+
             case RequestType::DECLARE_ANIMAL_FLAG_ENTITY:
                 //TODO: only add the mininum required fields for this Message Type
+                break;
+
             case RequestType::DECLARE_ARRIVAL_ENTITY:
                 //TODO: only add the mininum required fields for this Message Type
+                break;
+
             case RequestType::DECLARE_BIRTH_ENTITY:
-                //TODO: only add the mininum required fields for this Message Type
+                if (array_key_exists('date_of_birth', $declareContentArray)) {
+                    $animal->setDateOfBirth(new \DateTime($declareContentArray['date_of_birth'])); }
+
+                if (array_key_exists('father', $declareContentArray)) {
+                    $animal->setParentFather($declareContentArray['parent']); }
+
+                if (array_key_exists('mother', $declareContentArray)) {
+                    $animal->setParentMother($declareContentArray['mother']); }
+
+                if (array_key_exists('surrogate', $animalContentArray)) {
+                    $animal->setParentNeuter($animalContentArray['surrogate']); }
+
+                if (array_key_exists('birth_tail_length', $animalContentArray)) {
+                    $animal->setParentNeuter($animalContentArray['birth_tail_length']); }
+                break;
+
             case RequestType::DECLARE_DEPART_ENTITY:
                 //TODO: only add the mininum required fields for this Message Type
+                break;
+
             case RequestType::DECLARE_EARTAGS_TRANSFER_ENTITY:
                 //TODO: only add the mininum required fields for this Message Type
+                break;
+
             case RequestType::DECLARE_LOSS_ENTITY:
-                //TODO: only add the mininum required fields for this Message Type
+                if (array_key_exists('date_of_death', $declareContentArray)) {
+                    $animal->setDateOfDeath(new \DateTime($declareContentArray['date_of_death'])); }
+
+                break;
+
             case RequestType::DECLARE_EXPORT_ENTITY:
                 //TODO: only add the mininum required fields for this Message Type
+                break;
+
             case RequestType::DECLARE_IMPORT_ENTITY:
                 //TODO: only add the mininum required fields for this Message Type
+                break;
             case RequestType::RETRIEVE_EARTAGS_ENTITY:
                 //TODO: only add the mininum required fields for this Message Type
+                break;
+
             case RequestType::REVOKE_DECLARATION_ENTITY:
                 //TODO: only add the mininum required fields for this Message Type
+                break;
+
             default:
+                //These are getters and setters which are not used at the moment
+                if (array_key_exists('name', $declareContentArray)) {
+                    $animal->setName($declareContentArray['name']); }
+
+                if (array_key_exists('animal_category', $declareContentArray)) {
+                    $animal->setAnimalCategory($declareContentArray['animal_category']); }
+
+                if (array_key_exists('animal_order_number', $declareContentArray)) {
+                    $animal->setAnimalOrderNumber($declareContentArray['animal_order_number']); }
+
+                if (array_key_exists('animal_hair_colour', $declareContentArray)) {
+                    $animal->setAnimalHairColour($declareContentArray['animal_hair_colour']); }
+
                 break;
 
         }
