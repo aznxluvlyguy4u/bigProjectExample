@@ -9,6 +9,7 @@ use AppBundle\DataFixtures\ORM\MockedAnimal;
 use AppBundle\DataFixtures\ORM\MockedClient;
 use Doctrine\ORM\EntityManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
+use Proxies\__CG__\AppBundle\Entity\Location;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Ram;
@@ -198,14 +199,17 @@ class DeclareExportAPIControllerTest extends  WebTestCase {
 
     //Get response
     $response = $this->client->getResponse()->getContent();
-    $declareExportResponse = new ArrayCollection(json_decode($response, true));
+    $declareExportResponse = json_decode($response, true);
 
     //Get requestId so we can do an update with PUT
     $requestId = $declareExportResponse['request_id'];
 
     //Update value
     $declareExportUpdated = $declareExport;
-    $declareExportUpdated->getAnimal()->setAssignedTag(null);
+
+    self::$mockedChild->getAssignedTag()->setUlnCountryCode("NL");
+    $updatedDateString = "2000-01-01T16:22:43-0500";
+    $declareExportUpdated->setExportDate(new \DateTime("2000-01-01T16:22:43-0500"));
 
     //Create json to be putted
     $declareExportUpdatedJson = self::$serializer->serializeToJSON($declareExportUpdated);
@@ -222,7 +226,7 @@ class DeclareExportAPIControllerTest extends  WebTestCase {
     $updatedResponse = $this->client->getResponse()->getContent();
     $updatedData = json_decode($updatedResponse, true);
 
-    $this->assertEquals($declareExportUpdated->getAnimal()->getAssignedTag(), $updatedData['animal']['assigned_tag']);
+    $this->assertEquals($updatedDateString, $updatedData['export_date']);
   }
 
   public function tearDown() {
