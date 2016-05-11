@@ -2,7 +2,7 @@
 
 namespace AppBundle\Tests\Controller;
 
-use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareLoss;
 use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedAnimal;
 use AppBundle\DataFixtures\ORM\MockedClient;
@@ -15,14 +15,13 @@ use AppBundle\Entity\Ewe;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
- * Class ImportAPIControllerTest
+ * Class LossAPIControllerTest
  * @package AppBundle\Tests\Controller
- * @group import
+ * @group loss
  */
-class ImportAPIControllerTest extends WebTestCase {
+class LossAPIControllerTest extends WebTestCase {
 
-
-  const DECLARE_IMPORT_ENDPOINT = "/api/v1/imports";
+  const DECLARE_LOSS_ENDPOINT = "/api/v1/losses";
 
   /**
    * @var RequestClient
@@ -73,8 +72,7 @@ class ImportAPIControllerTest extends WebTestCase {
 
     //Load fixture class
     $fixtures = array('AppBundle\DataFixtures\ORM\MockedClient',
-      'AppBundle\DataFixtures\ORM\MockedAnimal',
-      'AppBundle\DataFixtures\ORM\MockedTags');
+      'AppBundle\DataFixtures\ORM\MockedAnimal');
     $this->loadFixtures($fixtures);
 
     //Get mocked Client
@@ -113,12 +111,12 @@ class ImportAPIControllerTest extends WebTestCase {
   }
 
   /**
-   * Test retrieving Declare imports list
+   * Test retrieving Declare losses list
    */
-  public function testGetImports()
+  public function testGetLosses()
   {
     $this->client->request('GET',
-      $this::DECLARE_IMPORT_ENDPOINT,
+      $this::DECLARE_LOSS_ENDPOINT,
       array(),
       array(),
       $this->defaultHeaders
@@ -131,12 +129,12 @@ class ImportAPIControllerTest extends WebTestCase {
   }
 
   /**
-   * Test retrieving Declare import by id
+   * Test retrieving Declare loss by id
    */
-  public function testGetImportById()
+  public function testGetLossById()
   {
     $this->client->request('GET',
-      $this::DECLARE_IMPORT_ENDPOINT . '/1',
+      $this::DECLARE_LOSS_ENDPOINT . '/1',
       array(),
       array(),
       $this->defaultHeaders
@@ -150,90 +148,100 @@ class ImportAPIControllerTest extends WebTestCase {
 
   /**
    *
-   * Test create new Declare import
+   * Test create new Declare loss
    */
-  public function testCreateImport()
+  public function testCreateLoss()
   {
-    //Create declare import
-    $declareImport = new DeclareImport();
-    $declareImport->setImportDate(new \DateTime());
-    $declareImport->setUbnPreviousOwner("123456");
-    $declareImport->setImportAnimal(true);
-    $declareImport->setAnimal(self::$mockedChild);
+    //Create declare loss
+    $declareLoss = new DeclareLoss();
+    $declareLoss->setReasonOfLoss("Life");
+    $declareLoss->setUbnProcessor("2299077");
+    $declareLoss->setDateOfDeath(new \DateTime("2024-02-24"));
+
+    $declareLoss->setAnimal(self::$mockedChild);
 
     //Create json to be posted
-    $declareImportJson = self::$serializer->serializeToJSON($declareImport);
+    $declareLossJson = self::$serializer->serializeToJSON($declareLoss);
 
     $this->client->request('POST',
-      $this::DECLARE_IMPORT_ENDPOINT,
+      $this::DECLARE_LOSS_ENDPOINT,
       array(),
       array(),
       $this->defaultHeaders,
-      $declareImportJson
+      $declareLossJson
     );
 
     $response = $this->client->getResponse();
-
     $data = json_decode($response->getContent(), true);
 
     $this->assertEquals('open', $data['request_state']);
+    $this->assertEquals($declareLoss->getReasonOfLoss(), $data['reason_of_loss']);
+    $this->assertEquals($declareLoss->getUbnProcessor(), $data['ubn_processor']);
   }
 
   /**
    *
-   * Test create new Declare import
+   * Test create new Declare loss
    */
-  public function testUpdateImport()
+  public function testUpdateLoss()
   {
-    //Create declare import
-    $declareImport = new DeclareImport();
-    $declareImport->setImportDate(new \DateTime());
-    $declareImport->setUbnPreviousOwner("123456");
-    $declareImport->setImportAnimal(true);
-    $declareImport->setAnimal(self::$mockedChild);
+    //Create declare loss
+    $declareLoss = new DeclareLoss();
+    $declareLoss->setReasonOfLoss("Accident");
+    $declareLoss->setUbnProcessor("666");
+    $declareLoss->setDateOfDeath(new \DateTime("2036-03-01"));
+
+    $declareLoss->setAnimal(self::$mockedChild);
 
     //Create json to be posted
-    $declareImportJson = self::$serializer->serializeToJSON($declareImport);
+    $declareLossJson = self::$serializer->serializeToJSON($declareLoss);
 
-    //Do POST declare import
+    //Do POST declare loss
     $this->client->request('POST',
-      $this::DECLARE_IMPORT_ENDPOINT,
+      $this::DECLARE_LOSS_ENDPOINT,
       array(),
       array(),
       $this->defaultHeaders,
-      $declareImportJson
+      $declareLossJson
     );
 
     //Get response
     $response = $this->client->getResponse()->getContent();
-    $declareImportResponse = new ArrayCollection(json_decode($response, true));
+    $declareLossResponse = new ArrayCollection(json_decode($response, true));
 
     //Get requestId so we can do an update with PUT
-    $requestId = $declareImportResponse['request_id'];
+    $requestId = $declareLossResponse['request_id'];
 
     //Update value
-    $declareImportUpdated = $declareImport;
-    $declareImportUpdated->setUbnPreviousOwner("999991");
+    $declareLossUpdated = $declareLoss;
+    $declareLoss->setReasonOfLoss("Destiny");
+    $declareLoss->setUbnProcessor("1");
+    $declareLossUpdated->getAnimal()->setUlnNumber('8795441');
 
     //Create json to be putted
-    $declareImportUpdatedJson = self::$serializer->serializeToJSON($declareImportUpdated);
+    $declareLossUpdatedJson = self::$serializer->serializeToJSON($declareLossUpdated);
 
-    //PUT updated declare import
+    //PUT updated declare loss
     $this->client->request('PUT',
-      $this::DECLARE_IMPORT_ENDPOINT . '/'. $requestId,
+      $this::DECLARE_LOSS_ENDPOINT . '/'. $requestId,
       array(),
       array(),
       $this->defaultHeaders,
-      $declareImportUpdatedJson
+      $declareLossUpdatedJson
     );
 
     $updatedResponse = $this->client->getResponse()->getContent();
     $updatedData = json_decode($updatedResponse, true);
 
-    $this->assertEquals($declareImportUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
-    $this->assertEquals($declareImportUpdated->getImportAnimal(), $updatedData['import_animal']);
-  }
+    //Verify the updated parameters
+    $this->assertEquals($declareLossUpdated->getReasonOfLoss(), $updatedData['reason_of_loss']);
+    $this->assertEquals($declareLossUpdated->getUbnProcessor(), $updatedData['ubn_processor']);
+    $this->assertEquals($declareLossUpdated->getAnimal()->getUlnNumber(), $updatedData['animal']['uln_number']);
 
+    //Verify some unchanged parameters
+    $this->assertEquals($declareLoss->getAnimal()->getUlnCountryCode(), $updatedData['animal']['uln_country_code']);
+  }
+  
   public function tearDown() {
     parent::tearDown();
   }

@@ -6,6 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
+use \DateTime;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
 
@@ -417,54 +418,6 @@ abstract class Animal
     }
 
     /**
-     * Set dateOfBirth
-     *
-     * @param \DateTime $dateOfBirth
-     *
-     * @return Animal
-     */
-    public function setDateOfBirth($dateOfBirth)
-    {
-        $this->dateOfBirth = $dateOfBirth;
-
-        return $this;
-    }
-
-    /**
-     * Get dateOfBirth
-     *
-     * @return \DateTime
-     */
-    public function getDateOfBirth()
-    {
-        return $this->dateOfBirth;
-    }
-
-    /**
-     * Set dateOfDeath
-     *
-     * @param \DateTime $dateOfDeath
-     *
-     * @return Animal
-     */
-    public function setDateOfDeath($dateOfDeath)
-    {
-        $this->dateOfDeath = $dateOfDeath;
-
-        return $this;
-    }
-
-    /**
-     * Get dateOfDeath
-     *
-     * @return \DateTime
-     */
-    public function getDateOfDeath()
-    {
-        return $this->dateOfDeath;
-    }
-
-    /**
      * Set gender
      *
      * @param string $gender
@@ -619,6 +572,9 @@ abstract class Animal
     }
 
     /**
+<<<<<<< HEAD
+     * Get arrivals
+=======
      * Get parentNeuter
      *
      * @return \AppBundle\Entity\Neuter
@@ -654,6 +610,7 @@ abstract class Animal
 
     /**
      * Get imports
+>>>>>>> feat/tag
      *
      * @return \Doctrine\Common\Collections\Collection
      */
@@ -872,6 +829,7 @@ abstract class Animal
         return $this;
     }
 
+
     /**
      * Get surrogateMother
      *
@@ -881,4 +839,53 @@ abstract class Animal
     {
         return $this->surrogateMother;
     }
+
+    /**
+     * Set dateOfDeath
+     *
+     * @param \DateTime $dateOfDeath
+     *
+     * @return Animal
+     */
+    public function setDateOfDeath($dateOfDeath)
+    {
+        $this->dateOfDeath = $dateOfDeath;
+
+        return $this;
+    }
+
+    /**
+     * Get dateOfDeath
+     *
+     * @return \DateTime
+     */
+    public function getDateOfDeath()
+    {
+        return $this->dateOfDeath;
+    }
+
+    /**
+     * Set dateOfBirth
+     *
+     * @param \DateTime $dateOfBirth
+     *
+     * @return Animal
+     */
+    public function setDateOfBirth($dateOfBirth)
+    {
+        $this->dateOfBirth = $dateOfBirth;
+
+        return $this;
+    }
+
+    /**
+     * Get dateOfBirth
+     *
+     * @return \DateTime
+     */
+    public function getDateOfBirth()
+    {
+        return $this->dateOfBirth;
+    }
+
 }

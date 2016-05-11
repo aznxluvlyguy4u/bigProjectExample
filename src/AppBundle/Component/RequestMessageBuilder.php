@@ -31,6 +31,11 @@ class RequestMessageBuilder
     private $birthMessageBuilder;
 
     /**
+     * @var LossMessageBuilder
+     */
+    private $lossMessageBuilder;
+
+    /**
      * @var IRSerializer
      */
     private $irSerializer;
@@ -48,6 +53,7 @@ class RequestMessageBuilder
         $this->departMessageBuilder = new DepartMessageBuilder($em);
         $this->importMessageBuilder = new ImportMessageBuilder($em);
         $this->birthMessageBuilder = new BirthMessageBuilder($em);
+        $this->lossMessageBuilder = new LossMessageBuilder($em);
     }
 
     public function build($messageClassNameSpace, ArrayCollection $contentArray, Person $person, $isEditMessage)
@@ -75,9 +81,8 @@ class RequestMessageBuilder
                 //TODO: only add the mininum required fields for this Message Type
                 return $declareEartagsTransfer;
             case RequestType::DECLARE_LOSS_ENTITY:
-                $declareLoss = $this->irSerializer->parseDeclareLoss($contentArray, $isEditMessage);
-                //TODO: only add the mininum required fields for this Message Type
-                return $declareLoss;
+                $declareLossRequest = $this->irSerializer->parseDeclareLoss($contentArray, $isEditMessage);
+                return $this->lossMessageBuilder->buildMessage($declareLossRequest, $person);
             case RequestType::DECLARE_EXPORT_ENTITY:
                 $declareExport = $this->irSerializer->parseDeclareExport($contentArray, $isEditMessage);
                 //TODO: only add the mininum required fields for this Message Type

@@ -18,7 +18,8 @@ use \DateTime;
  * @ORM\DiscriminatorMap({"DeclareArrivalResponse" = "DeclareArrivalResponse",
  *                        "DeclareBirthResponse" = "DeclareBirthResponse",
  *                        "DeclareDepartResponse" = "DeclareDepartResponse",
- *                        "DeclareImportResponse" = "DeclareImportResponse"
+ *                        "DeclareImportResponse" = "DeclareImportResponse",
+ *                        "DeclareLossResponse" = "DeclareLossResponse"
  *                        })
  * @package AppBundle\Entity\DeclareBaseResponse
  */

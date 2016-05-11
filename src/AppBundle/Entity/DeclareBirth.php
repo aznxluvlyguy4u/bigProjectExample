@@ -60,6 +60,19 @@ class DeclareBirth extends DeclareBase
     private $lambar;
 
     /**
+     * 2016-04-01T22:00:48.131Z
+     *
+     * @var DateTime
+     *
+     * @ORM\Column(type="datetime")
+     * @Assert\Date
+     * @Assert\NotBlank
+     * @JMS\Type("DateTime")
+     * @Expose
+     */
+    private $dateOfBirth;
+
+    /**
      * @ORM\Column(type="string")
      * @Assert\Length(max = 100)
      * @Assert\NotBlank
@@ -99,17 +112,6 @@ class DeclareBirth extends DeclareBase
      * @Expose
      */
     private $transportationCode;
-
-    /**
-     * 2016-04-01T22:00:48.131Z
-     *
-     * @ORM\Column(type="datetime")
-     * @Assert\Date
-     * @Assert\NotBlank
-     * @JMS\Type("DateTime")
-     * @Expose
-     */
-    private $dateOfBirth;
 
     /**
      * @ORM\OneToMany(targetEntity="DeclareBirthResponse", mappedBy="declareBirthRequestMessage", cascade={"persist"})
@@ -209,6 +211,30 @@ class DeclareBirth extends DeclareBase
     public function getAnimal()
     {
         return $this->animal;
+    }
+
+    /**
+     * Set dateOfBirth
+     *
+     * @param \DateTime $dateOfBirth
+     *
+     * @return DeclareBirth
+     */
+    public function setDateOfBirth($dateOfBirth)
+    {
+        $this->dateOfBirth = $dateOfBirth;
+
+        return $this;
+    }
+
+    /**
+     * Get dateOfBirth
+     *
+     * @return \DateTime
+     */
+    public function getDateOfBirth()
+    {
+        return $this->dateOfBirth;
     }
 
     /**
@@ -364,27 +390,4 @@ class DeclareBirth extends DeclareBase
         $this->transportationCode = $transportationCode;
     }
 
-    /**
-     * Set birthDate
-     *
-     * @param \DateTime $dateOfBirth
-     *
-     * @return DeclareBirth
-     */
-    public function setDateOfBirth($dateOfBirth)
-    {
-        $this->dateOfBirth = $dateOfBirth;
-
-        return $this;
-    }
-
-    /**
-     * Get birthDate
-     *
-     * @return \DateTime
-     */
-    public function getDateOfBirth()
-    {
-        return $this->dateOfBirth;
-    }
 }

@@ -212,6 +212,57 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
           return new JsonResponse(array("message"=>"No DeclareBirth found with request_id:" . $Id), 204);
         }
 
+
+    if ($declareBirthUpdate->getAnimal() != null) {
+      $declareBirth->setAnimal($declareBirthUpdate->getAnimal());
+    }
+
+    if ($declareBirthUpdate->getDateOfBirth() != null) {
+      $declareBirth->setDateOfBirth($declareBirthUpdate->getDateOfBirth());
+    }
+
+    if ($declareBirthUpdate->getBirthType() != null) {
+      $declareBirth->setBirthType($declareBirthUpdate->getBirthType());
+    }
+
+    if ($declareBirthUpdate->getLocation() != null) {
+      $declareBirth->setLocation($declareBirthUpdate->getLocation());
+    }
+
+    if ($declareBirthUpdate->getLambar() != null) {
+      $declareBirth->setLambar($declareBirthUpdate->getLambar());
+    }
+
+    if ($declareBirthUpdate->getAborted() != null) {
+      $declareBirth->setAborted($declareBirthUpdate->getAborted());
+    }
+
+    if($declareBirthUpdate->getUbnPreviousOwner() != null) {
+      $declareBirth->setUbnPreviousOwner($declareBirthUpdate->getUbnPreviousOwner());
+    }
+
+    if ($declareBirthUpdate->getPseudoPregnancy() != null) {
+      $declareBirth->setPseudoPregnancy($declareBirthUpdate->getPseudoPregnancy());
+    }
+
+    if ($declareBirthUpdate->getLitterSize() != null) {
+      $declareBirth->setLitterSize($declareBirthUpdate->getLitterSize());
+    }
+
+    if ($declareBirthUpdate->getAnimalWeight() != null) {
+      $declareBirth->setAnimalWeight($declareBirthUpdate->getAnimalWeight());
+    }
+
+    if ($declareBirthUpdate->getTailLength() != null) {
+      $declareBirth->setTailLength($declareBirthUpdate->getTailLength());
+    }
+
+    if ($declareBirthUpdate->getTransportationCode() != null) {
+      $declareBirth->setTransportationCode($declareBirthUpdate->getTransportationCode());
+    }
+
+    $declareBirth = $entityManager->update($declareBirth);
+
     return new JsonResponse($declareBirth, 200);
   }
 }

@@ -15,6 +15,11 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use Doctrine\Common\Collections\ArrayCollection;
 
+/**
+ * Class ArrivalAPIControllerTest
+ * @package AppBundle\Tests\Controller
+ * @group arrival
+ */
 class ArrivalAPIControllerTest extends WebTestCase {
 
   const DECLARE_ARRIVAL_ENDPOINT = "/api/v1/arrivals";

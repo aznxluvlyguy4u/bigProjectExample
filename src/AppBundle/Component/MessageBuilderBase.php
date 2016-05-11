@@ -40,8 +40,8 @@ class MessageBuilderBase
      * be set in the constructor.
      *
      * @param object $messageObject the message received from the front-end as an entity from a class that is extended from DeclareBase.
-     * @param string $relationNumberKeeper
-     * @return ArrayCollection the base message
+     * @param Person $person
+     * @return object the base message
      */
     protected function buildBaseMessageObject($messageObject, Person $person)
     {

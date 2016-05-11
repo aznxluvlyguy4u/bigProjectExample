@@ -72,6 +72,13 @@ class Location
   protected $imports;
 
   /**
+   * @var array
+   *
+   * @ORM\OneToMany(targetEntity="DeclareLoss", mappedBy="location")
+   */
+  protected $losses;
+
+  /**
    * @Assert\NotBlank
    * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"})
    * @JMS\Type("AppBundle\Entity\Company")
@@ -95,6 +102,7 @@ class Location
     $this->births = new ArrayCollection();
     $this->departures = new ArrayCollection();
     $this->imports = new ArrayCollection();
+    $this->losses = new ArrayCollection();
     $this->animals = new ArrayCollection();
   }
 
@@ -315,6 +323,40 @@ class Location
     public function getDepartures()
     {
         return $this->departures;
+    }
+
+    /**
+     * Add loss
+     *
+     * @param \AppBundle\Entity\DeclareLoss $loss
+     *
+     * @return Location
+     */
+    public function addLoss(\AppBundle\Entity\DeclareLoss $loss)
+    {
+      $this->losses[] = $loss;
+  
+      return $this;
+    }
+  
+    /**
+     * Remove loss
+     *
+     * @param \AppBundle\Entity\DeclareLoss $loss
+     */
+    public function removeLoss(\AppBundle\Entity\DeclareLoss $loss)
+    {
+      $this->losses->removeElement($loss);
+    }
+  
+    /**
+     * Get losses
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getLosses()
+    {
+      return $this->losses;
     }
 
     /**

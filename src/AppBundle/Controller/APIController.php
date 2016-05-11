@@ -143,7 +143,7 @@ class APIController extends Controller implements APIControllerInterface
    * @param $messageClassNameSpace
    * @param ArrayCollection $contentArray
    * @param $user
-   * @return mixed|null
+   * @return object|null
    * @throws \Exception
    */
   protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user)
@@ -415,7 +415,5 @@ class APIController extends Controller implements APIControllerInterface
 
     return new JsonResponse($response, 401);
   }
-
-
 
 }

@@ -16,6 +16,11 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use Doctrine\Common\Collections\ArrayCollection;
 
+/**
+ * Class BirthAPIControllerTest
+ * @package AppBundle\Tests\Controller
+ * @group birth
+ */
 class BirthAPIControllerTest extends WebTestCase {
 
   const DECLARE_BIRTH_ENDPOINT = "/api/v1/births";
@@ -154,6 +159,8 @@ class BirthAPIControllerTest extends WebTestCase {
     //Create declare birth
     $declareBirth = new DeclareBirth();
     $declareBirth->setBirthType("keizersnee");
+    $declareBirth->setUbn("777777");
+
     $declareBirth->setDateOfBirth(self::$mockedChild->getDateOfBirth());
 
     $unassignedTags = MockedTags::getMockedTags();
@@ -190,6 +197,7 @@ class BirthAPIControllerTest extends WebTestCase {
     //Create declare birth
     $declareBirth = new DeclareBirth();
     $declareBirth->setBirthType("keizersnee");
+    $declareBirth->setUbn("777777");
     $declareBirth->setDateOfBirth(self::$mockedChild->getDateOfBirth());
 
     $unassignedTags = MockedTags::getMockedTags();
@@ -222,6 +230,7 @@ class BirthAPIControllerTest extends WebTestCase {
     //Update value
     $declareBirthUpdated = $declareBirth;
     $declareBirthUpdated->setBirthType("Painful but worth it");
+    $declareBirthUpdated->setDateOfBirth(new \DateTime());
     $declareBirthUpdated->setAborted("N");
     $declareBirthUpdated->setAnimalWeight(999);
     $declareBirthUpdated->setLambar("N");
@@ -248,6 +257,8 @@ class BirthAPIControllerTest extends WebTestCase {
     $tag = $updatedData['animal']['assigned_tag'];
 
     //Verify the updated parameters
+
+    $this->assertEquals($declareBirthUpdated->getDateOfBirth(), new \DateTime($updatedData['date_of_birth']));
     $this->assertEquals($declareBirthUpdated->getBirthType(), $updatedData['birth_type']);
     $this->assertEquals($declareBirthUpdated->getAborted(), $updatedData['aborted']);
     $this->assertEquals($declareBirthUpdated->getAnimalWeight(), $updatedData['animal_weight']);
