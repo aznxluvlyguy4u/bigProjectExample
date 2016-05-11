@@ -32,16 +32,6 @@ class AnimalRepository extends BaseRepository
    */
   function findByCountryCodeAndUlnOrPedigree($countryCode, $ulnOrPedigreeCode)
   {
-    return $this->querier($countryCode, $ulnOrPedigreeCode);
-  }
-
-  /**
-   * @param $countryCode
-   * @param $ulnOrPedigreeCode
-   * @return array|null
-   */
-  private function querier($countryCode, $ulnOrPedigreeCode){
-
     $animal = null;
     $tagRepository = $this->getEntityManager()->getRepository(Constant::TAG_REPOSITORY);
 
@@ -49,7 +39,7 @@ class AnimalRepository extends BaseRepository
     $tag = $tagRepository->findByUlnNumberAndCountryCode($countryCode,$ulnOrPedigreeCode);
 
     if($tag != null) {
-        $animal = $tag->getAnimal();
+      $animal = $tag->getAnimal();
     } else { //Find animal through Animal pedigreeNumber
       $animal = $this->findByCountryCodeAndPedigree($countryCode, $ulnOrPedigreeCode);
     }

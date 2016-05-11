@@ -390,4 +390,76 @@ class DeclareBirth extends DeclareBase
         $this->transportationCode = $transportationCode;
     }
 
+
+    /**
+     * Set isAborted
+     *
+     * @param string $isAborted
+     *
+     * @return DeclareBirth
+     */
+    public function setIsAborted($isAborted)
+    {
+        $this->is_aborted = $isAborted;
+
+        return $this;
+    }
+
+    /**
+     * Get isAborted
+     *
+     * @return string
+     */
+    public function getIsAborted()
+    {
+        return $this->is_aborted;
+    }
+
+    /**
+     * Set isPseudoPregnancy
+     *
+     * @param string $isPseudoPregnancy
+     *
+     * @return DeclareBirth
+     */
+    public function setIsPseudoPregnancy($isPseudoPregnancy)
+    {
+        $this->is_pseudoPregnancy = $isPseudoPregnancy;
+
+        return $this;
+    }
+
+    /**
+     * Get isPseudoPregnancy
+     *
+     * @return string
+     */
+    public function getIsPseudoPregnancy()
+    {
+        return $this->is_pseudoPregnancy;
+    }
+
+    /**
+     * Set isLambar
+     *
+     * @param string $isLambar
+     *
+     * @return DeclareBirth
+     */
+    public function setIsLambar($isLambar)
+    {
+        $this->is_lambar = $isLambar;
+
+        return $this;
+    }
+
+    /**
+     * Get isLambar
+     *
+     * @return string
+     */
+    public function getIsLambar()
+    {
+        return $this->is_lambar;
+    }
 }

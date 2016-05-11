@@ -6,6 +6,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Tools\Export\ExportException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -145,7 +146,17 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     $returnMessages = new ArrayCollection();
 
     foreach($children as $child) {
+        
+        $ulnNumber = $child[Constant::ULN_NUMBER_NAMESPACE];
+        $ulnCountryCode = $child[Constant::ULN_COUNTRY_CODE_NAMESPACE];
 
+        $tag = $this->getEntityGetter()->retrieveTag($ulnCountryCode, $ulnNumber);
+
+        if($tag->getTagStatus() == "assigned"){
+            //TODO redirect to error table / save the incorrect input (?)
+            return new JsonResponse(array("Tag already in use", 200), 200);
+        }
+        
         $contentPerChild = $contentWithoutChildren;
         $contentPerChild->set('animal', $child);
 
