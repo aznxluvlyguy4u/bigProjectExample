@@ -36,7 +36,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
 
         //TODO Maybe set the revoked requestState from the Internal Worker when a successful RevokeDeclaration has been received, and remove doing that in this controller. But doing it like this, might cause confusion for the user in the frontend.
         //Now set the requestState of the revoked message to REVOKED
-        $this->persistRevokedRequestState($revokeDeclarationObject);
+        $this->persistRevokingRequestState($revokeDeclarationObject);
 
         //Send it to the queue and persist/update any changed state to the database
         $this->sendMessageObjectToQueue($revokeDeclarationObject, RequestType::REVOKE_DECLARATION_ENTITY, RequestType::REVOKE_DECLARATION);

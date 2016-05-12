@@ -444,13 +444,13 @@ class APIController extends Controller implements APIControllerInterface
    *
    * @param RevokeDeclaration $revokeDeclarationObject
    */
-  public function persistRevokedRequestState(RevokeDeclaration $revokeDeclarationObject)
+  public function persistRevokingRequestState(RevokeDeclaration $revokeDeclarationObject)
   {
     $em = $this->getDoctrine()->getEntityManager();
 
     $messageObjectTobeRevoked = $this->getEntitySetter()->setRequestStateToRevoked($revokeDeclarationObject->getMessageId());
 
-    $messageObjectWithRevokedRequestState = $messageObjectTobeRevoked->setRequestState(RequestStateType::REVOKED);
+    $messageObjectWithRevokedRequestState = $messageObjectTobeRevoked->setRequestState(RequestStateType::REVOKING);
 
     $classNameWithPath = $em->getClassMetadata(get_class($messageObjectTobeRevoked))->getName();
     $pathArray = explode('\\', $classNameWithPath);
