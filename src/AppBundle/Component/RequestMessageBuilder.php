@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Constant\Constant;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Service\IRSerializer;
@@ -103,7 +104,7 @@ class RequestMessageBuilder
                 return $retrieveEartags;
             case RequestType::REVOKE_DECLARATION_ENTITY:
                 $revokeDeclaration = new RevokeDeclaration();
-                $revokeDeclaration->setMessageId($contentArray['message_id']);
+                $revokeDeclaration->setMessageId($contentArray[Constant::MESSAGE_ID_SNAKE_CASE_NAMESPACE]);
 
                 return $this->revokeMessageBuilder->buildMessage($revokeDeclaration, $person);
 

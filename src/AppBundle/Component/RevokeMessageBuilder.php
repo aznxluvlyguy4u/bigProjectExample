@@ -51,14 +51,12 @@ class RevokeMessageBuilder extends MessageBuilderBase
      * @return RevokeDeclaration
      */
     private function addRevokeDeclarationData(RevokeDeclaration $revokeDeclaration, $person)
-    { //FIXME
-        $responseDeclaration = $this->entityGetter->getResponseDeclarationByMessageId($revokeDeclaration->getMessageId());
-        $requestDeclaration = $responseDeclaration->getRevokeDeclarationRequestMessage();
-
-//        $requestDeclaration = $this->entityGetter->getResponseDeclarationByRequestId($responseDeclaration->getRequestId());
+    {
+        $retrievedDeclaration = $this->entityGetter->getRequestMessageByMessageId($revokeDeclaration->getMessageId());
 
         $revokeDeclaration->setRelationNumberKeeper($person->getRelationNumberKeeper());
-        $revokeDeclaration->setUbn($requestDeclaration->getUbn());
+        $revokeDeclaration->setUbn($retrievedDeclaration->getUbn());
+        $revokeDeclaration->setRequestId($retrievedDeclaration->getRequestId());
 
         return $revokeDeclaration;
     }

@@ -20,5 +20,6 @@ class RequestStateType
     const FINISHED = "finished";
     const FAILED = "failed";
     const CANCELLED = "cancelled";
+    const REVOKED = "revoked";
 
 }

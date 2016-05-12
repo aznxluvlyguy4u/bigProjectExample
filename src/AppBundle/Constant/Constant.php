@@ -13,6 +13,8 @@ class Constant
     const RESULT_NAMESPACE = "result";
     const CONTINENT_NAMESPACE = 'continent';
     const LOCATION_NAMESPACE = 'location';
+    const MESSAGE_ID_SNAKE_CASE_NAMESPACE = 'message_id';
+    const MESSAGE_ID_CAMEL_CASE_NAMESPACE = 'messageId';
     const ANIMAL_TYPE_NAMESPACE = 'type';
     const ANIMAL_NAMESPACE = 'animal';
     const ALL_NAMESPACE = 'all';

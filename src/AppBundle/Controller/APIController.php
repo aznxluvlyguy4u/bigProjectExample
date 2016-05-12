@@ -415,5 +415,4 @@ class APIController extends Controller implements APIControllerInterface
 
     return new JsonResponse($response, 401);
   }
-
 }

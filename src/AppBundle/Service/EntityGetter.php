@@ -429,12 +429,22 @@ class EntityGetter
     }
 
     /**
-     * @param $id
+     * @param $messageId
      * @return \AppBundle\Entity\DeclareBase
      */
-    public function getResponseDeclarationByRequestId($requestId)
+    public function getRequestMessageByMessageId($messageId)
     {
-        return $this->entityManager->getRepository(Constant::DECLARE_BASE_REPOSITORY)->findOneBy(array("request_id" => $requestId));
+        $requestId = $this->getResponseMessageByMessageId($messageId)->getRequestId();
+
+        return $this->entityManager->getRepository(Constant::DECLARE_BASE_REPOSITORY)->findOneBy(array(Constant::REQUEST_ID_NAMESPACE=>$requestId));
     }
 
+    /**
+     * @param $messageId
+     * @return \AppBundle\Entity\DeclareBaseResponse
+     */
+    public function getResponseMessageByMessageId($messageId)
+    {
+        return $this->entityManager->getRepository(Constant::DECLARE_BASE_RESPONSE_REPOSITORY)->findOneBy(array(Constant::MESSAGE_ID_CAMEL_CASE_NAMESPACE=>$messageId));
+    }
 }
