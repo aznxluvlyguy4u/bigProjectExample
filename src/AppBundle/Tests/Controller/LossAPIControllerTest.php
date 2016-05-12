@@ -191,7 +191,7 @@ class LossAPIControllerTest extends WebTestCase {
     $declareLoss = new DeclareLoss();
     $declareLoss->setReasonOfLoss("Accident");
     $declareLoss->setUbnProcessor("666");
-    $declareLoss->setDateOfDeath(new \DateTime("2036-03-01"));
+    $declareLoss->setDateOfDeath(new \DateTime("2018-05-24"));
 
     $declareLoss->setAnimal(self::$mockedChild);
 
@@ -216,8 +216,8 @@ class LossAPIControllerTest extends WebTestCase {
 
     //Update value
     $declareLossUpdated = $declareLoss;
-    $declareLoss->setReasonOfLoss("Destiny");
-    $declareLoss->setUbnProcessor("1");
+    $declareLossUpdated->setReasonOfLoss("Destiny");
+    $declareLossUpdated->setUbnProcessor("1");
     $declareLossUpdated->getAnimal()->setUlnNumber('8795441');
 
     //Create json to be putted
@@ -241,7 +241,7 @@ class LossAPIControllerTest extends WebTestCase {
     $this->assertEquals($declareLossUpdated->getAnimal()->getUlnNumber(), $updatedData['animal']['uln_number']);
 
     //Verify some unchanged parameters
-    $this->assertEquals($declareLoss->getAnimal()->getUlnCountryCode(), $updatedData['animal']['uln_country_code']);
+    $this->assertEquals($declareLossUpdated->getAnimal()->getUlnCountryCode(), $updatedData['animal']['uln_country_code']);
   }
   
   public function tearDown() {
