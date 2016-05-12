@@ -1,10 +1,8 @@
 <?php
 
-namespace AppBundle\Component;
-
+namespace AppBundle\Service;
 
 use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Service\EntityGetter;
 use Doctrine\ORM\EntityManager;
 
 class EntitySetter extends EntityGetter
@@ -15,7 +13,7 @@ class EntitySetter extends EntityGetter
     }
 
 
-    function setRequestStateToRevoked($messageId)
+    public function setRequestStateToRevoked($messageId)
     {
         $messageObject = $this->getRequestMessageByMessageId($messageId);
         $messageObject->setRequestState(RequestStateType::REVOKED);

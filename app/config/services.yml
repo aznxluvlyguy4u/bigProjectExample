@@ -21,6 +21,10 @@ services:
         class: AppBundle\Service\EntityGetter
         arguments: ['@doctrine.orm.entity_manager']
 
+    app.doctrine.entitysetter:
+        class: AppBundle\Service\EntitySetter
+        arguments: ['@doctrine.orm.entity_manager']
+
 
     app.messagebuilder.base:
         class: AppBundle\Component\MessageBuilderBase

@@ -5,6 +5,10 @@ namespace AppBundle\Controller;
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\AnimalType;
+use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Service\EntityGetter;
+use AppBundle\Service\EntitySetter;
+use AppBundle\Entity\RevokeDeclaration;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -53,6 +57,23 @@ class APIController extends Controller implements APIControllerInterface
     }
 
     return $this->entityGetter;
+  }
+
+  /**
+   * @var \AppBundle\Service\EntitySetter
+   */
+  private $entitySetter;
+
+  /**
+   * @return \AppBundle\Service\EntitySetter
+   */
+  protected function getEntitySetter()
+  {
+    if($this->entitySetter == null){
+      $this->entitySetter = $this->get('app.doctrine.entitysetter');
+    }
+
+    return $this->entitySetter;
   }
 
   /**
@@ -414,5 +435,27 @@ class APIController extends Controller implements APIControllerInterface
     );
 
     return new JsonResponse($response, 401);
+  }
+
+  /**
+   * Retrieve the messageObject related to the RevokeDeclaration
+   * reset the request state to 'revoked'
+   * and persist the update.
+   *
+   * @param RevokeDeclaration $revokeDeclarationObject
+   */
+  public function persistRevokedRequestState(RevokeDeclaration $revokeDeclarationObject)
+  {
+    $em = $this->getDoctrine()->getEntityManager();
+
+    $messageObjectTobeRevoked = $this->getEntitySetter()->setRequestStateToRevoked($revokeDeclarationObject->getMessageId());
+
+    $messageObjectWithRevokedRequestState = $messageObjectTobeRevoked->setRequestState(RequestStateType::REVOKED);
+
+    $classNameWithPath = $em->getClassMetadata(get_class($messageObjectTobeRevoked))->getName();
+    $pathArray = explode('\\', $classNameWithPath);
+    $className = $pathArray[sizeof($pathArray)-1];
+
+    $this->persist($messageObjectWithRevokedRequestState, $className);
   }
 }

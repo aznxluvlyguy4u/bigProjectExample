@@ -2,11 +2,6 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Component\MessageBuilderBase;
-use AppBundle\Component\RevokeMessageBuilder;
-use AppBundle\Constant\Constant;
-use AppBundle\Entity\RevokeDeclaration;
-use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -34,14 +29,18 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
         $content = $this->getContentAsArray($request);
 
         //Convert the array into an object and add the mandatory values retrieved from the database
-        $messageObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $content, $this->getAuthenticatedUser($request));
+        $revokeDeclarationObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $content, $this->getAuthenticatedUser($request));
 
         //First Persist object to Database, before sending it to the queue
-        $this->persist($messageObject, RequestType::REVOKE_DECLARATION_ENTITY);
+        $this->persist($revokeDeclarationObject, RequestType::REVOKE_DECLARATION_ENTITY);
+
+        //TODO Maybe set the revoked requestState from the Internal Worker when a successful RevokeDeclaration has been received, and remove doing that in this controller. But doing it like this, might cause confusion for the user in the frontend.
+        //Now set the requestState of the revoked message to REVOKED
+        $this->persistRevokedRequestState($revokeDeclarationObject);
 
         //Send it to the queue and persist/update any changed state to the database
-        $this->sendMessageObjectToQueue($messageObject, RequestType::REVOKE_DECLARATION_ENTITY, RequestType::REVOKE_DECLARATION);
+        $this->sendMessageObjectToQueue($revokeDeclarationObject, RequestType::REVOKE_DECLARATION_ENTITY, RequestType::REVOKE_DECLARATION);
 
-        return new JsonResponse($messageObject, 200);
+        return new JsonResponse($revokeDeclarationObject, 200);
     }
 }
