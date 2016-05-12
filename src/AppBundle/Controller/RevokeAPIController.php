@@ -33,8 +33,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
 
         //First Persist object to Database, before sending it to the queue
         $this->persist($revokeDeclarationObject, RequestType::REVOKE_DECLARATION_ENTITY);
-
-        //TODO Maybe set the revoked requestState from the Internal Worker when a successful RevokeDeclaration has been received, and remove doing that in this controller. But doing it like this, might cause confusion for the user in the frontend.
+        
         //Now set the requestState of the revoked message to REVOKED
         $this->persistRevokingRequestState($revokeDeclarationObject);
 
