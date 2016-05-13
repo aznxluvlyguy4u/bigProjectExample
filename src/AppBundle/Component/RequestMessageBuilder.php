@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Entity\RetrieveEartags;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Service\IRSerializer;
 use Doctrine\ORM\EntityManager;
@@ -36,6 +37,11 @@ class RequestMessageBuilder
     private $birthMessageBuilder;
 
     /**
+     * @var RetrieveEartagsMessageBuilder
+     */
+    private $retrieveEartagsMessageBuilder;
+
+    /**
      * @var IRSerializer
      */
     private $irSerializer;
@@ -54,6 +60,7 @@ class RequestMessageBuilder
         $this->importMessageBuilder = new ImportMessageBuilder($em);
         $this->birthMessageBuilder = new BirthMessageBuilder($em);
         $this->exportMessageBuilder = new ExportMessageBuilder($em);
+        $this->retrieveEartagsMessageBuilder = new RetrieveEartagsMessageBuilder($em);
     }
 
     public function build($messageClassNameSpace, ArrayCollection $contentArray, Person $person, $isEditMessage)
@@ -91,9 +98,8 @@ class RequestMessageBuilder
                 $declareImportRequest = $this->irSerializer->parseDeclareImport($contentArray, $isEditMessage);
                 return $this->importMessageBuilder->buildMessage($declareImportRequest, $person);
             case RequestType::RETRIEVE_EARTAGS_ENTITY:
-                $retrieveEartags = $this->irSerializer->parseRetrieveEartags($contentArray, $isEditMessage);
-                //TODO: only add the mininum required fields for this Message Type
-                return $retrieveEartags;
+                $retrieveEartagsRequest = $this->irSerializer->parseRetrieveEartags($contentArray, $isEditMessage);
+                return $this->retrieveEartagsMessageBuilder->buildMessage($retrieveEartagsRequest, $person);
             case RequestType::REVOKE_DECLARATION_ENTITY:
                 $revokeDeclaration = $this->irSerializer->parseRevokeDeclaration($contentArray, $isEditMessage);
                 //TODO: only add the mininum required fields for this Message Type
