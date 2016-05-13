@@ -16,18 +16,22 @@ use Doctrine\Common\Collections\ArrayCollection;
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * //TODO add new child classes to the DiscriminatorMap
- * @ORM\DiscriminatorMap({  "DeclarationDetail" = "DeclarationDetail",
- *                          "DeclareAnimalFlag" = "DeclareAnimalFlag",
- *                          "DeclareArrival" = "DeclareArrival",
- *                          "DeclareBirth" = "DeclareBirth",
- *                          "DeclareDepart" = "DeclareDepart",
- *                          "DeclareEartagsTransfer" = "DeclareEartagsTransfer",
- *                          "DeclareExport" = "DeclareExport",
- *                          "DeclareImport" = "DeclareImport",
- *                          "DeclareLoss" = "DeclareLoss",
- *                          "DeclareMate" = "DeclareMate",
- *                          "RetrieveEartags" = "RetrieveEartags",
- *                          "RevokeDeclaration" = "RevokeDeclaration"})
+ * @ORM\DiscriminatorMap(
+ *   {
+ *      "DeclarationDetail" = "DeclarationDetail",
+ *      "DeclareAnimalFlag" = "DeclareAnimalFlag",
+ *      "DeclareArrival" = "DeclareArrival",
+ *      "DeclareBirth" = "DeclareBirth",
+ *      "DeclareDepart" = "DeclareDepart",
+ *      "DeclareEartagsTransfer" = "DeclareEartagsTransfer",
+ *      "DeclareExport" = "DeclareExport",
+ *      "DeclareImport" = "DeclareImport",
+ *      "DeclareLoss" = "DeclareLoss",
+ *      "DeclareMate" = "DeclareMate",
+ *      "RetrieveEartags" = "RetrieveEartags",
+ *      "RevokeDeclaration" = "RevokeDeclaration"
+ *   }
+ * )
  * @package AppBundle\Entity\DeclareBase
  */
 abstract class DeclareBase
