@@ -188,6 +188,11 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $data = json_decode($response->getContent(), true);
 
     $this->assertEquals('open', $data['request_state']);
+
+    //make sure the animal is updated instead of created as a new animal
+    $animalIdBeforeUpdate = $declareArrival->getAnimal()->getId();
+    $animalIdAfterUpdate = $data['request_state']['animal']['id'];
+    $this->assertEquals($animalIdBeforeUpdate, $animalIdAfterUpdate);
   }
 
   /**
@@ -248,6 +253,11 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $this->assertEquals($declareArrivalUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
     $this->assertEquals($declareArrival->getIsImportAnimal(), $updatedData['is_import_animal']);
     $this->assertEquals($declareArrival->getAnimal()->getUlnCountryCode(), $updatedData['animal']['uln_country_code']);
+
+    //make sure the animal is updated instead of created as a new animal
+    $animalIdBeforeUpdate = $declareArrival->getAnimal()->getId();
+    $animalIdAfterUpdate = $updatedData['request_state']['animal']['id'];
+    $this->assertEquals($animalIdBeforeUpdate, $animalIdAfterUpdate);
   }
 
   public function tearDown() {
