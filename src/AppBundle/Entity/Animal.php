@@ -164,6 +164,15 @@ abstract class Animal
     protected $birth;
 
     /**
+     * @var DeclareLoss
+     *
+     * @JMS\Type("AppBundle\Entity\DeclareLoss")
+     * @ORM\OneToOne(targetEntity="DeclareLoss", mappedBy="animal")
+     * @Expose
+     */
+    protected $death;
+
+    /**
      * @var Animal
      *
      * @ORM\ManyToOne(targetEntity="Ram", inversedBy="children", cascade={"persist"})
@@ -866,5 +875,29 @@ abstract class Animal
     public function getExports()
     {
         return $this->exports;
+    }
+
+    /**
+     * Set death
+     *
+     * @param \AppBundle\Entity\DeclareLoss $death
+     *
+     * @return Animal
+     */
+    public function setDeath(\AppBundle\Entity\DeclareLoss $death = null)
+    {
+        $this->death = $death;
+
+        return $this;
+    }
+
+    /**
+     * Get death
+     *
+     * @return \AppBundle\Entity\DeclareLoss
+     */
+    public function getDeath()
+    {
+        return $this->death;
     }
 }
