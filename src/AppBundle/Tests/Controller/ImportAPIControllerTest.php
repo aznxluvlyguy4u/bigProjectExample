@@ -207,7 +207,7 @@ class ImportAPIControllerTest extends WebTestCase {
     $requestId = $declareImportResponse['request_id'];
 
     $declareImportUpdated = $declareImport;
-    $updatedDateString = "1899-01-01T16:22:43-0500\"";
+    $updatedDateString = "1899-01-01T16:22:43-0500";
     $declareImportUpdated->setImportDate(new \DateTime($updatedDateString));
     //Create json to be putted
     $declareImportUpdatedJson = self::$serializer->serializeToJSON($declareImportUpdated);
