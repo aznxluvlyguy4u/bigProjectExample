@@ -229,11 +229,14 @@ class LossAPIControllerTest extends WebTestCase {
     //Get requestId so we can do an update with PUT
     $requestId = $declareLossResponse['request_id'];
 
+    //Get tag
+    $tag = self::$mockedTagsList->get(rand(1,sizeof(self::$mockedTagsList)-1));
+
     //Update value
     $declareLossUpdated = $declareLoss;
     $declareLossUpdated->setReasonOfLoss("Destiny");
     $declareLossUpdated->setUbnProcessor("1");
-    $declareLossUpdated->getAnimal()->setUlnNumber('8795441');
+    $declareLossUpdated->getAnimal()->setAssignedTag($tag);
 
     //Create json to be putted
     $declareLossUpdatedJson = self::$serializer->serializeToJSON($declareLossUpdated);
