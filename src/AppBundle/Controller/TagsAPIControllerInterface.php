@@ -44,12 +44,6 @@ interface TagsAPIControllerInterface {
    * @param Request $request
    * @return mixed
    */
-  public function createTagTransfer(Request $request, $tagId, $ubnId);
-
-  /**
-   * @param Request $request
-   * @return mixed
-   */
   public function createTagsTransfer(Request $request);
 
   /**
