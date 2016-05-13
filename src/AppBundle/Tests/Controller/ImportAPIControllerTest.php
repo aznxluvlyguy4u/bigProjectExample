@@ -114,6 +114,7 @@ class ImportAPIControllerTest extends WebTestCase {
 
   /**
    * @group get
+   * @group import-get
    * Test retrieving Declare imports list
    */
   public function testGetImports()
@@ -133,6 +134,7 @@ class ImportAPIControllerTest extends WebTestCase {
 
   /**
    * @group get
+   * @group import-get
    * Test retrieving Declare import by id
    */
   public function testGetImportById()
@@ -152,6 +154,7 @@ class ImportAPIControllerTest extends WebTestCase {
 
   /**
    * @group create
+   * @group import-create
    * Test create new Declare import
    */
   public function testCreateImport()
@@ -183,6 +186,7 @@ class ImportAPIControllerTest extends WebTestCase {
 
   /**
    * @group update
+   * @group import-update
    * Test create new Declare import
    */
   public function testUpdateImport()

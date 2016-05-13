@@ -123,6 +123,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
 
   /**
    * @group get
+   * @group arrival-get
    * Test retrieving Declare arrivals list
    */
   public function testGetArrivals()
@@ -142,6 +143,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
 
   /**
    * @group get
+   * @group arrival-get
    * Test retrieving Declare arrival by id
    */
   public function testGetArrivalById()
@@ -161,6 +163,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
 
   /**
    * @group create
+   * @group arrival-create
    * Test create new Declare arrival
    */
   public function testCreateArrival()
@@ -197,6 +200,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
 
   /**
    * @group update
+   * @group arrival-update
    * Test create new Declare arrival
    */
   public function testUpdateArrival()

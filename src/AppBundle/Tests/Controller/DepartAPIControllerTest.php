@@ -113,6 +113,7 @@ class DepartAPIControllerTest extends WebTestCase {
 
   /**
    * @group get
+   * @group depart-get
    * Test retrieving Declare departures list
    */
   public function testGetDepartures()
@@ -132,6 +133,7 @@ class DepartAPIControllerTest extends WebTestCase {
 
   /**
    * @group get
+   * @group depart-get
    * Test retrieving Declare departures by id
    */
   public function testGetDeparturesById()
@@ -151,6 +153,7 @@ class DepartAPIControllerTest extends WebTestCase {
 
   /**
    * @group create
+   * @group depart-create
    * Test create new Declare depart
    */
   public function testCreateDepart()
@@ -181,6 +184,7 @@ class DepartAPIControllerTest extends WebTestCase {
 
   /**
    * @group update
+   * @group depart-update
    * Test create new Declare Depart
    */
   public function testUpdateDepart()
