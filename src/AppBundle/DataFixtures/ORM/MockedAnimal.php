@@ -93,7 +93,7 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
 
     self::$mockedParentRam = new Ram();
     self::$mockedParentRam->setIsAlive(true);
-    self::$mockedParentRam->setAssignedTag($tags->get(rand(1,$tagListSize)));
+    self::$mockedParentRam->setAssignedTag($tags->get(rand(1,$tagListSize-1)));
     self::$mockedParentRam->setAnimalType(AnimalType::sheep);
     self::$mockedParentRam->setDateOfBirth(new \DateTime());
     self::$mockedParentRam->setPedigreeNumber("35645");
@@ -102,7 +102,7 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
 
     self::$mockedParentEwe = new Ewe();
     self::$mockedParentEwe->setIsAlive(true);
-    self::$mockedParentEwe->setAssignedTag($tags->get(rand(1,$tagListSize)));
+    self::$mockedParentEwe->setAssignedTag($tags->get(rand(1,$tagListSize-1)));
     self::$mockedParentEwe->setAnimalType(AnimalType::sheep);
     self::$mockedParentEwe->setDateOfBirth(new \DateTime());
     self::$mockedParentEwe->setPedigreeNumber("79164");
@@ -111,7 +111,7 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
 
     self::$anotherEwe = new Ewe();
     self::$anotherEwe->setIsAlive(true);
-    self::$anotherEwe->setAssignedTag($tags->get(rand(1,$tagListSize)));
+    self::$anotherEwe->setAssignedTag($tags->get(rand(1,$tagListSize-1)));
     self::$anotherEwe->setAnimalType(AnimalType::sheep);
     self::$anotherEwe->setDateOfBirth(new \DateTime());
     self::$anotherEwe->setPedigreeNumber("52350");
@@ -120,7 +120,7 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
 
     self::$mockedNewBornRam = new Ram();
     self::$mockedNewBornRam->setIsAlive(true);
-    self::$mockedNewBornRam->setAssignedTag($tags->get(rand(1,$tagListSize)));
+    self::$mockedNewBornRam->setAssignedTag($tags->get(rand(1,$tagListSize-1)));
     self::$mockedNewBornRam->setAnimalType(AnimalType::sheep);
     self::$mockedNewBornRam->setDateOfBirth(new \DateTime());
     self::$mockedNewBornRam->setPedigreeNumber("65454");
