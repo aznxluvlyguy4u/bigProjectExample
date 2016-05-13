@@ -9,12 +9,15 @@ class Constant
     const ACCESS_TOKEN_HEADER_NAMESPACE = 'AccessToken';
     const STATE_NAMESPACE = 'state';
     const REQUEST_STATE_NAMESPACE = 'requestState';
+    const TAG_STATUS_NAMESPACE = 'tagStatus';
     const REQUEST_ID_NAMESPACE = 'requestId';
     const RESULT_NAMESPACE = "result";
     const CONTINENT_NAMESPACE = 'continent';
     const LOCATION_NAMESPACE = 'location';
     const ANIMAL_TYPE_NAMESPACE = 'type';
     const ANIMAL_NAMESPACE = 'animal';
+    const ANIMALTYPE_NAMESPACE = "animalType";
+    const TAG_TYPE_NAMESPACE = "tagType";
     const ALL_NAMESPACE = 'all';
     const ALIVE_NAMESPACE = 'alive';
     const IS_ALIVE_NAMESPACE = 'isAlive';
@@ -36,8 +39,8 @@ class Constant
     const DECLARE_IMPORT_REPOSITORY ='AppBundle:DeclareImport';
     const DECLARE_EXPORT_REPOSITORY ='AppBundle:DeclareExport';
     const DECLARE_EARTAGS_TRANSFER_REPOSITORY = 'AppBundle:DeclareEartagsTransfer';
+    const RETRIEVE_EARTAGS_REPOSITORY = 'AppBundle:RetrieveEartags';
     const DECLARE_LOSS_REPOSITORY = 'AppBundle:DeclareLoss';
-
     const TAG_REPOSITORY = 'AppBundle:Tag';
     const ANIMAL_REPOSITORY = 'AppBundle:Animal';
     const EWE_REPOSITORY = 'AppBundle:Ewe';
