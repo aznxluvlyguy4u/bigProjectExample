@@ -16,30 +16,109 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class DeclareEartagsTransfer extends DeclareBase
 {
-//TODO
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="Tag", mappedBy="declareEartagTransferRequestMessage", cascade={"persist"})
+     * @ORM\JoinColumn(name="declare_eartag_transfer_request_message_id", referencedColumnName="id")
+     * @JMS\Type("array")
+     */
+    private $tags;
+
+    /**
+     * @var string
+     */
+    private $relationNumberAcceptant;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="DeclareEartagsTransferResponse", mappedBy="declareEartagsTransferRequestMessage", cascade={"persist"})
+     * @ORM\JoinColumn(name="declare_eartag_transfer_request_message_id", referencedColumnName="id")
+     * @JMS\Type("array")
+     */
+    private $responses;
+
+    /**
+     * DeclareEartagsTransfer constructor.
+     */
+    function __construct() {
+        parent::__construct();
+
+        $this->setRequestState('open');
+
+        //Create responses array
+        $this->responses = new ArrayCollection();
+        $this->tags = new ArrayCollection();
+    }
 
 
     /**
-     * Set ubn
+     * Add tag
      *
-     * @param string $ubn
+     * @param \AppBundle\Entity\Tag $tag
      *
      * @return DeclareEartagsTransfer
      */
-    public function setUbn($ubn)
+    public function addTag(\AppBundle\Entity\Tag $tag)
     {
-        $this->ubn = $ubn;
+        $this->tags[] = $tag;
 
         return $this;
     }
 
     /**
-     * Get ubn
+     * Remove tag
      *
-     * @return string
+     * @param \AppBundle\Entity\Tag $tag
      */
-    public function getUbn()
+    public function removeTag(\AppBundle\Entity\Tag $tag)
     {
-        return $this->ubn;
+        $this->tags->removeElement($tag);
+    }
+
+    /**
+     * Get tags
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getTags()
+    {
+        return $this->tags;
+    }
+
+    /**
+     * Add response
+     *
+     * @param \AppBundle\Entity\DeclareImportResponse $response
+     *
+     * @return DeclareEartagsTransfer
+     */
+    public function addResponse(\AppBundle\Entity\DeclareImportResponse $response)
+    {
+        $this->responses[] = $response;
+
+        return $this;
+    }
+
+    /**
+     * Remove response
+     *
+     * @param \AppBundle\Entity\DeclareImportResponse $response
+     */
+    public function removeResponse(\AppBundle\Entity\DeclareImportResponse $response)
+    {
+        $this->responses->removeElement($response);
+    }
+
+    /**
+     * Get responses
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getResponses()
+    {
+        return $this->responses;
     }
 }

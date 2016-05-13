@@ -153,7 +153,6 @@ abstract class Animal
      */
     protected $exports;
 
-
     /**
      * @var DeclareBirth
      *
@@ -162,15 +161,6 @@ abstract class Animal
      * @Expose
      */
     protected $birth;
-
-    /**
-     * @var DeclareLoss
-     *
-     * @JMS\Type("AppBundle\Entity\DeclareLoss")
-     * @ORM\OneToOne(targetEntity="DeclareLoss", mappedBy="animal")
-     * @Expose
-     */
-    protected $death;
 
     /**
      * @var Animal

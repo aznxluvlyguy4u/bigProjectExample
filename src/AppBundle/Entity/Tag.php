@@ -131,6 +131,14 @@ class Tag {
   private $isVerified;
 
   /**
+   * @var DeclareEartagsTransfer
+   * @Assert\NotBlank
+   * @ORM\ManyToOne(targetEntity="DeclareEartagsTransfer", cascade={"persist"}, inversedBy="tags")
+   * @JMS\Type("AppBundle\Entity\DeclareEartagsTransfer")
+   */
+  protected $declareEartagTransferRequestMessage;
+
+  /**
    * Tag constructor.
    */
   public function __construct() {
@@ -374,4 +382,28 @@ class Tag {
   {
     return $this->isVerified;
   }
+
+    /**
+     * Set declareEartagTransferRequestMessage
+     *
+     * @param \AppBundle\Entity\DeclareEartagsTransfer $declareEartagTransferRequestMessage
+     *
+     * @return Tag
+     */
+    public function setDeclareEartagTransferRequestMessage(\AppBundle\Entity\DeclareEartagsTransfer $declareEartagTransferRequestMessage = null)
+    {
+        $this->declareEartagTransferRequestMessage = $declareEartagTransferRequestMessage;
+
+        return $this;
+    }
+
+    /**
+     * Get declareEartagTransferRequestMessage
+     *
+     * @return \AppBundle\Entity\DeclareEartagsTransfer
+     */
+    public function getDeclareEartagTransferRequestMessage()
+    {
+        return $this->declareEartagTransferRequestMessage;
+    }
 }

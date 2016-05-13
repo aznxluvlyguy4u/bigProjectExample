@@ -28,6 +28,7 @@ use Doctrine\Common\Collections\ArrayCollection;
  *      "DeclareImport" = "DeclareImport",
  *      "DeclareLoss" = "DeclareLoss",
  *      "DeclareMate" = "DeclareMate",
+ *      "DeclareEartagsTransfer" = "DeclareEartagsTransfer",
  *      "RetrieveEartags" = "RetrieveEartags",
  *      "RevokeDeclaration" = "RevokeDeclaration"
  *   }
