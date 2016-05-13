@@ -28,6 +28,10 @@ class DeclareEartagsTransfer extends DeclareBase
 
     /**
      * @var string
+     *
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
      */
     private $relationNumberAcceptant;
 
@@ -120,5 +124,29 @@ class DeclareEartagsTransfer extends DeclareBase
     public function getResponses()
     {
         return $this->responses;
+    }
+
+    /**
+     * Set relationNumberAcceptant
+     *
+     * @param string $relationNumberAcceptant
+     *
+     * @return DeclareEartagsTransfer
+     */
+    public function setRelationNumberAcceptant($relationNumberAcceptant)
+    {
+        $this->relationNumberAcceptant = $relationNumberAcceptant;
+
+        return $this;
+    }
+
+    /**
+     * Get relationNumberAcceptant
+     *
+     * @return string
+     */
+    public function getRelationNumberAcceptant()
+    {
+        return $this->relationNumberAcceptant;
     }
 }

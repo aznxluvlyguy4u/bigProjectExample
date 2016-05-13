@@ -25,11 +25,19 @@ class RetrieveEartags extends DeclareBase
 
     /**
      * @var string
+     *
+     * @ORM\Column(type="string")
+     * @JMS\Type("string")
      */
     private $tagType;
 
     /**
      * @var integer
+     *
+     * @ORM\Column(type="integer")
+     * @Assert\Length(max = 1)
+     * @Assert\NotBlank
+     * @JMS\Type("integer")
      */
     private $animalType;
 
@@ -96,5 +104,53 @@ class RetrieveEartags extends DeclareBase
     public function getResponses()
     {
         return $this->responses;
+    }
+
+    /**
+     * Set tagType
+     *
+     * @param string $tagType
+     *
+     * @return RetrieveEartags
+     */
+    public function setTagType($tagType)
+    {
+        $this->tagType = $tagType;
+
+        return $this;
+    }
+
+    /**
+     * Get tagType
+     *
+     * @return string
+     */
+    public function getTagType()
+    {
+        return $this->tagType;
+    }
+
+    /**
+     * Set animalType
+     *
+     * @param integer $animalType
+     *
+     * @return RetrieveEartags
+     */
+    public function setAnimalType($animalType)
+    {
+        $this->animalType = $animalType;
+
+        return $this;
+    }
+
+    /**
+     * Get animalType
+     *
+     * @return integer
+     */
+    public function getAnimalType()
+    {
+        return $this->animalType;
     }
 }
