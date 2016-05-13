@@ -6,6 +6,7 @@ use AppBundle\Entity\DeclareDepart;
 use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedAnimal;
 use AppBundle\DataFixtures\ORM\MockedClient;
+use AppBundle\DataFixtures\ORM\MockedTags;
 use Doctrine\ORM\EntityManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
@@ -37,6 +38,11 @@ class DepartAPIControllerTest extends WebTestCase {
    * @var EntityManager
    */
   static private $entityManager;
+
+  /**
+   * @var ArrayCollection
+   */
+  static private $mockedTagsList;
 
   /**
    * @var Client
@@ -84,6 +90,9 @@ class DepartAPIControllerTest extends WebTestCase {
     self::$mockedChild  = MockedAnimal::getMockedRamWithParents();
     self::$mockedFather = MockedAnimal::getMockedParentRam();
     self::$mockedMother = MockedAnimal::getMockedParentEwe();
+
+    ///Get mocked tags
+    self::$mockedTagsList = MockedTags::getMockedTags();
 
     $this->defaultHeaders = array(
       'CONTENT_TYPE' => 'application/json',

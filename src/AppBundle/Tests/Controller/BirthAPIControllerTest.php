@@ -41,6 +41,11 @@ class BirthAPIControllerTest extends WebTestCase {
   static private $entityManager;
 
   /**
+   * @var ArrayCollection
+   */
+  static private $mockedTagsList;
+
+  /**
    * @var Client
    */
   static private $mockedClient;
@@ -87,6 +92,9 @@ class BirthAPIControllerTest extends WebTestCase {
     self::$mockedChild  = MockedAnimal::getMockedNewBornRam();
     self::$mockedFather = MockedAnimal::getMockedParentRam();
     self::$mockedMother = MockedAnimal::getMockedParentEwe();
+
+    ///Get mocked tags
+    self::$mockedTagsList = MockedTags::getMockedTags();
 
     $this->defaultHeaders = array(
       'CONTENT_TYPE' => 'application/json',
