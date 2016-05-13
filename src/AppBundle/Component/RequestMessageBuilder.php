@@ -42,6 +42,11 @@ class RequestMessageBuilder
     private $retrieveEartagsMessageBuilder;
 
     /**
+     * @var TagTransferMessageBuilder
+     */
+    private $tagTransferMessageBuilder;
+
+    /**
      * @var IRSerializer
      */
     private $irSerializer;
@@ -61,6 +66,7 @@ class RequestMessageBuilder
         $this->birthMessageBuilder = new BirthMessageBuilder($em);
         $this->exportMessageBuilder = new ExportMessageBuilder($em);
         $this->retrieveEartagsMessageBuilder = new RetrieveEartagsMessageBuilder($em);
+        $this->tagTransferMessageBuilder = new TagTransferMessageBuilder($em);
     }
 
     public function build($messageClassNameSpace, ArrayCollection $contentArray, Person $person, $isEditMessage)
@@ -84,9 +90,8 @@ class RequestMessageBuilder
                 $declareDepartRequest = $this->irSerializer->parseDeclareDepart($contentArray, $isEditMessage);
                 return $this->departMessageBuilder->buildMessage($declareDepartRequest, $person);
             case RequestType::DECLARE_EARTAGS_TRANSFER_ENTITY:
-                $declareEartagsTransfer = $this->irSerializer->parseDeclareEartagsTransfer($contentArray, $isEditMessage);
-                //TODO: only add the mininum required fields for this Message Type
-                return $declareEartagsTransfer;
+                $declareTagsTransferRequest = $this->irSerializer->parseDeclareEartagsTransfer($contentArray, $isEditMessage);
+                return $this->tagTransferMessageBuilder->buildMessage($declareTagsTransferRequest, $person);
             case RequestType::DECLARE_LOSS_ENTITY:
                 $declareLoss = $this->irSerializer->parseDeclareLoss($contentArray, $isEditMessage);
                 //TODO: only add the mininum required fields for this Message Type
