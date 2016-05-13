@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Client;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\EntityGetter;
@@ -251,7 +252,7 @@ class APIController extends Controller implements APIControllerInterface
   /**
    * @param Request|null $request
    * @param null $token
-   * @return \AppBundle\Entity\Person|null|object
+   * @return \AppBundle\Entity\Person|Client|null|object
    */
   public function getAuthenticatedUser(Request $request= null, $token = null)
   {
