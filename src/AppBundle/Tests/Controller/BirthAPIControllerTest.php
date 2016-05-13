@@ -115,6 +115,7 @@ class BirthAPIControllerTest extends WebTestCase {
   }
 
   /**
+   * @group get
    * Test retrieving Declare births list
    */
   public function testGetBirths()
@@ -133,6 +134,7 @@ class BirthAPIControllerTest extends WebTestCase {
   }
 
   /**
+   * @group get
    * Test retrieving Declare birth by id
    */
   public function testGetBirthById()
@@ -151,7 +153,7 @@ class BirthAPIControllerTest extends WebTestCase {
   }
 
   /**
-   *
+   * @group create
    * Test create new Declare birth
    */
   public function testCreateBirth()
@@ -189,7 +191,7 @@ class BirthAPIControllerTest extends WebTestCase {
   }
 
   /**
-   *
+   * @group update
    * Test create new Declare birth
    */
   public function testUpdateBirth()

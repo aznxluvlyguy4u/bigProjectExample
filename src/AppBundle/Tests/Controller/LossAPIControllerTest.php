@@ -113,6 +113,7 @@ class LossAPIControllerTest extends WebTestCase {
   }
 
   /**
+   * @group get
    * Test retrieving Declare losses list
    */
   public function testGetLosses()
@@ -131,6 +132,7 @@ class LossAPIControllerTest extends WebTestCase {
   }
 
   /**
+   * @group get
    * Test retrieving Declare loss by id
    */
   public function testGetLossById()
@@ -149,7 +151,7 @@ class LossAPIControllerTest extends WebTestCase {
   }
 
   /**
-   *
+   * @group create
    * Test create new Declare loss
    */
   public function testCreateLoss()
@@ -182,7 +184,7 @@ class LossAPIControllerTest extends WebTestCase {
   }
 
   /**
-   *
+   * @group update
    * Test create new Declare loss
    */
   public function testUpdateLoss()

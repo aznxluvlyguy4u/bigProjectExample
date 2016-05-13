@@ -86,6 +86,7 @@ class CountryAPIControllerTest extends WebTestCase {
   }
 
   /**
+   * @group get
    * Test retrieving Countries list
    */
   public function testGetCountries()
