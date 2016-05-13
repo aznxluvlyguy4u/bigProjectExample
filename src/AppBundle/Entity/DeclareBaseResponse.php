@@ -19,7 +19,8 @@ use \DateTime;
  *                        "DeclareBirthResponse" = "DeclareBirthResponse",
  *                        "DeclareDepartResponse" = "DeclareDepartResponse",
  *                        "DeclareImportResponse" = "DeclareImportResponse",
- *                        "DeclareExportResponse" = "DeclareExportResponse"
+ *                        "DeclareExportResponse" = "DeclareExportResponse",
+ *                        "RetrieveEartagsResponse" = "RetrieveEartagsResponse"
  *                        })
  * @package AppBundle\Entity\DeclareBaseResponse
  */

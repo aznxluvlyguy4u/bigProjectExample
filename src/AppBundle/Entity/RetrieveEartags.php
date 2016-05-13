@@ -16,30 +16,85 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class RetrieveEartags extends DeclareBase
 {
-//TODO
-
+    /**
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="Location", inversedBy="imports", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Location")
+     */
+    private $location;
 
     /**
-     * Set ubn
+     * @var string
+     */
+    private $tagType;
+
+    /**
+     * @var integer
+     */
+    private $animalType;
+
+    /**
+     * @ORM\OneToMany(targetEntity="RetrieveEartagsResponse", mappedBy="retrieveEartagsRequestMessage", cascade={"persist"})
+     * @ORM\JoinColumn(name="retrieve_eartags_request_message_id", referencedColumnName="id")
+     * @JMS\Type("array")
+     */
+    private $responses;
+
+    /**
+     * Set location
      *
-     * @param string $ubn
+     * @param \AppBundle\Entity\Location $location
      *
      * @return RetrieveEartags
      */
-    public function setUbn($ubn)
+    public function setLocation(\AppBundle\Entity\Location $location = null)
     {
-        $this->ubn = $ubn;
+        $this->location = $location;
 
         return $this;
     }
 
     /**
-     * Get ubn
+     * Get location
      *
-     * @return string
+     * @return \AppBundle\Entity\Location
      */
-    public function getUbn()
+    public function getLocation()
     {
-        return $this->ubn;
+        return $this->location;
+    }
+
+    /**
+     * Add response
+     *
+     * @param \AppBundle\Entity\RetrieveEartagsResponse $response
+     *
+     * @return RetrieveEartags
+     */
+    public function addResponse(\AppBundle\Entity\RetrieveEartagsResponse $response)
+    {
+        $this->responses[] = $response;
+
+        return $this;
+    }
+
+    /**
+     * Remove response
+     *
+     * @param \AppBundle\Entity\RetrieveEartagsResponse $response
+     */
+    public function removeResponse(\AppBundle\Entity\RetrieveEartagsResponse $response)
+    {
+        $this->responses->removeElement($response);
+    }
+
+    /**
+     * Get responses
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getResponses()
+    {
+        return $this->responses;
     }
 }
