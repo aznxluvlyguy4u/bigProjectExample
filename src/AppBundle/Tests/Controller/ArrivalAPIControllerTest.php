@@ -40,6 +40,11 @@ class ArrivalAPIControllerTest extends WebTestCase {
   static private $entityManager;
 
   /**
+   * @var ArrayCollection
+   */
+  static private $mockedTagsList;
+
+  /**
    * @var Client
    */
   static private $mockedClient;
@@ -86,6 +91,9 @@ class ArrivalAPIControllerTest extends WebTestCase {
     self::$mockedChild  = MockedAnimal::getMockedRamWithParents();
     self::$mockedFather = MockedAnimal::getMockedParentRam();
     self::$mockedMother = MockedAnimal::getMockedParentEwe();
+
+    ///Get mocked tags
+    self::$mockedTagsList = MockedTags::getMockedTags();
 
     $this->defaultHeaders = array(
       'CONTENT_TYPE' => 'application/json',
@@ -207,14 +215,18 @@ class ArrivalAPIControllerTest extends WebTestCase {
 
     //Get response
     $response = $this->client->getResponse()->getContent();
-    $declareArrivalResponse = new ArrayCollection(json_decode($response, true));
+    $declareArrivalResponse = json_decode($response, true); //TODO fix in other tests
 
     //Get requestId so we can do an update with PUT
     $requestId = $declareArrivalResponse['request_id'];
 
+    //Get tag
+    $tag = self::$mockedTagsList->get(rand(1,sizeof(self::$mockedTagsList)-1));
+
     //Update value
     $declareArrivalUpdated = $declareArrival;
     $declareArrivalUpdated->setUbnPreviousOwner("999991");
+    $declareArrivalUpdated->getAnimal()->setAssignedTag($tag);
 
     //Create json to be putted
     $declareArrivalUpdatedJson = self::$serializer->serializeToJSON($declareArrivalUpdated);
@@ -233,6 +245,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
 
     $this->assertEquals($declareArrivalUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
     $this->assertEquals($declareArrival->getIsImportAnimal(), $updatedData['is_import_animal']);
+    $this->assertEquals($declareArrival->getAnimal()->getUlnCountryCode(), $updatedData['animal']['uln_country_code']);
   }
 
   public function tearDown() {
