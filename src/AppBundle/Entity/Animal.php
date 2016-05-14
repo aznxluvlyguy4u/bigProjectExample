@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\AnimalType;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -207,6 +208,15 @@ abstract class Animal
      * @Expose
      */
     protected $birth;
+
+    /**
+     * @var DeclareBirth
+     *
+     * @JMS\Type("AppBundle\Entity\DeclareLoss")
+     * @ORM\OneToOne(targetEntity="DeclareLoss", mappedBy="animal")
+     * @Expose
+     */
+    protected $death;
 
     /**
      * @var Tag
@@ -928,16 +938,6 @@ abstract class Animal
         return $this;
     }
 
-    /**
-     * Get death
-     *
-     * @return \AppBundle\Entity\DeclareLoss
-     */
-    public function getDeath()
-    {
-        return $this->death;
-    }
-
     /*
      * Get dateOfBirth
      *
@@ -946,5 +946,15 @@ abstract class Animal
     public function getDateOfBirth()
     {
         return $this->dateOfBirth;
+    }
+
+    /**
+     * Get death
+     *
+     * @return \AppBundle\Entity\DeclareLoss
+     */
+    public function getDeath()
+    {
+        return $this->death;
     }
 }

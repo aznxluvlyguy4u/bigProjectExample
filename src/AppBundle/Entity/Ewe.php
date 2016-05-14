@@ -48,6 +48,7 @@ class Ewe extends Animal
          $this->objectType = "Ewe";
          $this->setAnimalType(AnimalType::sheep);
          $this->setGender(AnimalType::FEMALE);
+         $this->setAnimalCategory(3);
 
          $this->children = new ArrayCollection();
      }
@@ -300,5 +301,15 @@ class Ewe extends Animal
     public function getSurrogateMother()
     {
         return $this->surrogateMother;
+    }
+
+    /**
+     * Get death
+     *
+     * @return \AppBundle\Entity\DeclareLoss
+     */
+    public function getDeath()
+    {
+        return $this->death;
     }
 }

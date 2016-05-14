@@ -42,6 +42,7 @@ class Neuter extends Animal
 
         $this->objectType = "Neuter";
         $this->setAnimalType(AnimalType::sheep);
+        $this->setAnimalCategory(3);
 
         //Create children array
         $this->children = new ArrayCollection();
@@ -261,5 +262,15 @@ class Neuter extends Animal
     public function getSurrogateMother()
     {
         return $this->surrogateMother;
+    }
+
+    /**
+     * Get death
+     *
+     * @return \AppBundle\Entity\DeclareLoss
+     */
+    public function getDeath()
+    {
+        return $this->death;
     }
 }

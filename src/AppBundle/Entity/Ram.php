@@ -43,6 +43,7 @@ class Ram extends Animal
 
          $this->objectType = "Ram";
          $this->setAnimalType(AnimalType::sheep);
+         $this->setAnimalCategory(3);
          $this->setGender(AnimalType::MALE);
 
          //Create children array
@@ -263,5 +264,15 @@ class Ram extends Animal
     public function getSurrogateMother()
     {
         return $this->surrogateMother;
+    }
+
+    /**
+     * Get death
+     *
+     * @return \AppBundle\Entity\DeclareLoss
+     */
+    public function getDeath()
+    {
+        return $this->death;
     }
 }
