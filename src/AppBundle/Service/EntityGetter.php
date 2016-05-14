@@ -370,13 +370,13 @@ class EntityGetter
 
         //Map all the other possible values
         if (array_key_exists('name', $animalArray)) {
-            $animal->setName($animal['name']); }
+            $animal->setName($animalArray['name']); }
 
         if (array_key_exists('date_of_birth', $animalArray)) {
-            $animal->setDateOfBirth($animal['date_of_birth']); }
+            $animal->setDateOfBirth($animalArray['date_of_birth']); }
 
         if (array_key_exists('date_of_death', $animalArray)) {
-            $animal->setDateOfDeath($animal['date_of_death']); }
+            $animal->setDateOfDeath($animalArray['date_of_death']); }
 
 //FIXME Setting an father, mother or surrogate here as well, might lead to a large loop
 //        if (array_key_exists('father', $animalArray)) {
@@ -396,13 +396,13 @@ class EntityGetter
 //            $animal->setSurrogateMother($surrogate); }
 
         if (array_key_exists('animal_category', $animalArray)) {
-            $animal->setAnimalCategory($animal['animal_category']); }
+            $animal->setAnimalCategory($animalArray['animal_category']); }
 
         if (array_key_exists('animal_hair_colour', $animalArray)) {
-            $animal->setAnimalHairColour($animal['animal_hair_colour']); }
+            $animal->setAnimalHairColour($animalArray['animal_hair_colour']); }
 
         if (array_key_exists('birth_tail_length', $animalArray)) {
-            $animal->setBirthTailLength($animal['birth_tail_length']); }
+            $animal->setBirthTailLength($animalArray['birth_tail_length']); }
 
         if (array_key_exists('location', $animalArray)) {
             $location = $locationRepository->findByLocationArray($animalArray['location']);
