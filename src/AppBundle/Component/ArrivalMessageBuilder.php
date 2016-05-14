@@ -31,8 +31,8 @@ class ArrivalMessageBuilder extends MessageBuilderBase
      * Accept front-end input and create a complete NSFO+IenR Message.
      *
      * @param DeclareArrival $messageObject the message received from the front-end
-     * @param string $relationNumberKeeper
-     * @return ArrayCollection
+     * @param Person $person
+     * @return DeclareArrival
      */
     public function buildMessage(DeclareArrival $messageObject, Person $person)
     {
@@ -44,8 +44,7 @@ class ArrivalMessageBuilder extends MessageBuilderBase
     }
 
     /**
-     * @param DeclareArrival $messageObject the message received from the front-end
-     * @param Person $person
+     * @param DeclareArrival $messageObject the baseMessageObject
      * @return DeclareArrival
      */
     private function addDeclareArrivalData(DeclareArrival $messageObject)

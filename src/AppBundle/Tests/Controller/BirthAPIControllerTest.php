@@ -16,6 +16,11 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use Doctrine\Common\Collections\ArrayCollection;
 
+/**
+ * Class BirthAPIControllerTest
+ * @package AppBundle\Tests\Controller
+ * @group birth
+ */
 class BirthAPIControllerTest extends WebTestCase {
 
   const DECLARE_BIRTH_ENDPOINT = "/api/v1/births";
@@ -110,6 +115,8 @@ class BirthAPIControllerTest extends WebTestCase {
   }
 
   /**
+   * @group get
+   * @group birth-get
    * Test retrieving Declare births list
    */
   public function testGetBirths()
@@ -128,6 +135,8 @@ class BirthAPIControllerTest extends WebTestCase {
   }
 
   /**
+   * @group get
+   * @group birth-get
    * Test retrieving Declare birth by id
    */
   public function testGetBirthById()
@@ -146,7 +155,8 @@ class BirthAPIControllerTest extends WebTestCase {
   }
 
   /**
-   *
+   * @group create
+   * @group birth-create
    * Test create new Declare birth
    */
   public function testCreateBirth()
@@ -154,6 +164,8 @@ class BirthAPIControllerTest extends WebTestCase {
     //Create declare birth
     $declareBirth = new DeclareBirth();
     $declareBirth->setBirthType("keizersnee");
+    $declareBirth->setUbn("777777");
+
     $declareBirth->setDateOfBirth(self::$mockedChild->getDateOfBirth());
 
     $unassignedTags = MockedTags::getMockedTags();
@@ -182,7 +194,8 @@ class BirthAPIControllerTest extends WebTestCase {
   }
 
   /**
-   *
+   * @group update
+   * @group birth-update
    * Test create new Declare birth
    */
   public function testUpdateBirth()
@@ -190,6 +203,7 @@ class BirthAPIControllerTest extends WebTestCase {
     //Create declare birth
     $declareBirth = new DeclareBirth();
     $declareBirth->setBirthType("keizersnee");
+    $declareBirth->setUbn("777777");
     $declareBirth->setDateOfBirth(self::$mockedChild->getDateOfBirth());
 
     $unassignedTags = MockedTags::getMockedTags();
@@ -222,12 +236,13 @@ class BirthAPIControllerTest extends WebTestCase {
     //Update value
     $declareBirthUpdated = $declareBirth;
     $declareBirthUpdated->setBirthType("Painful but worth it");
+    $declareBirthUpdated->setDateOfBirth(new \DateTime());
     $declareBirthUpdated->setAborted("N");
     $declareBirthUpdated->setAnimalWeight(999);
     $declareBirthUpdated->setLambar("N");
     $declareBirthUpdated->setPseudoPregnancy("N");
     $declareBirthUpdated->setLitterSize(6);
-    $declareBirthUpdated->setTailLength(1425);
+    $declareBirthUpdated->setBirthTailLength(1425);
     $declareBirthUpdated->setAnimalWeight(842);
 
     //Create json to be putted
@@ -248,13 +263,15 @@ class BirthAPIControllerTest extends WebTestCase {
     $tag = $updatedData['animal']['assigned_tag'];
 
     //Verify the updated parameters
+
+    $this->assertEquals($declareBirthUpdated->getDateOfBirth(), new \DateTime($updatedData['date_of_birth']));
     $this->assertEquals($declareBirthUpdated->getBirthType(), $updatedData['birth_type']);
     $this->assertEquals($declareBirthUpdated->getAborted(), $updatedData['aborted']);
     $this->assertEquals($declareBirthUpdated->getAnimalWeight(), $updatedData['animal_weight']);
     $this->assertEquals($declareBirthUpdated->getLambar(), $updatedData['lambar']);
     $this->assertEquals($declareBirthUpdated->getPseudoPregnancy(), $updatedData['pseudo_pregnancy']);
     $this->assertEquals($declareBirthUpdated->getLitterSize(), $updatedData['litter_size']);
-    $this->assertEquals($declareBirthUpdated->getTailLength(), $updatedData['tail_length']);
+    $this->assertEquals($declareBirthUpdated->getBirthTailLength(), $updatedData['tail_length']);
     $this->assertEquals($declareBirthUpdated->getAnimalWeight(), $updatedData['animal_weight']);
     $this->assertEquals($declareBirthUpdated->getAnimal()->getAssignedTag()->getUlnNumber(), $tag['uln_number']);
 

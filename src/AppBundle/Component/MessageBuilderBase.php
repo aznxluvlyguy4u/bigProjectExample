@@ -40,8 +40,8 @@ class MessageBuilderBase
      * be set in the constructor.
      *
      * @param object $messageObject the message received from the front-end as an entity from a class that is extended from DeclareBase.
-     * @param string $relationNumberKeeper
-     * @return ArrayCollection the base message
+     * @param Person $person
+     * @return object the base message
      */
     protected function buildBaseMessageObject($messageObject, Person $person)
     {
@@ -51,7 +51,6 @@ class MessageBuilderBase
             $requestId = $this->getNewRequestId();
             //Add general data to content
             $messageObject->setRequestId($requestId);
-            $messageObject->setMessageId($requestId);;
         }
 
         if($messageObject->getAction() == null) {
@@ -85,8 +84,6 @@ class MessageBuilderBase
      */
     private function getNewRequestId()
     {
-        $maxLengthRequestId = 20;
-        return join('', array_map(function($value) { return $value == 1 ? mt_rand(1, 9) :
-            mt_rand(0, 9); }, range(1, $maxLengthRequestId)));
+        return uniqid(mt_rand(0,999999));
     }
 }

@@ -122,6 +122,18 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    */
   public function createDepart(Request $request)
   {
+    $validityCheckUlnOrPedigiree= $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
+    }
+
     //Convert front-end message into an array
     //Get content to array
     $content = $this->getContentAsArray($request);
@@ -164,6 +176,18 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    */
   public function updateDepart(Request $request, $Id)
   {
+    $validityCheckUlnOrPedigiree= $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
+    }
+
     //Convert the array into an object and add the mandatory values retrieved from the database
     $declareDepartUpdate = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY,
         $this->getContentAsArray($request), $this->getAuthenticatedUser($request));

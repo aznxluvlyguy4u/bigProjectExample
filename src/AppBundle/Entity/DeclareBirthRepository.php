@@ -46,8 +46,8 @@ class DeclareBirthRepository extends BaseRepository {
       $declareBirth->setAnimalWeight($declareBirthUpdate->getAnimalWeight());
     }
 
-    if ($declareBirthUpdate->getTailLength() != null) {
-      $declareBirth->setTailLength($declareBirthUpdate->getTailLength());
+    if ($declareBirthUpdate->getBirthTailLength() != null) {
+      $declareBirth->setBirthTailLength($declareBirthUpdate->getBirthTailLength());
     }
 
     return $this->update($declareBirth);

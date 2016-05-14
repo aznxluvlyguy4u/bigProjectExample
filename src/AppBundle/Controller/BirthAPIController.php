@@ -5,6 +5,8 @@ namespace AppBundle\Controller;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Tools\Export\ExportException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -121,23 +123,56 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    */
   public function createBirth(Request $request)
   {
-    if(!$this->isUlnOrPedigreeCodeValid($request)) {
-      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
+    $validityCheckUlnOrPedigree = $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
     }
 
     //Get content to array
     $content = $this->getContentAsArray($request);
 
-    //Convert the array into an object and add the mandatory values retrieved from the database
-    $messageObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $content, $this->getAuthenticatedUser($request));
+    //Split up the children in the array into separate messages
+    $children = $content->get("children"); 
+    $contentWithoutChildren = $content;
+    $contentWithoutChildren->remove("children");
 
-    //First Persist object to Database, before sending it to the queue
-    $this->persist($messageObject, RequestType::DECLARE_BIRTH_ENTITY);
+    $returnMessages = new ArrayCollection();
 
-    //Send it to the queue and persist/update any changed state to the database
-    $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_BIRTH_ENTITY, RequestType::DECLARE_BIRTH);
+    foreach($children as $child) {
+        
+        $ulnNumber = $child[Constant::ULN_NUMBER_NAMESPACE];
+        $ulnCountryCode = $child[Constant::ULN_COUNTRY_CODE_NAMESPACE];
 
-    return new JsonResponse($messageObject, 200);
+        $tag = $this->getEntityGetter()->retrieveTag($ulnCountryCode, $ulnNumber);
+
+        if($tag->getTagStatus() == "assigned"){
+            //TODO redirect to error table / save the incorrect input (?)
+            return new JsonResponse(array("Tag already in use", 200), 200);
+        }
+        
+        $contentPerChild = $contentWithoutChildren;
+        $contentPerChild->set('animal', $child);
+
+        //Convert the array into an object and add the mandatory values retrieved from the database
+        $declareBirthObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $contentPerChild, $this->getAuthenticatedUser($request));
+
+        //First Persist object to Database, before sending it to the queue
+        $this->persist($declareBirthObject, RequestType::DECLARE_BIRTH_ENTITY);
+
+        //Send it to the queue and persist/update any changed state to the database
+        $this->sendMessageObjectToQueue($declareBirthObject, RequestType::DECLARE_BIRTH_ENTITY, RequestType::DECLARE_BIRTH);
+
+        $returnMessages->add($declareBirthObject);
+    }
+
+    return new JsonResponse($returnMessages, 200);
   }
 
   /**
@@ -165,21 +200,79 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    */
   public function updateBirth(Request $request, $Id) {
 
-    //Validate uln/pedigree code
-    if(!$this->isUlnOrPedigreeCodeValid($request)) {
-      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
+      $validityCheckUlnOrPedigree = $this->isUlnOrPedigreeCodeValid($request);
+      $isValid = $validityCheckUlnOrPedigree['isValid'];
+
+      if(!$isValid) {
+          $keyType = $validityCheckUlnOrPedigree['keyType']; // uln  of pedigree
+          $animalKind = $validityCheckUlnOrPedigree['animalKind'];
+          $message = $keyType . ' of ' . $animalKind . ' not found.';
+          $messageArray = array('code'=>428, "message" => $message);
+
+          return new JsonResponse($messageArray, 428);
+      }
+
+      //Convert the array into an object and add the mandatory values retrieved from the database
+      $declareBirthUpdate = $this->buildEditMessageObject(RequestType::DECLARE_BIRTH_ENTITY,
+          $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+
+      $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
+      $declareBirth = $entityManager->updateDeclareBirthMessage($declareBirthUpdate, $Id);
+
+        if($declareBirth == null) {
+          return new JsonResponse(array("message"=>"No DeclareBirth found with request_id:" . $Id), 204);
+        }
+
+
+    if ($declareBirthUpdate->getAnimal() != null) {
+      $declareBirth->setAnimal($declareBirthUpdate->getAnimal());
     }
 
-    //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareBirthUpdate = $this->buildEditMessageObject(RequestType::DECLARE_BIRTH_ENTITY,
-        $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
-
-    $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
-    $declareBirth = $entityManager->updateDeclareBirthMessage($declareBirthUpdate, $Id);
-
-    if($declareBirth == null) {
-      return new JsonResponse(array("message"=>"No DeclareBirth found with request_id:" . $Id), 204);
+    if ($declareBirthUpdate->getDateOfBirth() != null) {
+      $declareBirth->setDateOfBirth($declareBirthUpdate->getDateOfBirth());
     }
+
+    if ($declareBirthUpdate->getBirthType() != null) {
+      $declareBirth->setBirthType($declareBirthUpdate->getBirthType());
+    }
+
+    if ($declareBirthUpdate->getLocation() != null) {
+      $declareBirth->setLocation($declareBirthUpdate->getLocation());
+    }
+
+    if ($declareBirthUpdate->getLambar() != null) {
+      $declareBirth->setLambar($declareBirthUpdate->getLambar());
+    }
+
+    if ($declareBirthUpdate->getAborted() != null) {
+      $declareBirth->setAborted($declareBirthUpdate->getAborted());
+    }
+
+    if($declareBirthUpdate->getUbnPreviousOwner() != null) {
+      $declareBirth->setUbnPreviousOwner($declareBirthUpdate->getUbnPreviousOwner());
+    }
+
+    if ($declareBirthUpdate->getPseudoPregnancy() != null) {
+      $declareBirth->setPseudoPregnancy($declareBirthUpdate->getPseudoPregnancy());
+    }
+
+    if ($declareBirthUpdate->getLitterSize() != null) {
+      $declareBirth->setLitterSize($declareBirthUpdate->getLitterSize());
+    }
+
+    if ($declareBirthUpdate->getAnimalWeight() != null) {
+      $declareBirth->setAnimalWeight($declareBirthUpdate->getAnimalWeight());
+    }
+
+    if ($declareBirthUpdate->getTailLength() != null) {
+      $declareBirth->setTailLength($declareBirthUpdate->getTailLength());
+    }
+
+    if ($declareBirthUpdate->getTransportationCode() != null) {
+      $declareBirth->setTransportationCode($declareBirthUpdate->getTransportationCode());
+    }
+
+    $declareBirth = $entityManager->update($declareBirth);
 
     return new JsonResponse($declareBirth, 200);
   }

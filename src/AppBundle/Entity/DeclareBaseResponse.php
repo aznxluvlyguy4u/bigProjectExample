@@ -18,12 +18,13 @@ use \DateTime;
  * @ORM\DiscriminatorMap(
  *   {
  *      "DeclareArrivalResponse" = "DeclareArrivalResponse",
- *      "DeclareBirthResponse" = "DeclareBirthResponse",
  *      "DeclareDepartResponse" = "DeclareDepartResponse",
+ *      "DeclareBirthResponse" = "DeclareBirthResponse",
  *      "DeclareImportResponse" = "DeclareImportResponse",
  *      "DeclareExportResponse" = "DeclareExportResponse",
  *      "DeclareTagsTransferResponse" = "DeclareTagsTransferResponse",
- *      "RetrieveTagsResponse" = "RetrieveTagsResponse"
+ *      "RetrieveTagsResponse" = "RetrieveTagsResponse",
+ *      "RevokeDeclarationResponse" = "RevokeDeclarationResponse"
  *   }
  * )
  * @package AppBundle\Entity\DeclareBaseResponse
@@ -36,6 +37,14 @@ abstract class DeclareBaseResponse
      * @ORM\GeneratedValue(strategy="AUTO")
      */
     protected $id;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\Length(max = 20)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    protected $requestId;
 
     /**
      * @ORM\Column(type="string")
@@ -237,4 +246,31 @@ abstract class DeclareBaseResponse
     {
         return $this->successIndicator;
     }
+
+    /**
+     * Get requestId
+     *
+     * @return string
+     */
+    public function getRequestId()
+    {
+        return $this->requestId;
+    }
+
+    /**
+     * Set requestId
+     *
+     * @param string $requestId
+     *
+     * @return DeclareBaseResponse
+     */
+    public function setRequestId($requestId)
+    {
+        $this->requestId = $requestId;
+        $this->setMessageId($requestId);
+
+        return $this;
+    }
+
+
 }

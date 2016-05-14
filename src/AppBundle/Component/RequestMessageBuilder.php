@@ -2,11 +2,11 @@
 
 namespace AppBundle\Component;
 
-use AppBundle\Entity\RetrieveEartags;
+use AppBundle\Constant\Constant;
+use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Service\IRSerializer;
 use Doctrine\ORM\EntityManager;
-use AppBundle\Entity\Client as Client;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
 
@@ -46,6 +46,16 @@ class RequestMessageBuilder
      */
     private $tagTransferMessageBuilder;
 
+    /*
+     * @var LossMessageBuilder
+     */
+    private $lossMessageBuilder;
+
+    /**
+     * @var RevokeMessageBuilder
+     */
+    private $revokeMessageBuilder;
+
     /**
      * @var IRSerializer
      */
@@ -67,6 +77,8 @@ class RequestMessageBuilder
         $this->exportMessageBuilder = new ExportMessageBuilder($em);
         $this->tagSyncMessageBuilder = new TagSyncMessageBuilder($em);
         $this->tagTransferMessageBuilder = new TagTransferMessageBuilder($em);
+        $this->lossMessageBuilder = new LossMessageBuilder($em);
+        $this->revokeMessageBuilder = new RevokeMessageBuilder($em);
     }
 
     public function build($messageClassNameSpace, ArrayCollection $contentArray, Person $person, $isEditMessage)
@@ -93,9 +105,8 @@ class RequestMessageBuilder
                 $declareTagsTransferRequest = $this->irSerializer->parseDeclareTagsTransfer($contentArray, $isEditMessage);
                 return $this->tagTransferMessageBuilder->buildMessage($declareTagsTransferRequest, $person);
             case RequestType::DECLARE_LOSS_ENTITY:
-                $declareLoss = $this->irSerializer->parseDeclareLoss($contentArray, $isEditMessage);
-                //TODO: only add the mininum required fields for this Message Type
-                return $declareLoss;
+                $declareLossRequest = $this->irSerializer->parseDeclareLoss($contentArray, $isEditMessage);
+                return $this->lossMessageBuilder->buildMessage($declareLossRequest, $person);
             case RequestType::DECLARE_EXPORT_ENTITY:
                 $declareExportRequest = $this->irSerializer->parseDeclareExport($contentArray, $isEditMessage);
                 return $this->exportMessageBuilder->buildMessage($declareExportRequest, $person);
@@ -106,9 +117,11 @@ class RequestMessageBuilder
                 $retrieveTagsRequest = $this->irSerializer->parseRetrieveTags($contentArray, $isEditMessage);
                 return $this->tagSyncMessageBuilder->buildMessage($retrieveTagsRequest, $person);
             case RequestType::REVOKE_DECLARATION_ENTITY:
-                $revokeDeclaration = $this->irSerializer->parseRevokeDeclaration($contentArray, $isEditMessage);
-                //TODO: only add the mininum required fields for this Message Type
-                return $revokeDeclaration;
+                $revokeDeclaration = new RevokeDeclaration();
+                $revokeDeclaration->setMessageId($contentArray[Constant::MESSAGE_ID_SNAKE_CASE_NAMESPACE]);
+
+                return $this->revokeMessageBuilder->buildMessage($revokeDeclaration, $person);
+
             default:
                 if ($messageClassNameSpace == null){
                     throw new \Exception('Cannot pass null into the RequestMessageBuilder');

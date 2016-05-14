@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\Constant;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
@@ -32,5 +33,23 @@ class LocationRepository extends BaseRepository
     }
 
     return $locations;
+  }
+
+  /**
+   * @param $ubn
+   * @return null|object
+   */
+  public function findByUbn($ubn)
+  {
+    return $this->findOneBy(array(Constant::UBN_NAMESPACE => ubn));
+  }
+
+  /**
+   * @param array $location
+   * @return null|object
+   */
+  public function findByLocationArray(array $location)
+  {
+    return $this->findByUbn($location[Constant::UBN_NAMESPACE]);
   }
 }

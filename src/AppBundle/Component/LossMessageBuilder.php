@@ -3,16 +3,18 @@
 namespace AppBundle\Component;
 
 use AppBundle\Enumerator\AnimalType;
-use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\Ram;
+use AppBundle\Entity\DeclareLoss;
 use Doctrine\ORM\EntityManager;
+use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
 
 /**
- * Class DepartMessageBuilderAPIController
+ * Class LossMessageBuilderAPIController
  * @package AppBundle\Controller
  */
-class DepartMessageBuilder extends MessageBuilderBase
+class LossMessageBuilder extends MessageBuilderBase
 {
     /**
      * @var Person
@@ -28,31 +30,32 @@ class DepartMessageBuilder extends MessageBuilderBase
      *
      * Accept front-end input and create a complete NSFO+IenR Message.
      *
-     * @param DeclareDepart $messageObject the message received from the front-end
+     * @param DeclareLoss $messageObject the message received from the front-end
      * @param Person $person
-     * @return DeclareDepart
+     * @return DeclareLoss
      */
-    public function buildMessage(DeclareDepart $messageObject, Person $person)
+    public function buildMessage(DeclareLoss $messageObject, Person $person)
     {
         $this->person = $person;
         $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
-        $completeMessageObject = $this->addDeclareDepartData($baseMessageObject);
+        $completeMessageObject = $this->addDeclareLossData($baseMessageObject);
 
         return $completeMessageObject;
     }
 
     /**
-     * @param DeclareDepart $messageObject the message received from the front-end
-     * @return DeclareDepart
+     * @param DeclareLoss $declareLoss the baseMessageObject
+     * @return DeclareLoss
      */
-    private function addDeclareDepartData(DeclareDepart $messageObject)
+    private function addDeclareLossData(DeclareLoss $declareLoss)
     {
-        $animal = $messageObject->getAnimal();
+        $animal = $declareLoss->getAnimal();
         $animal->setAnimalType(AnimalType::sheep);
+        $animal->setDateOfDeath($declareLoss->getDateOfDeath());
 
         //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
-        $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
-        return $messageObject;
+        $declareLoss->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
+        return $declareLoss;
     }
 
 }

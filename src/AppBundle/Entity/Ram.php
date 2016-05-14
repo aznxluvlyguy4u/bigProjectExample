@@ -2,6 +2,8 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\AnimalType;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -40,7 +42,8 @@ class Ram extends Animal
          parent::__construct();
 
          $this->objectType = "Ram";
-         $this->setAnimalType(3);
+         $this->setAnimalType(AnimalType::sheep);
+         $this->setGender(AnimalType::MALE);
 
          //Create children array
          $this->children = new ArrayCollection();
@@ -226,5 +229,39 @@ class Ram extends Animal
     public function getExports()
     {
         return $this->exports;
+    }
+
+    /*
+     * Remove departure
+     *
+     * @param \AppBundle\Entity\DeclareDepart $departure
+     */
+    public function removeDeparture(\AppBundle\Entity\DeclareDepart $departure)
+    {
+        $this->departures->removeElement($departure);
+    }
+
+    /**
+     * Set surrogateMother
+     *
+     * @param \AppBundle\Entity\Ewe $surrogateMother
+     *
+     * @return Ram
+     */
+    public function setSurrogateMother(\AppBundle\Entity\Ewe $surrogateMother = null)
+    {
+        $this->surrogateMother = $surrogateMother;
+
+        return $this;
+    }
+
+    /**
+     * Get surrogateMother
+     *
+     * @return \AppBundle\Entity\Ewe
+     */
+    public function getSurrogateMother()
+    {
+        return $this->surrogateMother;
     }
 }

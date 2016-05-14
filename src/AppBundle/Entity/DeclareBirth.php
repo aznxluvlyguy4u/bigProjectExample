@@ -41,7 +41,7 @@ class DeclareBirth extends DeclareBase
      * @JMS\Type("string")
      * @Expose
      */
-    private $aborted;
+    private $is_aborted;
 
     /**
      * @ORM\Column(type="string", nullable=true)
@@ -49,7 +49,7 @@ class DeclareBirth extends DeclareBase
      * @JMS\Type("string")
      * @Expose
      */
-    private $pseudoPregnancy;
+    private $is_pseudoPregnancy;
 
     /**
      * @ORM\Column(type="string", nullable=true)
@@ -57,7 +57,20 @@ class DeclareBirth extends DeclareBase
      * @JMS\Type("string")
      * @Expose
      */
-    private $lambar;
+    private $is_lambar;
+
+    /**
+     * 2016-04-01T22:00:48.131Z
+     *
+     * @var DateTime
+     *
+     * @ORM\Column(type="datetime")
+     * @Assert\Date
+     * @Assert\NotBlank
+     * @JMS\Type("DateTime")
+     * @Expose
+     */
+    private $dateOfBirth;
 
     /**
      * @ORM\Column(type="string")
@@ -90,7 +103,7 @@ class DeclareBirth extends DeclareBase
      * @JMS\Type("integer")
      * @Expose
      */
-    private $tailLength;
+    private $birthTailLength;
 
     /**
      * @ORM\Column(type="string", nullable=true)
@@ -99,17 +112,6 @@ class DeclareBirth extends DeclareBase
      * @Expose
      */
     private $transportationCode;
-
-    /**
-     * 2016-04-01T22:00:48.131Z
-     *
-     * @ORM\Column(type="datetime")
-     * @Assert\Date
-     * @Assert\NotBlank
-     * @JMS\Type("DateTime")
-     * @Expose
-     */
-    private $dateOfBirth;
 
     /**
      * @ORM\OneToMany(targetEntity="DeclareBirthResponse", mappedBy="declareBirthRequestMessage", cascade={"persist"})
@@ -209,6 +211,30 @@ class DeclareBirth extends DeclareBase
     public function getAnimal()
     {
         return $this->animal;
+    }
+
+    /**
+     * Set dateOfBirth
+     *
+     * @param \DateTime $dateOfBirth
+     *
+     * @return DeclareBirth
+     */
+    public function setDateOfBirth($dateOfBirth)
+    {
+        $this->dateOfBirth = $dateOfBirth;
+
+        return $this;
+    }
+
+    /**
+     * Get dateOfBirth
+     *
+     * @return \DateTime
+     */
+    public function getDateOfBirth()
+    {
+        return $this->dateOfBirth;
     }
 
     /**
@@ -335,17 +361,17 @@ class DeclareBirth extends DeclareBase
     /**
      * @return integer
      */
-    public function getTailLength()
+    public function getBirthTailLength()
     {
-        return $this->tailLength;
+        return $this->birthTailLength;
     }
 
     /**
-     * @param integer $tailLength
+     * @param integer $birthTailLength
      */
-    public function setTailLength($tailLength)
+    public function setBirthTailLength($birthTailLength)
     {
-        $this->tailLength = $tailLength;
+        $this->birthTailLength = $birthTailLength;
     }
 
     /**
@@ -364,27 +390,76 @@ class DeclareBirth extends DeclareBase
         $this->transportationCode = $transportationCode;
     }
 
+
     /**
-     * Set birthDate
+     * Set isAborted
      *
-     * @param \DateTime $dateOfBirth
+     * @param string $isAborted
      *
      * @return DeclareBirth
      */
-    public function setDateOfBirth($dateOfBirth)
+    public function setIsAborted($isAborted)
     {
-        $this->dateOfBirth = $dateOfBirth;
+        $this->is_aborted = $isAborted;
 
         return $this;
     }
 
     /**
-     * Get birthDate
+     * Get isAborted
      *
-     * @return \DateTime
+     * @return string
      */
-    public function getDateOfBirth()
+    public function getIsAborted()
     {
-        return $this->dateOfBirth;
+        return $this->is_aborted;
+    }
+
+    /**
+     * Set isPseudoPregnancy
+     *
+     * @param string $isPseudoPregnancy
+     *
+     * @return DeclareBirth
+     */
+    public function setIsPseudoPregnancy($isPseudoPregnancy)
+    {
+        $this->is_pseudoPregnancy = $isPseudoPregnancy;
+
+        return $this;
+    }
+
+    /**
+     * Get isPseudoPregnancy
+     *
+     * @return string
+     */
+    public function getIsPseudoPregnancy()
+    {
+        return $this->is_pseudoPregnancy;
+    }
+
+    /**
+     * Set isLambar
+     *
+     * @param string $isLambar
+     *
+     * @return DeclareBirth
+     */
+    public function setIsLambar($isLambar)
+    {
+        $this->is_lambar = $isLambar;
+
+        return $this;
+    }
+
+    /**
+     * Get isLambar
+     *
+     * @return string
+     */
+    public function getIsLambar()
+    {
+        return $this->is_lambar;
     }
 }

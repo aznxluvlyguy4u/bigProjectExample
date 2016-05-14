@@ -3,8 +3,11 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Client;
+use AppBundle\Entity\Location;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -42,8 +45,13 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * @Method("GET")
    */
   public function getArrivalById(Request $request, $Id)
-  {
-    $arrival = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findOneBy(array(Constant::REQUEST_ID_NAMESPACE=>$Id));
+  {//TODO for phase 2: read a location from the $request and find declareArrivals for that location
+
+    $client = $this->getAuthenticatedUser($request);
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
+
+    $arrival = $repository->getArrivalsById($client, $Id);
+
     return new JsonResponse($arrival, 200);
   }
 
@@ -84,17 +92,23 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * @Method("GET")
    */
   public function getArrivals(Request $request)
-  {
-    //No explicit filter given, thus find all
-    if(!$request->query->has(Constant::STATE_NAMESPACE)) {
-      $declareArrivals = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findAll();
+  { //TODO for phase 2: read a location from the $request and find declareArrivals for that location
+
+    $client = $this->getAuthenticatedUser($request);
+    $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
+
+    if(!$stateExists) {
+      $declareArrivals = $repository->getArrivals($client);
+
     } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareArrivals = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findBy(array(Constant::REQUEST_STATE_NAMESPACE => $state));
+      $declareArrivals = $repository->getArrivals($client, $state);
     }
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareArrivals), 200);
   }
+
 
   /**
    * Create a new DeclareArrival request
@@ -120,9 +134,16 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function createArrival(Request $request)
   {
-    //Validate uln/pedigree code
-    if(!$this->isUlnOrPedigreeCodeValid($request)) {
-      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
+    $validityCheckUlnOrPedigiree= $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
     }
 
     //Get content to array
@@ -164,10 +185,16 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * @Method("PUT")
    */
   public function updateArrival(Request $request, $Id) {
+    $validityCheckUlnOrPedigiree = $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigiree['isValid'];
 
-    //Validate uln/pedigree code
-    if(!$this->isUlnOrPedigreeCodeValid($request)) {
-      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
     }
 
     //Convert the array into an object and add the mandatory values retrieved from the database

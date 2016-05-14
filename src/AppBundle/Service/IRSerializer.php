@@ -106,23 +106,27 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclarationDetail(ArrayCollection $contentArray, $isEditMessage)
+    function parseDeclarationDetail(ArrayCollection $declarationDetailcontentArray, $isEditMessage)
     {
-        // TODO: Implement parseDeclarationDetail() method.
-        $declarationDetail = null;
+        $declarationDetailcontentArray["type"] = RequestType::DECLARATION_DETAIL_ENTITY;
 
-        return $declarationDetail;
+        // TODO: Implement parseDeclarationDetail() method.
+        $declarationDetailcontentArray = null;
+
+        return $declarationDetailcontentArray;
     }
 
     /**
      * @inheritdoc
      */
-    function parseDeclareAnimalFlag(ArrayCollection $contentArray, $isEditMessage)
+    function parseDeclareAnimalFlag(ArrayCollection $declareAnimalFlagContentArray, $isEditMessage)
     {
-        // TODO: Implement parseDeclareAnimalFlag() method.
-        $declareAnimalFlag = null;
+        $declareAnimalFlagContentArray["type"] = RequestType::DECLARE_ANIMAL_FLAG_ENTITY;
 
-        return $declareAnimalFlag;
+        // TODO: Implement parseDeclareAnimalFlag() method.
+        $declareAnimalFlagContentArray = null;
+
+        return $declareAnimalFlagContentArray;
     }
 
     /**
@@ -130,6 +134,8 @@ class IRSerializer implements IRSerializerInterface
      */
     function parseDeclareArrival(ArrayCollection $declareArrivalContentArray, $isEditMessage)
     {
+        $declareArrivalContentArray["type"] = RequestType::DECLARE_ARRIVAL_ENTITY;
+
         //Retrieve animal entity
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray);
 
@@ -151,6 +157,8 @@ class IRSerializer implements IRSerializerInterface
      */
     function parseDeclareBirth(ArrayCollection $declareBirthContentArray, $isEditMessage)
     {
+        $declareBirthContentArray["type"] = RequestType::DECLARE_BIRTH_ENTITY;
+
         $declareBirthRequest = null;
 
         //If it's not an edit message, just retrieve animal and set animal, otherwise don't setup
@@ -161,7 +169,7 @@ class IRSerializer implements IRSerializerInterface
             $animalObject = null;
 
             //Find registered tag, through given ulnCountryCode & ulnNumber, so we can assign the tag to this animal
-            $tag = $this->entityGetter->retrieveTag($animal[Constant::ULN_COUNTRY_CODE_NAMESPACE], $animal[Constant::ULN_NAMESPACE]);
+            $tag = $this->entityGetter->retrieveTag($animal[Constant::ULN_COUNTRY_CODE_NAMESPACE], $animal[Constant::ULN_NUMBER_NAMESPACE]);
 
             if($tag == null){
                 return null;
@@ -219,6 +227,8 @@ class IRSerializer implements IRSerializerInterface
      */
     function parseDeclareDepart(ArrayCollection $declareDepartContentArray, $isEditMessage)
     {
+        $declareDepartContentArray["type"] = RequestType::DECLARE_DEPART_ENTITY;
+
         //Retrieve animal entity
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareDepartContentArray);
 
@@ -293,12 +303,24 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareLoss(ArrayCollection $contentArray, $isEditMessage)
+    function parseDeclareLoss(ArrayCollection $declareLossContentArray, $isEditMessage)
     {
-        // TODO: Implement parseDeclareLoss() method.
-        $declareLoss = null;
+        $declareLossContentArray["type"] = RequestType::DECLARE_LOSS_ENTITY;
 
-        return $declareLoss;
+        //Retrieve animal entity
+        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareLossContentArray);
+
+        //Add retrieved animal properties including type to initial animalContentArray
+        $declareLossContentArray['animal'] =  $this->returnAnimalArray($retrievedAnimal);
+
+        //denormalize the content to an object
+        $json = $this->serializeToJSON($declareLossContentArray);
+        $declareLossRequest = $this->deserializeToObject($json, RequestType::DECLARE_LOSS_ENTITY);
+
+        //Add retrieved animal to DeclareLoss
+        $declareLossRequest->setAnimal($retrievedAnimal);
+
+        return $declareLossRequest;
     }
 
     /**
@@ -326,6 +348,8 @@ class IRSerializer implements IRSerializerInterface
      */
     function parseDeclareImport(ArrayCollection $declareImportContentArray, $isEditMessage)
     {
+        $declareImportContentArray["type"] = RequestType::DECLARE_IMPORT_ENTITY;
+
         //Retrieve animal entity
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareImportContentArray);
 
@@ -347,37 +371,39 @@ class IRSerializer implements IRSerializerInterface
      */
     function parseRetrieveTags(ArrayCollection $contentArray, $isEditMessage)
     {
-        $retrieveEartags = new RetrieveTags();
+        $retrieveTags = new RetrieveTags();
 
         //No custom filter content given, revert to default values
         if($contentArray->count() == 0) {
-            $retrieveEartags->setTagType(TagType::FREE);
-            $retrieveEartags->setAnimalType(AnimalType::sheep);
+            $retrieveTags->setTagType(TagType::FREE);
+            $retrieveTags->setAnimalType(AnimalType::sheep);
 
-            return $retrieveEartags;
+            return $retrieveTags;
         }
 
         //set animalType
         if($contentArray->containsKey(Constant::ANIMALTYPE_NAMESPACE)) {
-            $retrieveEartags->setAnimalType($contentArray->get(Constant::ANIMALTYPE_NAMESPACE));
+            $retrieveTags->setAnimalType($contentArray->get(Constant::ANIMALTYPE_NAMESPACE));
         }
 
         //set tagType
         if($contentArray->containsKey(Constant::TAG_TYPE_NAMESPACE)) {
-            $retrieveEartags->setAnimalType($contentArray->get(Constant::ANIMALTYPE_NAMESPACE));
+            $retrieveTags->setAnimalType($contentArray->get(Constant::ANIMALTYPE_NAMESPACE));
         }
 
-        return $retrieveEartags;
+        return $retrieveTags;
     }
 
     /**
      * @inheritdoc
      */
-    function parseRevokeDeclaration(ArrayCollection $contentArray, $isEditMessage)
+    function parseRevokeDeclaration(ArrayCollection $revokeDeclarationContentArray, $isEditMessage)
     {
-        // TODO: Implement parseRevokeDeclaration() method.
-        $revokeDeclaration = null;
+        $revokeDeclarationContentArray["type"] = RequestType::REVOKE_DECLARATION_ENTITY;
 
-        return $revokeDeclaration;
+        // TODO: Implement parseRevokeDeclaration() method.
+        $revokeDeclarationContentArray = null;
+
+        return $revokeDeclarationContentArray;
     }
 }

@@ -15,6 +15,8 @@ class Constant
     const RESULT_NAMESPACE = "result";
     const CONTINENT_NAMESPACE = 'continent';
     const LOCATION_NAMESPACE = 'location';
+    const MESSAGE_ID_SNAKE_CASE_NAMESPACE = 'message_id';
+    const MESSAGE_ID_CAMEL_CASE_NAMESPACE = 'messageId';
     const ANIMAL_TYPE_NAMESPACE = 'type';
     const TAGS_NAMESPACE = "tags";
     const ANIMAL_NAMESPACE = 'animal';
@@ -26,24 +28,40 @@ class Constant
     const BOOLEAN_TRUE_NAMESPACE = 'true';
     const UNKNOWN_NAMESPACE = 'unknown';
     const CODE_NAMESPACE = 'code';
-    const ULN_NAMESPACE = "uln_number";
+    const ULN_NUMBER_NAMESPACE = "uln_number";
+    const PEDIGREE_NUMBER_NAMESPACE = "pedigree_number";
     const ULN_COUNTRY_CODE_NAMESPACE = "uln_country_code";
-    const PEDIGREE_NAMESPACE = "pedigree_number";
+    const PEDIGREE_SNAKE_CASE_NAMESPACE = "pedigree_number";
     const PEDIGREE_COUNTRY_CODE_NAMESPACE = "pedigree_country_code";
+    const PEDIGREE_NAMESPACE = 'pedigree';
+    const ULN_NAMESPACE = 'uln';
+    const UBN_NAMESPACE = 'ubn';
     const GENDER_NAMESPACE = 'gender';
+
     const DATE_OF_BIRTH_NAMESPACE  = 'date_of_birth';
     const DATE_OF_DEATH_NAMESPACE  = 'date_of_death';
     const RELATION_NUMBER_ACCEPTANT_SNAKE_CASE_NAMESPACE = "relation_number_acceptant";
+
+    const FATHER_NAMESPACE = 'father';
+    const MOTHER_NAMESPACE = 'mother';
+    const CHILDREN_NAMESPACE = 'children';
+    const SURROGATE_NAMESPACE = 'surrogate';
 
     //Request repositories
     const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';
     const DECLARE_BIRTH_REPOSITORY = 'AppBundle:DeclareBirth';
     const DECLARE_DEPART_REPOSITORY = 'AppBundle:DeclareDepart';
+
     const DECLARE_IMPORT_REPOSITORY ='AppBundle:DeclareImport';
     const DECLARE_EXPORT_REPOSITORY ='AppBundle:DeclareExport';
     const DECLARE_TAGS_TRANSFER_REPOSITORY = 'AppBundle:DeclareTagsTransfer';
     const RETRIEVE_TAGS_REPOSITORY = 'AppBundle:RetrieveTags';
     const DECLARE_LOSS_REPOSITORY = 'AppBundle:DeclareLoss';
+
+    const DECLARE_EARTAGS_TRANSFER_REPOSITORY = 'AppBundle:DeclareEartagsTransfer';
+    const DECLARE_BASE_REPOSITORY = 'AppBundle:DeclareBase';
+    const DECLARE_BASE_RESPONSE_REPOSITORY = 'AppBundle:DeclareBaseResponse';
+
     const TAG_REPOSITORY = 'AppBundle:Tag';
     const ANIMAL_REPOSITORY = 'AppBundle:Animal';
     const EWE_REPOSITORY = 'AppBundle:Ewe';

@@ -14,6 +14,11 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use Doctrine\Common\Collections\ArrayCollection;
 
+/**
+ * Class DepartAPIControllerTest
+ * @package AppBundle\Tests\Controller
+ * @group depart
+ */
 class DepartAPIControllerTest extends WebTestCase {
 
   const DECLARE_DEPART_ENDPOINT = "/api/v1/departs";
@@ -107,6 +112,8 @@ class DepartAPIControllerTest extends WebTestCase {
   }
 
   /**
+   * @group get
+   * @group depart-get
    * Test retrieving Declare departures list
    */
   public function testGetDepartures()
@@ -125,6 +132,8 @@ class DepartAPIControllerTest extends WebTestCase {
   }
 
   /**
+   * @group get
+   * @group depart-get
    * Test retrieving Declare departures by id
    */
   public function testGetDeparturesById()
@@ -143,7 +152,8 @@ class DepartAPIControllerTest extends WebTestCase {
   }
 
   /**
-   *
+   * @group create
+   * @group depart-create
    * Test create new Declare depart
    */
   public function testCreateDepart()
@@ -173,7 +183,8 @@ class DepartAPIControllerTest extends WebTestCase {
   }
 
   /**
-   *
+   * @group update
+   * @group depart-update
    * Test create new Declare Depart
    */
   public function testUpdateDepart()

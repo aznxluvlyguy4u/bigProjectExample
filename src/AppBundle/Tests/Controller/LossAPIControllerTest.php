@@ -2,7 +2,7 @@
 
 namespace AppBundle\Tests\Controller;
 
-use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareLoss;
 use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedAnimal;
 use AppBundle\DataFixtures\ORM\MockedClient;
@@ -15,14 +15,13 @@ use AppBundle\Entity\Ewe;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
- * Class ImportAPIControllerTest
+ * Class LossAPIControllerTest
  * @package AppBundle\Tests\Controller
- * @group import
+ * @group loss
  */
-class ImportAPIControllerTest extends WebTestCase {
+class LossAPIControllerTest extends WebTestCase {
 
-
-  const DECLARE_IMPORT_ENDPOINT = "/api/v1/imports";
+  const DECLARE_LOSS_ENDPOINT = "/api/v1/losses";
 
   /**
    * @var RequestClient
@@ -72,9 +71,10 @@ class ImportAPIControllerTest extends WebTestCase {
     $this->client = parent::createClient();
 
     //Load fixture class
-    $fixtures = array('AppBundle\DataFixtures\ORM\MockedClient',
-      'AppBundle\DataFixtures\ORM\MockedAnimal',
-      'AppBundle\DataFixtures\ORM\MockedTags');
+    $fixtures = array(
+        'AppBundle\DataFixtures\ORM\MockedClient',
+        'AppBundle\DataFixtures\ORM\MockedAnimal',
+        'AppBundle\DataFixtures\ORM\MockedTags');
     $this->loadFixtures($fixtures);
 
     //Get mocked Client
@@ -114,13 +114,13 @@ class ImportAPIControllerTest extends WebTestCase {
 
   /**
    * @group get
-   * @group import-get
-   * Test retrieving Declare imports list
+   * @group loss-get 
+   * Test retrieving Declare losses list
    */
-  public function testGetImports()
+  public function testGetLosses()
   {
     $this->client->request('GET',
-      $this::DECLARE_IMPORT_ENDPOINT,
+      $this::DECLARE_LOSS_ENDPOINT,
       array(),
       array(),
       $this->defaultHeaders
@@ -134,13 +134,13 @@ class ImportAPIControllerTest extends WebTestCase {
 
   /**
    * @group get
-   * @group import-get
-   * Test retrieving Declare import by id
+   * @group loss-get
+   * Test retrieving Declare loss by id
    */
-  public function testGetImportById()
+  public function testGetLossById()
   {
     $this->client->request('GET',
-      $this::DECLARE_IMPORT_ENDPOINT . '/1',
+      $this::DECLARE_LOSS_ENDPOINT . '/1',
       array(),
       array(),
       $this->defaultHeaders
@@ -154,90 +154,102 @@ class ImportAPIControllerTest extends WebTestCase {
 
   /**
    * @group create
-   * @group import-create
-   * Test create new Declare import
+   * @group loss-create
+   * Test create new Declare loss
    */
-  public function testCreateImport()
+  public function testCreateLoss()
   {
-    //Create declare import
-    $declareImport = new DeclareImport();
-    $declareImport->setAnimalCountryOrigin("AFG");
-    $declareImport->setImportDate(new \DateTime());
-    $declareImport->setIsImportAnimal(true);
-    $declareImport->setAnimal(self::$mockedChild);
+    //Create declare loss
+    $declareLoss = new DeclareLoss();
+    $declareLoss->setReasonOfLoss("Life");
+    $declareLoss->setUbnProcessor("2299077");
+    $declareLoss->setDateOfDeath(new \DateTime("2024-02-24"));
+
+    $declareLoss->setAnimal(self::$mockedChild);
 
     //Create json to be posted
-    $declareImportJson = self::$serializer->serializeToJSON($declareImport);
+    $declareLossJson = self::$serializer->serializeToJSON($declareLoss);
 
     $this->client->request('POST',
-      $this::DECLARE_IMPORT_ENDPOINT,
+      $this::DECLARE_LOSS_ENDPOINT,
       array(),
       array(),
       $this->defaultHeaders,
-      $declareImportJson
+      $declareLossJson
     );
 
     $response = $this->client->getResponse();
-
     $data = json_decode($response->getContent(), true);
 
     $this->assertEquals('open', $data['request_state']);
+    $this->assertEquals($declareLoss->getReasonOfLoss(), $data['reason_of_loss']);
+    $this->assertEquals($declareLoss->getUbnProcessor(), $data['ubn_processor']);
   }
 
   /**
    * @group update
-   * @group import-update
-   * Test create new Declare import
+   * @group loss-update
+   * Test create new Declare loss
    */
-  public function testUpdateImport()
+  public function testUpdateLoss()
   {
-    //Create declare import
-    $declareImport = new DeclareImport();
-    $declareImport->setAnimalCountryOrigin("AFG");
-    $declareImport->setImportDate(new \DateTime());
-    $declareImport->setIsImportAnimal(true);
-    $declareImport->setAnimal(self::$mockedChild);
+    //Create declare loss
+    $declareLoss = new DeclareLoss();
+    $declareLoss->setReasonOfLoss("Accident");
+    $declareLoss->setUbnProcessor("666");
+    $declareLoss->setDateOfDeath(new \DateTime("2018-05-24"));
+
+    $declareLoss->setAnimal(self::$mockedChild);
 
     //Create json to be posted
-    $declareImportJson = self::$serializer->serializeToJSON($declareImport);
+    $declareLossJson = self::$serializer->serializeToJSON($declareLoss);
 
-    //Do POST declare import
+    //Do POST declare loss
     $this->client->request('POST',
-      $this::DECLARE_IMPORT_ENDPOINT,
+      $this::DECLARE_LOSS_ENDPOINT,
       array(),
       array(),
       $this->defaultHeaders,
-      $declareImportJson
+      $declareLossJson
     );
 
     //Get response
     $response = $this->client->getResponse()->getContent();
-    $declareImportResponse = json_decode($response, true);
+    $declareLossResponse = new ArrayCollection(json_decode($response, true));
 
     //Get requestId so we can do an update with PUT
-    $requestId = $declareImportResponse['request_id'];
+    $requestId = $declareLossResponse['request_id'];
 
-    $declareImportUpdated = $declareImport;
-    $updatedDateString = "1899-01-01T16:22:43-0500";
-    $declareImportUpdated->setImportDate(new \DateTime($updatedDateString));
+    //Update value
+    $declareLossUpdated = $declareLoss;
+    $declareLossUpdated->setReasonOfLoss("Destiny");
+    $declareLossUpdated->setUbnProcessor("1");
+    $declareLossUpdated->getAnimal()->setUlnNumber('8795441');
+
     //Create json to be putted
-    $declareImportUpdatedJson = self::$serializer->serializeToJSON($declareImportUpdated);
+    $declareLossUpdatedJson = self::$serializer->serializeToJSON($declareLossUpdated);
 
-    //PUT updated declare import
+    //PUT updated declare loss
     $this->client->request('PUT',
-      $this::DECLARE_IMPORT_ENDPOINT . '/'. $requestId,
+      $this::DECLARE_LOSS_ENDPOINT . '/'. $requestId,
       array(),
       array(),
       $this->defaultHeaders,
-      $declareImportUpdatedJson
+      $declareLossUpdatedJson
     );
 
     $updatedResponse = $this->client->getResponse()->getContent();
     $updatedData = json_decode($updatedResponse, true);
 
-    $this->assertEquals($updatedDateString, $updatedData['import_date']);
-  }
+    //Verify the updated parameters
+    $this->assertEquals($declareLossUpdated->getReasonOfLoss(), $updatedData['reason_of_loss']);
+    $this->assertEquals($declareLossUpdated->getUbnProcessor(), $updatedData['ubn_processor']);
+    $this->assertEquals($declareLossUpdated->getAnimal()->getUlnNumber(), $updatedData['animal']['uln_number']);
 
+    //Verify some unchanged parameters
+    $this->assertEquals($declareLossUpdated->getAnimal()->getUlnCountryCode(), $updatedData['animal']['uln_country_code']);
+  }
+  
   public function tearDown() {
     parent::tearDown();
   }

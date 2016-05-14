@@ -4,6 +4,12 @@ namespace AppBundle\Controller;
 
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Client;
+use AppBundle\Enumerator\AnimalType;
+use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Service\EntityGetter;
+use AppBundle\Service\EntitySetter;
+use AppBundle\Entity\RevokeDeclaration;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -52,6 +58,23 @@ class APIController extends Controller implements APIControllerInterface
     }
 
     return $this->entityGetter;
+  }
+
+  /**
+   * @var \AppBundle\Service\EntitySetter
+   */
+  private $entitySetter;
+
+  /**
+   * @return \AppBundle\Service\EntitySetter
+   */
+  protected function getEntitySetter()
+  {
+    if($this->entitySetter == null){
+      $this->entitySetter = $this->get('app.doctrine.entitysetter');
+    }
+
+    return $this->entitySetter;
   }
 
   /**
@@ -142,7 +165,7 @@ class APIController extends Controller implements APIControllerInterface
    * @param $messageClassNameSpace
    * @param ArrayCollection $contentArray
    * @param $user
-   * @return \AppBundle\Entity\RetrieveEartags|\AppBundle\Entity\RevokeDeclaration|null
+   * @return object|null
    * @throws \Exception
    */
   protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user)
@@ -158,7 +181,7 @@ class APIController extends Controller implements APIControllerInterface
    * @param $messageClassNameSpace
    * @param ArrayCollection $contentArray
    * @param $user
-   * @return \AppBundle\Entity\RetrieveEartags|\AppBundle\Entity\RevokeDeclaration|null
+   * @return object
    * @throws \Exception
    */
   protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user)
@@ -229,7 +252,7 @@ class APIController extends Controller implements APIControllerInterface
   /**
    * @param Request|null $request
    * @param null $token
-   * @return \AppBundle\Entity\Person|null|object
+   * @return \AppBundle\Entity\Person|Client|null|object
    */
   public function getAuthenticatedUser(Request $request= null, $token = null)
   {
@@ -243,54 +266,144 @@ class APIController extends Controller implements APIControllerInterface
 
   public function isUlnOrPedigreeCodeValid(Request $request, $Id = null)
   {
-    $countryCode = null;
-    $ulnOrPedigreeCode = null;
-    $tag = null;
-
-    $isValid = false;
-
-    //First check if supplied ulnNumber & ulnCountryCode exists by checking is a Tag exists
-    $tagRepository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY);
-
     if($Id != null) {
-
       //validate if Id is of format: AZ123456789
       if(!preg_match("([A-Z]{2}\d+)",$Id)){
         return false;
       }
 
-      //Strip countryCode
-      $countryCode = mb_substr($Id, 0, 2, 'utf-8');
+      return $this->verifyUlnOrPedigreeCode($Id);
 
-      //Strip ulnCode or pedigreeCode
-      $ulnOrPedigreeCode = mb_substr($Id, 2, strlen($Id));
-
-      $tag = $tagRepository->findByUlnNumberAndCountryCode($countryCode, $ulnOrPedigreeCode);
     } else {
       $contentArray = $this->getContentAsArray($request);
+      $array = $contentArray->toArray();
 
-      if (array_key_exists(Constant::ANIMAL_NAMESPACE, $contentArray->toArray())) {
-        $animalContentArray = $contentArray->get(Constant::ANIMAL_NAMESPACE);
-        if (array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::ULN_NAMESPACE, $animalContentArray)) {
-          $ulnOrPedigreeCode = $animalContentArray[Constant::ULN_NAMESPACE];
-          $countryCode = $animalContentArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
+      $objectsToBeVerified = array();
+      array_push($objectsToBeVerified, Constant::ANIMAL_NAMESPACE, Constant::FATHER_NAMESPACE, Constant::MOTHER_NAMESPACE);
+
+      //Strip countryCode
+      $countryCode = mb_substr($Id, 0, 2, 'utf-8');
+      //All objects containing a uln or pedigree code must have that code verified
+      foreach ($objectsToBeVerified as $objectToBeVerified) {
+        if (array_key_exists($objectToBeVerified, $array)) {
+          $animalContentArray = $contentArray->get($objectToBeVerified);
+
+          $verification = $this->verifyUlnOrPedigreeCodeInAnimal($animalContentArray, $objectToBeVerified);
+
+          if($verification["isValid"] == false) { return $verification; }
         }
-        else {
-          if (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::PEDIGREE_NAMESPACE, $animalContentArray)) {
-            $ulnOrPedigreeCode = $animalContentArray[Constant::PEDIGREE_NAMESPACE];
-            $countryCode = $animalContentArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
+      }
+
+      //Animals in a Children array need to be retrieved differently
+      if($contentArray->containsKey(Constant::CHILDREN_NAMESPACE)){
+        $children = $array[Constant::CHILDREN_NAMESPACE];
+
+        foreach($children as $child) {
+          $verification = $this->verifyUlnOrPedigreeCodeInAnimal($child, Constant::CHILDREN_NAMESPACE);
+
+          if($verification["isValid"] == false) { return $verification; }
+
+          //Also verify the surrogate of a child
+          if(array_key_exists(Constant::SURROGATE_NAMESPACE, $child)){
+            $verification = $this->verifyUlnOrPedigreeCodeInAnimal($child[Constant::SURROGATE_NAMESPACE], Constant::SURROGATE_NAMESPACE);
+
+            if($verification["isValid"] == false) { return $verification; }
           }
         }
+      }
 
-        $tag = $tagRepository->findByUlnNumberAndCountryCode($countryCode, $ulnOrPedigreeCode);
+      $keyType = Constant::ULN_NAMESPACE . " and/or " . Constant::PEDIGREE_SNAKE_CASE_NAMESPACE;
+
+      //When all animals have passed the verification return this:
+      return array("animalKind" => "All objects",
+            "keyType" => $keyType,
+            "isValid" => true);
+    }
+
+  }
+
+  private function verifyUlnOrPedigreeCodeInAnimal($animalContentArray, $objectToBeVerified)
+  {
+    $ulnCountryCode = null;
+    $pedigreeCountryCode = null;
+    $ulnCode = null;
+    $pedigreeCode = null;
+    $tag = null;
+    $animal = null;
+
+    //First check if supplied ulnNumber & ulnCountryCode exists by checking if a Tag exists
+    $tagRepository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY);
+
+    //This repository class is used to verify if a pedigree code is valid
+    $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+
+    if (array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalContentArray)) {
+      $ulnCode = $animalContentArray[Constant::ULN_NUMBER_NAMESPACE];
+      $ulnCountryCode = $animalContentArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
+
+      $tag = $tagRepository->findByUlnNumberAndCountryCode($ulnCountryCode, $ulnCode);
+
+      if ($tag == null) {
+        return array("animalKind" => $objectToBeVerified,
+            "keyType" => Constant::ULN_NAMESPACE,
+            "isValid" => false);
+      }
+    }
+    else {
+      if (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalContentArray) && array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalContentArray)) {
+        $pedigreeCode = $animalContentArray[Constant::PEDIGREE_NUMBER_NAMESPACE];
+        $pedigreeCountryCode = $animalContentArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
+      }
+
+      $animal = $animalRepository->findByCountryCodeAndPedigree($pedigreeCountryCode, $pedigreeCode);
+
+      if($animal == null){
+        return array("animalKind" => $objectToBeVerified,
+            "keyType" => Constant::PEDIGREE_SNAKE_CASE_NAMESPACE,
+            "isValid" => false);
+      }
+    }
+    $keyType = Constant::ULN_NAMESPACE . " and/or " . Constant::PEDIGREE_SNAKE_CASE_NAMESPACE;
+
+    return array("animalKind" => $objectToBeVerified,
+        "keyType" => $keyType,
+        "isValid" => true);
+  }
+
+  private function verifyUlnOrPedigreeCode($Id)
+  {
+    $isValid = false;
+    $keyType = Constant::ULN_NAMESPACE . " and/or " . Constant::PEDIGREE_SNAKE_CASE_NAMESPACE;
+
+    //First check if supplied ulnNumber & ulnCountryCode exists by checking if a Tag exists
+    $tagRepository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY);
+
+    //Strip countryCode
+    $countryCode = mb_substr($Id, 0, 2, 'utf-8');
+
+    //Strip ulnCode or pedigreeCode
+    $ulnOrPedigreeCode = mb_substr($Id, 2, strlen($Id));
+
+    $tag = $tagRepository->findByUlnNumberAndCountryCode($countryCode, $ulnOrPedigreeCode);
+
+    if ($tag != null) {
+      $isValid = true;
+      $keyType = Constant::ULN_NAMESPACE;
+    } else {
+      //Verify if id is a valid pedigreenumber
+
+      $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+      $animal = $animalRepository->findByCountryCodeAndPedigree($countryCode, $ulnOrPedigreeCode);
+
+      if ($animal != null) {
+        $isValid = true;
+        $keyType = Constant::PEDIGREE_SNAKE_CASE_NAMESPACE;
       }
     }
 
-    if($tag != null){
-      $isValid = true;
-    }
-
-    return $isValid;
+    return array("animalKind" => "Id",
+        "keyType" => $keyType,
+        "isValid" => $isValid);
   }
 
   /**
@@ -331,6 +444,25 @@ class APIController extends Controller implements APIControllerInterface
     return new JsonResponse($response, 401);
   }
 
+  /**
+   * Retrieve the messageObject related to the RevokeDeclaration
+   * reset the request state to 'revoked'
+   * and persist the update.
+   *
+   * @param RevokeDeclaration $revokeDeclarationObject
+   */
+  public function persistRevokingRequestState(RevokeDeclaration $revokeDeclarationObject)
+  {
+    $em = $this->getDoctrine()->getEntityManager();
 
+    $messageObjectTobeRevoked = $this->getEntitySetter()->setRequestStateToRevoked($revokeDeclarationObject->getMessageId());
 
+    $messageObjectWithRevokedRequestState = $messageObjectTobeRevoked->setRequestState(RequestStateType::REVOKING);
+
+    $classNameWithPath = $em->getClassMetadata(get_class($messageObjectTobeRevoked))->getName();
+    $pathArray = explode('\\', $classNameWithPath);
+    $className = $pathArray[sizeof($pathArray)-1];
+
+    $this->persist($messageObjectWithRevokedRequestState, $className);
+  }
 }

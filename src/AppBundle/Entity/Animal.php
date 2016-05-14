@@ -6,6 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
+use \DateTime;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
 
@@ -28,6 +29,7 @@ abstract class Animal
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
+     * @Expose
      */
     protected $id;
 
@@ -98,6 +100,42 @@ abstract class Animal
     protected $gender;
 
     /**
+     * @var Animal
+     *
+     * @ORM\ManyToOne(targetEntity="Ram", inversedBy="children", cascade={"persist"})
+     * @ORM\JoinColumn(name="parent_father_id", referencedColumnName="id", onDelete="set null")
+     * @JMS\Type("AppBundle\Entity\Animal")
+     */
+    protected $parentFather;
+
+    /**
+     * @var Animal
+     *
+     * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="children", cascade={"persist"})
+     * @ORM\JoinColumn(name="parent_mother_id", referencedColumnName="id", onDelete="set null")
+     * @JMS\Type("AppBundle\Entity\Animal")
+     */
+    protected $parentMother;
+
+    /**
+     * @var Animal
+     *
+     * @ORM\ManyToOne(targetEntity="Neuter", inversedBy="children", cascade={"persist"})
+     * @ORM\JoinColumn(name="parent_neuter_id", referencedColumnName="id", onDelete="set null")
+     * @JMS\Type("AppBundle\Entity\Animal")
+     */
+    protected $parentNeuter;
+
+    /**
+     * @var Animal
+     *
+     * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="surrogateChildren", cascade={"persist"})
+     * @ORM\JoinColumn(name="surrogate_mother_id", referencedColumnName="id", onDelete="set null")
+     * @JMS\Type("AppBundle\Entity\Animal")
+     */
+    protected $surrogateMother;
+
+    /**
      * @var integer
      *
      * @ORM\Column(type="integer")
@@ -124,6 +162,14 @@ abstract class Animal
      * @Expose
      */
     protected $animalHairColour;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     * @Assert\Length(max = 4)
+     * @JMS\Type("integer")
+     * @Expose
+     */
+    protected $birthTailLength;
 
     /**
      * @var array
@@ -163,38 +209,10 @@ abstract class Animal
     protected $birth;
 
     /**
-     * @var Animal
-     *
-     * @ORM\ManyToOne(targetEntity="Ram", inversedBy="children", cascade={"persist"})
-     * @ORM\JoinColumn(name="parent_father_id", referencedColumnName="id", onDelete="set null")
-     * @JMS\Type("AppBundle\Entity\Animal")
-     */
-    protected $parentFather;
-
-    /**
-     * @var Animal
-     *
-     * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="children", cascade={"persist"})
-     * @ORM\JoinColumn(name="parent_mother_id", referencedColumnName="id", onDelete="set null")
-     * @JMS\Type("AppBundle\Entity\Animal")
-     */
-    protected $parentMother;
-
-    /**
-     * @var Animal
-     *
-     * @ORM\ManyToOne(targetEntity="Neuter", inversedBy="children", cascade={"persist"})
-     * @ORM\JoinColumn(name="parent_neuter_id", referencedColumnName="id", onDelete="set null")
-     * @JMS\Type("AppBundle\Entity\Animal")
-     */
-    protected $parentNeuter;
-
-    /**
      * @var Tag
      *
      * @ORM\OneToOne(targetEntity="Tag", mappedBy="animal", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Tag")
-     * @Expose
      */
     protected $assignedTag;
 
@@ -364,6 +382,7 @@ abstract class Animal
     {
         if($assignedTag != null){
             $this->assignedTag = $assignedTag;
+            $this->assignedTag->setTagStatus("assigned");
             $assignedTag->setAnimal($this);
             $this->setUlnNumber($assignedTag->getUlnNumber());
             $this->setUlnCountryCode($assignedTag->getUlnCountryCode());
@@ -405,54 +424,6 @@ abstract class Animal
     public function getName()
     {
         return $this->name;
-    }
-
-    /**
-     * Set dateOfBirth
-     *
-     * @param \DateTime $dateOfBirth
-     *
-     * @return Animal
-     */
-    public function setDateOfBirth($dateOfBirth)
-    {
-        $this->dateOfBirth = $dateOfBirth;
-
-        return $this;
-    }
-
-    /**
-     * Get dateOfBirth
-     *
-     * @return \DateTime
-     */
-    public function getDateOfBirth()
-    {
-        return $this->dateOfBirth;
-    }
-
-    /**
-     * Set dateOfDeath
-     *
-     * @param \DateTime $dateOfDeath
-     *
-     * @return Animal
-     */
-    public function setDateOfDeath($dateOfDeath)
-    {
-        $this->dateOfDeath = $dateOfDeath;
-
-        return $this;
-    }
-
-    /**
-     * Get dateOfDeath
-     *
-     * @return \DateTime
-     */
-    public function getDateOfDeath()
-    {
-        return $this->dateOfDeath;
     }
 
     /**
@@ -670,6 +641,22 @@ abstract class Animal
     }
 
     /**
+     * @return integer
+     */
+    public function getBirthTailLength()
+    {
+        return $this->birthTailLength;
+    }
+
+    /**
+     * @param integer $birthTailLength
+     */
+    public function setBirthTailLength($birthTailLength)
+    {
+        $this->birthTailLength = $birthTailLength;
+    }
+
+    /**
      * Set parentFather
      *
      * @param \AppBundle\Entity\Ram $parentFather
@@ -847,6 +834,20 @@ abstract class Animal
         return $this;
     }
 
+    /*
+     * Set surrogateMother
+     *
+     * @param \AppBundle\Entity\Ewe $surrogateMother
+     *
+     * @return Animal
+     */
+    public function setSurrogateMother(\AppBundle\Entity\Ewe $surrogateMother = null)
+    {
+        $this->surrogateMother = $surrogateMother;
+
+        return $this;
+    }
+
     /**
      * Remove export
      *
@@ -877,6 +878,52 @@ abstract class Animal
     public function setDeath(\AppBundle\Entity\DeclareLoss $death = null)
     {
         $this->death = $death;
+    }
+
+    /**
+     * Get surrogateMother
+     *
+     * @return \AppBundle\Entity\Ewe
+     */
+    public function getSurrogateMother()
+    {
+        return $this->surrogateMother;
+    }
+
+    /**
+     * Set dateOfDeath
+     *
+     * @param \DateTime $dateOfDeath
+     *
+     * @return Animal
+     */
+    public function setDateOfDeath($dateOfDeath)
+    {
+        $this->dateOfDeath = $dateOfDeath;
+
+        return $this;
+    }
+
+    /**
+     * Get dateOfDeath
+     *
+     * @return \DateTime
+     */
+    public function getDateOfDeath()
+    {
+        return $this->dateOfDeath;
+    }
+
+    /**
+     * Set dateOfBirth
+     *
+     * @param \DateTime $dateOfBirth
+     *
+     * @return Animal
+     */
+    public function setDateOfBirth($dateOfBirth)
+    {
+        $this->dateOfBirth = $dateOfBirth;
 
         return $this;
     }
@@ -889,5 +936,15 @@ abstract class Animal
     public function getDeath()
     {
         return $this->death;
+    }
+
+    /*
+     * Get dateOfBirth
+     *
+     * @return \DateTime
+     */
+    public function getDateOfBirth()
+    {
+        return $this->dateOfBirth;
     }
 }
