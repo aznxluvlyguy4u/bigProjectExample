@@ -117,15 +117,15 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
     $content = $this->getContentAsArray($request);
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareTagsRetrieval = $this->buildMessageObject(RequestType::DECLARE_TAGS_TRANSFER_ENTITY, $content, $this->getAuthenticatedUser($request));
+    $declareTagsTransfer = $this->buildMessageObject(RequestType::DECLARE_TAGS_TRANSFER_ENTITY, $content, $this->getAuthenticatedUser($request));
 
     //First Persist object to Database, before sending it to the queue
-    $this->persist($declareTagsRetrieval, RequestType::DECLARE_TAGS_TRANSFER_ENTITY);
+    $this->persist($declareTagsTransfer, RequestType::DECLARE_TAGS_TRANSFER_ENTITY);
 
     //Send it to the queue and persist/update any changed state to the database
-    $this->sendMessageObjectToQueue($declareTagsRetrieval, RequestType::DECLARE_TAGS_TRANSFER_ENTITY, RequestType::DECLARE_EARTAGS_TRANSFER);
+    $this->sendMessageObjectToQueue($declareTagsTransfer, RequestType::DECLARE_TAGS_TRANSFER_ENTITY, RequestType::DECLARE_TAGS_TRANSFER);
 
-    return new JsonResponse($declareTagsRetrieval, 200);
+    return new JsonResponse($declareTagsTransfer, 200);
   }
 
   /**
@@ -154,13 +154,8 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
    */
   public function updateTagsTransfer(Request $request, $Id)
   {
-    //Validate uln/pedigree code
-    if(!$this->isUlnOrPedigreeCodeValid($request)) {
-      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
-    }
-
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareTagsTransferUpdate = $this->buildMessageObject(RequestType::DECLARE_TAGS_TRANSFER_ENTITY,
+    $declareTagsTransferUpdate = $this->buildEditMessageObject(RequestType::DECLARE_TAGS_TRANSFER_ENTITY,
       $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
     $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_TAGS_TRANSFER_REPOSITORY);

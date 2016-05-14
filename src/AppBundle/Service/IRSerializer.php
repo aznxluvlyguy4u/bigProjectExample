@@ -2,6 +2,7 @@
 
 namespace AppBundle\Service;
 
+use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Enumerator\AnimalType;
@@ -11,6 +12,8 @@ use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Animal;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Enumerator\TagStateType;
+use AppBundle\Enumerator\TagType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 use Symfony\Bundle\FrameworkBundle\Client;
@@ -237,10 +240,54 @@ class IRSerializer implements IRSerializerInterface
      */
     function parseDeclareTagsTransfer(ArrayCollection $contentArray, $isEditMessage)
     {
-        // TODO: Implement parseDeclareEartagsTransfer() method.
-        $declareEartagsTransfer = null;
+        $declareTagsTransfer = new DeclareTagsTransfer();
+        $fetchedTag = null;
+        $tagsRepository = $this->entityManager->getRepository(Constant::DECLARE_TAGS_TRANSFER_REPOSITORY);
 
-        return $declareEartagsTransfer;
+        //Set relationNumberAcceptant
+        if($contentArray->containsKey(Constant::RELATION_NUMBER_ACCEPTANT_SNAKE_CASE_NAMESPACE)) {
+            $declareTagsTransfer->setRelationNumberAcceptant($contentArray[Constant::RELATION_NUMBER_ACCEPTANT_SNAKE_CASE_NAMESPACE]);
+        }
+
+        //Add Tag(s)
+        if($contentArray->containsKey(Constant::TAGS_NAMESPACE)) {
+            $tagsContentArray = $contentArray[Constant::TAGS_NAMESPACE];
+
+            // Check if each tagItem has a ulnNumber and ulnCountryCode, so we can retrieve it from database
+            foreach($tagsContentArray as $tagItem) {
+                if(array_key_exists(Constant::ULN_NAMESPACE, $tagItem) && array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $tagItem) ) {
+
+                    //Fetch tag from database
+                    $fetchedTag = $this->entityGetter->retrieveTag($tagItem[Constant::ULN_COUNTRY_CODE_NAMESPACE], $tagItem[Constant::ULN_NAMESPACE]);
+
+                    switch($fetchedTag->getTagStatus()) {
+                        case TagStateType::UNASSIGNED:
+                            //Ensure tag is not assigned
+                            if($fetchedTag->getAnimal() == null) {
+                                //Set tagState to transferring, save to database
+                                $fetchedTag->setTagStatus(TagStateType::TRANSFERRING_TO_NEW_OWNER);
+                                $tagsRepository->update($fetchedTag);
+
+                                $declareTagsTransfer->addTag($fetchedTag);
+                            }
+                            break;
+                        case TagStateType::ASSIGNED:
+                            //TODO - what to do when a Tag to be transferred is already assigned to an Animal?
+                        break;
+                        case TagStateType::TRANSFERRING_TO_NEW_OWNER || TagStateType::TRANSFERRED_TO_NEW_OWNER:
+                            //TODO - what to do when a Tag to be transferred is already in transfer or is already transferred?
+                            break;
+                        default:
+                            break;
+
+                    }
+                }
+            }
+
+            $fetchedTag = null;
+        }
+
+        return $declareTagsTransfer;
     }
 
     /**
@@ -304,8 +351,8 @@ class IRSerializer implements IRSerializerInterface
 
         //No custom filter content given, revert to default values
         if($contentArray->count() == 0) {
-            $retrieveEartags->setTagType("V");
-            $retrieveEartags->setAnimalType(3);
+            $retrieveEartags->setTagType(TagType::FREE);
+            $retrieveEartags->setAnimalType(AnimalType::sheep);
 
             return $retrieveEartags;
         }

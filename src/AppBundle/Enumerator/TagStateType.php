@@ -15,5 +15,6 @@ namespace AppBundle\Enumerator;
 class TagStateType {
   const ASSIGNED = "assigned";
   const UNASSIGNED = "unassigned";
+  const TRANSFERRING_TO_NEW_OWNER = "transferring";
   const TRANSFERRED_TO_NEW_OWNER = "transferred";
 }

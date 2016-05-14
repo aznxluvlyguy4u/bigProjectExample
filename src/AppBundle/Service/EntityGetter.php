@@ -34,7 +34,7 @@ class EntityGetter
     /**
      * @param $ulnCountryCode
      * @param $ulnNumber
-     * @return array|null
+     * @return null|Tag
      */
     public function retrieveTag($ulnCountryCode, $ulnNumber)
     {

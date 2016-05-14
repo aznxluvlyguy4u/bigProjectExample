@@ -5,8 +5,6 @@ namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use \AppBundle\Entity\Animal;
-use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
@@ -27,6 +25,11 @@ class DeclareTagsTransfer extends DeclareBase
     private $tags;
 
     /**
+     * @var array
+     */
+    private $tagsNotTransferred;
+
+    /**
      * @var string
      *
      * @ORM\Column(type="string")
@@ -34,6 +37,13 @@ class DeclareTagsTransfer extends DeclareBase
      * @JMS\Type("string")
      */
     private $relationNumberAcceptant;
+
+    /**
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="Location", inversedBy="tagTransfers", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Location")
+     */
+    private $location;
 
     /**
      * @var ArrayCollection
@@ -148,5 +158,30 @@ class DeclareTagsTransfer extends DeclareBase
     public function getRelationNumberAcceptant()
     {
         return $this->relationNumberAcceptant;
+    }
+
+    /**
+     * Set location
+     *
+     * @param \AppBundle\Entity\Location $location
+     *
+     * @return DeclareTagsTransfer
+     */
+    public function setLocation(\AppBundle\Entity\Location $location = null)
+    {
+        $this->location = $location;
+        $this->setUbn($location->getUbn());
+
+        return $this;
+    }
+
+    /**
+     * Get location
+     *
+     * @return \AppBundle\Entity\Location
+     */
+    public function getLocation()
+    {
+        return $this->location;
     }
 }

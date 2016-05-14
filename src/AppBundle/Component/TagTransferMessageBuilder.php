@@ -2,8 +2,7 @@
 
 namespace AppBundle\Component;
 
-use AppBundle\Entity\DeclareEartagsTransfer;
-use AppBundle\Entity\RetrieveEartags;
+use AppBundle\Entity\DeclareTagsTransfer;
 use Doctrine\ORM\EntityManager;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
@@ -31,11 +30,11 @@ class TagTransferMessageBuilder extends MessageBuilderBase {
    *
    * Create a complete NSFO+IenR Message.
    *
-   * @param DeclareEartagsTransfer $messageObject the message received
+   * @param DeclareTagsTransfer $messageObject the message received
    * @param string $relationNumberKeeper
    * @return ArrayCollection
    */
-  public function buildMessage(DeclareEartagsTransfer $messageObject, Person $person)
+  public function buildMessage(DeclareTagsTransfer $messageObject, Person $person)
   {
     $this->person = $person;
     $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
@@ -45,11 +44,11 @@ class TagTransferMessageBuilder extends MessageBuilderBase {
   }
 
   /**
-   * @param DeclareEartagsTransfer $messageObject the message received
+   * @param DeclareTagsTransfer $messageObject the message received
    * @param Person $person
-   * @return DeclareEartagsTransfer
+   * @return DeclareTagsTransfer
    */
-  private function addDeclareEartagsTransferData(DeclareEartagsTransfer $messageObject)
+  private function addDeclareEartagsTransferData(DeclareTagsTransfer $messageObject)
   {
     //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
     $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);

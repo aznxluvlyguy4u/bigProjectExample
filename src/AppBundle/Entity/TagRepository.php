@@ -7,7 +7,7 @@ class TagRepository extends BaseRepository {
   /**
    * @param $ulnCountryCode
    * @param $ulnNumber
-   * @return array|null
+   * @return null|object
    */
   public function findByUlnNumberAndCountryCode($ulnCountryCode, $ulnNumber)
   {

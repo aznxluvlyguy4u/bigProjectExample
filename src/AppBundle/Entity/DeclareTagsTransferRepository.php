@@ -22,8 +22,15 @@ class DeclareTagsTransferRepository extends BaseRepository {
       return null;
     }
 
-    if ($declareTagsTransferUpdate->getTags() != null) {
-      $declareTagsTransfer->setTag($declareTagsTransferUpdate->getTags());
+    if (sizeof($declareTagsTransferUpdate->getTags()) > 0) {
+
+      $taglistUpdate =$declareTagsTransferUpdate->getTags();
+
+      foreach($taglistUpdate as $tagListItemUpdate ) {
+        $declareTagsTransfer->addTag($tagListItemUpdate);
+      }
+
+      $taglistUpdate = null;
     }
 
     if ($declareTagsTransferUpdate->getRelationNumberAcceptant()) {

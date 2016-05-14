@@ -16,6 +16,7 @@ class Constant
     const CONTINENT_NAMESPACE = 'continent';
     const LOCATION_NAMESPACE = 'location';
     const ANIMAL_TYPE_NAMESPACE = 'type';
+    const TAGS_NAMESPACE = "tags";
     const ANIMAL_NAMESPACE = 'animal';
     const ANIMALTYPE_NAMESPACE = "animalType";
     const TAG_TYPE_NAMESPACE = "tagType";
@@ -26,12 +27,13 @@ class Constant
     const UNKNOWN_NAMESPACE = 'unknown';
     const CODE_NAMESPACE = 'code';
     const ULN_NAMESPACE = "uln_number";
-    const PEDIGREE_NAMESPACE = "pedigree_number";
     const ULN_COUNTRY_CODE_NAMESPACE = "uln_country_code";
+    const PEDIGREE_NAMESPACE = "pedigree_number";
     const PEDIGREE_COUNTRY_CODE_NAMESPACE = "pedigree_country_code";
     const GENDER_NAMESPACE = 'gender';
     const DATE_OF_BIRTH_NAMESPACE  = 'date_of_birth';
     const DATE_OF_DEATH_NAMESPACE  = 'date_of_death';
+    const RELATION_NUMBER_ACCEPTANT_SNAKE_CASE_NAMESPACE = "relation_number_acceptant";
 
     //Request repositories
     const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';

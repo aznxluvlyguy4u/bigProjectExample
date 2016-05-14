@@ -85,6 +85,13 @@ class Location
   protected $exports;
 
   /**
+   * @var array
+   *
+   * @ORM\OneToMany(targetEntity="DeclareTagsTransfer", mappedBy="location")
+   */
+  protected $tagTransfers;
+
+  /**
    * @Assert\NotBlank
    * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"})
    * @JMS\Type("AppBundle\Entity\Company")
@@ -110,6 +117,7 @@ class Location
     $this->imports = new ArrayCollection();
     $this->exports = new ArrayCollection();
     $this->animals = new ArrayCollection();
+    $this->tagTransfers = new ArrayCollection();
   }
 
   /**
@@ -398,5 +406,40 @@ class Location
     public function getExports()
     {
         return $this->exports;
+    }
+
+
+    /**
+     * Add tagTransfer
+     *
+     * @param \AppBundle\Entity\DeclareTagsTransfer $tagTransfer
+     *
+     * @return Location
+     */
+    public function addTagTransfer(\AppBundle\Entity\DeclareTagsTransfer $tagTransfer)
+    {
+        $this->tagTransfers[] = $tagTransfer;
+
+        return $this;
+    }
+
+    /**
+     * Remove tagTransfer
+     *
+     * @param \AppBundle\Entity\DeclareTagsTransfer $tagTransfer
+     */
+    public function removeTagTransfer(\AppBundle\Entity\DeclareTagsTransfer $tagTransfer)
+    {
+        $this->tagTransfers->removeElement($tagTransfer);
+    }
+
+    /**
+     * Get tagTransfers
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getTagTransfers()
+    {
+        return $this->tagTransfers;
     }
 }
