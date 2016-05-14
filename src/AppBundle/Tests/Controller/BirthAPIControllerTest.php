@@ -15,6 +15,7 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
  * Class BirthAPIControllerTest
@@ -166,7 +167,7 @@ class BirthAPIControllerTest extends WebTestCase {
     $declareBirth->setBirthType("keizersnee");
     $declareBirth->setUbn("777777");
 
-    $declareBirth->setDateOfBirth(self::$mockedChild->getDateOfBirth());
+    $declareBirth->setDateOfBirth(new \DateTime(self::$mockedChild->getDateOfBirth()));
 
     $unassignedTags = MockedTags::getMockedTags();
     $tag = $unassignedTags->get(1);
@@ -204,7 +205,7 @@ class BirthAPIControllerTest extends WebTestCase {
     $declareBirth = new DeclareBirth();
     $declareBirth->setBirthType("keizersnee");
     $declareBirth->setUbn("777777");
-    $declareBirth->setDateOfBirth(self::$mockedChild->getDateOfBirth());
+    $declareBirth->setDateOfBirth(new \DateTime(self::$mockedChild->getDateOfBirth()));
 
     $unassignedTags = MockedTags::getMockedTags();
     $tag = $unassignedTags->get(0);
