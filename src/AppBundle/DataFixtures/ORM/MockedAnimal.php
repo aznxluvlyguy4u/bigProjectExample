@@ -46,9 +46,19 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
   static private $mockedNewBornRam;
 
   /**
+   * @var Ram
+   */
+  static private $mockedNewBornEwe;
+
+  /**
    * @var Ewe
    */
-  static private $anotherEwe;
+  static private $MockedAnotherEwe;
+
+  /**
+   * @var array
+   */
+  static private $tag = array();
 
   /**
    * Sets the container.
@@ -88,66 +98,72 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     $location = $company->getLocations()->get(0);
 
     //Get mocked tags, assign it to mocked animals
-    $tags = MockedTags::getMockedTags();
-    $tagListSize = sizeof($tags);
+    self::setTagStatusAssignedAndAddToTagArray(6);
 
     self::$mockedParentRam = new Ram();
     self::$mockedParentRam->setIsAlive(true);
-    self::$mockedParentRam->setAssignedTag($tags->get(rand(1,$tagListSize-1)));
     self::$mockedParentRam->setAnimalType(AnimalType::sheep);
-    self::$mockedParentRam->setDateOfBirth(new \DateTime());
+    self::$mockedParentRam->setDateOfBirth(new \DateTime('2001-01-01'));
     self::$mockedParentRam->setPedigreeNumber("35645");
     self::$mockedParentRam->setPedigreeCountryCode("NL");
-    $location->addAnimal(self::$mockedParentRam);
+    self::$mockedParentRam->setAssignedTag(self::$tag[1]);
+    self::$mockedParentRam->setLocation($location);
 
     self::$mockedParentEwe = new Ewe();
     self::$mockedParentEwe->setIsAlive(true);
-    self::$mockedParentEwe->setAssignedTag($tags->get(rand(1,$tagListSize-1)));
     self::$mockedParentEwe->setAnimalType(AnimalType::sheep);
-    self::$mockedParentEwe->setDateOfBirth(new \DateTime());
+    self::$mockedParentEwe->setDateOfBirth(new \DateTime('2002-02-02'));
     self::$mockedParentEwe->setPedigreeNumber("79164");
     self::$mockedParentEwe->setPedigreeCountryCode("NL");
-    $location->addAnimal(self::$mockedParentEwe);
+    self::$mockedParentEwe->setAssignedTag(self::$tag[2]);
+    self::$mockedParentEwe->setLocation($location);
 
-    self::$anotherEwe = new Ewe();
-    self::$anotherEwe->setIsAlive(true);
-    self::$anotherEwe->setAssignedTag($tags->get(rand(1,$tagListSize-1)));
-    self::$anotherEwe->setAnimalType(AnimalType::sheep);
-    self::$anotherEwe->setDateOfBirth(new \DateTime());
-    self::$anotherEwe->setPedigreeNumber("52350");
-    self::$anotherEwe->setPedigreeCountryCode("NL");
-    $location->addAnimal(self::$anotherEwe);
+    self::$MockedAnotherEwe = new Ewe();
+    self::$MockedAnotherEwe->setIsAlive(true);
+    self::$MockedAnotherEwe->setAnimalType(AnimalType::sheep);
+    self::$MockedAnotherEwe->setDateOfBirth(new \DateTime('2003-03-03'));
+    self::$MockedAnotherEwe->setPedigreeNumber("52350");
+    self::$MockedAnotherEwe->setPedigreeCountryCode("NL");
+    self::$MockedAnotherEwe->setAssignedTag(self::$tag[3]);
+    self::$MockedAnotherEwe->setLocation($location);
+
+    self::$mockedRamWithParents = new Ram();
+    self::$mockedRamWithParents->setIsAlive(true);
+    self::$mockedRamWithParents->setPedigreeNumber("12345");
+    self::$mockedRamWithParents->setPedigreeCountryCode("NL");
+    self::$mockedRamWithParents->setDateOfBirth(new \DateTime('2004-04-04'));
+    self::$mockedRamWithParents->setAnimalType(AnimalType::sheep);
+    self::$mockedRamWithParents->setParentFather(self::$mockedParentRam);
+    self::$mockedRamWithParents->setParentMother(self::$mockedParentEwe);
+    self::$mockedRamWithParents->setAssignedTag(self::$tag[4]);
+    self::$mockedRamWithParents->setLocation($location);
 
     self::$mockedNewBornRam = new Ram();
     self::$mockedNewBornRam->setIsAlive(true);
-    self::$mockedNewBornRam->setAssignedTag($tags->get(rand(1,$tagListSize-1)));
     self::$mockedNewBornRam->setAnimalType(AnimalType::sheep);
-    self::$mockedNewBornRam->setDateOfBirth(new \DateTime());
+    self::$mockedNewBornRam->setDateOfBirth(new \DateTime('2005-05-05'));
     self::$mockedNewBornRam->setPedigreeNumber("65454");
     self::$mockedNewBornRam->setPedigreeCountryCode("NL");
     self::$mockedNewBornRam->setParentFather(self::$mockedParentRam);
     self::$mockedNewBornRam->setParentMother(self::$mockedParentEwe);
-    $location->addAnimal(self::$mockedNewBornRam);
+    self::$mockedNewBornRam->setAssignedTag(self::$tag[5]);
+    self::$mockedNewBornRam->setLocation($location);
 
-
-    self::$mockedRamWithParents = new Ram();
-    self::$mockedRamWithParents->setIsAlive(true);
-
-    $tagToAssign = $tags->get(rand(1,$tagListSize));
-    $tagToAssign->setAnimal(self::$mockedRamWithParents);
-    self::$mockedRamWithParents->setAssignedTag($tagToAssign);
-
-    self::$mockedRamWithParents->setPedigreeNumber("12345");
-    self::$mockedRamWithParents->setPedigreeCountryCode("NL");
-    self::$mockedRamWithParents->setAnimalType(AnimalType::sheep);
-    self::$mockedRamWithParents->setParentFather(self::$mockedParentRam);
-    self::$mockedRamWithParents->setParentMother(self::$mockedParentEwe);
-    $location->addAnimal(self::$mockedRamWithParents);
+    self::$mockedNewBornEwe = new Ewe();
+    self::$mockedNewBornEwe->setIsAlive(true);
+    self::$mockedNewBornEwe->setAnimalType(AnimalType::sheep);
+    self::$mockedNewBornEwe->setDateOfBirth(new \DateTime('2005-05-05'));
+    self::$mockedNewBornEwe->setPedigreeNumber("80902");
+    self::$mockedNewBornEwe->setPedigreeCountryCode("NL");
+    self::$mockedNewBornEwe->setParentFather(self::$mockedParentRam);
+    self::$mockedNewBornEwe->setParentMother(self::$mockedParentEwe);
+    self::$mockedNewBornEwe->setAssignedTag(self::$tag[6]);
+    self::$mockedNewBornEwe->setLocation($location);
 
     //Persist mocked data
     $manager->persist(self::$mockedRamWithParents);
     $manager->persist(self::$mockedNewBornRam);
-    $manager->persist(self::$anotherEwe);
+    $manager->persist(self::$MockedAnotherEwe);
     $manager->flush();
 
   }
@@ -193,5 +209,25 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
   public static function getMockedNewBornRam()
   {
     return self::$mockedNewBornRam;
+  }
+
+  /**
+   * @return Ewe
+   */
+  public static function getMockedAnotherEwe()
+  {
+      return self::$MockedAnotherEwe;
+  }
+
+  private static function setTagStatusAssignedAndAddToTagArray($tagCount)
+  {
+    $mockedTags = MockedTags::getMockedTags();
+    $partSize = sizeof($mockedTags)/$tagCount;
+
+    for($i = 1; $i<=$tagCount; $i++) {
+      $tag = $mockedTags->get(rand(($i-1)*$partSize,$i*$partSize-1));
+      $tag->setTagStatus(Constant::ASSIGNED_NAMESPACE);
+      self::$tag[$i] = $tag;
+    }
   }
 }
