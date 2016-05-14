@@ -49,7 +49,7 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedClient->setFirstName("Bart");
     self::$mockedClient->setLastName("de Boer");
     self::$mockedClient->setEmailAddress("bart@deboer.com");
-    self::$mockedClient->setRelationNumberKeeper("77777444");
+    self::$mockedClient->setRelationNumberKeeper("203719934");
     self::$mockedClient->setUsername("Bartje");
     self::$mockedClient->setPassword($encoder->encodePassword(self::$mockedClient, "blauwetexelaar"));
 
@@ -86,7 +86,7 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     $location = new Location();
     $location->setAddress($locationAddress);
     $location->setCompany($company);
-    $location->setUbn("98989898");
+    $location->setUbn("1674459");
 
     $company->addLocation($location);
     self::$mockedClient->addCompany($company);
