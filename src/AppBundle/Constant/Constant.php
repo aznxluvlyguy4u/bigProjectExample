@@ -10,6 +10,7 @@ class Constant
     const STATE_NAMESPACE = 'state';
     const REQUEST_STATE_NAMESPACE = 'requestState';
     const TAG_STATUS_NAMESPACE = 'tagStatus';
+    const TAG_STATUS_IS_TRANSFERRED_NAMESPACE = 'isTransferredToNewOwner';
     const REQUEST_ID_NAMESPACE = 'requestId';
     const RESULT_NAMESPACE = "result";
     const CONTINENT_NAMESPACE = 'continent';
@@ -38,8 +39,8 @@ class Constant
     const DECLARE_DEPART_REPOSITORY = 'AppBundle:DeclareDepart';
     const DECLARE_IMPORT_REPOSITORY ='AppBundle:DeclareImport';
     const DECLARE_EXPORT_REPOSITORY ='AppBundle:DeclareExport';
-    const DECLARE_EARTAGS_TRANSFER_REPOSITORY = 'AppBundle:DeclareEartagsTransfer';
-    const RETRIEVE_EARTAGS_REPOSITORY = 'AppBundle:RetrieveEartags';
+    const DECLARE_TAGS_TRANSFER_REPOSITORY = 'AppBundle:DeclareTagsTransfer';
+    const RETRIEVE_TAGS_REPOSITORY = 'AppBundle:RetrieveTags';
     const DECLARE_LOSS_REPOSITORY = 'AppBundle:DeclareLoss';
     const TAG_REPOSITORY = 'AppBundle:Tag';
     const ANIMAL_REPOSITORY = 'AppBundle:Animal';

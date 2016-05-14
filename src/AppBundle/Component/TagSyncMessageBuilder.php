@@ -2,24 +2,24 @@
 
 namespace AppBundle\Component;
 
-use AppBundle\Entity\RetrieveEartags;
+use AppBundle\Entity\RetrieveTags;
 use AppBundle\Enumerator\AnimalType;
 use Doctrine\ORM\EntityManager;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
 
 /**
- * Class RetrieveEartagsMessageBuilder
+ * Class TagSyncMessageBuilder
  * @package AppBundle\Component
  */
-class RetrieveEartagsMessageBuilder extends MessageBuilderBase {
+class TagSyncMessageBuilder extends MessageBuilderBase {
   /**
    * @var Person
    */
   private $person;
 
   /**
-   * RetrieveEartagsMessageBuilder constructor.
+   * TagSyncMessageBuilder constructor.
    * @param EntityManager $em
    */
   public function __construct(EntityManager $em)
@@ -35,7 +35,7 @@ class RetrieveEartagsMessageBuilder extends MessageBuilderBase {
    * @param string $relationNumberKeeper
    * @return ArrayCollection
    */
-  public function buildMessage(RetrieveEartags $messageObject, Person $person)
+  public function buildMessage(RetrieveTags $messageObject, Person $person)
   {
     $this->person = $person;
     $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
@@ -45,11 +45,11 @@ class RetrieveEartagsMessageBuilder extends MessageBuilderBase {
   }
 
   /**
-   * @param RetrieveEartags $messageObject the message received
+   * @param RetrieveTags $messageObject the message received
    * @param Person $person
-   * @return RetrieveEartags
+   * @return RetrieveTags
    */
-  private function addRetrieveEartagsData(RetrieveEartags $messageObject)
+  private function addRetrieveEartagsData(RetrieveTags $messageObject)
   {
     //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
     $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);

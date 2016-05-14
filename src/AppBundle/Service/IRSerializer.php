@@ -3,6 +3,7 @@
 namespace AppBundle\Service;
 
 use AppBundle\Entity\Employee;
+use AppBundle\Entity\RetrieveTags;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Ram;
@@ -234,7 +235,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareEartagsTransfer(ArrayCollection $contentArray, $isEditMessage)
+    function parseDeclareTagsTransfer(ArrayCollection $contentArray, $isEditMessage)
     {
         // TODO: Implement parseDeclareEartagsTransfer() method.
         $declareEartagsTransfer = null;
@@ -297,10 +298,27 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseRetrieveEartags(ArrayCollection $contentArray, $isEditMessage)
+    function parseRetrieveTags(ArrayCollection $contentArray, $isEditMessage)
     {
-        // TODO: Implement parseRetrieveEartags() method.
-        $retrieveEartags = null;
+        $retrieveEartags = new RetrieveTags();
+
+        //No custom filter content given, revert to default values
+        if($contentArray->count() == 0) {
+            $retrieveEartags->setTagType("V");
+            $retrieveEartags->setAnimalType(3);
+
+            return $retrieveEartags;
+        }
+
+        //set animalType
+        if($contentArray->containsKey(Constant::ANIMALTYPE_NAMESPACE)) {
+            $retrieveEartags->setAnimalType($contentArray->get(Constant::ANIMALTYPE_NAMESPACE));
+        }
+
+        //set tagType
+        if($contentArray->containsKey(Constant::TAG_TYPE_NAMESPACE)) {
+            $retrieveEartags->setAnimalType($contentArray->get(Constant::ANIMALTYPE_NAMESPACE));
+        }
 
         return $retrieveEartags;
     }

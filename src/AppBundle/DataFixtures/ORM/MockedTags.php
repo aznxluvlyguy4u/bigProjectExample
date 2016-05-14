@@ -60,7 +60,6 @@ class MockedTags implements FixtureInterface, ContainerAwareInterface, OrderedFi
 
       //Mocked tags
       $tag = new Tag();
-      $tag->setIsVerified(true);
       $tag->setTagStatus('unassigned');
       $tag->setOrderDate(new \DateTime());
       $tag->setAnimalOrderNumber($randomAnimalOrderNumber);

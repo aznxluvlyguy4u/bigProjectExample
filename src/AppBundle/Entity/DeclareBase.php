@@ -23,13 +23,12 @@ use Doctrine\Common\Collections\ArrayCollection;
  *      "DeclareArrival" = "DeclareArrival",
  *      "DeclareBirth" = "DeclareBirth",
  *      "DeclareDepart" = "DeclareDepart",
- *      "DeclareEartagsTransfer" = "DeclareEartagsTransfer",
  *      "DeclareExport" = "DeclareExport",
  *      "DeclareImport" = "DeclareImport",
  *      "DeclareLoss" = "DeclareLoss",
  *      "DeclareMate" = "DeclareMate",
- *      "DeclareEartagsTransfer" = "DeclareEartagsTransfer",
- *      "RetrieveEartags" = "RetrieveEartags",
+ *      "DeclareTagsTransfer" = "DeclareTagsTransfer",
+ *      "RetrieveTags" = "RetrieveTags",
  *      "RevokeDeclaration" = "RevokeDeclaration"
  *   }
  * )

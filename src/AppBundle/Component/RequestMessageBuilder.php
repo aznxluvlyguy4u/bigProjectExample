@@ -37,9 +37,9 @@ class RequestMessageBuilder
     private $birthMessageBuilder;
 
     /**
-     * @var RetrieveEartagsMessageBuilder
+     * @var TagSyncMessageBuilder
      */
-    private $retrieveEartagsMessageBuilder;
+    private $tagSyncMessageBuilder;
 
     /**
      * @var TagTransferMessageBuilder
@@ -65,7 +65,7 @@ class RequestMessageBuilder
         $this->importMessageBuilder = new ImportMessageBuilder($em);
         $this->birthMessageBuilder = new BirthMessageBuilder($em);
         $this->exportMessageBuilder = new ExportMessageBuilder($em);
-        $this->retrieveEartagsMessageBuilder = new RetrieveEartagsMessageBuilder($em);
+        $this->tagSyncMessageBuilder = new TagSyncMessageBuilder($em);
         $this->tagTransferMessageBuilder = new TagTransferMessageBuilder($em);
     }
 
@@ -89,8 +89,8 @@ class RequestMessageBuilder
             case RequestType::DECLARE_DEPART_ENTITY:
                 $declareDepartRequest = $this->irSerializer->parseDeclareDepart($contentArray, $isEditMessage);
                 return $this->departMessageBuilder->buildMessage($declareDepartRequest, $person);
-            case RequestType::DECLARE_EARTAGS_TRANSFER_ENTITY:
-                $declareTagsTransferRequest = $this->irSerializer->parseDeclareEartagsTransfer($contentArray, $isEditMessage);
+            case RequestType::DECLARE_TAGS_TRANSFER_ENTITY:
+                $declareTagsTransferRequest = $this->irSerializer->parseDeclareTagsTransfer($contentArray, $isEditMessage);
                 return $this->tagTransferMessageBuilder->buildMessage($declareTagsTransferRequest, $person);
             case RequestType::DECLARE_LOSS_ENTITY:
                 $declareLoss = $this->irSerializer->parseDeclareLoss($contentArray, $isEditMessage);
@@ -102,9 +102,9 @@ class RequestMessageBuilder
             case RequestType::DECLARE_IMPORT_ENTITY:
                 $declareImportRequest = $this->irSerializer->parseDeclareImport($contentArray, $isEditMessage);
                 return $this->importMessageBuilder->buildMessage($declareImportRequest, $person);
-            case RequestType::RETRIEVE_EARTAGS_ENTITY:
-                $retrieveEartagsRequest = $this->irSerializer->parseRetrieveEartags($contentArray, $isEditMessage);
-                return $this->retrieveEartagsMessageBuilder->buildMessage($retrieveEartagsRequest, $person);
+            case RequestType::RETRIEVE_TAGS_ENTITY:
+                $retrieveTagsRequest = $this->irSerializer->parseRetrieveTags($contentArray, $isEditMessage);
+                return $this->tagSyncMessageBuilder->buildMessage($retrieveTagsRequest, $person);
             case RequestType::REVOKE_DECLARATION_ENTITY:
                 $revokeDeclaration = $this->irSerializer->parseRevokeDeclaration($contentArray, $isEditMessage);
                 //TODO: only add the mininum required fields for this Message Type

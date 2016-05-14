@@ -253,6 +253,12 @@ class APIController extends Controller implements APIControllerInterface
     $tagRepository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY);
 
     if($Id != null) {
+
+      //validate if Id is of format: AZ123456789
+      if(!preg_match("([A-Z]{2}\d+)",$Id)){
+        return false;
+      }
+
       //Strip countryCode
       $countryCode = mb_substr($Id, 0, 2, 'utf-8');
 

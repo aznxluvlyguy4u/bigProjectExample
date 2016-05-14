@@ -8,11 +8,11 @@ use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareDepart;
-use AppBundle\Entity\DeclareEartagsTransfer;
+use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
-use AppBundle\Entity\RetrieveEartags;
+use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RevokeDeclaration;
 use Doctrine\Common\Collections\ArrayCollection;
 
@@ -50,9 +50,9 @@ interface IRSerializerInterface
 
     /**
      * @param ArrayCollection $contentArray
-     * @return DeclareEartagsTransfer
+     * @return DeclareTagsTransfer
      */
-    function parseDeclareEartagsTransfer(ArrayCollection $contentArray, $isEditMessage);
+    function parseDeclareTagsTransfer(ArrayCollection $contentArray, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
@@ -74,9 +74,9 @@ interface IRSerializerInterface
 
     /**
      * @param ArrayCollection $contentArray
-     * @return RetrieveEartags
+     * @return RetrieveTags
      */
-    function parseRetrieveEartags(ArrayCollection $contentArray, $isEditMessage);
+    function parseRetrieveTags(ArrayCollection $contentArray, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray

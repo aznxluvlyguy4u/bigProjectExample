@@ -15,7 +15,6 @@ use \DateTime;
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * //TODO add new child classes to the DiscriminatorMap
-<<<<<<< HEAD
  * @ORM\DiscriminatorMap(
  *   {
  *      "DeclareArrivalResponse" = "DeclareArrivalResponse",
@@ -23,8 +22,8 @@ use \DateTime;
  *      "DeclareDepartResponse" = "DeclareDepartResponse",
  *      "DeclareImportResponse" = "DeclareImportResponse",
  *      "DeclareExportResponse" = "DeclareExportResponse",
- *      "DeclareEartagsTransferResponse" = "DeclareEartagsTransferResponse",
- *      "RetrieveEartagsResponse" = "RetrieveEartagsResponse"
+ *      "DeclareTagsTransferResponse" = "DeclareTagsTransferResponse",
+ *      "RetrieveTagsResponse" = "RetrieveTagsResponse"
  *   }
  * )
  * @package AppBundle\Entity\DeclareBaseResponse

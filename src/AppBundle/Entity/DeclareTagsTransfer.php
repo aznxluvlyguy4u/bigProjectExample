@@ -10,18 +10,18 @@ use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
- * Class DeclareEartagsTransfer
- * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareEartagsTransferRepository")
+ * Class DeclareTagsTransfer
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareTagsTransferRepository")
  * @package AppBundle\Entity
  */
-class DeclareEartagsTransfer extends DeclareBase
+class DeclareTagsTransfer extends DeclareBase
 {
 
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="Tag", mappedBy="declareEartagTransferRequestMessage", cascade={"persist"})
-     * @ORM\JoinColumn(name="declare_eartag_transfer_request_message_id", referencedColumnName="id")
+     * @ORM\OneToMany(targetEntity="Tag", mappedBy="declareTagTransferRequestMessage", cascade={"persist"})
+     * @ORM\JoinColumn(name="declare_tag_transfer_request_message_id", referencedColumnName="id")
      * @JMS\Type("array")
      */
     private $tags;
@@ -38,14 +38,14 @@ class DeclareEartagsTransfer extends DeclareBase
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="DeclareEartagsTransferResponse", mappedBy="declareEartagsTransferRequestMessage", cascade={"persist"})
-     * @ORM\JoinColumn(name="declare_eartag_transfer_request_message_id", referencedColumnName="id")
+     * @ORM\OneToMany(targetEntity="DeclareTagsTransferResponse", mappedBy="declareTagsTransferRequestMessage", cascade={"persist"})
+     * @ORM\JoinColumn(name="declare_tag_transfer_request_message_id", referencedColumnName="id")
      * @JMS\Type("array")
      */
     private $responses;
 
     /**
-     * DeclareEartagsTransfer constructor.
+     * DeclareTagsTransfer constructor.
      */
     function __construct() {
         parent::__construct();
@@ -63,7 +63,7 @@ class DeclareEartagsTransfer extends DeclareBase
      *
      * @param \AppBundle\Entity\Tag $tag
      *
-     * @return DeclareEartagsTransfer
+     * @return DeclareTagsTransfer
      */
     public function addTag(\AppBundle\Entity\Tag $tag)
     {
@@ -97,7 +97,7 @@ class DeclareEartagsTransfer extends DeclareBase
      *
      * @param \AppBundle\Entity\DeclareImportResponse $response
      *
-     * @return DeclareEartagsTransfer
+     * @return DeclareTagsTransfer
      */
     public function addResponse(\AppBundle\Entity\DeclareImportResponse $response)
     {
@@ -131,7 +131,7 @@ class DeclareEartagsTransfer extends DeclareBase
      *
      * @param string $relationNumberAcceptant
      *
-     * @return DeclareEartagsTransfer
+     * @return DeclareTagsTransfer
      */
     public function setRelationNumberAcceptant($relationNumberAcceptant)
     {

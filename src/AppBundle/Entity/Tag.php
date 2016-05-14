@@ -122,27 +122,18 @@ class Tag {
   private $animal;
 
   /**
-   * @var boolean
-   * @ORM\Column(type="boolean")
+   * @var DeclareTagsTransfer
    * @Assert\NotBlank
-   * @JMS\Type("boolean")
-   * @Expose
+   * @ORM\ManyToOne(targetEntity="DeclareTagsTransfer", cascade={"persist"}, inversedBy="tags")
+   * @JMS\Type("AppBundle\Entity\DeclareTagsTransfer")
    */
-  private $isVerified;
-
-  /**
-   * @var DeclareEartagsTransfer
-   * @Assert\NotBlank
-   * @ORM\ManyToOne(targetEntity="DeclareEartagsTransfer", cascade={"persist"}, inversedBy="tags")
-   * @JMS\Type("AppBundle\Entity\DeclareEartagsTransfer")
-   */
-  protected $declareEartagTransferRequestMessage;
+  protected $declareTagTransferRequestMessage;
 
   /**
    * Tag constructor.
    */
   public function __construct() {
-
+    
   }
 
     /**
@@ -371,28 +362,16 @@ class Tag {
         return $this->id;
     }
 
-  public function setIsVerified($isVerified)
-  {
-    $this->isVerified = $isVerified;
-
-    return $this;
-  }
-
-  public function getIsVerified()
-  {
-    return $this->isVerified;
-  }
-
     /**
      * Set declareEartagTransferRequestMessage
      *
-     * @param \AppBundle\Entity\DeclareEartagsTransfer $declareEartagTransferRequestMessage
+     * @param \AppBundle\Entity\DeclareTagsTransfer $declareTagTransferRequestMessage
      *
      * @return Tag
      */
-    public function setDeclareEartagTransferRequestMessage(\AppBundle\Entity\DeclareEartagsTransfer $declareEartagTransferRequestMessage = null)
+    public function setDeclareTagTransferRequestMessage(\AppBundle\Entity\DeclareTagsTransfer $declareTagTransferRequestMessage = null)
     {
-        $this->declareEartagTransferRequestMessage = $declareEartagTransferRequestMessage;
+        $this->declareTagTransferRequestMessage = $declareTagTransferRequestMessage;
 
         return $this;
     }
@@ -400,10 +379,10 @@ class Tag {
     /**
      * Get declareEartagTransferRequestMessage
      *
-     * @return \AppBundle\Entity\DeclareEartagsTransfer
+     * @return \AppBundle\Entity\DeclareTagsTransfer
      */
-    public function getDeclareEartagTransferRequestMessage()
+    public function getDeclareTagTransferRequestMessage()
     {
-        return $this->declareEartagTransferRequestMessage;
+        return $this->declareTagTransferRequestMessage;
     }
 }

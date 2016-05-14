@@ -10,11 +10,11 @@ use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
- * Class RetrieveEartags
- * @ORM\Entity(repositoryClass="AppBundle\Entity\RetrieveEartagsRepository")
+ * Class RetrieveTags
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\RetrieveTagsRepository")
  * @package AppBundle\Entity
  */
-class RetrieveEartags extends DeclareBase
+class RetrieveTags extends DeclareBase
 {
     /**
      * @Assert\NotBlank
@@ -42,8 +42,8 @@ class RetrieveEartags extends DeclareBase
     private $animalType;
 
     /**
-     * @ORM\OneToMany(targetEntity="RetrieveEartagsResponse", mappedBy="retrieveEartagsRequestMessage", cascade={"persist"})
-     * @ORM\JoinColumn(name="retrieve_eartags_request_message_id", referencedColumnName="id")
+     * @ORM\OneToMany(targetEntity="RetrieveTagsResponse", mappedBy="retrieveTagsRequestMessage", cascade={"persist"})
+     * @ORM\JoinColumn(name="retrieve_tags_request_message_id", referencedColumnName="id")
      * @JMS\Type("array")
      */
     private $responses;
@@ -53,7 +53,7 @@ class RetrieveEartags extends DeclareBase
      *
      * @param \AppBundle\Entity\Location $location
      *
-     * @return RetrieveEartags
+     * @return RetrieveTags
      */
     public function setLocation(\AppBundle\Entity\Location $location = null)
     {
@@ -76,11 +76,11 @@ class RetrieveEartags extends DeclareBase
     /**
      * Add response
      *
-     * @param \AppBundle\Entity\RetrieveEartagsResponse $response
+     * @param \AppBundle\Entity\RetrieveTagsResponse $response
      *
-     * @return RetrieveEartags
+     * @return RetrieveTags
      */
-    public function addResponse(\AppBundle\Entity\RetrieveEartagsResponse $response)
+    public function addResponse(\AppBundle\Entity\RetrieveTagsResponse $response)
     {
         $this->responses[] = $response;
 
@@ -90,9 +90,9 @@ class RetrieveEartags extends DeclareBase
     /**
      * Remove response
      *
-     * @param \AppBundle\Entity\RetrieveEartagsResponse $response
+     * @param \AppBundle\Entity\RetrieveTagsResponse $response
      */
-    public function removeResponse(\AppBundle\Entity\RetrieveEartagsResponse $response)
+    public function removeResponse(\AppBundle\Entity\RetrieveTagsResponse $response)
     {
         $this->responses->removeElement($response);
     }
@@ -112,7 +112,7 @@ class RetrieveEartags extends DeclareBase
      *
      * @param string $tagType
      *
-     * @return RetrieveEartags
+     * @return RetrieveTags
      */
     public function setTagType($tagType)
     {
@@ -136,7 +136,7 @@ class RetrieveEartags extends DeclareBase
      *
      * @param integer $animalType
      *
-     * @return RetrieveEartags
+     * @return RetrieveTags
      */
     public function setAnimalType($animalType)
     {
