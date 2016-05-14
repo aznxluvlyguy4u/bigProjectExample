@@ -91,7 +91,9 @@ class Location
    */
   protected $tagTransfers;
 
-  /*
+  /**
+   * @var array
+   * 
    * @ORM\OneToMany(targetEntity="DeclareLoss", mappedBy="location")
    */
   protected $losses;
