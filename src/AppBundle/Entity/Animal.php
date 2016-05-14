@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\Constant;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -204,8 +205,10 @@ abstract class Animal
     /**
      * @var Tag
      *
-     * @ORM\OneToOne(targetEntity="Tag", mappedBy="animal", cascade={"persist"})
+     * @ORM\OneToOne(targetEntity="Tag", inversedBy="animal", cascade={"persist"})
+     * @ORM\JoinColumn(name="tag_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Tag")
+     * @Expose
      */
     protected $assignedTag;
 
@@ -573,9 +576,6 @@ abstract class Animal
     }
 
     /**
-<<<<<<< HEAD
-     * Get arrivals
-=======
      * Get parentNeuter
      *
      * @return \AppBundle\Entity\Neuter
@@ -611,7 +611,6 @@ abstract class Animal
 
     /**
      * Get imports
->>>>>>> feat/tag
      *
      * @return \Doctrine\Common\Collections\Collection
      */

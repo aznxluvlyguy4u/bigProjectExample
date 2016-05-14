@@ -114,8 +114,7 @@ class Tag {
   /**
    * @var Animal
    *
-   * @ORM\OneToOne(targetEntity="Animal", inversedBy="assignedTag", cascade={"persist"})
-   * @ORM\JoinColumn(name="animal_id", referencedColumnName="id")
+   * @ORM\OneToOne(targetEntity="Animal", mappedBy="assignedTag", cascade={"persist"})
    * @JMS\Type("AppBundle\Entity\Animal")
    * @Expose
    */
