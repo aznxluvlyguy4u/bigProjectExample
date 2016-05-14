@@ -212,6 +212,14 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
   }
 
   /**
+   * @return Ram
+   */
+  public static function getMockedNewBornEwe()
+  {
+    return self::$mockedNewBornEwe;
+  }
+
+  /**
    * @return Ewe
    */
   public static function getMockedAnotherEwe()
