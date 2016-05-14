@@ -373,10 +373,10 @@ class EntityGetter
             $animal->setName($animalArray['name']); }
 
         if (array_key_exists('date_of_birth', $animalArray)) {
-            $animal->setDateOfBirth($animalArray['date_of_birth']); }
+            $animal->setDateOfBirth(new \DateTime($animalArray['date_of_birth'])); }
 
         if (array_key_exists('date_of_death', $animalArray)) {
-            $animal->setDateOfDeath($animalArray['date_of_death']); }
+            $animal->setDateOfDeath(new \DateTime($animalArray['date_of_death'])); }
 
 //FIXME Setting an father, mother or surrogate here as well, might lead to a large loop
 //        if (array_key_exists('father', $animalArray)) {
