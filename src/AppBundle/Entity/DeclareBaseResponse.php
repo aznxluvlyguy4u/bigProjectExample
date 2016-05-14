@@ -20,6 +20,7 @@ use \DateTime;
  *      "DeclareArrivalResponse" = "DeclareArrivalResponse",
  *      "DeclareDepartResponse" = "DeclareDepartResponse",
  *      "DeclareBirthResponse" = "DeclareBirthResponse",
+ *      "DeclareLossResponse" = "DeclareLossResponse",
  *      "DeclareImportResponse" = "DeclareImportResponse",
  *      "DeclareExportResponse" = "DeclareExportResponse",
  *      "DeclareTagsTransferResponse" = "DeclareTagsTransferResponse",
