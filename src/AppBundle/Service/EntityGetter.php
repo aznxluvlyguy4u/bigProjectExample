@@ -197,7 +197,7 @@ class EntityGetter
                 if (array_key_exists('surrogate', $animalArray)) {
                     $animalArray['surrogate'][Constant::GENDER_NAMESPACE] = AnimalType::FEMALE;
                     $surrogate = $this->retrieveAnimalFromAnimalArray($animalArray['surrogate']);
-                    $animalObject->setSurrogateMother($surrogate); }
+                    $animalObject->setSurrogate($surrogate); }
 
                 if (array_key_exists('birth_tail_length', $animalArray)) {
                     $animalObject->setBirthTailLength($animalArray['birth_tail_length']); }
@@ -393,7 +393,7 @@ class EntityGetter
 //        if (array_key_exists('surrogate', $animalArray)) {
 //            $animalArray['surrogate'][Constant::GENDER_NAMESPACE] = AnimalType::FEMALE;
 //            $surrogate = $this->retrieveAnimalFromAnimalArray($animalArray['surrogate']);
-//            $animal->setSurrogateMother($surrogate); }
+//            $animal->setSurrogate($surrogate); }
 
         if (array_key_exists('animal_category', $animalArray)) {
             $animal->setAnimalCategory($animalArray['animal_category']); }
