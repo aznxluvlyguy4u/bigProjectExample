@@ -163,6 +163,7 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     //Persist mocked data
     $manager->persist(self::$mockedRamWithParents);
     $manager->persist(self::$mockedNewBornRam);
+    $manager->persist(self::$mockedNewBornEwe);
     $manager->persist(self::$MockedAnotherEwe);
     $manager->flush();
 
@@ -233,7 +234,7 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     $partSize = sizeof($mockedTags)/$tagCount;
 
     for($i = 1; $i<=$tagCount; $i++) {
-      $tag = $mockedTags->get(rand(($i-1)*$partSize,$i*$partSize-1));
+      $tag = $mockedTags->get(rand(($i-1)*$partSize,$i*$partSize-2));
       $tag->setTagStatus(Constant::ASSIGNED_NAMESPACE);
       self::$tag[$i] = $tag;
     }
