@@ -155,12 +155,12 @@ class EntityGetter
     {
         $declareType = $declareContentArray['type'];
 
-        //Transfer values from the array to the newly created animal
-        if (array_key_exists('animal_type', $animalArray) && $animalArray['animal_type'] != null) {
-            $animalObject->setAnimalType($animalArray['animal_type']);
-        } else { //by default it is a sheep
-            $animalObject->setAnimalType(AnimalType::sheep);
-        }
+//        //Transfer values from the array to the newly created animal
+//        if (array_key_exists('animal_type', $animalArray) && $animalArray['animal_type'] != null) {
+//            $animalObject->setAnimalType($animalArray['animal_type']);
+//        } else { //by default it is a sheep
+//            $animalObject->setAnimalType(AnimalType::sheep);
+//        }
 
         //Note a newly created animal cannot have any messages yet,
         //(like arrivals, departures, imports)
