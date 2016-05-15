@@ -22,6 +22,7 @@ class DeclareLoss extends DeclareBase
     /**
      * @Assert\NotBlank
      * @ORM\OneToOne(targetEntity="Animal", cascade={"persist"}, inversedBy="death")
+     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Animal")
      * @Expose
      */
