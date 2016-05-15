@@ -131,30 +131,6 @@ class Neuter extends Animal
     }
 
     /**
-     * Set birth
-     *
-     * @param \AppBundle\Entity\DeclareBirth $birth
-     *
-     * @return Neuter
-     */
-    public function setBirth(\AppBundle\Entity\DeclareBirth $birth = null)
-    {
-        $this->birth = $birth;
-
-        return $this;
-    }
-
-    /**
-     * Get birth
-     *
-     * @return \AppBundle\Entity\DeclareBirth
-     */
-    public function getBirth()
-    {
-        return $this->birth;
-    }
-
-    /**
      * Set ulnNumber
      *
      * @param string $ulnNumber
@@ -265,16 +241,6 @@ class Neuter extends Animal
     }
 
     /**
-     * Get death
-     *
-     * @return \AppBundle\Entity\DeclareLoss
-     */
-    public function getDeath()
-    {
-        return $this->death;
-    }
-
-    /**
      * Add flag
      *
      * @param \AppBundle\Entity\DeclareAnimalFlag $flag
@@ -303,8 +269,7 @@ class Neuter extends Animal
      *
      * @return \Doctrine\Common\Collections\Collection
      */
-    public function getFlags()
-    {
+    public function getFlags() {
         return $this->flags;
     }
 }

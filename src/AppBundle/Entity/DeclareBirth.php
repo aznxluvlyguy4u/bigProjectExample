@@ -21,8 +21,7 @@ class DeclareBirth extends DeclareBase
 {
     /**
      * @Assert\NotBlank
-     * @ORM\OneToOne(targetEntity="Animal", inversedBy="birth", cascade={"persist"})
-     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id")
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="births", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Animal")
      * @Expose
      */

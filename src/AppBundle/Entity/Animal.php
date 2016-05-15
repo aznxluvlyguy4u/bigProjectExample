@@ -205,22 +205,20 @@ abstract class Animal
     protected $exports;
 
     /**
-     * @var DeclareBirth
-     *
+     * @var array
      * @JMS\Type("AppBundle\Entity\DeclareBirth")
-     * @ORM\OneToOne(targetEntity="DeclareBirth", mappedBy="animal")
+     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="animal", cascade={"persist"})
      * @Expose
      */
-    protected $birth;
+    protected $births;
 
     /**
-     * @var DeclareBirth
-     *
+     * @var array
      * @JMS\Type("AppBundle\Entity\DeclareLoss")
-     * @ORM\OneToOne(targetEntity="DeclareLoss", mappedBy="animal")
+     * @ORM\OneToMany(targetEntity="DeclareLoss", mappedBy="animal", cascade={"persist"})
      * @Expose
      */
-    protected $death;
+    protected $deaths;
 
     /**
      * @var array
@@ -288,6 +286,9 @@ abstract class Animal
         $this->departures = new ArrayCollection();
         $this->imports = new ArrayCollection();
         $this->exports = new ArrayCollection();
+        $this->births = new ArrayCollection();
+        $this->deaths = new ArrayCollection();
+
         $this->flags = new ArrayCollection();
         $this->isAlive = true;
 
@@ -779,30 +780,6 @@ abstract class Animal
     }
 
     /**
-     * Set birth
-     *
-     * @param \AppBundle\Entity\DeclareBirth $birth
-     *
-     * @return Animal
-     */
-    public function setBirth(\AppBundle\Entity\DeclareBirth $birth = null)
-    {
-        $this->birth = $birth;
-
-        return $this;
-    }
-
-    /**
-     * Get birth
-     *
-     * @return \AppBundle\Entity\DeclareBirth
-     */
-    public function getBirth()
-    {
-        return $this->birth;
-    }
-
-    /**
      * Set ulnNumber
      *
      * @param string $ulnNumber
@@ -893,18 +870,6 @@ abstract class Animal
     }
 
     /**
-     * Set death
-     *
-     * @param \AppBundle\Entity\DeclareLoss $death
-     *
-     * @return Animal
-     */
-    public function setDeath(\AppBundle\Entity\DeclareLoss $death = null)
-    {
-        $this->death = $death;
-    }
-
-    /**
      * Get surrogate
      *
      * @return \AppBundle\Entity\Ewe
@@ -963,16 +928,6 @@ abstract class Animal
     }
 
     /**
-     * Get death
-     *
-     * @return \AppBundle\Entity\DeclareLoss
-     */
-    public function getDeath()
-    {
-        return $this->death;
-    }
-
-    /**
      * Add flag
      *
      * @param \AppBundle\Entity\DeclareAnimalFlag $flag
@@ -1004,5 +959,73 @@ abstract class Animal
     public function getFlags()
     {
         return $this->flags;
+    }
+
+    /**
+     * Add birth
+     *
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     *
+     * @return Animal
+     */
+    public function addBirth(\AppBundle\Entity\DeclareBirth $birth)
+    {
+        $this->births[] = $birth;
+
+        return $this;
+    }
+
+    /**
+     * Remove birth
+     *
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     */
+    public function removeBirth(\AppBundle\Entity\DeclareBirth $birth)
+    {
+        $this->births->removeElement($birth);
+    }
+
+    /**
+     * Get births
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getBirths()
+    {
+        return $this->births;
+    }
+
+    /**
+     * Add death
+     *
+     * @param \AppBundle\Entity\DeclareLoss $death
+     *
+     * @return Animal
+     */
+    public function addDeath(\AppBundle\Entity\DeclareLoss $death)
+    {
+        $this->deaths[] = $death;
+
+        return $this;
+    }
+
+    /**
+     * Remove death
+     *
+     * @param \AppBundle\Entity\DeclareLoss $death
+     */
+    public function removeDeath(\AppBundle\Entity\DeclareLoss $death)
+    {
+        $this->deaths->removeElement($death);
+    }
+
+    /**
+     * Get deaths
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getDeaths()
+    {
+        return $this->deaths;
     }
 }

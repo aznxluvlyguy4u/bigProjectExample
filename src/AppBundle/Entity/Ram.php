@@ -133,30 +133,6 @@ class Ram extends Animal
     }
 
     /**
-     * Set birth
-     *
-     * @param \AppBundle\Entity\DeclareBirth $birth
-     *
-     * @return Ram
-     */
-    public function setBirth(\AppBundle\Entity\DeclareBirth $birth = null)
-    {
-        $this->birth = $birth;
-
-        return $this;
-    }
-
-    /**
-     * Get birth
-     *
-     * @return \AppBundle\Entity\DeclareBirth
-     */
-    public function getBirth()
-    {
-        return $this->birth;
-    }
-
-    /**
      * Set ulnNumber
      *
      * @param string $ulnNumber
@@ -264,16 +240,6 @@ class Ram extends Animal
     public function getSurrogate()
     {
         return $this->surrogate;
-    }
-
-    /**
-     * Get death
-     *
-     * @return \AppBundle\Entity\DeclareLoss
-     */
-    public function getDeath()
-    {
-        return $this->death;
     }
 
     /**
