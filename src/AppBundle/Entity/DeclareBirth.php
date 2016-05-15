@@ -41,7 +41,7 @@ class DeclareBirth extends DeclareBase
      * @JMS\Type("string")
      * @Expose
      */
-    private $is_aborted;
+    private $isAborted;
 
     /**
      * @ORM\Column(type="string", nullable=true)
@@ -49,7 +49,7 @@ class DeclareBirth extends DeclareBase
      * @JMS\Type("string")
      * @Expose
      */
-    private $is_pseudoPregnancy;
+    private $isPseudoPregnancy;
 
     /**
      * @ORM\Column(type="string", nullable=true)
@@ -57,7 +57,7 @@ class DeclareBirth extends DeclareBase
      * @JMS\Type("string")
      * @Expose
      */
-    private $is_lambar;
+    private $isLambar;
 
     /**
      * 2016-04-01T22:00:48.131Z
@@ -95,7 +95,7 @@ class DeclareBirth extends DeclareBase
      * @JMS\Type("integer")
      * @Expose
      */
-    private $animalWeight;
+    private $birthWeight;
 
     /**
      * @ORM\Column(type="integer", nullable=true)
@@ -265,54 +265,6 @@ class DeclareBirth extends DeclareBase
     /**
      * @return string
      */
-    public function getAborted()
-    {
-        return $this->aborted;
-    }
-
-    /**
-     * @param string $aborted
-     */
-    public function setAborted($aborted)
-    {
-        $this->aborted = $aborted;
-    }
-
-    /**
-     * @return string
-     */
-    public function getPseudoPregnancy()
-    {
-        return $this->pseudoPregnancy;
-    }
-
-    /**
-     * @param string $pseudoPregnancy
-     */
-    public function setPseudoPregnancy($pseudoPregnancy)
-    {
-        $this->pseudoPregnancy = $pseudoPregnancy;
-    }
-
-    /**
-     * @return string
-     */
-    public function getLambar()
-    {
-        return $this->lambar;
-    }
-
-    /**
-     * @param string $lambar
-     */
-    public function setLambar($lambar)
-    {
-        $this->lambar = $lambar;
-    }
-
-    /**
-     * @return string
-     */
     public function getBirthType()
     {
         return $this->birthType;
@@ -345,17 +297,17 @@ class DeclareBirth extends DeclareBase
     /**
      * @return integer
      */
-    public function getAnimalWeight()
+    public function getBirthWeight()
     {
-        return $this->animalWeight;
+        return $this->birthWeight;
     }
 
     /**
-     * @param integer $animalWeight
+     * @param integer $birthWeight
      */
-    public function setAnimalWeight($animalWeight)
+    public function setBirthWeight($birthWeight)
     {
-        $this->animalWeight = $animalWeight;
+        $this->birthWeight = $birthWeight;
     }
 
     /**
@@ -400,7 +352,7 @@ class DeclareBirth extends DeclareBase
      */
     public function setIsAborted($isAborted)
     {
-        $this->is_aborted = $isAborted;
+        $this->isAborted = $isAborted;
 
         return $this;
     }
@@ -412,7 +364,7 @@ class DeclareBirth extends DeclareBase
      */
     public function getIsAborted()
     {
-        return $this->is_aborted;
+        return $this->isAborted;
     }
 
     /**
@@ -424,7 +376,7 @@ class DeclareBirth extends DeclareBase
      */
     public function setIsPseudoPregnancy($isPseudoPregnancy)
     {
-        $this->is_pseudoPregnancy = $isPseudoPregnancy;
+        $this->isPseudoPregnancy = $isPseudoPregnancy;
 
         return $this;
     }
@@ -436,7 +388,7 @@ class DeclareBirth extends DeclareBase
      */
     public function getIsPseudoPregnancy()
     {
-        return $this->is_pseudoPregnancy;
+        return $this->isPseudoPregnancy;
     }
 
     /**
@@ -448,7 +400,7 @@ class DeclareBirth extends DeclareBase
      */
     public function setIsLambar($isLambar)
     {
-        $this->is_lambar = $isLambar;
+        $this->isLambar = $isLambar;
 
         return $this;
     }
@@ -460,6 +412,6 @@ class DeclareBirth extends DeclareBase
      */
     public function getIsLambar()
     {
-        return $this->is_lambar;
+        return $this->isLambar;
     }
 }

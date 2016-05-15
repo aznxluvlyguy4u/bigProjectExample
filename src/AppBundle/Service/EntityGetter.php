@@ -197,7 +197,7 @@ class EntityGetter
                 if (array_key_exists('surrogate', $animalArray)) {
                     $animalArray['surrogate'][Constant::GENDER_NAMESPACE] = AnimalType::FEMALE;
                     $surrogate = $this->retrieveAnimalFromAnimalArray($animalArray['surrogate']);
-                    $animalObject->setSurrogateMother($surrogate); }
+                    $animalObject->setSurrogate($surrogate); }
 
                 if (array_key_exists('birth_tail_length', $animalArray)) {
                     $animalObject->setBirthTailLength($animalArray['birth_tail_length']); }
@@ -370,13 +370,13 @@ class EntityGetter
 
         //Map all the other possible values
         if (array_key_exists('name', $animalArray)) {
-            $animal->setName($animal['name']); }
+            $animal->setName($animalArray['name']); }
 
         if (array_key_exists('date_of_birth', $animalArray)) {
-            $animal->setDateOfBirth($animal['date_of_birth']); }
+            $animal->setDateOfBirth(new \DateTime($animalArray['date_of_birth'])); }
 
         if (array_key_exists('date_of_death', $animalArray)) {
-            $animal->setDateOfDeath($animal['date_of_death']); }
+            $animal->setDateOfDeath(new \DateTime($animalArray['date_of_death'])); }
 
 //FIXME Setting an father, mother or surrogate here as well, might lead to a large loop
 //        if (array_key_exists('father', $animalArray)) {
@@ -393,16 +393,16 @@ class EntityGetter
 //        if (array_key_exists('surrogate', $animalArray)) {
 //            $animalArray['surrogate'][Constant::GENDER_NAMESPACE] = AnimalType::FEMALE;
 //            $surrogate = $this->retrieveAnimalFromAnimalArray($animalArray['surrogate']);
-//            $animal->setSurrogateMother($surrogate); }
+//            $animal->setSurrogate($surrogate); }
 
         if (array_key_exists('animal_category', $animalArray)) {
-            $animal->setAnimalCategory($animal['animal_category']); }
+            $animal->setAnimalCategory($animalArray['animal_category']); }
 
         if (array_key_exists('animal_hair_colour', $animalArray)) {
-            $animal->setAnimalHairColour($animal['animal_hair_colour']); }
+            $animal->setAnimalHairColour($animalArray['animal_hair_colour']); }
 
         if (array_key_exists('birth_tail_length', $animalArray)) {
-            $animal->setBirthTailLength($animal['birth_tail_length']); }
+            $animal->setBirthTailLength($animalArray['birth_tail_length']); }
 
         if (array_key_exists('location', $animalArray)) {
             $location = $locationRepository->findByLocationArray($animalArray['location']);

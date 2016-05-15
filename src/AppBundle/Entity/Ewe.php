@@ -24,7 +24,7 @@ class Ewe extends Animal
      protected $children;
 
     /**
-     * @ORM\OneToMany(targetEntity="Animal", mappedBy="surrogateMother")
+     * @ORM\OneToMany(targetEntity="Animal", mappedBy="surrogate")
      * @JMS\Type("AppBundle\Entity\Ewe")
      */
     protected $surrogateChildren;
@@ -280,27 +280,27 @@ class Ewe extends Animal
     }
 
     /**
-     * Set surrogateMother
+     * Set surrogate
      *
-     * @param \AppBundle\Entity\Ewe $surrogateMother
+     * @param \AppBundle\Entity\Ewe $surrogate
      *
      * @return Ewe
      */
-    public function setSurrogateMother(\AppBundle\Entity\Ewe $surrogateMother = null)
+    public function setSurrogate(\AppBundle\Entity\Ewe $surrogate = null)
     {
-        $this->surrogateMother = $surrogateMother;
+        $this->surrogate = $surrogate;
 
         return $this;
     }
 
     /**
-     * Get surrogateMother
+     * Get surrogate
      *
      * @return \AppBundle\Entity\Ewe
      */
-    public function getSurrogateMother()
+    public function getSurrogate()
     {
-        return $this->surrogateMother;
+        return $this->surrogate;
     }
 
     /**

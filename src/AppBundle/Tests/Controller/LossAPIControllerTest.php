@@ -6,6 +6,7 @@ use AppBundle\Entity\DeclareLoss;
 use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedAnimal;
 use AppBundle\DataFixtures\ORM\MockedClient;
+use AppBundle\DataFixtures\ORM\MockedTags;
 use Doctrine\ORM\EntityManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
@@ -37,6 +38,11 @@ class LossAPIControllerTest extends WebTestCase {
    * @var EntityManager
    */
   static private $entityManager;
+
+  /**
+   * @var ArrayCollection
+   */
+  static private $mockedTagsList;
 
   /**
    * @var Client
@@ -85,6 +91,9 @@ class LossAPIControllerTest extends WebTestCase {
     self::$mockedChild  = MockedAnimal::getMockedRamWithParents();
     self::$mockedFather = MockedAnimal::getMockedParentRam();
     self::$mockedMother = MockedAnimal::getMockedParentEwe();
+
+    ///Get mocked tags
+    self::$mockedTagsList = MockedTags::getMockedTags();
 
     $this->defaultHeaders = array(
       'CONTENT_TYPE' => 'application/json',
@@ -220,11 +229,14 @@ class LossAPIControllerTest extends WebTestCase {
     //Get requestId so we can do an update with PUT
     $requestId = $declareLossResponse['request_id'];
 
+    //Get tag
+    $tag = self::$mockedTagsList->get(rand(1,sizeof(self::$mockedTagsList)-1));
+
     //Update value
     $declareLossUpdated = $declareLoss;
     $declareLossUpdated->setReasonOfLoss("Destiny");
     $declareLossUpdated->setUbnProcessor("1");
-    $declareLossUpdated->getAnimal()->setUlnNumber('8795441');
+    $declareLossUpdated->getAnimal()->setAssignedTag($tag);
 
     //Create json to be putted
     $declareLossUpdatedJson = self::$serializer->serializeToJSON($declareLossUpdated);

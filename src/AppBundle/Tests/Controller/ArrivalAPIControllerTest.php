@@ -7,6 +7,7 @@ use AppBundle\Entity\DeclareArrival;
 use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedAnimal;
 use AppBundle\DataFixtures\ORM\MockedClient;
+use AppBundle\Tests\TestSettings;
 use Doctrine\ORM\EntityManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
@@ -192,10 +193,12 @@ class ArrivalAPIControllerTest extends WebTestCase {
 
     $this->assertEquals('open', $data['request_state']);
 
-    //make sure the animal is updated instead of created as a new animal
-    $animalIdBeforeUpdate = $declareArrival->getAnimal()->getId();
-    $animalIdAfterUpdate = $data['request_state']['animal']['id'];
-    $this->assertEquals($animalIdBeforeUpdate, $animalIdAfterUpdate);
+    if(TestSettings::TestEntitiesAreIdentical) {
+      //make sure the animal is updated instead of created as a new animal
+      $animalIdBeforeUpdate = $declareArrival->getAnimal()->getId();
+      $animalIdAfterUpdate = $data['request_state']['animal']['id'];
+      $this->assertEquals($animalIdBeforeUpdate, $animalIdAfterUpdate);
+    }
   }
 
   /**
@@ -258,10 +261,12 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $this->assertEquals($declareArrival->getIsImportAnimal(), $updatedData['is_import_animal']);
     $this->assertEquals($declareArrival->getAnimal()->getUlnCountryCode(), $updatedData['animal']['uln_country_code']);
 
-    //make sure the animal is updated instead of created as a new animal
-    $animalIdBeforeUpdate = $declareArrival->getAnimal()->getId();
-    $animalIdAfterUpdate = $updatedData['request_state']['animal']['id'];
-    $this->assertEquals($animalIdBeforeUpdate, $animalIdAfterUpdate);
+    if(TestSettings::TestEntitiesAreIdentical) {
+      //make sure the animal is updated instead of created as a new animal
+      $animalIdBeforeUpdate = $declareArrival->getAnimal()->getId();
+      $animalIdAfterUpdate = $updatedData['request_state']['animal']['id'];
+      $this->assertEquals($animalIdBeforeUpdate, $animalIdAfterUpdate);
+    }
   }
 
   public function tearDown() {

@@ -241,27 +241,27 @@ class Neuter extends Animal
     }
 
     /**
-     * Set surrogateMother
+     * Set surrogate
      *
-     * @param \AppBundle\Entity\Ewe $surrogateMother
+     * @param \AppBundle\Entity\Ewe $surrogate
      *
      * @return Neuter
      */
-    public function setSurrogateMother(\AppBundle\Entity\Ewe $surrogateMother = null)
+    public function setSurrogate(\AppBundle\Entity\Ewe $surrogate = null)
     {
-        $this->surrogateMother = $surrogateMother;
+        $this->surrogate = $surrogate;
 
         return $this;
     }
 
     /**
-     * Get surrogateMother
+     * Get surrogate
      *
      * @return \AppBundle\Entity\Ewe
      */
-    public function getSurrogateMother()
+    public function getSurrogate()
     {
-        return $this->surrogateMother;
+        return $this->surrogate;
     }
 
     /**

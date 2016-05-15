@@ -211,6 +211,11 @@ class IRSerializer implements IRSerializerInterface
         //Retrieve animal entity
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareBirthContentArray);
 
+        //Move nested fields to the proper level
+        $declareBirthContentArray['birth_weight'] = $declareBirthContentArray['animal']['birth_weight'];
+        $declareBirthContentArray['is_lambar'] = $declareBirthContentArray['animal']['is_lambar'];
+
+
         //Add retrieved animal properties including type to initial animalContentArray
         $declareBirthContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
 

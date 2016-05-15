@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\AnimalType;
+use AppBundle\Constant\Constant;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -106,6 +107,7 @@ abstract class Animal
      * @ORM\ManyToOne(targetEntity="Ram", inversedBy="children", cascade={"persist"})
      * @ORM\JoinColumn(name="parent_father_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\Animal")
+     * @Expose
      */
     protected $parentFather;
 
@@ -115,6 +117,7 @@ abstract class Animal
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="children", cascade={"persist"})
      * @ORM\JoinColumn(name="parent_mother_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\Animal")
+     * @Expose
      */
     protected $parentMother;
 
@@ -131,10 +134,11 @@ abstract class Animal
      * @var Animal
      *
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="surrogateChildren", cascade={"persist"})
-     * @ORM\JoinColumn(name="surrogate_mother_id", referencedColumnName="id", onDelete="set null")
+     * @ORM\JoinColumn(name="surrogate_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\Animal")
+     * @Expose
      */
-    protected $surrogateMother;
+    protected $surrogate;
 
     /**
      * @var integer
@@ -221,8 +225,10 @@ abstract class Animal
     /**
      * @var Tag
      *
-     * @ORM\OneToOne(targetEntity="Tag", mappedBy="animal", cascade={"persist"})
+     * @ORM\OneToOne(targetEntity="Tag", inversedBy="animal", cascade={"persist"})
+     * @ORM\JoinColumn(name="tag_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Tag")
+     * @Expose
      */
     protected $assignedTag;
 
@@ -392,7 +398,7 @@ abstract class Animal
     {
         if($assignedTag != null){
             $this->assignedTag = $assignedTag;
-            $this->assignedTag->setTagStatus("assigned");
+            $this->assignedTag->setTagStatus(Constant::ASSIGNED_NAMESPACE);
             $assignedTag->setAnimal($this);
             $this->setUlnNumber($assignedTag->getUlnNumber());
             $this->setUlnCountryCode($assignedTag->getUlnCountryCode());
@@ -845,15 +851,15 @@ abstract class Animal
     }
 
     /*
-     * Set surrogateMother
+     * Set surrogate
      *
-     * @param \AppBundle\Entity\Ewe $surrogateMother
+     * @param \AppBundle\Entity\Ewe $surrogate
      *
      * @return Animal
      */
-    public function setSurrogateMother(\AppBundle\Entity\Ewe $surrogateMother = null)
+    public function setSurrogate(\AppBundle\Entity\Ewe $surrogate = null)
     {
-        $this->surrogateMother = $surrogateMother;
+        $this->surrogate = $surrogate;
 
         return $this;
     }
@@ -891,13 +897,13 @@ abstract class Animal
     }
 
     /**
-     * Get surrogateMother
+     * Get surrogate
      *
      * @return \AppBundle\Entity\Ewe
      */
-    public function getSurrogateMother()
+    public function getSurrogate()
     {
-        return $this->surrogateMother;
+        return $this->surrogate;
     }
 
     /**
