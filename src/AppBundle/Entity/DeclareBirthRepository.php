@@ -10,13 +10,36 @@ use AppBundle\Constant\Constant;
  */
 class DeclareBirthRepository extends BaseRepository {
 
-  public function updateDeclareBirthMessage($declareBirthUpdate, $Id) {
+  public function updateDeclareBirthMessage(DeclareBirth $declareBirthUpdate, $Id) {
 
     $declareBirth = $this->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
 
     if($declareBirth == null) {
       return null;
     }
+
+    //TODO Verify if this works
+    $ulnCountryCode = $declareBirthUpdate->getAnimal()->getUlnCountryCode();
+    if ($ulnCountryCode != null) {
+      $declareBirth->getAnimal()->setUlnCountryCode($ulnCountryCode);
+    }
+
+    $ulnNumber = $declareBirthUpdate->getAnimal()->getUlnNumber();
+    if ($ulnNumber != null) {
+      $declareBirth->getAnimal()->setUlnNumber($ulnNumber);
+    }
+
+    $pedigreeCountryCode = $declareBirthUpdate->getAnimal()->getPedigreeCountryCode();
+    if ($pedigreeCountryCode != null) {
+      $declareBirth->getAnimal()->setPedigreeCountryCode($pedigreeCountryCode);
+    }
+
+    $pedigreeNumber = $declareBirthUpdate->getAnimal()->getPedigreeNumber();
+    if ($pedigreeNumber != null) {
+      $declareBirth->getAnimal()->setPedigreeNumber($pedigreeNumber);
+    }
+
+    //TODO: How to update gender? Create a new Ram/Ewe? Check IRSerializer->parseDeclareBirth
 
     if ($declareBirthUpdate->getBirthType() != null) {
       $declareBirth->setBirthType($declareBirthUpdate->getBirthType());
