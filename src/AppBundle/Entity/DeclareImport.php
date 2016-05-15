@@ -71,10 +71,8 @@ class DeclareImport extends DeclareBase
   private $responses;
 
   /**
-   * @var RevokeDeclaration
-   *
    * @ORM\OneToOne(targetEntity="RevokeDeclaration", inversedBy="import", cascade={"persist"})
-   * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id")
+   * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id", nullable=true)
    * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
    * @Expose
    */
