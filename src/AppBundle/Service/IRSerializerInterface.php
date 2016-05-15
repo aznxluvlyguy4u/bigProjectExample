@@ -83,4 +83,33 @@ interface IRSerializerInterface
      * @return RevokeDeclaration
      */
     function parseRevokeDeclaration(ArrayCollection $contentArray, $isEditMessage);
+
+    /**
+     * @param ArrayCollection $contentArray
+     * @param $isEditMessage
+     * @return RetrieveAnimals
+     */
+    function parseRetrieveAnimals(ArrayCollection $contentArray, $isEditMessage);
+
+    /**
+     * @param ArrayCollection $contentArray
+     * @param $isEditMessage
+     * @return RetrieveAnimalDetails
+     */
+    function parseRetrieveAnimalDetails(ArrayCollection $contentArray, $isEditMessage);
+
+    /**
+     * @param ArrayCollection $contentArray
+     * @param $isEditMessage
+     * @return RetrieveEUCountries
+     */
+    function parseRetrieveEUCountries(ArrayCollection $contentArray, $isEditMessage);
+
+    /**
+     * @param ArrayCollection $contentArray
+     * @param $isEditMessage
+     * @return RetrieveUBNDetails
+     */
+    function parseRetrieveUBNDetails(ArrayCollection $contentArray, $isEditMessage);
+
 }

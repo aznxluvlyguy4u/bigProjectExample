@@ -14,7 +14,7 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 /**
  * @Route("/api/v1/animals")
  */
-class AnimalAPIController extends APIController
+class AnimalAPIController extends APIController implements AnimalAPIControllerInterface
 {
 
   /**
@@ -118,5 +118,25 @@ class AnimalAPIController extends APIController
     $animal = $repository->findByUlnOrPedigree($Id);
 
     return new JsonResponse($animal, 200);
+  }
+
+  /**
+   * @param Request $request the request object
+   * @return Response
+   * @Route("")
+   * @Method("POST")
+   */
+  function getAnimals(Request $request) {
+    // TODO: Implement getAnimals() method.
+  }
+
+  /**
+   * @param Request $request the request object
+   * @return Response
+   * @Route("")
+   * @Method("POST")
+   */
+  function getAnimalDetails(Request $request) {
+    // TODO: Implement getAnimalDetails() method.
   }
 }

@@ -16,6 +16,10 @@ class RequestType
     const DECLARE_IMPORT = 'DECLARE_IMPORT';
     const RETRIEVE_TAGS = 'RETRIEVE_TAGS';
     const REVOKE_DECLARATION = 'REVOKE_DECLARATION';
+    const RETRIEVE_ANIMALS = "RETRIEVE_ANIMALS";
+    const RETRIEVE_ANIMAL_DETAILS = "RETRIEVE_ANIMAL_DETAILS";
+    const RETRIEVE_EU_COUNTRIES = "RETRIEVE_EU_COUNTRIES";
+    const RETRIEVE_UBN_DETAILS = "RETRIEVE_UBN_DETAILS";
 
     const DECLARATION_DETAIL_ENTITY = 'DeclarationDetail';
     const DECLARE_ARRIVAL_ENTITY = 'DeclareArrival';
@@ -28,4 +32,8 @@ class RequestType
     const DECLARE_IMPORT_ENTITY = 'DeclareImport';
     const RETRIEVE_TAGS_ENTITY = 'RetrieveTags';
     const REVOKE_DECLARATION_ENTITY = 'RevokeDeclaration';
+    const RETRIEVE_ANIMALS_ENTITY = "RetrieveAnimals";
+    const RETRIEVE_ANIMAL_DETAILS_ENTITY = "RetrieveAnimalDetails";
+    const RETRIEVE_EU_COUNTRIES_ENTITY = "RetrieveEUCountries";
+    const RETRIEVE_UBN_DETAILS_ENTITY = "RetrieveUBNDetails";
 }

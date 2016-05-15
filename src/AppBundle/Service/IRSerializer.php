@@ -5,6 +5,7 @@ namespace AppBundle\Service;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\RetrieveTags;
+use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Ram;
@@ -400,10 +401,48 @@ class IRSerializer implements IRSerializerInterface
     function parseRevokeDeclaration(ArrayCollection $revokeDeclarationContentArray, $isEditMessage)
     {
         $revokeDeclarationContentArray["type"] = RequestType::REVOKE_DECLARATION_ENTITY;
+        $revokeDeclaration = new RevokeDeclaration();
 
-        // TODO: Implement parseRevokeDeclaration() method.
-        $revokeDeclarationContentArray = null;
+        if($revokeDeclarationContentArray->containsKey(Constant::MESSAGE_ID_SNAKE_CASE_NAMESPACE)) {
+            $revokeDeclaration->setMessageId($revokeDeclarationContentArray[Constant::MESSAGE_ID_SNAKE_CASE_NAMESPACE]);
+        }
 
-        return $revokeDeclarationContentArray;
+        return $revokeDeclaration;
+    }
+
+    /**
+     * @param ArrayCollection $contentArray
+     * @param $isEditMessage
+     * @return RetrieveAnimals
+     */
+    function parseRetrieveAnimals(ArrayCollection $contentArray, $isEditMessage) {
+        // TODO: Implement parseRetrieveAnimals() method.
+    }
+
+    /**
+     * @param ArrayCollection $contentArray
+     * @param $isEditMessage
+     * @return RetrieveAnimalDetails
+     */
+    function parseRetrieveAnimalDetails(ArrayCollection $contentArray, $isEditMessage) {
+        // TODO: Implement parseRetrieveAnimalDetails() method.
+    }
+
+    /**
+     * @param ArrayCollection $contentArray
+     * @param $isEditMessage
+     * @return RetrieveEUCountries
+     */
+    function parseRetrieveEUCountries(ArrayCollection $contentArray, $isEditMessage) {
+        // TODO: Implement parseRetrieveEUCountries() method.
+    }
+
+    /**
+     * @param ArrayCollection $contentArray
+     * @param $isEditMessage
+     * @return RetrieveUBNDetails
+     */
+    function parseRetrieveUBNDetails(ArrayCollection $contentArray, $isEditMessage) {
+        // TODO: Implement parseRetrieveUBNDetails() method.
     }
 }

@@ -117,11 +117,20 @@ class RequestMessageBuilder
                 $retrieveTagsRequest = $this->irSerializer->parseRetrieveTags($contentArray, $isEditMessage);
                 return $this->tagSyncMessageBuilder->buildMessage($retrieveTagsRequest, $person);
             case RequestType::REVOKE_DECLARATION_ENTITY:
-                $revokeDeclaration = new RevokeDeclaration();
-                $revokeDeclaration->setMessageId($contentArray[Constant::MESSAGE_ID_SNAKE_CASE_NAMESPACE]);
-
-                return $this->revokeMessageBuilder->buildMessage($revokeDeclaration, $person);
-
+                $revokeDeclarationRequest = $this->irSerializer->parseRevokeDeclaration($contentArray, $isEditMessage);
+                return $this->revokeMessageBuilder->buildMessage($revokeDeclarationRequest, $person);
+            case RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY:
+                //TODO: only add the mininum required fields for this Message Type
+                return null;
+            case RequestType::RETRIEVE_ANIMALS_ENTITY:
+                //TODO: only add the mininum required fields for this Message Type
+                return null;
+            case RequestType::RETRIEVE_EU_COUNTRIES_ENTITY:
+                //TODO: only add the mininum required fields for this Message Type
+                return null;
+            case RequestType::RETRIEVE_UBN_DETAILS_ENTITY:
+                //TODO: only add the mininum required fields for this Message Type
+                return null;
             default:
                 if ($messageClassNameSpace == null){
                     throw new \Exception('Cannot pass null into the RequestMessageBuilder');

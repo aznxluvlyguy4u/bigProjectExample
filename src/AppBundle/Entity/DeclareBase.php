@@ -28,8 +28,12 @@ use Doctrine\Common\Collections\ArrayCollection;
  *      "DeclareLoss" = "DeclareLoss",
  *      "DeclareMate" = "DeclareMate",
  *      "DeclareTagsTransfer" = "DeclareTagsTransfer",
+ *      "RevokeDeclaration" = "RevokeDeclaration",
  *      "RetrieveTags" = "RetrieveTags",
- *      "RevokeDeclaration" = "RevokeDeclaration"
+ *      "RetrieveAnimals" = "RetrieveAnimals",
+ *      "RetrieveAnimalDetails" = "RetrieveAnimalDetails",
+ *      "RetrieveEuropeanCountries" = "RetrieveEuropeanCountries",
+ *      "RetrieveUBNDetails" = "RetrieveUBNDetails"
  *   }
  * )
  * @package AppBundle\Entity\DeclareBase

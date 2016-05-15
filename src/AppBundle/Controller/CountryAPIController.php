@@ -14,7 +14,8 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 /**
  * @Route("/api/v1/countries")
  */
-class CountryAPIController extends APIController {
+class CountryAPIController extends APIController implements CountryAPIControllerInterface
+{
 
   /**
    * Retrieve a list of Country codes and corresponding full Country name
@@ -47,19 +48,39 @@ class CountryAPIController extends APIController {
    * @Method("GET")
    */
   public function getCountryCodes(Request $request) {
-    if(!$request->query->has(Constant::CONTINENT_NAMESPACE)) {
-      $countries = $this->getDoctrine()->getRepository(Constant::COUNTRY_REPOSITORY)->findAll();
-    } else {
+    if (!$request->query->has(Constant::CONTINENT_NAMESPACE)) {
+      $countries = $this->getDoctrine()
+        ->getRepository(Constant::COUNTRY_REPOSITORY)
+        ->findAll();
+    }
+    else {
       $continent = ucfirst($request->query->get(Constant::CONTINENT_NAMESPACE));
-      if($continent == Constant::ALL_NAMESPACE){
-        $countries = $this->getDoctrine()->getRepository(Constant::COUNTRY_REPOSITORY)->findAll();
-      } else {
-        $countries = $this->getDoctrine()->getRepository(Constant::COUNTRY_REPOSITORY)->findBy(array(Constant::CONTINENT_NAMESPACE => $continent));
+      if ($continent == Constant::ALL_NAMESPACE) {
+        $countries = $this->getDoctrine()
+          ->getRepository(Constant::COUNTRY_REPOSITORY)
+          ->findAll();
+      }
+      else {
+        $countries = $this->getDoctrine()
+          ->getRepository(Constant::COUNTRY_REPOSITORY)
+          ->findBy(array (Constant::CONTINENT_NAMESPACE => $continent));
       }
     }
 
-    $countries = $this->getSerializer()->serializeToJSON(array(Constant::RESULT_NAMESPACE => $countries));
+    $countries = $this->getSerializer()
+      ->serializeToJSON(array (Constant::RESULT_NAMESPACE => $countries));
 
     return new Response($countries);
+  }
+
+  /**
+   * @param Request $request the request object
+   * @return Response
+   * @Route("")
+   * @Method("POST")
+   */
+  function getEUCountries(Request $request)
+  {
+    // TODO: Implement getEUCountries() method.
   }
 }
