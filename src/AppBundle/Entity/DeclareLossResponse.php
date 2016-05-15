@@ -14,15 +14,14 @@ use \AppBundle\Entity\DeclareLoss;
  */
 class DeclareLossResponse extends DeclareBaseResponse {
 
-  /**
-   * @var DeclareLoss
-   *
-   * @Assert\NotBlank
-   * @ORM\ManyToOne(targetEntity="DeclareLoss", cascade={"persist"}, inversedBy="responses")
-   * @JMS\Type("AppBundle\Entity\DeclareLoss")
-   */
-  private $declareLossRequestMessage;
-//JColumn(name="declare_loss_request_message_id", referencedColumnName="id")
+    /**
+     * @var DeclareLoss
+     *
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="DeclareLoss", cascade={"persist"}, inversedBy="responses")
+     * @JMS\Type("AppBundle\Entity\DeclareLoss")
+     */
+    private $declareLossRequestMessage;
 
     /**
      * Set declareLossRequestMessage
