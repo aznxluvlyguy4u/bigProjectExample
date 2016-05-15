@@ -122,6 +122,16 @@ class DeclareBirth extends DeclareBase
     private $responses;
 
     /**
+     * @var RevokeDeclaration
+     *
+     * @ORM\OneToOne(targetEntity="RevokeDeclaration", inversedBy="birth", cascade={"persist"})
+     * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
+     * @Expose
+     */
+    private $revoke;
+
+    /**
      * Constructor.
      */
     public function __construct() {
@@ -413,5 +423,21 @@ class DeclareBirth extends DeclareBase
     public function getIsLambar()
     {
         return $this->isLambar;
+    }
+
+    /**
+     * @return RevokeDeclaration
+     */
+    public function getRevoke()
+    {
+        return $this->revoke;
+    }
+
+    /**
+     * @param RevokeDeclaration $revoke
+     */
+    public function setRevoke($revoke = null)
+    {
+        $this->revoke = $revoke;
     }
 }

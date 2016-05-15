@@ -71,6 +71,16 @@ class DeclareImport extends DeclareBase
   private $responses;
 
   /**
+   * @var RevokeDeclaration
+   *
+   * @ORM\OneToOne(targetEntity="RevokeDeclaration", inversedBy="import", cascade={"persist"})
+   * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id")
+   * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
+   * @Expose
+   */
+  private $revoke;
+
+  /**
    * DeclareArrival constructor.
    */
   public function __construct() {
@@ -237,5 +247,21 @@ class DeclareImport extends DeclareBase
     public function getResponses()
     {
         return $this->responses;
+    }
+
+    /**
+     * @return RevokeDeclaration
+     */
+    public function getRevoke()
+    {
+        return $this->revoke;
+    }
+
+    /**
+     * @param RevokeDeclaration $revoke
+     */
+    public function setRevoke($revoke = null)
+    {
+        $this->revoke = $revoke;
     }
 }

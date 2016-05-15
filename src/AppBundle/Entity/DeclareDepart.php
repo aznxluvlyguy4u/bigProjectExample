@@ -69,6 +69,16 @@ class DeclareDepart extends DeclareBase
     private $responses;
 
     /**
+     * @var RevokeDeclaration
+     *
+     * @ORM\OneToOne(targetEntity="RevokeDeclaration", inversedBy="depart", cascade={"persist"})
+     * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
+     * @Expose
+     */
+    private $revoke;
+
+    /**
      * DeclareDepart constructor.
      */
     public function __construct() {
@@ -237,4 +247,19 @@ class DeclareDepart extends DeclareBase
         return $this;
     }
 
+    /**
+     * @return RevokeDeclaration
+     */
+    public function getRevoke()
+    {
+        return $this->revoke;
+    }
+
+    /**
+     * @param RevokeDeclaration $revoke
+     */
+    public function setRevoke($revoke = null)
+    {
+        $this->revoke = $revoke;
+    }
 }

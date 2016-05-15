@@ -72,6 +72,16 @@ class DeclareLoss extends DeclareBase
     private $responses;
 
     /**
+     * @var RevokeDeclaration
+     *
+     * @ORM\OneToOne(targetEntity="RevokeDeclaration", inversedBy="loss", cascade={"persist"})
+     * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
+     * @Expose
+     */
+    private $revoke;
+
+    /**
      * DeclareLoss constructor.
      */
     public function __construct() {
@@ -242,5 +252,21 @@ class DeclareLoss extends DeclareBase
     public function setUbnProcessor($ubnProcessor)
     {
         $this->ubnProcessor = $ubnProcessor;
+    }
+
+    /**
+     * @return RevokeDeclaration
+     */
+    public function getRevoke()
+    {
+        return $this->revoke;
+    }
+
+    /**
+     * @param RevokeDeclaration $revoke
+     */
+    public function setRevoke($revoke = null)
+    {
+        $this->revoke = $revoke;
     }
 }
