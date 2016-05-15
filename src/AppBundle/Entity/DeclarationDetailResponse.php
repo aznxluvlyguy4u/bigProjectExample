@@ -2,6 +2,9 @@
 
 namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
+use \AppBundle\Entity\DeclarationDetail;
+use Symfony\Component\Validator\Constraints as Assert;
+use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class DeclarationDetailResponse
@@ -10,6 +13,14 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class DeclarationDetailResponse extends DeclarationBaseResponse {
 
+    /**
+     * @var DeclarationDetail
+     *
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="DeclarationDetail", cascade={"persist"}, inversedBy="responses")
+     * @JMS\Type("AppBundle\Entity\DeclarationDetail")
+     */
+    private $declarationDetailRequestMessage;
 
     /**
      * Get id
@@ -163,5 +174,29 @@ class DeclarationDetailResponse extends DeclarationBaseResponse {
     public function getUbn()
     {
         return $this->ubn;
+    }
+
+    /**
+     * Set declarationDetailRequestMessage
+     *
+     * @param \AppBundle\Entity\DeclarationDetail $declarationDetailRequestMessage
+     *
+     * @return DeclarationDetailResponse
+     */
+    public function setDeclarationDetailRequestMessage(\AppBundle\Entity\DeclarationDetail $declarationDetailRequestMessage = null)
+    {
+        $this->declarationDetailRequestMessage = $declarationDetailRequestMessage;
+
+        return $this;
+    }
+
+    /**
+     * Get declarationDetailRequestMessage
+     *
+     * @return \AppBundle\Entity\DeclarationDetail
+     */
+    public function getDeclarationDetailRequestMessage()
+    {
+        return $this->declarationDetailRequestMessage;
     }
 }
