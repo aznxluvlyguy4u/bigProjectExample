@@ -16,9 +16,9 @@ use AppBundle\Enumerator\AnimalType;
 class DeclareBirthJsonFormatChild
 {
     /**
-     * @var string
+     * @var boolean
      */
-    private $alive;
+    private $isAlive;
 
     /**
      * @var string
@@ -61,7 +61,7 @@ class DeclareBirthJsonFormatChild
     private $birthTailLength;
 
     /**
-     * @var string
+     * @var boolean
      */
     private $hasLambar;
 
@@ -123,19 +123,19 @@ class DeclareBirthJsonFormatChild
     }
 
     /**
-     * @return string
+     * @return boolean
      */
     public function getIsAlive()
     {
-        return $this->alive;
+        return $this->isAlive;
     }
 
     /**
-     * @param string $isAlive
+     * @param boolean $isAlive
      */
     public function setIsAlive($isAlive)
     {
-        $this->alive = $isAlive;
+        $this->isAlive = $isAlive;
     }
 
     /**
@@ -267,7 +267,7 @@ class DeclareBirthJsonFormatChild
     }
 
     /**
-     * @return string
+     * @return boolean
      */
     public function getHasLambar()
     {
@@ -275,7 +275,7 @@ class DeclareBirthJsonFormatChild
     }
 
     /**
-     * @param string $hasLambar
+     * @param boolean $hasLambar
      */
     public function setHasLambar($hasLambar)
     {

@@ -20,7 +20,7 @@ use JMS\Serializer\Annotation\Expose;
 class DeclareBirthJsonFormat
 {
     /**
-     * @var string
+     * @var boolean
      */
     private $isAborted;
 
@@ -186,7 +186,7 @@ class DeclareBirthJsonFormat
     }
 
     /**
-     * @return string
+     * @return boolean
      */
     public function getIsAborted()
     {
@@ -194,7 +194,7 @@ class DeclareBirthJsonFormat
     }
 
     /**
-     * @param string $isAborted
+     * @param boolean $isAborted
      */
     public function setIsAborted($isAborted)
     {
@@ -202,7 +202,7 @@ class DeclareBirthJsonFormat
     }
 
     /**
-     * @return string
+     * @return boolean
      */
     public function getIsPseudoPregnancy()
     {
@@ -210,7 +210,7 @@ class DeclareBirthJsonFormat
     }
 
     /**
-     * @param string $isPseudoPregnancy
+     * @param boolean $isPseudoPregnancy
      */
     public function setIsPseudoPregnancy($isPseudoPregnancy)
     {
