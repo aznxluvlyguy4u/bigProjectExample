@@ -108,14 +108,6 @@ class DeclareBirth extends DeclareBase
     private $birthTailLength;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
-     * @Assert\Length(max = 50)
-     * @JMS\Type("string")
-     * @Expose
-     */
-    private $transportationCode;
-
-    /**
      * @ORM\OneToMany(targetEntity="DeclareBirthResponse", mappedBy="declareBirthRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_birth_request_message_id", referencedColumnName="id")
      * @JMS\Type("array")
@@ -326,22 +318,6 @@ class DeclareBirth extends DeclareBase
     public function setBirthTailLength($birthTailLength)
     {
         $this->birthTailLength = $birthTailLength;
-    }
-
-    /**
-     * @return string
-     */
-    public function getTransportationCode()
-    {
-        return $this->transportationCode;
-    }
-
-    /**
-     * @param string $transportationCode
-     */
-    public function setTransportationCode($transportationCode)
-    {
-        $this->transportationCode = $transportationCode;
     }
 
     /**
