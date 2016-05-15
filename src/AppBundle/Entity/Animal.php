@@ -223,6 +223,13 @@ abstract class Animal
     protected $death;
 
     /**
+     * @var array
+     * @JMS\Type("AppBundle\Entity\DeclareAnimalFlag")
+     * @ORM\OneToMany(targetEntity="DeclareAnimalFlag", mappedBy="animal", cascade={"persist"})
+     */
+    protected $flags;
+
+    /**
      * @var Tag
      *
      * @ORM\OneToOne(targetEntity="Tag", inversedBy="animal", cascade={"persist"})
@@ -281,6 +288,7 @@ abstract class Animal
         $this->departures = new ArrayCollection();
         $this->imports = new ArrayCollection();
         $this->exports = new ArrayCollection();
+        $this->flags = new ArrayCollection();
         $this->isAlive = true;
 
         $this->ulnCountryCode = '';
@@ -962,5 +970,39 @@ abstract class Animal
     public function getDeath()
     {
         return $this->death;
+    }
+
+    /**
+     * Add flag
+     *
+     * @param \AppBundle\Entity\DeclareAnimalFlag $flag
+     *
+     * @return Animal
+     */
+    public function addFlag(\AppBundle\Entity\DeclareAnimalFlag $flag)
+    {
+        $this->flags[] = $flag;
+
+        return $this;
+    }
+
+    /**
+     * Remove flag
+     *
+     * @param \AppBundle\Entity\DeclareAnimalFlag $flag
+     */
+    public function removeFlag(\AppBundle\Entity\DeclareAnimalFlag $flag)
+    {
+        $this->flags->removeElement($flag);
+    }
+
+    /**
+     * Get flags
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getFlags()
+    {
+        return $this->flags;
     }
 }

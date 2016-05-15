@@ -23,6 +23,7 @@ use \DateTime;
  *      "DeclareLossResponse" = "DeclareLossResponse",
  *      "DeclareImportResponse" = "DeclareImportResponse",
  *      "DeclareExportResponse" = "DeclareExportResponse",
+ *      "DeclareAnimalFlagResponse" = "DeclareAnimalFlagResponse",
  *      "DeclareTagsTransferResponse" = "DeclareTagsTransferResponse",
  *      "RevokeDeclarationResponse" = "RevokeDeclarationResponse",
  *      "RetrieveTagsResponse" = "RetrieveTagsResponse",

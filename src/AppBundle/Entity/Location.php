@@ -99,6 +99,14 @@ class Location
   protected $losses;
 
   /**
+   * @var array
+   *
+   * @JMS\Type("AppBundle\Entity\DeclareAnimalFlag")
+   * @ORM\OneToMany(targetEntity="DeclareAnimalFlag", mappedBy="location", cascade={"persist"})
+   */
+  protected $flags;
+
+  /**
    * @Assert\NotBlank
    * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"})
    * @JMS\Type("AppBundle\Entity\Company")
@@ -126,6 +134,7 @@ class Location
     $this->losses = new ArrayCollection();
     $this->animals = new ArrayCollection();
     $this->tagTransfers = new ArrayCollection();
+    $this->flags = new ArrayCollection();
   }
 
   /**
@@ -483,5 +492,39 @@ class Location
     public function getTagTransfers()
     {
         return $this->tagTransfers;
+    }
+
+    /**
+     * Add flag
+     *
+     * @param \AppBundle\Entity\DeclareAnimalFlag $flag
+     *
+     * @return Location
+     */
+    public function addFlag(\AppBundle\Entity\DeclareAnimalFlag $flag)
+    {
+        $this->flags[] = $flag;
+
+        return $this;
+    }
+
+    /**
+     * Remove flag
+     *
+     * @param \AppBundle\Entity\DeclareAnimalFlag $flag
+     */
+    public function removeFlag(\AppBundle\Entity\DeclareAnimalFlag $flag)
+    {
+        $this->flags->removeElement($flag);
+    }
+
+    /**
+     * Get flags
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getFlags()
+    {
+        return $this->flags;
     }
 }
