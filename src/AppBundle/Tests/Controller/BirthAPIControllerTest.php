@@ -196,28 +196,28 @@ class BirthAPIControllerTest extends WebTestCase {
     //Create child object in jsonFormat with surrogate
     $childRam = new DeclareBirthJsonFormatChild();
     $childRam->setChildValues(self::$mockedNewBornRam);
-    $childRam->setIsAlive("true");
+    $childRam->setIsAlive(true);
     $childRam->setBirthType("keizersnee");
-    $childRam->setBirthWeight(231);
-    $childRam->setBirthTailLength(12);
-    $childRam->setIsLambar("false");
+    $childRam->setBirthWeight(231.2);
+    $childRam->setBirthTailLength(12.1);
+    $childRam->setHasLambar(true);
     $childRam->setSurrogateValues(self::$mockedSurrogate);
 
     //Create child object in jsonFormat with surrogate
     $childEwe = new DeclareBirthJsonFormatChild();
     $childEwe->setChildValues(self::$mockedNewBornEwe);
-    $childEwe->setIsAlive("true");
+    $childEwe->setIsAlive(true);
     $childEwe->setBirthType("keizersnee");
-    $childEwe->setBirthWeight(187);
-    $childEwe->setBirthTailLength(10);
-    $childEwe->setIsLambar("false");
+    $childEwe->setBirthWeight(187.3);
+    $childEwe->setBirthTailLength(10.5);
+    $childEwe->setHasLambar(true);
     
 
     //Create declare birth object in jsonFormat
     $declareBirthJsonFormat = new DeclareBirthJsonFormat();
     $declareBirthJsonFormat->setBirthType("keizersnee");
-    $declareBirthJsonFormat->setIsPseudoPregnancy("false");
-    $declareBirthJsonFormat->setIsAborted("false");
+    $declareBirthJsonFormat->setIsPseudoPregnancy(false);
+    $declareBirthJsonFormat->setIsAborted(false);
     $declareBirthJsonFormat->setDateOfBirth(self::$mockedNewBornRam->getDateOfBirth());
     $declareBirthJsonFormat->setLitterSize(2);
     $declareBirthJsonFormat->setAliveCount(2);
@@ -246,7 +246,7 @@ class BirthAPIControllerTest extends WebTestCase {
     $dataEwe = $responseEwe['animal'];
 
     //Verify Ram Child
-    $this->assertEquals($childRam->getIsAlive(), $dataRam['is_alive'] ? 'true' : 'false');
+    $this->assertEquals($childRam->getIsAlive(), $dataRam['is_alive'] ? true : false);
     $this->assertEquals($childRam->getUlnCountryCode(), $dataRam['uln_country_code']);
     $this->assertEquals($childRam->getUlnNumber(), $dataRam['uln_number']);
     $this->assertEquals($childRam->getGender(), $dataRam['gender']);
@@ -268,10 +268,10 @@ class BirthAPIControllerTest extends WebTestCase {
     $this->assertEquals($declareBirthJsonFormat->getMother()->getUlnNumber(),
         $dataRam['parent_mother']['uln_number']);
     $this->assertEquals($childRam->getBirthWeight(), $responseRam['birth_weight']);
-    $this->assertEquals($childRam->getIsLambar(), $responseRam['is_lambar']);
+    $this->assertEquals($childRam->getHasLambar(), $responseRam['has_lambar']);
 
     //Verify Ewe Child
-    $this->assertEquals($childEwe->getIsAlive(), $dataEwe['is_alive'] ? 'true' : 'false');
+    $this->assertEquals($childEwe->getIsAlive(), $dataEwe['is_alive'] ? true : false);
     $this->assertEquals($childEwe->getUlnCountryCode(), $dataEwe['uln_country_code']);
     $this->assertEquals($childEwe->getUlnNumber(), $dataEwe['uln_number']);
     $this->assertEquals($childEwe->getGender(), $dataEwe['gender']);
@@ -288,7 +288,7 @@ class BirthAPIControllerTest extends WebTestCase {
     $this->assertEquals($declareBirthJsonFormat->getMother()->getUlnNumber(),
         $dataEwe['parent_mother']['uln_number']);
     $this->assertEquals($childEwe->getBirthWeight(), $responseEwe['birth_weight']);
-    $this->assertEquals($childEwe->getIsLambar(), $responseEwe['is_lambar']);
+    $this->assertEquals($childEwe->getHasLambar(), $responseEwe['has_lambar']);
 
   }
 
@@ -312,13 +312,13 @@ class BirthAPIControllerTest extends WebTestCase {
 //    $childEwe->setBirthType("keizersnee");
 //    $childEwe->setBirthWeight(187);
 //    $childEwe->setBirthTailLength(10);
-//    $childEwe->setIsLambar("false");
+//    $childEwe->setHasLambar(false);
 //
 //    //Create declare birth object in jsonFormat
 //    $declareBirthJsonFormat = new DeclareBirthJsonFormat();
 //    $declareBirthJsonFormat->setBirthType("keizersnee");
-//    $declareBirthJsonFormat->setIsPseudoPregnancy("false");
-//    $declareBirthJsonFormat->setIsAborted("false");
+//    $declareBirthJsonFormat->setIsPseudoPregnancy(false);
+//    $declareBirthJsonFormat->setIsAborted(false);
 //    $declareBirthJsonFormat->setDateOfBirth(self::$mockedNewBornRam->getDateOfBirth());
 //    $declareBirthJsonFormat->setLitterSize(1);
 //    $declareBirthJsonFormat->setAliveCount(1);
@@ -351,7 +351,7 @@ class BirthAPIControllerTest extends WebTestCase {
 //    $declareBirthUpdated->setDateOfBirth(new \DateTime('2017-07-07'));
 //    $declareBirthUpdated->setIsAborted("N");
 //    $declareBirthUpdated->getChildren()->get(0)->setBirthWeight(999);
-//    $declareBirthUpdated->getChildren()->get(0)->setIsLambar("N");
+//    $declareBirthUpdated->getChildren()->get(0)->setHasLambar("N");
 //    $declareBirthUpdated->setIsPseudoPregnancy("N");
 //    $declareBirthUpdated->setLitterSize(6);
 //    $declareBirthUpdated->getChildren()->get(0)->setBirthTailLength(125);
@@ -381,7 +381,7 @@ class BirthAPIControllerTest extends WebTestCase {
 //    $this->assertEquals($declareBirthUpdated->getBirthType(), $updatedData['birth_type']);
 //    $this->assertEquals($declareBirthUpdated->getIsAborted(), $updatedData['is_aborted']);
 //    $this->assertEquals($declareBirthUpdated->getChildren()->get(0)->getBirthWeight(), $updatedData['children'][0]['birth_weight']);
-//    $this->assertEquals($declareBirthUpdated->getChildren()->get(0)->getIsLambar(), $updatedData['children'][0]['is_lambar']);
+//    $this->assertEquals($declareBirthUpdated->getChildren()->get(0)->getHasLambar(), $updatedData['children'][0]['has_lambar']);
 //    $this->assertEquals($declareBirthUpdated->getIsPseudoPregnancy(), $updatedData['is_pseudo_pregnancy']);
 //    $this->assertEquals($declareBirthUpdated->getLitterSize(), $updatedData['litter_size']);
 //    $this->assertEquals($declareBirthUpdated->getChildren()->get(0)->getBirthTailLength(), $updatedData['children'][]['birth_tail_length']);

@@ -51,19 +51,19 @@ class DeclareBirthJsonFormatChild
     private $birthType;
 
     /**
-     * @var integer
+     * @var float
      */
     private $birthWeight;
 
     /**
-     * @var integer
+     * @var float
      */
     private $birthTailLength;
 
     /**
      * @var string
      */
-    private $isLambar;
+    private $hasLambar;
 
     /**
      * @var DeclareBirthJsonFormatEwe
@@ -235,7 +235,7 @@ class DeclareBirthJsonFormatChild
     }
 
     /**
-     * @return int
+     * @return float
      */
     public function getBirthWeight()
     {
@@ -243,7 +243,7 @@ class DeclareBirthJsonFormatChild
     }
 
     /**
-     * @param int $birthWeight
+     * @param float $birthWeight
      */
     public function setBirthWeight($birthWeight)
     {
@@ -251,7 +251,7 @@ class DeclareBirthJsonFormatChild
     }
 
     /**
-     * @return int
+     * @return float
      */
     public function getBirthTailLength()
     {
@@ -259,7 +259,7 @@ class DeclareBirthJsonFormatChild
     }
 
     /**
-     * @param int $birthTailLength
+     * @param float $birthTailLength
      */
     public function setBirthTailLength($birthTailLength)
     {
@@ -269,17 +269,17 @@ class DeclareBirthJsonFormatChild
     /**
      * @return string
      */
-    public function getIsLambar()
+    public function getHasLambar()
     {
-        return $this->isLambar;
+        return $this->hasLambar;
     }
 
     /**
-     * @param string $isLambar
+     * @param string $hasLambar
      */
-    public function setIsLambar($isLambar)
+    public function setHasLambar($hasLambar)
     {
-        $this->isLambar = $isLambar;
+        $this->hasLambar = $hasLambar;
     }
 
     /**

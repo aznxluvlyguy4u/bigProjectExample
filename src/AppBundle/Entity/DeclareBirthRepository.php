@@ -49,16 +49,16 @@ class DeclareBirthRepository extends BaseRepository {
       $declareBirth->setDateOfBirth($declareBirthUpdate->getDateOfBirth());
     }
 
-    if ($declareBirthUpdate->getLambar() != null) {
-      $declareBirth->setLambar($declareBirthUpdate->getLambar());
+    if ($declareBirthUpdate->getHasLambar() != null) {
+      $declareBirth->setLambar($declareBirthUpdate->getHasLambar());
     }
 
-    if ($declareBirthUpdate->getAborted() != null) {
-      $declareBirth->setAborted($declareBirthUpdate->getAborted());
+    if ($declareBirthUpdate->getIsAborted() != null) {
+      $declareBirth->setAborted($declareBirthUpdate->getIsAborted());
     }
 
-    if ($declareBirthUpdate->getPseudoPregnancy() != null) {
-      $declareBirth->setPseudoPregnancy($declareBirthUpdate->getPseudoPregnancy());
+    if ($declareBirthUpdate->getIsPseudoPregnancy() != null) {
+      $declareBirth->setPseudoPregnancy($declareBirthUpdate->getIsPseudoPregnancy());
     }
 
     if ($declareBirthUpdate->getLitterSize() != null) {

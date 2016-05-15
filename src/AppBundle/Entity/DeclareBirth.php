@@ -35,28 +35,28 @@ class DeclareBirth extends DeclareBase
     private $location;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
-     * @Assert\Length(max = 1)
-     * @JMS\Type("string")
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
      * @Expose
      */
     private $isAborted;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
-     * @Assert\Length(max = 1)
-     * @JMS\Type("string")
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
      * @Expose
      */
     private $isPseudoPregnancy;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
-     * @Assert\Length(max = 1)
-     * @JMS\Type("string")
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
      * @Expose
      */
-    private $isLambar;
+    private $hasLambar;
 
     /**
      * 2016-04-01T22:00:48.131Z
@@ -81,25 +81,28 @@ class DeclareBirth extends DeclareBase
     private $birthType;
 
     /**
+     * @var integer
+     *
      * @ORM\Column(type="integer", nullable=true)
-     * @Assert\Length(max = 2)
      * @JMS\Type("integer")
      * @Expose
      */
     private $litterSize;
 
     /**
-     * @ORM\Column(type="integer", nullable=true)
-     * @Assert\Length(max = 3)
-     * @JMS\Type("integer")
+     * @var float
+     *
+     * @ORM\Column(type="float", nullable=true)
+     * @JMS\Type("float")
      * @Expose
      */
     private $birthWeight;
 
     /**
-     * @ORM\Column(type="integer", nullable=true)
-     * @Assert\Length(max = 4)
-     * @JMS\Type("integer")
+     * @var float
+     *
+     * @ORM\Column(type="float", nullable=true)
+     * @JMS\Type("float")
      * @Expose
      */
     private $birthTailLength;
@@ -341,11 +344,10 @@ class DeclareBirth extends DeclareBase
         $this->transportationCode = $transportationCode;
     }
 
-
     /**
      * Set isAborted
      *
-     * @param string $isAborted
+     * @param boolean $isAborted
      *
      * @return DeclareBirth
      */
@@ -359,7 +361,7 @@ class DeclareBirth extends DeclareBase
     /**
      * Get isAborted
      *
-     * @return string
+     * @return boolean
      */
     public function getIsAborted()
     {
@@ -369,7 +371,7 @@ class DeclareBirth extends DeclareBase
     /**
      * Set isPseudoPregnancy
      *
-     * @param string $isPseudoPregnancy
+     * @param boolean $isPseudoPregnancy
      *
      * @return DeclareBirth
      */
@@ -383,7 +385,7 @@ class DeclareBirth extends DeclareBase
     /**
      * Get isPseudoPregnancy
      *
-     * @return string
+     * @return boolean
      */
     public function getIsPseudoPregnancy()
     {
@@ -391,26 +393,26 @@ class DeclareBirth extends DeclareBase
     }
 
     /**
-     * Set isLambar
+     * Set hasLambar
      *
-     * @param string $isLambar
+     * @param boolean $hasLambar
      *
      * @return DeclareBirth
      */
-    public function setIsLambar($isLambar)
+    public function setHasLambar($hasLambar)
     {
-        $this->isLambar = $isLambar;
+        $this->hasLambar = $hasLambar;
 
         return $this;
     }
 
     /**
-     * Get isLambar
+     * Get hasLambar
      *
-     * @return string
+     * @return boolean
      */
-    public function getIsLambar()
+    public function getHasLambar()
     {
-        return $this->isLambar;
+        return $this->hasLambar;
     }
 }
