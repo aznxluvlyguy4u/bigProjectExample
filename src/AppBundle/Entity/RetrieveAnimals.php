@@ -14,14 +14,21 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class RetrieveAnimals extends DeclareBase
 {
-  /**
-   * @Assert\NotBlank
-   * @ORM\OneToOne(targetEntity="Location")
-   * @ORM\JoinColumn(name="location_id", referencedColumnName="id")
-   * @JMS\Type("AppBundle\Entity\Location")
-   */
-  private $location;
+    /**
+     * @Assert\NotBlank
+     * @ORM\OneToOne(targetEntity="Location")
+     * @ORM\JoinColumn(name="location_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\Location")
+     */
+    private $location;
 
+
+    /**
+     * @ORM\OneToMany(targetEntity="RetrieveAnimalsResponse", mappedBy="retrieveAnimalsRequestMessage", cascade={"persist"})
+     * @ORM\JoinColumn(name="retrieve_animals_request_message_id", referencedColumnName="id")
+     * @JMS\Type("array")
+     */
+    private $responses;
 
     /**
      * Set location
@@ -45,5 +52,39 @@ class RetrieveAnimals extends DeclareBase
     public function getLocation()
     {
         return $this->location;
+    }
+
+    /**
+     * Add response
+     *
+     * @param \AppBundle\Entity\RetrieveAnimalsResponse $response
+     *
+     * @return RetrieveAnimals
+     */
+    public function addResponse(\AppBundle\Entity\RetrieveAnimalsResponse $response)
+    {
+        $this->responses[] = $response;
+
+        return $this;
+    }
+
+    /**
+     * Remove response
+     *
+     * @param \AppBundle\Entity\RetrieveAnimalsResponse $response
+     */
+    public function removeResponse(\AppBundle\Entity\RetrieveAnimalsResponse $response)
+    {
+        $this->responses->removeElement($response);
+    }
+
+    /**
+     * Get responses
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getResponses()
+    {
+        return $this->responses;
     }
 }
