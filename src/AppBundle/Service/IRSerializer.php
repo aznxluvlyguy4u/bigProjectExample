@@ -6,6 +6,7 @@ use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RevokeDeclaration;
+use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Ram;
@@ -416,7 +417,9 @@ class IRSerializer implements IRSerializerInterface
      * @return RetrieveAnimals
      */
     function parseRetrieveAnimals(ArrayCollection $contentArray, $isEditMessage) {
-        // TODO: Implement parseRetrieveAnimals() method.
+        $retrieveAnimals = new RetrieveAnimals();
+
+        return $retrieveAnimals;
     }
 
     /**

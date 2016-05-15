@@ -10,12 +10,12 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use AppBundle\Enumerator\RequestType;
 
 /**
  * @Route("/api/v1/animals")
  */
-class AnimalAPIController extends APIController implements AnimalAPIControllerInterface
-{
+class AnimalAPIController extends APIController implements AnimalAPIControllerInterface {
 
   /**
    * Retrieve a list of animals. Animal-types are: {ram, ewe, neuter}
@@ -54,40 +54,54 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Route("")
    * @Method("GET")
    */
-  public function getAllAnimalsByTypeOrState(Request $request)
-  {
+  public function getAllAnimalsByTypeOrState(Request $request) {
     $animals = null;
-    $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-    $locationRepository = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY);
+    $animalRepository = $this->getDoctrine()
+      ->getRepository(Constant::ANIMAL_REPOSITORY);
+    $locationRepository = $this->getDoctrine()
+      ->getRepository(Constant::LOCATION_REPOSITORY);
 
     //Get locations of user
     $locations = $locationRepository->findByUser($this->getAuthenticatedUser($request));
 
     //Get animals on each location belonging to user
-    foreach($locations as $location) {
+    foreach ($locations as $location) {
       $filterArray = array (Constant::LOCATION_NAMESPACE => $location->getId());
 
       if (!$request->query->has(Constant::ANIMAL_TYPE_NAMESPACE) && !$request->query->has(Constant::ALIVE_NAMESPACE)) {
         //select all animals, belonging to user with no filters
         $animals = $animalRepository->findByTypeOrState(null, $filterArray);
-      } else if (!$request->query->has(Constant::ANIMAL_TYPE_NAMESPACE) && $request->query->has(Constant::ALIVE_NAMESPACE)) {
-        //filter animals by given isAlive state:{true, false}, belonging to user
-        $isAlive = $request->query->get(Constant::ALIVE_NAMESPACE);
-        $filterArray = array (Constant::LOCATION_NAMESPACE => $location->getId(), Constant::IS_ALIVE_NAMESPACE => ($isAlive === Constant::BOOLEAN_TRUE_NAMESPACE));
-        $animals = $animalRepository->findByTypeOrState(null, $filterArray);
-      } else if ($request->query->has(Constant::ANIMAL_TYPE_NAMESPACE) && !$request->query->has(Constant::ALIVE_NAMESPACE)) {
-        $animalType = $request->query->get(Constant::ANIMAL_TYPE_NAMESPACE);
-        $animals = $animalRepository->findByTypeOrState($animalType, $filterArray);
-      } else {
-        //filter animals by given animal-type: {ram, ewe, neuter} and isAlive state: {true, false}, belonging to user
-        $animalType = $request->query->get(Constant::ANIMAL_TYPE_NAMESPACE);
-        $isAlive = $request->query->get(Constant::ALIVE_NAMESPACE);
-        $filterArray = array (Constant::LOCATION_NAMESPACE => $location->getId(), Constant::IS_ALIVE_NAMESPACE => ($isAlive === Constant::BOOLEAN_TRUE_NAMESPACE));
-        $animals = $animalRepository->findByTypeOrState($animalType, $filterArray);
+      }
+      else {
+        if (!$request->query->has(Constant::ANIMAL_TYPE_NAMESPACE) && $request->query->has(Constant::ALIVE_NAMESPACE)) {
+          //filter animals by given isAlive state:{true, false}, belonging to user
+          $isAlive = $request->query->get(Constant::ALIVE_NAMESPACE);
+          $filterArray = array (
+            Constant::LOCATION_NAMESPACE => $location->getId(),
+            Constant::IS_ALIVE_NAMESPACE => ($isAlive === Constant::BOOLEAN_TRUE_NAMESPACE)
+          );
+          $animals = $animalRepository->findByTypeOrState(null, $filterArray);
+        }
+        else {
+          if ($request->query->has(Constant::ANIMAL_TYPE_NAMESPACE) && !$request->query->has(Constant::ALIVE_NAMESPACE)) {
+            $animalType = $request->query->get(Constant::ANIMAL_TYPE_NAMESPACE);
+            $animals = $animalRepository->findByTypeOrState($animalType, $filterArray);
+          }
+          else {
+            //filter animals by given animal-type: {ram, ewe, neuter} and isAlive state: {true, false}, belonging to user
+            $animalType = $request->query->get(Constant::ANIMAL_TYPE_NAMESPACE);
+            $isAlive = $request->query->get(Constant::ALIVE_NAMESPACE);
+            $filterArray = array (
+              Constant::LOCATION_NAMESPACE => $location->getId(),
+              Constant::IS_ALIVE_NAMESPACE => ($isAlive === Constant::BOOLEAN_TRUE_NAMESPACE)
+            );
+            $animals = $animalRepository->findByTypeOrState($animalType, $filterArray);
+          }
+        }
       }
     }
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $animals), 200);
+    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $animals), 200);
   }
 
   /**
@@ -112,30 +126,55 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Route("/{Id}")
    * @Method("GET")
    */
-  public function getAnimalById(Request $request, $Id)
-  {
-    $repository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+  public function getAnimalById(Request $request, $Id) {
+    $repository = $this->getDoctrine()
+      ->getRepository(Constant::ANIMAL_REPOSITORY);
     $animal = $repository->findByUlnOrPedigree($Id);
 
     return new JsonResponse($animal, 200);
   }
 
   /**
+   * Create a RetrieveAnimal request
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Post a RetrieveAnimals request",
+   *   input = "AppBundle\Entity\RetrieveAnimals",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
    * @param Request $request the request object
-   * @return Response
+   * @return JsonResponse
    * @Route("")
    * @Method("POST")
    */
-  function getAnimals(Request $request) {
-    // TODO: Implement getAnimals() method.
+  public function createRetrieveAnimals(Request $request) {
+    {
+      //Get content to array
+      $content = $this->getContentAsArray($request);
+
+      //Convert the array into an object and add the mandatory values retrieved from the database
+      $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $this->getAuthenticatedUser($request));
+
+      //First Persist object to Database, before sending it to the queue
+     // $this->persist($messageObject, RequestType::RETRIEVE_ANIMALS_ENTITY);
+
+      //Send it to the queue and persist/update any changed state to the database
+      $this->sendMessageObjectToQueue($messageObject, RequestType::RETRIEVE_ANIMALS_ENTITY, RequestType::RETRIEVE_ANIMALS);
+
+      return new JsonResponse($messageObject, 200);
+    }
   }
 
-  /**
-   * @param Request $request the request object
-   * @return Response
-   * @Route("")
-   * @Method("POST")
-   */
+
   function getAnimalDetails(Request $request) {
     // TODO: Implement getAnimalDetails() method.
   }

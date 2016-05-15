@@ -15,7 +15,7 @@ interface AnimalAPIControllerInterface
    * @param Request $request
    * @return mixed
    */
-  function getAnimals(Request $request);
+  function createRetrieveAnimals(Request $request);
 
   /**
    * @param Request $request

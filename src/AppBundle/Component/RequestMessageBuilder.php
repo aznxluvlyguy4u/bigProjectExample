@@ -3,6 +3,7 @@
 namespace AppBundle\Component;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Service\IRSerializer;
@@ -46,6 +47,10 @@ class RequestMessageBuilder
      */
     private $tagTransferMessageBuilder;
 
+    /**
+     * @var RetrieveAnimals
+     */
+    private $retrieveAnimalsMessageBuilder;
     /*
      * @var LossMessageBuilder
      */
@@ -79,6 +84,7 @@ class RequestMessageBuilder
         $this->tagTransferMessageBuilder = new TagTransferMessageBuilder($em);
         $this->lossMessageBuilder = new LossMessageBuilder($em);
         $this->revokeMessageBuilder = new RevokeMessageBuilder($em);
+        $this->retrieveAnimalsMessageBuilder = new RetrieveAnimalsMessageBuilder($em);
     }
 
     public function build($messageClassNameSpace, ArrayCollection $contentArray, Person $person, $isEditMessage)
@@ -123,8 +129,8 @@ class RequestMessageBuilder
                 //TODO: only add the mininum required fields for this Message Type
                 return null;
             case RequestType::RETRIEVE_ANIMALS_ENTITY:
-                //TODO: only add the mininum required fields for this Message Type
-                return null;
+                $retrieveAnimalsRequest = $this->irSerializer->parseRetrieveAnimals($contentArray, $isEditMessage);
+                return $this->retrieveAnimalsMessageBuilder->buildMessage($retrieveAnimalsRequest, $person);
             case RequestType::RETRIEVE_EU_COUNTRIES_ENTITY:
                 //TODO: only add the mininum required fields for this Message Type
                 return null;
