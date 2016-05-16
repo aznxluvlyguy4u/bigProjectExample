@@ -55,13 +55,6 @@ class DeclareDepart extends DeclareBase
     private $location;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
-     * @Expose
-     */
-    private $transportationCode;
-
-    /**
      * @ORM\OneToMany(targetEntity="DeclareDepartResponse", mappedBy="declareDepartRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_depart_request_message_id", referencedColumnName="id")
      * @JMS\Type("array")
@@ -217,25 +210,4 @@ class DeclareDepart extends DeclareBase
 
         return $this;
     }
-
-    /**
-     * @return string
-     */
-    public function getTransportationCode()
-    {
-        return $this->transportationCode;
-    }
-
-    /**
-     * @param string $transportationCode
-     *
-     * @return \AppBundle\Entity\DeclareDepart
-     */
-    public function setTransportationCode($transportationCode)
-    {
-        $this->transportationCode = $transportationCode;
-
-        return $this;
-    }
-
 }
