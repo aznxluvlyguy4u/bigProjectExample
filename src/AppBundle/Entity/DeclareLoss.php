@@ -46,17 +46,6 @@ class DeclareLoss extends DeclareBase
     private $reasonOfLoss;
 
     /**
-     * Note from UXPIN:
-     * "Project Manager: Dierverwerker is per definitie Rendac Son B.V. 2299077"
-     *
-     * @ORM\Column(type="string", nullable=true)
-     * @Assert\Length(max = 12)
-     * @JMS\Type("string")
-     * @Expose
-     */
-    private $ubnProcessor;
-
-    /**
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="losses", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
@@ -234,22 +223,6 @@ class DeclareLoss extends DeclareBase
     public function setReasonOfLoss($reasonOfLoss)
     {
         $this->reasonOfLoss = $reasonOfLoss;
-    }
-
-    /**
-     * @return string
-     */
-    public function getUbnProcessor()
-    {
-        return $this->ubnProcessor;
-    }
-
-    /**
-     * @param string $ubnProcessor
-     */
-    public function setUbnProcessor($ubnProcessor)
-    {
-        $this->ubnProcessor = $ubnProcessor;
     }
 
     /**
