@@ -165,7 +165,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $this->getAuthenticatedUser($request));
 
       //First Persist object to Database, before sending it to the queue
-     // $this->persist($messageObject, RequestType::RETRIEVE_ANIMALS_ENTITY);
+      $this->persist($messageObject, RequestType::RETRIEVE_ANIMALS_ENTITY);
 
       //Send it to the queue and persist/update any changed state to the database
       $this->sendMessageObjectToQueue($messageObject, RequestType::RETRIEVE_ANIMALS_ENTITY, RequestType::RETRIEVE_ANIMALS);
