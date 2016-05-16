@@ -257,6 +257,8 @@ class IRSerializer implements IRSerializerInterface
      */
     function parseDeclareTagsTransfer(ArrayCollection $contentArray, $isEditMessage)
     {
+        $contentArray["type"] = RequestType::DECLARE_TAGS_TRANSFER_ENTITY;
+
         $declareTagsTransfer = new DeclareTagsTransfer();
         $fetchedTag = null;
         $tagsRepository = $this->entityManager->getRepository(Constant::DECLARE_TAGS_TRANSFER_REPOSITORY);
@@ -380,6 +382,8 @@ class IRSerializer implements IRSerializerInterface
      */
     function parseRetrieveTags(ArrayCollection $contentArray, $isEditMessage)
     {
+        $contentArray["type"] = RequestType::RETRIEVE_TAGS_ENTITY;
+
         $retrieveTags = new RetrieveTags();
 
         //No custom filter content given, revert to default values
@@ -436,6 +440,8 @@ class IRSerializer implements IRSerializerInterface
      */
     function parseRetrieveAnimalDetails(ArrayCollection $contentArray, $isEditMessage) {
         // TODO: Implement parseRetrieveAnimalDetails() method.
+        $contentArray["type"] = RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY;
+
     }
 
     /**
@@ -445,6 +451,7 @@ class IRSerializer implements IRSerializerInterface
      */
     function parseRetrieveEUCountries(ArrayCollection $contentArray, $isEditMessage) {
         // TODO: Implement parseRetrieveEUCountries() method.
+        $contentArray["type"] = RequestType::RETRIEVE_EU_COUNTRIES_ENTITY;
     }
 
     /**
@@ -454,5 +461,6 @@ class IRSerializer implements IRSerializerInterface
      */
     function parseRetrieveUBNDetails(ArrayCollection $contentArray, $isEditMessage) {
         // TODO: Implement parseRetrieveUBNDetails() method.
+        $contentArray["type"] = RequestType::RETRIEVE_UBN_DETAILS_ENTITY;
     }
 }
