@@ -157,6 +157,7 @@ class IRSerializer implements IRSerializerInterface
 
         $declareBirthRequest = null;
 
+        //TODO in this if block a new animal is created to allow switching genders. However this results in dataloss!!! Make sure to map the data from the old animal to the new one.
         //If it's not an edit message, just retrieve animal and set animal, otherwise don't setup
         //so the updated animal details will be persisted
         if($isEditMessage) {
@@ -208,7 +209,7 @@ class IRSerializer implements IRSerializerInterface
         //Move nested fields to the proper level
         $declareBirthContentArray['birth_weight'] = $declareBirthContentArray['animal']['birth_weight'];
         $declareBirthContentArray['is_lambar'] = $declareBirthContentArray['animal']['is_lambar'];
-
+        $declareBirthContentArray['birth_tail_length'] = $declareBirthContentArray['animal']['birth_tail_length'];
 
         //Add retrieved animal properties including type to initial animalContentArray
         $declareBirthContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));

@@ -250,7 +250,6 @@ class BirthAPIControllerTest extends WebTestCase {
     $this->assertEquals($childRam->getUlnCountryCode(), $dataRam['uln_country_code']);
     $this->assertEquals($childRam->getUlnNumber(), $dataRam['uln_number']);
     $this->assertEquals($childRam->getGender(), $dataRam['gender']);
-    $this->assertEquals($childRam->getBirthTailLength(), $dataRam['birth_tail_length']);
 
     $this->assertEquals($childRam->getSurrogate()->getUlnCountryCode(),
         $dataRam[Constant::SURROGATE_NAMESPACE]['uln_country_code']);
@@ -269,13 +268,13 @@ class BirthAPIControllerTest extends WebTestCase {
         $dataRam['parent_mother']['uln_number']);
     $this->assertEquals($childRam->getBirthWeight(), $responseRam['birth_weight']);
     $this->assertEquals($childRam->getIsLambar(), $responseRam['is_lambar']);
-
+    $this->assertEquals($childRam->getBirthTailLength(), $responseRam['birth_tail_length']);
+    
     //Verify Ewe Child
     $this->assertEquals($childEwe->getIsAlive(), $dataEwe['is_alive'] ? 'true' : 'false');
     $this->assertEquals($childEwe->getUlnCountryCode(), $dataEwe['uln_country_code']);
     $this->assertEquals($childEwe->getUlnNumber(), $dataEwe['uln_number']);
     $this->assertEquals($childEwe->getGender(), $dataEwe['gender']);
-    $this->assertEquals($childEwe->getBirthTailLength(), $dataEwe['birth_tail_length']);
 
     $this->assertEquals($childEwe->getBirthType(), $responseEwe['birth_type']);
     $this->assertEquals($declareBirthJsonFormat->getLitterSize(), $responseEwe['litter_size']);
@@ -289,7 +288,7 @@ class BirthAPIControllerTest extends WebTestCase {
         $dataEwe['parent_mother']['uln_number']);
     $this->assertEquals($childEwe->getBirthWeight(), $responseEwe['birth_weight']);
     $this->assertEquals($childEwe->getIsLambar(), $responseEwe['is_lambar']);
-
+    $this->assertEquals($childEwe->getBirthTailLength(), $responseEwe['birth_tail_length']);
   }
 
   /**
