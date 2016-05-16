@@ -126,7 +126,7 @@ class Tag {
    * @ORM\ManyToOne(targetEntity="DeclareTagsTransfer", cascade={"persist"}, inversedBy="tags")
    * @JMS\Type("AppBundle\Entity\DeclareTagsTransfer")
    */
-  protected $declareTagTransferRequestMessage;
+  protected $declareTagsTransferRequestMessage;
 
   /**
    * Tag constructor.
@@ -362,26 +362,26 @@ class Tag {
     }
 
     /**
-     * Set declareEartagTransferRequestMessage
+     * Set declareTagsTransferRequestMessage
      *
-     * @param \AppBundle\Entity\DeclareTagsTransfer $declareTagTransferRequestMessage
+     * @param \AppBundle\Entity\DeclareTagsTransfer $declareTagsTransferRequestMessage
      *
      * @return Tag
      */
-    public function setDeclareTagTransferRequestMessage(\AppBundle\Entity\DeclareTagsTransfer $declareTagTransferRequestMessage = null)
+    public function setDeclareTagsTransferRequestMessage(\AppBundle\Entity\DeclareTagsTransfer $declareTagsTransferRequestMessage = null)
     {
-        $this->declareTagTransferRequestMessage = $declareTagTransferRequestMessage;
+        $this->declareTagsTransferRequestMessage = $declareTagsTransferRequestMessage;
 
         return $this;
     }
 
     /**
-     * Get declareEartagTransferRequestMessage
+     * Get declareTagsTransferRequestMessage
      *
      * @return \AppBundle\Entity\DeclareTagsTransfer
      */
-    public function getDeclareTagTransferRequestMessage()
+    public function getDeclareTagsTransferRequestMessage()
     {
-        return $this->declareTagTransferRequestMessage;
+        return $this->declareTagsTransferRequestMessage;
     }
 }

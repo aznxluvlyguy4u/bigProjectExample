@@ -18,7 +18,7 @@ class DeclareTagsTransfer extends DeclareBase
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="Tag", mappedBy="declareTagTransferRequestMessage", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="Tag", mappedBy="declareTagsTransferRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_tag_transfer_request_message_id", referencedColumnName="id")
      * @JMS\Type("array")
      */
