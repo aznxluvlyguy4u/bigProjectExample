@@ -44,6 +44,8 @@ class RetrieveAnimalsMessageBuilder extends MessageBuilderBase
   {
     //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
     $retrieveAnimals->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
+    $retrieveAnimals->setRelationNumberKeeper($this->person->getRelationNumberKeeper());
+
     return $retrieveAnimals;
   }
 }
