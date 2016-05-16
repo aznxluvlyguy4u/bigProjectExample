@@ -7,6 +7,7 @@ use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Enumerator\RequestType;
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -55,9 +56,13 @@ class RevokeMessageBuilder extends MessageBuilderBase
         $messageNumber = $revokeDeclaration->getMessageNumber();
         $retrievedDeclaration = $this->entityGetter->getRequestMessageByMessageNumber($messageNumber);
 
+        //Set values
         $revokeDeclaration->setRelationNumberKeeper($person->getRelationNumberKeeper());
         $revokeDeclaration->setUbn($retrievedDeclaration->getUbn());
         $revokeDeclaration->setRequestId($retrievedDeclaration->getRequestId());
+
+        //Set related request
+        $retrievedDeclaration->setRevoke($revokeDeclaration);
 
         return $revokeDeclaration;
     }
