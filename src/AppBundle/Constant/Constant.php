@@ -23,7 +23,9 @@ class Constant
     const TAGS_NAMESPACE = "tags";
     const ANIMAL_NAMESPACE = 'animal';
     const ANIMALTYPE_NAMESPACE = "animalType";
+    const ANIMAL_TYPE_SNAKE_CASE_NAMESPACE = "animal_type";
     const TAG_TYPE_NAMESPACE = "tagType";
+    const TAG_TYPE_SNAKE_CASE_NAMESPACE = "tag_type";
     const ALL_NAMESPACE = 'all';
     const ALIVE_NAMESPACE = 'alive';
     const IS_ALIVE_NAMESPACE = 'isAlive';

@@ -395,13 +395,13 @@ class IRSerializer implements IRSerializerInterface
         }
 
         //set animalType
-        if($contentArray->containsKey(Constant::ANIMALTYPE_NAMESPACE)) {
-            $retrieveTags->setAnimalType($contentArray->get(Constant::ANIMALTYPE_NAMESPACE));
+        if($contentArray->containsKey(Constant::ANIMAL_TYPE_SNAKE_CASE_NAMESPACE)) {
+            $retrieveTags->setAnimalType($contentArray->get(Constant::ANIMAL_TYPE_SNAKE_CASE_NAMESPACE));
         }
 
         //set tagType
-        if($contentArray->containsKey(Constant::TAG_TYPE_NAMESPACE)) {
-            $retrieveTags->setAnimalType($contentArray->get(Constant::ANIMALTYPE_NAMESPACE));
+        if($contentArray->containsKey(Constant::TAG_TYPE_SNAKE_CASE_NAMESPACE)) {
+            $retrieveTags->setTagType($contentArray->get(Constant::TAG_TYPE_SNAKE_CASE_NAMESPACE));
         }
 
         return $retrieveTags;
