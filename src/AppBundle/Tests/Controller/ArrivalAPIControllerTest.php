@@ -4,6 +4,7 @@ namespace AppBundle\Tests\Controller;
 
 use AppBundle\DataFixtures\ORM\MockedTags;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\JsonFormat\DeclareArrivalJsonFormat;
 use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedAnimal;
 use AppBundle\DataFixtures\ORM\MockedClient;
@@ -170,7 +171,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
   public function testCreateArrival()
   {
     //Create declare arrival
-    $declareArrival = new DeclareArrival();
+    $declareArrival = new DeclareArrivalJsonFormat();
     $declareArrival->setArrivalDate(new \DateTime());
     $declareArrival->setUbnPreviousOwner("123456");
     $declareArrival->setIsImportAnimal(false);
@@ -209,11 +210,12 @@ class ArrivalAPIControllerTest extends WebTestCase {
   public function testUpdateArrival()
   {
     //Create declare arrival
-    $declareArrival = new DeclareArrival();
+    $animal = self::$mockedChild;
+    $declareArrival = new DeclareArrivalJsonFormat();
     $declareArrival->setArrivalDate(new \DateTime());
     $declareArrival->setUbnPreviousOwner("123456");
     $declareArrival->setIsImportAnimal(false);
-    $declareArrival->setAnimal(self::$mockedChild);
+    $declareArrival->setAnimal($animal);
 
     //Create json to be posted
     $declareArrivalJson = self::$serializer->serializeToJSON($declareArrival);
@@ -240,7 +242,7 @@ class ArrivalAPIControllerTest extends WebTestCase {
     //Update value
     $declareArrivalUpdated = $declareArrival;
     $declareArrivalUpdated->setUbnPreviousOwner("999991");
-    $declareArrivalUpdated->getAnimal()->setAssignedTag($tag);
+    $declareArrivalUpdated->getAnimalJsonFormat()->setAssignedTag($tag);
 
     //Create json to be putted
     $declareArrivalUpdatedJson = self::$serializer->serializeToJSON($declareArrivalUpdated);
@@ -259,11 +261,11 @@ class ArrivalAPIControllerTest extends WebTestCase {
 
     $this->assertEquals($declareArrivalUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
     $this->assertEquals($declareArrival->getIsImportAnimal(), $updatedData['is_import_animal']);
-    $this->assertEquals($declareArrival->getAnimal()->getUlnCountryCode(), $updatedData['animal']['uln_country_code']);
+    $this->assertEquals($declareArrival->getAnimalJsonFormat()->getUlnCountryCode(), $updatedData['animal']['uln_country_code']);
 
     if(TestSettings::TestEntitiesAreIdentical) {
       //make sure the animal is updated instead of created as a new animal
-      $animalIdBeforeUpdate = $declareArrival->getAnimal()->getId();
+      $animalIdBeforeUpdate = $animal->getId();
       $animalIdAfterUpdate = $updatedData['request_state']['animal']['id'];
       $this->assertEquals($animalIdBeforeUpdate, $animalIdAfterUpdate);
     }
