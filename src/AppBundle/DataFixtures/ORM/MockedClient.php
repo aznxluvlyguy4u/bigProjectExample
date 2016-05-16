@@ -27,6 +27,32 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
   static private $mockedClient;
 
   /**
+   * @var LocationAddress
+   */
+  static private $mockedLocationAddress;
+
+  /**
+   * @var BillingAddress
+   */
+  static private $mockedBillingAddress;
+
+  /**
+   * @var CompanyAddress
+   */
+  static private $mockedCompanyAddress;
+
+  /**
+   * @var Company
+   */
+  static private $mockedCompany;
+
+  /**
+   * @var Location
+   */
+  static private $mockedLocation;
+  
+  
+  /**
    * Sets the container.
    *
    * @param ContainerInterface|null $container A ContainerInterface instance or null
@@ -53,43 +79,43 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedClient->setUsername("Bartje");
     self::$mockedClient->setPassword($encoder->encodePassword(self::$mockedClient, "blauwetexelaar"));
 
-    $locationAddress = new LocationAddress();
-    $locationAddress->setAddressNumber("1");
-    $locationAddress->setCity("Den Haag");
-    $locationAddress->setPostalCode("1111AZ");
-    $locationAddress->setState("ZH");
-    $locationAddress->setStreetName("Boederij");
-    $locationAddress->setCountry("Nederland");
+    self::$mockedLocationAddress = new LocationAddress();
+    self::$mockedLocationAddress->setAddressNumber("1");
+    self::$mockedLocationAddress->setCity("Den Haag");
+    self::$mockedLocationAddress->setPostalCode("1111AZ");
+    self::$mockedLocationAddress->setState("ZH");
+    self::$mockedLocationAddress->setStreetName("Boederij");
+    self::$mockedLocationAddress->setCountry("Nederland");
 
-    $billingAddress = new BillingAddress();
-    $billingAddress->setAddressNumber("2");
-    $billingAddress->setCity("Den Haag");
-    $billingAddress->setPostalCode("2222GG");
-    $billingAddress->setState("ZH");
-    $billingAddress->setStreetName("Raamweg");
-    $billingAddress->setCountry("Nederland");
+    self::$mockedBillingAddress = new BillingAddress();
+    self::$mockedBillingAddress->setAddressNumber("2");
+    self::$mockedBillingAddress->setCity("Den Haag");
+    self::$mockedBillingAddress->setPostalCode("2222GG");
+    self::$mockedBillingAddress->setState("ZH");
+    self::$mockedBillingAddress->setStreetName("Raamweg");
+    self::$mockedBillingAddress->setCountry("Nederland");
 
-    $companyAddress = new CompanyAddress();
-    $companyAddress->setAddressNumber("3");
-    $companyAddress->setCity("Rotterdam");
-    $companyAddress->setPostalCode("3333XX");
-    $companyAddress->setState("ZH");
-    $companyAddress->setStreetName("Papierengeldweg");
-    $companyAddress->setCountry("Nederland");
+    self::$mockedCompanyAddress = new CompanyAddress();
+    self::$mockedCompanyAddress->setAddressNumber("3");
+    self::$mockedCompanyAddress->setCity("Rotterdam");
+    self::$mockedCompanyAddress->setPostalCode("3333XX");
+    self::$mockedCompanyAddress->setState("ZH");
+    self::$mockedCompanyAddress->setStreetName("Papierengeldweg");
+    self::$mockedCompanyAddress->setCountry("Nederland");
 
-    $company = new Company();
-    $company->setAddress($companyAddress);
-    $company->setBillingAddress($billingAddress);
-    $company->setCompanyName("Boederij de weiland");
-    $company->setOwner(self::$mockedClient);
+    self::$mockedCompany = new Company();
+    self::$mockedCompany->setAddress(self::$mockedCompanyAddress);
+    self::$mockedCompany->setBillingAddress(self::$mockedBillingAddress);
+    self::$mockedCompany->setCompanyName("Boederij de weiland");
+    self::$mockedCompany->setOwner(self::$mockedClient);
 
-    $location = new Location();
-    $location->setAddress($locationAddress);
-    $location->setCompany($company);
-    $location->setUbn("1674459");
+    self::$mockedLocation = new Location();
+    self::$mockedLocation->setAddress(self::$mockedLocationAddress);
+    self::$mockedLocation->setCompany(self::$mockedCompany);
+    self::$mockedLocation->setUbn("98989898");
 
-    $company->addLocation($location);
-    self::$mockedClient->addCompany($company);
+    self::$mockedCompany->addLocation(self::$mockedLocation);
+    self::$mockedClient->addCompany(self::$mockedCompany);
 
     //persist mocked data
     $manager->persist(self::$mockedClient);
@@ -114,4 +140,46 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
   {
     return self::$mockedClient;
   }
+
+  /**
+   * @return LocationAddress
+   */
+  public static function getMockedLocationAddress()
+  {
+    return self::$mockedLocationAddress;
+  }
+
+  /**
+   * @return BillingAddress
+   */
+  public static function getMockedBillingAddress()
+  {
+    return self::$mockedBillingAddress;
+  }
+
+  /**
+   * @return CompanyAddress
+   */
+  public static function getMockedCompanyAddress()
+  {
+    return self::$mockedCompanyAddress;
+  }
+
+  /**
+   * @return Company
+   */
+  public static function getMockedCompany()
+  {
+    return self::$mockedCompany;
+  }
+
+  /**
+   * @return Location
+   */
+  public static function getMockedLocation()
+  {
+    return self::$mockedLocation;
+  }
+
+
 }

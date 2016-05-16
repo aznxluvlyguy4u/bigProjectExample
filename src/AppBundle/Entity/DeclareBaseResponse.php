@@ -61,6 +61,14 @@ abstract class DeclareBaseResponse
     private $messageId;
 
     /**
+     * @ORM\Column(type="string")
+     * @Assert\Length(max = 15)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    protected $messageNumber;
+
+    /**
      * @ORM\Column(type="datetime")
      * @Assert\Date
      * @Assert\NotBlank
@@ -131,6 +139,22 @@ abstract class DeclareBaseResponse
     public function getMessageId()
     {
         return $this->messageId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMessageNumber()
+    {
+        return $this->messageNumber;
+    }
+
+    /**
+     * @param string $messageNumber
+     */
+    public function setMessageNumber($messageNumber)
+    {
+        $this->messageNumber = $messageNumber;
     }
 
     /**

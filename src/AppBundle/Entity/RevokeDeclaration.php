@@ -5,8 +5,6 @@ namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use \AppBundle\Entity\Animal;
-use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
@@ -29,6 +27,60 @@ class RevokeDeclaration extends DeclareBase
     private $responses;
 
     /**
+     * @var DeclareArrival
+     *
+     * @ORM\OneToOne(targetEntity="DeclareArrival", mappedBy="revoke", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\DeclareArrival")
+     * @Expose
+     */
+    private $arrival;
+
+    /**
+     * @var DeclareBirth
+     *
+     * @ORM\OneToOne(targetEntity="DeclareBirth", mappedBy="revoke", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\DeclareBirth")
+     * @Expose
+     */
+    private $birth;
+
+    /**
+     * @var DeclareDepart
+     *
+     * @ORM\OneToOne(targetEntity="DeclareDepart", mappedBy="revoke", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\DeclareDepart")
+     * @Expose
+     */
+    private $depart;
+
+    /**
+     * @var DeclareImport
+     *
+     * @ORM\OneToOne(targetEntity="DeclareImport", mappedBy="revoke", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\DeclareImport")
+     * @Expose
+     */
+    private $import;
+
+    /**
+     * @var DeclareLoss
+     *
+     * @ORM\OneToOne(targetEntity="DeclareLoss", mappedBy="revoke", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\DeclareLoss")
+     * @Expose
+     */
+    private $loss;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\Length(max = 15)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    protected $messageNumber;
+
+    /**
      * constructor.
      */
     public function __construct() {
@@ -36,6 +88,22 @@ class RevokeDeclaration extends DeclareBase
 
         //Create responses array
         $this->responses = new ArrayCollection();
+    }
+
+    /**
+     * @return DeclareArrival
+     */
+    public function getArrival()
+    {
+        return $this->arrival;
+    }
+
+    /**
+     * @param DeclareArrival $arrival
+     */
+    public function setArrival($arrival = null)
+    {
+        $this->arrival = $arrival;
     }
 
     /**
@@ -95,4 +163,86 @@ class RevokeDeclaration extends DeclareBase
     {
         return $this->responses;
     }
+
+    /**
+     * @return DeclareBirth
+     */
+    public function getBirth()
+    {
+        return $this->birth;
+    }
+
+    /**
+     * @param DeclareBirth $birth
+     */
+    public function setBirth($birth = null)
+    {
+        $this->birth = $birth;
+    }
+
+    /**
+     * @return DeclareDepart
+     */
+    public function getDepart()
+    {
+        return $this->depart;
+    }
+
+    /**
+     * @param DeclareDepart $depart
+     */
+    public function setDepart($depart = null)
+    {
+        $this->depart = $depart;
+    }
+
+    /**
+     * @return DeclareImport
+     */
+    public function getImport()
+    {
+        return $this->import;
+    }
+
+    /**
+     * @param DeclareImport $import
+     */
+    public function setImport($import = null)
+    {
+        $this->import = $import;
+    }
+
+    /**
+     * @return DeclareLoss
+     */
+    public function getLoss()
+    {
+        return $this->loss;
+    }
+
+    /**
+     * @param DeclareLoss $loss
+     */
+    public function setLoss($loss = null)
+    {
+        $this->loss = $loss;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMessageNumber()
+    {
+        return $this->messageNumber;
+    }
+
+    /**
+     * @param string $messageNumber
+     */
+    public function setMessageNumber($messageNumber)
+    {
+        $this->messageNumber = $messageNumber;
+    }
+
+
 }

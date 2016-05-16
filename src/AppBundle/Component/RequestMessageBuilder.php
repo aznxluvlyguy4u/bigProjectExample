@@ -123,8 +123,10 @@ class RequestMessageBuilder
                 $retrieveTagsRequest = $this->irSerializer->parseRetrieveTags($contentArray, $isEditMessage);
                 return $this->tagSyncMessageBuilder->buildMessage($retrieveTagsRequest, $person);
             case RequestType::REVOKE_DECLARATION_ENTITY:
-                $revokeDeclarationRequest = $this->irSerializer->parseRevokeDeclaration($contentArray, $isEditMessage);
-                return $this->revokeMessageBuilder->buildMessage($revokeDeclarationRequest, $person);
+                $revokeDeclaration = new RevokeDeclaration();
+                $revokeDeclaration->setMessageNumber($contentArray[Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE]);
+
+                return $this->revokeMessageBuilder->buildMessage($revokeDeclaration, $person);
             case RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY:
                 //TODO: only add the mininum required fields for this Message Type
                 return null;
