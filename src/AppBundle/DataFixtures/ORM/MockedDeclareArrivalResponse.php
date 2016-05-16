@@ -2,6 +2,7 @@
 
 namespace AppBundle\DataFixtures\ORM;
 
+use AppBundle\Constant\Constant;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -41,12 +42,15 @@ class MockedDeclareArrivalResponse implements FixtureInterface, ContainerAwareIn
             self::$mockedArrivalSuccessResponse = new DeclareArrivalResponse();
 
             $id1 = uniqid(mt_rand(0,999999));
+            $messageNumberFailedResponse = uniqid(mt_rand(0,99));
+            $messageNumberSuccessResponse = uniqid(mt_rand(0,99));
             $mockedArrival = MockedDeclareArrival::getMockedArrival();
 
             self::$mockedArrivalSuccessResponse->setDeclareArrivalRequestMessage($mockedArrival);
             self::$mockedArrivalSuccessResponse->setLogDate(new \DateTime('2023-03-22'));
             self::$mockedArrivalSuccessResponse->setRequestId($id1);
             self::$mockedArrivalSuccessResponse->setMessageId($id1);
+            self::$mockedArrivalSuccessResponse->setMessageNumber($messageNumberSuccessResponse);
             self::$mockedArrivalSuccessResponse->setErrorCode(null);
             self::$mockedArrivalSuccessResponse->setErrorMessage(null);
             self::$mockedArrivalSuccessResponse->setErrorKindIndicator(null);
@@ -61,10 +65,51 @@ class MockedDeclareArrivalResponse implements FixtureInterface, ContainerAwareIn
             self::$mockedArrivalFailedResponse->setLogDate(new \DateTime('2023-03-21'));
             self::$mockedArrivalFailedResponse->setRequestId($id2);
             self::$mockedArrivalFailedResponse->setMessageId($id2);
+            self::$mockedArrivalFailedResponse->setMessageNumber($messageNumberFailedResponse);
             self::$mockedArrivalFailedResponse->setErrorCode("IRD-00363");
             self::$mockedArrivalFailedResponse->setErrorMessage("Er zijn geen dieren gevonden bij het opgegeven werknummer");
             self::$mockedArrivalFailedResponse->setErrorKindIndicator("F");
             self::$mockedArrivalFailedResponse->setSuccessIndicator("N");
+
+            //Persist mocked data
+            $manager->persist(self::$mockedArrivalSuccessResponse);
+            $manager->persist(self::$mockedArrivalFailedResponse);
+            $manager->flush();
+
+        } else {
+            $entityManager = $this->container->get('doctrine.orm.entity_manager');
+            $arrivalRepository = $entityManager->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
+
+            $messageNumberFailedResponse = uniqid(mt_rand(0,99));
+            $messageNumberSuccessResponse = uniqid(mt_rand(0,99));
+            $id = MockedDeclareArrival::getMockedArrival()->getId();
+
+            //It is necessary to retrieve the DeclareArrival entity from the Repository first
+            $declareArrival = $arrivalRepository->findOneBy(array("id"=>$id));
+
+            //Create and persist failed Response
+            self::$mockedArrivalFailedResponse = new DeclareArrivalResponse();
+            self::$mockedArrivalFailedResponse->setDeclareArrivalRequestMessage($declareArrival);
+            self::$mockedArrivalFailedResponse->setLogDate(new \DateTime('2023-03-21'));
+            self::$mockedArrivalFailedResponse->setRequestId($declareArrival->getRequestId());
+            self::$mockedArrivalFailedResponse->setMessageId($declareArrival->getMessageId());
+            self::$mockedArrivalFailedResponse->setMessageNumber($messageNumberFailedResponse);
+            self::$mockedArrivalFailedResponse->setErrorCode("IRD-00363");
+            self::$mockedArrivalFailedResponse->setErrorMessage("Er zijn geen dieren gevonden bij het opgegeven werknummer");
+            self::$mockedArrivalFailedResponse->setErrorKindIndicator("F");
+            self::$mockedArrivalFailedResponse->setSuccessIndicator("N");
+
+            //Create and persist successful Response
+            self::$mockedArrivalSuccessResponse = new DeclareArrivalResponse();
+            self::$mockedArrivalSuccessResponse->setDeclareArrivalRequestMessage($declareArrival);
+            self::$mockedArrivalSuccessResponse->setLogDate(new \DateTime('2023-03-22'));
+            self::$mockedArrivalSuccessResponse->setRequestId($declareArrival->getRequestId());
+            self::$mockedArrivalSuccessResponse->setMessageId($declareArrival->getMessageId());
+            self::$mockedArrivalSuccessResponse->setMessageNumber($messageNumberSuccessResponse);
+            self::$mockedArrivalSuccessResponse->setErrorCode(null);
+            self::$mockedArrivalSuccessResponse->setErrorMessage(null);
+            self::$mockedArrivalSuccessResponse->setErrorKindIndicator(null);
+            self::$mockedArrivalSuccessResponse->setSuccessIndicator("J");
 
             //Persist mocked data
             $manager->persist(self::$mockedArrivalSuccessResponse);

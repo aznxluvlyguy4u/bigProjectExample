@@ -10,14 +10,20 @@ use AppBundle\Entity\BillingAddress;
 use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Location;
+use AppBundle\Service\IRSerializer;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManager;
+use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
 
 class MockedDeclareArrival implements FixtureInterface, ContainerAwareInterface, OrderedFixtureInterface
 {
+    const DECLARE_ARRIVAL_ENDPOINT = "/api/v1/arrivals";
+
     static public $hasCascadePersistenceIssueBeenFixed = false;
 
     /**
@@ -26,9 +32,29 @@ class MockedDeclareArrival implements FixtureInterface, ContainerAwareInterface,
     private $container;
 
     /**
+     * @var RequestClient
+     */
+    private $client;
+
+    /**
+     * @var IRSerializer
+     */
+    static private $serializer;
+
+    /**
+     * @var EntityManager
+     */
+    static private $entityManager;
+
+    /**
      * @var DeclareArrival
      */
     static private $mockedArrival;
+
+    /**
+     * @var array
+     */
+    private $defaultHeaders;
 
     public function setContainer(ContainerInterface $container = null)
     {
@@ -65,6 +91,44 @@ class MockedDeclareArrival implements FixtureInterface, ContainerAwareInterface,
             //Persist mocked data
             $manager->persist(self::$mockedArrival);
             $manager->flush();
+
+        } else {
+
+            //Get service classes
+            self::$serializer = $this->container->get('app.serializer.ir');
+            self::$entityManager = $this->container->get('doctrine.orm.entity_manager');
+
+            //Create client
+            $this->client = new RequestClient($this->container->get('kernel'));
+
+            $this->defaultHeaders = array(
+                'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCESSTOKEN' => MockedClient::getMockedClient()->getAccessToken(),
+            );
+
+            //Create declare arrival
+            $declareArrival = new DeclareArrival();
+            $declareArrival->setArrivalDate(new \DateTime());
+            $declareArrival->setUbnPreviousOwner("123456");
+            $declareArrival->setIsImportAnimal(false);
+            $declareArrival->setAnimal(MockedAnimal::getMockedRamWithParents());
+
+            //Create json to be posted
+            $declareArrivalJson = self::$serializer->serializeToJSON($declareArrival);
+
+            $this->client->request('POST',
+                $this::DECLARE_ARRIVAL_ENDPOINT,
+                array(),
+                array(),
+                $this->defaultHeaders,
+                $declareArrivalJson
+            );
+
+            $response = $this->client->getResponse()->getContent();
+            $declareArrivalArray = json_decode($response, true);
+            $id = $declareArrivalArray['id'];
+
+            self::$mockedArrival = self::$entityManager->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findOneBy(array("id"=>$id));
         }
     }
 
