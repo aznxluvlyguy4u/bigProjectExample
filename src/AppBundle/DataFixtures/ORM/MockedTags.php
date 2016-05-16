@@ -94,4 +94,17 @@ class MockedTags implements FixtureInterface, ContainerAwareInterface, OrderedFi
     return self::$mockedTags;
   }
 
+  /**
+   * @return Tag|null
+   */
+  public static function getOneUnassignedTag()
+  {
+    foreach(self::getMockedTags() as $mockedTag) {
+      if($mockedTag->getTagStatus() == Constant::UNASSIGNED_NAMESPACE) {
+        return $mockedTag;
+      }
+    }
+    return null;
+  }
+
 }
