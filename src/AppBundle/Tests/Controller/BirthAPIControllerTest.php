@@ -13,6 +13,7 @@ use AppBundle\JsonFormat\DeclareBirthJsonFormatRam;
 use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedAnimal;
 use AppBundle\DataFixtures\ORM\MockedClient;
+use AppBundle\Tests\TestSettings;
 use Doctrine\ORM\EntityManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
@@ -297,99 +298,118 @@ class BirthAPIControllerTest extends WebTestCase {
    * Test create new Declare birth
    */
   public function testUpdateBirth()
-  {//FIXME UPDATE THIS
-//    //Create parents object in jsonFormat
-//    $father = new DeclareBirthJsonFormatRam();
-//    $father->setRamUln(self::$mockedFather);
-//    $mother = new DeclareBirthJsonFormatEwe();
-//    $mother->setEweUln(self::$mockedMother);
-//
-//    //Create child object in jsonFormat with surrogate
-//    $childEwe = new DeclareBirthJsonFormatChild();
-//    $childEwe->setChildValues(self::$mockedNewBornEwe);
-//    $childEwe->setIsAlive("true");
-//    $childEwe->setBirthType("keizersnee");
-//    $childEwe->setBirthWeight(187);
-//    $childEwe->setBirthTailLength(10);
-//    $childEwe->setIsLambar("false");
-//
-//    //Create declare birth object in jsonFormat
-//    $declareBirthJsonFormat = new DeclareBirthJsonFormat();
-//    $declareBirthJsonFormat->setBirthType("keizersnee");
-//    $declareBirthJsonFormat->setIsPseudoPregnancy("false");
-//    $declareBirthJsonFormat->setIsAborted("false");
-//    $declareBirthJsonFormat->setDateOfBirth(self::$mockedNewBornRam->getDateOfBirth());
-//    $declareBirthJsonFormat->setLitterSize(1);
-//    $declareBirthJsonFormat->setAliveCount(1);
-//
-//    $declareBirthJsonFormat->setFather($father);
-//    $declareBirthJsonFormat->setMother($mother);
-//    $declareBirthJsonFormat->addChild($childEwe);
-//
-//    //Create json to be posted
-//    $declareBirthJson = self::$serializer->serializeToJSON($declareBirthJsonFormat);
-//
-//    $this->client->request('POST',
-//        $this::DECLARE_BIRTH_ENDPOINT,
-//        array(),
-//        array(),
-//        $this->defaultHeaders,
-//        $declareBirthJson
-//    );
-//
-//    //Get response
-//    $response = $this->client->getResponse();
-//    $declareBirthResponse = json_decode($response->getContent(), true)['0'];
-//
-//    //Get requestId so we can do an update with PUT
-//    $requestId = $declareBirthResponse['request_id'];
-//
-//    //Update value
-//    $declareBirthUpdated = $declareBirthJsonFormat;
-//    $declareBirthUpdated->setBirthType("Painful but worth it");
-//    $declareBirthUpdated->setDateOfBirth(new \DateTime('2017-07-07'));
-//    $declareBirthUpdated->setIsAborted("N");
-//    $declareBirthUpdated->getChildren()->get(0)->setBirthWeight(999);
-//    $declareBirthUpdated->getChildren()->get(0)->setIsLambar("N");
-//    $declareBirthUpdated->setIsPseudoPregnancy("N");
-//    $declareBirthUpdated->setLitterSize(6);
-//    $declareBirthUpdated->getChildren()->get(0)->setBirthTailLength(125);
-//    $declareBirthUpdated->getChildren()->get(0)->setBirthWeight(842);
-//
-//    //Create json to be putted
-//    $declareBirthUpdatedJson = self::$serializer->serializeToJSON($declareBirthUpdated);
-//
-//    //PUT updated declare birth
-//    $this->client->request('PUT',
-//      $this::DECLARE_BIRTH_ENDPOINT . '/'. $requestId,
-//      array(),
-//      array(),
-//      $this->defaultHeaders,
-//      $declareBirthUpdatedJson
-//    );
-//
-//    $updatedResponse = $this->client->getResponse()->getContent();
-//
-//    $updatedData = json_decode($updatedResponse, true); dump($updatedData);die();
-//    $tag = $updatedData['animal']['assigned_tag'];
+  {
+    //Create parents object in jsonFormat
+    $father = new DeclareBirthJsonFormatRam();
+    $father->setRamUln(self::$mockedFather);
+    $mother = new DeclareBirthJsonFormatEwe();
+    $mother->setEweUln(self::$mockedMother);
+
+    //Create child object in jsonFormat with surrogate
+    $childEwe = new DeclareBirthJsonFormatChild();
+    $childEwe->setChildValues(self::$mockedNewBornEwe);
+    $childEwe->setIsAlive("true");
+    $childEwe->setBirthType("keizersnee");
+    $childEwe->setBirthWeight(187);
+    $childEwe->setBirthTailLength(10);
+    $childEwe->setIsLambar("false");
+
+    //Create declare birth object in jsonFormat
+    $declareBirthJsonFormat = new DeclareBirthJsonFormat();
+    $declareBirthJsonFormat->setBirthType("keizersnee");
+    $declareBirthJsonFormat->setIsPseudoPregnancy("false");
+    $declareBirthJsonFormat->setIsAborted("false");
+    $declareBirthJsonFormat->setDateOfBirth(self::$mockedNewBornRam->getDateOfBirth());
+    $declareBirthJsonFormat->setLitterSize(1);
+    $declareBirthJsonFormat->setAliveCount(1);
+
+    $declareBirthJsonFormat->setFather($father);
+    $declareBirthJsonFormat->setMother($mother);
+    $declareBirthJsonFormat->addChild($childEwe);
+
+    //Create json to be posted
+    $declareBirthJson = self::$serializer->serializeToJSON($declareBirthJsonFormat);
+
+    $this->client->request('POST',
+        $this::DECLARE_BIRTH_ENDPOINT,
+        array(),
+        array(),
+        $this->defaultHeaders,
+        $declareBirthJson
+    );
+
+    //Get response
+    $response = $this->client->getResponse();
+    $declareBirthResponse = json_decode($response->getContent(), true)['0'];
+
+    //Get requestId so we can do an update with PUT
+    $requestId = $declareBirthResponse['request_id'];
+
+    //Update retrieved child from database
+    $animalId = $declareBirthResponse['animal']['id'];
+    $tag = MockedTags::getOneUnassignedTag();
+    $childEweUpdated = self::$entityManager->getRepository(Constant::ANIMAL_REPOSITORY)->find($animalId);
+    $childEweUpdated->setAssignedTag($tag);
+    $childEweUpdated->setPedigreeCountryCode("DE");
+    $childEweUpdated->setPedigreeNumber(682661);
+
+
+    //Update value, note the format for updating a birth
+    //is identical to the structure of the DeclareBirth entity
+    $declareBirthUpdated = new DeclareBirth();
+    $declareBirthUpdated->setBirthType("Painful but worth it");
+    $declareBirthUpdated->setDateOfBirth(new \DateTime('2017-07-07'));
+    $declareBirthUpdated->setIsAborted("N");
+    $declareBirthUpdated->setIsPseudoPregnancy("N");
+    $declareBirthUpdated->setLitterSize(6);
+    $declareBirthUpdated->setBirthWeight(842);
+    $declareBirthUpdated->setIsLambar("N");
+    $declareBirthUpdated->setBirthTailLength(125);
+    $declareBirthUpdated->setAnimal($childEweUpdated);
+
+    //Create json to be putted
+    $declareBirthUpdatedJson = self::$serializer->serializeToJSON($declareBirthUpdated);
+
+    //PUT updated declare birth
+    $this->client->request('PUT',
+      $this::DECLARE_BIRTH_ENDPOINT . '/'. $requestId,
+      array(),
+      array(),
+      $this->defaultHeaders,
+      $declareBirthUpdatedJson
+    );
+
+    $updatedResponse = $this->client->getResponse()->getContent();
+
+    $updatedData = json_decode($updatedResponse, true);
+    $updatedAnimal = $updatedData['animal'];
+    $updatedTag = $updatedAnimal['assigned_tag'];
 
     //Verify the updated parameters
+    $this->assertEquals($declareBirthUpdated->getDateOfBirth(), new \DateTime($updatedData['date_of_birth']));
+    $this->assertEquals($declareBirthUpdated->getIsAborted(), $updatedData['is_aborted']);
+    $this->assertEquals($declareBirthUpdated->getBirthType(), $updatedData['birth_type']);
+    $this->assertEquals($declareBirthUpdated->getIsAborted(), $updatedData['is_aborted']);
+    $this->assertEquals($declareBirthUpdated->getBirthWeight(), $updatedData['birth_weight']);
+    $this->assertEquals($declareBirthUpdated->getIsLambar(), $updatedData['is_lambar']);
+    $this->assertEquals($declareBirthUpdated->getIsPseudoPregnancy(), $updatedData['is_pseudo_pregnancy']);
+    $this->assertEquals($declareBirthUpdated->getLitterSize(), $updatedData['litter_size']);
+    $this->assertEquals($declareBirthUpdated->getBirthTailLength(), $updatedData['birth_tail_length']);
 
-    //TODO
-//    $this->assertEquals($declareBirthUpdated->getDateOfBirth(), new \DateTime($updatedData['date_of_birth']));
-//    $this->assertEquals($declareBirthUpdated->getBirthType(), $updatedData['birth_type']);
-//    $this->assertEquals($declareBirthUpdated->getIsAborted(), $updatedData['is_aborted']);
-//    $this->assertEquals($declareBirthUpdated->getChildren()->get(0)->getBirthWeight(), $updatedData['children'][0]['birth_weight']);
-//    $this->assertEquals($declareBirthUpdated->getChildren()->get(0)->getIsLambar(), $updatedData['children'][0]['is_lambar']);
-//    $this->assertEquals($declareBirthUpdated->getIsPseudoPregnancy(), $updatedData['is_pseudo_pregnancy']);
-//    $this->assertEquals($declareBirthUpdated->getLitterSize(), $updatedData['litter_size']);
-//    $this->assertEquals($declareBirthUpdated->getChildren()->get(0)->getBirthTailLength(), $updatedData['children'][]['birth_tail_length']);
 
-    //TODO
-//    $this->assertEquals($declareBirthUpdated->getChildren()->get(0)->getAssignedTag()->getUlnNumber(), $tag['uln_number']);
-//
-//    //Verify some unchanged parameters
-//    $this->assertEquals($declareBirthJsonFormat->getAnimal()->getAssignedTag()->getUlnCountryCode(), $tag['uln_country_code']);
+
+    if(TestSettings::TestEntitiesAreIdentical){
+      //Verify updated variables
+      $this->assertEquals($childEweUpdated->getDateOfBirth(), new \DateTime($updatedData['date_of_birth']));
+      $this->assertEquals($childEweUpdated->getAssignedTag()->getUlnCountryCode(), $updatedTag['uln_country_code']);
+      $this->assertEquals($childEweUpdated->getAssignedTag()->getUlnNumber(), $updatedTag['uln_number']);
+      $this->assertEquals($childEweUpdated->getPedigreeCountryCode(), $updatedTag['pedigree_country_code']);
+      $this->assertEquals($childEweUpdated->getPedigreeNumber(), $updatedTag['pedigree_number']);
+
+      //Verify if entities are identical
+      $this->assertEquals($childEweUpdated->getId(), $updatedAnimal['id']);
+      $this->assertEquals($tag->getId(), $updatedTag['id']);
+    }
   }
   
   public function tearDown() {

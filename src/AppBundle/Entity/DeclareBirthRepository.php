@@ -49,24 +49,24 @@ class DeclareBirthRepository extends BaseRepository {
       $declareBirth->setDateOfBirth($declareBirthUpdate->getDateOfBirth());
     }
 
-    if ($declareBirthUpdate->getLambar() != null) {
-      $declareBirth->setLambar($declareBirthUpdate->getLambar());
+    if ($declareBirthUpdate->getIsLambar() != null) {
+      $declareBirth->setIsLambar($declareBirthUpdate->getIsLambar());
     }
 
-    if ($declareBirthUpdate->getAborted() != null) {
-      $declareBirth->setAborted($declareBirthUpdate->getAborted());
+    if ($declareBirthUpdate->getIsAborted() != null) {
+      $declareBirth->setIsAborted($declareBirthUpdate->getIsAborted());
     }
 
-    if ($declareBirthUpdate->getPseudoPregnancy() != null) {
-      $declareBirth->setPseudoPregnancy($declareBirthUpdate->getPseudoPregnancy());
+    if ($declareBirthUpdate->getIsPseudoPregnancy() != null) {
+      $declareBirth->setIsPseudoPregnancy($declareBirthUpdate->getIsPseudoPregnancy());
     }
 
     if ($declareBirthUpdate->getLitterSize() != null) {
       $declareBirth->setLitterSize($declareBirthUpdate->getLitterSize());
     }
 
-    if ($declareBirthUpdate->getAnimalWeight() != null) {
-      $declareBirth->setAnimalWeight($declareBirthUpdate->getAnimalWeight());
+    if ($declareBirthUpdate->getBirthWeight() != null) {
+      $declareBirth->setBirthWeight($declareBirthUpdate->getBirthWeight());
     }
 
     if ($declareBirthUpdate->getBirthTailLength() != null) {
