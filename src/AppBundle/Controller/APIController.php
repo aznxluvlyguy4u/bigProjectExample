@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Component\RequestMessageBuilder;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
 use AppBundle\Enumerator\AnimalType;
@@ -453,9 +454,7 @@ class APIController extends Controller implements APIControllerInterface
 
     $messageObjectWithRevokedRequestState = $messageObjectTobeRevoked->setRequestState(RequestStateType::REVOKING);
 
-    $classNameWithPath = $em->getClassMetadata(get_class($messageObjectTobeRevoked))->getName();
-    $pathArray = explode('\\', $classNameWithPath);
-    $className = $pathArray[sizeof($pathArray)-1];
+    $className = Utils::getClassName($messageObjectTobeRevoked);
 
     $this->persist($messageObjectWithRevokedRequestState, $className);
   }
