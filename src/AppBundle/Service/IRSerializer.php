@@ -274,10 +274,10 @@ class IRSerializer implements IRSerializerInterface
 
             // Check if each tagItem has a ulnNumber and ulnCountryCode, so we can retrieve it from database
             foreach($tagsContentArray as $tagItem) {
-                if(array_key_exists(Constant::ULN_NAMESPACE, $tagItem) && array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $tagItem) ) {
+                if(array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $tagItem) && array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $tagItem) ) {
 
                     //Fetch tag from database
-                    $fetchedTag = $this->entityGetter->retrieveTag($tagItem[Constant::ULN_COUNTRY_CODE_NAMESPACE], $tagItem[Constant::ULN_NAMESPACE]);
+                    $fetchedTag = $this->entityGetter->retrieveTag($tagItem[Constant::ULN_COUNTRY_CODE_NAMESPACE], $tagItem[Constant::ULN_NUMBER_NAMESPACE]);
 
                     switch($fetchedTag->getTagStatus()) {
                         case TagStateType::UNASSIGNED:
@@ -302,6 +302,7 @@ class IRSerializer implements IRSerializerInterface
                     }
                 }
             }
+
 
             $fetchedTag = null;
         }
