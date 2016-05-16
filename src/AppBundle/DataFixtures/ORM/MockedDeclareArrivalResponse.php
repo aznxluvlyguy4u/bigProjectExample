@@ -19,7 +19,12 @@ class MockedDeclareArrivalResponse implements FixtureInterface, ContainerAwareIn
     /**
      * @var DeclareArrivalResponse
      */
-    static private $mockedArrivalResponse;
+    static private $mockedArrivalSuccessResponse;
+
+    /**
+     * @var DeclareArrivalResponse
+     */
+    static private $mockedArrivalFailedResponse;
 
     public function setContainer(ContainerInterface $container = null)
     {
@@ -31,14 +36,41 @@ class MockedDeclareArrivalResponse implements FixtureInterface, ContainerAwareIn
      */
     public function load(ObjectManager $manager)
     {
-        //Create mocked data
-        self::$mockedArrivalResponse = new DeclareArrivalResponse();
+        if(MockedDeclareArrival::$hasCascadePersistenceIssueBeenFixed) {
+            //Create mocked data
+            self::$mockedArrivalSuccessResponse = new DeclareArrivalResponse();
 
-        // TODO: Fill mockedObject
+            $id1 = uniqid(mt_rand(0,999999));
+            $mockedArrival = MockedDeclareArrival::getMockedArrival();
 
-        //Persist mocked data
-        $manager->persist(self::$mockedArrivalResponse);
-        $manager->flush();
+            self::$mockedArrivalSuccessResponse->setDeclareArrivalRequestMessage($mockedArrival);
+            self::$mockedArrivalSuccessResponse->setLogDate(new \DateTime('2023-03-22'));
+            self::$mockedArrivalSuccessResponse->setRequestId($id1);
+            self::$mockedArrivalSuccessResponse->setMessageId($id1);
+            self::$mockedArrivalSuccessResponse->setErrorCode(null);
+            self::$mockedArrivalSuccessResponse->setErrorMessage(null);
+            self::$mockedArrivalSuccessResponse->setErrorKindIndicator(null);
+            self::$mockedArrivalSuccessResponse->setSuccessIndicator("J");
+
+            self::$mockedArrivalFailedResponse = new DeclareArrivalResponse();
+
+            $id2 = uniqid(mt_rand(0,999999));
+            $mockedArrival = MockedDeclareArrival::getMockedArrival();
+
+            self::$mockedArrivalFailedResponse->setDeclareArrivalRequestMessage($mockedArrival);
+            self::$mockedArrivalFailedResponse->setLogDate(new \DateTime('2023-03-21'));
+            self::$mockedArrivalFailedResponse->setRequestId($id2);
+            self::$mockedArrivalFailedResponse->setMessageId($id2);
+            self::$mockedArrivalFailedResponse->setErrorCode("IRD-00363");
+            self::$mockedArrivalFailedResponse->setErrorMessage("Er zijn geen dieren gevonden bij het opgegeven werknummer");
+            self::$mockedArrivalFailedResponse->setErrorKindIndicator("F");
+            self::$mockedArrivalFailedResponse->setSuccessIndicator("N");
+
+            //Persist mocked data
+            $manager->persist(self::$mockedArrivalSuccessResponse);
+            $manager->persist(self::$mockedArrivalFailedResponse);
+            $manager->flush();
+        }
     }
 
     /**
@@ -55,9 +87,17 @@ class MockedDeclareArrivalResponse implements FixtureInterface, ContainerAwareIn
     /**
      * @return DeclareArrivalResponse
      */
-    public static function getMockedArrivalResponse()
+    public static function getMockedArrivalSuccessResponse()
     {
-        return self::$mockedArrivalResponse;
+        return self::$mockedArrivalSuccessResponse;
+    }
+
+    /**
+     * @return DeclareArrivalResponse
+     */
+    public static function getMockedArrivalFailedResponse()
+    {
+        return self::$mockedArrivalFailedResponse;
     }
 
 
