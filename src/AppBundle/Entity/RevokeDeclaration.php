@@ -72,6 +72,15 @@ class RevokeDeclaration extends DeclareBase
     private $loss;
 
     /**
+     * @ORM\Column(type="string")
+     * @Assert\Length(max = 15)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    protected $messageNumber;
+
+    /**
      * constructor.
      */
     public function __construct() {
@@ -217,6 +226,22 @@ class RevokeDeclaration extends DeclareBase
     public function setLoss($loss = null)
     {
         $this->loss = $loss;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMessageNumber()
+    {
+        return $this->messageNumber;
+    }
+
+    /**
+     * @param string $messageNumber
+     */
+    public function setMessageNumber($messageNumber)
+    {
+        $this->messageNumber = $messageNumber;
     }
 
 

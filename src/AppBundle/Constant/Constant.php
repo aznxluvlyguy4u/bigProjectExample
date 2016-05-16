@@ -15,6 +15,8 @@ class Constant
     const LOCATION_NAMESPACE = 'location';
     const MESSAGE_ID_SNAKE_CASE_NAMESPACE = 'message_id';
     const MESSAGE_ID_CAMEL_CASE_NAMESPACE = 'messageId';
+    const MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE = 'message_number';
+    const MESSAGE_NUMBER_CAMEL_CASE_NAMESPACE = 'messageNumber';
     const ANIMAL_TYPE_NAMESPACE = 'type';
     const ANIMAL_NAMESPACE = 'animal';
     const ALL_NAMESPACE = 'all';

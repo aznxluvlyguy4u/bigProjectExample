@@ -104,7 +104,7 @@ class RequestMessageBuilder
                 return $retrieveEartags;
             case RequestType::REVOKE_DECLARATION_ENTITY:
                 $revokeDeclaration = new RevokeDeclaration();
-                $revokeDeclaration->setMessageId($contentArray[Constant::MESSAGE_ID_SNAKE_CASE_NAMESPACE]);
+                $revokeDeclaration->setMessageNumber($contentArray[Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE]);
 
                 return $this->revokeMessageBuilder->buildMessage($revokeDeclaration, $person);
 

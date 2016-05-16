@@ -181,7 +181,7 @@ class APIController extends Controller implements APIControllerInterface
    * @param $messageClassNameSpace
    * @param ArrayCollection $contentArray
    * @param $user
-   * @return object
+   * @return mixed
    * @throws \Exception
    */
   protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user)
@@ -443,13 +443,13 @@ class APIController extends Controller implements APIControllerInterface
    * reset the request state to 'revoked'
    * and persist the update.
    *
-   * @param RevokeDeclaration $revokeDeclarationObject
+   * @param string $messageNumber
    */
-  public function persistRevokingRequestState(RevokeDeclaration $revokeDeclarationObject)
+  public function persistRevokingRequestState($messageNumber)
   {
     $em = $this->getDoctrine()->getEntityManager();
 
-    $messageObjectTobeRevoked = $this->getEntitySetter()->setRequestStateToRevoked($revokeDeclarationObject->getMessageId());
+    $messageObjectTobeRevoked = $this->getEntityGetter()->getRequestMessageByMessageNumber($messageNumber);
 
     $messageObjectWithRevokedRequestState = $messageObjectTobeRevoked->setRequestState(RequestStateType::REVOKING);
 
