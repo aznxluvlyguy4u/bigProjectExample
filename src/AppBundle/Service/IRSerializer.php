@@ -335,6 +335,8 @@ class IRSerializer implements IRSerializerInterface
      */
     function parseDeclareExport(ArrayCollection $declareExportContentArray, $isEditMessage)
     {
+        $declareExportContentArray["type"] = RequestType::DECLARE_EXPORT_ENTITY;
+
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareExportContentArray);
 
         //Add retrieved animal properties including type to initial animalContentArray
