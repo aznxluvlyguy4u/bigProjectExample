@@ -10,6 +10,7 @@ use AppBundle\Entity\BillingAddress;
 use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Location;
+use AppBundle\JsonFormat\DeclareArrivalJsonFormat;
 use AppBundle\Service\IRSerializer;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
@@ -107,14 +108,14 @@ class MockedDeclareArrival implements FixtureInterface, ContainerAwareInterface,
             );
 
             //Create declare arrival
-            $declareArrival = new DeclareArrival();
-            $declareArrival->setArrivalDate(new \DateTime());
-            $declareArrival->setUbnPreviousOwner("123456");
-            $declareArrival->setIsImportAnimal(false);
-            $declareArrival->setAnimal(MockedAnimal::getMockedRamWithParents());
+            $declareArrivalJsonFormat = new DeclareArrivalJsonFormat();
+            $declareArrivalJsonFormat->setArrivalDate(new \DateTime());
+            $declareArrivalJsonFormat->setUbnPreviousOwner("123456");
+            $declareArrivalJsonFormat->setIsImportAnimal(false);
+            $declareArrivalJsonFormat->setAnimal(MockedAnimal::getMockedRamWithParents());
 
             //Create json to be posted
-            $declareArrivalJson = self::$serializer->serializeToJSON($declareArrival);
+            $declareArrivalJson = self::$serializer->serializeToJSON($declareArrivalJsonFormat);
 
             $this->client->request('POST',
                 $this::DECLARE_ARRIVAL_ENDPOINT,
