@@ -219,10 +219,10 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
         return new JsonResponse(array("message"=>"No DeclareExport found with request_id:" . $Id), 204);
       } else {
         //First Persist object to Database, before sending it to the queue
-        $this->persist($declareExport, RequestType::DECLARE_DEPART_ENTITY);
+        $this->persist($declareExport, RequestType::DECLARE_EXPORT_ENTITY);
 
         //Send it to the queue and persist/update any changed state to the database
-        $this->sendMessageObjectToQueue($declareExport, RequestType::DECLARE_DEPART_ENTITY, RequestType::DECLARE_DEPART);
+        $this->sendMessageObjectToQueue($declareExport, RequestType::DECLARE_EXPORT_ENTITY, RequestType::DECLARE_EXPORT);
 
         return new JsonResponse($declareExport, 200);
       }
