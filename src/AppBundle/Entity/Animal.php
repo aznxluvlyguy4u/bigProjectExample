@@ -278,6 +278,13 @@ abstract class Animal
     private $isExportAnimal;
 
     /**
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     * @Expose
+     */
+    private $isDepartedAnimal;
+
+    /**
      * Animal constructor.
      */
     public function __construct() {
@@ -297,6 +304,7 @@ abstract class Animal
         $this->animalOrderNumber = '';
         $this->isImportAnimal = false;
         $this->isExportAnimal = false;
+        $this->isDepartedAnimal = false;
     }
 
     /**
@@ -1077,5 +1085,29 @@ abstract class Animal
     public function getIsExportAnimal()
     {
         return $this->isExportAnimal;
+    }
+
+    /**
+     * Set isDepartedAnimal
+     *
+     * @param boolean $isDepartedAnimal
+     *
+     * @return Animal
+     */
+    public function setIsDepartedAnimal($isDepartedAnimal)
+    {
+        $this->isDepartedAnimal = $isDepartedAnimal;
+
+        return $this;
+    }
+
+    /**
+     * Get isDepartedAnimal
+     *
+     * @return boolean
+     */
+    public function getIsDepartedAnimal()
+    {
+        return $this->isDepartedAnimal;
     }
 }
