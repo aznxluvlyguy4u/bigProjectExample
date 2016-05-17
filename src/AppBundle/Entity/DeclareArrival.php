@@ -72,7 +72,7 @@ class DeclareArrival extends DeclareBase {
 
     /**
      * @ORM\OneToOne(targetEntity="RevokeDeclaration", inversedBy="arrival", cascade={"persist"})
-     * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id", nullable=true)
+     * @ORM\JoinColumn(name="revoke_declaration_request_message_id", referencedColumnName="id", nullable=true)
      * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
      * @Expose
      */

@@ -17,6 +17,14 @@ use JMS\Serializer\Annotation\Expose;
  */
 class RevokeDeclaration extends DeclareBase
 {
+    /**
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="Location", inversedBy="revokes", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Location")
+     * @Expose
+     *
+     */
+    private $location;
 
     /**
      * @ORM\OneToMany(targetEntity="RevokeDeclarationResponse", mappedBy="revokeDeclarationRequestMessage", cascade={"persist"})
@@ -245,4 +253,28 @@ class RevokeDeclaration extends DeclareBase
     }
 
 
+
+    /**
+     * Set location
+     *
+     * @param \AppBundle\Entity\Location $location
+     *
+     * @return RevokeDeclaration
+     */
+    public function setLocation(\AppBundle\Entity\Location $location = null)
+    {
+        $this->location = $location;
+
+        return $this;
+    }
+
+    /**
+     * Get location
+     *
+     * @return \AppBundle\Entity\Location
+     */
+    public function getLocation()
+    {
+        return $this->location;
+    }
 }
