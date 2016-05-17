@@ -159,8 +159,8 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedNewBornRam->setLocation($location);
 
     $tag5 = $tagRepository->findOneBy(array("id"=>5));
-    self::$mockedRamWithParents->setAssignedTag($tag5);
-    $manager->persist(self::$mockedRamWithParents);
+    self::$mockedNewBornRam->setAssignedTag($tag5);
+    $manager->persist(self::$mockedNewBornRam);
 
 
     self::$mockedNewBornEwe = new Ewe();
@@ -174,8 +174,8 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedNewBornEwe->setLocation($location);
 
     $tag6 = $tagRepository->findOneBy(array("id"=>6));
-    self::$mockedRamWithParents->setAssignedTag($tag6);
-    $manager->persist(self::$mockedRamWithParents);
+    self::$mockedNewBornEwe->setAssignedTag($tag6);
+    $manager->persist(self::$mockedNewBornEwe);
 
 
 //    Persist mocked data
