@@ -182,7 +182,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * )
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/{Id}")
+   * @Route("/update/{Id}")
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
    * @Method("PUT")
    */
@@ -190,7 +190,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     //Valitidy check
     $content = $this->getContentAsArray($request);
-    
+
       if(array_key_exists("uln_country_code", $content['animal']) &&
           array_key_exists("uln_number", $content['animal']) &&
           array_key_exists("pedigree_country_code", $content['animal']) &&
@@ -235,5 +235,50 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $this->sendMessageObjectToQueue($declareArrival, RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_ARRIVAL);
 
     return new JsonResponse($declareArrival, 200);
+  }
+
+
+  /**
+   * Update existing DeclareArrivalResponse with a isRemovedByUser
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Update a DeclareArrival request",
+   *   input = "AppBundle\Entity\DeclareArrival",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/error")
+   * @Method("PUT")
+   */
+  public function updateArrivalError(Request $request) {
+    $content = $this->getContentAsArray($request);
+    $messageNumber = $content->get("message_number");
+
+    if($messageNumber != null) {
+
+      $client = $this->getAuthenticatedUser($request);
+      $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
+
+      $response = $repository->getArrivalResponseByMessageNumber($client, $messageNumber);
+
+      $response->setIsRemovedByUser($content['is_removed_by_user']);
+
+      //First Persist object to Database, before sending it to the queue
+      $this->persist($response, RequestType::DECLARE_ARRIVAL_RESPONSE_ENTITY);
+
+      return new JsonResponse(array("code"=>200, "message"=>"saved"), 200);
+    }
+
+    return new JsonResponse(array('code' => 428, "message" => "fill in message number"), 428);
   }
 }

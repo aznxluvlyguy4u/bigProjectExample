@@ -55,6 +55,7 @@ class Constant
 
     //Request repositories
     const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';
+    const DECLARE_ARRIVAL_RESPONSE_REPOSITORY = 'AppBundle:DeclareArrivalResponse';
     const DECLARE_BIRTH_REPOSITORY = 'AppBundle:DeclareBirth';
     const DECLARE_DEPART_REPOSITORY = 'AppBundle:DeclareDepart';
 

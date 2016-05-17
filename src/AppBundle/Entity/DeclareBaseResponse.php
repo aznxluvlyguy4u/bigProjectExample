@@ -107,6 +107,14 @@ abstract class DeclareBaseResponse
     private $successIndicator;
 
     /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     */
+    private $isRemovedByUser;
+
+    /**
      * Get id
      *
      * @return integer
@@ -301,5 +309,31 @@ abstract class DeclareBaseResponse
         return $this;
     }
 
+    /**
+     * @return boolean
+     */
+    public function isIsRemovedByUser()
+    {
+        return $this->isRemovedByUser;
+    }
 
+    /**
+     * @param boolean $isRemovedByUser
+     */
+    public function setIsRemovedByUser($isRemovedByUser)
+    {
+        $this->isRemovedByUser = $isRemovedByUser;
+    }
+
+
+
+    /**
+     * Get isRemovedByUser
+     *
+     * @return boolean
+     */
+    public function getIsRemovedByUser()
+    {
+        return $this->isRemovedByUser;
+    }
 }

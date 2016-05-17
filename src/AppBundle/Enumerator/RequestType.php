@@ -23,6 +23,7 @@ class RequestType
 
     const DECLARATION_DETAIL_ENTITY = 'DeclarationDetail';
     const DECLARE_ARRIVAL_ENTITY = 'DeclareArrival';
+    const DECLARE_ARRIVAL_RESPONSE_ENTITY = 'DeclareArrivalResponse';
     const DECLARE_BIRTH_ENTITY = 'DeclareBirth';
     const DECLARE_ANIMAL_FLAG_ENTITY = 'DeclareAnimalFlag';
     const DECLARE_DEPART_ENTITY = 'DeclareDepart';
