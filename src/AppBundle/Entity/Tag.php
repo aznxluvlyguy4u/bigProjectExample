@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Validator\Constraints\DateTime;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
@@ -113,8 +114,8 @@ class Tag {
 
   /**
    * @var Animal
-   *
    * @ORM\OneToOne(targetEntity="Animal", mappedBy="assignedTag", cascade={"persist"})
+   * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", nullable=true)
    * @JMS\Type("AppBundle\Entity\Animal")
    * @Expose
    */
@@ -132,7 +133,6 @@ class Tag {
    * Tag constructor.
    */
   public function __construct() {
-    
   }
 
     /**
@@ -327,29 +327,7 @@ class Tag {
         return $this->ulnNumber;
     }
 
-    /**
-     * Set animal
-     *
-     * @param \AppBundle\Entity\Animal $animal
-     *
-     * @return Tag
-     */
-    public function setAnimal(\AppBundle\Entity\Animal $animal = null)
-    {
-        $this->animal = $animal;
-
-        return $this;
-    }
-
-    /**
-     * Get animal
-     *
-     * @return \AppBundle\Entity\Animal
-     */
-    public function getAnimal()
-    {
-        return $this->animal;
-    }
+    
 
     /**
      * Get id
@@ -383,5 +361,29 @@ class Tag {
     public function getDeclareTagsTransferRequestMessage()
     {
         return $this->declareTagsTransferRequestMessage;
+    }
+
+    /**
+     * Set animal
+     *
+     * @param \AppBundle\Entity\Animal $animal
+     *
+     * @return Tag
+     */
+    public function setAnimal(\AppBundle\Entity\Animal $animal = null)
+    {
+        $this->animal = $animal;
+
+        return $this;
+    }
+
+    /**
+     * Get animal
+     *
+     * @return \AppBundle\Entity\Animal
+     */
+    public function getAnimal()
+    {
+        return $this->animal;
     }
 }
