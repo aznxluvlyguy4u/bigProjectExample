@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
@@ -276,48 +277,4 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
   }
 
 
-  /**
-   * Hide an error a user does not want to see anymore,
-   * by updating the existing DeclareArrivalResponse's isRemovedByUser to true.
-   *
-   * @ApiDoc(
-   *   requirements={
-   *     {
-   *       "name"="AccessToken",
-   *       "dataType"="string",
-   *       "requirement"="",
-   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-   *     }
-   *   },
-   *   resource = true,
-   *   description = "Update a DeclareArrival request",
-   *   input = "AppBundle\Entity\DeclareArrival",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
-   * )
-   * @param Request $request the request object
-   * @return JsonResponse
-   * @Route("/error")
-   * @Method("PUT")
-   */
-  public function updateArrivalError(Request $request) {
-    $content = $this->getContentAsArray($request);
-    $messageNumber = $content->get("message_number");
-
-    if($messageNumber != null) {
-
-      $client = $this->getAuthenticatedUser($request);
-      $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
-
-      $response = $repository->getArrivalResponseByMessageNumber($client, $messageNumber);
-
-      $response->setIsRemovedByUser($content['is_removed_by_user']);
-
-      //First Persist object to Database, before sending it to the queue
-      $this->persist($response, RequestType::DECLARE_ARRIVAL_RESPONSE_ENTITY);
-
-      return new JsonResponse(array("code"=>200, "message"=>"saved"), 200);
-    }
-
-    return new JsonResponse(array('code' => 428, "message" => "fill in message number"), 428);
-  }
 }
