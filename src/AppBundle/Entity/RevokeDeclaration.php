@@ -71,6 +71,15 @@ class RevokeDeclaration extends DeclareBase
     private $import;
 
     /**
+     * @var DeclareExport
+     *
+     * @ORM\OneToOne(targetEntity="DeclareExport", mappedBy="revoke", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\DeclareExport")
+     * @Expose
+     */
+    private $export;
+
+    /**
      * @var DeclareLoss
      *
      * @ORM\OneToOne(targetEntity="DeclareLoss", mappedBy="revoke", cascade={"persist"})
@@ -218,6 +227,22 @@ class RevokeDeclaration extends DeclareBase
     public function setImport($import = null)
     {
         $this->import = $import;
+    }
+
+    /**
+     * @return DeclareExport
+     */
+    public function getExport()
+    {
+        return $this->export;
+    }
+
+    /**
+     * @param DeclareExport $export
+     */
+    public function setExport($export = null)
+    {
+        $this->export = $export;
     }
 
     /**
