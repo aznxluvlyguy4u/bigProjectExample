@@ -107,7 +107,6 @@ abstract class Animal
      * @ORM\ManyToOne(targetEntity="Ram", inversedBy="children", cascade={"persist"})
      * @ORM\JoinColumn(name="parent_father_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\Animal")
-     * @Expose
      */
     protected $parentFather;
 
@@ -117,7 +116,6 @@ abstract class Animal
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="children", cascade={"persist"})
      * @ORM\JoinColumn(name="parent_mother_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\Animal")
-     * @Expose
      */
     protected $parentMother;
 
@@ -136,7 +134,6 @@ abstract class Animal
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="surrogateChildren", cascade={"persist"})
      * @ORM\JoinColumn(name="surrogate_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\Animal")
-     * @Expose
      */
     protected $surrogate;
 
@@ -200,7 +197,6 @@ abstract class Animal
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareBirth")
      * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="animal", cascade={"persist"})
-     * @Expose
      */
     protected $births;
 
@@ -208,7 +204,6 @@ abstract class Animal
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareLoss")
      * @ORM\OneToMany(targetEntity="DeclareLoss", mappedBy="animal", cascade={"persist"})
-     * @Expose
      */
     protected $deaths;
 
@@ -225,7 +220,6 @@ abstract class Animal
      * @ORM\OneToOne(targetEntity="Tag", inversedBy="animal", cascade={"persist"})
      * @ORM\JoinColumn(name="tag_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Tag")
-     * @Expose
      */
     protected $assignedTag;
 
