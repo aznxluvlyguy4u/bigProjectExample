@@ -277,7 +277,8 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
 
   /**
-   * Update existing DeclareArrivalResponse with a isRemovedByUser
+   * Hide an error a user does not want to see anymore,
+   * by updating the existing DeclareArrivalResponse's isRemovedByUser to true.
    *
    * @ApiDoc(
    *   requirements={
