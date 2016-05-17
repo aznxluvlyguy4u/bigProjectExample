@@ -160,7 +160,7 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
   public function updateExport(Request $request, $Id) {
     //Validate uln/pedigree code
     if(!$this->isUlnOrPedigreeCodeValid($request)) {
-      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
+      return new JsonResponse(array("error_code" => 428, "error_message"=>"Given Uln & Country code is invalid, it is not registered to a known Tag"), 428);
     }
 
     //Convert the array into an object and add the mandatory values retrieved from the database
