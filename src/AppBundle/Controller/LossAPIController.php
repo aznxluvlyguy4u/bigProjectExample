@@ -42,7 +42,12 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function getLossById(Request $request, $Id)
   {
-    $loss = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_REPOSITORY)->findOneBy(array(Constant::REQUEST_ID_NAMESPACE=>$Id));
+    //TODO for phase 2: read a location from the $request and find declareLosses for that location
+    $client = $this->getAuthenticatedUser($request);
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_REPOSITORY);
+
+    $loss = $repository->getLossesById($client, $Id);
+
     return new JsonResponse($loss, 200);
   }
 
@@ -85,12 +90,17 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function getLosses(Request $request)
   {
-    //No explicit filter given, thus find all
-    if(!$request->query->has(Constant::STATE_NAMESPACE)) {
-      $declareLosses = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_REPOSITORY)->findAll();
+    //TODO for phase 2: read a location from the $request and find declareLosses for that location
+    $client = $this->getAuthenticatedUser($request);
+    $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_REPOSITORY);
+
+    if(!$stateExists) {
+      $declareLosses = $repository->getLosses($client);
+
     } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareLosses = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_REPOSITORY)->findBy(array(Constant::REQUEST_STATE_NAMESPACE => $state));
+      $declareLosses = $repository->getLosses($client, $state);
     }
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareLosses), 200);
