@@ -125,10 +125,19 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
    * @Method("POST")
    */
   public function createExport(Request $request) {
-    //Validate uln/pedigree code
-    if(!$this->isUlnOrPedigreeCodeValid($request)) {
-      return new JsonResponse(array("error_code" => 428, "error_message"=>"Given Uln & Country code is invalid, it is not registered to a known Tag"), 428);
+    //Validity check
+    $validityCheckUlnOrPedigiree= $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
     }
+
     //Get content to array
     $content = $this->getContentAsArray($request);
 
@@ -169,7 +178,7 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
    */
   public function updateExport(Request $request, $Id) {
     //Validate uln/pedigree code
-    if(!$this->isUlnOrPedigreeCodeValid($request)) {
+    if(!$this->isUlnOrPedigreeCodeValid($request)['isValid']) {
       return new JsonResponse(array("error_code" => 428, "error_message"=>"Given Uln & Country code is invalid, it is not registered to a known Tag"), 428);
     }
 
