@@ -270,6 +270,20 @@ abstract class Animal
     protected $animalOrderNumber;
 
     /**
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     * @Expose
+     */
+    private $isImportAnimal;
+
+    /**
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     * @Expose
+     */
+    private $isExportAnimal;
+
+    /**
      * Animal constructor.
      */
     public function __construct() {
@@ -287,6 +301,8 @@ abstract class Animal
         $this->ulnCountryCode = '';
         $this->ulnNumber = '';
         $this->animalOrderNumber = '';
+        $this->isImportAnimal = false;
+        $this->isExportAnimal = false;
     }
 
     /**
@@ -1019,5 +1035,53 @@ abstract class Animal
     public function getDeaths()
     {
         return $this->deaths;
+    }
+
+    /**
+     * Set isImportAnimal
+     *
+     * @param boolean $isImportAnimal
+     *
+     * @return Animal
+     */
+    public function setIsImportAnimal($isImportAnimal)
+    {
+        $this->isImportAnimal = $isImportAnimal;
+
+        return $this;
+    }
+
+    /**
+     * Get isImportAnimal
+     *
+     * @return boolean
+     */
+    public function getIsImportAnimal()
+    {
+        return $this->isImportAnimal;
+    }
+
+    /**
+     * Set isExportAnimal
+     *
+     * @param boolean $isExportAnimal
+     *
+     * @return Animal
+     */
+    public function setIsExportAnimal($isExportAnimal)
+    {
+        $this->isExportAnimal = $isExportAnimal;
+
+        return $this;
+    }
+
+    /**
+     * Get isExportAnimal
+     *
+     * @return boolean
+     */
+    public function getIsExportAnimal()
+    {
+        return $this->isExportAnimal;
     }
 }
