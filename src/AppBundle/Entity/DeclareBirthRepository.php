@@ -49,24 +49,25 @@ class DeclareBirthRepository extends BaseRepository {
       $declareBirth->setDateOfBirth($declareBirthUpdate->getDateOfBirth());
     }
 
+
     if ($declareBirthUpdate->getHasLambar() != null) {
-      $declareBirth->setLambar($declareBirthUpdate->getHasLambar());
+      $declareBirth->setIsLambar($declareBirthUpdate->getHasLambar());
     }
 
     if ($declareBirthUpdate->getIsAborted() != null) {
-      $declareBirth->setAborted($declareBirthUpdate->getIsAborted());
+      $declareBirth->setIsAborted($declareBirthUpdate->getIsAborted());
     }
 
     if ($declareBirthUpdate->getIsPseudoPregnancy() != null) {
-      $declareBirth->setPseudoPregnancy($declareBirthUpdate->getIsPseudoPregnancy());
+      $declareBirth->setIsPseudoPregnancy($declareBirthUpdate->getIsPseudoPregnancy());
     }
 
     if ($declareBirthUpdate->getLitterSize() != null) {
       $declareBirth->setLitterSize($declareBirthUpdate->getLitterSize());
     }
 
-    if ($declareBirthUpdate->getAnimalWeight() != null) {
-      $declareBirth->setAnimalWeight($declareBirthUpdate->getAnimalWeight());
+    if ($declareBirthUpdate->getBirthWeight() != null) {
+      $declareBirth->setBirthWeight($declareBirthUpdate->getBirthWeight());
     }
 
     if ($declareBirthUpdate->getBirthTailLength() != null) {

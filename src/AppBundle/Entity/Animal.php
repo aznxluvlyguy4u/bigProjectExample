@@ -169,14 +169,6 @@ abstract class Animal
     protected $animalHairColour;
 
     /**
-     * @ORM\Column(type="integer", nullable=true)
-     * @Assert\Length(max = 4)
-     * @JMS\Type("integer")
-     * @Expose
-     */
-    protected $birthTailLength;
-
-    /**
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareArrival")
      * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="animal", cascade={"persist"})

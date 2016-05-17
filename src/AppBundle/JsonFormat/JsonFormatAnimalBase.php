@@ -4,12 +4,13 @@ namespace AppBundle\JsonFormat;
 
 
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\Tag;
 
 /**
  * Class JsonFormatAnimalBase
  * @package AppBundle\JsonFormat
  */
-abstract class JsonFormatAnimalBase
+class JsonFormatAnimalBase
 {
     /**
      * @var string
@@ -120,5 +121,14 @@ abstract class JsonFormatAnimalBase
     public function setUlnNumber($ulnNumber)
     {
         $this->ulnNumber = $ulnNumber;
+    }
+
+    /**
+     * @param Tag $tag
+     */
+    public function setAssignedTag(Tag $tag)
+    {
+        $this->setUlnCountryCode($tag->getUlnCountryCode());
+        $this->setUlnNumber($tag->getUlnNumber());
     }
 }
