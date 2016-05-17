@@ -208,6 +208,12 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       return new JsonResponse(array("message"=>"No DeclareArrival found with request_id:" . $Id), 204);
     }
 
+    //First Persist object to Database, before sending it to the queue
+    $this->persist($declareArrival, RequestType::DECLARE_ARRIVAL_ENTITY);
+
+    //Send it to the queue and persist/update any changed state to the database
+    $this->sendMessageObjectToQueue($declareArrival, RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_ARRIVAL);
+
     return new JsonResponse($declareArrival, 200);
   }
 }
