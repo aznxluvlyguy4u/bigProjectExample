@@ -56,11 +56,6 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
   static private $MockedAnotherEwe;
 
   /**
-   * @var array
-   */
-  static private $tag = array();
-
-  /**
    * Sets the container.
    *
    * @param ContainerInterface|null $container A ContainerInterface instance or null
@@ -97,8 +92,7 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     //Get persons company location to add animals to.
     $location = $company->getLocations()->get(0);
 
-    //Get mocked tags, assign it to mocked animals
-    self::setTagStatusAssignedAndAddToTagArray(6);
+    $tagRepository = $this->container->get('doctrine.orm.entity_manager')->getRepository(Constant::TAG_REPOSITORY);
 
     self::$mockedParentRam = new Ram();
     self::$mockedParentRam->setIsAlive(true);
@@ -106,8 +100,12 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedParentRam->setDateOfBirth(new \DateTime('2001-01-01'));
     self::$mockedParentRam->setPedigreeNumber("35645");
     self::$mockedParentRam->setPedigreeCountryCode("NL");
-    self::$mockedParentRam->setAssignedTag(self::$tag[1]);
     self::$mockedParentRam->setLocation($location);
+
+    $tag1 = $tagRepository->findOneBy(array("id"=>1));
+    self::$mockedParentRam->setAssignedTag($tag1);
+    $manager->persist(self::$mockedParentRam);
+
 
     self::$mockedParentEwe = new Ewe();
     self::$mockedParentEwe->setIsAlive(true);
@@ -115,8 +113,12 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedParentEwe->setDateOfBirth(new \DateTime('2002-02-02'));
     self::$mockedParentEwe->setPedigreeNumber("79164");
     self::$mockedParentEwe->setPedigreeCountryCode("NL");
-    self::$mockedParentEwe->setAssignedTag(self::$tag[2]);
     self::$mockedParentEwe->setLocation($location);
+
+    $tag2 = $tagRepository->findOneBy(array("id"=>2));
+    self::$mockedParentEwe->setAssignedTag($tag2);
+    $manager->persist(self::$mockedParentEwe);
+
 
     self::$MockedAnotherEwe = new Ewe();
     self::$MockedAnotherEwe->setIsAlive(true);
@@ -124,8 +126,12 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$MockedAnotherEwe->setDateOfBirth(new \DateTime('2003-03-03'));
     self::$MockedAnotherEwe->setPedigreeNumber("52350");
     self::$MockedAnotherEwe->setPedigreeCountryCode("NL");
-    self::$MockedAnotherEwe->setAssignedTag(self::$tag[3]);
     self::$MockedAnotherEwe->setLocation($location);
+
+    $tag3 = $tagRepository->findOneBy(array("id"=>3));
+    self::$MockedAnotherEwe->setAssignedTag($tag3);
+    $manager->persist(self::$MockedAnotherEwe);
+
 
     self::$mockedRamWithParents = new Ram();
     self::$mockedRamWithParents->setIsAlive(true);
@@ -135,8 +141,12 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedRamWithParents->setAnimalType(AnimalType::sheep);
     self::$mockedRamWithParents->setParentFather(self::$mockedParentRam);
     self::$mockedRamWithParents->setParentMother(self::$mockedParentEwe);
-    self::$mockedRamWithParents->setAssignedTag(self::$tag[4]);
     self::$mockedRamWithParents->setLocation($location);
+
+    $tag4 = $tagRepository->findOneBy(array("id"=>4));
+    self::$mockedRamWithParents->setAssignedTag($tag4);
+    $manager->persist(self::$mockedRamWithParents);
+
 
     self::$mockedNewBornRam = new Ram();
     self::$mockedNewBornRam->setIsAlive(true);
@@ -146,9 +156,12 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedNewBornRam->setPedigreeCountryCode("NL");
     self::$mockedNewBornRam->setParentFather(self::$mockedParentRam);
     self::$mockedNewBornRam->setParentMother(self::$mockedParentEwe);
-
-    self::$mockedNewBornRam->setAssignedTag(self::$tag[5]);
     self::$mockedNewBornRam->setLocation($location);
+
+    $tag5 = $tagRepository->findOneBy(array("id"=>5));
+    self::$mockedRamWithParents->setAssignedTag($tag5);
+    $manager->persist(self::$mockedRamWithParents);
+
 
     self::$mockedNewBornEwe = new Ewe();
     self::$mockedNewBornEwe->setIsAlive(true);
@@ -158,14 +171,14 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedNewBornEwe->setPedigreeCountryCode("NL");
     self::$mockedNewBornEwe->setParentFather(self::$mockedParentRam);
     self::$mockedNewBornEwe->setParentMother(self::$mockedParentEwe);
-    self::$mockedNewBornEwe->setAssignedTag(self::$tag[6]);
     self::$mockedNewBornEwe->setLocation($location);
 
-    //Persist mocked data
+    $tag6 = $tagRepository->findOneBy(array("id"=>6));
+    self::$mockedRamWithParents->setAssignedTag($tag6);
     $manager->persist(self::$mockedRamWithParents);
-    $manager->persist(self::$mockedNewBornRam);
-    $manager->persist(self::$mockedNewBornEwe);
-    $manager->persist(self::$MockedAnotherEwe);
+
+
+//    Persist mocked data
     $manager->flush();
 
   }
@@ -227,17 +240,5 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
   public static function getMockedAnotherEwe()
   {
       return self::$MockedAnotherEwe;
-  }
-
-  private static function setTagStatusAssignedAndAddToTagArray($tagCount)
-  {
-    $mockedTags = MockedTags::getMockedTags();
-    $partSize = sizeof($mockedTags)/$tagCount;
-
-    for($i = 1; $i<=$tagCount; $i++) {
-      $tag = $mockedTags->get(rand(($i-1)*$partSize,$i*$partSize-2));
-      $tag->setTagStatus(Constant::ASSIGNED_NAMESPACE);
-      self::$tag[$i] = $tag;
-    }
   }
 }
