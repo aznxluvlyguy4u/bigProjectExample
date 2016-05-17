@@ -61,9 +61,8 @@ abstract class DeclareBaseResponse
     private $messageId;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 15)
-     * @Assert\NotBlank
      * @JMS\Type("string")
      */
     protected $messageNumber;
