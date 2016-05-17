@@ -196,14 +196,14 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * )
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/update/{Id}")
-   * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
+   * @Route("/update")
    * @Method("PUT")
    */
-  public function updateArrival(Request $request, $Id) {
+  public function updateArrival(Request $request) {
 
     //Valitidy check
     $content = $this->getContentAsArray($request);
+    $requestId = $content->get('request_id');
 
       if(array_key_exists("uln_country_code", $content['animal']) &&
           array_key_exists("uln_number", $content['animal']) &&
@@ -239,10 +239,10 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
           $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
       $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY);
-      $declareImport = $entityManager->updateDeclareImportMessage($declareImportUpdate, $Id);
+      $declareImport = $entityManager->updateDeclareImportMessage($declareImportUpdate, $requestId);
 
       if($declareImport == null) {
-        return new JsonResponse(array("message"=>"No DeclareImport found with request_id:" . $Id), 204);
+        return new JsonResponse(array("message"=>"No DeclareImport found with request_id:" . $requestId), 204);
       }
 
       //First Persist object to Database, before sending it to the queue
@@ -259,10 +259,10 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
           $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
       $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
-      $declareArrival = $entityManager->updateDeclareArrivalMessage($declareArrivalUpdate, $Id);
+      $declareArrival = $entityManager->updateDeclareArrivalMessage($declareArrivalUpdate, $requestId);
 
       if($declareArrival == null) {
-        return new JsonResponse(array("message"=>"No DeclareArrival found with request_id:" . $Id), 204);
+        return new JsonResponse(array("message"=>"No DeclareArrival found with request_id:" . $requestId), 204);
       }
 
       //First Persist object to Database, before sending it to the queue
