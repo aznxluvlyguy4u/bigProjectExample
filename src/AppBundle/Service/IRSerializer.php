@@ -210,7 +210,7 @@ class IRSerializer implements IRSerializerInterface
 
         //Move nested fields to the proper level
         $declareBirthContentArray['birth_weight'] = $declareBirthContentArray['animal']['birth_weight'];
-        $declareBirthContentArray['is_lambar'] = $declareBirthContentArray['animal']['is_lambar'];
+        $declareBirthContentArray['has_lambar'] = $declareBirthContentArray['animal']['has_lambar'];
         $declareBirthContentArray['birth_tail_length'] = $declareBirthContentArray['animal']['birth_tail_length'];
 
         //Add retrieved animal properties including type to initial animalContentArray
