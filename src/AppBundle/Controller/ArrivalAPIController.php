@@ -61,7 +61,9 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    *    OPEN,
    *    FINISHED,
    *    FAILED,
-   *    CANCELLED
+   *    CANCELLED,
+   *    REVOKING,
+   *    REVOKED
    * }
    *
    * @ApiDoc(
@@ -185,6 +187,24 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * @Method("PUT")
    */
   public function updateArrival(Request $request, $Id) {
+
+    //Valitidy check
+    $content = $this->getContentAsArray($request);
+    
+      if(array_key_exists("uln_country_code", $content['animal']) &&
+          array_key_exists("uln_number", $content['animal']) &&
+          array_key_exists("pedigree_country_code", $content['animal']) &&
+          array_key_exists("pedigree_number", $content['animal'])) {
+
+          $ulnSize = sizeof($content['animal']['uln_country_code']) + sizeof($content['animal']['uln_number']);
+          $pedigreeSize = sizeof($content['animal']['pedigree_country_code']) + sizeof($content['animal']['pedigree_number']);
+
+          if ($ulnSize > 0 && $pedigreeSize > 0) {
+              return new JsonResponse(array('code' => 428, "message" => "fill in either pedigree or uln, not both"), 428);
+          }
+      }
+
+    //Validity check
     $validityCheckUlnOrPedigiree = $this->isUlnOrPedigreeCodeValid($request);
     $isValid = $validityCheckUlnOrPedigiree['isValid'];
 
