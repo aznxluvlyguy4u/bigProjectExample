@@ -49,12 +49,12 @@ class AnimalRepository extends BaseRepository
 
   /**
    * @param $countryCode
-   * @param $pedigreeCode
+   * @param $pedigreeNumber
    * @return null|object
    */
-  public function findByCountryCodeAndPedigree($countryCode, $pedigreeCode)
+  public function findByCountryCodeAndPedigree($countryCode, $pedigreeNumber)
   {
-    $animal = $this->findOneBy(array('pedigreeCountryCode'=>$countryCode, 'pedigreeNumber'=>$pedigreeCode));
+    $animal = $this->findOneBy(array('pedigreeCountryCode'=>$countryCode, 'pedigreeNumber'=>$pedigreeNumber));
 
     return $animal;
   }
