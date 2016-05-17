@@ -82,6 +82,4 @@ class Constant
     const COUNTRY_REPOSITORY = 'AppBundle:Country';
     const COMPANY_REPOSITORY = 'AppBundle:Company';
     const LOCATION_REPOSITORY = 'AppBundle:Location';
-
-    const RESPONSE_ULN_NOT_FOUND = array("code"=>428,"message"=>"Given Uln & Country code is invalid, it is not registered to a known Tag");
 }
