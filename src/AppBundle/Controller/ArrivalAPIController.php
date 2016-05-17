@@ -61,7 +61,9 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    *    OPEN,
    *    FINISHED,
    *    FAILED,
-   *    CANCELLED
+   *    CANCELLED,
+   *    REVOKING,
+   *    REVOKED
    * }
    *
    * @ApiDoc(
@@ -149,14 +151,28 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     //Get content to array
     $content = $this->getContentAsArray($request);
 
-    //Convert the array into an object and add the mandatory values retrieved from the database
-    $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $this->getAuthenticatedUser($request));
+    $isImportAnimal = $content->get('is_import_animal');
 
-    //First Persist object to Database, before sending it to the queue
-    $this->persist($messageObject, RequestType::DECLARE_ARRIVAL_ENTITY);
+    if($isImportAnimal) {
+      //Convert the array into an object and add the mandatory values retrieved from the database
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $this->getAuthenticatedUser($request));
 
-    //Send it to the queue and persist/update any changed state to the database
-    $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_ARRIVAL);
+      //First Persist object to Database, before sending it to the queue
+      $this->persist($messageObject, RequestType::DECLARE_IMPORT_ENTITY);
+
+      //Send it to the queue and persist/update any changed state to the database
+      $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_IMPORT_ENTITY, RequestType::DECLARE_IMPORT);
+
+    } else {
+      //Convert the array into an object and add the mandatory values retrieved from the database
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $this->getAuthenticatedUser($request));
+
+      //First Persist object to Database, before sending it to the queue
+      $this->persist($messageObject, RequestType::DECLARE_ARRIVAL_ENTITY);
+
+      //Send it to the queue and persist/update any changed state to the database
+      $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_ARRIVAL);
+    }
 
     return new JsonResponse($messageObject, 200);
   }
@@ -180,11 +196,29 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * )
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/{Id}")
-   * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
+   * @Route("/update")
    * @Method("PUT")
    */
-  public function updateArrival(Request $request, $Id) {
+  public function updateArrival(Request $request) {
+
+    //Valitidy check
+    $content = $this->getContentAsArray($request);
+    $requestId = $content->get('request_id');
+
+      if(array_key_exists("uln_country_code", $content['animal']) &&
+          array_key_exists("uln_number", $content['animal']) &&
+          array_key_exists("pedigree_country_code", $content['animal']) &&
+          array_key_exists("pedigree_number", $content['animal'])) {
+
+          $ulnSize = sizeof($content['animal']['uln_country_code']) + sizeof($content['animal']['uln_number']);
+          $pedigreeSize = sizeof($content['animal']['pedigree_country_code']) + sizeof($content['animal']['pedigree_number']);
+
+          if ($ulnSize > 0 && $pedigreeSize > 0) {
+              return new JsonResponse(array('code' => 428, "message" => "fill in either pedigree or uln, not both"), 428);
+          }
+      }
+
+    //Validity check
     $validityCheckUlnOrPedigiree = $this->isUlnOrPedigreeCodeValid($request);
     $isValid = $validityCheckUlnOrPedigiree['isValid'];
 
@@ -197,17 +231,92 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       return new JsonResponse($messageArray, 428);
     }
 
-    //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareArrivalUpdate = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY,
-      $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+    $isImportAnimal = $content->get('is_import_animal');
 
-    $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
-    $declareArrival = $entityManager->updateDeclareArrivalMessage($declareArrivalUpdate, $Id);
+    if($isImportAnimal) {
+      //Convert the array into an object and add the mandatory values retrieved from the database
+      $declareImportUpdate = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY,
+          $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
-    if($declareArrival == null) {
-      return new JsonResponse(array("message"=>"No DeclareArrival found with request_id:" . $Id), 204);
+      $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY);
+      $declareImport = $entityManager->updateDeclareImportMessage($declareImportUpdate, $requestId);
+
+      if($declareImport == null) {
+        return new JsonResponse(array("message"=>"No DeclareImport found with request_id:" . $requestId), 204);
+      }
+
+      //First Persist object to Database, before sending it to the queue
+      $this->persist($declareImport, RequestType::DECLARE_IMPORT_ENTITY);
+
+      //Send it to the queue and persist/update any changed state to the database
+      $this->sendMessageObjectToQueue($declareImport, RequestType::DECLARE_IMPORT_ENTITY, RequestType::DECLARE_IMPORT);
+
+      return new JsonResponse($declareImport, 200);
+
+    } else {
+      //Convert the array into an object and add the mandatory values retrieved from the database
+      $declareArrivalUpdate = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY,
+          $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+
+      $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
+      $declareArrival = $entityManager->updateDeclareArrivalMessage($declareArrivalUpdate, $requestId);
+
+      if($declareArrival == null) {
+        return new JsonResponse(array("message"=>"No DeclareArrival found with request_id:" . $requestId), 204);
+      }
+
+      //First Persist object to Database, before sending it to the queue
+      $this->persist($declareArrival, RequestType::DECLARE_ARRIVAL_ENTITY);
+
+      //Send it to the queue and persist/update any changed state to the database
+      $this->sendMessageObjectToQueue($declareArrival, RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_ARRIVAL);
+
+      return new JsonResponse($declareArrival, 200);
+    }
+  }
+
+
+  /**
+   * Update existing DeclareArrivalResponse with a isRemovedByUser
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Update a DeclareArrival request",
+   *   input = "AppBundle\Entity\DeclareArrival",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/error")
+   * @Method("PUT")
+   */
+  public function updateArrivalError(Request $request) {
+    $content = $this->getContentAsArray($request);
+    $messageNumber = $content->get("message_number");
+
+    if($messageNumber != null) {
+
+      $client = $this->getAuthenticatedUser($request);
+      $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
+
+      $response = $repository->getArrivalResponseByMessageNumber($client, $messageNumber);
+
+      $response->setIsRemovedByUser($content['is_removed_by_user']);
+
+      //First Persist object to Database, before sending it to the queue
+      $this->persist($response, RequestType::DECLARE_ARRIVAL_RESPONSE_ENTITY);
+
+      return new JsonResponse(array("code"=>200, "message"=>"saved"), 200);
     }
 
-    return new JsonResponse($declareArrival, 200);
+    return new JsonResponse(array('code' => 428, "message" => "fill in message number"), 428);
   }
 }

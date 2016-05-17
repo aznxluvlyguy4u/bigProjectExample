@@ -55,6 +55,7 @@ class Constant
 
     //Request repositories
     const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';
+    const DECLARE_ARRIVAL_RESPONSE_REPOSITORY = 'AppBundle:DeclareArrivalResponse';
     const DECLARE_BIRTH_REPOSITORY = 'AppBundle:DeclareBirth';
     const DECLARE_DEPART_REPOSITORY = 'AppBundle:DeclareDepart';
 
@@ -81,6 +82,4 @@ class Constant
     const COUNTRY_REPOSITORY = 'AppBundle:Country';
     const COMPANY_REPOSITORY = 'AppBundle:Company';
     const LOCATION_REPOSITORY = 'AppBundle:Location';
-
-    const RESPONSE_ULN_NOT_FOUND = array("code"=>428,"message"=>"Given Uln & Country code is invalid, it is not registered to a known Tag");
 }

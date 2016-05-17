@@ -70,7 +70,7 @@ class CountryAPIController extends APIController implements CountryAPIController
     $countries = $this->getSerializer()
       ->serializeToJSON(array (Constant::RESULT_NAMESPACE => $countries));
 
-    return new Response($countries);
+    return new JsonResponse(array("result"=>$countries), 200);
   }
 
   /**

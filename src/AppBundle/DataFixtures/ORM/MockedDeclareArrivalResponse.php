@@ -70,6 +70,7 @@ class MockedDeclareArrivalResponse implements FixtureInterface, ContainerAwareIn
             self::$mockedArrivalFailedResponse->setErrorMessage("Er zijn geen dieren gevonden bij het opgegeven werknummer");
             self::$mockedArrivalFailedResponse->setErrorKindIndicator("F");
             self::$mockedArrivalFailedResponse->setSuccessIndicator("N");
+            self::$mockedArrivalFailedResponse->setIsRemovedByUser(false);
 
             //Persist mocked data
             $manager->persist(self::$mockedArrivalSuccessResponse);
@@ -98,6 +99,7 @@ class MockedDeclareArrivalResponse implements FixtureInterface, ContainerAwareIn
             self::$mockedArrivalFailedResponse->setErrorMessage("Er zijn geen dieren gevonden bij het opgegeven werknummer");
             self::$mockedArrivalFailedResponse->setErrorKindIndicator("F");
             self::$mockedArrivalFailedResponse->setSuccessIndicator("N");
+            self::$mockedArrivalFailedResponse->setIsRemovedByUser(false);
 
             //Create and persist successful Response
             self::$mockedArrivalSuccessResponse = new DeclareArrivalResponse();

@@ -38,6 +38,10 @@ class DeclareImportRepository extends BaseRepository {
       $declareImport->setIsImportAnimal($declareImportUpdate->getIsImportAnimal());
     }
 
+    if ($declareImportUpdate->getAnimalCountryOrigin() != null) {
+      $declareImport->setAnimalCountryOrigin($declareImportUpdate->getAnimalCountryOrigin());
+    }
+
     return $declareImport;
   }
 }

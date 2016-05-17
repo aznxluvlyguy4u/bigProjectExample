@@ -190,6 +190,13 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
       return new JsonResponse(array("message"=>"No DeclareImport found with request_id:" . $Id), 204);
     }
 
+    //First Persist object to Database, before sending it to the queue
+    $this->persist($declareImport, RequestType::DECLARE_IMPORT_ENTITY);
+
+    //Send it to the queue and persist/update any changed state to the database
+    $this->sendMessageObjectToQueue($declareImport, RequestType::DECLARE_IMPORT_ENTITY, RequestType::DECLARE_IMPORT);
+
+
     return new JsonResponse($declareImport, 200);
   }
 }

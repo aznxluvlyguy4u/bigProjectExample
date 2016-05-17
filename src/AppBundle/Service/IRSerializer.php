@@ -98,10 +98,6 @@ class IRSerializer implements IRSerializerInterface
         //Parse json to content array to add additional 'animal type' property
         $retrievedAnimalContentArray = json_decode($retrievedAnimalJson, true);
 
-        //Add animal type to content array
-        $retrievedAnimalContentArray[$this::DISCRIMINATOR_TYPE_NAMESPACE] = $retrievedAnimal->getObjectType();
-
-
         return  $retrievedAnimalContentArray;
     }
 
