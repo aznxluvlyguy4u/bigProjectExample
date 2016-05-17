@@ -117,7 +117,7 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
   public function createExport(Request $request) {
     //Validate uln/pedigree code
     if(!$this->isUlnOrPedigreeCodeValid($request)) {
-      return new JsonResponse(Constant::RESPONSE_ULN_NOT_FOUND, Constant::RESPONSE_ULN_NOT_FOUND[Constant::CODE_NAMESPACE]);
+      return new JsonResponse(array("error_code" => 428, "error_message"=>"Given Uln & Country code is invalid, it is not registered to a known Tag"), 428);
     }
     //Get content to array
     $content = $this->getContentAsArray($request);
