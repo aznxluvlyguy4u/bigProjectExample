@@ -138,15 +138,31 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     //Get content to array
     $content = $this->getContentAsArray($request);
 
-    //Convert the array into an object and add the mandatory values retrieved from the database
-    $messageObject = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $this->getAuthenticatedUser($request));
+    $isExportAnimal = $content->get('animal')['is_export_animal'];
 
-    //First Persist object to Database, before sending it to the queue
-    $this->persist($messageObject, RequestType::DECLARE_DEPART_ENTITY);
+    if($isExportAnimal) {
+      //Convert the array into an object and add the mandatory values retrieved from the database
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $this->getAuthenticatedUser($request));
 
-    //Send it to the queue and persist/update any changed state to the database
-    $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_DEPART_ENTITY, RequestType::DECLARE_DEPART);
-    return new JsonResponse($messageObject, 200);
+      //First Persist object to Database, before sending it to the queue
+      $this->persist($messageObject, RequestType::DECLARE_EXPORT_ENTITY);
+
+      //Send it to the queue and persist/update any changed state to the database
+      $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_EXPORT_ENTITY, RequestType::DECLARE_EXPORT);
+
+      return new JsonResponse($messageObject, 200);
+
+    } else {
+      //Convert the array into an object and add the mandatory values retrieved from the database
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $this->getAuthenticatedUser($request));
+
+      //First Persist object to Database, before sending it to the queue
+      $this->persist($messageObject, RequestType::DECLARE_DEPART_ENTITY);
+
+      //Send it to the queue and persist/update any changed state to the database
+      $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_DEPART_ENTITY, RequestType::DECLARE_DEPART);
+      return new JsonResponse($messageObject, 200);
+    }
   }
 
 
@@ -188,17 +204,49 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
       return new JsonResponse($messageArray, 428);
     }
 
-    //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareDepartUpdate = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY,
-        $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+    $content = $this->getContentAsArray($request);
+    $isExportAnimal = $content->get('animal')['is_export_animal'];
 
-    $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_DEPART_REPOSITORY);
-    $declareDepart = $entityManager->updateDeclareDepartMessage($declareDepartUpdate, $Id);
+    if($isExportAnimal) {
+      //Convert the array into an object and add the mandatory values retrieved from the database
+      $declareExportUpdate = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY,
+          $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
-    if($declareDepart == null) {
-      return new JsonResponse(array("message"=>"No DeclareDepart found with request_id:" . $Id), 204);
+      $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY);
+      $declareExport = $entityManager->updateDeclareExportMessage($declareExportUpdate, $Id);
+
+      if($declareExport == null) {
+        return new JsonResponse(array("message"=>"No DeclareExport found with request_id:" . $Id), 204);
+      } else {
+        //First Persist object to Database, before sending it to the queue
+        $this->persist($declareExport, RequestType::DECLARE_DEPART_ENTITY);
+
+        //Send it to the queue and persist/update any changed state to the database
+        $this->sendMessageObjectToQueue($declareExport, RequestType::DECLARE_DEPART_ENTITY, RequestType::DECLARE_DEPART);
+
+        return new JsonResponse($declareExport, 200);
+      }
+
+    } else {
+      //Convert the array into an object and add the mandatory values retrieved from the database
+      $declareDepartUpdate = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY,
+          $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+
+      $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_DEPART_REPOSITORY);
+      $declareDepart = $entityManager->updateDeclareDepartMessage($declareDepartUpdate, $Id);
+
+      if($declareDepart == null) {
+        return new JsonResponse(array("message"=>"No DeclareDepart found with request_id:" . $Id), 204);
+      } else {
+        //First Persist object to Database, before sending it to the queue
+        $this->persist($declareDepart, RequestType::DECLARE_DEPART_ENTITY);
+
+        //Send it to the queue and persist/update any changed state to the database
+        $this->sendMessageObjectToQueue($declareDepart, RequestType::DECLARE_DEPART_ENTITY, RequestType::DECLARE_DEPART);
+
+        return new JsonResponse($declareDepart, 200);
+      }
+
     }
-
-    return new JsonResponse($declareDepart, 200);
   }  
 }
