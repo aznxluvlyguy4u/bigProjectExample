@@ -121,6 +121,14 @@ class Location
    */
   private $address;
 
+  /**
+   * @var array
+   *
+   * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
+   * @ORM\OneToMany(targetEntity="RevokeDeclaration", mappedBy="location", cascade={"persist"})
+   */
+  protected $revokes;
+
   /*
   * Constructor
   */
@@ -135,6 +143,7 @@ class Location
     $this->animals = new ArrayCollection();
     $this->tagTransfers = new ArrayCollection();
     $this->flags = new ArrayCollection();
+    $this->revokes = new ArrayCollection();
   }
 
   /**
@@ -526,5 +535,39 @@ class Location
     public function getFlags()
     {
         return $this->flags;
+    }
+
+    /**
+     * Add revoke
+     *
+     * @param \AppBundle\Entity\RevokeDeclaration $revoke
+     *
+     * @return Location
+     */
+    public function addRevoke(\AppBundle\Entity\RevokeDeclaration $revoke)
+    {
+        $this->revokes[] = $revoke;
+
+        return $this;
+    }
+
+    /**
+     * Remove revoke
+     *
+     * @param \AppBundle\Entity\RevokeDeclaration $revoke
+     */
+    public function removeRevoke(\AppBundle\Entity\RevokeDeclaration $revoke)
+    {
+        $this->revokes->removeElement($revoke);
+    }
+
+    /**
+     * Get revokes
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getRevokes()
+    {
+        return $this->revokes;
     }
 }

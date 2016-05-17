@@ -22,7 +22,6 @@ class DeclareArrivalResponse extends DeclareBaseResponse {
    * @JMS\Type("AppBundle\Entity\DeclareArrival")
    */
   private $declareArrivalRequestMessage;
-//JColumn(name="declare_arrival_request_message_id", referencedColumnName="id")
 
     /**
      * Set declareArrivalRequestMessage
