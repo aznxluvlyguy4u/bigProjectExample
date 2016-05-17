@@ -44,9 +44,9 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
     $client = $this->getAuthenticatedUser($request);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY);
 
-    $arrival = $repository->getImportsById($client, $Id);
+    $import = $repository->getImportsById($client, $Id);
 
-    return new JsonResponse($arrival, 200);
+    return new JsonResponse($import, 200);
   }
 
   /**
