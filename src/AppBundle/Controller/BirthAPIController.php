@@ -156,12 +156,12 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     $returnMessages = new ArrayCollection();
 
     foreach($children as $child) {
-        
+
         $ulnNumber = $child[Constant::ULN_NUMBER_NAMESPACE];
         $ulnCountryCode = $child[Constant::ULN_COUNTRY_CODE_NAMESPACE];
 
         $tag = $this->getEntityGetter()->retrieveTag($ulnCountryCode, $ulnNumber);
-
+       
         if($tag->getTagStatus() == Constant::ASSIGNED_NAMESPACE){
             //TODO redirect to error table / save the incorrect input (?)
             return new JsonResponse(array("Tag already in use", 200), 200);
