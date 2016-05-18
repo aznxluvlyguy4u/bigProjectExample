@@ -199,9 +199,6 @@ class EntityGetter
                     $surrogate = $this->retrieveAnimalFromAnimalArray($animalArray['surrogate']);
                     $animalObject->setSurrogate($surrogate); }
 
-                if (array_key_exists('birth_tail_length', $animalArray)) {
-                    $animalObject->setBirthTailLength($animalArray['birth_tail_length']); }
-
                 break;
 
             case RequestType::DECLARE_DEPART_ENTITY:

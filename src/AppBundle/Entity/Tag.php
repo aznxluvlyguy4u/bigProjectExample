@@ -351,6 +351,11 @@ class Tag {
         return $this->animal;
     }
 
+
+    public function removeAnimal()
+    {
+        $this->animal = null;
+    }
     /**
      * Get id
      *
