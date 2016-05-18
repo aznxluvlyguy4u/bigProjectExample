@@ -53,6 +53,10 @@ class BirthMessageBuilder extends MessageBuilderBase
         $animal->setAnimalType(AnimalType::sheep);
         $animal->setDateOfBirth($declareBirth->getDateOfBirth());
 
+        //Both persist and flush are necessary for the animal
+        $this->em->persist($animal);
+        $this->em->flush();
+
         //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
         $declareBirth->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
         return $declareBirth;
