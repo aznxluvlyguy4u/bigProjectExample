@@ -132,6 +132,19 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function createLoss(Request $request)
   {
+    //Validity check
+    $validityCheckUlnOrPedigiree = $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
+    }
+
     //Convert front-end message into an array
     //Get content to array
     $content = $this->getContentAsArray($request);
@@ -174,6 +187,19 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function editLoss(Request $request, $Id)
   {
+    //Validity check
+    $validityCheckUlnOrPedigiree = $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
+    }
+
     //Convert the array into an object and add the mandatory values retrieved from the database
     $declareLossUpdate = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY,
         $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
@@ -185,31 +211,28 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
 
     if($declareLoss == null) {
       return new JsonResponse(array("message"=>"No DeclareLoss found with request_id: " . $Id), 204);
+
+    } else {
+      if ($declareLossUpdate->getAnimal() != null) {
+        $declareLoss->setAnimal($declareLossUpdate->getAnimal());
+      }
+
+      if ($declareLossUpdate->getDateOfDeath() != null) {
+        $declareLoss->setDateOfDeath($declareLossUpdate->getDateOfDeath());
+      }
+
+      if($declareLossUpdate->getReasonOfLoss() != null) {
+        $declareLoss->setReasonOfLoss($declareLossUpdate->getReasonOfLoss());
+      }
+
+      //First Persist object to Database, before sending it to the queue
+      $this->persist($declareLoss, RequestType::DECLARE_LOSS_ENTITY);
+
+      //Send it to the queue and persist/update any changed state to the database
+      $this->sendMessageObjectToQueue($declareLoss, RequestType::DECLARE_LOSS_ENTITY, RequestType::DECLARE_LOSS);
+
+      return new JsonResponse($declareLoss, 200);
     }
 
-
-    if ($declareLossUpdate->getAnimal() != null) {
-      $declareLoss->setAnimal($declareLossUpdate->getAnimal());
-    }
-
-    if ($declareLossUpdate->getDateOfDeath() != null) {
-      $declareLoss->setDateOfDeath($declareLossUpdate->getDateOfDeath());
-    }
-
-    if ($declareLossUpdate->getLocation() != null) {
-      $declareLoss->setLocation($declareLossUpdate->getLocation());
-    }
-
-    if($declareLossUpdate->getUbnProcessor() != null) {
-      $declareLoss->setUbnProcessor($declareLossUpdate->getUbnProcessor());
-    }
-
-    if($declareLossUpdate->getReasonOfLoss() != null) {
-      $declareLoss->setReasonOfLoss($declareLossUpdate->getReasonOfLoss());
-    }
-
-    $declareLoss = $entityManager->update($declareLoss);
-
-    return new JsonResponse($declareLoss, 200);
   }
 }
