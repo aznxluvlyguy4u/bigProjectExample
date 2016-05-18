@@ -48,6 +48,7 @@ class ExportMessageBuilder extends MessageBuilderBase
     $animal->setAnimalType(AnimalType::sheep);
 
     //Both persist and flush are necessary for the animal
+    $animal->setIsExportAnimal(true);
     $this->em->persist($animal);
     $this->em->flush();
 

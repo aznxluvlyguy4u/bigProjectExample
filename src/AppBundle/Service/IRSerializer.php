@@ -337,6 +337,8 @@ class IRSerializer implements IRSerializerInterface
     {
         $declareExportContentArray["type"] = RequestType::DECLARE_EXPORT_ENTITY;
 
+        $exportDate = $declareExportContentArray['depart_date'];
+
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareExportContentArray);
 
         //Add retrieved animal properties including type to initial animalContentArray
@@ -346,8 +348,8 @@ class IRSerializer implements IRSerializerInterface
         $json = $this->serializeToJSON($declareExportContentArray);
         $declareExportRequest = $this->deserializeToObject($json, RequestType::DECLARE_EXPORT_ENTITY);
 
-        //Add retrieved animal to DeclareArrival
         $declareExportRequest->setAnimal($retrievedAnimal);
+        $declareExportRequest->setExportDate(new \DateTime($exportDate));
 
         return $declareExportRequest;
     }
