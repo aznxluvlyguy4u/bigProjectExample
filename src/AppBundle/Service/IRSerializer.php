@@ -359,6 +359,8 @@ class IRSerializer implements IRSerializerInterface
     {
         $declareImportContentArray["type"] = RequestType::DECLARE_IMPORT_ENTITY;
 
+        $importDate = $declareImportContentArray['arrival_date'];
+
         //Retrieve animal entity
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareImportContentArray);
 
@@ -369,8 +371,9 @@ class IRSerializer implements IRSerializerInterface
         $json = $this->serializeToJSON($declareImportContentArray);
         $declareImportRequest = $this->deserializeToObject($json, RequestType::DECLARE_IMPORT_ENTITY);
 
-        //Add retrieved animal to DeclareArrival
+        //Add retrieved animal and import date to DeclareImport
         $declareImportRequest->setAnimal($retrievedAnimal);
+        $declareImportRequest->setImportDate(new \DateTime($importDate));
 
         return $declareImportRequest;
     }
