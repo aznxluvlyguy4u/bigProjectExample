@@ -78,6 +78,38 @@ class MessageBuilderBase
     }
 
     /**
+     *
+     * @param object $messageObject the message received
+     * @param Person $person
+     * @return object the retrieve message
+     */
+    protected function buildBaseRetrieveMessageObject($messageObject, Person $person)
+    {
+        //Generate new requestId
+
+        if($messageObject->getRequestId()== null) {
+            $requestId = $this->getNewRequestId();
+            //Add general data to content
+            $messageObject->setRequestId($requestId);
+        }
+
+        $messageObject->setLogDate(new \DateTime());
+        $messageObject->setRequestState("open");
+
+        //Add relationNumberKeeper to content
+
+        if($person instanceof Client) {
+            $relationNumberKeeper = $person->getRelationNumberKeeper();
+        } else { //TODO what if an employee does a DA request?
+            $relationNumberKeeper = ""; // mandatory for I&R
+        }
+
+        $messageObject->setRelationNumberKeeper($relationNumberKeeper);
+
+        return $messageObject;
+    }
+
+    /**
      * Generate a pseudo random requestId of MAX length 20
      *
      * @return string
