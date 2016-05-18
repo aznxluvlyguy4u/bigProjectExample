@@ -430,6 +430,16 @@ abstract class Animal
     }
 
     /**
+     *
+     */
+    public function removeAssignedTag()
+    {
+        $this->assignedTag->setAnimal(null);
+        $this->assignedTag->setTagStatus(Constant::UNASSIGNED_NAMESPACE);
+        $this->assignedTag = null;
+    }
+
+    /**
      * Set name
      *
      * @param string $name
@@ -665,22 +675,6 @@ abstract class Animal
     public function setAnimalHairColour($animalHairColour)
     {
         $this->animalHairColour = $animalHairColour;
-    }
-
-    /**
-     * @return integer
-     */
-    public function getBirthTailLength()
-    {
-        return $this->birthTailLength;
-    }
-
-    /**
-     * @param integer $birthTailLength
-     */
-    public function setBirthTailLength($birthTailLength)
-    {
-        $this->birthTailLength = $birthTailLength;
     }
 
     /**
