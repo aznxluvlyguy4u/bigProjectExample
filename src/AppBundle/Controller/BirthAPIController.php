@@ -210,6 +210,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    */
   public function updateBirth(Request $request, $Id) {
 
+      //TODO Phase 2: Minimize validity check for all controllers
       $validityCheckUlnOrPedigree = $this->isUlnOrPedigreeCodeValid($request);
       $isValid = $validityCheckUlnOrPedigree['isValid'];
 
