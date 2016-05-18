@@ -112,7 +112,7 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedLocation = new Location();
     self::$mockedLocation->setAddress(self::$mockedLocationAddress);
     self::$mockedLocation->setCompany(self::$mockedCompany);
-    self::$mockedLocation->setUbn("98989898");
+    self::$mockedLocation->setUbn("1674459");
 
     self::$mockedCompany->addLocation(self::$mockedLocation);
     self::$mockedClient->addCompany(self::$mockedCompany);
