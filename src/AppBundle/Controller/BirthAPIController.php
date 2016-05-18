@@ -46,8 +46,13 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    */
   public function getBirthById(Request $request, $Id)
   {
-    $birth = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY)->findOneBy(array(Constant::REQUEST_ID_NAMESPACE=>$Id));
-    return new JsonResponse($birth, 200);
+      //TODO for phase 2: read a location from the $request and find declareBirths for that location
+      $client = $this->getAuthenticatedUser($request);
+      $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
+
+      $export = $repository->getBirthsById($client, $Id);
+
+      return new JsonResponse($export, 200);
   }
 
   /**
@@ -88,15 +93,20 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    */
   public function getBirths(Request $request)
   {
-    //No explicit filter given, thus find all
-    if(!$request->query->has(Constant::STATE_NAMESPACE)) {
-      $declareBirths = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY)->findAll();
-    } else { //A state parameter was given, use custom filter to find subset
-      $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareBirths = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY)->findBy(array(Constant::REQUEST_STATE_NAMESPACE => $state));
-    }
+      //TODO for phase 2: read a location from the $request and find declareBirths for that location
+      $client = $this->getAuthenticatedUser($request);
+      $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
+      $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareBirths), 200);
+      if(!$stateExists) {
+          $declareBirths = $repository->getBirths($client);
+
+      } else { //A state parameter was given, use custom filter to find subset
+          $state = $request->query->get(Constant::STATE_NAMESPACE);
+          $declareBirths = $repository->getBirths($client, $state);
+      }
+
+      return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareBirths), 200);
   }
 
   /**
