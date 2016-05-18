@@ -153,7 +153,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * )
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("")
+   * @Route("-sync")
    * @Method("POST")
    */
   public function createRetrieveAnimals(Request $request) {
@@ -174,8 +174,42 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     }
   }
 
-
+  /**
+   * Create a RetrieveAnimalDetails request
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Post a RetrieveAnimals request",
+   *   input = "AppBundle\Entity\RetrieveAnimals",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-details")
+   * @Method("POST")
+   */
   function getAnimalDetails(Request $request) {
-    // TODO: Implement getAnimalDetails() method.
+    //Get content to array
+    $content = $this->getContentAsArray($request);
+
+    //Convert the array into an object and add the mandatory values retrieved from the database
+    $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY, $content, $this->getAuthenticatedUser($request));
+
+    //First Persist object to Database, before sending it to the queue
+    //$this->persist($messageObject, RequestType::RETRIEVE_ANIMALS_ENTITY);
+
+    //Send it to the queue and persist/update any changed state to the database
+    $this->sendMessageObjectToQueue($messageObject, RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY, RequestType::RETRIEVE_ANIMAL_DETAILS);
+
+    return new JsonResponse($messageObject, 200);
+
   }
 }

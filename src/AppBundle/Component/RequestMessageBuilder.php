@@ -51,6 +51,8 @@ class RequestMessageBuilder
      * @var RetrieveAnimals
      */
     private $retrieveAnimalsMessageBuilder;
+
+    private $retrieveAnimalDetailsBuilder;
     /*
      * @var LossMessageBuilder
      */
@@ -85,6 +87,7 @@ class RequestMessageBuilder
         $this->lossMessageBuilder = new LossMessageBuilder($em);
         $this->revokeMessageBuilder = new RevokeMessageBuilder($em);
         $this->retrieveAnimalsMessageBuilder = new RetrieveAnimalsMessageBuilder($em);
+        $this->retrieveAnimalDetailsBuilder = new RetrieveAnimalDetailsMessageBuilder($em);
     }
 
     public function build($messageClassNameSpace, ArrayCollection $contentArray, Person $person, $isEditMessage)
@@ -128,8 +131,8 @@ class RequestMessageBuilder
 
                 return $this->revokeMessageBuilder->buildMessage($revokeDeclaration, $person);
             case RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY:
-                //TODO: only add the mininum required fields for this Message Type
-                return null;
+                $retrieveAnimalDetailsRequest = $this->irSerializer->parseRetrieveAnimalDetails($contentArray, $isEditMessage);
+                return $this->retrieveAnimalDetailsBuilder->buildMessage($retrieveAnimalDetailsRequest, $person);
             case RequestType::RETRIEVE_ANIMALS_ENTITY:
                 $retrieveAnimalsRequest = $this->irSerializer->parseRetrieveAnimals($contentArray, $isEditMessage);
                 return $this->retrieveAnimalsMessageBuilder->buildMessage($retrieveAnimalsRequest, $person);

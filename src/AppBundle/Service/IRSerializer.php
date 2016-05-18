@@ -7,6 +7,7 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\RetrieveAnimals;
+use AppBundle\Entity\RetrieveAnimalDetails;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Ram;
@@ -437,9 +438,20 @@ class IRSerializer implements IRSerializerInterface
      * @return RetrieveAnimalDetails
      */
     function parseRetrieveAnimalDetails(ArrayCollection $contentArray, $isEditMessage) {
-        // TODO: Implement parseRetrieveAnimalDetails() method.
-        $contentArray["type"] = RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY;
+        $retrieveAnimalDetails = new RetrieveAnimalDetails();
 
+        if($contentArray->containsKey(Constant::ULN_NUMBER_NAMESPACE) && $contentArray->containsKey(Constant::ULN_COUNTRY_CODE_NAMESPACE)) {
+            $ulnNumber = $contentArray->get(Constant::ULN_NUMBER_NAMESPACE);
+            $ulnCountryCode = $contentArray->get(Constant::ULN_COUNTRY_CODE_NAMESPACE);
+
+            $retrieveAnimalDetails->setUlnNumber($ulnNumber);
+            $retrieveAnimalDetails->setUlnCountryCode($ulnCountryCode);
+        } else if($contentArray->containsKey(Constant::ANIMAL_ORDER_NUMBER_NAMESPACE)) {
+            $animalOrderNumber = $contentArray->get(Constant::ANIMAL_ORDER_NUMBER_NAMESPACE);
+            $retrieveAnimalDetails->setAnimalOrderNumber($animalOrderNumber);
+        }
+
+        return $retrieveAnimalDetails;
     }
 
     /**
