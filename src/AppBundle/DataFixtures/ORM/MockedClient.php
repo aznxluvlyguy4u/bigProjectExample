@@ -80,7 +80,7 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedClient->setFirstName("Bart");
     self::$mockedClient->setLastName("de Boer");
     self::$mockedClient->setEmailAddress("bart@deboer.com");
-    self::$mockedClient->setRelationNumberKeeper("203719934");
+    self::$mockedClient->setRelationNumberKeeper("203719934");  //NOTE! Echte RelationNumberKeeper nodig voor successvolle IenR melding!
     self::$mockedClient->setUsername("Bartje");
     self::$mockedClient->setPassword($encoder->encodePassword(self::$mockedClient, "blauwetexelaar"));
 
@@ -117,7 +117,7 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedLocation = new Location();
     self::$mockedLocation->setAddress(self::$mockedLocationAddress);
     self::$mockedLocation->setCompany(self::$mockedCompany);
-    self::$mockedLocation->setUbn("98989898");
+    self::$mockedLocation->setUbn("1674459"); //NOTE! Echte UBN nodig voor successvolle IenR melding!
 
     self::$mockedCompany->addLocation(self::$mockedLocation);
     self::$mockedClient->addCompany(self::$mockedCompany);
