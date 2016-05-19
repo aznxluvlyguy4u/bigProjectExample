@@ -73,7 +73,7 @@ class RetrieveAnimals
 
     /**
      * @Assert\NotBlank
-     * @ORM\OneToOne(targetEntity="Location")
+     * @ORM\ManyToOne(targetEntity="Location")
      * @ORM\JoinColumn(name="location_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Location")
      */
