@@ -137,18 +137,6 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function createArrival(Request $request)
   {
-    $validityCheckUlnOrPedigiree= $this->isUlnOrPedigreeCodeValid($request);
-    $isValid = $validityCheckUlnOrPedigiree['isValid'];
-
-    if(!$isValid) {
-      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
-      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
-      $message = $keyType . ' of ' . $animalKind . ' not found.';
-      $messageArray = array('code'=>428, "message" => $message);
-
-      return new JsonResponse($messageArray, 428);
-    }
-
     //Get content to array
     $content = $this->getContentAsArray($request);
 
