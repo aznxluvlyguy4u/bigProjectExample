@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -98,6 +99,20 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
     if(!$stateExists) {
       $declareLosses = $repository->getLosses($client);
 
+    } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
+
+      $declareLosses = new ArrayCollection();
+      //TODO Front-end cannot accept messages without animal ULN/Pedigree
+//      foreach($repository->getLosses($client, RequestStateType::OPEN) as $loss) {
+//        $declareLosses->add($loss);
+//      }
+      foreach($repository->getLosses($client, RequestStateType::REVOKING) as $loss) {
+        $declareLosses->add($loss);
+      }
+      foreach($repository->getLosses($client, RequestStateType::FINISHED) as $loss) {
+        $declareLosses->add($loss);
+      }
+      
     } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(Constant::STATE_NAMESPACE);
       $declareLosses = $repository->getLosses($client, $state);

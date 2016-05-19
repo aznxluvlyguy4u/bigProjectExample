@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -98,6 +99,20 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     if(!$stateExists) {
       $declareDepartures = $repository->getDepartures($client);
 
+    } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
+
+      $declareDeparts = new ArrayCollection();
+      //TODO Front-end cannot accept messages without animal ULN/Pedigree
+//      foreach($repository->getDeparts($client, RequestStateType::OPEN) as $depart) {
+//        $declareDeparts->add($depart);
+//      }
+      foreach($repository->getDepartures($client, RequestStateType::REVOKING) as $depart) {
+        $declareDeparts->add($depart);
+      }
+      foreach($repository->getDepartures($client, RequestStateType::FINISHED) as $depart) {
+        $declareDeparts->add($depart);
+      }
+      
     } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(Constant::STATE_NAMESPACE);
       $declareDepartures = $repository->getDepartures($client, $state);

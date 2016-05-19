@@ -101,6 +101,20 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
       if(!$stateExists) {
           $declareBirths = $repository->getBirths($client);
 
+      } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
+
+          $declareBirths = new ArrayCollection();
+          //TODO Front-end cannot accept messages without animal ULN/Pedigree
+//      foreach($repository->getBirths($client, RequestStateType::OPEN) as $birth) {
+//        $declareBirths->add($birth);
+//      }
+          foreach($repository->getBirths($client, RequestStateType::REVOKING) as $birth) {
+              $declareBirths->add($birth);
+          }
+          foreach($repository->getBirths($client, RequestStateType::FINISHED) as $birth) {
+              $declareBirths->add($birth);
+          }
+          
       } else { //A state parameter was given, use custom filter to find subset
           $state = $request->query->get(Constant::STATE_NAMESPACE);
           $declareBirths = $repository->getBirths($client, $state);

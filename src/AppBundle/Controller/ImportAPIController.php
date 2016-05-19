@@ -3,6 +3,8 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\RequestStateType;
+use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -94,6 +96,20 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
     if(!$stateExists) {
       $declareImports = $repository->getImports($client);
 
+    } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
+
+      $declareImports = new ArrayCollection();
+      //TODO Front-end cannot accept messages without animal ULN/Pedigree
+//      foreach($repository->getImports($client, RequestStateType::OPEN) as $import) {
+//        $declareImports->add($import);
+//      }
+      foreach($repository->getImports($client, RequestStateType::REVOKING) as $import) {
+        $declareImports->add($import);
+      }
+      foreach($repository->getImports($client, RequestStateType::FINISHED) as $import) {
+        $declareImports->add($import);
+      }
+      
     } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(Constant::STATE_NAMESPACE);
       $declareImports = $repository->getImports($client, $state);
