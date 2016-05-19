@@ -5,9 +5,7 @@ namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
-use \AppBundle\Entity\Animal;
 use \DateTime;
-use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class RetrieveTags
@@ -17,94 +15,241 @@ use Doctrine\Common\Collections\ArrayCollection;
 class RetrieveTags
 {
     /**
-     * @Assert\NotBlank
-     * @ORM\ManyToOne(targetEntity="Location", inversedBy="imports", cascade={"persist"})
-     * @JMS\Type("AppBundle\Entity\Location")
+     * @ORM\Column(type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $location;
+    private $id;
+
+    /**
+     * @ORM\Column(type="datetime")
+     * @Assert\Date
+     * @Assert\NotBlank
+     * @JMS\Type("DateTime")
+     */
+    private $logDate;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\Length(max = 20)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    private $requestId;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\Length(max = 20)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    private $messageId;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    private $requestState;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\Length(max = 20)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    private $relationNumberKeeper;
 
     /**
      * @var string
      *
      * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @Assert\Length(max = 12)
+     * @JMS\Type("string")
+     */
+    private $ubn;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
      * @JMS\Type("string")
      */
     private $tagType;
 
     /**
-     * @var integer
-     *
-     * @ORM\Column(type="integer")
-     * @Assert\Length(max = 1)
      * @Assert\NotBlank
-     * @JMS\Type("integer")
+     * @ORM\ManyToOne(targetEntity="Location")
+     * @ORM\JoinColumn(name="location_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\Location")
+     */
+    private $location;
+
+    /**
+     * @var integer
+     * @ORM\Column(type="integer")
+     * @Assert\NotBlank
      */
     private $animalType;
 
-    /**
-     * @ORM\OneToMany(targetEntity="RetrieveTagsResponse", mappedBy="retrieveTagsRequestMessage", cascade={"persist"})
-     * @ORM\JoinColumn(name="retrieve_tags_request_message_id", referencedColumnName="id")
-     * @JMS\Type("array")
-     */
-    private $responses;
+    public function __construct() {
+        $this->setLogDate(new \DateTime());
+    }
 
     /**
-     * Set location
+     * Get id
      *
-     * @param \AppBundle\Entity\Location $location
+     * @return integer
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set logDate
+     *
+     * @param \DateTime $logDate
      *
      * @return RetrieveTags
      */
-    public function setLocation(\AppBundle\Entity\Location $location = null)
+    public function setLogDate($logDate)
     {
-        $this->location = $location;
-        $this->setUbn($location->getUbn());
+        $this->logDate = $logDate;
 
         return $this;
     }
 
     /**
-     * Get location
+     * Get logDate
      *
-     * @return \AppBundle\Entity\Location
+     * @return \DateTime
      */
-    public function getLocation()
+    public function getLogDate()
     {
-        return $this->location;
+        return $this->logDate;
     }
 
     /**
-     * Add response
+     * Set requestId
      *
-     * @param \AppBundle\Entity\RetrieveTagsResponse $response
+     * @param string $requestId
      *
      * @return RetrieveTags
      */
-    public function addResponse(\AppBundle\Entity\RetrieveTagsResponse $response)
+    public function setRequestId($requestId)
     {
-        $this->responses[] = $response;
+        $this->requestId = $requestId;
+        $this->setMessageId($requestId);
+        return $this;
+    }
+
+    /**
+     * Get requestId
+     *
+     * @return string
+     */
+    public function getRequestId()
+    {
+        return $this->requestId;
+    }
+
+    /**
+     * Set messageId
+     *
+     * @param string $messageId
+     *
+     * @return RetrieveTags
+     */
+    public function setMessageId($messageId)
+    {
+        $this->messageId = $messageId;
 
         return $this;
     }
 
     /**
-     * Remove response
+     * Get messageId
      *
-     * @param \AppBundle\Entity\RetrieveTagsResponse $response
+     * @return string
      */
-    public function removeResponse(\AppBundle\Entity\RetrieveTagsResponse $response)
+    public function getMessageId()
     {
-        $this->responses->removeElement($response);
+        return $this->messageId;
     }
 
     /**
-     * Get responses
+     * Set requestState
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @param string $requestState
+     *
+     * @return RetrieveTags
      */
-    public function getResponses()
+    public function setRequestState($requestState)
     {
-        return $this->responses;
+        $this->requestState = $requestState;
+
+        return $this;
+    }
+
+    /**
+     * Get requestState
+     *
+     * @return string
+     */
+    public function getRequestState()
+    {
+        return $this->requestState;
+    }
+
+    /**
+     * Set relationNumberKeeper
+     *
+     * @param string $relationNumberKeeper
+     *
+     * @return RetrieveTags
+     */
+    public function setRelationNumberKeeper($relationNumberKeeper)
+    {
+        $this->relationNumberKeeper = $relationNumberKeeper;
+
+        return $this;
+    }
+
+    /**
+     * Get relationNumberKeeper
+     *
+     * @return string
+     */
+    public function getRelationNumberKeeper()
+    {
+        return $this->relationNumberKeeper;
+    }
+
+    /**
+     * Set ubn
+     *
+     * @param string $ubn
+     *
+     * @return RetrieveTags
+     */
+    public function setUbn($ubn)
+    {
+        $this->ubn = $ubn;
+
+        return $this;
+    }
+
+    /**
+     * Get ubn
+     *
+     * @return string
+     */
+    public function getUbn()
+    {
+        return $this->ubn;
     }
 
     /**
@@ -153,5 +298,30 @@ class RetrieveTags
     public function getAnimalType()
     {
         return $this->animalType;
+    }
+
+    /**
+     * Set location
+     *
+     * @param \AppBundle\Entity\Location $location
+     *
+     * @return RetrieveTags
+     */
+    public function setLocation(\AppBundle\Entity\Location $location = null)
+    {
+        $this->location = $location;
+        $this->setUbn($location->getUbn());
+
+        return $this;
+    }
+
+    /**
+     * Get location
+     *
+     * @return \AppBundle\Entity\Location
+     */
+    public function getLocation()
+    {
+        return $this->location;
     }
 }
