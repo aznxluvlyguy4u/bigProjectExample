@@ -20,8 +20,7 @@ use JMS\Serializer\Annotation\Expose;
 class DeclareArrival extends DeclareBase {
 
     /**
-     * @Assert\NotBlank
-     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="arrivals", cascade={"persist"})
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="arrivals")
      * @JMS\Type("AppBundle\Entity\Animal")
      * @Expose
      */
