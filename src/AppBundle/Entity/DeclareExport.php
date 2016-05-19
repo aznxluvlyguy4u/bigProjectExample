@@ -53,6 +53,14 @@ class DeclareExport extends DeclareBase
     private $responses;
 
     /**
+     * @ORM\OneToOne(targetEntity="RevokeDeclaration", inversedBy="export", cascade={"persist"})
+     * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id", nullable=true)
+     * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
+     * @Expose
+     */
+    private $revoke;
+
+    /**
      * Set exportDate
      *
      * @param \DateTime $exportDate
@@ -158,4 +166,23 @@ class DeclareExport extends DeclareBase
     {
         return $this->responses;
     }
+
+    /**
+     * @return RevokeDeclaration
+     */
+    public function getRevoke()
+    {
+        return $this->revoke;
+    }
+
+    /**
+     * @param RevokeDeclaration $revoke
+     */
+    public function setRevoke($revoke = null)
+    {
+        $this->revoke = $revoke;
+    }
+
+
+
 }

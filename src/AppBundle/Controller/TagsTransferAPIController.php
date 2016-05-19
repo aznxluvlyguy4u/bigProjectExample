@@ -128,43 +128,4 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
     return new JsonResponse($declareTagsTransfer, 200);
   }
 
-  /**
-   * Update existing DeclareTagsTranfer request
-   *
-   * @ApiDoc(
-   *   requirements={
-   *     {
-   *       "name"="AccessToken",
-   *       "dataType"="string",
-   *       "requirement"="",
-   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-   *     }
-   *   },
-   *   resource = true,
-   *   description = "Update DeclareTagsTranfer request",
-   *   input = "AppBundle\Entity\DeclareTagsTransfer",
-   *   output = "AppBundle\Entity\DeclareTagsTransfer"
-   * )
-   * @param Request $request
-   * @param int $Id Id of the DeclareTagsTransfer to be updated
-   * @return JsonResponse
-   * @Route("/{Id}")
-   * @ParamConverter("Id", class="AppBundle\Entity\DeclareTagsTransferRepository")
-   * @Method("PUT")
-   */
-  public function updateTagsTransfer(Request $request, $Id)
-  {
-    //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareTagsTransferUpdate = $this->buildEditMessageObject(RequestType::DECLARE_TAGS_TRANSFER_ENTITY,
-      $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
-
-    $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_TAGS_TRANSFER_REPOSITORY);
-    $declareTagsTransfer = $entityManager->updateDeclareTagsTransferMessage($declareTagsTransferUpdate, $Id);
-
-    if($declareTagsTransfer == null) {
-      return new JsonResponse(array("message"=>"No DeclareTagsTransfer found with request_id:" . $Id), 204);
-    }
-
-    return new JsonResponse($declareTagsTransfer, 200);
-  }
 }

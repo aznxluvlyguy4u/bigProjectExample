@@ -16,7 +16,7 @@ class DeclareArrivalResponseRepository extends BaseRepository {
      * @param $messageNumber
      * @return DeclareArrivalResponse|null
      */
-    public function getArrivalResponseByMessageNumber(Client $client, $messageNumber)
+    public function getArrivalResponseByMessageNumber($messageNumber)
     {
         return $this->getEntityManager()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY)->findOneBy(array("messageNumber"=>$messageNumber));
     }

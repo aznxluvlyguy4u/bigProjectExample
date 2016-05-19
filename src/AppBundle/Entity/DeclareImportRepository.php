@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Constant\Constant;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class DeclareImportRepository
@@ -43,5 +44,49 @@ class DeclareImportRepository extends BaseRepository {
     }
 
     return $declareImport;
+  }
+
+  /**
+   * @param Client $client
+   * @param string $state
+   * @return ArrayCollection
+   */
+  public function getImports(Client $client, $state = null)
+  {
+    $location = $client->getCompanies()->get(0)->getLocations()->get(0);
+    $retrievedImports = $location->getImports();
+
+    if($state == null) {
+      $declareImports = $retrievedImports;
+
+    } else {
+      $declareImports = new ArrayCollection();
+      foreach($retrievedImports as $retrievedImport) {
+        if($retrievedImport->getRequestState() == $state) {
+          $declareImports->add($retrievedImport);
+        }
+      }
+    }
+
+    return $declareImports;
+  }
+
+  /**
+   * @param Client $client
+   * @param string $requestId
+   * @return DeclareImport|null
+   */
+  public function getImportsById(Client $client, $requestId)
+  {
+    $imports = $this->getImports($client);
+
+    foreach($imports as $import) {
+      $foundRequestId = $import->getRequestId($requestId);
+      if($foundRequestId == $requestId) {
+        return $import;
+      }
+    }
+
+    return null;
   }
 }

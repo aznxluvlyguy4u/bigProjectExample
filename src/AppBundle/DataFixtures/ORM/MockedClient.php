@@ -27,6 +27,11 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
   static private $mockedClient;
 
   /**
+   * @var Client
+   */
+  static private $mockedClientTwo;
+
+  /**
    * @var LocationAddress
    */
   static private $mockedLocationAddress;
@@ -75,7 +80,7 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedClient->setFirstName("Bart");
     self::$mockedClient->setLastName("de Boer");
     self::$mockedClient->setEmailAddress("bart@deboer.com");
-    self::$mockedClient->setRelationNumberKeeper("203719934");
+    self::$mockedClient->setRelationNumberKeeper("203719934");  //NOTE! Echte RelationNumberKeeper nodig voor successvolle IenR melding!
     self::$mockedClient->setUsername("Bartje");
     self::$mockedClient->setPassword($encoder->encodePassword(self::$mockedClient, "blauwetexelaar"));
 
@@ -112,13 +117,63 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedLocation = new Location();
     self::$mockedLocation->setAddress(self::$mockedLocationAddress);
     self::$mockedLocation->setCompany(self::$mockedCompany);
-    self::$mockedLocation->setUbn("1674459");
+
+    self::$mockedLocation->setUbn("1674459"); //NOTE! Echte UBN nodig voor successvolle IenR melding!
 
     self::$mockedCompany->addLocation(self::$mockedLocation);
     self::$mockedClient->addCompany(self::$mockedCompany);
 
+
+    //Create mocked data ClientTwo
+    self::$mockedClientTwo = new Client();
+    self::$mockedClientTwo->setFirstName("Sarah");
+    self::$mockedClientTwo->setLastName("de Schapenherder");
+    self::$mockedClientTwo->setEmailAddress("sarah@deschapenherder.com");
+    self::$mockedClientTwo->setRelationNumberKeeper("51381121");
+    self::$mockedClientTwo->setUsername("Sarahtje");
+    self::$mockedClientTwo->setPassword($encoder->encodePassword(self::$mockedClientTwo, "super-password"));
+
+    $mockedLocationAddress = new LocationAddress();
+    $mockedLocationAddress->setAddressNumber("56");
+    $mockedLocationAddress->setCity("Sweetlake City");
+    $mockedLocationAddress->setPostalCode("2222ZZ");
+    $mockedLocationAddress->setState("ZH");
+    $mockedLocationAddress->setStreetName("Streetroadlane");
+    $mockedLocationAddress->setCountry("Nederland");
+
+    $mockedBillingAddress = new BillingAddress();
+    $mockedBillingAddress->setAddressNumber("26556");
+    $mockedBillingAddress->setCity("Den Haag");
+    $mockedBillingAddress->setPostalCode("2222PP");
+    $mockedBillingAddress->setState("ZH");
+    $mockedBillingAddress->setStreetName("Raamweg");
+    $mockedBillingAddress->setCountry("Nederland");
+
+    $mockedCompanyAddress = new CompanyAddress();
+    $mockedCompanyAddress->setAddressNumber("3");
+    $mockedCompanyAddress->setCity("Zoetermeer");
+    $mockedCompanyAddress->setPostalCode("3333XX");
+    $mockedCompanyAddress->setState("ZH");
+    $mockedCompanyAddress->setStreetName("Het Geertje");
+    $mockedCompanyAddress->setCountry("Nederland");
+
+    $mockedCompany = new Company();
+    $mockedCompany->setAddress($mockedCompanyAddress);
+    $mockedCompany->setBillingAddress($mockedBillingAddress);
+    $mockedCompany->setCompanyName("Animal Farm");
+    $mockedCompany->setOwner(self::$mockedClientTwo);
+
+    $mockedLocation = new Location();
+    $mockedLocation->setAddress($mockedLocationAddress);
+    $mockedLocation->setCompany($mockedCompany);
+    $mockedLocation->setUbn("10101011110");
+
+    $mockedCompany->addLocation($mockedLocation);
+    self::$mockedClientTwo->addCompany($mockedCompany);
+    
     //persist mocked data
     $manager->persist(self::$mockedClient);
+    $manager->persist(self::$mockedClientTwo);
     $manager->flush();
 
     echo "\r\n" .'accestoken: ' . self::$mockedClient->getAccessToken() . "\r\n\r\n";
@@ -141,6 +196,14 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
   public static function getMockedClient()
   {
     return self::$mockedClient;
+  }
+
+  /**
+   * @return Client
+   */
+  public static function getMockedClientTwo()
+  {
+    return self::$mockedClientTwo;
   }
 
   /**

@@ -40,8 +40,13 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    * @Method("GET")
    */
   public function getImportById(Request $request, $Id) {
-    $arrival = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->findOneBy(array(Constant::REQUEST_ID_NAMESPACE=>$Id));
-    return new JsonResponse($arrival, 200);
+    //TODO for phase 2: read a location from the $request and find declareImports for that location
+    $client = $this->getAuthenticatedUser($request);
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY);
+
+    $import = $repository->getImportsById($client, $Id);
+
+    return new JsonResponse($import, 200);
   }
 
   /**
@@ -81,12 +86,17 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    * @Method("GET")
    */
   public function getImports(Request $request) {
-    //No explicit filter given, thus find all
-    if(!$request->query->has(Constant::STATE_NAMESPACE)) {
-      $declareImports = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->findAll();
+    //TODO for phase 2: read a location from the $request and find declareImports for that location
+    $client = $this->getAuthenticatedUser($request);
+    $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY);
+
+    if(!$stateExists) {
+      $declareImports = $repository->getImports($client);
+
     } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareImports = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->findBy(array(Constant::REQUEST_STATE_NAMESPACE => $state));
+      $declareImports = $repository->getImports($client, $state);
     }
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareImports), 200);

@@ -47,6 +47,11 @@ class ExportMessageBuilder extends MessageBuilderBase
     $animal = $messageObject->getAnimal();
     $animal->setAnimalType(AnimalType::sheep);
 
+    //Both persist and flush are necessary for the animal
+    $animal->setIsExportAnimal(true);
+    $this->em->persist($animal);
+    $this->em->flush();
+
     //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
     $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
     return $messageObject;

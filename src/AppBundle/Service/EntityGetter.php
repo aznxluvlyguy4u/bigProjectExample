@@ -58,7 +58,7 @@ class EntityGetter
         $ulnNumberExists = array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $retrievedAnimalArray);
         $pedigreeNumberExists = array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $retrievedAnimalArray);
 
-        if($ulnNumberExists){ 
+        if($ulnNumberExists){
             $retrievedAnimal = $this->retrieveAnimalFromUln($retrievedAnimalArray);
 
             if($retrievedAnimal == null) { $retrievedAnimal = $this->createNewAnimal($declareArrayContent); }
@@ -198,9 +198,6 @@ class EntityGetter
                     $animalArray['surrogate'][Constant::GENDER_NAMESPACE] = AnimalType::FEMALE;
                     $surrogate = $this->retrieveAnimalFromAnimalArray($animalArray['surrogate']);
                     $animalObject->setSurrogate($surrogate); }
-
-                if (array_key_exists('birth_tail_length', $animalArray)) {
-                    $animalObject->setBirthTailLength($animalArray['birth_tail_length']); }
 
                 break;
 

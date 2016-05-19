@@ -2,6 +2,7 @@
 
 namespace AppBundle\Service;
 
+use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\RetrieveTags;
@@ -18,6 +19,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\Types\JsonArrayType;
 use Doctrine\ORM\EntityManager;
 use Symfony\Bundle\FrameworkBundle\Client;
 
@@ -156,24 +158,32 @@ class IRSerializer implements IRSerializerInterface
      */
     function parseDeclareBirth(ArrayCollection $declareBirthContentArray, $isEditMessage)
     {
-        $declareBirthContentArray["type"] = RequestType::DECLARE_BIRTH_ENTITY;
-
         $declareBirthRequest = null;
 
-        //TODO in this if block a new animal is created to allow switching genders. However this results in dataloss!!! Make sure to map the data from the old animal to the new one.
-        //If it's not an edit message, just retrieve animal and set animal, otherwise don't setup
-        //so the updated animal details will be persisted
+        $declareBirthContentArray["type"] = RequestType::DECLARE_BIRTH_ENTITY;
+        $animal = $declareBirthContentArray['animal'];
+        $requestId = $declareBirthContentArray['request_id'];
+
         if($isEditMessage) {
-            //denormalize the content to an object
-            $animal = $declareBirthContentArray->get(Constant::ANIMAL_NAMESPACE);
-            $animalObject = null;
 
-            //Find registered tag, through given ulnCountryCode & ulnNumber, so we can assign the tag to this animal
-            $tag = $this->entityGetter->retrieveTag($animal[Constant::ULN_COUNTRY_CODE_NAMESPACE], $animal[Constant::ULN_NUMBER_NAMESPACE]);
+            $declareBirth = $this->entityManager->getRepository(Constant::DECLARE_BASE_REPOSITORY)->findOneBy(array("requestId"=>$requestId));
+            $retrievedAnimal = $declareBirth->getAnimal();
+            $tag = $retrievedAnimal->getAssignedTag();
 
-            if($tag == null){
-                return null;
+            $ulnCountryCodeNew = $declareBirthContentArray['animal']['uln_country_code'];
+            $ulnNumberNew = $declareBirthContentArray['animal']['uln_number'];
+
+            if($tag->getUlnCountryCode()!=$ulnCountryCodeNew || $tag->getUlnNumber()!=$ulnNumberNew) {
+                $tag->setTagStatus(Constant::UNASSIGNED_NAMESPACE);
+                $tag->setAnimal(null);
+                $this->entityManager->persist($tag);
+                $this->entityManager->flush();
+                $tag = $this->entityManager->getRepository(Constant::TAG_REPOSITORY)->findOneBy(array("ulnCountryCode"=>$ulnCountryCodeNew, "ulnNumber"=>$ulnNumberNew));
             }
+
+
+            $declareBirthNew = new DeclareBirth();
+            $declareBirthNew = $declareBirth;
 
             //Create animal-type based on gender
             if(array_key_exists(Constant::GENDER_NAMESPACE, $animal)) {
@@ -193,19 +203,44 @@ class IRSerializer implements IRSerializerInterface
                 $animalObject = new Neuter();
             }
 
-            //Assign tag to this animal
-            $animalObject->setAssignedTag($tag);
+            $dateOfBirth = new \DateTime($declareBirthContentArray['date_of_birth']);
+            $animalObject->setDateOfBirth($dateOfBirth);
+            $declareBirthNew->setDateOfBirth($dateOfBirth);
 
-            //Convert to array pass animal into declareBirthContentArray
-            $animalJson = $this->serializeToJSON($animalObject);
-            $animalContentArray = json_decode($animalJson, true);
-            $declareBirthContentArray->set(Constant::ANIMAL_NAMESPACE, $animalContentArray);
-            $json = $this->serializeToJSON($declareBirthContentArray->toArray());
-            $declareBirthRequest = $this->deserializeToObject($json, RequestType::DECLARE_BIRTH_ENTITY);
+            $animalObject->setAnimalCategory($retrievedAnimal->getAnimalCategory());
+            $animalObject->setAnimalHairColour($retrievedAnimal->getAnimalHairColour());
+            $animalObject->setDateOfBirth($retrievedAnimal->getDateOfBirth());
+            //Skip date of death and setting declarations because this is a brand new animal
+            //Gender is automatically set when creating an animal
+            //
+            $animalObject->setLocation($retrievedAnimal->getLocation());
+            $animalObject->setName($retrievedAnimal->getName());
+            $animalObject->setParentFather($retrievedAnimal->getParentFather());
+            $animalObject->setParentMother($retrievedAnimal->getParentMother());
+            $animalObject->setParentNeuter($retrievedAnimal->getParentNeuter());
+            $animalObject->setPedigreeCountryCode($retrievedAnimal->getPedigreeCountryCode());
+            $animalObject->setPedigreeNumber($retrievedAnimal->getPedigreeNumber());
+            $animalObject->setSurrogate($retrievedAnimal->getSurrogate());
+//            $animalObject->setUlnCountryCode($ulnCountryCodeNew);
+//            $animalObject->setUlnNumber($ulnNumberNew);
 
-            return $declareBirthRequest;
+            $this->entityManager->remove($declareBirth);
+            $this->entityManager->flush();
+
+//            $animalObject->setAssignedTag($tag);
+            $tag->setAnimal($animalObject);
+            $tag->setTagStatus(Constant::ASSIGNED_NAMESPACE);
+            $this->entityManager->persist($tag);
+            $this->entityManager->persist($animalObject->setAssignedTag($tag));
+            $this->entityManager->flush();
+
+            $declareBirthNew->setAnimal($animalObject);
+            $this->entityManager->persist($declareBirthNew);
+            $this->entityManager->flush();
+
+            return $declareBirthNew;
+
         }
-
         //Retrieve animal entity
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareBirthContentArray);
 
@@ -338,6 +373,8 @@ class IRSerializer implements IRSerializerInterface
     {
         $declareExportContentArray["type"] = RequestType::DECLARE_EXPORT_ENTITY;
 
+        $exportDate = $declareExportContentArray['depart_date'];
+
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareExportContentArray);
 
         //Add retrieved animal properties including type to initial animalContentArray
@@ -347,8 +384,8 @@ class IRSerializer implements IRSerializerInterface
         $json = $this->serializeToJSON($declareExportContentArray);
         $declareExportRequest = $this->deserializeToObject($json, RequestType::DECLARE_EXPORT_ENTITY);
 
-        //Add retrieved animal to DeclareArrival
         $declareExportRequest->setAnimal($retrievedAnimal);
+        $declareExportRequest->setExportDate(new \DateTime($exportDate));
 
         return $declareExportRequest;
     }
@@ -360,6 +397,8 @@ class IRSerializer implements IRSerializerInterface
     {
         $declareImportContentArray["type"] = RequestType::DECLARE_IMPORT_ENTITY;
 
+        $importDate = $declareImportContentArray['arrival_date'];
+
         //Retrieve animal entity
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareImportContentArray);
 
@@ -370,8 +409,9 @@ class IRSerializer implements IRSerializerInterface
         $json = $this->serializeToJSON($declareImportContentArray);
         $declareImportRequest = $this->deserializeToObject($json, RequestType::DECLARE_IMPORT_ENTITY);
 
-        //Add retrieved animal to DeclareArrival
+        //Add retrieved animal and import date to DeclareImport
         $declareImportRequest->setAnimal($retrievedAnimal);
+        $declareImportRequest->setImportDate(new \DateTime($importDate));
 
         return $declareImportRequest;
     }

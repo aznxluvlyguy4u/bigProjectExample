@@ -46,8 +46,13 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    */
   public function getBirthById(Request $request, $Id)
   {
-    $birth = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY)->findOneBy(array(Constant::REQUEST_ID_NAMESPACE=>$Id));
-    return new JsonResponse($birth, 200);
+      //TODO for phase 2: read a location from the $request and find declareBirths for that location
+      $client = $this->getAuthenticatedUser($request);
+      $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
+
+      $export = $repository->getBirthsById($client, $Id);
+
+      return new JsonResponse($export, 200);
   }
 
   /**
@@ -88,15 +93,20 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    */
   public function getBirths(Request $request)
   {
-    //No explicit filter given, thus find all
-    if(!$request->query->has(Constant::STATE_NAMESPACE)) {
-      $declareBirths = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY)->findAll();
-    } else { //A state parameter was given, use custom filter to find subset
-      $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareBirths = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY)->findBy(array(Constant::REQUEST_STATE_NAMESPACE => $state));
-    }
+      //TODO for phase 2: read a location from the $request and find declareBirths for that location
+      $client = $this->getAuthenticatedUser($request);
+      $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
+      $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareBirths), 200);
+      if(!$stateExists) {
+          $declareBirths = $repository->getBirths($client);
+
+      } else { //A state parameter was given, use custom filter to find subset
+          $state = $request->query->get(Constant::STATE_NAMESPACE);
+          $declareBirths = $repository->getBirths($client, $state);
+      }
+
+      return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareBirths), 200);
   }
 
   /**
@@ -146,12 +156,12 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     $returnMessages = new ArrayCollection();
 
     foreach($children as $child) {
-        
+
         $ulnNumber = $child[Constant::ULN_NUMBER_NAMESPACE];
         $ulnCountryCode = $child[Constant::ULN_COUNTRY_CODE_NAMESPACE];
 
         $tag = $this->getEntityGetter()->retrieveTag($ulnCountryCode, $ulnNumber);
-
+       
         if($tag->getTagStatus() == Constant::ASSIGNED_NAMESPACE){
             //TODO redirect to error table / save the incorrect input (?)
             return new JsonResponse(array("Tag already in use", 200), 200);
@@ -200,6 +210,20 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    */
   public function updateBirth(Request $request, $Id) {
 
+      $content = $this->getContentAsArray($request);
+
+      $client = $this->getAuthenticatedUser($request);
+      $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
+      $declareBirth = $entityManager->getBirthsById($client, $content->get("request_id"));
+
+      if($declareBirth == null) {
+          $message = 'no message found for the given requestId';
+          $messageArray = array('code'=>400, "message" => $message);
+
+          return new JsonResponse($messageArray, 400);
+      }
+
+      //TODO Phase 2: Minimize validity check for all controllers
       $validityCheckUlnOrPedigree = $this->isUlnOrPedigreeCodeValid($request);
       $isValid = $validityCheckUlnOrPedigree['isValid'];
 
@@ -212,17 +236,35 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
           return new JsonResponse($messageArray, 428);
       }
 
+
+      //Validate if tag is available
+      $ulnCountryCode = $content->get('animal')['uln_country_code'];
+      $ulnNumber = $content->get('animal')['uln_number'];
+      $query = array("ulnCountryCode"=>$ulnCountryCode, "ulnNumber"=>$ulnNumber);
+      $retrievedTag = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY)->findOneBy($query);
+
+      $tagIsNotAvailable = $retrievedTag->getTagStatus()!=Constant::UNASSIGNED_NAMESPACE;
+
+
+      $tagUsedByAnimalToBeDeletedInUpdate = $declareBirth->getAnimal()->getAssignedTag() == $retrievedTag;
+
+      if($tagIsNotAvailable && !$tagUsedByAnimalToBeDeletedInUpdate) {
+          $message = 'Tag is already assigned';
+          $messageArray = array('code'=>400, "message" => $message);
+
+          return new JsonResponse($messageArray, 400);
+      }
+
       //Convert the array into an object and add the mandatory values retrieved from the database
       $declareBirthUpdate = $this->buildEditMessageObject(RequestType::DECLARE_BIRTH_ENTITY,
-          $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+          $content, $this->getAuthenticatedUser($request));
 
-      $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
-      $declareBirth = $entityManager->updateDeclareBirthMessage($declareBirthUpdate, $Id);
+      //First Persist object to Database, before sending it to the queue
+      $this->persist($declareBirthUpdate, RequestType::DECLARE_BIRTH_ENTITY);
 
-        if($declareBirth == null) {
-          return new JsonResponse(array("message"=>"No DeclareBirth found with request_id:" . $Id), 204);
-        }
+      //Send it to the queue and persist/update any changed state to the database
+      $this->sendMessageObjectToQueue($declareBirthUpdate, RequestType::DECLARE_BIRTH_ENTITY, RequestType::DECLARE_BIRTH);
 
-    return new JsonResponse($declareBirth, 200);
+    return new JsonResponse($declareBirthUpdate, 200);
   }
 }

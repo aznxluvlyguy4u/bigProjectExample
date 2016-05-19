@@ -40,7 +40,12 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
    * @Method("GET")
    */
   public function getExportById(Request $request, $Id) {
-    $export = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->findOneBy(array(Constant::REQUEST_ID_NAMESPACE=>$Id));
+    //TODO for phase 2: read a location from the $request and find declareExports for that location
+    $client = $this->getAuthenticatedUser($request);
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY);
+
+    $export = $repository->getExportsById($client, $Id);
+
     return new JsonResponse($export, 200);
   }
 
@@ -81,12 +86,17 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
    * @Method("GET")
    */
   public function getExports(Request $request) {
-    //No explicit filter given, thus find all
-    if(!$request->query->has(Constant::STATE_NAMESPACE)) {
-      $declareExports = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY)->findAll();
+    //TODO for phase 2: read a location from the $request and find declareExports for that location
+    $client = $this->getAuthenticatedUser($request);
+    $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY);
+
+    if(!$stateExists) {
+      $declareExports = $repository->getExports($client);
+
     } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareExports = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY)->findBy(array(Constant::REQUEST_STATE_NAMESPACE => $state));
+      $declareExports = $repository->getExports($client, $state);
     }
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareExports), 200);
@@ -115,10 +125,19 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
    * @Method("POST")
    */
   public function createExport(Request $request) {
-    //Validate uln/pedigree code
-    if(!$this->isUlnOrPedigreeCodeValid($request)) {
-      return new JsonResponse(array("error_code" => 428, "error_message"=>"Given Uln & Country code is invalid, it is not registered to a known Tag"), 428);
+    //Validity check
+    $validityCheckUlnOrPedigiree= $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $messageArray = array('code'=>428, "message" => $message);
+
+      return new JsonResponse($messageArray, 428);
     }
+
     //Get content to array
     $content = $this->getContentAsArray($request);
 
@@ -159,7 +178,7 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
    */
   public function updateExport(Request $request, $Id) {
     //Validate uln/pedigree code
-    if(!$this->isUlnOrPedigreeCodeValid($request)) {
+    if(!$this->isUlnOrPedigreeCodeValid($request)['isValid']) {
       return new JsonResponse(array("error_code" => 428, "error_message"=>"Given Uln & Country code is invalid, it is not registered to a known Tag"), 428);
     }
 
@@ -172,6 +191,13 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
 
     if($declareExport == null) {
       return new JsonResponse(array("message"=>"No DeclareExport found with request_id:" . $Id), 204);
+    } else {
+
+      //First Persist object to Database, before sending it to the queue
+      $this->persist($declareExport, RequestType::DECLARE_EXPORT_ENTITY);
+
+      //Send it to the queue and persist/update any changed state to the database
+      $this->sendMessageObjectToQueue($declareExport, RequestType::DECLARE_EXPORT_ENTITY, RequestType::DECLARE_EXPORT);
     }
 
     return new JsonResponse($declareExport, 200);
