@@ -50,6 +50,7 @@ class ImportMessageBuilder extends MessageBuilderBase
   {
     $animal = $messageObject->getAnimal();
     $animal->setAnimalType(AnimalType::sheep);
+    $animal->setAnimalCountryOrigin($messageObject->getAnimalCountryOrigin());
 
     //Both persist and flush are necessary for the animal
     $this->em->persist($animal);
