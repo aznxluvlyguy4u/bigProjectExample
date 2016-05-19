@@ -38,7 +38,7 @@ class TagSyncMessageBuilder extends MessageBuilderBase {
   public function buildMessage(RetrieveTags $messageObject, Person $person)
   {
     $this->person = $person;
-    $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
+    $baseMessageObject = $this->buildBaseRetrieveMessageObject($messageObject, $person);
     $completeMessageObject = $this->addRetrieveEartagsData($baseMessageObject);
 
     return $completeMessageObject;

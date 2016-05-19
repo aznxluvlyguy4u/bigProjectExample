@@ -386,8 +386,6 @@ class IRSerializer implements IRSerializerInterface
      */
     function parseRetrieveTags(ArrayCollection $contentArray, $isEditMessage)
     {
-        $contentArray["type"] = RequestType::RETRIEVE_TAGS_ENTITY;
-
         $retrieveTags = new RetrieveTags();
 
         //No custom filter content given, revert to default values
