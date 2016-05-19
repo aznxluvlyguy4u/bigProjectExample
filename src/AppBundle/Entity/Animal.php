@@ -285,6 +285,13 @@ abstract class Animal
     private $isDepartedAnimal;
 
     /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $animalCountryOrigin;
+
+    /**
      * Animal constructor.
      */
     public function __construct() {
@@ -1103,5 +1110,29 @@ abstract class Animal
     public function getIsDepartedAnimal()
     {
         return $this->isDepartedAnimal;
+    }
+
+    /**
+     * Set animalCountryOrigin
+     *
+     * @param string $animalCountryOrigin
+     *
+     * @return Animal
+     */
+    public function setAnimalCountryOrigin($animalCountryOrigin)
+    {
+        $this->animalCountryOrigin = $animalCountryOrigin;
+
+        return $this;
+    }
+
+    /**
+     * Get animalCountryOrigin
+     *
+     * @return string
+     */
+    public function getAnimalCountryOrigin()
+    {
+        return $this->animalCountryOrigin;
     }
 }
