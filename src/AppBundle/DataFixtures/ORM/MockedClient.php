@@ -171,7 +171,6 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedClientTwo->addCompany($mockedCompany);
     
     //persist mocked data
-    $manager->persist(self::$mockedClient);
     $manager->persist(self::$mockedClientTwo);
     $manager->flush();
   }

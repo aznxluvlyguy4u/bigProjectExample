@@ -65,11 +65,16 @@ class MockedTags implements FixtureInterface, ContainerAwareInterface, OrderedFi
       $tag->setAnimalOrderNumber($randomAnimalOrderNumber);
       $tag->setUlnNumber($randomUln);
       $tag->setUlnCountryCode("NL");
-
+      $tag->setOwner(MockedClient::getMockedClient());
       self::$mockedTags->add($tag);
 
       //Persist mocked data
       $manager->persist($tag);
+
+
+//      MockedClient::getMockedClient()->addTag($tag);
+//      $manager->persist(MockedClient::getMockedClient());
+//      $manager->flush();
     }
     $manager->flush();
   }

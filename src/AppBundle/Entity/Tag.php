@@ -8,6 +8,7 @@ use JMS\Serializer\Annotation\Expose;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class Tag
@@ -119,6 +120,13 @@ class Tag {
    * @Expose
    */
   private $animal;
+
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Client", inversedBy="tags", cascade={"persist"})
+     * @ORM\JoinColumn(name="owner_id", referencedColumnName="id")
+     */
+    private $owner;
 
   /**
    * @var DeclareTagsTransfer
@@ -388,5 +396,29 @@ class Tag {
     public function getDeclareTagsTransferRequestMessage()
     {
         return $this->declareTagsTransferRequestMessage;
+    }
+
+    /**
+     * Set owner
+     *
+     * @param \AppBundle\Entity\Client $owner
+     *
+     * @return Tag
+     */
+    public function setOwner(\AppBundle\Entity\Client $owner = null)
+    {
+        $this->owner = $owner;
+
+        return $this;
+    }
+
+    /**
+     * Get owner
+     *
+     * @return \AppBundle\Entity\Client
+     */
+    public function getOwner()
+    {
+        return $this->owner;
     }
 }

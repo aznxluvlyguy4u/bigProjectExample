@@ -41,6 +41,14 @@ class Client extends Person
   private $companies;
 
   /**
+   * @var ArrayCollection
+   *
+   * @ORM\OneToMany(targetEntity="Tag", mappedBy="owner", cascade={"persist"})
+   * @JMS\Type("array")
+   */
+  private $tags;
+
+  /**
    * Constructor
    */
   public function __construct()
@@ -50,7 +58,26 @@ class Client extends Person
 
     $this->objectType = "Client";
     $this->companies = new ArrayCollection();
+    $this->tags = new ArrayCollection();
   }
+
+  /**
+   * @return ArrayCollection
+   */
+  public function getTags()
+  {
+    return $this->tags;
+  }
+
+  /**
+   * @param ArrayCollection $tags
+   */
+  public function setTags($tags)
+  {
+    $this->tags = $tags;
+  }
+
+
 
   /**
    * Set relationNumberKeeper
@@ -181,4 +208,28 @@ class Client extends Person
   {
     return $this->objectType;
   }
+
+    /**
+     * Add tag
+     *
+     * @param \AppBundle\Entity\Tag $tag
+     *
+     * @return Client
+     */
+    public function addTag(\AppBundle\Entity\Tag $tag)
+    {
+        $this->tags[] = $tag;
+
+        return $this;
+    }
+
+    /**
+     * Remove tag
+     *
+     * @param \AppBundle\Entity\Tag $tag
+     */
+    public function removeTag(\AppBundle\Entity\Tag $tag)
+    {
+        $this->tags->removeElement($tag);
+    }
 }
