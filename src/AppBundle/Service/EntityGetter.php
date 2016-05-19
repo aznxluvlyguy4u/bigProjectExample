@@ -136,12 +136,6 @@ class EntityGetter
 
         $animal = $this->mapArrayValuesToAnimal($animal, $animalArray, $declareContentArray);
 
-
-        //Persist the new Ram/Ewe/Neuter with an unregistered Tag
-        $this->entityManager->persist($animal);
-        //$this->entityManager->persist($tag);
-        $this->entityManager->flush();
-
         return $animal;
     }
 
@@ -404,12 +398,6 @@ class EntityGetter
         if (array_key_exists('location', $animalArray)) {
             $location = $locationRepository->findByLocationArray($animalArray['location']);
             $animal->setLocation($location); }
-
-
-        //Persist the new Ram/Ewe/Neuter with an unregistered Tag
-        $this->entityManager->persist($animal);
-        //$this->entityManager->persist($tag);
-        $this->entityManager->flush();
 
         return $animal;
     }

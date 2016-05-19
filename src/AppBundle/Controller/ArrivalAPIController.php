@@ -156,14 +156,15 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       //Convert the array into an object and add the mandatory values retrieved from the database
       $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $this->getAuthenticatedUser($request));
 
-      //First Persist object to Database, before sending it to the queue
-      $this->persist($messageObject, RequestType::DECLARE_ARRIVAL_ENTITY);
-
       //Send it to the queue and persist/update any changed state to the database
       $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_ARRIVAL);
+
+      //First Persist object to Database, before sending it to the queue
+      $messageObject->setAnimal(null);
+      $this->persist($messageObject, RequestType::DECLARE_ARRIVAL_ENTITY);
     }
 
-    return new JsonResponse($messageObject, 200);
+    return new JsonResponse(array("status"=>"sent"), 200);
   }
 
   /**
