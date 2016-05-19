@@ -16,16 +16,4 @@ interface TagsTransferAPIControllerInterface
    */
   public function createTagsTransfer(Request $request);
 
-  /**
-   * @param Request $request
-   * @return mixed
-   */
-  public function getTagsTransferById(Request $request, $Id);
-
-  /**
-   * @param Request $request
-   * @return mixed
-   */
-  public function getTagsTransfers(Request $request);
-
 }
