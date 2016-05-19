@@ -155,6 +155,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
     $returnMessages = new ArrayCollection();
 
+    //Validate ALL children's ULN's BEFORE persisting any animal at all
     foreach($children as $child) {
 
         $ulnNumber = $child[Constant::ULN_NUMBER_NAMESPACE];
@@ -164,8 +165,12 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
        
         if($tag->getTagStatus() == Constant::ASSIGNED_NAMESPACE){
             //TODO redirect to error table / save the incorrect input (?)
-            return new JsonResponse(array("Tag already in use", 200), 200);
+            $message = "Tag " . $ulnCountryCode . $ulnNumber . " for child already in use";
+            return new JsonResponse(array($message, 200), 200);
         }
+    }
+
+    foreach($children as $child) {
 
         $contentPerChild = $contentWithoutChildren;
         $contentPerChild->set('animal', $child);
@@ -180,7 +185,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $this->sendMessageObjectToQueue($declareBirthObject, RequestType::DECLARE_BIRTH_ENTITY, RequestType::DECLARE_BIRTH);
 
         $returnMessages->add($declareBirthObject);
-    }
+      }
 
     return new JsonResponse($returnMessages, 200);
   }
