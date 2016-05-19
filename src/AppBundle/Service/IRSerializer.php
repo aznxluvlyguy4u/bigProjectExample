@@ -15,6 +15,7 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Animal;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
@@ -138,17 +139,28 @@ class IRSerializer implements IRSerializerInterface
         $declareArrivalContentArray["type"] = RequestType::DECLARE_ARRIVAL_ENTITY;
 
         //Retrieve animal entity
-        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray);
+        if($isEditMessage){
+            $requestId = $declareArrivalContentArray['request_id'];
+            $declareArrivalRequest = $this->entityManager->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findOneBy(array("requestId"=>$requestId));
 
-        //Add retrieved animal properties including type to initial animalContentArray
-        $declareArrivalContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
+            //Update values here
+            $declareArrivalRequest->setArrivalDate(new \DateTime($declareArrivalContentArray['arrival_date']));
+            $declareArrivalRequest->setUbnPreviousOwner($declareArrivalContentArray['ubn_previous_owner']);
+            $declareArrivalRequest->setRequestState(RequestStateType::OPEN);
 
-        //denormalize the content to an object
-        $json = $this->serializeToJSON($declareArrivalContentArray);
-        $declareArrivalRequest = $this->deserializeToObject($json, RequestType::DECLARE_ARRIVAL_ENTITY);
+        } else {
+            $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray);
 
-        //Add retrieved animal to DeclareArrival
-        $declareArrivalRequest->setAnimal($retrievedAnimal);
+            //Add retrieved animal properties including type to initial animalContentArray
+            $declareArrivalContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
+
+            //denormalize the content to an object
+            $json = $this->serializeToJSON($declareArrivalContentArray);
+            $declareArrivalRequest = $this->deserializeToObject($json, RequestType::DECLARE_ARRIVAL_ENTITY);
+
+            //Add retrieved animal to DeclareArrival
+            $declareArrivalRequest->setAnimal($retrievedAnimal);
+        }
 
         return $declareArrivalRequest;
     }

@@ -205,37 +205,12 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function updateArrival(Request $request) {
 
-    //Valitidy check
     $content = $this->getContentAsArray($request);
     $requestId = $content->get('request_id');
 
-      if(array_key_exists("uln_country_code", $content['animal']) &&
-          array_key_exists("uln_number", $content['animal']) &&
-          array_key_exists("pedigree_country_code", $content['animal']) &&
-          array_key_exists("pedigree_number", $content['animal'])) {
-
-          $ulnSize = sizeof($content['animal']['uln_country_code']) + sizeof($content['animal']['uln_number']);
-          $pedigreeSize = sizeof($content['animal']['pedigree_country_code']) + sizeof($content['animal']['pedigree_number']);
-
-          if ($ulnSize > 0 && $pedigreeSize > 0) {
-              return new JsonResponse(array('code' => 428, "message" => "fill in either pedigree or uln, not both"), 428);
-          }
-      }
-
-    //Validity check
-    $validityCheckUlnOrPedigiree = $this->isUlnOrPedigreeCodeValid($request);
-    $isValid = $validityCheckUlnOrPedigiree['isValid'];
-
-    if(!$isValid) {
-      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
-      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
-      $message = $keyType . ' of ' . $animalKind . ' not found.';
-      $messageArray = array('code'=>428, "message" => $message);
-
-      return new JsonResponse($messageArray, 428);
-    }
-
-    $isImportAnimal = $content->get('is_import_animal');
+    //TODO Add verification requestId filter
+    $declareArrivalOrImport = $this->getDoctrine()->getRepository(Constant::DECLARE_BASE_REPOSITORY)->findOneBy(array("requestId"=>$requestId));
+    $isImportAnimal = $declareArrivalOrImport->getIsImportAnimal();
 
     if($isImportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database
@@ -259,21 +234,19 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     } else {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $declareArrivalUpdate = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY,
+      $declareArrival = $this->buildEditMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY,
           $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
-
-      $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
-      $declareArrival = $entityManager->updateDeclareArrivalMessage($declareArrivalUpdate, $requestId);
 
       if($declareArrival == null) {
         return new JsonResponse(array("message"=>"No DeclareArrival found with request_id:" . $requestId), 204);
       }
 
-      //First Persist object to Database, before sending it to the queue
-      $this->persist($declareArrival, RequestType::DECLARE_ARRIVAL_ENTITY);
-
       //Send it to the queue and persist/update any changed state to the database
       $this->sendMessageObjectToQueue($declareArrival, RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_ARRIVAL);
+
+      //First Persist object to Database, before sending it to the queue
+      $declareArrival->setAnimal(null);
+      $this->persist($declareArrival, RequestType::DECLARE_ARRIVAL_ENTITY);
 
       return new JsonResponse($declareArrival, 200);
     }
