@@ -108,9 +108,10 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
 
       $declareArrivals = new ArrayCollection();
-      foreach($repository->getArrivals($client, RequestStateType::OPEN) as $arrival) {
-        $declareArrivals->add($arrival);
-      }
+      //TODO Front-end cannot accept messages without animal ULN/Pedigree
+//      foreach($repository->getArrivals($client, RequestStateType::OPEN) as $arrival) {
+//        $declareArrivals->add($arrival);
+//      }
       foreach($repository->getArrivals($client, RequestStateType::REVOKING) as $arrival) {
         $declareArrivals->add($arrival);
       }
@@ -245,7 +246,6 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       $this->sendMessageObjectToQueue($declareArrival, RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_ARRIVAL);
 
       //First Persist object to Database, before sending it to the queue
-      $declareArrival->setAnimal(null);
       $this->persist($declareArrival, RequestType::DECLARE_ARRIVAL_ENTITY);
 
       return new JsonResponse($declareArrival, 200);
