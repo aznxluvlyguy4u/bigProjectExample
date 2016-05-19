@@ -14,7 +14,7 @@ use Doctrine\Common\Collections\ArrayCollection;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\RetrieveTagsRepository")
  * @package AppBundle\Entity
  */
-class RetrieveTags extends DeclareBase
+class RetrieveTags
 {
     /**
      * @Assert\NotBlank

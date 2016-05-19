@@ -12,7 +12,7 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\RetrieveTagsResponseRepository")
  * @package AppBundle\Entity
  */
-class RetrieveTagsResponse extends DeclareBaseResponse {
+class RetrieveTagsResponse {
 
     /**
      * @var RetrieveTags
