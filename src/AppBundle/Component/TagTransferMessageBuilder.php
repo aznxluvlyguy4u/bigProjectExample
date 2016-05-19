@@ -3,9 +3,11 @@
 namespace AppBundle\Component;
 
 use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Enumerator\TagStateType;
 use Doctrine\ORM\EntityManager;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
+use Proxies\__CG__\AppBundle\Entity\Tag;
 
 /**
  * Class TagTransferMessageBuilder
@@ -50,6 +52,12 @@ class TagTransferMessageBuilder extends MessageBuilderBase {
    */
   private function addDeclareEartagsTransferData(DeclareTagsTransfer $messageObject)
   {
+    foreach($messageObject->getTags() as $tag) {
+      $tag->setTagStatus(TagStateType::TRANSFERRING_TO_NEW_OWNER);
+      $this->em->persist($tag);
+      $this->em->flush();
+    }
+
     //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
     $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
     return $messageObject;
