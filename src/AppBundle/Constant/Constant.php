@@ -42,6 +42,7 @@ class Constant
     const UBN_NAMESPACE = 'ubn';
     const GENDER_NAMESPACE = 'gender';
     const ANIMAL_ORDER_NUMBER_NAMESPACE = 'animal_order_number';
+    const UBN_NEW_OWNER_NAMESPACE = 'ubn_new_owner';
 
     const DATE_OF_BIRTH_NAMESPACE  = 'date_of_birth';
     const DATE_OF_DEATH_NAMESPACE  = 'date_of_death';

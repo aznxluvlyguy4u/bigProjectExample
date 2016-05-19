@@ -297,48 +297,13 @@ class IRSerializer implements IRSerializerInterface
         $tagsRepository = $this->entityManager->getRepository(Constant::DECLARE_TAGS_TRANSFER_REPOSITORY);
 
         //Set relationNumberAcceptant
-        if($contentArray->containsKey(Constant::RELATION_NUMBER_ACCEPTANT_SNAKE_CASE_NAMESPACE)) {
-            $declareTagsTransfer->setRelationNumberAcceptant($contentArray[Constant::RELATION_NUMBER_ACCEPTANT_SNAKE_CASE_NAMESPACE]);
-        }
-
-        //Add Tag(s)
-        if($contentArray->containsKey(Constant::TAGS_NAMESPACE)) {
-            $tagsContentArray = $contentArray[Constant::TAGS_NAMESPACE];
-
-            // Check if each tagItem has a ulnNumber and ulnCountryCode, so we can retrieve it from database
-            foreach($tagsContentArray as $tagItem) {
-                if(array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $tagItem) && array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $tagItem) ) {
-
-                    //Fetch tag from database
-                    $fetchedTag = $this->entityGetter->retrieveTag($tagItem[Constant::ULN_COUNTRY_CODE_NAMESPACE], $tagItem[Constant::ULN_NUMBER_NAMESPACE]);
-
-                    switch($fetchedTag->getTagStatus()) {
-                        case TagStateType::UNASSIGNED:
-                            //Ensure tag is not assigned
-                            if($fetchedTag->getAnimal() == null) {
-                                //Set tagState to transferring, save to database
-                                $fetchedTag->setTagStatus(TagStateType::TRANSFERRING_TO_NEW_OWNER);
-                                $tagsRepository->update($fetchedTag);
-
-                                $declareTagsTransfer->addTag($fetchedTag);
-                            }
-                            break;
-                        case TagStateType::ASSIGNED:
-                            //TODO - what to do when a Tag to be transferred is already assigned to an Animal?
-                        break;
-                        case TagStateType::TRANSFERRING_TO_NEW_OWNER || TagStateType::TRANSFERRED_TO_NEW_OWNER:
-                            //TODO - what to do when a Tag to be transferred is already in transfer or is already transferred?
-                            break;
-                        default:
-                            break;
-
-                    }
-                }
-            }
+        $declareTagsTransfer->setRelationNumberAcceptant($contentArray[Constant::UBN_NEW_OWNER_NAMESPACE]);
 
 
-            $fetchedTag = null;
-        }
+        //Fetch tag from database
+        $fetchedTag = $this->entityGetter->retrieveTag($contentArray[Constant::ULN_COUNTRY_CODE_NAMESPACE], $contentArray[Constant::ULN_NUMBER_NAMESPACE]);
+
+        $declareTagsTransfer->addTag($fetchedTag);
 
         return $declareTagsTransfer;
     }

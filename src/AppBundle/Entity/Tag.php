@@ -121,6 +121,13 @@ class Tag {
    */
   private $animal;
 
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Client", inversedBy="tags", cascade={"persist"})
+     * @ORM\JoinColumn(name="owner_id", referencedColumnName="id")
+     */
+    private $owner;
+
   /**
    * @var DeclareTagsTransfer
    * @Assert\NotBlank
@@ -377,7 +384,19 @@ class Tag {
      */
     public function setAnimal(\AppBundle\Entity\Animal $animal = null)
     {
-        $this->animal = $animal;
+      $this->animal = $animal;
+    }
+
+    /* Set owner
+     *
+     * @param \AppBundle\Entity\Client $owner
+     *
+     * @return Tag
+     */
+
+    public function setOwner(\AppBundle\Entity\Client $owner = null)
+    {
+        $this->owner = $owner;
 
         return $this;
     }
@@ -389,6 +408,16 @@ class Tag {
      */
     public function getAnimal()
     {
-        return $this->animal;
+      return $this->animal;
+    }
+
+    /*
+     * Get owner
+     *
+     * @return \AppBundle\Entity\Client
+     */
+    public function getOwner()
+    {
+        return $this->owner;
     }
 }
