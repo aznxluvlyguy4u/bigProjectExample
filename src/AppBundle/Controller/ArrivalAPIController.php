@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
@@ -103,6 +104,19 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     if(!$stateExists) {
       $declareArrivals = $repository->getArrivals($client);
+
+    } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
+
+      $declareArrivals = new ArrayCollection();
+      foreach($repository->getArrivals($client, RequestStateType::OPEN) as $arrival) {
+        $declareArrivals->add($arrival);
+      }
+      foreach($repository->getArrivals($client, RequestStateType::REVOKING) as $arrival) {
+        $declareArrivals->add($arrival);
+      }
+      foreach($repository->getArrivals($client, RequestStateType::FINISHED) as $arrival) {
+        $declareArrivals->add($arrival);
+      }
 
     } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(Constant::STATE_NAMESPACE);

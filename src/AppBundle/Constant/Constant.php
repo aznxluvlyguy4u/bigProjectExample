@@ -39,6 +39,7 @@ class Constant
     const PEDIGREE_COUNTRY_CODE_NAMESPACE = "pedigree_country_code";
     const PEDIGREE_NAMESPACE = 'pedigree';
     const ULN_NAMESPACE = 'uln';
+    const HISTORY_NAMESPACE = 'history';
     const UBN_NAMESPACE = 'ubn';
     const GENDER_NAMESPACE = 'gender';
     const ANIMAL_ORDER_NUMBER_NAMESPACE = 'animal_order_number';
