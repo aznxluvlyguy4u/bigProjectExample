@@ -133,6 +133,7 @@ class RetrieveUBNDetails
     public function setRequestId($requestId)
     {
         $this->requestId = $requestId;
+        $this->setMessageId($requestId);
 
         return $this;
     }
@@ -277,6 +278,7 @@ class RetrieveUBNDetails
     public function setLocation(\AppBundle\Entity\Location $location = null)
     {
         $this->location = $location;
+        $this->setUbn($location->getUbn());
 
         return $this;
     }
