@@ -25,12 +25,7 @@ use \DateTime;
  *      "DeclareExportResponse" = "DeclareExportResponse",
  *      "DeclareAnimalFlagResponse" = "DeclareAnimalFlagResponse",
  *      "DeclareTagsTransferResponse" = "DeclareTagsTransferResponse",
- *      "RevokeDeclarationResponse" = "RevokeDeclarationResponse",
- *      "RetrieveTagsResponse" = "RetrieveTagsResponse",
- *      "RetrieveAnimalsResponse" = "RetrieveAnimalsResponse",
- *      "RetrieveAnimalDetailsResponse" = "RetrieveAnimalDetailsResponse",
- *      "RetrieveEuropeanCountriesResponse" = "RetrieveEuropeanCountriesResponse",
- *      "RetrieveUBNDetailsResponse" = "RetrieveUBNDetailsResponse"
+ *      "RevokeDeclarationResponse" = "RevokeDeclarationResponse"
  *   }
  * )
  * @package AppBundle\Entity\DeclareBaseResponse
