@@ -7,7 +7,6 @@ use AppBundle\Enumerator\TagStateType;
 use Doctrine\ORM\EntityManager;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
-use Proxies\__CG__\AppBundle\Entity\Tag;
 
 /**
  * Class TagTransferMessageBuilder
