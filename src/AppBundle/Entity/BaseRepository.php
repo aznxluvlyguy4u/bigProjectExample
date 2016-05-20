@@ -24,4 +24,33 @@ class BaseRepository extends EntityRepository
 
         return $entity;
     }
+
+    protected function getRequests($requests, $state = null)
+    {
+        if($state == null) {
+            return $requests;
+
+        } else {
+            $filteredRequests = new ArrayCollection();
+            foreach($requests as $request) {
+                if($request->getRequestState() == $state) {
+                    $filteredRequests->add($request);
+                }
+            }
+        }
+
+        return $filteredRequests;
+    }
+    
+    protected function getRequestsById($requests, $requestId)
+    {
+        foreach($requests as $request) {
+            $foundRequestId = $request->getRequestId($requestId);
+            if($foundRequestId == $requestId) {
+                return $request;
+            }
+        }
+
+        return null;
+    }
 }

@@ -21,19 +21,7 @@ class DeclareBirthRepository extends BaseRepository {
     $location = $client->getCompanies()->get(0)->getLocations()->get(0);
     $retrievedBirths = $location->getBirths();
 
-    if($state == null) {
-      $declareBirths = $retrievedBirths;
-
-    } else {
-      $declareBirths = new ArrayCollection();
-      foreach($retrievedBirths as $retrievedBirth) {
-        if($retrievedBirth->getRequestState() == $state) {
-          $declareBirths->add($retrievedBirth);
-        }
-      }
-    }
-
-    return $declareBirths;
+    return $this->getRequests($retrievedBirths, $state);
   }
 
   /**
@@ -45,13 +33,6 @@ class DeclareBirthRepository extends BaseRepository {
   {
     $births = $this->getBirths($client);
 
-    foreach($births as $birth) {
-      $foundRequestId = $birth->getRequestId($requestId);
-      if($foundRequestId == $requestId) {
-        return $birth;
-      }
-    }
-
-    return null;
+    return $this->getRequestsById($births, $requestId);
   }
 }

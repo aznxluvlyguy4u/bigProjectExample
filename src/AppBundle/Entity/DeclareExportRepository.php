@@ -48,19 +48,7 @@ class DeclareExportRepository extends BaseRepository {
     $location = $client->getCompanies()->get(0)->getLocations()->get(0);
     $retrievedExports = $location->getExports();
 
-    if($state == null) {
-      $declareExports = $retrievedExports;
-
-    } else {
-      $declareExports = new ArrayCollection();
-      foreach($retrievedExports as $retrievedImport) {
-        if($retrievedImport->getRequestState() == $state) {
-          $declareExports->add($retrievedImport);
-        }
-      }
-    }
-
-    return $declareExports;
+    return $this->getRequests($retrievedExports, $state);
   }
 
   /**
@@ -72,13 +60,6 @@ class DeclareExportRepository extends BaseRepository {
   {
     $exports = $this->getExports($client);
 
-    foreach($exports as $export) {
-      $foundRequestId = $export->getRequestId($requestId);
-      if($foundRequestId == $requestId) {
-        return $export;
-      }
-    }
-
-    return null;
+    return $this->getRequestsById($exports, $requestId);
   }
 }

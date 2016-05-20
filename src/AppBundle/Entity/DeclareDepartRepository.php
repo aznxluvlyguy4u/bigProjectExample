@@ -52,19 +52,7 @@ class DeclareDepartRepository extends BaseRepository {
     $location = $client->getCompanies()->get(0)->getLocations()->get(0);
     $retrievedDeparts = $location->getDepartures();
 
-    if($state == null) {
-      $declareDeparts = $retrievedDeparts;
-
-    } else {
-      $declareDeparts = new ArrayCollection();
-      foreach($retrievedDeparts as $retrievedDepart) {
-        if($retrievedDepart->getRequestState() == $state) {
-          $declareDeparts->add($retrievedDepart);
-        }
-      }
-    }
-
-    return $declareDeparts;
+    return $this->getRequests($retrievedDeparts, $state);
   }
 
   /**
@@ -76,13 +64,6 @@ class DeclareDepartRepository extends BaseRepository {
   {
     $departs = $this->getDepartures($client);
 
-    foreach($departs as $depart) {
-      $foundRequestId = $depart->getRequestId($requestId);
-      if($foundRequestId == $requestId) {
-        return $depart;
-      }
-    }
-
-    return null;
+    return $this->getRequestsById($departs, $requestId);
   }
 }

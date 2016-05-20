@@ -22,19 +22,7 @@ class DeclareArrivalRepository extends BaseRepository
     $location = $client->getCompanies()->get(0)->getLocations()->get(0);
     $retrievedArrivals = $location->getArrivals();
 
-    if($state == null) {
-      $declareArrivals = $retrievedArrivals;
-
-    } else {
-      $declareArrivals = new ArrayCollection();
-      foreach($retrievedArrivals as $retrievedArrival) {
-        if($retrievedArrival->getRequestState() == $state) {
-          $declareArrivals->add($retrievedArrival);
-        }
-      }
-    }
-
-    return $declareArrivals;
+    return $this->getRequests($retrievedArrivals, $state);
   }
 
   /**
@@ -46,14 +34,7 @@ class DeclareArrivalRepository extends BaseRepository
   {
     $arrivals = $this->getArrivals($client);
 
-    foreach($arrivals as $arrival) {
-      $foundRequestId = $arrival->getRequestId($requestId);
-      if($foundRequestId == $requestId) {
-        return $arrival;
-      }
-    }
-
-    return null;
+    return $this->getRequestsById($arrivals, $requestId);
   }
 
 }

@@ -19,37 +19,62 @@ class DeclareLossRepository extends BaseRepository {
         $location = $client->getCompanies()->get(0)->getLocations()->get(0);
         $retrievedLosses = $location->getLosses();
 
-        if($state == null) {
-            $declareLosses = $retrievedLosses;
-
-        } else {
-            $declareLosses = new ArrayCollection();
-            foreach($retrievedLosses as $retrievedLoss) {
-                if($retrievedLoss->getRequestState() == $state) {
-                    $declareLosses->add($retrievedLoss);
-                }
-            }
-        }
-
-        return $declareLosses;
+        return $this->getRequests($retrievedLosses, $state);
     }
 
     /**
      * @param Client $client
      * @param string $requestId
-     * @return DeclareLoss|null
+     * @return DeclareArrival|null
      */
     public function getLossesById(Client $client, $requestId)
     {
         $losses = $this->getLosses($client);
 
-        foreach($losses as $loss) {
-            $foundRequestId = $loss->getRequestId($requestId);
-            if($foundRequestId == $requestId) {
-                return $loss;
-            }
-        }
-
-        return null;
+        return $this->getRequestsById($losses, $requestId);
     }
+    
+//    /**
+//     * @param Client $client
+//     * @param string $state
+//     * @return ArrayCollection
+//     */
+//    public function getLosses(Client $client, $state = null)
+//    {
+//        $location = $client->getCompanies()->get(0)->getLocations()->get(0);
+//        $retrievedLosses = $location->getLosses();
+//
+//        if($state == null) {
+//            $declareLosses = $retrievedLosses;
+//
+//        } else {
+//            $declareLosses = new ArrayCollection();
+//            foreach($retrievedLosses as $retrievedLoss) {
+//                if($retrievedLoss->getRequestState() == $state) {
+//                    $declareLosses->add($retrievedLoss);
+//                }
+//            }
+//        }
+//
+//        return $declareLosses;
+//    }
+//
+//    /**
+//     * @param Client $client
+//     * @param string $requestId
+//     * @return DeclareLoss|null
+//     */
+//    public function getLossesById(Client $client, $requestId)
+//    {
+//        $losses = $this->getLosses($client);
+//
+//        foreach($losses as $loss) {
+//            $foundRequestId = $loss->getRequestId($requestId);
+//            if($foundRequestId == $requestId) {
+//                return $loss;
+//            }
+//        }
+//
+//        return null;
+//    }
 }
