@@ -84,7 +84,7 @@ class MockedDeclareArrival implements FixtureInterface, ContainerAwareInterface,
             self::$mockedArrival->setLogDate(new \DateTime('2023-03-22'));
             self::$mockedArrival->setRequestId($id);
             self::$mockedArrival->setMessageId($id);
-            self::$mockedArrival->setRequestState('open');
+            self::$mockedArrival->setRequestState('finished');
             self::$mockedArrival->setAction('C');
             self::$mockedArrival->setRecoveryIndicator('N');
             self::$mockedArrival->setRelationNumberKeeper($relationNumberKeeper);
