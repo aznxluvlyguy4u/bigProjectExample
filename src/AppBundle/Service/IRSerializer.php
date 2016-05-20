@@ -19,6 +19,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
+use AppBundle\Enumerator\UIDType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Types\JsonArrayType;
 use Doctrine\ORM\EntityManager;
@@ -165,9 +166,9 @@ class IRSerializer implements IRSerializerInterface
             $uidNumber = $declareArrivalRequest->getUidNumber();
             $animalRepository = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY);
             $retrievedAnimal = null;
-            if($uidType == Constant::ULN_NAMESPACE) {
+            if($uidType == UIDType::ULN) {
                 $retrievedAnimal = $animalRepository->findOneBy(array('ulnCountryCode'=>$uidCountryCode, 'ulnNumber'=>$uidNumber));
-            } else if($uidType == Constant::PEDIGREE_NAMESPACE) {
+            } else if($uidType == UIDType::PEDIGREE) {
                 $retrievedAnimal = $animalRepository->findOneBy(array('pedigreeCountryCode' => $uidCountryCode, 'pedigreeNumber' => $uidNumber));
             }
 
@@ -179,12 +180,12 @@ class IRSerializer implements IRSerializerInterface
                 if($ulnCountryCode != null && $ulnNumber != null) {
                     $declareArrivalRequest->setUidCountryCode($ulnCountryCode);
                     $declareArrivalRequest->setUidNumber($ulnNumber);
-                    $declareArrivalRequest->setUidType(Constant::ULN_NAMESPACE);
+                    $declareArrivalRequest->setUidType(UIDType::ULN);
 
                 } else {
                     $declareArrivalRequest->setUidCountryCode($retrievedAnimal->getPedigreeCountryCode());
                     $declareArrivalRequest->setUidNumber($retrievedAnimal->getPedigreeNumber());
-                    $declareArrivalRequest->setUidType(Constant::PEDIGREE_NAMESPACE);
+                    $declareArrivalRequest->setUidType(UIDType::PEDIGREE);
                 }
             }
             
@@ -208,12 +209,12 @@ class IRSerializer implements IRSerializerInterface
                 if(array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $contentAnimal) && array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $contentAnimal)) {
                     $declareArrivalRequest->setUidCountryCode($contentAnimal[Constant::ULN_COUNTRY_CODE_NAMESPACE]);
                     $declareArrivalRequest->setUidNumber($contentAnimal[Constant::ULN_NUMBER_NAMESPACE]);
-                    $declareArrivalRequest->setUidType(Constant::ULN_NAMESPACE);
+                    $declareArrivalRequest->setUidType(UIDType::ULN);
 
                 } else if(array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $contentAnimal) && array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $contentAnimal)) {
                     $declareArrivalRequest->setUidCountryCode($contentAnimal[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE]);
                     $declareArrivalRequest->setUidNumber($contentAnimal[Constant::PEDIGREE_NUMBER_NAMESPACE]);
-                    $declareArrivalRequest->setUidType(Constant::PEDIGREE_NAMESPACE);
+                    $declareArrivalRequest->setUidType(UIDType::PEDIGREE);
                 }
             }
         }
