@@ -95,33 +95,32 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * @Route("")
    * @Method("GET")
    */
-  public function getArrivals(Request $request)
+  public function getArrivals(Request $request) //TODO rename function!!!!!!!!!!
   { //TODO for phase 2: read a location from the $request and find declareArrivals for that location
 
     $client = $this->getAuthenticatedUser($request);
     $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
 
     if(!$stateExists) {
-      $declareArrivals = $repository->getArrivals($client);
+      $declareArrivals = $repository->getArrivalResponses($client);
 
     } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
 
       $declareArrivals = new ArrayCollection();
-      //TODO Front-end cannot accept messages without animal ULN/Pedigree
-//      foreach($repository->getArrivals($client, RequestStateType::OPEN) as $arrival) {
-//        $declareArrivals->add($arrival);
-//      }
-      foreach($repository->getArrivals($client, RequestStateType::REVOKING) as $arrival) {
+      foreach($repository->getArrivalResponses($client, RequestStateType::OPEN) as $arrival) {
         $declareArrivals->add($arrival);
       }
-      foreach($repository->getArrivals($client, RequestStateType::FINISHED) as $arrival) {
+      foreach($repository->getArrivalResponses($client, RequestStateType::REVOKING) as $arrival) {
+        $declareArrivals->add($arrival);
+      }
+      foreach($repository->getArrivalResponses($client, RequestStateType::FINISHED) as $arrival) {
         $declareArrivals->add($arrival);
       }
 
     } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareArrivals = $repository->getArrivals($client, $state);
+      $declareArrivals = $repository->getArrivalResponses($client, $state);
     }
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareArrivals), 200);
