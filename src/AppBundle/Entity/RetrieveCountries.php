@@ -53,7 +53,10 @@ class RetrieveCountries {
     private $requestState;
 
     public function __construct() {
-
+        $this->setLogDate(new \DateTime());
+        $this->setRequestId(rand(999,999999));
+        $this->setMessageId($this->getRequestId());
+        $this->setRequestState("open");
     }
 
 

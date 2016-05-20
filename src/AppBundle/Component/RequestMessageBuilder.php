@@ -5,6 +5,7 @@ namespace AppBundle\Component;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\RetrieveAnimalDetails;
 use AppBundle\Entity\RetrieveAnimals;
+use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveUBNDetails;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\RequestType;
@@ -147,9 +148,9 @@ class RequestMessageBuilder
             case RequestType::RETRIEVE_ANIMALS_ENTITY:
                 $retrieveAnimalsRequest = $this->irSerializer->parseRetrieveAnimals($contentArray, $isEditMessage);
                 return $this->retrieveAnimalsMessageBuilder->buildMessage($retrieveAnimalsRequest, $person);
-            case RequestType::RETRIEVE_EU_COUNTRIES_ENTITY:
-                //TODO: only add the mininum required fields for this Message Type
-                return null;
+            case RequestType::RETRIEVE_COUNTRIES_ENTITY:
+                $retrieveCountries = new RetrieveCountries();
+                return $retrieveCountries;
             case RequestType::RETRIEVE_UBN_DETAILS_ENTITY:
                 $retrieveUbnDetailsRequest = $this->irSerializer->parseRetrieveUBNDetails($contentArray, $isEditMessage);
                 return $this->retrieveUBNDetailsBuilder->buildMessage($retrieveUbnDetailsRequest, $person);

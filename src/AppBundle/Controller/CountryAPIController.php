@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Enumerator\RequestType;
 
 /**
  * @Route("/api/v1/countries")
@@ -79,8 +80,21 @@ class CountryAPIController extends APIController implements CountryAPIController
    * @Route("")
    * @Method("POST")
    */
-  function getEUCountries(Request $request)
+  function getCountries(Request $request)
   {
-    // TODO: Implement getEUCountries() method.
+    //Get content to array
+    $content = $this->getContentAsArray($request);
+
+    //Convert the array into an object and add the mandatory values retrieved from the database
+    $retrieveEartagsRequest = $this->buildMessageObject(RequestType::RETRIEVE_COUNTRIES_ENTITY, $content, $this->getAuthenticatedUser($request));
+
+    //First Persist object to Database, before sending it to the queue
+    $this->persist($retrieveEartagsRequest, RequestType::RETRIEVE_COUNTRIES_ENTITY);
+
+    //Send it to the queue and persist/update any changed state to the database
+    $this->sendMessageObjectToQueue($retrieveEartagsRequest, RequestType::RETRIEVE_COUNTRIES_ENTITY, RequestType::RETRIEVE_COUNTRIES);
+
+    return new JsonResponse($retrieveEartagsRequest, 200);
+
   }
 }

@@ -18,7 +18,7 @@ class RequestType
     const REVOKE_DECLARATION = 'REVOKE_DECLARATION';
     const RETRIEVE_ANIMALS = "RETRIEVE_ANIMALS";
     const RETRIEVE_ANIMAL_DETAILS = "RETRIEVE_ANIMAL_DETAILS";
-    const RETRIEVE_EU_COUNTRIES = "RETRIEVE_EU_COUNTRIES";
+    const RETRIEVE_COUNTRIES = "RETRIEVE_COUNTRIES";
     const RETRIEVE_UBN_DETAILS = "RETRIEVE_UBN_DETAILS";
 
     const DECLARATION_DETAIL_ENTITY = 'DeclarationDetail';
@@ -35,6 +35,6 @@ class RequestType
     const REVOKE_DECLARATION_ENTITY = 'RevokeDeclaration';
     const RETRIEVE_ANIMALS_ENTITY = "RetrieveAnimals";
     const RETRIEVE_ANIMAL_DETAILS_ENTITY = "RetrieveAnimalDetails";
-    const RETRIEVE_EU_COUNTRIES_ENTITY = "RetrieveEUCountries";
+    const RETRIEVE_COUNTRIES_ENTITY = "RetrieveCountries";
     const RETRIEVE_UBN_DETAILS_ENTITY = "RetrieveUBNDetails";
 }
