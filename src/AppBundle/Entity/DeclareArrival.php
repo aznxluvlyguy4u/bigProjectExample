@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\Constant;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -25,6 +26,30 @@ class DeclareArrival extends DeclareBase {
      * @Expose
      */
     private $animal;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
+    private $uidCountryCode;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
+    private $uidNumber;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
+    private $uidType;
 
     /**
      * 2016-04-01T22:00:48.131Z
@@ -241,6 +266,20 @@ class DeclareArrival extends DeclareBase {
     {
         $this->animal = $animal;
 
+        if($animal != null) {
+
+            if($animal->getUlnCountryCode()!=null && $animal->getUlnNumber()!=null) {
+                $this->uidCountryCode = $animal->getUlnCountryCode();
+                $this->uidNumber = $animal->getUlnNumber();
+                $this->uidType = Constant::ULN_NAMESPACE;
+
+            } else if ($animal->getPedigreeCountryCode()!=null && $animal->getPedigreeNumber()!=null){
+                $this->uidCountryCode = $animal->getPedigreeCountryCode();
+                $this->uidNumber = $animal->getPedigreeNumber();
+                $this->uidType = Constant::PEDIGREE_NAMESPACE;
+            }
+        }
+
         return $this;
     }
 
@@ -293,4 +332,54 @@ class DeclareArrival extends DeclareBase {
     {
         $this->revoke = $revoke;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getUidCountryCode()
+    {
+        return $this->uidCountryCode;
+    }
+
+    /**
+     * @param mixed $uidCountryCode
+     */
+    public function setUidCountryCode($uidCountryCode)
+    {
+        $this->uidCountryCode = $uidCountryCode;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getUidNumber()
+    {
+        return $this->uidNumber;
+    }
+
+    /**
+     * @param mixed $uidNumber
+     */
+    public function setUidNumber($uidNumber)
+    {
+        $this->uidNumber = $uidNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUidType()
+    {
+        return $this->uidType;
+    }
+
+    /**
+     * @param string $uidType
+     */
+    public function setUidType($uidType)
+    {
+        $this->uidType = $uidType;
+    }
+
+
 }
