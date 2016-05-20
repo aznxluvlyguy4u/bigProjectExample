@@ -42,28 +42,28 @@ class Location
   protected $ubn;
 
   /**
-   * @var array
+   * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="location")
    */
   protected $arrivals;
 
   /**
-   * @var array
+   * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="location")
    */
   protected $births;
 
   /**
-   * @var array
+   * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="DeclareDepart", mappedBy="location")
    */
   protected $departures;
 
   /**
-   * @var array
+   * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="Animal", mappedBy="location")
    * @JMS\Type("AppBundle\Entity\Animal")
@@ -71,35 +71,35 @@ class Location
   protected $animals;
 
   /**
-   * @var array
+   * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="location")
    */
   protected $imports;
 
   /**
-   * @var array
+   * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="DeclareExport", mappedBy="location")
    */
   protected $exports;
 
   /**
-   * @var array
+   * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="DeclareTagsTransfer", mappedBy="location")
    */
   protected $tagTransfers;
 
   /**
-   * @var array
+   * @var ArrayCollection
    * 
    * @ORM\OneToMany(targetEntity="DeclareLoss", mappedBy="location")
    */
   protected $losses;
 
   /**
-   * @var array
+   * @var ArrayCollection
    *
    * @JMS\Type("AppBundle\Entity\DeclareAnimalFlag")
    * @ORM\OneToMany(targetEntity="DeclareAnimalFlag", mappedBy="location", cascade={"persist"})
@@ -122,7 +122,7 @@ class Location
   private $address;
 
   /**
-   * @var array
+   * @var ArrayCollection
    *
    * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
    * @ORM\OneToMany(targetEntity="RevokeDeclaration", mappedBy="location", cascade={"persist"})
