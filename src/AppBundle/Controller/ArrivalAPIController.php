@@ -208,6 +208,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     $content = $this->getContentAsArray($request);
     $requestId = $content->get('request_id');
+    $client = $this->getAuthenticatedUser($request);
 
     //TODO Add verification requestId filter
     $declareArrivalOrImport = $this->getDoctrine()->getRepository(Constant::DECLARE_BASE_REPOSITORY)->findOneBy(array("requestId"=>$requestId));
@@ -245,8 +246,11 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       //Send it to the queue and persist/update any changed state to the database
       $this->sendMessageObjectToQueue($declareArrival, RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_ARRIVAL);
 
-      //First Persist object to Database, before sending it to the queue
-      $this->persist($declareArrival, RequestType::DECLARE_ARRIVAL_ENTITY);
+      $declareArrivalRequest = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivalsById($client, $requestId);
+
+      //Update values here, only update the requestState
+      $declareArrivalRequest->setRequestState(RequestStateType::OPEN);
+      $declareArrivalRequest = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivalsById($client, $requestId);
 
       return new JsonResponse($declareArrival, 200);
     }
