@@ -8,11 +8,11 @@ use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
- * Class RetrieveUBNDetails
- * @ORM\Entity(repositoryClass="AppBundle\Entity\RetrieveUBNDetailsRepository")
+ * Class RetrieveUbnDetails
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\RetrieveUbnDetailsRepository")
  * @package AppBundle\Entity
  */
-class RetrieveUBNDetails
+class RetrieveUbnDetails
 {
     /**
      * @ORM\Column(type="integer")

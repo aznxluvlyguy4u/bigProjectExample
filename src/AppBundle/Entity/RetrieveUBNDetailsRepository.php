@@ -3,10 +3,10 @@
 namespace AppBundle\Entity;
 
 /**
- * Class RetrieveUBNDetailsRepository
+ * Class RetrieveUbnDetailsRepository
  * @package AppBundle\Entity
  */
-class RetrieveUBNDetailsRepository extends BaseRepository
+class RetrieveUbnDetailsRepository extends BaseRepository
 {
 
 }

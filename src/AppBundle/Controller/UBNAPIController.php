@@ -17,7 +17,7 @@ class UBNAPIController extends APIController implements UBNAPIControllerInterfac
 {
 
   /**
-   * Create a RetrieveUBNDetails request
+   * Create a RetrieveUbnDetails request
    *
    * @ApiDoc(
    *   requirements={
@@ -29,8 +29,8 @@ class UBNAPIController extends APIController implements UBNAPIControllerInterfac
    *     }
    *   },
    *   resource = true,
-   *   description = "Post a RetrieveUBNDetails request",
-   *   input = "AppBundle\Entity\RetrieveUBNDetails",
+   *   description = "Post a RetrieveUbnDetails request",
+   *   input = "AppBundle\Entity\RetrieveUbnDetails",
    *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
    * )
    * @param Request $request the request object

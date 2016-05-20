@@ -6,8 +6,8 @@ use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\RetrieveTags;
-use AppBundle\Entity\RetrieveUBNDetails;
-use AppBundle\Entity\RetrieveEuropeanCountries;
+use AppBundle\Entity\RetrieveUbnDetails;
+use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveAnimalDetails;
@@ -462,20 +462,20 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @param ArrayCollection $contentArray
      * @param $isEditMessage
-     * @return RetrieveEuropeanCountries
+     * @return RetrieveCountries
      */
     function parseRetrieveEUCountries(ArrayCollection $contentArray, $isEditMessage) {
         // TODO: Implement parseRetrieveEUCountries() method.
-        $contentArray["type"] = RequestType::RETRIEVE_EU_COUNTRIES_ENTITY;
+        $contentArray["type"] = RequestType::RETRIEVE_COUNTRIES_ENTITY;
     }
 
     /**
      * @param ArrayCollection $contentArray
      * @param $isEditMessage
-     * @return RetrieveUBNDetails
+     * @return RetrieveUbnDetails
      */
     function parseRetrieveUBNDetails(ArrayCollection $contentArray, $isEditMessage) {
-        $retrieveUbnDetails = new RetrieveUBNDetails();
+        $retrieveUbnDetails = new RetrieveUbnDetails();
 
         return $retrieveUbnDetails;
     }

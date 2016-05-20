@@ -7,11 +7,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 
 /**
- * Class RetrieveUBNDetailsResponse
- * @ORM\Entity(repositoryClass="AppBundle\Entity\RetrieveUBNDetailsResponseRepository")
+ * Class RetrieveUbnDetailsResponse
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\RetrieveUbnDetailsResponseRepository")
  * @package AppBundle\Entity
  */
-class RetrieveUBNDetailsResponse
+class RetrieveUbnDetailsResponse
 {
     /**
      * @ORM\Column(type="integer")
