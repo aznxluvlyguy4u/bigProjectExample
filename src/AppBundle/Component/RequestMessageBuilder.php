@@ -3,7 +3,9 @@
 namespace AppBundle\Component;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\RetrieveAnimalDetails;
 use AppBundle\Entity\RetrieveAnimals;
+use AppBundle\Entity\RetrieveUBNDetails;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Service\IRSerializer;
@@ -52,7 +54,16 @@ class RequestMessageBuilder
      */
     private $retrieveAnimalsMessageBuilder;
 
+    /**
+     * @var RetrieveAnimalDetails
+     */
     private $retrieveAnimalDetailsBuilder;
+
+    /**
+     * @var RetrieveUBNDetailsMessageBuilder
+     */
+    private $retrieveUBNDetailsBuilder;
+
     /*
      * @var LossMessageBuilder
      */
@@ -88,6 +99,7 @@ class RequestMessageBuilder
         $this->revokeMessageBuilder = new RevokeMessageBuilder($em);
         $this->retrieveAnimalsMessageBuilder = new RetrieveAnimalsMessageBuilder($em);
         $this->retrieveAnimalDetailsBuilder = new RetrieveAnimalDetailsMessageBuilder($em);
+        $this->retrieveUBNDetailsBuilder = new RetrieveUBNDetailsMessageBuilder($em);
     }
 
     public function build($messageClassNameSpace, ArrayCollection $contentArray, Person $person, $isEditMessage)
@@ -128,7 +140,6 @@ class RequestMessageBuilder
             case RequestType::REVOKE_DECLARATION_ENTITY:
                 $revokeDeclaration = new RevokeDeclaration();
                 $revokeDeclaration->setMessageNumber($contentArray[Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE]);
-
                 return $this->revokeMessageBuilder->buildMessage($revokeDeclaration, $person);
             case RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY:
                 $retrieveAnimalDetailsRequest = $this->irSerializer->parseRetrieveAnimalDetails($contentArray, $isEditMessage);
@@ -140,8 +151,8 @@ class RequestMessageBuilder
                 //TODO: only add the mininum required fields for this Message Type
                 return null;
             case RequestType::RETRIEVE_UBN_DETAILS_ENTITY:
-                //TODO: only add the mininum required fields for this Message Type
-                return null;
+                $retrieveUbnDetailsRequest = $this->irSerializer->parseRetrieveUBNDetails($contentArray, $isEditMessage);
+                return $this->retrieveUBNDetailsBuilder->buildMessage($retrieveUbnDetailsRequest, $person);
             default:
                 if ($messageClassNameSpace == null){
                     throw new \Exception('Cannot pass null into the RequestMessageBuilder');
