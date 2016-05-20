@@ -112,6 +112,7 @@ class MockedDeclareArrivalResponse implements FixtureInterface, ContainerAwareIn
             self::$mockedArrivalSuccessResponse->setErrorMessage(null);
             self::$mockedArrivalSuccessResponse->setErrorKindIndicator(null);
             self::$mockedArrivalSuccessResponse->setSuccessIndicator("J");
+            self::$mockedArrivalSuccessResponse->setIsRemovedByUser(false);
 
             //Persist mocked data
             $manager->persist(self::$mockedArrivalSuccessResponse);
