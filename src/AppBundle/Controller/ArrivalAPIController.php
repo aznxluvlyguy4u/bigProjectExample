@@ -174,12 +174,15 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       //Send it to the queue and persist/update any changed state to the database
       $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_ARRIVAL);
 
-      //First Persist object to Database, before sending it to the queue
+      //Persist message without animal. That is done after a successful response
+      $animal = $messageObject->getAnimal();
       $messageObject->setAnimal(null);
       $this->persist($messageObject, RequestType::DECLARE_ARRIVAL_ENTITY);
+      $messageObject->setAnimal($animal);
     }
 
-    return new JsonResponse(array("status"=>"sent"), 200);
+//    return new JsonResponse(array("status"=>"sent"), 200);
+    return new JsonResponse($messageObject, 200);
   }
 
   /**

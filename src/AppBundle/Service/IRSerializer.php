@@ -92,6 +92,18 @@ class IRSerializer implements IRSerializerInterface
     }
 
     /**
+     * @param $object
+     * @return array
+     */
+    public function normalizeToArray($object)
+    {
+        $json = $this->serializeToJSON($object);
+        $array = json_decode($json, true);
+
+        return $array;
+    }
+
+    /**
      * @param Animal $retrievedAnimal
      * @return array
      */
@@ -139,7 +151,7 @@ class IRSerializer implements IRSerializerInterface
         $declareArrivalContentArray["type"] = RequestType::DECLARE_ARRIVAL_ENTITY;
 
         //Retrieve animal entity
-        if($isEditMessage){
+        if($isEditMessage) {
             $requestId = $declareArrivalContentArray['request_id'];
             $declareArrivalRequest = $this->entityManager->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findOneBy(array("requestId"=>$requestId));
 
@@ -147,19 +159,63 @@ class IRSerializer implements IRSerializerInterface
             $declareArrivalRequest->setArrivalDate(new \DateTime($declareArrivalContentArray['arrival_date']));
             $declareArrivalRequest->setUbnPreviousOwner($declareArrivalContentArray['ubn_previous_owner']);
             $declareArrivalRequest->setRequestState(RequestStateType::OPEN);
+            
+            $uidType = $declareArrivalRequest->getUidType();
+            $uidCountryCode = $declareArrivalRequest->getUidCountryCode();
+            $uidNumber = $declareArrivalRequest->getUidNumber();
+            $animalRepository = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY);
+            $retrievedAnimal = null;
+            if($uidType == Constant::ULN_NAMESPACE) {
+                $retrievedAnimal = $animalRepository->findOneBy(array('ulnCountryCode'=>$uidCountryCode, 'ulnNumber'=>$uidNumber));
+            } else if($uidType == Constant::PEDIGREE_NAMESPACE) {
+                $retrievedAnimal = $animalRepository->findOneBy(array('pedigreeCountryCode' => $uidCountryCode, 'pedigreeNumber' => $uidNumber));
+            }
 
+            if($retrievedAnimal != null) {
+
+                $ulnCountryCode = $retrievedAnimal->getUlnCountryCode();
+                $ulnNumber = $retrievedAnimal->getUlnNumber();
+
+                if($ulnCountryCode != null && $ulnNumber != null) {
+                    $declareArrivalRequest->setUidCountryCode($ulnCountryCode);
+                    $declareArrivalRequest->setUidNumber($ulnNumber);
+                    $declareArrivalRequest->setUidType(Constant::ULN_NAMESPACE);
+
+                } else {
+                    $declareArrivalRequest->setUidCountryCode($retrievedAnimal->getPedigreeCountryCode());
+                    $declareArrivalRequest->setUidNumber($retrievedAnimal->getPedigreeNumber());
+                    $declareArrivalRequest->setUidType(Constant::PEDIGREE_NAMESPACE);
+                }
+            }
+            
         } else {
             $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray);
 
             //Add retrieved animal properties including type to initial animalContentArray
             $declareArrivalContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
-
+            
             //denormalize the content to an object
             $json = $this->serializeToJSON($declareArrivalContentArray);
             $declareArrivalRequest = $this->deserializeToObject($json, RequestType::DECLARE_ARRIVAL_ENTITY);
 
             //Add retrieved animal to DeclareArrival
             $declareArrivalRequest->setAnimal($retrievedAnimal);
+
+            $contentAnimal = $declareArrivalContentArray['animal'];
+
+            if($contentAnimal != null) {
+
+                if(array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $contentAnimal) && array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $contentAnimal)) {
+                    $declareArrivalRequest->setUidCountryCode($contentAnimal[Constant::ULN_COUNTRY_CODE_NAMESPACE]);
+                    $declareArrivalRequest->setUidNumber($contentAnimal[Constant::ULN_NUMBER_NAMESPACE]);
+                    $declareArrivalRequest->setUidType(Constant::ULN_NAMESPACE);
+
+                } else if(array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $contentAnimal) && array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $contentAnimal)) {
+                    $declareArrivalRequest->setUidCountryCode($contentAnimal[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE]);
+                    $declareArrivalRequest->setUidNumber($contentAnimal[Constant::PEDIGREE_NUMBER_NAMESPACE]);
+                    $declareArrivalRequest->setUidType(Constant::PEDIGREE_NAMESPACE);
+                }
+            }
         }
 
         return $declareArrivalRequest;
