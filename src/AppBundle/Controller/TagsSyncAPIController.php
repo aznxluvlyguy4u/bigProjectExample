@@ -128,7 +128,7 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
     $retrieveEartagsRequest = $this->buildMessageObject(RequestType::RETRIEVE_TAGS_ENTITY, $content, $this->getAuthenticatedUser($request));
 
     //First Persist object to Database, before sending it to the queue
-    $this->persist($retrieveEartagsRequest, RequestType::RETRIEVE_TAGS_ENTITY);
+    $this->persist($retrieveEartagsRequest);
 
     //Send it to the queue and persist/update any changed state to the database
     $messageArray = $this->sendMessageObjectToQueue($retrieveEartagsRequest);

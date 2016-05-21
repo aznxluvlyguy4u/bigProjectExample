@@ -50,7 +50,7 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
     $declareTagsTransfer = $this->buildMessageObject(RequestType::DECLARE_TAGS_TRANSFER_ENTITY, $content, $this->getAuthenticatedUser($request));
 
     //First Persist object to Database, before sending it to the queue
-    $this->persist($declareTagsTransfer, RequestType::DECLARE_TAGS_TRANSFER_ENTITY);
+    $this->persist($declareTagsTransfer);
 
     //Send it to the queue and persist/update any changed state to the database
     $messageArray = $this->sendMessageObjectToQueue($declareTagsTransfer);

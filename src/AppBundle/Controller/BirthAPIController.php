@@ -193,7 +193,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $declareBirthObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $contentPerChild, $this->getAuthenticatedUser($request));
 
         //First Persist object to Database, before sending it to the queue
-        $this->persist($declareBirthObject, RequestType::DECLARE_BIRTH_ENTITY);
+        $this->persist($declareBirthObject);
 
         //Send it to the queue and persist/update any changed state to the database
         $messageArray = $this->sendMessageObjectToQueue($declareBirthObject);
@@ -279,7 +279,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
           $content, $this->getAuthenticatedUser($request));
 
       //First Persist object to Database, before sending it to the queue
-      $this->persist($declareBirthUpdate, RequestType::DECLARE_BIRTH_ENTITY);
+      $this->persist($declareBirthUpdate);
 
       //Send it to the queue and persist/update any changed state to the database
       $messageArray = $this->sendEditMessageObjectToQueue($declareBirthUpdate);

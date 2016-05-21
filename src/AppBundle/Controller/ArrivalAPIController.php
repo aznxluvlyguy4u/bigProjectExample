@@ -162,7 +162,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client);
 
       //First Persist object to Database, before sending it to the queue
-      $this->persist($messageObject, RequestType::DECLARE_IMPORT_ENTITY);
+      $this->persist($messageObject);
 
       //Send it to the queue and persist/update any changed state to the database
       $messageArray = $this->sendMessageObjectToQueue($messageObject);
@@ -176,7 +176,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
       //Persist message without animal. That is done after a successful response
       $messageObject->setAnimal(null);
-      $this->persist($messageObject, RequestType::DECLARE_ARRIVAL_ENTITY);
+      $this->persist($messageObject);
     }
 
 //    return new JsonResponse(array("status"=>"sent"), 200);
@@ -228,7 +228,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       }
 
       //First Persist object to Database, before sending it to the queue
-      $this->persist($declareImport, RequestType::DECLARE_IMPORT_ENTITY);
+      $this->persist($declareImport);
 
       //Send it to the queue and persist/update any changed state to the database
       $messageArray = $this->sendEditMessageObjectToQueue($declareImport);
@@ -248,7 +248,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       $messageArray = $this->sendEditMessageObjectToQueue($declareArrival);
 
       //Persist the update
-      $this->persist($declareArrival, RequestType::DECLARE_ARRIVAL_ENTITY);
+      $this->persist($declareArrival);
 
       return new JsonResponse($messageArray, 200);
     }

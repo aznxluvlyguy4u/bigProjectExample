@@ -170,7 +170,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
       $messageObject = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $this->getAuthenticatedUser($request));
 
       //First Persist object to Database, before sending it to the queue
-      $this->persist($messageObject, RequestType::DECLARE_EXPORT_ENTITY);
+      $this->persist($messageObject);
 
       //Send it to the queue and persist/update any changed state to the database
       $messageArray = $this->sendMessageObjectToQueue($messageObject);
@@ -182,7 +182,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
       $messageObject = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $this->getAuthenticatedUser($request));
 
       //First Persist object to Database, before sending it to the queue
-      $this->persist($messageObject, RequestType::DECLARE_DEPART_ENTITY);
+      $this->persist($messageObject);
 
       //Send it to the queue and persist/update any changed state to the database
       $messageArray = $this->sendMessageObjectToQueue($messageObject);
@@ -244,7 +244,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
         return new JsonResponse(array("message"=>"No DeclareExport found with request_id:" . $Id), 204);
       } else {
         //First Persist object to Database, before sending it to the queue
-        $this->persist($declareExport, RequestType::DECLARE_EXPORT_ENTITY);
+        $this->persist($declareExport);
 
         //Send it to the queue and persist/update any changed state to the database
         $messageArray = $this->sendEditMessageObjectToQueue($declareExport);
@@ -264,7 +264,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
         return new JsonResponse(array("message"=>"No DeclareDepart found with request_id:" . $Id), 204);
       } else {
         //First Persist object to Database, before sending it to the queue
-        $this->persist($declareDepart, RequestType::DECLARE_DEPART_ENTITY);
+        $this->persist($declareDepart);
 
         //Send it to the queue and persist/update any changed state to the database
         $messageArray = $this->sendEditMessageObjectToQueue($declareDepart);

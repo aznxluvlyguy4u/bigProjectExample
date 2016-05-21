@@ -32,7 +32,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
         $revokeDeclarationObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $content, $this->getAuthenticatedUser($request));
 
         //First Persist object to Database, before sending it to the queue
-        $this->persist($revokeDeclarationObject, RequestType::REVOKE_DECLARATION_ENTITY);
+        $this->persist($revokeDeclarationObject);
         
         //Now set the requestState of the revoked message to REVOKED
         $this->persistRevokingRequestState($revokeDeclarationObject->getMessageNumber());

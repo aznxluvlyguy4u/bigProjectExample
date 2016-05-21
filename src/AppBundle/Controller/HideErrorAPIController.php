@@ -54,7 +54,7 @@ class HideErrorAPIController extends APIController implements HideErrorAPIContro
             $response->setIsRemovedByUser($content['is_removed_by_user']);
         //TODO NOTE! No "HideMessage" declaration message is created-and-persisted. A value is just updated in an existing declaration.
             //First Persist object to Database, before sending it to the queue
-            $this->persist($response, Utils::getClassName($response));
+            $this->persist($response);
 
             return new JsonResponse(array("code"=>200, "message"=>"saved"), 200);
         }

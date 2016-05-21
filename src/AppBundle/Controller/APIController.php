@@ -198,13 +198,12 @@ class APIController extends Controller implements APIControllerInterface
 
   /**
    * @param $messageObject
-   * @param $messageClassNameSpace
    * @return mixed
    */
-  public function persist($messageObject, $messageClassNameSpace)
+  public function persist($messageObject)
   {
     //Set the string values
-    $repositoryEntityNameSpace = "AppBundle:$messageClassNameSpace";
+    $repositoryEntityNameSpace = Utils::getRepositoryNameSpace($messageObject);
 
     //Persist to database
     $this->getDoctrine()->getRepository($repositoryEntityNameSpace)->persist($messageObject);
@@ -479,14 +478,10 @@ class APIController extends Controller implements APIControllerInterface
    */
   public function persistRevokingRequestState($messageNumber)
   {
-    $em = $this->getDoctrine()->getEntityManager();
-
     $messageObjectTobeRevoked = $this->getEntityGetter()->getRequestMessageByMessageNumber($messageNumber);
 
     $messageObjectWithRevokedRequestState = $messageObjectTobeRevoked->setRequestState(RequestStateType::REVOKING);
 
-    $className = Utils::getClassName($messageObjectTobeRevoked);
-
-    $this->persist($messageObjectWithRevokedRequestState, $className);
+    $this->persist($messageObjectWithRevokedRequestState);
   }
 }
