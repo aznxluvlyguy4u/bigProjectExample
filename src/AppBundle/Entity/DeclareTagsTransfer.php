@@ -14,7 +14,6 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class DeclareTagsTransfer extends DeclareBase
 {
-
     /**
      * @var ArrayCollection
      *
@@ -33,10 +32,21 @@ class DeclareTagsTransfer extends DeclareBase
      * @var string
      *
      * @ORM\Column(type="string")
+     * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
      */
     private $relationNumberAcceptant;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @Assert\Length(max = 12)
+     * @JMS\Type("string")
+     */
+    private $ubnNewOwner;
 
     /**
      * @Assert\NotBlank
@@ -65,6 +75,7 @@ class DeclareTagsTransfer extends DeclareBase
         //Create responses array
         $this->responses = new ArrayCollection();
         $this->tags = new ArrayCollection();
+        $this->setLogDate(new \DateTime());
     }
 
 
@@ -183,5 +194,29 @@ class DeclareTagsTransfer extends DeclareBase
     public function getLocation()
     {
         return $this->location;
+    }
+
+    /**
+     * Set ubnNewOwner
+     *
+     * @param string $ubnNewOwner
+     *
+     * @return DeclareTagsTransfer
+     */
+    public function setUbnNewOwner($ubnNewOwner)
+    {
+        $this->ubnNewOwner = $ubnNewOwner;
+
+        return $this;
+    }
+
+    /**
+     * Get ubnNewOwner
+     *
+     * @return string
+     */
+    public function getUbnNewOwner()
+    {
+        return $this->ubnNewOwner;
     }
 }
