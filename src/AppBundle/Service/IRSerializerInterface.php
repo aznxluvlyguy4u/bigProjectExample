@@ -3,6 +3,7 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -32,9 +33,11 @@ interface IRSerializerInterface
 
     /**
      * @param ArrayCollection $contentArray
+     * @param Client $client
+     * @param boolean $isEditMessage
      * @return DeclareArrival
      */
-    function parseDeclareArrival(ArrayCollection $contentArray, $isEditMessage);
+    function parseDeclareArrival(ArrayCollection $contentArray, Client $client, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray

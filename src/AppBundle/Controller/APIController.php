@@ -8,6 +8,8 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Enumerator\RequestType;
+use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Service\EntitySetter;
 use AppBundle\Entity\RevokeDeclaration;
@@ -212,31 +214,57 @@ class APIController extends Controller implements APIControllerInterface
 
   /**
    * @param $messageObject
-   * @param $messageClassNameSpace
-   * @param $requestTypeNameSpace
-   * @return mixed
+   * @param bool $isUpdate
+   * @return array
    */
-  //TODO It works but better reassess this function
-  protected function sendMessageObjectToQueue($messageObject, $messageClassNameSpace, $requestTypeNameSpace) {
+  protected function sendMessageObjectToQueue($messageObject, $isUpdate = false) {
+
     $requestId = $messageObject->getRequestId();
-    $jsonMessage = $this->getSerializer()->serializeToJSON($messageObject);
+    $repository = $this->getDoctrine()->getRepository(Utils::getRepositoryNameSpace($messageObject));
+
+    //create array and jsonMessage
+    $messageArray = RequestMessageOutputBuilder::createOutputArray($messageObject, $isUpdate);
+
+    if($messageArray == null) {
+      //These objects do not have a customized minimal json output for the queue yet
+      $jsonMessage = $this->getSerializer()->serializeToJSON($messageObject);
+      $messageArray = json_decode($jsonMessage, true);
+    } else {
+      //Use the minimized custom output
+      $jsonMessage = $this->getSerializer()->serializeToJSON($messageArray);
+    }
 
     //Send serialized message to Queue
+    $requestTypeNameSpace = RequestType::getRequestTypeFromObject($messageObject);
     $sendToQresult = $this->getQueueService()
       ->send($requestId, $jsonMessage, $requestTypeNameSpace);
 
+    //TODO DISCUSS what should happen to a create and/or edit when the messageObject has not been sent to the queue. A new message (create) persisted with a failed state makes sense. But a persisted update will overwrite the old data, even if the update has not been verified yet.
     //If send to Queue, failed, it needs to be resend, set state to failed
     if ($sendToQresult['statusCode'] != '200') {
-      $messageObject->setRequestState('failed');
+      $this->getDoctrine()->getEntityManager()->refresh($messageObject);
+      $messageObject->setRequestState(RequestStateType::FAILED);
 
       //Update this state to the database
-      $repositoryEntityNameSpace = "AppBundle:$messageClassNameSpace";
-      $messageObject = $this->getDoctrine()
-        ->getRepository($repositoryEntityNameSpace)
-        ->persist($messageObject);
+      $messageObject = $repository->persist($messageObject);
+
+    } else if($isUpdate) { //If succesfully sent to the queue and message is an Update/Edit request
+      $this->getDoctrine()->getEntityManager()->refresh($messageObject); //Do not persist updated values yet at this stage
+      $messageObject->setRequestState(RequestStateType::OPEN); //Only update the RequestState
+
+      //Update this state to the database
+      $messageObject = $repository->persist($messageObject);
     }
 
-    return $messageObject;
+    return $messageArray;
+  }
+
+  /**
+   * @param $messageObject
+   * @return array
+   */
+  protected function sendEditMessageObjectToQueue($messageObject) {
+    return $this->sendMessageObjectToQueue($messageObject, true);
   }
 
   /**

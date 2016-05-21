@@ -3,8 +3,11 @@
 namespace AppBundle\Enumerator;
 
 
+use AppBundle\Component\Utils;
+
 class RequestType
 {
+    //RequestType
     const DECLARATION_DETAIL = 'DECLARATION_DETAIL';
     const DECLARE_ARRIVAL = 'DECLARE_ARRIVAL';
     const DECLARE_BIRTH = 'DECLARE_BIRTH';
@@ -21,11 +24,11 @@ class RequestType
     const RETRIEVE_EU_COUNTRIES = "RETRIEVE_EU_COUNTRIES";
     const RETRIEVE_UBN_DETAILS = "RETRIEVE_UBN_DETAILS";
 
+    //Request entity namespaces
     const DECLARATION_DETAIL_ENTITY = 'DeclarationDetail';
-    const DECLARE_ARRIVAL_ENTITY = 'DeclareArrival';
-    const DECLARE_ARRIVAL_RESPONSE_ENTITY = 'DeclareArrivalResponse';
-    const DECLARE_BIRTH_ENTITY = 'DeclareBirth';
     const DECLARE_ANIMAL_FLAG_ENTITY = 'DeclareAnimalFlag';
+    const DECLARE_ARRIVAL_ENTITY = 'DeclareArrival';
+    const DECLARE_BIRTH_ENTITY = 'DeclareBirth';
     const DECLARE_DEPART_ENTITY = 'DeclareDepart';
     const DECLARE_TAGS_TRANSFER_ENTITY = 'DeclareTagsTransfer';
     const DECLARE_LOSS_ENTITY = 'DeclareLoss';
@@ -37,4 +40,66 @@ class RequestType
     const RETRIEVE_ANIMAL_DETAILS_ENTITY = "RetrieveAnimalDetails";
     const RETRIEVE_EU_COUNTRIES_ENTITY = "RetrieveEUCountries";
     const RETRIEVE_UBN_DETAILS_ENTITY = "RetrieveUBNDetails";
+
+    //Response entity namespaces
+    const DECLARE_ARRIVAL_RESPONSE_ENTITY = 'DeclareArrivalResponse';
+
+
+    public static function getRequestTypeFromEntityNameSpace($entityNameSpace)
+    {
+        switch($entityNameSpace) {
+            case RequestType::DECLARATION_DETAIL_ENTITY:
+                return RequestType::DECLARATION_DETAIL;
+
+            case RequestType::DECLARE_ANIMAL_FLAG_ENTITY:
+                return RequestType::DECLARE_ANIMAL_FLAG;
+
+            case RequestType::DECLARE_ARRIVAL_ENTITY:
+                return RequestType::DECLARE_ARRIVAL;
+
+            case RequestType::DECLARE_BIRTH_ENTITY:
+                return RequestType::DECLARE_BIRTH;
+
+            case RequestType::DECLARE_DEPART_ENTITY:
+                return RequestType::DECLARE_DEPART;
+
+            case RequestType::DECLARE_TAGS_TRANSFER_ENTITY:
+                return RequestType::DECLARE_TAGS_TRANSFER;
+
+            case RequestType::DECLARE_LOSS_ENTITY:
+                return RequestType::DECLARE_LOSS;
+
+            case RequestType::DECLARE_EXPORT_ENTITY:
+                return RequestType::DECLARE_EXPORT;
+
+            case RequestType::DECLARE_IMPORT_ENTITY:
+                return RequestType::DECLARE_IMPORT;
+
+            case RequestType::RETRIEVE_TAGS_ENTITY:
+                return RequestType::RETRIEVE_TAGS;
+
+            case RequestType::REVOKE_DECLARATION_ENTITY:
+                return RequestType::REVOKE_DECLARATION;
+
+            case RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY:
+                return RequestType::RETRIEVE_ANIMAL_DETAILS;
+
+            case RequestType::RETRIEVE_ANIMALS_ENTITY:
+                return RequestType::RETRIEVE_ANIMALS;
+
+            case RequestType::RETRIEVE_EU_COUNTRIES_ENTITY:
+                return RequestType::RETRIEVE_EU_COUNTRIES;
+
+            case RequestType::RETRIEVE_UBN_DETAILS_ENTITY:
+                return RequestType::RETRIEVE_UBN_DETAILS;
+
+            default:
+                return null;
+        }
+    }
+
+    public static function getRequestTypeFromObject($object)
+    {
+        return RequestType::getRequestTypeFromEntityNameSpace(Utils::getClassName($object));
+    }
 }

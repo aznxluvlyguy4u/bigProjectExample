@@ -5,6 +5,7 @@ namespace AppBundle\Service;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Employee;
+use AppBundle\Entity\Client;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\RetrieveAnimals;
@@ -23,7 +24,6 @@ use AppBundle\Enumerator\UIDType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Types\JsonArrayType;
 use Doctrine\ORM\EntityManager;
-use Symfony\Bundle\FrameworkBundle\Client;
 
 /**
  * Class IRSerializer.
@@ -147,20 +147,20 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareArrival(ArrayCollection $declareArrivalContentArray, $isEditMessage)
+    function parseDeclareArrival(ArrayCollection $declareArrivalContentArray, Client $client, $isEditMessage)
     {
         $declareArrivalContentArray["type"] = RequestType::DECLARE_ARRIVAL_ENTITY;
 
         //Retrieve animal entity
         if($isEditMessage) {
             $requestId = $declareArrivalContentArray['request_id'];
-            $declareArrivalRequest = $this->entityManager->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findOneBy(array("requestId"=>$requestId));
+            $declareArrivalRequest = $this->entityManager->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivalsById($client, $requestId);
 
             //Update values here
             $declareArrivalRequest->setArrivalDate(new \DateTime($declareArrivalContentArray['arrival_date']));
             $declareArrivalRequest->setUbnPreviousOwner($declareArrivalContentArray['ubn_previous_owner']);
             $declareArrivalRequest->setRequestState(RequestStateType::OPEN);
-            
+
             //The animal and its values are not updatable.
             
         } else {

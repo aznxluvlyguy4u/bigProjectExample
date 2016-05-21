@@ -6,6 +6,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Output\DeclareArrivalOutput;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
@@ -152,12 +153,13 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
   {
     //Get content to array
     $content = $this->getContentAsArray($request);
+    $client = $this->getAuthenticatedUser($request);
 
     $isImportAnimal = $content->get('is_import_animal');
 
     if($isImportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $this->getAuthenticatedUser($request));
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client);
 
       //First Persist object to Database, before sending it to the queue
       $this->persist($messageObject, RequestType::DECLARE_IMPORT_ENTITY);
@@ -167,20 +169,18 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     } else {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $this->getAuthenticatedUser($request));
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client);
 
       //Send it to the queue and persist/update any changed state to the database
-      $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_ARRIVAL);
+      $messageArray = $this->sendMessageObjectToQueue($messageObject);
 
       //Persist message without animal. That is done after a successful response
-      $animal = $messageObject->getAnimal();
       $messageObject->setAnimal(null);
       $this->persist($messageObject, RequestType::DECLARE_ARRIVAL_ENTITY);
-      $messageObject->setAnimal($animal);
     }
 
 //    return new JsonResponse(array("status"=>"sent"), 200);
-    return new JsonResponse($messageObject, 200);
+    return new JsonResponse($messageArray, 200);
   }
 
   /**
@@ -244,16 +244,12 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
         return new JsonResponse(array("message"=>"No DeclareArrival found with request_id:" . $requestId), 204);
       }
 
-      //Send it to the queue and persist/update any changed state to the database
-      $this->sendMessageObjectToQueue($declareArrival, RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_ARRIVAL);
+      //Send it to the queue and persist/update any changed requestState to the database
+      $messageArray = $this->sendEditMessageObjectToQueue($declareArrival);
 
-      $declareArrivalRequest = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivalsById($client, $requestId);
+      //An update should not be persisted from the API. TODO Discuss what exactly should be persisted, without any corrupted data and without any dataloss. ALso see TODO fro APIcontroller function: sendMessageObjectToQueue.
 
-      //Update values here, only update the requestState
-      $declareArrivalRequest->setRequestState(RequestStateType::OPEN);
-      $declareArrivalRequest = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivalsById($client, $requestId);
-
-      return new JsonResponse($declareArrival, 200);
+      return new JsonResponse($messageArray, 200);
     }
   }
 

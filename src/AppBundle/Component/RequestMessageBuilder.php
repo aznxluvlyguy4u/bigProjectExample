@@ -102,7 +102,7 @@ class RequestMessageBuilder
                 //TODO: only add the mininum required fields for this Message Type
                 return $declareAnimalFlag;
             case RequestType::DECLARE_ARRIVAL_ENTITY:
-                $declareArrivalRequest = $this->irSerializer->parseDeclareArrival($contentArray, $isEditMessage);
+                $declareArrivalRequest = $this->irSerializer->parseDeclareArrival($contentArray, $person, $isEditMessage);
                 return $this->arrivalMessageBuilder->buildMessage($declareArrivalRequest, $person);
             case RequestType::DECLARE_BIRTH_ENTITY:
                 $declareBirthRequest = $this->irSerializer->parseDeclareBirth($contentArray, $isEditMessage);
