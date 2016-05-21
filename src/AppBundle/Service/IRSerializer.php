@@ -296,16 +296,97 @@ class IRSerializer implements IRSerializerInterface
 
         $declareTagsTransfer = new DeclareTagsTransfer();
         $fetchedTag = null;
-        $tagsRepository = $this->entityManager->getRepository(Constant::DECLARE_TAGS_TRANSFER_REPOSITORY);
+        $tagsRepository = $this->entityManager->getRepository(Constant::TAG_REPOSITORY);
+        $tagsContentArray = $contentArray->get('tags');
 
-        //Set relationNumberAcceptant
-        $declareTagsTransfer->setRelationNumberAcceptant($contentArray[Constant::UBN_NEW_OWNER_NAMESPACE]);
+        foreach($tagsContentArray as $tag) {
 
+            //In order to do a valid request to I&R for DeclareTagTransfer the ubnNewOwner AND the relationNumberAcceptant
+            //must be found and set for the request to the Queue. See page 80 of I&R berichtenboek.
 
-        //Fetch tag from database
-        $fetchedTag = $this->entityGetter->retrieveTag($contentArray[Constant::ULN_COUNTRY_CODE_NAMESPACE], $contentArray[Constant::ULN_NUMBER_NAMESPACE]);
+            //FIXME - reasses
 
-        $declareTagsTransfer->addTag($fetchedTag);
+            //Output- a Valid request for I*R
+            /*
+                {
+                  "id": 5,
+                  "log_date": "2016-05-22T00:49:20+0200",
+                  "request_id": "1624185740e5f07c8bc",
+                  "message_id": "1624185740e5f07c8bc",
+                  "request_state": "open",
+                  "action": "C",
+                  "recovery_indicator": "N",
+                  "relation_number_keeper": "203719934",
+                  "ubn": "1674459",
+                  "tags": [
+                    {
+                      "tag_status": "unassigned",
+                      "animal_order_number": "600625",
+                      "order_date": "2016-05-22T00:17:40+0200",
+                      "uln_country_code": "NL",
+                      "uln_number": "925378"
+                    }
+                  ],
+                  "relation_number_acceptant": "51381121",
+                  "ubn_new_owner": "10101011110",
+                  "location": {
+                    "id": 2,
+                    "ubn": "1674459"
+                  },
+                  "responses": []
+                }
+            */
+            //Strategy:
+            // 1) First find the location belonging to the newOwnerUbn,
+            // 2) Then get the owner of that UBN
+            // 3) then get the relationNumberKeeper for that ubn
+            // 4) Set the relationNumberAcceptant for the given relationNumberKeeper of the New owner
+            // 5) If 1 to 4 is succeeded, then find the Tag to be transferred
+            // 6) Check if Tag is in state UNASSIGNED AND no animal is assigned to it, if so it then may be added to the transfer list
+
+            //Find the client belonging to the UBN in order to get the Clients relationNumberKeeper number
+            $relationNumberAcceptant = null;
+
+            //1 - find UBN
+            $ubnNewOwner = $tag['ubn_new_owner'];
+            $locationRepository = $this->entityManager->getRepository(Constant::LOCATION_REPOSITORY);
+            $locationFilter = array(Constant::UBN_NAMESPACE => $ubnNewOwner);
+            $newOwnerslocation = $locationRepository->findOneBy($locationFilter);
+
+            //2 - Get client for ubn
+            if($newOwnerslocation != null) {
+
+                //3 - Get relationNumberAcceptants relationNumberKeeper
+                if($newOwnerslocation->getCompany() != null) {
+                    $newOwner = $newOwnerslocation->getCompany()->getOwner();
+                    $relationNumberAcceptant = $newOwner->getRelationNumberKeeper();
+
+                    //4 - Set relationNumberAcceptant to request
+                    $declareTagsTransfer->setRelationNumberAcceptant($relationNumberAcceptant);
+                    $declareTagsTransfer->setUbnNewOwner($ubnNewOwner);
+
+                    //5 - Find the tag to be transferred
+
+                    //create filter to search tag
+                    $tagFilter = array("ulnCountryCode" => $tag[Constant::ULN_COUNTRY_CODE_NAMESPACE],
+                      "ulnNumber" => $tag[Constant::ULN_NUMBER_NAMESPACE]);
+
+                    //Fetch tag from database
+                    $fetchedTag = $tagsRepository->findOneBy($tagFilter);
+
+                    //If tag was found at it to the declare transfer request
+                    if($fetchedTag != null) {
+
+                        //6 - Check if Tag status is UNASSIGNED && No animal is assigned to it
+                        if($fetchedTag->getTagStatus() == TagStateType::UNASSIGNED && $fetchedTag->getAnimal() == null) {
+
+                            //add tag to result set
+                            $declareTagsTransfer->addTag($fetchedTag);
+                        }
+                    }
+                }
+            }
+        }
 
         return $declareTagsTransfer;
     }
