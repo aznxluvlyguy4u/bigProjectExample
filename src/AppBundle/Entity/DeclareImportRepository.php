@@ -64,7 +64,7 @@ class DeclareImportRepository extends BaseRepository {
    * @param string $requestId
    * @return DeclareImport|null
    */
-  public function getImportsById(Client $client, $requestId)
+  public function getImportByRequestId(Client $client, $requestId)
   {
     $imports = $this->getImports($client);
 

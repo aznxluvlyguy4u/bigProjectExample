@@ -30,7 +30,7 @@ class DeclareArrivalRepository extends BaseRepository
    * @param string $requestId
    * @return DeclareArrival|null
    */
-  public function getArrivalsById(Client $client, $requestId)
+  public function getArrivalByRequestId(Client $client, $requestId)
   {
     $arrivals = $this->getArrivals($client);
 

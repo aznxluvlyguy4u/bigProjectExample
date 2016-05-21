@@ -47,7 +47,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     $client = $this->getAuthenticatedUser($request);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_DEPART_REPOSITORY);
 
-    $depart = $repository->getDeparturesById($client, $Id);
+    $depart = $repository->getDepartureByRequestId($client, $Id);
 
     return new JsonResponse($depart, 200);
   }

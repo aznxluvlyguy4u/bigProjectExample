@@ -53,7 +53,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $client = $this->getAuthenticatedUser($request);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
 
-    $arrival = $repository->getArrivalsById($client, $Id);
+    $arrival = $repository->getArrivalByRequestId($client, $Id);
 
     return new JsonResponse($arrival, 200);
   }

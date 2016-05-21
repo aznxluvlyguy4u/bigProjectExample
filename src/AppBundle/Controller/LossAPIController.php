@@ -47,7 +47,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
     $client = $this->getAuthenticatedUser($request);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_REPOSITORY);
 
-    $loss = $repository->getLossesById($client, $Id);
+    $loss = $repository->getLossByRequestId($client, $Id);
 
     return new JsonResponse($loss, 200);
   }

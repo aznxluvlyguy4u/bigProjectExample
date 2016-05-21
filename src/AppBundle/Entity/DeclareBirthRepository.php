@@ -29,7 +29,7 @@ class DeclareBirthRepository extends BaseRepository {
    * @param string $requestId
    * @return DeclareBirth|null
    */
-  public function getBirthsById(Client $client, $requestId)
+  public function getBirthByRequestId(Client $client, $requestId)
   {
     $births = $this->getBirths($client);
 

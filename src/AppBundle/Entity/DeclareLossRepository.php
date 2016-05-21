@@ -27,7 +27,7 @@ class DeclareLossRepository extends BaseRepository {
      * @param string $requestId
      * @return DeclareArrival|null
      */
-    public function getLossesById(Client $client, $requestId)
+    public function getLossByRequestId(Client $client, $requestId)
     {
         $losses = $this->getLosses($client);
 

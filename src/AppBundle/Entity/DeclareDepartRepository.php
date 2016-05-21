@@ -60,7 +60,7 @@ class DeclareDepartRepository extends BaseRepository {
    * @param string $requestId
    * @return DeclareDepart|null
    */
-  public function getDeparturesById(Client $client, $requestId)
+  public function getDepartureByRequestId(Client $client, $requestId)
   {
     $departs = $this->getDepartures($client);
 

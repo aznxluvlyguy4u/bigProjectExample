@@ -50,7 +50,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
       $client = $this->getAuthenticatedUser($request);
       $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
 
-      $export = $repository->getBirthsById($client, $Id);
+      $export = $repository->getBirthByRequestId($client, $Id);
 
       return new JsonResponse($export, 200);
   }
@@ -233,7 +233,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
       $client = $this->getAuthenticatedUser($request);
       $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
-      $declareBirth = $entityManager->getBirthsById($client, $content->get("request_id"));
+      $declareBirth = $entityManager->getBirthByRequestId($client, $content->get("request_id"));
 
       if($declareBirth == null) {
           $message = 'no message found for the given requestId';

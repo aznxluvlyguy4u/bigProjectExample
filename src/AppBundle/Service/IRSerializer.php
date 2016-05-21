@@ -154,7 +154,7 @@ class IRSerializer implements IRSerializerInterface
         //Retrieve animal entity
         if($isEditMessage) {
             $requestId = $declareArrivalContentArray['request_id'];
-            $declareArrivalRequest = $this->entityManager->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivalsById($client, $requestId);
+            $declareArrivalRequest = $this->entityManager->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivalByRequestId($client, $requestId);
 
             //Update values here
             $declareArrivalRequest->setArrivalDate(new \DateTime($declareArrivalContentArray['arrival_date']));

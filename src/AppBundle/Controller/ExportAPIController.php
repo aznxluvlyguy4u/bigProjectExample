@@ -46,7 +46,7 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
     $client = $this->getAuthenticatedUser($request);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY);
 
-    $export = $repository->getExportsById($client, $Id);
+    $export = $repository->getExportByRequestId($client, $Id);
 
     return new JsonResponse($export, 200);
   }

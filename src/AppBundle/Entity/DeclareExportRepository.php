@@ -56,7 +56,7 @@ class DeclareExportRepository extends BaseRepository {
    * @param string $requestId
    * @return DeclareExport|null
    */
-  public function getExportsById(Client $client, $requestId)
+  public function getExportByRequestId(Client $client, $requestId)
   {
     $exports = $this->getExports($client);
 
