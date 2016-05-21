@@ -247,7 +247,8 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       //Send it to the queue and persist/update any changed requestState to the database
       $messageArray = $this->sendEditMessageObjectToQueue($declareArrival);
 
-      //An update should not be persisted from the API. TODO Discuss what exactly should be persisted, without any corrupted data and without any dataloss. ALso see TODO fro APIcontroller function: sendMessageObjectToQueue.
+      //Persist the update
+      $this->persist($declareArrival, RequestType::DECLARE_ARRIVAL_ENTITY);
 
       return new JsonResponse($messageArray, 200);
     }

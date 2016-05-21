@@ -239,18 +239,15 @@ class APIController extends Controller implements APIControllerInterface
     $sendToQresult = $this->getQueueService()
       ->send($requestId, $jsonMessage, $requestTypeNameSpace);
 
-    //TODO DISCUSS what should happen to a create and/or edit when the messageObject has not been sent to the queue. A new message (create) persisted with a failed state makes sense. But a persisted update will overwrite the old data, even if the update has not been verified yet.
     //If send to Queue, failed, it needs to be resend, set state to failed
     if ($sendToQresult['statusCode'] != '200') {
-      $this->getDoctrine()->getEntityManager()->refresh($messageObject);
       $messageObject->setRequestState(RequestStateType::FAILED);
 
       //Update this state to the database
       $messageObject = $repository->persist($messageObject);
 
-    } else if($isUpdate) { //If succesfully sent to the queue and message is an Update/Edit request
-      $this->getDoctrine()->getEntityManager()->refresh($messageObject); //Do not persist updated values yet at this stage
-      $messageObject->setRequestState(RequestStateType::OPEN); //Only update the RequestState
+    } else if($isUpdate) { //If successfully sent to the queue and message is an Update/Edit request
+      $messageObject->setRequestState(RequestStateType::OPEN); //update the RequestState
 
       //Update this state to the database
       $messageObject = $repository->persist($messageObject);
