@@ -31,7 +31,7 @@ class DeclareLossRepository extends BaseRepository {
     {
         $losses = $this->getLosses($client);
 
-        return $this->getRequestsById($losses, $requestId);
+        return $this->getRequestByRequestId($losses, $requestId);
     }
     
 //    /**

@@ -34,7 +34,7 @@ class DeclareArrivalRepository extends BaseRepository
   {
     $arrivals = $this->getArrivals($client);
 
-    return $this->getRequestsById($arrivals, $requestId);
+    return $this->getRequestByRequestId($arrivals, $requestId);
   }
 
 }

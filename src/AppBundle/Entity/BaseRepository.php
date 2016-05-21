@@ -42,7 +42,7 @@ class BaseRepository extends EntityRepository
         return $filteredRequests;
     }
     
-    protected function getRequestsById($requests, $requestId)
+    protected function getRequestByRequestId($requests, $requestId)
     {
         foreach($requests as $request) {
             $foundRequestId = $request->getRequestId($requestId);

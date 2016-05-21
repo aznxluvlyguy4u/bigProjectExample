@@ -33,6 +33,6 @@ class DeclareBirthRepository extends BaseRepository {
   {
     $births = $this->getBirths($client);
 
-    return $this->getRequestsById($births, $requestId);
+    return $this->getRequestByRequestId($births, $requestId);
   }
 }

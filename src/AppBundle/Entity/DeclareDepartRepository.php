@@ -64,6 +64,6 @@ class DeclareDepartRepository extends BaseRepository {
   {
     $departs = $this->getDepartures($client);
 
-    return $this->getRequestsById($departs, $requestId);
+    return $this->getRequestByRequestId($departs, $requestId);
   }
 }

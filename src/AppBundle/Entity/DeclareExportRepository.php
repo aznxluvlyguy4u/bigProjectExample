@@ -60,6 +60,6 @@ class DeclareExportRepository extends BaseRepository {
   {
     $exports = $this->getExports($client);
 
-    return $this->getRequestsById($exports, $requestId);
+    return $this->getRequestByRequestId($exports, $requestId);
   }
 }
