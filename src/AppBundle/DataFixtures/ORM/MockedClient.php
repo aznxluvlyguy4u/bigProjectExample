@@ -84,6 +84,9 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedClient->setUsername("Bartje");
     self::$mockedClient->setPassword($encoder->encodePassword(self::$mockedClient, "blauwetexelaar"));
 
+    //For easy testing, keep the AccessToken the same for each run
+    self::$mockedClient->setAccessToken("81a7a57abacc29ea18fcd270978c76055148a094");
+
     self::$mockedLocationAddress = new LocationAddress();
     self::$mockedLocationAddress->setAddressNumber("1");
     self::$mockedLocationAddress->setCity("Den Haag");
