@@ -2,8 +2,11 @@
 
 namespace AppBundle\Entity;
 use AppBundle\Constant\Constant;
+use AppBundle\DataFixtures\ORM\MockedDeclareArrivalResponse;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use Doctrine\Common\Collections\ArrayCollection;
+use AppBundle\Entity\DeclareArrival;
 
 /**
  * Class DeclareArrivalResponseRepository
@@ -22,59 +25,99 @@ class DeclareArrivalResponseRepository extends BaseRepository {
         return $this->getEntityManager()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY)->findOneBy(array("messageNumber"=>$messageNumber));
     }
 
-    /**
-     * @param Client $client
-     * @param string $state
-     * @return ArrayCollection
-     */
-    public function getArrivalResponses(Client $client, $state = null)
+    public function getArrivalsWithLastHistoryResponses(Client $client)
     {
-        $location = $client->getCompanies()->get(0)->getLocations()->get(0);
-        $retrievedArrivals = $location->getArrivals();
+        $retrievedArrivals = $this->_em->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivals($client);
 
-        $declareArrivalsResponse = new ArrayCollection();
+        $results = new ArrayCollection();
 
-        if($state == null) {
-            foreach($retrievedArrivals as $arrival) {
-                $responses = $arrival->getResponses();
+        foreach($retrievedArrivals as $arrival) {
 
-                foreach($responses as $response) {
-                    $declareArrivalsResponse->add($response);
+            $isHistoryRequestStateType = $arrival->getRequestState() == RequestStateType::OPEN ||
+                                         $arrival->getRequestState() == RequestStateType::REVOKING ||
+                                         $arrival->getRequestState() == RequestStateType::FINISHED;
+
+            if($isHistoryRequestStateType) {
+
+                $animal = $arrival->getAnimal();
+                if($animal != null) {
+                    $ulnCountryCode = $animal->getUlnCountryCode();
+                    $ulnNumber = $animal->getUlnNumber();
+                    $pedigreeCountryCode = $animal->getPedigreeCountryCode();
+                    $pedigreeNumber = $animal->getPedigreeNumber();
+                    $isImportAnimal = $animal->getIsImportAnimal();
+                } else {
+                    $ulnCountryCode = null;
+                    $ulnNumber = null;
+                    $pedigreeCountryCode = null;
+                    $pedigreeNumber = null;
+                    $isImportAnimal = null;
                 }
-            }
 
-        } else {
-            foreach($retrievedArrivals as $arrival) {
-                $responses = $arrival->getResponses();
+                $res = array("request_id" => $arrival->getRequestId(),
+                    "log_datum" => $arrival->getLogDate(),
+                    "uln_country_code" => $ulnCountryCode,
+                    "uln_number" => $ulnNumber,
+                    "pedigree_country_code" => $pedigreeCountryCode,
+                    "pedigree_number" => $pedigreeNumber,
+                    "arrival_date" => $arrival->getArrivalDate(),
+                    "is_import_animal" => $isImportAnimal,
+                    "ubn_previous_owner" => $arrival->getUbnPreviousOwner(),
+                    "requestState" => $arrival->getRequestState()
+                );
 
-                foreach($responses as $response) {
-                    if($arrival->getRequestState() == $state) {
-                        $declareArrivalsResponse->add($response);
-                    }
-                }
+                $results->add($res);
             }
         }
 
-        return $declareArrivalsResponse;
+        return $results;
     }
 
-    /**
-     * @param Client $client
-     * @param string $requestId
-     * @return DeclareArrivalResponse|null
-     */
-    public function getArrivalResponseById(Client $client, $requestId)
+    public function getArrivalsWithLastErrorResponses(Client $client)
     {
-        $arrivalResponsesResponse = $this->getArrivalsResponse($client);
+        $retrievedArrivals = $this->_em->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivals($client);
 
-        foreach($arrivalResponsesResponse as $arrivalResponse) {
-            $foundRequestId = $arrivalResponse->getRequestId($requestId);
-            if($foundRequestId == $requestId) {
-                return $arrivalResponse;
+        $results = new ArrayCollection();
+
+        foreach($retrievedArrivals as $arrival) {
+
+            if($arrival->getRequestState() == RequestStateType::FAILED) {
+                $lastResponse = $arrival->getResponses()->last();
+
+                $animal = $arrival->getAnimal();
+                if($animal != null) {
+                    $ulnCountryCode = $animal->getUlnCountryCode();
+                    $ulnNumber = $animal->getUlnNumber();
+                    $pedigreeCountryCode = $animal->getPedigreeCountryCode();
+                    $pedigreeNumber = $animal->getPedigreeNumber();
+                    $isImportAnimal = $animal->getIsImportAnimal();
+                } else {
+                    $ulnCountryCode = null;
+                    $ulnNumber = null;
+                    $pedigreeCountryCode = null;
+                    $pedigreeNumber = null;
+                    $isImportAnimal = null;
+                }
+
+                $res = array("request_id" => $arrival->getRequestId(),
+                    "log_datum" => $arrival->getLogDate(),
+                    "uln_country_code" => $ulnCountryCode,
+                    "uln_number" => $ulnNumber,
+                    "pedigree_country_code" => $pedigreeCountryCode,
+                    "pedigree_number" => $pedigreeNumber,
+                    "ubn_previous_owner" => $arrival->getUbnPreviousOwner(),
+                    "is_import_animal" => $isImportAnimal,
+                    "requestState" => $arrival->getRequestState(),
+                    "error_code" => $lastResponse->getErrorCode(),
+                    "error_message" => $lastResponse->getErrorMessage()
+                );
+
+                $results->add($res);
             }
         }
 
-        return null;
+        return $results;
     }
+
 
 }

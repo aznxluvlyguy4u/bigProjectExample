@@ -16,6 +16,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use JMS\Serializer\SerializationContext;
 
 /**
  * @Route("/api/v1/arrivals")
@@ -47,8 +48,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * @Method("GET")
    */
   public function getArrivalById(Request $request, $Id)
-  {//TODO for phase 2: read a location from the $request and find declareArrivals for that location
-
+  {
     $client = $this->getAuthenticatedUser($request);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
 
@@ -95,32 +95,31 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * @Route("")
    * @Method("GET")
    */
-  public function getArrivals(Request $request) //TODO rename function!!!!!!!!!!
-  { //TODO for phase 2: read a location from the $request and find declareArrivals for that location
-
+  public function getArrivals(Request $request)
+  {
     $client = $this->getAuthenticatedUser($request);
     $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
 
     if(!$stateExists) {
-      $declareArrivals = $repository->getArrivalResponses($client);
+      $declareArrivals = $repository->getArrivals($client);
 
     } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
 
       $declareArrivals = new ArrayCollection();
-      foreach($repository->getArrivalResponses($client, RequestStateType::OPEN) as $arrival) {
+      foreach($repository->getArrivals($client, RequestStateType::OPEN) as $arrival) {
         $declareArrivals->add($arrival);
       }
-      foreach($repository->getArrivalResponses($client, RequestStateType::REVOKING) as $arrival) {
+      foreach($repository->getArrivals($client, RequestStateType::REVOKING) as $arrival) {
         $declareArrivals->add($arrival);
       }
-      foreach($repository->getArrivalResponses($client, RequestStateType::FINISHED) as $arrival) {
+      foreach($repository->getArrivals($client, RequestStateType::FINISHED) as $arrival) {
         $declareArrivals->add($arrival);
       }
 
     } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareArrivals = $repository->getArrivalResponses($client, $state);
+      $declareArrivals = $repository->getArrivals($client, $state);
     }
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareArrivals), 200);
@@ -258,5 +257,38 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     }
   }
 
+
+  /**
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/responses/errors")
+   * @Method("GET")
+   */
+  public function getArrivalsForErrorTab(Request $request)
+  {
+    $client = $this->getAuthenticatedUser($request);
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
+
+    $declareArrivals = $repository->getArrivalsWithLastErrorResponses($client);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareArrivals), 200);
+  }
+
+
+  /**
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/responses/history")
+   * @Method("GET")
+   */
+  public function getArrivalsForHistoryTab(Request $request)
+  {
+    $client = $this->getAuthenticatedUser($request);
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
+
+    $declareArrivals = $repository->getArrivalsWithLastHistoryResponses($client);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareArrivals), 200);
+  }
 
 }
