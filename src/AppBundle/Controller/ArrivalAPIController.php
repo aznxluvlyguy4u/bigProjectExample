@@ -165,7 +165,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       $this->persist($messageObject, RequestType::DECLARE_IMPORT_ENTITY);
 
       //Send it to the queue and persist/update any changed state to the database
-      $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_IMPORT_ENTITY, RequestType::DECLARE_IMPORT);
+      $messageArray = $this->sendMessageObjectToQueue($messageObject);
 
     } else {
       //Convert the array into an object and add the mandatory values retrieved from the database
@@ -231,9 +231,9 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       $this->persist($declareImport, RequestType::DECLARE_IMPORT_ENTITY);
 
       //Send it to the queue and persist/update any changed state to the database
-      $this->sendMessageObjectToQueue($declareImport, RequestType::DECLARE_IMPORT_ENTITY, RequestType::DECLARE_IMPORT);
+      $messageArray = $this->sendEditMessageObjectToQueue($declareImport);
 
-      return new JsonResponse($declareImport, 200);
+      return new JsonResponse($messageArray, 200);
 
     } else {
       //Convert the array into an object and add the mandatory values retrieved from the database

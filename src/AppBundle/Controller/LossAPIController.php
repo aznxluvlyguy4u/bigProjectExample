@@ -171,8 +171,8 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
     $this->persist($messageObject, RequestType::DECLARE_LOSS_ENTITY);
 
     //Send it to the queue and persist/update any changed state to the database
-    $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_LOSS_ENTITY, RequestType::DECLARE_LOSS);
-    return new JsonResponse($messageObject, 200);
+    $messageArray = $this->sendMessageObjectToQueue($messageObject);
+    return new JsonResponse($messageArray, 200);
   }
 
 
@@ -244,9 +244,9 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
       $this->persist($declareLoss, RequestType::DECLARE_LOSS_ENTITY);
 
       //Send it to the queue and persist/update any changed state to the database
-      $this->sendMessageObjectToQueue($declareLoss, RequestType::DECLARE_LOSS_ENTITY, RequestType::DECLARE_LOSS);
+      $messageArray = $this->sendEditMessageObjectToQueue($declareLoss);
 
-      return new JsonResponse($declareLoss, 200);
+      return new JsonResponse($messageArray, 200);
     }
 
   }

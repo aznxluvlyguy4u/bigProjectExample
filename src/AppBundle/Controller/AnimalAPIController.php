@@ -168,7 +168,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       $this->persist($messageObject, RequestType::RETRIEVE_ANIMALS_ENTITY);
 
       //Send it to the queue and persist/update any changed state to the database
-      $this->sendMessageObjectToQueue($messageObject, RequestType::RETRIEVE_ANIMALS_ENTITY, RequestType::RETRIEVE_ANIMALS);
+      $messageArray = $this->sendMessageObjectToQueue($messageObject);
 
       return new JsonResponse($messageObject, 200);
     }
@@ -207,7 +207,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     //$this->persist($messageObject, RequestType::RETRIEVE_ANIMALS_ENTITY);
 
     //Send it to the queue and persist/update any changed state to the database
-    $this->sendMessageObjectToQueue($messageObject, RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY, RequestType::RETRIEVE_ANIMAL_DETAILS);
+    $messageArray = $this->sendMessageObjectToQueue($messageObject);
 
     return new JsonResponse($messageObject, 200);
 

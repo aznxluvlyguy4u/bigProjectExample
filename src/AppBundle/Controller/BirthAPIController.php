@@ -196,9 +196,9 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $this->persist($declareBirthObject, RequestType::DECLARE_BIRTH_ENTITY);
 
         //Send it to the queue and persist/update any changed state to the database
-        $this->sendMessageObjectToQueue($declareBirthObject, RequestType::DECLARE_BIRTH_ENTITY, RequestType::DECLARE_BIRTH);
+        $messageArray = $this->sendMessageObjectToQueue($declareBirthObject);
 
-        $returnMessages->add($declareBirthObject);
+        $returnMessages->add($messageArray);
       }
 
     return new JsonResponse($returnMessages, 200);
@@ -282,8 +282,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
       $this->persist($declareBirthUpdate, RequestType::DECLARE_BIRTH_ENTITY);
 
       //Send it to the queue and persist/update any changed state to the database
-      $this->sendMessageObjectToQueue($declareBirthUpdate, RequestType::DECLARE_BIRTH_ENTITY, RequestType::DECLARE_BIRTH);
+      $messageArray = $this->sendEditMessageObjectToQueue($declareBirthUpdate);
 
-    return new JsonResponse($declareBirthUpdate, 200);
+    return new JsonResponse($messageArray, 200);
   }
 }
