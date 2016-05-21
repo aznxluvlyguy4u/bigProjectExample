@@ -42,6 +42,15 @@ class Location
   protected $ubn;
 
   /**
+   * @var string
+   *
+   * @ORM\Column(type="string", nullable=true)
+   * @JMS\Type("string")
+   * @Expose
+   */
+  private $locationHolder;
+
+  /**
    * @var array
    *
    * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="location")
@@ -569,5 +578,29 @@ class Location
     public function getRevokes()
     {
         return $this->revokes;
+    }
+
+    /**
+     * Set locationHolder
+     *
+     * @param string $locationHolder
+     *
+     * @return Location
+     */
+    public function setLocationHolder($locationHolder)
+    {
+        $this->locationHolder = $locationHolder;
+
+        return $this;
+    }
+
+    /**
+     * Get locationHolder
+     *
+     * @return string
+     */
+    public function getLocationHolder()
+    {
+        return $this->locationHolder;
     }
 }
