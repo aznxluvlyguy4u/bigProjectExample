@@ -264,7 +264,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * @Route("/responses/errors")
    * @Method("GET")
    */
-  public function getArrivalsForErrorTab(Request $request)
+  public function getArrivalErrors(Request $request)
   {
     $client = $this->getAuthenticatedUser($request);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
@@ -281,7 +281,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * @Route("/responses/history")
    * @Method("GET")
    */
-  public function getArrivalsForHistoryTab(Request $request)
+  public function getArrivalHistory(Request $request)
   {
     $client = $this->getAuthenticatedUser($request);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);

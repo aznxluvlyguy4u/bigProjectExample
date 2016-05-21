@@ -63,7 +63,7 @@ class DeclareArrivalResponseRepository extends BaseRepository {
                     "arrival_date" => $arrival->getArrivalDate(),
                     "is_import_animal" => $isImportAnimal,
                     "ubn_previous_owner" => $arrival->getUbnPreviousOwner(),
-                    "requestState" => $arrival->getRequestState()
+                    "request_state" => $arrival->getRequestState()
                 );
 
                 $results->add($res);
@@ -107,7 +107,7 @@ class DeclareArrivalResponseRepository extends BaseRepository {
                     "pedigree_number" => $pedigreeNumber,
                     "ubn_previous_owner" => $arrival->getUbnPreviousOwner(),
                     "is_import_animal" => $isImportAnimal,
-                    "requestState" => $arrival->getRequestState(),
+                    "request_state" => $arrival->getRequestState(),
                     "error_code" => $lastResponse->getErrorCode(),
                     "error_message" => $lastResponse->getErrorMessage()
                 );
