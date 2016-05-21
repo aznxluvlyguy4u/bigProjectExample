@@ -161,33 +161,7 @@ class IRSerializer implements IRSerializerInterface
             $declareArrivalRequest->setUbnPreviousOwner($declareArrivalContentArray['ubn_previous_owner']);
             $declareArrivalRequest->setRequestState(RequestStateType::OPEN);
             
-            $uidType = $declareArrivalRequest->getUidType();
-            $uidCountryCode = $declareArrivalRequest->getUidCountryCode();
-            $uidNumber = $declareArrivalRequest->getUidNumber();
-            $animalRepository = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY);
-            $retrievedAnimal = null;
-            if($uidType == UIDType::ULN) {
-                $retrievedAnimal = $animalRepository->findOneBy(array('ulnCountryCode'=>$uidCountryCode, 'ulnNumber'=>$uidNumber));
-            } else if($uidType == UIDType::PEDIGREE) {
-                $retrievedAnimal = $animalRepository->findOneBy(array('pedigreeCountryCode' => $uidCountryCode, 'pedigreeNumber' => $uidNumber));
-            }
-
-            if($retrievedAnimal != null) {
-
-                $ulnCountryCode = $retrievedAnimal->getUlnCountryCode();
-                $ulnNumber = $retrievedAnimal->getUlnNumber();
-
-                if($ulnCountryCode != null && $ulnNumber != null) {
-                    $declareArrivalRequest->setUidCountryCode($ulnCountryCode);
-                    $declareArrivalRequest->setUidNumber($ulnNumber);
-                    $declareArrivalRequest->setUidType(UIDType::ULN);
-
-                } else {
-                    $declareArrivalRequest->setUidCountryCode($retrievedAnimal->getPedigreeCountryCode());
-                    $declareArrivalRequest->setUidNumber($retrievedAnimal->getPedigreeNumber());
-                    $declareArrivalRequest->setUidType(UIDType::PEDIGREE);
-                }
-            }
+            //The animal and its values are not updatable.
             
         } else {
             $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray);
@@ -207,14 +181,13 @@ class IRSerializer implements IRSerializerInterface
             if($contentAnimal != null) {
 
                 if(array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $contentAnimal) && array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $contentAnimal)) {
-                    $declareArrivalRequest->setUidCountryCode($contentAnimal[Constant::ULN_COUNTRY_CODE_NAMESPACE]);
-                    $declareArrivalRequest->setUidNumber($contentAnimal[Constant::ULN_NUMBER_NAMESPACE]);
-                    $declareArrivalRequest->setUidType(UIDType::ULN);
+                    $declareArrivalRequest->setUlnCountryCode($contentAnimal[Constant::ULN_COUNTRY_CODE_NAMESPACE]);
+                    $declareArrivalRequest->setUlnNumber($contentAnimal[Constant::ULN_NUMBER_NAMESPACE]);
+                }
 
-                } else if(array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $contentAnimal) && array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $contentAnimal)) {
-                    $declareArrivalRequest->setUidCountryCode($contentAnimal[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE]);
-                    $declareArrivalRequest->setUidNumber($contentAnimal[Constant::PEDIGREE_NUMBER_NAMESPACE]);
-                    $declareArrivalRequest->setUidType(UIDType::PEDIGREE);
+                if(array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $contentAnimal) && array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $contentAnimal)) {
+                    $declareArrivalRequest->setPedigreeCountryCode($contentAnimal[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE]);
+                    $declareArrivalRequest->setPedigreeNumber($contentAnimal[Constant::PEDIGREE_NUMBER_NAMESPACE]);
                 }
             }
         }

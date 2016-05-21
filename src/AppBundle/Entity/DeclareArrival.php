@@ -33,7 +33,7 @@ class DeclareArrival extends DeclareBase {
      * @ORM\Column(type="string", nullable=true)
      * @Expose
      */
-    private $uidCountryCode;
+    private $ulnCountryCode;
 
     /**
      * @var string
@@ -41,7 +41,7 @@ class DeclareArrival extends DeclareBase {
      * @ORM\Column(type="string", nullable=true)
      * @Expose
      */
-    private $uidNumber;
+    private $ulnNumber;
 
     /**
      * @var string
@@ -49,7 +49,15 @@ class DeclareArrival extends DeclareBase {
      * @ORM\Column(type="string", nullable=true)
      * @Expose
      */
-    private $uidType;
+    private $pedigreeCountryCode;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
+    private $pedigreeNumber;
 
     /**
      * 2016-04-01T22:00:48.131Z
@@ -269,14 +277,13 @@ class DeclareArrival extends DeclareBase {
         if($animal != null) {
 
             if($animal->getUlnCountryCode()!=null && $animal->getUlnNumber()!=null) {
-                $this->uidCountryCode = $animal->getUlnCountryCode();
-                $this->uidNumber = $animal->getUlnNumber();
-                $this->uidType = Constant::ULN_NAMESPACE;
+                $this->ulnCountryCode = $animal->getUlnCountryCode();
+                $this->ulnNumber = $animal->getUlnNumber();
+            }
 
-            } else if ($animal->getPedigreeCountryCode()!=null && $animal->getPedigreeNumber()!=null){
-                $this->uidCountryCode = $animal->getPedigreeCountryCode();
-                $this->uidNumber = $animal->getPedigreeNumber();
-                $this->uidType = Constant::PEDIGREE_NAMESPACE;
+            if ($animal->getPedigreeCountryCode()!=null && $animal->getPedigreeNumber()!=null){
+                $this->pedigreeCountryCode = $animal->getPedigreeCountryCode();
+                $this->pedigreeNumber = $animal->getPedigreeNumber();
             }
         }
 
@@ -334,52 +341,69 @@ class DeclareArrival extends DeclareBase {
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getUidCountryCode()
+    public function getUlnCountryCode()
     {
-        return $this->uidCountryCode;
+        return $this->ulnCountryCode;
     }
 
     /**
-     * @param mixed $uidCountryCode
+     * @param string $ulnCountryCode
      */
-    public function setUidCountryCode($uidCountryCode)
+    public function setUlnCountryCode($ulnCountryCode)
     {
-        $this->uidCountryCode = $uidCountryCode;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getUidNumber()
-    {
-        return $this->uidNumber;
-    }
-
-    /**
-     * @param mixed $uidNumber
-     */
-    public function setUidNumber($uidNumber)
-    {
-        $this->uidNumber = $uidNumber;
+        $this->ulnCountryCode = $ulnCountryCode;
     }
 
     /**
      * @return string
      */
-    public function getUidType()
+    public function getUlnNumber()
     {
-        return $this->uidType;
+        return $this->ulnNumber;
     }
 
     /**
-     * @param string $uidType
+     * @param string $ulnNumber
      */
-    public function setUidType($uidType)
+    public function setUlnNumber($ulnNumber)
     {
-        $this->uidType = $uidType;
+        $this->ulnNumber = $ulnNumber;
     }
+
+    /**
+     * @return string
+     */
+    public function getPedigreeCountryCode()
+    {
+        return $this->pedigreeCountryCode;
+    }
+
+    /**
+     * @param string $pedigreeCountryCode
+     */
+    public function setPedigreeCountryCode($pedigreeCountryCode)
+    {
+        $this->pedigreeCountryCode = $pedigreeCountryCode;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPedigreeNumber()
+    {
+        return $this->pedigreeNumber;
+    }
+
+    /**
+     * @param mixed $pedigreeNumber
+     */
+    public function setPedigreeNumber($pedigreeNumber)
+    {
+        $this->pedigreeNumber = $pedigreeNumber;
+    }
+
 
 
 }

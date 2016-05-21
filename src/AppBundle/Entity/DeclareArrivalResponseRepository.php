@@ -39,29 +39,14 @@ class DeclareArrivalResponseRepository extends BaseRepository {
 
             if($isHistoryRequestStateType) {
 
-                $animal = $arrival->getAnimal();
-                if($animal != null) {
-                    $ulnCountryCode = $animal->getUlnCountryCode();
-                    $ulnNumber = $animal->getUlnNumber();
-                    $pedigreeCountryCode = $animal->getPedigreeCountryCode();
-                    $pedigreeNumber = $animal->getPedigreeNumber();
-                    $isImportAnimal = $animal->getIsImportAnimal();
-                } else {
-                    $ulnCountryCode = null;
-                    $ulnNumber = null;
-                    $pedigreeCountryCode = null;
-                    $pedigreeNumber = null;
-                    $isImportAnimal = null;
-                }
-
                 $res = array("request_id" => $arrival->getRequestId(),
                     "log_datum" => $arrival->getLogDate(),
-                    "uln_country_code" => $ulnCountryCode,
-                    "uln_number" => $ulnNumber,
-                    "pedigree_country_code" => $pedigreeCountryCode,
-                    "pedigree_number" => $pedigreeNumber,
+                    "uln_country_code" => $arrival->getUlnCountryCode(),
+                    "uln_number" => $arrival->getUlnNumber(),
+                    "pedigree_country_code" => $arrival->getPedigreeCountryCode(),
+                    "pedigree_number" => $arrival->getPedigreeNumber(),
                     "arrival_date" => $arrival->getArrivalDate(),
-                    "is_import_animal" => $isImportAnimal,
+                    "is_import_animal" => $arrival->getIsImportAnimal(),
                     "ubn_previous_owner" => $arrival->getUbnPreviousOwner(),
                     "request_state" => $arrival->getRequestState()
                 );
@@ -84,29 +69,14 @@ class DeclareArrivalResponseRepository extends BaseRepository {
             if($arrival->getRequestState() == RequestStateType::FAILED) {
                 $lastResponse = $arrival->getResponses()->last();
 
-                $animal = $arrival->getAnimal();
-                if($animal != null) {
-                    $ulnCountryCode = $animal->getUlnCountryCode();
-                    $ulnNumber = $animal->getUlnNumber();
-                    $pedigreeCountryCode = $animal->getPedigreeCountryCode();
-                    $pedigreeNumber = $animal->getPedigreeNumber();
-                    $isImportAnimal = $animal->getIsImportAnimal();
-                } else {
-                    $ulnCountryCode = null;
-                    $ulnNumber = null;
-                    $pedigreeCountryCode = null;
-                    $pedigreeNumber = null;
-                    $isImportAnimal = null;
-                }
-
                 $res = array("request_id" => $arrival->getRequestId(),
                     "log_datum" => $arrival->getLogDate(),
-                    "uln_country_code" => $ulnCountryCode,
-                    "uln_number" => $ulnNumber,
-                    "pedigree_country_code" => $pedigreeCountryCode,
-                    "pedigree_number" => $pedigreeNumber,
+                    "uln_country_code" => $arrival->getUlnCountryCode(),
+                    "uln_number" => $arrival->getUlnNumber(),
+                    "pedigree_country_code" => $arrival->getPedigreeCountryCode(),
+                    "pedigree_number" => $arrival->getPedigreeNumber(),
                     "ubn_previous_owner" => $arrival->getUbnPreviousOwner(),
-                    "is_import_animal" => $isImportAnimal,
+                    "is_import_animal" => $arrival->getIsImportAnimal(),
                     "request_state" => $arrival->getRequestState(),
                     "error_code" => $lastResponse->getErrorCode(),
                     "error_message" => $lastResponse->getErrorMessage()
