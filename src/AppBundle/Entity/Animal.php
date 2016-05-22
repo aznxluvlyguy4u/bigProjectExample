@@ -182,7 +182,7 @@ abstract class Animal
     /**
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareImport")
-     * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="animal", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="animal")
      */
     protected $imports;
 
