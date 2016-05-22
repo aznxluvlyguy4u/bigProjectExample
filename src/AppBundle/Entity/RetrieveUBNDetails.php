@@ -53,9 +53,8 @@ class RetrieveUbnDetails
     private $requestState;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 20)
-     * @Assert\NotBlank
      * @JMS\Type("string")
      */
     private $relationNumberKeeper;
@@ -63,20 +62,11 @@ class RetrieveUbnDetails
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
-     * @Assert\NotBlank
+     * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
      */
     private $ubn;
-
-    /**
-     * @Assert\NotBlank
-     * @ORM\ManyToOne(targetEntity="Location")
-     * @ORM\JoinColumn(name="location_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\Location")
-     */
-    private $location;
 
     /**
      * @var integer
@@ -266,30 +256,5 @@ class RetrieveUbnDetails
     public function getAnimalType()
     {
         return $this->animalType;
-    }
-
-    /**
-     * Set location
-     *
-     * @param \AppBundle\Entity\Location $location
-     *
-     * @return RetrieveUBNDetails
-     */
-    public function setLocation(\AppBundle\Entity\Location $location = null)
-    {
-        $this->location = $location;
-        $this->setUbn($location->getUbn());
-
-        return $this;
-    }
-
-    /**
-     * Get location
-     *
-     * @return \AppBundle\Entity\Location
-     */
-    public function getLocation()
-    {
-        return $this->location;
     }
 }
