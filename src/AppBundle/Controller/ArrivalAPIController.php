@@ -151,33 +151,39 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function createArrival(Request $request)
   {
+    //Only verify if pedigree exists TODO Verify that only unknown ULNs are allowed but not unknown pedigrees
+    if(!$this->verifyOnlyPedigreeCodeInAnimal($request)){
+      return new JsonResponse(array('code'=>428, "message" => "Pedigree value is not in database."), 428);
+    }
+
     //Get content to array
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
+    $repository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
 
     $isImportAnimal = $content->get('is_import_animal');
 
+    //Convert the array into an object and add the mandatory values retrieved from the database
     if($isImportAnimal) {
-      //Convert the array into an object and add the mandatory values retrieved from the database
       $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client);
 
-      //First Persist object to Database, before sending it to the queue
-      $this->persist($messageObject);
-
-      //Send it to the queue and persist/update any changed state to the database
-      $messageArray = $this->sendMessageObjectToQueue($messageObject);
-
     } else {
-      //Convert the array into an object and add the mandatory values retrieved from the database
       $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client);
-
-      //Send it to the queue and persist/update any changed state to the database
-      $messageArray = $this->sendMessageObjectToQueue($messageObject);
-
-      //Persist message without animal. That is done after a successful response
-      $messageObject->setAnimal(null);
-      $this->persist($messageObject);
     }
+
+    //Send it to the queue and persist/update any changed state to the database
+    $messageArray = $this->sendMessageObjectToQueue($messageObject);
+
+    //Persist message without animal. That is done after a successful response
+    $retrievedAnimal = $repository->findByAnimal($messageObject->getAnimal());
+    $animalIsInDatabase = $retrievedAnimal != null;
+    if($animalIsInDatabase){
+      $messageObject->setAnimal(null);
+      $messageObject->setAnimal($retrievedAnimal);
+    } else {
+      $messageObject->setAnimal(null);
+    }
+    $this->persist($messageObject);
 
 //    return new JsonResponse(array("status"=>"sent"), 200);
     return new JsonResponse($messageArray, 200);
@@ -211,47 +217,38 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $requestId = $content->get('request_id');
     $client = $this->getAuthenticatedUser($request);
 
-    //TODO Add verification requestId filter
-    $declareArrivalOrImport = $this->getDoctrine()->getRepository(Constant::DECLARE_BASE_REPOSITORY)->findOneBy(array("requestId"=>$requestId));
-    $isImportAnimal = $declareArrivalOrImport->getIsImportAnimal();
+    //verify requestId for arrivals
+    $messageObject = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivalByRequestId($client, $requestId);
+
+    if($messageObject == null) { //verify requestId for imports
+      $messageObject = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->getImportByRequestId($client, $requestId);
+    }
+
+    if($messageObject == null) {
+      $errorMessage = "No DeclareArrival or DeclareImport found with request_id: " . $requestId;
+      return new JsonResponse(array('code'=>428, "message" => $errorMessage), 428);
+    }
+
+    $isImportAnimal = $messageObject->getIsImportAnimal();
 
     if($isImportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $declareImportUpdate = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY,
+      $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_IMPORT_ENTITY,
           $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
-
-      $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY);
-      $declareImport = $entityManager->updateDeclareImportMessage($declareImportUpdate, $requestId);
-
-      if($declareImport == null) {
-        return new JsonResponse(array("message"=>"No DeclareImport found with request_id:" . $requestId), 204);
-      }
-
-      //First Persist object to Database, before sending it to the queue
-      $this->persist($declareImport);
-
-      //Send it to the queue and persist/update any changed state to the database
-      $messageArray = $this->sendEditMessageObjectToQueue($declareImport);
-
-      return new JsonResponse($messageArray, 200);
 
     } else {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $declareArrival = $this->buildEditMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY,
+      $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY,
           $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
-
-      if($declareArrival == null) {
-        return new JsonResponse(array("message"=>"No DeclareArrival found with request_id:" . $requestId), 204);
-      }
-
-      //Send it to the queue and persist/update any changed requestState to the database
-      $messageArray = $this->sendEditMessageObjectToQueue($declareArrival);
-
-      //Persist the update
-      $this->persist($declareArrival);
-
-      return new JsonResponse($messageArray, 200);
     }
+
+    //Send it to the queue and persist/update any changed requestState to the database
+    $messageArray = $this->sendEditMessageObjectToQueue($messageObject);
+
+    //Persist the update
+    $this->persist($messageObject);
+
+    return new JsonResponse($messageArray, 200);
   }
 
 

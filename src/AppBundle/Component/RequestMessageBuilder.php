@@ -3,7 +3,20 @@
 namespace AppBundle\Component;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Client;
+use AppBundle\Entity\DeclarationDetail;
+use AppBundle\Entity\DeclareAnimalFlag;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareExport;
+use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareLoss;
+use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\RetrieveAnimals;
+use AppBundle\Entity\RetrieveEuropeanCountries;
+use AppBundle\Entity\RetrieveTags;
+use AppBundle\Entity\RetrieveUBNDetails;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Service\IRSerializer;
@@ -90,7 +103,15 @@ class RequestMessageBuilder
         $this->retrieveAnimalDetailsBuilder = new RetrieveAnimalDetailsMessageBuilder($em);
     }
 
-    public function build($messageClassNameSpace, ArrayCollection $contentArray, Person $person, $isEditMessage)
+    /**
+     * @param string $messageClassNameSpace
+     * @param ArrayCollection $contentArray
+     * @param Person|Client $person
+     * @param boolean $isEditMessage
+     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveEuropeanCountries|RetrieveUBNDetails
+     * @throws \Exception
+     */
+    public function build($messageClassNameSpace, ArrayCollection $contentArray, $person, $isEditMessage)
     {
         switch($messageClassNameSpace) {
             case RequestType::DECLARATION_DETAIL_ENTITY:
@@ -120,7 +141,7 @@ class RequestMessageBuilder
                 $declareExportRequest = $this->irSerializer->parseDeclareExport($contentArray, $isEditMessage);
                 return $this->exportMessageBuilder->buildMessage($declareExportRequest, $person);
             case RequestType::DECLARE_IMPORT_ENTITY:
-                $declareImportRequest = $this->irSerializer->parseDeclareImport($contentArray, $isEditMessage);
+                $declareImportRequest = $this->irSerializer->parseDeclareImport($contentArray, $person, $isEditMessage);
                 return $this->importMessageBuilder->buildMessage($declareImportRequest, $person);
             case RequestType::RETRIEVE_TAGS_ENTITY:
                 $retrieveTagsRequest = $this->irSerializer->parseRetrieveTags($contentArray, $isEditMessage);

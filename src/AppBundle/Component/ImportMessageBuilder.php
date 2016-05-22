@@ -43,21 +43,18 @@ class ImportMessageBuilder extends MessageBuilderBase
   }
 
   /**
-   * @param DeclareImport $messageObject the message received from the front-end
+   * @param DeclareImport $declareImport the message received from the front-end
    * @return DeclareImport
    */
-  private function addDeclareImportData(DeclareImport $messageObject)
+  private function addDeclareImportData(DeclareImport $declareImport)
   {
-    $animal = $messageObject->getAnimal();
-    $animal->setAnimalType(AnimalType::sheep);
-    $animal->setAnimalCountryOrigin($messageObject->getAnimalCountryOrigin());
-
-    //Both persist and flush are necessary for the animal
-    $this->em->persist($animal);
-    $this->em->flush();
+    $animal = $declareImport->getAnimal();
+    if($animal != null) {
+      $animal->setAnimalCountryOrigin($declareImport->getAnimalCountryOrigin());
+    }
 
     //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
-    $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
-    return $messageObject;
+    $declareImport->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
+    return $declareImport;
   }
 }

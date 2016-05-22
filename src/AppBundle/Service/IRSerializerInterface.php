@@ -73,7 +73,7 @@ interface IRSerializerInterface
      * @param ArrayCollection $contentArray
      * @return DeclareImport
      */
-    function parseDeclareImport(ArrayCollection $contentArray, $isEditMessage);
+    function parseDeclareImport(ArrayCollection $contentArray, Client $client, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray

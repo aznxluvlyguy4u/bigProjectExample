@@ -238,18 +238,31 @@ class APIController extends Controller implements APIControllerInterface
     $sendToQresult = $this->getQueueService()
       ->send($requestId, $jsonMessage, $requestTypeNameSpace);
 
+
+    $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+    $retrievedAnimal = $animalRepository->findByAnimal($messageObject->getAnimal());
+    $animalIsInDatabase = $retrievedAnimal != null;
+
     //If send to Queue, failed, it needs to be resend, set state to failed
     if ($sendToQresult['statusCode'] != '200') {
       $messageObject->setRequestState(RequestStateType::FAILED);
 
       //Update this state to the database
-      $messageObject = $repository->persist($messageObject);
+      if($animalIsInDatabase){
+      } else {
+        $messageObject->setAnimal(null);
+      }
+      $this->persist($messageObject);
 
     } else if($isUpdate) { //If successfully sent to the queue and message is an Update/Edit request
       $messageObject->setRequestState(RequestStateType::OPEN); //update the RequestState
 
       //Update this state to the database
-      $messageObject = $repository->persist($messageObject);
+      if($animalIsInDatabase){
+      } else {
+        $messageObject->setAnimal(null);
+      }
+      $this->persist($messageObject);
     }
 
     return $messageArray;
@@ -342,9 +355,59 @@ class APIController extends Controller implements APIControllerInterface
       //When all animals have passed the verification return this:
       return array("animalKind" => "All objects",
             "keyType" => $keyType,
-            "isValid" => true);
+            "isValid" => true,
+            "result" => $this->createValidityCheckMessage(true));
     }
 
+  }
+
+  public function verifyOnlyPedigreeCodeInAnimal(Request $request)
+  {
+    $content = $this->getContentAsArray($request)->get(Constant::ANIMAL_NAMESPACE);
+
+    if (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $content) && array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $content)) {
+      $pedigreeNumber = $content[Constant::PEDIGREE_NUMBER_NAMESPACE];
+      $pedigreeCountryCode = $content[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
+
+      if($pedigreeCountryCode != null && $pedigreeNumber != null) {
+        $result = $this->isUlnOrPedigreeCodeValid($request)['isValid'];
+
+      } else {
+        $result = true;
+      }
+    } else {
+      $result = true;
+    }
+
+    return $result;
+  }
+
+  /**
+   * @param boolean $isValid
+   * @param string $keyType
+   * @param string $animalKind
+   * @return array
+   */
+  private function createValidityCheckMessage($isValid, $keyType = null, $animalKind = null)
+  {
+    if($isValid && $keyType == null && $animalKind == null) {
+      $message = "The uln and/or pedigree values for all objects are valid.";
+      $code = 200;
+    } else if ($keyType == null) {
+      $message = "The uln or pedigree" . ' of ' . $animalKind . ' not found.';
+      $code = 400;
+    } else if ($animalKind == null) {
+      $message = "No animal found";
+      $code = 400;
+    } else if (!$isValid) { //and has keyType and animalKind
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      $code = 428;
+    } else { //isValid == true, and has keyType and animalKind
+      $message = "The " . $keyType . " of " . $animalKind . " is valid.";
+      $code = 200;
+    }
+
+    return array('code'=>$code, "message" => $message);
   }
 
   private function verifyUlnOrPedigreeCodeInAnimal($animalContentArray, $objectToBeVerified)
@@ -371,7 +434,8 @@ class APIController extends Controller implements APIControllerInterface
       if ($tag == null) {
         return array("animalKind" => $objectToBeVerified,
             "keyType" => Constant::ULN_NAMESPACE,
-            "isValid" => false);
+            "isValid" => false,
+            "result" => $this->createValidityCheckMessage(false, Constant::ULN_NAMESPACE), $objectToBeVerified);
       }
     }
     else {
@@ -380,19 +444,22 @@ class APIController extends Controller implements APIControllerInterface
         $pedigreeCountryCode = $animalContentArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
       }
 
-      $animal = $animalRepository->findByCountryCodeAndPedigree($pedigreeCountryCode, $pedigreeCode);
+      $animal = $animalRepository->findByPedigreeCountryCodeAndNumber($pedigreeCountryCode, $pedigreeCode);
 
       if($animal == null){
+        $keyType = Constant::PEDIGREE_SNAKE_CASE_NAMESPACE;
         return array("animalKind" => $objectToBeVerified,
-            "keyType" => Constant::PEDIGREE_SNAKE_CASE_NAMESPACE,
-            "isValid" => false);
+            "keyType" => $keyType,
+            "isValid" => false,
+            "result" => $this->createValidityCheckMessage(false, $keyType, $objectToBeVerified));
       }
     }
     $keyType = Constant::ULN_NAMESPACE . " and/or " . Constant::PEDIGREE_SNAKE_CASE_NAMESPACE;
 
     return array("animalKind" => $objectToBeVerified,
         "keyType" => $keyType,
-        "isValid" => true);
+        "isValid" => true,
+        "result" => $this->createValidityCheckMessage(true));
   }
 
   private function verifyUlnOrPedigreeCode($Id)
@@ -418,7 +485,7 @@ class APIController extends Controller implements APIControllerInterface
       //Verify if id is a valid pedigreenumber
 
       $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-      $animal = $animalRepository->findByCountryCodeAndPedigree($countryCode, $ulnOrPedigreeCode);
+      $animal = $animalRepository->findByPedigreeCountryCodeAndNumber($countryCode, $ulnOrPedigreeCode);
 
       if ($animal != null) {
         $isValid = true;
@@ -428,7 +495,8 @@ class APIController extends Controller implements APIControllerInterface
 
     return array("animalKind" => "Id",
         "keyType" => $keyType,
-        "isValid" => $isValid);
+        "isValid" => $isValid,
+        "result" => $this->createValidityCheckMessage($isValid, $keyType, $Id));
   }
 
   /**

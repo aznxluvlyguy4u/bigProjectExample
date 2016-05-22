@@ -160,8 +160,6 @@ class IRSerializer implements IRSerializerInterface
             $declareArrivalRequest->setArrivalDate(new \DateTime($declareArrivalContentArray['arrival_date']));
             $declareArrivalRequest->setUbnPreviousOwner($declareArrivalContentArray['ubn_previous_owner']);
             $declareArrivalRequest->setRequestState(RequestStateType::OPEN);
-
-            //The animal and its values are not updatable.
             
         } else {
             $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray);
@@ -400,25 +398,52 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareImport(ArrayCollection $declareImportContentArray, $isEditMessage)
+    function parseDeclareImport(ArrayCollection $declareImportContentArray, Client $client, $isEditMessage)
     {
         $declareImportContentArray["type"] = RequestType::DECLARE_IMPORT_ENTITY;
 
         $importDate = $declareImportContentArray['arrival_date'];
 
-        //Retrieve animal entity
-        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareImportContentArray);
+        if($isEditMessage) {
+            $requestId = $declareImportContentArray['request_id'];
+            $declareImportRequest = $this->entityManager->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->getImportByRequestId($client, $requestId);
 
-        //Add retrieved animal properties including type to initial animalContentArray
-        $declareImportContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
+            //Update values here
+            $declareImportRequest->setImportDate(new \DateTime($declareImportContentArray['arrival_date']));
+            $declareImportRequest->setAnimalCountryOrigin($declareImportContentArray['animal_country_origin']);
+            $declareImportRequest->setRequestState(RequestStateType::OPEN);
 
-        //denormalize the content to an object
-        $json = $this->serializeToJSON($declareImportContentArray);
-        $declareImportRequest = $this->deserializeToObject($json, RequestType::DECLARE_IMPORT_ENTITY);
+        } else {
+            //Retrieve animal entity
+            $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareImportContentArray);
+            $retrievedAnimal->setIsImportAnimal(true);
 
-        //Add retrieved animal and import date to DeclareImport
-        $declareImportRequest->setAnimal($retrievedAnimal);
-        $declareImportRequest->setImportDate(new \DateTime($importDate));
+            //Add retrieved animal properties including type to initial animalContentArray
+            $declareImportContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
+
+            //denormalize the content to an object
+            $json = $this->serializeToJSON($declareImportContentArray);
+            $declareImportRequest = $this->deserializeToObject($json, RequestType::DECLARE_IMPORT_ENTITY);
+
+            //Add retrieved animal and import date to DeclareImport
+            $declareImportRequest->setAnimal($retrievedAnimal);
+            $declareImportRequest->setImportDate(new \DateTime($importDate));
+
+            $contentAnimal = $declareImportContentArray['animal'];
+
+            if($contentAnimal != null) {
+
+                if(array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $contentAnimal) && array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $contentAnimal)) {
+                    $declareImportRequest->setUlnCountryCode($contentAnimal[Constant::ULN_COUNTRY_CODE_NAMESPACE]);
+                    $declareImportRequest->setUlnNumber($contentAnimal[Constant::ULN_NUMBER_NAMESPACE]);
+                }
+
+                if(array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $contentAnimal) && array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $contentAnimal)) {
+                    $declareImportRequest->setPedigreeCountryCode($contentAnimal[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE]);
+                    $declareImportRequest->setPedigreeNumber($contentAnimal[Constant::PEDIGREE_NUMBER_NAMESPACE]);
+                }
+            }
+        }
 
         return $declareImportRequest;
     }
