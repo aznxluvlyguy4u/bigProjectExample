@@ -12,12 +12,14 @@ use Doctrine\Common\Collections\ArrayCollection;
 class DeclareDepartRepository extends BaseRepository {
 
   /**
-   * @param $declareDepartUpdate
-   * @param $Id
-   * @return null|object
+   * @param DeclareDepart $declareDepartUpdate
+   * @param Client $client
+   * @param $id
+   * @return null|DeclareDepart
    */
-  public function updateDeclareDepartMessage($declareDepartUpdate, $Id) {
-    $declareDepart = $this->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
+  public function updateDeclareDepartMessage($declareDepartUpdate, $client, $id) {
+
+    $declareDepart = $this->getDepartureByRequestId($client, $id);
 
     if($declareDepart == null) {
       return null;

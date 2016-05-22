@@ -12,12 +12,14 @@ use Doctrine\Common\Collections\ArrayCollection;
 class DeclareExportRepository extends BaseRepository {
 
   /**
-   * @param $declareExportUpdate
-   * @param $Id
-   * @return null|object
+   * @param DeclareExport $declareExportUpdate
+   * @param Client $client
+   * @param $id
+   * @return null|DeclareExport
    */
-  public function updateDeclareExportMessage($declareExportUpdate, $Id) {
-    $declareExport = $this->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
+  public function updateDeclareExportMessage($declareExportUpdate, $client, $id) {
+
+    $declareExport = $this->getExportByRequestId($client, $id);
 
     if($declareExport == null) {
       return null;

@@ -198,9 +198,22 @@ class DeclareDepart extends DeclareBase
      *
      * @return DeclareDepart
      */
-    public function setAnimal(\AppBundle\Entity\Animal $animal)
+    public function setAnimal(\AppBundle\Entity\Animal $animal = null)
     {
         $this->animal = $animal;
+
+        if($animal != null) {
+
+            if($animal->getUlnCountryCode()!=null && $animal->getUlnNumber()!=null) {
+                $this->ulnCountryCode = $animal->getUlnCountryCode();
+                $this->ulnNumber = $animal->getUlnNumber();
+            }
+
+            if ($animal->getPedigreeCountryCode()!=null && $animal->getPedigreeNumber()!=null){
+                $this->pedigreeCountryCode = $animal->getPedigreeCountryCode();
+                $this->pedigreeNumber = $animal->getPedigreeNumber();
+            }
+        }
 
         return $this;
     }
