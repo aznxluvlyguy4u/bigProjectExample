@@ -261,11 +261,14 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
   public function getArrivalErrors(Request $request)
   {
     $client = $this->getAuthenticatedUser($request);
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
 
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
     $declareArrivals = $repository->getArrivalsWithLastErrorResponses($client);
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareArrivals), 200);
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_RESPONSE_REPOSITORY);
+    $declareImports = $repository->getImportsWithLastErrorResponses($client);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('arrivals' => $declareArrivals, 'imports' => $declareImports)), 200);
   }
 
 
@@ -278,11 +281,14 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
   public function getArrivalHistory(Request $request)
   {
     $client = $this->getAuthenticatedUser($request);
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
 
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
     $declareArrivals = $repository->getArrivalsWithLastHistoryResponses($client);
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareArrivals), 200);
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_RESPONSE_REPOSITORY);
+    $declareImports = $repository->getImportsWithLastHistoryResponses($client);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('arrivals' => $declareArrivals, 'imports' => $declareImports)), 200);
   }
 
 }
