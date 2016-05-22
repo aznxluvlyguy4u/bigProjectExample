@@ -147,16 +147,16 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    */
   public function createDepart(Request $request)
   {
+    //TODO validity check: Client can only depart/export own animals
     $validityCheckUlnOrPedigiree= $this->isUlnOrPedigreeCodeValid($request);
     $isValid = $validityCheckUlnOrPedigiree['isValid'];
 
     if(!$isValid) {
-      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
-      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
-      $message = $keyType . ' of ' . $animalKind . ' not found.';
-      $messageArray = array('code'=>428, "message" => $message);
+      $errorCode = $validityCheckUlnOrPedigiree['result']['code'];
+      $errorMessage = $validityCheckUlnOrPedigiree['result']['message'];
 
-      return new JsonResponse($messageArray, 428);
+//      return new JsonResponse($messageArray, 428);
+      return new JsonResponse(array('code'=>$errorCode, "message" => $errorMessage), $errorCode);
     }
 
     //Convert front-end message into an array
@@ -216,7 +216,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    * @Method("PUT")
    */
   public function updateDepart(Request $request, $Id)
-  {
+  { //TODO validity check: Client can only depart/export own animals
     $validityCheckUlnOrPedigiree= $this->isUlnOrPedigreeCodeValid($request);
     $isValid = $validityCheckUlnOrPedigiree['isValid'];
 
