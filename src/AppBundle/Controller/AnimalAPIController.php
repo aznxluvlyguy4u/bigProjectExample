@@ -57,52 +57,23 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Method("GET")
    */
   public function getAllAnimalsByTypeOrState(Request $request) {
-    $animals = null;
-    $animalRepository = $this->getDoctrine()
-      ->getRepository(Constant::ANIMAL_REPOSITORY);
-    $locationRepository = $this->getDoctrine()
-      ->getRepository(Constant::LOCATION_REPOSITORY);
 
-    //Get locations of user
-    $locations = $locationRepository->findByUser($this->getAuthenticatedUser($request));
-
-    //Get animals on each location belonging to user
-    foreach ($locations as $location) {
-      $filterArray = array (Constant::LOCATION_NAMESPACE => $location->getId());
-
-      if (!$request->query->has(Constant::ANIMAL_TYPE_NAMESPACE) && !$request->query->has(Constant::ALIVE_NAMESPACE)) {
-        //select all animals, belonging to user with no filters
-        $animals = $animalRepository->findByTypeOrState(null, $filterArray);
-      }
-      else {
-        if (!$request->query->has(Constant::ANIMAL_TYPE_NAMESPACE) && $request->query->has(Constant::ALIVE_NAMESPACE)) {
-          //filter animals by given isAlive state:{true, false}, belonging to user
-          $isAlive = $request->query->get(Constant::ALIVE_NAMESPACE);
-          $filterArray = array (
-            Constant::LOCATION_NAMESPACE => $location->getId(),
-            Constant::IS_ALIVE_NAMESPACE => ($isAlive === Constant::BOOLEAN_TRUE_NAMESPACE)
-          );
-          $animals = $animalRepository->findByTypeOrState(null, $filterArray);
-        }
-        else {
-          if ($request->query->has(Constant::ANIMAL_TYPE_NAMESPACE) && !$request->query->has(Constant::ALIVE_NAMESPACE)) {
-            $animalType = $request->query->get(Constant::ANIMAL_TYPE_NAMESPACE);
-            $animals = $animalRepository->findByTypeOrState($animalType, $filterArray);
-          }
-          else {
-            //filter animals by given animal-type: {ram, ewe, neuter} and isAlive state: {true, false}, belonging to user
-            $animalType = $request->query->get(Constant::ANIMAL_TYPE_NAMESPACE);
-            $isAlive = $request->query->get(Constant::ALIVE_NAMESPACE);
-            $filterArray = array (
-              Constant::LOCATION_NAMESPACE => $location->getId(),
-              Constant::IS_ALIVE_NAMESPACE => ($isAlive === Constant::BOOLEAN_TRUE_NAMESPACE)
-            );
-            $animals = $animalRepository->findByTypeOrState($animalType, $filterArray);
-          }
-        }
-      }
+    if($request->query->has(Constant::ANIMAL_TYPE_NAMESPACE)) {
+      $animalType = $request->query->get(Constant::ANIMAL_TYPE_NAMESPACE);
+    } else {
+      $animalType = null;
     }
 
+    if($request->query->has(Constant::ALIVE_NAMESPACE)) {
+      $isAlive = $request->query->get(Constant::ALIVE_NAMESPACE);
+    } else {
+      $isAlive = null;
+    }
+
+    $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+    $client = $this->getAuthenticatedUser($request);
+
+    $animals = $animalRepository->findOfClientByAnimalTypeAndIsAlive($client, $animalType, $isAlive);
     $minimizedOutput = AnimalOutput::createAnimalsArray($animals);
 
     return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);

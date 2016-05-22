@@ -127,5 +127,49 @@ class AnimalRepository extends BaseRepository
     return $retrievedAnimal;
   }
 
+  /**
+   * @param Client $client
+   * @param null|string $animalType
+   * @param null|boolean $isAlive
+   * @return Animal[]|Ewe[]|Neuter[]|Ram[]|array|null
+   */
+  public function findOfClientByAnimalTypeAndIsAlive(Client $client, $animalType = null, $isAlive = null)
+  {
+    $animals = null;
+    $locationRepository = $this->getEntityManager()
+        ->getRepository(Constant::LOCATION_REPOSITORY);
 
+    //Get locations of user
+    $locations = $locationRepository->findByUser($client);
+
+    //Get animals on each location belonging to user
+    foreach ($locations as $location) {
+      $filterArray = array(Constant::LOCATION_NAMESPACE => $location->getId());
+
+      //select all animals, belonging to user with no filters
+      if ($animalType == null && $isAlive == null) {
+        $animals = $this->findByTypeOrState(null, $filterArray);
+
+      //filter animals by given isAlive state:{true, false}, belonging to user
+      } else if ($animalType == null && $isAlive != null) {
+        $filterArray = array(
+            Constant::LOCATION_NAMESPACE => $location->getId(),
+            Constant::IS_ALIVE_NAMESPACE => ($isAlive === Constant::BOOLEAN_TRUE_NAMESPACE)
+        );
+        $animals = $this->findByTypeOrState(null, $filterArray);
+
+      } else if ($animalType != null && $isAlive == null) {
+        $animals = $this->findByTypeOrState($animalType, $filterArray);
+
+      //filter animals by given animal-type: {ram, ewe, neuter} and isAlive state: {true, false}, belonging to user
+      } else {
+        $filterArray = array(
+            Constant::LOCATION_NAMESPACE => $location->getId(),
+            Constant::IS_ALIVE_NAMESPACE => ($isAlive === Constant::BOOLEAN_TRUE_NAMESPACE)
+        );
+        $animals = $this->findByTypeOrState($animalType, $filterArray);
+      }
+    }
+    return $animals;
+  }
 }
