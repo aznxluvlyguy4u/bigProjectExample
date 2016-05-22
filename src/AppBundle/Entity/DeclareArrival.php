@@ -389,7 +389,7 @@ class DeclareArrival extends DeclareBase {
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getPedigreeNumber()
     {
@@ -397,7 +397,7 @@ class DeclareArrival extends DeclareBase {
     }
 
     /**
-     * @param mixed $pedigreeNumber
+     * @param string $pedigreeNumber
      */
     public function setPedigreeNumber($pedigreeNumber)
     {
