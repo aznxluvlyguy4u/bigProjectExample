@@ -83,10 +83,9 @@ class MockedDeclareArrivalResponse implements FixtureInterface, ContainerAwareIn
 
             $messageNumberFailedResponse = uniqid(mt_rand(0,99));
             $messageNumberSuccessResponse = uniqid(mt_rand(0,99));
-            $id = MockedDeclareArrival::getMockedArrival()->getId();
 
             //It is necessary to retrieve the DeclareArrival entity from the Repository first
-            $declareArrival = $arrivalRepository->findOneBy(array("id"=>$id));
+            $declareArrival = $arrivalRepository->findAll()['0'];
 
             //Create and persist failed Response
             self::$mockedArrivalFailedResponse = new DeclareArrivalResponse();

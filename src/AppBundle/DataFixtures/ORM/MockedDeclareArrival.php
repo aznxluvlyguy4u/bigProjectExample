@@ -127,9 +127,9 @@ class MockedDeclareArrival implements FixtureInterface, ContainerAwareInterface,
 
             $response = $this->client->getResponse()->getContent();
             $declareArrivalArray = json_decode($response, true);
-            $id = $declareArrivalArray['id'];
 
-            self::$mockedArrival = self::$entityManager->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findOneBy(array("id"=>$id));
+            self::$mockedArrival = self::$entityManager->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findAll()['0'];
+
         }
     }
 
