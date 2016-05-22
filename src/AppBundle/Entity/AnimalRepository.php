@@ -22,7 +22,7 @@ class AnimalRepository extends BaseRepository
     //Strip ulnCode or pedigreeCode
     $ulnOrPedigreeCode = mb_substr($Id, 2, strlen($Id));
 
-    return $this->querier($countryCode, $ulnOrPedigreeCode);
+    return $this->findByCountryCodeAndUlnOrPedigree($countryCode, $ulnOrPedigreeCode);
   }
 
   /**

@@ -3,6 +3,8 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Output\AnimalOutput;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -101,7 +103,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       }
     }
 
-    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $animals), 200);
+    $minimizedOutput = AnimalOutput::createAnimalsArray($animals);
+
+    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
   }
 
   /**
@@ -131,7 +135,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       ->getRepository(Constant::ANIMAL_REPOSITORY);
     $animal = $repository->findByUlnOrPedigree($Id);
 
-    return new JsonResponse($animal, 200);
+    $minimizedOutput = AnimalOutput::createAnimalArray($animal);
+
+    return new JsonResponse($minimizedOutput, 200);
   }
 
   /**
