@@ -61,10 +61,12 @@ class Constant
     const DECLARE_ARRIVAL_RESPONSE_REPOSITORY = 'AppBundle:DeclareArrivalResponse';
     const DECLARE_BIRTH_REPOSITORY = 'AppBundle:DeclareBirth';
     const DECLARE_DEPART_REPOSITORY = 'AppBundle:DeclareDepart';
+    const DECLARE_DEPART_RESPONSE_REPOSITORY = 'AppBundle:DeclareDepartResponse';
 
     const DECLARE_IMPORT_REPOSITORY ='AppBundle:DeclareImport';
     const DECLARE_IMPORT_RESPONSE_REPOSITORY ='AppBundle:DeclareImportResponse';
     const DECLARE_EXPORT_REPOSITORY ='AppBundle:DeclareExport';
+    const DECLARE_EXPORT_RESPONSE_REPOSITORY ='AppBundle:DeclareExportResponse';
     const DECLARE_TAGS_TRANSFER_REPOSITORY = 'AppBundle:DeclareTagsTransfer';
     const RETRIEVE_TAGS_REPOSITORY = 'AppBundle:RetrieveTags';
     const DECLARE_LOSS_REPOSITORY = 'AppBundle:DeclareLoss';

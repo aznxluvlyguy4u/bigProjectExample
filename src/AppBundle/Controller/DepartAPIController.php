@@ -250,5 +250,44 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     $messageArray = $this->sendEditMessageObjectToQueue($messageObject);
 
     return new JsonResponse($messageArray, 200);
-  }  
+  }
+
+  /**
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/responses/errors")
+   * @Method("GET")
+   */
+  public function getDepartErrors(Request $request)
+  {
+    $client = $this->getAuthenticatedUser($request);
+
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_DEPART_RESPONSE_REPOSITORY);
+    $declareDeparts = $repository->getDeparturesWithLastErrorResponses($client);
+
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_RESPONSE_REPOSITORY);
+    $declareExports = $repository->getExportsWithLastErrorResponses($client);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('departures' => $declareDeparts, 'exports' => $declareExports)), 200);
+  }
+
+
+  /**
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/responses/history")
+   * @Method("GET")
+   */
+  public function getDepartHistory(Request $request)
+  {
+    $client = $this->getAuthenticatedUser($request);
+
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_DEPART_RESPONSE_REPOSITORY);
+    $declareDeparts = $repository->getDeparturesWithLastHistoryResponses($client);
+
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_RESPONSE_REPOSITORY);
+    $declareExports = $repository->getExportsWithLastHistoryResponses($client);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('departures' => $declareDeparts, 'exports' => $declareExports)), 200);
+  }
 }
