@@ -42,8 +42,9 @@ class DeclareArrivalResponseOutput
             "uln_number" => $arrival->getUlnNumber(),
             "pedigree_country_code" => $arrival->getPedigreeCountryCode(),
             "pedigree_number" => $arrival->getPedigreeNumber(),
-            "ubn_previous_owner" => $arrival->getUbnPreviousOwner(),
             "is_import_animal" => $arrival->getIsImportAnimal(),
+            "arrival_date" => $arrival->getArrivalDate(),
+            "ubn_previous_owner" => $arrival->getUbnPreviousOwner(),
             "request_state" => $arrival->getRequestState(),
             "error_code" => $lastResponse->getErrorCode(),
             "error_message" => $lastResponse->getErrorMessage()
