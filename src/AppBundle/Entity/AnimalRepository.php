@@ -22,26 +22,22 @@ class AnimalRepository extends BaseRepository
     //Strip ulnCode or pedigreeCode
     $ulnOrPedigreeCode = mb_substr($Id, 2, strlen($Id));
 
-    return $this->findByCountryCodeAndUlnOrPedigree($countryCode, $ulnOrPedigreeCode);
+    return $this->findByUlnOrPedigreeCountryCodeAndNumber($countryCode, $ulnOrPedigreeCode);
   }
 
   /**
    * @param $countryCode
    * @param $ulnOrPedigreeCode
-   * @return array|null
+   * @return Animal|null
    */
-  function findByCountryCodeAndUlnOrPedigree($countryCode, $ulnOrPedigreeCode)
+  function findByUlnOrPedigreeCountryCodeAndNumber($countryCode, $ulnOrPedigreeCode)
   {
-    $animal = null;
-    $tagRepository = $this->getEntityManager()->getRepository(Constant::TAG_REPOSITORY);
+    $animal = $this->findByUlnCountryCodeAndNumber($countryCode, $ulnOrPedigreeCode);
 
-    //Find animal through Tag ulnNumber
-    $tag = $tagRepository->findByUlnNumberAndCountryCode($countryCode,$ulnOrPedigreeCode);
-
-    if($tag != null) {
-      $animal = $tag->getAnimal();
+    if($animal != null) {
+      return $animal;
     } else { //Find animal through Animal pedigreeNumber
-      $animal = $this->findByCountryCodeAndPedigree($countryCode, $ulnOrPedigreeCode);
+      $animal = $this->findByPedigreeCountryCodeAndNumber($countryCode, $ulnOrPedigreeCode);
     }
 
     return $animal;
@@ -50,11 +46,23 @@ class AnimalRepository extends BaseRepository
   /**
    * @param $countryCode
    * @param $pedigreeNumber
-   * @return null|object
+   * @return null|Animal
    */
-  public function findByCountryCodeAndPedigree($countryCode, $pedigreeNumber)
+  public function findByPedigreeCountryCodeAndNumber($countryCode, $pedigreeNumber)
   {
     $animal = $this->findOneBy(array('pedigreeCountryCode'=>$countryCode, 'pedigreeNumber'=>$pedigreeNumber));
+
+    return $animal;
+  }
+
+  /**
+   * @param $countryCode
+   * @param $ulnNumber
+   * @return null|Animal
+   */
+  public function findByUlnCountryCodeAndNumber($countryCode, $ulnNumber)
+  {
+    $animal = $this->findOneBy(array('ulnCountryCode'=>$countryCode, 'ulnNumber'=>$ulnNumber));
 
     return $animal;
   }
@@ -93,4 +101,31 @@ class AnimalRepository extends BaseRepository
 
     return $animals;
   }
+
+  /**
+   * @param Animal $animal
+   * @return Animal|null
+   */
+  public function findByAnimal(Animal $animal = null)
+  {
+    if($animal == null) {
+      return null;
+    }
+
+    $countryCode = $animal->getUlnCountryCode();
+    $number = $animal->getUlnNumber();
+    $retrievedAnimal = $this->findByUlnCountryCodeAndNumber($countryCode, $number);
+
+    if($retrievedAnimal != null) {
+        return $retrievedAnimal;
+    } else {
+      $countryCode = $animal->getPedigreeCountryCode();
+      $number = $animal->getPedigreeNumber();
+      $retrievedAnimal = $this->findByPedigreeCountryCodeAndNumber($countryCode, $number);
+    }
+
+    return $retrievedAnimal;
+  }
+
+
 }
