@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by IntelliJ IDEA.
- * User: radiancekfx
- * Date: 21-5-16
- * Time: 20:58
- */
 
 namespace AppBundle\Output;
 
@@ -83,11 +77,10 @@ class RequestMessageOutputBuilder
                 }
 
             case RequestType::DECLARE_IMPORT_ENTITY:
-                //TODO
                 if($isUpdate) {
-                    return null; //update Array
+                    return DeclareImportOutput::createUpdateRequestArray($messageObject);
                 } else {
-                    return null; //post Array
+                    return DeclareImportOutput::createPostRequestArray($messageObject);
                 }
 
             case RequestType::RETRIEVE_TAGS_ENTITY:
