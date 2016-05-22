@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\Modifier\MessageModifier;
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
@@ -238,30 +239,15 @@ class APIController extends Controller implements APIControllerInterface
     $sendToQresult = $this->getQueueService()
       ->send($requestId, $jsonMessage, $requestTypeNameSpace);
 
-
-    $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-    $retrievedAnimal = $animalRepository->findByAnimal($messageObject->getAnimal());
-    $animalIsInDatabase = $retrievedAnimal != null;
-
     //If send to Queue, failed, it needs to be resend, set state to failed
     if ($sendToQresult['statusCode'] != '200') {
       $messageObject->setRequestState(RequestStateType::FAILED);
-
-      //Update this state to the database
-      if($animalIsInDatabase){
-      } else {
-        $messageObject->setAnimal(null);
-      }
+      $messageObject = MessageModifier::modifyBeforePersistingRequestStateByQueueStatus($messageObject);
       $this->persist($messageObject);
 
     } else if($isUpdate) { //If successfully sent to the queue and message is an Update/Edit request
       $messageObject->setRequestState(RequestStateType::OPEN); //update the RequestState
-
-      //Update this state to the database
-      if($animalIsInDatabase){
-      } else {
-        $messageObject->setAnimal(null);
-      }
+      $messageObject = MessageModifier::modifyBeforePersistingRequestStateByQueueStatus($messageObject);
       $this->persist($messageObject);
     }
 
