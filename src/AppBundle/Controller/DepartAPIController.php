@@ -164,25 +164,18 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
       //Convert the array into an object and add the mandatory values retrieved from the database
       $messageObject = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $this->getAuthenticatedUser($request));
 
-      //First Persist object to Database, before sending it to the queue
-      $this->persist($messageObject);
-
-      //Send it to the queue and persist/update any changed state to the database
-      $messageArray = $this->sendMessageObjectToQueue($messageObject);
-
-      return new JsonResponse($messageArray, 200);
-
     } else {
       //Convert the array into an object and add the mandatory values retrieved from the database
       $messageObject = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $this->getAuthenticatedUser($request));
-
-      //First Persist object to Database, before sending it to the queue
-      $this->persist($messageObject);
-
-      //Send it to the queue and persist/update any changed state to the database
-      $messageArray = $this->sendMessageObjectToQueue($messageObject);
-      return new JsonResponse($messageArray, 200);
     }
+
+    //Send it to the queue and persist/update any changed state to the database
+    $messageArray = $this->sendMessageObjectToQueue($messageObject);
+
+    //Persist object to Database
+    $this->persist($messageObject);
+
+    return new JsonResponse($messageArray, 200);
   }
 
 
