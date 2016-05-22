@@ -6,7 +6,9 @@ use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\RetrieveEuropeanCountries;
 use AppBundle\Entity\RetrieveTags;
+use AppBundle\Entity\RetrieveUBNDetails;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveAnimalDetails;
@@ -121,7 +123,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclarationDetail(ArrayCollection $declarationDetailcontentArray, $isEditMessage)
+    function parseDeclarationDetail(ArrayCollection $declarationDetailcontentArray, Client $client, $isEditMessage)
     {
         $declarationDetailcontentArray["type"] = RequestType::DECLARATION_DETAIL_ENTITY;
 
@@ -134,7 +136,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareAnimalFlag(ArrayCollection $declareAnimalFlagContentArray, $isEditMessage)
+    function parseDeclareAnimalFlag(ArrayCollection $declareAnimalFlagContentArray, Client $client, $isEditMessage)
     {
         $declareAnimalFlagContentArray["type"] = RequestType::DECLARE_ANIMAL_FLAG_ENTITY;
 
@@ -196,7 +198,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareBirth(ArrayCollection $declareBirthContentArray, $isEditMessage)
+    function parseDeclareBirth(ArrayCollection $declareBirthContentArray, Client $client,$isEditMessage)
     {
         $declareBirthRequest = null;
 
@@ -305,7 +307,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareDepart(ArrayCollection $declareDepartContentArray, $isEditMessage)
+    function parseDeclareDepart(ArrayCollection $declareDepartContentArray, Client $client,$isEditMessage)
     {
         $declareDepartContentArray["type"] = RequestType::DECLARE_DEPART_ENTITY;
 
@@ -328,7 +330,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareTagsTransfer(ArrayCollection $contentArray, $isEditMessage)
+    function parseDeclareTagsTransfer(ArrayCollection $contentArray, Client $client, $isEditMessage)
     {
         $contentArray["type"] = RequestType::DECLARE_TAGS_TRANSFER_ENTITY;
 
@@ -351,7 +353,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareLoss(ArrayCollection $declareLossContentArray, $isEditMessage)
+    function parseDeclareLoss(ArrayCollection $declareLossContentArray, Client $client,$isEditMessage)
     {
         $declareLossContentArray["type"] = RequestType::DECLARE_LOSS_ENTITY;
 
@@ -374,7 +376,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareExport(ArrayCollection $declareExportContentArray, $isEditMessage)
+    function parseDeclareExport(ArrayCollection $declareExportContentArray, Client $client,$isEditMessage)
     {
         $declareExportContentArray["type"] = RequestType::DECLARE_EXPORT_ENTITY;
 
@@ -455,7 +457,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseRetrieveTags(ArrayCollection $contentArray, $isEditMessage)
+    function parseRetrieveTags(ArrayCollection $contentArray, Client $client,$isEditMessage)
     {
         $retrieveTags = new RetrieveTags();
 
@@ -483,7 +485,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseRevokeDeclaration(ArrayCollection $revokeDeclarationContentArray, $isEditMessage)
+    function parseRevokeDeclaration(ArrayCollection $revokeDeclarationContentArray, Client $client, $isEditMessage)
     {
         $revokeDeclarationContentArray["type"] = RequestType::REVOKE_DECLARATION_ENTITY;
         $revokeDeclaration = new RevokeDeclaration();
@@ -496,22 +498,18 @@ class IRSerializer implements IRSerializerInterface
     }
 
     /**
-     * @param ArrayCollection $contentArray
-     * @param $isEditMessage
-     * @return RetrieveAnimals
+     * @inheritdoc
      */
-    function parseRetrieveAnimals(ArrayCollection $contentArray, $isEditMessage) {
+    function parseRetrieveAnimals(ArrayCollection $contentArray, Client $client, $isEditMessage) {
         $retrieveAnimals = new RetrieveAnimals();
 
         return $retrieveAnimals;
     }
 
     /**
-     * @param ArrayCollection $contentArray
-     * @param $isEditMessage
-     * @return RetrieveAnimalDetails
+     * @inheritdoc
      */
-    function parseRetrieveAnimalDetails(ArrayCollection $contentArray, $isEditMessage) {
+    function parseRetrieveAnimalDetails(ArrayCollection $contentArray, Client $client,$isEditMessage) {
         $retrieveAnimalDetails = new RetrieveAnimalDetails();
 
         if($contentArray->containsKey(Constant::ULN_NUMBER_NAMESPACE) && $contentArray->containsKey(Constant::ULN_COUNTRY_CODE_NAMESPACE)) {
@@ -529,21 +527,19 @@ class IRSerializer implements IRSerializerInterface
     }
 
     /**
-     * @param ArrayCollection $contentArray
-     * @param $isEditMessage
-     * @return RetrieveEUCountries
+     * @inheritdoc
      */
-    function parseRetrieveEUCountries(ArrayCollection $contentArray, $isEditMessage) {
+    function parseRetrieveEUCountries(ArrayCollection $contentArray, Client $client, $isEditMessage) {
         // TODO: Implement parseRetrieveEUCountries() method.
         $contentArray["type"] = RequestType::RETRIEVE_EU_COUNTRIES_ENTITY;
     }
 
     /**
      * @param ArrayCollection $contentArray
-     * @param $isEditMessage
+     * @param boolean $isEditMessage
      * @return RetrieveUBNDetails
      */
-    function parseRetrieveUBNDetails(ArrayCollection $contentArray, $isEditMessage) {
+    function parseRetrieveUBNDetails(ArrayCollection $contentArray, Client $client, $isEditMessage) {
         // TODO: Implement parseRetrieveUBNDetails() method.
         $contentArray["type"] = RequestType::RETRIEVE_UBN_DETAILS_ENTITY;
     }
