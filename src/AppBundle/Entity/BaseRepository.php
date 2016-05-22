@@ -45,7 +45,7 @@ class BaseRepository extends EntityRepository
     protected function getRequestByRequestId($requests, $requestId)
     {
         foreach($requests as $request) {
-            $foundRequestId = $request->getRequestId($requestId);
+            $foundRequestId = $request->getRequestId();
             if($foundRequestId == $requestId) {
                 return $request;
             }
