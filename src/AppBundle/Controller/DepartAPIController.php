@@ -147,23 +147,18 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    */
   public function createDepart(Request $request)
   {
-    //TODO validity check: Client can only depart/export own animals
-    $validityCheckUlnOrPedigiree= $this->isUlnOrPedigreeCodeValid($request);
-    $isValid = $validityCheckUlnOrPedigiree['isValid'];
-
-    if(!$isValid) {
-      $errorCode = $validityCheckUlnOrPedigiree['result']['code'];
-      $errorMessage = $validityCheckUlnOrPedigiree['result']['message'];
-
-//      return new JsonResponse($messageArray, 428);
-      return new JsonResponse(array('code'=>$errorCode, "message" => $errorMessage), $errorCode);
-    }
-
-    //Convert front-end message into an array
-    //Get content to array
     $content = $this->getContentAsArray($request);
 
-    $isExportAnimal = $content->get('animal')['is_export_animal'];
+    //Client can only depart/export own animals
+    $client = $this->getAuthenticatedUser($request);
+    $animal = $content->get(Constant::ANIMAL_NAMESPACE);
+    $isAnimalOfClient = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->verifyIfClientOwnsAnimal($client, $animal);
+
+    if(!$isAnimalOfClient) {
+      return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
+    }
+
+    $isExportAnimal = $animal['is_export_animal'];
 
     if($isExportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database
@@ -216,21 +211,19 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    * @Method("PUT")
    */
   public function updateDepart(Request $request, $Id)
-  { //TODO validity check: Client can only depart/export own animals
-    $validityCheckUlnOrPedigiree= $this->isUlnOrPedigreeCodeValid($request);
-    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+  {
+    $content = $this->getContentAsArray($request);
 
-    if(!$isValid) {
-      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
-      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
-      $message = $keyType . ' of ' . $animalKind . ' not found.';
-      $messageArray = array('code'=>428, "message" => $message);
+    //Client can only depart/export own animals
+    $client = $this->getAuthenticatedUser($request);
+    $animal = $content->get(Constant::ANIMAL_NAMESPACE);
+    $isAnimalOfClient = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->verifyIfClientOwnsAnimal($client, $animal);
 
-      return new JsonResponse($messageArray, 428);
+    if(!$isAnimalOfClient) {
+      return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
     }
 
-    $content = $this->getContentAsArray($request);
-    $isExportAnimal = $content->get('animal')['is_export_animal'];
+    $isExportAnimal = $animal['is_export_animal'];
 
     if($isExportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database
@@ -238,18 +231,10 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
           $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
       $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY);
-      $declareExport = $entityManager->updateDeclareExportMessage($declareExportUpdate, $Id);
+      $messageObject = $entityManager->updateDeclareExportMessage($declareExportUpdate, $Id);
 
-      if($declareExport == null) {
-        return new JsonResponse(array("message"=>"No DeclareExport found with request_id:" . $Id), 204);
-      } else {
-        //First Persist object to Database, before sending it to the queue
-        $this->persist($declareExport);
-
-        //Send it to the queue and persist/update any changed state to the database
-        $messageArray = $this->sendEditMessageObjectToQueue($declareExport);
-
-        return new JsonResponse($messageArray, 200);
+      if($messageObject == null) {
+        return new JsonResponse(array("message"=>"No DeclareExport found with request_id: " . $Id), 204);
       }
 
     } else {
@@ -258,20 +243,19 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
           $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
       $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_DEPART_REPOSITORY);
-      $declareDepart = $entityManager->updateDeclareDepartMessage($declareDepartUpdate, $Id);
+      $messageObject = $entityManager->updateDeclareDepartMessage($declareDepartUpdate, $Id);
 
-      if($declareDepart == null) {
-        return new JsonResponse(array("message"=>"No DeclareDepart found with request_id:" . $Id), 204);
-      } else {
-        //First Persist object to Database, before sending it to the queue
-        $this->persist($declareDepart);
-
-        //Send it to the queue and persist/update any changed state to the database
-        $messageArray = $this->sendEditMessageObjectToQueue($declareDepart);
-
-        return new JsonResponse($messageArray, 200);
+      if($messageObject == null) {
+        return new JsonResponse(array("message"=>"No DeclareDepart found with request_id: " . $Id), 204);
       }
-
     }
+
+    //First Persist object to Database, before sending it to the queue
+    $this->persist($messageObject);
+
+    //Send it to the queue and persist/update any changed state to the database
+    $messageArray = $this->sendEditMessageObjectToQueue($messageObject);
+
+    return new JsonResponse($messageArray, 200);
   }  
 }
