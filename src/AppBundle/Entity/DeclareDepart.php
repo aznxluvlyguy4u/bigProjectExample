@@ -67,6 +67,14 @@ class DeclareDepart extends DeclareBase
     private $isExportAnimal;
 
     /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     * @Expose
+     */
+    private $isDepartedAnimal;
+
+    /**
      * 2016-04-01T22:00:48.131Z
      *
      * @ORM\Column(type="datetime")
@@ -352,6 +360,22 @@ class DeclareDepart extends DeclareBase
     public function setIsExportAnimal($isExportAnimal)
     {
         $this->isExportAnimal = $isExportAnimal;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getIsDepartedAnimal()
+    {
+        return $this->isDepartedAnimal;
+    }
+
+    /**
+     * @param boolean $isDepartedAnimal
+     */
+    public function setIsDepartedAnimal($isDepartedAnimal)
+    {
+        $this->isDepartedAnimal = $isDepartedAnimal;
     }
 
 
