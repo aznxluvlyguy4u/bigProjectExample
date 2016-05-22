@@ -94,6 +94,8 @@ class MockedDeclareArrivalResponse implements FixtureInterface, ContainerAwareIn
             self::$mockedArrivalFailedResponse->setRequestId($declareArrival->getRequestId());
             self::$mockedArrivalFailedResponse->setMessageId($declareArrival->getMessageId());
             self::$mockedArrivalFailedResponse->setMessageNumber($messageNumberFailedResponse);
+            self::$mockedArrivalFailedResponse->setArrivalDate($declareArrival->getArrivalDate());
+            self::$mockedArrivalFailedResponse->setUbnPreviousOwner($declareArrival->getUbnPreviousOwner());
             self::$mockedArrivalFailedResponse->setErrorCode("IRD-00363");
             self::$mockedArrivalFailedResponse->setErrorMessage("Er zijn geen dieren gevonden bij het opgegeven werknummer");
             self::$mockedArrivalFailedResponse->setErrorKindIndicator("F");
@@ -107,6 +109,8 @@ class MockedDeclareArrivalResponse implements FixtureInterface, ContainerAwareIn
             self::$mockedArrivalSuccessResponse->setRequestId($declareArrival->getRequestId());
             self::$mockedArrivalSuccessResponse->setMessageId($declareArrival->getMessageId());
             self::$mockedArrivalSuccessResponse->setMessageNumber($messageNumberSuccessResponse);
+            self::$mockedArrivalSuccessResponse->setArrivalDate($declareArrival->getArrivalDate());
+            self::$mockedArrivalSuccessResponse->setUbnPreviousOwner($declareArrival->getUbnPreviousOwner());
             self::$mockedArrivalSuccessResponse->setErrorCode(null);
             self::$mockedArrivalSuccessResponse->setErrorMessage(null);
             self::$mockedArrivalSuccessResponse->setErrorKindIndicator(null);

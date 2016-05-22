@@ -47,6 +47,22 @@ class DeclareArrivalResponse extends DeclareBaseResponse {
         return $this->declareArrivalRequestMessage;
     }
 
+    /**
+     * 2016-04-01T22:00:48.131Z
+     *
+     * @ORM\Column(type="datetime")
+     * @Assert\Date
+     * @Assert\NotBlank
+     * @JMS\Type("DateTime")
+     */
+    private $arrivalDate;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 10)
+     * @JMS\Type("string")
+     */
+    private $ubnPreviousOwner;
 
     /**
      * Get id
@@ -81,4 +97,39 @@ class DeclareArrivalResponse extends DeclareBaseResponse {
     {
         return $this->logDate;
     }
+
+    /**
+     * @return \DateTime
+     */
+    public function getArrivalDate()
+    {
+        return $this->arrivalDate;
+    }
+
+    /**
+     * @param \DateTime $arrivalDate
+     */
+    public function setArrivalDate($arrivalDate)
+    {
+        $this->arrivalDate = $arrivalDate;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUbnPreviousOwner()
+    {
+        return $this->ubnPreviousOwner;
+    }
+
+    /**
+     * @param string $ubnPreviousOwner
+     */
+    public function setUbnPreviousOwner($ubnPreviousOwner)
+    {
+        $this->ubnPreviousOwner = $ubnPreviousOwner;
+    }
+
+
+
 }
