@@ -410,7 +410,11 @@ class IRSerializer implements IRSerializerInterface
 
             //Update values here
             $declareImportRequest->setImportDate(new \DateTime($declareImportContentArray['arrival_date']));
-            $declareImportRequest->setAnimalCountryOrigin($declareImportContentArray['animal_country_origin']);
+
+            if($declareImportContentArray->containsKey('animal_country_origin')) {
+                $declareImportRequest->setAnimalCountryOrigin($declareImportContentArray['animal_country_origin']);
+            }
+
             $declareImportRequest->setRequestState(RequestStateType::OPEN);
 
         } else {
