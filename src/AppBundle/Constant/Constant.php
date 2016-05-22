@@ -63,6 +63,7 @@ class Constant
     const DECLARE_DEPART_REPOSITORY = 'AppBundle:DeclareDepart';
 
     const DECLARE_IMPORT_REPOSITORY ='AppBundle:DeclareImport';
+    const DECLARE_IMPORT_RESPONSE_REPOSITORY ='AppBundle:DeclareImportResponse';
     const DECLARE_EXPORT_REPOSITORY ='AppBundle:DeclareExport';
     const DECLARE_TAGS_TRANSFER_REPOSITORY = 'AppBundle:DeclareTagsTransfer';
     const RETRIEVE_TAGS_REPOSITORY = 'AppBundle:RetrieveTags';

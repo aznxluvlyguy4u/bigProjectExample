@@ -53,4 +53,17 @@ class BaseRepository extends EntityRepository
 
         return null;
     }
+
+    protected function getResponseMessageFromRequestsByMessageNumber($requests, $messageNumber)
+    {
+        foreach($requests as $request) {
+            foreach($request->getResponses() as $response) {
+                if($response->getMessageNumber() == $messageNumber) {
+                    return $response;
+                }
+            }
+        }
+
+        return null;
+    }
 }
