@@ -3,7 +3,7 @@
 namespace AppBundle\Entity;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Output\DeclareArrivalAndImportResponseOutput;
+use AppBundle\Output\DeclareImportResponseOutput;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
@@ -36,7 +36,7 @@ class DeclareImportResponseRepository extends BaseRepository {
                 $import->getRequestState() == RequestStateType::FINISHED;
 
             if($isHistoryRequestStateType) {
-                $results->add(DeclareArrivalAndImportResponseOutput::createHistoryResponse($import));
+                $results->add(DeclareImportResponseOutput::createHistoryResponse($import));
             }
         }
 
@@ -51,7 +51,7 @@ class DeclareImportResponseRepository extends BaseRepository {
 
         foreach($retrievedImports as $import) {
             if($import->getRequestState() == RequestStateType::FAILED) {
-                $results->add(DeclareArrivalAndImportResponseOutput::createErrorResponse($import));
+                $results->add(DeclareImportResponseOutput::createErrorResponse($import));
             }
         }
 

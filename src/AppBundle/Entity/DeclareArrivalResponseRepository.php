@@ -5,7 +5,6 @@ use AppBundle\Constant\Constant;
 use AppBundle\DataFixtures\ORM\MockedDeclareArrivalResponse;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
-use AppBundle\Output\DeclareArrivalAndImportResponseOutput;
 use AppBundle\Output\DeclareArrivalResponseOutput;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\DeclareArrival;
@@ -42,7 +41,7 @@ class DeclareArrivalResponseRepository extends BaseRepository {
                                          $arrival->getRequestState() == RequestStateType::FINISHED;
 
             if($isHistoryRequestStateType) {
-                $results->add(DeclareArrivalAndImportResponseOutput::createHistoryResponse($arrival));
+                $results->add(DeclareArrivalResponseOutput::createHistoryResponse($arrival));
             }
         }
 
@@ -57,7 +56,7 @@ class DeclareArrivalResponseRepository extends BaseRepository {
 
         foreach($retrievedArrivals as $arrival) {
             if($arrival->getRequestState() == RequestStateType::FAILED) {
-                $results->add(DeclareArrivalAndImportResponseOutput::createErrorResponse($arrival));
+                $results->add(DeclareArrivalResponseOutput::createErrorResponse($arrival));
             }
         }
 

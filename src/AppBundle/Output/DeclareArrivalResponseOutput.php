@@ -6,10 +6,10 @@ namespace AppBundle\Output;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 
-class DeclareArrivalAndImportResponseOutput
+class DeclareArrivalResponseOutput
 {
     /**
-     * @param DeclareArrival|DeclareImport $arrival
+     * @param DeclareArrival $arrival
      * @return array
      */
     public static function createHistoryResponse($arrival)
@@ -29,7 +29,7 @@ class DeclareArrivalAndImportResponseOutput
     }
 
     /**
-     * @param DeclareArrival|DeclareImport $arrival
+     * @param DeclareArrival $arrival
      * @return array
      */
     public static function createErrorResponse($arrival)
