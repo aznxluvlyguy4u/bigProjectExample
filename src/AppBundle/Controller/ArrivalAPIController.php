@@ -271,7 +271,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_RESPONSE_REPOSITORY);
     $declareImports = $repository->getImportsWithLastErrorResponses($client);
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array($declareArrivals, $declareImports)), 200);
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('arrivals' => $declareArrivals, 'imports' => $declareImports)), 200);
   }
 
 
@@ -291,7 +291,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_RESPONSE_REPOSITORY);
     $declareImports = $repository->getImportsWithLastHistoryResponses($client);
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array($declareArrivals, $declareImports)), 200);
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('arrivals' => $declareArrivals, 'imports' => $declareImports)), 200);
   }
 
 }
