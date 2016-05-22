@@ -81,21 +81,21 @@ class RetrieveAnimalDetails
     /**
      * @var string
      * @JMS\Type("string")
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=true)
      */
     private $ulnNumber;
 
     /**
      * @var string
      * @JMS\Type("string")
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=true)
      */
     private $ulnCountryCode;
 
    /**
     * @var string
     * @JMS\Type("string")
-    * @ORM\Column(type="string")
+    * @ORM\Column(type="string", nullable=true)
     */
     private $animalOrderNumber;
 
@@ -150,6 +150,7 @@ class RetrieveAnimalDetails
     public function setRequestId($requestId)
     {
         $this->requestId = $requestId;
+        $this->setMessageId($requestId);
 
         return $this;
     }
@@ -342,6 +343,7 @@ class RetrieveAnimalDetails
     public function setLocation(\AppBundle\Entity\Location $location = null)
     {
         $this->location = $location;
+        $this->setUbn($location->getUbn());
 
         return $this;
     }
