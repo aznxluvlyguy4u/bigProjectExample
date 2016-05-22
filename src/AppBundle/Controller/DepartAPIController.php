@@ -102,10 +102,9 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
 
       $declareDeparts = new ArrayCollection();
-      //TODO Front-end cannot accept messages without animal ULN/Pedigree
-//      foreach($repository->getDeparts($client, RequestStateType::OPEN) as $depart) {
-//        $declareDeparts->add($depart);
-//      }
+      foreach($repository->getDepartures($client, RequestStateType::OPEN) as $depart) {
+        $declareDeparts->add($depart);
+      }
       foreach($repository->getDepartures($client, RequestStateType::REVOKING) as $depart) {
         $declareDeparts->add($depart);
       }
