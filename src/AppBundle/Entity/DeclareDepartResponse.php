@@ -14,6 +14,61 @@ use \AppBundle\Entity\DeclareDepart;
  */
 class DeclareDepartResponse extends DeclareBaseResponse {
 
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private $ulnCountryCode;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private $ulnNumber;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private $pedigreeCountryCode;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private $pedigreeNumber;
+
+    /**
+     * 2016-04-01T22:00:48.131Z
+     *
+     * @var \DateTime
+     * @ORM\Column(type="datetime")
+     * @Assert\Date
+     * @Assert\NotBlank
+     * @JMS\Type("DateTime")
+     */
+    private $departDate;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string")
+     * @Assert\Length(max = 10)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    private $ubnNewOwner;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     */
+    private $isExportAnimal;
+
   /**
    * @var DeclareDepart
    *
@@ -82,4 +137,119 @@ class DeclareDepartResponse extends DeclareBaseResponse {
     {
         return $this->logDate;
     }
+
+    /**
+     * @return string
+     */
+    public function getUlnCountryCode()
+    {
+        return $this->ulnCountryCode;
+    }
+
+    /**
+     * @param string $ulnCountryCode
+     */
+    public function setUlnCountryCode($ulnCountryCode)
+    {
+        $this->ulnCountryCode = $ulnCountryCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUlnNumber()
+    {
+        return $this->ulnNumber;
+    }
+
+    /**
+     * @param string $ulnNumber
+     */
+    public function setUlnNumber($ulnNumber)
+    {
+        $this->ulnNumber = $ulnNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPedigreeCountryCode()
+    {
+        return $this->pedigreeCountryCode;
+    }
+
+    /**
+     * @param string $pedigreeCountryCode
+     */
+    public function setPedigreeCountryCode($pedigreeCountryCode)
+    {
+        $this->pedigreeCountryCode = $pedigreeCountryCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPedigreeNumber()
+    {
+        return $this->pedigreeNumber;
+    }
+
+    /**
+     * @param string $pedigreeNumber
+     */
+    public function setPedigreeNumber($pedigreeNumber)
+    {
+        $this->pedigreeNumber = $pedigreeNumber;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getDepartDate()
+    {
+        return $this->departDate;
+    }
+
+    /**
+     * @param \DateTime $departDate
+     */
+    public function setDepartDate($departDate)
+    {
+        $this->departDate = $departDate;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUbnNewOwner()
+    {
+        return $this->ubnNewOwner;
+    }
+
+    /**
+     * @param string $ubnNewOwner
+     */
+    public function setUbnNewOwner($ubnNewOwner)
+    {
+        $this->ubnNewOwner = $ubnNewOwner;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getIsExportAnimal()
+    {
+        return $this->isExportAnimal;
+    }
+
+    /**
+     * @param boolean $isExportAnimal
+     */
+    public function setIsExportAnimal($isExportAnimal)
+    {
+        $this->isExportAnimal = $isExportAnimal;
+    }
+
+
+
 }
