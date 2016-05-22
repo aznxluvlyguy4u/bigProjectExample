@@ -14,8 +14,11 @@ class AnimalRemover extends MessageModifier
 {
     public static function removeUnverifiedAnimalFromMessageObject($messageObject)
     {
-        $retrievedAnimal = self::retrieveAnimalByAnimalObject($messageObject->getAnimal());
-        if($retrievedAnimal == null){ $messageObject->setAnimal(null); }
+        $animal = $messageObject->getAnimal();
+        if($animal != null) {
+            $retrievedAnimal = self::retrieveAnimalByAnimalObject($animal);
+            if($retrievedAnimal == null){ $messageObject->setAnimal(null); }
+        }
 
         return $messageObject;
     }
