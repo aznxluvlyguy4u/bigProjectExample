@@ -2,6 +2,8 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\Constant;
+
 class ClientRepository extends BaseRepository {
 
 
@@ -9,7 +11,7 @@ class ClientRepository extends BaseRepository {
     {
 
         $em = $this->getEntityManager();
-        $client = $em->getRepository('AppBundle:Client')->findOneBy(array('accessToken' => $token));
+        $client = $em->getRepository(Constant::CLIENT_REPOSITORY)->findOneBy(array('accessToken' => $token));
 
         return $client;
     }
@@ -19,5 +21,18 @@ class ClientRepository extends BaseRepository {
         $client = $this->getByToken($token);
 
         return $client->getRelationNumberKeeper();
+    }
+
+    public function getByRelationNumberKeeper($relationNumberKeeper)
+    {
+        $repository = $this->getEntityManager()->getRepository(Constant::CLIENT_REPOSITORY);
+        $client = $repository->findOneBy(array("relationNumberKeeper" => $relationNumberKeeper));
+
+        return $client;
+    }
+
+    public function getByMessageObject($messageObject)
+    {
+        return $this->getByRelationNumberKeeper($messageObject->getRelationNumberKeeper());
     }
 }
