@@ -39,11 +39,19 @@ class ExportMessageBuilder extends MessageBuilderBase
 
   /**
    * @param DeclareExport $messageObject the message received
-   * @param Person $person
    * @return DeclareExport
    */
   private function addDeclareExportData(DeclareExport $messageObject)
   {
+    $animal = $messageObject->getAnimal();
+    $animal->setIsExportAnimal(true);
+
+    $messageObject->setUlnCountryCode($animal->getUlnCountryCode());
+    $messageObject->setUlnNumber($animal->getUlnNumber());
+    $messageObject->setPedigreeCountryCode($animal->getPedigreeCountryCode());
+    $messageObject->setPedigreeNumber($animal->getPedigreeNumber());
+    $messageObject->setIsExportAnimal(true);
+
     //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
     $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
     return $messageObject;

@@ -45,11 +45,10 @@ class RequestMessageOutputBuilder
                 }
 
             case RequestType::DECLARE_DEPART_ENTITY:
-                //TODO
                 if($isUpdate) {
-                    return null; //update Array
+                    return DeclareDepartOutput::createUpdateRequestArray($messageObject);
                 } else {
-                    return null; //post Array
+                    return DeclareDepartOutput::createPostRequestArray($messageObject);
                 }
 
             case RequestType::DECLARE_TAGS_TRANSFER_ENTITY:
@@ -69,11 +68,10 @@ class RequestMessageOutputBuilder
                 }
 
             case RequestType::DECLARE_EXPORT_ENTITY:
-                //TODO
                 if($isUpdate) {
-                    return null; //update Array
+                    return DeclareExportOutput::createUpdateRequestArray($messageObject);
                 } else {
-                    return null; //post Array
+                    return DeclareExportOutput::createPostRequestArray($messageObject);
                 }
 
             case RequestType::DECLARE_IMPORT_ENTITY:

@@ -47,6 +47,17 @@ class DepartMessageBuilder extends MessageBuilderBase
      */
     private function addDeclareDepartData(DeclareDepart $messageObject)
     {
+        $animal = $messageObject->getAnimal();
+        $animal->setIsExportAnimal(false);
+        $animal->setIsDepartedAnimal(true);
+
+        $messageObject->setUlnCountryCode($animal->getUlnCountryCode());
+        $messageObject->setUlnNumber($animal->getUlnNumber());
+        $messageObject->setPedigreeCountryCode($animal->getPedigreeCountryCode());
+        $messageObject->setPedigreeNumber($animal->getPedigreeNumber());
+        $messageObject->setIsExportAnimal(false);
+        $messageObject->setIsDepartedAnimal(true);
+
         //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
         $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
         return $messageObject;
