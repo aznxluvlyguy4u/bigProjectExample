@@ -14,7 +14,7 @@ use AppBundle\Entity\Ram;
 class AnimalOutput
 {
     /**
-     * @param Ram|Ewe|Neuter $animals
+     * @param Ram[]|Ewe[]|Neuter[] $animals
      * @return array
      */
     public static function createAnimalsArray($animals)
