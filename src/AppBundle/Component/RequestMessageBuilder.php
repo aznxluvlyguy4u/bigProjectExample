@@ -172,8 +172,8 @@ class RequestMessageBuilder
                 $retrieveCountries = new RetrieveCountries();
                 return $retrieveCountries;
             case RequestType::RETRIEVE_UBN_DETAILS_ENTITY:
-                $retrieveUbnDetailsRequest = $this->irSerializer->parseRetrieveUBNDetails($contentArray, $person, $isEditMessage);
-                return $this->retrieveUBNDetailsBuilder->buildMessage($retrieveUbnDetailsRequest, $person);
+                $retrieveUbnDetailsRequest = $this->irSerializer->parseRetrieveUbnDetails($contentArray, $person, $isEditMessage);
+                return $this->retrieveUbnDetailsBuilder->buildMessage($retrieveUbnDetailsRequest, $person);
             default:
                 if ($messageClassNameSpace == null){
                     throw new \Exception('Cannot pass null into the RequestMessageBuilder');
