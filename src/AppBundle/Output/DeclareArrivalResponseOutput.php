@@ -16,7 +16,7 @@ class DeclareArrivalResponseOutput
     {
         return array(
             "request_id" => $arrival->getRequestId(),
-            "log_datum" => $arrival->getLogDate(),
+            "log_date" => $arrival->getLogDate(),
             "uln_country_code" => $arrival->getUlnCountryCode(),
             "uln_number" => $arrival->getUlnNumber(),
             "pedigree_country_code" => $arrival->getPedigreeCountryCode(),
@@ -37,7 +37,7 @@ class DeclareArrivalResponseOutput
         $lastResponse = $arrival->getResponses()->last();
 
         $res = array("request_id" => $arrival->getRequestId(),
-            "log_datum" => $arrival->getLogDate(),
+            "log_date" => $arrival->getLogDate(),
             "uln_country_code" => $arrival->getUlnCountryCode(),
             "uln_number" => $arrival->getUlnNumber(),
             "pedigree_country_code" => $arrival->getPedigreeCountryCode(),
