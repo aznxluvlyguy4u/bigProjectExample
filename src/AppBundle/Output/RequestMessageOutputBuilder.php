@@ -59,11 +59,10 @@ class RequestMessageOutputBuilder
                 }
 
             case RequestType::DECLARE_LOSS_ENTITY:
-                //TODO
                 if($isUpdate) {
-                    return null; //update Array
+                    return DeclareLossOutput::createUpdateRequestArray($messageObject);
                 } else {
-                    return null; //post Array
+                    return DeclareLossOutput::createPostRequestArray($messageObject);
                 }
 
             case RequestType::DECLARE_EXPORT_ENTITY:
