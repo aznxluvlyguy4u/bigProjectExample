@@ -20,5 +20,5 @@ interface CountryAPIControllerInterface
    * @param Request $request
    * @return mixed
    */
-  function getEUCountries(Request $request);
+  function getCountries(Request $request);
 }

@@ -14,127 +14,128 @@ use JMS\Serializer\Annotation as JMS;
  * Class Tag
  * @ORM\Entity(repositoryClass="AppBundle\Entity\TagRepository")
  * @package AppBundle\Entity
+ * @ExclusionPolicy("all")
  */
 class Tag {
 
-  /**
-   * @var integer
-   *
-   * @ORM\Id
-   * @ORM\Column(type="integer")
-   * @ORM\GeneratedValue(strategy="AUTO")
-   */
-  private $id;
+    /**
+     * @var integer
+     *
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
 
-  /**
-   * @var string
-   *
-   * @ORM\Column(type="string", nullable=true)
-   * @JMS\Type("string")
-   * @Expose
-   */
-  private $tagStatus;
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $tagStatus;
 
-  /**
-   * @var string
-   * @ORM\Column(type="string", nullable=true)
-   * @JMS\Type("string")
-   * @Expose
-   */
-  private $tagKind;
+    /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $tagKind;
 
-  /**
-   * @var string
-   * @ORM\Column(type="string", nullable=true)
-   * @JMS\Type("string")
-   * @Expose
-   */
-  private $tagTypeCode;
+    /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $tagTypeCode;
 
-  /**
-   * @var string
-   *
-   * @ORM\Column(type="string", nullable=true)
-   * @JMS\Type("string")
-   * @Expose
-   */
-  private $tagDescription;
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $tagDescription;
 
-  /**
-   * @var string
-   *
-   * @ORM\Column(type="string")
-   * @JMS\Type("string")
-   * @Expose
-   */
-  private $animalOrderNumber;
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $animalOrderNumber;
 
-  /**
-   * @var DateTime
-   *
-   * 2016-04-01T22:00:48.131Z
-   *
-   * @ORM\Column(type="datetime")
-   * @Assert\Date
-   * @Assert\NotBlank
-   * @JMS\Type("DateTime")
-   * @Expose
-   */
-  private $orderDate;
+    /**
+     * @var DateTime
+     *
+     * 2016-04-01T22:00:48.131Z
+     *
+     * @ORM\Column(type="datetime")
+     * @Assert\Date
+     * @Assert\NotBlank
+     * @JMS\Type("DateTime")
+     * @Expose
+     */
+    private $orderDate;
 
-  /**
-   * @var string
-   *
-   * Country code as defined by ISO 3166-1:
-   * {https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2}
-   *
-   * Example: NL(Netherlands), IE(Ireland), DK(Denmark), SE(Sweden)
-   *
-   * @ORM\Column(type="string")
-   * @Assert\Regex("/([A-Z]{2})\b/")
-   * @Assert\Length(max = 2)
-   * @Assert\NotBlank
-   * @JMS\Type("string")
-   * @Expose
-   */
-  private $ulnCountryCode;
+    /**
+     * @var string
+     *
+     * Country code as defined by ISO 3166-1:
+     * {https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2}
+     *
+     * Example: NL(Netherlands), IE(Ireland), DK(Denmark), SE(Sweden)
+     *
+     * @ORM\Column(type="string")
+     * @Assert\Regex("/([A-Z]{2})\b/")
+     * @Assert\Length(max = 2)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ulnCountryCode;
 
-  /**
-   * @var string
-   *
-   * Example: 000000012345
-   *
-   * @ORM\Column(type="string")
-   * @Assert\Regex("/([0-9]{12})\b/")
-   * @Assert\NotBlank
-   * @JMS\Type("string")
-   * @Expose
-   */
-  private $ulnNumber;
+    /**
+     * @var string
+     *
+     * Example: 000000012345
+     *
+     * @ORM\Column(type="string")
+     * @Assert\Regex("/([0-9]{12})\b/")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ulnNumber;
 
-  /**
-   * @var Animal
-   * @ORM\OneToOne(targetEntity="Animal", mappedBy="assignedTag", cascade={"persist"})
-   * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", nullable=true)
-   * @JMS\Type("AppBundle\Entity\Animal")
-   * @Expose
-   */
-  private $animal;
-
+    /**
+     * @var Animal
+     * @ORM\OneToOne(targetEntity="Animal", mappedBy="assignedTag", cascade={"persist"})
+     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", nullable=true)
+     * @JMS\Type("AppBundle\Entity\Animal")
+     * @Expose
+     */
+    private $animal;
 
     /**
      * @ORM\ManyToOne(targetEntity="Client", inversedBy="tags", cascade={"persist"})
      * @ORM\JoinColumn(name="owner_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\Client")
      */
     private $owner;
 
-  /**
-   * @var DeclareTagsTransfer
-   * @Assert\NotBlank
-   * @ORM\ManyToOne(targetEntity="DeclareTagsTransfer", cascade={"persist"}, inversedBy="tags")
-   * @JMS\Type("AppBundle\Entity\DeclareTagsTransfer")
-   */
-  protected $declareTagsTransferRequestMessage;
+    /**
+     * @var DeclareTagsTransfer
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="DeclareTagsTransfer", cascade={"persist"}, inversedBy="tags")
+     * @JMS\Type("AppBundle\Entity\DeclareTagsTransfer")
+     */
+    protected $declareTagsTransferRequestMessage;
 
   /**
    * Tag constructor.

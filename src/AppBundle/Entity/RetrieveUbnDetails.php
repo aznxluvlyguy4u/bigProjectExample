@@ -8,11 +8,11 @@ use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
- * Class RetrieveAnimalDetails
- * @ORM\Entity(repositoryClass="AppBundle\Entity\RetrieveAnimalDetailsRepository")
+ * Class RetrieveUbnDetails
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\RetrieveUbnDetailsRepository")
  * @package AppBundle\Entity
  */
-class RetrieveAnimalDetails
+class RetrieveUbnDetails
 {
     /**
      * @ORM\Column(type="integer")
@@ -53,9 +53,8 @@ class RetrieveAnimalDetails
     private $requestState;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 20)
-     * @Assert\NotBlank
      * @JMS\Type("string")
      */
     private $relationNumberKeeper;
@@ -63,50 +62,24 @@ class RetrieveAnimalDetails
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
-     * @Assert\NotBlank
+     * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
      */
     private $ubn;
 
     /**
+     * @var integer
+     * @ORM\Column(type="integer")
      * @Assert\NotBlank
-     * @ORM\ManyToOne(targetEntity="Location")
-     * @ORM\JoinColumn(name="location_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\Location")
      */
-    private $location;
+    private $animalType;
 
-    /**
-     * @var string
-     * @JMS\Type("string")
-     * @ORM\Column(type="string", nullable=true)
-     */
-    private $ulnNumber;
-
-    /**
-     * @var string
-     * @JMS\Type("string")
-     * @ORM\Column(type="string", nullable=true)
-     */
-    private $ulnCountryCode;
-
-   /**
-    * @var string
-    * @JMS\Type("string")
-    * @ORM\Column(type="string", nullable=true)
-    */
-    private $animalOrderNumber;
-
-    /**
-     * RetrieveAnimals constructor
-     */
     public function __construct() {
-      $this->logDate = new \DateTime();
+      $this->setLogDate(new \DateTime());
     }
 
-    /**
+  /**
      * Get id
      *
      * @return integer
@@ -121,7 +94,7 @@ class RetrieveAnimalDetails
      *
      * @param \DateTime $logDate
      *
-     * @return RetrieveAnimalDetails
+     * @return RetrieveUBNDetails
      */
     public function setLogDate($logDate)
     {
@@ -145,7 +118,7 @@ class RetrieveAnimalDetails
      *
      * @param string $requestId
      *
-     * @return RetrieveAnimalDetails
+     * @return RetrieveUBNDetails
      */
     public function setRequestId($requestId)
     {
@@ -170,7 +143,7 @@ class RetrieveAnimalDetails
      *
      * @param string $messageId
      *
-     * @return RetrieveAnimalDetails
+     * @return RetrieveUBNDetails
      */
     public function setMessageId($messageId)
     {
@@ -194,7 +167,7 @@ class RetrieveAnimalDetails
      *
      * @param string $requestState
      *
-     * @return RetrieveAnimalDetails
+     * @return RetrieveUBNDetails
      */
     public function setRequestState($requestState)
     {
@@ -218,7 +191,7 @@ class RetrieveAnimalDetails
      *
      * @param string $relationNumberKeeper
      *
-     * @return RetrieveAnimalDetails
+     * @return RetrieveUBNDetails
      */
     public function setRelationNumberKeeper($relationNumberKeeper)
     {
@@ -242,7 +215,7 @@ class RetrieveAnimalDetails
      *
      * @param string $ubn
      *
-     * @return RetrieveAnimalDetails
+     * @return RetrieveUBNDetails
      */
     public function setUbn($ubn)
     {
@@ -262,99 +235,26 @@ class RetrieveAnimalDetails
     }
 
     /**
-     * Set ulnNumber
+     * Set animalType
      *
-     * @param string $ulnNumber
+     * @param integer $animalType
      *
-     * @return RetrieveAnimalDetails
+     * @return RetrieveUBNDetails
      */
-    public function setUlnNumber($ulnNumber)
+    public function setAnimalType($animalType)
     {
-        $this->ulnNumber = $ulnNumber;
+        $this->animalType = $animalType;
 
         return $this;
     }
 
     /**
-     * Get ulnNumber
+     * Get animalType
      *
-     * @return string
+     * @return integer
      */
-    public function getUlnNumber()
+    public function getAnimalType()
     {
-        return $this->ulnNumber;
-    }
-
-    /**
-     * Set ulnCountryCode
-     *
-     * @param string $ulnCountryCode
-     *
-     * @return RetrieveAnimalDetails
-     */
-    public function setUlnCountryCode($ulnCountryCode)
-    {
-        $this->ulnCountryCode = $ulnCountryCode;
-
-        return $this;
-    }
-
-    /**
-     * Get ulnCountryCode
-     *
-     * @return string
-     */
-    public function getUlnCountryCode()
-    {
-        return $this->ulnCountryCode;
-    }
-
-    /**
-     * Set animalOrderNumber
-     *
-     * @param string $animalOrderNumber
-     *
-     * @return RetrieveAnimalDetails
-     */
-    public function setAnimalOrderNumber($animalOrderNumber)
-    {
-        $this->animalOrderNumber = $animalOrderNumber;
-
-        return $this;
-    }
-
-    /**
-     * Get animalOrderNumber
-     *
-     * @return string
-     */
-    public function getAnimalOrderNumber()
-    {
-        return $this->animalOrderNumber;
-    }
-
-    /**
-     * Set location
-     *
-     * @param \AppBundle\Entity\Location $location
-     *
-     * @return RetrieveAnimalDetails
-     */
-    public function setLocation(\AppBundle\Entity\Location $location = null)
-    {
-        $this->location = $location;
-        $this->setUbn($location->getUbn());
-
-        return $this;
-    }
-
-    /**
-     * Get location
-     *
-     * @return \AppBundle\Entity\Location
-     */
-    public function getLocation()
-    {
-        return $this->location;
+        return $this->animalType;
     }
 }

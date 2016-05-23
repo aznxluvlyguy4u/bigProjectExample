@@ -3,6 +3,7 @@
 namespace AppBundle\Component;
 
 use AppBundle\Constant\Constant;
+
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
@@ -14,9 +15,10 @@ use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\RetrieveAnimals;
-use AppBundle\Entity\RetrieveEuropeanCountries;
+use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
-use AppBundle\Entity\RetrieveUBNDetails;
+use AppBundle\Entity\RetrieveAnimalDetails;
+use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Service\IRSerializer;
@@ -65,7 +67,16 @@ class RequestMessageBuilder
      */
     private $retrieveAnimalsMessageBuilder;
 
+    /**
+     * @var RetrieveAnimalDetails
+     */
     private $retrieveAnimalDetailsBuilder;
+
+    /**
+     * @var RetrieveUbnDetailsMessageBuilder
+     */
+    private $retrieveUbnDetailsBuilder;
+
     /*
      * @var LossMessageBuilder
      */
@@ -101,6 +112,7 @@ class RequestMessageBuilder
         $this->revokeMessageBuilder = new RevokeMessageBuilder($em);
         $this->retrieveAnimalsMessageBuilder = new RetrieveAnimalsMessageBuilder($em);
         $this->retrieveAnimalDetailsBuilder = new RetrieveAnimalDetailsMessageBuilder($em);
+        $this->retrieveUbnDetailsBuilder = new RetrieveUbnDetailsMessageBuilder($em);
     }
 
     /**
@@ -108,7 +120,7 @@ class RequestMessageBuilder
      * @param ArrayCollection $contentArray
      * @param Person|Client $person
      * @param boolean $isEditMessage
-     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveEuropeanCountries|RetrieveUBNDetails
+     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
      * @throws \Exception
      */
     public function build($messageClassNameSpace, ArrayCollection $contentArray, $person, $isEditMessage)
@@ -149,7 +161,6 @@ class RequestMessageBuilder
             case RequestType::REVOKE_DECLARATION_ENTITY:
                 $revokeDeclaration = new RevokeDeclaration();
                 $revokeDeclaration->setMessageNumber($contentArray[Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE]);
-
                 return $this->revokeMessageBuilder->buildMessage($revokeDeclaration, $person);
             case RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY:
                 $retrieveAnimalDetailsRequest = $this->irSerializer->parseRetrieveAnimalDetails($contentArray, $person, $isEditMessage);
@@ -157,12 +168,12 @@ class RequestMessageBuilder
             case RequestType::RETRIEVE_ANIMALS_ENTITY:
                 $retrieveAnimalsRequest = $this->irSerializer->parseRetrieveAnimals($contentArray, $person, $isEditMessage);
                 return $this->retrieveAnimalsMessageBuilder->buildMessage($retrieveAnimalsRequest, $person);
-            case RequestType::RETRIEVE_EU_COUNTRIES_ENTITY:
-                //TODO: only add the mininum required fields for this Message Type
-                return null;
+            case RequestType::RETRIEVE_COUNTRIES_ENTITY:
+                $retrieveCountries = new RetrieveCountries();
+                return $retrieveCountries;
             case RequestType::RETRIEVE_UBN_DETAILS_ENTITY:
-                //TODO: only add the mininum required fields for this Message Type
-                return null;
+                $retrieveUbnDetailsRequest = $this->irSerializer->parseRetrieveUBNDetails($contentArray, $person, $isEditMessage);
+                return $this->retrieveUBNDetailsBuilder->buildMessage($retrieveUbnDetailsRequest, $person);
             default:
                 if ($messageClassNameSpace == null){
                     throw new \Exception('Cannot pass null into the RequestMessageBuilder');
