@@ -147,23 +147,16 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function createLoss(Request $request)
   {
-    //Validity check
-    $validityCheckUlnOrPedigiree = $this->isUlnOrPedigreeCodeValid($request);
-    $isValid = $validityCheckUlnOrPedigiree['isValid'];
-
-    if(!$isValid) {
-      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
-      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
-      $message = $keyType . ' of ' . $animalKind . ' not found.';
-      $messageArray = array('code'=>428, "message" => $message);
-
-      return new JsonResponse($messageArray, 428);
-    }
-
-    //Convert front-end message into an array
-    //Get content to array
     $content = $this->getContentAsArray($request);
 
+    //Client can only report a loss of own animals
+    $client = $this->getAuthenticatedUser($request);
+    $animal = $content->get(Constant::ANIMAL_NAMESPACE);
+    $isAnimalOfClient = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->verifyIfClientOwnsAnimal($client, $animal);
+
+    if(!$isAnimalOfClient) {
+      return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
+    }
     //Convert the array into an object and add the mandatory values retrieved from the database
     $messageObject = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $this->getAuthenticatedUser($request));
 
@@ -202,52 +195,34 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function editLoss(Request $request, $Id)
   {
-    //Validity check
-    $validityCheckUlnOrPedigiree = $this->isUlnOrPedigreeCodeValid($request);
-    $isValid = $validityCheckUlnOrPedigiree['isValid'];
+    $content = $this->getContentAsArray($request);
 
-    if(!$isValid) {
-      $keyType = $validityCheckUlnOrPedigiree['keyType']; // uln  of pedigree
-      $animalKind = $validityCheckUlnOrPedigiree['animalKind'];
-      $message = $keyType . ' of ' . $animalKind . ' not found.';
-      $messageArray = array('code'=>428, "message" => $message);
+    //Client can only report a loss of own animals
+    $client = $this->getAuthenticatedUser($request);
+    $animal = $content->get(Constant::ANIMAL_NAMESPACE);
+    $isAnimalOfClient = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->verifyIfClientOwnsAnimal($client, $animal);
 
-      return new JsonResponse($messageArray, 428);
+    if(!$isAnimalOfClient) {
+      return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
     }
 
     //Convert the array into an object and add the mandatory values retrieved from the database
     $declareLossUpdate = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY,
         $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
 
-    $entityManager = $this->getDoctrine()
-        ->getManager()
-        ->getRepository(Constant::DECLARE_LOSS_REPOSITORY);
-    $declareLoss = $entityManager->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
+    $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_LOSS_REPOSITORY);
+    $messageObject = $entityManager->updateDeclareLossMessage($declareLossUpdate, $client, $Id);
 
-    if($declareLoss == null) {
+    if($messageObject == null) {
       return new JsonResponse(array("message"=>"No DeclareLoss found with request_id: " . $Id), 204);
-
-    } else {
-      if ($declareLossUpdate->getAnimal() != null) {
-        $declareLoss->setAnimal($declareLossUpdate->getAnimal());
-      }
-
-      if ($declareLossUpdate->getDateOfDeath() != null) {
-        $declareLoss->setDateOfDeath($declareLossUpdate->getDateOfDeath());
-      }
-
-      if($declareLossUpdate->getReasonOfLoss() != null) {
-        $declareLoss->setReasonOfLoss($declareLossUpdate->getReasonOfLoss());
-      }
-
-      //First Persist object to Database, before sending it to the queue
-      $this->persist($declareLoss);
-
-      //Send it to the queue and persist/update any changed state to the database
-      $messageArray = $this->sendEditMessageObjectToQueue($declareLoss);
-
-      return new JsonResponse($messageArray, 200);
     }
 
+    //Send it to the queue and persist/update any changed state to the database
+    $messageArray = $this->sendEditMessageObjectToQueue($messageObject);
+
+    //Persist object to Database
+    $this->persist($messageObject);
+
+    return new JsonResponse($messageArray, 200);
   }
 }

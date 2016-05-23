@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Constant\Constant;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
@@ -8,6 +9,36 @@ use Doctrine\Common\Collections\ArrayCollection;
  * @package AppBundle\Entity
  */
 class DeclareLossRepository extends BaseRepository {
+
+    /**
+     * @param DeclareLoss $declareLossUpdate
+     * @param Client $client
+     * @param $id
+     * @return DeclareLoss|null
+     */
+    public function updateDeclareLossMessage($declareLossUpdate, Client $client, $id) {
+
+        $declareLoss = $this->getLossByRequestId($client, $id);
+
+        if($declareLoss == null) {
+            return null;
+
+        } else {
+            if ($declareLossUpdate->getAnimal() != null) {
+                $declareLoss->setAnimal($declareLossUpdate->getAnimal());
+            }
+
+            if ($declareLossUpdate->getDateOfDeath() != null) {
+                $declareLoss->setDateOfDeath($declareLossUpdate->getDateOfDeath());
+            }
+
+            if ($declareLossUpdate->getReasonOfLoss() != null) {
+                $declareLoss->setReasonOfLoss($declareLossUpdate->getReasonOfLoss());
+            }
+        }
+
+        return $declareLoss;
+    }
 
     /**
      * @param Client $client
@@ -25,7 +56,7 @@ class DeclareLossRepository extends BaseRepository {
     /**
      * @param Client $client
      * @param string $requestId
-     * @return DeclareArrival|null
+     * @return DeclareLoss|null
      */
     public function getLossByRequestId(Client $client, $requestId)
     {
