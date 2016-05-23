@@ -25,10 +25,15 @@ class DeclareLossOutput
             "relation_number_keeper" => $loss->getRelationNumberKeeper(),
             "log_date" => $loss->getLogDate(),
             "ubn" => $loss->getUbn(),
-            "uln_country_code" => $loss->getUlnCountryCode(),
-            "uln_number" => $loss->getUlnNumber(),
             "date_of_death" => $loss->getDateOfDeath(),
-            "reason_of_loss" => $loss->getReasonOfLoss()
+            "reason_of_loss" => $loss->getReasonOfLoss(),
+            "type" => "DeclareLoss",
+            "animal" =>
+            array(
+                "uln_country_code" => $loss->getUlnCountryCode(),
+                "uln_number" => $loss->getUlnNumber(),
+                "type" => "Ewe" //FIXME get type from animal
+            ),
         );
 
         return $result;

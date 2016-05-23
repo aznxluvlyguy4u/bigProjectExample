@@ -34,6 +34,7 @@ class DeclareDepartOutput
             "ubn" => $depart->getUbn(),
             "depart_date" => $depart->getDepartDate(),
             "ubn_new_owner" => $depart->getUbnNewOwner(),
+            "type" => "DeclareDepart",
             "animal" =>
             array("id" => $animalId,
                   "uln_country_code" => $depart->getUlnCountryCode(),
@@ -41,7 +42,9 @@ class DeclareDepartOutput
                   "pedigree_country_code" => $depart->getPedigreeCountryCode(),
                   "pedigree_number" => $depart->getPedigreeNumber(),
                   "is_export_animal" => $depart->getIsExportAnimal(),
-                  "is_departed_animal" => $depart->getIsDepartedAnimal()),
+                  "is_departed_animal" => $depart->getIsDepartedAnimal(),
+                  "type" => "Ewe" //FIXME get type from animal
+            ),
             "location"=>
             array("id" => $depart->getLocation()->getId(),
                   "ubn" => $depart->getLocation()->getUbn())
