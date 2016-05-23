@@ -21,6 +21,7 @@ class DeclareDepartResponseOutput
             $messageNumber = null;
         }
 
+
         return array(
             "request_id" => $depart->getRequestId(),
             "log_date" => $depart->getLogDate(),
@@ -45,8 +46,12 @@ class DeclareDepartResponseOutput
     {
         $lastResponse = $depart->getResponses()->last();
         if($lastResponse) {
+            $errorCode = $lastResponse->getErrorCode();
+            $errorMessage = $lastResponse->getErrorMessage();
             $messageNumber = $lastResponse->getMessageNumber();
         } else {
+            $errorCode = null;
+            $errorMessage = null;
             $messageNumber = null;
         }
 
@@ -61,8 +66,8 @@ class DeclareDepartResponseOutput
             "ubn_new_owner" => $depart->getUbnNewOwner(),
             "reason_of_depart" => $depart->getReasonOfDepart(),
             "request_state" => $depart->getRequestState(),
-            "error_code" => $lastResponse->getErrorCode(),
-            "error_message" => $lastResponse->getErrorMessage(),
+            "error_code" => $errorCode,
+            "error_message" => $errorMessage,
             "message_number" => $messageNumber
         );
 

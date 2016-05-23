@@ -20,6 +20,7 @@ class DeclareExportResponseOutput
             $messageNumber = null;
         }
 
+
         return array(
             "request_id" => $export->getRequestId(),
             "log_date" => $export->getLogDate(),
@@ -43,8 +44,12 @@ class DeclareExportResponseOutput
     {
         $lastResponse = $export->getResponses()->last();
         if($lastResponse) {
+            $errorCode = $lastResponse->getErrorCode();
+            $errorMessage = $lastResponse->getErrorMessage();
             $messageNumber = $lastResponse->getMessageNumber();
         } else {
+            $errorCode = null;
+            $errorMessage = null;
             $messageNumber = null;
         }
 
@@ -58,8 +63,8 @@ class DeclareExportResponseOutput
             "depart_date" => $export->getExportDate(),
             "reason_of_depart" => $export->getReasonOfExport(),
             "request_state" => $export->getRequestState(),
-            "error_code" => $lastResponse->getErrorCode(),
-            "error_message" => $lastResponse->getErrorMessage(),
+            "error_code" => $errorCode,
+            "error_message" => $errorMessage,
             "message_number" => $messageNumber
         );
 

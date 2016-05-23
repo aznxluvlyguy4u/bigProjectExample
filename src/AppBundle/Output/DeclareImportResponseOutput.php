@@ -43,8 +43,12 @@ class DeclareImportResponseOutput
     {
         $lastResponse = $import->getResponses()->last();
         if($lastResponse) {
+            $errorCode = $lastResponse->getErrorCode();
+            $errorMessage = $lastResponse->getErrorMessage();
             $messageNumber = $lastResponse->getMessageNumber();
         } else {
+            $errorCode = null;
+            $errorMessage = null;
             $messageNumber = null;
         }
 
@@ -58,8 +62,8 @@ class DeclareImportResponseOutput
             "import_date" => $import->getImportDate(),
             "animal_country_origin" => $import->getAnimalCountryOrigin(),
             "request_state" => $import->getRequestState(),
-            "error_code" => $lastResponse->getErrorCode(),
-            "error_message" => $lastResponse->getErrorMessage(),
+            "error_code" => $errorCode,
+            "error_message" => $errorMessage,
             "message_number" => $messageNumber
         );
 
