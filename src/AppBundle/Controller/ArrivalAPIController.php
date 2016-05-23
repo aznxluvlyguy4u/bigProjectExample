@@ -255,7 +255,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
   /**
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/responses/errors")
+   * @Route("-errors")
    * @Method("GET")
    */
   public function getArrivalErrors(Request $request)
@@ -275,7 +275,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
   /**
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/responses/history")
+   * @Route("-history")
    * @Method("GET")
    */
   public function getArrivalHistory(Request $request)
