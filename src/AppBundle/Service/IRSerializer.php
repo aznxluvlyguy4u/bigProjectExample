@@ -334,23 +334,17 @@ class IRSerializer implements IRSerializerInterface
     {
         $contentArray["type"] = RequestType::DECLARE_TAGS_TRANSFER_ENTITY;
 
+        $ubnNewOwner = $contentArray['ubn_new_owner'];
+        $relationNumberAcceptant = $contentArray['relation_number_acceptant'];
+
         $declareTagsTransfer = new DeclareTagsTransfer();
+        $declareTagsTransfer->setRelationNumberAcceptant($relationNumberAcceptant);
+        $declareTagsTransfer->setUbnNewOwner($ubnNewOwner);
         $fetchedTag = null;
         $tagsRepository = $this->entityManager->getRepository(Constant::TAG_REPOSITORY);
         $tagsContentArray = $contentArray->get('tags');
 
         foreach($tagsContentArray as $tag) {
-
-            //Find the client belonging to the UBN in order to get the Clients relationNumberKeeper number
-            $relationNumberAcceptant = null;
-
-            //1 - find UBN
-            $ubnNewOwner = $tag['ubn_new_owner'];
-            $relationNumberAcceptant = $tag['relation_number_acceptant'];
-            $locationRepository = $this->entityManager->getRepository(Constant::LOCATION_REPOSITORY);
-            $locationFilter = array(Constant::UBN_NAMESPACE => $ubnNewOwner);
-            $newOwnerslocation = $locationRepository->findOneBy($locationFilter);
-
             //create filter to search tag
             $tagFilter = array("ulnCountryCode" => $tag[Constant::ULN_COUNTRY_CODE_NAMESPACE],
                 "ulnNumber" => $tag[Constant::ULN_NUMBER_NAMESPACE]);
@@ -368,8 +362,6 @@ class IRSerializer implements IRSerializerInterface
                     $declareTagsTransfer->addTag($fetchedTag);
                 }
             }
-            $declareTagsTransfer->setRelationNumberAcceptant($relationNumberAcceptant);
-            $declareTagsTransfer->setUbnNewOwner($ubnNewOwner);
         }
 
         return $declareTagsTransfer;

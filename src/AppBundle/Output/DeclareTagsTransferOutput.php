@@ -25,6 +25,7 @@ class DeclareTagsTransferOutput
             "relation_number_keeper" => $tagTransfer->getRelationNumberKeeper(),
             "log_date" => $tagTransfer->getLogDate(),
             "ubn" => $tagTransfer->getUbn(),
+            "ubn_new_owner" => $tagTransfer->getUbnNewOwner(),
             "relation_number_acceptant" => $tagTransfer->getRelationNumberAcceptant(),
             "tags" => self::tagsArray($tagTransfer)
         );
