@@ -22,7 +22,7 @@ class DeclareExportResponseOutput
 
         return array(
             "request_id" => $export->getRequestId(),
-            "log_datum" => $export->getLogDate(),
+            "log_date" => $export->getLogDate(),
             "uln_country_code" => $export->getUlnCountryCode(),
             "uln_number" => $export->getUlnNumber(),
             "pedigree_country_code" => $export->getPedigreeCountryCode(),
@@ -49,7 +49,7 @@ class DeclareExportResponseOutput
         }
 
         $res = array("request_id" => $export->getRequestId(),
-            "log_datum" => $export->getLogDate(),
+            "log_date" => $export->getLogDate(),
             "uln_country_code" => $export->getUlnCountryCode(),
             "uln_number" => $export->getUlnNumber(),
             "pedigree_country_code" => $export->getPedigreeCountryCode(),

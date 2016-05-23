@@ -22,7 +22,7 @@ class DeclareImportResponseOutput
 
         return array(
             "request_id" => $import->getRequestId(),
-            "log_datum" => $import->getLogDate(),
+            "log_date" => $import->getLogDate(),
             "uln_country_code" => $import->getUlnCountryCode(),
             "uln_number" => $import->getUlnNumber(),
             "pedigree_country_code" => $import->getPedigreeCountryCode(),
@@ -49,7 +49,7 @@ class DeclareImportResponseOutput
         }
 
         $res = array("request_id" => $import->getRequestId(),
-            "log_datum" => $import->getLogDate(),
+            "log_date" => $import->getLogDate(),
             "uln_country_code" => $import->getUlnCountryCode(),
             "uln_number" => $import->getUlnNumber(),
             "pedigree_country_code" => $import->getPedigreeCountryCode(),

@@ -23,7 +23,7 @@ class DeclareDepartResponseOutput
 
         return array(
             "request_id" => $depart->getRequestId(),
-            "log_datum" => $depart->getLogDate(),
+            "log_date" => $depart->getLogDate(),
             "uln_country_code" => $depart->getUlnCountryCode(),
             "uln_number" => $depart->getUlnNumber(),
             "pedigree_country_code" => $depart->getPedigreeCountryCode(),
@@ -51,7 +51,7 @@ class DeclareDepartResponseOutput
         }
 
         $res = array("request_id" => $depart->getRequestId(),
-            "log_datum" => $depart->getLogDate(),
+            "log_date" => $depart->getLogDate(),
             "uln_country_code" => $depart->getUlnCountryCode(),
             "uln_number" => $depart->getUlnNumber(),
             "pedigree_country_code" => $depart->getPedigreeCountryCode(),
