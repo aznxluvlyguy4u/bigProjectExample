@@ -35,12 +35,14 @@ class DeclareArrivalOutput
             "is_import_animal" => $arrival->getIsImportAnimal(),
             "ubn_previous_owner" => $arrival->getUbnPreviousOwner(),
             "request_state" => $arrival->getRequestState(),
+            "type" => "DeclareArrival",
             "animal" =>
             array("id" => $animalId,
                   "uln_country_code" => $arrival->getUlnCountryCode(),
                   "uln_number" => $arrival->getUlnNumber(),
                   "pedigree_country_code" => $arrival->getPedigreeCountryCode(),
-                  "pedigree_number" => $arrival->getPedigreeNumber()
+                  "pedigree_number" => $arrival->getPedigreeNumber(),
+                  "type" => "Ram", //FIXME get from animal
                   //FIXME ADD animalType ALSO TO ENTITY  /Mandatory for IenR
             ),
             "location"=>
