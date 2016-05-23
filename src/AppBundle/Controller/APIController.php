@@ -219,6 +219,7 @@ class APIController extends Controller implements APIControllerInterface
    */
   protected function sendMessageObjectToQueue($messageObject, $isUpdate = false) {
 
+    $doctrine = $this->getDoctrine();
     $requestId = $messageObject->getRequestId();
     $repository = $this->getDoctrine()->getRepository(Utils::getRepositoryNameSpace($messageObject));
 
@@ -242,12 +243,12 @@ class APIController extends Controller implements APIControllerInterface
     //If send to Queue, failed, it needs to be resend, set state to failed
     if ($sendToQresult['statusCode'] != '200') {
       $messageObject->setRequestState(RequestStateType::FAILED);
-      $messageObject = MessageModifier::modifyBeforePersistingRequestStateByQueueStatus($messageObject);
+      $messageObject = MessageModifier::modifyBeforePersistingRequestStateByQueueStatus($messageObject, $doctrine);
       $this->persist($messageObject);
 
     } else if($isUpdate) { //If successfully sent to the queue and message is an Update/Edit request
       $messageObject->setRequestState(RequestStateType::OPEN); //update the RequestState
-      $messageObject = MessageModifier::modifyBeforePersistingRequestStateByQueueStatus($messageObject);
+      $messageObject = MessageModifier::modifyBeforePersistingRequestStateByQueueStatus($messageObject, $doctrine);
       $this->persist($messageObject);
     }
 

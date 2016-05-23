@@ -25,6 +25,10 @@ services:
         class: AppBundle\Component\Modifier\MessageModifier
         arguments: ['@doctrine.orm.entity_manager']
 
+    app.modifier.animalremover:
+        class: AppBundle\Component\Modifier\AnimalRemover
+        arguments: ['@doctrine.orm.entity_manager']
+
     app.messagebuilder.base:
         class: AppBundle\Component\MessageBuilderBase
         arguments: ['@doctrine.orm.entity_manager']

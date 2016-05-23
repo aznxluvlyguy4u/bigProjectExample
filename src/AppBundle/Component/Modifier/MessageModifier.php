@@ -26,7 +26,7 @@ class MessageModifier
     /**
      * @var EntityManager
      */
-    protected static $em;
+    private static $em;
 
     public function __construct(EntityManager $em)
     {
@@ -37,7 +37,7 @@ class MessageModifier
      * @param null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveEuropeanCountries|RetrieveUBNDetails $messageObject
      * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveEuropeanCountries|RetrieveUBNDetails
      */
-    public static function modifyBeforePersistingRequestStateByQueueStatus($messageObject)
+    public static function modifyBeforePersistingRequestStateByQueueStatus($messageObject, $doctrine)
     {
         $entityNameSpace = Utils::getClassName($messageObject);
         
@@ -49,7 +49,7 @@ class MessageModifier
                 return $messageObject;
 
             case RequestType::DECLARE_ARRIVAL_ENTITY:
-                return  AnimalRemover::removeUnverifiedAnimalFromMessageObject($messageObject);
+                return  AnimalRemover::removeUnverifiedAnimalFromMessageObject($messageObject, $doctrine);
 
             case RequestType::DECLARE_BIRTH_ENTITY:
                 return $messageObject;
@@ -67,7 +67,7 @@ class MessageModifier
                 return  $messageObject;
 
             case RequestType::DECLARE_IMPORT_ENTITY:
-                return  AnimalRemover::removeUnverifiedAnimalFromMessageObject($messageObject);
+                return  AnimalRemover::removeUnverifiedAnimalFromMessageObject($messageObject, $doctrine);
 
             case RequestType::RETRIEVE_TAGS_ENTITY:
                 return $messageObject;
