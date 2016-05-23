@@ -44,7 +44,7 @@ class DeclareDepartOutput
                   "is_export_animal" => $depart->getIsExportAnimal(),
                   "is_departed_animal" => $depart->getIsDepartedAnimal(),
                   "animal_type" => $depart->getAnimalType(),
-                  "type" => "Ewe" //FIXME get type from animal
+                  "type" => $depart->getAnimalObjectType()
             ),
             "location"=>
             array("id" => $depart->getLocation()->getId(),

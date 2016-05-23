@@ -43,7 +43,7 @@ class DeclareImportOutput
                   "pedigree_country_code" => $import->getPedigreeCountryCode(),
                   "pedigree_number" => $import->getPedigreeNumber(),
                   "animal_type" => $import->getAnimalType(),
-                  "type" => "Ewe" //FIXME get type from animal
+                  "type" => $import->getAnimalObjectType()
             ),
             "location"=>
             array("id" => $import->getLocation()->getId(),

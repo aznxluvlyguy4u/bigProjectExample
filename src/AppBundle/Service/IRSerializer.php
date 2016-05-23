@@ -2,6 +2,7 @@
 
 namespace AppBundle\Service;
 
+use AppBundle\Component\Utils;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Employee;
@@ -175,6 +176,7 @@ class IRSerializer implements IRSerializerInterface
 
             //Add retrieved animal to DeclareArrival
             $declareArrivalRequest->setAnimal($retrievedAnimal);
+            $declareArrivalRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
 
             $contentAnimal = $declareArrivalContentArray['animal'];
 
@@ -323,6 +325,7 @@ class IRSerializer implements IRSerializerInterface
 
         //Add retrieved animal to DeclareArrival
         $declareDepartRequest->setAnimal($retrievedAnimal);
+        $declareDepartRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
 
         return $declareDepartRequest;
     }
@@ -386,6 +389,7 @@ class IRSerializer implements IRSerializerInterface
 
         //Add retrieved animal to DeclareLoss
         $declareLossRequest->setAnimal($retrievedAnimal);
+        $declareLossRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
 
         return $declareLossRequest;
     }
@@ -410,6 +414,7 @@ class IRSerializer implements IRSerializerInterface
 
         $declareExportRequest->setAnimal($retrievedAnimal);
         $declareExportRequest->setExportDate(new \DateTime($exportDate));
+        $declareExportRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
 
         return $declareExportRequest;
     }
@@ -451,6 +456,7 @@ class IRSerializer implements IRSerializerInterface
             //Add retrieved animal and import date to DeclareImport
             $declareImportRequest->setAnimal($retrievedAnimal);
             $declareImportRequest->setImportDate(new \DateTime($importDate));
+            $declareImportRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
 
             $contentAnimal = $declareImportContentArray['animal'];
 

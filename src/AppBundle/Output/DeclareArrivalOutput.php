@@ -43,8 +43,7 @@ class DeclareArrivalOutput
                   "pedigree_country_code" => $arrival->getPedigreeCountryCode(),
                   "pedigree_number" => $arrival->getPedigreeNumber(),
                   "animal_type" => $arrival->getAnimalType(),
-                  "type" => "Ram" //FIXME get from animal
-                  //FIXME ADD animalType ALSO TO ENTITY  /Mandatory for IenR
+                  "type" => $arrival->getAnimalObjectType()
             ),
             "location"=>
             array("id" => $arrival->getLocation()->getId(),

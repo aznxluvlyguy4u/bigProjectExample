@@ -42,7 +42,7 @@ class DeclareExportOutput
                   "pedigree_number" => $export->getPedigreeNumber(),
                   "is_export_animal" => $export->getIsExportAnimal(),
                   "animal_type" => $export->getAnimalType(),
-                  "type" => "Ewe" //FIXME get type from animal
+                  "type" => $export->getAnimalObjectType()
             ),
             "location"=>
             array("id" => $export->getLocation()->getId(),
