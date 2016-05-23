@@ -61,7 +61,7 @@ class MessageModifier
                 return $messageObject;
 
             case RequestType::DECLARE_LOSS_ENTITY:
-                return  AnimalRemover::removeUnverifiedAnimalFromMessageObject($messageObject);
+                return  $messageObject;
 
             case RequestType::DECLARE_EXPORT_ENTITY:
                 return  $messageObject;
