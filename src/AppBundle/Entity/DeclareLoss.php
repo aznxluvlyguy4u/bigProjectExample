@@ -43,6 +43,16 @@ class DeclareLoss extends DeclareBase
     private $ulnNumber;
 
     /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer")
+     * @Assert\NotBlank
+     * @JMS\Type("integer")
+     * @Expose
+     */
+    private $animalType;
+
+    /**
      * @var \DateTime
      *
      * @ORM\Column(type="datetime", nullable=true)
@@ -296,6 +306,23 @@ class DeclareLoss extends DeclareBase
     {
         $this->ulnNumber = $ulnNumber;
     }
+
+    /**
+     * @return int
+     */
+    public function getAnimalType()
+    {
+        return $this->animalType;
+    }
+
+    /**
+     * @param int $animalType
+     */
+    public function setAnimalType($animalType)
+    {
+        $this->animalType = $animalType;
+    }
+
 
 
 }

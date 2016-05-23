@@ -66,6 +66,16 @@ class DeclareExport extends DeclareBase
     private $isExportAnimal;
 
     /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer")
+     * @Assert\NotBlank
+     * @JMS\Type("integer")
+     * @Expose
+     */
+    private $animalType;
+
+    /**
      * 2016-04-01T22:00:48.131Z
      *
      * @ORM\Column(type="datetime")
@@ -313,6 +323,22 @@ class DeclareExport extends DeclareBase
     public function setIsExportAnimal($isExportAnimal)
     {
         $this->isExportAnimal = $isExportAnimal;
+    }
+
+    /**
+     * @return int
+     */
+    public function getAnimalType()
+    {
+        return $this->animalType;
+    }
+
+    /**
+     * @param int $animalType
+     */
+    public function setAnimalType($animalType)
+    {
+        $this->animalType = $animalType;
     }
 
 

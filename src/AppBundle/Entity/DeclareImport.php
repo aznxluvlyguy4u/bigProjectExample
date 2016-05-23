@@ -60,6 +60,16 @@ class DeclareImport extends DeclareBase
    */
   private $pedigreeNumber;
 
+    /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer")
+     * @Assert\NotBlank
+     * @JMS\Type("integer")
+     * @Expose
+     */
+    private $animalType;
+
   /**
    * 2016-04-01T22:00:48.131Z
    *
