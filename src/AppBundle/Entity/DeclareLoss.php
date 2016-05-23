@@ -23,19 +23,34 @@ class DeclareLoss extends DeclareBase
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="deaths", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Animal")
-     * @Expose
      */
     private $animal;
 
     /**
-     * @var DateTime
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
+    private $ulnCountryCode;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
+    private $ulnNumber;
+
+    /**
+     * @var \DateTime
      *
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
      * @Expose
      */
-    protected $dateOfDeath;
+    private $dateOfDeath;
 
     /**
      * @ORM\Column(type="string", nullable=true)
@@ -122,6 +137,15 @@ class DeclareLoss extends DeclareBase
     public function setAnimal(\AppBundle\Entity\Animal $animal = null)
     {
         $this->animal = $animal;
+
+        if($animal != null) {
+
+            if($animal->getUlnCountryCode()!=null && $animal->getUlnNumber()!=null) {
+                $this->ulnCountryCode = $animal->getUlnCountryCode();
+                $this->ulnNumber = $animal->getUlnNumber();
+            }
+
+        }
 
         return $this;
     }
@@ -240,4 +264,38 @@ class DeclareLoss extends DeclareBase
     {
         $this->revoke = $revoke;
     }
+
+    /**
+     * @return string
+     */
+    public function getUlnCountryCode()
+    {
+        return $this->ulnCountryCode;
+    }
+
+    /**
+     * @param string $ulnCountryCode
+     */
+    public function setUlnCountryCode($ulnCountryCode)
+    {
+        $this->ulnCountryCode = $ulnCountryCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUlnNumber()
+    {
+        return $this->ulnNumber;
+    }
+
+    /**
+     * @param string $ulnNumber
+     */
+    public function setUlnNumber($ulnNumber)
+    {
+        $this->ulnNumber = $ulnNumber;
+    }
+
+
 }
