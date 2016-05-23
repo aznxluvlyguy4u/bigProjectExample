@@ -24,6 +24,23 @@ class DeclareArrivalResponse extends DeclareBaseResponse {
   private $declareArrivalRequestMessage;
 
     /**
+     * 2016-04-01T22:00:48.131Z
+     *
+     * @ORM\Column(type="datetime")
+     * @Assert\Date
+     * @Assert\NotBlank
+     * @JMS\Type("DateTime")
+     */
+    private $arrivalDate;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 10)
+     * @JMS\Type("string")
+     */
+    private $ubnPreviousOwner;
+
+    /**
      * Set declareArrivalRequestMessage
      *
      * @param \AppBundle\Entity\DeclareArrival $declareArrivalRequestMessage
@@ -46,23 +63,6 @@ class DeclareArrivalResponse extends DeclareBaseResponse {
     {
         return $this->declareArrivalRequestMessage;
     }
-
-    /**
-     * 2016-04-01T22:00:48.131Z
-     *
-     * @ORM\Column(type="datetime")
-     * @Assert\Date
-     * @Assert\NotBlank
-     * @JMS\Type("DateTime")
-     */
-    private $arrivalDate;
-
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     * @Assert\Length(max = 10)
-     * @JMS\Type("string")
-     */
-    private $ubnPreviousOwner;
 
     /**
      * Get id
