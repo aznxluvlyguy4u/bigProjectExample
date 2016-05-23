@@ -52,11 +52,10 @@ class RequestMessageOutputBuilder
                 }
 
             case RequestType::DECLARE_TAGS_TRANSFER_ENTITY:
-                //TODO
                 if($isUpdate) {
-                    return null; //update Array
+                    return null; //at this moment no update for tag transfers
                 } else {
-                    return null; //post Array
+                    return DeclareTagsTransferOutput::createPostRequestArray($messageObject); //post Array
                 }
 
             case RequestType::DECLARE_LOSS_ENTITY:
