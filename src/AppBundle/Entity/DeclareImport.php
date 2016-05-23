@@ -380,6 +380,22 @@ class DeclareImport extends DeclareBase
         $this->pedigreeNumber = $pedigreeNumber;
     }
 
+    /**
+     * @return int
+     */
+    public function getAnimalType()
+    {
+        return $this->animalType;
+    }
+
+    /**
+     * @param int $animalType
+     */
+    public function setAnimalType($animalType)
+    {
+        $this->animalType = $animalType;
+    }
+
     
 
 }
