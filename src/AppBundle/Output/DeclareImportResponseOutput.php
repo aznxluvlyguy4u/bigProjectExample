@@ -13,6 +13,13 @@ class DeclareImportResponseOutput
      */
     public static function createHistoryResponse($import)
     {
+        $lastResponse = $import->getResponses()->last();
+        if($lastResponse) {
+            $messageNumber = $lastResponse->getMessageNumber();
+        } else {
+            $messageNumber = null;
+        }
+
         return array(
             "request_id" => $import->getRequestId(),
             "log_datum" => $import->getLogDate(),
@@ -23,7 +30,8 @@ class DeclareImportResponseOutput
             "is_import_animal" => $import->getIsImportAnimal(),
             "import_date" => $import->getImportDate(),
             "animal_country_origin" => $import->getAnimalCountryOrigin(),
-            "request_state" => $import->getRequestState()
+            "request_state" => $import->getRequestState(),
+            "message_number" => $messageNumber
         );
     }
 
@@ -34,6 +42,11 @@ class DeclareImportResponseOutput
     public static function createErrorResponse($import)
     {
         $lastResponse = $import->getResponses()->last();
+        if($lastResponse) {
+            $messageNumber = $lastResponse->getMessageNumber();
+        } else {
+            $messageNumber = null;
+        }
 
         $res = array("request_id" => $import->getRequestId(),
             "log_datum" => $import->getLogDate(),
@@ -46,7 +59,8 @@ class DeclareImportResponseOutput
             "animal_country_origin" => $import->getAnimalCountryOrigin(),
             "request_state" => $import->getRequestState(),
             "error_code" => $lastResponse->getErrorCode(),
-            "error_message" => $lastResponse->getErrorMessage()
+            "error_message" => $lastResponse->getErrorMessage(),
+            "message_number" => $messageNumber
         );
 
         return $res;

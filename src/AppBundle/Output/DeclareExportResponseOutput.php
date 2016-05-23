@@ -13,6 +13,13 @@ class DeclareExportResponseOutput
      */
     public static function createHistoryResponse($export)
     {
+        $lastResponse = $export->getResponses()->last();
+        if($lastResponse) {
+            $messageNumber = $lastResponse->getMessageNumber();
+        } else {
+            $messageNumber = null;
+        }
+
         return array(
             "request_id" => $export->getRequestId(),
             "log_datum" => $export->getLogDate(),
@@ -22,7 +29,8 @@ class DeclareExportResponseOutput
             "pedigree_number" => $export->getPedigreeNumber(),
             "is_export_animal" => $export->getIsExportAnimal(),
             "depart_date" => $export->getExportDate(),
-            "request_state" => $export->getRequestState()
+            "request_state" => $export->getRequestState(),
+            "message_number" => $messageNumber
         );
     }
 
@@ -33,6 +41,11 @@ class DeclareExportResponseOutput
     public static function createErrorResponse($export)
     {
         $lastResponse = $export->getResponses()->last();
+        if($lastResponse) {
+            $messageNumber = $lastResponse->getMessageNumber();
+        } else {
+            $messageNumber = null;
+        }
 
         $res = array("request_id" => $export->getRequestId(),
             "log_datum" => $export->getLogDate(),
@@ -44,7 +57,8 @@ class DeclareExportResponseOutput
             "depart_date" => $export->getExportDate(),
             "request_state" => $export->getRequestState(),
             "error_code" => $lastResponse->getErrorCode(),
-            "error_message" => $lastResponse->getErrorMessage()
+            "error_message" => $lastResponse->getErrorMessage(),
+            "message_number" => $messageNumber
         );
 
         return $res;

@@ -4,6 +4,7 @@ namespace AppBundle\Output;
 
 
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareArrivalResponse;
 use AppBundle\Entity\DeclareImport;
 
 class DeclareArrivalResponseOutput
@@ -14,6 +15,13 @@ class DeclareArrivalResponseOutput
      */
     public static function createHistoryResponse($arrival)
     {
+        $lastResponse = $arrival->getResponses()->last();
+        if($lastResponse) {
+            $messageNumber = $lastResponse->getMessageNumber();
+        } else {
+            $messageNumber = null;
+        }
+
         return array(
             "request_id" => $arrival->getRequestId(),
             "log_date" => $arrival->getLogDate(),
@@ -24,7 +32,8 @@ class DeclareArrivalResponseOutput
             "arrival_date" => $arrival->getArrivalDate(),
             "is_import_animal" => $arrival->getIsImportAnimal(),
             "ubn_previous_owner" => $arrival->getUbnPreviousOwner(),
-            "request_state" => $arrival->getRequestState()
+            "request_state" => $arrival->getRequestState(),
+            "message_number" => $messageNumber
         );
     }
 
@@ -35,6 +44,11 @@ class DeclareArrivalResponseOutput
     public static function createErrorResponse($arrival)
     {
         $lastResponse = $arrival->getResponses()->last();
+        if($lastResponse) {
+            $messageNumber = $lastResponse->getMessageNumber();
+        } else {
+            $messageNumber = null;
+        }
 
         $res = array("request_id" => $arrival->getRequestId(),
             "log_date" => $arrival->getLogDate(),
@@ -47,7 +61,8 @@ class DeclareArrivalResponseOutput
             "ubn_previous_owner" => $arrival->getUbnPreviousOwner(),
             "request_state" => $arrival->getRequestState(),
             "error_code" => $lastResponse->getErrorCode(),
-            "error_message" => $lastResponse->getErrorMessage()
+            "error_message" => $lastResponse->getErrorMessage(),
+            "message_number" => $messageNumber
         );
 
         return $res;
