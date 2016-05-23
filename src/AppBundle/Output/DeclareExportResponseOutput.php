@@ -29,6 +29,7 @@ class DeclareExportResponseOutput
             "pedigree_number" => $export->getPedigreeNumber(),
             "is_export_animal" => $export->getIsExportAnimal(),
             "depart_date" => $export->getExportDate(),
+            "reason_of_depart" => $export->getReasonOfExport(),
             "request_state" => $export->getRequestState(),
             "message_number" => $messageNumber
         );
@@ -55,6 +56,7 @@ class DeclareExportResponseOutput
             "pedigree_number" => $export->getPedigreeNumber(),
             "is_export_animal" => $export->getIsExportAnimal(),
             "depart_date" => $export->getExportDate(),
+            "reason_of_depart" => $export->getReasonOfExport(),
             "request_state" => $export->getRequestState(),
             "error_code" => $lastResponse->getErrorCode(),
             "error_message" => $lastResponse->getErrorMessage(),

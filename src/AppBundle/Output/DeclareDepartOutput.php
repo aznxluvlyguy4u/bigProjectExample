@@ -34,6 +34,7 @@ class DeclareDepartOutput
             "ubn" => $depart->getUbn(),
             "depart_date" => $depart->getDepartDate(),
             "ubn_new_owner" => $depart->getUbnNewOwner(),
+            "reason_of_depart" => $depart->getReasonOfDepart(),
             "type" => "DeclareDepart",
             "animal" =>
             array("id" => $animalId,

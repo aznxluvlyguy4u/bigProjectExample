@@ -414,6 +414,7 @@ class IRSerializer implements IRSerializerInterface
 
         $declareExportRequest->setAnimal($retrievedAnimal);
         $declareExportRequest->setExportDate(new \DateTime($exportDate));
+        $declareExportRequest->setReasonOfExport($declareExportContentArray['reason_of_depart']);
         $declareExportRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
 
         return $declareExportRequest;

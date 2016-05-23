@@ -33,6 +33,7 @@ class DeclareExportOutput
             "log_date" => $export->getLogDate(),
             "ubn" => $export->getUbn(),
             "export_date" => $export->getExportDate(),
+            "reason_of_export" => $export->getReasonOfExport(),
             "type" => "DeclareExport",
             "animal" =>
             array("id" => $animalId,

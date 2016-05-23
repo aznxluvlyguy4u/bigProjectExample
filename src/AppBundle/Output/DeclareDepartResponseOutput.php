@@ -31,6 +31,7 @@ class DeclareDepartResponseOutput
             "depart_date" => $depart->getDepartDate(),
             "is_export_animal" => $depart->getIsExportAnimal(),
             "ubn_new_owner" => $depart->getUbnNewOwner(),
+            "reason_of_depart" => $depart->getReasonOfDepart(),
             "request_state" => $depart->getRequestState(),
             "message_number" => $messageNumber
         );
@@ -58,6 +59,7 @@ class DeclareDepartResponseOutput
             "depart_date" => $depart->getDepartDate(),
             "is_export_animal" => $depart->getIsExportAnimal(),
             "ubn_new_owner" => $depart->getUbnNewOwner(),
+            "reason_of_depart" => $depart->getReasonOfDepart(),
             "request_state" => $depart->getRequestState(),
             "error_code" => $lastResponse->getErrorCode(),
             "error_message" => $lastResponse->getErrorMessage(),
