@@ -224,7 +224,6 @@ abstract class Animal
     protected $assignedTag;
 
     /**
-     * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="animals", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
      */
