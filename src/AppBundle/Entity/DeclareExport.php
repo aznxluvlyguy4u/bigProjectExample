@@ -97,6 +97,14 @@ class DeclareExport extends DeclareBase
     private $exportDate;
 
     /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 20)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $reasonOfExport;
+
+    /**
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="exports", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
@@ -365,6 +373,22 @@ class DeclareExport extends DeclareBase
     public function setAnimalObjectType($animalObjectType)
     {
         $this->animalObjectType = $animalObjectType;
+    }
+
+    /**
+     * @return string
+     */
+    public function getReasonOfExport()
+    {
+        return $this->reasonOfExport;
+    }
+
+    /**
+     * @param string $reasonOfExport
+     */
+    public function setReasonOfExport($reasonOfExport)
+    {
+        $this->reasonOfExport = $reasonOfExport;
     }
 
 
