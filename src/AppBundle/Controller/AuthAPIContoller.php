@@ -50,7 +50,7 @@ class AuthAPIContoller extends APIController {
   {
     return new JsonResponse(array("code" => 403, "message" => "no online registration available at the moment"), 403);
 
-    //TODO There is no registration page at the momemt, so the route below is blocked
+    //TODO There is no registration page at the moment, so the route below is blocked
     $credentials = $request->headers->get(Constant::AUTHORIZATION_HEADER_NAMESPACE);
     $credentials = str_replace('Basic ', '', $credentials);
     $credentials = base64_decode($credentials);

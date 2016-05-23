@@ -43,7 +43,6 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function getLossById(Request $request, $Id)
   {
-    //TODO for phase 2: read a location from the $request and find declareLosses for that location
     $client = $this->getAuthenticatedUser($request);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_REPOSITORY);
 
@@ -91,7 +90,6 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function getLosses(Request $request)
   {
-    //TODO for phase 2: read a location from the $request and find declareLosses for that location
     $client = $this->getAuthenticatedUser($request);
     $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_REPOSITORY);

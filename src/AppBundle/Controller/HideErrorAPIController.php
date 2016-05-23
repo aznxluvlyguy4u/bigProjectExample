@@ -23,7 +23,7 @@ class HideErrorAPIController extends APIController implements HideErrorAPIContro
     /**
      * Hide an error a user does not want to see anymore,
      * by updating the existing DeclareArrivalResponse's isRemovedByUser to true.
-     * TODO verify this javadoc
+     *
      * @ApiDoc(
      *   requirements={
      *     {
@@ -52,8 +52,8 @@ class HideErrorAPIController extends APIController implements HideErrorAPIContro
             $response = $this->getDoctrine()->getRepository(Constant::DECLARE_BASE_RESPONSE_REPOSITORY)->findOneBy(array("messageNumber"=>$messageNumber));;
 
             $response->setIsRemovedByUser($content['is_removed_by_user']);
-        //TODO NOTE! No "HideMessage" declaration message is created-and-persisted. A value is just updated in an existing declaration.
-            //First Persist object to Database, before sending it to the queue
+
+            //No "HideMessage" declaration message is created-and-persisted. A value is just updated in an existing declaration.
             $this->persist($response);
 
             return new JsonResponse(array("code"=>200, "message"=>"saved"), 200);
