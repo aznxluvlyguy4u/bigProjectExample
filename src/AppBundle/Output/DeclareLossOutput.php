@@ -32,6 +32,7 @@ class DeclareLossOutput
             array(
                 "uln_country_code" => $loss->getUlnCountryCode(),
                 "uln_number" => $loss->getUlnNumber(),
+                "animal_type" => $loss->getAnimalType(),
                 "type" => "Ewe" //FIXME get type from animal
             ),
         );

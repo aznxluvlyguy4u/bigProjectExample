@@ -43,6 +43,7 @@ class DeclareDepartOutput
                   "pedigree_number" => $depart->getPedigreeNumber(),
                   "is_export_animal" => $depart->getIsExportAnimal(),
                   "is_departed_animal" => $depart->getIsDepartedAnimal(),
+                  "animal_type" => $depart->getAnimalType(),
                   "type" => "Ewe" //FIXME get type from animal
             ),
             "location"=>
