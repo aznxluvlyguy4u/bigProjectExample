@@ -33,13 +33,16 @@ class DeclareExportOutput
             "log_date" => $export->getLogDate(),
             "ubn" => $export->getUbn(),
             "export_date" => $export->getExportDate(),
+            "type" => "DeclareExport",
             "animal" =>
             array("id" => $animalId,
                   "uln_country_code" => $export->getUlnCountryCode(),
                   "uln_number" => $export->getUlnNumber(),
                   "pedigree_country_code" => $export->getPedigreeCountryCode(),
                   "pedigree_number" => $export->getPedigreeNumber(),
-                  "is_export_animal" => $export->getIsExportAnimal()),
+                  "is_export_animal" => $export->getIsExportAnimal(),
+                  "type" => "Ewe" //FIXME get type from animal
+            ),
             "location"=>
             array("id" => $export->getLocation()->getId(),
                   "ubn" => $export->getLocation()->getUbn())
