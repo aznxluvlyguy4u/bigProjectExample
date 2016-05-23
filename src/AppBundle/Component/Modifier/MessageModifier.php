@@ -81,7 +81,7 @@ class MessageModifier
             case RequestType::RETRIEVE_ANIMALS_ENTITY:
                 return $messageObject;
 
-            case RequestType::RETRIEVE_EU_COUNTRIES_ENTITY:
+            case RequestType::RETRIEVE_COUNTRIES_ENTITY:
                 return $messageObject;
 
             case RequestType::RETRIEVE_UBN_DETAILS_ENTITY:

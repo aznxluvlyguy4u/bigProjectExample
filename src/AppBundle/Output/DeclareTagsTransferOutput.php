@@ -27,6 +27,7 @@ class DeclareTagsTransferOutput
             "ubn" => $tagTransfer->getUbn(),
             "ubn_new_owner" => $tagTransfer->getUbnNewOwner(),
             "relation_number_acceptant" => $tagTransfer->getRelationNumberAcceptant(),
+            "type" => "DeclareTagsTransfer",
             "tags" => self::tagsArray($tagTransfer)
         );
 
@@ -47,7 +48,9 @@ class DeclareTagsTransferOutput
                          "animal_order_number" => $tag->getAnimalOrderNumber(),
                          "order_date" => $tag->getOrderDate(),
                          "uln_country_code" => $tag->getUlnCountryCode(),
-                         "uln_number" => $tag->getUlnNumber());
+                         "uln_number" => $tag->getUlnNumber(),
+                         "type" => "Tag"
+            );
             $tags[] = $tag;
         }
 

@@ -111,7 +111,7 @@ class RequestMessageOutputBuilder
                     return null; //post Array
                 }
 
-            case RequestType::RETRIEVE_EU_COUNTRIES_ENTITY:
+            case RequestType::RETRIEVE_COUNTRIES_ENTITY:
                 //TODO
                 if($isUpdate) {
                     return null; //update Array

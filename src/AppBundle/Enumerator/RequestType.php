@@ -39,7 +39,7 @@ class RequestType
     const RETRIEVE_ANIMALS_ENTITY = "RetrieveAnimals";
     const RETRIEVE_ANIMAL_DETAILS_ENTITY = "RetrieveAnimalDetails";
     const RETRIEVE_COUNTRIES_ENTITY = "RetrieveCountries";
-    const RETRIEVE_UBN_DETAILS_ENTITY = "RetrieveUBNDetails";
+    const RETRIEVE_UBN_DETAILS_ENTITY = "RetrieveUbnDetails";
 
     //Response entity namespaces
     const DECLARE_ARRIVAL_RESPONSE_ENTITY = 'DeclareArrivalResponse';
@@ -87,8 +87,8 @@ class RequestType
             case RequestType::RETRIEVE_ANIMALS_ENTITY:
                 return RequestType::RETRIEVE_ANIMALS;
 
-            case RequestType::RETRIEVE_EU_COUNTRIES_ENTITY:
-                return RequestType::RETRIEVE_EU_COUNTRIES;
+            case RequestType::RETRIEVE_COUNTRIES_ENTITY:
+                return RequestType::RETRIEVE_COUNTRIES;
 
             case RequestType::RETRIEVE_UBN_DETAILS_ENTITY:
                 return RequestType::RETRIEVE_UBN_DETAILS;

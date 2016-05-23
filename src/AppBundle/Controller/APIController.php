@@ -237,6 +237,7 @@ class APIController extends Controller implements APIControllerInterface
 
     //Send serialized message to Queue
     $requestTypeNameSpace = RequestType::getRequestTypeFromObject($messageObject);
+
     $sendToQresult = $this->getQueueService()
       ->send($requestId, $jsonMessage, $requestTypeNameSpace);
 
