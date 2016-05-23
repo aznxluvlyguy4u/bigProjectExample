@@ -53,6 +53,16 @@ class DeclareLoss extends DeclareBase
     private $animalType;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $animalObjectType;
+
+    /**
      * @var \DateTime
      *
      * @ORM\Column(type="datetime", nullable=true)
@@ -321,6 +331,22 @@ class DeclareLoss extends DeclareBase
     public function setAnimalType($animalType)
     {
         $this->animalType = $animalType;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAnimalObjectType()
+    {
+        return $this->animalObjectType;
+    }
+
+    /**
+     * @param string $animalObjectType
+     */
+    public function setAnimalObjectType($animalObjectType)
+    {
+        $this->animalObjectType = $animalObjectType;
     }
 
 
