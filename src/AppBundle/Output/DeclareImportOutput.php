@@ -35,12 +35,15 @@ class DeclareImportOutput
             "is_import_animal" => $import->getIsImportAnimal(),
             "animal_country_origin" => $import->getAnimalCountryOrigin(),
             "ubn" => $import->getUbn(),
+            "type" => "DeclareImport",
             "animal" =>
             array("id" => $animalId,
                   "uln_country_code" => $import->getUlnCountryCode(),
                   "uln_number" => $import->getUlnNumber(),
                   "pedigree_country_code" => $import->getPedigreeCountryCode(),
-                  "pedigree_number" => $import->getPedigreeNumber()),
+                  "pedigree_number" => $import->getPedigreeNumber(),
+                  "type" => "Ewe" //FIXME get type from animal
+            ),
             "location"=>
             array("id" => $import->getLocation()->getId(),
                   "ubn" => $import->getLocation()->getUbn())
