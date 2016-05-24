@@ -51,7 +51,7 @@ class DeclareExportResponse extends DeclareBaseResponse {
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      */
-    private $departDate;
+    private $exportDate;
 
     /**
      * @var boolean
@@ -160,18 +160,20 @@ class DeclareExportResponse extends DeclareBaseResponse {
     /**
      * @return \DateTime
      */
-    public function getDepartDate()
+    public function getExportDate()
     {
-        return $this->departDate;
+        return $this->exportDate;
     }
 
     /**
-     * @param \DateTime $departDate
+     * @param \DateTime $exportDate
      */
-    public function setDepartDate($departDate)
+    public function setExportDate($exportDate)
     {
-        $this->departDate = $departDate;
+        $this->exportDate = $exportDate;
     }
+
+
 
     /**
      * @return boolean

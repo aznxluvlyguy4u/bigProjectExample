@@ -405,11 +405,7 @@ abstract class Animal
      */
     public function getAnimalOrderNumber()
     {
-        if($this->getAssignedTag() != null){
-            $this->getAssignedTag()->getAnimalOrderNumber();
-        }
-
-        return null;
+        return $this->animalOrderNumber;
     }
 
     /**

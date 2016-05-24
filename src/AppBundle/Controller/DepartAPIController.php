@@ -155,7 +155,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
       return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
     }
 
-    $isExportAnimal = $animal['is_export_animal'];
+    $isExportAnimal = $content['is_export_animal'];
 
     if($isExportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database
@@ -213,7 +213,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
       return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
     }
 
-    $isExportAnimal = $animal['is_export_animal'];
+    $isExportAnimal = $content['is_export_animal'];
 
     if($isExportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database
@@ -252,7 +252,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
   /**
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/responses/errors")
+   * @Route("-errors")
    * @Method("GET")
    */
   public function getDepartErrors(Request $request)
@@ -265,14 +265,14 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_RESPONSE_REPOSITORY);
     $declareExports = $repository->getExportsWithLastErrorResponses($client);
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('departures' => $declareDeparts, 'exports' => $declareExports)), 200);
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('departs' => $declareDeparts, 'exports' => $declareExports)), 200);
   }
 
 
   /**
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/responses/history")
+   * @Route("-history")
    * @Method("GET")
    */
   public function getDepartHistory(Request $request)
@@ -285,6 +285,6 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_RESPONSE_REPOSITORY);
     $declareExports = $repository->getExportsWithLastHistoryResponses($client);
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('departures' => $declareDeparts, 'exports' => $declareExports)), 200);
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('departs' => $declareDeparts, 'exports' => $declareExports)), 200);
   }
 }

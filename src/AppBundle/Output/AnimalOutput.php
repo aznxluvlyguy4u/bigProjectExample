@@ -41,14 +41,14 @@ class AnimalOutput
             "uln_number" => $animal->getUlnNumber(),
             "pedigree_country_code" => $animal->getPedigreeCountryCode(),
             "pedigree_number" => $animal->getPedigreeNumber(),
+            "work_number" => $animal->getAnimalOrderNumber(),
+            "collar_number" => "unknown", //TODO not available in phase 1
             "gender" => $animal->getGender(),
-            "object_type" => $animal->getObjectType(),
+            "date_of_birth" => $animal->getDateOfBirth(),
+            "breed_status" => "unknown", //TODO not available in phase 1
+            "inflow_date" => "unknown", //TODO not available in phase 1
             "is_alive" => $animal->getIsAlive(),
             "is_departed_animal" => $animal->getIsDepartedAnimal(),
-            "location"=>
-                array("id" => $animal->getLocation()->getId(),
-                    "ubn" => $animal->getLocation()->getUbn()),
-            "children" => self::createChildrenArray($animal)
         );
 
         return $result;

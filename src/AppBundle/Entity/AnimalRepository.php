@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\AnimalType;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Class AnimalRepository
@@ -131,6 +132,7 @@ class AnimalRepository extends BaseRepository
    * @param Client $client
    * @param null|string $animalType
    * @param null|boolean $isAlive
+   * @param null|boolean $includeDepartedAndExported
    * @return Animal[]|Ewe[]|Neuter[]|Ram[]|array|null
    */
   public function findOfClientByAnimalTypeAndIsAlive(Client $client, $animalType = null, $isAlive = null)
@@ -156,7 +158,6 @@ class AnimalRepository extends BaseRepository
             Constant::LOCATION_NAMESPACE => $location->getId(),
             Constant::IS_ALIVE_NAMESPACE => ($isAlive === Constant::BOOLEAN_TRUE_NAMESPACE)
         );
-        $animals = $this->findByTypeOrState(null, $filterArray);
 
       } else if ($animalType != null && $isAlive == null) {
         $animals = $this->findByTypeOrState($animalType, $filterArray);
@@ -167,9 +168,10 @@ class AnimalRepository extends BaseRepository
             Constant::LOCATION_NAMESPACE => $location->getId(),
             Constant::IS_ALIVE_NAMESPACE => ($isAlive === Constant::BOOLEAN_TRUE_NAMESPACE)
         );
-        $animals = $this->findByTypeOrState($animalType, $filterArray);
       }
+      $animals = $this->findByTypeOrState($animalType, $filterArray);
     }
+
     return $animals;
   }
 
@@ -221,5 +223,36 @@ class AnimalRepository extends BaseRepository
     }
 
     return false;
+  }
+
+  /**
+   * @param Client $client
+   * @return array|null
+   */
+  public function getLiveStock(Client $client)
+  {
+    $isDeparted = false;
+    $isExported = false;
+    $isAlive = true;
+
+    $animals = array();
+
+    foreach($client->getCompanies() as $company) {
+      foreach($company->getLocations() as $location) {
+        foreach($location->getAnimals() as $animal) {
+
+          $showAnimal = $animal->getIsAlive() == $isAlive
+                     && $animal->getIsExportAnimal() == $isExported
+                     && $animal->getIsDepartedAnimal() == $isDeparted;
+
+          if($showAnimal) {
+              $animals[] = $animal;
+          }
+
+        }
+      }
+    }
+
+    return $animals;
   }
 }

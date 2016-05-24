@@ -33,6 +33,10 @@ class DeclareExportRepository extends BaseRepository {
       $declareExport->setExportDate($declareExportUpdate->getExportDate());
     }
 
+    if ($declareExportUpdate->getReasonOfExport() != null) {
+      $declareExport->setReasonOfExport($declareExportUpdate->getReasonOfExport());
+    }
+    
     if ($declareExportUpdate->getLocation() != null) {
       $declareExport->setLocation($declareExportUpdate->getLocation());
     }

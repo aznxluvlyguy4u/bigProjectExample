@@ -37,6 +37,10 @@ class DeclareDepartRepository extends BaseRepository {
       $declareDepart->setLocation($declareDepartUpdate->getLocation());
     }
 
+    if ($declareDepartUpdate->getReasonOfDepart() != null) {
+      $declareDepart->setReasonOfDepart($declareDepartUpdate->getReasonOfDepart());
+    }
+
     if($declareDepartUpdate->getUbnNewOwner() != null) {
       $declareDepart->setUbnNewOwner($declareDepartUpdate->getUbnNewOwner());
     }
