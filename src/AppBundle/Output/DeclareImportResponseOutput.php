@@ -29,7 +29,7 @@ class DeclareImportResponseOutput
             "pedigree_number" => $import->getPedigreeNumber(),
             "is_import_animal" => $import->getIsImportAnimal(),
             "arrival_date" => $import->getImportDate(),
-            "animal_country_origin" => $import->getAnimalCountryOrigin(),
+            "country_origin" => $import->getAnimalCountryOrigin(),
             "request_state" => $import->getRequestState(),
             "message_number" => $messageNumber
         );
@@ -60,7 +60,7 @@ class DeclareImportResponseOutput
             "pedigree_number" => $import->getPedigreeNumber(),
             "is_import_animal" => $import->getIsImportAnimal(),
             "arrival_date" => $import->getImportDate(),
-            "animal_country_origin" => $import->getAnimalCountryOrigin(),
+            "country_origin" => $import->getAnimalCountryOrigin(),
             "request_state" => $import->getRequestState(),
             "error_code" => $errorCode,
             "error_message" => $errorMessage,
