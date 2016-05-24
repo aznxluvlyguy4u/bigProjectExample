@@ -28,7 +28,7 @@ class DeclareImportResponseOutput
             "pedigree_country_code" => $import->getPedigreeCountryCode(),
             "pedigree_number" => $import->getPedigreeNumber(),
             "is_import_animal" => $import->getIsImportAnimal(),
-            "import_date" => $import->getImportDate(),
+            "arrival_date" => $import->getImportDate(),
             "animal_country_origin" => $import->getAnimalCountryOrigin(),
             "request_state" => $import->getRequestState(),
             "message_number" => $messageNumber
@@ -59,7 +59,7 @@ class DeclareImportResponseOutput
             "pedigree_country_code" => $import->getPedigreeCountryCode(),
             "pedigree_number" => $import->getPedigreeNumber(),
             "is_import_animal" => $import->getIsImportAnimal(),
-            "import_date" => $import->getImportDate(),
+            "arrival_date" => $import->getImportDate(),
             "animal_country_origin" => $import->getAnimalCountryOrigin(),
             "request_state" => $import->getRequestState(),
             "error_code" => $errorCode,
