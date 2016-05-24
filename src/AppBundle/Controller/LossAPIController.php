@@ -231,7 +231,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    * @Route("-errors")
    * @Method("GET")
    */
-  public function getArrivalErrors(Request $request)
+  public function getLossErrors(Request $request)
   {
     $client = $this->getAuthenticatedUser($request);
 
@@ -248,7 +248,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    * @Route("-history")
    * @Method("GET")
    */
-  public function getArrivalHistory(Request $request)
+  public function getLossHistory(Request $request)
   {
     $client = $this->getAuthenticatedUser($request);
 
