@@ -50,7 +50,6 @@ class DeclareExportResponse extends DeclareBaseResponse {
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
-     * @Expose
      */
     private $exportDate;
 
