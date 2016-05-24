@@ -65,6 +65,11 @@ class TagRepository extends BaseRepository {
     return $this->findOneBy(array('ulnCountryCode'=>$ulnCountryCode, 'ulnNumber'=>$ulnNumber));
   }
 
+  /**
+   * @param Client $client
+   * @param string $tagStatus
+   * @return ArrayCollection
+   */
   public function findTags(Client $client, $tagStatus = TagStateType::UNASSIGNED)
   {
     $tags = new ArrayCollection();
@@ -78,6 +83,31 @@ class TagRepository extends BaseRepository {
     return $tags;
   }
 
+  /**
+   * @param Client $client
+   * @param int $count
+   * @return Tag|ArrayCollection
+   */
+  public function findUnAssignedTags(Client $client, $count)
+  {
+    $tags = new ArrayCollection();
+
+    $i = 0;
+
+    foreach($client->getTags() as $tag){
+      if($tag->getTagStatus() == TagStateType::UNASSIGNED) {
+        $tags->add($tag);
+        $i = $i + 1;
+      }
+      if($i = $count) { break; }
+    }
+
+    if(sizeof($tags)==1) {
+      return $tags->get(0);
+    } else {
+      return $tags;
+    }
+  }
 
 
 }
