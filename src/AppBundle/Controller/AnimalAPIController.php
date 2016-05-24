@@ -59,7 +59,8 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   public function getAllAnimalsByTypeOrState(Request $request) {
 
     if($request->query->has(Constant::ANIMAL_TYPE_NAMESPACE)) {
-      $animalType = $request->query->get(Constant::ANIMAL_TYPE_NAMESPACE);
+      $animalTypeMaybeNotAllCaps = $request->query->get(Constant::ANIMAL_TYPE_NAMESPACE);
+      $animalType = strtoupper($animalTypeMaybeNotAllCaps);
     } else {
       $animalType = null;
     }

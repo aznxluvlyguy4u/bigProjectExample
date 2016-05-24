@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\AnimalType;
 use Doctrine\Common\Collections\ArrayCollection;
 
@@ -86,13 +87,13 @@ class AnimalRepository extends BaseRepository
     } else if ($animalType != null) {
       //filter animals by given animal-type:{ram, ewe, neuter}, belonging to user
       switch ($animalType) {
-        case AnimalType::EWE:
+        case AnimalObjectType::EWE:
           $animals = $this->getEntityManager()->getRepository(Constant::EWE_REPOSITORY)->findBy($filterArray);
           break;
-        case AnimalType::RAM:
+        case AnimalObjectType::RAM:
           $animals = $this->getEntityManager()->getRepository(Constant::RAM_REPOSITORY)->findBy($filterArray);
           break;
-        case AnimalType::NEUTER:
+        case AnimalObjectType::NEUTER:
           $animals = $this->getEntityManager()->getRepository(Constant::NEUTER_REPOSITORY)->findBy($filterArray);
           break;
         default:
