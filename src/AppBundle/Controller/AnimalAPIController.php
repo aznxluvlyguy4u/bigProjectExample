@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -205,7 +206,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Route("-details")
    * @Method("POST")
    */
-  function getAnimalDetails(Request $request) {
+  function createAnimalDetails(Request $request) {
     //Get content to array
     $content = $this->getContentAsArray($request);
 
@@ -219,6 +220,51 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $messageArray = $this->sendMessageObjectToQueue($messageObject);
 
     return new JsonResponse($messageObject, 200);
+  }
+
+  /**
+   * Get Animal Details by ULN. For example NL151052626
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Retrieve an Animal by ULN",
+   *   output = "AppBundle\Entity\Animal"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-details/{ulnString}")
+   * @Method("GET")
+   */
+  public function getAnimalDetailsById(Request $request, $ulnString) {
+    $client = $this->getAuthenticatedUser($request);
+    $repository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+
+    $animal = $repository->getAnimalByUlnString($client, $ulnString);
+
+    if($animal == null) {
+      return new JsonResponse(array('code'=>404, "message" => "For this account, no animal was found with uln: " . $ulnString), 404);
+    }
+
+    $animalIsAlive = $animal->getIsAlive();
+
+    if($animal != null && $animalIsAlive) {
+      $output = AnimalDetailsOutput::create($animal);
+      return new JsonResponse(array(Constant::RESULT_NAMESPACE => $output), 200);
+
+    } else if ($animal != null && !$animalIsAlive) { //TODO Is this condition correct?
+      return new JsonResponse(array('code'=>410, "message" => "Animal has passed away"), 410);
+    }
+
 
   }
+
+
 }
