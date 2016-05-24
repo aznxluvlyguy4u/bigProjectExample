@@ -218,7 +218,7 @@ class IRSerializer implements IRSerializerInterface
             $ulnNumberNew = $declareBirthContentArray['animal']['uln_number'];
 
             if($tag->getUlnCountryCode()!=$ulnCountryCodeNew || $tag->getUlnNumber()!=$ulnNumberNew) {
-                $tag->setTagStatus(Constant::UNASSIGNED_NAMESPACE);
+                $tag->setTagStatus(TagStateType::UNASSIGNED);
                 $tag->setAnimal(null);
                 $this->entityManager->persist($tag);
                 $this->entityManager->flush();
@@ -273,7 +273,7 @@ class IRSerializer implements IRSerializerInterface
 
 //            $animalObject->setAssignedTag($tag);
             $tag->setAnimal($animalObject);
-            $tag->setTagStatus(Constant::ASSIGNED_NAMESPACE);
+            $tag->setTagStatus(TagStateType::ASSIGNED);
             $this->entityManager->persist($tag);
             $this->entityManager->persist($animalObject->setAssignedTag($tag));
             $this->entityManager->flush();
