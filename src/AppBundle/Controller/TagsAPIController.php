@@ -6,6 +6,7 @@ use AppBundle\Enumerator\TagStateType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Symfony\Bridge\PhpUnit\ClockMock;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Enumerator\RequestType;
@@ -45,19 +46,24 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
   {
     $tagRepository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY);
 
-    //fixme
     //validate if Id is of format: AZ123456789
-    if(preg_match("([A-Z]{2}\d+)",$Id)){
-      $countryCode = mb_substr($Id, 0, 2, 'utf-8');
-      $ulnOrPedigreeCode = mb_substr($Id, 2, strlen($Id));
-      $tag = $tagRepository->findByUlnNumberAndCountryCode($countryCode, $ulnOrPedigreeCode);
-
-      return new JsonResponse($tag, 200);
+    $isValidUlnFormat = $tagRepository->verifyUlnFormat($Id);
+    if(!$isValidUlnFormat){
+      return new JsonResponse(
+          array("errorCode" => 428,
+              "errorMessage" => "Given tagId format is invalid, supply tagId in the following format: AZ123456789"), 200);
     }
 
-    return new JsonResponse(
-      array("errorCode" => 428,
-            "errorMessage" => "Given tagId is invalid, supply tagId in the following format: AZ123456789"), 200);
+    $client = $this->getAuthenticatedUser($request);
+    $tag = $tagRepository->findOneByString($client, $Id);
+
+    if($tag == null) {
+      return new JsonResponse(
+          array("errorCode" => 400,
+              "errorMessage" => "No tag found"), 200);
+    } else {
+      return new JsonResponse($tag, 200);
+    }
   }
 
   /**
@@ -98,14 +104,16 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
    */
   public function getTags(Request $request)
   {
+    $client = $this->getAuthenticatedUser($request);
+    $tagRepository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY);
+
     //No explicit filter given, thus find all
     if(!$request->query->has(Constant::STATE_NAMESPACE)) {
       //Only retrieve tags that are either assigned OR unassigned, ignore transferred tags
-      $tags = $tagRepository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY)
-        ->findBy(array(Constant::TAG_STATUS_NAMESPACE => [TagStateType::ASSIGNED, TagStateType::UNASSIGNED]));
+      $tags = $tagRepository->findTags($client);
     } else { //A state parameter was given, use custom filter to find subset
-      $state = $request->query->get(Constant::STATE_NAMESPACE);
-       $tags = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY)->findBy(array(Constant::TAG_STATUS_NAMESPACE => $state));
+      $tagStatus = $request->query->get(Constant::STATE_NAMESPACE);
+      $tags = $tagRepository->findTags($client, $tagStatus);
     }
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $tags), 200);
