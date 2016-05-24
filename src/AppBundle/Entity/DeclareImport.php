@@ -100,6 +100,13 @@ class DeclareImport extends DeclareBase
   private $animalCountryOrigin;
 
   /**
+   * @ORM\Column(type="string", nullable=true)
+   * @JMS\Type("string")
+   * @Expose
+   */
+  private $animalUlnNumberOrigin;
+
+  /**
    * @Assert\NotBlank
    * @ORM\ManyToOne(targetEntity="Location", inversedBy="imports", cascade={"persist"})
    * @JMS\Type("AppBundle\Entity\Location")
@@ -128,6 +135,8 @@ class DeclareImport extends DeclareBase
    * @Expose
    */
   private $revoke;
+
+
 
   /**
    * DeclareArrival constructor.
@@ -424,4 +433,28 @@ class DeclareImport extends DeclareBase
 
     
 
+
+    /**
+     * Set animalUlnNumberOrigin
+     *
+     * @param string $animalUlnNumberOrigin
+     *
+     * @return DeclareImport
+     */
+    public function setAnimalUlnNumberOrigin($animalUlnNumberOrigin)
+    {
+        $this->$animalUlnNumberOrigin = $animalUlnNumberOrigin;
+
+        return $this;
+    }
+
+    /**
+     * Get animalUlnNumberOrigin
+     *
+     * @return string
+     */
+    public function getAnimalUlnNumberOrigin()
+    {
+        return $this->animalUlnNumberOrigin;
+    }
 }
