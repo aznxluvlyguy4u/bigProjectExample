@@ -112,6 +112,37 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   }
 
   /**
+   * Retrieve all alive on-location animals belonging to this Client: De Stallijst
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = " Retrieve all alive on-location animals belonging to this Client",
+   *   output = "AppBundle\Entity\Animal"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-livestock")
+   * @Method("GET")
+   */
+  public function getLiveStock(Request $request) {
+    $client = $client = $this->getAuthenticatedUser($request);
+    $animals = $this->getDoctrine()
+        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($client);
+
+    $minimizedOutput = AnimalOutput::createAnimalsArray($animals);
+
+    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
+  }
+
+  /**
    * Create a RetrieveAnimal request
    *
    * @ApiDoc(
