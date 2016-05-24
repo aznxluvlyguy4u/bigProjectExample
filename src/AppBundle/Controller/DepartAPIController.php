@@ -155,7 +155,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
       return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
     }
 
-    $isExportAnimal = $animal['is_export_animal'];
+    $isExportAnimal = $content['is_export_animal'];
 
     if($isExportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database

@@ -312,9 +312,11 @@ class IRSerializer implements IRSerializerInterface
     function parseDeclareDepart(ArrayCollection $declareDepartContentArray, Client $client,$isEditMessage)
     {
         $declareDepartContentArray["type"] = RequestType::DECLARE_DEPART_ENTITY;
+        $isExportAnimal = $declareDepartContentArray['is_export_animal'];
 
         //Retrieve animal entity
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareDepartContentArray);
+        $retrievedAnimal->setIsExportAnimal($isExportAnimal);
 
         //Add retrieved animal properties including type to initial animalContentArray
         $declareDepartContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
@@ -402,8 +404,10 @@ class IRSerializer implements IRSerializerInterface
         $declareExportContentArray["type"] = RequestType::DECLARE_EXPORT_ENTITY;
 
         $exportDate = $declareExportContentArray['depart_date'];
+        $isExportAnimal = $declareExportContentArray['is_export_animal'];
 
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareExportContentArray);
+        $retrievedAnimal->setIsExportAnimal($isExportAnimal);
 
         //Add retrieved animal properties including type to initial animalContentArray
         $declareExportContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
@@ -414,6 +418,7 @@ class IRSerializer implements IRSerializerInterface
 
         $declareExportRequest->setAnimal($retrievedAnimal);
         $declareExportRequest->setExportDate(new \DateTime($exportDate));
+        $declareExportRequest->setIsExportAnimal($isExportAnimal);
         $declareExportRequest->setReasonOfExport($declareExportContentArray['reason_of_depart']);
         $declareExportRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
 
