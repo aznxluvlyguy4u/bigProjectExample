@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\RequestStateType;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -70,7 +71,7 @@ class DeclareTagsTransfer extends DeclareBase
     function __construct() {
         parent::__construct();
 
-        $this->setRequestState('open');
+        $this->setRequestState(RequestStateType::OPEN);
 
         //Create responses array
         $this->responses = new ArrayCollection();

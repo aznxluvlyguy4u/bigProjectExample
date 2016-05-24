@@ -3,6 +3,7 @@
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Entity\DeclareLoss;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedAnimal;
 use AppBundle\DataFixtures\ORM\MockedClient;
@@ -190,7 +191,7 @@ class LossAPIControllerTest extends WebTestCase {
     $response = $this->client->getResponse();
     $data = json_decode($response->getContent(), true);
 
-    $this->assertEquals('open', $data['request_state']);
+    $this->assertEquals(RequestStateType::OPEN, $data['request_state']);
     $this->assertEquals($declareLoss->getReasonOfLoss(), $data['reason_of_loss']);
     $this->assertEquals($declareLoss->getUbnProcessor(), $data['ubn_processor']);
   }

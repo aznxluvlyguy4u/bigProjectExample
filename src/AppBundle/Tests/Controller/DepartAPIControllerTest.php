@@ -3,6 +3,7 @@
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Entity\DeclareDepart;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedAnimal;
 use AppBundle\DataFixtures\ORM\MockedClient;
@@ -188,7 +189,7 @@ class DepartAPIControllerTest extends WebTestCase {
     $contentJson = $this->client->getResponse()->getContent();
     $dataArray = json_decode($contentJson, true);
 
-    $this->assertEquals('open', $dataArray['request_state']);
+    $this->assertEquals(RequestStateType::OPEN, $dataArray['request_state']);
   }
 
   /**

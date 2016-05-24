@@ -5,6 +5,7 @@ namespace AppBundle\Component;
 use AppBundle\Controller\APIController;
 use AppBundle\Entity\Client as Client;
 use AppBundle\Entity\DeclareBase as DeclareBase;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\EntityGetter;
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
@@ -58,7 +59,7 @@ class MessageBuilderBase
         }
 
         $messageObject->setLogDate(new \DateTime());
-        $messageObject->setRequestState("open");
+        $messageObject->setRequestState(RequestStateType::OPEN);
 
         if($messageObject->getRecoveryIndicator() == null) {
             $messageObject->setRecoveryIndicator("N");
@@ -94,7 +95,7 @@ class MessageBuilderBase
         }
 
         $messageObject->setLogDate(new \DateTime());
-        $messageObject->setRequestState("open");
+        $messageObject->setRequestState(RequestStateType::OPEN);
 
         //Add relationNumberKeeper to content
 

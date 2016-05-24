@@ -16,10 +16,10 @@ namespace AppBundle\Enumerator;
  */
 class RequestStateType
 {
-    const OPEN = "open";
-    const FINISHED = "finished";
-    const FAILED = "failed";
-    const CANCELLED = "cancelled";
-    const REVOKED = "revoked";
-    const REVOKING = "revoking";
+    const OPEN = "OPEN";
+    const FINISHED = "FINISHED";
+    const FAILED = "FAILED";
+    const CANCELLED = "CANCELLED";
+    const REVOKED = "REVOKED";
+    const REVOKING = "REVOKING";
 }

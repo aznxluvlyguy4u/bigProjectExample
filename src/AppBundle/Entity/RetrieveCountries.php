@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\RequestStateType;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -56,7 +57,7 @@ class RetrieveCountries {
         $this->setLogDate(new \DateTime());
         $this->setRequestId(rand(999,999999));
         $this->setMessageId($this->getRequestId());
-        $this->setRequestState("open");
+        $this->setRequestState(RequestStateType::OPEN);
     }
 
 
