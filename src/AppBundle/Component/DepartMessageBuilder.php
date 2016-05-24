@@ -4,6 +4,7 @@ namespace AppBundle\Component;
 
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Entity\DeclareDepart;
+use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
@@ -58,6 +59,10 @@ class DepartMessageBuilder extends MessageBuilderBase
         $messageObject->setIsExportAnimal(false);
         $messageObject->setIsDepartedAnimal(true);
         $messageObject->setAnimalType(AnimalType::sheep);
+
+        if(ActionFlagSetting::DECLARE_DEPART != null) {
+            $messageObject->setAction(ActionFlagSetting::DECLARE_DEPART);
+        }
 
         //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
         $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);

@@ -3,6 +3,7 @@
 namespace AppBundle\Component;
 
 use AppBundle\Entity\RetrieveUbnDetails;
+use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use AppBundle\Entity\Person;
 
@@ -43,6 +44,10 @@ class RetrieveUbnDetailsMessageBuilder extends MessageBuilderBase
    */
   private function addRetrieveUbnDetailsData(RetrieveUbnDetails $retrieveUbnDetails)
   {
+    if(ActionFlagSetting::RETRIEVE_UBN_DETAILS != null) {
+      $retrieveUbnDetails->setAction(ActionFlagSetting::RETRIEVE_UBN_DETAILS);
+    }
+
     //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
     $retrieveUbnDetails->setRelationNumberKeeper($this->person->getRelationNumberKeeper());
 

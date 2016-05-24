@@ -4,6 +4,7 @@ namespace AppBundle\Component;
 
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
@@ -55,6 +56,10 @@ class TagTransferMessageBuilder extends MessageBuilderBase {
       $tag->setTagStatus(TagStateType::TRANSFERRING_TO_NEW_OWNER);
       $this->em->persist($tag);
       $this->em->flush();
+    }
+
+    if(ActionFlagSetting::TAG_TRANSFER != null) {
+      $messageObject->setAction(ActionFlagSetting::TAG_TRANSFER);
     }
 
     //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
