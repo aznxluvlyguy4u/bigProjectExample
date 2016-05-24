@@ -265,7 +265,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_RESPONSE_REPOSITORY);
     $declareExports = $repository->getExportsWithLastErrorResponses($client);
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('departures' => $declareDeparts, 'exports' => $declareExports)), 200);
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('departs' => $declareDeparts, 'exports' => $declareExports)), 200);
   }
 
 
