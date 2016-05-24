@@ -238,7 +238,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_RESPONSE_REPOSITORY);
     $declareLosses = $repository->getLossesWithLastErrorResponses($client);
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array($declareLosses, 200)), 200);
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareLosses), 200);
   }
 
 
@@ -255,6 +255,6 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_RESPONSE_REPOSITORY);
     $declareLosses = $repository->getLossesWithLastHistoryResponses($client);
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array($declareLosses, 200)),200);
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareLosses),200);
   }
 }
