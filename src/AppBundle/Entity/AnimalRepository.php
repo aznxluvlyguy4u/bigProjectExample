@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\AnimalType;
@@ -230,12 +231,8 @@ class AnimalRepository extends BaseRepository
    * @param Client $client
    * @return array|null
    */
-  public function getLiveStock(Client $client)
+  public function getLiveStock(Client $client, $isAlive = true, $isDeparted = false, $isExported = false)
   {
-    $isDeparted = false;
-    $isExported = false;
-    $isAlive = true;
-
     $animals = array();
 
     foreach($client->getCompanies() as $company) {
@@ -255,5 +252,36 @@ class AnimalRepository extends BaseRepository
     }
 
     return $animals;
+  }
+
+  /**
+   * @param Client $client
+   * @param string $ulnString
+   * @return null|Animal
+   */
+  public function getAnimalByUlnString(Client $client, $ulnString)
+  {
+    $uln = Utils::getUlnFromString($ulnString);
+
+    if($uln == null) { //invalid input for $ulnString
+      return null;
+    }
+
+    foreach($client->getCompanies() as $company) {
+      foreach($company->getLocations() as $location) {
+        foreach($location->getAnimals() as $animal) {
+
+          $showAnimal = $animal->getUlnCountryCode() == $uln[Constant::ULN_COUNTRY_CODE_NAMESPACE]
+                     && $animal->getUlnNumber() == $uln[Constant::ULN_NUMBER_NAMESPACE];
+
+          if($showAnimal) {
+            return $animal;
+          }
+
+        }
+      }
+    }
+
+    return null;
   }
 }
