@@ -48,6 +48,9 @@ class AuthAPIContoller extends APIController {
    */
   public function registerUser(Request $request)
   {
+    return new JsonResponse(array("code" => 403, "message" => "no online registration available at the moment"), 403);
+
+    //TODO There is no registration page at the moment, so the route below is blocked
     $credentials = $request->headers->get(Constant::AUTHORIZATION_HEADER_NAMESPACE);
     $credentials = str_replace('Basic ', '', $credentials);
     $credentials = base64_decode($credentials);
@@ -58,6 +61,8 @@ class AuthAPIContoller extends APIController {
 
     /*
     {
+        "first_name":"Jane",
+        "last_name":"Doe",
         "ubn":"123",
         "email_address": "",
         "postal_code":"1234AB",
@@ -68,49 +73,22 @@ class AuthAPIContoller extends APIController {
     //Get content to array
     $content = $this->getContentAsArray($request);
 
+    $firstName = $content['first_name'];
+    $lastName = $content['lastName'];
     $ubn = $content['ubn'];
     $emailAddress = $content['email_address'];
     $postalCode = $content['postal_code'];
     $homeNumber = $content['home_number'];
 
     $client = new Client();
-    $client->setFirstName("Jane");
-    $client->setLastName("Doe");
-    $client->setRelationNumberKeeper("");
+    $client->setFirstName($firstName);
+    $client->setLastName($lastName);
+    $client->setRelationNumberKeeper(uniqid(mt_rand(0,9999999)));
     $client->setEmailAddress($emailAddress);
     $client->setUsername($username);
 
     $encodedPassword = $encoder->encodePassword($client, $password);
     $client->setPassword($encodedPassword);
-
-    $locationAddress = new LocationAddress();
-    $locationAddress->setStreetName("Weiland");
-    $locationAddress->setAddressNumber("1");
-    $locationAddress->setAddressNumberSuffix("");
-    $locationAddress->setCity("Groningen");
-    $locationAddress->setCountry("Netherlands");
-    $locationAddress->setPostalCode("1111ZZ");
-    $locationAddress->setState("NH");
-
-    $location = new Location();
-    $location->setUbn($ubn);
-    $location->setAddress($locationAddress);
-
-    $companyAddress = new CompanyAddress();
-    $companyAddress->setStreetName("Baxandall");
-    $companyAddress->setAddressNumber($homeNumber);
-    $companyAddress->setAddressNumberSuffix("A");
-    $companyAddress->setCity("Groningen");
-    $companyAddress->setCountry("Netherlands");
-    $companyAddress->setPostalCode($postalCode);
-    $companyAddress->setState("NH");
-
-    $company = new Company();
-    $company->setOwner($client);
-    $company->addLocation($location);
-    $company->setAddress($companyAddress);
-
-    $client->addCompany($company);
 
     $client = $this->getDoctrine()->getRepository('AppBundle:Client')->persist($client);
 
@@ -172,12 +150,14 @@ class AuthAPIContoller extends APIController {
     $credentials = base64_decode($credentials);
 
     list($username, $password) = explode(":", $credentials);
-    $encoder = $this->get('security.password_encoder');
+    if($username != null && $password != null) {
+      $encoder = $this->get('security.password_encoder');
 
-    $client = $this->getDoctrine()->getRepository('AppBundle:Client')->findOneBy(array("username"=>$username));
+      $client = $this->getDoctrine()->getRepository('AppBundle:Client')->findOneBy(array("username"=>$username));
 
-    if($encoder->isPasswordValid($client, $password)) {
-      return new JsonResponse(array("access_token"=>$client->getAccessToken()), 200);
+      if($encoder->isPasswordValid($client, $password)) {
+        return new JsonResponse(array("access_token"=>$client->getAccessToken()), 200);
+      }
     }
 
     return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);

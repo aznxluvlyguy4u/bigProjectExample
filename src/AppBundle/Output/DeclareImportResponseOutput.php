@@ -22,14 +22,14 @@ class DeclareImportResponseOutput
 
         return array(
             "request_id" => $import->getRequestId(),
-            "log_datum" => $import->getLogDate(),
+            "log_date" => $import->getLogDate(),
             "uln_country_code" => $import->getUlnCountryCode(),
             "uln_number" => $import->getUlnNumber(),
             "pedigree_country_code" => $import->getPedigreeCountryCode(),
             "pedigree_number" => $import->getPedigreeNumber(),
             "is_import_animal" => $import->getIsImportAnimal(),
-            "import_date" => $import->getImportDate(),
-            "animal_country_origin" => $import->getAnimalCountryOrigin(),
+            "arrival_date" => $import->getImportDate(),
+            "country_origin" => $import->getAnimalCountryOrigin(),
             "request_state" => $import->getRequestState(),
             "message_number" => $messageNumber
         );
@@ -43,23 +43,27 @@ class DeclareImportResponseOutput
     {
         $lastResponse = $import->getResponses()->last();
         if($lastResponse) {
+            $errorCode = $lastResponse->getErrorCode();
+            $errorMessage = $lastResponse->getErrorMessage();
             $messageNumber = $lastResponse->getMessageNumber();
         } else {
+            $errorCode = null;
+            $errorMessage = null;
             $messageNumber = null;
         }
 
         $res = array("request_id" => $import->getRequestId(),
-            "log_datum" => $import->getLogDate(),
+            "log_date" => $import->getLogDate(),
             "uln_country_code" => $import->getUlnCountryCode(),
             "uln_number" => $import->getUlnNumber(),
             "pedigree_country_code" => $import->getPedigreeCountryCode(),
             "pedigree_number" => $import->getPedigreeNumber(),
             "is_import_animal" => $import->getIsImportAnimal(),
-            "import_date" => $import->getImportDate(),
-            "animal_country_origin" => $import->getAnimalCountryOrigin(),
+            "arrival_date" => $import->getImportDate(),
+            "country_origin" => $import->getAnimalCountryOrigin(),
             "request_state" => $import->getRequestState(),
-            "error_code" => $lastResponse->getErrorCode(),
-            "error_message" => $lastResponse->getErrorMessage(),
+            "error_code" => $errorCode,
+            "error_message" => $errorMessage,
             "message_number" => $messageNumber
         );
 

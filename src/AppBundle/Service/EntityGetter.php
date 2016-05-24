@@ -64,7 +64,7 @@ class EntityGetter
             if($retrievedAnimal == null) { $retrievedAnimal = $this->createNewAnimal($declareArrayContent); }
 
         } else if ($pedigreeNumberExists){
-            $retrievedAnimal = $this->retrieveAnimalFromPedigree($retrievedAnimalArray); //TODO check if animal has valid ULN
+            $retrievedAnimal = $this->retrieveAnimalFromPedigree($retrievedAnimalArray);
             if($retrievedAnimal == null) { $retrievedAnimal = $this->createNewAnimal($declareArrayContent); }
         }
 

@@ -20,15 +20,17 @@ class DeclareExportResponseOutput
             $messageNumber = null;
         }
 
+
         return array(
             "request_id" => $export->getRequestId(),
-            "log_datum" => $export->getLogDate(),
+            "log_date" => $export->getLogDate(),
             "uln_country_code" => $export->getUlnCountryCode(),
             "uln_number" => $export->getUlnNumber(),
             "pedigree_country_code" => $export->getPedigreeCountryCode(),
             "pedigree_number" => $export->getPedigreeNumber(),
             "is_export_animal" => $export->getIsExportAnimal(),
             "depart_date" => $export->getExportDate(),
+            "reason_of_depart" => $export->getReasonOfExport(),
             "request_state" => $export->getRequestState(),
             "message_number" => $messageNumber
         );
@@ -42,22 +44,27 @@ class DeclareExportResponseOutput
     {
         $lastResponse = $export->getResponses()->last();
         if($lastResponse) {
+            $errorCode = $lastResponse->getErrorCode();
+            $errorMessage = $lastResponse->getErrorMessage();
             $messageNumber = $lastResponse->getMessageNumber();
         } else {
+            $errorCode = null;
+            $errorMessage = null;
             $messageNumber = null;
         }
 
         $res = array("request_id" => $export->getRequestId(),
-            "log_datum" => $export->getLogDate(),
+            "log_date" => $export->getLogDate(),
             "uln_country_code" => $export->getUlnCountryCode(),
             "uln_number" => $export->getUlnNumber(),
             "pedigree_country_code" => $export->getPedigreeCountryCode(),
             "pedigree_number" => $export->getPedigreeNumber(),
             "is_export_animal" => $export->getIsExportAnimal(),
             "depart_date" => $export->getExportDate(),
+            "reason_of_depart" => $export->getReasonOfExport(),
             "request_state" => $export->getRequestState(),
-            "error_code" => $lastResponse->getErrorCode(),
-            "error_message" => $lastResponse->getErrorMessage(),
+            "error_code" => $errorCode,
+            "error_message" => $errorMessage,
             "message_number" => $messageNumber
         );
 

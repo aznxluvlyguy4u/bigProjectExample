@@ -2,6 +2,7 @@
 
 namespace AppBundle\Service;
 
+use AppBundle\Component\Utils;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Employee;
@@ -175,6 +176,7 @@ class IRSerializer implements IRSerializerInterface
 
             //Add retrieved animal to DeclareArrival
             $declareArrivalRequest->setAnimal($retrievedAnimal);
+            $declareArrivalRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
 
             $contentAnimal = $declareArrivalContentArray['animal'];
 
@@ -323,6 +325,7 @@ class IRSerializer implements IRSerializerInterface
 
         //Add retrieved animal to DeclareArrival
         $declareDepartRequest->setAnimal($retrievedAnimal);
+        $declareDepartRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
 
         return $declareDepartRequest;
     }
@@ -386,6 +389,7 @@ class IRSerializer implements IRSerializerInterface
 
         //Add retrieved animal to DeclareLoss
         $declareLossRequest->setAnimal($retrievedAnimal);
+        $declareLossRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
 
         return $declareLossRequest;
     }
@@ -410,6 +414,8 @@ class IRSerializer implements IRSerializerInterface
 
         $declareExportRequest->setAnimal($retrievedAnimal);
         $declareExportRequest->setExportDate(new \DateTime($exportDate));
+        $declareExportRequest->setReasonOfExport($declareExportContentArray['reason_of_depart']);
+        $declareExportRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
 
         return $declareExportRequest;
     }
@@ -422,6 +428,11 @@ class IRSerializer implements IRSerializerInterface
         $declareImportContentArray["type"] = RequestType::DECLARE_IMPORT_ENTITY;
 
         $importDate = $declareImportContentArray['arrival_date'];
+        if($declareImportContentArray->containsKey('country_origin')) {
+            $animalCountryOrigin = $declareImportContentArray['country_origin'];
+        } else {
+            $animalCountryOrigin = null;
+        }
 
         if($isEditMessage) {
             $requestId = $declareImportContentArray['request_id'];
@@ -430,8 +441,8 @@ class IRSerializer implements IRSerializerInterface
             //Update values here
             $declareImportRequest->setImportDate(new \DateTime($declareImportContentArray['arrival_date']));
 
-            if($declareImportContentArray->containsKey('animal_country_origin')) {
-                $declareImportRequest->setAnimalCountryOrigin($declareImportContentArray['animal_country_origin']);
+            if($declareImportContentArray->containsKey('country_origin')) {
+                $declareImportRequest->setAnimalCountryOrigin($animalCountryOrigin);
             }
 
             $declareImportRequest->setRequestState(RequestStateType::OPEN);
@@ -450,7 +461,9 @@ class IRSerializer implements IRSerializerInterface
 
             //Add retrieved animal and import date to DeclareImport
             $declareImportRequest->setAnimal($retrievedAnimal);
+            $declareImportRequest->setAnimalCountryOrigin($animalCountryOrigin);
             $declareImportRequest->setImportDate(new \DateTime($importDate));
+            $declareImportRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
 
             $contentAnimal = $declareImportContentArray['animal'];
 

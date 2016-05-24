@@ -70,6 +70,7 @@ class Constant
     const DECLARE_TAGS_TRANSFER_REPOSITORY = 'AppBundle:DeclareTagsTransfer';
     const RETRIEVE_TAGS_REPOSITORY = 'AppBundle:RetrieveTags';
     const DECLARE_LOSS_REPOSITORY = 'AppBundle:DeclareLoss';
+    const DECLARE_LOSS_RESPONSE_REPOSITORY = 'AppBundle:DeclareLossResponse';
 
     const DECLARE_EARTAGS_TRANSFER_REPOSITORY = 'AppBundle:DeclareEartagsTransfer';
     const DECLARE_BASE_REPOSITORY = 'AppBundle:DeclareBase';

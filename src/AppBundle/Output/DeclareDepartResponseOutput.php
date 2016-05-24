@@ -21,9 +21,10 @@ class DeclareDepartResponseOutput
             $messageNumber = null;
         }
 
+
         return array(
             "request_id" => $depart->getRequestId(),
-            "log_datum" => $depart->getLogDate(),
+            "log_date" => $depart->getLogDate(),
             "uln_country_code" => $depart->getUlnCountryCode(),
             "uln_number" => $depart->getUlnNumber(),
             "pedigree_country_code" => $depart->getPedigreeCountryCode(),
@@ -31,6 +32,7 @@ class DeclareDepartResponseOutput
             "depart_date" => $depart->getDepartDate(),
             "is_export_animal" => $depart->getIsExportAnimal(),
             "ubn_new_owner" => $depart->getUbnNewOwner(),
+            "reason_of_depart" => $depart->getReasonOfDepart(),
             "request_state" => $depart->getRequestState(),
             "message_number" => $messageNumber
         );
@@ -44,13 +46,17 @@ class DeclareDepartResponseOutput
     {
         $lastResponse = $depart->getResponses()->last();
         if($lastResponse) {
+            $errorCode = $lastResponse->getErrorCode();
+            $errorMessage = $lastResponse->getErrorMessage();
             $messageNumber = $lastResponse->getMessageNumber();
         } else {
+            $errorCode = null;
+            $errorMessage = null;
             $messageNumber = null;
         }
 
         $res = array("request_id" => $depart->getRequestId(),
-            "log_datum" => $depart->getLogDate(),
+            "log_date" => $depart->getLogDate(),
             "uln_country_code" => $depart->getUlnCountryCode(),
             "uln_number" => $depart->getUlnNumber(),
             "pedigree_country_code" => $depart->getPedigreeCountryCode(),
@@ -58,9 +64,10 @@ class DeclareDepartResponseOutput
             "depart_date" => $depart->getDepartDate(),
             "is_export_animal" => $depart->getIsExportAnimal(),
             "ubn_new_owner" => $depart->getUbnNewOwner(),
+            "reason_of_depart" => $depart->getReasonOfDepart(),
             "request_state" => $depart->getRequestState(),
-            "error_code" => $lastResponse->getErrorCode(),
-            "error_message" => $lastResponse->getErrorMessage(),
+            "error_code" => $errorCode,
+            "error_message" => $errorMessage,
             "message_number" => $messageNumber
         );
 

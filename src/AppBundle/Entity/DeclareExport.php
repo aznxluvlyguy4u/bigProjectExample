@@ -76,6 +76,16 @@ class DeclareExport extends DeclareBase
     private $animalType;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $animalObjectType;
+
+    /**
      * 2016-04-01T22:00:48.131Z
      *
      * @ORM\Column(type="datetime")
@@ -85,6 +95,14 @@ class DeclareExport extends DeclareBase
      * @Expose
      */
     private $exportDate;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 20)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $reasonOfExport;
 
     /**
      * @Assert\NotBlank
@@ -339,6 +357,38 @@ class DeclareExport extends DeclareBase
     public function setAnimalType($animalType)
     {
         $this->animalType = $animalType;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAnimalObjectType()
+    {
+        return $this->animalObjectType;
+    }
+
+    /**
+     * @param string $animalObjectType
+     */
+    public function setAnimalObjectType($animalObjectType)
+    {
+        $this->animalObjectType = $animalObjectType;
+    }
+
+    /**
+     * @return string
+     */
+    public function getReasonOfExport()
+    {
+        return $this->reasonOfExport;
+    }
+
+    /**
+     * @param string $reasonOfExport
+     */
+    public function setReasonOfExport($reasonOfExport)
+    {
+        $this->reasonOfExport = $reasonOfExport;
     }
 
 

@@ -43,7 +43,6 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function getLossById(Request $request, $Id)
   {
-    //TODO for phase 2: read a location from the $request and find declareLosses for that location
     $client = $this->getAuthenticatedUser($request);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_REPOSITORY);
 
@@ -91,7 +90,6 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function getLosses(Request $request)
   {
-    //TODO for phase 2: read a location from the $request and find declareLosses for that location
     $client = $this->getAuthenticatedUser($request);
     $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_REPOSITORY);
@@ -224,5 +222,39 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
     $this->persist($messageObject);
 
     return new JsonResponse($messageArray, 200);
+  }
+
+
+  /**
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-errors")
+   * @Method("GET")
+   */
+  public function getArrivalErrors(Request $request)
+  {
+    $client = $this->getAuthenticatedUser($request);
+
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_RESPONSE_REPOSITORY);
+    $declareLosses = $repository->getLossesWithLastErrorResponses($client);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array($declareLosses)), 200);
+  }
+
+
+  /**
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-history")
+   * @Method("GET")
+   */
+  public function getArrivalHistory(Request $request)
+  {
+    $client = $this->getAuthenticatedUser($request);
+
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_RESPONSE_REPOSITORY);
+    $declareLosses = $repository->getLossesWithLastHistoryResponses($client);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array($declareLosses, 200)),200);
   }
 }

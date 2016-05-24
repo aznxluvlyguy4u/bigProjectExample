@@ -14,7 +14,6 @@ class RequestMessageOutputBuilder
 
         switch($entityNameSpace) {
             case RequestType::DECLARATION_DETAIL_ENTITY:
-                //TODO
                 if($isUpdate) {
                     return null; //update Array
                 } else {
@@ -22,7 +21,6 @@ class RequestMessageOutputBuilder
                 }
 
             case RequestType::DECLARE_ANIMAL_FLAG_ENTITY:
-                //TODO
                 if($isUpdate) {
                     return null; //update Array
                 } else {
@@ -37,7 +35,6 @@ class RequestMessageOutputBuilder
                 }
 
             case RequestType::DECLARE_BIRTH_ENTITY:
-                //TODO
                 if($isUpdate) {
                     return null; //update Array
                 } else {
@@ -80,7 +77,6 @@ class RequestMessageOutputBuilder
                 }
 
             case RequestType::RETRIEVE_TAGS_ENTITY:
-                //TODO
                 if($isUpdate) {
                     return null; //update Array
                 } else {
@@ -88,7 +84,6 @@ class RequestMessageOutputBuilder
                 }
 
             case RequestType::REVOKE_DECLARATION_ENTITY:
-                //TODO
                 if($isUpdate) {
                     return null; //update Array
                 } else {
@@ -96,7 +91,6 @@ class RequestMessageOutputBuilder
                 }
 
             case RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY:
-                //TODO
                 if($isUpdate) {
                     return null; //update Array
                 } else {
@@ -104,7 +98,6 @@ class RequestMessageOutputBuilder
                 }
 
             case RequestType::RETRIEVE_ANIMALS_ENTITY:
-                //TODO
                 if($isUpdate) {
                     return null; //update Array
                 } else {
@@ -112,7 +105,6 @@ class RequestMessageOutputBuilder
                 }
 
             case RequestType::RETRIEVE_COUNTRIES_ENTITY:
-                //TODO
                 if($isUpdate) {
                     return null; //update Array
                 } else {
@@ -120,7 +112,6 @@ class RequestMessageOutputBuilder
                 }
 
             case RequestType::RETRIEVE_UBN_DETAILS_ENTITY:
-                //TODO
                 if($isUpdate) {
                     return null; //update Array
                 } else {

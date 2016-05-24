@@ -54,7 +54,9 @@ class LossMessageBuilder extends MessageBuilderBase
         $animal->setDateOfDeath($declareLoss->getDateOfDeath());
         $animal->setIsAlive(false);
 
+        $declareLoss->setAnimalType(AnimalType::sheep);
         $declareLoss->setAnimal($animal);
+
         //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
         $declareLoss->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
         return $declareLoss;

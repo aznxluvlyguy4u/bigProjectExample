@@ -34,6 +34,7 @@ class DeclareDepartOutput
             "ubn" => $depart->getUbn(),
             "depart_date" => $depart->getDepartDate(),
             "ubn_new_owner" => $depart->getUbnNewOwner(),
+            "reason_of_depart" => $depart->getReasonOfDepart(),
             "type" => "DeclareDepart",
             "animal" =>
             array("id" => $animalId,
@@ -43,7 +44,8 @@ class DeclareDepartOutput
                   "pedigree_number" => $depart->getPedigreeNumber(),
                   "is_export_animal" => $depart->getIsExportAnimal(),
                   "is_departed_animal" => $depart->getIsDepartedAnimal(),
-                  "type" => "Ewe" //FIXME get type from animal
+                  "animal_type" => $depart->getAnimalType(),
+                  "type" => $depart->getAnimalObjectType()
             ),
             "location"=>
             array("id" => $depart->getLocation()->getId(),

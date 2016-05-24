@@ -53,6 +53,8 @@ class ImportMessageBuilder extends MessageBuilderBase
       $animal->setAnimalCountryOrigin($declareImport->getAnimalCountryOrigin());
     }
 
+    $declareImport->setAnimalType(AnimalType::sheep);
+
     //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
     $declareImport->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
     return $declareImport;

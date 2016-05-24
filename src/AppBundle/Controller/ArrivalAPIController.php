@@ -151,7 +151,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function createArrival(Request $request)
   {
-    //Only verify if pedigree exists TODO Verify that only unknown ULNs are allowed but not unknown pedigrees
+    //Only verify if pedigree exists in our database. Unknown ULNs are allowed
     if(!$this->verifyOnlyPedigreeCodeInAnimal($request)){
       return new JsonResponse(array('code'=>428, "message" => "Pedigree value is not in database."), 428);
     }

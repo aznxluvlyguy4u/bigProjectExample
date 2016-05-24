@@ -45,10 +45,15 @@ class DeclareArrivalResponseOutput
     {
         $lastResponse = $arrival->getResponses()->last();
         if($lastResponse) {
+            $errorCode = $lastResponse->getErrorCode();
+            $errorMessage = $lastResponse->getErrorMessage();
             $messageNumber = $lastResponse->getMessageNumber();
         } else {
+            $errorCode = null;
+            $errorMessage = null;
             $messageNumber = null;
         }
+
 
         $res = array("request_id" => $arrival->getRequestId(),
             "log_date" => $arrival->getLogDate(),
@@ -60,8 +65,8 @@ class DeclareArrivalResponseOutput
             "arrival_date" => $arrival->getArrivalDate(),
             "ubn_previous_owner" => $arrival->getUbnPreviousOwner(),
             "request_state" => $arrival->getRequestState(),
-            "error_code" => $lastResponse->getErrorCode(),
-            "error_message" => $lastResponse->getErrorMessage(),
+            "error_code" => $errorCode,
+            "error_message" => $errorMessage,
             "message_number" => $messageNumber
         );
 

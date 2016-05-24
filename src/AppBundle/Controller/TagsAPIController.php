@@ -57,7 +57,7 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
 
     return new JsonResponse(
       array("errorCode" => 428,
-            "errorMessage" => "Given tagId is invalid, supplyr tagId in the following format: AZ123456789"), 200);
+            "errorMessage" => "Given tagId is invalid, supply tagId in the following format: AZ123456789"), 200);
   }
 
   /**
