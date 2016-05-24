@@ -252,7 +252,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
   /**
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/responses/errors")
+   * @Route("-errors")
    * @Method("GET")
    */
   public function getDepartErrors(Request $request)
@@ -272,7 +272,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
   /**
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/responses/history")
+   * @Route("-history")
    * @Method("GET")
    */
   public function getDepartHistory(Request $request)
@@ -285,6 +285,6 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_RESPONSE_REPOSITORY);
     $declareExports = $repository->getExportsWithLastHistoryResponses($client);
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('departures' => $declareDeparts, 'exports' => $declareExports)), 200);
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('departs' => $declareDeparts, 'exports' => $declareExports)), 200);
   }
 }

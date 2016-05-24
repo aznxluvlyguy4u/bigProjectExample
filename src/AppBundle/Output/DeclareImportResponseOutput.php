@@ -30,6 +30,7 @@ class DeclareImportResponseOutput
             "is_import_animal" => $import->getIsImportAnimal(),
             "arrival_date" => $import->getImportDate(),
             "country_origin" => $import->getAnimalCountryOrigin(),
+            "animal_uln_number_origin" => $import->getAnimalUlnNumberOrigin(),
             "request_state" => $import->getRequestState(),
             "message_number" => $messageNumber
         );
@@ -61,6 +62,7 @@ class DeclareImportResponseOutput
             "is_import_animal" => $import->getIsImportAnimal(),
             "arrival_date" => $import->getImportDate(),
             "country_origin" => $import->getAnimalCountryOrigin(),
+            "animal_uln_number_origin" => $import->getAnimalUlnNumberOrigin(),
             "request_state" => $import->getRequestState(),
             "error_code" => $errorCode,
             "error_message" => $errorMessage,

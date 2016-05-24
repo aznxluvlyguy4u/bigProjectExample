@@ -439,6 +439,13 @@ class IRSerializer implements IRSerializerInterface
             $animalCountryOrigin = null;
         }
 
+        if($declareImportContentArray->containsKey('animal_uln_number_origin')) {
+            $animalUlnNumberOrigin = $declareImportContentArray['animal_uln_number_origin'];
+        } else {
+            $animalUlnNumberOrigin = null;
+        }
+
+
         if($isEditMessage) {
             $requestId = $declareImportContentArray['request_id'];
             $declareImportRequest = $this->entityManager->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->getImportByRequestId($client, $requestId);
@@ -448,6 +455,10 @@ class IRSerializer implements IRSerializerInterface
 
             if($declareImportContentArray->containsKey('country_origin')) {
                 $declareImportRequest->setAnimalCountryOrigin($animalCountryOrigin);
+            }
+
+            if($declareImportContentArray->containsKey('animal_uln_number_origin')) {
+                $declareImportRequest->setAnimalUlnNumberOrigin($animalUlnNumberOrigin);
             }
 
             $declareImportRequest->setRequestState(RequestStateType::OPEN);

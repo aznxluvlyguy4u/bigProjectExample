@@ -34,6 +34,7 @@ class DeclareImportOutput
             "import_date" => $import->getImportDate(),
             "is_import_animal" => $import->getIsImportAnimal(),
             "animal_country_origin" => $import->getAnimalCountryOrigin(),
+            "animal_uln_number_origin" => $import->getAnimalUlnNumberOrigin(),
             "ubn" => $import->getUbn(),
             "type" => "DeclareImport",
             "animal" =>
