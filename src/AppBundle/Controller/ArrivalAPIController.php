@@ -208,13 +208,16 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * )
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/update")
+   * @Route("/{Id}")
+   * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
    * @Method("PUT")
    */
-  public function updateArrival(Request $request) {
+  public function updateArrival(Request $request, $Id) {
 
     $content = $this->getContentAsArray($request);
-    $requestId = $content->get('request_id');
+    $requestId = $Id;
+    $content->set("request_id", $requestId);
+
     $client = $this->getAuthenticatedUser($request);
 
     //verify requestId for arrivals
@@ -234,12 +237,12 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     if($isImportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database
       $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_IMPORT_ENTITY,
-          $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+          $content, $this->getAuthenticatedUser($request));
 
     } else {
       //Convert the array into an object and add the mandatory values retrieved from the database
       $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY,
-          $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+          $content, $this->getAuthenticatedUser($request));
     }
 
     //Send it to the queue and persist/update any changed requestState to the database
