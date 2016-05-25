@@ -28,7 +28,7 @@ class DeclareExport extends DeclareBase
     /**
      * @var string
      * @JMS\Type("string")
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=false)
      * @Expose
      */
     private $ulnCountryCode;
@@ -36,7 +36,7 @@ class DeclareExport extends DeclareBase
     /**
      * @var string
      * @JMS\Type("string")
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=false)
      * @Expose
      */
     private $ulnNumber;
@@ -98,7 +98,6 @@ class DeclareExport extends DeclareBase
 
     /**
      * @ORM\Column(type="string", nullable=true)
-     * @Assert\Length(max = 20)
      * @JMS\Type("string")
      * @Expose
      */
