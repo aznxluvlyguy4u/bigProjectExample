@@ -60,14 +60,20 @@ class DeclareExportResponse extends DeclareBaseResponse {
      */
     private $isExportAnimal;
 
-  /**
-   * @var DeclareExport
-   *
-   * @Assert\NotBlank
-   * @ORM\ManyToOne(targetEntity="DeclareExport", cascade={"persist"}, inversedBy="responses")
-   * @JMS\Type("AppBundle\Entity\DeclareExport")
-   */
-  private $declareExportRequestMessage;
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $reasonOfExport;
+
+    /**
+     * @var DeclareExport
+     *
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="DeclareExport", cascade={"persist"}, inversedBy="responses")
+     * @JMS\Type("AppBundle\Entity\DeclareExport")
+     */
+    private $declareExportRequestMessage;
 
     /**
      * Set declareExportRequestMessage
@@ -201,5 +207,29 @@ class DeclareExportResponse extends DeclareBaseResponse {
     public function getIsExportAnimal()
     {
         return $this->isExportAnimal;
+    }
+
+    /**
+     * Set reasonOfExport
+     *
+     * @param string $reasonOfExport
+     *
+     * @return DeclareExportResponse
+     */
+    public function setReasonOfExport($reasonOfExport)
+    {
+        $this->reasonOfExport = $reasonOfExport;
+
+        return $this;
+    }
+
+    /**
+     * Get reasonOfExport
+     *
+     * @return string
+     */
+    public function getReasonOfExport()
+    {
+        return $this->reasonOfExport;
     }
 }
