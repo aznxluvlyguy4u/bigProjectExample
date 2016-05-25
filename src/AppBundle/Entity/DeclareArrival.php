@@ -30,7 +30,7 @@ class DeclareArrival extends DeclareBase {
     /**
      * @var string
      * @JMS\Type("string")
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=false)
      * @Expose
      */
     private $ulnCountryCode;
@@ -38,7 +38,7 @@ class DeclareArrival extends DeclareBase {
     /**
      * @var string
      * @JMS\Type("string")
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=false)
      * @Expose
      */
     private $ulnNumber;
@@ -124,7 +124,7 @@ class DeclareArrival extends DeclareBase {
 
     /**
      * @ORM\OneToOne(targetEntity="RevokeDeclaration", inversedBy="arrival", cascade={"persist"})
-     * @ORM\JoinColumn(name="revoke_declaration_request_message_id", referencedColumnName="id", nullable=true)
+     * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id", nullable=true)
      * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
      * @Expose
      */
