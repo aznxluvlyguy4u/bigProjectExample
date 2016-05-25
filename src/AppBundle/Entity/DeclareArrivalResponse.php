@@ -41,6 +41,12 @@ class DeclareArrivalResponse extends DeclareBaseResponse {
     private $ubnPreviousOwner;
 
     /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $gender;
+
+    /**
      * Set declareArrivalRequestMessage
      *
      * @param \AppBundle\Entity\DeclareArrival $declareArrivalRequestMessage
@@ -132,4 +138,28 @@ class DeclareArrivalResponse extends DeclareBaseResponse {
 
 
 
+
+    /**
+     * Set gender
+     *
+     * @param string $gender
+     *
+     * @return DeclareArrivalResponse
+     */
+    public function setGender($gender)
+    {
+        $this->gender = $gender;
+
+        return $this;
+    }
+
+    /**
+     * Get gender
+     *
+     * @return string
+     */
+    public function getGender()
+    {
+        return $this->gender;
+    }
 }

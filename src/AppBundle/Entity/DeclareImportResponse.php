@@ -39,6 +39,12 @@ class DeclareImportResponse extends DeclareBaseResponse {
     private $animalCountryOrigin;
 
     /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $gender;
+
+    /**
      * Set declareImportRequestMessage
      *
      * @param \AppBundle\Entity\DeclareImport $declareImportRequestMessage
@@ -96,4 +102,28 @@ class DeclareImportResponse extends DeclareBaseResponse {
 
 
 
+
+    /**
+     * Set gender
+     *
+     * @param string $gender
+     *
+     * @return DeclareImportResponse
+     */
+    public function setGender($gender)
+    {
+        $this->gender = $gender;
+
+        return $this;
+    }
+
+    /**
+     * Get gender
+     *
+     * @return string
+     */
+    public function getGender()
+    {
+        return $this->gender;
+    }
 }
