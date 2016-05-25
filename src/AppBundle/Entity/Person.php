@@ -79,6 +79,14 @@ abstract class Person implements UserInterface
    */
   protected $username;
 
+  /**
+   * @var string
+   *
+   * @ORM\Column(type="string", nullable=true)
+   * @JMS\Type("string")
+   */
+  private $cellphoneNumber;
+
   public function __construct()
   {
     $this->accessToken = sha1(uniqid(rand(), true));
@@ -310,4 +318,22 @@ abstract class Person implements UserInterface
 
         return $this;
     }
+
+  /**
+   * @return string
+   */
+  public function getCellphoneNumber()
+  {
+    return $this->cellphoneNumber;
+  }
+
+  /**
+   * @param string $cellphoneNumber
+   */
+  public function setCellphoneNumber($cellphoneNumber)
+  {
+    $this->cellphoneNumber = $cellphoneNumber;
+  }
+
+
 }

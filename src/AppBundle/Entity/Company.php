@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Entity\ContactData;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -29,6 +30,30 @@ class Company
    * @JMS\Type("string")
    */
   private $companyName;
+
+  /**
+   * @var string
+   *
+   * @ORM\Column(type="string", nullable=true)
+   * @JMS\Type("string")
+   */
+  private $btwNumber;
+
+  /**
+   * @var string
+   *
+   * @ORM\Column(type="string", nullable=true)
+   * @JMS\Type("string")
+   */
+  private $kvkNumber;
+
+  /**
+   * @var string
+   *
+   * @ORM\Column(type="string", nullable=true)
+   * @JMS\Type("string")
+   */
+  private $brsNumber;
 
   /**
    * @var ArrayCollection
@@ -62,6 +87,14 @@ class Company
    * @JMS\Type("AppBundle\Entity\BillingAddress")
    */
   private $billingAddress;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $telephoneNumber;
 
   /**
    * Company constructor.
@@ -212,4 +245,72 @@ class Company
     {
         return $this->billingAddress;
     }
+
+    /**
+     * @return string
+     */
+    public function getBtwNumber()
+    {
+        return $this->btwNumber;
+    }
+
+    /**
+     * @param string $btwNumber
+     */
+    public function setBtwNumber($btwNumber)
+    {
+        $this->btwNumber = $btwNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getKvkNumber()
+    {
+        return $this->kvkNumber;
+    }
+
+    /**
+     * @param string $kvkNumber
+     */
+    public function setKvkNumber($kvkNumber)
+    {
+        $this->kvkNumber = $kvkNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBrsNumber()
+    {
+        return $this->brsNumber;
+    }
+
+    /**
+     * @param string $brsNumber
+     */
+    public function setBrsNumber($brsNumber)
+    {
+        $this->brsNumber = $brsNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTelephoneNumber()
+    {
+        return $this->telephoneNumber;
+    }
+
+    /**
+     * @param string $telephoneNumber
+     */
+    public function setTelephoneNumber($telephoneNumber)
+    {
+        $this->telephoneNumber = $telephoneNumber;
+    }
+
+
+
+
 }
