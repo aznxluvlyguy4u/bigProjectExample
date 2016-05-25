@@ -149,6 +149,15 @@ abstract class Animal
     protected $animalType;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    protected $transferState;
+
+    /**
      * @var integer
      *
      * @ORM\Column(type="integer", nullable=true)
@@ -1131,4 +1140,22 @@ abstract class Animal
     {
         return $this->animalCountryOrigin;
     }
+
+    /**
+     * @return string
+     */
+    public function getTransferState()
+    {
+        return $this->transferState;
+    }
+
+    /**
+     * @param string $transferState
+     */
+    public function setTransferState($transferState)
+    {
+        $this->transferState = $transferState;
+    }
+
+
 }
