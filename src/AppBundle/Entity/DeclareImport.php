@@ -31,7 +31,7 @@ class DeclareImport extends DeclareBase
   /**
    * @var string
    * @JMS\Type("string")
-   * @ORM\Column(type="string", nullable=true)
+   * @ORM\Column(type="string", nullable=false)
    * @Expose
    */
   private $ulnCountryCode;
@@ -39,7 +39,7 @@ class DeclareImport extends DeclareBase
   /**
    * @var string
    * @JMS\Type("string")
-   * @ORM\Column(type="string", nullable=true)
+   * @ORM\Column(type="string", nullable=false)
    * @Expose
    */
   private $ulnNumber;
