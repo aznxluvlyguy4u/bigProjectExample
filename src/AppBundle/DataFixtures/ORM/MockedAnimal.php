@@ -107,6 +107,7 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedParentRam->setPedigreeNumber("35645");
     self::$mockedParentRam->setPedigreeCountryCode("NL");
     self::$mockedParentRam->setLocation($location);
+    $location->addAnimal(self::$mockedParentRam);
 
     $tag1 = $tagRepository->findOneBy(array("id"=>$lowestTagId+$offset+0));
     self::$mockedParentRam->setAssignedTag($tag1);
