@@ -19,8 +19,6 @@ class AnimalDetailsOutput
     {
 
         $result = array(
-            "animalDetails" =>
-            array(
                   "uln_country_code" => $animal->getUlnCountryCode(),
                   "uln_number" => $animal->getUlnNumber(),
                   "pedigree_country_code" => $animal->getPedigreeCountryCode(),
@@ -37,46 +35,43 @@ class AnimalDetailsOutput
                   "rearing" => "",
                   "suction_size" => "",
                   "blind_factor" => "",
-                  "scrapie_genotype" => ""
-            ),
-            "exterior" =>
-            array(
-                "head" => "",
-                "progress" => "",
-                "muscularity" => "",
-                "proportion" => "",
-                "type" => "",
-                "leg_work" => "",
-                "pelt" => "",
-                "general_appearance" => "",
-                "height" => "",
-                "breast_depth" => "",
-                "torso_length" => "",
-                "markings" => ""
-            ),
-            "measurements" =>
-            array(
-                "fat_cover" => "",
-                "muscular_thickness" => "",
-                "scan_weight" => "",
-                "tail_length" => "",
-                "birth_weight" => "",
-                "birth_progress" => "",
-            ),
-            "predicate_and_statuses" =>
-            array(
-                "breed" => "",
-                "predicate" => "",
-                "status" => ""
-            ),
-            "breeder_information" =>
-            array(
-                "breeder" => "",
-                "ubn_breeder" => "",
-                "email_address" => "",
-                "telephone" => "",
-                "co-owner" => ""
-            )
+                  "scrapie_genotype" => "",
+                  "breed" => "",
+                  "predicate" => "",
+                  "breed_status" => "",
+                "exterior" =>
+                    array(
+                        "head" => "",
+                        "progress" => "",
+                        "muscularity" => "",
+                        "proportion" => "",
+                        "type" => "",
+                        "leg_work" => "",
+                        "pelt" => "",
+                        "general_appearance" => "",
+                        "height" => "",
+                        "breast_depth" => "",
+                        "torso_length" => "",
+                        "markings" => ""
+                    ),
+                "measurement" =>
+                    array(
+                        "fat_cover" => "",
+                        "muscular_thickness" => "",
+                        "scan_weight" => "",
+                        "tail_length" => "",
+                        "birth_weight" => "",
+                        "birth_progress" => "",
+                    ),
+                "breeder" =>
+                    array(
+                        "breeder" => "",
+                        "ubn_breeder" => "",
+                        "email_address" => "",
+                        "telephone" => "",
+                        "co-owner" => ""
+                    ),
+                "note" => ""
         );
 
         return $result;
