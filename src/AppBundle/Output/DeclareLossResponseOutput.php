@@ -27,9 +27,8 @@ class DeclareLossResponseOutput
             "uln_number" => $loss->getUlnNumber(),
             "pedigree_country_code" => $loss->getAnimal()->getPedigreeCountryCode(),
             "pedigree_number" => $loss->getAnimal()->getPedigreeNumber(),
-            "loss_date" => $loss->getAnimal()->getDateOfDeath(),
+            "date_of_death" => $loss->getDateOfDeath(),
             "reason_of_loss" => $loss->getReasonOfLoss(),
-            "ubn_processor" => "000000", //TODO add ubnProcessor field to DeclareLoss
             "request_state" => $loss->getRequestState(),
             "message_number" => $messageNumber
         );
@@ -65,9 +64,8 @@ class DeclareLossResponseOutput
             "uln_number" => $loss->getUlnNumber(),
             "pedigree_country_code" => $loss->getAnimal()->getPedigreeCountryCode(),
             "pedigree_number" => $loss->getAnimal()->getPedigreeNumber(),
-            "loss_date" => $loss->getAnimal()->getDateOfDeath(),
+            "date_of_death" => $loss->getDateOfDeath(),
             "reason_of_loss" => $loss->getReasonOfLoss(),
-            "ubn_processor" => "000000", //TODO add ubnProcessor field to DeclareLoss
             "request_state" => $loss->getRequestState(),
             "error_code" => $errorCode,
             "error_message" => $errorMessage,
