@@ -1,4 +1,15 @@
-<h3>Contact NSFO</h3>
+<h3>Contactformulier: {{ category }} - {{ mood }}</h3>
 
-<p>Email reeds verstuurd naar NSFO</p>
+<ul>
+    <li>Verstuurd door: {{ firstName }} {{ lastName }}</li>
+    <li>Relatienummerhouder: {{ relationNumberKeeper }}</li>
+    <li>Verstuurd van: {{ emailAddressUser }}</li>
+    <li>Categorie: {{ category }}</li>
+    <li>Gemoedstoestand: {{ mood }}</li>
+</ul>
 
+----------------
+
+<p>Het verstuurde bericht: </p>
+
+{{ body }}

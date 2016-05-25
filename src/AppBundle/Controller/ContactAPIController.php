@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -25,14 +26,70 @@ class ContactAPIController extends APIController {
   public function postContactEmail(Request $request) {
 
     $content = $this->getContentAsArray($request);
-    
+    $user = $this->getAuthenticatedUser($request);
+
+    $lastName = $user->getLastName();
+    $firstName = $user->getFirstName();
+    $userName = $lastName . ", " . $firstName;
+    $relationNumberKeeper = $user->getRelationNumberKeeper();
+
     //Content format
-    $email = $content->get('email');
+    $emailAddressUser = $content->get('email');
     $category = $content->get('category');
     $mood = $content->get('mood');
-    $message = $content->get('message');
+    $messageBody = $content->get('message');
 
-    return new JsonResponse($content, 200);
+    //Message to NSFO
+    $emailAddressReceiver = $this->container->getParameter('mailer_contact_form_receiver');
+    $message = \Swift_Message::newInstance()
+        ->setSubject('Contact: ' . $userName . ". Categorie: " . $category . " - " . $mood)
+        ->setFrom('info@stormdelta.com')
+        ->setTo($emailAddressReceiver)
+        ->setBody(
+            $this->renderView(
+            // app/Resources/views/...
+                'User/contact_email.html.twig',
+                array('firstName' => $firstName,
+                      'lastName' => $lastName,
+                      'relationNumberKeeper' => $relationNumberKeeper,
+                      'emailAddressUser' => $emailAddressUser,
+                      'body' => $messageBody,
+                      'category' => $category,
+                      'mood' => $mood)
+            ),
+            'text/html'
+        )
+        ->setSender('info@stormdelta.com')
+    ;
+
+    $this->get('mailer')->send($message);
+
+    //Confirmation message back to the sender
+    $messageConfirmation = \Swift_Message::newInstance()
+        ->setSubject('NSFO Contact formulier is verzonden! Categorie: ' . $category . " - " . $mood)
+        ->setFrom('info@stormdelta.com')
+        ->setTo($emailAddressUser)
+        ->setBody(
+            $this->renderView(
+            // app/Resources/views/...
+                'User/contact_verification_email.html.twig',
+                array('firstName' => $firstName,
+                    'lastName' => $lastName,
+                    'relationNumberKeeper' => $relationNumberKeeper,
+                    'emailAddressUser' => $emailAddressUser,
+                    'body' => $messageBody,
+                    'category' => $category,
+                    'mood' => $mood)
+            ),
+            'text/html'
+        )
+        ->setSender('info@stormdelta.com')
+    ;
+
+    $this->get('mailer')->send($messageConfirmation);
+
+    return new JsonResponse(array("Message sent!" => $messageBody), 200); //$this->redirectToRoute('/');
+
   }
 
 
