@@ -45,14 +45,20 @@ class DeclareDepartResponseOutput
     public static function createErrorResponse($depart)
     {
         $lastResponse = $depart->getResponses()->last();
-        if($lastResponse) {
+        if($lastResponse != false) {
             $errorCode = $lastResponse->getErrorCode();
             $errorMessage = $lastResponse->getErrorMessage();
             $messageNumber = $lastResponse->getMessageNumber();
+            $isRemovedByUser = $lastResponse->getIsRemovedByUser();
         } else {
             $errorCode = null;
             $errorMessage = null;
             $messageNumber = null;
+            $isRemovedByUser = true;
+        }
+
+        if($isRemovedByUser) {
+            return null;
         }
 
         $res = array("request_id" => $depart->getRequestId(),
