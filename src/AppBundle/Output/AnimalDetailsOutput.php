@@ -62,6 +62,9 @@ class AnimalDetailsOutput
                         "tail_length" => "",
                         "birth_weight" => "",
                         "birth_progress" => "",
+                        "withers" => "",
+                        "breast_depth" => "",
+                        "torso_length" => ""
                     ),
                 "breeder" =>
                     array(
