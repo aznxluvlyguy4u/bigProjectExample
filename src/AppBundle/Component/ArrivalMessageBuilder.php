@@ -2,9 +2,11 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Enumerator\ActionType;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -50,6 +52,10 @@ class ArrivalMessageBuilder extends MessageBuilderBase
     private function addDeclareArrivalData(DeclareArrival $messageObject)
     {
         $messageObject->setAnimalType(AnimalType::sheep);
+
+        if(ActionFlagSetting::DECLARE_ARRIVAL != null) {
+            $messageObject->setAction(ActionFlagSetting::DECLARE_ARRIVAL);
+        }
 
         //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
         $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);

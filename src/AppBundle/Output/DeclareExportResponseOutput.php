@@ -43,14 +43,20 @@ class DeclareExportResponseOutput
     public static function createErrorResponse($export)
     {
         $lastResponse = $export->getResponses()->last();
-        if($lastResponse) {
+        if($lastResponse != false) {
             $errorCode = $lastResponse->getErrorCode();
             $errorMessage = $lastResponse->getErrorMessage();
             $messageNumber = $lastResponse->getMessageNumber();
+            $isRemovedByUser = $lastResponse->getIsRemovedByUser();
         } else {
             $errorCode = null;
             $errorMessage = null;
             $messageNumber = null;
+            $isRemovedByUser = true;
+        }
+
+        if($isRemovedByUser) {
+            return null;
         }
 
         $res = array("request_id" => $export->getRequestId(),

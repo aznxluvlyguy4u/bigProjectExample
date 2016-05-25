@@ -83,15 +83,15 @@ class CountryAPIController extends APIController implements CountryAPIController
     $content = $this->getContentAsArray($request);
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $retrieveEartagsRequest = $this->buildMessageObject(RequestType::RETRIEVE_COUNTRIES_ENTITY, $content, $this->getAuthenticatedUser($request));
+    $retrieveCountries = $this->buildMessageObject(RequestType::RETRIEVE_COUNTRIES_ENTITY, $content, $this->getAuthenticatedUser($request));
 
     //First Persist object to Database, before sending it to the queue
-    $this->persist($retrieveEartagsRequest, RequestType::RETRIEVE_COUNTRIES_ENTITY);
+    $this->persist($retrieveCountries);
 
     //Send it to the queue and persist/update any changed state to the database
-    $this->sendMessageObjectToQueue($retrieveEartagsRequest, RequestType::RETRIEVE_COUNTRIES_ENTITY, RequestType::RETRIEVE_COUNTRIES);
+    $this->sendMessageObjectToQueue($retrieveCountries);
 
-    return new JsonResponse($retrieveEartagsRequest, 200);
+    return new JsonResponse($retrieveCountries, 200);
 
   }
 }

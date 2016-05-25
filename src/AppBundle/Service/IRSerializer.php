@@ -218,7 +218,7 @@ class IRSerializer implements IRSerializerInterface
             $ulnNumberNew = $declareBirthContentArray['animal']['uln_number'];
 
             if($tag->getUlnCountryCode()!=$ulnCountryCodeNew || $tag->getUlnNumber()!=$ulnNumberNew) {
-                $tag->setTagStatus(Constant::UNASSIGNED_NAMESPACE);
+                $tag->setTagStatus(TagStateType::UNASSIGNED);
                 $tag->setAnimal(null);
                 $this->entityManager->persist($tag);
                 $this->entityManager->flush();
@@ -273,7 +273,7 @@ class IRSerializer implements IRSerializerInterface
 
 //            $animalObject->setAssignedTag($tag);
             $tag->setAnimal($animalObject);
-            $tag->setTagStatus(Constant::ASSIGNED_NAMESPACE);
+            $tag->setTagStatus(TagStateType::ASSIGNED);
             $this->entityManager->persist($tag);
             $this->entityManager->persist($animalObject->setAssignedTag($tag));
             $this->entityManager->flush();
@@ -430,6 +430,8 @@ class IRSerializer implements IRSerializerInterface
      */
     function parseDeclareImport(ArrayCollection $declareImportContentArray, Client $client, $isEditMessage)
     {
+        //TODO Phase 2: Built in explicit check for non-EU/EU countries. Now it is filtered by animalUlnNumberOrigin field being null or not.
+
         $declareImportContentArray["type"] = RequestType::DECLARE_IMPORT_ENTITY;
 
         $importDate = $declareImportContentArray['arrival_date'];
@@ -443,6 +445,12 @@ class IRSerializer implements IRSerializerInterface
             $animalUlnNumberOrigin = $declareImportContentArray['animal_uln_number_origin'];
         } else {
             $animalUlnNumberOrigin = null;
+        }
+
+        //TODO explicitly check the countries
+        //For EU countries the ulnCountryCode needs to be the AnimalCountyOrigin (=country_origin)
+        if($animalUlnNumberOrigin == null) {
+            $declareImportContentArray[Constant::ULN_COUNTRY_CODE_NAMESPACE] = $animalCountryOrigin;
         }
 
 

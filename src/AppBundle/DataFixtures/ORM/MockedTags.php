@@ -3,6 +3,7 @@
 namespace AppBundle\DataFixtures\ORM;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\TagStateType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
@@ -60,7 +61,7 @@ class MockedTags implements FixtureInterface, ContainerAwareInterface, OrderedFi
 
       //Mocked tags
       $tag = new Tag();
-      $tag->setTagStatus('unassigned');
+      $tag->setTagStatus(TagStateType::UNASSIGNED);
       $tag->setOrderDate(new \DateTime());
       $tag->setAnimalOrderNumber($randomAnimalOrderNumber);
       $tag->setUlnNumber($randomUln);
@@ -104,7 +105,7 @@ class MockedTags implements FixtureInterface, ContainerAwareInterface, OrderedFi
   public static function getOneUnassignedTag()
   {
     foreach(self::getMockedTags() as $mockedTag) {
-      if($mockedTag->getTagStatus() == Constant::UNASSIGNED_NAMESPACE) {
+      if($mockedTag->getTagStatus() == TagStateType::UNASSIGNED) {
         return $mockedTag;
       }
     }

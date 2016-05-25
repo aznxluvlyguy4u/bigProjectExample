@@ -6,6 +6,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\DeclareBirth;
+use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -59,6 +60,10 @@ class BirthMessageBuilder extends MessageBuilderBase
         $this->em->flush();
 
         $declareBirth->setAnimal($animal);
+
+        if(ActionFlagSetting::DECLARE_BIRTH != null) {
+            $declareBirth->setAction(ActionFlagSetting::DECLARE_BIRTH);
+        }
         
         //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
         $declareBirth->setLocation($this->person->getCompanies()[0]->getLocations()[0]);

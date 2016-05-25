@@ -2,24 +2,13 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Component\Utils;
+use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\TagStateType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Form\ClickableInterface;
 
 class TagRepository extends BaseRepository {
-
-  /**
-   * validate if Id is of format: AZ123456789
-   *
-   * @param $ulnString
-   * @return bool
-   */
-  public function verifyUlnFormat($ulnString) {
-    if(preg_match("([A-Z]{2}\d+)",$ulnString)) {
-      return true;
-    }
-    return false;
-  }
 
   /**
    * @param Client $client
@@ -29,13 +18,12 @@ class TagRepository extends BaseRepository {
   public function findOneByString(Client $client, $ulnString)
   {
     //Verify format first
-    if(!$this->verifyUlnFormat($ulnString)) {
+    if(!Utils::verifyUlnFormat($ulnString)) {
       return null;
     }
-    $countryCode = mb_substr($ulnString, 0, 2, 'utf-8');
-    $ulnNumber = mb_substr($ulnString, 2, strlen($ulnString));
+    $uln = Utils::getUlnFromString($ulnString);
 
-    return $this->findOneByUln($client, $countryCode, $ulnNumber);
+    return $this->findOneByUln($client, $uln[Constant::ULN_COUNTRY_CODE_NAMESPACE], $uln[Constant::ULN_NUMBER_NAMESPACE]);
   }
 
   /**
@@ -65,6 +53,11 @@ class TagRepository extends BaseRepository {
     return $this->findOneBy(array('ulnCountryCode'=>$ulnCountryCode, 'ulnNumber'=>$ulnNumber));
   }
 
+  /**
+   * @param Client $client
+   * @param string $tagStatus
+   * @return ArrayCollection
+   */
   public function findTags(Client $client, $tagStatus = TagStateType::UNASSIGNED)
   {
     $tags = new ArrayCollection();
@@ -78,6 +71,31 @@ class TagRepository extends BaseRepository {
     return $tags;
   }
 
+  /**
+   * @param Client $client
+   * @param int $count
+   * @return Tag|ArrayCollection
+   */
+  public function findUnAssignedTags(Client $client, $count)
+  {
+    $tags = new ArrayCollection();
+
+    $i = 0;
+
+    foreach($client->getTags() as $tag){
+      if($tag->getTagStatus() == TagStateType::UNASSIGNED) {
+        $tags->add($tag);
+        $i = $i + 1;
+      }
+      if($i = $count) { break; }
+    }
+
+    if(sizeof($tags)==1) {
+      return $tags->get(0);
+    } else {
+      return $tags;
+    }
+  }
 
 
 }

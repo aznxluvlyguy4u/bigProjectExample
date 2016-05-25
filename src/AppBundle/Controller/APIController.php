@@ -527,7 +527,7 @@ class APIController extends Controller implements APIControllerInterface
 
   /**
    * Retrieve the messageObject related to the RevokeDeclaration
-   * reset the request state to 'revoked'
+   * reset the request state to 'REVOKING'
    * and persist the update.
    *
    * @param string $messageNumber

@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Component;
+use AppBundle\Constant\Constant;
 
 /**
  * Class Utils
@@ -34,5 +35,32 @@ class Utils
         $repositoryNameSpace = $pathArray[$n-3] . ":" . $pathArray[$n-1];
 
         return $repositoryNameSpace;
+    }
+
+    /**
+     * validate if Id is of format: AZ123456789
+     *
+     * @param $ulnString
+     * @return bool
+     */
+    public static function verifyUlnFormat($ulnString)
+    {
+        if(preg_match("([A-Z]{2}\d+)",$ulnString)) {
+            return true;
+        }
+        return false;
+    }
+
+    public static function getUlnFromString($ulnString)
+    {
+        //Verify format first
+        if(!Utils::verifyUlnFormat($ulnString)) {
+            return null;
+        }
+
+        $countryCode = mb_substr($ulnString, 0, 2, 'utf-8');
+        $ulnNumber = mb_substr($ulnString, 2, strlen($ulnString));
+
+        return array(Constant::ULN_COUNTRY_CODE_NAMESPACE => $countryCode, Constant::ULN_NUMBER_NAMESPACE => $ulnNumber);
     }
 }

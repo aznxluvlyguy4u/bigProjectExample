@@ -4,6 +4,7 @@ namespace AppBundle\Component;
 
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Enumerator\AnimalType;
+use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
@@ -51,6 +52,10 @@ class TagSyncMessageBuilder extends MessageBuilderBase {
    */
   private function addRetrieveEartagsData(RetrieveTags $messageObject)
   {
+    if(ActionFlagSetting::TAG_SYNC != null) {
+      $messageObject->setAction(ActionFlagSetting::TAG_SYNC);
+    }
+
     //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
     $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
     return $messageObject;

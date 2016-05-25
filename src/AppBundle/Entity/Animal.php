@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\TagStateType;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -146,6 +147,15 @@ abstract class Animal
      * @Expose
      */
     protected $animalType;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    protected $transferState;
 
     /**
      * @var integer
@@ -419,7 +429,7 @@ abstract class Animal
     {
         if($assignedTag != null){
             $this->assignedTag = $assignedTag;
-            $this->assignedTag->setTagStatus(Constant::ASSIGNED_NAMESPACE);
+            $this->assignedTag->setTagStatus(TagStateType::ASSIGNED);
             $assignedTag->setAnimal($this);
             $this->setUlnNumber($assignedTag->getUlnNumber());
             $this->setUlnCountryCode($assignedTag->getUlnCountryCode());
@@ -445,7 +455,7 @@ abstract class Animal
     public function removeAssignedTag()
     {
         $this->assignedTag->setAnimal(null);
-        $this->assignedTag->setTagStatus(Constant::UNASSIGNED_NAMESPACE);
+        $this->assignedTag->setTagStatus(TagStateType::UNASSIGNED);
         $this->assignedTag = null;
     }
 
@@ -1130,4 +1140,22 @@ abstract class Animal
     {
         return $this->animalCountryOrigin;
     }
+
+    /**
+     * @return string
+     */
+    public function getTransferState()
+    {
+        return $this->transferState;
+    }
+
+    /**
+     * @param string $transferState
+     */
+    public function setTransferState($transferState)
+    {
+        $this->transferState = $transferState;
+    }
+
+
 }

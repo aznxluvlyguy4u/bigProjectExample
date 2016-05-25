@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Enumerator\TagStateType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Tools\Export\ExportException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -175,7 +176,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         $tag = $this->getEntityGetter()->retrieveTag($ulnCountryCode, $ulnNumber);
        
-        if($tag->getTagStatus() == Constant::ASSIGNED_NAMESPACE){
+        if($tag->getTagStatus() == TagStateType::ASSIGNED){
             //TODO redirect to error table / save the incorrect input (?)
             $message = "Tag " . $ulnCountryCode . $ulnNumber . " for child already in use";
             return new JsonResponse(array($message, 200), 200);
@@ -260,7 +261,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
       $query = array("ulnCountryCode"=>$ulnCountryCode, "ulnNumber"=>$ulnNumber);
       $retrievedTag = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY)->findOneBy($query);
 
-      $tagIsNotAvailable = $retrievedTag->getTagStatus()!=Constant::UNASSIGNED_NAMESPACE;
+      $tagIsNotAvailable = $retrievedTag->getTagStatus()!=TagStateType::UNASSIGNED;
 
 
       $tagUsedByAnimalToBeDeletedInUpdate = $declareBirth->getAnimal()->getAssignedTag() == $retrievedTag;

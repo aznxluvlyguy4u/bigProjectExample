@@ -10,6 +10,7 @@ use AppBundle\Entity\BillingAddress;
 use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Location;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\JsonFormat\DeclareArrivalJsonFormat;
 use AppBundle\Service\IRSerializer;
 use Doctrine\Common\DataFixtures\FixtureInterface;
@@ -84,7 +85,7 @@ class MockedDeclareArrival implements FixtureInterface, ContainerAwareInterface,
             self::$mockedArrival->setLogDate(new \DateTime('2023-03-22'));
             self::$mockedArrival->setRequestId($id);
             self::$mockedArrival->setMessageId($id);
-            self::$mockedArrival->setRequestState('finished');
+            self::$mockedArrival->setRequestState(RequestStateType::FINISHED);
             self::$mockedArrival->setAction('C');
             self::$mockedArrival->setRecoveryIndicator('N');
             self::$mockedArrival->setRelationNumberKeeper($relationNumberKeeper);

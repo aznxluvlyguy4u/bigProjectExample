@@ -8,6 +8,7 @@ use AppBundle\Enumerator\AnimalType;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -63,6 +64,10 @@ class RevokeMessageBuilder extends MessageBuilderBase
 
         //Set related request
         $retrievedDeclaration->setRevoke($revokeDeclaration);
+
+        if(ActionFlagSetting::REVOKE_DECLARATION != null) {
+            $revokeDeclaration->setAction(ActionFlagSetting::REVOKE_DECLARATION);
+        }
 
         return $revokeDeclaration;
     }

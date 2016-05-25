@@ -4,6 +4,7 @@ namespace AppBundle\Component;
 
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Enumerator\AnimalType;
+use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
@@ -54,6 +55,10 @@ class ImportMessageBuilder extends MessageBuilderBase
     }
 
     $declareImport->setAnimalType(AnimalType::sheep);
+
+    if(ActionFlagSetting::DECLARE_IMPORT != null) {
+      $declareImport->setAction(ActionFlagSetting::DECLARE_IMPORT);
+    }
 
     //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
     $declareImport->setLocation($this->person->getCompanies()[0]->getLocations()[0]);

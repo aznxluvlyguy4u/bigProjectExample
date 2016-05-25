@@ -4,6 +4,7 @@ namespace AppBundle\Tests\Controller;
 
 use AppBundle\DataFixtures\ORM\MockedTags;
 use AppBundle\Entity\DeclareExport;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedAnimal;
 use AppBundle\DataFixtures\ORM\MockedClient;
@@ -171,7 +172,7 @@ class DeclareExportAPIControllerTest extends  WebTestCase {
 
     $data = json_decode($response->getContent(), true);
 
-    $this->assertEquals('open', $data['request_state']);
+    $this->assertEquals(RequestStateType::OPEN, $data['request_state']);
   }
 
   /**

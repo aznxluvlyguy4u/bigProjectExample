@@ -6,6 +6,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\DeclareLoss;
+use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -56,6 +57,10 @@ class LossMessageBuilder extends MessageBuilderBase
 
         $declareLoss->setAnimalType(AnimalType::sheep);
         $declareLoss->setAnimal($animal);
+
+        if(ActionFlagSetting::DECLARE_LOSS != null) {
+            $declareLoss->setAction(ActionFlagSetting::DECLARE_LOSS);
+        }
 
         //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
         $declareLoss->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
