@@ -165,6 +165,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     //Convert the array into an object and add the mandatory values retrieved from the database
     if($isImportAnimal) {
+      //TODO Phase 2: Filter between non-EU countries and EU countries. At the moment we only process sheep from EU countries
       $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client);
 
     } else {
