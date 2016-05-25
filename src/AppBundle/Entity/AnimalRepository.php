@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\AnimalObjectType;
+use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\AnimalType;
 use Doctrine\Common\Collections\ArrayCollection;
 
@@ -231,9 +232,15 @@ class AnimalRepository extends BaseRepository
    * @param Client $client
    * @return array|null
    */
-  public function getLiveStock(Client $client, $isAlive = true, $isDeparted = false, $isExported = false)
+  public function getLiveStock(Client $client, $isAlive = true, $isDeparted = false, $isExported = false, $showTransferring = false)
   {
     $animals = array();
+
+    if($showTransferring) {
+      $transferState = AnimalTransferStatus::TRANSFERRING;
+    } else {
+      $transferState = AnimalTransferStatus::NULL;
+    }
 
     foreach($client->getCompanies() as $company) {
       foreach($company->getLocations() as $location) {
@@ -241,7 +248,9 @@ class AnimalRepository extends BaseRepository
 
           $showAnimal = $animal->getIsAlive() == $isAlive
                      && $animal->getIsExportAnimal() == $isExported
-                     && $animal->getIsDepartedAnimal() == $isDeparted;
+                     && $animal->getIsDepartedAnimal() == $isDeparted
+                     && ($animal->getTransferState() == AnimalTransferStatus::NULL
+                      || $animal->getTransferState() == $transferState);
 
           if($showAnimal) {
               $animals[] = $animal;

@@ -6,7 +6,12 @@ use AppBundle\Component\Modifier\MessageModifier;
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Neuter;
+use AppBundle\Entity\Ram;
+use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
@@ -539,5 +544,15 @@ class APIController extends Controller implements APIControllerInterface
     $messageObjectWithRevokedRequestState = $messageObjectTobeRevoked->setRequestState(RequestStateType::REVOKING);
 
     $this->persist($messageObjectWithRevokedRequestState);
+  }
+
+  /**
+   * @param Animal|Ram|Ewe|Neuter $animal
+   */
+  public function persistAnimalTransferringStateAndFlush($animal)
+  {
+    $animal->setTransferState(AnimalTransferStatus::TRANSFERRING);
+    $this->getDoctrine()->getEntityManager()->persist($animal);
+    $this->getDoctrine()->getEntityManager()->flush();
   }
 }
