@@ -83,6 +83,7 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedClient->setRelationNumberKeeper("203719934");  //NOTE! Echte RelationNumberKeeper nodig voor successvolle IenR melding!
     self::$mockedClient->setUsername("Bartje");
     self::$mockedClient->setPassword($encoder->encodePassword(self::$mockedClient, "blauwetexelaar"));
+    self::$mockedClient->setCellphoneNumber("+31698765432");
 
     //For easy testing, keep the AccessToken the same for each run
     self::$mockedClient->setAccessToken("81a7a57abacc29ea18fcd270978c76055148a094");
@@ -116,6 +117,10 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedCompany->setBillingAddress(self::$mockedBillingAddress);
     self::$mockedCompany->setCompanyName("Boederij de weiland");
     self::$mockedCompany->setOwner(self::$mockedClient);
+    self::$mockedCompany->setBrsNumber("111111");
+    self::$mockedCompany->setKvkNumber("222222");
+    self::$mockedCompany->setBtwNumber("333333");
+    self::$mockedCompany->setTelephoneNumber("+313131313131");
 
     self::$mockedLocation = new Location();
     self::$mockedLocation->setAddress(self::$mockedLocationAddress);
