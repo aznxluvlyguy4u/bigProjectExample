@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -171,6 +172,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
     //Persist object to Database
     $this->persist($messageObject);
+    $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
 
     return new JsonResponse($messageArray, 200);
   }
@@ -242,6 +244,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($messageObject);
+    $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
 
     //Send it to the queue and persist/update any changed state to the database
     $messageArray = $this->sendEditMessageObjectToQueue($messageObject);

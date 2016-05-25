@@ -53,7 +53,6 @@ class LossMessageBuilder extends MessageBuilderBase
     {
         $animal = $declareLoss->getAnimal();
         $animal->setDateOfDeath($declareLoss->getDateOfDeath());
-        $animal->setIsAlive(false);
 
         $declareLoss->setAnimalType(AnimalType::sheep);
         $declareLoss->setAnimal($animal);

@@ -160,6 +160,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($messageObject);
+    $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
 
     //Send it to the queue and persist/update any changed state to the database
     $messageArray = $this->sendMessageObjectToQueue($messageObject);
@@ -217,6 +218,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
 
     //Send it to the queue and persist/update any changed state to the database
     $messageArray = $this->sendEditMessageObjectToQueue($messageObject);
+    $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
 
     //Persist object to Database
     $this->persist($messageObject);
