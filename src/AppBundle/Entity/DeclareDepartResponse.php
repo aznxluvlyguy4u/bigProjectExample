@@ -80,7 +80,7 @@ class DeclareDepartResponse extends DeclareBaseResponse {
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      */
-    private $reasonOfDeparture;
+    private $reasonOfDepart;
 
     /**
      * @var DeclareDepart
@@ -292,13 +292,13 @@ class DeclareDepartResponse extends DeclareBaseResponse {
     /**
      * Set reasonOfDeparture
      *
-     * @param string $reasonOfDeparture
+     * @param string $reasonOfDepart
      *
      * @return DeclareDepartResponse
      */
-    public function setReasonOfDeparture($reasonOfDeparture)
+    public function setReasonOfDepart($reasonOfDepart)
     {
-        $this->reasonOfDeparture = $reasonOfDeparture;
+        $this->reasonOfDepart = $reasonOfDepart;
 
         return $this;
     }
@@ -308,8 +308,8 @@ class DeclareDepartResponse extends DeclareBaseResponse {
      *
      * @return string
      */
-    public function getReasonOfDeparture()
+    public function getReasonOfDepart()
     {
-        return $this->reasonOfDeparture;
+        return $this->reasonOfDepart;
     }
 }
