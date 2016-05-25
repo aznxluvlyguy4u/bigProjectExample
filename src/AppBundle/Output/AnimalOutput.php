@@ -42,11 +42,11 @@ class AnimalOutput
             "pedigree_country_code" => $animal->getPedigreeCountryCode(),
             "pedigree_number" => $animal->getPedigreeNumber(),
             "work_number" => $animal->getAnimalOrderNumber(),
-            "collar_number" => "unknown", //TODO not available in phase 1
+//            "collar_number" => "unknown", //TODO not available in phase 1
             "gender" => $animal->getGender(),
             "date_of_birth" => $animal->getDateOfBirth(),
-            "breed_status" => "unknown", //TODO not available in phase 1
-            "inflow_date" => "unknown", //TODO not available in phase 1
+//            "breed_status" => "unknown", //TODO not available in phase 1
+//            "inflow_date" => "unknown", //TODO not available in phase 1
             "is_alive" => $animal->getIsAlive(),
             "is_departed_animal" => $animal->getIsDepartedAnimal(),
         );

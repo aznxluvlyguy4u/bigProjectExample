@@ -72,6 +72,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       $isAlive = null;
     }
 
+    //TODO Phase 2 Admin must be able to search all animals for which he is authorized.
+//    $x =  $this->getDoctrine()->getRepository('AppBundle:Employee')->findOneBy(array("accessToken" => $token));
+
     $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
     $client = $this->getAuthenticatedUser($request);
 
