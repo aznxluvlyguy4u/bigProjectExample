@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
 use AppBundle\Output\CompanyProfileOutput;
+use AppBundle\Output\LoginOutput;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -32,5 +33,19 @@ class ProfileAPIController extends APIController {
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
   }
 
+
+  /**
+   *
+   * Get info for login data view
+   * @Route("/login-info")
+   * @Method("GET")
+   */
+  public function getLoginDataIR(Request $request) {
+    $client = $this->getAuthenticatedUser($request);
+
+    $outputArray = LoginOutput::create($client);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+  }
 
 }
