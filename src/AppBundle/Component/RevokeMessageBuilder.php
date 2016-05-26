@@ -7,6 +7,7 @@ use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
@@ -59,13 +60,50 @@ class RevokeMessageBuilder extends MessageBuilderBase
      */
     private function addRevokeDeclarationData(RevokeDeclaration $revokeDeclaration, $person)
     {
+
+
         $messageNumber = $revokeDeclaration->getMessageNumber();
         $retrievedDeclaration = $this->entityGetter->getRequestMessageByMessageNumber($messageNumber);
 
+        // set both the requestID of the request to revoke AND the requestType of the request to revoke
+        //FIXME
+        $requestTypeToRevoke = $this->em->getClassMetadata(get_class($retrievedDeclaration))->getName();
+        $requestTypeToRevoke = str_replace("AppBundle\\Entity\\", "", $requestTypeToRevoke);
+
+        switch($requestTypeToRevoke) {
+            case RequestType::DECLARE_ARRIVAL_ENTITY:
+                $revokeDeclaration->setRequestTypeToRevoke(RequestType::DECLARE_ARRIVAL_ENTITY);
+                break;
+            case RequestType::DECLARE_LOSS_ENTITY:
+                $revokeDeclaration->setRequestTypeToRevoke(RequestType::DECLARE_LOSS_ENTITY);
+                break;
+            case RequestType::DECLARE_BIRTH_ENTITY:
+                $revokeDeclaration->setRequestTypeToRevoke(RequestType::DECLARE_BIRTH_ENTITY);
+                break;
+            case RequestType::DECLARE_ANIMAL_FLAG_ENTITY:
+                $revokeDeclaration->setRequestTypeToRevoke(RequestType::DECLARE_ANIMAL_FLAG_ENTITY);
+                break;
+            case RequestType::DECLARE_DEPART_ENTITY:
+                $revokeDeclaration->setRequestTypeToRevoke(RequestType::DECLARE_DEPART_ENTITY);
+                break;
+            case RequestType::DECLARE_TAGS_TRANSFER_ENTITY:
+                $revokeDeclaration->setRequestTypeToRevoke(RequestType::DECLARE_TAGS_TRANSFER_ENTITY);
+                break;
+            case RequestType::DECLARE_EXPORT_ENTITY:
+                $revokeDeclaration->setRequestTypeToRevoke(RequestType::DECLARE_EXPORT_ENTITY);
+                break;
+            case RequestType::DECLARE_IMPORT_ENTITY:
+                $revokeDeclaration->setRequestTypeToRevoke(RequestType::DECLARE_IMPORT_ENTITY);
+                break;
+            default:
+                break;
+        }
+
         //Set values
+        $revokeDeclaration->setRequestIdToRevoke($retrievedDeclaration->getRequestId());
         $revokeDeclaration->setRelationNumberKeeper($person->getRelationNumberKeeper());
         $revokeDeclaration->setUbn($retrievedDeclaration->getUbn());
-        $revokeDeclaration->setRequestIdToRevoke($retrievedDeclaration->getRequestId());
+        $revokeDeclaration->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
 
         //Set related request
         $retrievedDeclaration->setRevoke($revokeDeclaration);
