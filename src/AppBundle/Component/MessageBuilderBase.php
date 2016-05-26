@@ -116,7 +116,7 @@ class MessageBuilderBase
      *
      * @return string
      */
-    private function getNewRequestId()
+    public static function getNewRequestId()
     {
         return uniqid(mt_rand(0,999999));
     }
