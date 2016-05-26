@@ -39,7 +39,7 @@ class AnimalRepository extends BaseRepository
   {
     $animal = $this->findByUlnCountryCodeAndNumber($countryCode, $ulnOrPedigreeCode);
 
-    if($animal != null) {
+    if ($animal != null) {
       return $animal;
     } else { //Find animal through Animal pedigreeNumber
       $animal = $this->findByPedigreeCountryCodeAndNumber($countryCode, $ulnOrPedigreeCode);
@@ -55,7 +55,7 @@ class AnimalRepository extends BaseRepository
    */
   public function findByPedigreeCountryCodeAndNumber($countryCode, $pedigreeNumber)
   {
-    $animal = $this->findOneBy(array('pedigreeCountryCode'=>$countryCode, 'pedigreeNumber'=>$pedigreeNumber));
+    $animal = $this->findOneBy(array('pedigreeCountryCode' => $countryCode, 'pedigreeNumber' => $pedigreeNumber));
 
     return $animal;
   }
@@ -67,7 +67,7 @@ class AnimalRepository extends BaseRepository
    */
   public function findByUlnCountryCodeAndNumber($countryCode, $ulnNumber)
   {
-    $animal = $this->findOneBy(array('ulnCountryCode'=>$countryCode, 'ulnNumber'=>$ulnNumber));
+    $animal = $this->findOneBy(array('ulnCountryCode' => $countryCode, 'ulnNumber' => $ulnNumber));
 
     return $animal;
   }
@@ -113,7 +113,7 @@ class AnimalRepository extends BaseRepository
    */
   public function findByAnimal(Animal $animal = null)
   {
-    if($animal == null) {
+    if ($animal == null) {
       return null;
     }
 
@@ -121,8 +121,8 @@ class AnimalRepository extends BaseRepository
     $number = $animal->getUlnNumber();
     $retrievedAnimal = $this->findByUlnCountryCodeAndNumber($countryCode, $number);
 
-    if($retrievedAnimal != null) {
-        return $retrievedAnimal;
+    if ($retrievedAnimal != null) {
+      return $retrievedAnimal;
     } else {
       $countryCode = $animal->getPedigreeCountryCode();
       $number = $animal->getPedigreeNumber();
@@ -156,7 +156,7 @@ class AnimalRepository extends BaseRepository
       if ($animalType == null && $isAlive == null) {
         $animals = $this->findByTypeOrState(null, $filterArray);
 
-      //filter animals by given isAlive state:{true, false}, belonging to user
+        //filter animals by given isAlive state:{true, false}, belonging to user
       } else if ($animalType == null && $isAlive != null) {
         $filterArray = array(
             Constant::LOCATION_NAMESPACE => $location->getId(),
@@ -166,7 +166,7 @@ class AnimalRepository extends BaseRepository
       } else if ($animalType != null && $isAlive == null) {
         $animals = $this->findByTypeOrState($animalType, $filterArray);
 
-      //filter animals by given animal-type: {ram, ewe, neuter} and isAlive state: {true, false}, belonging to user
+        //filter animals by given animal-type: {ram, ewe, neuter} and isAlive state: {true, false}, belonging to user
       } else {
         $filterArray = array(
             Constant::LOCATION_NAMESPACE => $location->getId(),
@@ -191,7 +191,7 @@ class AnimalRepository extends BaseRepository
     $pedigreeExists = array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalArray) &&
         array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalArray);
 
-    if($ulnExists) {
+    if ($ulnExists) {
       $numberToCheck = $animalArray[Constant::ULN_NUMBER_NAMESPACE];
       $countryCodeToCheck = $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
 
@@ -203,21 +203,21 @@ class AnimalRepository extends BaseRepository
       return null;
     }
 
-    foreach($client->getCompanies() as $company) {
-      foreach($company->getLocations() as $location) {
-        foreach($location->getAnimals() as $animal) {
+    foreach ($client->getCompanies() as $company) {
+      foreach ($company->getLocations() as $location) {
+        foreach ($location->getAnimals() as $animal) {
 
-          if($ulnExists) {
+          if ($ulnExists) {
             $ulnNumber = $animal->getUlnNumber();
             $ulnCountryCode = $animal->getUlnCountryCode();
-            if($ulnNumber == $numberToCheck && $ulnCountryCode == $countryCodeToCheck) {
+            if ($ulnNumber == $numberToCheck && $ulnCountryCode == $countryCodeToCheck) {
               return true;
             }
 
           } else if ($pedigreeExists) {
             $pedigreeNumber = $animal->getPedigreeNumber();
             $pedigreeCountryCode = $animal->getPedigreeCountryCode();
-            if($pedigreeNumber == $numberToCheck && $pedigreeCountryCode == $countryCodeToCheck) {
+            if ($pedigreeNumber == $numberToCheck && $pedigreeCountryCode == $countryCodeToCheck) {
               return true;
             }
           }
@@ -237,24 +237,24 @@ class AnimalRepository extends BaseRepository
   {
     $animals = array();
 
-    if($showTransferring) {
+    if ($showTransferring) {
       $transferState = AnimalTransferStatus::TRANSFERRING;
     } else {
       $transferState = AnimalTransferStatus::NULL;
     }
 
-    foreach($client->getCompanies() as $company) {
-      foreach($company->getLocations() as $location) {
-        foreach($location->getAnimals() as $animal) {
+    foreach ($client->getCompanies() as $company) {
+      foreach ($company->getLocations() as $location) {
+        foreach ($location->getAnimals() as $animal) {
 
           $showAnimal = $animal->getIsAlive() == $isAlive
-                     && $animal->getIsExportAnimal() == $isExported
-                     && $animal->getIsDepartedAnimal() == $isDeparted
-                     && ($animal->getTransferState() == AnimalTransferStatus::NULL
-                      || $animal->getTransferState() == $transferState);
+              && $animal->getIsExportAnimal() == $isExported
+              && $animal->getIsDepartedAnimal() == $isDeparted
+              && ($animal->getTransferState() == AnimalTransferStatus::NULL
+                  || $animal->getTransferState() == $transferState);
 
-          if($showAnimal) {
-              $animals[] = $animal;
+          if ($showAnimal) {
+            $animals[] = $animal;
           }
 
         }
@@ -273,18 +273,18 @@ class AnimalRepository extends BaseRepository
   {
     $uln = Utils::getUlnFromString($ulnString);
 
-    if($uln == null) { //invalid input for $ulnString
+    if ($uln == null) { //invalid input for $ulnString
       return null;
     }
 
-    foreach($client->getCompanies() as $company) {
-      foreach($company->getLocations() as $location) {
-        foreach($location->getAnimals() as $animal) {
+    foreach ($client->getCompanies() as $company) {
+      foreach ($company->getLocations() as $location) {
+        foreach ($location->getAnimals() as $animal) {
 
           $showAnimal = $animal->getUlnCountryCode() == $uln[Constant::ULN_COUNTRY_CODE_NAMESPACE]
-                     && $animal->getUlnNumber() == $uln[Constant::ULN_NUMBER_NAMESPACE];
+              && $animal->getUlnNumber() == $uln[Constant::ULN_NUMBER_NAMESPACE];
 
-          if($showAnimal) {
+          if ($showAnimal) {
             return $animal;
           }
 
@@ -293,91 +293,5 @@ class AnimalRepository extends BaseRepository
     }
 
     return null;
-  }
-
-  /**
-   * Return an ArrayCollection with keys:
-   * - pedigree
-   * - non-pedigree
-   * - total
-   * having an integer value for the amount of animals in that category.
-   *
-   * @param Client $client
-   * @return ArrayCollection
-   */
-  public function getLiveStockCount(Client $client)
-  {
-
-    //Settings
-    $isAlive = true;
-    $isDepartedOption = false;
-    $isExportedOption = false;
-    $countTransferring = false;
-
-    if($countTransferring) {
-      $transferState = AnimalTransferStatus::TRANSFERRING;
-    } else {
-      $transferState = AnimalTransferStatus::NULL;
-    }
-
-    //Initialize counters
-    $pedigreeAdults = 0;
-    $pedigreeLambs = 0;
-    $nonPedigreeAdults = 0;
-    $nonPedigreeLambs = 0;
-
-    $adultDateOfBirthLimit = Utils::getAdultDateOfBirthLimit();
-
-    foreach($client->getCompanies() as $company) {
-      foreach($company->getLocations() as $location) {
-        foreach($location->getAnimals() as $animal) {
-
-          $isOwnedAnimal = $animal->getIsAlive() == $isAlive
-              && $animal->getIsExportAnimal() == $isExportedOption
-              && $animal->getIsDepartedAnimal() == $isDepartedOption
-              && ($animal->getTransferState() == AnimalTransferStatus::NULL
-                  || $animal->getTransferState() == $transferState);
-
-          $isPedigree = $animal->getPedigreeCountryCode() != null
-                     && $animal->getPedigreeNumber() != null;
-
-          $dateOfBirth = $animal->getDateOfBirth();
-
-          if($isOwnedAnimal) {
-            if($isPedigree) {
-              if($dateOfBirth > $adultDateOfBirthLimit) { // is under 1 years old
-                $pedigreeLambs++;
-              } else { // is adult
-                $pedigreeAdults++;
-              }
-
-            } else { //is non-pedigree
-              if($dateOfBirth > $adultDateOfBirthLimit) { // is under 1 years old
-                $nonPedigreeLambs++;
-              } else { // is adult
-                $nonPedigreeAdults++;
-              }
-            }
-          }
-
-        }
-      }
-    }
-
-    $pedigreeTotal = $pedigreeAdults + $pedigreeLambs;
-    $nonPedigreeTotal = $nonPedigreeAdults + $nonPedigreeLambs;
-
-    $count = new ArrayCollection();
-    $count->set(LiveStockType::PEDIGREE_ADULT, $pedigreeAdults);
-    $count->set(LiveStockType::PEDIGREE_LAMB, $pedigreeLambs);
-    $count->set(LiveStockType::PEDIGREE_TOTAL, $pedigreeTotal);
-    $count->set(LiveStockType::NON_PEDIGREE_ADULT, $nonPedigreeAdults);
-    $count->set(LiveStockType::NON_PEDIGREE_LAMB, $nonPedigreeLambs);
-    $count->set(LiveStockType::NON_PEDIGREE_TOTAL, $nonPedigreeTotal);
-    $count->set(LiveStockType::ADULT, $nonPedigreeAdults + $pedigreeAdults);
-    $count->set(LiveStockType::LAMB, $nonPedigreeLambs + $pedigreeLambs);
-    $count->set(LiveStockType::TOTAL, $nonPedigreeTotal + $pedigreeTotal);
-
-    return $count;
   }
 }

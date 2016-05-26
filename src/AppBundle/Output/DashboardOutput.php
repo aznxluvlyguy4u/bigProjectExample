@@ -2,7 +2,9 @@
 
 namespace AppBundle\Output;
 use AppBundle\Entity\Client;
+use AppBundle\Component\Count;
 use AppBundle\Enumerator\LiveStockType;
+use AppBundle\Enumerator\RequestType;
 use Doctrine\Common\Collections\ArrayCollection;
 
 
@@ -16,8 +18,12 @@ class DashboardOutput
      * @param ArrayCollection $liveStockCount
      * @return array
      */
-    public static function create(Client $client, ArrayCollection $liveStockCount)
+    public static function create(Client $client, ArrayCollection $declarationLogDate)
     {
+        $liveStockCount = Count::getLiveStockCount($client);
+        $errorCounts = Count::getErrorCountDeclarations($client);
+        $unassignedTagsCount = Count::getUnassignedTagsCount($client);
+
         $ubn = $client->getCompanies()->get(0)->getLocations()->get(0)->getUbn(); //TODO Phase 2+ select proper location
 
         $result = array(
@@ -56,18 +62,18 @@ class DashboardOutput
                   ),
                   "arrival" => //including import
                   array(
-                      "date_last_declaration" => "",
-                      "error_count" => ""
+                      "date_last_declaration" => $declarationLogDate->get(RequestType::DECLARE_ARRIVAL_ENTITY),
+                      "error_count" => $errorCounts->get(RequestType::DECLARE_ARRIVAL)
                   ),
                   "depart" => //including export
                   array(
-                      "date_last_declaration" => "",
-                      "error_count" => ""
+                      "date_last_declaration" => $declarationLogDate->get(RequestType::DECLARE_DEPART_ENTITY),
+                      "error_count" => $errorCounts->get(RequestType::DECLARE_DEPART)
                   ),
                   "birth" =>
                   array(
-                      "date_last_declaration" => "",
-                      "error_count" => ""
+                      "date_last_declaration" => $declarationLogDate->get(RequestType::DECLARE_BIRTH_ENTITY),
+                      "error_count" => $errorCounts->get(RequestType::DECLARE_BIRTH)
                   ),
                   "mate" =>
                   array(
@@ -76,13 +82,13 @@ class DashboardOutput
                   ),
                   "loss" =>
                   array(
-                      "date_last_declaration" => "",
-                      "error_count" => ""
+                      "date_last_declaration" => $declarationLogDate->get(RequestType::DECLARE_LOSS_ENTITY),
+                      "error_count" => $errorCounts->get(RequestType::DECLARE_LOSS)
                   ),
                   "tag_transfer" =>
                   array(
-                      "date_last_declaration" => "",
-                      "unassigned_tags" => ""
+                      "date_last_declaration" => $declarationLogDate->get(RequestType::DECLARE_TAGS_TRANSFER_ENTITY),
+                      "unassigned_tags" => $unassignedTagsCount
                   )
         );
 
