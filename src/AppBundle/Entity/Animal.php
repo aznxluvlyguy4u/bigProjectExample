@@ -86,7 +86,7 @@ abstract class Animal
     /**
      * @var DateTime
      *
-     * @ORM\Column(type="date", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
      * @Expose
