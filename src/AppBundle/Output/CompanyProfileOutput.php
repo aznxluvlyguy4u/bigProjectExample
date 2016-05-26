@@ -44,23 +44,25 @@ class CompanyProfileOutput
                     "billing_address" =>
                         array(
                             "street_name" => $billingAddress->getStreetName(),
+                            "suffix" => $billingAddress->getAddressNumberSuffix(),
                             "address_number" => $billingAddress->getAddressNumber(),
                             "postal_code" => $billingAddress->getPostalCode(),
                             "city" => $billingAddress->getCity()
+                        ),
+                    "address" =>
+                        array(
+                            "street_name" => $address->getStreetName(),
+                            "address_number" => $address->getAddressNumber(),
+                            "suffix" => $address->getAddressNumberSuffix(),
+                            "postal_code" => $address->getPostalCode(),
+                            "city" => $address->getCity()
+                        ),
+                    "contact_person" =>
+                        array(
+                            "first_name" => $client->getFirstName(),
+                            "last_name" => $client->getLastName(),
+                            "cellphone_number" => $client->getCellphoneNumber()
                         )
-                ),
-            "location" =>
-                array(
-                    "street_name" => $address->getStreetName(),
-                    "address_number" => $address->getAddressNumber(),
-                    "postal_code" => $address->getPostalCode(),
-                    "city" => $address->getCity()
-                ),
-            "client" =>
-                array(
-                    "first_name" => $client->getFirstName(),
-                    "last_name" => $client->getLastName(),
-                    "cellphone_number" => $client->getCellphoneNumber()
                 )
         );
 
