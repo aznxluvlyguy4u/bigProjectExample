@@ -97,7 +97,6 @@ class RevokeDeclaration extends DeclareBase
      */
     private $messageNumber;
 
-
     /**
      * @ORM\Column(type="string")
      * @Assert\NotBlank
@@ -105,6 +104,14 @@ class RevokeDeclaration extends DeclareBase
      * @Expose
      */
     private $requestIdToRevoke;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $requestTypeToRevoke;
     
     /**
      * constructor.
@@ -335,5 +342,29 @@ class RevokeDeclaration extends DeclareBase
     public function getRequestIdToRevoke()
     {
         return $this->requestIdToRevoke;
+    }
+
+    /**
+     * Set requestTypeToRevoke
+     *
+     * @param string $requestTypeToRevoke
+     *
+     * @return RevokeDeclaration
+     */
+    public function setRequestTypeToRevoke($requestTypeToRevoke)
+    {
+        $this->requestTypeToRevoke = $requestTypeToRevoke;
+
+        return $this;
+    }
+
+    /**
+     * Get requestTypeToRevoke
+     *
+     * @return string
+     */
+    public function getRequestTypeToRevoke()
+    {
+        return $this->requestTypeToRevoke;
     }
 }
