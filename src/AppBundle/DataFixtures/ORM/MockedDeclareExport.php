@@ -111,8 +111,8 @@ class MockedDeclareExport implements FixtureInterface, ContainerAwareInterface, 
         self::$mockedExport = $exportRepository->findAll()['0'];
 
         //Create Responses
-        $messageNumberFailedResponse = uniqid(mt_rand(0,99));
-        $messageNumberSuccessResponse = uniqid(mt_rand(0,99));
+        $messageNumberFailedResponse = mt_rand(0,99999999999999);
+        $messageNumberSuccessResponse = mt_rand(0,99999999999999);
 
         //It is necessary to retrieve the DeclareExport entity from the Repository first
         $declareExport = $exportRepository->findAll()['0'];
