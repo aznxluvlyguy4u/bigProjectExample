@@ -13,309 +13,439 @@ use JMS\Serializer\Annotation as JMS;
  */
 class TagTransferItemResponse {
 
-  /**
-   * @var integer
-   *
-   * @ORM\Id
-   * @ORM\Column(type="integer")
-   * @ORM\GeneratedValue(strategy="AUTO")
-   */
-  private $id;
+    /**
+     * @var integer
+     *
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
 
-  /**
-   * @var integer
-   * @ORM\Column(type="integer")
-   * @Assert\NotBlank
-   */
-  private $animalType;
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=false)
+     */
+    private $ulnNumber;
 
-  /**
-   * @var string
-   * @JMS\Type("string")
-   * @ORM\Column(type="string", nullable=false)
-   */
-  private $ulnNumber;
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=false)
+     */
+    private $ulnCountryCode;
 
-  /**
-   * @var string
-   * @JMS\Type("string")
-   * @ORM\Column(type="string", nullable=false)
-   */
-  private $ulnCountryCode;
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=false)
+     */
+    private $ubnNewOwner;
 
-  /**
-   * @var string
-   * @JMS\Type("string")
-   * @ORM\Column(type="string", nullable=true)
-   */
-  private $animalOrderNumber;
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=false)
+     */
+    private $relationNumberAcceptant;
 
-  /**
-   * @var string;
-   *
-   * @ORM\Column(type="string", nullable=true)
-   *
-   */
-  private $errorCode;
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private $animalOrderNumber;
 
-  /**
-   * @var string
-   *
-   * @ORM\Column(type="string", nullable=true)
-   */
-  private $errorMessage;
+    /**
+     * @var string;
+     *
+     * @ORM\Column(type="string", nullable=true)
+     *
+     */
+    private $errorCode;
 
-  /**
-   * @var string
-   *
-   * @ORM\Column(type="string", nullable=true)
-   * @Assert\Length(max = 1)
-   */
-  private $errorKindIndicator;
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private $errorMessage;
 
-  /**
-   * @var string
-   *
-   * @ORM\Column(type="string", nullable=true)
-   * @Assert\Length(max = 1)
-   */
-  private $successIndicator;
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 1)
+     */
+    private $errorKindIndicator;
 
-  /**
-   * @ORM\Column(type="string", nullable=true)
-   * @Assert\Length(max = 15)
-   * @JMS\Type("string")
-   */
-  protected $messageNumber;
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 1)
+     */
+    private $successIndicator;
 
-  function __construct()
-  {
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 15)
+     * @JMS\Type("string")
+     */
+    private $messageNumber;
 
-  }
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     */
+    private $isRemovedByUser;
 
-  /**
-   * Get id
-   *
-   * @return integer
-   */
-  public function getId()
-  {
-    return $this->id;
-  }
+    /**
+     * @ORM\Column(type="datetime")
+     * @Assert\Date
+     * @Assert\NotBlank
+     * @JMS\Type("DateTime")
+     */
+    private $logDate;
 
-  /**
-   * Set animalType
-   *
-   * @param integer $animalType
-   *
-   * @return TagTransferItemResponse
-   */
-  public function setAnimalType($animalType)
-  {
-    $this->animalType = $animalType;
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    private $requestState;
 
-    return $this;
-  }
 
-  /**
-   * Get animalType
-   *
-   * @return integer
-   */
-  public function getAnimalType()
-  {
-    return $this->animalType;
-  }
+    /*
+     *
+     */
+    function __construct()
+    {
+        $this->logDate = new \DateTime();
+    }
 
-  /**
-   * Set ulnNumber
-   *
-   * @param string $ulnNumber
-   *
-   * @return TagTransferItemResponse
-   */
-  public function setUlnNumber($ulnNumber)
-  {
-    $this->ulnNumber = $ulnNumber;
+    /**
+     * Get id
+     *
+     * @return integer
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
 
-    return $this;
-  }
+    /**
+     * Set ulnNumber
+     *
+     * @param string $ulnNumber
+     *
+     * @return TagTransferItemResponse
+     */
+    public function setUlnNumber($ulnNumber)
+    {
+        $this->ulnNumber = $ulnNumber;
 
-  /**
-   * Get ulnNumber
-   *
-   * @return string
-   */
-  public function getUlnNumber()
-  {
-    return $this->ulnNumber;
-  }
+        return $this;
+    }
 
-  /**
-   * Set ulnCountryCode
-   *
-   * @param string $ulnCountryCode
-   *
-   * @return TagTransferItemResponse
-   */
-  public function setUlnCountryCode($ulnCountryCode)
-  {
-    $this->ulnCountryCode = $ulnCountryCode;
+    /**
+     * Get ulnNumber
+     *
+     * @return string
+     */
+    public function getUlnNumber()
+    {
+        return $this->ulnNumber;
+    }
 
-    return $this;
-  }
+    /**
+     * Set ulnCountryCode
+     *
+     * @param string $ulnCountryCode
+     *
+     * @return TagTransferItemResponse
+     */
+    public function setUlnCountryCode($ulnCountryCode)
+    {
+        $this->ulnCountryCode = $ulnCountryCode;
 
-  /**
-   * Get ulnCountryCode
-   *
-   * @return string
-   */
-  public function getUlnCountryCode()
-  {
-    return $this->ulnCountryCode;
-  }
+        return $this;
+    }
 
-  /**
-   * Set animalOrderNumber
-   *
-   * @param string $animalOrderNumber
-   *
-   * @return TagTransferItemResponse
-   */
-  public function setAnimalOrderNumber($animalOrderNumber)
-  {
-    $this->animalOrderNumber = $animalOrderNumber;
+    /**
+     * Get ulnCountryCode
+     *
+     * @return string
+     */
+    public function getUlnCountryCode()
+    {
+        return $this->ulnCountryCode;
+    }
 
-    return $this;
-  }
+    /**
+     * Set ubnNewOwner
+     *
+     * @param string $ubnNewOwner
+     *
+     * @return TagTransferItemResponse
+     */
+    public function setUbnNewOwner($ubnNewOwner)
+    {
+        $this->ubnNewOwner = $ubnNewOwner;
 
-  /**
-   * Get animalOrderNumber
-   *
-   * @return string
-   */
-  public function getAnimalOrderNumber()
-  {
-    return $this->animalOrderNumber;
-  }
+        return $this;
+    }
 
-  /**
-   * Set errorCode
-   *
-   * @param string $errorCode
-   *
-   * @return TagTransferItemResponse
-   */
-  public function setErrorCode($errorCode)
-  {
-    $this->errorCode = $errorCode;
+    /**
+     * Get ubnNewOwner
+     *
+     * @return string
+     */
+    public function getUbnNewOwner()
+    {
+        return $this->ubnNewOwner;
+    }
 
-    return $this;
-  }
+    /**
+     * Set relationNumberAcceptant
+     *
+     * @param string $relationNumberAcceptant
+     *
+     * @return TagTransferItemResponse
+     */
+    public function setRelationNumberAcceptant($relationNumberAcceptant)
+    {
+        $this->relationNumberAcceptant = $relationNumberAcceptant;
 
-  /**
-   * Get errorCode
-   *
-   * @return string
-   */
-  public function getErrorCode()
-  {
-    return $this->errorCode;
-  }
+        return $this;
+    }
 
-  /**
-   * Set errorMessage
-   *
-   * @param string $errorMessage
-   *
-   * @return TagTransferItemResponse
-   */
-  public function setErrorMessage($errorMessage)
-  {
-    $this->errorMessage = $errorMessage;
+    /**
+     * Get relationNumberAcceptant
+     *
+     * @return string
+     */
+    public function getRelationNumberAcceptant()
+    {
+        return $this->relationNumberAcceptant;
+    }
 
-    return $this;
-  }
+    /**
+     * Set animalOrderNumber
+     *
+     * @param string $animalOrderNumber
+     *
+     * @return TagTransferItemResponse
+     */
+    public function setAnimalOrderNumber($animalOrderNumber)
+    {
+        $this->animalOrderNumber = $animalOrderNumber;
 
-  /**
-   * Get errorMessage
-   *
-   * @return string
-   */
-  public function getErrorMessage()
-  {
-    return $this->errorMessage;
-  }
+        return $this;
+    }
 
-  /**
-   * Set errorKindIndicator
-   *
-   * @param string $errorKindIndicator
-   *
-   * @return TagTransferItemResponse
-   */
-  public function setErrorKindIndicator($errorKindIndicator)
-  {
-    $this->errorKindIndicator = $errorKindIndicator;
+    /**
+     * Get animalOrderNumber
+     *
+     * @return string
+     */
+    public function getAnimalOrderNumber()
+    {
+        return $this->animalOrderNumber;
+    }
 
-    return $this;
-  }
+    /**
+     * Set errorCode
+     *
+     * @param string $errorCode
+     *
+     * @return TagTransferItemResponse
+     */
+    public function setErrorCode($errorCode)
+    {
+        $this->errorCode = $errorCode;
 
-  /**
-   * Get errorKindIndicator
-   *
-   * @return string
-   */
-  public function getErrorKindIndicator()
-  {
-    return $this->errorKindIndicator;
-  }
+        return $this;
+    }
 
-  /**
-   * Set successIndicator
-   *
-   * @param string $successIndicator
-   *
-   * @return TagTransferItemResponse
-   */
-  public function setSuccessIndicator($successIndicator)
-  {
-    $this->successIndicator = $successIndicator;
+    /**
+     * Get errorCode
+     *
+     * @return string
+     */
+    public function getErrorCode()
+    {
+        return $this->errorCode;
+    }
 
-    return $this;
-  }
+    /**
+     * Set errorMessage
+     *
+     * @param string $errorMessage
+     *
+     * @return TagTransferItemResponse
+     */
+    public function setErrorMessage($errorMessage)
+    {
+        $this->errorMessage = $errorMessage;
 
-  /**
-   * Get successIndicator
-   *
-   * @return string
-   */
-  public function getSuccessIndicator()
-  {
-    return $this->successIndicator;
-  }
+        return $this;
+    }
 
-  /**
-   * Set messageNumber
-   *
-   * @param string $messageNumber
-   *
-   * @return TagTransferItemResponse
-   */
-  public function setMessageNumber($messageNumber)
-  {
-    $this->messageNumber = $messageNumber;
+    /**
+     * Get errorMessage
+     *
+     * @return string
+     */
+    public function getErrorMessage()
+    {
+        return $this->errorMessage;
+    }
 
-    return $this;
-  }
+    /**
+     * Set errorKindIndicator
+     *
+     * @param string $errorKindIndicator
+     *
+     * @return TagTransferItemResponse
+     */
+    public function setErrorKindIndicator($errorKindIndicator)
+    {
+        $this->errorKindIndicator = $errorKindIndicator;
 
-  /**
-   * Get messageNumber
-   *
-   * @return string
-   */
-  public function getMessageNumber()
-  {
-    return $this->messageNumber;
-  }
+        return $this;
+    }
+
+    /**
+     * Get errorKindIndicator
+     *
+     * @return string
+     */
+    public function getErrorKindIndicator()
+    {
+        return $this->errorKindIndicator;
+    }
+
+    /**
+     * Set successIndicator
+     *
+     * @param string $successIndicator
+     *
+     * @return TagTransferItemResponse
+     */
+    public function setSuccessIndicator($successIndicator)
+    {
+        $this->successIndicator = $successIndicator;
+
+        return $this;
+    }
+
+    /**
+     * Get successIndicator
+     *
+     * @return string
+     */
+    public function getSuccessIndicator()
+    {
+        return $this->successIndicator;
+    }
+
+    /**
+     * Set messageNumber
+     *
+     * @param string $messageNumber
+     *
+     * @return TagTransferItemResponse
+     */
+    public function setMessageNumber($messageNumber)
+    {
+        $this->messageNumber = $messageNumber;
+
+        return $this;
+    }
+
+    /**
+     * Get messageNumber
+     *
+     * @return string
+     */
+    public function getMessageNumber()
+    {
+        return $this->messageNumber;
+    }
+
+    /**
+     * Set isRemovedByUser
+     *
+     * @param boolean $isRemovedByUser
+     *
+     * @return TagTransferItemResponse
+     */
+    public function setIsRemovedByUser($isRemovedByUser)
+    {
+        $this->isRemovedByUser = $isRemovedByUser;
+
+        return $this;
+    }
+
+    /**
+     * Get isRemovedByUser
+     *
+     * @return boolean
+     */
+    public function getIsRemovedByUser()
+    {
+        return $this->isRemovedByUser;
+    }
+
+    /**
+     * Set logDate
+     *
+     * @param \DateTime $logDate
+     *
+     * @return TagTransferItemResponse
+     */
+    public function setLogDate($logDate)
+    {
+        $this->logDate = $logDate;
+
+        return $this;
+    }
+
+    /**
+     * Get logDate
+     *
+     * @return \DateTime
+     */
+    public function getLogDate()
+    {
+        return $this->logDate;
+    }
+
+    /**
+     * Set requestState
+     *
+     * @param string $requestState
+     *
+     * @return TagTransferItemResponse
+     */
+    public function setRequestState($requestState)
+    {
+        $this->requestState = $requestState;
+
+        return $this;
+    }
+
+    /**
+     * Get requestState
+     *
+     * @return string
+     */
+    public function getRequestState()
+    {
+        return $this->requestState;
+    }
 }

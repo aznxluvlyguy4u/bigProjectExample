@@ -69,15 +69,27 @@ class DeclareDepartResponse extends DeclareBaseResponse {
      */
     private $isExportAnimal;
 
-  /**
-   * @var DeclareDepart
-   *
-   * @Assert\NotBlank
-   * @ORM\ManyToOne(targetEntity="DeclareDepart", cascade={"persist"}, inversedBy="responses")
-   * @JMS\Type("AppBundle\Entity\DeclareDepart")
-   */
-  private $declareDepartRequestMessage;
-//JColumn(name="declare_depart_request_message_id", referencedColumnName="id")
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     */
+    private $isDepartedAnimal;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $reasonOfDepart;
+
+    /**
+     * @var DeclareDepart
+     *
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="DeclareDepart", cascade={"persist"}, inversedBy="responses")
+     * @JMS\Type("AppBundle\Entity\DeclareDepart")
+     */
+    private $declareDepartRequestMessage;
 
     /**
      * Set declareDepartRequestMessage
@@ -252,4 +264,52 @@ class DeclareDepartResponse extends DeclareBaseResponse {
 
 
 
+
+    /**
+     * Set isDepartedAnimal
+     *
+     * @param boolean $isDepartedAnimal
+     *
+     * @return DeclareDepartResponse
+     */
+    public function setIsDepartedAnimal($isDepartedAnimal)
+    {
+        $this->isDepartedAnimal = $isDepartedAnimal;
+
+        return $this;
+    }
+
+    /**
+     * Get isDepartedAnimal
+     *
+     * @return boolean
+     */
+    public function getIsDepartedAnimal()
+    {
+        return $this->isDepartedAnimal;
+    }
+
+    /**
+     * Set reasonOfDeparture
+     *
+     * @param string $reasonOfDepart
+     *
+     * @return DeclareDepartResponse
+     */
+    public function setReasonOfDepart($reasonOfDepart)
+    {
+        $this->reasonOfDepart = $reasonOfDepart;
+
+        return $this;
+    }
+
+    /**
+     * Get reasonOfDeparture
+     *
+     * @return string
+     */
+    public function getReasonOfDepart()
+    {
+        return $this->reasonOfDepart;
+    }
 }

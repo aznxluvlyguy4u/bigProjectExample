@@ -2,6 +2,8 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Component\MessageBuilderBase;
+use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -25,9 +27,13 @@ class DeclareTagsTransfer extends DeclareBase
     private $tags;
 
     /**
-     * @var array
+     * @ORM\ManyToMany(targetEntity="TagTransferItemRequest", cascade={"persist"})
+     * @ORM\JoinTable(name="transfer_requests",
+     *      joinColumns={@ORM\JoinColumn(name="declare_tags_transfer_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="tag_transfer_item_request_id", referencedColumnName="id", unique=true)}
+     *      )
      */
-    private $tagsNotTransferred;
+    private $tagTransferRequests;
 
     /**
      * @var string
@@ -90,6 +96,22 @@ class DeclareTagsTransfer extends DeclareBase
     public function addTag(\AppBundle\Entity\Tag $tag)
     {
         $this->tags[] = $tag;
+
+        if($this->requestId == null) {
+            $this->setRequestId(MessageBuilderBase::getNewRequestId());
+        }
+
+        $tagTransferItemRequest = new TagTransferItemRequest();
+        $tagTransferItemRequest->setRequestId($this->getRequestId());
+        $tagTransferItemRequest->setMessageId($this->getMessageId());
+        $tagTransferItemRequest->setRequestState(RequestStateType::OPEN);
+        $tagTransferItemRequest->setAnimalType(AnimalType::sheep);
+        $tagTransferItemRequest->setRelationNumberAcceptant($this->relationNumberAcceptant);
+        $tagTransferItemRequest->setUbnNewOwner($this->ubnNewOwner);
+        $tagTransferItemRequest->setUlnCountryCode($tag->getUlnCountryCode());
+        $tagTransferItemRequest->setUlnNumber($tag->getUlnNumber());
+
+        $this->addTagTransferRequest($tagTransferItemRequest);
 
         return $this;
     }
@@ -219,5 +241,39 @@ class DeclareTagsTransfer extends DeclareBase
     public function getUbnNewOwner()
     {
         return $this->ubnNewOwner;
+    }
+
+    /**
+     * Add tagTransferRequest
+     *
+     * @param \AppBundle\Entity\TagTransferItemRequest $tagTransferRequest
+     *
+     * @return DeclareTagsTransfer
+     */
+    public function addTagTransferRequest(\AppBundle\Entity\TagTransferItemRequest $tagTransferRequest)
+    {
+        $this->tagTransferRequests[] = $tagTransferRequest;
+
+        return $this;
+    }
+
+    /**
+     * Remove tagTransferRequest
+     *
+     * @param \AppBundle\Entity\TagTransferItemRequest $tagTransferRequest
+     */
+    public function removeTagTransferRequest(\AppBundle\Entity\TagTransferItemRequest $tagTransferRequest)
+    {
+        $this->tagTransferRequests->removeElement($tagTransferRequest);
+    }
+
+    /**
+     * Get tagTransferRequests
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getTagTransferRequests()
+    {
+        return $this->tagTransferRequests;
     }
 }
