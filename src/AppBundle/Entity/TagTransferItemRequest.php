@@ -92,6 +92,13 @@ class TagTransferItemRequest {
      */
     private $requestState;
 
+    /**
+     * @var Tag
+     * @ORM\OneToOne(targetEntity="Tag", cascade={"persist"})
+     * @ORM\JoinColumn(name="tag_id", referencedColumnName="id", nullable=true)
+     * @JMS\Type("AppBundle\Entity\Tag")
+     */
+    private $tag;
 
     /**
      * @ORM\ManyToMany(targetEntity="TagTransferItemResponse")
@@ -369,5 +376,29 @@ class TagTransferItemRequest {
     public function getResponses()
     {
         return $this->responses;
+    }
+
+    /**
+     * Set tag
+     *
+     * @param \AppBundle\Entity\Tag $tag
+     *
+     * @return TagTransferItemRequest
+     */
+    public function setTag(\AppBundle\Entity\Tag $tag = null)
+    {
+        $this->tag = $tag;
+
+        return $this;
+    }
+
+    /**
+     * Get tag
+     *
+     * @return \AppBundle\Entity\Tag
+     */
+    public function getTag()
+    {
+        return $this->tag;
     }
 }
