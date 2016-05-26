@@ -117,9 +117,9 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedCompany->setBillingAddress(self::$mockedBillingAddress);
     self::$mockedCompany->setCompanyName("Boederij de weiland");
     self::$mockedCompany->setOwner(self::$mockedClient);
-    self::$mockedCompany->setBrsNumber("111111");
-    self::$mockedCompany->setKvkNumber("222222");
-    self::$mockedCompany->setBtwNumber("333333");
+    self::$mockedCompany->setCompanyRelationNumber("111111");
+    self::$mockedCompany->setChamberOfCommerceNumber("222222");
+    self::$mockedCompany->setVatNumber("333333");
     self::$mockedCompany->setTelephoneNumber("+313131313131");
 
     self::$mockedLocation = new Location();

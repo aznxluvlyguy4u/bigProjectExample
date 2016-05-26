@@ -37,10 +37,10 @@ class CompanyProfileOutput
                 array(
                     "company_name" => $company->getCompanyName(),
                     "telephone_number" => $company->getTelephoneNumber(),
-                    "ubn" => $location->getUbn(), //TODO verify Uniek bedrijfsnummber === ubn
-                    "btw_number" => $company->getBtwNumber(),
-                    "kvk_number" => $company->getKvkNumber(),
-                    "brs_number" => $company->getBrsNumber(),
+                    "ubn" => $location->getUbn(),
+                    "vat_number" => $company->getVatNumber(),
+                    "chamber_of_commerce_number" => $company->getChamberOfCommerceNumber(),
+                    "company_relation_number" => $company->getCompanyRelationNumber(),
                     "billing_address" =>
                         array(
                             "street_name" => $billingAddress->getStreetName(),

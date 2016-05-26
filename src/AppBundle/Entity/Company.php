@@ -37,7 +37,7 @@ class Company
    * @ORM\Column(type="string", nullable=true)
    * @JMS\Type("string")
    */
-  private $btwNumber;
+  private $vatNumber;
 
   /**
    * @var string
@@ -45,7 +45,7 @@ class Company
    * @ORM\Column(type="string", nullable=true)
    * @JMS\Type("string")
    */
-  private $kvkNumber;
+  private $chamberOfCommerceNumber;
 
   /**
    * @var string
@@ -53,7 +53,7 @@ class Company
    * @ORM\Column(type="string", nullable=true)
    * @JMS\Type("string")
    */
-  private $brsNumber;
+  private $companyRelationNumber;
 
   /**
    * @var ArrayCollection
@@ -249,49 +249,49 @@ class Company
     /**
      * @return string
      */
-    public function getBtwNumber()
+    public function getVatNumber()
     {
-        return $this->btwNumber;
+        return $this->vatNumber;
     }
 
     /**
-     * @param string $btwNumber
+     * @param string $vatNumber
      */
-    public function setBtwNumber($btwNumber)
+    public function setVatNumber($vatNumber)
     {
-        $this->btwNumber = $btwNumber;
-    }
-
-    /**
-     * @return string
-     */
-    public function getKvkNumber()
-    {
-        return $this->kvkNumber;
-    }
-
-    /**
-     * @param string $kvkNumber
-     */
-    public function setKvkNumber($kvkNumber)
-    {
-        $this->kvkNumber = $kvkNumber;
+        $this->vatNumber = $vatNumber;
     }
 
     /**
      * @return string
      */
-    public function getBrsNumber()
+    public function getChamberOfCommerceNumber()
     {
-        return $this->brsNumber;
+        return $this->chamberOfCommerceNumber;
     }
 
     /**
-     * @param string $brsNumber
+     * @param string $chamberOfCommerceNumber
      */
-    public function setBrsNumber($brsNumber)
+    public function setChamberOfCommerceNumber($chamberOfCommerceNumber)
     {
-        $this->brsNumber = $brsNumber;
+        $this->chamberOfCommerceNumber = $chamberOfCommerceNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyRelationNumber()
+    {
+        return $this->companyRelationNumber;
+    }
+
+    /**
+     * @param string $companyRelationNumber
+     */
+    public function setCompanyRelationNumber($companyRelationNumber)
+    {
+        $this->companyRelationNumber = $companyRelationNumber;
     }
 
     /**
