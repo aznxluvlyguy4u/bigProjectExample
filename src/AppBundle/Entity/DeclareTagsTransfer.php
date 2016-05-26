@@ -110,6 +110,7 @@ class DeclareTagsTransfer extends DeclareBase
         $tagTransferItemRequest->setUbnNewOwner($this->ubnNewOwner);
         $tagTransferItemRequest->setUlnCountryCode($tag->getUlnCountryCode());
         $tagTransferItemRequest->setUlnNumber($tag->getUlnNumber());
+        $tagTransferItemRequest->setTag($tag);
 
         $this->addTagTransferRequest($tagTransferItemRequest);
 
