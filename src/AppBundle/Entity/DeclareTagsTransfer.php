@@ -25,11 +25,6 @@ class DeclareTagsTransfer extends DeclareBase
     private $tags;
 
     /**
-     * @var array
-     */
-    private $tagsNotTransferred;
-
-    /**
      * @var string
      *
      * @ORM\Column(type="string")
