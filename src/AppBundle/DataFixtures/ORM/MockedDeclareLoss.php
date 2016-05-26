@@ -110,8 +110,8 @@ class MockedDeclareLoss implements FixtureInterface, ContainerAwareInterface, Or
         self::$mockedLoss = $departRepository->findAll()['0'];
 
         //Create Responses
-        $messageNumberFailedResponse = uniqid(mt_rand(0,99));
-        $messageNumberSuccessResponse = uniqid(mt_rand(0,99));
+        $messageNumberFailedResponse = mt_rand(0,99999999999999);
+        $messageNumberSuccessResponse = mt_rand(0,99999999999999);
 
         //It is necessary to retrieve the DeclareLoss entity from the Repository first
         $declareLoss = $departRepository->findAll()['0'];

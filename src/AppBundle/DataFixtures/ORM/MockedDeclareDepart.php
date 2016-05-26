@@ -113,8 +113,8 @@ class MockedDeclareDepart implements FixtureInterface, ContainerAwareInterface, 
         self::$mockedDepart = $departRepository->findAll()['0'];
 
         //Create Responses
-        $messageNumberFailedResponse = uniqid(mt_rand(0,99));
-        $messageNumberSuccessResponse = uniqid(mt_rand(0,99));
+        $messageNumberFailedResponse = mt_rand(0,99999999999999);
+        $messageNumberSuccessResponse = mt_rand(0,99999999999999);
 
         //It is necessary to retrieve the DeclareDepart entity from the Repository first
         $declareDepart = $departRepository->findAll()['0'];
