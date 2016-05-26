@@ -19,8 +19,10 @@ class Constant
     const MESSAGE_ID_CAMEL_CASE_NAMESPACE = 'messageId';
     const MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE = 'message_number';
     const MESSAGE_NUMBER_CAMEL_CASE_NAMESPACE = 'messageNumber';
+    const MESSAGE_NAMESPACE = 'message';
     const ANIMAL_TYPE_NAMESPACE = 'type';
     const TAGS_NAMESPACE = "tags";
+    const TAG_NAMESPACE = "tag";
     const ANIMAL_NAMESPACE = 'animal';
     const ANIMALTYPE_NAMESPACE = "animalType";
     const ANIMAL_TYPE_SNAKE_CASE_NAMESPACE = "animal_type";
@@ -31,6 +33,7 @@ class Constant
     const IS_ALIVE_NAMESPACE = 'isAlive';
     const BOOLEAN_TRUE_NAMESPACE = 'true';
     const UNKNOWN_NAMESPACE = 'unknown';
+    const VALIDITY_NAMESPACE = 'validity';
     const CODE_NAMESPACE = 'code';
     const ULN_NUMBER_NAMESPACE = "uln_number";
     const PEDIGREE_NUMBER_NAMESPACE = "pedigree_number";
