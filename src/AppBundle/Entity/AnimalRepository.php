@@ -6,6 +6,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\AnimalType;
+use AppBundle\Enumerator\LiveStockType;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
@@ -292,5 +293,91 @@ class AnimalRepository extends BaseRepository
     }
 
     return null;
+  }
+
+  /**
+   * Return an ArrayCollection with keys:
+   * - pedigree
+   * - non-pedigree
+   * - total
+   * having an integer value for the amount of animals in that category.
+   *
+   * @param Client $client
+   * @return ArrayCollection
+   */
+  public function getLiveStockCount(Client $client)
+  {
+
+    //Settings
+    $isAlive = true;
+    $isDepartedOption = false;
+    $isExportedOption = false;
+    $countTransferring = false;
+
+    if($countTransferring) {
+      $transferState = AnimalTransferStatus::TRANSFERRING;
+    } else {
+      $transferState = AnimalTransferStatus::NULL;
+    }
+
+    //Initialize counters
+    $pedigreeAdults = 0;
+    $pedigreeLambs = 0;
+    $nonPedigreeAdults = 0;
+    $nonPedigreeLambs = 0;
+
+    $adultDateOfBirthLimit = Utils::getAdultDateOfBirthLimit();
+
+    foreach($client->getCompanies() as $company) {
+      foreach($company->getLocations() as $location) {
+        foreach($location->getAnimals() as $animal) {
+
+          $isOwnedAnimal = $animal->getIsAlive() == $isAlive
+              && $animal->getIsExportAnimal() == $isExportedOption
+              && $animal->getIsDepartedAnimal() == $isDepartedOption
+              && ($animal->getTransferState() == AnimalTransferStatus::NULL
+                  || $animal->getTransferState() == $transferState);
+
+          $isPedigree = $animal->getPedigreeCountryCode() != null
+                     && $animal->getPedigreeNumber() != null;
+
+          $dateOfBirth = $animal->getDateOfBirth();
+
+          if($isOwnedAnimal) {
+            if($isPedigree) {
+              if($dateOfBirth > $adultDateOfBirthLimit) { // is under 1 years old
+                $pedigreeLambs++;
+              } else { // is adult
+                $pedigreeAdults++;
+              }
+
+            } else { //is non-pedigree
+              if($dateOfBirth > $adultDateOfBirthLimit) { // is under 1 years old
+                $nonPedigreeLambs++;
+              } else { // is adult
+                $nonPedigreeAdults++;
+              }
+            }
+          }
+
+        }
+      }
+    }
+
+    $pedigreeTotal = $pedigreeAdults + $pedigreeLambs;
+    $nonPedigreeTotal = $nonPedigreeAdults + $nonPedigreeLambs;
+
+    $count = new ArrayCollection();
+    $count->set(LiveStockType::PEDIGREE_ADULT, $pedigreeAdults);
+    $count->set(LiveStockType::PEDIGREE_LAMB, $pedigreeLambs);
+    $count->set(LiveStockType::PEDIGREE_TOTAL, $pedigreeTotal);
+    $count->set(LiveStockType::NON_PEDIGREE_ADULT, $nonPedigreeAdults);
+    $count->set(LiveStockType::NON_PEDIGREE_LAMB, $nonPedigreeLambs);
+    $count->set(LiveStockType::NON_PEDIGREE_TOTAL, $nonPedigreeTotal);
+    $count->set(LiveStockType::ADULT, $nonPedigreeAdults + $pedigreeAdults);
+    $count->set(LiveStockType::LAMB, $nonPedigreeLambs + $pedigreeLambs);
+    $count->set(LiveStockType::TOTAL, $nonPedigreeTotal + $pedigreeTotal);
+
+    return $count;
   }
 }

@@ -63,4 +63,34 @@ class Utils
 
         return array(Constant::ULN_COUNTRY_CODE_NAMESPACE => $countryCode, Constant::ULN_NUMBER_NAMESPACE => $ulnNumber);
     }
+
+    /**
+     * Returns the minimum DateTime for when the age is at least the inserted value.
+     *
+     * @param integer $years
+     * @param boolean $accurateOnTheSecond
+     * @return \DateTime
+     */ //FIXME Fix exact age calculation
+    public static function getDateLimitForAge($years, $accurateOnTheSecond = false)
+    {
+        if($accurateOnTheSecond == true) {
+            $query = 'now';
+        } else {
+            $query = 'today';
+        }
+        $date = new \DateTime($query);
+        $date->sub(new \DateInterval('P' . $years . "Y"));
+
+        return $date;
+    }
+
+    /**
+     * @param bool $accurateOnTheSecond if false it only looks at the day and not the hours, minutes and seconds
+     * @return \DateTime the exact date at which someone or something becomes an adult
+     */
+    public static function getAdultDateOfBirthLimit($accurateOnTheSecond = false)
+    {
+        $adultAgeLimit = 1; //one year or older
+        return self::getDateLimitForAge($adultAgeLimit, $accurateOnTheSecond);
+    }
 }
