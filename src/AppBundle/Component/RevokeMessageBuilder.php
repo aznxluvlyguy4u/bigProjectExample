@@ -25,9 +25,15 @@ class RevokeMessageBuilder extends MessageBuilderBase
      */
     private $person;
 
+    /**
+     * @var EntityManager
+     */
+    protected $em;
+
     public function __construct(EntityManager $em)
     {
         parent::__construct($em);
+        $this->em = $em;
     }
 
     /**
@@ -45,7 +51,6 @@ class RevokeMessageBuilder extends MessageBuilderBase
         $completeMessageObject = $this->addRevokeDeclarationData($baseMessageObject, $person);
 
         return $completeMessageObject;
-
     }
 
     /**
@@ -60,7 +65,7 @@ class RevokeMessageBuilder extends MessageBuilderBase
         //Set values
         $revokeDeclaration->setRelationNumberKeeper($person->getRelationNumberKeeper());
         $revokeDeclaration->setUbn($retrievedDeclaration->getUbn());
-        $revokeDeclaration->setRequestId($retrievedDeclaration->getRequestId());
+        $revokeDeclaration->setRequestIdToRevoke($retrievedDeclaration->getRequestId());
 
         //Set related request
         $retrievedDeclaration->setRevoke($revokeDeclaration);
