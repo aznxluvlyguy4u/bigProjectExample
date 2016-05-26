@@ -33,8 +33,6 @@ class CompanyProfileOutput
         $address = $company->getAddress();
 
         $result = array(
-            "company" =>
-                array(
                     "company_name" => $company->getCompanyName(),
                     "telephone_number" => $company->getTelephoneNumber(),
                     "ubn" => $location->getUbn(),
@@ -62,9 +60,20 @@ class CompanyProfileOutput
                             "first_name" => $client->getFirstName(),
                             "last_name" => $client->getLastName(),
                             "cellphone_number" => $client->getCellphoneNumber()
+                        ),
+                    "veterinarian" =>
+                        array(
+                            "dap_number" => "",
+                            "company_name" => "",
+                            "telephone_number" => "",
+                            "email_address" => "",
+                            "contact_person" =>
+                                array(
+                                    "name" =>"",
+                                    "email_address" => "",
+                                )
                         )
-                )
-        );
+                );
 
         return $result;
     }
