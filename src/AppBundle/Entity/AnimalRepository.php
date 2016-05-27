@@ -19,7 +19,7 @@ class AnimalRepository extends BaseRepository
    * @param $Id
    * @return array|null
    */
-  function findByUlnOrPedigree($Id)
+  function findByUlnOrPedigree($Id, $isUln)
   {
     //Strip countryCode
     $countryCode = mb_substr($Id, 0, 2, 'utf-8');
@@ -27,25 +27,12 @@ class AnimalRepository extends BaseRepository
     //Strip ulnCode or pedigreeCode
     $ulnOrPedigreeCode = mb_substr($Id, 2, strlen($Id));
 
-    return $this->findByUlnOrPedigreeCountryCodeAndNumber($countryCode, $ulnOrPedigreeCode);
-  }
+    if($isUln) {
+      return $this->findByUlnCountryCodeAndNumber($countryCode, $ulnOrPedigreeCode);
 
-  /**
-   * @param $countryCode
-   * @param $ulnOrPedigreeCode
-   * @return Animal|null
-   */
-  function findByUlnOrPedigreeCountryCodeAndNumber($countryCode, $ulnOrPedigreeCode)
-  {
-    $animal = $this->findByUlnCountryCodeAndNumber($countryCode, $ulnOrPedigreeCode);
-
-    if ($animal != null) {
-      return $animal;
-    } else { //Find animal through Animal pedigreeNumber
-      $animal = $this->findByPedigreeCountryCodeAndNumber($countryCode, $ulnOrPedigreeCode);
+    } else {
+      return $this->findByPedigreeCountryCodeAndNumber($countryCode, $ulnOrPedigreeCode);
     }
-
-    return $animal;
   }
 
   /**

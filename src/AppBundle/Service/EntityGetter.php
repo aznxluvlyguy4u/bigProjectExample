@@ -285,7 +285,7 @@ class EntityGetter
             $ulnNumber = $animalArray[Constant::ULN_NUMBER_NAMESPACE];
             $countryCode = $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
 
-            $animal = $animalRepository->findByUlnOrPedigreeCountryCodeAndNumber($countryCode, $ulnNumber);
+            $animal = $animalRepository->findByUlnCountryCodeAndNumber($countryCode, $ulnNumber);
         }
 
         return $animal;
