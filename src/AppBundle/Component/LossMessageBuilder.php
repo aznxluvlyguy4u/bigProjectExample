@@ -52,8 +52,6 @@ class LossMessageBuilder extends MessageBuilderBase
     private function addDeclareLossData(DeclareLoss $declareLoss)
     {
         $animal = $declareLoss->getAnimal();
-        $animal->setDateOfDeath($declareLoss->getDateOfDeath());
-
         $declareLoss->setAnimalType(AnimalType::sheep);
         $declareLoss->setAnimal($animal);
 
