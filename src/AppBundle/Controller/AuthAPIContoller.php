@@ -195,7 +195,7 @@ class AuthAPIContoller extends APIController {
     $client = $this->getAuthenticatedUser($request);
     $content = $this->getContentAsArray($request);
     $encodedOldPassword = $client->getPassword();
-    $newPassword = base64_decode($content['new_password']);
+    $newPassword = base64_decode($content->get('new_password'));
 
     $encoder = $this->get('security.password_encoder');
     $encodedNewPassword = $encoder->encodePassword($client, $newPassword);
