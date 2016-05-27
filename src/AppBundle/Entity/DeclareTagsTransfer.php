@@ -111,6 +111,7 @@ class DeclareTagsTransfer extends DeclareBase
         $tagTransferItemRequest->setUlnCountryCode($tag->getUlnCountryCode());
         $tagTransferItemRequest->setUlnNumber($tag->getUlnNumber());
         $tagTransferItemRequest->setTag($tag);
+        $tag->setDeclareTagsTransferRequestMessage($this);
 
         $this->addTagTransferRequest($tagTransferItemRequest);
 

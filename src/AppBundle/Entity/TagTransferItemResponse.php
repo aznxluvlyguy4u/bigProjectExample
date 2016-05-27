@@ -39,7 +39,7 @@ class TagTransferItemResponse {
     /**
      * @var string
      * @JMS\Type("string")
-     * @ORM\Column(type="string", nullable=false)
+     * @ORM\Column(type="string", nullable=true)
      */
     private $ubnNewOwner;
 
@@ -118,6 +118,13 @@ class TagTransferItemResponse {
      */
     private $requestState;
 
+    /**
+     * @var TagTransferItemRequest
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="TagTransferItemRequest", cascade={"persist"}, inversedBy="responses")
+     * @JMS\Type("AppBundle\Entity\TagTransferItemRequest")
+     */
+    private $tagTransferItemRequest;
 
     /*
      *
@@ -447,5 +454,29 @@ class TagTransferItemResponse {
     public function getRequestState()
     {
         return $this->requestState;
+    }
+
+    /**
+     * Set tagTransferItemRequest
+     *
+     * @param \AppBundle\Entity\TagTransferItemRequest $tagTransferItemRequest
+     *
+     * @return TagTransferItemResponse
+     */
+    public function setTagTransferItemRequest(\AppBundle\Entity\TagTransferItemRequest $tagTransferItemRequest = null)
+    {
+        $this->tagTransferItemRequest = $tagTransferItemRequest;
+
+        return $this;
+    }
+
+    /**
+     * Get tagTransferItemRequest
+     *
+     * @return \AppBundle\Entity\TagTransferItemRequest
+     */
+    public function getTagTransferItemRequest()
+    {
+        return $this->tagTransferItemRequest;
     }
 }

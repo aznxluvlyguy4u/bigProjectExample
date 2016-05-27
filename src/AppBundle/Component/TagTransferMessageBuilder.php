@@ -52,6 +52,10 @@ class TagTransferMessageBuilder extends MessageBuilderBase {
    */
   private function addDeclareEartagsTransferData(DeclareTagsTransfer $messageObject)
   {
+    //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
+    $location = $this->person->getCompanies()[0]->getLocations()[0];
+    $messageObject->setLocation($location);
+
     foreach($messageObject->getTags() as $tag) {
       $tag->setTagStatus(TagStateType::TRANSFERRING_TO_NEW_OWNER);
       $this->em->persist($tag);
@@ -62,8 +66,12 @@ class TagTransferMessageBuilder extends MessageBuilderBase {
       $messageObject->setAction(ActionFlagSetting::TAG_TRANSFER);
     }
 
-    //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
-    $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
+    foreach($messageObject->getTagTransferRequests() as $tagTransferRequest) {
+      $this->em->persist($tagTransferRequest);
+      $this->em->flush();
+    }
+
+
     return $messageObject;
   }
 }

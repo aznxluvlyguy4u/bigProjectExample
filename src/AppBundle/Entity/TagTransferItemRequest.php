@@ -101,12 +101,9 @@ class TagTransferItemRequest {
     private $tag;
 
     /**
-     * @ORM\ManyToMany(targetEntity="TagTransferItemResponse")
-     * @ORM\JoinTable(
-     *   name="transfer_item_responses",
-     *   joinColumns={@ORM\JoinColumn(name="tag_transfer_request_id", referencedColumnName="id")},
-     *   inverseJoinColumns={@ORM\JoinColumn(name="tag_transfer_item_response_id", referencedColumnName="id", unique=true)}
-     * )
+     * @ORM\OneToMany(targetEntity="TagTransferItemResponse", mappedBy="tagTransferItemRequest", cascade={"persist"})
+     * @ORM\JoinColumn(name="tag_transfer_item_request_id", referencedColumnName="id")
+     * @JMS\Type("array")
      */
     private $responses;
 
