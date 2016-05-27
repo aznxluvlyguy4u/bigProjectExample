@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\CompanyAddress;
@@ -165,7 +166,7 @@ class AuthAPIContoller extends APIController {
   }
 
   /**
-   * Reset your password.
+   * Change password when already logged in.
    *
    * @ApiDoc(
    *   requirements={
@@ -181,10 +182,10 @@ class AuthAPIContoller extends APIController {
    * )
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/password-reset")
+   * @Route("/password-change")
    * @Method("PUT")
    */
-  public function resetPassword(Request $request)
+  public function changePassword(Request $request)
   {
     /*
     {
@@ -237,7 +238,7 @@ class AuthAPIContoller extends APIController {
       return new JsonResponse(array("code" => 200, "message"=>"Password has been reset"), 200);
 
     } else if($encodedPasswordInDatabase == $encodedOldPassword) {
-      return new JsonResponse(array("code" => 400, "message"=>"Password has not been reset"), 400);
+      return new JsonResponse(array("code" => 428, "message"=>"Password has not been reset"), 428);
 
     } else if($encodedPasswordInDatabase == null) {
       return new JsonResponse(array("code" => 500, "message"=>"Password in database is null"), 500);
@@ -248,7 +249,7 @@ class AuthAPIContoller extends APIController {
   }
 
   /**
-   * Retrieve a new password.
+   * Reset password when not logged in.
    *
    * @ApiDoc(
    *   requirements={
@@ -264,10 +265,10 @@ class AuthAPIContoller extends APIController {
    * )
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/password-new")
-   * @Method("POST")
+   * @Route("/password-reset")
+   * @Method("PUT")
    */
-  public function newPassword(Request $request)
+  public function resetPassword(Request $request)
   {
     /*
     {
@@ -277,9 +278,15 @@ class AuthAPIContoller extends APIController {
     $content = $this->getContentAsArray($request);
     $emailAddress = $content->get('email_address');
 
+    $client = $this->getClientByEmail($emailAddress);
+    //Verify if email is correct
+    if($client == null) {
+      return new JsonResponse(array("code" => 428, "message"=>"No user found with emailaddress: " . $emailAddress), 428);
+    }
+
     //Create a new password
-    $client = $this->getAuthenticatedUser($request);
-    $newPassword = uniqid();
+    $passwordLength = 9;
+    $newPassword = Utils::randomString($passwordLength);
 
     $encoder = $this->get('security.password_encoder');
     $encodedNewPassword = $encoder->encodePassword($client, $newPassword);
