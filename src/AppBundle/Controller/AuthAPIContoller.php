@@ -215,7 +215,7 @@ class AuthAPIContoller extends APIController {
       $emailAddress = $this->container->getParameter('mailer_contact_form_receiver');
 
       //Confirmation message back to the sender
-      $messageConfirmation = \Swift_Message::newInstance()
+      $message = \Swift_Message::newInstance()
           ->setSubject('Nieuw wachtwoord voor NSFO dierregistratiesysteem')
           ->setFrom('info@stormdelta.com')
           ->setTo($emailAddress)
@@ -232,7 +232,7 @@ class AuthAPIContoller extends APIController {
           ->setSender('info@stormdelta.com')
       ;
 
-      $this->get('mailer')->send($messageConfirmation);
+      $this->get('mailer')->send($message);
 
       return new JsonResponse(array("code" => 200, "message"=>"Password has been reset"), 200);
 
@@ -247,5 +247,71 @@ class AuthAPIContoller extends APIController {
 
   }
 
+  /**
+   * Retrieve a new password.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="Authorization header",
+   *       "dataType"="string",
+   *       "requirement"="Base64 encoded",
+   *       "description"="Basic Authentication header with a Base64 encoded secret, semicolon separated value, with delimiter"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Reset login password"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/password-new")
+   * @Method("POST")
+   */
+  public function newPassword(Request $request)
+  {
+    /*
+    {
+        "email_address":"name@email.com"
+    }
+    */
+    $content = $this->getContentAsArray($request);
+    $emailAddress = $content->get('email_address');
+
+    //Create a new password
+    $client = $this->getAuthenticatedUser($request);
+    $newPassword = uniqid();
+
+    $encoder = $this->get('security.password_encoder');
+    $encodedNewPassword = $encoder->encodePassword($client, $newPassword);
+    $client->setPassword($encodedNewPassword);
+
+    $this->getDoctrine()->getEntityManager()->persist($client);
+    $this->getDoctrine()->getEntityManager()->flush();
+
+
+    //Confirmation message back to the sender
+    $message = \Swift_Message::newInstance()
+        ->setSubject('Nieuw wachtwoord voor NSFO dierregistratiesysteem')
+        ->setFrom('info@stormdelta.com')
+        ->setTo($emailAddress)
+        ->setBody(
+            $this->renderView(
+            // app/Resources/views/...
+                'User/new_password_email.html.twig',
+                array('firstName' => $client->getFirstName(),
+                    'lastName' => $client->getLastName(),
+                    'relationNumberKeeper' => $client->getRelationNumberKeeper(),
+                    'password' => $newPassword)
+            ),
+            'text/html'
+        )
+        ->setSender('info@stormdelta.com')
+    ;
+
+    $this->get('mailer')->send($message);
+
+    return new JsonResponse(array("code" => 200,
+        "message"=>"Your new password has been emailed to: " . $emailAddress), 200);
+  }
 
 }
