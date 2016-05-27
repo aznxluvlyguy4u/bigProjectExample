@@ -20,7 +20,7 @@ class DeclareExport extends DeclareBase
 {
     /**
      * @Assert\NotBlank
-     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="exports")
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="exports", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     private $animal;
