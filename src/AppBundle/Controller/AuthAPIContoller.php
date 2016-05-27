@@ -155,6 +155,9 @@ class AuthAPIContoller extends APIController {
       $encoder = $this->get('security.password_encoder');
 
       $client = $this->getDoctrine()->getRepository('AppBundle:Client')->findOneBy(array("username"=>$username));
+      if($client == null) {
+        return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
+      }
 
       if($encoder->isPasswordValid($client, $password)) {
         return new JsonResponse(array("access_token"=>$client->getAccessToken()), 200);
@@ -235,16 +238,16 @@ class AuthAPIContoller extends APIController {
 
       $this->get('mailer')->send($message);
 
-      return new JsonResponse(array("code" => 200, "message"=>"Password has been reset"), 200);
+      return new JsonResponse(array("code" => 200, "message"=>"Password has been changed"), 200);
 
     } else if($encodedPasswordInDatabase == $encodedOldPassword) {
-      return new JsonResponse(array("code" => 428, "message"=>"Password has not been reset"), 428);
+      return new JsonResponse(array("code" => 428, "message"=>"Password has not been changed"), 428);
 
     } else if($encodedPasswordInDatabase == null) {
       return new JsonResponse(array("code" => 500, "message"=>"Password in database is null"), 500);
     }
 
-    return new JsonResponse(array("code" => 401, "message"=>"Password in datbase doesn't match new or old password"), 401);
+    return new JsonResponse(array("code" => 401, "message"=>"Password in database doesn't match new or old password"), 401);
 
   }
 
