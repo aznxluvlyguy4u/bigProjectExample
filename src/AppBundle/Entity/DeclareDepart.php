@@ -22,7 +22,7 @@ class DeclareDepart extends DeclareBase
 {
     /**
      * @Assert\NotBlank
-     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="departures", cascade={"persist"})
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="departures")
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     private $animal;

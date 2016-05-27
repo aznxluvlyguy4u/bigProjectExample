@@ -45,7 +45,6 @@ class ExportMessageBuilder extends MessageBuilderBase
   private function addDeclareExportData(DeclareExport $messageObject)
   {
     $animal = $messageObject->getAnimal();
-    $animal->setIsExportAnimal(true);
 
     $messageObject->setUlnCountryCode($animal->getUlnCountryCode());
     $messageObject->setUlnNumber($animal->getUlnNumber());
