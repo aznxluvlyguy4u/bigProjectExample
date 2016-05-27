@@ -135,13 +135,13 @@ class Tag {
      * @ORM\ManyToOne(targetEntity="DeclareTagsTransfer", cascade={"persist"}, inversedBy="tags")
      * @JMS\Type("AppBundle\Entity\DeclareTagsTransfer")
      */
-    protected $declareTagsTransferRequestMessage;
+    private $declareTagsTransferRequestMessage;
 
-  /**
-   * Tag constructor.
-   */
-  public function __construct() {
-  }
+    /**
+     * Tag constructor.
+     */
+    public function __construct() {
+    }
 
     /**
      * Set tagStatus

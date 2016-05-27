@@ -109,7 +109,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   public function getAnimalById(Request $request, $Id) {
     $repository = $this->getDoctrine()
       ->getRepository(Constant::ANIMAL_REPOSITORY);
-    $animal = $repository->findByUlnOrPedigree($Id);
+    $animal = $repository->findByUlnOrPedigree($Id, true);
 
     $minimizedOutput = AnimalOutput::createAnimalArray($animal);
 

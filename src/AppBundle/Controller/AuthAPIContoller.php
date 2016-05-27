@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\CompanyAddress;
@@ -154,6 +155,9 @@ class AuthAPIContoller extends APIController {
       $encoder = $this->get('security.password_encoder');
 
       $client = $this->getDoctrine()->getRepository('AppBundle:Client')->findOneBy(array("username"=>$username));
+      if($client == null) {
+        return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
+      }
 
       if($encoder->isPasswordValid($client, $password)) {
         return new JsonResponse(array("access_token"=>$client->getAccessToken()), 200);
@@ -163,4 +167,161 @@ class AuthAPIContoller extends APIController {
     return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
 
   }
+
+  /**
+   * Change password when already logged in.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="Authorization header",
+   *       "dataType"="string",
+   *       "requirement"="Base64 encoded",
+   *       "description"="Basic Authentication header with a Base64 encoded secret, semicolon separated value, with delimiter"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Reset login password"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/password-change")
+   * @Method("PUT")
+   */
+  public function changePassword(Request $request)
+  {
+    /*
+    {
+        "new_password":"Tm90TXlGaXJzdFBhc3N3b3JkMQ==" //base64 encoded 'NotMyFirstPassword1'
+    }
+    */
+
+    $client = $this->getAuthenticatedUser($request);
+    $content = $this->getContentAsArray($request);
+    $encodedOldPassword = $client->getPassword();
+    $newPassword = base64_decode($content->get('new_password'));
+
+    $encoder = $this->get('security.password_encoder');
+    $encodedNewPassword = $encoder->encodePassword($client, $newPassword);
+    $client->setPassword($encodedNewPassword);
+
+    $this->getDoctrine()->getEntityManager()->persist($client);
+    $this->getDoctrine()->getEntityManager()->flush();
+
+    //Validate password change
+    $client = $this->getAuthenticatedUser($request);
+    $encodedPasswordInDatabase = $client->getPassword();
+
+    if($encodedPasswordInDatabase == $encodedNewPassword) {
+
+      //TODO for production use the clients email
+//      $emailAddress = $client->getEmailAddress();
+      $emailAddress = $this->container->getParameter('mailer_contact_form_receiver');
+
+      //Confirmation message back to the sender
+      $message = \Swift_Message::newInstance()
+          ->setSubject('Nieuw wachtwoord voor NSFO dierregistratiesysteem')
+          ->setFrom('info@stormdelta.com')
+          ->setTo($emailAddress)
+          ->setBody(
+              $this->renderView(
+              // app/Resources/views/...
+                  'User/reset_password_email.html.twig',
+                  array('firstName' => $client->getFirstName(),
+                      'lastName' => $client->getLastName(),
+                      'relationNumberKeeper' => $client->getRelationNumberKeeper())
+              ),
+              'text/html'
+          )
+          ->setSender('info@stormdelta.com')
+      ;
+
+      $this->get('mailer')->send($message);
+
+      return new JsonResponse(array("code" => 200, "message"=>"Password has been changed"), 200);
+
+    } else if($encodedPasswordInDatabase == $encodedOldPassword) {
+      return new JsonResponse(array("code" => 428, "message"=>"Password has not been changed"), 428);
+
+    } else if($encodedPasswordInDatabase == null) {
+      return new JsonResponse(array("code" => 500, "message"=>"Password in database is null"), 500);
+    }
+
+    return new JsonResponse(array("code" => 401, "message"=>"Password in database doesn't match new or old password"), 401);
+
+  }
+
+  /**
+   * Reset password when not logged in.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="Authorization header",
+   *       "dataType"="string",
+   *       "requirement"="Base64 encoded",
+   *       "description"="Basic Authentication header with a Base64 encoded secret, semicolon separated value, with delimiter"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Reset login password"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/password-reset")
+   * @Method("PUT")
+   */
+  public function resetPassword(Request $request)
+  {
+    /*
+    {
+        "email_address":"name@email.com"
+    }
+    */
+    $content = $this->getContentAsArray($request);
+    $emailAddress = $content->get('email_address');
+
+    $client = $this->getClientByEmail($emailAddress);
+    //Verify if email is correct
+    if($client == null) {
+      return new JsonResponse(array("code" => 428, "message"=>"No user found with emailaddress: " . $emailAddress), 428);
+    }
+
+    //Create a new password
+    $passwordLength = 9;
+    $newPassword = Utils::randomString($passwordLength);
+
+    $encoder = $this->get('security.password_encoder');
+    $encodedNewPassword = $encoder->encodePassword($client, $newPassword);
+    $client->setPassword($encodedNewPassword);
+
+    $this->getDoctrine()->getEntityManager()->persist($client);
+    $this->getDoctrine()->getEntityManager()->flush();
+
+
+    //Confirmation message back to the sender
+    $message = \Swift_Message::newInstance()
+        ->setSubject('Nieuw wachtwoord voor NSFO dierregistratiesysteem')
+        ->setFrom('info@stormdelta.com')
+        ->setTo($emailAddress)
+        ->setBody(
+            $this->renderView(
+            // app/Resources/views/...
+                'User/new_password_email.html.twig',
+                array('firstName' => $client->getFirstName(),
+                    'lastName' => $client->getLastName(),
+                    'relationNumberKeeper' => $client->getRelationNumberKeeper(),
+                    'password' => $newPassword)
+            ),
+            'text/html'
+        )
+        ->setSender('info@stormdelta.com')
+    ;
+
+    $this->get('mailer')->send($message);
+
+    return new JsonResponse(array("code" => 200,
+        "message"=>"Your new password has been emailed to: " . $emailAddress), 200);
+  }
+
 }

@@ -49,8 +49,6 @@ class DepartMessageBuilder extends MessageBuilderBase
     private function addDeclareDepartData(DeclareDepart $messageObject)
     {
         $animal = $messageObject->getAnimal();
-        $animal->setIsExportAnimal(false);
-        $animal->setIsDepartedAnimal(true);
 
         $messageObject->setUlnCountryCode($animal->getUlnCountryCode());
         $messageObject->setUlnNumber($animal->getUlnNumber());

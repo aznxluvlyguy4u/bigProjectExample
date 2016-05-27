@@ -13,6 +13,7 @@ use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\RetrieveAnimals;
+use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveEuropeanCountries;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RetrieveUBNDetails;
@@ -34,8 +35,8 @@ class MessageModifier
     }
 
     /**
-     * @param null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveEuropeanCountries|RetrieveUBNDetails $messageObject
-     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveEuropeanCountries|RetrieveUBNDetails
+     * @param null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails $messageObject
+     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
      */
     public static function modifyBeforePersistingRequestStateByQueueStatus($messageObject, $doctrine)
     {

@@ -35,4 +35,12 @@ class ClientRepository extends BaseRepository {
     {
         return $this->getByRelationNumberKeeper($messageObject->getRelationNumberKeeper());
     }
+
+    public function getByEmail($email)
+    {
+        $repository = $this->getEntityManager()->getRepository(Constant::CLIENT_REPOSITORY);
+        $client = $repository->findOneBy(array("emailAddress" => $email));
+
+        return $client;
+    }
 }

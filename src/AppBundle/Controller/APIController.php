@@ -555,4 +555,13 @@ class APIController extends Controller implements APIControllerInterface
     $this->getDoctrine()->getEntityManager()->persist($animal);
     $this->getDoctrine()->getEntityManager()->flush();
   }
+
+  /**
+   * @param $email
+   * @return Client
+   */
+  public function getClientByEmail($email) {
+    return $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY)->getByEmail($email);
+  }
+
 }

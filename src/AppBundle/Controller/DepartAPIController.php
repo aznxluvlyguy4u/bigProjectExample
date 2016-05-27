@@ -170,6 +170,9 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     //Send it to the queue and persist/update any changed state to the database
     $messageArray = $this->sendMessageObjectToQueue($messageObject);
 
+    //Reset isExportAnimal to false before persisting
+    $messageObject->getAnimal()->setIsExportAnimal(false);
+
     //Persist object to Database
     $this->persist($messageObject);
     $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
@@ -217,6 +220,8 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
     $isExportAnimal = $content['is_export_animal'];
 
+    //TODO Phase 2+: Validate if declare type (export or import) from RequestId matches type read from ['is_export_animal']
+
     if($isExportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database
       $declareExportUpdate = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY,
@@ -241,6 +246,8 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
         return new JsonResponse(array("message"=>"No DeclareDepart found with request_id: " . $Id), 204);
       }
     }
+    //Reset isExportAnimal to false before persisting
+    $messageObject->getAnimal()->setIsExportAnimal(false);
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($messageObject);

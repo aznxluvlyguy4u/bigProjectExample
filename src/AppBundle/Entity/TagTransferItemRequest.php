@@ -92,14 +92,18 @@ class TagTransferItemRequest {
      */
     private $requestState;
 
+    /**
+     * @var Tag
+     * @ORM\OneToOne(targetEntity="Tag", cascade={"persist"})
+     * @ORM\JoinColumn(name="tag_id", referencedColumnName="id", nullable=true)
+     * @JMS\Type("AppBundle\Entity\Tag")
+     */
+    private $tag;
 
     /**
-     * @ORM\ManyToMany(targetEntity="TagTransferItemResponse")
-     * @ORM\JoinTable(
-     *   name="transfer_item_responses",
-     *   joinColumns={@ORM\JoinColumn(name="tag_transfer_request_id", referencedColumnName="id")},
-     *   inverseJoinColumns={@ORM\JoinColumn(name="tag_transfer_item_response_id", referencedColumnName="id", unique=true)}
-     * )
+     * @ORM\OneToMany(targetEntity="TagTransferItemResponse", mappedBy="tagTransferItemRequest", cascade={"persist"})
+     * @ORM\JoinColumn(name="tag_transfer_item_request_id", referencedColumnName="id")
+     * @JMS\Type("array")
      */
     private $responses;
 
@@ -369,5 +373,29 @@ class TagTransferItemRequest {
     public function getResponses()
     {
         return $this->responses;
+    }
+
+    /**
+     * Set tag
+     *
+     * @param \AppBundle\Entity\Tag $tag
+     *
+     * @return TagTransferItemRequest
+     */
+    public function setTag(\AppBundle\Entity\Tag $tag = null)
+    {
+        $this->tag = $tag;
+
+        return $this;
+    }
+
+    /**
+     * Get tag
+     *
+     * @return \AppBundle\Entity\Tag
+     */
+    public function getTag()
+    {
+        return $this->tag;
     }
 }
