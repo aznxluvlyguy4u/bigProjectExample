@@ -23,7 +23,7 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * @Route("/api/v1/auth")
  */
-class AuthAPIContoller extends APIController {
+class AuthAPIController extends APIController {
 
   /**
    * Register a user
