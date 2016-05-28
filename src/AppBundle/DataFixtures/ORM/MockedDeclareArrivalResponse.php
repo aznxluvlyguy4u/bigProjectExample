@@ -3,6 +3,7 @@
 namespace AppBundle\DataFixtures\ORM;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Setting\DataFixtureSetting;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -37,6 +38,10 @@ class MockedDeclareArrivalResponse implements FixtureInterface, ContainerAwareIn
      */
     public function load(ObjectManager $manager)
     {
+        if(!DataFixtureSetting::USE_MOCKED_REQUESTS_AND_RESPONSES) {
+            return null;
+        }
+
         if(MockedDeclareArrival::$hasCascadePersistenceIssueBeenFixed) {
             //Create mocked data
             self::$mockedArrivalSuccessResponse = new DeclareArrivalResponse();

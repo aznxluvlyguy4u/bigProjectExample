@@ -4,6 +4,7 @@ namespace AppBundle\DataFixtures\ORM;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Setting\DataFixtureSetting;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
@@ -52,7 +53,13 @@ class MockedTags implements FixtureInterface, ContainerAwareInterface, OrderedFi
    */
   public function load(ObjectManager $manager) {
 
+    if(!DataFixtureSetting::USE_MOCKED_TAGS) {
+      return null;
+    }
+
     self::$mockedTags = new ArrayCollection();
+
+    $client = $manager->getRepository(Constant::CLIENT_REPOSITORY)->getByToken(MockedClient::getMockedClient()->getAccessToken());
 
     for($i = 0; $i < 100; $i++) {
 
@@ -66,7 +73,7 @@ class MockedTags implements FixtureInterface, ContainerAwareInterface, OrderedFi
       $tag->setAnimalOrderNumber($randomAnimalOrderNumber);
       $tag->setUlnNumber($randomUln);
       $tag->setUlnCountryCode("NL");
-      $tag->setOwner(MockedClient::getMockedClient());
+      $tag->setOwner($client);
       self::$mockedTags->add($tag);
 
       //Persist mocked data

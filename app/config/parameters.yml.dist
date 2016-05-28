@@ -12,11 +12,14 @@ parameters:
 
     mailer_transport:  smtp
     mailer_host:       127.0.0.1
-    mailer_user:       ~
-    mailer_password:   ~
+    mailer_user: ~
+    mailer_password: ~
+    mailer_encryption: ~
+    mailer_port: ~
+    mailer_encryption: ~
+    mailer_contact_form_receiver: ~
 
-    # A secret key that's used to generate certain security-related tokens
-    secret:            ThisTokenIsNotSoSecretChangeIt
+    secret: ThisTokenIsNotSoSecretChangeIt
     aws_access_key_id: ~
     aws_secret_key: ~
     aws_sqs_region: ~

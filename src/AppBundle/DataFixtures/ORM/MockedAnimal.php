@@ -3,6 +3,7 @@
 namespace AppBundle\DataFixtures\ORM;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Setting\DataFixtureSetting;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -75,6 +76,10 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
    */
   public function load(ObjectManager $manager) {
 
+    if(!DataFixtureSetting::USE_MOCKED_ANIMALS) {
+      return null;
+    }
+
     //Get mocked person
     $personRepository = $manager->getRepository(Constant::CLIENT_REPOSITORY);
     $persons = $personRepository->findAll();
@@ -82,7 +87,7 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     $company = 0;
 
     if(sizeof($persons) > 0) {
-      $person = $persons[1];
+      $person = $persons[0];
       $companies = $person->getCompanies();
       if(sizeof($companies) > 0){
         $company = $companies->get(0);
@@ -189,7 +194,7 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     $manager->persist(self::$mockedNewBornEwe);
     $manager->flush();
 
-    
+
   }
 
   /**
