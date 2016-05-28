@@ -301,6 +301,14 @@ abstract class Animal
     private $animalCountryOrigin;
 
     /**
+     * @ORM\OneToOne(targetEntity="AnimalHealth", inversedBy="animal", cascade={"persist"})
+     * @ORM\JoinColumn(name="health_id", referencedColumnName="id", nullable=true)
+     * @JMS\Type("AppBundle\Entity\AnimalHealth")
+     * @Expose
+     */
+    protected $health;
+
+    /**
      * Animal constructor.
      */
     public function __construct() {
@@ -1158,4 +1166,28 @@ abstract class Animal
     }
 
 
+
+    /**
+     * Set health
+     *
+     * @param \AppBundle\Entity\AnimalHealth $health
+     *
+     * @return Animal
+     */
+    public function setHealth(\AppBundle\Entity\AnimalHealth $health = null)
+    {
+        $this->health = $health;
+
+        return $this;
+    }
+
+    /**
+     * Get health
+     *
+     * @return \AppBundle\Entity\AnimalHealth
+     */
+    public function getHealth()
+    {
+        return $this->health;
+    }
 }

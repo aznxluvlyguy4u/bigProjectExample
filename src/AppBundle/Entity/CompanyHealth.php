@@ -2,11 +2,26 @@
 
 namespace AppBundle\Entity;
 
+use \DateTime;
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use JMS\Serializer\Annotation as JMS;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Expose;
 
+/**
+ * Class CompanyHealth
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\CompanyHealthRepository")
+ * @package AppBundle\Entity
+ */
 class CompanyHealth extends Health
 {
     /**
      * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
      */
     private $companyHealthStatus;
 
@@ -14,18 +29,43 @@ class CompanyHealth extends Health
      * maedi_visna is 'zwoegerziekte' in Dutch
      *
      * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @Expose
      */
     private $maediVisnaEndDate;
 
     /**
      * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @Expose
      */
     private $scrapieEndDate;
 
     /**
      * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @Expose
      */
     private $checkDate;
+
+    /**
+     * Get id
+     *
+     * @return integer
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
 
     /**
      * @return string
@@ -90,7 +130,6 @@ class CompanyHealth extends Health
     {
         $this->checkDate = $checkDate;
     }
-
 
 
 

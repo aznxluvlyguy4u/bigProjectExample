@@ -312,4 +312,28 @@ class Ewe extends Animal
     {
         return $this->flags;
     }
+
+    /**
+     * Set health
+     *
+     * @param \AppBundle\Entity\AnimalHealth $health
+     *
+     * @return Ewe
+     */
+    public function setHealth(\AppBundle\Entity\AnimalHealth $health = null)
+    {
+        $this->health = $health;
+
+        return $this;
+    }
+
+    /**
+     * Get health
+     *
+     * @return \AppBundle\Entity\AnimalHealth
+     */
+    public function getHealth()
+    {
+        return $this->health;
+    }
 }

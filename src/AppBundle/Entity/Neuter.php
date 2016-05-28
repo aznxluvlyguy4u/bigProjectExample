@@ -272,4 +272,28 @@ class Neuter extends Animal
     public function getFlags() {
         return $this->flags;
     }
+
+    /**
+     * Set health
+     *
+     * @param \AppBundle\Entity\AnimalHealth $health
+     *
+     * @return Neuter
+     */
+    public function setHealth(\AppBundle\Entity\AnimalHealth $health = null)
+    {
+        $this->health = $health;
+
+        return $this;
+    }
+
+    /**
+     * Get health
+     *
+     * @return \AppBundle\Entity\AnimalHealth
+     */
+    public function getHealth()
+    {
+        return $this->health;
+    }
 }

@@ -3,9 +3,9 @@
 namespace AppBundle\Entity;
 
 /**
- * Class EweRepository
+ * Class HealthRepository
  * @package AppBundle\Entity
  */
-class EweRepository extends BaseRepository {
+class HealthRepository extends BaseRepository {
 
 }
