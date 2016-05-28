@@ -11,28 +11,45 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class LocationRepository extends BaseRepository
 {
+
   /**
+   * @param Client $client
    * @return ArrayCollection
    */
-  public function findByUser($user)
+  public function findByUser(Client $client)
   {
     //Result set
     $locations = new ArrayCollection();
 
-    //Get companies of user
-    $companies = $user->getCompanies();
-
-    foreach($companies as $company) {
-      //Get locations of every company, add it to result set
-      $locationsRetrieved = $company->getLocations();
-
-      foreach($locationsRetrieved as $location) {
+    foreach($client->getCompanies() as $company) {
+      //Get locations of every company and add it to result set
+      foreach($company->getLocations() as $location) {
         $locations->add($location);
       }
-
     }
 
     return $locations;
+  }
+
+  /**
+   * @param Client $client
+   * @param string $ubn
+   * @return Location|null
+   */
+  public function findOfClientByUbn(Client $client, $ubn)
+  {
+    //Get companies of user
+    $companies = $client->getCompanies();
+
+    foreach($companies as $company) {
+      foreach($company->getLocations() as $location) {
+        if($location->getUbn() == $ubn) {
+          return $location;
+        }
+      }
+    }
+
+    return null;
   }
 
   /**

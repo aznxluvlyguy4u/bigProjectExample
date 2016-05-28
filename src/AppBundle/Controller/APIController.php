@@ -9,6 +9,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\AnimalTransferStatus;
@@ -562,6 +563,16 @@ class APIController extends Controller implements APIControllerInterface
    */
   public function getClientByEmail($email) {
     return $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY)->getByEmail($email);
+  }
+
+  /**
+   * @param Client $client
+   * @param string $ubn
+   * @return Location|null
+   */
+  public function getLocationByUbn($client, $ubn)
+  {
+    return $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY)->findOfClientByUbn($client, $ubn);
   }
 
 }
