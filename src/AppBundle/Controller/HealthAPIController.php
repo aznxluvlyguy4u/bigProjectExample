@@ -51,14 +51,17 @@ class HealthAPIController extends APIController {
    */
   public function getHealthByLocation(Request $request) {
 
+    $client = $this->getAuthenticatedUser($request);
+
     if($request->query->has(Constant::UBN_NAMESPACE)) {
       $ubn = $request->query->get(Constant::UBN_NAMESPACE);
+      $location = $this->getLocationByUbn($client, $ubn);
     } else {
-      $ubn = null;
+      //by default get the first location in the first company
+      $location = $client->getCompanies()->get(0)->getLocations()->get(0);
     }
 
-    $client = $this->getAuthenticatedUser($request);
-    $outputArray = HealthOutput::create($client, $ubn);
+    $outputArray = HealthOutput::create($client, $location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
   }
