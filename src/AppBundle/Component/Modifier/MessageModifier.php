@@ -14,7 +14,6 @@ use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
-use AppBundle\Entity\RetrieveEuropeanCountries;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RetrieveUBNDetails;
 use AppBundle\Entity\RevokeDeclaration;
