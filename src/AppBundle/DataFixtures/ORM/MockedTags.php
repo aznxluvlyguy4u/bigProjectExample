@@ -59,6 +59,8 @@ class MockedTags implements FixtureInterface, ContainerAwareInterface, OrderedFi
 
     self::$mockedTags = new ArrayCollection();
 
+    $client = $manager->getRepository(Constant::CLIENT_REPOSITORY)->getByToken(MockedClient::getMockedClient()->getAccessToken());
+
     for($i = 0; $i < 100; $i++) {
 
       $randomAnimalOrderNumber =  (string)rand(99, 999) .(string)rand(99, 999);
@@ -71,7 +73,7 @@ class MockedTags implements FixtureInterface, ContainerAwareInterface, OrderedFi
       $tag->setAnimalOrderNumber($randomAnimalOrderNumber);
       $tag->setUlnNumber($randomUln);
       $tag->setUlnCountryCode("NL");
-      $tag->setOwner(MockedClient::getMockedClient());
+      $tag->setOwner($client);
       self::$mockedTags->add($tag);
 
       //Persist mocked data

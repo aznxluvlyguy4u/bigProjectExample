@@ -87,7 +87,7 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     $company = 0;
 
     if(sizeof($persons) > 0) {
-      $person = $persons[1];
+      $person = $persons[0];
       $companies = $person->getCompanies();
       if(sizeof($companies) > 0){
         $company = $companies->get(0);
