@@ -17,6 +17,15 @@ use JMS\Serializer\Annotation\Expose;
 class LocationHealth extends Health
 {
     /**
+     * @var Location
+     *
+     * @ORM\OneToOne(targetEntity="Location", mappedBy="health", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Location")
+     * @Expose
+     */
+    private $location;
+
+    /**
      * @var string
      *
      * @ORM\Column(type="string", nullable=true)
@@ -129,6 +138,22 @@ class LocationHealth extends Health
     public function setCheckDate($checkDate)
     {
         $this->checkDate = $checkDate;
+    }
+
+    /**
+     * @return Location
+     */
+    public function getLocation()
+    {
+        return $this->location;
+    }
+
+    /**
+     * @param Location $location
+     */
+    public function setLocation($location)
+    {
+        $this->location = $location;
     }
 
 

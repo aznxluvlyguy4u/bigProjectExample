@@ -138,6 +138,14 @@ class Location
    */
   protected $revokes;
 
+  /**
+   * @ORM\OneToOne(targetEntity="LocationHealth", inversedBy="location", cascade={"persist"})
+   * @ORM\JoinColumn(name="health_id", referencedColumnName="id", nullable=true)
+   * @JMS\Type("AppBundle\Entity\LocationHealth")
+   * @Expose
+   */
+  private $health;
+
   /*
   * Constructor
   */
@@ -603,4 +611,23 @@ class Location
     {
         return $this->locationHolder;
     }
+
+  /**
+   * @return LocationHealth
+   */
+  public function getHealth()
+  {
+    return $this->health;
+  }
+
+  /**
+   * @param LocationHealth $health
+   */
+  public function setHealth($health)
+  {
+    $this->health = $health;
+  }
+
+
+
 }
