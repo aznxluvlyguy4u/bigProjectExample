@@ -10,11 +10,11 @@ use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
 
 /**
- * Class CompanyHealth
- * @ORM\Entity(repositoryClass="AppBundle\Entity\CompanyHealthRepository")
+ * Class LocationHealth
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\LocationHealthRepository")
  * @package AppBundle\Entity
  */
-class CompanyHealth extends Health
+class LocationHealth extends Health
 {
     /**
      * @var string
@@ -23,7 +23,7 @@ class CompanyHealth extends Health
      * @JMS\Type("string")
      * @Expose
      */
-    private $companyHealthStatus;
+    private $locationHealthStatus;
 
     /**
      * maedi_visna is 'zwoegerziekte' in Dutch
@@ -70,17 +70,17 @@ class CompanyHealth extends Health
     /**
      * @return string
      */
-    public function getCompanyHealthStatus()
+    public function getLocationHealthStatus()
     {
-        return $this->companyHealthStatus;
+        return $this->locationHealthStatus;
     }
 
     /**
-     * @param string $companyHealthStatus
+     * @param string $locationHealthStatus
      */
-    public function setCompanyHealthStatus($companyHealthStatus)
+    public function setLocationHealthStatus($locationHealthStatus)
     {
-        $this->companyHealthStatus = $companyHealthStatus;
+        $this->locationHealthStatus = $locationHealthStatus;
     }
 
     /**

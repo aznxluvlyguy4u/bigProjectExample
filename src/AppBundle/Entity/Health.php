@@ -15,7 +15,7 @@ use JMS\Serializer\Annotation\Expose;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\HealthRepository")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
- * @ORM\DiscriminatorMap({"Animal" = "Animal", "CompanyHealth" = "CompanyHealth", "AnimalHealth" = "AnimalHealth"})
+ * @ORM\DiscriminatorMap({"Animal" = "Animal", "LocationHealth" = "LocationHealth", "AnimalHealth" = "AnimalHealth"})
  * @package AppBundle\Entity\Health
  * @ExclusionPolicy("all")
  */
