@@ -189,7 +189,7 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     $manager->persist(self::$mockedNewBornEwe);
     $manager->flush();
 
-    
+
   }
 
   /**

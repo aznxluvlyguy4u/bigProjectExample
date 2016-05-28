@@ -180,10 +180,11 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedClientTwo->addCompany($mockedCompany);
     
     //persist mocked data
-    $manager->persist(self::$mockedClientTwo);
+    $manager->persist(self::$mockedClient);
+//    $manager->persist(self::$mockedClientTwo);
     $manager->flush();
 
-    echo "\r\n" .'accestoken: ' . self::$mockedClient->getAccessToken() . "\r\n\r\n";
+    echo "\r\n" .'client accestoken: ' . self::$mockedClient->getAccessToken() . "\r\n\r\n";
   }
 
   /**
