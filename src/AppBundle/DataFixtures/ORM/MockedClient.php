@@ -2,6 +2,7 @@
 
 namespace AppBundle\DataFixtures\ORM;
 
+use AppBundle\Setting\DataFixtureSetting;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -73,6 +74,11 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
    * @param ObjectManager $manager
    */
   public function load(ObjectManager $manager) {
+
+    if(!DataFixtureSetting::USE_MOCKED_CLIENT) {
+      return null;
+    }
+
     $encoder = $this->container->get('security.password_encoder');
 
     //Create mocked data

@@ -13,6 +13,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\JsonFormat\DeclareArrivalJsonFormat;
 use AppBundle\Service\IRSerializer;
+use AppBundle\Setting\DataFixtureSetting;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -65,6 +66,10 @@ class MockedDeclareArrival implements FixtureInterface, ContainerAwareInterface,
 
     public function load(ObjectManager $manager)
     {
+        if(!DataFixtureSetting::USE_MOCKED_REQUESTS_AND_RESPONSES) {
+            return null;
+        }
+
         if(self::$hasCascadePersistenceIssueBeenFixed) {
             //Create mocked data
 

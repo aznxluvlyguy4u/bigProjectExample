@@ -4,6 +4,7 @@ namespace AppBundle\DataFixtures\ORM;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Setting\DataFixtureSetting;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
@@ -51,6 +52,10 @@ class MockedTags implements FixtureInterface, ContainerAwareInterface, OrderedFi
    * @param ObjectManager $manager
    */
   public function load(ObjectManager $manager) {
+
+    if(!DataFixtureSetting::USE_MOCKED_TAGS) {
+      return null;
+    }
 
     self::$mockedTags = new ArrayCollection();
 

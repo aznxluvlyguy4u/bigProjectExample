@@ -3,6 +3,7 @@
 namespace AppBundle\DataFixtures\ORM;
 
 use AppBundle\Entity\Employee;
+use AppBundle\Setting\DataFixtureSetting;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -38,6 +39,11 @@ class MockedEmployee implements FixtureInterface, ContainerAwareInterface, Order
    * @param ObjectManager $manager
    */
   public function load(ObjectManager $manager) {
+
+    if(!DataFixtureSetting::USE_MOCKED_EMPLOYEE) {
+      return null;
+    }
+
     $encoder = $this->container->get('security.password_encoder');
 
     //Create mocked data

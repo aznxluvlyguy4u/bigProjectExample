@@ -7,6 +7,7 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareLossResponse;
 use AppBundle\Service\IRSerializer;
+use AppBundle\Setting\DataFixtureSetting;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -68,6 +69,10 @@ class MockedDeclareLoss implements FixtureInterface, ContainerAwareInterface, Or
 
     public function load(ObjectManager $manager)
     {
+        if(!DataFixtureSetting::USE_MOCKED_REQUESTS_AND_RESPONSES) {
+            return null;
+        }
+
         //Get service classes
         self::$serializer = $this->container->get('app.serializer.ir');
         self::$entityManager = $this->container->get('doctrine.orm.entity_manager');

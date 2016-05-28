@@ -3,6 +3,7 @@
 namespace AppBundle\DataFixtures\ORM;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Setting\DataFixtureSetting;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -74,6 +75,10 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
    * @param ObjectManager $manager
    */
   public function load(ObjectManager $manager) {
+
+    if(!DataFixtureSetting::USE_MOCKED_ANIMALS) {
+      return null;
+    }
 
     //Get mocked person
     $personRepository = $manager->getRepository(Constant::CLIENT_REPOSITORY);

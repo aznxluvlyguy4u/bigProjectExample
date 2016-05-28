@@ -3,6 +3,7 @@
 namespace AppBundle\DataFixtures\ORM;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Setting\DataFixtureSetting;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
@@ -45,6 +46,9 @@ class MockedCountries implements FixtureInterface, ContainerAwareInterface, Orde
    */
   public function load(ObjectManager $manager)
   {
+    if(!DataFixtureSetting::USE_MOCKED_COUNTRIES) {
+      return null;
+    }
 
     $countries = null;
 
