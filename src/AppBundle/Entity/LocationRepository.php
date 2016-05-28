@@ -41,7 +41,7 @@ class LocationRepository extends BaseRepository
    */
   public function findByUbn($ubn)
   {
-    return $this->findOneBy(array(Constant::UBN_NAMESPACE => ubn));
+    return $this->findOneBy(array(Constant::UBN_NAMESPACE => $ubn));
   }
 
   /**
