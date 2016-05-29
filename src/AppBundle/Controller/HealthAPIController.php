@@ -44,6 +44,11 @@ class HealthAPIController extends APIController {
 
     $client = $this->getAuthenticatedUser($request);
     $location = $this->getLocationByUbn($client, $ubn);
+
+    if($location == null) {
+      $errorMessage = "No Location found with ubn: " . $ubn;
+      return new JsonResponse(array('code'=>428, "message" => $errorMessage), 428);
+    }
     $outputArray = HealthOutput::create($client, $location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
