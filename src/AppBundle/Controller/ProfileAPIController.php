@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
+use AppBundle\FormInput\CompanyProfile;
 use AppBundle\Output\CompanyProfileOutput;
 use AppBundle\Output\LoginOutput;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -44,6 +45,29 @@ class ProfileAPIController extends APIController {
     $client = $this->getAuthenticatedUser($request);
 
     $outputArray = LoginOutput::create($client);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+  }
+
+  /**
+   *
+   * Update company profile
+   *
+   * @Route("/company")
+   * @Method("PUT")
+   */
+  public function editCompanyProfile(Request $request) {
+    $client = $this->getAuthenticatedUser($request);
+    $content = $this->getContentAsArray($request);
+
+    //TODO Phase 2: Give back a specific company and location of that company. The CompanyProfileOutput already can process a ($client, $company, $location) method signature.
+
+    //Persist updated changes and return the updated values
+    $client = CompanyProfile::update($client, $content);
+    $this->getDoctrine()->getManager()->persist($client);
+    $this->getDoctrine()->getManager()->flush();
+
+    $outputArray = CompanyProfileOutput::create($client);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
   }
