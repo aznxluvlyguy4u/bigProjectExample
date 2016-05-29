@@ -25,7 +25,7 @@ class LocationHealth
      * @ORM\GeneratedValue(strategy="AUTO")
      * @Expose
      */
-    protected $id;
+    private $id;
 
     /**
      * @var Location
@@ -45,7 +45,7 @@ class LocationHealth
      * @JMS\Type("string")
      * @Expose
      */
-    protected $maediVisnaStatus;
+    private $maediVisnaStatus;
 
     /**
      * @var string
@@ -54,7 +54,7 @@ class LocationHealth
      * @JMS\Type("string")
      * @Expose
      */
-    protected $scrapieStatus;
+    private $scrapieStatus;
 
     /**
      * @var string
