@@ -81,13 +81,15 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
 
     $encoder = $this->container->get('security.password_encoder');
 
+    $ubn = '1674459';
+
     //Create mocked data
     self::$mockedClient = new Client();
     self::$mockedClient->setFirstName("Bart");
     self::$mockedClient->setLastName("de Boer");
     self::$mockedClient->setEmailAddress("bart@deboer.com");
     self::$mockedClient->setRelationNumberKeeper("203719934");  //NOTE! Echte RelationNumberKeeper nodig voor successvolle IenR melding!
-    self::$mockedClient->setUsername("Bartje");
+    self::$mockedClient->setUsername($ubn);
     self::$mockedClient->setPassword($encoder->encodePassword(self::$mockedClient, "blauwetexelaar"));
     self::$mockedClient->setCellphoneNumber("+31698765432");
 
@@ -132,7 +134,7 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedLocation->setAddress(self::$mockedLocationAddress);
     self::$mockedLocation->setCompany(self::$mockedCompany);
 
-    self::$mockedLocation->setUbn("1674459"); //NOTE! Echte UBN nodig voor successvolle IenR melding!
+    self::$mockedLocation->setUbn($ubn); //NOTE! Echte UBN nodig voor successvolle IenR melding!
 
     self::$mockedCompany->addLocation(self::$mockedLocation);
     self::$mockedClient->addCompany(self::$mockedCompany);
