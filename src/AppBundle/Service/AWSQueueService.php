@@ -97,8 +97,7 @@ class AWSQueueService
     );
 
     $this->queueService = new SqsClient($sqsConfig);
-
-    $queueId = 'ext_nsfo_dev'; //FIXME
+    
     $result = $this->queueService->createQueue(array('QueueName' => $queueId));
     $this->queueURL = $result->get('QueueUrl');
   }
