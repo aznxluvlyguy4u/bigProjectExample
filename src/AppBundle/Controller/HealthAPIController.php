@@ -13,14 +13,14 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 
 /**
- * @Route("/api/v1/health")
+ * @Route("/api/v1/ubns")
  */
 class HealthAPIController extends APIController {
 
 
   /**
    *
-   * Get Health status found by location
+   * Get Health status found by ubn
    *
    * @ApiDoc(
    *   requirements={
@@ -31,36 +31,19 @@ class HealthAPIController extends APIController {
    *       "description"="A valid accesstoken belonging to the user that is registered with the API"
    *     }
    *   },
-   *   parameters={
-   *      {
-   *        "name"="ubn",
-   *        "dataType"="string",
-   *        "required"=false,
-   *        "description"="the ubn number of a location belonging to the client",
-   *        "format"="?ubn=number"
-   *      },
-   *   },
    *   resource = true,
    *   description = "Retrieve a Health status for the given ubn",
-   *   output = "AppBundle\Entity\Health"
+   *   output = "AppBundle\Entity\HealthOutput"
    * )
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("")
+   * @Route("/{ubn}/health")
    * @Method("GET")
    */
-  public function getHealthByLocation(Request $request) {
+  public function getHealthByLocation(Request $request, $ubn) {
 
     $client = $this->getAuthenticatedUser($request);
-
-    if($request->query->has(Constant::UBN_NAMESPACE)) {
-      $ubn = $request->query->get(Constant::UBN_NAMESPACE);
-      $location = $this->getLocationByUbn($client, $ubn);
-    } else {
-      //by default get the first location in the first company
-      $location = $client->getCompanies()->get(0)->getLocations()->get(0);
-    }
-
+    $location = $this->getLocationByUbn($client, $ubn);
     $outputArray = HealthOutput::create($client, $location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
