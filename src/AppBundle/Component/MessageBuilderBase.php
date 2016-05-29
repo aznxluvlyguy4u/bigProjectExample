@@ -120,4 +120,9 @@ class MessageBuilderBase
     {
         return uniqid(mt_rand(0,999999));
     }
+
+    protected function updateLocationHealthStatus()
+    {
+
+    }
 }

@@ -576,58 +576,5 @@ class APIController extends Controller implements APIControllerInterface
     return $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY)->findOfClientByUbn($client, $ubn);
   }
 
-  /**
-   * @param Location $location
-   * @param ArrayCollection $content
-   * @return Location
-   */
-  public function updateHealthStatusOfLocationByGivenAnimalHealths(Location $location, $content)
-  {
-    //Check for maediVisnaStatus and scrapieStatus separately
-    foreach($content['animal_healths'] as $animalHealth) {
-      $maediVisnaStatus = $animalHealth[Constant::MAEDI_VISNA_STATUS];
-      $scrapieStatus = $animalHealth[Constant::SCRAPIE_STATUS];
 
-      if($maediVisnaStatus == HealthStatus::UNKNOWN ||
-          $maediVisnaStatus == HealthStatus::IN_OBSERVATION ||
-          $maediVisnaStatus == null ||
-          $maediVisnaStatus == "") {
-
-        $location->getHealth()->setMaediVisnaStatus(HealthStatus::IN_OBSERVATION);
-      }
-
-      if($scrapieStatus == HealthStatus::UNKNOWN ||
-          $scrapieStatus == HealthStatus::IN_OBSERVATION ||
-          $scrapieStatus == null ||
-          $scrapieStatus == "") {
-
-        $location->getHealth()->setScrapieStatus(HealthStatus::IN_OBSERVATION);
-      }
-
-      if($maediVisnaStatus == HealthStatus::INFECTED) {
-        $location->getHealth()->setMaediVisnaStatus(HealthStatus::INFECTED);
-      }
-
-      if($scrapieStatus == HealthStatus::INFECTED) {
-        $location->getHealth()->setScrapieStatus(HealthStatus::INFECTED);
-      }
-    }
-
-    //Update the overall LocationHealthStatus in this exact order
-    //TODO Verify if this is correct
-    if($location->getHealth()->getMaediVisnaStatus() == HealthStatus::IN_OBSERVATION ||
-        $location->getHealth()->getScrapieStatus() == HealthStatus::IN_OBSERVATION) {
-      $location->getHealth()->setLocationHealthStatus(HealthStatus::IN_OBSERVATION);
-    }
-
-    if($location->getHealth()->getMaediVisnaStatus() == HealthStatus::INFECTED ||
-        $location->getHealth()->getScrapieStatus() == HealthStatus::INFECTED) {
-      $location->getHealth()->setLocationHealthStatus(HealthStatus::INFECTED);
-    }
-
-    $this->getDoctrine()->getEntityManager()->persist($location);
-    $this->getDoctrine()->getEntityManager()->flush();
-
-    return $location;
-  }
 }
