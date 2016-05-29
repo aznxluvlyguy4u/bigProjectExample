@@ -86,12 +86,11 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     $companies = null;
     $company = 0;
 
-    if(sizeof($persons) > 0) {
-      $person = $persons[0];
-      $companies = $person->getCompanies();
-      if(sizeof($companies) > 0){
-        $company = $companies->get(0);
-      }
+    $person = $personRepository->getByRelationNumberKeeper(MockedClient::getMockedClient()->getRelationNumberKeeper());
+
+    $companies = $person->getCompanies();
+    if(sizeof($companies) > 0){
+      $company = $companies->get(0);
     }
 
     //Get persons company location to add animals to.

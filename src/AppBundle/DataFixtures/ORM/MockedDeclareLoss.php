@@ -76,7 +76,7 @@ class MockedDeclareLoss implements FixtureInterface, ContainerAwareInterface, Or
         //Get service classes
         self::$serializer = $this->container->get('app.serializer.ir');
         self::$entityManager = $this->container->get('doctrine.orm.entity_manager');
-        $departRepository = self::$entityManager->getRepository(Constant::DECLARE_LOSS_REPOSITORY);
+        $lossRepository = self::$entityManager->getRepository(Constant::DECLARE_LOSS_REPOSITORY);
 
         //Create client
         $this->client = new RequestClient($this->container->get('kernel'));
@@ -112,14 +112,14 @@ class MockedDeclareLoss implements FixtureInterface, ContainerAwareInterface, Or
         $response = $this->client->getResponse()->getContent();
         $declareLossArray = json_decode($response, true);
 
-        self::$mockedLoss = $departRepository->findAll()['0'];
+        self::$mockedLoss = $lossRepository->findAll()['0'];
 
         //Create Responses
         $messageNumberFailedResponse = mt_rand(0,99999999999999);
         $messageNumberSuccessResponse = mt_rand(0,99999999999999);
 
         //It is necessary to retrieve the DeclareLoss entity from the Repository first
-        $declareLoss = $departRepository->findAll()['0'];
+        $declareLoss = $lossRepository->findAll()['0'];
 
         //Create and persist failed Response
         self::$mockedLossFailedResponse = new DeclareLossResponse();
