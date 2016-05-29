@@ -296,15 +296,11 @@ class APIController extends Controller implements APIControllerInterface
     return $em->getRepository('AppBundle:Person')->findOneBy(array("accessToken" => $token));
   }
 
-  public function isUlnOrPedigreeCodeValid(Request $request, $Id = null)
+  public function isUlnOrPedigreeCodeValid(Request $request, $ulnCode = null)
   {
-    if($Id != null) {
-      //validate if Id is of format: AZ123456789
-      if(!preg_match("([A-Z]{2}\d+)",$Id)){
-        return false;
-      }
+    if($ulnCode != null) {
 
-      return $this->verifyUlnOrPedigreeCode($Id);
+      return $this->verifyAnimalByUln($ulnCode);
 
     } else {
       $contentArray = $this->getContentAsArray($request);
@@ -314,7 +310,7 @@ class APIController extends Controller implements APIControllerInterface
       array_push($objectsToBeVerified, Constant::ANIMAL_NAMESPACE, Constant::FATHER_NAMESPACE, Constant::MOTHER_NAMESPACE);
 
       //Strip countryCode
-      $countryCode = mb_substr($Id, 0, 2, 'utf-8');
+      $countryCode = mb_substr($ulnCode, 0, 2, 'utf-8');
       //All objects containing a uln or pedigree code must have that code verified
       foreach ($objectsToBeVerified as $objectToBeVerified) {
         if (array_key_exists($objectToBeVerified, $array)) {
@@ -410,11 +406,7 @@ class APIController extends Controller implements APIControllerInterface
     $pedigreeCountryCode = null;
     $ulnCode = null;
     $pedigreeCode = null;
-    $tag = null;
     $animal = null;
-
-    //First check if supplied ulnNumber & ulnCountryCode exists by checking if a Tag exists
-    $tagRepository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY);
 
     //This repository class is used to verify if a pedigree code is valid
     $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
@@ -423,9 +415,9 @@ class APIController extends Controller implements APIControllerInterface
       $ulnCode = $animalContentArray[Constant::ULN_NUMBER_NAMESPACE];
       $ulnCountryCode = $animalContentArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
 
-      $tag = $tagRepository->findByUlnNumberAndCountryCode($ulnCountryCode, $ulnCode);
+      $animal = $animalRepository->findByUlnCountryCodeAndNumber($ulnCountryCode, $ulnCode);
 
-      if ($tag == null) {
+      if ($animal == null) {
         return array("animalKind" => $objectToBeVerified,
             "keyType" => Constant::ULN_NAMESPACE,
             "isValid" => false,
@@ -456,41 +448,29 @@ class APIController extends Controller implements APIControllerInterface
         "result" => $this->createValidityCheckMessage(true));
   }
 
-  private function verifyUlnOrPedigreeCode($Id)
+  private function verifyAnimalByUln($ulnString)
   {
     $isValid = false;
-    $keyType = Constant::ULN_NAMESPACE . " and/or " . Constant::PEDIGREE_SNAKE_CASE_NAMESPACE;
+    $keyType = Constant::ULN_NAMESPACE;
 
-    //First check if supplied ulnNumber & ulnCountryCode exists by checking if a Tag exists
-    $tagRepository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY);
+    //validate if Id is of format: AZ123456789
+    if(!preg_match("([A-Z]{2}\d+)",$ulnString)){
+      //Directly return isValid = false result
 
-    //Strip countryCode
-    $countryCode = mb_substr($Id, 0, 2, 'utf-8');
-
-    //Strip ulnCode or pedigreeCode
-    $ulnOrPedigreeCode = mb_substr($Id, 2, strlen($Id));
-
-    $tag = $tagRepository->findByUlnNumberAndCountryCode($countryCode, $ulnOrPedigreeCode);
-
-    if ($tag != null) {
-      $isValid = true;
-      $keyType = Constant::ULN_NAMESPACE;
     } else {
-      //Verify if id is a valid pedigreenumber
 
       $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-      $animal = $animalRepository->findByPedigreeCountryCodeAndNumber($countryCode, $ulnOrPedigreeCode);
+      $animal = $animalRepository->findByUlnOrPedigree($ulnString, true);
 
       if ($animal != null) {
         $isValid = true;
-        $keyType = Constant::PEDIGREE_SNAKE_CASE_NAMESPACE;
       }
     }
 
     return array("animalKind" => "Id",
         "keyType" => $keyType,
         "isValid" => $isValid,
-        "result" => $this->createValidityCheckMessage($isValid, $keyType, $Id));
+        "result" => $this->createValidityCheckMessage($isValid, $keyType, $ulnString));
   }
 
   /**
