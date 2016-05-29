@@ -214,9 +214,7 @@ class AuthAPIController extends APIController {
 
     if($encodedPasswordInDatabase == $encodedNewPassword) {
 
-      //TODO for production use the clients email
-//      $emailAddress = $client->getEmailAddress();
-      $emailAddress = $this->container->getParameter('mailer_contact_form_receiver');
+      $emailAddress = $client->getEmailAddress();
 
       //Confirmation message back to the sender
       $message = \Swift_Message::newInstance()
@@ -226,7 +224,7 @@ class AuthAPIController extends APIController {
           ->setBody(
               $this->renderView(
               // app/Resources/views/...
-                  'User/reset_password_email.html.twig',
+                  'User/change_password_email.html.twig',
                   array('firstName' => $client->getFirstName(),
                       'lastName' => $client->getLastName(),
                       'relationNumberKeeper' => $client->getRelationNumberKeeper())
@@ -307,9 +305,10 @@ class AuthAPIController extends APIController {
         ->setBody(
             $this->renderView(
             // app/Resources/views/...
-                'User/new_password_email.html.twig',
+                'User/reset_password_email.html.twig',
                 array('firstName' => $client->getFirstName(),
                     'lastName' => $client->getLastName(),
+                    'userName' => $client->getUsername(),
                     'relationNumberKeeper' => $client->getRelationNumberKeeper(),
                     'password' => $newPassword)
             ),
