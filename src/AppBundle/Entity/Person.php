@@ -239,6 +239,16 @@ abstract class Person implements UserInterface
    */
   public function getUsername()
   {
+    return $this->username;
+  }
+
+  /**
+   * Returns the full name of the user.
+   *
+   * @return string The username
+   */
+  public function getFullName()
+  {
     return $this->firstName . ' ' . $this->lastName;
   }
 
