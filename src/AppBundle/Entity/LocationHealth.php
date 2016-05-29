@@ -13,9 +13,20 @@ use JMS\Serializer\Annotation\Expose;
  * Class LocationHealth
  * @ORM\Entity(repositoryClass="AppBundle\Entity\LocationHealthRepository")
  * @package AppBundle\Entity
+ * @ExclusionPolicy("all")
  */
-class LocationHealth extends Health
+class LocationHealth
 {
+    /**
+     * @var integer
+     *
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue(strategy="AUTO")
+     * @Expose
+     */
+    protected $id;
+
     /**
      * @var Location
      *
@@ -24,6 +35,26 @@ class LocationHealth extends Health
      * @Expose
      */
     private $location;
+
+    /**
+     * maedi_visna is 'zwoegerziekte' in Dutch
+     *
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    protected $maediVisnaStatus;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    protected $scrapieStatus;
 
     /**
      * @var string
@@ -156,6 +187,36 @@ class LocationHealth extends Health
         $this->location = $location;
     }
 
+    /**
+     * @return string
+     */
+    public function getMaediVisnaStatus()
+    {
+        return $this->maediVisnaStatus;
+    }
 
+    /**
+     * @param string $maediVisnaStatus
+     */
+    public function setMaediVisnaStatus($maediVisnaStatus)
+    {
+        $this->maediVisnaStatus = $maediVisnaStatus;
+    }
+
+    /**
+     * @return string
+     */
+    public function getScrapieStatus()
+    {
+        return $this->scrapieStatus;
+    }
+
+    /**
+     * @param string $scrapieStatus
+     */
+    public function setScrapieStatus($scrapieStatus)
+    {
+        $this->scrapieStatus = $scrapieStatus;
+    }
 
 }
