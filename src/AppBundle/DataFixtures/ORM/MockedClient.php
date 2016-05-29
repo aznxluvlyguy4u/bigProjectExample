@@ -140,56 +140,69 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedClient->addCompany(self::$mockedCompany);
 
 
-    //Create mocked data ClientTwo
-    self::$mockedClientTwo = new Client();
-    self::$mockedClientTwo->setFirstName("Sarah");
-    self::$mockedClientTwo->setLastName("de Schapenherder");
-    self::$mockedClientTwo->setEmailAddress("sarah@deschapenherder.com");
-    self::$mockedClientTwo->setRelationNumberKeeper("51381121");
-    self::$mockedClientTwo->setUsername("Sarahtje");
-    self::$mockedClientTwo->setPassword($encoder->encodePassword(self::$mockedClientTwo, "super-password"));
+    if(DataFixtureSetting::USE_MOCKED_CLIENT_TWO) {
+      $ubnTwo = '101';
 
-    $mockedLocationAddress = new LocationAddress();
-    $mockedLocationAddress->setAddressNumber("56");
-    $mockedLocationAddress->setCity("Sweetlake City");
-    $mockedLocationAddress->setPostalCode("2222ZZ");
-    $mockedLocationAddress->setState("ZH");
-    $mockedLocationAddress->setStreetName("Streetroadlane");
-    $mockedLocationAddress->setCountry("Nederland");
+      //Create mocked data ClientTwo
+      self::$mockedClientTwo = new Client();
+      self::$mockedClientTwo->setFirstName("Sarah");
+      self::$mockedClientTwo->setLastName("de Schapenherder");
+      self::$mockedClientTwo->setEmailAddress("sarah@deschapenherder.com");
+      self::$mockedClientTwo->setRelationNumberKeeper("51381121");
+      self::$mockedClientTwo->setUsername($ubnTwo);
+      self::$mockedClientTwo->setPassword($encoder->encodePassword(self::$mockedClientTwo, "super-password"));
 
-    $mockedBillingAddress = new BillingAddress();
-    $mockedBillingAddress->setAddressNumber("26556");
-    $mockedBillingAddress->setCity("Den Haag");
-    $mockedBillingAddress->setPostalCode("2222PP");
-    $mockedBillingAddress->setState("ZH");
-    $mockedBillingAddress->setStreetName("Raamweg");
-    $mockedBillingAddress->setCountry("Nederland");
+      $mockedLocationAddress = new LocationAddress();
+      $mockedLocationAddress->setAddressNumber("56");
+      $mockedLocationAddress->setCity("Sweetlake City");
+      $mockedLocationAddress->setPostalCode("2222ZZ");
+      $mockedLocationAddress->setState("ZH");
+      $mockedLocationAddress->setStreetName("Streetroadlane");
+      $mockedLocationAddress->setCountry("Nederland");
 
-    $mockedCompanyAddress = new CompanyAddress();
-    $mockedCompanyAddress->setAddressNumber("3");
-    $mockedCompanyAddress->setCity("Zoetermeer");
-    $mockedCompanyAddress->setPostalCode("3333XX");
-    $mockedCompanyAddress->setState("ZH");
-    $mockedCompanyAddress->setStreetName("Het Geertje");
-    $mockedCompanyAddress->setCountry("Nederland");
+      $mockedBillingAddress = new BillingAddress();
+      $mockedBillingAddress->setAddressNumber("26556");
+      $mockedBillingAddress->setCity("Den Haag");
+      $mockedBillingAddress->setPostalCode("2222PP");
+      $mockedBillingAddress->setState("ZH");
+      $mockedBillingAddress->setStreetName("Raamweg");
+      $mockedBillingAddress->setCountry("Nederland");
 
-    $mockedCompany = new Company();
-    $mockedCompany->setAddress($mockedCompanyAddress);
-    $mockedCompany->setBillingAddress($mockedBillingAddress);
-    $mockedCompany->setCompanyName("Animal Farm");
-    $mockedCompany->setOwner(self::$mockedClientTwo);
+      $mockedCompanyAddress = new CompanyAddress();
+      $mockedCompanyAddress->setAddressNumber("3");
+      $mockedCompanyAddress->setCity("Zoetermeer");
+      $mockedCompanyAddress->setPostalCode("3333XX");
+      $mockedCompanyAddress->setState("ZH");
+      $mockedCompanyAddress->setStreetName("Het Geertje");
+      $mockedCompanyAddress->setCountry("Nederland");
 
-    $mockedLocation = new Location();
-    $mockedLocation->setAddress($mockedLocationAddress);
-    $mockedLocation->setCompany($mockedCompany);
-    $mockedLocation->setUbn("10101011110");
+      $mockedCompany = new Company();
+      $mockedCompany->setAddress($mockedCompanyAddress);
+      $mockedCompany->setBillingAddress($mockedBillingAddress);
+      $mockedCompany->setCompanyName("Animal Farm");
+      $mockedCompany->setOwner(self::$mockedClientTwo);
 
-    $mockedCompany->addLocation($mockedLocation);
-    self::$mockedClientTwo->addCompany($mockedCompany);
+      $LocationHealthTwo = new LocationHealth();
+      $LocationHealthTwo->setMaediVisnaStatus(HealthStatus::HEALTHY_LEVEL_3);
+      $LocationHealthTwo->setMaediVisnaEndDate(new \DateTime('2016-11-04'));
+      $LocationHealthTwo->setScrapieStatus(HealthStatus::HEALTHY_LEVEL_3);
+      $LocationHealthTwo->setScrapieEndDate(new \DateTime('2016-12-04'));
+      $LocationHealthTwo->setCheckDate(new \DateTime('2016-12-14'));
+
+      $mockedLocation = new Location();
+      $mockedLocation->setAddress($mockedLocationAddress);
+      $mockedLocation->setCompany($mockedCompany);
+      $mockedLocation->setUbn($ubnTwo);
+      $mockedLocation->setHealth($LocationHealthTwo);
+
+      $mockedCompany->addLocation($mockedLocation);
+      self::$mockedClientTwo->addCompany($mockedCompany);
+
+      $manager->persist(self::$mockedClientTwo);
+    }
     
     //persist mocked data
     $manager->persist(self::$mockedClient);
-//    $manager->persist(self::$mockedClientTwo);
     $manager->flush();
 
     echo "\r\n" .'client accestoken: ' . self::$mockedClient->getAccessToken() . "\r\n\r\n";
