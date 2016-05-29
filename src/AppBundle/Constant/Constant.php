@@ -48,6 +48,12 @@ class Constant
     const ANIMAL_ORDER_NUMBER_NAMESPACE = 'animal_order_number';
     const UBN_NEW_OWNER_NAMESPACE = 'ubn_new_owner';
 
+    const MAEDI_VISNA_STATUS = "maedi_visna_status";
+    const MAEDI_VISNA_END_DATE = "maedi_visna_end_date";
+    const SCRAPIE_STATUS = "scrapie_status";
+    const SCRAPIE_END_DATE = "scrapie_end_date";
+    const CHECK_DATE = "check_date";
+
     const DATE_OF_BIRTH_NAMESPACE  = 'date_of_birth';
     const DATE_OF_DEATH_NAMESPACE  = 'date_of_death';
     const RELATION_NUMBER_ACCEPTANT_SNAKE_CASE_NAMESPACE = "relation_number_acceptant";
