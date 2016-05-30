@@ -58,7 +58,7 @@ abstract class Output
     {
         if($location != null) {
             self::$ubn = $location->getUbn();
-            self::$locationHealth = $location->getHealth();
+            self::$locationHealth = $location->getHealths()->last();
 
         } else {
             self::$ubn = null;

@@ -139,12 +139,14 @@ class Location
   protected $revokes;
 
   /**
-   * @ORM\OneToOne(targetEntity="LocationHealth", inversedBy="location", cascade={"persist"})
+   * @var ArrayCollection
+   *
+   * @ORM\OneToMany(targetEntity="LocationHealth", mappedBy="location", cascade={"persist"})
    * @ORM\JoinColumn(name="health_id", referencedColumnName="id", nullable=true)
    * @JMS\Type("AppBundle\Entity\LocationHealth")
    * @Expose
    */
-  private $health;
+  private $healths;
 
   /*
   * Constructor
@@ -161,6 +163,7 @@ class Location
     $this->tagTransfers = new ArrayCollection();
     $this->flags = new ArrayCollection();
     $this->revokes = new ArrayCollection();
+    $this->healths = new ArrayCollection();
   }
 
   /**
@@ -612,21 +615,37 @@ class Location
         return $this->locationHolder;
     }
 
-  /**
-   * @return LocationHealth
-   */
-  public function getHealth()
-  {
-    return $this->health;
-  }
+    /**
+     * @return ArrayCollection
+     */
+    public function getHealths()
+    {
+      return $this->healths;
+    }
 
-  /**
-   * @param LocationHealth $health
-   */
-  public function setHealth($health)
-  {
-    $this->health = $health;
-  }
+    /**
+     * Add health
+     *
+     * @param LocationHealth $health
+     *
+     * @return Location
+     */
+    public function addHealth(LocationHealth $health)
+    {
+      $this->healths->add($health);
+
+      return $this;
+    }
+
+    /**
+     * Remove health
+     *
+     * @param LocationHealth $health
+     */
+    public function removeHealth(LocationHealth $health)
+    {
+      $this->healths->removeElement($health);
+    }
 
 
 

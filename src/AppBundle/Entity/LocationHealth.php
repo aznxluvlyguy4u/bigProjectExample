@@ -30,7 +30,7 @@ class LocationHealth
     /**
      * @var Location
      *
-     * @ORM\OneToOne(targetEntity="Location", mappedBy="health", cascade={"persist"})
+     * @ORM\ManyToOne(targetEntity="Location", inversedBy="healths", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
      * @Expose
      */

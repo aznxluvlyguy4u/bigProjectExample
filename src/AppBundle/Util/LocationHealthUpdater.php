@@ -10,6 +10,13 @@ use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\HealthStatus;
 use Doctrine\ORM\EntityManager;
 
+//TODO NOTE! For phase one we assume a location only has one LocationHealth. Even though healths is an ArrayCollection.
+//TODO Replace get(0) by getting the last one in the ArrayCollection ->last() has some issues. Test it first.
+
+/**
+ * Class LocationHealthUpdater
+ * @package AppBundle\Util
+ */
 class LocationHealthUpdater
 {
     /**
@@ -29,23 +36,25 @@ class LocationHealthUpdater
     public static function updateByGivenLocationOfOrigin(Location $locationOfDestination,
                                                          $locationOfOrigin = null)
     {
-        //By default set the status to IN_OBSERVATION
+        //By default set the status to IN_OBSERVATION for animals with an unknown HealthStatus
         $maediVisnaStatus = HealthStatus::IN_OBSERVATION;
         $scrapieStatus = HealthStatus::IN_OBSERVATION;
 
         if($locationOfOrigin != null) {
-            $healthOrigin = $locationOfOrigin->getHealth();
+            $healthsOrigin = $locationOfOrigin->getHealths();
+            if(!$healthsOrigin->isEmpty()) {
+                $healthOrigin = $healthsOrigin->get(0);
 
-            if($healthOrigin != null) {
                 //Get the health status
                 $maediVisnaStatus = $healthOrigin->getMaediVisnaStatus();
                 $scrapieStatus = $healthOrigin->getScrapieStatus();
             }
         }
 
-        //Create a new LocationHealth entity if the destination Location does not have one yet
-        if($locationOfDestination->getHealth() == null) {
-            $locationOfDestination->setHealth(new LocationHealth());
+        $healthsDestination = $locationOfDestination->getHealths();
+        if($healthsDestination->isEmpty()) {
+            $locationOfDestination->getHealths()->clear();
+            $locationOfDestination->addHealth(new LocationHealth());
         }
 
         $locationOfDestination = self::updateByStatus($locationOfDestination, $maediVisnaStatus, $scrapieStatus);
@@ -55,6 +64,7 @@ class LocationHealthUpdater
     }
 
     /**
+     * @param EntityManager $em
      * @param Location $location
      * @param string $ubnPreviousOwner
      * @return Location
@@ -66,6 +76,7 @@ class LocationHealthUpdater
     }
 
     /**
+     * @param EntityManager $em
      * @param Location $location
      * @param Animal $animal
      * @return Location
@@ -100,7 +111,7 @@ class LocationHealthUpdater
             $maediVisnaStatus == null ||
             $maediVisnaStatus == "") {
 
-            $location->getHealth()->setMaediVisnaStatus(HealthStatus::IN_OBSERVATION);
+            $location->getHealths()->get(0)->setMaediVisnaStatus(HealthStatus::IN_OBSERVATION);
         }
 
         if($scrapieStatus == HealthStatus::UNKNOWN ||
@@ -108,15 +119,15 @@ class LocationHealthUpdater
             $scrapieStatus == null ||
             $scrapieStatus == "") {
 
-            $location->getHealth()->setScrapieStatus(HealthStatus::IN_OBSERVATION);
+            $location->getHealths()->get(0)->setScrapieStatus(HealthStatus::IN_OBSERVATION);
         }
 
         if($maediVisnaStatus == HealthStatus::INFECTED) {
-            $location->getHealth()->setMaediVisnaStatus(HealthStatus::INFECTED);
+            $location->getHealths()->get(0)->setMaediVisnaStatus(HealthStatus::INFECTED);
         }
 
         if($scrapieStatus == HealthStatus::INFECTED) {
-            $location->getHealth()->setScrapieStatus(HealthStatus::INFECTED);
+            $location->getHealths()->get(0)->setScrapieStatus(HealthStatus::INFECTED);
         }
 
         return $location;
@@ -132,14 +143,14 @@ class LocationHealthUpdater
     private static function updateOverallHealthStatus(Location $location)
     {
         //Update the overall LocationHealthStatus in this exact order
-        if($location->getHealth()->getMaediVisnaStatus() == HealthStatus::IN_OBSERVATION ||
-            $location->getHealth()->getScrapieStatus() == HealthStatus::IN_OBSERVATION) {
-            $location->getHealth()->setLocationHealthStatus(HealthStatus::IN_OBSERVATION);
+        if($location->getHealths()->get(0)->getMaediVisnaStatus() == HealthStatus::IN_OBSERVATION ||
+            $location->getHealths()->get(0)->getScrapieStatus() == HealthStatus::IN_OBSERVATION) {
+            $location->getHealths()->get(0)->setLocationHealthStatus(HealthStatus::IN_OBSERVATION);
         }
 
-        if($location->getHealth()->getMaediVisnaStatus() == HealthStatus::INFECTED ||
-            $location->getHealth()->getScrapieStatus() == HealthStatus::INFECTED) {
-            $location->getHealth()->setLocationHealthStatus(HealthStatus::INFECTED);
+        if($location->getHealths()->get(0)->getMaediVisnaStatus() == HealthStatus::INFECTED ||
+            $location->getHealths()->get(0)->getScrapieStatus() == HealthStatus::INFECTED) {
+            $location->getHealths()->get(0)->setLocationHealthStatus(HealthStatus::INFECTED);
         }
 
         return $location;
