@@ -115,4 +115,22 @@ class Utils
         }
         return $str;
     }
+
+    /**
+     * Verify whether all values in an array are unique.
+     *
+     * @param array $array
+     * @return bool
+     */
+    public static function arrayValuesAreUnique($array)
+    {
+        for($i = 0; $i < sizeof($array); $i++) {
+            for($j = $i +1; $j < sizeof($array); $j++) {
+                if($array[$i] == $array[$j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 }

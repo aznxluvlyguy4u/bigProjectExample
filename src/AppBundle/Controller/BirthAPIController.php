@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Component\Modifier\AnimalRemover;
 use AppBundle\Component\Modifier\MessageModifier;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
@@ -169,13 +170,24 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     $returnMessages = new ArrayCollection();
 
     //Validate ALL children's ULN's BEFORE persisting any animal at all
+    $ulns = array();
     foreach($children as $child) {
-        $verification = $this->isTagUnassigned($child[Constant::ULN_COUNTRY_CODE_NAMESPACE],
-                                               $child[Constant::ULN_NUMBER_NAMESPACE]);
+        $ulnCountryCode = $child[Constant::ULN_COUNTRY_CODE_NAMESPACE];
+        $ulnNumber = $child[Constant::ULN_NUMBER_NAMESPACE];
+        $verification = $this->isTagUnassigned($ulnCountryCode,
+                                               $ulnNumber);
         if(!$verification['isValid']) {
             return $verification['jsonResponse'];
         }
+        $ulns[] = $ulnCountryCode . $ulnNumber;
     }
+
+    //Validate all ulns are unique
+    if(!Utils::arrayValuesAreUnique($ulns)) {
+        return new JsonResponse(array('code' => 428,
+            'message' => 'The uln values are valid, but each child should have a unique uln'), 428);
+    }
+
 
     foreach($children as $child) {
 
