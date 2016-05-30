@@ -18,19 +18,6 @@ class LocationHealthUpdater
      */
     public static function updateWithoutOriginHealthData(Location $locationOfDestination)
     {
-//        //By default set the status to IN_OBSERVATION
-//        $maediVisnaStatus = HealthStatus::IN_OBSERVATION;
-//        $scrapieStatus = HealthStatus::IN_OBSERVATION;
-//
-//        //Create a new LocationHealth entity if the destination Location does not have one yet
-//        if($locationOfDestination->getHealth() == null) {
-//            $locationOfDestination->setHealth(new LocationHealth());
-//        }
-//
-//        $locationOfDestination = self::updateByStatus($locationOfDestination, $maediVisnaStatus, $scrapieStatus);
-//        $locationOfDestination = self::updateOverallHealthStatus($locationOfDestination);
-//
-//        return $locationOfDestination;
         return self::updateByGivenLocationOfOrigin($locationOfDestination, null);
     }
 
