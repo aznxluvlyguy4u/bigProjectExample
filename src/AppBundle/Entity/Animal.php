@@ -429,7 +429,7 @@ abstract class Animal
     {
         if($assignedTag != null){
             $this->assignedTag = $assignedTag;
-            $this->assignedTag->setTagStatus(TagStateType::ASSIGNED);
+            $this->assignedTag->setTagStatus(TagStateType::ASSIGNING);
             $assignedTag->setAnimal($this);
             $this->setUlnNumber($assignedTag->getUlnNumber());
             $this->setUlnCountryCode($assignedTag->getUlnCountryCode());

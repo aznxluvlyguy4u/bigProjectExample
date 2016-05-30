@@ -513,7 +513,7 @@ class APIController extends Controller implements APIControllerInterface
       $jsonResponse = new JsonResponse(array('code'=>428, "message" => $message), 428);
 
     } else {
-      if($tag->getTagStatus() == TagStateType::ASSIGNED){
+      if($tag->getTagStatus() == TagStateType::ASSIGNED || $tag->getTagStatus() == TagStateType::ASSIGNING){
         $isValid = false;
         $message = "Tag " . $ulnCountryCode . $ulnNumber . " for child already in use";
         $jsonResponse = new JsonResponse(array('code'=>428, "message" => $message), 428);

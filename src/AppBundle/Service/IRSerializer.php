@@ -293,7 +293,7 @@ class IRSerializer implements IRSerializerInterface
 
 //            $animalObject->setAssignedTag($tag);
             $tag->setAnimal($animalObject);
-            $tag->setTagStatus(TagStateType::ASSIGNED);
+            $tag->setTagStatus(TagStateType::ASSIGNING);
             $this->entityManager->persist($tag);
             $this->entityManager->persist($animalObject->setAssignedTag($tag));
             $this->entityManager->flush();
