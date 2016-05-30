@@ -37,6 +37,7 @@ class DeclareBirthOutput
             "date_of_birth" => $birth->getDateOfBirth(),  //Mandatory for IenR
             "is_aborted" => $birth->getIsAborted(),
             "has_lambar" => $birth->getHasLambar(),
+            "is_pseudo_pregnancy" => $birth->getIsPseudoPregnancy(),
             "birth_type" => $birth->getBirthType(),
             "litter_size" => $birth->getLitterSize(),
             "birth_weight" => $birth->getBirthWeight(),
