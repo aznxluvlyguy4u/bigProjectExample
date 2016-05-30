@@ -200,6 +200,9 @@ class DeclareBirth extends DeclareBase
     public function __construct() {
         parent::__construct();
         $this->setRequestState(RequestStateType::OPEN);
+        $this->setIsPseudoPregnancy(false);
+        $this->setIsAborted(false);
+        $this->setHasLambar(false);
 
         //Create responses array
         $this->responses = new ArrayCollection();
