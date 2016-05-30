@@ -2,6 +2,7 @@
 
 namespace AppBundle\Service;
 
+use AppBundle\Enumerator\TagStateType;
 use Exception;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestType;
@@ -40,7 +41,6 @@ class EntityGetter
      */
     public function retrieveTag($ulnCountryCode, $ulnNumber)
     {
-
         $tagRepository = $this->entityManager->getRepository(Constant::TAG_REPOSITORY);
         return $tagRepository->findByUlnNumberAndCountryCode($ulnCountryCode, $ulnNumber);
     }
@@ -318,7 +318,7 @@ class EntityGetter
     private function createNewAnimalFromAnimalArray(array $animalArray)
     {
         $animal = $this->createAnimalBasedOnGender($animalArray);
-
+;
         $ulnNumber = null;
         $countryCode = null;
         $tagRepository = $this->entityManager->getRepository(Constant::TAG_REPOSITORY);
@@ -333,14 +333,19 @@ class EntityGetter
             $ulnNumber = $animalArray[Constant::ULN_NUMBER_NAMESPACE];
             $countryCode = $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
 
-            //Find registered tag, assign to this animal
+            //NOTE! It is assumed the necessary validity checks for the ULNs and Tags have already been done!
+
+            //Whether or not a new animal gets a tag assigned depends on the validation before this function
+            //If animal is new && uln code matches an unassigned tag, then assign that tag to the animal.
             $tag = $tagRepository->findByUlnNumberAndCountryCode($countryCode, $ulnNumber);
 
-            if($tag->getTagStatus() == "assigned") { throw new Exception('Tag has already been assigned'); }
-
-            $animal->setAssignedTag($tag);
-            $animal->setAnimalType(AnimalType::sheep);
-            $animal->setIsAlive(true);
+            if($tag != null) {
+                if($tag->getTagStatus() == TagStateType::UNASSIGNED) {
+                    $animal->setAssignedTag($tag);
+                    $animal->setAnimalType(AnimalType::sheep);
+                    $animal->setIsAlive(true);
+                }
+            }
 
             //Set the uln in the newly created animal
             $animal->setUlnCountryCode($countryCode);

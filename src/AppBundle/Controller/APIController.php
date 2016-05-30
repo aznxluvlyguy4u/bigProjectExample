@@ -16,6 +16,7 @@ use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Service\EntitySetter;
@@ -298,8 +299,9 @@ class APIController extends Controller implements APIControllerInterface
 
   public function isUlnOrPedigreeCodeValid(Request $request, $ulnCode = null)
   {
-    if($ulnCode != null) {
+    $verifySurrogates = false;
 
+    if($ulnCode != null) {
       return $this->verifyAnimalByUln($ulnCode);
 
     } else {
@@ -307,7 +309,21 @@ class APIController extends Controller implements APIControllerInterface
       $array = $contentArray->toArray();
 
       $objectsToBeVerified = array();
-      array_push($objectsToBeVerified, Constant::ANIMAL_NAMESPACE, Constant::FATHER_NAMESPACE, Constant::MOTHER_NAMESPACE);
+      array_push($objectsToBeVerified, Constant::ANIMAL_NAMESPACE, Constant::MOTHER_NAMESPACE);
+
+      //For Father (DeclareBirth) only verify pedigree. ULN not checked in API since father can be from external farm.
+      if($contentArray->containsKey(Constant::FATHER_NAMESPACE)) {
+        $father = $array[Constant::FATHER_NAMESPACE];
+
+        $isVerified = $this->verifyOnlyPedigreeCodeInAnimal($father);
+
+        if (!$isVerified) {
+          return array("animalKind" => Constant::FATHER_NAMESPACE,
+              "keyType" => Constant::PEDIGREE_NAMESPACE,
+              "isValid" => false,
+              "result" => $this->createValidityCheckMessage(false, Constant::ULN_NAMESPACE), Constant::FATHER_NAMESPACE);
+        }
+      }
 
       //Strip countryCode
       $countryCode = mb_substr($ulnCode, 0, 2, 'utf-8');
@@ -327,16 +343,18 @@ class APIController extends Controller implements APIControllerInterface
         $children = $array[Constant::CHILDREN_NAMESPACE];
 
         foreach($children as $child) {
-          $verification = $this->verifyUlnOrPedigreeCodeInAnimal($child, Constant::CHILDREN_NAMESPACE);
 
-          if($verification["isValid"] == false) { return $verification; }
+          //NOTE Children are created with new uln from unassigned tags, so they cannot be in the system!
 
-          //Also verify the surrogate of a child
-          if(array_key_exists(Constant::SURROGATE_NAMESPACE, $child)){
-            $verification = $this->verifyUlnOrPedigreeCodeInAnimal($child[Constant::SURROGATE_NAMESPACE], Constant::SURROGATE_NAMESPACE);
+          if($verifySurrogates) {
+            //Also verify the surrogate of a child
+            if(array_key_exists(Constant::SURROGATE_NAMESPACE, $child)){
+              $verification = $this->verifyUlnOrPedigreeCodeInAnimal($child[Constant::SURROGATE_NAMESPACE], Constant::SURROGATE_NAMESPACE);
 
-            if($verification["isValid"] == false) { return $verification; }
+              if($verification["isValid"] == false) { return $verification; }
+            }
           }
+
         }
       }
 
@@ -351,21 +369,30 @@ class APIController extends Controller implements APIControllerInterface
 
   }
 
-  public function verifyOnlyPedigreeCodeInAnimal(Request $request)
+  /**
+   * @param array $animalArray
+   * @return bool
+   */
+  public function verifyOnlyPedigreeCodeInAnimal($animalArray)
   {
-    $content = $this->getContentAsArray($request)->get(Constant::ANIMAL_NAMESPACE);
-
-    if (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $content) && array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $content)) {
-      $pedigreeNumber = $content[Constant::PEDIGREE_NUMBER_NAMESPACE];
-      $pedigreeCountryCode = $content[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
+    if (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalArray) && array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalArray)) {
+      $pedigreeNumber = $animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE];
+      $pedigreeCountryCode = $animalArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
 
       if($pedigreeCountryCode != null && $pedigreeNumber != null) {
-        $result = $this->isUlnOrPedigreeCodeValid($request)['isValid'];
+        $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+        $animal = $animalRepository->findByPedigreeCountryCodeAndNumber($pedigreeCountryCode, $pedigreeNumber);
 
-      } else {
+        if($animal != null) {
+          $result = true;
+
+        } else { //Animal is not found
+          $result = false;
+        }
+      } else { //PedigreeCountryCode and/or PedigreeNumber is null, so not validating on Pedigree
         $result = true;
       }
-    } else {
+    } else { //PedigreeCountryCode and/or PedigreeNumber keys do not exist, so not validating on Pedigree
       $result = true;
     }
 
@@ -471,6 +498,29 @@ class APIController extends Controller implements APIControllerInterface
         "keyType" => $keyType,
         "isValid" => $isValid,
         "result" => $this->createValidityCheckMessage($isValid, $keyType, $ulnString));
+  }
+
+  public function isTagUnassigned($ulnCountryCode, $ulnNumber)
+  {
+    $isValid = true;
+    $jsonResponse = null;
+
+    $tag = $this->getEntityGetter()->retrieveTag($ulnCountryCode, $ulnNumber);
+
+    if($tag == null) {
+      $isValid = false;
+      $message = "Tag " . $ulnCountryCode . $ulnNumber . " for child does not exist";
+      $jsonResponse = new JsonResponse(array('code'=>428, "message" => $message), 428);
+
+    } else {
+      if($tag->getTagStatus() == TagStateType::ASSIGNED){
+        $isValid = false;
+        $message = "Tag " . $ulnCountryCode . $ulnNumber . " for child already in use";
+        $jsonResponse = new JsonResponse(array('code'=>428, "message" => $message), 428);
+      }
+    }
+
+    return array('isValid' => $isValid, 'jsonResponse' => $jsonResponse);
   }
 
   /**

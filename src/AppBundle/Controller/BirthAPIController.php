@@ -153,9 +153,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
       $keyType = $validityCheckUlnOrPedigree['keyType']; // uln  of pedigree
       $animalKind = $validityCheckUlnOrPedigree['animalKind'];
       $message = $keyType . ' of ' . $animalKind . ' not found.';
-      $messageArray = array('code'=>428, "message" => $message);
-
-      return new JsonResponse($messageArray, 428);
+      return new JsonResponse(array('code'=>428, "message" => $message), 428);
     }
 
     //Get content to array
@@ -170,16 +168,10 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
     //Validate ALL children's ULN's BEFORE persisting any animal at all
     foreach($children as $child) {
-
-        $ulnNumber = $child[Constant::ULN_NUMBER_NAMESPACE];
-        $ulnCountryCode = $child[Constant::ULN_COUNTRY_CODE_NAMESPACE];
-
-        $tag = $this->getEntityGetter()->retrieveTag($ulnCountryCode, $ulnNumber);
-       
-        if($tag->getTagStatus() == TagStateType::ASSIGNED){
-            //TODO redirect to error table / save the incorrect input (?)
-            $message = "Tag " . $ulnCountryCode . $ulnNumber . " for child already in use";
-            return new JsonResponse(array($message, 200), 200);
+        $verification = $this->isTagUnassigned($child[Constant::ULN_COUNTRY_CODE_NAMESPACE],
+                                               $child[Constant::ULN_NUMBER_NAMESPACE]);
+        if(!$verification['isValid']) {
+            return $verification['jsonResponse'];
         }
     }
 
@@ -254,24 +246,30 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
           return new JsonResponse($messageArray, 428);
       }
 
-
       //Validate if tag is available
-      $ulnCountryCode = $content->get('animal')['uln_country_code'];
-      $ulnNumber = $content->get('animal')['uln_number'];
-      $query = array("ulnCountryCode"=>$ulnCountryCode, "ulnNumber"=>$ulnNumber);
-      $retrievedTag = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY)->findOneBy($query);
-
-      $tagIsNotAvailable = $retrievedTag->getTagStatus()!=TagStateType::UNASSIGNED;
-
-
-      $tagUsedByAnimalToBeDeletedInUpdate = $declareBirth->getAnimal()->getAssignedTag() == $retrievedTag;
-
-      if($tagIsNotAvailable && !$tagUsedByAnimalToBeDeletedInUpdate) {
-          $message = 'Tag is already assigned';
-          $messageArray = array('code'=>400, "message" => $message);
-
-          return new JsonResponse($messageArray, 400);
+      $verification = $this->isTagUnassigned($content->get('animal')['uln_country_code'],
+          $content->get('animal')['uln_number']);
+      if(!$verification['isValid']) {
+          return $verification['jsonResponse'];
       }
+
+      //Validate if tag is available (OLD VERSION)
+//      $ulnCountryCode = $content->get('animal')['uln_country_code'];
+//      $ulnNumber = $content->get('animal')['uln_number'];
+//      $query = array("ulnCountryCode"=>$ulnCountryCode, "ulnNumber"=>$ulnNumber);
+//      $retrievedTag = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY)->findOneBy($query);
+//
+//      $tagIsNotAvailable = $retrievedTag->getTagStatus()!=TagStateType::UNASSIGNED;
+//
+//
+//      $tagUsedByAnimalToBeDeletedInUpdate = $declareBirth->getAnimal()->getAssignedTag() == $retrievedTag;
+//
+//      if($tagIsNotAvailable && !$tagUsedByAnimalToBeDeletedInUpdate) {
+//          $message = 'Tag is already assigned';
+//          $messageArray = array('code'=>400, "message" => $message);
+//
+//          return new JsonResponse($messageArray, 400);
+//      }
 
       //Convert the array into an object and add the mandatory values retrieved from the database
       $declareBirthUpdate = $this->buildEditMessageObject(RequestType::DECLARE_BIRTH_ENTITY,

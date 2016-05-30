@@ -151,13 +151,13 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function createArrival(Request $request)
   {
+    $content = $this->getContentAsArray($request);
+
     //Only verify if pedigree exists in our database. Unknown ULNs are allowed
-    if(!$this->verifyOnlyPedigreeCodeInAnimal($request)){
+    if(!$this->verifyOnlyPedigreeCodeInAnimal($content->get(Constant::ANIMAL_NAMESPACE))){
       return new JsonResponse(array('code'=>428, "message" => "Pedigree value is not in database."), 428);
     }
 
-    //Get content to array
-    $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
     $repository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
 
