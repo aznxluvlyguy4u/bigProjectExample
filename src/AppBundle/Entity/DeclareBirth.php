@@ -28,6 +28,22 @@ class DeclareBirth extends DeclareBase
     private $animal;
 
     /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
+    private $ulnNumber;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
+    private $ulnCountryCode;
+
+    /**
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="births", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
@@ -415,4 +431,39 @@ class DeclareBirth extends DeclareBase
     {
         $this->revoke = $revoke;
     }
+
+    /**
+     * @return string
+     */
+    public function getUlnNumber()
+    {
+        return $this->ulnNumber;
+    }
+
+    /**
+     * @param string $ulnNumber
+     */
+    public function setUlnNumber($ulnNumber)
+    {
+        $this->ulnNumber = $ulnNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUlnCountryCode()
+    {
+        return $this->ulnCountryCode;
+    }
+
+    /**
+     * @param string $ulnCountryCode
+     */
+    public function setUlnCountryCode($ulnCountryCode)
+    {
+        $this->ulnCountryCode = $ulnCountryCode;
+    }
+
+
+
 }
