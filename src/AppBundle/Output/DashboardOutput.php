@@ -11,7 +11,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 /**
  * Class DashboardOutput
  */
-class DashboardOutput
+class DashboardOutput extends Output
 {
     /**
      * @param Client $client
@@ -24,20 +24,23 @@ class DashboardOutput
         $errorCounts = Count::getErrorCountDeclarations($client);
         $unassignedTagsCount = Count::getUnassignedTagsCount($client);
 
-        $ubn = $client->getCompanies()->get(0)->getLocations()->get(0)->getUbn(); //TODO Phase 2+ select proper location
+        //TODO Phase 2+ select proper location
+        $location = $client->getCompanies()->get(0)->getLocations()->get(0);
+        self:: setUbnAndLocationHealthValues($location);
 
         $result = array(
                   "introduction" => "Welkom! Geniet van ons nieuw systeem.",
-                  "ubn" => $ubn,
+                  "ubn" => self::$ubn,
                   "health_status" =>
                   array(
-                    "company_health_status" => "",
+                    //TODO refactor 'company_health_status'  to 'location_health_status'
+                    "company_health_status" => self::$locationHealthStatus,
                     //maedi_visna is zwoegerziekte
-                    "maedi_visna_status" => "",
-                    "maedi_visna_end_date" => "",
-                    "scrapie_status" => "",
-                    "scrapie_end_date" => "",
-                    "check_date" => ""
+                      "maedi_visna_status" => self::$maediVisnaStatus,
+                      "maedi_visna_end_date" => self::$maediVisnaEndDate,
+                      "scrapie_status" => self::$scrapieStatus,
+                      "scrapie_end_date" => self::$scrapieEndDate,
+                      "check_date" => self::$checkDate
                   ),
                   "livestock" =>
                   array(

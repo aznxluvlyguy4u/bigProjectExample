@@ -272,4 +272,6 @@ class Neuter extends Animal
     public function getFlags() {
         return $this->flags;
     }
+
+
 }

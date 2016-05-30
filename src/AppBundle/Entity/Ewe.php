@@ -312,4 +312,6 @@ class Ewe extends Animal
     {
         return $this->flags;
     }
+
+
 }
