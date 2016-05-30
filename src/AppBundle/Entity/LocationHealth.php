@@ -105,6 +105,11 @@ class LocationHealth
      */
     private $checkDate;
 
+    public function __construct()
+    {
+        $this->setLogDate(new DateTime('now'));
+    }
+
     /**
      * Get id
      *
