@@ -37,6 +37,14 @@ class LocationHealth
     private $location;
 
     /**
+     * @ORM\Column(type="datetime")
+     * @Assert\Date
+     * @Assert\NotBlank
+     * @JMS\Type("DateTime")
+     */
+    protected $logDate;
+
+    /**
      * maedi_visna is 'zwoegerziekte' in Dutch
      *
      * @var string
@@ -105,6 +113,22 @@ class LocationHealth
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getLogDate()
+    {
+        return $this->logDate;
+    }
+
+    /**
+     * @param mixed $logDate
+     */
+    public function setLogDate($logDate)
+    {
+        $this->logDate = $logDate;
     }
 
     /**
