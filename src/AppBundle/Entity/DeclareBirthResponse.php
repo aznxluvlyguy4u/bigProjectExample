@@ -35,6 +35,14 @@ class DeclareBirthResponse extends DeclareBaseResponse {
     private $animal;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $gender;
+
+    /**
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
@@ -395,4 +403,22 @@ class DeclareBirthResponse extends DeclareBaseResponse {
     {
         return $this->ulnCountryCodeSurrogate;
     }
+
+    /**
+     * @return string
+     */
+    public function getGender()
+    {
+        return $this->gender;
+    }
+
+    /**
+     * @param string $gender
+     */
+    public function setGender($gender)
+    {
+        $this->gender = $gender;
+    }
+
+
 }
