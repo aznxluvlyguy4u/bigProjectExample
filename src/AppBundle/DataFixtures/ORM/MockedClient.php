@@ -142,7 +142,7 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedLocation = new Location();
     self::$mockedLocation->setAddress(self::$mockedLocationAddress);
     self::$mockedLocation->setCompany(self::$mockedCompany);
-    self::$mockedLocation->setHealth($LocationHealth);
+    self::$mockedLocation->addHealth($LocationHealth);
 
     self::$mockedLocation->setUbn($ubn); //NOTE! Echte UBN nodig voor successvolle IenR melding!
 
@@ -203,7 +203,7 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
       $mockedLocation->setAddress($mockedLocationAddress);
       $mockedLocation->setCompany($mockedCompany);
       $mockedLocation->setUbn($ubnTwo);
-      $mockedLocation->setHealth($LocationHealthTwo);
+      $mockedLocation->addHealth($LocationHealthTwo);
 
       $mockedCompany->addLocation($mockedLocation);
       self::$mockedClientTwo->addCompany($mockedCompany);
