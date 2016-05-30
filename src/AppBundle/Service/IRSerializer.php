@@ -319,6 +319,7 @@ class IRSerializer implements IRSerializerInterface
 
         }
         //Retrieve animal entity
+        
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareBirthContentArray);
         $retrievedAnimalArray = $this->returnAnimalArrayIncludingParentsAndSurrogate($retrievedAnimal);
 
@@ -327,7 +328,7 @@ class IRSerializer implements IRSerializerInterface
         $declareBirthContentArray['has_lambar'] = $declareBirthContentArray['animal']['has_lambar'];
         $declareBirthContentArray['birth_tail_length'] = $declareBirthContentArray['animal']['birth_tail_length'];
         $declareBirthContentArray['gender'] = $declareBirthContentArray['animal']['gender'];
-
+        
         //Add retrieved animal properties including type to initial animalContentArray
         $declareBirthContentArray->set(Constant::ANIMAL_NAMESPACE, $retrievedAnimalArray);
 
@@ -341,6 +342,14 @@ class IRSerializer implements IRSerializerInterface
         $surrogateArray = $declareBirthContentArray['animal']['surrogate'];
         $declareBirthRequest->setUlnSurrogate($surrogateArray['uln_number']);
         $declareBirthRequest->setUlnCountryCodeSurrogate($surrogateArray['uln_country_code']);
+
+        $fatherArray = $declareBirthContentArray['father'];
+        $declareBirthRequest->setUlnFather($fatherArray['uln_number']);
+        $declareBirthRequest->setUlnCountryCodeFather($fatherArray['uln_country_code']);
+
+        $motherArray = $declareBirthContentArray['mother'];
+        $declareBirthRequest->setUlnMother($motherArray['uln_number']);
+        $declareBirthRequest->setUlnCountryCodeMother($motherArray['uln_country_code']);
 
         return $declareBirthRequest;
     }
