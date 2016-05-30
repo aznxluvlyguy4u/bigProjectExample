@@ -36,9 +36,9 @@ class RequestMessageOutputBuilder
 
             case RequestType::DECLARE_BIRTH_ENTITY:
                 if($isUpdate) {
-                    return null; //update Array
+                    return DeclareBirthOutput::createUpdateRequestArray($messageObject);
                 } else {
-                    return null; //post Array
+                    return DeclareBirthOutput::createPostRequestArray($messageObject);
                 }
 
             case RequestType::DECLARE_DEPART_ENTITY:
