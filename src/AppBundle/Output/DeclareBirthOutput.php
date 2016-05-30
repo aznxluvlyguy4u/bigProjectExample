@@ -45,7 +45,7 @@ class DeclareBirthOutput
             
             "animal" =>
             array("id" => $animalId,
-                  "uln_country_code" => $birth->getAnimal()->getUlnCountryCode(),
+                  "uln_country_code" => $birth->getUlnCountryCode(),
                   "uln_number" => $birth->getAnimal()->getUlnNumber(),
                   "pedigree_country_code" => $birth->getAnimal()->getPedigreeCountryCode(),
                   "pedigree_number" => $birth->getAnimal()->getPedigreeNumber(),
@@ -59,26 +59,20 @@ class DeclareBirthOutput
                   "type" => Utils::getClassName($birth->getAnimal()),
                   "parent_mother" =>
                   array(
-                      "uln_country_code" => $birth->getAnimal()->getParentMother()->getUlnCountryCode(),
-                      "uln_number" => $birth->getAnimal()->getParentMother()->getUlnNumber(),
-                      "pedigree_country_code" => $birth->getAnimal()->getParentMother()->getPedigreeCountryCode(),
-                      "pedigree_number" => $birth->getAnimal()->getParentMother()->getPedigreeNumber(),
+                      "uln_country_code" => $birth->getUlnCountryCodeMother(),
+                      "uln_number" => $birth->getUlnMother(),
                       "type" => "Ewe"
                   ),
                   "parent_father" =>
                   array(
-                      "uln_country_code" => $birth->getAnimal()->getParentFather()->getUlnCountryCode(),
-                      "uln_number" => $birth->getAnimal()->getParentFather()->getUlnNumber(),
-                      "pedigree_country_code" => $birth->getAnimal()->getParentFather()->getPedigreeCountryCode(),
-                      "pedigree_number" => $birth->getAnimal()->getParentFather()->getPedigreeNumber(),
+                      "uln_country_code" => $birth->getUlnCountryCodeFather(),
+                      "uln_number" => $birth->getUlnFather(),
                       "type" => "Ram"
                   ),
                   "surrogate" =>
                   array(
-                      "uln_country_code" => $birth->getAnimal()->getSurrogate()->getUlnCountryCode(),
-                      "uln_number" => $birth->getAnimal()->getSurrogate()->getUlnNumber(),
-                      "pedigree_country_code" => $birth->getAnimal()->getSurrogate()->getPedigreeCountryCode(),
-                      "pedigree_number" => $birth->getAnimal()->getSurrogate()->getPedigreeNumber(),
+                      "uln_country_code" => $birth->getUlnCountryCodeSurrogate(),
+                      "uln_number" => $birth->getUlnSurrogate(),
                       "type" => "Ewe"
                   )
             ),

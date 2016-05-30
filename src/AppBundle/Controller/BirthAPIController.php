@@ -163,30 +163,30 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     $content = $this->getContentAsArray($request);
 
     //Split up the children in the array into separate messages
-    $children = $content->get("children"); 
+    $children = $content->get("children");
     $contentWithoutChildren = $content;
     $contentWithoutChildren->remove("children");
 
     $returnMessages = new ArrayCollection();
 
     //Validate ALL children's ULN's BEFORE persisting any animal at all
-    $ulns = array();
-    foreach($children as $child) {
-        $ulnCountryCode = $child[Constant::ULN_COUNTRY_CODE_NAMESPACE];
-        $ulnNumber = $child[Constant::ULN_NUMBER_NAMESPACE];
-        $verification = $this->isTagUnassigned($ulnCountryCode,
-                                               $ulnNumber);
-        if(!$verification['isValid']) {
-            return $verification['jsonResponse'];
-        }
-        $ulns[] = $ulnCountryCode . $ulnNumber;
-    }
-
-    //Validate all ulns are unique
-    if(!Utils::arrayValuesAreUnique($ulns)) {
-        return new JsonResponse(array('code' => 428,
-            'message' => 'The uln values are valid, but each child should have a unique uln'), 428);
-    }
+//    $ulns = array();
+//    foreach($children as $child) {
+//        $ulnCountryCode = $child[Constant::ULN_COUNTRY_CODE_NAMESPACE];
+//        $ulnNumber = $child[Constant::ULN_NUMBER_NAMESPACE];
+//        $verification = $this->isTagUnassigned($ulnCountryCode,
+//                                               $ulnNumber);
+//        if(!$verification['isValid']) {
+//            return $verification['jsonResponse'];
+//        }
+//        $ulns[] = $ulnCountryCode . $ulnNumber;
+//    }
+//
+//    //Validate all ulns are unique
+//    if(!Utils::arrayValuesAreUnique($ulns)) {
+//        return new JsonResponse(array('code' => 428,
+//            'message' => 'The uln values are valid, but each child should have a unique uln'), 428);
+//    }
 
 
     foreach($children as $child) {
@@ -200,13 +200,15 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         //Send it to the queue and persist/update any changed state to the database
         $messageArray = $this->sendMessageObjectToQueue($declareBirthObject);
 
-        //Persist message without new child
-        $declareBirthObject = AnimalRemover::removeChildFromDeclareBirth($declareBirthObject);
+
+//        Persist message without animal. That is done after a successful response
+        $declareBirthObject->setAnimal(null);
         $this->persist($declareBirthObject);
 
-        $returnMessages->add($messageArray);
-      }
 
+//        $returnMessages->add($messageArray);
+      }
+return new JsonResponse($declareBirthObject, 200);
     return new JsonResponse($returnMessages, 200);
   }
 

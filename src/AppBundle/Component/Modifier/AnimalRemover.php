@@ -9,6 +9,7 @@ use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
+use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Doctrine\ORM\EntityManager;
 
 class AnimalRemover extends MessageModifier
@@ -32,11 +33,22 @@ class AnimalRemover extends MessageModifier
 
     /**
      * @param DeclareBirth $declareBirthObject
+     * @param $doctrine
      * @return DeclareBirth
      */
-    public static function removeChildFromDeclareBirth($declareBirthObject)
+    public static function removeChildFromDeclareBirth($declareBirthObject, $doctrine)
     {
-        $declareBirthObject->setAnimal(null);
+        $child = $declareBirthObject->getAnimal();
+
+        if($child != null) {
+            $retrievedAnimal = self::retrieveAnimalByAnimalObject($child, $doctrine);
+            if($retrievedAnimal != null){
+                $doctrine->getManager()->remove($retrievedAnimal);
+            }
+
+            $declareBirthObject->setAnimal(null);
+        }
+
         return $declareBirthObject;
     }
 

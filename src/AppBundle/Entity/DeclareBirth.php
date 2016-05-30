@@ -21,7 +21,7 @@ use JMS\Serializer\Annotation\Expose;
 class DeclareBirth extends DeclareBase
 {
     /**
-     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="births", cascade={"persist", "remove"})
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="births")
      * @JMS\Type("AppBundle\Entity\Animal")
      * @Expose
      */

@@ -52,14 +52,7 @@ class BirthMessageBuilder extends MessageBuilderBase
     private function addDeclareBirthData(DeclareBirth $declareBirth)
     {
         $animal = $declareBirth->getAnimal();
-        $animal->setAnimalType(AnimalType::sheep);
         $animal->setDateOfBirth($declareBirth->getDateOfBirth());
-
-        //Both persist and flush are necessary for the animal
-        $this->em->persist($animal);
-        $this->em->flush();
-
-        $declareBirth->setAnimal($animal);
 
         if(ActionFlagSetting::DECLARE_BIRTH != null) {
             $declareBirth->setAction(ActionFlagSetting::DECLARE_BIRTH);
