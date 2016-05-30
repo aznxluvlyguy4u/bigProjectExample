@@ -5,7 +5,6 @@ namespace AppBundle\Output;
 
 use AppBundle\Component\Utils;
 use AppBundle\Entity\DeclareBirth;
-use AppBundle\Enumerator\AnimalObjectType;
 
 /**
  * Class DeclareBirthOutput
@@ -64,7 +63,7 @@ class DeclareBirthOutput
                       "uln_number" => $birth->getAnimal()->getParentMother()->getUlnNumber(),
                       "pedigree_country_code" => $birth->getAnimal()->getParentMother()->getPedigreeCountryCode(),
                       "pedigree_number" => $birth->getAnimal()->getParentMother()->getPedigreeNumber(),
-                      "type" => Utils::getClassName($birth->getAnimal()->getParentMother())
+                      "type" => "Ewe"
                   ),
                   "parent_father" =>
                   array(
@@ -72,7 +71,7 @@ class DeclareBirthOutput
                       "uln_number" => $birth->getAnimal()->getParentFather()->getUlnNumber(),
                       "pedigree_country_code" => $birth->getAnimal()->getParentFather()->getPedigreeCountryCode(),
                       "pedigree_number" => $birth->getAnimal()->getParentFather()->getPedigreeNumber(),
-                      "type" => Utils::getClassName($birth->getAnimal()->getParentFather())
+                      "type" => "Ram"
                   ),
                   "surrogate" =>
                   array(
@@ -80,7 +79,7 @@ class DeclareBirthOutput
                       "uln_number" => $birth->getAnimal()->getSurrogate()->getUlnNumber(),
                       "pedigree_country_code" => $birth->getAnimal()->getSurrogate()->getPedigreeCountryCode(),
                       "pedigree_number" => $birth->getAnimal()->getSurrogate()->getPedigreeNumber(),
-                      "type" => Utils::getClassName($birth->getAnimal()->getSurrogate())
+                      "type" => "Ewe"
                   )
             ),
             "location"=>

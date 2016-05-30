@@ -27,21 +27,76 @@ class DeclareBirth extends DeclareBase
      */
     private $animal;
 
+
     /**
-     * @var string
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
      * @JMS\Type("string")
-     * @ORM\Column(type="string", nullable=true)
      * @Expose
      */
     private $ulnNumber;
 
     /**
-     * @var string
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
      * @JMS\Type("string")
-     * @ORM\Column(type="string", nullable=true)
      * @Expose
      */
     private $ulnCountryCode;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $gender;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ulnFather;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ulnCountryCodeFather;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ulnMother;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ulnCountryCodeMother;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ulnSurrogate;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ulnCountryCodeSurrogate;
 
     /**
      * @Assert\NotBlank
@@ -218,6 +273,27 @@ class DeclareBirth extends DeclareBase
     public function setAnimal(\AppBundle\Entity\Animal $animal = null)
     {
         $this->animal = $animal;
+
+        if($animal != null) {
+            $this->setUlnCountryCode($animal->getUlnCountryCode());
+            $this->setUlnNumber($animal->getUlnNumber());
+
+            if($animal->getParentFather() != null) {
+                $this->setUlnCountryCodeFather($animal->getParentFather()->getUlnCountryCode());
+                $this->setUlnFather($animal->getParentFather()->getUlnNumber());
+            }
+
+            if($animal->getParentMother() != null) {
+                $this->setUlnCountryCodeMother($animal->getParentMother()->getUlnCountryCode());
+                $this->setUlnMother($animal->getParentMother()->getUlnNumber());
+            }
+
+            if($animal->getSurrogate() != null) {
+                $this->setUlnCountryCodeSurrogate($animal->getSurrogate()->getUlnCountryCode());
+                $this->setUlnSurrogate($animal->getSurrogate()->getUlnNumber());
+            }
+        }
+
         return $this;
     }
 
@@ -433,6 +509,8 @@ class DeclareBirth extends DeclareBase
     }
 
     /**
+     * Get ulnNumber
+     *
      * @return string
      */
     public function getUlnNumber()
@@ -449,6 +527,22 @@ class DeclareBirth extends DeclareBase
     }
 
     /**
+     * Set ulnCountryCode
+     *
+     * @param string $ulnCountryCode
+     *
+     * @return DeclareBirth
+     */
+    public function setUlnCountryCode($ulnCountryCode)
+    {
+        $this->ulnCountryCode = $ulnCountryCode;
+
+        return $this;
+    }
+
+    /**
+     * Get ulnCountryCode
+     *
      * @return string
      */
     public function getUlnCountryCode()
@@ -457,13 +551,171 @@ class DeclareBirth extends DeclareBase
     }
 
     /**
-     * @param string $ulnCountryCode
+     * Set ulnFather
+     *
+     * @param string $ulnFather
+     *
+     * @return DeclareBirth
      */
-    public function setUlnCountryCode($ulnCountryCode)
+    public function setUlnFather($ulnFather)
     {
-        $this->ulnCountryCode = $ulnCountryCode;
+        $this->ulnFather = $ulnFather;
+
+        return $this;
     }
 
+    /**
+     * Get ulnFather
+     *
+     * @return string
+     */
+    public function getUlnFather()
+    {
+        return $this->ulnFather;
+    }
 
+    /**
+     * Set ulnCountryCodeFather
+     *
+     * @param string $ulnCountryCodeFather
+     *
+     * @return DeclareBirth
+     */
+    public function setUlnCountryCodeFather($ulnCountryCodeFather)
+    {
+        $this->ulnCountryCodeFather = $ulnCountryCodeFather;
+
+        return $this;
+    }
+
+    /**
+     * Get ulnCountryCodeFather
+     *
+     * @return string
+     */
+    public function getUlnCountryCodeFather()
+    {
+        return $this->ulnCountryCodeFather;
+    }
+
+    /**
+     * Set ulnMother
+     *
+     * @param string $ulnMother
+     *
+     * @return DeclareBirth
+     */
+    public function setUlnMother($ulnMother)
+    {
+        $this->ulnMother = $ulnMother;
+
+        return $this;
+    }
+
+    /**
+     * Get ulnMother
+     *
+     * @return string
+     */
+    public function getUlnMother()
+    {
+        return $this->ulnMother;
+    }
+
+    /**
+     * Set ulnCountryCodeMother
+     *
+     * @param string $ulnCountryCodeMother
+     *
+     * @return DeclareBirth
+     */
+    public function setUlnCountryCodeMother($ulnCountryCodeMother)
+    {
+        $this->ulnCountryCodeMother = $ulnCountryCodeMother;
+
+        return $this;
+    }
+
+    /**
+     * Get ulnCountryCodeMother
+     *
+     * @return string
+     */
+    public function getUlnCountryCodeMother()
+    {
+        return $this->ulnCountryCodeMother;
+    }
+
+    /**
+     * Set ulnSurrogate
+     *
+     * @param string $ulnSurrogate
+     *
+     * @return DeclareBirth
+     */
+    public function setUlnSurrogate($ulnSurrogate)
+    {
+        $this->ulnSurrogate = $ulnSurrogate;
+
+        return $this;
+    }
+
+    /**
+     * Get ulnSurrogate
+     *
+     * @return string
+     */
+    public function getUlnSurrogate()
+    {
+        return $this->ulnSurrogate;
+    }
+
+    /**
+     * Set ulnCountryCodeSurrogate
+     *
+     * @param string $ulnCountryCodeSurrogate
+     *
+     * @return DeclareBirth
+     */
+    public function setUlnCountryCodeSurrogate($ulnCountryCodeSurrogate)
+    {
+        $this->ulnCountryCodeSurrogate = $ulnCountryCodeSurrogate;
+
+        return $this;
+    }
+
+    /**
+     * Get ulnCountryCodeSurrogate
+     *
+     * @return string
+     */
+    public function getUlnCountryCodeSurrogate()
+    {
+        return $this->ulnCountryCodeSurrogate;
+    }
+
+    /**
+     * Set gender
+     *
+     * @param string $gender
+     *
+     * @return DeclareBirth
+     */
+    public function setGender($gender)
+    {
+        $this->gender = $gender;
+
+        return $this;
+    }
+
+    /**
+     * Get gender
+     *
+     * @return string
+     */
+    public function getGender()
+    {
+        return $this->gender;
+    }
 
 }

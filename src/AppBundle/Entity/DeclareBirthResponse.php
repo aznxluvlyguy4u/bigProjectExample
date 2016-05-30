@@ -35,31 +35,58 @@ class DeclareBirthResponse extends DeclareBaseResponse {
     private $animal;
 
     /**
-     * @var Ram
-     *
-     * @ORM\ManyToOne(targetEntity="Ram", cascade={"persist"})
-     * @ORM\JoinColumn(name="parent_father_id", referencedColumnName="id", onDelete="set null")
-     * @JMS\Type("AppBundle\Entity\Ram")
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
      */
-    protected $parentFather;
+    private $ulnNumber;
 
     /**
-     * @var Ewe
-     *
-     * @ORM\ManyToOne(targetEntity="Ewe", cascade={"persist"})
-     * @ORM\JoinColumn(name="parent_mother_id", referencedColumnName="id", onDelete="set null")
-     * @JMS\Type("AppBundle\Entity\Ewe")
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
      */
-    protected $parentMother;
+    private $ulnCountryCode;
 
     /**
-     * @var Ewe
-     *
-     * @ORM\ManyToOne(targetEntity="Ewe", cascade={"persist"})
-     * @ORM\JoinColumn(name="surrogate_id", referencedColumnName="id", onDelete="set null")
-     * @JMS\Type("AppBundle\Entity\Ewe")
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
      */
-    protected $surrogate;
+    private $ulnFather;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $ulnCountryCodeFather;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    private $ulnMother;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    private $ulnCountryCodeMother;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    private $ulnSurrogate;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    private $ulnCountryCodeSurrogate;
 
     /**
      * @var DeclareBirth
@@ -178,74 +205,194 @@ class DeclareBirthResponse extends DeclareBaseResponse {
     }
 
     /**
-     * Set parentFather
+     * Set ulnNumber
      *
-     * @param \AppBundle\Entity\Ram $parentFather
+     * @param string $ulnNumber
      *
      * @return DeclareBirthResponse
      */
-    public function setParentFather(\AppBundle\Entity\Ram $parentFather = null)
+    public function setUlnNumber($ulnNumber)
     {
-        $this->parentFather = $parentFather;
+        $this->ulnNumber = $ulnNumber;
 
         return $this;
     }
 
     /**
-     * Get parentFather
+     * Get ulnNumber
      *
-     * @return \AppBundle\Entity\Ram
+     * @return string
      */
-    public function getParentFather()
+    public function getUlnNumber()
     {
-        return $this->parentFather;
+        return $this->ulnNumber;
     }
 
     /**
-     * Set parentMother
+     * Set ulnCountryCode
      *
-     * @param \AppBundle\Entity\Ewe $parentMother
+     * @param string $ulnCountryCode
      *
      * @return DeclareBirthResponse
      */
-    public function setParentMother(\AppBundle\Entity\Ewe $parentMother = null)
+    public function setUlnCountryCode($ulnCountryCode)
     {
-        $this->parentMother = $parentMother;
+        $this->ulnCountryCode = $ulnCountryCode;
 
         return $this;
     }
 
     /**
-     * Get parentMother
+     * Get ulnCountryCode
      *
-     * @return \AppBundle\Entity\Ewe
+     * @return string
      */
-    public function getParentMother()
+    public function getUlnCountryCode()
     {
-        return $this->parentMother;
+        return $this->ulnCountryCode;
     }
 
     /**
-     * Set surrogate
+     * Set ulnFather
      *
-     * @param \AppBundle\Entity\Ewe $surrogate
+     * @param string $ulnFather
      *
      * @return DeclareBirthResponse
      */
-    public function setSurrogate(\AppBundle\Entity\Ewe $surrogate = null)
+    public function setUlnFather($ulnFather)
     {
-        $this->surrogate = $surrogate;
+        $this->ulnFather = $ulnFather;
 
         return $this;
     }
 
     /**
-     * Get surrogate
+     * Get ulnFather
      *
-     * @return \AppBundle\Entity\Ewe
+     * @return string
      */
-    public function getSurrogate()
+    public function getUlnFather()
     {
-        return $this->surrogate;
+        return $this->ulnFather;
+    }
+
+    /**
+     * Set ulnCountryCodeFather
+     *
+     * @param string $ulnCountryCodeFather
+     *
+     * @return DeclareBirthResponse
+     */
+    public function setUlnCountryCodeFather($ulnCountryCodeFather)
+    {
+        $this->ulnCountryCodeFather = $ulnCountryCodeFather;
+
+        return $this;
+    }
+
+    /**
+     * Get ulnCountryCodeFather
+     *
+     * @return string
+     */
+    public function getUlnCountryCodeFather()
+    {
+        return $this->ulnCountryCodeFather;
+    }
+
+    /**
+     * Set ulnMother
+     *
+     * @param string $ulnMother
+     *
+     * @return DeclareBirthResponse
+     */
+    public function setUlnMother($ulnMother)
+    {
+        $this->ulnMother = $ulnMother;
+
+        return $this;
+    }
+
+    /**
+     * Get ulnMother
+     *
+     * @return string
+     */
+    public function getUlnMother()
+    {
+        return $this->ulnMother;
+    }
+
+    /**
+     * Set ulnCountryCodeMother
+     *
+     * @param string $ulnCountryCodeMother
+     *
+     * @return DeclareBirthResponse
+     */
+    public function setUlnCountryCodeMother($ulnCountryCodeMother)
+    {
+        $this->ulnCountryCodeMother = $ulnCountryCodeMother;
+
+        return $this;
+    }
+
+    /**
+     * Get ulnCountryCodeMother
+     *
+     * @return string
+     */
+    public function getUlnCountryCodeMother()
+    {
+        return $this->ulnCountryCodeMother;
+    }
+
+    /**
+     * Set ulnSurrogate
+     *
+     * @param string $ulnSurrogate
+     *
+     * @return DeclareBirthResponse
+     */
+    public function setUlnSurrogate($ulnSurrogate)
+    {
+        $this->ulnSurrogate = $ulnSurrogate;
+
+        return $this;
+    }
+
+    /**
+     * Get ulnSurrogate
+     *
+     * @return string
+     */
+    public function getUlnSurrogate()
+    {
+        return $this->ulnSurrogate;
+    }
+
+    /**
+     * Set ulnCountryCodeSurrogate
+     *
+     * @param string $ulnCountryCodeSurrogate
+     *
+     * @return DeclareBirthResponse
+     */
+    public function setUlnCountryCodeSurrogate($ulnCountryCodeSurrogate)
+    {
+        $this->ulnCountryCodeSurrogate = $ulnCountryCodeSurrogate;
+
+        return $this;
+    }
+
+    /**
+     * Get ulnCountryCodeSurrogate
+     *
+     * @return string
+     */
+    public function getUlnCountryCodeSurrogate()
+    {
+        return $this->ulnCountryCodeSurrogate;
     }
 }
