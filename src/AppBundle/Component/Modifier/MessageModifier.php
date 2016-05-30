@@ -52,7 +52,7 @@ class MessageModifier
                 return  AnimalRemover::removeUnverifiedAnimalFromMessageObject($messageObject, $doctrine);
 
             case RequestType::DECLARE_BIRTH_ENTITY:
-                return $messageObject;
+                return AnimalRemover::removeChildFromDeclareBirth($messageObject);
 
             case RequestType::DECLARE_DEPART_ENTITY:
                 return  $messageObject;

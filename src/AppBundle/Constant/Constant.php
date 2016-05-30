@@ -56,6 +56,7 @@ class Constant
     const MOTHER_NAMESPACE = 'mother';
     const CHILDREN_NAMESPACE = 'children';
     const SURROGATE_NAMESPACE = 'surrogate';
+    const SURROGATE_CHILDREN_NAMESPACE = 'surrogate_children';
 
     //Request repositories
     const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';

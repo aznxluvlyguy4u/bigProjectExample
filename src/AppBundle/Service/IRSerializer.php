@@ -111,14 +111,34 @@ class IRSerializer implements IRSerializerInterface
      * @param Animal $retrievedAnimal
      * @return array
      */
-    function returnAnimalArray(Animal $retrievedAnimal)
+    function returnAnimalArray(Animal $retrievedAnimal, $unsetChildren = true)
     {
         //Parse to json
         $retrievedAnimalJson = $this->serializeToJSON($retrievedAnimal);
         //Parse json to content array to add additional 'animal type' property
         $retrievedAnimalContentArray = json_decode($retrievedAnimalJson, true);
 
+        if($unsetChildren ==  true) {
+            unset($retrievedAnimalContentArray[Constant::CHILDREN_NAMESPACE]);
+            unset($retrievedAnimalContentArray[Constant::SURROGATE_CHILDREN_NAMESPACE]);
+        }
+
         return  $retrievedAnimalContentArray;
+    }
+
+    /**
+     * @param Animal $retrievedAnimal
+     * @return array
+     */
+    function returnAnimalArrayIncludingParentsAndSurrogate(Animal $retrievedAnimal)
+    {
+        $childContentArray = $this->returnAnimalArray($retrievedAnimal);
+
+        $childContentArray['parent_father'] = $this->returnAnimalArray($retrievedAnimal->getParentFather());
+        $childContentArray['parent_mother'] =  $this->returnAnimalArray($retrievedAnimal->getParentMother());
+        $childContentArray['surrogate'] =  $this->returnAnimalArray($retrievedAnimal->getSurrogate());
+
+        return  $childContentArray;
     }
 
     /**
@@ -287,14 +307,15 @@ class IRSerializer implements IRSerializerInterface
         }
         //Retrieve animal entity
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareBirthContentArray);
+        $retrievedAnimalArray = $this->returnAnimalArrayIncludingParentsAndSurrogate($retrievedAnimal);
 
         //Move nested fields to the proper level
         $declareBirthContentArray['birth_weight'] = $declareBirthContentArray['animal']['birth_weight'];
         $declareBirthContentArray['has_lambar'] = $declareBirthContentArray['animal']['has_lambar'];
         $declareBirthContentArray['birth_tail_length'] = $declareBirthContentArray['animal']['birth_tail_length'];
-
+        
         //Add retrieved animal properties including type to initial animalContentArray
-        $declareBirthContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
+        $declareBirthContentArray->set(Constant::ANIMAL_NAMESPACE, $retrievedAnimalArray);
 
         //denormalize the content to an object
         $json = $this->serializeToJSON($declareBirthContentArray);

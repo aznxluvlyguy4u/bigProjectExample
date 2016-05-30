@@ -31,13 +31,13 @@ class AnimalRemover extends MessageModifier
     }
 
     /**
-     * @param DeclareBirth $messageObject
+     * @param DeclareBirth $declareBirthObject
      * @return DeclareBirth
      */
-    public static function removeUnverifiedFatherFromMessageObject($messageObject, $doctrine)
+    public static function removeChildFromDeclareBirth($declareBirthObject)
     {
-        //TODO Father can be animal not registered at NSFO
-        return $messageObject;
+        $declareBirthObject->setAnimal(null);
+        return $declareBirthObject;
     }
 
     /**

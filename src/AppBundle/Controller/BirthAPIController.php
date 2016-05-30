@@ -2,6 +2,8 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\Modifier\AnimalRemover;
+use AppBundle\Component\Modifier\MessageModifier;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
@@ -183,11 +185,12 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         //Convert the array into an object and add the mandatory values retrieved from the database
         $declareBirthObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $contentPerChild, $this->getAuthenticatedUser($request));
 
-        //First Persist object to Database, before sending it to the queue
-        $this->persist($declareBirthObject);
-
         //Send it to the queue and persist/update any changed state to the database
         $messageArray = $this->sendMessageObjectToQueue($declareBirthObject);
+
+        //Persist message without new child
+        $declareBirthObject = AnimalRemover::removeChildFromDeclareBirth($declareBirthObject);
+        $this->persist($declareBirthObject);
 
         $returnMessages->add($messageArray);
       }
