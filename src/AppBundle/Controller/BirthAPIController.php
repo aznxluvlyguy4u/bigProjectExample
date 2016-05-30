@@ -256,24 +256,6 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
           return $verification['jsonResponse'];
       }
 
-      //Validate if tag is available (OLD VERSION)
-//      $ulnCountryCode = $content->get('animal')['uln_country_code'];
-//      $ulnNumber = $content->get('animal')['uln_number'];
-//      $query = array("ulnCountryCode"=>$ulnCountryCode, "ulnNumber"=>$ulnNumber);
-//      $retrievedTag = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY)->findOneBy($query);
-//
-//      $tagIsNotAvailable = $retrievedTag->getTagStatus()!=TagStateType::UNASSIGNED;
-//
-//
-//      $tagUsedByAnimalToBeDeletedInUpdate = $declareBirth->getAnimal()->getAssignedTag() == $retrievedTag;
-//
-//      if($tagIsNotAvailable && !$tagUsedByAnimalToBeDeletedInUpdate) {
-//          $message = 'Tag is already assigned';
-//          $messageArray = array('code'=>400, "message" => $message);
-//
-//          return new JsonResponse($messageArray, 400);
-//      }
-
       //Convert the array into an object and add the mandatory values retrieved from the database
       $declareBirthUpdate = $this->buildEditMessageObject(RequestType::DECLARE_BIRTH_ENTITY,
           $content, $this->getAuthenticatedUser($request));
