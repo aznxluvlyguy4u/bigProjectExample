@@ -35,6 +35,33 @@ class DeclareBirthResponse extends DeclareBaseResponse {
     private $animal;
 
     /**
+     * @var Ram
+     *
+     * @ORM\ManyToOne(targetEntity="Ram", cascade={"persist"})
+     * @ORM\JoinColumn(name="parent_father_id", referencedColumnName="id", onDelete="set null")
+     * @JMS\Type("AppBundle\Entity\Ram")
+     */
+    protected $parentFather;
+
+    /**
+     * @var Ewe
+     *
+     * @ORM\ManyToOne(targetEntity="Ewe", cascade={"persist"})
+     * @ORM\JoinColumn(name="parent_mother_id", referencedColumnName="id", onDelete="set null")
+     * @JMS\Type("AppBundle\Entity\Ewe")
+     */
+    protected $parentMother;
+
+    /**
+     * @var Ewe
+     *
+     * @ORM\ManyToOne(targetEntity="Ewe", cascade={"persist"})
+     * @ORM\JoinColumn(name="surrogate_id", referencedColumnName="id", onDelete="set null")
+     * @JMS\Type("AppBundle\Entity\Ewe")
+     */
+    protected $surrogate;
+
+    /**
      * @var DeclareBirth
      *
      * @Assert\NotBlank
@@ -148,5 +175,77 @@ class DeclareBirthResponse extends DeclareBaseResponse {
     public function getAnimal()
     {
         return $this->animal;
+    }
+
+    /**
+     * Set parentFather
+     *
+     * @param \AppBundle\Entity\Ram $parentFather
+     *
+     * @return DeclareBirthResponse
+     */
+    public function setParentFather(\AppBundle\Entity\Ram $parentFather = null)
+    {
+        $this->parentFather = $parentFather;
+
+        return $this;
+    }
+
+    /**
+     * Get parentFather
+     *
+     * @return \AppBundle\Entity\Ram
+     */
+    public function getParentFather()
+    {
+        return $this->parentFather;
+    }
+
+    /**
+     * Set parentMother
+     *
+     * @param \AppBundle\Entity\Ewe $parentMother
+     *
+     * @return DeclareBirthResponse
+     */
+    public function setParentMother(\AppBundle\Entity\Ewe $parentMother = null)
+    {
+        $this->parentMother = $parentMother;
+
+        return $this;
+    }
+
+    /**
+     * Get parentMother
+     *
+     * @return \AppBundle\Entity\Ewe
+     */
+    public function getParentMother()
+    {
+        return $this->parentMother;
+    }
+
+    /**
+     * Set surrogate
+     *
+     * @param \AppBundle\Entity\Ewe $surrogate
+     *
+     * @return DeclareBirthResponse
+     */
+    public function setSurrogate(\AppBundle\Entity\Ewe $surrogate = null)
+    {
+        $this->surrogate = $surrogate;
+
+        return $this;
+    }
+
+    /**
+     * Get surrogate
+     *
+     * @return \AppBundle\Entity\Ewe
+     */
+    public function getSurrogate()
+    {
+        return $this->surrogate;
     }
 }
