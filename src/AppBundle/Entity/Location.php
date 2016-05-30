@@ -633,6 +633,7 @@ class Location
     public function addHealth(LocationHealth $health)
     {
       $this->healths->add($health);
+      $health->setLocation($this);
 
       return $this;
     }
