@@ -8,7 +8,7 @@ use AppBundle\Entity\DeclareImport;
 /**
  * Class DeclareImportOutput
  */
-class DeclareImportOutput
+class DeclareImportOutput extends Output
 {
     /**
      * @param DeclareImport $import
@@ -22,6 +22,8 @@ class DeclareImportOutput
         } else {
             $animalId = null;
         }
+
+        self::setUbnAndLocationHealthValues($import->getLocation());
 
         $result = array("id" => $import->getId(),
             "request_id" => $import->getRequestId(),
@@ -48,7 +50,17 @@ class DeclareImportOutput
             ),
             "location"=>
             array("id" => $import->getLocation()->getId(),
-                  "ubn" => $import->getLocation()->getUbn())
+                  "ubn" => $import->getLocation()->getUbn(),  //Mandatory for IenR or use the own above
+                "health" =>
+                    array(
+                        "location_health_status" => self::$locationHealthStatus,
+                        //maedi_visna is zwoegerziekte
+                        "maedi_visna_status" => self::$maediVisnaStatus,
+                        "maedi_visna_end_date" => self::$maediVisnaEndDate,
+                        "scrapie_status" => self::$scrapieStatus,
+                        "scrapie_end_date" => self::$scrapieEndDate,
+                        "check_date" => self::$checkDate
+                    ))
         );
 
         return $result;

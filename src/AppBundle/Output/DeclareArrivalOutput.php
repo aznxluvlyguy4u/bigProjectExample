@@ -8,7 +8,7 @@ use AppBundle\Entity\DeclareArrival;
 /**
  * Class DeclareArrivalOutput
  */
-class DeclareArrivalOutput
+class DeclareArrivalOutput extends Output
 {
     /**
      * @param DeclareArrival $arrival
@@ -22,6 +22,8 @@ class DeclareArrivalOutput
         } else {
             $animalId = null;
         }
+
+        self::setUbnAndLocationHealthValues($arrival->getLocation());
 
         $result = array("id" => $arrival->getId(),
             "message_id" => $arrival->getMessageId(),
@@ -47,7 +49,17 @@ class DeclareArrivalOutput
             ),
             "location"=>
             array("id" => $arrival->getLocation()->getId(),
-                  "ubn" => $arrival->getLocation()->getUbn())  //Mandatory for IenR or use the own above
+                  "ubn" => $arrival->getLocation()->getUbn(),  //Mandatory for IenR or use the own above
+                  "health" =>
+                  array(
+                      "location_health_status" => self::$locationHealthStatus,
+                      //maedi_visna is zwoegerziekte
+                      "maedi_visna_status" => self::$maediVisnaStatus,
+                      "maedi_visna_end_date" => self::$maediVisnaEndDate,
+                      "scrapie_status" => self::$scrapieStatus,
+                      "scrapie_end_date" => self::$scrapieEndDate,
+                      "check_date" => self::$checkDate
+                  ))
         );
 
         return $result;

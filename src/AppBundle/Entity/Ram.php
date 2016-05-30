@@ -275,4 +275,6 @@ class Ram extends Animal
     {
         return $this->flags;
     }
+
+
 }

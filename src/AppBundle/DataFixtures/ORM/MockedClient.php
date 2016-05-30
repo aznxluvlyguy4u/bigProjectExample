@@ -2,6 +2,8 @@
 
 namespace AppBundle\DataFixtures\ORM;
 
+use AppBundle\Entity\LocationHealth;
+use AppBundle\Enumerator\HealthStatus;
 use AppBundle\Setting\DataFixtureSetting;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
@@ -130,9 +132,17 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedCompany->setVatNumber("333333");
     self::$mockedCompany->setTelephoneNumber("+313131313131");
 
+    $LocationHealth = new LocationHealth();
+    $LocationHealth->setMaediVisnaStatus(HealthStatus::HEALTHY_LEVEL_1);
+    $LocationHealth->setMaediVisnaEndDate(new \DateTime('2016-08-04'));
+    $LocationHealth->setScrapieStatus(HealthStatus::HEALTHY_LEVEL_2);
+    $LocationHealth->setScrapieEndDate(new \DateTime('2016-10-04'));
+    $LocationHealth->setCheckDate(new \DateTime('2016-07-04'));
+
     self::$mockedLocation = new Location();
     self::$mockedLocation->setAddress(self::$mockedLocationAddress);
     self::$mockedLocation->setCompany(self::$mockedCompany);
+    self::$mockedLocation->addHealth($LocationHealth);
 
     self::$mockedLocation->setUbn($ubn); //NOTE! Echte UBN nodig voor successvolle IenR melding!
 
@@ -193,7 +203,8 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
       $mockedLocation->setAddress($mockedLocationAddress);
       $mockedLocation->setCompany($mockedCompany);
       $mockedLocation->setUbn($ubnTwo);
-      $mockedLocation->setHealth($LocationHealthTwo);
+
+      $mockedLocation->addHealth($LocationHealthTwo);
 
       $mockedCompany->addLocation($mockedLocation);
       self::$mockedClientTwo->addCompany($mockedCompany);

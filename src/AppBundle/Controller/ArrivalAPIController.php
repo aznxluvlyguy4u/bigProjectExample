@@ -186,6 +186,10 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     }
     $this->persist($messageObject);
 
+    //Persist HealthStatus
+    $this->getDoctrine()->getManager()->persist($messageObject->getLocation()->getHealths()->last());
+    $this->getDoctrine()->getManager()->flush();
+
 //    return new JsonResponse(array("status"=>"sent"), 200);
     return new JsonResponse($messageArray, 200);
   }
@@ -251,6 +255,10 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     //Persist the update
     $this->persist($messageObject);
+
+    //Persist HealthStatus
+    $this->getDoctrine()->getManager()->persist($messageObject->getLocation()->getHealths()->last());
+    $this->getDoctrine()->getManager()->flush();
 
     return new JsonResponse($messageArray, 200);
   }
