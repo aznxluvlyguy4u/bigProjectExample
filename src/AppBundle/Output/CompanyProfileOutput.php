@@ -63,15 +63,10 @@ class CompanyProfileOutput
                         ),
                     "veterinarian" =>
                         array(
-                            "dap_number" => "",
-                            "company_name" => "",
-                            "telephone_number" => "",
-                            "email_address" => "",
-                            "contact_person" =>
-                                array(
-                                    "name" =>"",
-                                    "email_address" => "",
-                                )
+                            "dap_number" => $company->getVeterinarianDapNumber(),
+                            "company_name" => $company->getVeterinarianCompanyName(),
+                            "telephone_number" => $company->getVeterinarianTelephoneNumber(),
+                            "email_address" => $company->getVeterinarianEmailAddress()
                         )
                 );
 

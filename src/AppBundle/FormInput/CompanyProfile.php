@@ -49,8 +49,12 @@ class CompanyProfile
         $client->setLastName($contactPersonArray['last_name']);
         $client->setCellphoneNumber($contactPersonArray['cellphone_number']);
 
-        //Veterinarian block is not for phase 1
-
+        $veterinarianArray = $content->get('veterinarian');
+        $company->setVeterinarianDapNumber($veterinarianArray['dap_number']);
+        $company->setVeterinarianCompanyName($veterinarianArray['company_name']);
+        $company->setVeterinarianTelephoneNumber($veterinarianArray['telephone_number']);
+        $company->setVeterinarianEmailAddress($veterinarianArray['email_address']);
+        
         return $client;
     }
 }
