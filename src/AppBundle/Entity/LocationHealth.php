@@ -67,6 +67,28 @@ class LocationHealth
     /**
      * @var string
      *
+     * CL (CLA)
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $caseousLymphadenitisStatus;
+
+    /**
+     * @var string
+     *
+     * rotkreupel
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $footRotStatus;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      * @Expose
@@ -94,6 +116,30 @@ class LocationHealth
      * @Expose
      */
     private $scrapieEndDate;
+
+    /**
+     * CL (CLA)
+     *
+     * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @Expose
+     */
+    private $caseousLymphadenitisEndDate;
+
+    /**
+     * rotkreupel
+     *
+     * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @Expose
+     */
+    private $footRotEndDate;
 
     /**
      * @var \DateTime
@@ -247,5 +293,71 @@ class LocationHealth
     {
         $this->scrapieStatus = $scrapieStatus;
     }
+
+    /**
+     * @return string
+     */
+    public function getCaseousLymphadenitisStatus()
+    {
+        return $this->caseousLymphadenitisStatus;
+    }
+
+    /**
+     * @param string $caseousLymphadenitisStatus
+     */
+    public function setCaseousLymphadenitisStatus($caseousLymphadenitisStatus)
+    {
+        $this->caseousLymphadenitisStatus = $caseousLymphadenitisStatus;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFootRotStatus()
+    {
+        return $this->footRotStatus;
+    }
+
+    /**
+     * @param string $footRotStatus
+     */
+    public function setFootRotStatus($footRotStatus)
+    {
+        $this->footRotStatus = $footRotStatus;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getCaseousLymphadenitisEndDate()
+    {
+        return $this->caseousLymphadenitisEndDate;
+    }
+
+    /**
+     * @param DateTime $caseousLymphadenitisEndDate
+     */
+    public function setCaseousLymphadenitisEndDate($caseousLymphadenitisEndDate)
+    {
+        $this->caseousLymphadenitisEndDate = $caseousLymphadenitisEndDate;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getFootRotEndDate()
+    {
+        return $this->footRotEndDate;
+    }
+
+    /**
+     * @param DateTime $footRotEndDate
+     */
+    public function setFootRotEndDate($footRotEndDate)
+    {
+        $this->footRotEndDate = $footRotEndDate;
+    }
+
+
 
 }
