@@ -5,7 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
-use AppBundle\Enumerator\HealthStatus;
+use AppBundle\Enumerator\LocationHealthStatus;
 use AppBundle\Output\HealthOutput;
 use AppBundle\Util\LocationHealthUpdater;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;

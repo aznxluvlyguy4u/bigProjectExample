@@ -3,7 +3,7 @@
 namespace AppBundle\DataFixtures\ORM;
 
 use AppBundle\Entity\LocationHealth;
-use AppBundle\Enumerator\HealthStatus;
+use AppBundle\Enumerator\LocationHealthStatus;
 use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Setting\DataFixtureSetting;
