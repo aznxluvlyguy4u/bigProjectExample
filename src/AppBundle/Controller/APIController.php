@@ -606,4 +606,19 @@ class APIController extends Controller implements APIControllerInterface
     return $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY)->findOfClientByUbn($client, $ubn);
   }
 
+
+  public function persistNewTagsToAssigning($client, $animalObject)
+  {
+    $tag = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY)->findByAnimal($client, $animalObject);
+    $tag->setTagStatus(TagStateType::ASSIGNING);
+
+    //Because of cascade persist, unset the tag from the animal first
+    $tag->setAnimal(null);
+
+    $this->getDoctrine()->getManager()->persist($tag);
+    $this->getDoctrine()->getManager()->flush();
+
+    return $tag;
+  }
+
 }

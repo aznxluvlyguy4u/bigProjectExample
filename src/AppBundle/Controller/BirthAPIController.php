@@ -188,6 +188,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             'message' => 'The uln values are valid, but each child should have a unique uln'), 428);
     }
 
+    $client = $this->getAuthenticatedUser($request);
 
     foreach($children as $child) {
 
@@ -200,11 +201,12 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         //Send it to the queue and persist/update any changed state to the database
         $messageArray = $this->sendMessageObjectToQueue($declareBirthObject);
 
+        //Set tags of child to ASSIGNING
+        $this->persistNewTagsToAssigning($client, $declareBirthObject->getAnimal());
 
         //Persist message without animal. That is done after a successful response
         $declareBirthObject->setAnimal(null);
         $this->persist($declareBirthObject);
-
 
         $returnMessages->add($messageArray);
       }

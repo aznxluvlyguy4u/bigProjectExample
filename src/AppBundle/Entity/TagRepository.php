@@ -97,5 +97,15 @@ class TagRepository extends BaseRepository {
     }
   }
 
+  /**
+   * @param Client $client
+   * @param Ram|Ewe|Neuter $animal
+   * @return Tag|null
+   */
+  public function findByAnimal($client, $animal)
+  {
+       return $this->findOneByUln($client, $animal->getUlnCountryCode(), $animal->getUlnNumber());
+  }
+
 
 }
