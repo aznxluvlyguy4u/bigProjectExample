@@ -150,11 +150,11 @@ class AuthAPIController extends APIController {
     $credentials = str_replace('Basic ', '', $credentials);
     $credentials = base64_decode($credentials);
 
-    list($username, $password) = explode(":", $credentials);
-    if($username != null && $password != null) {
+    list($emailAddress, $password) = explode(":", $credentials);
+    if($emailAddress != null && $password != null) {
       $encoder = $this->get('security.password_encoder');
 
-      $client = $this->getDoctrine()->getRepository('AppBundle:Client')->findOneBy(array("username"=>$username));
+      $client = $this->getDoctrine()->getRepository('AppBundle:Client')->findOneBy(array("emailAddress"=>$emailAddress));
       if($client == null) {
         return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
       }
