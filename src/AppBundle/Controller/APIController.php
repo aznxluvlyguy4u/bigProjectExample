@@ -309,9 +309,6 @@ class APIController extends Controller implements APIControllerInterface
       $contentArray = $this->getContentAsArray($request);
       $array = $contentArray->toArray();
 
-      $objectsToBeVerified = array();
-      array_push($objectsToBeVerified, Constant::ANIMAL_NAMESPACE, Constant::MOTHER_NAMESPACE);
-
       //For Father (DeclareBirth) only verify pedigree. ULN not checked in API since father can be from external farm.
       if($contentArray->containsKey(Constant::FATHER_NAMESPACE)) {
         $father = $array[Constant::FATHER_NAMESPACE];
@@ -326,8 +323,9 @@ class APIController extends Controller implements APIControllerInterface
         }
       }
 
-      //Strip countryCode
-      $countryCode = mb_substr($ulnCode, 0, 2, 'utf-8');
+      $objectsToBeVerified = array();
+      array_push($objectsToBeVerified, Constant::ANIMAL_NAMESPACE, Constant::MOTHER_NAMESPACE);
+      
       //All objects containing a uln or pedigree code must have that code verified
       foreach ($objectsToBeVerified as $objectToBeVerified) {
         if (array_key_exists($objectToBeVerified, $array)) {
@@ -380,7 +378,7 @@ class APIController extends Controller implements APIControllerInterface
       $pedigreeNumber = $animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE];
       $pedigreeCountryCode = $animalArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
 
-      if($pedigreeCountryCode != null && $pedigreeNumber != null) {
+      if($pedigreeNumber != null && $pedigreeNumber != "") {
         $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
         $animal = $animalRepository->findByPedigreeCountryCodeAndNumber($pedigreeCountryCode, $pedigreeNumber);
 
