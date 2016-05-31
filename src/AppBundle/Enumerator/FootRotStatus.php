@@ -3,7 +3,7 @@
 namespace AppBundle\Enumerator;
 
 
-class HealthStatus
+class FootRot
 {
     const NOT_SUSPECT_1 = 'ONVERDACHT_1';
     const NOT_SUSPECT_2 = 'ONVERDACHT_2';
