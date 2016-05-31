@@ -281,4 +281,16 @@ class AnimalRepository extends BaseRepository
 
     return null;
   }
+
+  /**
+   * @param string $pedigreeCountryCode
+   * @param string $pedigreeNumber
+   * @return array
+   */
+  public function getUlnByPedigree($pedigreeCountryCode, $pedigreeNumber)
+  {
+    $animal = $this->findByPedigreeCountryCodeAndNumber($pedigreeCountryCode, $pedigreeNumber);
+    return array(Constant::ULN_COUNTRY_CODE_NAMESPACE => $animal->getUlnCountryCode(),
+                 Constant::ULN_NUMBER_NAMESPACE => $animal->getUlnNumber());
+  }
 }

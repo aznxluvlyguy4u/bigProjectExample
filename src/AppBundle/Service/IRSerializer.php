@@ -339,17 +339,18 @@ class IRSerializer implements IRSerializerInterface
         //Add retrieved animal to DeclareBirth
         $declareBirthRequest->setAnimal($retrievedAnimal);
         //Note setting the Animal will overwrite the animal values
-        $surrogateArray = $declareBirthContentArray['animal']['surrogate'];
-        $declareBirthRequest->setUlnSurrogate($surrogateArray['uln_number']);
-        $declareBirthRequest->setUlnCountryCodeSurrogate($surrogateArray['uln_country_code']);
+        $animalArray = $declareBirthContentArray['animal'];
+        $fatherArray = $animalArray['parent_father'];
+        $declareBirthRequest->setUlnCountryCodeFather($fatherArray[Constant::ULN_COUNTRY_CODE_NAMESPACE]);
+        $declareBirthRequest->setUlnFather($fatherArray[Constant::ULN_NUMBER_NAMESPACE]);
 
-        $fatherArray = $declareBirthContentArray['father'];
-        $declareBirthRequest->setUlnFather($fatherArray['uln_number']);
-        $declareBirthRequest->setUlnCountryCodeFather($fatherArray['uln_country_code']);
+        $motherArray = $animalArray['parent_mother'];
+        $declareBirthRequest->setUlnCountryCodeMother($motherArray[Constant::ULN_COUNTRY_CODE_NAMESPACE]);
+        $declareBirthRequest->setUlnMother($motherArray[Constant::ULN_NUMBER_NAMESPACE]);
 
-        $motherArray = $declareBirthContentArray['mother'];
-        $declareBirthRequest->setUlnMother($motherArray['uln_number']);
-        $declareBirthRequest->setUlnCountryCodeMother($motherArray['uln_country_code']);
+        $surrogateArray = $animalArray['surrogate'];
+        $declareBirthRequest->setUlnCountryCodeSurrogate($surrogateArray[Constant::ULN_COUNTRY_CODE_NAMESPACE]);
+        $declareBirthRequest->setUlnSurrogate($surrogateArray[Constant::ULN_NUMBER_NAMESPACE]);
 
         return $declareBirthRequest;
     }
@@ -650,5 +651,32 @@ class IRSerializer implements IRSerializerInterface
         $retrieveUbnDetails = new RetrieveUbnDetails();
 
         return $retrieveUbnDetails;
+    }
+
+    /**
+     * @param array $animalArray
+     * @return array
+     */
+    function extractUlnFromAnimal($animalArray)
+    {
+        if(array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $animalArray) && array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalArray)) {
+            if( ($animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE] != null && $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE] != "" )
+                && ($animalArray[Constant::ULN_NUMBER_NAMESPACE] != null && $animalArray[Constant::ULN_NUMBER_NAMESPACE] != "" ) ) {
+                
+                return array(Constant::ULN_COUNTRY_CODE_NAMESPACE => $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE],
+                                   Constant::ULN_NUMBER_NAMESPACE => $animalArray[Constant::ULN_NUMBER_NAMESPACE]);
+            }
+            
+        } elseif (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalArray) && array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalArray)) {
+            if (($animalArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE] != null && $animalArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE] != "")
+                && ($animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE] != null && $animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE] != "") ) {
+
+                return $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)->getUlnByPedigree(
+                    $animalArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE], $animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE]);
+            }
+        }
+
+        return array(Constant::ULN_COUNTRY_CODE_NAMESPACE => null,
+            Constant::ULN_NUMBER_NAMESPACE => null);
     }
 }
