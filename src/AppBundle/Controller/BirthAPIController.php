@@ -284,4 +284,39 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
     return new JsonResponse($messageArray, 200);
   }
+
+    /**
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("-errors")
+     * @Method("GET")
+     */
+    public function getBirthErrors(Request $request)
+    {
+        $client = $this->getAuthenticatedUser($request);
+
+        $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+        $birthRepository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_RESPONSE_REPOSITORY);
+        $declareBirths = $birthRepository->getBirthsWithLastErrorResponses($client, $animalRepository);
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('births' => $declareBirths)), 200);
+    }
+
+
+    /**
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("-history")
+     * @Method("GET")
+     */
+    public function getBirthHistory(Request $request)
+    {
+        $client = $this->getAuthenticatedUser($request);
+
+        $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+        $birthRepository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_RESPONSE_REPOSITORY);
+        $declareBirths = $birthRepository->getBirthsWithLastHistoryResponses($client, $animalRepository);
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('births' => $declareBirths)), 200);
+    }
 }

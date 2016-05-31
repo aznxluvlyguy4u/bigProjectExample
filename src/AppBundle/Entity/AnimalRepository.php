@@ -290,7 +290,37 @@ class AnimalRepository extends BaseRepository
   public function getUlnByPedigree($pedigreeCountryCode, $pedigreeNumber)
   {
     $animal = $this->findByPedigreeCountryCodeAndNumber($pedigreeCountryCode, $pedigreeNumber);
-    return array(Constant::ULN_COUNTRY_CODE_NAMESPACE => $animal->getUlnCountryCode(),
-                 Constant::ULN_NUMBER_NAMESPACE => $animal->getUlnNumber());
+
+    if($animal!=null) {
+      $ulnCountryCode = $animal->getUlnCountryCode();
+      $ulnNumber = $animal->getUlnNumber();
+    } else {
+      $ulnCountryCode = null;
+      $ulnNumber = null;
+    }
+
+    return array(Constant::ULN_COUNTRY_CODE_NAMESPACE => $ulnCountryCode,
+                 Constant::ULN_NUMBER_NAMESPACE => $ulnNumber);
   }
+
+   /**
+   * @param string $ulnCountryCode
+   * @param string $ulnNumber
+   * @return array
+   */
+    public function getPedigreeByUln($ulnCountryCode, $ulnNumber)
+    {
+      $animal = $this->findByUlnCountryCodeAndNumber($ulnCountryCode, $ulnNumber);
+
+      if($animal!=null) {
+        $pedigreeCountryCode = $animal->getPedigreeCountryCode();
+        $pedigreeNumber = $animal->getPedigreeNumber();
+      } else {
+        $pedigreeCountryCode = null;
+        $pedigreeNumber = null;
+      }
+
+      return array(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE => $pedigreeCountryCode,
+          Constant::PEDIGREE_NUMBER_NAMESPACE => $pedigreeNumber);
+    }
 }

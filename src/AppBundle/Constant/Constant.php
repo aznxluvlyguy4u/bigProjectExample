@@ -68,6 +68,7 @@ class Constant
     const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';
     const DECLARE_ARRIVAL_RESPONSE_REPOSITORY = 'AppBundle:DeclareArrivalResponse';
     const DECLARE_BIRTH_REPOSITORY = 'AppBundle:DeclareBirth';
+    const DECLARE_BIRTH_RESPONSE_REPOSITORY = 'AppBundle:DeclareBirthResponse';
     const DECLARE_DEPART_REPOSITORY = 'AppBundle:DeclareDepart';
     const DECLARE_DEPART_RESPONSE_REPOSITORY = 'AppBundle:DeclareDepartResponse';
 
