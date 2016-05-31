@@ -3,12 +3,12 @@
 namespace AppBundle\Enumerator;
 
 /**
- * CL (CLA)
+ * Zwoegerziekte
  *
- * Class CaseousLymphadenitisStatus
+ * Class MaediVisnaStatus
  * @package AppBundle\Enumerator
  */
-class CaseousLymphadenitisStatus
+class MaediVisnaStatus
 {
     const FREE_1_YEAR = 'VRIJ_1_JAAR';
     const FREE_2_YEAR = 'VRIJ_2_JAAR';
