@@ -618,11 +618,11 @@ abstract class Animal
     /**
      * Set parentNeuter
      *
-     * @param \AppBundle\Entity\Neuter $parentNeuter
+     * @param Animal $parentNeuter
      *
      * @return Animal
      */
-    public function setParentNeuter(\AppBundle\Entity\Neuter $parentNeuter = null)
+    public function setParentNeuter(Animal $parentNeuter = null)
     {
         $this->parentNeuter = $parentNeuter;
 
@@ -632,7 +632,7 @@ abstract class Animal
     /**
      * Get parentNeuter
      *
-     * @return \AppBundle\Entity\Neuter
+     * @return Animal
      */
     public function getParentNeuter()
     {
@@ -692,11 +692,11 @@ abstract class Animal
     /**
      * Set parentFather
      *
-     * @param \AppBundle\Entity\Ram $parentFather
+     * @param Animal
      *
      * @return Animal
      */
-    public function setParentFather(\AppBundle\Entity\Ram $parentFather = null)
+    public function setParentFather(Animal $parentFather = null)
     {
         $this->parentFather = $parentFather;
         //$parentFather->getChildren()->add($this);
@@ -707,7 +707,7 @@ abstract class Animal
     /**
      * Get parentFather
      *
-     * @return \AppBundle\Entity\Ram
+     * @return Animal
      */
     public function getParentFather()
     {
@@ -717,11 +717,11 @@ abstract class Animal
     /**
      * Set parentMother
      *
-     * @param \AppBundle\Entity\Ewe $parentMother
+     * @param Animal $parentMother
      *
      * @return Animal
      */
-    public function setParentMother(\AppBundle\Entity\Ewe $parentMother = null)
+    public function setParentMother($parentMother = null)
     {
         $this->parentMother = $parentMother;
         //$parentMother->getChildren()->add($this);
@@ -732,7 +732,7 @@ abstract class Animal
     /**
      * Get parentMother
      *
-     * @return \AppBundle\Entity\Ewe
+     * @return Animal
      */
     public function getParentMother()
     {
