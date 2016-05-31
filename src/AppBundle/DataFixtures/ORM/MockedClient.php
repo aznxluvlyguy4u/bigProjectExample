@@ -4,6 +4,8 @@ namespace AppBundle\DataFixtures\ORM;
 
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Enumerator\HealthStatus;
+use AppBundle\Enumerator\MaediVisnaStatus;
+use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Setting\DataFixtureSetting;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
@@ -133,9 +135,9 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
     self::$mockedCompany->setTelephoneNumber("+313131313131");
 
     $LocationHealth = new LocationHealth();
-    $LocationHealth->setMaediVisnaStatus(HealthStatus::HEALTHY_LEVEL_1);
+    $LocationHealth->setMaediVisnaStatus(MaediVisnaStatus::FREE_2_YEAR);
     $LocationHealth->setMaediVisnaEndDate(new \DateTime('2016-08-04'));
-    $LocationHealth->setScrapieStatus(HealthStatus::HEALTHY_LEVEL_2);
+    $LocationHealth->setScrapieStatus(ScrapieStatus::RESISTANT);
     $LocationHealth->setScrapieEndDate(new \DateTime('2016-10-04'));
     $LocationHealth->setCheckDate(new \DateTime('2016-07-04'));
 
@@ -193,9 +195,9 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
       $mockedCompany->setOwner(self::$mockedClientTwo);
 
       $LocationHealthTwo = new LocationHealth();
-      $LocationHealthTwo->setMaediVisnaStatus(HealthStatus::HEALTHY_LEVEL_3);
+      $LocationHealthTwo->setMaediVisnaStatus(MaediVisnaStatus::FREE_1_YEAR);
       $LocationHealthTwo->setMaediVisnaEndDate(new \DateTime('2016-11-04'));
-      $LocationHealthTwo->setScrapieStatus(HealthStatus::HEALTHY_LEVEL_3);
+      $LocationHealthTwo->setScrapieStatus(ScrapieStatus::RESISTANT);
       $LocationHealthTwo->setScrapieEndDate(new \DateTime('2016-12-04'));
       $LocationHealthTwo->setCheckDate(new \DateTime('2016-12-14'));
 
