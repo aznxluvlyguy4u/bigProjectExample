@@ -8,6 +8,6 @@ namespace AppBundle\Enumerator;
  */
 class ScrapieStatus
 {
-    const RESISTANT = 'RESISTENT';
-    const IN_OBSERVATION = 'IN_OBSERVATIE';
+    const RESISTANT = 'RESISTANT';
+    const UNDER_OBSERVATION = 'UNDER OBSERVATION';
 }
