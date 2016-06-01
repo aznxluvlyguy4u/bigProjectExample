@@ -38,9 +38,9 @@ class LocationHealthUpdater
     public static function updateByGivenLocationOfOrigin(Location $locationOfDestination,
                                                          $locationOfOrigin = null)
     {
-        //By default set the status to IN_OBSERVATION for animals with an unknown HealthStatus
-        $maediVisnaStatus = MaediVisnaStatus::IN_OBSERVATION;
-        $scrapieStatus = ScrapieStatus::IN_OBSERVATION;
+        //By default set the status to UNDER_OBSERVATION for animals with an unknown HealthStatus
+        $maediVisnaStatus = MaediVisnaStatus::UNDER_OBSERVATION;
+        $scrapieStatus = ScrapieStatus::UNDER_OBSERVATION;
 
         if($locationOfOrigin != null) {
             $healthsOrigin = $locationOfOrigin->getHealths();
@@ -108,18 +108,18 @@ class LocationHealthUpdater
     private static function updateByStatus($location, $maediVisnaStatus, $scrapieStatus)
     {
         //Check for maediVisnaStatus and scrapieStatus separately
-        if( $maediVisnaStatus == MaediVisnaStatus::IN_OBSERVATION ||
+        if( $maediVisnaStatus == MaediVisnaStatus::UNDER_OBSERVATION ||
             $maediVisnaStatus == null ||
             $maediVisnaStatus == "") {
 
-            $location->getHealths()->get(0)->setMaediVisnaStatus(MaediVisnaStatus::IN_OBSERVATION);
+            $location->getHealths()->get(0)->setMaediVisnaStatus(MaediVisnaStatus::UNDER_OBSERVATION);
         }
 
-        if( $scrapieStatus == ScrapieStatus::IN_OBSERVATION ||
+        if( $scrapieStatus == ScrapieStatus::UNDER_OBSERVATION ||
             $scrapieStatus == null ||
             $scrapieStatus == "") {
 
-            $location->getHealths()->get(0)->setScrapieStatus(ScrapieStatus::IN_OBSERVATION);
+            $location->getHealths()->get(0)->setScrapieStatus(ScrapieStatus::UNDER_OBSERVATION);
         }
 
         return $location;
@@ -134,9 +134,9 @@ class LocationHealthUpdater
      */
     private static function updateOverallHealthStatus(Location $location)
     {
-        if($location->getHealths()->get(0)->getMaediVisnaStatus() == MaediVisnaStatus::IN_OBSERVATION ||
-            $location->getHealths()->get(0)->getScrapieStatus() == ScrapieStatus::IN_OBSERVATION) {
-            $location->getHealths()->get(0)->setLocationHealthStatus(LocationHealthStatus::IN_OBSERVATION);
+        if($location->getHealths()->get(0)->getMaediVisnaStatus() == MaediVisnaStatus::UNDER_OBSERVATION ||
+            $location->getHealths()->get(0)->getScrapieStatus() == ScrapieStatus::UNDER_OBSERVATION) {
+            $location->getHealths()->get(0)->setLocationHealthStatus(LocationHealthStatus::UNDER_OBSERVATION);
         }
 
         return $location;

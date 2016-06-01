@@ -195,20 +195,25 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $contentPerChild = $contentWithoutChildren;
         $contentPerChild->set('animal', $child);
 
-        //Convert the array into an object and add the mandatory values retrieved from the database
-        $declareBirthObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $contentPerChild, $this->getAuthenticatedUser($request));
+        if($child['is_alive'] == true) { //DeclareBirth with sending a request to IenR
+            //Convert the array into an object and add the mandatory values retrieved from the database
+            $declareBirthObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $contentPerChild, $this->getAuthenticatedUser($request));
 
-        //Send it to the queue and persist/update any changed state to the database
-        $messageArray = $this->sendMessageObjectToQueue($declareBirthObject);
+            //Send it to the queue and persist/update any changed state to the database
+            $messageArray = $this->sendMessageObjectToQueue($declareBirthObject);
 
-        //Set tags of child to ASSIGNING
-        $this->persistNewTagsToAssigning($client, $declareBirthObject->getAnimal());
+            //Set tags of child to ASSIGNING
+            $this->persistNewTagsToAssigning($client, $declareBirthObject->getAnimal());
 
-        //Persist message without animal. That is done after a successful response
-        $declareBirthObject->setAnimal(null);
-        $this->persist($declareBirthObject);
+            //Persist message without animal. That is done after a successful response
+            $declareBirthObject->setAnimal(null);
+            $this->persist($declareBirthObject);
 
-        $returnMessages->add($messageArray);
+            $returnMessages->add($messageArray); //TODO when stillborn is complete, move out side if() but still inside foreach
+
+        } else { //DeclareStill born, only persist to database and don't send request to IenR
+            //TODO
+        }
       }
 
     return new JsonResponse($returnMessages, 200);
