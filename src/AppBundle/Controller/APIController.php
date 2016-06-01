@@ -313,7 +313,7 @@ class APIController extends Controller implements APIControllerInterface
       if($contentArray->containsKey(Constant::FATHER_NAMESPACE)) {
         $father = $array[Constant::FATHER_NAMESPACE];
 
-        $isVerified = $this->verifyOnlyPedigreeCodeInAnimal($father);
+        $isVerified = $this->verifyOnlyPedigreeCodeInAnimal($father)->get('isValid');
 
         if (!$isVerified) {
           return array("animalKind" => Constant::FATHER_NAMESPACE,
@@ -370,32 +370,42 @@ class APIController extends Controller implements APIControllerInterface
 
   /**
    * @param array $animalArray
-   * @return bool
+   * @return ArrayCollection
    */
   public function verifyOnlyPedigreeCodeInAnimal($animalArray)
   {
+    $array = new ArrayCollection();
+
     if (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalArray) && array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalArray)) {
       $pedigreeNumber = $animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE];
       $pedigreeCountryCode = $animalArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
+
+      $array->set('pedigreeNumber', $pedigreeNumber);
+      $array->set('pedigreeCountryCode', $pedigreeCountryCode);
+      $array->set(Constant::PEDIGREE_NAMESPACE, $pedigreeCountryCode . $pedigreeNumber);
+
 
       if($pedigreeNumber != null && $pedigreeNumber != "") {
         $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
         $animal = $animalRepository->findByPedigreeCountryCodeAndNumber($pedigreeCountryCode, $pedigreeNumber);
 
         if($animal != null) {
-          $result = true;
+          $array->set('isValid', true);
 
         } else { //Animal is not found
-          $result = false;
+          $array->set('isValid', false);
         }
       } else { //PedigreeCountryCode and/or PedigreeNumber is null, so not validating on Pedigree
-        $result = true;
+        $array->set('isValid', true);
       }
     } else { //PedigreeCountryCode and/or PedigreeNumber keys do not exist, so not validating on Pedigree
-      $result = true;
+      $array->set('isValid', true);
+      $array->set('pedigreeNumber', null);
+      $array->set('pedigreeCountryCode', null);
+      $array->set(Constant::PEDIGREE_NAMESPACE, null);
     }
 
-    return $result;
+    return $array;
   }
 
   /**
