@@ -192,9 +192,6 @@ class IRSerializer implements IRSerializerInterface
             $locationOfDestination = LocationHealthUpdater::updateByGivenUbnOfOrigin($this->entityManager, $locationOfDestination, $ubnPreviousOwner);
             $declareArrivalRequest->setLocation($locationOfDestination);
             
-            //Set recoveryIndicator
-            $declareArrivalRequest->setRecoveryIndicator(ActionFlagSetting::RECOVERY_FLAG_TRUE);
-            
         } else {
             $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray);
 
