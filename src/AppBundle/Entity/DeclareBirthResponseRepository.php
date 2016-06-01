@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Output\DeclareBirthResponseOutput;
@@ -49,11 +50,16 @@ class DeclareBirthResponseRepository extends BaseRepository {
     {
         $retrievedBirths = $this->_em->getRepository(Constant::DECLARE_BIRTH_REPOSITORY)->getBirths($client);
 
-        $results = new ArrayCollection();
+        $results = array();
 
         foreach($retrievedBirths as $birth) {
             if($birth->getRequestState() == RequestStateType::FAILED) {
-                $results->add(DeclareBirthResponseOutput::createErrorResponse($birth, $animalRepository));
+
+                $lastResponse = Utils::returnLastResponse($birth->getResponses());
+                if($lastResponse != false) {
+                    if($lastResponse->getIsRemovedByUser() != true) {
+                        $results[] = DeclareBirthResponseOutput::createErrorResponse($birth, $animalRepository);                    }
+                }
             }
         }
 

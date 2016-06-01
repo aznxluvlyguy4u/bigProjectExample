@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Output\DeclareDepartResponseOutput;
@@ -49,11 +50,17 @@ class DeclareDepartResponseRepository extends BaseRepository {
     {
         $retrievedDepartures = $this->_em->getRepository(Constant::DECLARE_DEPART_REPOSITORY)->getDepartures($client);
 
-        $results = new ArrayCollection();
+        $results = array();
 
         foreach($retrievedDepartures as $depart) {
             if($depart->getRequestState() == RequestStateType::FAILED) {
-                $results->add(DeclareDepartResponseOutput::createErrorResponse($depart));
+
+                $lastResponse = Utils::returnLastResponse($depart->getResponses());
+                if($lastResponse != false) {
+                    if($lastResponse->getIsRemovedByUser() != true) {
+                        $results[] = DeclareDepartResponseOutput::createErrorResponse($depart);
+                    }
+                }
             }
         }
 

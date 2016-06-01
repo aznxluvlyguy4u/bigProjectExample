@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Output\DeclareExportResponseOutput;
@@ -48,11 +49,17 @@ class DeclareExportResponseRepository extends BaseRepository {
     {
         $retrievedExports = $this->_em->getRepository(Constant::DECLARE_EXPORT_REPOSITORY)->getExports($client);
 
-        $results = new ArrayCollection();
+        $results = array();
 
         foreach($retrievedExports as $export) {
             if($export->getRequestState() == RequestStateType::FAILED) {
-                $results->add(DeclareExportResponseOutput::createErrorResponse($export));
+
+                $lastResponse = Utils::returnLastResponse($export->getResponses());
+                if($lastResponse != false) {
+                    if($lastResponse->getIsRemovedByUser() != true) {
+                        $results[] = DeclareExportResponseOutput::createErrorResponse($export);
+                    }
+                }
             }
         }
 

@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\DataFixtures\ORM\MockedDeclareArrivalResponse;
 use AppBundle\Enumerator\RequestStateType;
@@ -54,11 +55,17 @@ class DeclareLossResponseRepository extends BaseRepository {
     {
         $retrievedLosses = $this->_em->getRepository(Constant::DECLARE_LOSS_REPOSITORY)->getLosses($client);
 
-        $results = new ArrayCollection();
+        $results = array();
 
         foreach($retrievedLosses as $loss) {
             if($loss->getRequestState() == RequestStateType::FAILED) {
-                $results->add(DeclareLossResponseOutput::createErrorResponse($loss));
+
+                $lastResponse = Utils::returnLastResponse($loss->getResponses());
+                if($lastResponse != false) {
+                    if($lastResponse->getIsRemovedByUser() != true) {
+                        $results[] = DeclareLossResponseOutput::createErrorResponse($loss);
+                    }
+                }
             }
         }
 

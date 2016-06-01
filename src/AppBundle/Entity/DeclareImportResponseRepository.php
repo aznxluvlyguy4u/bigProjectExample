@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Output\DeclareImportResponseOutput;
@@ -48,11 +49,17 @@ class DeclareImportResponseRepository extends BaseRepository {
     {
         $retrievedImports = $this->_em->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->getImports($client);
 
-        $results = new ArrayCollection();
+        $results = array();
 
         foreach($retrievedImports as $import) {
             if($import->getRequestState() == RequestStateType::FAILED) {
-                $results->add(DeclareImportResponseOutput::createErrorResponse($import));
+
+                $lastResponse = Utils::returnLastResponse($import->getResponses());
+                if($lastResponse != false) {
+                    if($lastResponse->getIsRemovedByUser() != true) {
+                        $results[] = DeclareImportResponseOutput::createErrorResponse($import);
+                    }
+                }
             }
         }
 
