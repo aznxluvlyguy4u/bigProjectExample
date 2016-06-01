@@ -24,6 +24,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
 use AppBundle\Enumerator\UIDType;
+use AppBundle\Setting\ActionFlagSetting;
 use AppBundle\Util\LocationHealthUpdater;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Types\JsonArrayType;
@@ -190,6 +191,9 @@ class IRSerializer implements IRSerializerInterface
             $locationOfDestination = $declareArrivalRequest->getLocation();
             $locationOfDestination = LocationHealthUpdater::updateByGivenUbnOfOrigin($this->entityManager, $locationOfDestination, $ubnPreviousOwner);
             $declareArrivalRequest->setLocation($locationOfDestination);
+            
+            //Set recoveryIndicator
+            $declareArrivalRequest->setRecoveryIndicator(ActionFlagSetting::RECOVERY_FLAG_TRUE);
             
         } else {
             $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray);
