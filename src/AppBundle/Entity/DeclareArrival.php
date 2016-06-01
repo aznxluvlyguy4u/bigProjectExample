@@ -249,7 +249,7 @@ class DeclareArrival extends DeclareBase {
      */
     public function addResponse(\AppBundle\Entity\DeclareArrivalResponse $response)
     {
-        $this->responses[] = $response;
+        $this->responses->add($response);
 
         return $this;
     }
