@@ -38,6 +38,7 @@ class DeclareArrivalResponseRepository extends BaseRepository {
 
             $isHistoryRequestStateType = $arrival->getRequestState() == RequestStateType::OPEN ||
                                          $arrival->getRequestState() == RequestStateType::REVOKING ||
+                                         $arrival->getRequestState() == RequestStateType::REVOKED ||
                                          $arrival->getRequestState() == RequestStateType::FINISHED;
 
             if($isHistoryRequestStateType) {

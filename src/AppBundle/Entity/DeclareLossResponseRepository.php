@@ -39,6 +39,7 @@ class DeclareLossResponseRepository extends BaseRepository {
 
             $isHistoryRequestStateType = $loss->getRequestState() == RequestStateType::OPEN ||
                 $loss->getRequestState() == RequestStateType::REVOKING ||
+                $loss->getRequestState() == RequestStateType::REVOKED ||
                 $loss->getRequestState() == RequestStateType::FINISHED;
 
             if($isHistoryRequestStateType) {

@@ -34,6 +34,7 @@ class DeclareBirthResponseRepository extends BaseRepository {
 
             $isHistoryRequestStateType = $birth->getRequestState() == RequestStateType::OPEN ||
                 $birth->getRequestState() == RequestStateType::REVOKING ||
+                $birth->getRequestState() == RequestStateType::REVOKED ||
                 $birth->getRequestState() == RequestStateType::FINISHED;
 
             if($isHistoryRequestStateType) {

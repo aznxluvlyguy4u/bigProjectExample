@@ -33,6 +33,7 @@ class DeclareExportResponseRepository extends BaseRepository {
 
             $isHistoryRequestStateType = $export->getRequestState() == RequestStateType::OPEN ||
                 $export->getRequestState() == RequestStateType::REVOKING ||
+                $export->getRequestState() == RequestStateType::REVOKED ||
                 $export->getRequestState() == RequestStateType::FINISHED;
 
             if($isHistoryRequestStateType) {

@@ -34,6 +34,7 @@ class DeclareDepartResponseRepository extends BaseRepository {
 
             $isHistoryRequestStateType = $depart->getRequestState() == RequestStateType::OPEN ||
                 $depart->getRequestState() == RequestStateType::REVOKING ||
+                $depart->getRequestState() == RequestStateType::REVOKED ||
                 $depart->getRequestState() == RequestStateType::FINISHED;
 
             if($isHistoryRequestStateType) {
