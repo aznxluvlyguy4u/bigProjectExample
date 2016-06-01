@@ -111,6 +111,13 @@ abstract class DeclareBase
     protected $ubn;
 
     /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 15)
+     * @JMS\Type("string")
+     */
+    protected $messageNumberToRecover;
+
+    /**
      * DeclareBase constructor.
      */
     public function __construct() {
@@ -319,4 +326,22 @@ abstract class DeclareBase
     {
         return $this->ubn;
     }
+
+    /**
+     * @return string
+     */
+    public function getMessageNumberToRecover()
+    {
+        return $this->messageNumberToRecover;
+    }
+
+    /**
+     * @param string $messageNumberToRecover
+     */
+    public function setMessageNumberToRecover($messageNumberToRecover)
+    {
+        $this->messageNumberToRecover = $messageNumberToRecover;
+    }
+
+
 }
