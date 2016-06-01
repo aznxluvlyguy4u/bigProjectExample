@@ -13,7 +13,7 @@ class DeclareImportResponseOutput
      */
     public static function createHistoryResponse($import)
     {
-        $lastResponse = $import->getResponses()->last();
+        $lastResponse = $import->getResponses()->first(); //ArrayCollection -> first() returns the last
         if($lastResponse) {
             $messageNumber = $lastResponse->getMessageNumber();
         } else {
@@ -42,7 +42,7 @@ class DeclareImportResponseOutput
      */
     public static function createErrorResponse($import)
     {
-        $lastResponse = $import->getResponses()->last();
+        $lastResponse = $import->getResponses()->first(); //ArrayCollection -> first() returns the last
         if($lastResponse != false) {
             $errorCode = $lastResponse->getErrorCode();
             $errorMessage = $lastResponse->getErrorMessage();

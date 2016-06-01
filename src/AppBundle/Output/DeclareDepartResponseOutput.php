@@ -14,7 +14,7 @@ class DeclareDepartResponseOutput
      */
     public static function createHistoryResponse($depart)
     {
-        $lastResponse = $depart->getResponses()->last();
+        $lastResponse = $depart->getResponses()->first(); //ArrayCollection -> first() returns the last
         if($lastResponse) {
             $messageNumber = $lastResponse->getMessageNumber();
         } else {
@@ -44,7 +44,7 @@ class DeclareDepartResponseOutput
      */
     public static function createErrorResponse($depart)
     {
-        $lastResponse = $depart->getResponses()->last();
+        $lastResponse = $depart->getResponses()->first(); //ArrayCollection -> first() returns the last
         if($lastResponse != false) {
             $errorCode = $lastResponse->getErrorCode();
             $errorMessage = $lastResponse->getErrorMessage();

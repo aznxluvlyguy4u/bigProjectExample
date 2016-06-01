@@ -13,7 +13,7 @@ class DeclareLossResponseOutput
      */
     public static function createHistoryResponse($loss)
     {
-        $lastResponse = $loss->getResponses()->last();
+        $lastResponse = $loss->getResponses()->first(); //ArrayCollection -> first() returns the last
         if($lastResponse) {
             $messageNumber = $lastResponse->getMessageNumber();
         } else {
@@ -40,7 +40,7 @@ class DeclareLossResponseOutput
      */
     public static function createErrorResponse($loss)
     {
-        $lastResponse = $loss->getResponses()->last();
+        $lastResponse = $loss->getResponses()->first(); //ArrayCollection -> first() returns the last
         if($lastResponse != false) {
             $errorCode = $lastResponse->getErrorCode();
             $errorMessage = $lastResponse->getErrorMessage();

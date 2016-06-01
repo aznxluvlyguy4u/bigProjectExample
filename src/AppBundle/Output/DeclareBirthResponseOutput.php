@@ -17,7 +17,7 @@ class DeclareBirthResponseOutput extends Output
      */
     public static function createHistoryResponse($birth, $animalRepository)
     {
-        $lastResponse = $birth->getResponses()->last();
+        $lastResponse = $birth->getResponses()->first(); //ArrayCollection -> first() returns the last
         if($lastResponse) {
             $messageNumber = $lastResponse->getMessageNumber();
         } else {
@@ -47,7 +47,7 @@ class DeclareBirthResponseOutput extends Output
      */
     public static function createErrorResponse($birth, $animalRepository)
     {
-        $lastResponse = $birth->getResponses()->last();
+        $lastResponse = $birth->getResponses()->first(); //ArrayCollection -> first() returns the last
         if($lastResponse != false) {
             $errorCode = $lastResponse->getErrorCode();
             $errorMessage = $lastResponse->getErrorMessage();
