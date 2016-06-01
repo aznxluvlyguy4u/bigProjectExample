@@ -389,11 +389,7 @@ abstract class Animal
      */
     public function getUlnCountryCode()
     {
-        if($this->getAssignedTag() != null) {
-            return $this->getAssignedTag()->getUlnCountryCode();
-        }
-
-        return null;
+        return $this->ulnCountryCode;
     }
 
     /**
@@ -403,11 +399,7 @@ abstract class Animal
      */
     public function getUlnNumber()
     {
-        if($this->getAssignedTag() != null) {
-            return $this->getAssignedTag()->getUlnNumber();
-        }
-
-        return null;
+        return $this->ulnNumber;
     }
 
     /**
