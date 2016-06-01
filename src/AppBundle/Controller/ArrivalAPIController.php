@@ -158,7 +158,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     if(!$verification->get('isValid')){
       return new JsonResponse(array('code'=>428,
                                "pedigree" => $verification->get(Constant::PEDIGREE_NAMESPACE),
-                                "message" => "PEDIGREE VALUE IS NOT IN DATABASE"), 428);
+                                "message" => "PEDIGREE VALUE IS NOT REGISTERED WITH NSFO"), 428);
     }
 
     $client = $this->getAuthenticatedUser($request);
