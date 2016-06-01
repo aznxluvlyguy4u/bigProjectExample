@@ -212,11 +212,11 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     //Client can only depart/export own animals
     $client = $this->getAuthenticatedUser($request);
     $animal = $content->get(Constant::ANIMAL_NAMESPACE);
-    $isAnimalOfClient = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->verifyIfClientOwnsAnimal($client, $animal);
 
-    if(!$isAnimalOfClient) {
-      return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
-    }
+    //NOTE!!! Don't try to verify any animals directly. Because they will have the isDeparted=true state.
+    //Verify this request using the requestId
+
+    //TODO verify if Updated request had was successful or not. DON'T Update successful departs and imports! They have to be revoked. And posted as a new request.
 
     $isExportAnimal = $content['is_export_animal'];
 
@@ -246,15 +246,15 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
         return new JsonResponse(array("message"=>"No DeclareDepart found with request_id: " . $Id), 204);
       }
     }
+    //Send it to the queue and persist/update any changed state to the database
+    $messageArray = $this->sendEditMessageObjectToQueue($messageObject);
+
     //Reset isExportAnimal to false before persisting
     $messageObject->getAnimal()->setIsExportAnimal(false);
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($messageObject);
     $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
-
-    //Send it to the queue and persist/update any changed state to the database
-    $messageArray = $this->sendEditMessageObjectToQueue($messageObject);
 
     return new JsonResponse($messageArray, 200);
   }
