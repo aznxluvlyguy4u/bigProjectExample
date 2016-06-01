@@ -3,6 +3,7 @@
 namespace AppBundle\Output;
 
 
+use AppBundle\Component\Utils;
 use AppBundle\Entity\DeclareImport;
 
 class DeclareImportResponseOutput
@@ -13,7 +14,7 @@ class DeclareImportResponseOutput
      */
     public static function createHistoryResponse($import)
     {
-        $lastResponse = $import->getResponses()->first(); //ArrayCollection -> first() returns the last
+        $lastResponse = Utils::returnLastResponse($import->getResponses());
         if($lastResponse) {
             $messageNumber = $lastResponse->getMessageNumber();
         } else {
@@ -42,7 +43,7 @@ class DeclareImportResponseOutput
      */
     public static function createErrorResponse($import)
     {
-        $lastResponse = $import->getResponses()->first(); //ArrayCollection -> first() returns the last
+        $lastResponse = Utils::returnLastResponse($import->getResponses());
         if($lastResponse != false) {
             $errorCode = $lastResponse->getErrorCode();
             $errorMessage = $lastResponse->getErrorMessage();

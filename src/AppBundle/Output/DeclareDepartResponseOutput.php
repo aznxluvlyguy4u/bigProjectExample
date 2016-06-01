@@ -3,6 +3,7 @@
 namespace AppBundle\Output;
 
 
+use AppBundle\Component\Utils;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareImport;
 
@@ -14,7 +15,7 @@ class DeclareDepartResponseOutput
      */
     public static function createHistoryResponse($depart)
     {
-        $lastResponse = $depart->getResponses()->first(); //ArrayCollection -> first() returns the last
+        $lastResponse = Utils::returnLastResponse($depart->getResponses());
         if($lastResponse) {
             $messageNumber = $lastResponse->getMessageNumber();
         } else {
@@ -44,7 +45,7 @@ class DeclareDepartResponseOutput
      */
     public static function createErrorResponse($depart)
     {
-        $lastResponse = $depart->getResponses()->first(); //ArrayCollection -> first() returns the last
+        $lastResponse = Utils::returnLastResponse($depart->getResponses());
         if($lastResponse != false) {
             $errorCode = $lastResponse->getErrorCode();
             $errorMessage = $lastResponse->getErrorMessage();

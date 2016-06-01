@@ -3,6 +3,7 @@
 namespace AppBundle\Output;
 
 
+use AppBundle\Component\Utils;
 use AppBundle\Entity\DeclareLoss;
 
 class DeclareLossResponseOutput
@@ -13,7 +14,7 @@ class DeclareLossResponseOutput
      */
     public static function createHistoryResponse($loss)
     {
-        $lastResponse = $loss->getResponses()->first(); //ArrayCollection -> first() returns the last
+        $lastResponse = Utils::returnLastResponse($loss->getResponses());
         if($lastResponse) {
             $messageNumber = $lastResponse->getMessageNumber();
         } else {
@@ -40,7 +41,7 @@ class DeclareLossResponseOutput
      */
     public static function createErrorResponse($loss)
     {
-        $lastResponse = $loss->getResponses()->first(); //ArrayCollection -> first() returns the last
+        $lastResponse = Utils::returnLastResponse($loss->getResponses());
         if($lastResponse != false) {
             $errorCode = $lastResponse->getErrorCode();
             $errorMessage = $lastResponse->getErrorMessage();

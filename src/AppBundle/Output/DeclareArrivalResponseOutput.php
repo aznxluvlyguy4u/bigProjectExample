@@ -3,6 +3,7 @@
 namespace AppBundle\Output;
 
 
+use AppBundle\Component\Utils;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareArrivalResponse;
 use AppBundle\Entity\DeclareImport;
@@ -15,7 +16,7 @@ class DeclareArrivalResponseOutput
      */
     public static function createHistoryResponse($arrival)
     {
-        $lastResponse = $arrival->getResponses()->first(); //ArrayCollection -> first() returns the last
+        $lastResponse = Utils::returnLastResponse($arrival->getResponses());
         if($lastResponse) {
             $messageNumber = $lastResponse->getMessageNumber();
         } else {
@@ -43,7 +44,7 @@ class DeclareArrivalResponseOutput
      */
     public static function createErrorResponse($arrival)
     {
-        $lastResponse = $arrival->getResponses()->first(); //ArrayCollection -> first() returns the last
+        $lastResponse = Utils::returnLastResponse($arrival->getResponses());
         if($lastResponse != false) {
             $errorCode = $lastResponse->getErrorCode();
             $errorMessage = $lastResponse->getErrorMessage();

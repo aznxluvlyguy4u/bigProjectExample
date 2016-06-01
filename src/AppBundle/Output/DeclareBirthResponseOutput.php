@@ -3,6 +3,7 @@
 namespace AppBundle\Output;
 
 
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\DeclareBirth;
@@ -17,7 +18,7 @@ class DeclareBirthResponseOutput extends Output
      */
     public static function createHistoryResponse($birth, $animalRepository)
     {
-        $lastResponse = $birth->getResponses()->first(); //ArrayCollection -> first() returns the last
+        $lastResponse = Utils::returnLastResponse($birth->getResponses());
         if($lastResponse) {
             $messageNumber = $lastResponse->getMessageNumber();
         } else {
@@ -47,7 +48,7 @@ class DeclareBirthResponseOutput extends Output
      */
     public static function createErrorResponse($birth, $animalRepository)
     {
-        $lastResponse = $birth->getResponses()->first(); //ArrayCollection -> first() returns the last
+        $lastResponse = Utils::returnLastResponse($birth->getResponses());
         if($lastResponse != false) {
             $errorCode = $lastResponse->getErrorCode();
             $errorMessage = $lastResponse->getErrorMessage();
