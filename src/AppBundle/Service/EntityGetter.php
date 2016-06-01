@@ -55,7 +55,8 @@ class EntityGetter
         $retrievedAnimal = null;
         $retrievedAnimalArray = $declareArrayContent->get(Constant::ANIMAL_NAMESPACE);
 
-        $ulnNumberExists = array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $retrievedAnimalArray);
+        $ulnNumberExists = array_key_exists(
+            Constant::ULN_NUMBER_NAMESPACE, $retrievedAnimalArray);
         $pedigreeNumberExists = array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $retrievedAnimalArray);
 
         if($ulnNumberExists){

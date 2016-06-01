@@ -174,16 +174,9 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     //Send it to the queue and persist/update any changed state to the database
     $messageArray = $this->sendMessageObjectToQueue($messageObject);
+    $messageObject->setAnimal(null);
 
     //Persist message without animal. That is done after a successful response
-    $retrievedAnimal = $repository->findByAnimal($messageObject->getAnimal());
-    $animalIsInDatabase = $retrievedAnimal != null;
-    if($animalIsInDatabase){
-      $messageObject->setAnimal(null);
-      $messageObject->setAnimal($retrievedAnimal);
-    } else {
-      $messageObject->setAnimal(null);
-    }
     $this->persist($messageObject);
 
     //Persist HealthStatus
