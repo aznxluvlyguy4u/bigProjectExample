@@ -45,16 +45,18 @@ class HideErrorAPIController extends APIController implements HideErrorAPIContro
      */
     public function updateError(Request $request) {
         $content = $this->getContentAsArray($request);
-        $messageNumber = $content->get("message_number");
+        $requestId = $content->get("request_id");
 
-        if($messageNumber != null) {
+        if($requestId != null) {
 
-            $response = $this->getDoctrine()->getRepository(Constant::DECLARE_BASE_RESPONSE_REPOSITORY)->findOneBy(array("messageNumber"=>$messageNumber));;
+            $responses = $this->getDoctrine()->getRepository(Constant::DECLARE_BASE_RESPONSE_REPOSITORY)->findBy(array("requestId"=>$requestId));
 
-            $response->setIsRemovedByUser($content['is_removed_by_user']);
+            foreach($responses as $response) {
+                $response->setIsRemovedByUser($content['is_removed_by_user']);
 
-            //No "HideMessage" declaration message is created-and-persisted. A value is just updated in an existing declaration.
-            $this->persist($response);
+                //No "HideMessage" declaration message is created-and-persisted. A value is just updated in an existing declaration.
+                $this->persist($response);
+            }
 
             return new JsonResponse(array("code"=>200, "message"=>"saved"), 200);
         }
