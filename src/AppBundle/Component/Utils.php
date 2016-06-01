@@ -2,6 +2,8 @@
 
 namespace AppBundle\Component;
 use AppBundle\Constant\Constant;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 /**
  * Class Utils
@@ -132,5 +134,33 @@ class Utils
             }
         }
         return true;
+    }
+
+    /**
+     * @param Collection $responses
+     * @return mixed|null
+     */
+    public static function returnLastResponse(Collection $responses)
+    {
+        if($responses->count() == 0) {
+            return null;
+        }
+
+        $length = $responses->count();
+
+        //initialize values
+        $lastResponseIndex = 0;
+        $startIndex = 0;
+        $latestLogDate = $responses->get($startIndex)->getLogDate();
+
+        for($i = $startIndex + 1; $i < $length; $i++) {
+            $responseLogDate = $responses->get($i)->getLogDate();
+            if($responseLogDate > $latestLogDate) {
+                $lastResponseIndex = $i;
+                $latestLogDate = $responseLogDate;
+            }
+        }
+
+        return $responses->get($lastResponseIndex);
     }
 }
