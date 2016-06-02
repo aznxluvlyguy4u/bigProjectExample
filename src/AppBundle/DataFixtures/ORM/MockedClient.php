@@ -153,14 +153,15 @@ class MockedClient implements FixtureInterface, ContainerAwareInterface, Ordered
 
 
     if(DataFixtureSetting::USE_MOCKED_CLIENT_TWO) {
-      $ubnTwo = '101';
+      $ubnTwo = '6182575'; //real ubn number
+      $relationNumberKeeper = '444555666';
 
       //Create mocked data ClientTwo
       self::$mockedClientTwo = new Client();
       self::$mockedClientTwo->setFirstName("Sarah");
       self::$mockedClientTwo->setLastName("de Schapenherder");
-      self::$mockedClientTwo->setEmailAddress("sarah@deschapenherder.com");
-      self::$mockedClientTwo->setRelationNumberKeeper("51381121");
+      self::$mockedClientTwo->setEmailAddress("sarah@deboer.com");
+      self::$mockedClientTwo->setRelationNumberKeeper($relationNumberKeeper);
       self::$mockedClientTwo->setUsername($ubnTwo);
       self::$mockedClientTwo->setPassword($encoder->encodePassword(self::$mockedClientTwo, "super-password"));
 
