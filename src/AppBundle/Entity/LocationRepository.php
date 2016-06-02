@@ -54,7 +54,7 @@ class LocationRepository extends BaseRepository
 
   /**
    * @param $ubn
-   * @return null|object
+   * @return null|Location
    */
   public function findByUbn($ubn)
   {
