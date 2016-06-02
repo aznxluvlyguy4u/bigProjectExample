@@ -17,7 +17,7 @@ class LoginOutput
     public static function create($client)
     {
         $usernameIr = ""; //TODO update entities to save IenR username and password. NOTE How do you save passwords in the database in a retrievable way?
-        $userNameNsfo = $client->getCompanies()->get(0)->getLocations()->get(0)->getUbn(); //TODO Phase 2+ select proper location
+        $emailAddress = $client->getEmailAddress();
 
         if(true) { //TODO create check here
             $passwordExists = true;
@@ -26,14 +26,14 @@ class LoginOutput
         }
 
         $result = array(
-                    "ienr" =>
+                    "ienr" => //TODO DELETE obsolete ienr array only in tandem with frontend
                     array(
                         "username" => $usernameIr,
                         "password" => $passwordExists
                     ),
                     "nsfo" =>
                     array(
-                        "username" => $userNameNsfo
+                        "username" => $emailAddress
                     )
                 );
 
