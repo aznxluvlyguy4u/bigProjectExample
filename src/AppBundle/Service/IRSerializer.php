@@ -19,6 +19,7 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Animal;
+use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
@@ -191,6 +192,17 @@ class IRSerializer implements IRSerializerInterface
             $locationOfDestination = $declareArrivalRequest->getLocation();
             $locationOfDestination = LocationHealthUpdater::updateByGivenUbnOfOrigin($this->entityManager, $locationOfDestination, $ubnPreviousOwner);
             $declareArrivalRequest->setLocation($locationOfDestination);
+
+            $requestState = $declareArrivalContentArray['request_state'];
+            if(Utils::hasSuccessfulLastResponse($requestState)) {
+                $declareArrivalRequest->setRecoveryIndicator(RecoveryIndicatorType::J);
+                $lastResponse = Utils::returnLastResponse($declareArrivalRequest->getResponses());
+                if($lastResponse != null) {
+                   $declareArrivalRequest->setMessageNumberToRecover($lastResponse->getMessageNumber());
+                }
+            } else {
+                $declareArrivalRequest->setRecoveryIndicator(RecoveryIndicatorType::N);
+            }
             
         } else {
             $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray);
@@ -353,6 +365,19 @@ class IRSerializer implements IRSerializerInterface
         $declareBirthRequest->setUlnCountryCodeSurrogate($surrogateArray[Constant::ULN_COUNTRY_CODE_NAMESPACE]);
         $declareBirthRequest->setUlnSurrogate($surrogateArray[Constant::ULN_NUMBER_NAMESPACE]);
 
+        if($isEditMessage) {
+            $requestState = $declareBirthContentArray['request_state'];
+            if(Utils::hasSuccessfulLastResponse($requestState)) {
+                $declareBirthRequest->setRecoveryIndicator(RecoveryIndicatorType::J);
+                $lastResponse = Utils::returnLastResponse($declareBirthRequest->getResponses());
+                if($lastResponse != null) {
+                    $declareBirthRequest->setMessageNumberToRecover($lastResponse->getMessageNumber());
+                }
+            } else {
+                $declareBirthRequest->setRecoveryIndicator(RecoveryIndicatorType::N);
+            }
+        }
+
         return $declareBirthRequest;
     }
 
@@ -378,6 +403,19 @@ class IRSerializer implements IRSerializerInterface
         //Add retrieved animal to DeclareArrival
         $declareDepartRequest->setAnimal($retrievedAnimal);
         $declareDepartRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
+
+        if($isEditMessage) {
+            $requestState = $declareDepartContentArray['request_state'];
+            if(Utils::hasSuccessfulLastResponse($requestState)) {
+                $declareDepartRequest->setRecoveryIndicator(RecoveryIndicatorType::J);
+                $lastResponse = Utils::returnLastResponse($declareDepartRequest->getResponses());
+                if($lastResponse != null) {
+                    $declareDepartRequest->setMessageNumberToRecover($lastResponse->getMessageNumber());
+                }
+            } else {
+                $declareDepartRequest->setRecoveryIndicator(RecoveryIndicatorType::N);
+            }
+        }
 
         return $declareDepartRequest;
     }
@@ -419,6 +457,8 @@ class IRSerializer implements IRSerializerInterface
             }
         }
 
+        //TODO: NO EDIT YET, Phase 2+
+
         return $declareTagsTransfer;
     }
 
@@ -442,6 +482,19 @@ class IRSerializer implements IRSerializerInterface
         //Add retrieved animal to DeclareLoss
         $declareLossRequest->setAnimal($retrievedAnimal);
         $declareLossRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
+
+        if($isEditMessage) {
+            $requestState = $declareLossContentArray['request_state'];
+            if(Utils::hasSuccessfulLastResponse($requestState)) {
+                $declareLossRequest->setRecoveryIndicator(RecoveryIndicatorType::J);
+                $lastResponse = Utils::returnLastResponse($declareLossRequest->getResponses());
+                if($lastResponse != null) {
+                    $declareLossRequest->setMessageNumberToRecover($lastResponse->getMessageNumber());
+                }
+            } else {
+                $declareLossRequest->setRecoveryIndicator(RecoveryIndicatorType::N);
+            }
+        }
 
         return $declareLossRequest;
     }
@@ -471,6 +524,19 @@ class IRSerializer implements IRSerializerInterface
         $declareExportRequest->setIsExportAnimal($isExportAnimal);
         $declareExportRequest->setReasonOfExport($declareExportContentArray['reason_of_depart']);
         $declareExportRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
+
+        if($isEditMessage) {
+            $requestState = $declareExportContentArray['request_state'];
+            if(Utils::hasSuccessfulLastResponse($requestState)) {
+                $declareExportRequest->setRecoveryIndicator(RecoveryIndicatorType::J);
+                $lastResponse = Utils::returnLastResponse($declareExportRequest->getResponses());
+                if($lastResponse != null) {
+                    $declareExportRequest->setMessageNumberToRecover($lastResponse->getMessageNumber());
+                }
+            } else {
+                $declareExportRequest->setRecoveryIndicator(RecoveryIndicatorType::N);
+            }
+        }
 
         return $declareExportRequest;
     }
@@ -520,6 +586,19 @@ class IRSerializer implements IRSerializerInterface
             }
 
             $declareImportRequest->setRequestState(RequestStateType::OPEN);
+
+
+            $requestState = $declareImportContentArray['request_state'];
+            if(Utils::hasSuccessfulLastResponse($requestState)) {
+                $declareImportRequest->setRecoveryIndicator(RecoveryIndicatorType::J);
+                $lastResponse = Utils::returnLastResponse($declareImportRequest->getResponses());
+                if($lastResponse != null) {
+                    $declareImportRequest->setMessageNumberToRecover($lastResponse->getMessageNumber());
+                }
+            } else {
+                $declareImportRequest->setRecoveryIndicator(RecoveryIndicatorType::N);
+            }
+
 
         } else {
             //Retrieve animal entity

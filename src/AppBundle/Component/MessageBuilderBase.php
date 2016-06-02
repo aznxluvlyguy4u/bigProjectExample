@@ -5,6 +5,7 @@ namespace AppBundle\Component;
 use AppBundle\Controller\APIController;
 use AppBundle\Entity\Client as Client;
 use AppBundle\Entity\DeclareBase as DeclareBase;
+use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Setting\ActionFlagSetting;
@@ -63,7 +64,7 @@ class MessageBuilderBase
         $messageObject->setRequestState(RequestStateType::OPEN);
 
         if($messageObject->getRecoveryIndicator() == null) {
-            $messageObject->setRecoveryIndicator("N");
+            $messageObject->setRecoveryIndicator(RecoveryIndicatorType::N);
         }
 
         //Add relationNumberKeeper to content

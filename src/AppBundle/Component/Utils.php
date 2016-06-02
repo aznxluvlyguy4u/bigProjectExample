@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component;
 use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 
@@ -163,4 +164,18 @@ class Utils
 
         return $responses->get($lastResponseIndex);
     }
+
+    /**
+     * @param string $requestState
+     * @return bool
+     */
+    public static function hasSuccessfulLastResponse($requestState)
+    {
+        if($requestState == RequestStateType::FINISHED){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 }
