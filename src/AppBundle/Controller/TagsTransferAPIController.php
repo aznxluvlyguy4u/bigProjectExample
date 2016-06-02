@@ -49,11 +49,11 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
     //Validate if ubn is in database and retrieve the relationNumberKeeper owning that ubn
     $ubnVerification = $this->isUbnValid($content->get(Constant::UBN_NEW_OWNER_NAMESPACE));
     if(!$ubnVerification['isValid']) {
-      $code = $ubnVerification['code'];
-      $message = $ubnVerification['message'];;
+      $code = $ubnVerification[Constant::CODE_NAMESPACE];
+      $message = $ubnVerification[Constant::MESSAGE_NAMESPACE];
       return new JsonResponse(array("code" => $code, "message" => $message), $code);
     }
-    $content->set("relation_number_keeper", $ubnVerification['relationNumberKeeper']);
+    $content->set("relation_number_acceptant", $ubnVerification['relationNumberKeeper']);
 
     //TODO Phase 2, with history and error tab in front-end, we can do a less strict filter. And only remove the incorrect tags and process the rest. However for proper feedback to the client we need to show the successful and failed TagTransfer history.
 

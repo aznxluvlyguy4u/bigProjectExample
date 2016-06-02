@@ -645,6 +645,7 @@ class APIController extends Controller implements APIControllerInterface
 
     if($location != null) {
       $isValid = true;
+      //'relationNumberKeeper' is an obligatory field in Client, so no need to verify if that field exists or not.
       $relationNumberKeeper = $location->getCompany()->getOwner()->getRelationNumberKeeper();
       $code = 200;
       $message = 'UBN IS VALID';
@@ -652,8 +653,8 @@ class APIController extends Controller implements APIControllerInterface
 
     return array('isValid' => $isValid,
     'relationNumberKeeper' => $relationNumberKeeper,
-            'errorMessage' => $message,
-               'errorCode' => $code
+        Constant::MESSAGE_NAMESPACE => $message,
+           Constant::CODE_NAMESPACE => $code
                 );
 
   }
