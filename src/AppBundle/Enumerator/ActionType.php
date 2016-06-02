@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by IntelliJ IDEA.
- * User: radiancekfx
- * Date: 24-5-16
- * Time: 22:13
- */
 
 namespace AppBundle\Enumerator;
 
