@@ -407,7 +407,7 @@ class IRSerializer implements IRSerializerInterface
             //Fetch tag from database
             $fetchedTag = $tagsRepository->findOneBy($tagFilter);
 
-            //If tag was found at it to the declare transfer request
+            //If tag was found, add it to the declare transfer request
             if($fetchedTag != null) {
 
                 //Check if Tag status is UNASSIGNED && No animal is assigned to it

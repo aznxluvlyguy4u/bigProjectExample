@@ -629,4 +629,32 @@ class APIController extends Controller implements APIControllerInterface
     return $tag;
   }
 
+  /**
+   * @param string $ubn
+   * @return array
+   */
+  public function isUbnValid($ubn)
+  {
+    //Default values
+    $isValid = false;
+    $relationNumberKeeper = null;
+    $code = 428;
+    $message = 'THE UBN IS NOT REGISTERED AT NSFO';
+
+    $location = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY)->findByUbn($ubn);
+
+    if($location != null) {
+      $isValid = true;
+      $relationNumberKeeper = $location->getCompany()->getOwner()->getRelationNumberKeeper();
+      $code = 200;
+      $message = 'UBN IS VALID';
+    } //else just use the default values
+
+    return array('isValid' => $isValid,
+    'relationNumberKeeper' => $relationNumberKeeper,
+            'errorMessage' => $message,
+               'errorCode' => $code
+                );
+
+  }
 }
