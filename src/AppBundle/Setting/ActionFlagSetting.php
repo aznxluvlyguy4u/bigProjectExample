@@ -8,7 +8,7 @@ use AppBundle\Enumerator\RequestStateType;
 
 class ActionFlagSetting
 {
-    const DEFAULT_ACTION = ActionType::C;
+    const DEFAULT_ACTION = ActionType::V;
 
     //If null, the default action is used.
     //If not null, the value below will override the default value.
@@ -28,4 +28,11 @@ class ActionFlagSetting
     //TODO The messages belonging to the request types below are not implemented yet
     const DECLARATION_DETAIL = null;
     const DECLARE_ANIMAL_FLAG = null;
+
+
+    const RECOVERY_FLAG_TRUE = 'J';
+    const RECOVERY_FLAG_FALSE = 'N';
+    const ACTION_TYPE_READ_ONLY = 'C';
+    const ACTION_TYPE_MUTATE = 'V';
+
 }
