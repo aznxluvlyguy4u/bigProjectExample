@@ -658,4 +658,30 @@ class APIController extends Controller implements APIControllerInterface
                 );
 
   }
+
+
+  public function hasMessageNumber(ArrayCollection $content)
+  {
+    //Default values
+    $isValid = false;
+    $messageNumber = null;
+    $code = 428;
+    $message = 'THERE IS NO VALUE GIVEN FOR THE MESSAGE NUMBER';
+
+    if($content->containsKey(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE)) {
+      $messageNumber = $content->get(Constant::MESSAGE_ID_SNAKE_CASE_NAMESPACE);
+
+      if($messageNumber != null || $messageNumber != "") {
+        $isValid = true;
+        $code = 200;
+        $message = 'MESSAGE NUMBER FIELD EXISTS AND IS NOT EMPTY';
+      }
+    }
+
+    return array('isValid' => $isValid,
+        'messageNumber' => $messageNumber,
+        Constant::MESSAGE_NAMESPACE => $message,
+        Constant::CODE_NAMESPACE => $code
+    );
+  }
 }
