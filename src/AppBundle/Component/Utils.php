@@ -178,4 +178,26 @@ class Utils
         }
     }
 
+    /**
+     * @param boolean $isValid
+     * @param int $code
+     * @param string $messageBody
+     * @param array $optionalArray
+     * @return array
+     */
+    public static function buildValidationArray($isValid, $code, $messageBody, $optionalArray = null)
+    {
+        $result = array(Constant::IS_VALID_NAMESPACE => $isValid,
+            Constant::MESSAGE_NAMESPACE => array(Constant::CODE_NAMESPACE => $code,
+                Constant::MESSAGE_NAMESPACE => $messageBody),
+            Constant::CODE_NAMESPACE => $code,
+        );
+
+        if($optionalArray != null) {
+            $result = array_merge($result, $optionalArray);
+        }
+
+        return $result;
+    }
+
 }

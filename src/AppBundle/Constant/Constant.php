@@ -34,6 +34,7 @@ class Constant
     const BOOLEAN_TRUE_NAMESPACE = 'true';
     const UNKNOWN_NAMESPACE = 'unknown';
     const VALIDITY_NAMESPACE = 'validity';
+    const IS_VALID_NAMESPACE = 'isValid';
     const CODE_NAMESPACE = 'code';
     const ULN_NUMBER_NAMESPACE = "uln_number";
     const PEDIGREE_NUMBER_NAMESPACE = "pedigree_number";

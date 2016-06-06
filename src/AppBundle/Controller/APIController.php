@@ -678,11 +678,6 @@ class APIController extends Controller implements APIControllerInterface
       }
     }
 
-    return array('isValid' => $isValid,
-        'messageNumber' => $messageNumber,
-        Constant::MESSAGE_NAMESPACE => array(Constant::CODE_NAMESPACE => $code,
-            Constant::MESSAGE_NAMESPACE => $messageBody),
-        Constant::CODE_NAMESPACE => $code,
-    );
+    return Utils::buildValidationArray($isValid, $code, $messageBody, array('messageNumber' => $messageNumber));
   }
 }
