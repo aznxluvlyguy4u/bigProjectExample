@@ -85,7 +85,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   }
 
   /**
-   * Retrieve an animal, found by it's Id.
+   * Retrieve an animal, found by it's ULN. For example NL100029511721
    *
    * @ApiDoc(
    *   requirements={
@@ -97,7 +97,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve an Animal by given ID",
+   *   description = "Retrieve an Animal by given ULN",
    *   output = "AppBundle\Entity\Animal"
    * )
    * @param Request $request the request object
@@ -183,7 +183,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       //Send it to the queue and persist/update any changed state to the database
       $messageArray = $this->sendMessageObjectToQueue($messageObject);
 
-      return new JsonResponse($messageObject, 200);
+      return new JsonResponse($messageArray, 200);
     }
   }
 
@@ -222,7 +222,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     //Send it to the queue and persist/update any changed state to the database
     $messageArray = $this->sendMessageObjectToQueue($messageObject);
 
-    return new JsonResponse($messageObject, 200);
+    return new JsonResponse($messageArray, 200);
   }
 
   /**
@@ -247,7 +247,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Method("GET")
    */
   public function getAnimalDetailsById(Request $request, $ulnString) {
-    
+
     $client = $this->getAuthenticatedUser($request);
     $animal = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->getAnimalByUlnString($client, $ulnString);
 

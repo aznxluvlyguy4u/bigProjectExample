@@ -17,7 +17,7 @@ class AnimalRepository extends BaseRepository
 {
   /**
    * @param $Id
-   * @return array|null
+   * @return null|Animal|Ram|Ewe|Neuter
    */
   function findByUlnOrPedigree($Id, $isUln)
   {
@@ -38,7 +38,7 @@ class AnimalRepository extends BaseRepository
   /**
    * @param $countryCode
    * @param $pedigreeNumber
-   * @return null|Animal
+   * @return null|Animal|Ram|Ewe|Neuter
    */
   public function findByPedigreeCountryCodeAndNumber($countryCode, $pedigreeNumber)
   {
@@ -50,7 +50,7 @@ class AnimalRepository extends BaseRepository
   /**
    * @param $countryCode
    * @param $ulnNumber
-   * @return null|Animal
+   * @return null|Animal|Ram|Ewe|Neuter
    */
   public function findByUlnCountryCodeAndNumber($countryCode, $ulnNumber)
   {
