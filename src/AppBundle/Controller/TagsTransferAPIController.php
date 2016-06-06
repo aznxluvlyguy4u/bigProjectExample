@@ -58,12 +58,9 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
     //TODO Phase 2, with history and error tab in front-end, we can do a less strict filter. And only remove the incorrect tags and process the rest. However for proper feedback to the client we need to show the successful and failed TagTransfer history.
 
     //Check if ALL tags are unassigned and in the database, else don't send any TagTransfer
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_TAGS_TRANSFER_REPOSITORY);
-    $validation = $repository->validateTags($client, $content);
-    $isValid = $validation[Constant::VALIDITY_NAMESPACE];
-
-    if($isValid == false) {
-      return new JsonResponse(array("code" => 404, "message" => $validation[Constant::MESSAGE_NAMESPACE]), 404);
+    $validation = $this->getDoctrine()->getRepository(Constant::DECLARE_TAGS_TRANSFER_REPOSITORY)->validateTags($client, $content);
+    if($validation[Constant::IS_VALID_NAMESPACE] == false) {
+      return new JsonResponse($validation[Constant::MESSAGE_NAMESPACE], $validation[Constant::CODE_NAMESPACE]);
     }
 
     //Convert the array into an object and add the mandatory values retrieved from the database

@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\TagStateType;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -56,15 +57,15 @@ class DeclareTagsTransferRepository extends BaseRepository {
 
       if($valid[Constant::VALIDITY_NAMESPACE] == false && $valid[Constant::TAG_NAMESPACE] != null) {
         $errorMessage = "Tag " . $ulnCountryCode . $ulnNumber . " is unavailable for tag transfer.";
-        return array(Constant::VALIDITY_NAMESPACE => false, Constant::MESSAGE_NAMESPACE => $errorMessage);
+        return Utils::buildValidationArray(false, 428, $errorMessage);
 
       } else if($valid[Constant::VALIDITY_NAMESPACE] == false && $valid[Constant::TAG_NAMESPACE] == null) {
         $errorMessage = "Tag " . $ulnCountryCode . $ulnNumber . " has not been found in your collection.";
-        return array(Constant::VALIDITY_NAMESPACE => false, Constant::MESSAGE_NAMESPACE => $errorMessage);
+        return Utils::buildValidationArray(false, 428, $errorMessage);
       }
     }
 
-    return array(Constant::VALIDITY_NAMESPACE => true, Constant::MESSAGE_NAMESPACE => null);
+    return Utils::buildValidationArray(true, 200, null);
   }
 
   /**
