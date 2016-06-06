@@ -79,7 +79,7 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $ubnNsfoTestAccount = '1111111'; //TODO insert real data
 
     $emailJanVanRijnsbergen = 'jan@nsfo.nl';
-    $emailReinardEverts = 'reinard@nsfo.nl';
+    $emailReinardEverts = 'dierenarts@nsfo.nl';
     $emailNsfoTestAccount = 'kantoor@nsfo.nl';
 
     $passwordJanVanRijnsbergen = '12345';
