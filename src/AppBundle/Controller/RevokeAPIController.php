@@ -33,10 +33,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
         //Validate if there is a message_number. It is mandatory for IenR
         $validation = $this->hasMessageNumber($content);
         if(!$validation['isValid']) {
-            $code = $validation[Constant::CODE_NAMESPACE];
-            $message = $validation[Constant::MESSAGE_NAMESPACE];
-            return new JsonResponse(array(Constant::CODE_NAMESPACE => $code,
-                                       Constant::MESSAGE_NAMESPACE => $message), $code);
+            return new JsonResponse($validation[Constant::MESSAGE_NAMESPACE], $validation[Constant::CODE_NAMESPACE]);
         }
 
         //Convert the array into an object and add the mandatory values retrieved from the database

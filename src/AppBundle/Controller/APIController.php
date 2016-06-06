@@ -666,7 +666,7 @@ class APIController extends Controller implements APIControllerInterface
     $isValid = false;
     $messageNumber = null;
     $code = 428;
-    $message = 'THERE IS NO VALUE GIVEN FOR THE MESSAGE NUMBER';
+    $messageBody = 'THERE IS NO VALUE GIVEN FOR THE MESSAGE NUMBER';
 
     if($content->containsKey(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE)) {
       $messageNumber = $content->get(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE);
@@ -674,14 +674,15 @@ class APIController extends Controller implements APIControllerInterface
       if($messageNumber != null || $messageNumber != "") {
         $isValid = true;
         $code = 200;
-        $message = 'MESSAGE NUMBER FIELD EXISTS AND IS NOT EMPTY';
+        $messageBody = 'MESSAGE NUMBER FIELD EXISTS AND IS NOT EMPTY';
       }
     }
 
     return array('isValid' => $isValid,
         'messageNumber' => $messageNumber,
-        Constant::MESSAGE_NAMESPACE => $message,
-        Constant::CODE_NAMESPACE => $code
+        Constant::MESSAGE_NAMESPACE => array(Constant::CODE_NAMESPACE => $code,
+            Constant::MESSAGE_NAMESPACE => $messageBody),
+        Constant::CODE_NAMESPACE => $code,
     );
   }
 }
