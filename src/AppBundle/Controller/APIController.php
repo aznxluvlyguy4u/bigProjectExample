@@ -669,7 +669,7 @@ class APIController extends Controller implements APIControllerInterface
     $message = 'THERE IS NO VALUE GIVEN FOR THE MESSAGE NUMBER';
 
     if($content->containsKey(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE)) {
-      $messageNumber = $content->get(Constant::MESSAGE_ID_SNAKE_CASE_NAMESPACE);
+      $messageNumber = $content->get(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE);
 
       if($messageNumber != null || $messageNumber != "") {
         $isValid = true;
