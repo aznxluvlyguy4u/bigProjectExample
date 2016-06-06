@@ -39,6 +39,7 @@ class AnimalDetailsOutput
                   "breed" => "",
                   "predicate" => "",
                   "breed_status" => "",
+                  "is_alive" => $animal->getIsAlive(),
                 "exterior" =>
                     array(
                         "head" => "",

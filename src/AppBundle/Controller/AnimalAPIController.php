@@ -226,7 +226,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   }
 
   /**
-   * Get Animal Details by ULN. For example NL151052626
+   * Get Animal Details by ULN. For example NL100029511721
    *
    * @ApiDoc(
    *   requirements={
@@ -247,26 +247,16 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Method("GET")
    */
   public function getAnimalDetailsById(Request $request, $ulnString) {
+    
     $client = $this->getAuthenticatedUser($request);
-    $repository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-
-    $animal = $repository->getAnimalByUlnString($client, $ulnString);
+    $animal = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->getAnimalByUlnString($client, $ulnString);
 
     if($animal == null) {
       return new JsonResponse(array('code'=>404, "message" => "For this account, no animal was found with uln: " . $ulnString), 404);
     }
 
-    $animalIsAlive = $animal->getIsAlive();
-
-    if($animal != null && $animalIsAlive) {
-      $output = AnimalDetailsOutput::create($animal);
-      return new JsonResponse(array(Constant::RESULT_NAMESPACE => $output), 200);
-
-    } else if ($animal != null && !$animalIsAlive) { //TODO Is this condition correct?
-      return new JsonResponse(array('code'=>410, "message" => "Animal has passed away"), 410);
-    }
-
-
+    $output = AnimalDetailsOutput::create($animal);
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $output), 200);
   }
 
 
