@@ -2,6 +2,18 @@
 
 namespace AppBundle\Service;
 
+use AppBundle\Entity\DeclarationDetail;
+use AppBundle\Entity\DeclareAnimalFlag;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareBase;
+use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareExport;
+use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareLoss;
+use AppBundle\Entity\DeclareMate;
+use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\TagStateType;
 use Exception;
 use AppBundle\Constant\Constant;
@@ -421,7 +433,7 @@ class EntityGetter
 
     /**
      * @param string $messageNumber
-     * @return \AppBundle\Entity\DeclareBase
+     * @return DeclareBase|DeclareArrival|DeclareAnimalFlag|DeclareBirth|DeclareDepart|DeclareExport|DeclareImport|DeclareLoss|DeclareTagsTransfer|DeclareMate|DeclarationDetail|RevokeDeclaration
      */
     public function getRequestMessageByMessageNumber($messageNumber)
     {
