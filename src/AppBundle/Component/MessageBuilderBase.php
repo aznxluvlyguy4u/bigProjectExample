@@ -2,9 +2,19 @@
 
 namespace AppBundle\Component;
 
-use AppBundle\Controller\APIController;
+use AppBundle\Entity\DeclarationDetail;
+use AppBundle\Entity\DeclareAnimalFlag;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareBase;
+use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareExport;
+use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareLoss;
+use AppBundle\Entity\DeclareMate;
+use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\Client as Client;
-use AppBundle\Entity\DeclareBase as DeclareBase;
 use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\EntityGetter;
@@ -44,7 +54,7 @@ class MessageBuilderBase
      *
      * @param object $messageObject the message received from the front-end as an entity from a class that is extended from DeclareBase.
      * @param Person $person
-     * @return object the base message
+     * @return DeclareBase|DeclareArrival|DeclareAnimalFlag|DeclareBirth|DeclareDepart|DeclareExport|DeclareImport|DeclareLoss|DeclareTagsTransfer|DeclareMate|DeclarationDetail|RevokeDeclaration the base message
      */
     protected function buildBaseMessageObject($messageObject, Person $person)
     {
