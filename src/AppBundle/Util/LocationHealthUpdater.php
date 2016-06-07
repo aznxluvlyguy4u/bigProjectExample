@@ -127,8 +127,6 @@ class LocationHealthUpdater
 
     /**
      *
-     * TODO Verify if this function is correct
-     *
      * @param Location $location
      * @return Location
      */
