@@ -2,7 +2,10 @@
 
 namespace AppBundle\Enumerator;
 
-
+/**
+ * Class LiveStockType
+ * @package AppBundle\Enumerator
+ */
 class LiveStockType
 {
     const PEDIGREE_ADULT = 'PEDIGREE_ADULT';

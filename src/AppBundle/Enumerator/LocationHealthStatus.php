@@ -2,7 +2,10 @@
 
 namespace AppBundle\Enumerator;
 
-
+/**
+ * Class LocationHealthStatus
+ * @package AppBundle\Enumerator
+ */
 class LocationHealthStatus
 {
     const INFECTED = 'INFECTED';

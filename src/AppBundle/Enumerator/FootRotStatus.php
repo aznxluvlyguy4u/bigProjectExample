@@ -2,7 +2,10 @@
 
 namespace AppBundle\Enumerator;
 
-
+/**
+ * Class FootRot
+ * @package AppBundle\Enumerator
+ */
 class FootRot
 {
     const NOT_SUSPECT_1 = 'NOT SUSPECT LEVEL 1';

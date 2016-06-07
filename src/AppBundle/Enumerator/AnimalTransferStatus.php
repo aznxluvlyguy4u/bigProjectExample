@@ -3,7 +3,10 @@
 
 namespace AppBundle\Enumerator;
 
-
+/**
+ * Class AnimalTransferStatus
+ * @package AppBundle\Enumerator
+ */
 class AnimalTransferStatus
 {
     const TRANSFERRING = "TRANSFERRING";

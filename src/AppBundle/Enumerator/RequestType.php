@@ -5,6 +5,10 @@ namespace AppBundle\Enumerator;
 
 use AppBundle\Component\Utils;
 
+/**
+ * Class RequestType
+ * @package AppBundle\Enumerator
+ */
 class RequestType
 {
     //RequestType
