@@ -16,14 +16,16 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 /**
  * @Route("/api/v1/profiles")
  */
-class ProfileAPIController extends APIController {
+class ProfileAPIController extends APIController implements ProfileAPIControllerInterface {
 
   /**
    *
    * Get company profile
    *
    * @Route("/company")
+   * @param Request $request
    * @Method("GET")
+   * @return jsonResponse
    */
   public function getCompanyProfile(Request $request) {
     $client = $this->getAuthenticatedUser($request);
@@ -39,9 +41,11 @@ class ProfileAPIController extends APIController {
    *
    * Get info for login data view
    * @Route("/login-info")
+   * @param Request $request
    * @Method("GET")
+   * @return jsonResponse
    */
-  public function getLoginDataIR(Request $request) {
+  public function getLoginData(Request $request) {
     $client = $this->getAuthenticatedUser($request);
 
     $outputArray = LoginOutput::create($client);
@@ -54,7 +58,9 @@ class ProfileAPIController extends APIController {
    * Update company profile
    *
    * @Route("/company")
+   * @param Request $request
    * @Method("PUT")
+   * @return jsonResponse
    */
   public function editCompanyProfile(Request $request) {
     $client = $this->getAuthenticatedUser($request);
