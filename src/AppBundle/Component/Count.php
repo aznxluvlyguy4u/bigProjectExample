@@ -4,6 +4,21 @@ namespace AppBundle\Component;
 
 
 use AppBundle\Entity\Client;
+use AppBundle\Entity\DeclarationDetail;
+use AppBundle\Entity\DeclareAnimalFlag;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareExport;
+use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareLoss;
+use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\RetrieveAnimals;
+use AppBundle\Entity\RetrieveCountries;
+use AppBundle\Entity\RetrieveTags;
+use AppBundle\Entity\RetrieveAnimalDetails;
+use AppBundle\Entity\RetrieveUbnDetails;
+use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Enumerator\RequestStateType;
@@ -11,8 +26,17 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use Doctrine\Common\Collections\ArrayCollection;
 
+
+/**
+ * Class Count
+ * @package AppBundle\Component
+ */
 class Count
 {
+    /**
+     * @param Client $client
+     * @return ArrayCollection
+     */
     public static function getErrorCountDeclarations(Client $client)
     {
         $errorCounts = new ArrayCollection();
@@ -24,17 +48,28 @@ class Count
         return $errorCounts;
     }
 
-
+    /**
+     * @param Client $client
+     * @return int
+     */
     public static function getErrorCountArrivalsAndImports(Client $client)
     {
         return self::getErrorCountArrivals($client) + self::getErrorCountImports($client);
     }
 
+    /**
+     * @param Client $client
+     * @return int
+     */
     public static function getErrorCountDepartsAndExports(Client $client)
     {
         return self::getErrorCountDeparts($client) + self::getErrorCountExports($client);
     }
 
+    /**
+     * @param Client $client
+     * @return int
+     */
     public static function getErrorCountArrivals(Client $client)
     {
         $count = 0;
@@ -52,6 +87,10 @@ class Count
         return $count;
     }
 
+    /**
+     * @param Client $client
+     * @return int
+     */
     public static function getErrorCountImports(Client $client)
     {
         $count = 0;
@@ -69,6 +108,10 @@ class Count
         return $count;
     }
 
+    /**
+     * @param Client $client
+     * @return int
+     */
     public static function getErrorCountDeparts(Client $client)
     {
         $count = 0;
@@ -86,6 +129,10 @@ class Count
         return $count;
     }
 
+    /**
+     * @param Client $client
+     * @return int
+     */
     public static function getErrorCountExports(Client $client)
     {
         $count = 0;
@@ -103,6 +150,10 @@ class Count
         return $count;
     }
 
+    /**
+     * @param Client $client
+     * @return int
+     */
     public static function getErrorCountLosses(Client $client)
     {
         $count = 0;
@@ -120,6 +171,10 @@ class Count
         return $count;
     }
 
+    /**
+     * @param Client $client
+     * @return int
+     */
     public static function getErrorCountBirths(Client $client)
     {
         $count = 0;
@@ -137,6 +192,10 @@ class Count
         return $count;
     }
 
+    /**
+     * @param Client $client
+     * @return int
+     */
     public static function getUnassignedTagsCount(Client $client)
     {
         $count = 0;
@@ -150,6 +209,10 @@ class Count
         return $count;
     }
 
+    /**
+     * @param DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|RetrieveAnimalDetails $declaration
+     * @return bool
+     */
     private static function countAsErrorResponse($declaration)
     {
         if($declaration->getRequestState() == RequestStateType::FAILED) {
