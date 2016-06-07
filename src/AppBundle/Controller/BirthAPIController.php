@@ -106,10 +106,11 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
       } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
 
           $declareBirths = new ArrayCollection();
-          //TODO Front-end cannot accept messages without animal ULN/Pedigree
-//      foreach($repository->getBirths($client, RequestStateType::OPEN) as $birth) {
-//        $declareBirths->add($birth);
-//      }
+
+          foreach($repository->getBirths($client, RequestStateType::OPEN) as $birth) {
+            $declareBirths->add($birth);
+          }
+
           foreach($repository->getBirths($client, RequestStateType::REVOKING) as $birth) {
               $declareBirths->add($birth);
           }

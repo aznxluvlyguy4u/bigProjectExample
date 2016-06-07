@@ -98,10 +98,10 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
     } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
 
       $declareImports = new ArrayCollection();
-      //TODO Front-end cannot accept messages without animal ULN/Pedigree
-//      foreach($repository->getImports($client, RequestStateType::OPEN) as $import) {
-//        $declareImports->add($import);
-//      }
+      foreach($repository->getImports($client, RequestStateType::OPEN) as $import) {
+        $declareImports->add($import);
+      }
+
       foreach($repository->getImports($client, RequestStateType::REVOKING) as $import) {
         $declareImports->add($import);
       }

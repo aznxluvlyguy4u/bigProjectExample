@@ -97,10 +97,10 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
     } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
 
       $declareExports = new ArrayCollection();
-      //TODO Front-end cannot accept messages without animal ULN/Pedigree
-//      foreach($repository->getExports($client, RequestStateType::OPEN) as $export) {
-//        $declareExports->add($export);
-//      }
+      foreach($repository->getExports($client, RequestStateType::OPEN) as $export) {
+        $declareExports->add($export);
+      }
+
       foreach($repository->getExports($client, RequestStateType::REVOKING) as $export) {
         $declareExports->add($export);
       }

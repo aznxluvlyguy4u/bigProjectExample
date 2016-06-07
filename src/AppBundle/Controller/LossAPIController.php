@@ -100,10 +100,9 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
     } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
 
       $declareLosses = new ArrayCollection();
-      //TODO Front-end cannot accept messages without animal ULN/Pedigree
-//      foreach($repository->getLosses($client, RequestStateType::OPEN) as $loss) {
-//        $declareLosses->add($loss);
-//      }
+      foreach($repository->getLosses($client, RequestStateType::OPEN) as $loss) {
+        $declareLosses->add($loss);
+      }
       foreach($repository->getLosses($client, RequestStateType::REVOKING) as $loss) {
         $declareLosses->add($loss);
       }
