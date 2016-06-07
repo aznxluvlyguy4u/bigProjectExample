@@ -52,7 +52,7 @@ class AWSQueueService
   private $queueIds;
 
   /**
-   * ArrivalAPIService constructor, intialize SQS configm
+   * ArrivalAPIService constructor, initialize SQS config
    *
    * @param $credentials array containing AWS accessKey and secretKey.
    * @param $region of the Queue.
@@ -105,7 +105,10 @@ class AWSQueueService
   /**
    * Send a request message to given Queue.
    *
-   * @param $messageBody
+   * @param string $requestId
+   * @param string $messageBody
+   * @param string $requestType
+   * @return array|null
    */
   public function send($requestId, $messageBody, $requestType)
   {
@@ -127,6 +130,9 @@ class AWSQueueService
     return $this->responseHandler($response,$messageBody);
   }
 
+  /**
+   * @return \Aws\Result
+   */
   public function getNextMessage()
   {
     $result = $this->queueService->receiveMessage(array(
@@ -144,6 +150,11 @@ class AWSQueueService
     return $this->queueService;
   }
 
+  /**
+   * @param $response
+   * @param $messageBody
+   * @return array
+   */
   private function responseHandler($response, $messageBody){
     $statusCode = $response['@metadata']['statusCode'];
     $result = array('statusCode' => $statusCode);
