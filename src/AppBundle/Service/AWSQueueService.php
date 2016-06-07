@@ -127,7 +127,7 @@ class AWSQueueService
       ],
     ));
 
-    return $this->responseHandler($response,$messageBody);
+    return $this->responseHandler($response);
   }
 
   /**
@@ -152,10 +152,9 @@ class AWSQueueService
 
   /**
    * @param $response
-   * @param $messageBody
    * @return array
    */
-  private function responseHandler($response, $messageBody){
+  private function responseHandler($response){
     $statusCode = $response['@metadata']['statusCode'];
     $result = array('statusCode' => $statusCode);
     return $result;
