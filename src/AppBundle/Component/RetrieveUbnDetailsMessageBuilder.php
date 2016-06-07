@@ -3,6 +3,7 @@
 namespace AppBundle\Component;
 
 use AppBundle\Entity\RetrieveUbnDetails;
+use AppBundle\Enumerator\AnimalType;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use AppBundle\Entity\Person;
@@ -33,7 +34,6 @@ class RetrieveUbnDetailsMessageBuilder extends MessageBuilderBase
     $this->person = $person;
     $baseMessageObject = $this->buildBaseRetrieveMessageObject($messageObject, $person);
     $completeMessageObject = $this->addRetrieveUbnDetailsData($baseMessageObject);
-    $completeMessageObject->setAnimalType(3);
 
     return $completeMessageObject;
   }
@@ -44,6 +44,8 @@ class RetrieveUbnDetailsMessageBuilder extends MessageBuilderBase
    */
   private function addRetrieveUbnDetailsData(RetrieveUbnDetails $retrieveUbnDetails)
   {
+    $retrieveUbnDetails->setAnimalType(AnimalType::sheep);
+
     if(ActionFlagSetting::RETRIEVE_UBN_DETAILS != null) {
       $retrieveUbnDetails->setAction(ActionFlagSetting::RETRIEVE_UBN_DETAILS);
     }

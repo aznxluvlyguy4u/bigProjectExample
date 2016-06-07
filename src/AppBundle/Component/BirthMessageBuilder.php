@@ -2,9 +2,6 @@
 
 namespace AppBundle\Component;
 
-use AppBundle\Constant\Constant;
-use AppBundle\Enumerator\AnimalType;
-use AppBundle\Entity\Ram;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;

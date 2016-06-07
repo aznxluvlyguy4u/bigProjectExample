@@ -3,7 +3,6 @@
 namespace AppBundle\Component;
 
 use AppBundle\Entity\RetrieveAnimals;
-use AppBundle\Entity\DeclareLoss;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use AppBundle\Entity\Person;

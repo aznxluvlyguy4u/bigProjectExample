@@ -32,11 +32,11 @@ class TagSyncMessageBuilder extends MessageBuilderBase {
    *
    * Create a complete NSFO+IenR Message.
    *
-   * @param RetrieveEartags $messageObject the message received
-   * @param string $relationNumberKeeper
+   * @param RetrieveTags $messageObject the message received
+   * @param Client|Person $person
    * @return ArrayCollection
    */
-  public function buildMessage(RetrieveTags $messageObject, Person $person)
+  public function buildMessage(RetrieveTags $messageObject, $person)
   {
     $this->person = $person;
     $baseMessageObject = $this->buildBaseRetrieveMessageObject($messageObject, $person);
@@ -47,7 +47,6 @@ class TagSyncMessageBuilder extends MessageBuilderBase {
 
   /**
    * @param RetrieveTags $messageObject the message received
-   * @param Person $person
    * @return RetrieveTags
    */
   private function addRetrieveEartagsData(RetrieveTags $messageObject)

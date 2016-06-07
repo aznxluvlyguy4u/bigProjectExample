@@ -2,9 +2,6 @@
 
 namespace AppBundle\Component;
 
-use AppBundle\Constant\Constant;
-use AppBundle\Enumerator\AnimalType;
-use AppBundle\Entity\Ram;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
@@ -52,7 +49,6 @@ class LossMessageBuilder extends MessageBuilderBase
     private function addDeclareLossData(DeclareLoss $declareLoss)
     {
         $animal = $declareLoss->getAnimal();
-        $declareLoss->setAnimalType(AnimalType::sheep);
         $declareLoss->setAnimal($animal);
 
         if(ActionFlagSetting::DECLARE_LOSS != null) {

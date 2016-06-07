@@ -2,9 +2,6 @@
 
 namespace AppBundle\Component;
 
-use AppBundle\Enumerator\ActionType;
-use AppBundle\Enumerator\AnimalType;
-use AppBundle\Entity\Ram;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
@@ -51,7 +48,6 @@ class ArrivalMessageBuilder extends MessageBuilderBase
      */
     private function addDeclareArrivalData(DeclareArrival $messageObject)
     {
-        $messageObject->setAnimalType(AnimalType::sheep);
 
         if(ActionFlagSetting::DECLARE_ARRIVAL != null) {
             $messageObject->setAction(ActionFlagSetting::DECLARE_ARRIVAL);

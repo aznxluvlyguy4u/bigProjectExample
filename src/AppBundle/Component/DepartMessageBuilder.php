@@ -2,7 +2,6 @@
 
 namespace AppBundle\Component;
 
-use AppBundle\Enumerator\AnimalType;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
@@ -56,7 +55,6 @@ class DepartMessageBuilder extends MessageBuilderBase
         $messageObject->setPedigreeNumber($animal->getPedigreeNumber());
         $messageObject->setIsExportAnimal(false);
         $messageObject->setIsDepartedAnimal(true);
-        $messageObject->setAnimalType(AnimalType::sheep);
 
         if(ActionFlagSetting::DECLARE_DEPART != null) {
             $messageObject->setAction(ActionFlagSetting::DECLARE_DEPART);
