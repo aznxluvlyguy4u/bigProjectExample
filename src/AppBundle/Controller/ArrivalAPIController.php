@@ -128,7 +128,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
 
   /**
-   * Create a new DeclareArrival request
+   * Create a new DeclareArrival or DeclareImport request
    *
    * @ApiDoc(
    *   requirements={
@@ -140,7 +140,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    *     }
    *   },
    *   resource = true,
-   *   description = "Post a DeclareArrival request",
+   *   description = "Post a DeclareArrival or DeclareImport request",
    *   input = "AppBundle\Entity\DeclareArrival",
    *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
    * )
@@ -191,7 +191,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
   }
 
   /**
-   * Update existing DeclareArrival request
+   * Update existing DeclareArrival or DeclareImport request
    *
    * @ApiDoc(
    *   requirements={
@@ -203,7 +203,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    *     }
    *   },
    *   resource = true,
-   *   description = "Update a DeclareArrival request",
+   *   description = "Update a DeclareArrival or DeclareImport request",
    *   input = "AppBundle\Entity\DeclareArrival",
    *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
    * )
@@ -261,6 +261,24 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
 
   /**
+   *
+   * Get DeclareArrivals & DeclareImports which have failed last responses.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Get DeclareArrivals & DeclareImports which have failed last responses",
+   *   input = "AppBundle\Entity\DeclareArrival",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
    * @param Request $request the request object
    * @return JsonResponse
    * @Route("-errors")
@@ -281,6 +299,24 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
 
   /**
+   *
+   * For the history view, get DeclareArrivals & DeclareImports which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Get DeclareArrivals & DeclareImports which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED",
+   *   input = "AppBundle\Entity\DeclareArrival",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
    * @param Request $request the request object
    * @return JsonResponse
    * @Route("-history")

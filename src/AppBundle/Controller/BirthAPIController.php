@@ -291,6 +291,24 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
   }
 
     /**
+     *
+     * Get DeclareBirths & DeclareStillborns which have failed last responses.
+     *
+     * @ApiDoc(
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Get DeclareBirths & DeclareStillborns which have failed last responses",
+     *   input = "AppBundle\Entity\DeclareBirth",
+     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     * )
+     *
      * @param Request $request the request object
      * @return JsonResponse
      * @Route("-errors")
@@ -309,6 +327,26 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
 
     /**
+     *
+    /**
+     *
+     * For the history view, get DeclareBirths & DeclareStillborns which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED.
+     *
+     * @ApiDoc(
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Get DeclareBirths & DeclareStillborns which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED",
+     *   input = "AppBundle\Entity\DeclareBirth",
+     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     * )
+     *
      * @param Request $request the request object
      * @return JsonResponse
      * @Route("-history")

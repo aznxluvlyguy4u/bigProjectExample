@@ -260,6 +260,24 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
   }
 
   /**
+   *
+   * Get DeclareDeparts & DeclareExports which have failed last responses.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Get DeclareDeparts & DeclareExports which have failed last responses",
+   *   input = "AppBundle\Entity\DeclareDeparts",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
    * @param Request $request the request object
    * @return JsonResponse
    * @Route("-errors")
@@ -280,6 +298,24 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
 
   /**
+   *
+   * For the history view, get DeclareDeparts & DeclareExports which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Get DeclareDeparts & DeclareExports which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED",
+   *   input = "AppBundle\Entity\DeclareDepart",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
    * @param Request $request the request object
    * @return JsonResponse
    * @Route("-history")

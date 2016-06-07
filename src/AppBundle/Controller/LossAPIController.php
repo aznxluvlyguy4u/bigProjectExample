@@ -228,6 +228,24 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
 
 
   /**
+   *
+   * Get DeclareLosses which have failed last responses.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Get DeclareLosses which have failed last responses",
+   *   input = "AppBundle\Entity\DeclareLoss",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
    * @param Request $request the request object
    * @return JsonResponse
    * @Route("-errors")
@@ -245,6 +263,24 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
 
 
   /**
+   *
+   * For the history view, get DeclareLosses which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Get DeclareLosses which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED",
+   *   input = "AppBundle\Entity\DeclareLosses",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
    * @param Request $request the request object
    * @return JsonResponse
    * @Route("-history")

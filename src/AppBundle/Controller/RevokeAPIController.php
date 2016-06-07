@@ -20,6 +20,24 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
 {
 
     /**
+     *
+     * Post a RevokeDeclaration request.
+     *
+     * @ApiDoc(
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Post a RevokeDeclaration request",
+     *   input = "AppBundle\Entity\RevokeDeclaration",
+     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     * )
+     *
      * @param Request $request the request object
      * @return JsonResponse
      * @Route("")
