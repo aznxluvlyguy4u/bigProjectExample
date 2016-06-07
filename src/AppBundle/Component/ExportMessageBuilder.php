@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
@@ -11,7 +12,7 @@ use AppBundle\Entity\Person;
 class ExportMessageBuilder extends MessageBuilderBase
 {
   /**
-   * @var Person
+   * @var Client|Person
    */
   private $person;
 
@@ -25,10 +26,10 @@ class ExportMessageBuilder extends MessageBuilderBase
    * Accept input and create a complete NSFO+IenR Message.
    *
    * @param DeclareExport $messageObject the message received
-   * @param Person $person
+   * @param Client|Person $person
    * @return DeclareExport
    */
-  public function buildMessage(DeclareExport $messageObject, Person $person)
+  public function buildMessage(DeclareExport $messageObject, $person)
   {
     $this->person = $person;
     $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);

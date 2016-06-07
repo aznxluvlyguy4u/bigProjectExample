@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Entity\Client;
 use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Enumerator\AnimalType;
 use Doctrine\ORM\EntityManager;
@@ -11,7 +12,7 @@ class RetrieveUbnDetailsMessageBuilder extends MessageBuilderBase
 {
 
   /**
-   * @var Person
+   * @var Client|Person
    */
   private $person;
 
@@ -25,10 +26,10 @@ class RetrieveUbnDetailsMessageBuilder extends MessageBuilderBase
    * Create a complete NSFO+IenR Message.
    *
    * @param RetrieveUbnDetails $messageObject the message received
-   * @param Person $person
+   * @param Client|Person $person
    * @return RetrieveUbnDetails
    */
-  public function buildMessage(RetrieveUbnDetails $messageObject, Person $person)
+  public function buildMessage(RetrieveUbnDetails $messageObject, $person)
   {
     $this->person = $person;
     $baseMessageObject = $this->buildBaseRetrieveMessageObject($messageObject, $person);

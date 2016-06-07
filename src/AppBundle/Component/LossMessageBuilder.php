@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
@@ -16,7 +17,7 @@ use AppBundle\Entity\Person;
 class LossMessageBuilder extends MessageBuilderBase
 {
     /**
-     * @var Person
+     * @var Client|Person
      */
     private $person;
 
@@ -30,10 +31,10 @@ class LossMessageBuilder extends MessageBuilderBase
      * Accept front-end input and create a complete NSFO+IenR Message.
      *
      * @param DeclareLoss $messageObject the message received from the front-end
-     * @param Person $person
+     * @param Client|Person $person
      * @return DeclareLoss
      */
-    public function buildMessage(DeclareLoss $messageObject, Person $person)
+    public function buildMessage(DeclareLoss $messageObject, $person)
     {
         $this->person = $person;
         $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);

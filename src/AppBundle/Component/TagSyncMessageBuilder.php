@@ -14,7 +14,7 @@ use AppBundle\Entity\Person;
  */
 class TagSyncMessageBuilder extends MessageBuilderBase {
   /**
-   * @var Person
+   * @var Client|Person
    */
   private $person;
 

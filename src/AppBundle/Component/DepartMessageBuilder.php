@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
@@ -15,7 +16,7 @@ use AppBundle\Entity\Person;
 class DepartMessageBuilder extends MessageBuilderBase
 {
     /**
-     * @var Person
+     * @var Client|Person
      */
     private $person;
 
@@ -29,10 +30,10 @@ class DepartMessageBuilder extends MessageBuilderBase
      * Accept front-end input and create a complete NSFO+IenR Message.
      *
      * @param DeclareDepart $messageObject the message received from the front-end
-     * @param Person $person
+     * @param Client|Person $person
      * @return DeclareDepart
      */
-    public function buildMessage(DeclareDepart $messageObject, Person $person)
+    public function buildMessage(DeclareDepart $messageObject, $person)
     {
         $this->person = $person;
         $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);

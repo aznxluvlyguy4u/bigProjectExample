@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
@@ -16,7 +17,7 @@ class ImportMessageBuilder extends MessageBuilderBase
 {
 
   /**
-   * @var Person
+   * @var Client|Person
    */
   private $person;
 
@@ -30,10 +31,10 @@ class ImportMessageBuilder extends MessageBuilderBase
    * Accept front-end input and create a complete NSFO+IenR Message.
    *
    * @param DeclareImport $messageObject the message received from the front-end
-   * @param Person $person
+   * @param Client|Person $person
    * @return DeclareImport
    */
-  public function buildMessage(DeclareImport $messageObject, Person $person)
+  public function buildMessage(DeclareImport $messageObject, $person)
   {
     $this->person = $person;
     $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);

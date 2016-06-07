@@ -101,7 +101,7 @@ class MessageBuilderBase
      * @param Person $person
      * @return RetrieveUbnDetails|RetrieveAnimals|RetrieveAnimalDetails|RetrieveTags|RetrieveCountries the retrieve message
      */
-    protected function buildBaseRetrieveMessageObject($messageObject, Person $person)
+    protected function buildBaseRetrieveMessageObject($messageObject, $person)
     {
         //Generate new requestId
 

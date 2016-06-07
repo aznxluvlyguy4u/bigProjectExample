@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Setting\ActionFlagSetting;
@@ -15,7 +16,7 @@ use AppBundle\Entity\Person;
  */
 class TagTransferMessageBuilder extends MessageBuilderBase {
   /**
-   * @var Person
+   * @var Client|Person
    */
   private $person;
 
@@ -33,10 +34,10 @@ class TagTransferMessageBuilder extends MessageBuilderBase {
    * Create a complete NSFO+IenR Message.
    *
    * @param DeclareTagsTransfer $messageObject the message received
-   * @param string $relationNumberKeeper
+   * @param Client|Person $person
    * @return ArrayCollection
    */
-  public function buildMessage(DeclareTagsTransfer $messageObject, Person $person)
+  public function buildMessage(DeclareTagsTransfer $messageObject, $person)
   {
     $this->person = $person;
     $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
@@ -47,7 +48,6 @@ class TagTransferMessageBuilder extends MessageBuilderBase {
 
   /**
    * @param DeclareTagsTransfer $messageObject the message received
-   * @param Person $person
    * @return DeclareTagsTransfer
    */
   private function addDeclareEartagsTransferData(DeclareTagsTransfer $messageObject)

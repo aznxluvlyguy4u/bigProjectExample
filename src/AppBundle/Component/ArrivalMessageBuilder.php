@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
@@ -16,7 +17,7 @@ use AppBundle\Entity\Person;
 class ArrivalMessageBuilder extends MessageBuilderBase
 {
     /**
-     * @var Person
+     * @var Client|Person
      */
     private $person;
 
@@ -30,10 +31,10 @@ class ArrivalMessageBuilder extends MessageBuilderBase
      * Accept front-end input and create a complete NSFO+IenR Message.
      *
      * @param DeclareArrival $messageObject the message received from the front-end
-     * @param Person $person
+     * @param Client|Person $person
      * @return DeclareArrival
      */
-    public function buildMessage(DeclareArrival $messageObject, Person $person)
+    public function buildMessage(DeclareArrival $messageObject, $person)
     {
         $this->person = $person;
         $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);

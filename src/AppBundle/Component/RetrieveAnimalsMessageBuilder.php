@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Entity\Client;
 use AppBundle\Entity\RetrieveAnimals;
 use Doctrine\ORM\EntityManager;
 use AppBundle\Entity\Person;
@@ -9,7 +10,7 @@ use AppBundle\Entity\Person;
 class RetrieveAnimalsMessageBuilder extends MessageBuilderBase
 {
   /**
-   * @var Person
+   * @var Client|Person
    */
   private $person;
 
@@ -23,10 +24,10 @@ class RetrieveAnimalsMessageBuilder extends MessageBuilderBase
    * Create a complete NSFO+IenR Message.
    *
    * @param RetrieveAnimals $messageObject the message received
-   * @param Person $person
+   * @param Client|Person $person
    * @return RetrieveAnimals
    */
-  public function buildMessage(RetrieveAnimals $messageObject, Person $person)
+  public function buildMessage(RetrieveAnimals $messageObject, $person)
   {
     $this->person = $person;
     $baseMessageObject = $this->buildBaseRetrieveMessageObject($messageObject, $person);

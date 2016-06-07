@@ -2,13 +2,14 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Entity\Client;
 use AppBundle\Entity\RetrieveAnimalDetails;
 use Doctrine\ORM\EntityManager;
 use AppBundle\Entity\Person;
 
 class RetrieveAnimalDetailsMessageBuilder extends MessageBuilderBase{
   /**
-   * @var Person
+   * @var Client|Person
    */
   private $person;
 
@@ -22,10 +23,10 @@ class RetrieveAnimalDetailsMessageBuilder extends MessageBuilderBase{
    * Create a complete NSFO+IenR Message.
    *
    * @param RetrieveAnimalDetails $messageObject the message received
-   * @param Person $person
+   * @param Client|Person $person
    * @return RetrieveAnimalDetails
    */
-  public function buildMessage(RetrieveAnimalDetails $messageObject, Person $person)
+  public function buildMessage(RetrieveAnimalDetails $messageObject, $person)
   {
     $this->person = $person;
     $baseMessageObject = $this->buildBaseRetrieveMessageObject($messageObject, $person);
@@ -38,13 +39,13 @@ class RetrieveAnimalDetailsMessageBuilder extends MessageBuilderBase{
    * @param RetrieveAnimalDetails $retrieveAnimalDetails the baseMessageObject
    * @return RetrieveAnimalDetails
    */
-  private function addRetrieveAnimalDetailsData(RetrieveAnimalDetails $retrieveAnimals)
+  private function addRetrieveAnimalDetailsData(RetrieveAnimalDetails $retrieveAnimalDetails)
   {
 
     //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
-    $retrieveAnimals->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
-    $retrieveAnimals->setRelationNumberKeeper($this->person->getRelationNumberKeeper());
+    $retrieveAnimalDetails->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
+    $retrieveAnimalDetails->setRelationNumberKeeper($this->person->getRelationNumberKeeper());
 
-    return $retrieveAnimals;
+    return $retrieveAnimalDetails;
   }
 }
