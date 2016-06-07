@@ -19,10 +19,6 @@ class ActionFlagSetting
     const DECLARE_IMPORT = null;
     const DECLARE_LOSS = null;
     const REVOKE_DECLARATION = null;
-    const RETRIEVE_ANIMAL_DETAILS = null;
-    const RETRIEVE_ANIMAL = null;
-    const RETRIEVE_UBN_DETAILS = null;
-    const TAG_SYNC = null;
     const TAG_TRANSFER = null;
 
     //TODO The messages belonging to the request types below are not implemented yet
