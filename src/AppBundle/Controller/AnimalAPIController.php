@@ -101,15 +101,15 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *   output = "AppBundle\Entity\Animal"
    * )
    * @param Request $request the request object
-   * @param $animal
+   * @param $uln
    * @return JsonResponse
-   * @Route("/{Id}")
+   * @Route("/{uln}")
    * @Method("GET")
    */
-  public function getAnimalById(Request $request, $Id) {
+  public function getAnimalById(Request $request, $uln) {
     $repository = $this->getDoctrine()
       ->getRepository(Constant::ANIMAL_REPOSITORY);
-    $animal = $repository->findByUlnOrPedigree($Id, true);
+    $animal = $repository->findByUlnOrPedigree($uln, true);
 
     $minimizedOutput = AnimalOutput::createAnimalArray($animal);
 
