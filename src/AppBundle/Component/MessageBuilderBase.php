@@ -13,6 +13,11 @@ use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareMate;
 use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\RetrieveAnimalDetails;
+use AppBundle\Entity\RetrieveAnimals;
+use AppBundle\Entity\RetrieveCountries;
+use AppBundle\Entity\RetrieveTags;
+use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\Client as Client;
 use AppBundle\Enumerator\RecoveryIndicatorType;
@@ -94,7 +99,7 @@ class MessageBuilderBase
      *
      * @param object $messageObject the message received
      * @param Person $person
-     * @return object the retrieve message
+     * @return RetrieveUbnDetails|RetrieveAnimals|RetrieveAnimalDetails|RetrieveTags|RetrieveCountries the retrieve message
      */
     protected function buildBaseRetrieveMessageObject($messageObject, Person $person)
     {
