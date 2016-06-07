@@ -4,30 +4,39 @@ namespace AppBundle\Constant;
 
 class Constant
 {
-    const jsonNamespace  = 'json';
+    //Auth
     const AUTHORIZATION_HEADER_NAMESPACE = 'Authorization';
     const ACCESS_TOKEN_HEADER_NAMESPACE = 'AccessToken';
+
+    //DeclareBase
     const STATE_NAMESPACE = 'state';
     const REQUEST_STATE_NAMESPACE = 'requestState';
-    const TAG_STATUS_NAMESPACE = 'tagStatus';
-    const TAG_STATUS_IS_TRANSFERRED_NAMESPACE = 'isTransferredToNewOwner';
     const REQUEST_ID_NAMESPACE = 'requestId';
-    const RESULT_NAMESPACE = "result";
+
+    //Location
     const CONTINENT_NAMESPACE = 'continent';
     const LOCATION_NAMESPACE = 'location';
+
+    //Message identification
     const MESSAGE_ID_SNAKE_CASE_NAMESPACE = 'message_id';
     const MESSAGE_ID_CAMEL_CASE_NAMESPACE = 'messageId';
     const MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE = 'message_number';
     const MESSAGE_NUMBER_CAMEL_CASE_NAMESPACE = 'messageNumber';
+
+    //Json response
     const MESSAGE_NAMESPACE = 'message';
-    const ANIMAL_TYPE_NAMESPACE = 'type';
+    const RESULT_NAMESPACE = "result";
+    const jsonNamespace  = 'json';
+
+    //Tags
     const TAGS_NAMESPACE = "tags";
     const TAG_NAMESPACE = "tag";
-    const ANIMAL_NAMESPACE = 'animal';
-    const ANIMALTYPE_NAMESPACE = "animalType";
-    const ANIMAL_TYPE_SNAKE_CASE_NAMESPACE = "animal_type";
     const TAG_TYPE_NAMESPACE = "tagType";
     const TAG_TYPE_SNAKE_CASE_NAMESPACE = "tag_type";
+    const TAG_STATUS_NAMESPACE = 'tagStatus';
+    const TAG_STATUS_IS_TRANSFERRED_NAMESPACE = 'isTransferredToNewOwner';
+
+    //Verification
     const ALL_NAMESPACE = 'all';
     const ALIVE_NAMESPACE = 'alive';
     const IS_ALIVE_NAMESPACE = 'isAlive';
@@ -36,29 +45,40 @@ class Constant
     const VALIDITY_NAMESPACE = 'validity';
     const IS_VALID_NAMESPACE = 'isValid';
     const CODE_NAMESPACE = 'code';
+
+    //Animal identification
+    const ULN_NAMESPACE = 'uln';
     const ULN_NUMBER_NAMESPACE = "uln_number";
-    const PEDIGREE_NUMBER_NAMESPACE = "pedigree_number";
     const ULN_COUNTRY_CODE_NAMESPACE = "uln_country_code";
+    const PEDIGREE_NAMESPACE = 'pedigree';
+    const PEDIGREE_NUMBER_NAMESPACE = "pedigree_number";
     const PEDIGREE_SNAKE_CASE_NAMESPACE = "pedigree_number";
     const PEDIGREE_COUNTRY_CODE_NAMESPACE = "pedigree_country_code";
-    const PEDIGREE_NAMESPACE = 'pedigree';
-    const ULN_NAMESPACE = 'uln';
+
+    //Other animal variables
     const HISTORY_NAMESPACE = 'history';
     const UBN_NAMESPACE = 'ubn';
     const GENDER_NAMESPACE = 'gender';
     const ANIMAL_ORDER_NUMBER_NAMESPACE = 'animal_order_number';
     const UBN_NEW_OWNER_NAMESPACE = 'ubn_new_owner';
+    const ANIMAL_TYPE_NAMESPACE = 'type';
+    const ANIMAL_NAMESPACE = 'animal';
+    const ANIMALTYPE_NAMESPACE = "animalType";
+    const ANIMAL_TYPE_SNAKE_CASE_NAMESPACE = "animal_type";
+    const DATE_OF_BIRTH_NAMESPACE  = 'date_of_birth';
+    const DATE_OF_DEATH_NAMESPACE  = 'date_of_death';
 
+    //Health Status
     const MAEDI_VISNA_STATUS = "maedi_visna_status";
     const MAEDI_VISNA_END_DATE = "maedi_visna_end_date";
     const SCRAPIE_STATUS = "scrapie_status";
     const SCRAPIE_END_DATE = "scrapie_end_date";
     const CHECK_DATE = "check_date";
 
-    const DATE_OF_BIRTH_NAMESPACE  = 'date_of_birth';
-    const DATE_OF_DEATH_NAMESPACE  = 'date_of_death';
+    //Declaration specific variables
     const RELATION_NUMBER_ACCEPTANT_SNAKE_CASE_NAMESPACE = "relation_number_acceptant";
 
+    //Animal family members
     const FATHER_NAMESPACE = 'father';
     const MOTHER_NAMESPACE = 'mother';
     const CHILDREN_NAMESPACE = 'children';
