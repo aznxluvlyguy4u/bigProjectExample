@@ -3,11 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
-use AppBundle\Entity\Client;
-use AppBundle\Entity\DeclareArrival;
-use AppBundle\Enumerator\LocationHealthStatus;
 use AppBundle\Output\HealthOutput;
-use AppBundle\Util\LocationHealthUpdater;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -18,7 +14,7 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 /**
  * @Route("/api/v1/ubns")
  */
-class HealthAPIController extends APIController {
+class HealthAPIController extends APIController implements HealthAPIControllerInterface {
 
 
   /**
@@ -39,6 +35,7 @@ class HealthAPIController extends APIController {
    *   output = "AppBundle\Entity\HealthOutput"
    * )
    * @param Request $request the request object
+   * @param String $ubn
    * @return JsonResponse
    * @Route("/{ubn}/health")
    * @Method("GET")

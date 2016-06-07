@@ -13,7 +13,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 /**
  * @Route("/api/v1/contacts")
  */
-class ContactAPIController extends APIController {
+class ContactAPIController extends APIController implements ContactAPIControllerInterface {
 
 
   /**

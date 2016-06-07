@@ -9,4 +9,6 @@ interface ArrivalAPIControllerInterface {
   public function getArrivals(Request $request);
   public function createArrival(Request $request);
   public function updateArrival(Request $request, $Id);
+  public function getArrivalErrors(Request $request);
+  public function getArrivalHistory(Request $request);
 }

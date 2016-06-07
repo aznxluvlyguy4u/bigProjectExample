@@ -23,4 +23,16 @@ interface AnimalAPIControllerInterface
    * @return mixed
    */
   function getAnimalDetailsById(Request $request, $ulnString);
+
+  /**
+   * @param Request $request
+   * @return mixed
+   */
+  function getLiveStock(Request $request);
+
+  /**
+   * @param Request $request
+   * @return mixed
+   */
+  function createAnimalDetails(Request $request);
 }

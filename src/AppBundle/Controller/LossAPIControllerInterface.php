@@ -9,4 +9,6 @@ interface LossAPIControllerInterface {
   public function getLosses(Request $request);
   public function createLoss(Request $request);
   public function editLoss(Request $request, $Id);
+  public function getLossErrors(Request $request);
+  public function getLossHistory(Request $request);
 }
