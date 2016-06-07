@@ -4,8 +4,6 @@ namespace AppBundle\FormInput;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
-use AppBundle\Entity\Company;
-use AppBundle\Output\CompanyProfileOutput;
 use Doctrine\Common\Collections\ArrayCollection;
 
 class CompanyProfile
