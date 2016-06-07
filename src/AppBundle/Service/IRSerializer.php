@@ -19,6 +19,7 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Animal;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
@@ -278,10 +279,10 @@ class IRSerializer implements IRSerializerInterface
             //Create animal-type based on gender
             if(array_key_exists(Constant::GENDER_NAMESPACE, $animal)) {
                 switch($animal[Constant::GENDER_NAMESPACE]){
-                    case AnimalType::FEMALE:
+                    case GenderType::FEMALE:
                         $animalObject = new Ewe();
                         break;
-                    case AnimalType::MALE:
+                    case GenderType::MALE:
                         $animalObject = new Ram();
                         break;
                     default:

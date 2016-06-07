@@ -6,6 +6,7 @@ namespace AppBundle\JsonFormat;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Ram;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\JsonFormat\DeclareBirthJsonFormatEwe;
 use AppBundle\Enumerator\AnimalType;
 
@@ -97,9 +98,9 @@ class DeclareBirthJsonFormatChild
             $this->setGender($child->getGender());
         } else {
             if($child instanceof Ram) {
-                $this->setGender(AnimalType::MALE);
+                $this->setGender(GenderType::MALE);
             } else if($child instanceof Ewe) {
-                $this->setGender(AnimalType::FEMALE);
+                $this->setGender(GenderType::FEMALE);
             }
         }
     }

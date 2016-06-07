@@ -14,6 +14,7 @@ use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareMate;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\RevokeDeclaration;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TagStateType;
 use Exception;
 use AppBundle\Constant\Constant;
@@ -98,10 +99,10 @@ class EntityGetter
         }
 
         switch($gender) {
-            case AnimalType::MALE:
+            case GenderType::MALE:
                 $animal = new Ram();
                 break;
-            case AnimalType::FEMALE:
+            case GenderType::FEMALE:
                 $animal = new Ewe();
                 break;
             default:
@@ -191,18 +192,18 @@ class EntityGetter
                     $animalObject->setDateOfBirth(new \DateTime($declareContentArray['date_of_birth'])); }
 
                 if (array_key_exists('father', $declareContentArray)) {
-                    $declareContentArray['father'][Constant::GENDER_NAMESPACE] = AnimalType::MALE;
+                    $declareContentArray['father'][Constant::GENDER_NAMESPACE] = GenderType::MALE;
                     $father = $this->retrieveAnimalFromAnimalArray($declareContentArray['father']);
                     $animalObject->setParentFather($father);
                 }
 
                 if (array_key_exists('mother', $declareContentArray)) {
-                    $declareContentArray['mother'][Constant::GENDER_NAMESPACE] = AnimalType::FEMALE;
+                    $declareContentArray['mother'][Constant::GENDER_NAMESPACE] = GenderType::FEMALE;
                     $mother = $this->retrieveAnimalFromAnimalArray( $declareContentArray['mother']);
                     $animalObject->setParentMother($mother); }
 
                 if (array_key_exists('surrogate', $animalArray)) {
-                    $animalArray['surrogate'][Constant::GENDER_NAMESPACE] = AnimalType::FEMALE;
+                    $animalArray['surrogate'][Constant::GENDER_NAMESPACE] = GenderType::FEMALE;
                     $surrogate = $this->retrieveAnimalFromAnimalArray($animalArray['surrogate']);
                     $animalObject->setSurrogate($surrogate); }
 
@@ -389,18 +390,18 @@ class EntityGetter
 
 //FIXME Setting an father, mother or surrogate here as well, might lead to a large loop
 //        if (array_key_exists('father', $animalArray)) {
-//            $animalArray['father'][Constant::GENDER_NAMESPACE] = AnimalType::MALE;
+//            $animalArray['father'][Constant::GENDER_NAMESPACE] = GenderType::MALE;
 //            $father = $this->retrieveAnimalFromAnimalArray($animalArray['father']);
 //            $animal->setParentFather($father);
 //        }
 //
 //        if (array_key_exists('mother', $animalArray)) {
-//            $animalArray['mother'][Constant::GENDER_NAMESPACE] = AnimalType::FEMALE;
+//            $animalArray['mother'][Constant::GENDER_NAMESPACE] = GenderType::FEMALE;
 //            $mother = $this->retrieveAnimalFromAnimalArray( $animalArray['mother']);
 //            $animal->setParentMother($mother); }
 //
 //        if (array_key_exists('surrogate', $animalArray)) {
-//            $animalArray['surrogate'][Constant::GENDER_NAMESPACE] = AnimalType::FEMALE;
+//            $animalArray['surrogate'][Constant::GENDER_NAMESPACE] = GenderType::FEMALE;
 //            $surrogate = $this->retrieveAnimalFromAnimalArray($animalArray['surrogate']);
 //            $animal->setSurrogate($surrogate); }
 

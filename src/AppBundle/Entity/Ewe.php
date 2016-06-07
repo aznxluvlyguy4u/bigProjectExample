@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\GenderType;
 use Doctrine\ORM\Mapping as ORM;
 use AppBundle\Enumerator\AnimalType;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -47,7 +48,7 @@ class Ewe extends Animal
 
          $this->objectType = "Ewe";
          $this->setAnimalType(AnimalType::sheep);
-         $this->setGender(AnimalType::FEMALE);
+         $this->setGender(GenderType::FEMALE);
          $this->setAnimalCategory(3);
 
          $this->children = new ArrayCollection();
