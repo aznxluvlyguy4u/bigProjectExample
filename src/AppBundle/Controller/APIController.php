@@ -20,7 +20,6 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\EntityGetter;
-use AppBundle\Service\EntitySetter;
 use AppBundle\Entity\RevokeDeclaration;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
@@ -70,23 +69,6 @@ class APIController extends Controller implements APIControllerInterface
     }
 
     return $this->entityGetter;
-  }
-
-  /**
-   * @var \AppBundle\Service\EntitySetter
-   */
-  private $entitySetter;
-
-  /**
-   * @return \AppBundle\Service\EntitySetter
-   */
-  protected function getEntitySetter()
-  {
-    if($this->entitySetter == null){
-      $this->entitySetter = $this->get('app.doctrine.entitysetter');
-    }
-
-    return $this->entitySetter;
   }
 
   /**
