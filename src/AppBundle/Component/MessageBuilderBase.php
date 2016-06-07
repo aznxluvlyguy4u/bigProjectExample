@@ -134,7 +134,7 @@ class MessageBuilderBase
      */
     public static function getNewRequestId()
     {
-        return uniqid(mt_rand(0,999999));
+        return uniqid(mt_rand(0,9999999));
     }
 
     protected function updateLocationHealthStatus()
