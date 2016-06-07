@@ -60,7 +60,6 @@ class EntityGetter
 
     /**
      * @param ArrayCollection $declareArrayContent
-     * @param string $animalKey
      * @return Neuter|array|null
      */
     public function retrieveAnimal($declareArrayContent)
@@ -287,6 +286,10 @@ class EntityGetter
         return $retrievedAnimal;
     }
 
+    /**
+     * @param array $animalArray
+     * @return \AppBundle\Entity\Animal|Ewe|Neuter|Ram|null
+     */
     private function retrieveAnimalFromUln(array $animalArray)
     {
         $animal = null;
@@ -305,6 +308,10 @@ class EntityGetter
         return $animal;
     }
 
+    /**
+     * @param array $animalArray
+     * @return \AppBundle\Entity\Animal|Ewe|Neuter|Ram|null
+     */
     private function retrieveAnimalFromPedigree(array $animalArray)
     {
         $animal = null;
@@ -332,7 +339,7 @@ class EntityGetter
     private function createNewAnimalFromAnimalArray(array $animalArray)
     {
         $animal = $this->createAnimalBasedOnGender($animalArray);
-;
+
         $ulnNumber = null;
         $countryCode = null;
         $tagRepository = $this->entityManager->getRepository(Constant::TAG_REPOSITORY);
@@ -410,9 +417,6 @@ class EntityGetter
 
         if (array_key_exists('animal_hair_colour', $animalArray)) {
             $animal->setAnimalHairColour($animalArray['animal_hair_colour']); }
-
-        if (array_key_exists('birth_tail_length', $animalArray)) {
-            $animal->setBirthTailLength($animalArray['birth_tail_length']); }
 
         if (array_key_exists('location', $animalArray)) {
             $location = $locationRepository->findByLocationArray($animalArray['location']);
