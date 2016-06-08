@@ -38,12 +38,16 @@ class DataFixturesEmployees implements FixtureInterface, ContainerAwareInterface
    */
   public function load(ObjectManager $manager) {
 
+    $encoder = $this->container->get('security.password_encoder');
+
     self::$employeeJVTRudolf = new Employee();
 
     self::$employeeJVTRudolf->setFirstName('Rudolf');
     self::$employeeJVTRudolf->setLastName('Sneep');
-    self::$employeeJVTRudolf->setPassword('N93I92G9H09QN8C90EC0NHF');
     self::$employeeJVTRudolf->setEmailAddress('rudolf@jongensvantechniek.nl');
+
+    $password = 'N93I92G9H09QN8C90EC0NHF';
+    self::$employeeJVTRudolf->setPassword($encoder->encodePassword(self::$employeeJVTRudolf, $password));
 
       //persist data
       $manager->persist(self::$employeeJVTRudolf);
