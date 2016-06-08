@@ -5,12 +5,15 @@ namespace AppBundle\Controller;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\ClientMigration;
 use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Company;
+use AppBundle\Enumerator\MigrationStatus;
+use AppBundle\Setting\MigrationSetting;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -321,6 +324,98 @@ class AuthAPIController extends APIController {
 
     return new JsonResponse(array("code" => 200,
         "message"=>"Your new password has been emailed to: " . $emailAddress), 200);
+  }
+
+  /**
+   * Generate new passwords for new clients and store them.
+   *
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/generate-passwords")
+   * @Method("POST")
+   *
+   * @param Request $request
+   */
+  public function generatePasswordsForNewClients(Request $request)
+  {
+    $employee = $this->getAuthenticatedEmployee($request);
+    if($employee == null) {
+      return new JsonResponse(array("errorCode" => 403, "errorMessage" => "Forbidden"), 403);
+    }
+
+    $em = $this->getDoctrine()->getEntityManager();
+    $encoder = $this->get('security.password_encoder');
+    $migrationDataRepository = $this->getDoctrine()->getRepository('AppBundle:ClientMigration');
+
+    //Settings
+    $passwordLength = 9;
+
+    //Default value
+    $hasDefaultNsfoEmailAddress = false;
+
+    $newClients = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY)->getClientsWithoutAPassword();
+
+    $oldMigrationCount = 0;
+    $totalMigrationCount = 0;
+    $migrationsWithNewEmailAddress = 0;
+
+    foreach($newClients as $newClient) {
+      //First check if client already is in the Migration table
+      $migrationData = $migrationDataRepository->getMigrationDataOfClient($newClient);
+      $oldMigrationDataExisted = $migrationData != null;
+      if($oldMigrationDataExisted) {
+        //check if it has a default nsfo email address before removing from database
+        $hasDefaultNsfoEmailAddress = $migrationData->getHasDefaultNsfoEmailAddress();
+
+        $oldMigrationCount++;
+        $em->remove($migrationData);
+        $em->flush();
+      }
+
+      $migrationData = new ClientMigration();
+      $migrationData->setHasDefaultNsfoEmailAddress($hasDefaultNsfoEmailAddress); //immediately set this value
+
+      $emailAddress = $newClient->getEmailAddress();
+      $clientHasEmailAddress = $emailAddress != null && $emailAddress != MigrationSetting::EMPTY_EMAIL_ADDRESS_INDICATOR;
+
+      if($clientHasEmailAddress) {
+        $newPassword = Utils::randomString($passwordLength);
+
+      } else { //Client has no email address
+        $newPassword = MigrationSetting::DEFAULT_MIGRATION_PASSWORD;
+
+        //TODO Phase2+ update the logic for clients with more than one UBN.
+        $ubn = $newClient->getCompanies()->get(0)->getLocations()->get(0)->getUbn();
+        $emailAddress = $ubn . "@" . MigrationSetting::DEFAULT_EMAIL_DOMAIN;
+        $newClient->setEmailAddress($emailAddress);
+        $migrationData->setHasDefaultNsfoEmailAddress(true);
+      }
+
+      $encryptedPassword = $encoder->encodePassword($newClient, $newPassword);
+      $newClient->setPassword($encryptedPassword);
+
+      //Migration data
+      $migrationData->setClient($newClient);
+      $migrationData->setEncryptedPassword($encryptedPassword);
+      $migrationData->setUnencryptedPassword($newPassword);
+      $migrationData->setMigrationStatus(MigrationStatus::NEW_PASSWORD);
+
+      $em->persist($newClient);
+      $em->persist($migrationData);
+
+      $em->flush();
+
+      //Counters
+      $totalMigrationCount++;
+
+      if($migrationData->getHasDefaultNsfoEmailAddress()) {
+        $migrationsWithNewEmailAddress++;
+      }
+    }
+
+    return new JsonResponse(array("total_clients_migrated" => $totalMigrationCount,
+                            "old_client_migrations_removed" => $oldMigrationCount,
+                            "migrations_with_new_default_nfso_email_address" => $migrationsWithNewEmailAddress), 200);
   }
 
 }
