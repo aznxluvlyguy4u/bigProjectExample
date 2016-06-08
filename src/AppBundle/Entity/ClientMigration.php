@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 
 use AppBundle\Entity\Client;
+use AppBundle\Enumerator\MigrationStatus;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -15,6 +16,13 @@ use JMS\Serializer\Annotation as JMS;
  */
 class ClientMigration
 {
+    /**
+     * @ORM\Column(type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
     /**
      * @var string
      * @ORM\Column(type="string")
@@ -47,13 +55,29 @@ class ClientMigration
     private $passwordCreationDate;
 
     /**
+     * @var string
+     */
+    private $migrationStatus;
+
+    /**
      * @var Client
      *
      * @ORM\OneToOne(targetEntity="Client")
-     * @JoinColumn(name="client_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="client_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Client")
      */
     private $client;
+
+
+    /**
+     * Get id
+     *
+     * @return integer
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
 
     /**
      * @return string
@@ -86,6 +110,7 @@ class ClientMigration
     {
         $this->encryptedPassword = $encryptedPassword;
         $this->passwordCreationDate = new \DateTime('now');
+        $this->setMigrationStatus(MigrationStatus::MIGRATED);
     }
 
     /**
@@ -111,6 +136,39 @@ class ClientMigration
     {
         $this->client = $client;
     }
+
+
+
+    /**
+     * Set passwordCreationDate
+     *
+     * @param \DateTime $passwordCreationDate
+     *
+     * @return ClientMigration
+     */
+    public function setPasswordCreationDate($passwordCreationDate)
+    {
+        $this->passwordCreationDate = $passwordCreationDate;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMigrationStatus()
+    {
+        return $this->migrationStatus;
+    }
+
+    /**
+     * @param string $migrationStatus
+     */
+    public function setMigrationStatus($migrationStatus)
+    {
+        $this->migrationStatus = $migrationStatus;
+    }
+
 
 
 }
