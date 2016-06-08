@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
+use AppBundle\FormInput\AnimalDetails;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -10,6 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Symfony\Component\Form\Extension\Core\DataMapper\RadioListMapper;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
@@ -242,11 +244,12 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *   output = "AppBundle\Entity\Animal"
    * )
    * @param Request $request the request object
+   * @param String $ulnString
    * @return JsonResponse
    * @Route("-details/{ulnString}")
    * @Method("GET")
    */
-  public function getAnimalDetailsById(Request $request, $ulnString) {
+  public function getAnimalDetailsByUln(Request $request, $ulnString) {
 
     $client = $this->getAuthenticatedUser($request);
     $animal = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->getAnimalByUlnString($client, $ulnString);
@@ -259,5 +262,53 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $output), 200);
   }
 
+  /**
+   *
+   * Update Animal Details for the given ULN. For example NL100029511721
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Update Animal Details for the given ULN",
+   *   input = "AppBundle\Entity\Animals",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
+   * @param Request $request the request object
+   * @param String $ulnString
+   * @return jsonResponse
+   * @Route("-details/{ulnString}")
+   * @Method("PUT")
+   */
+  public function editAnimalDetailsByUln(Request $request, $ulnString) {
+
+    $client = $this->getAuthenticatedUser($request);
+    $animal = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->getAnimalByUlnString($client, $ulnString);
+
+    if($animal == null) {
+      return new JsonResponse(array('code'=>404, "message" => "For this account, no animal was found with uln: " . $ulnString), 404);
+    }
+
+    $content = $this->getContentAsArray($request);
+
+    //TODO for this phase only the bare essential data can be edited: pedigree, animalOrderNumber
+    //TODO keep history of changes
+
+    //Persist updated changes and return the updated values
+    $animal = AnimalDetails::update($animal, $content);
+    $this->getDoctrine()->getManager()->persist($animal);
+    $this->getDoctrine()->getManager()->flush();
+
+    $outputArray = AnimalDetailsOutput::create($animal);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+  }
 
 }

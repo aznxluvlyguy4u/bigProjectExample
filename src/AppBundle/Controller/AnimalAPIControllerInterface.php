@@ -22,7 +22,7 @@ interface AnimalAPIControllerInterface
    * @param string $ulnString
    * @return mixed
    */
-  function getAnimalDetailsById(Request $request, $ulnString);
+  function getAnimalDetailsByUln(Request $request, $ulnString);
 
   /**
    * @param Request $request

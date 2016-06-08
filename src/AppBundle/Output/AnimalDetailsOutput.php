@@ -3,8 +3,9 @@
 namespace AppBundle\Output;
 
 
+use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
-use AppBundle\Enumerator\TagStateType;
 
 /**
  * Class DeclareAnimalDetailsOutput
@@ -19,19 +20,19 @@ class AnimalDetailsOutput
     {
 
         $result = array(
-                  "uln_country_code" => $animal->getUlnCountryCode(),
-                  "uln_number" => $animal->getUlnNumber(),
-                  "pedigree_country_code" => $animal->getPedigreeCountryCode(),
-                  "pedigree_number" => $animal->getPedigreeNumber(),
-                  "work_number" => $animal->getAnimalOrderNumber(),
+                  Constant::ULN_COUNTRY_CODE_NAMESPACE => $animal->getUlnCountryCode(),
+                  Constant::ULN_NUMBER_NAMESPACE => $animal->getUlnNumber(),
+                  Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE => $animal->getPedigreeCountryCode(),
+                  Constant::PEDIGREE_NUMBER_NAMESPACE => $animal->getPedigreeNumber(),
+                  JsonInputConstant::WORK_NUMBER => $animal->getAnimalOrderNumber(),
                   "collar_number" => "",
                   "name" => "",
-                  "date_of_birth" => $animal->getDateOfBirth(),
+                  Constant::DATE_OF_BIRTH_NAMESPACE => $animal->getDateOfBirth(),
                   "inbred_coefficient" => "",
-                  "gender" => $animal->getGender(),
+                  Constant::GENDER_NAMESPACE => $animal->getGender(),
                   "litter_size" => "",
-                  "mother" => "",
-                  "father" => "",
+                  Constant::MOTHER_NAMESPACE => "",
+                  Constant::FATHER_NAMESPACE => "",
                   "rearing" => "",
                   "suction_size" => "",
                   "blind_factor" => "",
@@ -39,7 +40,7 @@ class AnimalDetailsOutput
                   "breed" => "",
                   "predicate" => "",
                   "breed_status" => "",
-                  "is_alive" => $animal->getIsAlive(),
+                  JsonInputConstant::IS_ALIVE => $animal->getIsAlive(),
                 "exterior" =>
                     array(
                         "head" => "",
