@@ -8,6 +8,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
@@ -266,9 +267,9 @@ class APIController extends Controller implements APIControllerInterface
   }
 
   /**
-   * @param Request|null $request
-   * @param null $token
-   * @return \AppBundle\Entity\Person|Client|null|object
+   * @param Request $request
+   * @param string $token
+   * @return Employee|Client|null
    */
   public function getAuthenticatedUser(Request $request= null, $token = null)
   {
@@ -278,6 +279,21 @@ class APIController extends Controller implements APIControllerInterface
     $em = $this->getDoctrine()->getEntityManager();
 
     return $em->getRepository('AppBundle:Person')->findOneBy(array("accessToken" => $token));
+  }
+
+  /**
+   * @param Request $request
+   * @param string $token
+   * @return Employee|null
+   */
+  public function getAuthenticatedEmployee(Request $request = null, $token = null)
+  {
+    $person = $this->getAuthenticatedUser($request, $token);
+    if($person instanceof Employee) {
+      return $person;
+    } else {
+      return null;
+    }
   }
 
   public function isUlnOrPedigreeCodeValid(Request $request, $ulnCode = null)
