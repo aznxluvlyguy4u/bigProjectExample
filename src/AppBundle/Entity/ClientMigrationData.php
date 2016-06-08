@@ -10,11 +10,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 
 /**
- * Class ClientMigration
- * @ORM\Entity(repositoryClass="AppBundle\Entity\ClientMigrationRepository")
+ * Class ClientMigrationData
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\ClientMigrationDataRepository")
  * @package AppBundle\Entity
  */
-class ClientMigration
+class ClientMigrationData
 {
     /**
      * @ORM\Column(type="integer")
@@ -160,7 +160,7 @@ class ClientMigration
      *
      * @param \DateTime $passwordCreationDate
      *
-     * @return ClientMigration
+     * @return ClientMigrationData
      */
     public function setPasswordCreationDate($passwordCreationDate)
     {

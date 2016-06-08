@@ -4,10 +4,10 @@ namespace AppBundle\Entity;
 
 
 /**
- * Class ClientMigrationRepository
+ * Class ClientMigrationDataRepository
  * @package AppBundle\Entity
  */
-class ClientMigrationRepository extends BaseRepository {
+class ClientMigrationDataRepository extends BaseRepository {
 
 
     public function getMigrationDataOfClient(Client $client)
