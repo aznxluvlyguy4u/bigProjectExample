@@ -45,7 +45,8 @@ class CompanyProfileOutput
                             "suffix" => $billingAddress->getAddressNumberSuffix(),
                             "address_number" => $billingAddress->getAddressNumber(),
                             "postal_code" => $billingAddress->getPostalCode(),
-                            "city" => $billingAddress->getCity()
+                            "city" => $billingAddress->getCity(),
+                            "state" => $billingAddress->getState()
                         ),
                     "address" =>
                         array(
@@ -53,7 +54,8 @@ class CompanyProfileOutput
                             "address_number" => $address->getAddressNumber(),
                             "suffix" => $address->getAddressNumberSuffix(),
                             "postal_code" => $address->getPostalCode(),
-                            "city" => $address->getCity()
+                            "city" => $address->getCity(),
+                            "state" => $address->getState()
                         ),
                     "contact_person" =>
                         array(
