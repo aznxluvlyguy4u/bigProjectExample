@@ -148,6 +148,16 @@ class Client extends Person
   }
 
   /**
+   * Set companies
+   *
+   * @param \Doctrine\Common\Collections\Collection $companies
+   */
+  public function setCompanies($companies)
+  {
+    $this->companies = $companies;
+  }
+
+  /**
    * Set username
    *
    * @param string $username
