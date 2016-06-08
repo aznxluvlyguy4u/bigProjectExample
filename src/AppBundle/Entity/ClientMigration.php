@@ -56,8 +56,19 @@ class ClientMigration
 
     /**
      * @var string
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
      */
     private $migrationStatus;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean")
+     * @Assert\NotBlank
+     * @JMS\Type("boolean")
+     */
+    private $hasDefaultNsfoEmailAddress;
 
     /**
      * @var Client
@@ -67,6 +78,11 @@ class ClientMigration
      * @JMS\Type("AppBundle\Entity\Client")
      */
     private $client;
+
+    public function __construct()
+    {
+        $this->setHasDefaultNsfoEmailAddress(false);
+    }
 
 
     /**
@@ -167,6 +183,22 @@ class ClientMigration
     public function setMigrationStatus($migrationStatus)
     {
         $this->migrationStatus = $migrationStatus;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getHasDefaultNsfoEmailAddress()
+    {
+        return $this->hasDefaultNsfoEmailAddress;
+    }
+
+    /**
+     * @param boolean $hasDefaultNsfoEmailAddress
+     */
+    public function setHasDefaultNsfoEmailAddress($hasDefaultNsfoEmailAddress)
+    {
+        $this->hasDefaultNsfoEmailAddress = $hasDefaultNsfoEmailAddress;
     }
 
 
