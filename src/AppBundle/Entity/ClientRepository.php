@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Setting\MigrationSetting;
 
 class ClientRepository extends BaseRepository {
 
@@ -42,5 +43,15 @@ class ClientRepository extends BaseRepository {
         $client = $repository->findOneBy(array("emailAddress" => $email));
 
         return $client;
+    }
+
+    /**
+     * Get all clients that do not have a password yet.
+     *
+     * @return array
+     */
+    public function getClientsWithoutAPassword()
+    {
+        return $this->findBy(array("password" => MigrationSetting::EMPTY_PASSWORD_INDICATOR));
     }
 }
