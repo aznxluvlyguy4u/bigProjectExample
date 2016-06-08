@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Animal;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -198,6 +199,15 @@ class Utils
         }
 
         return $result;
+    }
+
+    /**
+     * @param Animal $animal
+     * @return string
+     */
+    public static function getUlnStringFromAnimal(Animal $animal)
+    {
+        return $animal->getUlnCountryCode() . $animal->getUlnNumber();
     }
 
 }

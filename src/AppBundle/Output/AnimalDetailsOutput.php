@@ -3,6 +3,7 @@
 namespace AppBundle\Output;
 
 
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
@@ -31,8 +32,8 @@ class AnimalDetailsOutput
                   "inbred_coefficient" => "",
                   Constant::GENDER_NAMESPACE => $animal->getGender(),
                   "litter_size" => "",
-                  Constant::MOTHER_NAMESPACE => "",
-                  Constant::FATHER_NAMESPACE => "",
+                  Constant::MOTHER_NAMESPACE => Utils::getUlnStringFromAnimal($animal->getParentMother()),
+                  Constant::FATHER_NAMESPACE => Utils::getUlnStringFromAnimal($animal->getParentFather()),
                   "rearing" => "",
                   "suction_size" => "",
                   "blind_factor" => "",
