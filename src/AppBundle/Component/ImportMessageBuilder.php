@@ -4,6 +4,7 @@ namespace AppBundle\Component;
 
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareImport;
+use AppBundle\Enumerator\AnimalType;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -53,6 +54,8 @@ class ImportMessageBuilder extends MessageBuilderBase
     if($animal != null) {
       $animal->setAnimalCountryOrigin($declareImport->getAnimalCountryOrigin());
     }
+
+    $declareImport->setAnimalType(AnimalType::sheep);
 
     if(ActionFlagSetting::DECLARE_IMPORT != null) {
       $declareImport->setAction(ActionFlagSetting::DECLARE_IMPORT);
