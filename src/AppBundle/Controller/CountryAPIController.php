@@ -10,11 +10,13 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Enumerator\RequestType;
 
 /**
  * @Route("/api/v1/countries")
  */
-class CountryAPIController extends APIController {
+class CountryAPIController extends APIController implements CountryAPIControllerInterface
+{
 
   /**
    * Retrieve a list of Country codes and corresponding full Country name
@@ -47,19 +49,49 @@ class CountryAPIController extends APIController {
    * @Method("GET")
    */
   public function getCountryCodes(Request $request) {
-    if(!$request->query->has(Constant::CONTINENT_NAMESPACE)) {
-      $countries = $this->getDoctrine()->getRepository(Constant::COUNTRY_REPOSITORY)->findAll();
-    } else {
+    if (!$request->query->has(Constant::CONTINENT_NAMESPACE)) {
+      $countries = $this->getDoctrine()
+        ->getRepository(Constant::COUNTRY_REPOSITORY)
+        ->findAll();
+    }
+    else {
       $continent = ucfirst($request->query->get(Constant::CONTINENT_NAMESPACE));
-      if($continent == Constant::ALL_NAMESPACE){
-        $countries = $this->getDoctrine()->getRepository(Constant::COUNTRY_REPOSITORY)->findAll();
-      } else {
-        $countries = $this->getDoctrine()->getRepository(Constant::COUNTRY_REPOSITORY)->findBy(array(Constant::CONTINENT_NAMESPACE => $continent));
+      if ($continent == Constant::ALL_NAMESPACE) {
+        $countries = $this->getDoctrine()
+          ->getRepository(Constant::COUNTRY_REPOSITORY)
+          ->findAll();
+      }
+      else {
+        $countries = $this->getDoctrine()
+          ->getRepository(Constant::COUNTRY_REPOSITORY)
+          ->findBy(array (Constant::CONTINENT_NAMESPACE => $continent));
       }
     }
 
-    $countries = $this->getSerializer()->serializeToJSON(array(Constant::RESULT_NAMESPACE => $countries));
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE=>$countries), 200);
+  }
 
-    return new Response($countries);
+  /**
+   * @param Request $request the request object
+   * @return Response
+   * @Route("")
+   * @Method("POST")
+   */
+  function getCountries(Request $request)
+  {
+    //Get content to array
+    $content = $this->getContentAsArray($request);
+
+    //Convert the array into an object and add the mandatory values retrieved from the database
+    $retrieveCountries = $this->buildMessageObject(RequestType::RETRIEVE_COUNTRIES_ENTITY, $content, $this->getAuthenticatedUser($request));
+
+    //First Persist object to Database, before sending it to the queue
+    $this->persist($retrieveCountries);
+
+    //Send it to the queue and persist/update any changed state to the database
+    $this->sendMessageObjectToQueue($retrieveCountries);
+
+    return new JsonResponse($retrieveCountries, 200);
+
   }
 }

@@ -15,11 +15,19 @@ use \DateTime;
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * //TODO add new child classes to the DiscriminatorMap
- * @ORM\DiscriminatorMap({"DeclareArrivalResponse" = "DeclareArrivalResponse",
- *                        "DeclareBirthResponse" = "DeclareBirthResponse",
- *                        "DeclareDepartResponse" = "DeclareDepartResponse",
- *                        "DeclareImportResponse" = "DeclareImportResponse"
- *                        })
+ * @ORM\DiscriminatorMap(
+ *   {
+ *      "DeclareArrivalResponse" = "DeclareArrivalResponse",
+ *      "DeclareDepartResponse" = "DeclareDepartResponse",
+ *      "DeclareBirthResponse" = "DeclareBirthResponse",
+ *      "DeclareLossResponse" = "DeclareLossResponse",
+ *      "DeclareImportResponse" = "DeclareImportResponse",
+ *      "DeclareExportResponse" = "DeclareExportResponse",
+ *      "DeclareAnimalFlagResponse" = "DeclareAnimalFlagResponse",
+ *      "DeclareTagsTransferResponse" = "DeclareTagsTransferResponse",
+ *      "RevokeDeclarationResponse" = "RevokeDeclarationResponse"
+ *   }
+ * )
  * @package AppBundle\Entity\DeclareBaseResponse
  */
 abstract class DeclareBaseResponse
@@ -37,7 +45,22 @@ abstract class DeclareBaseResponse
      * @Assert\NotBlank
      * @JMS\Type("string")
      */
+    protected $requestId;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\Length(max = 20)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
     private $messageId;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 15)
+     * @JMS\Type("string")
+     */
+    protected $messageNumber;
 
     /**
      * @ORM\Column(type="datetime")
@@ -79,6 +102,14 @@ abstract class DeclareBaseResponse
     private $successIndicator;
 
     /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     */
+    private $isRemovedByUser;
+
+    /**
      * Get id
      *
      * @return integer
@@ -110,6 +141,22 @@ abstract class DeclareBaseResponse
     public function getMessageId()
     {
         return $this->messageId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMessageNumber()
+    {
+        return $this->messageNumber;
+    }
+
+    /**
+     * @param string $messageNumber
+     */
+    public function setMessageNumber($messageNumber)
+    {
+        $this->messageNumber = $messageNumber;
     }
 
     /**
@@ -230,5 +277,58 @@ abstract class DeclareBaseResponse
     public function getSuccessIndicator()
     {
         return $this->successIndicator;
+    }
+
+    /**
+     * Get requestId
+     *
+     * @return string
+     */
+    public function getRequestId()
+    {
+        return $this->requestId;
+    }
+
+    /**
+     * Set requestId
+     *
+     * @param string $requestId
+     *
+     * @return DeclareBaseResponse
+     */
+    public function setRequestId($requestId)
+    {
+        $this->requestId = $requestId;
+        $this->setMessageId($requestId);
+
+        return $this;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isIsRemovedByUser()
+    {
+        return $this->isRemovedByUser;
+    }
+
+    /**
+     * @param boolean $isRemovedByUser
+     */
+    public function setIsRemovedByUser($isRemovedByUser)
+    {
+        $this->isRemovedByUser = $isRemovedByUser;
+    }
+
+
+
+    /**
+     * Get isRemovedByUser
+     *
+     * @return boolean
+     */
+    public function getIsRemovedByUser()
+    {
+        return $this->isRemovedByUser;
     }
 }

@@ -52,7 +52,7 @@ class AWSQueueService
   private $queueIds;
 
   /**
-   * ArrivalAPIService constructor, intialize SQS configm
+   * ArrivalAPIService constructor, initialize SQS config
    *
    * @param $credentials array containing AWS accessKey and secretKey.
    * @param $region of the Queue.
@@ -85,6 +85,9 @@ class AWSQueueService
       case 'test':
         $queueId = $queueIds[2];
         break;
+      case 'local':
+        $queueId = $queueIds[3];
+        break;
       default; //dev
         $queueId = $queueIds[1];
         break;
@@ -97,7 +100,7 @@ class AWSQueueService
     );
 
     $this->queueService = new SqsClient($sqsConfig);
-
+    
     $result = $this->queueService->createQueue(array('QueueName' => $queueId));
     $this->queueURL = $result->get('QueueUrl');
   }
@@ -105,7 +108,10 @@ class AWSQueueService
   /**
    * Send a request message to given Queue.
    *
-   * @param $messageBody
+   * @param string $requestId
+   * @param string $messageBody
+   * @param string $requestType
+   * @return array|null
    */
   public function send($requestId, $messageBody, $requestType)
   {
@@ -124,9 +130,12 @@ class AWSQueueService
       ],
     ));
 
-    return $this->responseHandler($response,$messageBody);
+    return $this->responseHandler($response);
   }
 
+  /**
+   * @return \Aws\Result
+   */
   public function getNextMessage()
   {
     $result = $this->queueService->receiveMessage(array(
@@ -144,7 +153,11 @@ class AWSQueueService
     return $this->queueService;
   }
 
-  private function responseHandler($response, $messageBody){
+  /**
+   * @param $response
+   * @return array
+   */
+  private function responseHandler($response){
     $statusCode = $response['@metadata']['statusCode'];
     $result = array('statusCode' => $statusCode);
     return $result;

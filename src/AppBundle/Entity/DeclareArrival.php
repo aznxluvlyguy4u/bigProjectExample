@@ -2,6 +2,8 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\RequestStateType;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -20,12 +22,63 @@ use JMS\Serializer\Annotation\Expose;
 class DeclareArrival extends DeclareBase {
 
     /**
-     * @Assert\NotBlank
-     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="arrivals", cascade={"persist"})
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="arrivals")
      * @JMS\Type("AppBundle\Entity\Animal")
      * @Expose
      */
     private $animal;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=false)
+     * @Expose
+     */
+    private $ulnCountryCode;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=false)
+     * @Expose
+     */
+    private $ulnNumber;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
+    private $pedigreeCountryCode;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
+    private $pedigreeNumber;
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer")
+     * @Assert\NotBlank
+     * @JMS\Type("integer")
+     * @Expose
+     */
+    private $animalType;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $animalObjectType;
 
     /**
      * 2016-04-01T22:00:48.131Z
@@ -50,6 +103,8 @@ class DeclareArrival extends DeclareBase {
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="arrivals", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
+     * @Expose
+     *
      */
     private $location;
 
@@ -58,7 +113,7 @@ class DeclareArrival extends DeclareBase {
      * @JMS\Type("boolean")
      * @Expose
      */
-    private $importAnimal;
+    private $isImportAnimal;
 
     /**
      * @ORM\OneToMany(targetEntity="DeclareArrivalResponse", mappedBy="declareArrivalRequestMessage", cascade={"persist"})
@@ -69,11 +124,20 @@ class DeclareArrival extends DeclareBase {
     private $responses;
 
     /**
+     * @ORM\OneToOne(targetEntity="RevokeDeclaration", inversedBy="arrival", cascade={"persist"})
+     * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id", nullable=true)
+     * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
+     * @Expose
+     */
+    private $revoke;
+
+    /**
      * DeclareArrival constructor.
      */
     public function __construct() {
         parent::__construct();
 
+        $this->setRequestState(RequestStateType::OPEN);
         //Create responses array
         $this->responses = new ArrayCollection();
     }
@@ -130,13 +194,13 @@ class DeclareArrival extends DeclareBase {
     /**
      * Set importAnimal
      *
-     * @param boolean $importAnimal
+     * @param boolean $isImportAnimal
      *
      * @return DeclareArrival
      */
-    public function setImportAnimal($importAnimal)
+    public function setIsImportAnimal($isImportAnimal)
     {
-        $this->importAnimal = $importAnimal;
+        $this->isImportAnimal = $isImportAnimal;
 
         return $this;
     }
@@ -146,9 +210,9 @@ class DeclareArrival extends DeclareBase {
      *
      * @return boolean
      */
-    public function getImportAnimal()
+    public function getIsImportAnimal()
     {
-        return $this->importAnimal;
+        return $this->isImportAnimal;
     }
 
     /**
@@ -185,7 +249,7 @@ class DeclareArrival extends DeclareBase {
      */
     public function addResponse(\AppBundle\Entity\DeclareArrivalResponse $response)
     {
-        $this->responses[] = $response;
+        $this->responses->add($response);
 
         return $this;
     }
@@ -231,6 +295,19 @@ class DeclareArrival extends DeclareBase {
     {
         $this->animal = $animal;
 
+        if($animal != null) {
+
+            if($animal->getUlnCountryCode()!=null && $animal->getUlnNumber()!=null) {
+                $this->ulnCountryCode = $animal->getUlnCountryCode();
+                $this->ulnNumber = $animal->getUlnNumber();
+            }
+
+            if ($animal->getPedigreeCountryCode()!=null && $animal->getPedigreeNumber()!=null){
+                $this->pedigreeCountryCode = $animal->getPedigreeCountryCode();
+                $this->pedigreeNumber = $animal->getPedigreeNumber();
+            }
+        }
+
         return $this;
     }
 
@@ -267,4 +344,119 @@ class DeclareArrival extends DeclareBase {
     {
         return $this->ubn;
     }
+
+    /**
+     * @return RevokeDeclaration
+     */
+    public function getRevoke()
+    {
+        return $this->revoke;
+    }
+
+    /**
+     * @param RevokeDeclaration $revoke
+     */
+    public function setRevoke($revoke = null)
+    {
+        $this->revoke = $revoke;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUlnCountryCode()
+    {
+        return $this->ulnCountryCode;
+    }
+
+    /**
+     * @param string $ulnCountryCode
+     */
+    public function setUlnCountryCode($ulnCountryCode)
+    {
+        $this->ulnCountryCode = $ulnCountryCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUlnNumber()
+    {
+        return $this->ulnNumber;
+    }
+
+    /**
+     * @param string $ulnNumber
+     */
+    public function setUlnNumber($ulnNumber)
+    {
+        $this->ulnNumber = $ulnNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPedigreeCountryCode()
+    {
+        return $this->pedigreeCountryCode;
+    }
+
+    /**
+     * @param string $pedigreeCountryCode
+     */
+    public function setPedigreeCountryCode($pedigreeCountryCode)
+    {
+        $this->pedigreeCountryCode = $pedigreeCountryCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPedigreeNumber()
+    {
+        return $this->pedigreeNumber;
+    }
+
+    /**
+     * @param string $pedigreeNumber
+     */
+    public function setPedigreeNumber($pedigreeNumber)
+    {
+        $this->pedigreeNumber = $pedigreeNumber;
+    }
+
+    /**
+     * @return int
+     */
+    public function getAnimalType()
+    {
+        return $this->animalType;
+    }
+
+    /**
+     * @param int $animalType
+     */
+    public function setAnimalType($animalType)
+    {
+        $this->animalType = $animalType;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAnimalObjectType()
+    {
+        return $this->animalObjectType;
+    }
+
+    /**
+     * @param string $animalObjectType
+     */
+    public function setAnimalObjectType($animalObjectType)
+    {
+        $this->animalObjectType = $animalObjectType;
+    }
+
+
+
 }

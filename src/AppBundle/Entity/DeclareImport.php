@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\RequestStateType;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -22,12 +23,63 @@ class DeclareImport extends DeclareBase
 {
 
   /**
-   * @Assert\NotBlank
-   * @ORM\ManyToOne(targetEntity="Animal", inversedBy="imports", cascade={"persist"})
+   * @ORM\ManyToOne(targetEntity="Animal", inversedBy="imports")
    * @JMS\Type("AppBundle\Entity\Animal")
    * @Expose
    */
   private $animal;
+
+  /**
+   * @var string
+   * @JMS\Type("string")
+   * @ORM\Column(type="string", nullable=false)
+   * @Expose
+   */
+  private $ulnCountryCode;
+
+  /**
+   * @var string
+   * @JMS\Type("string")
+   * @ORM\Column(type="string", nullable=false)
+   * @Expose
+   */
+  private $ulnNumber;
+
+  /**
+   * @var string
+   * @JMS\Type("string")
+   * @ORM\Column(type="string", nullable=true)
+   * @Expose
+   */
+  private $pedigreeCountryCode;
+
+  /**
+   * @var string
+   * @JMS\Type("string")
+   * @ORM\Column(type="string", nullable=true)
+   * @Expose
+   */
+  private $pedigreeNumber;
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer")
+     * @Assert\NotBlank
+     * @JMS\Type("integer")
+     * @Expose
+     */
+    private $animalType;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $animalObjectType;
 
   /**
    * 2016-04-01T22:00:48.131Z
@@ -41,12 +93,19 @@ class DeclareImport extends DeclareBase
   private $importDate;
 
   /**
-   * @ORM\Column(type="string", nullable=true)
-   * @Assert\Length(max = 10)
+   * @ORM\Column(type="string")
+   * @Assert\NotBlank
    * @JMS\Type("string")
    * @Expose
    */
-  private $ubnPreviousOwner;
+  private $animalCountryOrigin;
+
+  /**
+   * @ORM\Column(type="string", nullable=true)
+   * @JMS\Type("string")
+   * @Expose
+   */
+  private $animalUlnNumberOrigin;
 
   /**
    * @Assert\NotBlank
@@ -60,7 +119,7 @@ class DeclareImport extends DeclareBase
    * @JMS\Type("boolean")
    * @Expose
    */
-  private $importAnimal;
+  private $isImportAnimal;
 
   /**
    * @ORM\OneToMany(targetEntity="DeclareImportResponse", mappedBy="declareImportRequestMessage", cascade={"persist"})
@@ -71,14 +130,26 @@ class DeclareImport extends DeclareBase
   private $responses;
 
   /**
+   * @ORM\OneToOne(targetEntity="RevokeDeclaration", inversedBy="import", cascade={"persist"})
+   * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id", nullable=true)
+   * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
+   * @Expose
+   */
+  private $revoke;
+
+
+
+  /**
    * DeclareArrival constructor.
    */
   public function __construct() {
     parent::__construct();
 
+    $this->setRequestState(RequestStateType::OPEN);
+
     //Create responses array
     $this->responses = new ArrayCollection();
-    $this->importAnimal = true;
+    $this->isImportAnimal = true;
   }
 
 
@@ -107,39 +178,15 @@ class DeclareImport extends DeclareBase
     }
 
     /**
-     * Set ubnPreviousOwner
-     *
-     * @param string $ubnPreviousOwner
-     *
-     * @return DeclareImport
-     */
-    public function setUbnPreviousOwner($ubnPreviousOwner)
-    {
-        $this->ubnPreviousOwner = $ubnPreviousOwner;
-
-        return $this;
-    }
-
-    /**
-     * Get ubnPreviousOwner
-     *
-     * @return string
-     */
-    public function getUbnPreviousOwner()
-    {
-        return $this->ubnPreviousOwner;
-    }
-
-    /**
      * Set importAnimal
      *
-     * @param boolean $importAnimal
+     * @param boolean $isImportAnimal
      *
      * @return DeclareImport
      */
-    public function setImportAnimal($importAnimal)
+    public function setIsImportAnimal($isImportAnimal)
     {
-        $this->importAnimal = $importAnimal;
+        $this->isImportAnimal = $isImportAnimal;
 
         return $this;
     }
@@ -149,9 +196,9 @@ class DeclareImport extends DeclareBase
      *
      * @return boolean
      */
-    public function getImportAnimal()
+    public function getIsImportAnimal()
     {
-        return $this->importAnimal;
+        return $this->isImportAnimal;
     }
 
     /**
@@ -164,6 +211,19 @@ class DeclareImport extends DeclareBase
     public function setAnimal(\AppBundle\Entity\Animal $animal = null)
     {
         $this->animal = $animal;
+
+        if($animal != null) {
+
+            if($animal->getUlnCountryCode()!=null && $animal->getUlnNumber()!=null) {
+                $this->ulnCountryCode = $animal->getUlnCountryCode();
+                $this->ulnNumber = $animal->getUlnNumber();
+            }
+
+            if ($animal->getPedigreeCountryCode()!=null && $animal->getPedigreeNumber()!=null){
+                $this->pedigreeCountryCode = $animal->getPedigreeCountryCode();
+                $this->pedigreeNumber = $animal->getPedigreeNumber();
+            }
+        }
 
         return $this;
     }
@@ -235,5 +295,167 @@ class DeclareImport extends DeclareBase
     public function getResponses()
     {
         return $this->responses;
+    }
+
+    /**
+     * Set animalCountryOrigin
+     *
+     * @param string $animalCountryOrigin
+     *
+     * @return DeclareImport
+     */
+    public function setAnimalCountryOrigin($animalCountryOrigin)
+    {
+        $this->animalCountryOrigin = $animalCountryOrigin;
+
+        return $this;
+    }
+
+    /**
+     * Get animalCountryOrigin
+     *
+     * @return string
+     */
+    public function getAnimalCountryOrigin() {
+      return $this->animalCountryOrigin;
+    }
+
+    /*
+     * @return RevokeDeclaration
+     */
+    public function getRevoke()
+    {
+        return $this->revoke;
+    }
+
+    /**
+     * @param RevokeDeclaration $revoke
+     */
+    public function setRevoke($revoke = null)
+    {
+        $this->revoke = $revoke;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUlnCountryCode()
+    {
+        return $this->ulnCountryCode;
+    }
+
+    /**
+     * @param string $ulnCountryCode
+     */
+    public function setUlnCountryCode($ulnCountryCode)
+    {
+        $this->ulnCountryCode = $ulnCountryCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUlnNumber()
+    {
+        return $this->ulnNumber;
+    }
+
+    /**
+     * @param string $ulnNumber
+     */
+    public function setUlnNumber($ulnNumber)
+    {
+        $this->ulnNumber = $ulnNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPedigreeCountryCode()
+    {
+        return $this->pedigreeCountryCode;
+    }
+
+    /**
+     * @param string $pedigreeCountryCode
+     */
+    public function setPedigreeCountryCode($pedigreeCountryCode)
+    {
+        $this->pedigreeCountryCode = $pedigreeCountryCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPedigreeNumber()
+    {
+        return $this->pedigreeNumber;
+    }
+
+    /**
+     * @param string $pedigreeNumber
+     */
+    public function setPedigreeNumber($pedigreeNumber)
+    {
+        $this->pedigreeNumber = $pedigreeNumber;
+    }
+
+    /**
+     * @return int
+     */
+    public function getAnimalType()
+    {
+        return $this->animalType;
+    }
+
+    /**
+     * @param int $animalType
+     */
+    public function setAnimalType($animalType)
+    {
+        $this->animalType = $animalType;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAnimalObjectType()
+    {
+        return $this->animalObjectType;
+    }
+
+    /**
+     * @param string $animalObjectType
+     */
+    public function setAnimalObjectType($animalObjectType)
+    {
+        $this->animalObjectType = $animalObjectType;
+    }
+
+    
+
+
+    /**
+     * Set animalUlnNumberOrigin
+     *
+     * @param string $animalUlnNumberOrigin
+     *
+     * @return DeclareImport
+     */
+    public function setAnimalUlnNumberOrigin($animalUlnNumberOrigin)
+    {
+        $this->$animalUlnNumberOrigin = $animalUlnNumberOrigin;
+
+        return $this;
+    }
+
+    /**
+     * Get animalUlnNumberOrigin
+     *
+     * @return string
+     */
+    public function getAnimalUlnNumberOrigin()
+    {
+        return $this->animalUlnNumberOrigin;
     }
 }

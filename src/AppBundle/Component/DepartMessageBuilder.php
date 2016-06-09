@@ -2,8 +2,10 @@
 
 namespace AppBundle\Component;
 
-use AppBundle\Enumerator\AnimalType;
+use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareDepart;
+use AppBundle\Enumerator\AnimalType;
+use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
@@ -15,7 +17,7 @@ use AppBundle\Entity\Person;
 class DepartMessageBuilder extends MessageBuilderBase
 {
     /**
-     * @var Person
+     * @var Client|Person
      */
     private $person;
 
@@ -29,10 +31,10 @@ class DepartMessageBuilder extends MessageBuilderBase
      * Accept front-end input and create a complete NSFO+IenR Message.
      *
      * @param DeclareDepart $messageObject the message received from the front-end
-     * @param Person $person
+     * @param Client|Person $person
      * @return DeclareDepart
      */
-    public function buildMessage(DeclareDepart $messageObject, Person $person)
+    public function buildMessage(DeclareDepart $messageObject, $person)
     {
         $this->person = $person;
         $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
@@ -43,13 +45,23 @@ class DepartMessageBuilder extends MessageBuilderBase
 
     /**
      * @param DeclareDepart $messageObject the message received from the front-end
-     * @param Person $person
      * @return DeclareDepart
      */
     private function addDeclareDepartData(DeclareDepart $messageObject)
     {
         $animal = $messageObject->getAnimal();
-        $animal->setAnimalType(AnimalType::sheep);
+
+        $messageObject->setUlnCountryCode($animal->getUlnCountryCode());
+        $messageObject->setUlnNumber($animal->getUlnNumber());
+        $messageObject->setPedigreeCountryCode($animal->getPedigreeCountryCode());
+        $messageObject->setPedigreeNumber($animal->getPedigreeNumber());
+        $messageObject->setIsExportAnimal(false);
+        $messageObject->setIsDepartedAnimal(true);
+        $messageObject->setAnimalType(AnimalType::sheep);
+
+        if(ActionFlagSetting::DECLARE_DEPART != null) {
+            $messageObject->setAction(ActionFlagSetting::DECLARE_DEPART);
+        }
 
         //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
         $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);

@@ -2,9 +2,10 @@
 
 namespace AppBundle\Component;
 
-use AppBundle\Enumerator\AnimalType;
-use AppBundle\Entity\Ram;
+use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Enumerator\AnimalType;
+use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -17,7 +18,7 @@ use AppBundle\Entity\Person;
 class ArrivalMessageBuilder extends MessageBuilderBase
 {
     /**
-     * @var Person
+     * @var Client|Person
      */
     private $person;
 
@@ -31,10 +32,10 @@ class ArrivalMessageBuilder extends MessageBuilderBase
      * Accept front-end input and create a complete NSFO+IenR Message.
      *
      * @param DeclareArrival $messageObject the message received from the front-end
-     * @param string $relationNumberKeeper
-     * @return ArrayCollection
+     * @param Client|Person $person
+     * @return DeclareArrival
      */
-    public function buildMessage(DeclareArrival $messageObject, Person $person)
+    public function buildMessage(DeclareArrival $messageObject, $person)
     {
         $this->person = $person;
         $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
@@ -44,14 +45,15 @@ class ArrivalMessageBuilder extends MessageBuilderBase
     }
 
     /**
-     * @param DeclareArrival $messageObject the message received from the front-end
-     * @param Person $person
+     * @param DeclareArrival $messageObject the baseMessageObject
      * @return DeclareArrival
      */
     private function addDeclareArrivalData(DeclareArrival $messageObject)
     {
-        $animal = $messageObject->getAnimal();
-        $animal->setAnimalType(AnimalType::sheep);
+        $messageObject->setAnimalType(AnimalType::sheep);
+        if(ActionFlagSetting::DECLARE_ARRIVAL != null) {
+            $messageObject->setAction(ActionFlagSetting::DECLARE_ARRIVAL);
+        }
 
         //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
         $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);

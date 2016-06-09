@@ -3,9 +3,11 @@
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Entity\DeclareDepart;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedAnimal;
 use AppBundle\DataFixtures\ORM\MockedClient;
+use AppBundle\DataFixtures\ORM\MockedTags;
 use Doctrine\ORM\EntityManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
@@ -14,6 +16,11 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use Doctrine\Common\Collections\ArrayCollection;
 
+/**
+ * Class DepartAPIControllerTest
+ * @package AppBundle\Tests\Controller
+ * @group depart
+ */
 class DepartAPIControllerTest extends WebTestCase {
 
   const DECLARE_DEPART_ENDPOINT = "/api/v1/departs";
@@ -32,6 +39,11 @@ class DepartAPIControllerTest extends WebTestCase {
    * @var EntityManager
    */
   static private $entityManager;
+
+  /**
+   * @var ArrayCollection
+   */
+  static private $mockedTagsList;
 
   /**
    * @var Client
@@ -67,7 +79,8 @@ class DepartAPIControllerTest extends WebTestCase {
 
     //Load fixture class
     $fixtures = array('AppBundle\DataFixtures\ORM\MockedClient',
-      'AppBundle\DataFixtures\ORM\MockedAnimal');
+      'AppBundle\DataFixtures\ORM\MockedAnimal',
+      'AppBundle\DataFixtures\ORM\MockedTags');
     $this->loadFixtures($fixtures);
 
     //Get mocked Client
@@ -78,6 +91,9 @@ class DepartAPIControllerTest extends WebTestCase {
     self::$mockedChild  = MockedAnimal::getMockedRamWithParents();
     self::$mockedFather = MockedAnimal::getMockedParentRam();
     self::$mockedMother = MockedAnimal::getMockedParentEwe();
+
+    ///Get mocked tags
+    self::$mockedTagsList = MockedTags::getMockedTags();
 
     $this->defaultHeaders = array(
       'CONTENT_TYPE' => 'application/json',
@@ -106,6 +122,8 @@ class DepartAPIControllerTest extends WebTestCase {
   }
 
   /**
+   * @group get
+   * @group depart-get
    * Test retrieving Declare departures list
    */
   public function testGetDepartures()
@@ -124,6 +142,8 @@ class DepartAPIControllerTest extends WebTestCase {
   }
 
   /**
+   * @group get
+   * @group depart-get
    * Test retrieving Declare departures by id
    */
   public function testGetDeparturesById()
@@ -142,7 +162,8 @@ class DepartAPIControllerTest extends WebTestCase {
   }
 
   /**
-   *
+   * @group create
+   * @group depart-create
    * Test create new Declare depart
    */
   public function testCreateDepart()
@@ -168,11 +189,12 @@ class DepartAPIControllerTest extends WebTestCase {
     $contentJson = $this->client->getResponse()->getContent();
     $dataArray = json_decode($contentJson, true);
 
-    $this->assertEquals('open', $dataArray['request_state']);
+    $this->assertEquals(RequestStateType::OPEN, $dataArray['request_state']);
   }
 
   /**
-   *
+   * @group update
+   * @group depart-update
    * Test create new Declare Depart
    */
   public function testUpdateDepart()
@@ -205,8 +227,7 @@ class DepartAPIControllerTest extends WebTestCase {
 
     //Update value
     $declareDepartUpdated = $declareDepart;
-    $declareDepartUpdated->setUbnNewOwner("444441");
-    $declareDepartUpdated->getAnimal()->setUlnNumber('555666');
+    $declareDepart->setUbnNewOwner("11111");
 
     //Create json to be putted
     $declareDepartUpdatedJson = self::$serializer->serializeToJSON($declareDepartUpdated);
@@ -224,7 +245,6 @@ class DepartAPIControllerTest extends WebTestCase {
     $updatedDataArray = json_decode($updatedResponseJson, true);
 
     $this->assertEquals($declareDepartUpdated->getUbnNewOwner(), $updatedDataArray['ubn_new_owner']);
-    $this->assertEquals($declareDepart->getUbn(), $updatedDataArray['ubn']);
   }
 
   public function tearDown() {

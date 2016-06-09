@@ -22,7 +22,29 @@ class DeclareArrivalResponse extends DeclareBaseResponse {
    * @JMS\Type("AppBundle\Entity\DeclareArrival")
    */
   private $declareArrivalRequestMessage;
-//JColumn(name="declare_arrival_request_message_id", referencedColumnName="id")
+
+    /**
+     * 2016-04-01T22:00:48.131Z
+     *
+     * @ORM\Column(type="datetime")
+     * @Assert\Date
+     * @Assert\NotBlank
+     * @JMS\Type("DateTime")
+     */
+    private $arrivalDate;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 10)
+     * @JMS\Type("string")
+     */
+    private $ubnPreviousOwner;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $gender;
 
     /**
      * Set declareArrivalRequestMessage
@@ -47,7 +69,6 @@ class DeclareArrivalResponse extends DeclareBaseResponse {
     {
         return $this->declareArrivalRequestMessage;
     }
-
 
     /**
      * Get id
@@ -81,5 +102,64 @@ class DeclareArrivalResponse extends DeclareBaseResponse {
     public function getLogDate()
     {
         return $this->logDate;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getArrivalDate()
+    {
+        return $this->arrivalDate;
+    }
+
+    /**
+     * @param \DateTime $arrivalDate
+     */
+    public function setArrivalDate($arrivalDate)
+    {
+        $this->arrivalDate = $arrivalDate;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUbnPreviousOwner()
+    {
+        return $this->ubnPreviousOwner;
+    }
+
+    /**
+     * @param string $ubnPreviousOwner
+     */
+    public function setUbnPreviousOwner($ubnPreviousOwner)
+    {
+        $this->ubnPreviousOwner = $ubnPreviousOwner;
+    }
+
+
+
+
+    /**
+     * Set gender
+     *
+     * @param string $gender
+     *
+     * @return DeclareArrivalResponse
+     */
+    public function setGender($gender)
+    {
+        $this->gender = $gender;
+
+        return $this;
+    }
+
+    /**
+     * Get gender
+     *
+     * @return string
+     */
+    public function getGender()
+    {
+        return $this->gender;
     }
 }

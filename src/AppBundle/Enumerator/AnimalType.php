@@ -2,7 +2,10 @@
 
 namespace AppBundle\Enumerator;
 
-
+/**
+ * Class AnimalType
+ * @package AppBundle\Enumerator
+ */
 class AnimalType
 {
     const sheep = 3;

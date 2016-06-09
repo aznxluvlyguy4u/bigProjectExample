@@ -3,9 +3,11 @@
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Entity\DeclareImport;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedAnimal;
 use AppBundle\DataFixtures\ORM\MockedClient;
+use AppBundle\DataFixtures\ORM\MockedTags;
 use Doctrine\ORM\EntityManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
@@ -14,6 +16,11 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use Doctrine\Common\Collections\ArrayCollection;
 
+/**
+ * Class ImportAPIControllerTest
+ * @package AppBundle\Tests\Controller
+ * @group import
+ */
 class ImportAPIControllerTest extends WebTestCase {
 
 
@@ -33,6 +40,11 @@ class ImportAPIControllerTest extends WebTestCase {
    * @var EntityManager
    */
   static private $entityManager;
+
+  /**
+   * @var ArrayCollection
+   */
+  static private $mockedTagsList;
 
   /**
    * @var Client
@@ -68,7 +80,8 @@ class ImportAPIControllerTest extends WebTestCase {
 
     //Load fixture class
     $fixtures = array('AppBundle\DataFixtures\ORM\MockedClient',
-      'AppBundle\DataFixtures\ORM\MockedAnimal');
+      'AppBundle\DataFixtures\ORM\MockedAnimal',
+      'AppBundle\DataFixtures\ORM\MockedTags');
     $this->loadFixtures($fixtures);
 
     //Get mocked Client
@@ -79,6 +92,9 @@ class ImportAPIControllerTest extends WebTestCase {
     self::$mockedChild  = MockedAnimal::getMockedRamWithParents();
     self::$mockedFather = MockedAnimal::getMockedParentRam();
     self::$mockedMother = MockedAnimal::getMockedParentEwe();
+
+    ///Get mocked tags
+    self::$mockedTagsList = MockedTags::getMockedTags();
 
     $this->defaultHeaders = array(
       'CONTENT_TYPE' => 'application/json',
@@ -107,6 +123,8 @@ class ImportAPIControllerTest extends WebTestCase {
   }
 
   /**
+   * @group get
+   * @group import-get
    * Test retrieving Declare imports list
    */
   public function testGetImports()
@@ -125,6 +143,8 @@ class ImportAPIControllerTest extends WebTestCase {
   }
 
   /**
+   * @group get
+   * @group import-get
    * Test retrieving Declare import by id
    */
   public function testGetImportById()
@@ -143,16 +163,17 @@ class ImportAPIControllerTest extends WebTestCase {
   }
 
   /**
-   *
+   * @group create
+   * @group import-create
    * Test create new Declare import
    */
   public function testCreateImport()
   {
     //Create declare import
     $declareImport = new DeclareImport();
+    $declareImport->setAnimalCountryOrigin("AFG");
     $declareImport->setImportDate(new \DateTime());
-    $declareImport->setUbnPreviousOwner("123456");
-    $declareImport->setImportAnimal(true);
+    $declareImport->setIsImportAnimal(true);
     $declareImport->setAnimal(self::$mockedChild);
 
     //Create json to be posted
@@ -167,22 +188,24 @@ class ImportAPIControllerTest extends WebTestCase {
     );
 
     $response = $this->client->getResponse();
+
     $data = json_decode($response->getContent(), true);
 
-    $this->assertEquals('open', $data['request_state']);
+    $this->assertEquals(RequestStateType::OPEN, $data['request_state']);
   }
 
   /**
-   *
+   * @group update
+   * @group import-update
    * Test create new Declare import
    */
   public function testUpdateImport()
   {
     //Create declare import
     $declareImport = new DeclareImport();
+    $declareImport->setAnimalCountryOrigin("AFG");
     $declareImport->setImportDate(new \DateTime());
-    $declareImport->setUbnPreviousOwner("123456");
-    $declareImport->setImportAnimal(true);
+    $declareImport->setIsImportAnimal(true);
     $declareImport->setAnimal(self::$mockedChild);
 
     //Create json to be posted
@@ -199,16 +222,14 @@ class ImportAPIControllerTest extends WebTestCase {
 
     //Get response
     $response = $this->client->getResponse()->getContent();
-    $declareImportResponse = new ArrayCollection(json_decode($response, true));
+    $declareImportResponse = json_decode($response, true);
 
     //Get requestId so we can do an update with PUT
     $requestId = $declareImportResponse['request_id'];
 
-    //Update value
     $declareImportUpdated = $declareImport;
-    $declareImportUpdated->setUbnPreviousOwner("999991");
-    $declareImportUpdated->getAnimal()->setUlnNumber('123131');
-
+    $updatedDateString = "1899-01-01T16:22:43-0500";
+    $declareImportUpdated->setImportDate(new \DateTime($updatedDateString));
     //Create json to be putted
     $declareImportUpdatedJson = self::$serializer->serializeToJSON($declareImportUpdated);
 
@@ -224,8 +245,7 @@ class ImportAPIControllerTest extends WebTestCase {
     $updatedResponse = $this->client->getResponse()->getContent();
     $updatedData = json_decode($updatedResponse, true);
 
-    $this->assertEquals($declareImportUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
-    $this->assertEquals($declareImportUpdated->getImportAnimal(), $updatedData['import_animal']);
+    $this->assertEquals($updatedDateString, $updatedData['import_date']);
   }
 
   public function tearDown() {

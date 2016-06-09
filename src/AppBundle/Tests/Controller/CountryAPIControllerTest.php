@@ -12,6 +12,11 @@ use AppBundle\Entity\Country;
 use AppBundle\Entity\Client;
 use Doctrine\Common\Collections\ArrayCollection;
 
+/**
+ * Class CountryAPIControllerTest
+ * @package AppBundle\Tests\Controller
+ * @group country
+ */
 class CountryAPIControllerTest extends WebTestCase {
 
   const COUNTRIES_ENDPOINT = "/api/v1/countries";
@@ -86,6 +91,8 @@ class CountryAPIControllerTest extends WebTestCase {
   }
 
   /**
+   * @group get
+   * @group country-get
    * Test retrieving Countries list
    */
   public function testGetCountries()

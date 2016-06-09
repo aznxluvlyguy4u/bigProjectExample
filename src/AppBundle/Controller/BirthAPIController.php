@@ -2,12 +2,19 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\Modifier\AnimalRemover;
+use AppBundle\Component\Modifier\MessageModifier;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Enumerator\TagStateType;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Tools\Export\ExportException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
@@ -43,8 +50,12 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    */
   public function getBirthById(Request $request, $Id)
   {
-    $birth = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY)->findOneBy(array(Constant::REQUEST_ID_NAMESPACE=>$Id));
-    return new JsonResponse($birth, 200);
+      $client = $this->getAuthenticatedUser($request);
+      $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
+
+      $export = $repository->getBirthByRequestId($client, $Id);
+
+      return new JsonResponse($export, 200);
   }
 
   /**
@@ -85,15 +96,34 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    */
   public function getBirths(Request $request)
   {
-    //No explicit filter given, thus find all
-    if(!$request->query->has(Constant::STATE_NAMESPACE)) {
-      $declareBirths = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY)->findAll();
-    } else { //A state parameter was given, use custom filter to find subset
-      $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareBirths = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY)->findBy(array(Constant::REQUEST_STATE_NAMESPACE => $state));
-    }
+      $client = $this->getAuthenticatedUser($request);
+      $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
+      $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareBirths), 200);
+      if(!$stateExists) {
+          $declareBirths = $repository->getBirths($client);
+
+      } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
+
+          $declareBirths = new ArrayCollection();
+
+          foreach($repository->getBirths($client, RequestStateType::OPEN) as $birth) {
+            $declareBirths->add($birth);
+          }
+
+          foreach($repository->getBirths($client, RequestStateType::REVOKING) as $birth) {
+              $declareBirths->add($birth);
+          }
+          foreach($repository->getBirths($client, RequestStateType::FINISHED) as $birth) {
+              $declareBirths->add($birth);
+          }
+          
+      } else { //A state parameter was given, use custom filter to find subset
+          $state = $request->query->get(Constant::STATE_NAMESPACE);
+          $declareBirths = $repository->getBirths($client, $state);
+      }
+
+      return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareBirths), 200);
   }
 
   /**
@@ -120,20 +150,74 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    */
   public function createBirth(Request $request)
   {
-    //Convert front-end message into an array
+    $validityCheckUlnOrPedigree = $this->isUlnOrPedigreeCodeValid($request);
+    $isValid = $validityCheckUlnOrPedigree['isValid'];
+
+    if(!$isValid) {
+      $keyType = $validityCheckUlnOrPedigree['keyType']; // uln  of pedigree
+      $animalKind = $validityCheckUlnOrPedigree['animalKind'];
+      $message = $keyType . ' of ' . $animalKind . ' not found.';
+      return new JsonResponse(array('code'=>428, "message" => $message), 428);
+    }
+
     //Get content to array
     $content = $this->getContentAsArray($request);
 
-    //Convert the array into an object and add the mandatory values retrieved from the database
-    $messageObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $content, $this->getAuthenticatedUser($request));
+    //Split up the children in the array into separate messages
+    $children = $content->get("children");
+    $contentWithoutChildren = $content;
+    $contentWithoutChildren->remove("children");
 
-    //First Persist object to Database, before sending it to the queue
-    $this->persist($messageObject, RequestType::DECLARE_BIRTH_ENTITY);
+    $returnMessages = new ArrayCollection();
 
-    //Send it to the queue and persist/update any changed state to the database
-    $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_BIRTH_ENTITY, RequestType::DECLARE_BIRTH);
+    //Validate ALL children's ULN's BEFORE persisting any animal at all
+    $ulns = array();
+    foreach($children as $child) {
+        $ulnCountryCode = $child[Constant::ULN_COUNTRY_CODE_NAMESPACE];
+        $ulnNumber = $child[Constant::ULN_NUMBER_NAMESPACE];
+        $verification = $this->isTagUnassigned($ulnCountryCode,
+                                               $ulnNumber);
+        if(!$verification['isValid']) {
+            return $verification['jsonResponse'];
+        }
+        $ulns[] = $ulnCountryCode . $ulnNumber;
+    }
 
-    return new JsonResponse($messageObject, 200);
+    //Validate all ulns are unique
+    if(!Utils::arrayValuesAreUnique($ulns)) {
+        return new JsonResponse(array('code' => 428,
+            'message' => 'The uln values are valid, but each child should have a unique uln'), 428);
+    }
+
+    $client = $this->getAuthenticatedUser($request);
+
+    foreach($children as $child) {
+
+        $contentPerChild = $contentWithoutChildren;
+        $contentPerChild->set('animal', $child);
+
+        if($child['is_alive'] == true) { //DeclareBirth with sending a request to IenR
+            //Convert the array into an object and add the mandatory values retrieved from the database
+            $declareBirthObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $contentPerChild, $this->getAuthenticatedUser($request));
+
+            //Send it to the queue and persist/update any changed state to the database
+            $messageArray = $this->sendMessageObjectToQueue($declareBirthObject);
+
+            //Set tags of child to ASSIGNING
+            $this->persistNewTagsToAssigning($client, $declareBirthObject->getAnimal());
+
+            //Persist message without animal. That is done after a successful response
+            $declareBirthObject->setAnimal(null);
+            $this->persist($declareBirthObject);
+
+            $returnMessages->add($messageArray); //TODO when stillborn is complete, move out side if() but still inside foreach
+
+        } else { //DeclareStill born, only persist to database and don't send request to IenR
+            //TODO
+        }
+      }
+
+    return new JsonResponse($returnMessages, 200);
   }
 
   /**
@@ -159,67 +243,124 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareBirthRepository")
    * @Method("PUT")
    */
-  public function editBirth(Request $request, $Id) {
-    //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareBirthUpdate = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY,
-        $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+  public function updateBirth(Request $request, $Id) {
 
-    $entityManager = $this->getDoctrine()
-        ->getEntityManager()
-        ->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
-    $declareBirth = $entityManager->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
+      $content = $this->getContentAsArray($request);
 
-    if($declareBirth == null) {
-      return new JsonResponse(array("message"=>"No DeclareBirth found with request_id:" . $Id), 204);
-    }
+      $client = $this->getAuthenticatedUser($request);
+      $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
+      $declareBirth = $entityManager->getBirthByRequestId($client, $content->get("request_id"));
 
+      if($declareBirth == null) {
+          $message = 'no message found for the given requestId';
+          $messageArray = array('code'=>400, "message" => $message);
 
-    if ($declareBirthUpdate->getAnimal() != null) {
-      $declareBirth->setAnimal($declareBirthUpdate->getAnimal());
-    }
+          return new JsonResponse($messageArray, 400);
+      }
 
-    if ($declareBirthUpdate->getBirthType() != null) {
-      $declareBirth->setBirthType($declareBirthUpdate->getBirthType());
-    }
+      //TODO Phase 2: Minimize validity check for all controllers
+      $validityCheckUlnOrPedigree = $this->isUlnOrPedigreeCodeValid($request);
+      $isValid = $validityCheckUlnOrPedigree['isValid'];
 
-    if ($declareBirthUpdate->getLocation() != null) {
-      $declareBirth->setLocation($declareBirthUpdate->getLocation());
-    }
+      if(!$isValid) {
+          $keyType = $validityCheckUlnOrPedigree['keyType']; // uln  of pedigree
+          $animalKind = $validityCheckUlnOrPedigree['animalKind'];
+          $message = $keyType . ' of ' . $animalKind . ' not found.';
+          $messageArray = array('code'=>428, "message" => $message);
 
-    if ($declareBirthUpdate->getLambar() != null) {
-      $declareBirth->setLambar($declareBirthUpdate->getLambar());
-    }
+          return new JsonResponse($messageArray, 428);
+      }
 
-    if ($declareBirthUpdate->getAborted() != null) {
-      $declareBirth->setAborted($declareBirthUpdate->getAborted());
-    }
+      //Validate if tag is available
+      $verification = $this->isTagUnassigned($content->get('animal')['uln_country_code'],
+          $content->get('animal')['uln_number']);
+      if(!$verification['isValid']) {
+          return $verification['jsonResponse'];
+      }
 
-    if($declareBirthUpdate->getUbnPreviousOwner() != null) {
-      $declareBirth->setUbnPreviousOwner($declareBirthUpdate->getUbnPreviousOwner());
-    }
+      //Convert the array into an object and add the mandatory values retrieved from the database
+      $declareBirthUpdate = $this->buildEditMessageObject(RequestType::DECLARE_BIRTH_ENTITY,
+          $content, $this->getAuthenticatedUser($request));
 
-    if ($declareBirthUpdate->getPseudoPregnancy() != null) {
-      $declareBirth->setPseudoPregnancy($declareBirthUpdate->getPseudoPregnancy());
-    }
+      //First Persist object to Database, before sending it to the queue
+      $this->persist($declareBirthUpdate);
 
-    if ($declareBirthUpdate->getLitterSize() != null) {
-      $declareBirth->setLitterSize($declareBirthUpdate->getLitterSize());
-    }
+      //Send it to the queue and persist/update any changed state to the database
+      $messageArray = $this->sendEditMessageObjectToQueue($declareBirthUpdate);
 
-    if ($declareBirthUpdate->getAnimalWeight() != null) {
-      $declareBirth->setAnimalWeight($declareBirthUpdate->getAnimalWeight());
-    }
-
-    if ($declareBirthUpdate->getTailLength() != null) {
-      $declareBirth->setTailLength($declareBirthUpdate->getTailLength());
-    }
-
-    if ($declareBirthUpdate->getTransportationCode() != null) {
-      $declareBirth->setTransportationCode($declareBirthUpdate->getTransportationCode());
-    }
-
-    $declareBirth = $entityManager->update($declareBirth);
-
-    return new JsonResponse($declareBirth, 200);
+    return new JsonResponse($messageArray, 200);
   }
+
+    /**
+     *
+     * Get DeclareBirths & DeclareStillborns which have failed last responses.
+     *
+     * @ApiDoc(
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Get DeclareBirths & DeclareStillborns which have failed last responses",
+     *   input = "AppBundle\Entity\DeclareBirth",
+     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     * )
+     *
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("-errors")
+     * @Method("GET")
+     */
+    public function getBirthErrors(Request $request)
+    {
+        $client = $this->getAuthenticatedUser($request);
+
+        $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+        $birthRepository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_RESPONSE_REPOSITORY);
+        $declareBirths = $birthRepository->getBirthsWithLastErrorResponses($client, $animalRepository);
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('births' => $declareBirths)), 200);
+    }
+
+
+    /**
+     *
+    /**
+     *
+     * For the history view, get DeclareBirths & DeclareStillborns which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED.
+     *
+     * @ApiDoc(
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Get DeclareBirths & DeclareStillborns which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED",
+     *   input = "AppBundle\Entity\DeclareBirth",
+     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     * )
+     *
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("-history")
+     * @Method("GET")
+     */
+    public function getBirthHistory(Request $request)
+    {
+        $client = $this->getAuthenticatedUser($request);
+
+        $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+        $birthRepository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_RESPONSE_REPOSITORY);
+        $declareBirths = $birthRepository->getBirthsWithLastHistoryResponses($client, $animalRepository);
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('births' => $declareBirths)), 200);
+    }
 }

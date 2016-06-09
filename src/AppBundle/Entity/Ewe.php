@@ -2,7 +2,9 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\GenderType;
 use Doctrine\ORM\Mapping as ORM;
+use AppBundle\Enumerator\AnimalType;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -13,15 +15,20 @@ use JMS\Serializer\Annotation\Expose;
  * Class Ewe
  * @ORM\Entity(repositoryClass="AppBundle\Entity\EweRepository")
  * @package AppBundle\Entity
- * @ExclusionPolicy("all")
  */
 class Ewe extends Animal
 {
-  /**
-   * @ORM\OneToMany(targetEntity="Animal", mappedBy="parentMother")
-   * @JMS\Type("AppBundle\Entity\Ewe")
-   */
-  protected $children;
+    /**
+     * @ORM\OneToMany(targetEntity="Animal", mappedBy="parentMother")
+     * @JMS\Type("AppBundle\Entity\Ewe")
+     */
+     protected $children;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Animal", mappedBy="surrogate")
+     * @JMS\Type("AppBundle\Entity\Ewe")
+     */
+    protected $surrogateChildren;
 
     /**
      * @var string
@@ -30,270 +37,45 @@ class Ewe extends Animal
      * @ORM\Column(type="string")
      * @JMS\Type("string")
      */
-    protected $objectType;
-
-
-    /**
-   * Ewe constructor.
-   */
-  public function __construct() {
-    //Call super constructor first
-    parent::__construct();
-
-    $this->objectType = "Ewe";
-
-    $this->children = new ArrayCollection();
-  }
-
+     protected $objectType;
 
     /**
-     * Get id
-     *
-     * @return integer
+     * Ewe constructor.
      */
-    public function getId()
-    {
-        return $this->id;
-    }
+     public function __construct() {
+         //Call super constructor first
+         parent::__construct();
+
+         $this->objectType = "Ewe";
+         $this->setAnimalType(AnimalType::sheep);
+         $this->setGender(GenderType::FEMALE);
+         $this->setAnimalCategory(3);
+
+         $this->children = new ArrayCollection();
+     }
 
     /**
-     * Set pedigreeCountryCode
+     * Set objectType
      *
-     * @param string $pedigreeCountryCode
+     * @param string $objectType
      *
      * @return Ewe
      */
-    public function setPedigreeCountryCode($pedigreeCountryCode)
+    public function setObjectType($objectType)
     {
-        $this->pedigreeCountryCode = $pedigreeCountryCode;
+        $this->objectType = $objectType;
 
         return $this;
     }
 
     /**
-     * Get pedigreeCountryCode
+     * Get objectType
      *
      * @return string
      */
-    public function getPedigreeCountryCode()
+    public function getObjectType()
     {
-        return $this->pedigreeCountryCode;
-    }
-
-    /**
-     * Set pedigreeNumber
-     *
-     * @param string $pedigreeNumber
-     *
-     * @return Ewe
-     */
-    public function setPedigreeNumber($pedigreeNumber)
-    {
-        $this->pedigreeNumber = $pedigreeNumber;
-
-        return $this;
-    }
-
-    /**
-     * Get pedigreeNumber
-     *
-     * @return string
-     */
-    public function getPedigreeNumber()
-    {
-        return $this->pedigreeNumber;
-    }
-
-    /**
-     * Set ulnCountryCode
-     *
-     * @param string $ulnCountryCode
-     *
-     * @return Ewe
-     */
-    public function setUlnCountryCode($ulnCountryCode)
-    {
-        $this->ulnCountryCode = $ulnCountryCode;
-
-        return $this;
-    }
-
-    /**
-     * Get ulnCountryCode
-     *
-     * @return string
-     */
-    public function getUlnCountryCode()
-    {
-        return $this->ulnCountryCode;
-    }
-
-    /**
-     * Set ulnNumber
-     *
-     * @param string $ulnNumber
-     *
-     * @return Ewe
-     */
-    public function setUlnNumber($ulnNumber)
-    {
-        $this->ulnNumber = $ulnNumber;
-
-        return $this;
-    }
-
-    /**
-     * Get ulnNumber
-     *
-     * @return string
-     */
-    public function getUlnNumber()
-    {
-        return $this->ulnNumber;
-    }
-
-    /**
-     * Set name
-     *
-     * @param string $name
-     *
-     * @return Ewe
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
-
-        return $this;
-    }
-
-    /**
-     * Get name
-     *
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
-
-    /**
-     * Set dateOfBirth
-     *
-     * @param \DateTime $dateOfBirth
-     *
-     * @return Ewe
-     */
-    public function setDateOfBirth($dateOfBirth)
-    {
-        $this->dateOfBirth = $dateOfBirth;
-
-        return $this;
-    }
-
-    /**
-     * Get dateOfBirth
-     *
-     * @return \DateTime
-     */
-    public function getDateOfBirth()
-    {
-        return $this->dateOfBirth;
-    }
-
-    /**
-     * Set dateOfDeath
-     *
-     * @param \DateTime $dateOfDeath
-     *
-     * @return Ewe
-     */
-    public function setDateOfDeath($dateOfDeath)
-    {
-        $this->dateOfDeath = $dateOfDeath;
-
-        return $this;
-    }
-
-    /**
-     * Get dateOfDeath
-     *
-     * @return \DateTime
-     */
-    public function getDateOfDeath()
-    {
-        return $this->dateOfDeath;
-    }
-
-    /**
-     * Set gender
-     *
-     * @param string $gender
-     *
-     * @return Ewe
-     */
-    public function setGender($gender)
-    {
-        $this->gender = $gender;
-
-        return $this;
-    }
-
-    /**
-     * Get gender
-     *
-     * @return string
-     */
-    public function getGender()
-    {
-        return $this->gender;
-    }
-
-    /**
-     * Set animalType
-     *
-     * @param integer $animalType
-     *
-     * @return Ewe
-     */
-    public function setAnimalType($animalType)
-    {
-        $this->animalType = $animalType;
-
-        return $this;
-    }
-
-    /**
-     * Get animalType
-     *
-     * @return integer
-     */
-    public function getAnimalType()
-    {
-        return $this->animalType;
-    }
-
-    /**
-     * Set animalCategory
-     *
-     * @param integer $animalCategory
-     *
-     * @return Ewe
-     */
-    public function setAnimalCategory($animalCategory)
-    {
-        $this->animalCategory = $animalCategory;
-
-        return $this;
-    }
-
-    /**
-     * Get animalCategory
-     *
-     * @return integer
-     */
-    public function getAnimalCategory()
-    {
-        return $this->animalCategory;
+        return $this->objectType;
     }
 
     /**
@@ -331,184 +113,86 @@ class Ewe extends Animal
     }
 
     /**
-     * Set parentFather
+     * Set isAlive
      *
-     * @param \AppBundle\Entity\Ram $parentFather
+     * @param boolean $isAlive
      *
      * @return Ewe
      */
-    public function setParentFather(\AppBundle\Entity\Ram $parentFather = null)
+    public function setIsAlive($isAlive)
     {
-        $this->parentFather = $parentFather;
+        $this->isAlive = $isAlive;
 
         return $this;
     }
 
     /**
-     * Get parentFather
+     * Get isAlive
      *
-     * @return \AppBundle\Entity\Ram
+     * @return boolean
      */
-    public function getParentFather()
+    public function getIsAlive()
     {
-        return $this->parentFather;
+        return $this->isAlive;
     }
 
     /**
-     * Set parentMother
+     * Set ulnNumber
      *
-     * @param \AppBundle\Entity\Ewe $parentMother
+     * @param string $ulnNumber
      *
      * @return Ewe
      */
-    public function setParentMother(\AppBundle\Entity\Ewe $parentMother = null)
+    public function setUlnNumber($ulnNumber)
     {
-        $this->parentMother = $parentMother;
+        $this->ulnNumber = $ulnNumber;
 
         return $this;
     }
 
     /**
-     * Get parentMother
+     * Set ulnCountryCode
      *
-     * @return \AppBundle\Entity\Ewe
-     */
-    public function getParentMother()
-    {
-        return $this->parentMother;
-    }
-
-    /**
-     * Add arrival
-     *
-     * @param \AppBundle\Entity\DeclareArrival $arrival
+     * @param string $ulnCountryCode
      *
      * @return Ewe
      */
-    public function addArrival(\AppBundle\Entity\DeclareArrival $arrival)
+    public function setUlnCountryCode($ulnCountryCode)
     {
-        $this->arrivals[] = $arrival;
+        $this->ulnCountryCode = $ulnCountryCode;
 
         return $this;
     }
 
     /**
-     * Remove arrival
+     * Set animalOrderNumber
      *
-     * @param \AppBundle\Entity\DeclareArrival $arrival
-     */
-    public function removeArrival(\AppBundle\Entity\DeclareArrival $arrival)
-    {
-        $this->arrivals->removeElement($arrival);
-    }
-
-    /**
-     * Get arrivals
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getArrivals()
-    {
-        return $this->arrivals;
-    }
-
-    /**
-     * Set parentNeuter
-     *
-     * @param \AppBundle\Entity\Neuter $parentNeuter
+     * @param string $animalOrderNumber
      *
      * @return Ewe
      */
-    public function setParentNeuter(\AppBundle\Entity\Neuter $parentNeuter = null)
+    public function setAnimalOrderNumber($animalOrderNumber)
     {
-        $this->parentNeuter = $parentNeuter;
+        $this->animalOrderNumber = $animalOrderNumber;
 
         return $this;
     }
 
     /**
-     * Get parentNeuter
+     * Add export
      *
-     * @return \AppBundle\Entity\Neuter
-     */
-    public function getParentNeuter()
-    {
-        return $this->parentNeuter;
-    }
-
-    /**
-     * Set objectType
-     *
-     * @param string $objectType
+     * @param \AppBundle\Entity\DeclareExport $export
      *
      * @return Ewe
      */
-    public function setObjectType($objectType)
+    public function addExport(\AppBundle\Entity\DeclareExport $export)
     {
-        $this->objectType = $objectType;
+        $this->exports[] = $export;
 
         return $this;
     }
 
-    /**
-     * Get objectType
-     *
-     * @return string
-     */
-    public function getObjectType()
-    {
-        return $this->objectType;
-    }
-
-    /**
-     * Add import
-     *
-     * @param \AppBundle\Entity\DeclareImport $import
-     *
-     * @return Ewe
-     */
-    public function addImport(\AppBundle\Entity\DeclareImport $import)
-    {
-        $this->imports[] = $import;
-
-        return $this;
-    }
-
-    /**
-     * Remove import
-     *
-     * @param \AppBundle\Entity\DeclareImport $import
-     */
-    public function removeImport(\AppBundle\Entity\DeclareImport $import)
-    {
-        $this->imports->removeElement($import);
-    }
-
-    /**
-     * Get imports
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getImports()
-    {
-        return $this->imports;
-    }
-
-    /**
-     * Add departure
-     *
-     * @param \AppBundle\Entity\DeclareDepart $departure
-     *
-     * @return Ewe
-     */
-    public function addDeparture(\AppBundle\Entity\DeclareDepart $departure)
-    {
-        $this->departures[] = $departure;
-
-        return $this;
-    }
-
-    /**
+    /*
      * Remove departure
      *
      * @param \AppBundle\Entity\DeclareDepart $departure
@@ -517,4 +201,118 @@ class Ewe extends Animal
     {
         $this->departures->removeElement($departure);
     }
+
+    /**
+     * Add surrogateChild
+     *
+     * @param \AppBundle\Entity\Animal $surrogateChild
+     *
+     * @return Ewe
+     */
+    public function addSurrogateChild(\AppBundle\Entity\Animal $surrogateChild)
+    {
+        $this->surrogateChildren[] = $surrogateChild;
+
+        return $this;
+    }
+
+    /**
+     * Remove export
+     *
+     * @param \AppBundle\Entity\DeclareExport $export
+     */
+    public function removeExport(\AppBundle\Entity\DeclareExport $export)
+    {
+        $this->exports->removeElement($export);
+    }
+
+    /**
+     * Get exports
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getExports()
+    {
+        return $this->exports;
+    }
+
+    /*
+     * Remove surrogateChild
+     *
+     * @param \AppBundle\Entity\Animal $surrogateChild
+     */
+    public function removeSurrogateChild(\AppBundle\Entity\Animal $surrogateChild)
+    {
+        $this->surrogateChildren->removeElement($surrogateChild);
+    }
+
+    /**
+     * Get surrogateChildren
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getSurrogateChildren()
+    {
+        return $this->surrogateChildren;
+    }
+
+    /**
+     * Set surrogate
+     *
+     * @param \AppBundle\Entity\Ewe $surrogate
+     *
+     * @return Ewe
+     */
+    public function setSurrogate(\AppBundle\Entity\Ewe $surrogate = null)
+    {
+        $this->surrogate = $surrogate;
+
+        return $this;
+    }
+
+    /**
+     * Get surrogate
+     *
+     * @return \AppBundle\Entity\Ewe
+     */
+    public function getSurrogate()
+    {
+        return $this->surrogate;
+    }
+
+    /**
+     * Add flag
+     *
+     * @param \AppBundle\Entity\DeclareAnimalFlag $flag
+     *
+     * @return Ewe
+     */
+    public function addFlag(\AppBundle\Entity\DeclareAnimalFlag $flag)
+    {
+        $this->flags[] = $flag;
+
+        return $this;
+    }
+
+    /**
+     * Remove flag
+     *
+     * @param \AppBundle\Entity\DeclareAnimalFlag $flag
+     */
+    public function removeFlag(\AppBundle\Entity\DeclareAnimalFlag $flag)
+    {
+        $this->flags->removeElement($flag);
+    }
+
+    /**
+     * Get flags
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getFlags()
+    {
+        return $this->flags;
+    }
+
+
 }

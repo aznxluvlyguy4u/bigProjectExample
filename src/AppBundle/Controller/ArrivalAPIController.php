@@ -2,15 +2,22 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Client;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Output\DeclareArrivalOutput;
+use AppBundle\Entity\Location;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use JMS\Serializer\SerializationContext;
 
 /**
  * @Route("/api/v1/arrivals")
@@ -43,7 +50,11 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivalById(Request $request, $Id)
   {
-    $arrival = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findOneBy(array(Constant::REQUEST_ID_NAMESPACE=>$Id));
+    $client = $this->getAuthenticatedUser($request);
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
+
+    $arrival = $repository->getArrivalByRequestId($client, $Id);
+
     return new JsonResponse($arrival, 200);
   }
 
@@ -53,7 +64,9 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    *    OPEN,
    *    FINISHED,
    *    FAILED,
-   *    CANCELLED
+   *    CANCELLED,
+   *    REVOKING,
+   *    REVOKED
    * }
    *
    * @ApiDoc(
@@ -85,19 +98,37 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivals(Request $request)
   {
-    //No explicit filter given, thus find all
-    if(!$request->query->has(Constant::STATE_NAMESPACE)) {
-      $declareArrivals = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findAll();
+    $client = $this->getAuthenticatedUser($request);
+    $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
+
+    if(!$stateExists) {
+      $declareArrivals = $repository->getArrivals($client);
+
+    } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
+
+      $declareArrivals = new ArrayCollection();
+      foreach($repository->getArrivals($client, RequestStateType::OPEN) as $arrival) {
+        $declareArrivals->add($arrival);
+      }
+      foreach($repository->getArrivals($client, RequestStateType::REVOKING) as $arrival) {
+        $declareArrivals->add($arrival);
+      }
+      foreach($repository->getArrivals($client, RequestStateType::FINISHED) as $arrival) {
+        $declareArrivals->add($arrival);
+      }
+
     } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareArrivals = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->findBy(array(Constant::REQUEST_STATE_NAMESPACE => $state));
+      $declareArrivals = $repository->getArrivals($client, $state);
     }
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareArrivals), 200);
   }
 
+
   /**
-   * Create a new DeclareArrival request
+   * Create a new DeclareArrival or DeclareImport request
    *
    * @ApiDoc(
    *   requirements={
@@ -109,7 +140,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    *     }
    *   },
    *   resource = true,
-   *   description = "Post a DeclareArrival request",
+   *   description = "Post a DeclareArrival or DeclareImport request",
    *   input = "AppBundle\Entity\DeclareArrival",
    *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
    * )
@@ -120,24 +151,47 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function createArrival(Request $request)
   {
-    //Convert front-end message into an array
-    //Get content to array
     $content = $this->getContentAsArray($request);
 
-    //Convert the array into an object and add the mandatory values retrieved from the database
-    $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $this->getAuthenticatedUser($request));
+    //Only verify if pedigree exists in our database. Unknown ULNs are allowed
+    $verification = $this->verifyOnlyPedigreeCodeInAnimal($content->get(Constant::ANIMAL_NAMESPACE));
+    if(!$verification->get('isValid')){
+      return new JsonResponse(array('code'=>428,
+                               "pedigree" => $verification->get(Constant::PEDIGREE_NAMESPACE),
+                                "message" => "PEDIGREE VALUE IS NOT REGISTERED WITH NSFO"), 428);
+    }
 
-    //First Persist object to Database, before sending it to the queue
-    $this->persist($messageObject, RequestType::DECLARE_ARRIVAL_ENTITY);
+    $client = $this->getAuthenticatedUser($request);
+    $repository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+
+    $isImportAnimal = $content->get('is_import_animal');
+
+    //Convert the array into an object and add the mandatory values retrieved from the database
+    if($isImportAnimal) {
+      //TODO Phase 2: Filter between non-EU countries and EU countries. At the moment we only process sheep from EU countries
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client);
+
+    } else {
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client);
+    }
 
     //Send it to the queue and persist/update any changed state to the database
-    $this->sendMessageObjectToQueue($messageObject, RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_ARRIVAL);
+    $messageArray = $this->sendMessageObjectToQueue($messageObject);
+    $messageObject->setAnimal(null);
 
-    return new JsonResponse($messageObject, 200);
+    //Persist message without animal. That is done after a successful response
+    $this->persist($messageObject);
+
+    //Persist HealthStatus
+    $this->getDoctrine()->getManager()->persist($messageObject->getLocation()->getHealths()->last());
+    $this->getDoctrine()->getManager()->flush();
+
+//    return new JsonResponse(array("status"=>"sent"), 200);
+    return new JsonResponse($messageArray, 200);
   }
 
   /**
-   * Update existing DeclareArrival request
+   * Update existing DeclareArrival or DeclareImport request
    *
    * @ApiDoc(
    *   requirements={
@@ -149,7 +203,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    *     }
    *   },
    *   resource = true,
-   *   description = "Update a DeclareArrival request",
+   *   description = "Update a DeclareArrival or DeclareImport request",
    *   input = "AppBundle\Entity\DeclareArrival",
    *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
    * )
@@ -159,43 +213,126 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * @ParamConverter("Id", class="AppBundle\Entity\DeclareArrivalRepository")
    * @Method("PUT")
    */
-  public function editArrival(Request $request, $Id) {
-    //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareArrivalUpdate = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY,
-      $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+  public function updateArrival(Request $request, $Id) {
 
-    $entityManager = $this->getDoctrine()
-      ->getManager()
-      ->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
-    $declareArrival = $entityManager->findOneBy(array (Constant::REQUEST_ID_NAMESPACE => $Id));
+    $content = $this->getContentAsArray($request);
+    $requestId = $Id;
+    $content->set("request_id", $requestId);
 
-    if($declareArrival == null) {
-      return new JsonResponse(array("message"=>"No DeclareArrival found with request_id:" . $Id), 204);
+    $client = $this->getAuthenticatedUser($request);
+
+    //verify requestId for arrivals
+    $messageObject = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivalByRequestId($client, $requestId);
+
+    if($messageObject == null) { //verify requestId for imports
+      $messageObject = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->getImportByRequestId($client, $requestId);
     }
 
-
-    if ($declareArrivalUpdate->getAnimal() != null) {
-      $declareArrival->setAnimal($declareArrivalUpdate->getAnimal());
+    if($messageObject == null) {
+      $errorMessage = "No DeclareArrival or DeclareImport found with request_id: " . $requestId;
+      return new JsonResponse(array('code'=>428, "message" => $errorMessage), 428);
     }
 
-    if ($declareArrivalUpdate->getArrivalDate() != null) {
-      $declareArrival->setArrivalDate($declareArrivalUpdate->getArrivalDate());
+    $isImportAnimal = $messageObject->getIsImportAnimal();
+
+    if($isImportAnimal) {
+      //Convert the array into an object and add the mandatory values retrieved from the database
+      $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_IMPORT_ENTITY,
+          $content, $this->getAuthenticatedUser($request));
+
+    } else {
+      //Convert the array into an object and add the mandatory values retrieved from the database
+      $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY,
+          $content, $this->getAuthenticatedUser($request));
     }
 
-    if ($declareArrivalUpdate->getLocation() != null) {
-      $declareArrival->setLocation($declareArrivalUpdate->getLocation());
-    }
+    //Send it to the queue and persist/update any changed requestState to the database
+    $messageArray = $this->sendEditMessageObjectToQueue($messageObject);
 
-    if ($declareArrivalUpdate->getImportAnimal() != null) {
-      $declareArrival->setImportAnimal($declareArrivalUpdate->getImportAnimal());
-    }
+    //Persist the update
+    $this->persist($messageObject);
 
-    if($declareArrivalUpdate->getUbnPreviousOwner() != null) {
-      $declareArrival->setUbnPreviousOwner($declareArrivalUpdate->getUbnPreviousOwner());
-    }
+    //Persist HealthStatus
+    $this->getDoctrine()->getManager()->persist($messageObject->getLocation()->getHealths()->last());
+    $this->getDoctrine()->getManager()->flush();
 
-    $declareArrival = $entityManager->update($declareArrival);
-
-    return new JsonResponse($declareArrival, 200);
+    return new JsonResponse($messageArray, 200);
   }
+
+
+  /**
+   *
+   * Get DeclareArrivals & DeclareImports which have failed last responses.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Get DeclareArrivals & DeclareImports which have failed last responses",
+   *   input = "AppBundle\Entity\DeclareArrival",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-errors")
+   * @Method("GET")
+   */
+  public function getArrivalErrors(Request $request)
+  {
+    $client = $this->getAuthenticatedUser($request);
+
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
+    $declareArrivals = $repository->getArrivalsWithLastErrorResponses($client);
+
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_RESPONSE_REPOSITORY);
+    $declareImports = $repository->getImportsWithLastErrorResponses($client);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('arrivals' => $declareArrivals, 'imports' => $declareImports)), 200);
+  }
+
+
+  /**
+   *
+   * For the history view, get DeclareArrivals & DeclareImports which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Get DeclareArrivals & DeclareImports which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED",
+   *   input = "AppBundle\Entity\DeclareArrival",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-history")
+   * @Method("GET")
+   */
+  public function getArrivalHistory(Request $request)
+  {
+    $client = $this->getAuthenticatedUser($request);
+
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
+    $declareArrivals = $repository->getArrivalsWithLastHistoryResponses($client);
+
+    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_RESPONSE_REPOSITORY);
+    $declareImports = $repository->getImportsWithLastHistoryResponses($client);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('arrivals' => $declareArrivals, 'imports' => $declareImports)), 200);
+  }
+
 }

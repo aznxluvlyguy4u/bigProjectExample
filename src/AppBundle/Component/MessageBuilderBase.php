@@ -2,10 +2,28 @@
 
 namespace AppBundle\Component;
 
-use AppBundle\Controller\APIController;
+use AppBundle\Entity\DeclarationDetail;
+use AppBundle\Entity\DeclareAnimalFlag;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareBase;
+use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareExport;
+use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareLoss;
+use AppBundle\Entity\DeclareMate;
+use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\RetrieveAnimalDetails;
+use AppBundle\Entity\RetrieveAnimals;
+use AppBundle\Entity\RetrieveCountries;
+use AppBundle\Entity\RetrieveTags;
+use AppBundle\Entity\RetrieveUbnDetails;
+use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\Client as Client;
-use AppBundle\Entity\DeclareBase as DeclareBase;
+use AppBundle\Enumerator\RecoveryIndicatorType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\EntityGetter;
+use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -40,8 +58,8 @@ class MessageBuilderBase
      * be set in the constructor.
      *
      * @param object $messageObject the message received from the front-end as an entity from a class that is extended from DeclareBase.
-     * @param string $relationNumberKeeper
-     * @return ArrayCollection the base message
+     * @param Person $person
+     * @return DeclareBase|DeclareArrival|DeclareAnimalFlag|DeclareBirth|DeclareDepart|DeclareExport|DeclareImport|DeclareLoss|DeclareTagsTransfer|DeclareMate|DeclarationDetail|RevokeDeclaration the base message
      */
     protected function buildBaseMessageObject($messageObject, Person $person)
     {
@@ -51,19 +69,50 @@ class MessageBuilderBase
             $requestId = $this->getNewRequestId();
             //Add general data to content
             $messageObject->setRequestId($requestId);
-            $messageObject->setMessageId($requestId);;
         }
 
         if($messageObject->getAction() == null) {
-            $messageObject->setAction("C");
+            $messageObject->setAction(ActionFlagSetting::DEFAULT_ACTION);
         }
 
         $messageObject->setLogDate(new \DateTime());
-        $messageObject->setRequestState("open");
+        $messageObject->setRequestState(RequestStateType::OPEN);
 
         if($messageObject->getRecoveryIndicator() == null) {
-            $messageObject->setRecoveryIndicator("N");
+            $messageObject->setRecoveryIndicator(RecoveryIndicatorType::N);
         }
+
+        //Add relationNumberKeeper to content
+
+        if($person instanceof Client) {
+            $relationNumberKeeper = $person->getRelationNumberKeeper();
+        } else { //TODO what if an employee does a DA request?
+            $relationNumberKeeper = ""; // mandatory for I&R
+        }
+
+        $messageObject->setRelationNumberKeeper($relationNumberKeeper);
+
+        return $messageObject;
+    }
+
+    /**
+     *
+     * @param object $messageObject the message received
+     * @param Person $person
+     * @return RetrieveUbnDetails|RetrieveAnimals|RetrieveAnimalDetails|RetrieveTags|RetrieveCountries the retrieve message
+     */
+    protected function buildBaseRetrieveMessageObject($messageObject, $person)
+    {
+        //Generate new requestId
+
+        if($messageObject->getRequestId()== null) {
+            $requestId = $this->getNewRequestId();
+            //Add general data to content
+            $messageObject->setRequestId($requestId);
+        }
+
+        $messageObject->setLogDate(new \DateTime());
+        $messageObject->setRequestState(RequestStateType::OPEN);
 
         //Add relationNumberKeeper to content
 
@@ -83,10 +132,13 @@ class MessageBuilderBase
      *
      * @return string
      */
-    private function getNewRequestId()
+    public static function getNewRequestId()
     {
-        $maxLengthRequestId = 20;
-        return join('', array_map(function($value) { return $value == 1 ? mt_rand(1, 9) :
-            mt_rand(0, 9); }, range(1, $maxLengthRequestId)));
+        return uniqid(mt_rand(0,9999999));
+    }
+
+    protected function updateLocationHealthStatus()
+    {
+
     }
 }

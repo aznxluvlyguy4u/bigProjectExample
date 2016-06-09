@@ -8,5 +8,7 @@ interface DepartAPIControllerInterface {
   public function getDepartById(Request $request, $Id);
   public function getDepartures(Request $request);
   public function createDepart(Request $request);
-  public function editDepart(Request $request, $Id);
+  public function updateDepart(Request $request, $Id);
+  public function getDepartErrors(Request $request);
+  public function getDepartHistory(Request $request);
 }

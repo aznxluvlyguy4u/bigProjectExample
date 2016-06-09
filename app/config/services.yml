@@ -14,13 +14,20 @@ services:
           credentials: ['%aws_access_key_id%', '%aws_secret_key%']
           region: %aws_sqs_region%
           version: %aws_sqs_version%
-          queueIds: ['%aws_sqs_queue_prod%', '%aws_sqs_queue_dev%', '%aws_sqs_queue_test%']
+          queueIds: ['%aws_sqs_queue_prod%', '%aws_sqs_queue_dev%', '%aws_sqs_queue_test%', '%aws_sqs_queue_local%']
           currentEnv: %kernel.environment%
 
     app.doctrine.entitygetter:
         class: AppBundle\Service\EntityGetter
         arguments: ['@doctrine.orm.entity_manager']
 
+    app.modifier.message:
+        class: AppBundle\Component\Modifier\MessageModifier
+        arguments: ['@doctrine.orm.entity_manager']
+
+    app.modifier.animalremover:
+        class: AppBundle\Component\Modifier\AnimalRemover
+        arguments: ['@doctrine.orm.entity_manager']
 
     app.messagebuilder.base:
         class: AppBundle\Component\MessageBuilderBase

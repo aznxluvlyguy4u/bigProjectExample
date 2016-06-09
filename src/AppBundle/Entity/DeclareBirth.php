@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\RequestStateType;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -20,12 +21,82 @@ use JMS\Serializer\Annotation\Expose;
 class DeclareBirth extends DeclareBase
 {
     /**
-     * @Assert\NotBlank
-     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="births", cascade={"persist"})
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="births")
      * @JMS\Type("AppBundle\Entity\Animal")
      * @Expose
      */
     private $animal;
+
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ulnNumber;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ulnCountryCode;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $gender;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ulnFather;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ulnCountryCodeFather;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ulnMother;
+
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ulnCountryCodeMother;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ulnSurrogate;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ulnCountryCodeSurrogate;
 
     /**
      * @Assert\NotBlank
@@ -35,36 +106,41 @@ class DeclareBirth extends DeclareBase
     private $location;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
-     * @Assert\Length(max = 10)
-     * @JMS\Type("string")
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
      * @Expose
      */
-    private $ubnPreviousOwner;
+    private $isAborted;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
-     * @Assert\Length(max = 1)
-     * @JMS\Type("string")
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
      * @Expose
      */
-    private $aborted;
+    private $isPseudoPregnancy;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
-     * @Assert\Length(max = 1)
-     * @JMS\Type("string")
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
      * @Expose
      */
-    private $pseudoPregnancy;
+    private $hasLambar;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
-     * @Assert\Length(max = 1)
-     * @JMS\Type("string")
+     * 2016-04-01T22:00:48.131Z
+     *
+     * @var DateTime
+     *
+     * @ORM\Column(type="datetime")
+     * @Assert\Date
+     * @Assert\NotBlank
+     * @JMS\Type("DateTime")
      * @Expose
      */
-    private $lambar;
+    private $dateOfBirth;
 
     /**
      * @ORM\Column(type="string")
@@ -76,37 +152,31 @@ class DeclareBirth extends DeclareBase
     private $birthType;
 
     /**
+     * @var integer
+     *
      * @ORM\Column(type="integer", nullable=true)
-     * @Assert\Length(max = 2)
      * @JMS\Type("integer")
      * @Expose
      */
     private $litterSize;
 
     /**
-     * @ORM\Column(type="integer", nullable=true)
-     * @Assert\Length(max = 3)
-     * @JMS\Type("integer")
+     * @var float
+     *
+     * @ORM\Column(type="float", nullable=true)
+     * @JMS\Type("float")
      * @Expose
      */
-    private $animalWeight;
+    private $birthWeight;
 
     /**
-     * @ORM\Column(type="integer", nullable=true)
-     * @Assert\Length(max = 4)
-     * @JMS\Type("integer")
+     * @var float
+     *
+     * @ORM\Column(type="float", nullable=true)
+     * @JMS\Type("float")
      * @Expose
      */
-    private $tailLength;
-
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     * @Assert\Length(max = 50)
-     * @JMS\Type("string")
-     * @Expose
-     */
-    private $transportationCode;
-
+    private $birthTailLength;
 
     /**
      * @ORM\OneToMany(targetEntity="DeclareBirthResponse", mappedBy="declareBirthRequestMessage", cascade={"persist"})
@@ -117,10 +187,22 @@ class DeclareBirth extends DeclareBase
     private $responses;
 
     /**
+     * @ORM\OneToOne(targetEntity="RevokeDeclaration", inversedBy="birth", cascade={"persist"})
+     * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id", nullable=true)
+     * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
+     * @Expose
+     */
+    private $revoke;
+
+    /**
      * Constructor.
      */
     public function __construct() {
         parent::__construct();
+        $this->setRequestState(RequestStateType::OPEN);
+        $this->setIsPseudoPregnancy(false);
+        $this->setIsAborted(false);
+        $this->setHasLambar(false);
 
         //Create responses array
         $this->responses = new ArrayCollection();
@@ -195,6 +277,26 @@ class DeclareBirth extends DeclareBase
     {
         $this->animal = $animal;
 
+        if($animal != null) {
+            $this->setUlnCountryCode($animal->getUlnCountryCode());
+            $this->setUlnNumber($animal->getUlnNumber());
+
+            if($animal->getParentFather() != null) {
+                $this->setUlnCountryCodeFather($animal->getParentFather()->getUlnCountryCode());
+                $this->setUlnFather($animal->getParentFather()->getUlnNumber());
+            }
+
+            if($animal->getParentMother() != null) {
+                $this->setUlnCountryCodeMother($animal->getParentMother()->getUlnCountryCode());
+                $this->setUlnMother($animal->getParentMother()->getUlnNumber());
+            }
+
+            if($animal->getSurrogate() != null) {
+                $this->setUlnCountryCodeSurrogate($animal->getSurrogate()->getUlnCountryCode());
+                $this->setUlnSurrogate($animal->getSurrogate()->getUlnNumber());
+            }
+        }
+
         return $this;
     }
 
@@ -206,6 +308,30 @@ class DeclareBirth extends DeclareBase
     public function getAnimal()
     {
         return $this->animal;
+    }
+
+    /**
+     * Set dateOfBirth
+     *
+     * @param \DateTime $dateOfBirth
+     *
+     * @return DeclareBirth
+     */
+    public function setDateOfBirth($dateOfBirth)
+    {
+        $this->dateOfBirth = $dateOfBirth;
+
+        return $this;
+    }
+
+    /**
+     * Get dateOfBirth
+     *
+     * @return \DateTime
+     */
+    public function getDateOfBirth()
+    {
+        return $this->dateOfBirth;
     }
 
     /**
@@ -231,78 +357,6 @@ class DeclareBirth extends DeclareBase
     public function getLocation()
     {
         return $this->location;
-    }
-
-    /**
-     * Set ubnPreviousOwner
-     *
-     * @param string $ubnPreviousOwner
-     *
-     * @return DeclareBirth
-     */
-    public function setUbnPreviousOwner($ubnPreviousOwner)
-    {
-        $this->ubnPreviousOwner = $ubnPreviousOwner;
-
-        return $this;
-    }
-
-    /**
-     * Get ubnPreviousOwner
-     *
-     * @return string
-     */
-    public function getUbnPreviousOwner()
-    {
-        return $this->ubnPreviousOwner;
-    }
-
-    /**
-     * @return string
-     */
-    public function getAborted()
-    {
-        return $this->aborted;
-    }
-
-    /**
-     * @param string $aborted
-     */
-    public function setAborted($aborted)
-    {
-        $this->aborted = $aborted;
-    }
-
-    /**
-     * @return string
-     */
-    public function getPseudoPregnancy()
-    {
-        return $this->pseudoPregnancy;
-    }
-
-    /**
-     * @param string $pseudoPregnancy
-     */
-    public function setPseudoPregnancy($pseudoPregnancy)
-    {
-        $this->pseudoPregnancy = $pseudoPregnancy;
-    }
-
-    /**
-     * @return string
-     */
-    public function getLambar()
-    {
-        return $this->lambar;
-    }
-
-    /**
-     * @param string $lambar
-     */
-    public function setLambar($lambar)
-    {
-        $this->lambar = $lambar;
     }
 
     /**
@@ -340,48 +394,331 @@ class DeclareBirth extends DeclareBase
     /**
      * @return integer
      */
-    public function getAnimalWeight()
+    public function getBirthWeight()
     {
-        return $this->animalWeight;
+        return $this->birthWeight;
     }
 
     /**
-     * @param integer $animalWeight
+     * @param integer $birthWeight
      */
-    public function setAnimalWeight($animalWeight)
+    public function setBirthWeight($birthWeight)
     {
-        $this->animalWeight = $animalWeight;
+        $this->birthWeight = $birthWeight;
     }
 
     /**
      * @return integer
      */
-    public function getTailLength()
+    public function getBirthTailLength()
     {
-        return $this->tailLength;
+        return $this->birthTailLength;
     }
 
     /**
-     * @param integer $tailLength
+     * @param integer $birthTailLength
      */
-    public function setTailLength($tailLength)
+    public function setBirthTailLength($birthTailLength)
     {
-        $this->tailLength = $tailLength;
+        $this->birthTailLength = $birthTailLength;
     }
 
     /**
+     * Set isAborted
+     *
+     * @param boolean $isAborted
+     *
+     * @return DeclareBirth
+     */
+    public function setIsAborted($isAborted)
+    {
+        $this->isAborted = $isAborted;
+
+        return $this;
+    }
+
+    /**
+     * Get isAborted
+     *
+     * @return boolean
+     */
+    public function getIsAborted()
+    {
+        return $this->isAborted;
+    }
+
+    /**
+     * Set isPseudoPregnancy
+     *
+     * @param boolean $isPseudoPregnancy
+     *
+     * @return DeclareBirth
+     */
+    public function setIsPseudoPregnancy($isPseudoPregnancy)
+    {
+        $this->isPseudoPregnancy = $isPseudoPregnancy;
+
+        return $this;
+    }
+
+    /**
+     * Get isPseudoPregnancy
+     *
+     * @return boolean
+     */
+    public function getIsPseudoPregnancy()
+    {
+        return $this->isPseudoPregnancy;
+    }
+
+    /**
+     * Set hasLambar
+     *
+     * @param boolean $hasLambar
+     *
+     * @return DeclareBirth
+     */
+    public function setHasLambar($hasLambar)
+    {
+        $this->hasLambar = $hasLambar;
+
+        return $this;
+    }
+
+    /**
+     * Get hasLambar
+     *
+     * @return boolean
+     */
+    public function getHasLambar()
+    {
+        return $this->hasLambar;
+    }
+
+    /**
+     * @return RevokeDeclaration
+     */
+    public function getRevoke()
+    {
+        return $this->revoke;
+    }
+
+    /**
+     * @param RevokeDeclaration $revoke
+     */
+    public function setRevoke($revoke = null)
+    {
+        $this->revoke = $revoke;
+    }
+
+    /**
+     * Get ulnNumber
+     *
      * @return string
      */
-    public function getTransportationCode()
+    public function getUlnNumber()
     {
-        return $this->transportationCode;
+        return $this->ulnNumber;
     }
 
     /**
-     * @param string $transportationCode
+     * @param string $ulnNumber
      */
-    public function setTransportationCode($transportationCode)
+    public function setUlnNumber($ulnNumber)
     {
-        $this->transportationCode = $transportationCode;
+        $this->ulnNumber = $ulnNumber;
     }
+
+    /**
+     * Set ulnCountryCode
+     *
+     * @param string $ulnCountryCode
+     *
+     * @return DeclareBirth
+     */
+    public function setUlnCountryCode($ulnCountryCode)
+    {
+        $this->ulnCountryCode = $ulnCountryCode;
+
+        return $this;
+    }
+
+    /**
+     * Get ulnCountryCode
+     *
+     * @return string
+     */
+    public function getUlnCountryCode()
+    {
+        return $this->ulnCountryCode;
+    }
+
+    /**
+     * Set ulnFather
+     *
+     * @param string $ulnFather
+     *
+     * @return DeclareBirth
+     */
+    public function setUlnFather($ulnFather)
+    {
+        $this->ulnFather = $ulnFather;
+
+        return $this;
+    }
+
+    /**
+     * Get ulnFather
+     *
+     * @return string
+     */
+    public function getUlnFather()
+    {
+        return $this->ulnFather;
+    }
+
+    /**
+     * Set ulnCountryCodeFather
+     *
+     * @param string $ulnCountryCodeFather
+     *
+     * @return DeclareBirth
+     */
+    public function setUlnCountryCodeFather($ulnCountryCodeFather)
+    {
+        $this->ulnCountryCodeFather = $ulnCountryCodeFather;
+
+        return $this;
+    }
+
+    /**
+     * Get ulnCountryCodeFather
+     *
+     * @return string
+     */
+    public function getUlnCountryCodeFather()
+    {
+        return $this->ulnCountryCodeFather;
+    }
+
+    /**
+     * Set ulnMother
+     *
+     * @param string $ulnMother
+     *
+     * @return DeclareBirth
+     */
+    public function setUlnMother($ulnMother)
+    {
+        $this->ulnMother = $ulnMother;
+
+        return $this;
+    }
+
+    /**
+     * Get ulnMother
+     *
+     * @return string
+     */
+    public function getUlnMother()
+    {
+        return $this->ulnMother;
+    }
+
+    /**
+     * Set ulnCountryCodeMother
+     *
+     * @param string $ulnCountryCodeMother
+     *
+     * @return DeclareBirth
+     */
+    public function setUlnCountryCodeMother($ulnCountryCodeMother)
+    {
+        $this->ulnCountryCodeMother = $ulnCountryCodeMother;
+
+        return $this;
+    }
+
+    /**
+     * Get ulnCountryCodeMother
+     *
+     * @return string
+     */
+    public function getUlnCountryCodeMother()
+    {
+        return $this->ulnCountryCodeMother;
+    }
+
+    /**
+     * Set ulnSurrogate
+     *
+     * @param string $ulnSurrogate
+     *
+     * @return DeclareBirth
+     */
+    public function setUlnSurrogate($ulnSurrogate)
+    {
+        $this->ulnSurrogate = $ulnSurrogate;
+
+        return $this;
+    }
+
+    /**
+     * Get ulnSurrogate
+     *
+     * @return string
+     */
+    public function getUlnSurrogate()
+    {
+        return $this->ulnSurrogate;
+    }
+
+    /**
+     * Set ulnCountryCodeSurrogate
+     *
+     * @param string $ulnCountryCodeSurrogate
+     *
+     * @return DeclareBirth
+     */
+    public function setUlnCountryCodeSurrogate($ulnCountryCodeSurrogate)
+    {
+        $this->ulnCountryCodeSurrogate = $ulnCountryCodeSurrogate;
+
+        return $this;
+    }
+
+    /**
+     * Get ulnCountryCodeSurrogate
+     *
+     * @return string
+     */
+    public function getUlnCountryCodeSurrogate()
+    {
+        return $this->ulnCountryCodeSurrogate;
+    }
+
+    /**
+     * Set gender
+     *
+     * @param string $gender
+     *
+     * @return DeclareBirth
+     */
+    public function setGender($gender)
+    {
+        $this->gender = $gender;
+
+        return $this;
+    }
+
+    /**
+     * Get gender
+     *
+     * @return string
+     */
+    public function getGender()
+    {
+        return $this->gender;
+    }
+
 }

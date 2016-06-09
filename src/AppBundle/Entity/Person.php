@@ -67,7 +67,8 @@ abstract class Person implements UserInterface
   private $isActive;
 
   /**
-   * @ORM\Column(type="string", length=64)
+   * @ORM\Column(type="string", length=64, nullable=false)
+   *
    */
   protected $password;
 
@@ -78,6 +79,14 @@ abstract class Person implements UserInterface
    * @JMS\Type("string")
    */
   protected $username;
+
+  /**
+   * @var string
+   *
+   * @ORM\Column(type="string", nullable=true)
+   * @JMS\Type("string")
+   */
+  private $cellphoneNumber;
 
   public function __construct()
   {
@@ -231,6 +240,16 @@ abstract class Person implements UserInterface
    */
   public function getUsername()
   {
+    return $this->username;
+  }
+
+  /**
+   * Returns the full name of the user.
+   *
+   * @return string The username
+   */
+  public function getFullName()
+  {
     return $this->firstName . ' ' . $this->lastName;
   }
 
@@ -310,4 +329,22 @@ abstract class Person implements UserInterface
 
         return $this;
     }
+
+  /**
+   * @return string
+   */
+  public function getCellphoneNumber()
+  {
+    return $this->cellphoneNumber;
+  }
+
+  /**
+   * @param string $cellphoneNumber
+   */
+  public function setCellphoneNumber($cellphoneNumber)
+  {
+    $this->cellphoneNumber = $cellphoneNumber;
+  }
+
+
 }

@@ -2,10 +2,14 @@
 
 namespace AppBundle\Tests\Controller;
 
+use AppBundle\DataFixtures\ORM\MockedTags;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Enumerator\RequestStateType;
+use AppBundle\JsonFormat\DeclareArrivalJsonFormat;
 use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedAnimal;
 use AppBundle\DataFixtures\ORM\MockedClient;
+use AppBundle\Tests\TestSettings;
 use Doctrine\ORM\EntityManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
@@ -14,6 +18,11 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use Doctrine\Common\Collections\ArrayCollection;
 
+/**
+ * Class ArrivalAPIControllerTest
+ * @package AppBundle\Tests\Controller
+ * @group arrival
+ */
 class ArrivalAPIControllerTest extends WebTestCase {
 
   const DECLARE_ARRIVAL_ENDPOINT = "/api/v1/arrivals";
@@ -32,6 +41,11 @@ class ArrivalAPIControllerTest extends WebTestCase {
    * @var EntityManager
    */
   static private $entityManager;
+
+  /**
+   * @var ArrayCollection
+   */
+  static private $mockedTagsList;
 
   /**
    * @var Client
@@ -66,8 +80,10 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $this->client = parent::createClient();
 
     //Load fixture class
-    $fixtures = array('AppBundle\DataFixtures\ORM\MockedClient',
-      'AppBundle\DataFixtures\ORM\MockedAnimal');
+    $fixtures = array(
+      'AppBundle\DataFixtures\ORM\MockedClient',
+      'AppBundle\DataFixtures\ORM\MockedAnimal',
+      'AppBundle\DataFixtures\ORM\MockedTags');
     $this->loadFixtures($fixtures);
 
     //Get mocked Client
@@ -78,6 +94,9 @@ class ArrivalAPIControllerTest extends WebTestCase {
     self::$mockedChild  = MockedAnimal::getMockedRamWithParents();
     self::$mockedFather = MockedAnimal::getMockedParentRam();
     self::$mockedMother = MockedAnimal::getMockedParentEwe();
+
+    ///Get mocked tags
+    self::$mockedTagsList = MockedTags::getMockedTags();
 
     $this->defaultHeaders = array(
       'CONTENT_TYPE' => 'application/json',
@@ -106,6 +125,8 @@ class ArrivalAPIControllerTest extends WebTestCase {
   }
 
   /**
+   * @group get
+   * @group arrival-get
    * Test retrieving Declare arrivals list
    */
   public function testGetArrivals()
@@ -124,6 +145,8 @@ class ArrivalAPIControllerTest extends WebTestCase {
   }
 
   /**
+   * @group get
+   * @group arrival-get
    * Test retrieving Declare arrival by id
    */
   public function testGetArrivalById()
@@ -142,16 +165,17 @@ class ArrivalAPIControllerTest extends WebTestCase {
   }
 
   /**
-   *
+   * @group create
+   * @group arrival-create
    * Test create new Declare arrival
    */
   public function testCreateArrival()
   {
     //Create declare arrival
-    $declareArrival = new DeclareArrival();
+    $declareArrival = new DeclareArrivalJsonFormat();
     $declareArrival->setArrivalDate(new \DateTime());
     $declareArrival->setUbnPreviousOwner("123456");
-    $declareArrival->setImportAnimal(true);
+    $declareArrival->setIsImportAnimal(false);
     $declareArrival->setAnimal(self::$mockedChild);
 
     //Create json to be posted
@@ -166,23 +190,33 @@ class ArrivalAPIControllerTest extends WebTestCase {
     );
 
     $response = $this->client->getResponse();
+
     $data = json_decode($response->getContent(), true);
 
-    $this->assertEquals('open', $data['request_state']);
+    $this->assertEquals(RequestStateType::OPEN, $data['request_state']);
+
+    if(TestSettings::TestEntitiesAreIdentical) {
+      //make sure the animal is updated instead of created as a new animal
+      $animalIdBeforeUpdate = $declareArrival->getAnimal()->getId();
+      $animalIdAfterUpdate = $data['request_state']['animal']['id'];
+      $this->assertEquals($animalIdBeforeUpdate, $animalIdAfterUpdate);
+    }
   }
 
   /**
-   *
+   * @group update
+   * @group arrival-update
    * Test create new Declare arrival
    */
   public function testUpdateArrival()
   {
     //Create declare arrival
-    $declareArrival = new DeclareArrival();
+    $animal = self::$mockedChild;
+    $declareArrival = new DeclareArrivalJsonFormat();
     $declareArrival->setArrivalDate(new \DateTime());
     $declareArrival->setUbnPreviousOwner("123456");
-    $declareArrival->setImportAnimal(true);
-    $declareArrival->setAnimal(self::$mockedChild);
+    $declareArrival->setIsImportAnimal(false);
+    $declareArrival->setAnimal($animal);
 
     //Create json to be posted
     $declareArrivalJson = self::$serializer->serializeToJSON($declareArrival);
@@ -198,15 +232,18 @@ class ArrivalAPIControllerTest extends WebTestCase {
 
     //Get response
     $response = $this->client->getResponse()->getContent();
-    $declareArrivalResponse = new ArrayCollection(json_decode($response, true));
+    $declareArrivalResponse = json_decode($response, true); //TODO fix in other tests
 
     //Get requestId so we can do an update with PUT
     $requestId = $declareArrivalResponse['request_id'];
 
+    //Get tag
+    $tag = self::$mockedTagsList->get(rand(1,sizeof(self::$mockedTagsList)-1));
+
     //Update value
     $declareArrivalUpdated = $declareArrival;
     $declareArrivalUpdated->setUbnPreviousOwner("999991");
-    $declareArrivalUpdated->getAnimal()->setUlnNumber('123131');
+    $declareArrivalUpdated->getAnimalJsonFormat()->setAssignedTag($tag);
 
     //Create json to be putted
     $declareArrivalUpdatedJson = self::$serializer->serializeToJSON($declareArrivalUpdated);
@@ -224,9 +261,17 @@ class ArrivalAPIControllerTest extends WebTestCase {
     $updatedData = json_decode($updatedResponse, true);
 
     $this->assertEquals($declareArrivalUpdated->getUbnPreviousOwner(), $updatedData['ubn_previous_owner']);
-    $this->assertEquals($declareArrival->getImportAnimal(), $updatedData['import_animal']);
+    $this->assertEquals($declareArrival->getIsImportAnimal(), $updatedData['is_import_animal']);
+    $this->assertEquals($declareArrival->getAnimalJsonFormat()->getUlnCountryCode(), $updatedData['animal']['uln_country_code']);
+
+    if(TestSettings::TestEntitiesAreIdentical) {
+      //make sure the animal is updated instead of created as a new animal
+      $animalIdBeforeUpdate = $animal->getId();
+      $animalIdAfterUpdate = $updatedData['request_state']['animal']['id'];
+      $this->assertEquals($animalIdBeforeUpdate, $animalIdAfterUpdate);
+    }
   }
-  
+
   public function tearDown() {
     parent::tearDown();
   }

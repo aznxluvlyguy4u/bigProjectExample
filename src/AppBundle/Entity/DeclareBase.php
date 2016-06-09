@@ -16,18 +16,21 @@ use Doctrine\Common\Collections\ArrayCollection;
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * //TODO add new child classes to the DiscriminatorMap
- * @ORM\DiscriminatorMap({  "DeclarationDetail" = "DeclarationDetail",
- *                          "DeclareAnimalFlag" = "DeclareAnimalFlag",
- *                          "DeclareArrival" = "DeclareArrival",
- *                          "DeclareBirth" = "DeclareBirth",
- *                          "DeclareDepart" = "DeclareDepart",
- *                          "DeclareEartagsTransfer" = "DeclareEartagsTransfer",
- *                          "DeclareExport" = "DeclareExport",
- *                          "DeclareImport" = "DeclareImport",
- *                          "DeclareLoss" = "DeclareLoss",
- *                          "DeclareMate" = "DeclareMate",
- *                          "RetrieveEartags" = "RetrieveEartags",
- *                          "RevokeDeclaration" = "RevokeDeclaration"})
+ * @ORM\DiscriminatorMap(
+ *   {
+ *      "DeclarationDetail" = "DeclarationDetail",
+ *      "DeclareAnimalFlag" = "DeclareAnimalFlag",
+ *      "DeclareArrival" = "DeclareArrival",
+ *      "DeclareBirth" = "DeclareBirth",
+ *      "DeclareDepart" = "DeclareDepart",
+ *      "DeclareExport" = "DeclareExport",
+ *      "DeclareImport" = "DeclareImport",
+ *      "DeclareLoss" = "DeclareLoss",
+ *      "DeclareMate" = "DeclareMate",
+ *      "DeclareTagsTransfer" = "DeclareTagsTransfer",
+ *      "RevokeDeclaration" = "RevokeDeclaration"
+ *   }
+ * )
  * @package AppBundle\Entity\DeclareBase
  */
 abstract class DeclareBase
@@ -108,6 +111,13 @@ abstract class DeclareBase
     protected $ubn;
 
     /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 15)
+     * @JMS\Type("string")
+     */
+    protected $messageNumberToRecover;
+
+    /**
      * DeclareBase constructor.
      */
     public function __construct() {
@@ -158,6 +168,7 @@ abstract class DeclareBase
     public function setRequestId($requestId)
     {
         $this->requestId = $requestId;
+        $this->messageId = $requestId;
 
         return $this;
     }
@@ -315,4 +326,22 @@ abstract class DeclareBase
     {
         return $this->ubn;
     }
+
+    /**
+     * @return string
+     */
+    public function getMessageNumberToRecover()
+    {
+        return $this->messageNumberToRecover;
+    }
+
+    /**
+     * @param string $messageNumberToRecover
+     */
+    public function setMessageNumberToRecover($messageNumberToRecover)
+    {
+        $this->messageNumberToRecover = $messageNumberToRecover;
+    }
+
+
 }

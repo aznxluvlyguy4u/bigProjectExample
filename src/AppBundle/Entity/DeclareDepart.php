@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\RequestStateType;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -23,9 +24,76 @@ class DeclareDepart extends DeclareBase
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="departures", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Animal")
-     * @Expose
      */
     private $animal;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=false)
+     * @Expose
+     */
+    private $ulnCountryCode;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=false)
+     * @Expose
+     */
+    private $ulnNumber;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
+    private $pedigreeCountryCode;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
+    private $pedigreeNumber;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     * @Expose
+     */
+    private $isExportAnimal;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     * @Expose
+     */
+    private $isDepartedAnimal;
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer")
+     * @Assert\NotBlank
+     * @JMS\Type("integer")
+     * @Expose
+     */
+    private $animalType;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $animalObjectType;
 
     /**
      * 2016-04-01T22:00:48.131Z
@@ -37,6 +105,15 @@ class DeclareDepart extends DeclareBase
      * @Expose
      */
     private $departDate;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 20)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $reasonOfDepart;
+
 
     /**
      * @ORM\Column(type="string")
@@ -55,13 +132,6 @@ class DeclareDepart extends DeclareBase
     private $location;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
-     * @Expose
-     */
-    private $transportationCode;
-
-    /**
      * @ORM\OneToMany(targetEntity="DeclareDepartResponse", mappedBy="declareDepartRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_depart_request_message_id", referencedColumnName="id")
      * @JMS\Type("array")
@@ -69,10 +139,19 @@ class DeclareDepart extends DeclareBase
     private $responses;
 
     /**
+     * @ORM\OneToOne(targetEntity="RevokeDeclaration", inversedBy="depart", cascade={"persist"})
+     * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id", nullable=true)
+     * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
+     * @Expose
+     */
+    private $revoke;
+
+    /**
      * DeclareDepart constructor.
      */
     public function __construct() {
         parent::__construct();
+        $this->setRequestState(RequestStateType::OPEN);
 
         //Create responses array
         $this->responses = new ArrayCollection();
@@ -149,9 +228,22 @@ class DeclareDepart extends DeclareBase
      *
      * @return DeclareDepart
      */
-    public function setAnimal(\AppBundle\Entity\Animal $animal)
+    public function setAnimal(\AppBundle\Entity\Animal $animal = null)
     {
         $this->animal = $animal;
+
+        if($animal != null) {
+
+            if($animal->getUlnCountryCode()!=null && $animal->getUlnNumber()!=null) {
+                $this->ulnCountryCode = $animal->getUlnCountryCode();
+                $this->ulnNumber = $animal->getUlnNumber();
+            }
+
+            if ($animal->getPedigreeCountryCode()!=null && $animal->getPedigreeNumber()!=null){
+                $this->pedigreeCountryCode = $animal->getPedigreeCountryCode();
+                $this->pedigreeNumber = $animal->getPedigreeNumber();
+            }
+        }
 
         return $this;
     }
@@ -212,28 +304,171 @@ class DeclareDepart extends DeclareBase
     public function setLocation($location)
     {
         $this->location = $location;
+        $this->setUbn($this->location->getUbn());
 
         return $this;
+    }
+
+    /**
+     * @return RevokeDeclaration
+     */
+    public function getRevoke()
+    {
+        return $this->revoke;
+    }
+
+    /**
+     * @param RevokeDeclaration $revoke
+     */
+    public function setRevoke($revoke = null)
+    {
+        $this->revoke = $revoke;
     }
 
     /**
      * @return string
      */
-    public function getTransportationCode()
+    public function getUlnCountryCode()
     {
-        return $this->transportationCode;
+        return $this->ulnCountryCode;
     }
 
     /**
-     * @param string $transportationCode
-     *
-     * @return \AppBundle\Entity\DeclareDepart
+     * @param string $ulnCountryCode
      */
-    public function setTransportationCode($transportationCode)
+    public function setUlnCountryCode($ulnCountryCode)
     {
-        $this->transportationCode = $transportationCode;
-
-        return $this;
+        $this->ulnCountryCode = $ulnCountryCode;
     }
+
+    /**
+     * @return string
+     */
+    public function getUlnNumber()
+    {
+        return $this->ulnNumber;
+    }
+
+    /**
+     * @param string $ulnNumber
+     */
+    public function setUlnNumber($ulnNumber)
+    {
+        $this->ulnNumber = $ulnNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPedigreeCountryCode()
+    {
+        return $this->pedigreeCountryCode;
+    }
+
+    /**
+     * @param string $pedigreeCountryCode
+     */
+    public function setPedigreeCountryCode($pedigreeCountryCode)
+    {
+        $this->pedigreeCountryCode = $pedigreeCountryCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPedigreeNumber()
+    {
+        return $this->pedigreeNumber;
+    }
+
+    /**
+     * @param string $pedigreeNumber
+     */
+    public function setPedigreeNumber($pedigreeNumber)
+    {
+        $this->pedigreeNumber = $pedigreeNumber;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getIsExportAnimal()
+    {
+        return $this->isExportAnimal;
+    }
+
+    /**
+     * @param boolean $isExportAnimal
+     */
+    public function setIsExportAnimal($isExportAnimal)
+    {
+        $this->isExportAnimal = $isExportAnimal;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getIsDepartedAnimal()
+    {
+        return $this->isDepartedAnimal;
+    }
+
+    /**
+     * @param boolean $isDepartedAnimal
+     */
+    public function setIsDepartedAnimal($isDepartedAnimal)
+    {
+        $this->isDepartedAnimal = $isDepartedAnimal;
+    }
+
+    /**
+     * @return int
+     */
+    public function getAnimalType()
+    {
+        return $this->animalType;
+    }
+
+    /**
+     * @param int $animalType
+     */
+    public function setAnimalType($animalType)
+    {
+        $this->animalType = $animalType;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAnimalObjectType()
+    {
+        return $this->animalObjectType;
+    }
+
+    /**
+     * @param string $animalObjectType
+     */
+    public function setAnimalObjectType($animalObjectType)
+    {
+        $this->animalObjectType = $animalObjectType;
+    }
+
+    /**
+     * @return string
+     */
+    public function getReasonOfDepart()
+    {
+        return $this->reasonOfDepart;
+    }
+
+    /**
+     * @param string $reasonOfDepart
+     */
+    public function setReasonOfDepart($reasonOfDepart)
+    {
+        $this->reasonOfDepart = $reasonOfDepart;
+    }
+
+
 
 }

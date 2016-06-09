@@ -17,7 +17,7 @@ security:
     firewalls:
         # To disable authentication on dev mode, comment out below DEV section
         dev:
-            pattern: ^(?:(?!doc|register|authorize|validate-token).)*$
+            pattern: ^(?:(?!doc|register|authorize|validate-token|password-reset).)*$
             security: true
             stateless: true
             guard:
@@ -25,7 +25,7 @@ security:
                     - app.authenticator.token
 
         secured_area:
-            pattern: ^(?:(?!doc|register|authorize|validate-token).)*$
+            pattern: ^(?:(?!doc|register|authorize|validate-token|password-reset).)*$
             security: true
             stateless: true
             guard:

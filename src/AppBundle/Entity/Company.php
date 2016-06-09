@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Entity\ContactData;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -29,6 +30,30 @@ class Company
    * @JMS\Type("string")
    */
   private $companyName;
+
+  /**
+   * @var string
+   *
+   * @ORM\Column(type="string", nullable=true)
+   * @JMS\Type("string")
+   */
+  private $vatNumber;
+
+  /**
+   * @var string
+   *
+   * @ORM\Column(type="string", nullable=true)
+   * @JMS\Type("string")
+   */
+  private $chamberOfCommerceNumber;
+
+  /**
+   * @var string
+   *
+   * @ORM\Column(type="string", nullable=true)
+   * @JMS\Type("string")
+   */
+  private $companyRelationNumber;
 
   /**
    * @var ArrayCollection
@@ -62,6 +87,46 @@ class Company
    * @JMS\Type("AppBundle\Entity\BillingAddress")
    */
   private $billingAddress;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $telephoneNumber;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $veterinarianDapNumber;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $veterinarianCompanyName;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $veterinarianTelephoneNumber;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $veterinarianEmailAddress;
 
   /**
    * Company constructor.
@@ -150,6 +215,7 @@ class Company
     public function setOwner(\AppBundle\Entity\Client $owner = null)
     {
         $this->owner = $owner;
+        $owner->addCompany($this);
 
         return $this;
     }
@@ -211,4 +277,136 @@ class Company
     {
         return $this->billingAddress;
     }
+
+    /**
+     * @return string
+     */
+    public function getVatNumber()
+    {
+        return $this->vatNumber;
+    }
+
+    /**
+     * @param string $vatNumber
+     */
+    public function setVatNumber($vatNumber)
+    {
+        $this->vatNumber = $vatNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getChamberOfCommerceNumber()
+    {
+        return $this->chamberOfCommerceNumber;
+    }
+
+    /**
+     * @param string $chamberOfCommerceNumber
+     */
+    public function setChamberOfCommerceNumber($chamberOfCommerceNumber)
+    {
+        $this->chamberOfCommerceNumber = $chamberOfCommerceNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyRelationNumber()
+    {
+        return $this->companyRelationNumber;
+    }
+
+    /**
+     * @param string $companyRelationNumber
+     */
+    public function setCompanyRelationNumber($companyRelationNumber)
+    {
+        $this->companyRelationNumber = $companyRelationNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTelephoneNumber()
+    {
+        return $this->telephoneNumber;
+    }
+
+    /**
+     * @param string $telephoneNumber
+     */
+    public function setTelephoneNumber($telephoneNumber)
+    {
+        $this->telephoneNumber = $telephoneNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVeterinarianDapNumber()
+    {
+        return $this->veterinarianDapNumber;
+    }
+
+    /**
+     * @param string $veterinarianDapNumber
+     */
+    public function setVeterinarianDapNumber($veterinarianDapNumber)
+    {
+        $this->veterinarianDapNumber = $veterinarianDapNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVeterinarianCompanyName()
+    {
+        return $this->veterinarianCompanyName;
+    }
+
+    /**
+     * @param string $veterinarianCompanyName
+     */
+    public function setVeterinarianCompanyName($veterinarianCompanyName)
+    {
+        $this->veterinarianCompanyName = $veterinarianCompanyName;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVeterinarianTelephoneNumber()
+    {
+        return $this->veterinarianTelephoneNumber;
+    }
+
+    /**
+     * @param string $veterinarianTelephoneNumber
+     */
+    public function setVeterinarianTelephoneNumber($veterinarianTelephoneNumber)
+    {
+        $this->veterinarianTelephoneNumber = $veterinarianTelephoneNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVeterinarianEmailAddress()
+    {
+        return $this->veterinarianEmailAddress;
+    }
+
+    /**
+     * @param string $veterinarianEmailAddress
+     */
+    public function setVeterinarianEmailAddress($veterinarianEmailAddress)
+    {
+        $this->veterinarianEmailAddress = $veterinarianEmailAddress;
+    }
+
+
+
+
 }

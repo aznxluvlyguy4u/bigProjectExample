@@ -8,11 +8,15 @@ use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\DeclareArrival;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class Location
  * @ORM\Entity(repositoryClass="AppBundle\Entity\LocationRepository")
  * @package AppBundle\Entity
+ * @ExclusionPolicy("all")
+
  */
 class Location
 {
@@ -22,6 +26,7 @@ class Location
    * @ORM\Id
    * @ORM\Column(type="integer")
    * @ORM\GeneratedValue(strategy="AUTO")
+   * @Expose
    */
   protected $id;
 
@@ -32,8 +37,18 @@ class Location
    * @Assert\NotBlank
    * @Assert\Length(max = 12)
    * @JMS\Type("string")
+   * @Expose
    */
   protected $ubn;
+
+  /**
+   * @var string
+   *
+   * @ORM\Column(type="string", nullable=true)
+   * @JMS\Type("string")
+   * @Expose
+   */
+  private $locationHolder;
 
   /**
    * @var array
@@ -43,25 +58,62 @@ class Location
   protected $arrivals;
 
   /**
-   * @var array
+   * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="location")
    */
   protected $births;
 
   /**
-   * @var array
+   * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="DeclareDepart", mappedBy="location")
    */
   protected $departures;
 
   /**
-   * @var array
+   * @var ArrayCollection
+   *
+   * @ORM\OneToMany(targetEntity="Animal", mappedBy="location")
+   * @JMS\Type("AppBundle\Entity\Animal")
+   */
+  protected $animals;
+
+  /**
+   * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="location")
    */
   protected $imports;
+
+  /**
+   * @var ArrayCollection
+   *
+   * @ORM\OneToMany(targetEntity="DeclareExport", mappedBy="location")
+   */
+  protected $exports;
+
+  /**
+   * @var ArrayCollection
+   *
+   * @ORM\OneToMany(targetEntity="DeclareTagsTransfer", mappedBy="location")
+   */
+  protected $tagTransfers;
+
+  /**
+   * @var ArrayCollection
+   * 
+   * @ORM\OneToMany(targetEntity="DeclareLoss", mappedBy="location")
+   */
+  protected $losses;
+
+  /**
+   * @var ArrayCollection
+   *
+   * @JMS\Type("AppBundle\Entity\DeclareAnimalFlag")
+   * @ORM\OneToMany(targetEntity="DeclareAnimalFlag", mappedBy="location", cascade={"persist"})
+   */
+  protected $flags;
 
   /**
    * @Assert\NotBlank
@@ -78,6 +130,24 @@ class Location
    */
   private $address;
 
+  /**
+   * @var ArrayCollection
+   *
+   * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
+   * @ORM\OneToMany(targetEntity="RevokeDeclaration", mappedBy="location", cascade={"persist"})
+   */
+  protected $revokes;
+
+  /**
+   * @var ArrayCollection
+   *
+   * @ORM\OneToMany(targetEntity="LocationHealth", mappedBy="location", cascade={"persist"})
+   * @ORM\JoinColumn(name="health_id", referencedColumnName="id", nullable=true)
+   * @JMS\Type("AppBundle\Entity\LocationHealth")
+   * @Expose
+   */
+  private $healths;
+
   /*
   * Constructor
   */
@@ -87,6 +157,13 @@ class Location
     $this->births = new ArrayCollection();
     $this->departures = new ArrayCollection();
     $this->imports = new ArrayCollection();
+    $this->exports = new ArrayCollection();
+    $this->losses = new ArrayCollection();
+    $this->animals = new ArrayCollection();
+    $this->tagTransfers = new ArrayCollection();
+    $this->flags = new ArrayCollection();
+    $this->revokes = new ArrayCollection();
+    $this->healths = new ArrayCollection();
   }
 
   /**
@@ -307,4 +384,270 @@ class Location
     {
         return $this->departures;
     }
+
+    /**
+     * Add loss
+     *
+     * @param \AppBundle\Entity\DeclareLoss $loss
+     *
+     * @return Location
+     */
+    public function addLoss(\AppBundle\Entity\DeclareLoss $loss)
+    {
+      $this->losses[] = $loss;
+  
+      return $this;
+    }
+  
+    /**
+     * Remove loss
+     *
+     * @param \AppBundle\Entity\DeclareLoss $loss
+     */
+    public function removeLoss(\AppBundle\Entity\DeclareLoss $loss)
+    {
+      $this->losses->removeElement($loss);
+    }
+  
+    /**
+     * Get losses
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getLosses()
+    {
+      return $this->losses;
+    }
+
+    /**
+     * Add animal
+     *
+     * @param \AppBundle\Entity\Animal $animal
+     *
+     * @return Location
+     */
+    public function addAnimal(\AppBundle\Entity\Animal $animal)
+    {
+        $animal->setLocation($this);
+        $this->animals[] = $animal;
+
+        return $this;
+    }
+
+    /**
+     * Remove animal
+     *
+     * @param \AppBundle\Entity\Animal $animal
+     */
+    public function removeAnimal(\AppBundle\Entity\Animal $animal)
+    {
+        $this->animals->removeElement($animal);
+    }
+
+    /**
+     * Get animals
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getAnimals()
+    {
+        return $this->animals;
+    }
+
+    /**
+     * Add export
+     *
+     * @param \AppBundle\Entity\DeclareExport $export
+     *
+     * @return Location
+     */
+    public function addExport(\AppBundle\Entity\DeclareExport $export)
+    {
+        $this->exports[] = $export;
+
+        return $this;
+    }
+
+    /**
+     * Remove export
+     *
+     * @param \AppBundle\Entity\DeclareExport $export
+     */
+    public function removeExport(\AppBundle\Entity\DeclareExport $export)
+    {
+        $this->exports->removeElement($export);
+    }
+
+    /**
+     * Get exports
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getExports()
+    {
+        return $this->exports;
+    }
+
+
+    /**
+     * Add tagTransfer
+     *
+     * @param \AppBundle\Entity\DeclareTagsTransfer $tagTransfer
+     *
+     * @return Location
+     */
+    public function addTagTransfer(\AppBundle\Entity\DeclareTagsTransfer $tagTransfer)
+    {
+        $this->tagTransfers[] = $tagTransfer;
+
+        return $this;
+    }
+
+    /**
+     * Remove tagTransfer
+     *
+     * @param \AppBundle\Entity\DeclareTagsTransfer $tagTransfer
+     */
+    public function removeTagTransfer(\AppBundle\Entity\DeclareTagsTransfer $tagTransfer)
+    {
+        $this->tagTransfers->removeElement($tagTransfer);
+    }
+
+    /**
+     * Get tagTransfers
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getTagTransfers()
+    {
+        return $this->tagTransfers;
+    }
+
+    /**
+     * Add flag
+     *
+     * @param \AppBundle\Entity\DeclareAnimalFlag $flag
+     *
+     * @return Location
+     */
+    public function addFlag(\AppBundle\Entity\DeclareAnimalFlag $flag)
+    {
+        $this->flags[] = $flag;
+
+        return $this;
+    }
+
+    /**
+     * Remove flag
+     *
+     * @param \AppBundle\Entity\DeclareAnimalFlag $flag
+     */
+    public function removeFlag(\AppBundle\Entity\DeclareAnimalFlag $flag)
+    {
+        $this->flags->removeElement($flag);
+    }
+
+    /**
+     * Get flags
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getFlags()
+    {
+        return $this->flags;
+    }
+
+    /**
+     * Add revoke
+     *
+     * @param \AppBundle\Entity\RevokeDeclaration $revoke
+     *
+     * @return Location
+     */
+    public function addRevoke(\AppBundle\Entity\RevokeDeclaration $revoke)
+    {
+        $this->revokes[] = $revoke;
+
+        return $this;
+    }
+
+    /**
+     * Remove revoke
+     *
+     * @param \AppBundle\Entity\RevokeDeclaration $revoke
+     */
+    public function removeRevoke(\AppBundle\Entity\RevokeDeclaration $revoke)
+    {
+        $this->revokes->removeElement($revoke);
+    }
+
+    /**
+     * Get revokes
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getRevokes()
+    {
+        return $this->revokes;
+    }
+
+    /**
+     * Set locationHolder
+     *
+     * @param string $locationHolder
+     *
+     * @return Location
+     */
+    public function setLocationHolder($locationHolder)
+    {
+        $this->locationHolder = $locationHolder;
+
+        return $this;
+    }
+
+    /**
+     * Get locationHolder
+     *
+     * @return string
+     */
+    public function getLocationHolder()
+    {
+        return $this->locationHolder;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getHealths()
+    {
+      return $this->healths;
+    }
+
+    /**
+     * Add health
+     *
+     * @param LocationHealth $health
+     *
+     * @return Location
+     */
+    public function addHealth(LocationHealth $health)
+    {
+      $this->healths->add($health);
+      $health->setLocation($this);
+
+      return $this;
+    }
+
+    /**
+     * Remove health
+     *
+     * @param LocationHealth $health
+     */
+    public function removeHealth(LocationHealth $health)
+    {
+      $this->healths->removeElement($health);
+    }
+
+
+
 }
