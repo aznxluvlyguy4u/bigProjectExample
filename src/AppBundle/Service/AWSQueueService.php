@@ -85,6 +85,9 @@ class AWSQueueService
       case 'test':
         $queueId = $queueIds[2];
         break;
+      case 'local':
+        $queueId = $queueIds[3];
+        break;
       default; //dev
         $queueId = $queueIds[1];
         break;
