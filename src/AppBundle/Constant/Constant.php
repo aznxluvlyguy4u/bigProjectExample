@@ -85,6 +85,10 @@ class Constant
     const SURROGATE_NAMESPACE = 'surrogate';
     const SURROGATE_CHILDREN_NAMESPACE = 'surrogate_children';
 
+    //Process runtime
+    const RUN_TIME_LIMIT_IN_MINUTES = 'run_time_limit_in_minutes';
+    const TEST_RUN_WITH_DEFAULT_UBNS = 'test_run_with_default_ubns';
+
     //Request repositories
     const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';
     const DECLARE_ARRIVAL_RESPONSE_REPOSITORY = 'AppBundle:DeclareArrivalResponse';
@@ -119,4 +123,6 @@ class Constant
     const COUNTRY_REPOSITORY = 'AppBundle:Country';
     const COMPANY_REPOSITORY = 'AppBundle:Company';
     const LOCATION_REPOSITORY = 'AppBundle:Location';
+
+    const CLIENT_MIGRATION_DATA_REPOSITORY = 'AppBundle:ClientMigrationData';
 }

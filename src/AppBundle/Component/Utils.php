@@ -210,4 +210,24 @@ class Utils
         return $animal->getUlnCountryCode() . $animal->getUlnNumber();
     }
 
+    /**
+     * @param ArrayCollection $content
+     * @param string $key
+     * @param string $defaultValue
+     * @return mixed|null
+     */
+    public static function getValueFromArrayCollectionKeyIfItExists(ArrayCollection $content, $key, $defaultValue)
+    {
+        if($content->containsKey($key)) {
+            $valueInKey = $content->get($key);
+            if($valueInKey != null && $valueInKey != "") {
+                return $valueInKey;
+            } else {
+                return $defaultValue;
+            }
+        } else {
+            return $defaultValue;
+        }
+    }
+
 }

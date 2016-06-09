@@ -3,9 +3,13 @@
 namespace AppBundle\Migration;
 
 use AppBundle\Component\Utils;
+use AppBundle\Constant\Constant;
+use AppBundle\Entity\Client;
 use AppBundle\Entity\ClientMigrationData;
 use AppBundle\Enumerator\MigrationStatus;
 use AppBundle\Setting\MigrationSetting;
+use Doctrine\Common\Collections\ArrayCollection;
+use Monolog\Handler\Curl\Util;
 
 /**
  * Class ClientMigration
@@ -17,15 +21,23 @@ class ClientMigration
      * @param $newClients
      * @param $doctrine
      * @param $encoder
+     * @param ArrayCollection $content
      * @return array
      */
-    public static function generateNewPasswordsAndEmailsForMigratedClients($newClients, $doctrine, $encoder)
+    public static function generateNewPasswordsAndEmailsForMigratedClients($newClients, $doctrine, $encoder, ArrayCollection $content)
     {
         $em = $doctrine->getEntityManager();
-        $migrationDataRepository = $doctrine->getRepository('AppBundle:ClientMigrationData');
+        $migrationDataRepository = $doctrine->getRepository(Constant::CLIENT_MIGRATION_DATA_REPOSITORY);
 
         //Settings
-        $passwordLength = 9;
+        $defaultRunTimeLimitInMinutes = 0; //if set on 0, it will have no run-time-limit
+        $runTimeLimitInMinutes = Utils::getValueFromArrayCollectionKeyIfItExists($content, Constant::RUN_TIME_LIMIT_IN_MINUTES, $defaultRunTimeLimitInMinutes);
+        set_time_limit($runTimeLimitInMinutes * 60);
+
+        $defaultTestRunSetting = false;
+        $useTestRunUbns = Utils::getValueFromArrayCollectionKeyIfItExists($content, Constant::TEST_RUN_WITH_DEFAULT_UBNS, $defaultTestRunSetting);
+
+        $passwordLength = MigrationSetting::PASSWORD_LENGTH;
 
         //Default value
         $hasDefaultNsfoEmailAddress = false;
@@ -36,17 +48,6 @@ class ClientMigration
         $migrationsWithNewEmailAddress = 0;
 
         foreach($newClients as $newClient) {
-            //First check if client already is in the Migration table
-            $migrationData = $migrationDataRepository->getMigrationDataOfClient($newClient);
-            $oldMigrationDataExisted = $migrationData != null;
-            if($oldMigrationDataExisted) {
-                //check if it has a default nsfo email address before removing from database
-                $hasDefaultNsfoEmailAddress = $migrationData->getHasDefaultNsfoEmailAddress();
-
-                $oldMigrationCount++;
-                $em->remove($migrationData);
-                $em->flush();
-            }
 
             $migrationData = new ClientMigrationData();
             $migrationData->setHasDefaultNsfoEmailAddress($hasDefaultNsfoEmailAddress); //immediately set this value
@@ -60,8 +61,14 @@ class ClientMigration
             } else { //Client has no email address
                 $newPassword = MigrationSetting::DEFAULT_MIGRATION_PASSWORD;
 
-                //TODO Phase2+ update the logic for clients with more than one UBN.
-                $ubn = $newClient->getCompanies()->get(0)->getLocations()->get(0)->getUbn();
+                if($useTestRunUbns) {
+                    $ubn = self::useMockUbnIfRealUbnDoesNotExist($newClient);
+
+                } else { //Use actual ubns
+                    //TODO Phase2+ update the logic for clients with more than one UBN.
+                    $ubn = $newClient->getCompanies()->get(0)->getLocations()->get(0)->getUbn();
+                }
+
                 $emailAddress = $ubn . "@" . MigrationSetting::DEFAULT_EMAIL_DOMAIN;
                 $newClient->setEmailAddress($emailAddress);
                 $migrationData->setHasDefaultNsfoEmailAddress(true);
@@ -92,5 +99,28 @@ class ClientMigration
         return array("total_clients_migrated" => $totalMigrationCount,
             "old_client_migrations_removed" => $oldMigrationCount,
             "migrations_with_new_default_nfso_email_address" => $migrationsWithNewEmailAddress);
+    }
+
+    /**
+     * @param Client $client
+     * @return string
+     */
+    private static function useMockUbnIfRealUbnDoesNotExist(Client $client)
+    {
+        $companies = $client->getCompanies();
+
+        if($companies->count() > 0) {
+            $locations = $companies->get(0)->getLocations();
+            if($locations->count() > 0) {
+                $ubn = $locations->get(0)->getUbn();
+            } else {
+                //just some random number without zeros, so it cannot start with a zero
+                $ubn = Utils::randomString(9, '123456789');
+            }
+        } else {
+            $ubn = Utils::randomString(9, '123456789');
+        }
+
+        return $ubn;
     }
 }
