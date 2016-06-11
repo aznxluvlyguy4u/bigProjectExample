@@ -206,7 +206,7 @@ class AuthAPIController extends APIController {
     if(!$passwordValidator->getIsPasswordValid()) {
         return $passwordValidator->createJsonErrorResponse();
     }
-dump($newPassword);die();
+
     $encodedOldPassword = $client->getPassword();
     $encoder = $this->get('security.password_encoder');
     $encodedNewPassword = $encoder->encodePassword($client, $newPassword);
