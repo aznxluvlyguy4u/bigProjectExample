@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
 use AppBundle\FormInput\AnimalDetails;
+use AppBundle\FormInput\WeightMeasurements;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
 use AppBundle\Output\WeightMeasurementsOutput;
@@ -371,7 +372,6 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function createWeightMeasurements(Request $request) {
 
-    $client = $client = $this->getAuthenticatedUser($request);
     $content = $this->getContentAsArray($request);
 
     //The ULN's are not validated because in the frontend the user is only able the select the animals given by the API
@@ -382,7 +382,25 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       return $weightValidator->createJsonErrorResponse();
     }
 
-    $minimizedOutput = "WEIGHTS ARE VALID"; //TODO PERSIST NEW WEIGHT MEASUREMENTS
+    $client = $client = $this->getAuthenticatedUser($request);
+    $livestockAnimals = $this->getDoctrine()
+        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($client);
+
+    //Persist updated changes and return the updated values
+    $manager = $this->getDoctrine()->getManager();
+    $objects = WeightMeasurements::createAndPersist($content, $livestockAnimals, $manager);
+    $updatedAnimals = $objects[Constant::ANIMALS_NAMESPACE];
+
+    //TODO verify with frontend: Return output for all animals, or only animals with new weight measurements.
+    //TODO Perhaps the boolean below could also be set in het jsonInput. Or maybe just return an "OK" string.
+    $outputOnlyUpdatedAnimals = true;
+
+    if($outputOnlyUpdatedAnimals) {
+      $minimizedOutput = WeightMeasurementsOutput::createForLiveStock($updatedAnimals);
+
+    } else {  //Output for all animals
+      $minimizedOutput = WeightMeasurementsOutput::createForLiveStock($livestockAnimals);
+    }
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
   }
