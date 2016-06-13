@@ -39,8 +39,8 @@ class LocationHealthUpdater
                                                          $locationOfOrigin = null)
     {
         //By default set the status to UNDER_OBSERVATION for animals with an unknown HealthStatus
-        $maediVisnaStatus = MaediVisnaStatus::UNDER_OBSERVATION;
-        $scrapieStatus = ScrapieStatus::UNDER_OBSERVATION;
+        $maediVisnaStatusOrigin = MaediVisnaStatus::UNDER_OBSERVATION;
+        $scrapieStatusOrigin = ScrapieStatus::UNDER_OBSERVATION;
 
         if($locationOfOrigin != null) {
             $healthsOrigin = $locationOfOrigin->getHealths();
@@ -48,8 +48,8 @@ class LocationHealthUpdater
                 $healthOrigin = Utils::returnLastItemFromCollectionByLogDate($healthsOrigin);
 
                 //Get the health status
-                $maediVisnaStatus = $healthOrigin->getMaediVisnaStatus();
-                $scrapieStatus = $healthOrigin->getScrapieStatus();
+                $maediVisnaStatusOrigin = $healthOrigin->getMaediVisnaStatus();
+                $scrapieStatusOrigin = $healthOrigin->getScrapieStatus();
             }
         }
 
@@ -59,7 +59,7 @@ class LocationHealthUpdater
             $locationOfDestination->addHealth(new LocationHealth());
         }
 
-        $locationOfDestination = self::updateByStatus($locationOfDestination, $maediVisnaStatus, $scrapieStatus);
+        $locationOfDestination = self::updateByStatus($locationOfDestination, $maediVisnaStatusOrigin, $scrapieStatusOrigin);
         $locationOfDestination = self::updateOverallHealthStatus($locationOfDestination);
 
         return $locationOfDestination;
@@ -101,24 +101,24 @@ class LocationHealthUpdater
 
     /**
      * @param Location $location
-     * @param string $maediVisnaStatus
-     * @param string $scrapieStatus
+     * @param string $maediVisnaStatusOrigin
+     * @param string $scrapieStatusOrigin
      * @return Location
      */
-    private static function updateByStatus($location, $maediVisnaStatus, $scrapieStatus)
+    private static function updateByStatus($location, $maediVisnaStatusOrigin, $scrapieStatusOrigin)
     {
         //Check for maediVisnaStatus and scrapieStatus separately
-        if( $maediVisnaStatus == MaediVisnaStatus::UNDER_OBSERVATION ||
-            $maediVisnaStatus == null ||
-            $maediVisnaStatus == "") {
+        if( $maediVisnaStatusOrigin == MaediVisnaStatus::UNDER_OBSERVATION ||
+            $maediVisnaStatusOrigin == null ||
+            $maediVisnaStatusOrigin == "") {
 
             $lastHealth = Utils::returnLastItemFromCollectionByLogDate($location->getHealths());
             $lastHealth->setMaediVisnaStatus(MaediVisnaStatus::UNDER_OBSERVATION);
         }
 
-        if( $scrapieStatus == ScrapieStatus::UNDER_OBSERVATION ||
-            $scrapieStatus == null ||
-            $scrapieStatus == "") {
+        if( $scrapieStatusOrigin == ScrapieStatus::UNDER_OBSERVATION ||
+            $scrapieStatusOrigin == null ||
+            $scrapieStatusOrigin == "") {
 
             $lastHealth = Utils::returnLastItemFromCollectionByLogDate($location->getHealths());
             $lastHealth->setScrapieStatus(ScrapieStatus::UNDER_OBSERVATION);
