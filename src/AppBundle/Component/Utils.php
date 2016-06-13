@@ -3,6 +3,7 @@
 namespace AppBundle\Component;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\WeightMeasurement;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -155,6 +156,15 @@ class Utils
     public static function returnLastWeightMeasurement(Collection $weightMeasurements)
     {
         return self::returnLastItemFromCollectionByLogDate($weightMeasurements);
+    }
+
+    /**
+     * @param Collection $locationHealths
+     * @return LocationHealth|null
+     */
+    public static function returnLastLocationHealth(Collection $locationHealths)
+    {
+        return self::returnLastItemFromCollectionByLogDate($locationHealths);
     }
 
     /**
