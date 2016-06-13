@@ -16,7 +16,7 @@ class WeightMeasurementsOutput
      * @param array $animals
      * @return array
      */
-    public static function createForLiveStock($animals)
+    public static function createForAnimals($animals)
     {
         $weightMeasurements = array();
 

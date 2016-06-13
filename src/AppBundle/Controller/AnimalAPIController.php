@@ -341,7 +341,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $animals = $this->getDoctrine()
         ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($client);
 
-    $minimizedOutput = WeightMeasurementsOutput::createForLiveStock($animals);
+    $minimizedOutput = WeightMeasurementsOutput::createForAnimals($animals);
 
     return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
   }
@@ -396,10 +396,10 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $outputOnlyUpdatedAnimals = true;
 
     if($outputOnlyUpdatedAnimals) {
-      $minimizedOutput = WeightMeasurementsOutput::createForLiveStock($updatedAnimals);
+      $minimizedOutput = WeightMeasurementsOutput::createForAnimals($updatedAnimals);
 
     } else {  //Output for all animals
-      $minimizedOutput = WeightMeasurementsOutput::createForLiveStock($livestockAnimals);
+      $minimizedOutput = WeightMeasurementsOutput::createForAnimals($livestockAnimals);
     }
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
