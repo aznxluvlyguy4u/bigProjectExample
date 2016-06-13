@@ -2,6 +2,7 @@
 
 namespace AppBundle\Util;
 
+use AppBundle\Component\Utils;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
@@ -13,7 +14,6 @@ use AppBundle\Enumerator\LocationHealthStatus;
 use Doctrine\ORM\EntityManager;
 
 //TODO NOTE! For phase one we assume a location only has one LocationHealth. Even though healths is an ArrayCollection.
-//TODO Replace get(0) by getting the last one in the ArrayCollection ->last() has some issues. Test it first.
 
 /**
  * Class LocationHealthUpdater
@@ -45,7 +45,7 @@ class LocationHealthUpdater
         if($locationOfOrigin != null) {
             $healthsOrigin = $locationOfOrigin->getHealths();
             if(!$healthsOrigin->isEmpty()) {
-                $healthOrigin = $healthsOrigin->get(0);
+                $healthOrigin = Utils::returnLastItemFromCollectionByLogDate($healthsOrigin);
 
                 //Get the health status
                 $maediVisnaStatus = $healthOrigin->getMaediVisnaStatus();
@@ -112,14 +112,16 @@ class LocationHealthUpdater
             $maediVisnaStatus == null ||
             $maediVisnaStatus == "") {
 
-            $location->getHealths()->get(0)->setMaediVisnaStatus(MaediVisnaStatus::UNDER_OBSERVATION);
+            $lastHealth = Utils::returnLastItemFromCollectionByLogDate($location->getHealths());
+            $lastHealth->setMaediVisnaStatus(MaediVisnaStatus::UNDER_OBSERVATION);
         }
 
         if( $scrapieStatus == ScrapieStatus::UNDER_OBSERVATION ||
             $scrapieStatus == null ||
             $scrapieStatus == "") {
 
-            $location->getHealths()->get(0)->setScrapieStatus(ScrapieStatus::UNDER_OBSERVATION);
+            $lastHealth = Utils::returnLastItemFromCollectionByLogDate($location->getHealths());
+            $lastHealth->setScrapieStatus(ScrapieStatus::UNDER_OBSERVATION);
         }
 
         return $location;
@@ -132,9 +134,11 @@ class LocationHealthUpdater
      */
     private static function updateOverallHealthStatus(Location $location)
     {
-        if($location->getHealths()->get(0)->getMaediVisnaStatus() == MaediVisnaStatus::UNDER_OBSERVATION ||
-            $location->getHealths()->get(0)->getScrapieStatus() == ScrapieStatus::UNDER_OBSERVATION) {
-            $location->getHealths()->get(0)->setLocationHealthStatus(LocationHealthStatus::UNDER_OBSERVATION);
+        $lastHealth = Utils::returnLastItemFromCollectionByLogDate($location->getHealths());
+
+        if($lastHealth->getMaediVisnaStatus() == MaediVisnaStatus::UNDER_OBSERVATION ||
+            $lastHealth->getScrapieStatus() == ScrapieStatus::UNDER_OBSERVATION) {
+            $lastHealth->setLocationHealthStatus(LocationHealthStatus::UNDER_OBSERVATION);
         }
 
         return $location;
