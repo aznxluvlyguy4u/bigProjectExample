@@ -6,6 +6,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\FormInput\AnimalDetails;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
+use AppBundle\Output\WeightMeasurementsOutput;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -309,6 +310,38 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $outputArray = AnimalDetailsOutput::create($animal);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+  }
+
+  /**
+   * Get the last weight measurements of all the animals in a clients livestock.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Get the last weight measurements of all the animals in a clients livestock",
+   *   output = "AppBundle\Entity\Animal"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-weights")
+   * @Method("GET")
+   */
+  public function getLastWeightMeasurements(Request $request)
+  {
+    $client = $client = $this->getAuthenticatedUser($request);
+    $animals = $this->getDoctrine()
+        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($client);
+
+    $minimizedOutput = WeightMeasurementsOutput::createForLiveStock($animals);
+
+    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
   }
 
 }
