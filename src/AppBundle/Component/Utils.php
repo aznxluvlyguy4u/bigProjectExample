@@ -3,6 +3,7 @@
 namespace AppBundle\Component;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\WeightMeasurement;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -144,26 +145,44 @@ class Utils
      */
     public static function returnLastResponse(Collection $responses)
     {
-        if($responses->count() == 0) {
+        return self::returnLastItemFromCollectionByLogDate($responses);
+    }
+
+    /**
+     * @param Collection $weightMeasurements
+     * @return WeightMeasurement|null
+     */
+    public static function returnLastWeightMeasurement(Collection $weightMeasurements)
+    {
+        return self::returnLastItemFromCollectionByLogDate($weightMeasurements);
+    }
+
+    /**
+     * @param Collection $items
+     * @return mixed|null
+     */
+    public static function returnLastItemFromCollectionByLogDate(Collection $items)
+    {
+        if($items->count() == 0) {
             return null;
         }
 
-        $length = $responses->count();
+        $length = $items->count();
 
         //initialize values
-        $lastResponseIndex = 0;
+        $lastItemIndex = 0;
         $startIndex = 0;
-        $latestLogDate = $responses->get($startIndex)->getLogDate();
+        $latestLogDate = $items->get($startIndex)->getLogDate();
 
         for($i = $startIndex + 1; $i < $length; $i++) {
-            $responseLogDate = $responses->get($i)->getLogDate();
-            if($responseLogDate > $latestLogDate) {
-                $lastResponseIndex = $i;
-                $latestLogDate = $responseLogDate;
+            $itemLogDate = $items->get($i)->getLogDate();
+            if($itemLogDate > $latestLogDate) {
+                $lastItemIndex = $i;
+                $latestLogDate = $itemLogDate;
             }
         }
 
-        return $responses->get($lastResponseIndex);
+        return $items->get($lastItemIndex);
     }
 
     /**
