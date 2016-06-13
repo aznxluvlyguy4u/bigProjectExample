@@ -274,4 +274,38 @@ class Neuter extends Animal
     }
 
 
+
+    /**
+     * Add weightMeasurement
+     *
+     * @param \AppBundle\Entity\WeightMeasurement $weightMeasurement
+     *
+     * @return Neuter
+     */
+    public function addWeightMeasurement(\AppBundle\Entity\WeightMeasurement $weightMeasurement)
+    {
+        $this->weightMeasurements[] = $weightMeasurement;
+
+        return $this;
+    }
+
+    /**
+     * Remove weightMeasurement
+     *
+     * @param \AppBundle\Entity\WeightMeasurement $weightMeasurement
+     */
+    public function removeWeightMeasurement(\AppBundle\Entity\WeightMeasurement $weightMeasurement)
+    {
+        $this->weightMeasurements->removeElement($weightMeasurement);
+    }
+
+    /**
+     * Get weightMeasurements
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getWeightMeasurements()
+    {
+        return $this->weightMeasurements;
+    }
 }
