@@ -45,6 +45,7 @@ class Constant
     const VALIDITY_NAMESPACE = 'validity';
     const IS_VALID_NAMESPACE = 'isValid';
     const CODE_NAMESPACE = 'code';
+    const ERRORS_NAMESPACE = 'errors';
 
     //Animal identification
     const ULN_NAMESPACE = 'uln';
