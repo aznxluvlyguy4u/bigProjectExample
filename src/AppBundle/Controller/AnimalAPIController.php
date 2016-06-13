@@ -7,6 +7,7 @@ use AppBundle\FormInput\AnimalDetails;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
 use AppBundle\Output\WeightMeasurementsOutput;
+use AppBundle\Validation\WeightValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -344,4 +345,45 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
   }
 
+  /**
+   *
+   * Create new weight measurements for the given animals.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Create new weight measurements for the given animals",
+   *   input = "AppBundle\Entity\Animals",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
+   * @param Request $request the request object
+   * @return jsonResponse
+   * @Route("-weights")
+   * @Method("POST")
+   */
+  public function createWeightMeasurements(Request $request) {
+
+    $client = $client = $this->getAuthenticatedUser($request);
+    $content = $this->getContentAsArray($request);
+
+    //The ULN's are not validated because in the frontend the user is only able the select the animals given by the API
+
+    //Validate password format
+    $weightValidator = new WeightValidator($content);
+    if(!$weightValidator->getAreWeightsValid()) {
+      return $weightValidator->createJsonErrorResponse();
+    }
+
+    $minimizedOutput = "WEIGHTS ARE VALID"; //TODO PERSIST NEW WEIGHT MEASUREMENTS
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
+  }
 }
