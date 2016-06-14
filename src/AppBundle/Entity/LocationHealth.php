@@ -42,7 +42,7 @@ class LocationHealth
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      */
-    protected $logDate;
+    private $logDate;
 
     /**
      * maedi_visna is 'zwoegerziekte' in Dutch
