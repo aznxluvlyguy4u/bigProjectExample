@@ -15,5 +15,5 @@ class MaediVisnaStatus
     const FREE = 'FREE'; //vrij
     const UNDER_OBSERVATION = 'UNDER OBSERVATION'; //in observatie
     const UNDER_INVESTIGATION = 'UNDER INVESTIGATION'; //in onderzoek
-    const STATUS_KNOWN_BY_AHD = 'STATUS KNOWN BY ANIMAL HEALTH DEPARTMENT'; //Status bij GD bekend. GD = Gezondheidsdienst voor Dieren.
+    const STATUS_KNOWN_BY_AHD = 'STATUS KNOWN BY ANIMAL HEALTH DEPARTMENT'; //Status bij GD bekend. GD = Gezondheidsdienst voor Dieren. This status is given to locations that are MaediVisna free.
 }
