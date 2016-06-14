@@ -141,7 +141,7 @@ class Location
   /**
    * @var ArrayCollection
    *
-   * @ORM\OneToMany(targetEntity="LocationHealth", mappedBy="location", cascade={"persist"})
+   * @ORM\OneToMany(targetEntity="LocationHealth", mappedBy="location")
    * @ORM\JoinColumn(name="health_id", referencedColumnName="id", nullable=true)
    * @JMS\Type("AppBundle\Entity\LocationHealth")
    * @Expose
