@@ -49,13 +49,22 @@ class LocationHealthMessage
     private $logDate;
 
     /**
-     * @var string
-     *
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
+     * @var boolean
+     * @ORM\Column(type="boolean")
+     * @JMS\Type("boolean")
+     * @Assert\NotBlank
      * @Expose
      */
-    private $illness;
+    private $checkForMaediVisna;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean")
+     * @JMS\Type("boolean")
+     * @Assert\NotBlank
+     * @Expose
+     */
+    private $checkForScrapie;
 
     /**
      * Reason here means 'arrival' or 'import'
@@ -155,27 +164,35 @@ class LocationHealthMessage
     }
 
     /**
-     * Set illness
-     *
-     * @param string $illness
-     *
-     * @return LocationHealthMessage
+     * @return boolean
      */
-    public function setIllness($illness)
+    public function isCheckForMaediVisna()
     {
-        $this->illness = $illness;
-
-        return $this;
+        return $this->checkForMaediVisna;
     }
 
     /**
-     * Get illness
-     *
-     * @return string
+     * @param boolean $checkForMaediVisna
      */
-    public function getIllness()
+    public function setCheckForMaediVisna($checkForMaediVisna)
     {
-        return $this->illness;
+        $this->checkForMaediVisna = $checkForMaediVisna;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isCheckForScrapie()
+    {
+        return $this->checkForScrapie;
+    }
+
+    /**
+     * @param boolean $checkForScrapie
+     */
+    public function setCheckForScrapie($checkForScrapie)
+    {
+        $this->checkForScrapie = $checkForScrapie;
     }
 
     /**
