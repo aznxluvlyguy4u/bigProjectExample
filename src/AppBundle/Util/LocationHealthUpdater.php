@@ -120,10 +120,8 @@ class LocationHealthUpdater
         $scrapieStatusOrigin = $healthOrigin->getScrapieStatus();
         $scrapieStatusDestination = $healthDestination->getScrapieStatus();
 
-        $isOriginScrapieHealthy = $scrapieStatusOrigin == ScrapieStatus::RESISTANT
-                               || $scrapieStatusOrigin == ScrapieStatus::FREE;
-        $isDestinationScrapieHealthy = $scrapieStatusDestination == ScrapieStatus::RESISTANT
-                                    || $scrapieStatusDestination == ScrapieStatus::FREE;
+        $isOriginScrapieHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieStatusOrigin);
+        $isDestinationScrapieHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieStatusDestination);
 
         if($isOriginScrapieHealthy && $isDestinationScrapieHealthy) {
          $newLocationHealth->setScrapieStatus($scrapieStatusDestination);
@@ -142,14 +140,8 @@ class LocationHealthUpdater
         $maediVisnaStatusOrigin = $healthOrigin->getMaediVisnaStatus();
         $maediVisnaStatusDestination = $healthDestination->getMaediVisnaStatus();
         
-        $isOriginMaediVisnaHealthy = $maediVisnaStatusOrigin == MaediVisnaStatus::FREE_1_YEAR
-                               || $maediVisnaStatusOrigin == MaediVisnaStatus::FREE_2_YEAR
-                               || $maediVisnaStatusOrigin == MaediVisnaStatus::FREE
-                               || $maediVisnaStatusOrigin == MaediVisnaStatus::STATUS_KNOWN_BY_AHD;
-        $isDestinationMaediVisnaHealthy = $maediVisnaStatusDestination == MaediVisnaStatus::FREE_1_YEAR
-                                    || $maediVisnaStatusDestination == MaediVisnaStatus::FREE_2_YEAR
-                                    || $maediVisnaStatusDestination == MaediVisnaStatus::FREE
-                                    || $maediVisnaStatusDestination == MaediVisnaStatus::STATUS_KNOWN_BY_AHD;
+        $isOriginMaediVisnaHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($maediVisnaStatusOrigin);
+        $isDestinationMaediVisnaHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($maediVisnaStatusDestination);
 
         if($isOriginMaediVisnaHealthy && $isDestinationMaediVisnaHealthy) {
             $newLocationHealth->setMaediVisnaStatus($maediVisnaStatusDestination);
@@ -185,15 +177,8 @@ class LocationHealthUpdater
      */
     public static function verifyIsLocationHealthy(LocationHealth $locationHealth)
     {
-        $scrapieStatus = $locationHealth->getScrapieStatus();
-        $maediVisnaStatus = $locationHealth->getMaediVisnaStatus();
-
-        $scrapieStatusHealthy = $scrapieStatus == ScrapieStatus::FREE
-                             || $scrapieStatus == ScrapieStatus::RESISTANT;
-        $maediVisnaStatusHealthy = $maediVisnaStatus == MaediVisnaStatus::FREE
-                             || $maediVisnaStatus == MaediVisnaStatus::FREE_1_YEAR
-                             || $maediVisnaStatus == MaediVisnaStatus::FREE_2_YEAR
-                             || $maediVisnaStatus == MaediVisnaStatus::STATUS_KNOWN_BY_AHD;
+        $scrapieStatusHealthy = HealthChecker::verifyIsScrapieStatusHealthy($locationHealth->getScrapieStatus());
+        $maediVisnaStatusHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($locationHealth->getMaediVisnaStatus());
 
         if($scrapieStatusHealthy && $maediVisnaStatusHealthy) {
             return true;
