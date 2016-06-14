@@ -130,6 +130,14 @@ class LocationHealthMessage
     private $import;
 
     /**
+     * LocationHealthMessage constructor.
+     */
+    public function __construct()
+    {
+        $this->setLogDate(new \DateTime('now'));
+    }
+
+    /**
      * Get id
      *
      * @return integer
@@ -409,5 +417,25 @@ class LocationHealthMessage
     public function getAnimal()
     {
         return $this->animal;
+    }
+
+    /**
+     * Get checkForMaediVisna
+     *
+     * @return boolean
+     */
+    public function getCheckForMaediVisna()
+    {
+        return $this->checkForMaediVisna;
+    }
+
+    /**
+     * Get checkForScrapie
+     *
+     * @return boolean
+     */
+    public function getCheckForScrapie()
+    {
+        return $this->checkForScrapie;
     }
 }
