@@ -108,7 +108,7 @@ class LocationHealthUpdater
 
 
 
-        //If origin is not verified as healthy and the location health statuses are not identical, a new LocationHealth has to be added
+        //If origin is not verified as completely healthy and the location health statuses are not identical, a new LocationHealth has to be added
         $newLocationHealth = new LocationHealth();
         //And we know the overall location is already not completely healthy at this point
         $newLocationHealth->setLocationHealthStatus(LocationHealthStatus::UNDER_OBSERVATION);
@@ -117,24 +117,54 @@ class LocationHealthUpdater
         //Now check each disease status separately ...
         
         //Scrapie
-        if($healthOrigin->getScrapieStatus() != ScrapieStatus::RESISTANT 
-            && $healthDestination->getScrapieStatus() != ScrapieStatus::RESISTANT) {
+        $scrapieStatusOrigin = $healthOrigin->getScrapieStatus();
+        $scrapieStatusDestination = $healthDestination->getScrapieStatus();
+
+        $isOriginScrapieHealthy = $scrapieStatusOrigin == ScrapieStatus::RESISTANT
+                               || $scrapieStatusOrigin == ScrapieStatus::FREE;
+        $isDestinationScrapieHealthy = $scrapieStatusDestination == ScrapieStatus::RESISTANT
+                                    || $scrapieStatusDestination == ScrapieStatus::FREE;
+
+        if($isOriginScrapieHealthy && $isDestinationScrapieHealthy) {
+         $newLocationHealth->setScrapieStatus($scrapieStatusDestination);
+
+        } else if(!$isOriginScrapieHealthy && $isDestinationScrapieHealthy) {
             $newLocationHealth->setScrapieStatus(ScrapieStatus::UNDER_OBSERVATION);
+
+        } else if($isOriginScrapieHealthy && !$isDestinationScrapieHealthy) {
+            $newLocationHealth->setScrapieStatus($scrapieStatusDestination);
+
+        } else { //(!$isOriginScrapieHealthy && !$isDestinationScrapieHealthy)
+            $newLocationHealth->setScrapieStatus($scrapieStatusDestination);
         }
         
         //MaediVisna
-        $isOriginMaediVisnaFree = $healthOrigin->getMaediVisnaStatus() == MaediVisnaStatus::FREE_1_YEAR
-            || $healthOrigin->getMaediVisnaStatus() == MaediVisnaStatus::FREE_2_YEAR;
-        $isDestinationMaediVisnaFree = $healthDestination->getMaediVisnaStatus() == MaediVisnaStatus::FREE_1_YEAR
-            || $healthDestination->getMaediVisnaStatus() == MaediVisnaStatus::FREE_2_YEAR;
+        $maediVisnaStatusOrigin = $healthOrigin->getMaediVisnaStatus();
+        $maediVisnaStatusDestination = $healthDestination->getMaediVisnaStatus();
         
-        if(!($isOriginMaediVisnaFree && $isDestinationMaediVisnaFree)) {
-            $newLocationHealth->setMaediVisnaStatus(ScrapieStatus::UNDER_OBSERVATION);
+        $isOriginMaediVisnaHealthy = $maediVisnaStatusOrigin == MaediVisnaStatus::FREE_1_YEAR
+                               || $maediVisnaStatusOrigin == MaediVisnaStatus::FREE_2_YEAR
+                               || $maediVisnaStatusOrigin == MaediVisnaStatus::FREE
+                               || $maediVisnaStatusOrigin == MaediVisnaStatus::STATUS_KNOWN_BY_AHD;
+        $isDestinationMaediVisnaHealthy = $maediVisnaStatusDestination == MaediVisnaStatus::FREE_1_YEAR
+                                    || $maediVisnaStatusDestination == MaediVisnaStatus::FREE_2_YEAR
+                                    || $maediVisnaStatusDestination == MaediVisnaStatus::FREE
+                                    || $maediVisnaStatusDestination == MaediVisnaStatus::STATUS_KNOWN_BY_AHD;
+
+        if($isOriginMaediVisnaHealthy && $isDestinationMaediVisnaHealthy) {
+            $newLocationHealth->setMaediVisnaStatus($maediVisnaStatusDestination);
+
+        } else if(!$isOriginMaediVisnaHealthy && $isDestinationMaediVisnaHealthy) {
+            $newLocationHealth->setMaediVisnaStatus(maediVisnaStatus::UNDER_OBSERVATION);
+
+        } else if($isOriginMaediVisnaHealthy && !$isDestinationMaediVisnaHealthy) {
+            $newLocationHealth->setMaediVisnaStatus($maediVisnaStatusDestination);
+
+        } else { //(!$isOriginMaediVisnaHealthy && !$isDestinationMaediVisnaHealthy)
+            $newLocationHealth->setMaediVisnaStatus($maediVisnaStatusDestination);
         }
 
-
         $locationOfDestination->addHealth($newLocationHealth);
-
         return $locationOfDestination;
     }
 
@@ -155,12 +185,17 @@ class LocationHealthUpdater
      */
     public static function verifyIsLocationHealthy(LocationHealth $locationHealth)
     {
-        if(    $locationHealth->getScrapieStatus() != ScrapieStatus::UNDER_OBSERVATION
-            && $locationHealth->getScrapieStatus() != null
-            && $locationHealth->getScrapieStatus() != ""
-            && $locationHealth->getMaediVisnaStatus() != ScrapieStatus::UNDER_OBSERVATION
-            && $locationHealth->getMaediVisnaStatus() != null
-            && $locationHealth->getMaediVisnaStatus() != "") {
+        $scrapieStatus = $locationHealth->getScrapieStatus();
+        $maediVisnaStatus = $locationHealth->getMaediVisnaStatus();
+
+        $scrapieStatusHealthy = $scrapieStatus == ScrapieStatus::FREE
+                             || $scrapieStatus == ScrapieStatus::RESISTANT;
+        $maediVisnaStatusHealthy = $maediVisnaStatus == MaediVisnaStatus::FREE
+                             || $maediVisnaStatus == MaediVisnaStatus::FREE_1_YEAR
+                             || $maediVisnaStatus == MaediVisnaStatus::FREE_2_YEAR
+                             || $maediVisnaStatus == MaediVisnaStatus::STATUS_KNOWN_BY_AHD;
+
+        if($scrapieStatusHealthy && $maediVisnaStatusHealthy) {
             return true;
         } else {
             return false;
@@ -181,5 +216,28 @@ class LocationHealthUpdater
             return false;
         }
     }
-    
+
+    /**
+     * Used for debugging in this class.
+     * Because there will be many changes to the health logic in subsequent phases, it is highly likely
+     * that this debugging function will come in handy.
+     *
+     * @param $i
+     * @param $locationOfDestination
+     * @param $locationOfOrigin
+     */
+    private static function dumpAndDie($i, $locationOfDestination, $locationOfOrigin)
+    {
+        $destinationHealth = Utils::returnLastLocationHealth($locationOfDestination->getHealths());
+        $originHealth = Utils::returnLastLocationHealth($locationOfOrigin->getHealths());
+
+        dump($i,
+            array("destination maediVisna" => $destinationHealth->getMaediVisnaStatus(),
+                "destination scrapie" => $destinationHealth->getScrapieStatus()),
+            array("origin maediVisna" => $originHealth->getMaediVisnaStatus(),
+                "origin scrapie" => $originHealth->getScrapieStatus())
+        );
+
+        die();
+    }
 }
