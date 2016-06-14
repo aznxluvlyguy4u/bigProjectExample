@@ -664,11 +664,11 @@ class Location
     /**
      * Add healthMessage
      *
-     * @param \AppBundle\Entity\LocationHealth $healthMessage
+     * @param \AppBundle\Entity\LocationHealthMessage $healthMessage
      *
      * @return Location
      */
-    public function addHealthMessage(\AppBundle\Entity\LocationHealth $healthMessage)
+    public function addHealthMessage(\AppBundle\Entity\LocationHealthMessage $healthMessage)
     {
         $this->healthMessages[] = $healthMessage;
 
@@ -678,9 +678,9 @@ class Location
     /**
      * Remove healthMessage
      *
-     * @param \AppBundle\Entity\LocationHealth $healthMessage
+     * @param \AppBundle\Entity\LocationHealthMessage $healthMessage
      */
-    public function removeHealthMessage(\AppBundle\Entity\LocationHealth $healthMessage)
+    public function removeHealthMessage(\AppBundle\Entity\LocationHealthMessage $healthMessage)
     {
         $this->healthMessages->removeElement($healthMessage);
     }
