@@ -278,8 +278,11 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     
     //persist data
     $manager->persist(self::$janVanRijnsbergen);
+    $manager->persist(self::$janVanRijnsbergen->getCompanies()->last()->getLocations()->last()->getHealths()->last());
     $manager->persist(self::$reinardEverts);
+    $manager->persist(self::$reinardEverts->getCompanies()->last()->getLocations()->last()->getHealths()->last());
     $manager->persist(self::$nsfoTestAccount);
+    $manager->persist(self::$nsfoTestAccount->getCompanies()->last()->getLocations()->last()->getHealths()->last());
     $manager->flush();
 
 
