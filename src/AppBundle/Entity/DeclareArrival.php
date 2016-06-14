@@ -132,6 +132,12 @@ class DeclareArrival extends DeclareBase {
     private $revoke;
 
     /**
+     * @ORM\OneToOne(targetEntity="LocationHealthMessage", inversedBy="arrival")
+     * @JMS\Type("AppBundle\Entity\LocationHealthMessage")
+     */
+    private $healthMessage;
+
+    /**
      * DeclareArrival constructor.
      */
     public function __construct() {
@@ -459,4 +465,28 @@ class DeclareArrival extends DeclareBase {
 
 
 
+
+    /**
+     * Set healthMessage
+     *
+     * @param \AppBundle\Entity\LocationHealthMessage $healthMessage
+     *
+     * @return DeclareArrival
+     */
+    public function setHealthMessage(\AppBundle\Entity\LocationHealthMessage $healthMessage = null)
+    {
+        $this->healthMessage = $healthMessage;
+
+        return $this;
+    }
+
+    /**
+     * Get healthMessage
+     *
+     * @return \AppBundle\Entity\LocationHealthMessage
+     */
+    public function getHealthMessage()
+    {
+        return $this->healthMessage;
+    }
 }

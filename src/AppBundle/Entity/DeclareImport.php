@@ -137,7 +137,11 @@ class DeclareImport extends DeclareBase
    */
   private $revoke;
 
-
+    /**
+     * @ORM\OneToOne(targetEntity="LocationHealthMessage", inversedBy="import")
+     * @JMS\Type("AppBundle\Entity\LocationHealthMessage")
+     */
+    private $healthMessage;
 
   /**
    * DeclareArrival constructor.
@@ -457,5 +461,29 @@ class DeclareImport extends DeclareBase
     public function getAnimalUlnNumberOrigin()
     {
         return $this->animalUlnNumberOrigin;
+    }
+
+    /**
+     * Set healthMessage
+     *
+     * @param \AppBundle\Entity\LocationHealthMessage $healthMessage
+     *
+     * @return DeclareImport
+     */
+    public function setHealthMessage(\AppBundle\Entity\LocationHealthMessage $healthMessage = null)
+    {
+        $this->healthMessage = $healthMessage;
+
+        return $this;
+    }
+
+    /**
+     * Get healthMessage
+     *
+     * @return \AppBundle\Entity\LocationHealthMessage
+     */
+    public function getHealthMessage()
+    {
+        return $this->healthMessage;
     }
 }

@@ -16,7 +16,6 @@ use JMS\Serializer\Annotation\Expose;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\LocationRepository")
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
-
  */
 class Location
 {
@@ -148,6 +147,16 @@ class Location
    */
   private $healths;
 
+  /**
+   * @var ArrayCollection
+   *
+   * @ORM\OneToMany(targetEntity="LocationHealthMessage", mappedBy="location")
+   * @ORM\JoinColumn(name="health_message_id", referencedColumnName="id", nullable=true)
+   * @JMS\Type("AppBundle\Entity\LocationHealthMessage")
+   * @Expose
+   */
+  private $healthMessages;
+
   /*
   * Constructor
   */
@@ -164,6 +173,7 @@ class Location
     $this->flags = new ArrayCollection();
     $this->revokes = new ArrayCollection();
     $this->healths = new ArrayCollection();
+    $this->healthMessages = new ArrayCollection();
   }
 
   /**
@@ -650,4 +660,38 @@ class Location
 
 
 
+
+    /**
+     * Add healthMessage
+     *
+     * @param \AppBundle\Entity\LocationHealth $healthMessage
+     *
+     * @return Location
+     */
+    public function addHealthMessage(\AppBundle\Entity\LocationHealth $healthMessage)
+    {
+        $this->healthMessages[] = $healthMessage;
+
+        return $this;
+    }
+
+    /**
+     * Remove healthMessage
+     *
+     * @param \AppBundle\Entity\LocationHealth $healthMessage
+     */
+    public function removeHealthMessage(\AppBundle\Entity\LocationHealth $healthMessage)
+    {
+        $this->healthMessages->removeElement($healthMessage);
+    }
+
+    /**
+     * Get healthMessages
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getHealthMessages()
+    {
+        return $this->healthMessages;
+    }
 }

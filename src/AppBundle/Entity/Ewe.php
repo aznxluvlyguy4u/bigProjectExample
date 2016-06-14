@@ -315,4 +315,38 @@ class Ewe extends Animal
     }
 
 
+
+    /**
+     * Add healthMessage
+     *
+     * @param \AppBundle\Entity\LocationHealthMessages $healthMessage
+     *
+     * @return Ewe
+     */
+    public function addHealthMessage(\AppBundle\Entity\LocationHealthMessages $healthMessage)
+    {
+        $this->healthMessages[] = $healthMessage;
+
+        return $this;
+    }
+
+    /**
+     * Remove healthMessage
+     *
+     * @param \AppBundle\Entity\LocationHealthMessages $healthMessage
+     */
+    public function removeHealthMessage(\AppBundle\Entity\LocationHealthMessages $healthMessage)
+    {
+        $this->healthMessages->removeElement($healthMessage);
+    }
+
+    /**
+     * Get healthMessages
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getHealthMessages()
+    {
+        return $this->healthMessages;
+    }
 }
