@@ -6,6 +6,7 @@ namespace AppBundle\Entity;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationHealth;
 use \DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -115,6 +116,14 @@ class LocationHealthMessage
     private $ulnCountryCode;
 
     /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $animalCountryOrigin;
+
+    /**
      * @var DeclareArrival
      *
      * @ORM\OneToOne(targetEntity="DeclareArrival", mappedBy="healthMessage")
@@ -127,6 +136,14 @@ class LocationHealthMessage
      * @ORM\OneToOne(targetEntity="DeclareImport", mappedBy="healthMessage")
      */
     private $import;
+
+    /**
+     * @var LocationHealth
+     *
+     * @ORM\OneToOne(targetEntity="LocationHealth")
+     * @ORM\JoinColumn(name="previous_location_health_id", referencedColumnName="id")
+     */
+    private $previousLocationHealth;
 
     /**
      * LocationHealthMessage constructor.
@@ -323,6 +340,22 @@ class LocationHealthMessage
     }
 
     /**
+     * @return string
+     */
+    public function getAnimalCountryOrigin()
+    {
+        return $this->animalCountryOrigin;
+    }
+
+    /**
+     * @param string $animalCountryOrigin
+     */
+    public function setAnimalCountryOrigin($animalCountryOrigin)
+    {
+        $this->animalCountryOrigin = $animalCountryOrigin;
+    }
+
+    /**
      * Set location
      *
      * @param \AppBundle\Entity\Location $location
@@ -437,4 +470,22 @@ class LocationHealthMessage
     {
         return $this->checkForScrapie;
     }
+
+    /**
+     * @return LocationHealth
+     */
+    public function getPreviousLocationHealth()
+    {
+        return $this->previousLocationHealth;
+    }
+
+    /**
+     * @param LocationHealth $previousLocationHealth
+     */
+    public function setPreviousLocationHealth($previousLocationHealth)
+    {
+        $this->previousLocationHealth = $previousLocationHealth;
+    }
+
+
 }
