@@ -8,6 +8,21 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\DeclarationDetail;
+use AppBundle\Entity\DeclareAnimalFlag;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareExport;
+use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareLoss;
+use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\RetrieveAnimals;
+use AppBundle\Entity\RetrieveCountries;
+use AppBundle\Entity\RetrieveTags;
+use AppBundle\Entity\RetrieveAnimalDetails;
+use AppBundle\Entity\RetrieveUbnDetails;
+use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
@@ -20,7 +35,6 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\EntityGetter;
-use AppBundle\Entity\RevokeDeclaration;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -175,7 +189,7 @@ class APIController extends Controller implements APIControllerInterface
    * @param $messageClassNameSpace
    * @param ArrayCollection $contentArray
    * @param $user
-   * @return mixed
+   * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
    * @throws \Exception
    */
   protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user)
@@ -189,7 +203,7 @@ class APIController extends Controller implements APIControllerInterface
 
   /**
    * @param $messageObject
-   * @return mixed
+   * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
    */
   public function persist($messageObject)
   {
