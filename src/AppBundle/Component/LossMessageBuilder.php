@@ -4,6 +4,7 @@ namespace AppBundle\Component;
 
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareLoss;
+use AppBundle\Enumerator\AnimalType;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
@@ -55,6 +56,7 @@ class LossMessageBuilder extends MessageBuilderBase
         if(ActionFlagSetting::DECLARE_LOSS != null) {
             $declareLoss->setAction(ActionFlagSetting::DECLARE_LOSS);
         }
+        $declareLoss->setAnimalType(AnimalType::sheep);
 
         //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
         $declareLoss->setLocation($this->person->getCompanies()[0]->getLocations()[0]);

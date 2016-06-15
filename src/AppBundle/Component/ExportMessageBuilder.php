@@ -4,6 +4,7 @@ namespace AppBundle\Component;
 
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareExport;
+use AppBundle\Enumerator\AnimalType;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -51,6 +52,7 @@ class ExportMessageBuilder extends MessageBuilderBase
     $messageObject->setPedigreeCountryCode($animal->getPedigreeCountryCode());
     $messageObject->setPedigreeNumber($animal->getPedigreeNumber());
     $messageObject->setIsExportAnimal(true);
+    $messageObject->setAnimalType(AnimalType::sheep);
 
     if(ActionFlagSetting::DECLARE_EXPORT != null) {
       $messageObject->setAction(ActionFlagSetting::DECLARE_EXPORT);

@@ -17,11 +17,6 @@ class LoginOutput
     public static function create($client)
     {
         $result = array(
-                    "ienr" => //TODO DELETE obsolete ienr array only in tandem with frontend
-                    array(
-                        "username" => "",
-                        "password" => ""
-                    ),
                     "nsfo" =>
                     array(
                         "username" => $client->getEmailAddress()

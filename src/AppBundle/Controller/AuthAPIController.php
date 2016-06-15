@@ -15,6 +15,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Company;
 use AppBundle\Enumerator\MigrationStatus;
 use AppBundle\Setting\MigrationSetting;
+use AppBundle\Validation\PasswordValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -202,9 +203,15 @@ class AuthAPIController extends APIController {
 
     $client = $this->getAuthenticatedUser($request);
     $content = $this->getContentAsArray($request);
-    $encodedOldPassword = $client->getPassword();
     $newPassword = base64_decode($content->get('new_password'));
 
+    //Validate password format
+    $passwordValidator = new PasswordValidator($newPassword);
+    if(!$passwordValidator->getIsPasswordValid()) {
+        return $passwordValidator->createJsonErrorResponse();
+    }
+
+    $encodedOldPassword = $client->getPassword();
     $encoder = $this->get('security.password_encoder');
     $encodedNewPassword = $encoder->encodePassword($client, $newPassword);
     $client->setPassword($encodedNewPassword);

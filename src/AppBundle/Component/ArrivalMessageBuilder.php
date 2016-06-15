@@ -4,6 +4,7 @@ namespace AppBundle\Component;
 
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Enumerator\AnimalType;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
@@ -49,7 +50,7 @@ class ArrivalMessageBuilder extends MessageBuilderBase
      */
     private function addDeclareArrivalData(DeclareArrival $messageObject)
     {
-
+        $messageObject->setAnimalType(AnimalType::sheep);
         if(ActionFlagSetting::DECLARE_ARRIVAL != null) {
             $messageObject->setAction(ActionFlagSetting::DECLARE_ARRIVAL);
         }

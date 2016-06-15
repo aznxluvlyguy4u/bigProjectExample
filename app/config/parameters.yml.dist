@@ -27,3 +27,4 @@ parameters:
     aws_sqs_queue_prod: ~
     aws_sqs_queue_dev: ~
     aws_sqs_queue_test: ~
+    aws_sqs_queue_local: ~

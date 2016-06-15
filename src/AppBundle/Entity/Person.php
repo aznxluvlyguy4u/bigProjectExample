@@ -67,7 +67,8 @@ abstract class Person implements UserInterface
   private $isActive;
 
   /**
-   * @ORM\Column(type="string", length=64)
+   * @ORM\Column(type="string", length=64, nullable=false)
+   *
    */
   protected $password;
 
