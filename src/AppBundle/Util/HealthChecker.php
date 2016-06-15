@@ -3,6 +3,8 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Component\Utils;
+use AppBundle\Entity\Location;
 use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\ScrapieStatus;
 
@@ -29,5 +31,21 @@ class HealthChecker
             || $maediVisnaStatus == MaediVisnaStatus::STATUS_KNOWN_BY_AHD;
     }
 
+    /**
+     * @param Location $location
+     * @return bool
+     */
+    public static function verifyIsLocationCompletelyHealthy($location)
+    {
+        $locationHealth = Utils::returnLastLocationHealth($location->getHealths());
+        $maediVisnaStatus = $locationHealth->getMaediVisnaStatus();
+        $scrapieStatus = $locationHealth->getScrapieStatus();
 
+        if(self::verifyIsMaediVisnaStatusHealthy($maediVisnaStatus)
+        && self::verifyIsScrapieStatusHealthy($scrapieStatus)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
