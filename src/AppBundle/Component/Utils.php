@@ -3,6 +3,7 @@
 namespace AppBundle\Component;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\WeightMeasurement;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -144,26 +145,76 @@ class Utils
      */
     public static function returnLastResponse(Collection $responses)
     {
-        if($responses->count() == 0) {
+        return self::returnLastItemFromCollectionByLogDate($responses);
+    }
+
+    /**
+     * @param Collection $items
+     * @return mixed|null
+     */
+    public static function returnLastItemFromCollectionByLogDate(Collection $items)
+    {
+        if($items->count() == 0) {
             return null;
         }
 
-        $length = $responses->count();
+        $length = $items->count();
 
         //initialize values
-        $lastResponseIndex = 0;
+        $lastItemIndex = 0;
         $startIndex = 0;
-        $latestLogDate = $responses->get($startIndex)->getLogDate();
+        $latestLogDate = $items->get($startIndex)->getLogDate();
 
         for($i = $startIndex + 1; $i < $length; $i++) {
-            $responseLogDate = $responses->get($i)->getLogDate();
-            if($responseLogDate > $latestLogDate) {
-                $lastResponseIndex = $i;
-                $latestLogDate = $responseLogDate;
+            $itemLogDate = $items->get($i)->getLogDate();
+            if($itemLogDate > $latestLogDate) {
+                $lastItemIndex = $i;
+                $latestLogDate = $itemLogDate;
             }
         }
 
-        return $responses->get($lastResponseIndex);
+        return $items->get($lastItemIndex);
+    }
+
+    /**
+     * WeightMeasurement are sorted first by weightMeasurementDate and then on logDate
+     *
+     * @param Collection $weightMeasurements
+     * @return WeightMeasurement|null
+     */
+    public static function returnLastWeightMeasurement(Collection $weightMeasurements)
+    {
+        if($weightMeasurements->count() == 0) {
+            return null;
+        }
+
+        $length = $weightMeasurements->count();
+
+        $measurementsOnLastWeightMeasurementDate = new ArrayCollection();
+
+        //initialize values
+        $startIndex = 0;
+        $firstWeightMeasurement = $weightMeasurements->get($startIndex);
+        $latestWeightMeasurementDate = $firstWeightMeasurement->getWeightMeasurementDate();
+        $measurementsOnLastWeightMeasurementDate->add($firstWeightMeasurement);
+
+        //Gather the weightMeasurements with the latest weightMeasurementDate
+        for($i = $startIndex + 1; $i < $length; $i++) {
+            $weightMeasurement = $weightMeasurements->get($i);
+            $weightMeasurementDate = $weightMeasurement->getWeightMeasurementDate();
+
+            if($weightMeasurementDate > $latestWeightMeasurementDate) {
+                $measurementsOnLastWeightMeasurementDate->clear();
+                $measurementsOnLastWeightMeasurementDate->add($weightMeasurement);
+                $latestWeightMeasurementDate = $weightMeasurementDate;
+
+            } else if($weightMeasurementDate == $latestWeightMeasurementDate) {
+                $measurementsOnLastWeightMeasurementDate->add($weightMeasurement);
+            }
+        }
+
+        //Then find the one with the latest logDate
+        return self::returnLastItemFromCollectionByLogDate($measurementsOnLastWeightMeasurementDate);
     }
 
     /**

@@ -225,6 +225,13 @@ abstract class Animal
     protected $flags;
 
     /**
+     * @var array
+     * @JMS\Type("AppBundle\Entity\WeightMeasurement")
+     * @ORM\OneToMany(targetEntity="WeightMeasurement", mappedBy="animal")
+     */
+    protected $weightMeasurements;
+
+    /**
      * @var Tag
      *
      * @ORM\OneToOne(targetEntity="Tag", inversedBy="animal", cascade={"persist"})
@@ -311,6 +318,7 @@ abstract class Animal
         $this->exports = new ArrayCollection();
         $this->births = new ArrayCollection();
         $this->deaths = new ArrayCollection();
+        $this->weightMeasurements = new ArrayCollection();
 
         $this->flags = new ArrayCollection();
         $this->isAlive = true;
@@ -1150,4 +1158,38 @@ abstract class Animal
     }
 
 
+
+    /**
+     * Add weightMeasurement
+     *
+     * @param \AppBundle\Entity\WeightMeasurement $weightMeasurement
+     *
+     * @return Animal
+     */
+    public function addWeightMeasurement(\AppBundle\Entity\WeightMeasurement $weightMeasurement)
+    {
+        $this->weightMeasurements[] = $weightMeasurement;
+
+        return $this;
+    }
+
+    /**
+     * Remove weightMeasurement
+     *
+     * @param \AppBundle\Entity\WeightMeasurement $weightMeasurement
+     */
+    public function removeWeightMeasurement(\AppBundle\Entity\WeightMeasurement $weightMeasurement)
+    {
+        $this->weightMeasurements->removeElement($weightMeasurement);
+    }
+
+    /**
+     * Get weightMeasurements
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getWeightMeasurements()
+    {
+        return $this->weightMeasurements;
+    }
 }
