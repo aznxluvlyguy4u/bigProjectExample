@@ -276,36 +276,36 @@ class Neuter extends Animal
 
 
     /**
-     * Add healthMessage
+     * Add weightMeasurement
      *
-     * @param \AppBundle\Entity\LocationHealthMessages $healthMessage
+     * @param \AppBundle\Entity\WeightMeasurement $weightMeasurement
      *
      * @return Neuter
      */
-    public function addHealthMessage(\AppBundle\Entity\LocationHealthMessages $healthMessage)
+    public function addWeightMeasurement(\AppBundle\Entity\WeightMeasurement $weightMeasurement)
     {
-        $this->healthMessages[] = $healthMessage;
+        $this->weightMeasurements[] = $weightMeasurement;
 
         return $this;
     }
 
     /**
-     * Remove healthMessage
+     * Remove weightMeasurement
      *
-     * @param \AppBundle\Entity\LocationHealthMessages $healthMessage
+     * @param \AppBundle\Entity\WeightMeasurement $weightMeasurement
      */
-    public function removeHealthMessage(\AppBundle\Entity\LocationHealthMessages $healthMessage)
+    public function removeWeightMeasurement(\AppBundle\Entity\WeightMeasurement $weightMeasurement)
     {
-        $this->healthMessages->removeElement($healthMessage);
+        $this->weightMeasurements->removeElement($weightMeasurement);
     }
 
     /**
-     * Get healthMessages
+     * Get weightMeasurements
      *
      * @return \Doctrine\Common\Collections\Collection
      */
-    public function getHealthMessages()
+    public function getWeightMeasurements()
     {
-        return $this->healthMessages;
+        return $this->weightMeasurements;
     }
 }

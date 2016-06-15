@@ -150,15 +150,6 @@ class Utils
     }
 
     /**
-     * @param Collection $weightMeasurements
-     * @return WeightMeasurement|null
-     */
-    public static function returnLastWeightMeasurement(Collection $weightMeasurements)
-    {
-        return self::returnLastItemFromCollectionByLogDate($weightMeasurements);
-    }
-
-    /**
      * @param Collection $locationHealths
      * @return LocationHealth|null
      */
@@ -193,6 +184,48 @@ class Utils
         }
 
         return $items->get($lastItemIndex);
+    }
+
+    /**
+     * WeightMeasurement are sorted first by weightMeasurementDate and then on logDate
+     *
+     * @param Collection $weightMeasurements
+     * @return WeightMeasurement|null
+     */
+    public static function returnLastWeightMeasurement(Collection $weightMeasurements)
+    {
+        if($weightMeasurements->count() == 0) {
+            return null;
+        }
+
+        $length = $weightMeasurements->count();
+
+        $measurementsOnLastWeightMeasurementDate = new ArrayCollection();
+
+        //initialize values
+        $startIndex = 0;
+        $firstWeightMeasurement = $weightMeasurements->get($startIndex);
+        $latestWeightMeasurementDate = $firstWeightMeasurement->getWeightMeasurementDate();
+        $measurementsOnLastWeightMeasurementDate->add($firstWeightMeasurement);
+
+        //Gather the weightMeasurements with the latest weightMeasurementDate
+        for($i = $startIndex + 1; $i < $length; $i++) {
+
+            $weightMeasurement = $weightMeasurements->get($i);
+            $weightMeasurementDate = $weightMeasurement->getWeightMeasurementDate();
+
+            if($weightMeasurementDate > $latestWeightMeasurementDate) {
+                $measurementsOnLastWeightMeasurementDate->clear();
+                $measurementsOnLastWeightMeasurementDate->add($weightMeasurement);
+                $latestWeightMeasurementDate = $weightMeasurementDate;
+
+            } else if($weightMeasurementDate == $latestWeightMeasurementDate) {
+                $measurementsOnLastWeightMeasurementDate->add($weightMeasurement);
+            }
+        }
+
+        //Then find the one with the latest logDate
+        return self::returnLastItemFromCollectionByLogDate($measurementsOnLastWeightMeasurementDate);
     }
 
     /**
