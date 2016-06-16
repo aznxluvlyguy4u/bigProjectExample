@@ -701,7 +701,6 @@ class APIController extends Controller implements APIControllerInterface
     }
 
 
-
     $previousLocationHealthDestination = $em->getRepository(Constant::LOCATION_HEALTH_REPOSITORY)->find($previousLocationHealthId);
     $newLocationHealthDestination = Utils::returnLastLocationHealth($location->getHealths());
 

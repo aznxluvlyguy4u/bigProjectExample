@@ -56,10 +56,19 @@ class LocationHealthUpdater
     {
         //If either or both the Destination or Origin location have a LocationHealth of null
         //Then create a new LocationHealth and set all values to "under observation".
-        if($locationOfOrigin == null) {
-            $newLocationHealth = self::createNewLocationHealthWithInitialValues();
-            $em->persist($newLocationHealth); $em->flush();
-            $locationOfDestination->addHealth($newLocationHealth);
+        if($locationOfOrigin == null) { //case of Import
+            
+            if(HealthChecker::verifyIsLocationCompletelyNotHealthy($locationOfDestination)) {
+                //Don't create a new LocationHealth. This will lead to a duplicate.
+                return $locationOfDestination;
+                
+            } else {
+                //Use the previous nonHealthy health statuses when available
+                $newLocationHealth = self::createNewLocationHealthWithInitialValues($locationOfDestination);                
+                $em->persist($newLocationHealth); $em->flush();
+                $locationOfDestination->addHealth($newLocationHealth);
+            }
+            
             return $locationOfDestination;
         }
 
@@ -144,13 +153,39 @@ class LocationHealthUpdater
         return $locationOfDestination;
     }
 
-
-    public static function createNewLocationHealthWithInitialValues()
+    /**
+     * @param Location $locationOfDestination
+     * @return LocationHealth
+     */
+    public static function createNewLocationHealthWithInitialValues(Location $locationOfDestination = null)
     {
         $locationHealth = new LocationHealth();
+
+        //Default values
         $locationHealth->setMaediVisnaStatus(MaediVisnaStatus::UNDER_OBSERVATION);
         $locationHealth->setScrapieStatus(ScrapieStatus::UNDER_OBSERVATION);
         $locationHealth->setLocationHealthStatus(LocationHealthStatus::UNDER_OBSERVATION);
+        
+        //Override default values if necessary
+        if($locationOfDestination != null) {
+            $previousLocationHealth = Utils::returnLastLocationHealth($locationOfDestination->getHealths());
+
+            $previousScrapieStatus = $previousLocationHealth->getScrapieStatus();
+            if(!HealthChecker::verifyIsScrapieStatusHealthy($previousScrapieStatus)){
+                $locationHealth->setScrapieStatus($previousScrapieStatus);
+            }
+
+            $previousMaediVisnaStatus = $previousLocationHealth->getMaediVisnaStatus();
+            if(!HealthChecker::verifyIsMaediVisnaStatusHealthy($previousMaediVisnaStatus)){
+                $locationHealth->setMaediVisnaStatus($previousMaediVisnaStatus);
+            }
+
+            $previousOverallLocationStatus = $previousLocationHealth->getLocationHealthStatus();
+            if(!HealthChecker::verifyIsOverallLocationStatusHealthy($previousOverallLocationStatus)
+            && $previousOverallLocationStatus != null){
+                $locationHealth->setLocationHealthStatus($previousOverallLocationStatus);
+            }
+        }
 
         return $locationHealth;
     }

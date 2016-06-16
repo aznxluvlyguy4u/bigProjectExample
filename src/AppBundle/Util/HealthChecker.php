@@ -9,6 +9,7 @@ use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
+use AppBundle\Enumerator\LocationHealthStatus;
 use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\ScrapieStatus;
@@ -39,6 +40,15 @@ class HealthChecker
     }
 
     /**
+     * @param string $overallStatus
+     * @return bool
+     */
+    public static function verifyIsOverallLocationStatusHealthy($overallStatus)
+    {
+        return $overallStatus == LocationHealthStatus::FREE;
+    }
+
+    /**
      * @param Location $location
      * @return bool
      */
@@ -50,6 +60,24 @@ class HealthChecker
 
         if(self::verifyIsMaediVisnaStatusHealthy($maediVisnaStatus)
         && self::verifyIsScrapieStatusHealthy($scrapieStatus)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @param Location $location
+     * @return bool
+     */
+    public static function verifyIsLocationCompletelyNotHealthy($location)
+    {
+        $locationHealth = Utils::returnLastLocationHealth($location->getHealths());
+        $maediVisnaStatus = $locationHealth->getMaediVisnaStatus();
+        $scrapieStatus = $locationHealth->getScrapieStatus();
+
+        if(!self::verifyIsMaediVisnaStatusHealthy($maediVisnaStatus)
+            && !self::verifyIsScrapieStatusHealthy($scrapieStatus)) {
             return true;
         } else {
             return false;
