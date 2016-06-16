@@ -1,0 +1,75 @@
+<?php
+
+namespace AppBundle\Controller;
+
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Symfony\Component\HttpFoundation\Request;
+use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Enumerator\RequestType;
+use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use AppBundle\Constant\Constant;
+
+/**
+ * Class TagsReplaceAPI
+ * @Route("/api/v1/tags-replace")
+ */
+class TagsReplaceAPIController extends APIController {
+
+  /**
+   *
+   * Create a new DeclareTagReplace request
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Post a new DeclareTagReplace request, containing a Tag to be replaced",
+   *   input = "AppBundle\Entity\DeclareTagReplace",
+   *   output = "AppBundle\Entity\DeclareTagReplaceResponse"
+   * )
+   * @param Request $request
+   * @return JsonResponse
+   * @Route("")
+   * @Method("POST")
+   */
+  public function createTagReplaceRequest(Request $request)
+  {
+    $content = $this->getContentAsArray($request);
+    $client = $this->getAuthenticatedUser($request);
+
+    $animal = $content->get(Constant::ANIMAL_NAMESPACE);
+    $isAnimalOfClient = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->verifyIfClientOwnsAnimal($client, $animal);
+
+    //Check if uln is valid
+    if(!$isAnimalOfClient) {
+      return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
+    }
+
+    //Check if tag replacement is unassigned and in the database, else don't send any TagReplace
+    $tagContent = $content->get(Constant::TAG_NAMESPACE);
+    $validation = $this->getDoctrine()->getRepository(Constant::DECLARE_TAGS_TRANSFER_REPOSITORY)->validateTag($client, $tagContent[Constant::ULN_COUNTRY_CODE_NAMESPACE], $tagContent[Constant::ULN_NUMBER_NAMESPACE]);
+
+    if($validation[Constant::VALIDITY_NAMESPACE] == false) {
+      return new JsonResponse($validation[Constant::MESSAGE_NAMESPACE], $validation[Constant::CODE_NAMESPACE]);
+    }
+
+    //Convert the array into an object and add the mandatory values retrieved from the database
+    $declareTagReplace = $this->buildMessageObject(RequestType::DECLARE_TAG_REPLACE, $content, $this->getAuthenticatedUser($request));
+
+    //First Persist object to Database, before sending it to the queue
+    $this->persist($declareTagReplace);
+
+    //Send it to the queue and persist/update any changed state to the database
+    $messageArray = $this->sendMessageObjectToQueue($declareTagReplace);
+
+    return new JsonResponse($messageArray, 200);
+  }
+}
