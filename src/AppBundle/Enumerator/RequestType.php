@@ -18,6 +18,7 @@ class RequestType
     const DECLARE_ANIMAL_FLAG = 'DECLARE_ANIMAL_FLAG';
     const DECLARE_DEPART = 'DECLARE_DEPART';
     const DECLARE_TAGS_TRANSFER = 'DECLARE_TAGS_TRANSFER';
+    const DECLARE_TAG_REPLACE = 'DECLARE_TAG_REPLACE';
     const DECLARE_LOSS = 'DECLARE_LOSS';
     const DECLARE_EXPORT = 'DECLARE_EXPORT';
     const DECLARE_IMPORT = 'DECLARE_IMPORT';
@@ -35,6 +36,7 @@ class RequestType
     const DECLARE_BIRTH_ENTITY = 'DeclareBirth';
     const DECLARE_DEPART_ENTITY = 'DeclareDepart';
     const DECLARE_TAGS_TRANSFER_ENTITY = 'DeclareTagsTransfer';
+    const DECLARE_TAG_REPLACE_ENTITY = 'DeclareTagReplace';
     const DECLARE_LOSS_ENTITY = 'DeclareLoss';
     const DECLARE_EXPORT_ENTITY = 'DeclareExport';
     const DECLARE_IMPORT_ENTITY = 'DeclareImport';
@@ -68,6 +70,9 @@ class RequestType
                 return RequestType::DECLARE_DEPART;
 
             case RequestType::DECLARE_TAGS_TRANSFER_ENTITY:
+                return RequestType::DECLARE_TAGS_TRANSFER;
+
+            case RequestType::DECLARE_TAG_REPLACE_ENTITY:
                 return RequestType::DECLARE_TAGS_TRANSFER;
 
             case RequestType::DECLARE_LOSS_ENTITY:
