@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Output;
+use AppBundle\Component\Utils;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
 
@@ -58,7 +59,7 @@ abstract class Output
     {
         if($location != null) {
             self::$ubn = $location->getUbn();
-            self::$locationHealth = $location->getHealths()->last();
+            self::$locationHealth = Utils::returnLastLocationHealth($location->getHealths());
 
         } else {
             self::$ubn = null;
