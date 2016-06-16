@@ -9,7 +9,7 @@ use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\LocationHealthStatus;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 
 //TODO Nothing is done with the endDates yet.
 
@@ -21,41 +21,45 @@ class LocationHealthUpdater
 {
 
     /**
-     * @param EntityManager $em
+     * @param ObjectManager $em
      * @param Location $location
      * @param string $ubnPreviousOwner
      * @return Location
      */
-    public static function updateByGivenUbnOfOrigin(EntityManager $em, Location $location, $ubnPreviousOwner)
+    public static function updateByGivenUbnOfOrigin(ObjectManager $em, Location $location, $ubnPreviousOwner)
     {
         $locationOfOrigin = $em->getRepository(Constant::LOCATION_REPOSITORY)->findByUbn($ubnPreviousOwner);
-        return self::updateByGivenLocationOfOrigin($location, $locationOfOrigin);
+        return self::updateByGivenLocationOfOrigin($em, $location, $locationOfOrigin);
     }
 
 
     /**
+     * @param ObjectManager $em
      * @param Location $locationOfDestination
      * @return Location
      */
-    public static function updateWithoutOriginHealthData(Location $locationOfDestination)
+    public static function updateWithoutOriginHealthData(ObjectManager $em,Location $locationOfDestination)
     {
-        return self::updateByGivenLocationOfOrigin($locationOfDestination, null);
+        return self::updateByGivenLocationOfOrigin($em,$locationOfDestination, null);
     }
 
 
 
     /**
+     * @param ObjectManager $em
      * @param Location $locationOfDestination
      * @param Location $locationOfOrigin
      * @return Location
      */
-    public static function updateByGivenLocationOfOrigin(Location $locationOfDestination,
+    public static function updateByGivenLocationOfOrigin(ObjectManager $em, Location $locationOfDestination,
                                                          $locationOfOrigin = null)
     {
         //If either or both the Destination or Origin location have a LocationHealth of null
         //Then create a new LocationHealth and set all values to "under observation".
         if($locationOfOrigin == null) {
-            $locationOfDestination->addHealth(self::createNewLocationHealthWithInitialValues());
+            $newLocationHealth = self::createNewLocationHealthWithInitialValues();
+            $em->persist($newLocationHealth); $em->flush();
+            $locationOfDestination->addHealth($newLocationHealth);
             return $locationOfDestination;
         }
 
@@ -63,7 +67,9 @@ class LocationHealthUpdater
         $healthsOrigin = $locationOfOrigin->getHealths();
 
         if($healthsOrigin->isEmpty() || $healthsDestination->isEmpty()) {
-            $locationOfDestination->addHealth(self::createNewLocationHealthWithInitialValues());
+            $newLocationHealth = self::createNewLocationHealthWithInitialValues();
+            $em->persist($newLocationHealth); $em->flush();
+            $locationOfDestination->addHealth($newLocationHealth);
             return $locationOfDestination;
         }
 
@@ -78,11 +84,10 @@ class LocationHealthUpdater
         //If origin is not verified as completely healthy ...
 
         $healthDestination = Utils::returnLastLocationHealth($locationOfDestination->getHealths());
-        $locationHealthStatusesAreIdentical = HealthChecker::verifyHealthStatusesAreIdentical($healthDestination, $healthOrigin);
+        $locationHealthStatusesAreIdentical = HealthChecker::verifyHealthStatusesAreAtIdenticalLevel($healthDestination, $healthOrigin);
         if($locationHealthStatusesAreIdentical) { //do nothing
             return $locationOfDestination;
         }
-
 
         //If origin is not verified as completely healthy and the location health statuses are not identical, a new LocationHealth has to be added
         $newLocationHealth = new LocationHealth();
@@ -133,6 +138,9 @@ class LocationHealthUpdater
         }
 
         $locationOfDestination->addHealth($newLocationHealth);
+
+        $em->persist($newLocationHealth); $em->flush();
+        
         return $locationOfDestination;
     }
 
@@ -147,27 +155,4 @@ class LocationHealthUpdater
         return $locationHealth;
     }
 
-    /**
-     * Used for debugging in this class.
-     * Because there will be many changes to the health logic in subsequent phases, it is highly likely
-     * that this debugging function will come in handy.
-     *
-     * @param $i
-     * @param $locationOfDestination
-     * @param $locationOfOrigin
-     */
-    private static function dumpAndDie($i, $locationOfDestination, $locationOfOrigin)
-    {
-        $destinationHealth = Utils::returnLastLocationHealth($locationOfDestination->getHealths());
-        $originHealth = Utils::returnLastLocationHealth($locationOfOrigin->getHealths());
-
-        dump($i,
-            array("destination maediVisna" => $destinationHealth->getMaediVisnaStatus(),
-                "destination scrapie" => $destinationHealth->getScrapieStatus()),
-            array("origin maediVisna" => $originHealth->getMaediVisnaStatus(),
-                "origin scrapie" => $originHealth->getScrapieStatus())
-        );
-
-        die();
-    }
 }

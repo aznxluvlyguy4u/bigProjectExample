@@ -688,43 +688,58 @@ class APIController extends Controller implements APIControllerInterface
    */
   public function checkAndPersistLocationHealthStatusAndCreateNewLocationHealthMessage($messageObject, $location, $animal)
   {
-    if($messageObject instanceof DeclareImport) { //import
-      $location = LocationHealthUpdater::updateWithoutOriginHealthData($location);
+    $em = $this->getDoctrine()->getManager();
+    $previousLocationHealthId = Utils::returnLastLocationHealth($location->getHealths())->getId();
 
-    } else if($messageObject instanceof DeclareArrival) { //arrival
-      $location = LocationHealthUpdater::updateByGivenUbnOfOrigin($this->getDoctrine()->getEntityManager(),
-          $location, $messageObject->getUbnPreviousOwner());
+    if($messageObject instanceof DeclareImport) {
+      $location = LocationHealthUpdater::updateWithoutOriginHealthData($em, $location);
+
+    } else if($messageObject instanceof DeclareArrival) {
+      $location = LocationHealthUpdater::updateByGivenUbnOfOrigin($em, $location, $messageObject->getUbnPreviousOwner());
     } else {
       return null; //Only Imports and Arrivals are allowed into the function
     }
 
-    $messageObject->setLocation($location);
 
-    //Build LocationHealthMessage here before animal is set to null
+
+    $previousLocationHealthDestination = $em->getRepository(Constant::LOCATION_HEALTH_REPOSITORY)->find($previousLocationHealthId);
+    $newLocationHealthDestination = Utils::returnLastLocationHealth($location->getHealths());
+
     $isLocationCompletelyHealthy = HealthChecker::verifyIsLocationCompletelyHealthy($location);
-    $locationHealthMessage = null;
+    $isLocationOriginCompletelyHealthy = HealthChecker::verifyIsLocationOriginCompletelyHealthy($messageObject, Utils::getClassName($messageObject), $em);
+    $hasLocationHealthChanged = HealthChecker::verifyHasLocationHealthChanged($previousLocationHealthDestination, $newLocationHealthDestination);
 
-    if(!$isLocationCompletelyHealthy) {
-      $previousLocationHealth = Utils::returnLastLocationHealth($location->getHealths());
-      $locationHealthMessage = LocationHealthMessageBuilder::build($messageObject, $previousLocationHealth, $animal);
+    /* LocationHealth Update */
+    if(!$isLocationCompletelyHealthy && $hasLocationHealthChanged)
+    {
+      //Persist HealthStatus
+      $messageObject->setLocation($location);
+      $em->persist($newLocationHealthDestination);
+      $this->persist($messageObject);
+      $em->flush();
 
-      $messageObject->setHealthMessage($locationHealthMessage);
-      $location->addHealthMessage($locationHealthMessage);
+    } else {
+      $previousLocationHealthDestination = null;
+      $previousLocationHealthId = null;
+      /* previousLocationHealth = null is saved in LocationHealthMessage,
+         to indicate there was no change in the LocationHealth */
     }
 
-    //Persist HealthStatus
-    $this->getDoctrine()->getManager()->persist($messageObject->getLocation()->getHealths()->last());
 
-    //Persist LocationHealthMessage and relations
-    if(!$isLocationCompletelyHealthy) {
-      $this->getDoctrine()->getManager()->persist($locationHealthMessage);
-      $this->getDoctrine()->getManager()->persist($location);
+    /* LocationHealthMessage */
+    if(!$isLocationOriginCompletelyHealthy) {
+      $locationHealthMessage = LocationHealthMessageBuilder::build($em, $messageObject, $previousLocationHealthId, $animal);
+
+//      $messageObject->setHealthMessage($locationHealthMessage);
+//      $location->addHealthMessage($locationHealthMessage);
+
+      //Persist LocationHealthMessage and relations with other Entities
+      $em->persist($locationHealthMessage);
+//      $em->persist(Utils::returnLastLocationHealth($location->getHealths()));
+//      $em->persist($location);
+//      $this->persist($messageObject);
+      $em->flush();
     }
-
-    //Persist message without animal. That is done after a successful response
-    $this->persist($messageObject);
-
-    $this->getDoctrine()->getManager()->flush();
 
     return $messageObject;
   }

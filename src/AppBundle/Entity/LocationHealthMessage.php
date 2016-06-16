@@ -138,19 +138,13 @@ class LocationHealthMessage
     private $import;
 
     /**
-     * @var LocationHealth
+     * @var integer
      *
-     * @ORM\OneToOne(targetEntity="LocationHealth")
-     * @ORM\JoinColumn(name="previous_location_health_id", referencedColumnName="id")
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     * @Expose
      */
-
-    /**
-     * @var LocationHealth
-     *
-     * @ORM\ManyToOne(targetEntity="LocationHealth", inversedBy="healthMessages")
-     * @JMS\Type("AppBundle\Entity\LocationHealth")
-     */
-    private $previousLocationHealth;
+    private $previousLocationHealthId;
 
     /**
      * LocationHealthMessage constructor.
@@ -479,20 +473,22 @@ class LocationHealthMessage
     }
 
     /**
-     * @return LocationHealth
+     * @return integer
      */
-    public function getPreviousLocationHealth()
+    public function getPreviousLocationHealthId()
     {
-        return $this->previousLocationHealth;
+        return $this->previousLocationHealthId;
     }
 
     /**
-     * @param LocationHealth $previousLocationHealth
+     * @param integer $previousLocationHealthId
      */
-    public function setPreviousLocationHealth($previousLocationHealth)
+    public function setPreviousLocationHealthId($previousLocationHealthId)
     {
-        $this->previousLocationHealth = $previousLocationHealth;
+        $this->previousLocationHealthId = $previousLocationHealthId;
     }
+
+
 
 
 }

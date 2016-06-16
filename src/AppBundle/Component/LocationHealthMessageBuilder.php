@@ -3,6 +3,7 @@
 namespace AppBundle\Component;
 
 
+use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
@@ -10,16 +11,18 @@ use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthMessage;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\HealthChecker;
+use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Component\Console\Event\ConsoleCommandEvent;
 
 class LocationHealthMessageBuilder
 {
     /**
      * @param DeclareArrival|DeclareImport $declareIn
-     * @param LocationHealth $previousLocationHealthOfDestination
+     * @param integer $idPreviousLocationHealthOfDestination
      * @param Animal $animal
      * @return LocationHealthMessage
      */
-    public static function build($declareIn, $previousLocationHealthOfDestination, Animal $animal = null)
+    public static function build(ObjectManager $em, $declareIn, $idPreviousLocationHealthOfDestination = null, Animal $animal = null)
     {
         if($animal == null) {
             $animal = $declareIn->getAnimal();
@@ -29,7 +32,6 @@ class LocationHealthMessageBuilder
 
         $healthMessage = new LocationHealthMessage();
         $healthMessage->setLocation($location);
-        $healthMessage->setPreviousLocationHealth($previousLocationHealthOfDestination);
         $healthMessage->setAnimal($animal);
         $healthMessage->setUbnNewOwner($location->getUbn());
         $healthMessage->setUlnCountryCode($declareIn->getUlnCountryCode());
@@ -46,9 +48,11 @@ class LocationHealthMessageBuilder
         switch($declareType) {
             case RequestType::DECLARE_ARRIVAL_ENTITY:
                 $healthMessage->setArrival($declareIn);
-                $healthMessage->setUbnPreviousOwner($declareIn->getUbnPreviousOwner()); //animalCountryOrigin for arrivals is null.
+                $ubnPreviousOwner = $declareIn->getUbnPreviousOwner();
+                $healthMessage->setUbnPreviousOwner($ubnPreviousOwner); //animalCountryOrigin for arrivals is null.
 
-                $locationHealthOrigin = Utils::returnLastLocationHealth($animal->getLocation()->getHealths());
+                $locationOrigin = $em->getRepository(Constant::LOCATION_REPOSITORY)->findByUbn($ubnPreviousOwner);
+                $locationHealthOrigin = Utils::returnLastLocationHealth($locationOrigin->getHealths());
                 $isMaediVisnaStatusHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($locationHealthOrigin->getMaediVisnaStatus());
                 $isScrapieStatusHealthy = HealthChecker::verifyIsScrapieStatusHealthy($locationHealthOrigin->getScrapieStatus());
                 break;
@@ -76,6 +80,10 @@ class LocationHealthMessageBuilder
             $healthMessage->setCheckForScrapie(false);
         } else {
             $healthMessage->setCheckForScrapie(true);
+        }
+        //id of previousLocationHealth
+        if($idPreviousLocationHealthOfDestination != null) {
+            $healthMessage->setPreviousLocationHealthId($idPreviousLocationHealthOfDestination);
         }
 
         return $healthMessage;
