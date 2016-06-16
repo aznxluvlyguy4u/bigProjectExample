@@ -143,6 +143,13 @@ class LocationHealthMessage
      * @ORM\OneToOne(targetEntity="LocationHealth")
      * @ORM\JoinColumn(name="previous_location_health_id", referencedColumnName="id")
      */
+
+    /**
+     * @var LocationHealth
+     *
+     * @ORM\ManyToOne(targetEntity="LocationHealth", inversedBy="healthMessages")
+     * @JMS\Type("AppBundle\Entity\LocationHealth")
+     */
     private $previousLocationHealth;
 
     /**

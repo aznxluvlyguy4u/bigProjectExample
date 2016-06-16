@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use \DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -150,6 +151,17 @@ class LocationHealth
      * @Expose
      */
     private $checkDate;
+
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="LocationHealthMessage", mappedBy="previousLocationHealth")
+     * @ORM\JoinColumn(name="health_message_id", referencedColumnName="id", nullable=true)
+     * @JMS\Type("AppBundle\Entity\LocationHealthMessage")
+     * @Expose
+     */
+    private $healthMessages;
 
     public function __construct()
     {
@@ -360,4 +372,38 @@ class LocationHealth
 
 
 
+
+    /**
+     * Add healthMessage
+     *
+     * @param \AppBundle\Entity\LocationHealthMessage $healthMessage
+     *
+     * @return LocationHealth
+     */
+    public function addHealthMessage(\AppBundle\Entity\LocationHealthMessage $healthMessage)
+    {
+        $this->healthMessages[] = $healthMessage;
+
+        return $this;
+    }
+
+    /**
+     * Remove healthMessage
+     *
+     * @param \AppBundle\Entity\LocationHealthMessage $healthMessage
+     */
+    public function removeHealthMessage(\AppBundle\Entity\LocationHealthMessage $healthMessage)
+    {
+        $this->healthMessages->removeElement($healthMessage);
+    }
+
+    /**
+     * Get healthMessages
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getHealthMessages()
+    {
+        return $this->healthMessages;
+    }
 }
