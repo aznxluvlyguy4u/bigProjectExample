@@ -27,7 +27,6 @@ use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
 use AppBundle\Enumerator\UIDType;
 use AppBundle\Setting\ActionFlagSetting;
-use AppBundle\Util\LocationHealthUpdater;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Types\JsonArrayType;
 use Doctrine\ORM\EntityManager;
@@ -189,11 +188,6 @@ class IRSerializer implements IRSerializerInterface
             $declareArrivalRequest->setUbnPreviousOwner($ubnPreviousOwner);
             $declareArrivalRequest->setRequestState(RequestStateType::OPEN);
 
-            //Update health status based on UbnPreviousOwner
-            $locationOfDestination = $declareArrivalRequest->getLocation();
-            $locationOfDestination = LocationHealthUpdater::updateByGivenUbnOfOrigin($this->entityManager, $locationOfDestination, $ubnPreviousOwner);
-            $declareArrivalRequest->setLocation($locationOfDestination);
-
             $requestState = $declareArrivalContentArray['request_state'];
             if(Utils::hasSuccessfulLastResponse($requestState)) {
                 $declareArrivalRequest->setRecoveryIndicator(RecoveryIndicatorType::J);
@@ -214,12 +208,6 @@ class IRSerializer implements IRSerializerInterface
             //denormalize the content to an object
             $json = $this->serializeToJSON($declareArrivalContentArray);
             $declareArrivalRequest = $this->deserializeToObject($json, RequestType::DECLARE_ARRIVAL_ENTITY);
-
-            //Get the location from the animal before the new location is set on the animal
-            $locationOfDestination = $client->getCompanies()->get(0)->getLocations()->get(0); //TODO Phase 2: Acceptt given Location
-            $locationOfOrigin = $retrievedAnimal->getLocation();
-            $locationOfDestination = LocationHealthUpdater::updateByGivenLocationOfOrigin($locationOfDestination, $locationOfOrigin);
-            $declareArrivalRequest->setLocation($locationOfDestination);
 
             //Add retrieved animal to DeclareArrival
             $declareArrivalRequest->setAnimal($retrievedAnimal);
@@ -637,7 +625,7 @@ class IRSerializer implements IRSerializerInterface
 
         //At the moment all imports are from location with unknown health status
         $locationOfDestination = $client->getCompanies()->get(0)->getLocations()->get(0); //TODO Phase 2+, accept different Locations
-        $locationOfDestination = LocationHealthUpdater::updateWithoutOriginHealthData($locationOfDestination);
+
         $declareImportRequest->setLocation($locationOfDestination);
 
         return $declareImportRequest;

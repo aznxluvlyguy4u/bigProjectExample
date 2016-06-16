@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\LocationHealthMessageBuilder;
 use AppBundle\Component\Modifier\MessageModifier;
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Component\Utils;
@@ -35,6 +36,8 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\EntityGetter;
+use AppBundle\Util\HealthChecker;
+use AppBundle\Util\LocationHealthUpdater;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -675,5 +678,54 @@ class APIController extends Controller implements APIControllerInterface
     }
 
     return Utils::buildValidationArray($isValid, $code, $messageBody, array('messageNumber' => $messageNumber));
+  }
+
+  /**
+   * @param DeclareArrival|DeclareImport $messageObject
+   * @param Location $location
+   * @param  Animal $animal
+   * @return null|DeclareArrival|DeclareImport
+   */
+  public function checkAndPersistLocationHealthStatusAndCreateNewLocationHealthMessage($messageObject, $location, $animal)
+  {
+    if($messageObject instanceof DeclareImport) { //import
+      $location = LocationHealthUpdater::updateWithoutOriginHealthData($location);
+
+    } else if($messageObject instanceof DeclareArrival) { //arrival
+      $location = LocationHealthUpdater::updateByGivenUbnOfOrigin($this->getDoctrine()->getEntityManager(),
+          $location, $messageObject->getUbnPreviousOwner());
+    } else {
+      return null; //Only Imports and Arrivals are allowed into the function
+    }
+
+    $messageObject->setLocation($location);
+
+    //Build LocationHealthMessage here before animal is set to null
+    $isLocationCompletelyHealthy = HealthChecker::verifyIsLocationCompletelyHealthy($location);
+    $locationHealthMessage = null;
+
+    if(!$isLocationCompletelyHealthy) {
+      $previousLocationHealth = Utils::returnLastLocationHealth($location->getHealths());
+      $locationHealthMessage = LocationHealthMessageBuilder::build($messageObject, $previousLocationHealth, $animal);
+
+      $messageObject->setHealthMessage($locationHealthMessage);
+      $location->addHealthMessage($locationHealthMessage);
+    }
+
+    //Persist HealthStatus
+    $this->getDoctrine()->getManager()->persist($messageObject->getLocation()->getHealths()->last());
+
+    //Persist LocationHealthMessage and relations
+    if(!$isLocationCompletelyHealthy) {
+      $this->getDoctrine()->getManager()->persist($locationHealthMessage);
+      $this->getDoctrine()->getManager()->persist($location);
+    }
+
+    //Persist message without animal. That is done after a successful response
+    $this->persist($messageObject);
+
+    $this->getDoctrine()->getManager()->flush();
+
+    return $messageObject;
   }
 }

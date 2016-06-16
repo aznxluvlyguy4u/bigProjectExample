@@ -3,6 +3,7 @@
 namespace AppBundle\Component;
 
 
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\LocationHealth;
@@ -15,11 +16,15 @@ class LocationHealthMessageBuilder
     /**
      * @param DeclareArrival|DeclareImport $declareIn
      * @param LocationHealth $previousLocationHealthOfDestination
+     * @param Animal $animal
      * @return LocationHealthMessage
      */
-    public static function build($declareIn, $previousLocationHealthOfDestination)
+    public static function build($declareIn, $previousLocationHealthOfDestination, Animal $animal = null)
     {
-        $animal = $declareIn->getAnimal();
+        if($animal == null) {
+            $animal = $declareIn->getAnimal();
+        }
+
         $location = $declareIn->getLocation();
 
         $healthMessage = new LocationHealthMessage();

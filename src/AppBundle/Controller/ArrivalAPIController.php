@@ -7,11 +7,13 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareImport;
 use AppBundle\Output\DeclareArrivalOutput;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\HealthChecker;
+use AppBundle\Util\LocationHealthUpdater;
 use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -167,7 +169,6 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     //TODO Phase 2: accept different locations
     $location = $client->getCompanies()->get(0)->getLocations()->get(0);
-    $previousLocationHealth = Utils::returnLastLocationHealth($location->getHealths());
 
     $isImportAnimal = $content->get('is_import_animal');
 
@@ -175,37 +176,20 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     if($isImportAnimal) {
       //TODO Phase 2: Filter between non-EU countries and EU countries. At the moment we only process sheep from EU countries
       $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client);
-
     } else {
       $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client);
     }
 
-    //Build LocationHealthMessage here before animal is set to null
-    $isLocationCompletelyHealthy = HealthChecker::verifyIsLocationCompletelyHealthy($location);
-    $locationHealthMessage = null;
-    if(!$isLocationCompletelyHealthy) {
-      $locationHealthMessage = LocationHealthMessageBuilder::build($messageObject, $previousLocationHealth);
-      $messageObject->setHealthMessage($locationHealthMessage);
-      $location->addHealthMessage($locationHealthMessage);
-    }
-
     //Send it to the queue and persist/update any changed state to the database
     $messageArray = $this->sendMessageObjectToQueue($messageObject);
+    $animal = $messageObject->getAnimal();
     $messageObject->setAnimal(null);
-
-    //Persist HealthStatus
-    $this->getDoctrine()->getManager()->persist($messageObject->getLocation()->getHealths()->last());
-
-    //Persist LocationHealthMessage and relations
-    if(!$isLocationCompletelyHealthy) {
-      $this->getDoctrine()->getManager()->persist($locationHealthMessage);
-      $this->getDoctrine()->getManager()->persist($location);
-    }
 
     //Persist message without animal. That is done after a successful response
     $this->persist($messageObject);
-
     $this->getDoctrine()->getManager()->flush();
+
+    $this->checkAndPersistLocationHealthStatusAndCreateNewLocationHealthMessage($messageObject, $location, $animal);
 
 //    return new JsonResponse(array("status"=>"sent"), 200);
     return new JsonResponse($messageArray, 200);
@@ -255,6 +239,11 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     }
 
     //TODO Updating an import will not update the HealthStatus change, so we only need to deal with an Arrival. Verify if UBN has changed. Then check if the updated UBN has a different status compared to the previous UBN. If so Implement rollback of locationHealth and then recalculate it with for the new UBN AND the Arrivals and Imports with a logDate after this one.     NOTE that if you just find ONE Import you are actually done. Because then all health statuses need to be updated :)
+//
+//    //Update health status based on UbnPreviousOwner
+//    $locationOfDestination = $declareArrivalRequest->getLocation();
+//    $locationOfDestination = LocationHealthUpdater::updateByGivenUbnOfOrigin($this->entityManager, $locationOfDestination, $ubnPreviousOwner);
+//    $declareArrivalRequest->setLocation($locationOfDestination);
 
     $isImportAnimal = $messageObject->getIsImportAnimal();
 
