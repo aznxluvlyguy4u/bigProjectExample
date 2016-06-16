@@ -28,6 +28,7 @@ use Doctrine\Common\Collections\ArrayCollection;
  *      "DeclareLoss" = "DeclareLoss",
  *      "DeclareMate" = "DeclareMate",
  *      "DeclareTagsTransfer" = "DeclareTagsTransfer",
+ *      "DeclareTagReplace" = "DeclareTagReplace",
  *      "RevokeDeclaration" = "RevokeDeclaration"
  *   }
  * )
