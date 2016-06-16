@@ -73,7 +73,7 @@ class RequestType
                 return RequestType::DECLARE_TAGS_TRANSFER;
 
             case RequestType::DECLARE_TAG_REPLACE_ENTITY:
-                return RequestType::DECLARE_TAGS_TRANSFER;
+                return RequestType::DECLARE_TAG_REPLACE;
 
             case RequestType::DECLARE_LOSS_ENTITY:
                 return RequestType::DECLARE_LOSS;
