@@ -3,12 +3,10 @@
 namespace AppBundle\Util;
 
 use AppBundle\Component\Utils;
-use AppBundle\Entity\Animal;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\ScrapieStatus;
-use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\LocationHealthStatus;
 use Doctrine\ORM\EntityManager;
@@ -34,26 +32,6 @@ class LocationHealthUpdater
         return self::updateByGivenLocationOfOrigin($location, $locationOfOrigin);
     }
 
-    /**
-     * @param EntityManager $em
-     * @param Location $location
-     * @param Animal $animal
-     * @return Location
-     */
-    public static function updateByGivenAnimal(EntityManager $em, Location $location, Animal $animal)
-    {
-        //Verify if Animal is in the NSFO database
-        $retrievedAnimal = $em->getRepository(Constant::ANIMAL_REPOSITORY)->findByAnimal($animal);
-        if($retrievedAnimal != null) {
-
-            $locationOfOrigin = $retrievedAnimal->getLocation();
-            return self::updateByGivenLocationOfOrigin($location, $locationOfOrigin);
-
-        } else {
-
-            return self::updateByGivenLocationOfOrigin($location);
-        }
-    }
 
     /**
      * @param Location $locationOfDestination
@@ -91,7 +69,7 @@ class LocationHealthUpdater
 
         //If both do have a LocationHealth ...
         $healthOrigin = Utils::returnLastLocationHealth($healthsOrigin);
-        $originLocationIsHealthy = self::verifyIsLocationHealthy($healthOrigin);
+        $originLocationIsHealthy = HealthChecker::verifyIsLocationHealthy($healthOrigin);
 
         if($originLocationIsHealthy) { //do nothing
             return $locationOfDestination;
@@ -100,12 +78,10 @@ class LocationHealthUpdater
         //If origin is not verified as completely healthy ...
 
         $healthDestination = Utils::returnLastLocationHealth($locationOfDestination->getHealths());
-        $locationHealthStatusesAreIdentical = self::verifyHealthStatusesAreIdentical($healthDestination, $healthOrigin);
+        $locationHealthStatusesAreIdentical = HealthChecker::verifyHealthStatusesAreIdentical($healthDestination, $healthOrigin);
         if($locationHealthStatusesAreIdentical) { //do nothing
             return $locationOfDestination;
         }
-
-
 
 
         //If origin is not verified as completely healthy and the location health statuses are not identical, a new LocationHealth has to be added
@@ -169,37 +145,6 @@ class LocationHealthUpdater
         $locationHealth->setLocationHealthStatus(LocationHealthStatus::UNDER_OBSERVATION);
 
         return $locationHealth;
-    }
-
-    /**
-     * @param LocationHealth $locationHealth
-     * @return bool
-     */
-    public static function verifyIsLocationHealthy(LocationHealth $locationHealth)
-    {
-        $scrapieStatusHealthy = HealthChecker::verifyIsScrapieStatusHealthy($locationHealth->getScrapieStatus());
-        $maediVisnaStatusHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($locationHealth->getMaediVisnaStatus());
-
-        if($scrapieStatusHealthy && $maediVisnaStatusHealthy) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * @param LocationHealth $destination
-     * @param LocationHealth $origin
-     * @return bool
-     */
-    public static function verifyHealthStatusesAreIdentical(LocationHealth $destination, LocationHealth $origin)
-    {
-        if($destination->getScrapieStatus() == $origin->getScrapieStatus()
-        && $destination->getMaediVisnaStatus() == $origin->getMaediVisnaStatus()) {
-            return true;
-        } else {
-            return false;
-        }
     }
 
     /**

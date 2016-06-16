@@ -5,6 +5,7 @@ namespace AppBundle\Util;
 
 use AppBundle\Component\Utils;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationHealth;
 use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\ScrapieStatus;
 
@@ -43,6 +44,37 @@ class HealthChecker
 
         if(self::verifyIsMaediVisnaStatusHealthy($maediVisnaStatus)
         && self::verifyIsScrapieStatusHealthy($scrapieStatus)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @param LocationHealth $locationHealth
+     * @return bool
+     */
+    public static function verifyIsLocationHealthy(LocationHealth $locationHealth)
+    {
+        $scrapieStatusHealthy = HealthChecker::verifyIsScrapieStatusHealthy($locationHealth->getScrapieStatus());
+        $maediVisnaStatusHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($locationHealth->getMaediVisnaStatus());
+
+        if($scrapieStatusHealthy && $maediVisnaStatusHealthy) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @param LocationHealth $destination
+     * @param LocationHealth $origin
+     * @return bool
+     */
+    public static function verifyHealthStatusesAreIdentical(LocationHealth $destination, LocationHealth $origin)
+    {
+        if($destination->getScrapieStatus() == $origin->getScrapieStatus()
+            && $destination->getMaediVisnaStatus() == $origin->getMaediVisnaStatus()) {
             return true;
         } else {
             return false;
