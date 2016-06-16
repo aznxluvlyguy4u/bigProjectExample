@@ -4,6 +4,7 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\Utils;
 use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Client;
@@ -462,6 +463,62 @@ class IRSerializer implements IRSerializerInterface
 
         return $declareTagsTransfer;
     }
+
+
+    /**
+     * @inheritdoc
+     */
+    function parseDeclareTagReplace(ArrayCollection $contentArray, Client $client, $isEditMessage)
+    {
+        $contentArray["type"] = RequestType::DECLARE_TAG_REPLACE_ENTITY;
+
+        $animal = $contentArray['animal'];
+        $tag = $contentArray['tag'];
+        $replaceDate = $contentArray['replace_date'];
+
+        $ulnCountryCodeToReplace = $animal['uln_country_code'];
+        $ulnNumberToReplace = $animal['uln_number'];
+        $ulnCountryCodeReplacement = $tag['uln_country_code'];
+        $ulnNumberReplacement= $tag['uln_number'];
+
+        $declareTagReplace = new DeclareTagReplace();
+
+        $declareTagReplace->setUlnCountryCodeToReplace($ulnCountryCodeToReplace);
+        $declareTagReplace->setUlnNumberToReplace($ulnNumberToReplace);
+
+        $declareTagReplace->setReplaceDate($replaceDate);
+
+        $fetchedTag = null;
+        $tagsRepository = $this->entityManager->getRepository(Constant::TAG_REPOSITORY);
+
+        //create filter to search tag
+        $tagFilter = array("ulnCountryCode" => $declareTagReplace->getUlnCountryCodeReplacement(),
+          "ulnNumber" => $declareTagReplace->getUlnNumberReplacement());
+
+        //Fetch tag from database
+        $fetchedTag = $tagsRepository->findOneBy($tagFilter);
+
+        //If tag was found, add it to the declare tag replac request
+        if($fetchedTag != null) {
+
+            //Check if Tag status is UNASSIGNED && No animal is assigned to it
+            if($fetchedTag->getTagStatus() == TagStateType::UNASSIGNED && $fetchedTag->getAnimal() == null) {
+
+                //add tag to result set
+                $declareTagReplace->addTag($fetchedTag);
+
+                $declareTagReplace->setUlnCountryCodeReplacement($fetchedTag->getUlnCountryCode());
+                $declareTagReplace->setUlnNumberReplacement($fetchedTag->getUlnNumber());
+            }
+        }
+
+
+        //TODO: NO EDIT YET, Phase 2+
+
+        return $declareTagReplace;
+    }
+
+
 
     /**
      * @inheritdoc
