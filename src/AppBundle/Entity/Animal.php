@@ -50,7 +50,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @Expose
      */
-    protected $pedigreeCountryCode;
+    private $pedigreeCountryCode;
 
     /**
      * @var string
@@ -62,7 +62,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @Expose
      */
-    protected $pedigreeNumber;
+    private $pedigreeNumber;
 
     /**
      * @var string
@@ -71,7 +71,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @Expose
      */
-    protected $name;
+    private $name;
 
     /**
      * @var DateTime
@@ -81,7 +81,7 @@ abstract class Animal
      * @JMS\Type("DateTime")
      * @Expose
      */
-    protected $dateOfBirth;
+    private $dateOfBirth;
 
     /**
      * @var DateTime
@@ -91,7 +91,7 @@ abstract class Animal
      * @JMS\Type("DateTime")
      * @Expose
      */
-    protected $dateOfDeath;
+    private $dateOfDeath;
 
     /**
      * @var string
@@ -100,7 +100,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @Expose
      */
-    protected $gender;
+    private $gender;
 
     /**
      * @var Animal
@@ -109,7 +109,7 @@ abstract class Animal
      * @ORM\JoinColumn(name="parent_father_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\Animal")
      */
-    protected $parentFather;
+    private $parentFather;
 
     /**
      * @var Animal
@@ -118,7 +118,7 @@ abstract class Animal
      * @ORM\JoinColumn(name="parent_mother_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\Animal")
      */
-    protected $parentMother;
+    private $parentMother;
 
     /**
      * @var Animal
@@ -136,7 +136,7 @@ abstract class Animal
      * @ORM\JoinColumn(name="surrogate_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\Animal")
      */
-    protected $surrogate;
+    private $surrogate;
 
     /**
      * @var integer
@@ -146,7 +146,7 @@ abstract class Animal
      * @JMS\Type("integer")
      * @Expose
      */
-    protected $animalType;
+    private $animalType;
 
     /**
      * @var string
@@ -155,7 +155,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @Expose
      */
-    protected $transferState;
+    private $transferState;
 
     /**
      * @var integer
@@ -164,7 +164,7 @@ abstract class Animal
      * @JMS\Type("integer")
      * @Expose
      */
-    protected $animalCategory;
+    private $animalCategory;
 
     /**
      * @var string
@@ -173,63 +173,63 @@ abstract class Animal
      * @JMS\Type("string")
      * @Expose
      */
-    protected $animalHairColour;
+    private $animalHairColour;
 
     /**
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareArrival")
      * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="animal")
      */
-    protected $arrivals;
+    private $arrivals;
 
     /**
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareDepart")
      * @ORM\OneToMany(targetEntity="DeclareDepart", mappedBy="animal", cascade={"persist"})
      */
-    protected $departures;
+    private $departures;
 
     /**
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareImport")
      * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="animal")
      */
-    protected $imports;
+    private $imports;
 
     /**
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareExport")
      * @ORM\OneToMany(targetEntity="DeclareExport", mappedBy="animal", cascade={"persist"})
      */
-    protected $exports;
+    private $exports;
 
     /**
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareBirth")
      * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="animal")
      */
-    protected $births;
+    private $births;
 
     /**
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareLoss")
      * @ORM\OneToMany(targetEntity="DeclareLoss", mappedBy="animal", cascade={"persist"})
      */
-    protected $deaths;
+    private $deaths;
 
     /**
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareAnimalFlag")
      * @ORM\OneToMany(targetEntity="DeclareAnimalFlag", mappedBy="animal", cascade={"persist"})
      */
-    protected $flags;
+    private $flags;
 
     /**
      * @var array
      * @JMS\Type("AppBundle\Entity\WeightMeasurement")
      * @ORM\OneToMany(targetEntity="WeightMeasurement", mappedBy="animal")
      */
-    protected $weightMeasurements;
+    private $weightMeasurements;
 
     /**
      * @var Tag
@@ -238,7 +238,7 @@ abstract class Animal
      * @ORM\JoinColumn(name="tag_id", referencedColumnName="id", nullable=true)
      * @JMS\Type("AppBundle\Entity\Tag")
      */
-    protected $assignedTag;
+    private $assignedTag;
 
     /**
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="animals", cascade={"persist"})
@@ -253,7 +253,7 @@ abstract class Animal
      * @JMS\Type("boolean")
      * @Expose
      */
-    protected $isAlive;
+    private $isAlive;
 
     /**
      * @var string
@@ -261,7 +261,7 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @Expose
      */
-    protected $ulnNumber;
+    private $ulnNumber;
 
     /**
      * @var string
@@ -269,7 +269,7 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @Expose
      */
-    protected $ulnCountryCode;
+    private $ulnCountryCode;
 
     /**
      * @var string
@@ -277,7 +277,7 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @Expose
      */
-    protected $animalOrderNumber;
+    private $animalOrderNumber;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
@@ -308,6 +308,17 @@ abstract class Animal
     private $animalCountryOrigin;
 
     /**
+     * @var ArrayCollection
+     * 
+     * @ORM\ManyToMany(targetEntity="Tag")
+     * @ORM\JoinTable(name="ulns_history",
+     *      joinColumns={@ORM\JoinColumn(name="animal_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="tag_id", referencedColumnName="id", unique=true)}
+     * )
+     */
+    private $ulnHistory;
+
+    /**
      * Animal constructor.
      */
     public function __construct() {
@@ -319,10 +330,9 @@ abstract class Animal
         $this->births = new ArrayCollection();
         $this->deaths = new ArrayCollection();
         $this->weightMeasurements = new ArrayCollection();
-
         $this->flags = new ArrayCollection();
+        $this->ulnHistory = new ArrayCollection();
         $this->isAlive = true;
-
         $this->ulnCountryCode = '';
         $this->ulnNumber = '';
         $this->animalOrderNumber = '';
@@ -1191,5 +1201,61 @@ abstract class Animal
     public function getWeightMeasurements()
     {
         return $this->weightMeasurements;
+    }
+
+    /**
+     * @param $ulnCountryCode
+     * @param $ulnNumber
+     */
+    public function replaceUln($ulnCountryCode , $ulnNumber) {
+
+        //Get current set ulnCountryCode and ulnNumber, add it to the history.
+
+        $tag = new Tag();
+        $tag->setUlnCountryCode($this->getUlnCountryCode());
+        $tag->setUlnNumber($this->getUlnNumber());
+        $tag->setTagStatus("REPLACED");
+
+        $this->ulnHistory->add($tag);
+
+        //Set new ulnCountryCode and ulnNumber as the current.
+        $this->setUlnCountryCode($ulnCountryCode);
+        $this->setUlnNumber($ulnNumber);
+    }
+
+
+
+    /**
+     * Add ulnHistory
+     *
+     * @param \AppBundle\Entity\Tag $ulnHistory
+     *
+     * @return Animal
+     */
+    public function addUlnHistory(\AppBundle\Entity\Tag $ulnHistory)
+    {
+        $this->ulnHistory[] = $ulnHistory;
+
+        return $this;
+    }
+
+    /**
+     * Remove ulnHistory
+     *
+     * @param \AppBundle\Entity\Tag $ulnHistory
+     */
+    public function removeUlnHistory(\AppBundle\Entity\Tag $ulnHistory)
+    {
+        $this->ulnHistory->removeElement($ulnHistory);
+    }
+
+    /**
+     * Get ulnHistory
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getUlnHistory()
+    {
+        return $this->ulnHistory;
     }
 }
