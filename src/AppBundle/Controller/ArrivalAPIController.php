@@ -14,6 +14,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\HealthChecker;
 use AppBundle\Util\LocationHealthUpdater;
+use AppBundle\Validation\UbnValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -156,21 +157,28 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
   public function createArrival(Request $request)
   {
     $content = $this->getContentAsArray($request);
+    $isImportAnimal = $content->get(Constant::IS_IMPORT_ANIMAL);
 
     //Only verify if pedigree exists in our database. Unknown ULNs are allowed
-    $verification = $this->verifyOnlyPedigreeCodeInAnimal($content->get(Constant::ANIMAL_NAMESPACE));
-    if(!$verification->get('isValid')){
+    $ulnVerification = $this->verifyOnlyPedigreeCodeInAnimal($content->get(Constant::ANIMAL_NAMESPACE));
+    if(!$ulnVerification->get('isValid')){
       return new JsonResponse(array('code'=>428,
-                               "pedigree" => $verification->get(Constant::PEDIGREE_NAMESPACE),
+                               "pedigree" => $ulnVerification->get(Constant::PEDIGREE_NAMESPACE),
                                 "message" => "PEDIGREE VALUE IS NOT REGISTERED WITH NSFO"), 428);
+    }
+
+    //Validate if ubnPreviousOwner matches the ubn of the animal with the given ULN, if the animal is in our database
+    if(!$isImportAnimal) {
+      $ubnValidator = new UbnValidator($this->getDoctrine()->getManager(), $content);
+      if(!$ubnValidator->getIsUbnValid()) {
+        return $ubnValidator->createArrivalJsonErrorResponse();
+      }
     }
 
     $client = $this->getAuthenticatedUser($request);
 
     //TODO Phase 2: accept different locations
     $location = $client->getCompanies()->get(0)->getLocations()->get(0);
-
-    $isImportAnimal = $content->get('is_import_animal');
 
     //Convert the array into an object and add the mandatory values retrieved from the database
     if($isImportAnimal) {
