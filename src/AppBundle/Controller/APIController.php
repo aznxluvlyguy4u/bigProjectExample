@@ -719,10 +719,7 @@ class APIController extends Controller implements APIControllerInterface
       $em->flush();
 
     } else {
-      $previousLocationHealthDestination = null;
-      $previousLocationHealthId = null;
-      /* previousLocationHealth = null is saved in LocationHealthMessage,
-         to indicate there was no change in the LocationHealth */
+      $previousLocationHealthId--;
     }
 
 
@@ -730,14 +727,12 @@ class APIController extends Controller implements APIControllerInterface
     if(!$isLocationOriginCompletelyHealthy) {
       $locationHealthMessage = LocationHealthMessageBuilder::build($em, $messageObject, $previousLocationHealthId, $animal);
 
-//      $messageObject->setHealthMessage($locationHealthMessage);
-//      $location->addHealthMessage($locationHealthMessage);
+      //Set LocationHealthMessage relationships
+      $messageObject->setHealthMessage($locationHealthMessage);
+      $location->addHealthMessage($locationHealthMessage);
 
-      //Persist LocationHealthMessage and relations with other Entities
+      //Persist LocationHealthMessage
       $em->persist($locationHealthMessage);
-//      $em->persist(Utils::returnLastLocationHealth($location->getHealths()));
-//      $em->persist($location);
-//      $this->persist($messageObject);
       $em->flush();
     }
 
