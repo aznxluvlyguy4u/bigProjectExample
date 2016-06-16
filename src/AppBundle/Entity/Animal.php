@@ -232,6 +232,13 @@ abstract class Animal
     private $weightMeasurements;
 
     /**
+     * @var array
+     * @JMS\Type("AppBundle\Entity\DeclareTagReplace")
+     * @ORM\OneToMany(targetEntity="DeclareTagReplace", mappedBy="animal", cascade={"persist"})
+     */
+    private $tagReplacements;
+
+    /**
      * @var Tag
      *
      * @ORM\OneToOne(targetEntity="Tag", inversedBy="animal", cascade={"persist"})
@@ -332,6 +339,7 @@ abstract class Animal
         $this->weightMeasurements = new ArrayCollection();
         $this->flags = new ArrayCollection();
         $this->ulnHistory = new ArrayCollection();
+        $this->tagReplacements = new ArrayCollection();
         $this->isAlive = true;
         $this->ulnCountryCode = '';
         $this->ulnNumber = '';
@@ -1257,5 +1265,39 @@ abstract class Animal
     public function getUlnHistory()
     {
         return $this->ulnHistory;
+    }
+
+    /**
+     * Add tagReplacement
+     *
+     * @param \AppBundle\Entity\DeclareTagReplace $tagReplacement
+     *
+     * @return Animal
+     */
+    public function addTagReplacement(\AppBundle\Entity\DeclareTagReplace $tagReplacement)
+    {
+        $this->tagReplacements[] = $tagReplacement;
+
+        return $this;
+    }
+
+    /**
+     * Remove tagReplacement
+     *
+     * @param \AppBundle\Entity\DeclareTagReplace $tagReplacement
+     */
+    public function removeTagReplacement(\AppBundle\Entity\DeclareTagReplace $tagReplacement)
+    {
+        $this->tagReplacements->removeElement($tagReplacement);
+    }
+
+    /**
+     * Get tagReplacements
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getTagReplacements()
+    {
+        return $this->tagReplacements;
     }
 }

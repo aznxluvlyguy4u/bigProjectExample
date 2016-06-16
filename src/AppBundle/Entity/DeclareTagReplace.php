@@ -18,6 +18,12 @@ use Doctrine\Common\Collections\ArrayCollection;
 class DeclareTagReplace extends DeclareBase {
 
     /**
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="tagReplacements")
+     * @JMS\Type("AppBundle\Entity\Animal")
+     */
+    private $animal;
+
+    /**
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
@@ -290,5 +296,29 @@ class DeclareTagReplace extends DeclareBase {
     public function getResponses()
     {
         return $this->responses;
+    }
+
+    /**
+     * Set animal
+     *
+     * @param \AppBundle\Entity\Animal $animal
+     *
+     * @return DeclareTagReplace
+     */
+    public function setAnimal(\AppBundle\Entity\Animal $animal = null)
+    {
+        $this->animal = $animal;
+
+        return $this;
+    }
+
+    /**
+     * Get animal
+     *
+     * @return \AppBundle\Entity\Animal
+     */
+    public function getAnimal()
+    {
+        return $this->animal;
     }
 }
