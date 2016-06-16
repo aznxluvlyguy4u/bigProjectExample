@@ -474,13 +474,20 @@ class IRSerializer implements IRSerializerInterface
         $animal = $contentArray['animal'];
         $tag = $contentArray['tag'];
         $replaceDate = $contentArray['replace_date'];
+
         $ulnCountryCodeToReplace = $animal['uln_country_code'];
         $ulnNumberToReplace = $animal['uln_number'];
 
-        $declareTagReplace = new DeclareTagReplace();
-        $declareTagReplace->setUlnCountryCodeToReplace($ulnCountryCodeToReplace);
-        $declareTagReplace->setUlnNumberToReplace($ulnNumberToReplace);
-        $declareTagReplace->setReplaceDate($replaceDate);
+        //denormalize the content to an object
+        $retrievedAnimal = $this->entityGetter->retrieveAnimal($contentArray);
+        $contentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
+        $json = $this->serializeToJSON($contentArray);
+        $declareTagReplace = $this->deserializeToObject($json, RequestType::DECLARE_TAG_REPLACE_ENTITY);
+
+        $declareTagReplace->setUlnCountryCodeToReplace($retrievedAnimal->getUlnCountryCode());
+        $declareTagReplace->setUlnNumberToReplace($retrievedAnimal->getUlnNumber());
+        $declareTagReplace->setAnimalType(AnimalType::sheep);
+        $declareTagReplace->setAnimal(null);
 
         $fetchedTag = null;
         $tagsRepository = $this->entityManager->getRepository(Constant::TAG_REPOSITORY);
@@ -499,8 +506,6 @@ class IRSerializer implements IRSerializerInterface
             if($fetchedTag->getTagStatus() == TagStateType::UNASSIGNED && $fetchedTag->getAnimal() == null) {
 
                 //add tag to result set
-                $declareTagReplace->addTag($fetchedTag);
-
                 $declareTagReplace->setUlnCountryCodeReplacement($fetchedTag->getUlnCountryCode());
                 $declareTagReplace->setUlnNumberReplacement($fetchedTag->getUlnNumber());
             }
