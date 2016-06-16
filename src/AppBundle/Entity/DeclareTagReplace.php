@@ -250,6 +250,7 @@ class DeclareTagReplace extends DeclareBase {
     public function setLocation(\AppBundle\Entity\Location $location = null)
     {
         $this->location = $location;
+        $this->setUbn($location->getUbn());
 
         return $this;
     }
