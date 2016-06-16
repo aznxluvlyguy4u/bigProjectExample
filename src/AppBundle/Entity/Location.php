@@ -143,7 +143,6 @@ class Location
    * @ORM\OneToMany(targetEntity="LocationHealth", mappedBy="location")
    * @ORM\JoinColumn(name="health_id", referencedColumnName="id", nullable=true)
    * @JMS\Type("AppBundle\Entity\LocationHealth")
-   * @Expose
    */
   private $healths;
 
@@ -153,7 +152,6 @@ class Location
    * @ORM\OneToMany(targetEntity="LocationHealthMessage", mappedBy="location")
    * @ORM\JoinColumn(name="health_message_id", referencedColumnName="id", nullable=true)
    * @JMS\Type("AppBundle\Entity\LocationHealthMessage")
-   * @Expose
    */
   private $healthMessages;
 
