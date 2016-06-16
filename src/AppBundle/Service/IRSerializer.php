@@ -464,7 +464,6 @@ class IRSerializer implements IRSerializerInterface
         return $declareTagsTransfer;
     }
 
-
     /**
      * @inheritdoc
      */
@@ -475,25 +474,20 @@ class IRSerializer implements IRSerializerInterface
         $animal = $contentArray['animal'];
         $tag = $contentArray['tag'];
         $replaceDate = $contentArray['replace_date'];
-
         $ulnCountryCodeToReplace = $animal['uln_country_code'];
         $ulnNumberToReplace = $animal['uln_number'];
-        $ulnCountryCodeReplacement = $tag['uln_country_code'];
-        $ulnNumberReplacement= $tag['uln_number'];
 
         $declareTagReplace = new DeclareTagReplace();
-
         $declareTagReplace->setUlnCountryCodeToReplace($ulnCountryCodeToReplace);
         $declareTagReplace->setUlnNumberToReplace($ulnNumberToReplace);
-
         $declareTagReplace->setReplaceDate($replaceDate);
 
         $fetchedTag = null;
         $tagsRepository = $this->entityManager->getRepository(Constant::TAG_REPOSITORY);
 
         //create filter to search tag
-        $tagFilter = array("ulnCountryCode" => $declareTagReplace->getUlnCountryCodeReplacement(),
-          "ulnNumber" => $declareTagReplace->getUlnNumberReplacement());
+        $tagFilter = array("ulnCountryCode" =>  $ulnCountryCodeReplacement = $tag['uln_country_code'],
+          "ulnNumber" => $ulnNumberReplacement= $tag['uln_number']);
 
         //Fetch tag from database
         $fetchedTag = $tagsRepository->findOneBy($tagFilter);
@@ -512,13 +506,10 @@ class IRSerializer implements IRSerializerInterface
             }
         }
 
-
         //TODO: NO EDIT YET, Phase 2+
 
         return $declareTagReplace;
     }
-
-
 
     /**
      * @inheritdoc
