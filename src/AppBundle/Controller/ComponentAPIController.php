@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
@@ -32,7 +33,7 @@ class ComponentAPIController extends APIController {
    *   description = "Get data for menu bar at the top.",
    *   output = "AppBundle\Entity\Client"
    * )
-   * @param Request $request the request object
+   * @param Request $request
    * @return JsonResponse
    * @Route("/menu-bar")
    * @Method("GET")
