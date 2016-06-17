@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Constant\Constant;
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * Class DeclareImportRepository
@@ -12,8 +13,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 class DeclareImportRepository extends BaseRepository {
 
   /**
-   * @param $declareImportUpdate
-   * @param $Id
+   * @param DeclareImport $declareImportUpdate
+   * @param integer $Id
    * @return JsonResponse|null|object
    */
   public function updateDeclareImportMessage($declareImportUpdate, $Id) {
