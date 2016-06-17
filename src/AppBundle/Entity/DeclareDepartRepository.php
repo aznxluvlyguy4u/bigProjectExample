@@ -13,13 +13,13 @@ class DeclareDepartRepository extends BaseRepository {
 
   /**
    * @param DeclareDepart $declareDepartUpdate
-   * @param Client $client
+   * @param Location $location
    * @param $id
    * @return null|DeclareDepart
    */
-  public function updateDeclareDepartMessage($declareDepartUpdate, $client, $id) {
+  public function updateDeclareDepartMessage($declareDepartUpdate, Location $location, $id) {
 
-    $declareDepart = $this->getDepartureByRequestId($client, $id);
+    $declareDepart = $this->getDepartureByRequestId($location, $id);
 
     if($declareDepart == null) {
       return null;

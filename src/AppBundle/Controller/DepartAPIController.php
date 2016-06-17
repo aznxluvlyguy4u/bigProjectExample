@@ -228,7 +228,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
       $declareExportUpdate = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $location);
 
       $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY);
-      $messageObject = $entityManager->updateDeclareExportMessage($declareExportUpdate, $client, $Id);
+      $messageObject = $entityManager->updateDeclareExportMessage($declareExportUpdate, $location, $Id);
 
       if($messageObject == null) {
         return new JsonResponse(array("message"=>"No DeclareExport found with request_id: " . $Id), 204);
@@ -239,7 +239,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
       $declareDepartUpdate = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $client, $location);
 
       $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_DEPART_REPOSITORY);
-      $messageObject = $entityManager->updateDeclareDepartMessage($declareDepartUpdate, $client, $Id);
+      $messageObject = $entityManager->updateDeclareDepartMessage($declareDepartUpdate, $location, $Id);
 
       if($messageObject == null) {
         return new JsonResponse(array("message"=>"No DeclareDepart found with request_id: " . $Id), 204);

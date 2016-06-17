@@ -233,10 +233,10 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $location = $this->getSelectedLocation($request);
 
     //verify requestId for arrivals
-    $messageObject = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivalByRequestId($client, $requestId);
+    $messageObject = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivalByRequestId($location, $requestId);
 
     if($messageObject == null) { //verify requestId for imports
-      $messageObject = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->getImportByRequestId($client, $requestId);
+      $messageObject = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->getImportByRequestId($location, $requestId);
     }
 
     if($messageObject == null) {
@@ -267,9 +267,6 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     //Persist the update
     $this->persist($messageObject);
-
-    //Persist HealthStatus
-    $this->getDoctrine()->getManager()->persist($messageObject->getLocation()->getHealths()->last()); //FIXME Delete
     $this->getDoctrine()->getManager()->flush();
 
     return new JsonResponse($messageArray, 200);

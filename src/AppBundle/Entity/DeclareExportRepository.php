@@ -13,13 +13,13 @@ class DeclareExportRepository extends BaseRepository {
 
   /**
    * @param DeclareExport $declareExportUpdate
-   * @param Client $client
+   * @param Location $location
    * @param $id
    * @return null|DeclareExport
    */
-  public function updateDeclareExportMessage($declareExportUpdate, $client, $id) {
+  public function updateDeclareExportMessage($declareExportUpdate, Location $location, $id) {
 
-    $declareExport = $this->getExportByRequestId($client, $id);
+    $declareExport = $this->getExportByRequestId($location, $id);
 
     if($declareExport == null) {
       return null;

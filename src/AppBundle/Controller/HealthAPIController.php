@@ -43,6 +43,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
   public function getHealthByLocation(Request $request, $ubn) {
 
     $client = $this->getAuthenticatedUser($request);
+    //TODO if ubn is in header change route and use $location = $this->getSelectedLocation($request);
     $location = $this->getLocationByUbn($client, $ubn);
 
     if($location == null) {
