@@ -319,12 +319,11 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      */
     public function getBirthErrors(Request $request)
     {
-        $client = $this->getAuthenticatedUser($request);
         $location = $this->getSelectedLocation($request);
-        //FIXME only return errors for given location
+
         $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
         $birthRepository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_RESPONSE_REPOSITORY);
-        $declareBirths = $birthRepository->getBirthsWithLastErrorResponses($client, $animalRepository);
+        $declareBirths = $birthRepository->getBirthsWithLastErrorResponses($location, $animalRepository);
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('births' => $declareBirths)), 200);
     }
@@ -358,12 +357,10 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      */
     public function getBirthHistory(Request $request)
     {
-        $client = $this->getAuthenticatedUser($request);
         $location = $this->getSelectedLocation($request);
-        //FIXME only return history for given location
         $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
         $birthRepository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_RESPONSE_REPOSITORY);
-        $declareBirths = $birthRepository->getBirthsWithLastHistoryResponses($client, $animalRepository);
+        $declareBirths = $birthRepository->getBirthsWithLastHistoryResponses($location, $animalRepository);
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('births' => $declareBirths)), 200);
     }

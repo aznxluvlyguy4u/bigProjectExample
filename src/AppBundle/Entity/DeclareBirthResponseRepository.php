@@ -14,20 +14,20 @@ use Doctrine\Common\Collections\ArrayCollection;
 class DeclareBirthResponseRepository extends BaseRepository {
 
     /**
-     * @param Client $client
+     * @param Location $location
      * @param $messageNumber
      * @return DeclareBirthResponse|null
      */
-    public function getBirthResponseByMessageNumber(Client $client, $messageNumber)
+    public function getBirthResponseByMessageNumber(Location $location, $messageNumber)
     {
-        $retrievedBirths = $this->_em->getRepository(Constant::DECLARE_BIRTH_REPOSITORY)->getBirths($client);
+        $retrievedBirths = $this->_em->getRepository(Constant::DECLARE_BIRTH_REPOSITORY)->getBirths($location);
 
         return $this->getResponseMessageFromRequestsByMessageNumber($retrievedBirths, $messageNumber);
     }
 
-    public function getBirthsWithLastHistoryResponses(Client $client, $animalRepository)
+    public function getBirthsWithLastHistoryResponses(Location $location, $animalRepository)
     {
-        $retrievedBirths = $this->_em->getRepository(Constant::DECLARE_BIRTH_REPOSITORY)->getBirths($client);
+        $retrievedBirths = $this->_em->getRepository(Constant::DECLARE_BIRTH_REPOSITORY)->getBirths($location);
 
         $results = new ArrayCollection();
 
@@ -46,9 +46,9 @@ class DeclareBirthResponseRepository extends BaseRepository {
         return $results;
     }
 
-    public function getBirthsWithLastErrorResponses(Client $client, $animalRepository)
+    public function getBirthsWithLastErrorResponses(Location $location, $animalRepository)
     {
-        $retrievedBirths = $this->_em->getRepository(Constant::DECLARE_BIRTH_REPOSITORY)->getBirths($client);
+        $retrievedBirths = $this->_em->getRepository(Constant::DECLARE_BIRTH_REPOSITORY)->getBirths($location);
 
         $results = array();
 
