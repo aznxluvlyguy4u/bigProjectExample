@@ -74,7 +74,7 @@ class ProfileAPIController extends APIController implements ProfileAPIController
     $company = $location->getCompany();
 
     //Persist updated changes and return the updated values
-    $client = CompanyProfile::update($client, $content, $company, $location);
+    $client = CompanyProfile::update($client, $content, $company);
     $this->getDoctrine()->getManager()->persist($client);
     $this->getDoctrine()->getManager()->flush();
 

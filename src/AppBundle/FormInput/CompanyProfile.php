@@ -17,7 +17,7 @@ class CompanyProfile
      * @param Location $location
      * @return Client
      */
-    public static function update(Client $client, ArrayCollection $content, $company, $location)
+    public static function update(Client $client, ArrayCollection $content, $company)
     {
         $billingAddress = $company->getBillingAddress();
         $address = $company->getAddress();
@@ -28,7 +28,8 @@ class CompanyProfile
 
         $company->setCompanyName($content->get('company_name'));
         $company->setTelephoneNumber($content->get('telephone_number'));
-        $location->setUbn($content->get(Constant::UBN_NAMESPACE));
+        //NOTE! Don't let the user change their UBN by themselves!
+        //If they change it to the UBN of another user, they can edit their data!
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
         $company->setCompanyRelationNumber($content->get('company_relation_number'));
