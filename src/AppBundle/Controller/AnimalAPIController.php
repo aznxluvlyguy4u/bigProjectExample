@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Employee;
 use AppBundle\FormInput\AnimalDetails;
 use AppBundle\FormInput\WeightMeasurements;
 use AppBundle\Output\AnimalDetailsOutput;
@@ -192,6 +193,37 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       $messageArray = $this->sendMessageObjectToQueue($messageObject);
 
       return new JsonResponse($messageArray, 200);
+    }
+  }
+
+  /**
+   * Create RetrieveAnimal requests for all clients.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Create RetrieveAnimal requests for all clients",
+   *   input = "AppBundle\Entity\RetrieveAnimals",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-sync-all")
+   * @Method("POST")
+   */
+  public function createRetrieveAnimalsForAllLocations(Request $request) {
+    {
+      //Any logged in user can sync all animals
+      $message = $this->syncAnimalsForAllLocations()[Constant::MESSAGE_NAMESPACE];
+
+      return new JsonResponse(array(Constant::RESULT_NAMESPACE => $message), 200);
     }
   }
 
