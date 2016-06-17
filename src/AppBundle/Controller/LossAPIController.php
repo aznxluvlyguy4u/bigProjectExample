@@ -43,10 +43,10 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function getLossById(Request $request, $Id)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_REPOSITORY);
 
-    $loss = $repository->getLossByRequestId($client, $Id);
+    $loss = $repository->getLossByRequestId($location, $Id);
 
     return new JsonResponse($loss, 200);
   }
@@ -90,29 +90,29 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function getLosses(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_REPOSITORY);
 
     if(!$stateExists) {
-      $declareLosses = $repository->getLosses($client);
+      $declareLosses = $repository->getLosses($location);
 
     } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
 
       $declareLosses = new ArrayCollection();
-      foreach($repository->getLosses($client, RequestStateType::OPEN) as $loss) {
+      foreach($repository->getLosses($location, RequestStateType::OPEN) as $loss) {
         $declareLosses->add($loss);
       }
-      foreach($repository->getLosses($client, RequestStateType::REVOKING) as $loss) {
+      foreach($repository->getLosses($location, RequestStateType::REVOKING) as $loss) {
         $declareLosses->add($loss);
       }
-      foreach($repository->getLosses($client, RequestStateType::FINISHED) as $loss) {
+      foreach($repository->getLosses($location, RequestStateType::FINISHED) as $loss) {
         $declareLosses->add($loss);
       }
       
     } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareLosses = $repository->getLosses($client, $state);
+      $declareLosses = $repository->getLosses($location, $state);
     }
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareLosses), 200);
@@ -146,10 +146,9 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
   {
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
-    //TODO Get location from header
-    $location = $client->getCompanies()[0]->getLocations()[0];
+    $location = $this->getSelectedLocation($request);
 
-    //Client can only report a loss of own animals
+    //Client can only report a loss of own animals //TODO verify if animal belongs to UBN
     $animal = $content->get(Constant::ANIMAL_NAMESPACE);
     $isAnimalOfClient = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->verifyIfClientOwnsAnimal($client, $animal);
 
@@ -197,8 +196,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
   {
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
-    //TODO Get location from header
-    $location = $client->getCompanies()[0]->getLocations()[0];
+    $location = $this->getSelectedLocation($request);
 
     //Client can only report a loss of own animals
     $animal = $content->get(Constant::ANIMAL_NAMESPACE);
@@ -212,7 +210,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
     $declareLossUpdate = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $client, $location);
 
     $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_LOSS_REPOSITORY);
-    $messageObject = $entityManager->updateDeclareLossMessage($declareLossUpdate, $client, $Id);
+    $messageObject = $entityManager->updateDeclareLossMessage($declareLossUpdate, $location, $Id);
 
     if($messageObject == null) {
       return new JsonResponse(array("message"=>"No DeclareLoss found with request_id: " . $Id), 204);
@@ -255,10 +253,10 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function getLossErrors(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_RESPONSE_REPOSITORY);
-    $declareLosses = $repository->getLossesWithLastErrorResponses($client);
+    $declareLosses = $repository->getLossesWithLastErrorResponses($location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareLosses), 200);
   }
@@ -290,10 +288,10 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function getLossHistory(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_RESPONSE_REPOSITORY);
-    $declareLosses = $repository->getLossesWithLastHistoryResponses($client);
+    $declareLosses = $repository->getLossesWithLastHistoryResponses($location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareLosses),200);
   }

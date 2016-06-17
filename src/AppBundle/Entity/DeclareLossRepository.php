@@ -12,13 +12,13 @@ class DeclareLossRepository extends BaseRepository {
 
     /**
      * @param DeclareLoss $declareLossUpdate
-     * @param Client $client
+     * @param Location $location
      * @param $id
      * @return DeclareLoss|null
      */
-    public function updateDeclareLossMessage($declareLossUpdate, Client $client, $id) {
+    public function updateDeclareLossMessage($declareLossUpdate, Location $location, $id) {
 
-        $declareLoss = $this->getLossByRequestId($client, $id);
+        $declareLoss = $this->getLossByRequestId($location, $id);
 
         if($declareLoss == null) {
             return null;
@@ -41,26 +41,25 @@ class DeclareLossRepository extends BaseRepository {
     }
 
     /**
-     * @param Client $client
+     * @param Location $location
      * @param string $state
      * @return ArrayCollection
      */
-    public function getLosses(Client $client, $state = null)
+    public function getLosses(Location $location, $state = null)
     {
-        $location = $client->getCompanies()->get(0)->getLocations()->get(0);
         $retrievedLosses = $location->getLosses();
 
         return $this->getRequests($retrievedLosses, $state);
     }
 
     /**
-     * @param Client $client
+     * @param Location $location
      * @param string $requestId
      * @return DeclareLoss|null
      */
-    public function getLossByRequestId(Client $client, $requestId)
+    public function getLossByRequestId(Location $location, $requestId)
     {
-        $losses = $this->getLosses($client);
+        $losses = $this->getLosses($location);
 
         return $this->getRequestByRequestId($losses, $requestId);
     }

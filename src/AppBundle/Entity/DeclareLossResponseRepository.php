@@ -19,20 +19,24 @@ class DeclareLossResponseRepository extends BaseRepository {
 
 
     /**
-     * @param Client $client
+     * @param Location $location
      * @param $messageNumber
      * @return DeclareLossResponse|null
      */
-    public function getLossResponseByMessageNumber(Client $client, $messageNumber)
+    public function getLossResponseByMessageNumber(Location $location, $messageNumber)
     {
-        $retrievedLosses = $this->_em->getRepository(Constant::DECLARE_LOSS_REPOSITORY)->getLosses($client);
+        $retrievedLosses = $this->_em->getRepository(Constant::DECLARE_LOSS_REPOSITORY)->getLosses($location);
 
         return $this->getResponseMessageFromRequestsByMessageNumber($retrievedLosses, $messageNumber);
     }
 
-    public function getLossesWithLastHistoryResponses(Client $client)
+    /**
+     * @param Location $location
+     * @return ArrayCollection
+     */
+    public function getLossesWithLastHistoryResponses(Location $location)
     {
-        $retrievedLosses = $this->_em->getRepository(Constant::DECLARE_LOSS_REPOSITORY)->getLosses($client);
+        $retrievedLosses = $this->_em->getRepository(Constant::DECLARE_LOSS_REPOSITORY)->getLosses($location);
 
         $results = new ArrayCollection();
 
@@ -51,9 +55,13 @@ class DeclareLossResponseRepository extends BaseRepository {
         return $results;
     }
 
-    public function getLossesWithLastErrorResponses(Client $client)
+    /**
+     * @param Location $location
+     * @return array
+     */
+    public function getLossesWithLastErrorResponses(Location $location)
     {
-        $retrievedLosses = $this->_em->getRepository(Constant::DECLARE_LOSS_REPOSITORY)->getLosses($client);
+        $retrievedLosses = $this->_em->getRepository(Constant::DECLARE_LOSS_REPOSITORY)->getLosses($location);
 
         $results = array();
 
