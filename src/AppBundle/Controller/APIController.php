@@ -38,6 +38,7 @@ use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Util\HealthChecker;
 use AppBundle\Util\LocationHealthUpdater;
+use AppBundle\Validation\HeaderValidation;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -738,5 +739,21 @@ class APIController extends Controller implements APIControllerInterface
     }
 
     return $messageObject;
+  }
+
+
+  public function getSelectedLocation(Request $request)
+  {
+
+    $client = $this->getAuthenticatedUser($request);
+    $headerValidation = new HeaderValidation($this->getDoctrine()->getManager(), $request, $client);
+
+    if($headerValidation->isInputValid()) {
+      //TODO when frontend is ready, get the ubn from the header
+      return $headerValidation->getLocation();
+
+    } else { //pick the first available UBN as default
+      return $client->getCompanies()->get(0)->getLocations()->get(0);
+    }
   }
 }
