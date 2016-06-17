@@ -33,7 +33,6 @@ class DashboardOutput extends Output
                   "ubn" => self::$ubn,
                   "health_status" =>
                   array(
-                    //TODO refactor 'company_health_status'  to 'location_health_status'
                     "location_health_status" => self::$locationHealthStatus,
                     //maedi_visna is zwoegerziekte
                       "maedi_visna_status" => self::$maediVisnaStatus,
