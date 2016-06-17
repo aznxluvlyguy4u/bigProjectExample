@@ -42,8 +42,12 @@ class UBNAPIController extends APIController implements UBNAPIControllerInterfac
     {
       //Get content to array
       $content = $this->getContentAsArray($request);
+      $client = $this->getAuthenticatedUser($request);
+      //TODO get ubn from headers
+      $location = $client->getCompanies()->get(0)->getLocations()->get(0);
+
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_UBN_DETAILS_ENTITY, $content, $this->getAuthenticatedUser($request));
+      $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_UBN_DETAILS_ENTITY, $content, $client, $location);
 
       //First Persist object to Database, before sending it to the queue
       $this->persist($messageObject);

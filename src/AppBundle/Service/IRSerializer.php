@@ -533,7 +533,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareImport(ArrayCollection $declareImportContentArray, Client $client, $isEditMessage)
+    function parseDeclareImport(ArrayCollection $declareImportContentArray, Client $client, $locationOfDestination, $isEditMessage)
     {
         //TODO Phase 2: Built in explicit check for non-EU/EU countries. Now it is filtered by animalUlnNumberOrigin field being null or not.
 
@@ -624,8 +624,6 @@ class IRSerializer implements IRSerializerInterface
         }
 
         //At the moment all imports are from location with unknown health status
-        $locationOfDestination = $client->getCompanies()->get(0)->getLocations()->get(0); //TODO Phase 2+, accept different Locations
-
         $declareImportRequest->setLocation($locationOfDestination);
 
         return $declareImportRequest;

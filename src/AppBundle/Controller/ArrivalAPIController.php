@@ -158,6 +158,9 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
   {
     $content = $this->getContentAsArray($request);
     $isImportAnimal = $content->get(Constant::IS_IMPORT_ANIMAL);
+    $client = $this->getAuthenticatedUser($request);
+    //TODO Phase 2: accept different locations
+    $location = $client->getCompanies()->get(0)->getLocations()->get(0);
 
     //Only verify if pedigree exists in our database. Unknown ULNs are allowed
     $ulnVerification = $this->verifyOnlyPedigreeCodeInAnimal($content->get(Constant::ANIMAL_NAMESPACE));
@@ -168,24 +171,19 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     }
 
     //Validate if ubnPreviousOwner matches the ubn of the animal with the given ULN, if the animal is in our database
-    if(!$isImportAnimal) {
+    if(!$isImportAnimal) { //DeclareArrival
       $ubnValidator = new UbnValidator($this->getDoctrine()->getManager(), $content);
       if(!$ubnValidator->getIsUbnValid()) {
         return $ubnValidator->createArrivalJsonErrorResponse();
       }
     }
 
-    $client = $this->getAuthenticatedUser($request);
-
-    //TODO Phase 2: accept different locations
-    $location = $client->getCompanies()->get(0)->getLocations()->get(0);
-
     //Convert the array into an object and add the mandatory values retrieved from the database
     if($isImportAnimal) {
       //TODO Phase 2: Filter between non-EU countries and EU countries. At the moment we only process sheep from EU countries
-      $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client);
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client, $location);
     } else {
-      $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client);
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $location);
     }
 
     //Send it to the queue and persist/update any changed state to the database
@@ -254,16 +252,15 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 //    $declareArrivalRequest->setLocation($locationOfDestination);
 
     $isImportAnimal = $messageObject->getIsImportAnimal();
+    $location = $messageObject->getLocation(); //TODO discuss with frontend if location should come from header or just from requestId
 
     if($isImportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_IMPORT_ENTITY,
-          $content, $this->getAuthenticatedUser($request));
+      $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client, $location);
 
     } else {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY,
-          $content, $this->getAuthenticatedUser($request));
+      $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $location);
     }
 
     //Send it to the queue and persist/update any changed requestState to the database
@@ -273,7 +270,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $this->persist($messageObject);
 
     //Persist HealthStatus
-    $this->getDoctrine()->getManager()->persist($messageObject->getLocation()->getHealths()->last());
+    $this->getDoctrine()->getManager()->persist($messageObject->getLocation()->getHealths()->last()); //FIXME Delete
     $this->getDoctrine()->getManager()->flush();
 
     return new JsonResponse($messageArray, 200);

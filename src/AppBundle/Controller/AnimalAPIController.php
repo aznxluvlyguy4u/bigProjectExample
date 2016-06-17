@@ -178,9 +178,12 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     {
       //Get content to array
       $content = $this->getContentAsArray($request);
+      $client = $this->getAuthenticatedUser($request);
+      //TODO Get location from header
+      $location = $client->getCompanies()[0]->getLocations()[0];
 
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $this->getAuthenticatedUser($request));
+      $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $location);
 
       //First Persist object to Database, before sending it to the queue
       $this->persist($messageObject);
@@ -217,9 +220,12 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   function createAnimalDetails(Request $request) {
     //Get content to array
     $content = $this->getContentAsArray($request);
+    $client = $this->getAuthenticatedUser($request);
+    //TODO Get location from header
+    $location = $client->getCompanies()[0]->getLocations()[0];
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY, $content, $this->getAuthenticatedUser($request));
+    $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY, $content, $client, $location);
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($messageObject);

@@ -123,9 +123,12 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
   {
     //Get content to array
     $content = $this->getContentAsArray($request);
+    $client = $this->getAuthenticatedUser($request);
+    //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
+    $location = $client->getCompanies()[0]->getLocations()[0];
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $retrieveEartagsRequest = $this->buildMessageObject(RequestType::RETRIEVE_TAGS_ENTITY, $content, $this->getAuthenticatedUser($request));
+    $retrieveEartagsRequest = $this->buildMessageObject(RequestType::RETRIEVE_TAGS_ENTITY, $content, $client, $location);
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($retrieveEartagsRequest);

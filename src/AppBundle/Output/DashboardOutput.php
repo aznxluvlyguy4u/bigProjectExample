@@ -3,6 +3,7 @@
 namespace AppBundle\Output;
 use AppBundle\Entity\Client;
 use AppBundle\Component\Count;
+use AppBundle\Entity\Location;
 use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Enumerator\RequestType;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -15,17 +16,16 @@ class DashboardOutput extends Output
 {
     /**
      * @param Client $client
-     * @param ArrayCollection $liveStockCount
+     * @param ArrayCollection $declarationLogDate
+     * @param Location $location
      * @return array
      */
-    public static function create(Client $client, ArrayCollection $declarationLogDate)
+    public static function create(Client $client, ArrayCollection $declarationLogDate, $location)
     {
         $liveStockCount = Count::getLiveStockCount($client);
         $errorCounts = Count::getErrorCountDeclarations($client);
         $unassignedTagsCount = Count::getUnassignedTagsCount($client);
 
-        //TODO Phase 2+ select proper location
-        $location = $client->getCompanies()->get(0)->getLocations()->get(0);
         self:: setUbnAndLocationHealthValues($location);
 
         $result = array(

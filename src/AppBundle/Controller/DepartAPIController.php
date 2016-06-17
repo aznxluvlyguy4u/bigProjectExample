@@ -146,9 +146,12 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
   public function createDepart(Request $request)
   {
     $content = $this->getContentAsArray($request);
+    $client = $this->getAuthenticatedUser($request);
+
+    //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
+    $location = $client->getCompanies()[0]->getLocations()[0];
 
     //Client can only depart/export own animals
-    $client = $this->getAuthenticatedUser($request);
     $animal = $content->get(Constant::ANIMAL_NAMESPACE);
     $isAnimalOfClient = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->verifyIfClientOwnsAnimal($client, $animal);
 
@@ -160,11 +163,11 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
     if($isExportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $this->getAuthenticatedUser($request));
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $location);
 
     } else {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $this->getAuthenticatedUser($request));
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $client, $location);
     }
 
     //Send it to the queue and persist/update any changed state to the database
@@ -212,6 +215,8 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     //Client can only depart/export own animals
     $client = $this->getAuthenticatedUser($request);
     $animal = $content->get(Constant::ANIMAL_NAMESPACE);
+    //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
+    $location = $client->getCompanies()[0]->getLocations()[0];
 
     //NOTE!!! Don't try to verify any animals directly. Because they will have the isDeparted=true state.
     //Verify this request using the requestId
@@ -224,8 +229,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
     if($isExportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $declareExportUpdate = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY,
-          $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+      $declareExportUpdate = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $location);
 
       $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY);
       $messageObject = $entityManager->updateDeclareExportMessage($declareExportUpdate, $client, $Id);
@@ -236,8 +240,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
     } else {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $declareDepartUpdate = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY,
-          $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+      $declareDepartUpdate = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $client, $location);
 
       $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_DEPART_REPOSITORY);
       $messageObject = $entityManager->updateDeclareDepartMessage($declareDepartUpdate, $client, $Id);

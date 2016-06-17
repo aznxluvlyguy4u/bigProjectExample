@@ -14,6 +14,7 @@ use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
@@ -119,11 +120,12 @@ class RequestMessageBuilder
      * @param string $messageClassNameSpace
      * @param ArrayCollection $contentArray
      * @param Person|Client $person
+     * @param Location $location
      * @param boolean $isEditMessage
      * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
      * @throws \Exception
      */
-    public function build($messageClassNameSpace, ArrayCollection $contentArray, $person, $isEditMessage)
+    public function build($messageClassNameSpace, ArrayCollection $contentArray, $person, $location, $isEditMessage)
     {
         switch($messageClassNameSpace) {
             case RequestType::DECLARATION_DETAIL_ENTITY:
@@ -136,38 +138,38 @@ class RequestMessageBuilder
                 return $declareAnimalFlag;
             case RequestType::DECLARE_ARRIVAL_ENTITY:
                 $declareArrivalRequest = $this->irSerializer->parseDeclareArrival($contentArray, $person, $isEditMessage);
-                return $this->arrivalMessageBuilder->buildMessage($declareArrivalRequest, $person);
+                return $this->arrivalMessageBuilder->buildMessage($declareArrivalRequest, $person, $location);
             case RequestType::DECLARE_BIRTH_ENTITY:
                 $declareBirthRequest = $this->irSerializer->parseDeclareBirth($contentArray, $person, $isEditMessage);
-                return $this->birthMessageBuilder->buildMessage($declareBirthRequest, $person);
+                return $this->birthMessageBuilder->buildMessage($declareBirthRequest, $person, $location);
             case RequestType::DECLARE_DEPART_ENTITY:
                 $declareDepartRequest = $this->irSerializer->parseDeclareDepart($contentArray, $person, $isEditMessage);
-                return $this->departMessageBuilder->buildMessage($declareDepartRequest, $person);
+                return $this->departMessageBuilder->buildMessage($declareDepartRequest, $person, $location);
             case RequestType::DECLARE_TAGS_TRANSFER_ENTITY:
                 $declareTagsTransferRequest = $this->irSerializer->parseDeclareTagsTransfer($contentArray, $person, $isEditMessage);
-                return $this->tagTransferMessageBuilder->buildMessage($declareTagsTransferRequest, $person);
+                return $this->tagTransferMessageBuilder->buildMessage($declareTagsTransferRequest, $person, $location);
             case RequestType::DECLARE_LOSS_ENTITY:
                 $declareLossRequest = $this->irSerializer->parseDeclareLoss($contentArray, $person, $isEditMessage);
-                return $this->lossMessageBuilder->buildMessage($declareLossRequest, $person);
+                return $this->lossMessageBuilder->buildMessage($declareLossRequest, $person, $location);
             case RequestType::DECLARE_EXPORT_ENTITY:
                 $declareExportRequest = $this->irSerializer->parseDeclareExport($contentArray, $person, $isEditMessage);
-                return $this->exportMessageBuilder->buildMessage($declareExportRequest, $person);
+                return $this->exportMessageBuilder->buildMessage($declareExportRequest, $person, $location);
             case RequestType::DECLARE_IMPORT_ENTITY:
-                $declareImportRequest = $this->irSerializer->parseDeclareImport($contentArray, $person, $isEditMessage);
-                return $this->importMessageBuilder->buildMessage($declareImportRequest, $person);
+                $declareImportRequest = $this->irSerializer->parseDeclareImport($contentArray, $person, $location, $isEditMessage);
+                return $this->importMessageBuilder->buildMessage($declareImportRequest, $person, $location);
             case RequestType::RETRIEVE_TAGS_ENTITY:
                 $retrieveTagsRequest = $this->irSerializer->parseRetrieveTags($contentArray, $person, $isEditMessage);
-                return $this->tagSyncMessageBuilder->buildMessage($retrieveTagsRequest, $person);
+                return $this->tagSyncMessageBuilder->buildMessage($retrieveTagsRequest, $person, $location);
             case RequestType::REVOKE_DECLARATION_ENTITY:
                 $revokeDeclaration = new RevokeDeclaration();
                 $revokeDeclaration->setMessageNumber($contentArray[Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE]);
-                return $this->revokeMessageBuilder->buildMessage($revokeDeclaration, $person);
+                return $this->revokeMessageBuilder->buildMessage($revokeDeclaration, $person, $location);
             case RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY:
                 $retrieveAnimalDetailsRequest = $this->irSerializer->parseRetrieveAnimalDetails($contentArray, $person, $isEditMessage);
-                return $this->retrieveAnimalDetailsBuilder->buildMessage($retrieveAnimalDetailsRequest, $person);
+                return $this->retrieveAnimalDetailsBuilder->buildMessage($retrieveAnimalDetailsRequest, $person, $location);
             case RequestType::RETRIEVE_ANIMALS_ENTITY:
                 $retrieveAnimalsRequest = $this->irSerializer->parseRetrieveAnimals($contentArray, $person, $isEditMessage);
-                return $this->retrieveAnimalsMessageBuilder->buildMessage($retrieveAnimalsRequest, $person);
+                return $this->retrieveAnimalsMessageBuilder->buildMessage($retrieveAnimalsRequest, $person, $location);
             case RequestType::RETRIEVE_COUNTRIES_ENTITY:
                 $retrieveCountries = new RetrieveCountries();
                 return $retrieveCountries;

@@ -145,9 +145,11 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
   public function createLoss(Request $request)
   {
     $content = $this->getContentAsArray($request);
+    $client = $this->getAuthenticatedUser($request);
+    //TODO Get location from header
+    $location = $client->getCompanies()[0]->getLocations()[0];
 
     //Client can only report a loss of own animals
-    $client = $this->getAuthenticatedUser($request);
     $animal = $content->get(Constant::ANIMAL_NAMESPACE);
     $isAnimalOfClient = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->verifyIfClientOwnsAnimal($client, $animal);
 
@@ -155,7 +157,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
       return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
     }
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $messageObject = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $this->getAuthenticatedUser($request));
+    $messageObject = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $client, $location);
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($messageObject);
@@ -194,9 +196,11 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
   public function editLoss(Request $request, $Id)
   {
     $content = $this->getContentAsArray($request);
+    $client = $this->getAuthenticatedUser($request);
+    //TODO Get location from header
+    $location = $client->getCompanies()[0]->getLocations()[0];
 
     //Client can only report a loss of own animals
-    $client = $this->getAuthenticatedUser($request);
     $animal = $content->get(Constant::ANIMAL_NAMESPACE);
     $isAnimalOfClient = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->verifyIfClientOwnsAnimal($client, $animal);
 
@@ -205,8 +209,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
     }
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareLossUpdate = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY,
-        $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+    $declareLossUpdate = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $client, $location);
 
     $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_LOSS_REPOSITORY);
     $messageObject = $entityManager->updateDeclareLossMessage($declareLossUpdate, $client, $Id);

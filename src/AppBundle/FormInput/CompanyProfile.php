@@ -4,6 +4,8 @@ namespace AppBundle\FormInput;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Company;
+use AppBundle\Entity\Location;
 use Doctrine\Common\Collections\ArrayCollection;
 
 class CompanyProfile
@@ -11,12 +13,12 @@ class CompanyProfile
     /**
      * @param Client $client
      * @param ArrayCollection $content
+     * @param Company $company
+     * @param Location $location
      * @return Client
      */
-    public static function update(Client $client, ArrayCollection $content)
+    public static function update(Client $client, ArrayCollection $content, $company, $location)
     {
-        $company = $client->getCompanies()->get(0);
-        $location = $company->getLocations()->get(0);
         $billingAddress = $company->getBillingAddress();
         $address = $company->getAddress();
 

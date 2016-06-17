@@ -4,6 +4,7 @@ namespace AppBundle\Component;
 
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareExport;
+use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
@@ -28,22 +29,24 @@ class ExportMessageBuilder extends MessageBuilderBase
    *
    * @param DeclareExport $messageObject the message received
    * @param Client|Person $person
+   * @param Location $location
    * @return DeclareExport
    */
-  public function buildMessage(DeclareExport $messageObject, $person)
+  public function buildMessage(DeclareExport $messageObject, $person, $location)
   {
     $this->person = $person;
     $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
-    $completeMessageObject = $this->addDeclareExportData($baseMessageObject);
+    $completeMessageObject = $this->addDeclareExportData($baseMessageObject, $location);
 
     return $completeMessageObject;
   }
 
   /**
    * @param DeclareExport $messageObject the message received
+   * @param Location $location
    * @return DeclareExport
    */
-  private function addDeclareExportData(DeclareExport $messageObject)
+  private function addDeclareExportData(DeclareExport $messageObject, $location)
   {
     $animal = $messageObject->getAnimal();
 
@@ -53,13 +56,12 @@ class ExportMessageBuilder extends MessageBuilderBase
     $messageObject->setPedigreeNumber($animal->getPedigreeNumber());
     $messageObject->setIsExportAnimal(true);
     $messageObject->setAnimalType(AnimalType::sheep);
+    $messageObject->setLocation($location);
 
     if(ActionFlagSetting::DECLARE_EXPORT != null) {
       $messageObject->setAction(ActionFlagSetting::DECLARE_EXPORT);
     }
 
-    //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
-    $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
     return $messageObject;
   }
 

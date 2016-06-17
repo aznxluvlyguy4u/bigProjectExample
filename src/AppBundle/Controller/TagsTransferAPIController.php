@@ -46,6 +46,9 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
 
+    //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
+    $location = $client->getCompanies()->get(0)->getLocations()->get(0);
+
     //Validate if ubn is in database and retrieve the relationNumberKeeper owning that ubn
     $ubnVerification = $this->isUbnValid($content->get(Constant::UBN_NEW_OWNER_NAMESPACE));
     if(!$ubnVerification['isValid']) {
@@ -64,7 +67,7 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
     }
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareTagsTransfer = $this->buildMessageObject(RequestType::DECLARE_TAGS_TRANSFER_ENTITY, $content, $this->getAuthenticatedUser($request));
+    $declareTagsTransfer = $this->buildMessageObject(RequestType::DECLARE_TAGS_TRANSFER_ENTITY, $content, $this->getAuthenticatedUser($request), $location);
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($declareTagsTransfer);

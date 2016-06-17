@@ -176,14 +176,15 @@ class APIController extends Controller implements APIControllerInterface
    * @param $messageClassNameSpace
    * @param ArrayCollection $contentArray
    * @param $user
+   * @param Location $location
    * @return object|null
    * @throws \Exception
    */
-  protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user)
+  protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $location)
   {
     $isEditMessage = true;
     $messageObject = $this->getRequestMessageBuilder()
-      ->build($messageClassNameSpace, $contentArray, $user, $isEditMessage);
+      ->build($messageClassNameSpace, $contentArray, $user, $location, $isEditMessage);
 
     return $messageObject;
   }
@@ -192,14 +193,15 @@ class APIController extends Controller implements APIControllerInterface
    * @param $messageClassNameSpace
    * @param ArrayCollection $contentArray
    * @param $user
+   * @param Location $location
    * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
    * @throws \Exception
    */
-  protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user)
+  protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $location)
   {
     $isEditMessage = false;
     $messageObject = $this->getRequestMessageBuilder()
-        ->build($messageClassNameSpace, $contentArray, $user, $isEditMessage);
+        ->build($messageClassNameSpace, $contentArray, $user, $location, $isEditMessage);
 
     return $messageObject;
   }

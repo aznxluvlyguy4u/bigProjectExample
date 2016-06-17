@@ -30,8 +30,13 @@ class ProfileAPIController extends APIController implements ProfileAPIController
   public function getCompanyProfile(Request $request) {
     $client = $this->getAuthenticatedUser($request);
 
+    //TODO Get ubn from header
+    $location = $client->getCompanies()[0]->getLocations()[0];
+
     //TODO Phase 2: Give back a specific company and location of that company. The CompanyProfileOutput already can process a ($client, $company, $location) method signature.
-    $outputArray = CompanyProfileOutput::create($client);
+    $company = $location->getCompany();
+
+    $outputArray = CompanyProfileOutput::create($client, $company, $location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
   }
@@ -66,14 +71,18 @@ class ProfileAPIController extends APIController implements ProfileAPIController
     $client = $this->getAuthenticatedUser($request);
     $content = $this->getContentAsArray($request);
 
+    //TODO Get ubn from header
+    $location = $client->getCompanies()->get(0)->getLocations()->get(0);
+
     //TODO Phase 2: Give back a specific company and location of that company. The CompanyProfileOutput already can process a ($client, $company, $location) method signature.
+    $company = $location->getCompany();
 
     //Persist updated changes and return the updated values
-    $client = CompanyProfile::update($client, $content);
+    $client = CompanyProfile::update($client, $content, $company, $location);
     $this->getDoctrine()->getManager()->persist($client);
     $this->getDoctrine()->getManager()->flush();
 
-    $outputArray = CompanyProfileOutput::create($client);
+    $outputArray = CompanyProfileOutput::create($client, $company, $location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
   }

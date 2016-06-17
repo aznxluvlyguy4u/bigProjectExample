@@ -190,6 +190,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     }
 
     $client = $this->getAuthenticatedUser($request);
+    $location = $client->getCompanies()[0]->getLocations()[0];
 
     foreach($children as $child) {
 
@@ -198,7 +199,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         if($child['is_alive'] == true) { //DeclareBirth with sending a request to IenR
             //Convert the array into an object and add the mandatory values retrieved from the database
-            $declareBirthObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $contentPerChild, $this->getAuthenticatedUser($request));
+            $declareBirthObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $contentPerChild, $client, $location);
 
             //Send it to the queue and persist/update any changed state to the database
             $messageArray = $this->sendMessageObjectToQueue($declareBirthObject);
@@ -246,8 +247,10 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
   public function updateBirth(Request $request, $Id) {
 
       $content = $this->getContentAsArray($request);
-
       $client = $this->getAuthenticatedUser($request);
+      //TODO Get ubn from header
+      $location = $client->getCompanies()[0]->getLocations()[0];
+
       $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
       $declareBirth = $entityManager->getBirthByRequestId($client, $content->get("request_id"));
 
@@ -280,7 +283,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
       //Convert the array into an object and add the mandatory values retrieved from the database
       $declareBirthUpdate = $this->buildEditMessageObject(RequestType::DECLARE_BIRTH_ENTITY,
-          $content, $this->getAuthenticatedUser($request));
+          $content, $client, $location);
 
       //First Persist object to Database, before sending it to the queue
       $this->persist($declareBirthUpdate);
