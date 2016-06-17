@@ -45,9 +45,7 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
   {
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
-
-    //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
-    $location = $client->getCompanies()->get(0)->getLocations()->get(0);
+    $location = $this->getSelectedLocation($request);
 
     //Validate if ubn is in database and retrieve the relationNumberKeeper owning that ubn
     $ubnVerification = $this->isUbnValid($content->get(Constant::UBN_NEW_OWNER_NAMESPACE));

@@ -47,8 +47,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
     {
         $content = $this->getContentAsArray($request);
         $client = $this->getAuthenticatedUser($request);
-        //TODO Set location from header
-        $location = $client->getCompanies()[0]->getLocations()[0];
+        $location = $this->getSelectedLocation($request);
 
         //Validate if there is a message_number. It is mandatory for IenR
         $validation = $this->hasMessageNumber($content);
