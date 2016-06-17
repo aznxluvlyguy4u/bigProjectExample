@@ -49,26 +49,25 @@ class DeclareDepartRepository extends BaseRepository {
   }
 
   /**
-   * @param Client $client
+   * @param Location $location
    * @param string $state
    * @return ArrayCollection
    */
-  public function getDepartures(Client $client, $state = null)
+  public function getDepartures(Location $location, $state = null)
   {
-    $location = $client->getCompanies()->get(0)->getLocations()->get(0);
     $retrievedDeparts = $location->getDepartures();
 
     return $this->getRequests($retrievedDeparts, $state);
   }
 
   /**
-   * @param Client $client
+   * @param Location $location
    * @param string $requestId
    * @return DeclareDepart|null
    */
-  public function getDepartureByRequestId(Client $client, $requestId)
+  public function getDepartureByRequestId(Location $location, $requestId)
   {
-    $departs = $this->getDepartures($client);
+    $departs = $this->getDepartures($location);
 
     return $this->getRequestByRequestId($departs, $requestId);
   }

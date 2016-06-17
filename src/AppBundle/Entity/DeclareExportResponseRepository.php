@@ -13,20 +13,24 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class DeclareExportResponseRepository extends BaseRepository {
     /**
-     * @param Client $client
+     * @param Location $location
      * @param $messageNumber
      * @return DeclareExportResponse|null
      */
-    public function getExportResponseByMessageNumber(Client $client, $messageNumber)
+    public function getExportResponseByMessageNumber(Location $location, $messageNumber)
     {
-        $retrievedExports = $this->_em->getRepository(Constant::DECLARE_EXPORT_REPOSITORY)->getExports($client);
+        $retrievedExports = $this->_em->getRepository(Constant::DECLARE_EXPORT_REPOSITORY)->getExports($location);
 
         return $this->getResponseMessageFromRequestsByMessageNumber($retrievedExports, $messageNumber);
     }
 
-    public function getExportsWithLastHistoryResponses(Client $client)
+    /**
+     * @param Location $location
+     * @return ArrayCollection
+     */
+    public function getExportsWithLastHistoryResponses(Location $location)
     {
-        $retrievedExports = $this->_em->getRepository(Constant::DECLARE_EXPORT_REPOSITORY)->getExports($client);
+        $retrievedExports = $this->_em->getRepository(Constant::DECLARE_EXPORT_REPOSITORY)->getExports($location);
 
         $results = new ArrayCollection();
 
@@ -45,9 +49,13 @@ class DeclareExportResponseRepository extends BaseRepository {
         return $results;
     }
 
-    public function getExportsWithLastErrorResponses(Client $client)
+    /**
+     * @param Location $location
+     * @return array
+     */
+    public function getExportsWithLastErrorResponses(Location $location)
     {
-        $retrievedExports = $this->_em->getRepository(Constant::DECLARE_EXPORT_REPOSITORY)->getExports($client);
+        $retrievedExports = $this->_em->getRepository(Constant::DECLARE_EXPORT_REPOSITORY)->getExports($location);
 
         $results = array();
 

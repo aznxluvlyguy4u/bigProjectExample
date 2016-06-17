@@ -45,26 +45,25 @@ class DeclareExportRepository extends BaseRepository {
   }
 
   /**
-   * @param Client $client
+   * @param Location $location
    * @param string $state
    * @return ArrayCollection
    */
-  public function getExports(Client $client, $state = null)
+  public function getExports(Location $location, $state = null)
   {
-    $location = $client->getCompanies()->get(0)->getLocations()->get(0);
     $retrievedExports = $location->getExports();
 
     return $this->getRequests($retrievedExports, $state);
   }
 
   /**
-   * @param Client $client
+   * @param Location $location
    * @param string $requestId
    * @return DeclareExport|null
    */
-  public function getExportByRequestId(Client $client, $requestId)
+  public function getExportByRequestId(Location $location, $requestId)
   {
-    $exports = $this->getExports($client);
+    $exports = $this->getExports($location);
 
     return $this->getRequestByRequestId($exports, $requestId);
   }
