@@ -18,20 +18,24 @@ class DeclareArrivalResponseRepository extends BaseRepository {
 
 
     /**
-     * @param Client $client
+     * @param Location $location
      * @param $messageNumber
      * @return DeclareArrivalResponse|null
      */
-    public function getArrivalResponseByMessageNumber(Client $client, $messageNumber)
+    public function getArrivalResponseByMessageNumber(Location $location, $messageNumber)
     {
-        $retrievedArrivals = $this->_em->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivals($client);
+        $retrievedArrivals = $this->_em->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivals($location);
 
         return $this->getResponseMessageFromRequestsByMessageNumber($retrievedArrivals, $messageNumber);
     }
 
-    public function getArrivalsWithLastHistoryResponses(Client $client)
+    /**
+     * @param Location $location
+     * @return ArrayCollection
+     */
+    public function getArrivalsWithLastHistoryResponses(Location $location)
     {
-        $retrievedArrivals = $this->_em->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivals($client);
+        $retrievedArrivals = $this->_em->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivals($location);
 
         $results = new ArrayCollection();
 
@@ -50,9 +54,13 @@ class DeclareArrivalResponseRepository extends BaseRepository {
         return $results;
     }
 
-    public function getArrivalsWithLastErrorResponses(Client $client)
+    /**
+     * @param Location $location
+     * @return array
+     */
+    public function getArrivalsWithLastErrorResponses(Location $location)
     {
-        $retrievedArrivals = $this->_em->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivals($client);
+        $retrievedArrivals = $this->_em->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivals($location);
 
         $results = array();
 

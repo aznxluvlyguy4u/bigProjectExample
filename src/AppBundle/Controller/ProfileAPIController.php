@@ -29,9 +29,7 @@ class ProfileAPIController extends APIController implements ProfileAPIController
    */
   public function getCompanyProfile(Request $request) {
     $client = $this->getAuthenticatedUser($request);
-
-    //TODO Get ubn from header
-    $location = $client->getCompanies()[0]->getLocations()[0];
+    $location = $this->getSelectedLocation($request);
 
     //TODO Phase 2: Give back a specific company and location of that company. The CompanyProfileOutput already can process a ($client, $company, $location) method signature.
     $company = $location->getCompany();
@@ -70,9 +68,7 @@ class ProfileAPIController extends APIController implements ProfileAPIController
   public function editCompanyProfile(Request $request) {
     $client = $this->getAuthenticatedUser($request);
     $content = $this->getContentAsArray($request);
-
-    //TODO Get ubn from header
-    $location = $client->getCompanies()->get(0)->getLocations()->get(0);
+    $location = $this->getSelectedLocation($request);
 
     //TODO Phase 2: Give back a specific company and location of that company. The CompanyProfileOutput already can process a ($client, $company, $location) method signature.
     $company = $location->getCompany();

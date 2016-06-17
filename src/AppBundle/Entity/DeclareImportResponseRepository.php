@@ -13,20 +13,24 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class DeclareImportResponseRepository extends BaseRepository {
     /**
-     * @param Client $client
+     * @param Location $location
      * @param $messageNumber
      * @return DeclareImportResponse|null
      */
-    public function getImportResponseByMessageNumber(Client $client, $messageNumber)
+    public function getImportResponseByMessageNumber(Location $location, $messageNumber)
     {
-        $retrievedImports = $this->_em->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->getImports($client);
+        $retrievedImports = $this->_em->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->getImports($location);
 
         return $this->getResponseMessageFromRequestsByMessageNumber($retrievedImports, $messageNumber);
     }
 
-    public function getImportsWithLastHistoryResponses(Client $client)
+    /**
+     * @param Location $location
+     * @return ArrayCollection
+     */
+    public function getImportsWithLastHistoryResponses(Location $location)
     {
-        $retrievedImports = $this->_em->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->getImports($client);
+        $retrievedImports = $this->_em->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->getImports($location);
 
         $results = new ArrayCollection();
 
@@ -45,9 +49,13 @@ class DeclareImportResponseRepository extends BaseRepository {
         return $results;
     }
 
-    public function getImportsWithLastErrorResponses(Client $client)
+    /**
+     * @param Location $location
+     * @return array
+     */
+    public function getImportsWithLastErrorResponses(Location $location)
     {
-        $retrievedImports = $this->_em->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->getImports($client);
+        $retrievedImports = $this->_em->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->getImports($location);
 
         $results = array();
 

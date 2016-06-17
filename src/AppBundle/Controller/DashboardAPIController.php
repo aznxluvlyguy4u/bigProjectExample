@@ -31,8 +31,7 @@ class DashboardAPIController extends APIController {
    */
   public function getDashBoard(Request $request) {
     $client = $this->getAuthenticatedUser($request);
-    //TODO Get ubn from header
-    $location = $client->getCompanies()[0]->getLocations()[0];
+    $location = $this->getSelectedLocation($request);
 
     $declarationLogDate = $this->getDoctrine()->getRepository(Constant::DECLARE_BASE_REPOSITORY)->getLatestLogDatesForDashboardDeclarations($client);
 

@@ -13,26 +13,25 @@ class DeclareArrivalRepository extends BaseRepository
 {
 
   /**
-   * @param Client $client
+   * @param Location $location
    * @param string $state
    * @return ArrayCollection
    */
-  public function getArrivals(Client $client, $state = null)
+  public function getArrivals(Location $location, $state = null)
   {
-    $location = $client->getCompanies()->get(0)->getLocations()->get(0);
     $retrievedArrivals = $location->getArrivals();
 
     return $this->getRequests($retrievedArrivals, $state);
   }
 
   /**
-   * @param Client $client
+   * @param Location $location
    * @param string $requestId
    * @return DeclareArrival|null
    */
-  public function getArrivalByRequestId(Client $client, $requestId)
+  public function getArrivalByRequestId(Location $location, $requestId)
   {
-    $arrivals = $this->getArrivals($client);
+    $arrivals = $this->getArrivals($location);
 
     return $this->getRequestByRequestId($arrivals, $requestId);
   }

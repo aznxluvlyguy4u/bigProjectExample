@@ -55,10 +55,10 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivalById(Request $request, $Id)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
 
-    $arrival = $repository->getArrivalByRequestId($client, $Id);
+    $arrival = $repository->getArrivalByRequestId($location, $Id);
 
     return new JsonResponse($arrival, 200);
   }
@@ -103,29 +103,29 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivals(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
 
     if(!$stateExists) {
-      $declareArrivals = $repository->getArrivals($client);
+      $declareArrivals = $repository->getArrivals($location);
 
     } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
 
       $declareArrivals = new ArrayCollection();
-      foreach($repository->getArrivals($client, RequestStateType::OPEN) as $arrival) {
+      foreach($repository->getArrivals($location, RequestStateType::OPEN) as $arrival) {
         $declareArrivals->add($arrival);
       }
-      foreach($repository->getArrivals($client, RequestStateType::REVOKING) as $arrival) {
+      foreach($repository->getArrivals($location, RequestStateType::REVOKING) as $arrival) {
         $declareArrivals->add($arrival);
       }
-      foreach($repository->getArrivals($client, RequestStateType::FINISHED) as $arrival) {
+      foreach($repository->getArrivals($location, RequestStateType::FINISHED) as $arrival) {
         $declareArrivals->add($arrival);
       }
 
     } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareArrivals = $repository->getArrivals($client, $state);
+      $declareArrivals = $repository->getArrivals($location, $state);
     }
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareArrivals), 200);
@@ -159,8 +159,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $content = $this->getContentAsArray($request);
     $isImportAnimal = $content->get(Constant::IS_IMPORT_ANIMAL);
     $client = $this->getAuthenticatedUser($request);
-    //TODO Phase 2: accept different locations
-    $location = $client->getCompanies()->get(0)->getLocations()->get(0);
+    $location = $this->getSelectedLocation($request);
 
     //Only verify if pedigree exists in our database. Unknown ULNs are allowed
     $ulnVerification = $this->verifyOnlyPedigreeCodeInAnimal($content->get(Constant::ANIMAL_NAMESPACE));
@@ -231,6 +230,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $content->set("request_id", $requestId);
 
     $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
     //verify requestId for arrivals
     $messageObject = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivalByRequestId($client, $requestId);
@@ -252,7 +252,6 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 //    $declareArrivalRequest->setLocation($locationOfDestination);
 
     $isImportAnimal = $messageObject->getIsImportAnimal();
-    $location = $messageObject->getLocation(); //TODO discuss with frontend if location should come from header or just from requestId
 
     if($isImportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database
@@ -303,13 +302,13 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivalErrors(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
-    $declareArrivals = $repository->getArrivalsWithLastErrorResponses($client);
+    $declareArrivals = $repository->getArrivalsWithLastErrorResponses($location);
 
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_RESPONSE_REPOSITORY);
-    $declareImports = $repository->getImportsWithLastErrorResponses($client);
+    $declareImports = $repository->getImportsWithLastErrorResponses($location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('arrivals' => $declareArrivals, 'imports' => $declareImports)), 200);
   }
@@ -341,13 +340,13 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivalHistory(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
-    $declareArrivals = $repository->getArrivalsWithLastHistoryResponses($client);
+    $declareArrivals = $repository->getArrivalsWithLastHistoryResponses($location);
 
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_RESPONSE_REPOSITORY);
-    $declareImports = $repository->getImportsWithLastHistoryResponses($client);
+    $declareImports = $repository->getImportsWithLastHistoryResponses($location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('arrivals' => $declareArrivals, 'imports' => $declareImports)), 200);
   }

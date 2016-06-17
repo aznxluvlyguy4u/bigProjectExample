@@ -144,8 +144,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function getLiveStock(Request $request) {
     $client = $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $animals = $this->getDoctrine()
-        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($client);
+        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($location);
 
     $minimizedOutput = AnimalOutput::createAnimalsArray($animals);
 
@@ -179,8 +180,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       //Get content to array
       $content = $this->getContentAsArray($request);
       $client = $this->getAuthenticatedUser($request);
-      //TODO Get location from header
-      $location = $client->getCompanies()[0]->getLocations()[0];
+      $location = $this->getSelectedLocation($request);
 
       //Convert the array into an object and add the mandatory values retrieved from the database
       $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $location);
@@ -221,8 +221,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     //Get content to array
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
-    //TODO Get location from header
-    $location = $client->getCompanies()[0]->getLocations()[0];
+    $location = $this->getSelectedLocation($request);
 
     //Convert the array into an object and add the mandatory values retrieved from the database
     $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY, $content, $client, $location);
@@ -344,8 +343,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   public function getLastWeightMeasurements(Request $request)
   {
     $client = $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $animals = $this->getDoctrine()
-        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($client);
+        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($location);
 
     $minimizedOutput = WeightMeasurementsOutput::createForAnimals($animals);
 
@@ -388,9 +388,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       return $weightValidator->createJsonErrorResponse();
     }
 
-    $client = $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $livestockAnimals = $this->getDoctrine()
-        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($client);
+        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($location);
 
     //Persist updated changes and return the updated values
     $manager = $this->getDoctrine()->getManager();

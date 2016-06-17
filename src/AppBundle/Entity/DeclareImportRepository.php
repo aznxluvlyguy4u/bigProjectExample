@@ -47,26 +47,25 @@ class DeclareImportRepository extends BaseRepository {
   }
 
   /**
-   * @param Client $client
+   * @param Location $location
    * @param string $state
    * @return ArrayCollection
    */
-  public function getImports(Client $client, $state = null)
+  public function getImports(Location $location, $state = null)
   {
-    $location = $client->getCompanies()->get(0)->getLocations()->get(0);
     $retrievedImports = $location->getImports();
 
     return $this->getRequests($retrievedImports, $state);
   }
 
   /**
-   * @param Client $client
+   * @param Location $location
    * @param string $requestId
    * @return DeclareImport|null
    */
-  public function getImportByRequestId(Client $client, $requestId)
+  public function getImportByRequestId(Location $location, $requestId)
   {
-    $imports = $this->getImports($client);
+    $imports = $this->getImports($location);
 
     return $this->getRequestByRequestId($imports, $requestId);
   }

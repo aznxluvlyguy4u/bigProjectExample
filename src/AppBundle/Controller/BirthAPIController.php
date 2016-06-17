@@ -190,7 +190,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     }
 
     $client = $this->getAuthenticatedUser($request);
-    $location = $client->getCompanies()[0]->getLocations()[0];
+    $location = $this->getSelectedLocation($request);
 
     foreach($children as $child) {
 
@@ -248,8 +248,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
       $content = $this->getContentAsArray($request);
       $client = $this->getAuthenticatedUser($request);
-      //TODO Get ubn from header
-      $location = $client->getCompanies()[0]->getLocations()[0];
+      $location = $this->getSelectedLocation($request);
 
       $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
       $declareBirth = $entityManager->getBirthByRequestId($client, $content->get("request_id"));
@@ -321,7 +320,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     public function getBirthErrors(Request $request)
     {
         $client = $this->getAuthenticatedUser($request);
-
+        $location = $this->getSelectedLocation($request);
+        //FIXME only return errors for given location
         $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
         $birthRepository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_RESPONSE_REPOSITORY);
         $declareBirths = $birthRepository->getBirthsWithLastErrorResponses($client, $animalRepository);
@@ -359,7 +359,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     public function getBirthHistory(Request $request)
     {
         $client = $this->getAuthenticatedUser($request);
-
+        $location = $this->getSelectedLocation($request);
+        //FIXME only return history for given location
         $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
         $birthRepository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_RESPONSE_REPOSITORY);
         $declareBirths = $birthRepository->getBirthsWithLastHistoryResponses($client, $animalRepository);

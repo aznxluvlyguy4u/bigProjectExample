@@ -82,8 +82,7 @@ class CountryAPIController extends APIController implements CountryAPIController
     //Get content to array
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
-    //TODO Get ubn from header
-    $location = $client->getCompanies()[0]->getLocations()[0];
+    $location = $this->getSelectedLocation($request);
 
     //Convert the array into an object and add the mandatory values retrieved from the database
     $retrieveCountries = $this->buildMessageObject(RequestType::RETRIEVE_COUNTRIES_ENTITY, $content, $client, $location);
