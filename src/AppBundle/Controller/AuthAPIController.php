@@ -197,9 +197,16 @@ class AuthAPIController extends APIController {
         "new_password":"Tm90TXlGaXJzdFBhc3N3b3JkMQ==" //base64 encoded 'NotMyFirstPassword1'
     }
     */
+    $encoder = $this->get('security.password_encoder');
 
     $client = $this->getAuthenticatedUser($request);
     $content = $this->getContentAsArray($request);
+    $enteredOldPassword = base64_decode($content->get('current_password'));
+
+    if(!$encoder->isPasswordValid($client, $enteredOldPassword)) {
+      return new JsonResponse(array(Constant::MESSAGE_NAMESPACE => "CURRENT PASSWORD NOT VALID", Constant::CODE_NAMESPACE => 401), 401);
+    }
+
     $newPassword = base64_decode($content->get('new_password'));
 
     //Validate password format
@@ -209,7 +216,6 @@ class AuthAPIController extends APIController {
     }
 
     $encodedOldPassword = $client->getPassword();
-    $encoder = $this->get('security.password_encoder');
     $encodedNewPassword = $encoder->encodePassword($client, $newPassword);
     $client->setPassword($encodedNewPassword);
 
