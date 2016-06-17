@@ -11,6 +11,7 @@ use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Company;
+use AppBundle\Validation\HeaderValidation;
 use AppBundle\Validation\PasswordValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -330,4 +331,37 @@ class AuthAPIController extends APIController {
         "message"=>"Your new password has been emailed to: " . $emailAddress), 200);
   }
 
+
+  /**
+   * Validate whether a ubn in the header is valid or not.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Validate whether a ubn in the header is valid or not.",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/validate-ubn")
+   * @Method("GET")
+   */
+  public function validateUbnInHeader(Request $request)
+  {
+    $client = $this->getAuthenticatedUser($request);
+    $headerValidation = new HeaderValidation($this->getDoctrine()->getManager(), $request, $client);
+
+    if($headerValidation->isInputValid()) {
+      return new JsonResponse("UBN IS VALID", 200);
+    } else {
+      return $headerValidation->createJsonErrorResponse();
+    }
+  }
 }
