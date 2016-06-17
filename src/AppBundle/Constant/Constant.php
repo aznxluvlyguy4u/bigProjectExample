@@ -23,6 +23,9 @@ class Constant
     const MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE = 'message_number';
     const MESSAGE_NUMBER_CAMEL_CASE_NAMESPACE = 'messageNumber';
 
+    //Identity
+    const NAME_NAMESPACE = 'name';
+
     //Json response
     const MESSAGE_NAMESPACE = 'message';
     const RESULT_NAMESPACE = "result";
@@ -124,4 +127,5 @@ class Constant
     const COMPANY_REPOSITORY = 'AppBundle:Company';
     const LOCATION_REPOSITORY = 'AppBundle:Location';
     const LOCATION_HEALTH_REPOSITORY = 'AppBundle:LocationHealth';
+    const PROCESSOR_REPOSITORY = 'AppBundle:Processor';
 }

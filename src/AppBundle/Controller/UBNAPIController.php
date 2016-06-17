@@ -2,6 +2,8 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Constant\Constant;
+use AppBundle\Output\ProcessorOutput;
 use Symfony\Component\HttpFoundation\Request;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -56,5 +58,39 @@ class UBNAPIController extends APIController implements UBNAPIControllerInterfac
 
       return new JsonResponse($messageObject, 200);
     }
+
+
+  /**
+   *
+   * Get list of UBN Processors.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Get list of UBN Processors",
+   *   input = "AppBundle\Entity\DeclareLosses",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/processors")
+   * @Method("GET")
+   */
+  public function getUbnProcessors(Request $request)
+  {
+    $processors = $this->getDoctrine()->getRepository(Constant::PROCESSOR_REPOSITORY)->findAll();
+    $includeNames = true;
+    $output = ProcessorOutput::create($processors, $includeNames);
+
+    return new JsonResponse($output, 200);
+  }
 
 }
