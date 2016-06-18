@@ -3,7 +3,15 @@
 namespace AppBundle\Service;
 
 use AppBundle\Component\Utils;
+use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\DeclarationDetail;
+use AppBundle\Entity\DeclareAnimalFlag;
+use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareExport;
+use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Client;
@@ -87,7 +95,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @param $json
      * @param $messageClassNameSpace
-     * @return array|\JMS\Serializer\scalar|mixed|object
+     * @return array|\JMS\Serializer\scalar|mixed|object|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
      */
     public function deserializeToObject($json, $messageClassNameSpace)
     {
@@ -212,6 +220,7 @@ class IRSerializer implements IRSerializerInterface
             //Add retrieved animal to DeclareArrival
             $declareArrivalRequest->setAnimal($retrievedAnimal);
             $declareArrivalRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
+            $declareArrivalRequest->setIsArrivedFromOtherNsfoClient($declareArrivalContentArray->get(JsonInputConstant::IS_ARRIVED_FROM_OTHER_NSFO_CLIENT));
 
             $contentAnimal = $declareArrivalContentArray['animal'];
 
