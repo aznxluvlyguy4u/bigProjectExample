@@ -130,7 +130,11 @@ class HealthChecker
         switch($className) {
             case RequestType::DECLARE_ARRIVAL_ENTITY:
                 $locationOrigin = $manager->getRepository(Constant::LOCATION_REPOSITORY)->findByUbn($declareIn->getUbnPreviousOwner());
-                return self::verifyIsLocationCompletelyHealthy($locationOrigin);
+                if($locationOrigin == null) {
+                    return false;
+                } else {
+                    return self::verifyIsLocationCompletelyHealthy($locationOrigin);
+                }
 
             case RequestType::DECLARE_IMPORT_ENTITY:
                 return false;

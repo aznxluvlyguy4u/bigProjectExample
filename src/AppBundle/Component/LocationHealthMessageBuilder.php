@@ -52,9 +52,14 @@ class LocationHealthMessageBuilder
                 $healthMessage->setUbnPreviousOwner($ubnPreviousOwner); //animalCountryOrigin for arrivals is null.
 
                 $locationOrigin = $em->getRepository(Constant::LOCATION_REPOSITORY)->findByUbn($ubnPreviousOwner);
-                $locationHealthOrigin = Utils::returnLastLocationHealth($locationOrigin->getHealths());
-                $isMaediVisnaStatusHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($locationHealthOrigin->getMaediVisnaStatus());
-                $isScrapieStatusHealthy = HealthChecker::verifyIsScrapieStatusHealthy($locationHealthOrigin->getScrapieStatus());
+                if($locationOrigin != null) {
+                    $locationHealthOrigin = Utils::returnLastLocationHealth($locationOrigin->getHealths());
+                    $isMaediVisnaStatusHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($locationHealthOrigin->getMaediVisnaStatus());
+                    $isScrapieStatusHealthy = HealthChecker::verifyIsScrapieStatusHealthy($locationHealthOrigin->getScrapieStatus());
+                } else {
+                    $isMaediVisnaStatusHealthy = false;
+                    $isScrapieStatusHealthy = false;
+                }
                 break;
 
             case RequestType::DECLARE_IMPORT_ENTITY;
