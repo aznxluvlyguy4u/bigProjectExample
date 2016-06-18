@@ -115,6 +115,12 @@ class DeclareImport extends DeclareBase
   private $location;
 
   /**
+   * @ORM\ManyToOne(targetEntity="LocationHealthQueue", inversedBy="imports")
+   * @JMS\Type("AppBundle\Entity\LocationHealthQueue")
+   */
+  private $locationHealthQueue;
+
+  /**
    * @ORM\Column(type="boolean")
    * @JMS\Type("boolean")
    * @Expose
@@ -486,4 +492,22 @@ class DeclareImport extends DeclareBase
     {
         return $this->healthMessage;
     }
+
+    /**
+     * @return LocationHealthQueue
+     */
+    public function getLocationHealthQueue()
+    {
+        return $this->locationHealthQueue;
+    }
+
+    /**
+     * @param LocationHealthQueue $locationHealthQueue
+     */
+    public function setLocationHealthQueue($locationHealthQueue)
+    {
+        $this->locationHealthQueue = $locationHealthQueue;
+    }
+
+
 }

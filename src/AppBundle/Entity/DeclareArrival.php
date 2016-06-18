@@ -145,6 +145,12 @@ class DeclareArrival extends DeclareBase {
     private $healthMessage;
 
     /**
+     * @ORM\ManyToOne(targetEntity="LocationHealthQueue", inversedBy="arrivals")
+     * @JMS\Type("AppBundle\Entity\LocationHealthQueue")
+     */
+    private $locationHealthQueue;
+
+    /**
      * DeclareArrival constructor.
      */
     public function __construct() {
@@ -508,5 +514,22 @@ class DeclareArrival extends DeclareBase {
     public function getHealthMessage()
     {
         return $this->healthMessage;
+    }
+
+
+    /**
+     * @return LocationHealthQueue
+     */
+    public function getLocationHealthQueue()
+    {
+        return $this->locationHealthQueue;
+    }
+
+    /**
+     * @param LocationHealthQueue $locationHealthQueue
+     */
+    public function setLocationHealthQueue($locationHealthQueue)
+    {
+        $this->locationHealthQueue = $locationHealthQueue;
     }
 }
