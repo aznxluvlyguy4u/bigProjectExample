@@ -4,6 +4,8 @@ namespace AppBundle\Validation;
 
 
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\DeclareArrival;
 use AppBundle\Util\AnimalArrayReader;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\Common\Collections\Collection;
@@ -20,6 +22,9 @@ class UbnValidator
 
     /** @var boolean */
     private $isUbnValid;
+
+    /** @var boolean */
+    private $isArrivedFromOtherNsfoClient;
 
     /** @var string */
     private $identification;
@@ -40,7 +45,7 @@ class UbnValidator
     private $ubnPreviousOwner;
 
     /** @var string */
-    private $ubnAnimal;
+    private $ubnOriginAnimal;
 
     /** @var ObjectManager */
     private $manager;
@@ -49,14 +54,15 @@ class UbnValidator
      * UbnValidator constructor.
      * @param ObjectManager $manager
      * @param Collection $content
+     * @param DeclareArrival|null $declareArrival
      */
-    public function __construct(ObjectManager $manager, Collection $content)
+    public function __construct(ObjectManager $manager, Collection $content, $declareArrival = null)
     {
         $this->manager = $manager;
 
-        //If content is for a DeclareArrival
-        if($this->verifyIsDeclareArrival($content)) {
-            $this->ubnPreviousOwner = $content->get(Constant::UBN_PREVIOUS_OWNER_NAMESPACE);
+        //If input is for a DeclareArrival POST
+        if($this->verifyIsDeclareArrivalPost($content, $declareArrival)) {
+            $this->ubnPreviousOwner = $content->get(JsonInputConstant::UBN_PREVIOUS_OWNER);
 
             $animalArray = $content->get(Constant::ANIMAL_NAMESPACE);
             $animalIdentification = AnimalArrayReader::readUlnOrPedigree($animalArray);
@@ -69,8 +75,24 @@ class UbnValidator
                 $this->pedigreeNumber = $animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE];
             }
 
-            //Validate password
-            $this->validateArrivalInput();
+            //Validate ubn values
+            $this->validateArrivalPostInput();
+        }
+
+        //If input is for a DeclareArrival PUT
+        if($this->verifyIsDeclareArrivalPut($content, $declareArrival)) {
+            $animal = $declareArrival->getAnimal();
+
+            $this->identification = Constant::ULN_NAMESPACE;
+            $this->ulnCountryCode = $animal->getUlnCountryCode();
+            $this->ulnNumber = $animal->getUlnNumber();
+            $this->ubnOriginAnimal = $declareArrival->getUbnPreviousOwner();
+
+            $this->ubnPreviousOwner = $content->get(JsonInputConstant::UBN_PREVIOUS_OWNER);
+            $this->isArrivedFromOtherNsfoClient = $declareArrival->getIsArrivedFromOtherNsfoClient();
+
+            //Validate ubn values
+            $this->validateArrivalPutInput();
         }
     }
 
@@ -83,14 +105,38 @@ class UbnValidator
 
     /**
      * @param Collection $content
+     * @param DeclareArrival|null $declareArrival
      * @return bool
      */
-    private function verifyIsDeclareArrival(Collection $content)
+    private function verifyIsDeclareArrivalPost(Collection $content, $declareArrival)
     {
-        if($content->containsKey(Constant::IS_IMPORT_ANIMAL) && $content->containsKey(Constant::UBN_PREVIOUS_OWNER_NAMESPACE)) {
-            $ubnPreviousOwner = $content->get(Constant::UBN_PREVIOUS_OWNER_NAMESPACE);
-            $isImportAnimal = $content->get(Constant::IS_IMPORT_ANIMAL);
+        if($content->containsKey(JsonInputConstant::IS_IMPORT_ANIMAL)
+            && $content->containsKey(JsonInputConstant::UBN_PREVIOUS_OWNER)
+            && $declareArrival == null
+           ) {
+            $ubnPreviousOwner = $content->get(JsonInputConstant::UBN_PREVIOUS_OWNER);
+            $isImportAnimal = $content->get(JsonInputConstant::IS_IMPORT_ANIMAL);
             if($isImportAnimal == false && $ubnPreviousOwner != null && $ubnPreviousOwner != "") {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @param Collection $content
+     * @param DeclareArrival|null $declareArrival
+     * @return bool
+     */
+    private function verifyIsDeclareArrivalPut(Collection $content, $declareArrival)
+    {
+        if($content->containsKey(JsonInputConstant::REQUEST_ID)
+            && $content->containsKey(JsonInputConstant::UBN_PREVIOUS_OWNER)
+            && $content->containsKey(JsonInputConstant::ARRIVAL_DATE)
+            && $declareArrival != null)
+        {
+            $requestId = $content->get(JsonInputConstant::REQUEST_ID);
+            if($requestId != null && $requestId != "") {
                 return true;
             }
         }
@@ -100,10 +146,8 @@ class UbnValidator
     /**
      *
      */
-    private function validateArrivalInput()
+    private function validateArrivalPostInput()
     {
-        //Initialize default validity
-        $this->isUbnValid = true;
         $animal = null;
 
         if($this->identification == Constant::ULN_NAMESPACE) {
@@ -115,18 +159,43 @@ class UbnValidator
         }
 
         if($animal != null) {
-            $this->ubnAnimal = $animal->getLocation()->getUbn();
+            $this->ubnOriginAnimal = $animal->getLocation()->getUbn();
             $this->ulnCountryCode = $animal->getUlnCountryCode();
             $this->ulnNumber = $animal->getUlnNumber();
             $this->pedigreeCountryCode = $animal->getPedigreeCountryCode();
             $this->pedigreeNumber = $animal->getPedigreeNumber();
+            $this->isArrivedFromOtherNsfoClient = true;
+        } else {
+            $this->isArrivedFromOtherNsfoClient = false;
         }
 
         //Validation criteria
         if($animal != null) { //only check the ubn for an animal already in our database
-            if($this->ubnAnimal != $this->ubnPreviousOwner) {
-                $this->isUbnValid = false;
-            }
+            $this->validateUbnPreviousOwner();
+        } else {
+            $this->isUbnValid = true;
+        }
+    }
+
+    private function validateArrivalPutInput()
+    {
+        if($this->isArrivedFromOtherNsfoClient == true) {
+            $this->validateUbnPreviousOwner();
+        } else {
+            $this->isUbnValid = true;
+        }
+    }
+
+    /**
+     *
+     */
+    private function validateUbnPreviousOwner()
+    {
+        //Initialize default validity
+        $this->isUbnValid = true;
+
+        if($this->ubnOriginAnimal != $this->ubnPreviousOwner) {
+            $this->isUbnValid = false;
         }
     }
 
@@ -165,12 +234,18 @@ class UbnValidator
             Constant::TYPE_NAMESPACE => $this->identification,
             Constant::ULN_NAMESPACE => $uln,
             Constant::PEDIGREE_NAMESPACE => $pedigree,
-            Constant::UBN_NAMESPACE => $this->ubnAnimal,
+            Constant::UBN_NAMESPACE => $this->ubnOriginAnimal,
             Constant::UBN_PREVIOUS_OWNER_NAMESPACE => $this->ubnPreviousOwner);
 
         return new JsonResponse($result, UbnValidator::ERROR_CODE);
     }
 
-
+    /**
+     * @return boolean
+     */
+    public function getIsArrivedFromOtherNsfoClient()
+    {
+        return $this->isArrivedFromOtherNsfoClient;
+    }
 
 }
