@@ -4,6 +4,7 @@ namespace AppBundle\Validation;
 
 
 use AppBundle\Constant\Constant;
+use AppBundle\Util\AnimalArrayReader;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -11,16 +12,29 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 class UbnValidator
 {
     const ERROR_CODE = 428;
-    const ERROR_MESSAGE = 'ANIMAL WITH GIVEN ULN DOES NOT BELONG TO GIVEN UBN PREVIOUS OWNER';
+    const ERROR_MESSAGE = 'ANIMAL IS NOT REGISTERED WITH GIVEN UBN PREVIOUS OWNER';
+    const VALID_CODE = 200;
+    const VALID_MESSAGE = 'UBN OF ANIMAL IS VALID';
+    const MISSING_CODE = 428;
+    const MISSING_MESSAGE = 'NO ULN OR PEDIGREE GIVEN';
 
     /** @var boolean */
     private $isUbnValid;
+
+    /** @var string */
+    private $identification;
 
     /** @var string */
     private $ulnCountryCode;
 
     /** @var string */
     private $ulnNumber;
+
+    /** @var string */
+    private $pedigreeCountryCode;
+
+    /** @var string */
+    private $pedigreeNumber;
 
     /** @var string */
     private $ubnPreviousOwner;
@@ -42,10 +56,18 @@ class UbnValidator
 
         //If content is for a DeclareArrival
         if($this->verifyIsDeclareArrival($content)) {
-            $animalArray = $content->get(Constant::ANIMAL_NAMESPACE);
             $this->ubnPreviousOwner = $content->get(Constant::UBN_PREVIOUS_OWNER_NAMESPACE);
-            $this->ulnCountryCode = $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
-            $this->ulnNumber = $animalArray[Constant::ULN_NUMBER_NAMESPACE];
+
+            $animalArray = $content->get(Constant::ANIMAL_NAMESPACE);
+            $animalIdentification = AnimalArrayReader::readUlnOrPedigree($animalArray);
+            $this->identification = $animalIdentification[Constant::TYPE_NAMESPACE];
+            if($this->identification == Constant::ULN_NAMESPACE) {
+                $this->ulnCountryCode = $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
+                $this->ulnNumber = $animalArray[Constant::ULN_NUMBER_NAMESPACE];
+            } else if ($this->identification == Constant::PEDIGREE_NAMESPACE) {
+                $this->pedigreeCountryCode = $animalArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
+                $this->pedigreeNumber = $animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE];
+            }
 
             //Validate password
             $this->validateArrivalInput();
@@ -82,12 +104,22 @@ class UbnValidator
     {
         //Initialize default validity
         $this->isUbnValid = true;
+        $animal = null;
 
-        $animal = $this->manager->getRepository(Constant::ANIMAL_REPOSITORY)->
-        findByUlnCountryCodeAndNumber($this->ulnCountryCode, $this->ulnNumber);
+        if($this->identification == Constant::ULN_NAMESPACE) {
+            $animal = $this->manager->getRepository(Constant::ANIMAL_REPOSITORY)->
+            findByUlnCountryCodeAndNumber($this->ulnCountryCode, $this->ulnNumber);
+        } else if ($this->identification == Constant::PEDIGREE_NAMESPACE) {
+            $animal = $this->manager->getRepository(Constant::ANIMAL_REPOSITORY)->
+            findByPedigreeCountryCodeAndNumber($this->pedigreeCountryCode, $this->pedigreeNumber);
+        }
 
         if($animal != null) {
             $this->ubnAnimal = $animal->getLocation()->getUbn();
+            $this->ulnCountryCode = $animal->getUlnCountryCode();
+            $this->ulnNumber = $animal->getUlnNumber();
+            $this->pedigreeCountryCode = $animal->getPedigreeCountryCode();
+            $this->pedigreeNumber = $animal->getPedigreeNumber();
         }
 
         //Validation criteria
@@ -105,10 +137,34 @@ class UbnValidator
      */
     public function createArrivalJsonErrorResponse()
     {
+        $uln = null;
+        $pedigree = null;
+
+        if($this->isUbnValid) {
+            $code = UbnValidator::VALID_CODE;
+            $message = UbnValidator::VALID_MESSAGE;
+        } else {
+            $code = UbnValidator::ERROR_CODE;
+            $message = UbnValidator::ERROR_MESSAGE;
+        }
+
+        //Only return the values for the identification type being tested
+        if($this->identification == Constant::ULN_NAMESPACE) {
+            $uln = $this->ulnCountryCode . $this->ulnNumber;
+        } else if ($this->identification == Constant::PEDIGREE_NAMESPACE) {
+            $pedigree = $this->pedigreeCountryCode . $this->pedigreeNumber;
+
+        } else { //If no ULN or PEDIGREE found
+            $code = UbnValidator::MISSING_CODE;
+            $message = UbnValidator::MISSING_MESSAGE;
+        }
+
         $result = array(
-            Constant::CODE_NAMESPACE => UbnValidator::ERROR_CODE,
-            Constant::MESSAGE_NAMESPACE => UbnValidator::ERROR_MESSAGE,
-            Constant::ULN_NAMESPACE => $this->ulnCountryCode . $this->ulnNumber,
+            Constant::CODE_NAMESPACE => $code,
+            Constant::MESSAGE_NAMESPACE => $message,
+            Constant::TYPE_NAMESPACE => $this->identification,
+            Constant::ULN_NAMESPACE => $uln,
+            Constant::PEDIGREE_NAMESPACE => $pedigree,
             Constant::UBN_NAMESPACE => $this->ubnAnimal,
             Constant::UBN_PREVIOUS_OWNER_NAMESPACE => $this->ubnPreviousOwner);
 
