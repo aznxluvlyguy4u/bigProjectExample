@@ -83,11 +83,18 @@ class BaseRepository extends EntityRepository
         return null;
     }
 
+
+    /**
+     * @param Client $client
+     * @param string $entityType
+     * @param string|null $entityType2
+     * @return \DateTime
+     * @throws \Doctrine\DBAL\DBALException
+     */
     public function getLatestLogDate(Client $client, $entityType, $entityType2 = null)
     {
         $relationNumberKeeper = $client->getRelationNumberKeeper();
 
-        //TODO Phase 2+ filter by UBN.
         if($entityType2 == null) {
             $sql = "SELECT MAX(log_date) FROM declare_base WHERE type = '" . $entityType."' AND relation_number_keeper ='" . $relationNumberKeeper . "'";
 
@@ -101,6 +108,10 @@ class BaseRepository extends EntityRepository
         return new \DateTime($query->fetchColumn());
     }
 
+    /**
+     * @param Client $client
+     * @return ArrayCollection
+     */
     public function getLatestLogDatesForDashboardDeclarations(Client $client)
     {
         $repository = $this->getEntityManager()->getRepository(Constant::DECLARE_BASE_REPOSITORY);
@@ -122,7 +133,54 @@ class BaseRepository extends EntityRepository
     }
 
 
+    /**
+     * @param string $ubn
+     * @param string $entityType
+     * @param string|null $entityType2
+     * @return \DateTime
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getLatestLogDatePerUbn($ubn, $entityType, $entityType2 = null)
+    {
+        if($entityType2 == null) {
+            $sql = "SELECT MAX(log_date) FROM declare_base WHERE type = '" . $entityType."' AND ubn ='" . $ubn . "'";
 
+        } else {
+            $sql = "SELECT MAX(log_date) FROM declare_base WHERE (type = '" . $entityType."' OR type = '" . $entityType2. "') AND ubn = '"  . $ubn . "'";
+        }
+
+        $query = $this->getEntityManager()->getConnection()->prepare($sql);
+        $query->execute();
+
+        return new \DateTime($query->fetchColumn());
+    }
+
+    /**
+     * @param Location $location
+     * @return ArrayCollection
+     */
+    public function getLatestLogDatesForDashboardDeclarationsPerLocation(Location $location)
+    {
+        $repository = $this->getEntityManager()->getRepository(Constant::DECLARE_BASE_REPOSITORY);
+        $ubn = $location->getUbn();
+
+        $latestArrivalLogdate = $repository->getLatestLogDatePerUbn($ubn,RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_IMPORT_ENTITY);
+        $latestDepartLogdate = $repository->getLatestLogDatePerUbn($ubn,RequestType::DECLARE_DEPART_ENTITY, RequestType::DECLARE_EXPORT_ENTITY);
+        $latestLossLogdate = $repository->getLatestLogDatePerUbn($ubn,RequestType::DECLARE_LOSS_ENTITY);
+        $latestTagTransferLogdate = $repository->getLatestLogDatePerUbn($ubn,RequestType::DECLARE_TAGS_TRANSFER_ENTITY);
+        $latestBirthLogdate = $repository->getLatestLogDatePerUbn($ubn,RequestType::DECLARE_BIRTH_ENTITY);
+
+        $declarationLogDate = new ArrayCollection();
+        $declarationLogDate->set(RequestType::DECLARE_ARRIVAL_ENTITY, $latestArrivalLogdate);
+        $declarationLogDate->set(RequestType::DECLARE_DEPART_ENTITY, $latestDepartLogdate);
+        $declarationLogDate->set(RequestType::DECLARE_LOSS_ENTITY, $latestLossLogdate);
+        $declarationLogDate->set(RequestType::DECLARE_TAGS_TRANSFER_ENTITY, $latestTagTransferLogdate);
+        $declarationLogDate->set(RequestType::DECLARE_BIRTH_ENTITY, $latestBirthLogdate);
+
+        return $declarationLogDate;
+    }
+    
+    
     public function getArrivalsAndImportsAfterLogDateInChronologicalOrder(Location $location, \DateTime $logDate)
     {
         //TODO A LOT MORE OPTIMIZATION IS NEEDED HERE

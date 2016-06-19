@@ -33,7 +33,8 @@ class DashboardAPIController extends APIController {
     $client = $this->getAuthenticatedUser($request);
     $location = $this->getSelectedLocation($request);
 
-    $declarationLogDate = $this->getDoctrine()->getRepository(Constant::DECLARE_BASE_REPOSITORY)->getLatestLogDatesForDashboardDeclarations($client);
+    $declarationLogDate = $this->getDoctrine()->getRepository(Constant::DECLARE_BASE_REPOSITORY)
+        ->getLatestLogDatesForDashboardDeclarationsPerLocation($location);
 
     //Update LocationHealth, before displaying it in the Dashboard
     $this->getHealthService()->processLocationHealthQueue();
