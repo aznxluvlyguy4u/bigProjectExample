@@ -18,6 +18,7 @@ use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\LocationHealthQueue;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
@@ -39,6 +40,7 @@ use AppBundle\Service\EntityGetter;
 use AppBundle\Util\HealthChecker;
 use AppBundle\Util\LocationHealthUpdater;
 use AppBundle\Validation\HeaderValidation;
+use Doctrine\ORM\Query;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -57,25 +59,20 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
  */
 class APIController extends Controller implements APIControllerInterface
 {
-  /**
-   * @var RequestMessageBuilder
-   */
+  /** @var RequestMessageBuilder */
   private $requestMessageBuilder;
 
-  /**
-   * @var
-   */
+  /** @var */
   private $serializer;
 
-  /**
-   * @var \AppBundle\Service\AWSQueueService
-   */
+  /** @var \AppBundle\Service\AWSQueueService */
   private $queueService;
 
-  /**
-   * @var \AppBundle\Service\EntityGetter
-   */
+  /** @var \AppBundle\Service\EntityGetter */
   private $entityGetter;
+
+  /** @var \AppBundle\Service\HealthService */
+  private $healthService;
 
   /**
    * @return \AppBundle\Service\EntityGetter
@@ -124,6 +121,17 @@ class APIController extends Controller implements APIControllerInterface
     }
 
     return $this->queueService;
+  }
+
+  /**
+   * @return \AppBundle\Service\HealthService
+   */
+  protected function getHealthService(){
+    if($this->healthService == null){
+      $this->healthService = $this->get('app.health.updater');
+    }
+
+    return $this->healthService;
   }
 
   /**
