@@ -129,4 +129,5 @@ class Constant
     const LOCATION_REPOSITORY = 'AppBundle:Location';
     const LOCATION_HEALTH_REPOSITORY = 'AppBundle:LocationHealth';
     const PROCESSOR_REPOSITORY = 'AppBundle:Processor';
+    const LOCATION_HEALTH_QUEUE_REPOSITORY = 'AppBundle:LocationHealthQueue';
 }
