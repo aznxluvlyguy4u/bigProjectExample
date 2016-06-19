@@ -11,6 +11,8 @@ use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealthQueue;
+use AppBundle\Entity\LocationHealthQueueRepository;
+use AppBundle\Entity\LocationHealthRepository;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\HealthChecker;
 use AppBundle\Util\LocationHealthUpdater;
@@ -22,13 +24,29 @@ class HealthService
     /** @var EntityManager */
     private $entityManager;
 
+    /** @var LocationHealthRepository */
+    private $locationHealthRepository;
+
+    /** @var LocationHealthQueueRepository */
+    private $locationHealthQueueRepository;
+
+    /** @var DeclareArrival */
+    private $arrivalRepository;
+
+    /** @var DeclareImport */
+    private $importRepository;
+
     /**
      * HealthService constructor.
      * @param $entityManager
      */
-    public function __construct($entityManager)
+    public function __construct(EntityManager $entityManager)
     {
         $this->entityManager = $entityManager;
+        $this->locationHealthQueueRepository = $entityManager->getRepository(Constant::LOCATION_HEALTH_QUEUE_REPOSITORY);
+        $this->locationHealthRepository = $entityManager->getRepository(Constant::LOCATION_HEALTH_REPOSITORY);
+        $this->arrivalRepository = $entityManager->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
+        $this->importRepository = $entityManager->getRepository(Constant::DECLARE_IMPORT_REPOSITORY);
     }
 
     /**
@@ -36,7 +54,7 @@ class HealthService
      */
     public function getLocationHealthQueue()
     {
-        $repository = $this->entityManager->getRepository(Constant::LOCATION_HEALTH_QUEUE_REPOSITORY);
+        $repository = $this->locationHealthQueueRepository;
         $queues = $repository->findAll();
         $count = sizeof($queues);
 
@@ -194,7 +212,7 @@ class HealthService
         }
 
 
-        $previousLocationHealthDestination = $em->getRepository(Constant::LOCATION_HEALTH_REPOSITORY)->find($previousLocationHealthId);
+        $previousLocationHealthDestination = $this->locationHealthRepository->find($previousLocationHealthId);
         $newLocationHealthDestination = Utils::returnLastLocationHealth($location->getHealths());
 
         $isLocationCompletelyHealthy = HealthChecker::verifyIsLocationCompletelyHealthy($location);
