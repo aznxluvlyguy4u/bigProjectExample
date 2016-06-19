@@ -27,7 +27,6 @@ use AppBundle\Entity\Ram;
  * Class LocationHealthQueueUpdateTest
  * @package AppBundle\Tests\Controller
  * @group location-health
- * @group aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
  */
 class LocationHealthQueueUpdateTest extends WebTestCase
 {
