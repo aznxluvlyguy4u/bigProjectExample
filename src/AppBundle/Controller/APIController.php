@@ -691,64 +691,6 @@ class APIController extends Controller implements APIControllerInterface
     return Utils::buildValidationArray($isValid, $code, $messageBody, array('messageNumber' => $messageNumber));
   }
 
-  /**
-   * @param DeclareArrival|DeclareImport $messageObject
-   * @param Location $location
-   * @param  Animal $animal
-   * @return null|DeclareArrival|DeclareImport
-   */
-  public function checkAndPersistLocationHealthStatusAndCreateNewLocationHealthMessage($messageObject, $location, $animal)
-  {
-    $em = $this->getDoctrine()->getManager();
-    $previousLocationHealthId = Utils::returnLastLocationHealth($location->getHealths())->getId();
-
-    if($messageObject instanceof DeclareImport) {
-      $location = LocationHealthUpdater::updateWithoutOriginHealthData($em, $location);
-
-    } else if($messageObject instanceof DeclareArrival) {
-      $location = LocationHealthUpdater::updateByGivenUbnOfOrigin($em, $location, $messageObject->getUbnPreviousOwner());
-    } else {
-      return null; //Only Imports and Arrivals are allowed into the function
-    }
-
-
-    $previousLocationHealthDestination = $em->getRepository(Constant::LOCATION_HEALTH_REPOSITORY)->find($previousLocationHealthId);
-    $newLocationHealthDestination = Utils::returnLastLocationHealth($location->getHealths());
-
-    $isLocationCompletelyHealthy = HealthChecker::verifyIsLocationCompletelyHealthy($location);
-    $isLocationOriginCompletelyHealthy = HealthChecker::verifyIsLocationOriginCompletelyHealthy($messageObject, Utils::getClassName($messageObject), $em);
-    $hasLocationHealthChanged = HealthChecker::verifyHasLocationHealthChanged($previousLocationHealthDestination, $newLocationHealthDestination);
-
-    /* LocationHealth Update */
-    if(!$isLocationCompletelyHealthy && $hasLocationHealthChanged)
-    {
-      //Persist HealthStatus
-      $messageObject->setLocation($location);
-      $em->persist($newLocationHealthDestination);
-      $this->persist($messageObject);
-      $em->flush();
-
-    } else {
-      $previousLocationHealthId--;
-    }
-
-
-    /* LocationHealthMessage */
-    if(!$isLocationOriginCompletelyHealthy) {
-      $locationHealthMessage = LocationHealthMessageBuilder::build($em, $messageObject, $previousLocationHealthId, $animal);
-
-      //Set LocationHealthMessage relationships
-      $messageObject->setHealthMessage($locationHealthMessage);
-      $location->addHealthMessage($locationHealthMessage);
-
-      //Persist LocationHealthMessage
-      $em->persist($locationHealthMessage);
-      $em->flush();
-    }
-
-    return $messageObject;
-  }
-
 
   public function getSelectedLocation(Request $request)
   {
