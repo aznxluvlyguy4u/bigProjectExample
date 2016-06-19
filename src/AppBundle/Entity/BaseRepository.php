@@ -28,6 +28,19 @@ class BaseRepository extends EntityRepository
         return $entity;
     }
 
+    public function remove($entity)
+    {
+        $this->getEntityManager()->remove($entity);
+
+        return $entity;
+    }
+
+
+    public function flush()
+    {
+        $this->getEntityManager()->flush();
+    }
+
     protected function getRequests($requests, $state = null)
     {
         if($state == null) {
