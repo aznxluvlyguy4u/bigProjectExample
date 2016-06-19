@@ -120,4 +120,35 @@ class BaseRepository extends EntityRepository
 
         return $declarationLogDate;
     }
+
+
+
+    public function getArrivalsAndImportsAfterLogDateInChronologicalOrder(Location $location, \DateTime $logDate)
+    {
+        //TODO A LOT MORE OPTIMIZATION IS NEEDED HERE
+        
+        $ubn = $location->getUbn();
+
+        $arrivalType = RequestType::DECLARE_ARRIVAL_ENTITY;
+        $importType = RequestType::DECLARE_IMPORT_ENTITY;
+
+        $sql = "SELECT id, log_date FROM declare_base
+                WHERE (type = '" . $arrivalType."' OR type = '" . $importType. "')
+                AND ubn = '"  . $ubn . "'
+                ORDER BY log_date ASC";
+
+        $query = $this->getEntityManager()->getConnection()->prepare($sql);
+        $query->execute();
+
+        $results = array();
+
+        foreach($query->fetchAll() as $item) {
+            $message = $this->find($item['id']);
+            if($message->getLogDate() > $logDate) {
+                $results[] = $message;
+            }
+        }
+
+        return $results;
+    }
 }
