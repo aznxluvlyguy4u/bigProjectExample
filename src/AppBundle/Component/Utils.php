@@ -4,6 +4,7 @@ namespace AppBundle\Component;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\LocationHealth;
+use AppBundle\Entity\LocationHealthQueue;
 use AppBundle\Entity\WeightMeasurement;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -272,4 +273,25 @@ class Utils
         return $animal->getUlnCountryCode() . $animal->getUlnNumber();
     }
 
+    /**
+     * @param array $locationHealthQueuesArray
+     * @return LocationHealthQueue
+     */
+    public static function combineLocationHealthQueues($locationHealthQueuesArray)
+    {
+        $combinedLocationHealthQueue = new LocationHealthQueue();
+
+        foreach($locationHealthQueuesArray as $locationHealthQueue) {
+
+            foreach($locationHealthQueue->getArrivals() as $arrival) {
+                $combinedLocationHealthQueue->addArrival($arrival);
+            }
+
+            foreach($locationHealthQueue->getImports() as $import) {
+                $combinedLocationHealthQueue->addImport($import);
+            }
+        }
+
+        return $combinedLocationHealthQueue;
+    }
 }
