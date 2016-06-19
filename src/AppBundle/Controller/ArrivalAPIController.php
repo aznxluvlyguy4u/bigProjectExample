@@ -197,7 +197,8 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $this->persist($messageObject);
     $this->getDoctrine()->getManager()->flush();
 
-    $this->checkAndPersistLocationHealthStatusAndCreateNewLocationHealthMessage($messageObject, $location, $animal);
+    //Place the DeclareArrival or DeclareImport in the LocationHealthQueue
+    $this->getHealthService()->updateLocationHealthQueue($messageObject);
 
 //    return new JsonResponse(array("status"=>"sent"), 200);
     return new JsonResponse($messageArray, 200);
