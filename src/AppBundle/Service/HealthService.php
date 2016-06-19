@@ -117,7 +117,7 @@ class HealthService
                 break;
 
             case RequestStateType::FINISHED:
-                $this->checkAndPersistLocationHealthStatusAndCreateNewLocationHealthMessage($declareIn);
+                $this->processFinishedMessageInLocationHealthQueue($declareIn);
                 $this->removeMessageFromLocationHealthQueue($declareIn, $queue);
                 break;
 
@@ -156,12 +156,15 @@ class HealthService
 
 
     /**
+     * Check and persist LocationHealthStatus
+     * and create a new LocationHealthMessage.
+     *
      * @param DeclareArrival|DeclareImport $messageObject
      * @param Location $location
      * @param  Animal $animal
      * @return null|DeclareArrival|DeclareImport
      */
-    public function checkAndPersistLocationHealthStatusAndCreateNewLocationHealthMessage($messageObject, $location = null, $animal = null)
+    public function processFinishedMessageInLocationHealthQueue($messageObject, $location = null, $animal = null)
     {
         if($location == null) {
             $location = $messageObject->getLocation();
