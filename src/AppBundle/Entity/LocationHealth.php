@@ -152,9 +152,21 @@ class LocationHealth
      */
     private $checkDate;
 
+    /**
+     * @ORM\Column(type="boolean")
+     * @JMS\Type("boolean")
+     * @Assert\NotBlank
+     * @Expose
+     */
+    private $isRevoked;
+
+    /**
+     * LocationHealth constructor.
+     */
     public function __construct()
     {
         $this->setLogDate(new DateTime('now'));
+        $this->isRevoked = false;
     }
 
     /**
@@ -357,6 +369,22 @@ class LocationHealth
     public function setFootRotEndDate($footRotEndDate)
     {
         $this->footRotEndDate = $footRotEndDate;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getIsRevoked()
+    {
+        return $this->isRevoked;
+    }
+
+    /**
+     * @param boolean $isRevoked
+     */
+    public function setIsRevoked($isRevoked)
+    {
+        $this->isRevoked = $isRevoked;
     }
 
 
