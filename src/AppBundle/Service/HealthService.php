@@ -87,6 +87,74 @@ class HealthService
     }
 
 
+    public function processLocationHealthQueue()
+    {
+        $queue = $this->getLocationHealthQueue();
+
+        foreach($queue->getArrivals() as $arrival) {
+            $this->processDeclaration($arrival, $queue);
+        }
+
+        foreach ($queue->getImports() as $import) {
+            $this->processDeclaration($import, $queue);
+        }
+    }
+
+
+    /**
+     * @param DeclareArrival|DeclareImport $declareIn
+     * @param LocationHealthQueue $queue
+     */
+    private function processDeclaration($declareIn, $queue)
+    {
+        switch($declareIn->getRequestState()){
+            case RequestStateType::CANCELLED:
+                $this->removeMessageFromLocationHealthQueue($declareIn, $queue);
+                break;
+
+            case RequestStateType::FAILED:
+                $this->removeMessageFromLocationHealthQueue($declareIn, $queue);
+                break;
+
+            case RequestStateType::FINISHED:
+                $this->checkAndPersistLocationHealthStatusAndCreateNewLocationHealthMessage($declareIn);
+                $this->removeMessageFromLocationHealthQueue($declareIn, $queue);
+                break;
+
+            case RequestStateType::REVOKED:
+                //TODO implement REVOKE LOGIC
+                $this->removeMessageFromLocationHealthQueue($declareIn, $queue);
+                break;
+
+            case RequestStateType::OPEN:
+                //do nothing. Leave the message in the queue
+                break;
+
+            case RequestStateType::REVOKING:
+                //do nothing. Leave the message in the queue
+                break;
+
+            default:
+                //do nothing. Leave the message in the queue
+                break;
+        }
+    }
+
+    /**
+     * @param DeclareArrival|DeclareImport $declareIn
+     * @param LocationHealthQueue $queue
+     */
+    public function removeMessageFromLocationHealthQueue($declareIn, $queue)
+    {
+        $declareIn->setLocationHealthQueue(null);
+        $queue->removeDeclaration($declareIn);
+
+        $this->entityManager->persist($declareIn);
+        $this->entityManager->persist($queue);
+        $this->entityManager->flush();
+    }
+
+
     /**
      * @param DeclareArrival|DeclareImport $messageObject
      * @param Location $location
@@ -154,70 +222,5 @@ class HealthService
     }
 
 
-    public function processLocationHealthQueue()
-    {
-        $queue = $this->getLocationHealthQueue();
-
-        foreach($queue->getArrivals() as $arrival) {
-            $this->processDeclaration($arrival, $queue);
-        }
-
-        foreach ($queue->getImports() as $import) {
-            $this->processDeclaration($import, $queue);
-        }
-    }
-
-    /**
-     * @param DeclareArrival|DeclareImport $declareIn
-     * @param LocationHealthQueue $queue
-     */
-    private function processDeclaration($declareIn, $queue)
-    {
-        switch($declareIn->getRequestState()){
-            case RequestStateType::CANCELLED:
-                $this->removeMessageFromLocationHealthQueue($declareIn, $queue);
-                break;
-
-            case RequestStateType::FAILED:
-                $this->removeMessageFromLocationHealthQueue($declareIn, $queue);
-                break;
-
-            case RequestStateType::FINISHED:
-                $this->checkAndPersistLocationHealthStatusAndCreateNewLocationHealthMessage($declareIn);
-                $this->removeMessageFromLocationHealthQueue($declareIn, $queue);
-                break;
-
-            case RequestStateType::REVOKED:
-                //TODO implement REVOKE LOGIC
-                $this->removeMessageFromLocationHealthQueue($declareIn, $queue);
-                break;
-
-            case RequestStateType::OPEN:
-                //do nothing. Leave the message in the queue
-                break;
-
-            case RequestStateType::REVOKING:
-                //do nothing. Leave the message in the queue
-                break;
-
-            default:
-                //do nothing. Leave the message in the queue
-                break;
-        }
-    }
-
-    /**
-     * @param DeclareArrival|DeclareImport $declareIn
-     * @param LocationHealthQueue $queue
-     */
-    public function removeMessageFromLocationHealthQueue($declareIn, $queue)
-    {
-        $declareIn->setLocationHealthQueue(null);
-        $queue->removeDeclaration($declareIn);
-
-        $this->entityManager->persist($declareIn);
-        $this->entityManager->persist($queue);
-        $this->entityManager->flush();
-    }
 
 }
