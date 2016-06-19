@@ -181,7 +181,7 @@ class APIController extends Controller implements APIControllerInterface
    * @param ArrayCollection $contentArray
    * @param $user
    * @param Location $location
-   * @return object|null
+   * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
    * @throws \Exception
    */
   protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $location)
