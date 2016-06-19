@@ -154,9 +154,48 @@ class Utils
      * @param Collection $locationHealths
      * @return LocationHealth|null
      */
-    public static function returnLastLocationHealth(Collection $locationHealths)
+    public static function returnLastLocationHealth(Collection $locationHealths, $includeRevoked = false)
     {
-        return self::returnLastItemFromCollectionByLogDate($locationHealths);
+        if($locationHealths->count() == 0) {
+            return null;
+        }
+
+        if($includeRevoked == true) {
+            return self::returnLastItemFromCollectionByLogDate($locationHealths);
+        }
+
+        $length = $locationHealths->count();
+
+        //initialize values
+        $lastItemIndex = 0;
+        $startIndex = 0;
+
+        $latestLogDate = null;
+
+        //find the first LocationHealth that is not revoked
+        foreach($locationHealths as $locationHealth) {
+            if($locationHealth->getIsRevoked() == false) {
+                $latestLogDate = $locationHealth->getLogDate();
+                break;
+            }
+        }
+
+
+        if($latestLogDate == null) {
+            //no LocationHealths found that are not revoked
+            return null;
+        }
+
+        for($i = $startIndex + 1; $i < $length; $i++) {
+            $locationHealth = $locationHealths->get($i);
+            $itemLogDate = $locationHealth->getLogDate();
+            if($itemLogDate > $latestLogDate && $locationHealth->getIsRevoked() == false) {
+                $lastItemIndex = $i;
+                $latestLogDate = $itemLogDate;
+            }
+        }
+
+        return $locationHealths->get($lastItemIndex);
     }
 
     /**
