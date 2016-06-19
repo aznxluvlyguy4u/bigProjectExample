@@ -14,6 +14,7 @@ use AppBundle\Entity\LocationHealthQueue;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\HealthChecker;
 use AppBundle\Util\LocationHealthUpdater;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 
 class HealthService
@@ -91,6 +92,12 @@ class HealthService
     {
         $queue = $this->getLocationHealthQueue();
 
+        /* TODO sort messages in RequestState types to enable much quicker batch processing
+          For example:
+           - For REVOKED: PER LOCATION only process the Revoked message with the oldest logDate/Arrival date
+           - For FINISHED: PER LOCATION group them by locationOrigin and only process one of them.
+           Don't forget to delete all FINISHED & REVOKED messages even if they are not use to calculate LocationHealth.
+        */
         foreach($queue->getArrivals() as $arrival) {
             $this->processDeclaration($arrival, $queue);
         }
