@@ -140,6 +140,18 @@ class LocationHealthQueue
     }
 
     /**
+     * @param DeclareArrival|DeclareImport $arrivalOrImport
+     */
+    public function removeDeclaration($arrivalOrImport)
+    {
+        if($arrivalOrImport instanceof DeclareArrival){
+            $this->removeArrival($arrivalOrImport);
+        } else if($arrivalOrImport instanceof DeclareImport) {
+            $this->removeImport($arrivalOrImport);
+        }
+    }
+
+    /**
      * Get id
      *
      * @return integer
