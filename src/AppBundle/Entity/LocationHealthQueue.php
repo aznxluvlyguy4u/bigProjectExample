@@ -127,7 +127,17 @@ class LocationHealthQueue
         $this->imports = $imports;
     }
 
-
+    /**
+     * @param DeclareArrival|DeclareImport $arrivalOrImport
+     */
+    public function addDeclaration($arrivalOrImport)
+    {
+        if($arrivalOrImport instanceof DeclareArrival){
+            $this->addArrival($arrivalOrImport);
+        } else if($arrivalOrImport instanceof DeclareImport) {
+            $this->addImport($arrivalOrImport);
+        }
+    }
 
     /**
      * Get id
