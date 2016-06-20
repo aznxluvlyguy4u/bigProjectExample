@@ -109,13 +109,7 @@ class HealthService
     public function processLocationHealthQueue()
     {
         $queue = $this->getLocationHealthQueue();
-
-        /* TODO sort messages in RequestState types to enable much quicker batch processing
-          For example:
-           - For REVOKED: PER LOCATION only process the Revoked message with the oldest logDate/Arrival date
-           - For FINISHED: PER LOCATION group them by locationOrigin and only process one of them.
-           Don't forget to delete all FINISHED & REVOKED messages even if they are not use to calculate LocationHealth.
-        */
+        
         foreach($queue->getArrivals() as $arrival) {
             $this->processDeclaration($arrival, $queue);
         }
