@@ -109,7 +109,7 @@ class HealthService
     public function processLocationHealthQueue()
     {
         $queue = $this->getLocationHealthQueue();
-        
+
         foreach($queue->getArrivals() as $arrival) {
             $this->processDeclaration($arrival, $queue);
         }
@@ -141,7 +141,7 @@ class HealthService
                 break;
 
             case RequestStateType::REVOKED:
-                $this->processRevokedMessageInLocationHealthQueue($declareIn);
+//                $this->processRevokedMessageInLocationHealthQueue($declareIn);
                 $this->removeMessageFromLocationHealthQueue($declareIn, $queue);
                 break;
 
@@ -182,7 +182,8 @@ class HealthService
      * @param boolean $doCreateLocationHealthMessage
      * @return null|DeclareArrival|DeclareImport
      */
-    public function processFinishedMessageInLocationHealthQueue($messageObject, $doCreateLocationHealthMessage = true)
+    public function processFinishedMessageInLocationHealthQueue($messageObject, $doCreateLocationHealthMessage = true,
+                                                                $isRevokedMessage = false)
     {
         $location = $messageObject->getLocation();
         $animal = $messageObject->getAnimal();
@@ -222,7 +223,7 @@ class HealthService
 
 
         /* LocationHealthMessage */
-        if(!$isLocationOriginCompletelyHealthy && $doCreateLocationHealthMessage) { //
+        if(!$isLocationOriginCompletelyHealthy && $doCreateLocationHealthMessage) {
             $locationHealthMessage = LocationHealthMessageBuilder::build($em, $messageObject, $previousLocationHealthId, $animal);
 
             //Set LocationHealthMessage relationships
@@ -231,6 +232,12 @@ class HealthService
 
             //Persist LocationHealthMessage
             $em->persist($locationHealthMessage);
+            $em->flush();
+        }
+
+        if($isRevokedMessage) {
+            $messageObject->getHealthMessage()->setPreviousLocationHealthId($previousLocationHealthId);
+            $em->persist($messageObject->getHealthMessage());
             $em->flush();
         }
 
@@ -256,8 +263,8 @@ class HealthService
         foreach($locationHealthsToRevoke as $locationHealthToRevoke) {
             $locationHealthToRevoke->setIsRevoked(true);
             $this->locationHealthRepository->persist($locationHealthToRevoke);
+            $this->entityManager->flush();
         }
-        $this->entityManager->flush();
 
         //Find starting point for recalculating LocationHealth
         $logDateBeforeRevoke = $messageObject->getLogDate(); //NOTE! LogDate of LocationHealth is NOT the same as for the message
@@ -269,8 +276,9 @@ class HealthService
         foreach($arrivalsAndImports as $arrivalsAndImport) {
             /* LocationHealthMessage is not dependent on LocationHealth status, but only on location of origin.
                so a different LocationHealth history due to a revoke will not change it. */
-            $doCreateLocationHealthMessage = false;
-            $this->processFinishedMessageInLocationHealthQueue($arrivalsAndImport, $doCreateLocationHealthMessage);
+            $doCreateLocationHealthMessage = false; $isRevokedMessage = true;
+            $this->processFinishedMessageInLocationHealthQueue($arrivalsAndImport,
+                $doCreateLocationHealthMessage, $isRevokedMessage);
         }
 
         return $messageObject;
