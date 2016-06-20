@@ -86,6 +86,13 @@ class DeclareTagReplace extends DeclareBase {
     private $responses;
 
     /**
+     * @ORM\OneToOne(targetEntity="RevokeDeclaration", inversedBy="tagReplace", cascade={"persist"})
+     * @ORM\JoinColumn(name="revoke_id", referencedColumnName="id", nullable=true)
+     * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
+     */
+    private $revoke;
+
+    /**
      * DeclareTagReplace constructor.
      */
     public function  __construct() {
@@ -321,5 +328,29 @@ class DeclareTagReplace extends DeclareBase {
     public function getAnimal()
     {
         return $this->animal;
+    }
+
+    /**
+     * Set revoke
+     *
+     * @param \AppBundle\Entity\RevokeDeclaration $revoke
+     *
+     * @return DeclareTagReplace
+     */
+    public function setRevoke(\AppBundle\Entity\RevokeDeclaration $revoke = null)
+    {
+        $this->revoke = $revoke;
+
+        return $this;
+    }
+
+    /**
+     * Get revoke
+     *
+     * @return \AppBundle\Entity\RevokeDeclaration
+     */
+    public function getRevoke()
+    {
+        return $this->revoke;
     }
 }
