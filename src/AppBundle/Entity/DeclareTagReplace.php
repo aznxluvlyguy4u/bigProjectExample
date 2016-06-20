@@ -42,6 +42,13 @@ class DeclareTagReplace extends DeclareBase {
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false)
      */
+    private $animalOrderNumberToReplace;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=false)
+     */
     private $ulnNumberReplacement;
 
     /**
@@ -50,6 +57,13 @@ class DeclareTagReplace extends DeclareBase {
      * @ORM\Column(type="string", nullable=false)
      */
     private $ulnCountryCodeReplacement;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=false)
+     */
+    private $animalOrderNumberReplacement;
 
     /**
      * @var integer
@@ -352,5 +366,53 @@ class DeclareTagReplace extends DeclareBase {
     public function getRevoke()
     {
         return $this->revoke;
+    }
+
+    /**
+     * Set animalOrderNumberToReplace
+     *
+     * @param string $animalOrderNumberToReplace
+     *
+     * @return DeclareTagReplace
+     */
+    public function setAnimalOrderNumberToReplace($animalOrderNumberToReplace)
+    {
+        $this->animalOrderNumberToReplace = $animalOrderNumberToReplace;
+
+        return $this;
+    }
+
+    /**
+     * Get animalOrderNumberToReplace
+     *
+     * @return string
+     */
+    public function getAnimalOrderNumberToReplace()
+    {
+        return $this->animalOrderNumberToReplace;
+    }
+
+    /**
+     * Set animalOrderNumberReplacement
+     *
+     * @param string $animalOrderNumberReplacement
+     *
+     * @return DeclareTagReplace
+     */
+    public function setAnimalOrderNumberReplacement($animalOrderNumberReplacement)
+    {
+        $this->animalOrderNumberReplacement = $animalOrderNumberReplacement;
+
+        return $this;
+    }
+
+    /**
+     * Get animalOrderNumberReplacement
+     *
+     * @return string
+     */
+    public function getAnimalOrderNumberReplacement()
+    {
+        return $this->animalOrderNumberReplacement;
     }
 }
