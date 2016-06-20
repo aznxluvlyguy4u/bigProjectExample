@@ -2,6 +2,8 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\Utils;
+use AppBundle\Enumerator\TagStateType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -58,7 +60,14 @@ class TagsReplaceAPIController extends APIController {
     $validation = $this->getDoctrine()->getRepository(Constant::DECLARE_TAGS_TRANSFER_REPOSITORY)->validateTag($client, $tagContent[Constant::ULN_COUNTRY_CODE_NAMESPACE], $tagContent[Constant::ULN_NUMBER_NAMESPACE]);
 
     if($validation[Constant::VALIDITY_NAMESPACE] == false) {
-      return new JsonResponse($validation[Constant::MESSAGE_NAMESPACE], $validation[Constant::CODE_NAMESPACE]);
+
+      $tag = $validation[Constant::TAG_NAMESPACE];
+
+      if($tag->getTagStatus() == TagStateType::REPLACING){
+        $errorMessage =  array("error_message" => "Tag " . $tag->getUlnCountryCode() .  $tag->getUlnNumber() . " is not available for replacement.", "error_code" => 428);
+        return new JsonResponse($errorMessage, 428);
+      }
+
     }
 
     //Convert the array into an object and add the mandatory values retrieved from the database
