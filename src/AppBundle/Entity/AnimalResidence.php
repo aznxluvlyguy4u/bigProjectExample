@@ -73,11 +73,20 @@ class AnimalResidence
     private $isPending;
 
     /**
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $country;
+
+    /**
      * AnimalResidence constructor.
      */
-    public function __construct()
+    public function __construct($country = 'NL', $isPending = true)
     {
-        $this->isPending = true;
+        $this->isPending = $isPending;
+        $this->country = $country;
     }
 
     /**
@@ -187,4 +196,22 @@ class AnimalResidence
     {
         return $this->isPending;
     }
+
+    /**
+     * @return string
+     */
+    public function getCountry()
+    {
+        return $this->country;
+    }
+
+    /**
+     * @param string $country
+     */
+    public function setCountry($country)
+    {
+        $this->country = $country;
+    }
+
+
 }
