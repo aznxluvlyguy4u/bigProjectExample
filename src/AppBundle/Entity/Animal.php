@@ -308,6 +308,14 @@ abstract class Animal
     private $animalCountryOrigin;
 
     /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="AnimalResidence", mappedBy="animal")
+     * @JMS\Type("AppBundle\Entity\AnimalResidence")
+     */
+    protected $animalResidenceHistory;
+
+    /**
      * Animal constructor.
      */
     public function __construct() {
@@ -319,6 +327,7 @@ abstract class Animal
         $this->births = new ArrayCollection();
         $this->deaths = new ArrayCollection();
         $this->weightMeasurements = new ArrayCollection();
+        $this->animalResidenceHistory = new ArrayCollection();
 
         $this->flags = new ArrayCollection();
         $this->isAlive = true;
@@ -1191,5 +1200,47 @@ abstract class Animal
     public function getWeightMeasurements()
     {
         return $this->weightMeasurements;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getAnimalResidenceHistory()
+    {
+        return $this->animalResidenceHistory;
+    }
+
+    /**
+     * @param ArrayCollection $animalResidenceHistory
+     */
+    public function setAnimalResidenceHistory($animalResidenceHistory)
+    {
+        $this->animalResidenceHistory = $animalResidenceHistory;
+    }
+
+
+
+    /**
+     * Add animalResidenceHistory
+     *
+     * @param \AppBundle\Entity\AnimalResidence $animalResidenceHistory
+     *
+     * @return Animal
+     */
+    public function addAnimalResidenceHistory(\AppBundle\Entity\AnimalResidence $animalResidenceHistory)
+    {
+        $this->animalResidenceHistory[] = $animalResidenceHistory;
+
+        return $this;
+    }
+
+    /**
+     * Remove animalResidenceHistory
+     *
+     * @param \AppBundle\Entity\AnimalResidence $animalResidenceHistory
+     */
+    public function removeAnimalResidenceHistory(\AppBundle\Entity\AnimalResidence $animalResidenceHistory)
+    {
+        $this->animalResidenceHistory->removeElement($animalResidenceHistory);
     }
 }

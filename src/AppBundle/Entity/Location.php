@@ -148,6 +148,14 @@ class Location
    */
   private $healths;
 
+  /**
+   * @var ArrayCollection
+   *
+   * @ORM\OneToMany(targetEntity="AnimalResidence", mappedBy="location")
+   * @JMS\Type("AppBundle\Entity\AnimalResidence")
+   */
+  private $animalResidenceHistory;
+
   /*
   * Constructor
   */
@@ -164,6 +172,7 @@ class Location
     $this->flags = new ArrayCollection();
     $this->revokes = new ArrayCollection();
     $this->healths = new ArrayCollection();
+    $this->animalResidenceHistory = new ArrayCollection();
   }
 
   /**
@@ -650,4 +659,38 @@ class Location
 
 
 
+
+    /**
+     * Add animalResidenceHistory
+     *
+     * @param \AppBundle\Entity\AnimalResidence $animalResidenceHistory
+     *
+     * @return Location
+     */
+    public function addAnimalResidenceHistory(\AppBundle\Entity\AnimalResidence $animalResidenceHistory)
+    {
+        $this->animalResidenceHistory[] = $animalResidenceHistory;
+
+        return $this;
+    }
+
+    /**
+     * Remove animalResidenceHistory
+     *
+     * @param \AppBundle\Entity\AnimalResidence $animalResidenceHistory
+     */
+    public function removeAnimalResidenceHistory(\AppBundle\Entity\AnimalResidence $animalResidenceHistory)
+    {
+        $this->animalResidenceHistory->removeElement($animalResidenceHistory);
+    }
+
+    /**
+     * Get animalResidenceHistory
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getAnimalResidenceHistory()
+    {
+        return $this->animalResidenceHistory;
+    }
 }
