@@ -486,6 +486,7 @@ class IRSerializer implements IRSerializerInterface
 
         $declareTagReplace->setUlnCountryCodeToReplace($retrievedAnimal->getUlnCountryCode());
         $declareTagReplace->setUlnNumberToReplace($retrievedAnimal->getUlnNumber());
+        $declareTagReplace->setAnimalOrderNumberToReplace($retrievedAnimal->getAnimalOrderNumber());
         $declareTagReplace->setAnimalType(AnimalType::sheep);
         $declareTagReplace->setAnimal(null);
 
@@ -508,6 +509,10 @@ class IRSerializer implements IRSerializerInterface
                 //add tag to result set
                 $declareTagReplace->setUlnCountryCodeReplacement($fetchedTag->getUlnCountryCode());
                 $declareTagReplace->setUlnNumberReplacement($fetchedTag->getUlnNumber());
+                $declareTagReplace->setAnimalOrderNumberReplacement($fetchedTag->getAnimalOrderNumber());
+                $fetchedTag->setTagStatus(TagStateType::REPLACING);
+                $this->entityManager->persist($fetchedTag);
+                $this->entityManager->flush();
             }
         }
 
