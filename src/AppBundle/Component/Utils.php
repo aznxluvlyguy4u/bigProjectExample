@@ -3,6 +3,7 @@
 namespace AppBundle\Component;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\WeightMeasurement;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -176,6 +177,36 @@ class Utils
         return $items->get($lastItemIndex);
     }
 
+
+    /**
+     * @param array $residences
+     * @return AnimalResidence|null
+     */
+    public static function returnLastAnimalResidenceByStartDate(array $residences)
+    {
+        $length = sizeof($residences);
+
+        if($length == 0) {
+            return null;
+        }
+
+        //initialize values
+        $lastItemIndex = 0;
+        $startIndex = 0;
+        $latestStartDate = $residences[$startIndex]->getStartDate();
+
+        for($i = $startIndex + 1; $i < $length; $i++) {
+            $itemStartDate = $residences[$i]->getStartDate();
+            if($itemStartDate > $latestStartDate) {
+                $lastItemIndex = $i;
+                $latestStartDate = $itemStartDate;
+            }
+        }
+
+        return $residences[$lastItemIndex];
+    }
+    
+    
     /**
      * WeightMeasurement are sorted first by weightMeasurementDate and then on logDate
      *
