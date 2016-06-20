@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestType;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -190,7 +191,7 @@ class BaseRepository extends EntityRepository
         $arrivalType = RequestType::DECLARE_ARRIVAL_ENTITY;
         $importType = RequestType::DECLARE_IMPORT_ENTITY;
 
-        $sql = "SELECT id, log_date FROM declare_base
+        $sql = "SELECT id, log_date, type FROM declare_base
                 WHERE (type = '" . $arrivalType."' OR type = '" . $importType. "')
                 AND ubn = '"  . $ubn . "'
                 ORDER BY log_date ASC";
@@ -201,7 +202,8 @@ class BaseRepository extends EntityRepository
         $results = array();
 
         foreach($query->fetchAll() as $item) {
-            $message = $this->find($item['id']);
+            $message = $this->getEntityManager()->getRepository('AppBundle:'.$item['type'])->find($item['id']);
+
             if($message->getLogDate() > $logDate) {
                 $results[] = $message;
             }
