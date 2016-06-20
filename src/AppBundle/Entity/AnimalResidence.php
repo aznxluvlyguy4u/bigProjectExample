@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Animal;
+use AppBundle\Enumerator\Country;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -28,6 +29,17 @@ class AnimalResidence
      * @Expose
      */
     private $id;
+
+    /**
+     * @var DateTime
+     *
+     * @ORM\Column(type="datetime")
+     * @Assert\Date
+     * @Assert\NotBlank
+     * @JMS\Type("DateTime")
+     * @Expose
+     */
+    private $logDate;
 
     /**
      * @var DateTime
@@ -83,10 +95,11 @@ class AnimalResidence
     /**
      * AnimalResidence constructor.
      */
-    public function __construct($country = 'NL', $isPending = true)
+    public function __construct($country = Country::NL, $isPending = true)
     {
         $this->isPending = $isPending;
         $this->country = $country;
+        $this->logDate = new \DateTime('now');
     }
 
     /**
@@ -212,6 +225,25 @@ class AnimalResidence
     {
         $this->country = $country;
     }
+
+    /**
+     * @return DateTime
+     */
+    public function getLogDate()
+    {
+        return $this->logDate;
+    }
+
+    /**
+     * @param DateTime $logDate
+     */
+    public function setLogDate($logDate)
+    {
+        $this->logDate = $logDate;
+    }
+
+
+
 
 
 }
