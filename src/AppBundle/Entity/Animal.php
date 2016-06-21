@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\TagStateType;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -232,6 +233,13 @@ abstract class Animal
     protected $weightMeasurements;
 
     /**
+     * @var array
+     * @JMS\Type("AppBundle\Entity\DeclareTagReplace")
+     * @ORM\OneToMany(targetEntity="DeclareTagReplace", mappedBy="animal", cascade={"persist"})
+     */
+    protected $tagReplacements;
+
+    /**
      * @var Tag
      *
      * @ORM\OneToOne(targetEntity="Tag", inversedBy="animal", cascade={"persist"})
@@ -244,7 +252,7 @@ abstract class Animal
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="animals", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
      */
-    private $location;
+    protected $location;
 
     /**
      * @var boolean
@@ -284,28 +292,39 @@ abstract class Animal
      * @JMS\Type("boolean")
      * @Expose
      */
-    private $isImportAnimal;
+    protected $isImportAnimal;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
      * @Expose
      */
-    private $isExportAnimal;
+    protected $isExportAnimal;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
      * @Expose
      */
-    private $isDepartedAnimal;
+    protected $isDepartedAnimal;
 
     /**
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      * @Expose
      */
-    private $animalCountryOrigin;
+    protected $animalCountryOrigin;
+
+    /**
+     * @var ArrayCollection
+     * 
+     * @ORM\ManyToMany(targetEntity="Tag")
+     * @ORM\JoinTable(name="ulns_history",
+     *      joinColumns={@ORM\JoinColumn(name="animal_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="tag_id", referencedColumnName="id", unique=true)}
+     * )
+     */
+    protected $ulnHistory;
 
     /**
      * @var ArrayCollection
@@ -330,8 +349,9 @@ abstract class Animal
         $this->animalResidenceHistory = new ArrayCollection();
 
         $this->flags = new ArrayCollection();
+        $this->ulnHistory = new ArrayCollection();
+        $this->tagReplacements = new ArrayCollection();
         $this->isAlive = true;
-
         $this->ulnCountryCode = '';
         $this->ulnNumber = '';
         $this->animalOrderNumber = '';
@@ -1171,11 +1191,11 @@ abstract class Animal
     /**
      * Add weightMeasurement
      *
-     * @param \AppBundle\Entity\WeightMeasurement $weightMeasurement
+     * @param WeightMeasurement $weightMeasurement
      *
      * @return Animal
      */
-    public function addWeightMeasurement(\AppBundle\Entity\WeightMeasurement $weightMeasurement)
+    public function addWeightMeasurement(WeightMeasurement $weightMeasurement)
     {
         $this->weightMeasurements[] = $weightMeasurement;
 
@@ -1185,7 +1205,7 @@ abstract class Animal
     /**
      * Remove weightMeasurement
      *
-     * @param \AppBundle\Entity\WeightMeasurement $weightMeasurement
+     * @param WeightMeasurement $weightMeasurement
      */
     public function removeWeightMeasurement(\AppBundle\Entity\WeightMeasurement $weightMeasurement)
     {
@@ -1195,7 +1215,7 @@ abstract class Animal
     /**
      * Get weightMeasurements
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getWeightMeasurements()
     {
@@ -1223,13 +1243,81 @@ abstract class Animal
     /**
      * Add animalResidenceHistory
      *
-     * @param \AppBundle\Entity\AnimalResidence $animalResidenceHistory
+     * @param AnimalResidence $animalResidenceHistory
      *
      * @return Animal
      */
-    public function addAnimalResidenceHistory(\AppBundle\Entity\AnimalResidence $animalResidenceHistory)
+    public function addAnimalResidenceHistory(AnimalResidence $animalResidenceHistory)
     {
         $this->animalResidenceHistory[] = $animalResidenceHistory;
+    }
+
+    /**
+     * @param $ulnCountryCode
+     * @param $ulnNumber
+     */
+    public function replaceUln($ulnCountryCode , $ulnNumber) {
+
+        //Get current set ulnCountryCode and ulnNumber, add it to the history.
+
+        $tag = new Tag();
+        $tag->setUlnCountryCode($this->getUlnCountryCode());
+        $tag->setUlnNumber($this->getUlnNumber());
+        $tag->setTagStatus("REPLACED");
+
+        $this->ulnHistory->add($tag);
+
+        //Set new ulnCountryCode and ulnNumber as the current.
+        $this->setUlnCountryCode($ulnCountryCode);
+        $this->setUlnNumber($ulnNumber);
+    }
+
+
+
+    /**
+     * Add ulnHistory
+     *
+     * @param Tag $ulnHistory
+     *
+     * @return Animal
+     */
+    public function addUlnHistory(Tag $ulnHistory)
+    {
+        $this->ulnHistory[] = $ulnHistory;
+
+        return $this;
+    }
+
+    /**
+     * Remove ulnHistory
+     *
+     * @param Tag $ulnHistory
+     */
+    public function removeUlnHistory(Tag $ulnHistory)
+    {
+        $this->ulnHistory->removeElement($ulnHistory);
+    }
+
+    /**
+     * Get ulnHistory
+     *
+     * @return Collection
+     */
+    public function getUlnHistory()
+    {
+        return $this->ulnHistory;
+    }
+
+    /**
+     * Add tagReplacement
+     *
+     * @param DeclareTagReplace $tagReplacement
+     *
+     * @return Animal
+     */
+    public function addTagReplacement(DeclareTagReplace $tagReplacement)
+    {
+        $this->tagReplacements[] = $tagReplacement;
 
         return $this;
     }
@@ -1237,10 +1325,30 @@ abstract class Animal
     /**
      * Remove animalResidenceHistory
      *
-     * @param \AppBundle\Entity\AnimalResidence $animalResidenceHistory
+     * @param AnimalResidence $animalResidenceHistory
      */
-    public function removeAnimalResidenceHistory(\AppBundle\Entity\AnimalResidence $animalResidenceHistory)
+    public function removeAnimalResidenceHistory(AnimalResidence $animalResidenceHistory)
     {
         $this->animalResidenceHistory->removeElement($animalResidenceHistory);
+    }
+
+    /**
+     * Remove tagReplacement
+     *
+     * @param DeclareTagReplace $tagReplacement
+     */
+    public function removeTagReplacement(DeclareTagReplace $tagReplacement)
+    {
+        $this->tagReplacements->removeElement($tagReplacement);
+    }
+
+    /**
+     * Get tagReplacements
+     *
+     * @return Collection
+     */
+    public function getTagReplacements()
+    {
+        return $this->tagReplacements;
     }
 }
