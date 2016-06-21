@@ -9,13 +9,13 @@ use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\RetrieveAnimalDetails;
 use AppBundle\Entity\RetrieveAnimals;
-use AppBundle\Entity\RetrieveEuropeanCountries;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RetrieveUBNDetails;
 use AppBundle\Entity\RevokeDeclaration;
@@ -56,7 +56,6 @@ interface IRSerializerInterface
      */
     function parseDeclareBirth(ArrayCollection $contentArray, Client $client, $isEditMessage);
 
-
     /**
      * @param ArrayCollection $contentArray
      * @param Client $client
@@ -65,7 +64,6 @@ interface IRSerializerInterface
      */
     function parseDeclareDepart(ArrayCollection $contentArray, Client $client, $isEditMessage);
 
-
     /**
      * @param ArrayCollection $contentArray
      * @param Client $client
@@ -73,6 +71,14 @@ interface IRSerializerInterface
      * @return DeclareTagsTransfer
      */
     function parseDeclareTagsTransfer(ArrayCollection $contentArray, Client $client, $isEditMessage);
+
+    /**
+     * @param ArrayCollection $contentArray
+     * @param Client $client
+     * @param boolean $isEditMessage
+     * @return DeclareTagReplace
+     */
+    function parseDeclareTagReplace(ArrayCollection $contentArray, Client $client, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
@@ -133,8 +139,8 @@ interface IRSerializerInterface
     /**
      * @param ArrayCollection $contentArray
      * @param Client $client
-     * @param boolean $isEditMessage
-     * @return RetrieveEuropeanCountries
+     * @param $isEditMessage
+     * @return mixed
      */
     function parseRetrieveEUCountries(ArrayCollection $contentArray, Client $client, $isEditMessage);
 

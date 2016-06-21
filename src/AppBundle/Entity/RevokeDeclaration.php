@@ -89,6 +89,15 @@ class RevokeDeclaration extends DeclareBase
     private $loss;
 
     /**
+     * @var DeclareTagReplace
+     *
+     * @ORM\OneToOne(targetEntity="DeclareTagReplace", mappedBy="revoke", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\DeclareTagReplace")
+     * @Expose
+     */
+    private $tagReplace;
+
+    /**
      * @ORM\Column(type="string")
      * @Assert\Length(max = 15)
      * @Assert\NotBlank
@@ -366,5 +375,29 @@ class RevokeDeclaration extends DeclareBase
     public function getRequestTypeToRevoke()
     {
         return $this->requestTypeToRevoke;
+    }
+
+    /**
+     * Set tagReplace
+     *
+     * @param \AppBundle\Entity\DeclareTagReplace $tagReplace
+     *
+     * @return RevokeDeclaration
+     */
+    public function setTagReplace(\AppBundle\Entity\DeclareTagReplace $tagReplace = null)
+    {
+        $this->tagReplace = $tagReplace;
+
+        return $this;
+    }
+
+    /**
+     * Get tagReplace
+     *
+     * @return \AppBundle\Entity\DeclareTagReplace
+     */
+    public function getTagReplace()
+    {
+        return $this->tagReplace;
     }
 }
