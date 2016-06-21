@@ -256,6 +256,9 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $this->getDoctrine()->getManager()->persist($messageObject->getLocation()->getHealths()->last());
     $this->getDoctrine()->getManager()->flush();
 
+    //log Animal location history
+    $this->getAnimalLocationHistoryService()->logAnimalResidenceInEdit($messageObject);
+
     return new JsonResponse($messageArray, 200);
   }
 
