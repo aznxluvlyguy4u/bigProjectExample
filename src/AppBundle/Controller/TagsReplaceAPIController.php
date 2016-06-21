@@ -60,14 +60,18 @@ class TagsReplaceAPIController extends APIController {
     $validation = $this->getDoctrine()->getRepository(Constant::DECLARE_TAGS_TRANSFER_REPOSITORY)->validateTag($client, $tagContent[Constant::ULN_COUNTRY_CODE_NAMESPACE], $tagContent[Constant::ULN_NUMBER_NAMESPACE]);
 
     if($validation[Constant::VALIDITY_NAMESPACE] == false) {
-
       $tag = $validation[Constant::TAG_NAMESPACE];
+      if($tag != null) {
+        if($tag->getTagStatus() == TagStateType::REPLACING){
+          $errorMessage =  array("error_message" => "Tag " . $tag->getUlnCountryCode() .  $tag->getUlnNumber() . " is not available for replacement.", "error_code" => 428);
 
-      if($tag->getTagStatus() == TagStateType::REPLACING){
-        $errorMessage =  array("error_message" => "Tag " . $tag->getUlnCountryCode() .  $tag->getUlnNumber() . " is not available for replacement.", "error_code" => 428);
+          return new JsonResponse($errorMessage, 428);
+        }
+      } else {
+        $errorMessage =  array("error_message" => "Tag is not found.", "error_code" => 428);
+
         return new JsonResponse($errorMessage, 428);
       }
-
     }
 
     //Convert the array into an object and add the mandatory values retrieved from the database
