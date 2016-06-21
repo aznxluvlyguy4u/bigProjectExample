@@ -66,7 +66,7 @@ class TagsReplaceAPIController extends APIController {
         $tag = $validation[Constant::TAG_NAMESPACE];
 
         if($tag != null) {
-          if($tag->getTagStatus() == TagStateType::REPLACING){
+          if($tag->getTagStatus() != TagStateType::UNASSIGNED){
             $errorMessage =  array("error_message" => "Tag " . $tag->getUlnCountryCode() .  $tag->getUlnNumber() . " is not available for replacement", "error_code" => 428);
 
             return new JsonResponse($errorMessage, 428);
