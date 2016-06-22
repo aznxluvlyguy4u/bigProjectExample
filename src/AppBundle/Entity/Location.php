@@ -138,13 +138,10 @@ class Location
   protected $revokes;
 
   /**
-   * @var ArrayCollection
-   *
-   * @ORM\OneToMany(targetEntity="LocationHealth", mappedBy="location")
-   * @ORM\JoinColumn(name="health_id", referencedColumnName="id", nullable=true)
+   * @ORM\OneToOne(targetEntity="LocationHealth", inversedBy="location")
    * @JMS\Type("AppBundle\Entity\LocationHealth")
    */
-  private $healths;
+  private $locationHealth;
 
   /**
    * @var ArrayCollection
@@ -691,5 +688,29 @@ class Location
     public function getHealthMessages()
     {
         return $this->healthMessages;
+    }
+
+    /**
+     * Set locationHealth
+     *
+     * @param \AppBundle\Entity\LocationHealth $locationHealth
+     *
+     * @return Location
+     */
+    public function setLocationHealth(\AppBundle\Entity\LocationHealth $locationHealth = null)
+    {
+        $this->locationHealth = $locationHealth;
+
+        return $this;
+    }
+
+    /**
+     * Get locationHealth
+     *
+     * @return \AppBundle\Entity\LocationHealth
+     */
+    public function getLocationHealth()
+    {
+        return $this->locationHealth;
     }
 }
