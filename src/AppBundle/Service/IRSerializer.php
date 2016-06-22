@@ -12,6 +12,7 @@ use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
+use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Client;
@@ -95,7 +96,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @param $json
      * @param $messageClassNameSpace
-     * @return array|\JMS\Serializer\scalar|mixed|object|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
+     * @return array|\JMS\Serializer\scalar|mixed|object|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|DeclareTagReplace
      */
     public function deserializeToObject($json, $messageClassNameSpace)
     {
@@ -458,6 +459,63 @@ class IRSerializer implements IRSerializerInterface
         //TODO: NO EDIT YET, Phase 2+
 
         return $declareTagsTransfer;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    function parseDeclareTagReplace(ArrayCollection $contentArray, Client $client, $isEditMessage)
+    {
+        $contentArray["type"] = RequestType::DECLARE_TAG_REPLACE_ENTITY;
+
+        $animal = $contentArray['animal'];
+        $tag = $contentArray['tag'];
+        $replaceDate = $contentArray['replace_date'];
+
+        $ulnCountryCodeToReplace = $animal['uln_country_code'];
+        $ulnNumberToReplace = $animal['uln_number'];
+
+        //denormalize the content to an object
+        $retrievedAnimal = $this->entityGetter->retrieveAnimal($contentArray);
+        $contentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
+        $json = $this->serializeToJSON($contentArray);
+        $declareTagReplace = $this->deserializeToObject($json, RequestType::DECLARE_TAG_REPLACE_ENTITY);
+
+        $declareTagReplace->setUlnCountryCodeToReplace($retrievedAnimal->getUlnCountryCode());
+        $declareTagReplace->setUlnNumberToReplace($retrievedAnimal->getUlnNumber());
+        $declareTagReplace->setAnimalOrderNumberToReplace($retrievedAnimal->getAnimalOrderNumber());
+        $declareTagReplace->setAnimalType(AnimalType::sheep);
+        $declareTagReplace->setAnimal(null);
+
+        $fetchedTag = null;
+        $tagsRepository = $this->entityManager->getRepository(Constant::TAG_REPOSITORY);
+
+        //create filter to search tag
+        $tagFilter = array("ulnCountryCode" =>  $ulnCountryCodeReplacement = $tag['uln_country_code'],
+          "ulnNumber" => $ulnNumberReplacement= $tag['uln_number']);
+
+        //Fetch tag from database
+        $fetchedTag = $tagsRepository->findOneBy($tagFilter);
+
+        //If tag was found, add it to the declare tag replac request
+        if($fetchedTag != null) {
+
+            //Check if Tag status is UNASSIGNED && No animal is assigned to it
+            if($fetchedTag->getTagStatus() == TagStateType::UNASSIGNED && $fetchedTag->getAnimal() == null) {
+
+                //add tag to result set
+                $declareTagReplace->setUlnCountryCodeReplacement($fetchedTag->getUlnCountryCode());
+                $declareTagReplace->setUlnNumberReplacement($fetchedTag->getUlnNumber());
+                $declareTagReplace->setAnimalOrderNumberReplacement($fetchedTag->getAnimalOrderNumber());
+                $fetchedTag->setTagStatus(TagStateType::REPLACING);
+                $this->entityManager->persist($fetchedTag);
+                $this->entityManager->flush();
+            }
+        }
+
+        //TODO: NO EDIT YET, Phase 2+
+
+        return $declareTagReplace;
     }
 
     /**

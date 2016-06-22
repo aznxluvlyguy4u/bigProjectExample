@@ -25,6 +25,7 @@ use \DateTime;
  *      "DeclareExportResponse" = "DeclareExportResponse",
  *      "DeclareAnimalFlagResponse" = "DeclareAnimalFlagResponse",
  *      "DeclareTagsTransferResponse" = "DeclareTagsTransferResponse",
+ *      "DeclareTagReplaceResponse" = "DeclareTagReplaceResponse",
  *      "RevokeDeclarationResponse" = "RevokeDeclarationResponse"
  *   }
  * )

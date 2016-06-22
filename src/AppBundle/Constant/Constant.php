@@ -106,6 +106,7 @@ class Constant
     const DECLARE_EXPORT_REPOSITORY ='AppBundle:DeclareExport';
     const DECLARE_EXPORT_RESPONSE_REPOSITORY ='AppBundle:DeclareExportResponse';
     const DECLARE_TAGS_TRANSFER_REPOSITORY = 'AppBundle:DeclareTagsTransfer';
+    const DECLARE_TAG_REPLACE_REPOSITORY = 'AppBundle:DeclareTagReplace';
     const RETRIEVE_TAGS_REPOSITORY = 'AppBundle:RetrieveTags';
     const DECLARE_LOSS_REPOSITORY = 'AppBundle:DeclareLoss';
     const DECLARE_LOSS_RESPONSE_REPOSITORY = 'AppBundle:DeclareLossResponse';

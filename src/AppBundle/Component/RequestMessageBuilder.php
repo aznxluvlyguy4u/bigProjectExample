@@ -13,6 +13,7 @@ use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
+use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\RetrieveAnimals;
@@ -78,6 +79,10 @@ class RequestMessageBuilder
      */
     private $retrieveUbnDetailsBuilder;
 
+    /**
+     * @var TagReplaceMessageBuilder
+     */
+    private $tagReplaceMessageBuilder;
     /*
      * @var LossMessageBuilder
      */
@@ -114,6 +119,7 @@ class RequestMessageBuilder
         $this->retrieveAnimalsMessageBuilder = new RetrieveAnimalsMessageBuilder($em);
         $this->retrieveAnimalDetailsBuilder = new RetrieveAnimalDetailsMessageBuilder($em);
         $this->retrieveUbnDetailsBuilder = new RetrieveUbnDetailsMessageBuilder($em);
+        $this->tagReplaceMessageBuilder = new TagReplaceMessageBuilder($em);
     }
 
     /**
@@ -122,7 +128,7 @@ class RequestMessageBuilder
      * @param Person|Client $person
      * @param Location $location
      * @param boolean $isEditMessage
-     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
+     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|DeclareTagReplace
      * @throws \Exception
      */
     public function build($messageClassNameSpace, ArrayCollection $contentArray, $person, $location, $isEditMessage)
@@ -148,6 +154,9 @@ class RequestMessageBuilder
             case RequestType::DECLARE_TAGS_TRANSFER_ENTITY:
                 $declareTagsTransferRequest = $this->irSerializer->parseDeclareTagsTransfer($contentArray, $person, $isEditMessage);
                 return $this->tagTransferMessageBuilder->buildMessage($declareTagsTransferRequest, $person, $location);
+            case RequestType::DECLARE_TAG_REPLACE:
+                $declareTagReplaceRequest = $this->irSerializer->parseDeclareTagReplace($contentArray, $person, $isEditMessage);
+                return $this->tagReplaceMessageBuilder->buildMessage($declareTagReplaceRequest, $person);
             case RequestType::DECLARE_LOSS_ENTITY:
                 $declareLossRequest = $this->irSerializer->parseDeclareLoss($contentArray, $person, $isEditMessage);
                 return $this->lossMessageBuilder->buildMessage($declareLossRequest, $person, $location);
