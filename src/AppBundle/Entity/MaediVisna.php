@@ -91,7 +91,7 @@ class MaediVisna
      * @Assert\NotBlank
      * @Expose
      */
-    private $hide;
+    private $isHidden;
 
     /**
      * MaediVisna constructor.
@@ -210,30 +210,6 @@ class MaediVisna
     }
 
     /**
-     * Set hide
-     *
-     * @param boolean $hide
-     *
-     * @return MaediVisna
-     */
-    public function setHide($hide)
-    {
-        $this->hide = $hide;
-
-        return $this;
-    }
-
-    /**
-     * Get hide
-     *
-     * @return boolean
-     */
-    public function getHide()
-    {
-        return $this->hide;
-    }
-
-    /**
      * Set arrivalRequest
      *
      * @param \AppBundle\Entity\DeclareArrival $arrivalRequest
@@ -303,5 +279,29 @@ class MaediVisna
     public function getLocationHealth()
     {
         return $this->locationHealth;
+    }
+
+    /**
+     * Set isHidden
+     *
+     * @param boolean $isHidden
+     *
+     * @return MaediVisna
+     */
+    public function setIsHidden($isHidden)
+    {
+        $this->isHidden = $isHidden;
+
+        return $this;
+    }
+
+    /**
+     * Get isHidden
+     *
+     * @return boolean
+     */
+    public function getIsHidden()
+    {
+        return $this->isHidden;
     }
 }
