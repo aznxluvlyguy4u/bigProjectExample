@@ -138,15 +138,6 @@ class LocationHealthMessage
     private $import;
 
     /**
-     * @var integer
-     *
-     * @ORM\Column(type="integer", nullable=true)
-     * @JMS\Type("integer")
-     * @Expose
-     */
-    private $previousLocationHealthId;
-
-    /**
      * LocationHealthMessage constructor.
      */
     public function __construct()
@@ -471,24 +462,5 @@ class LocationHealthMessage
     {
         return $this->checkForScrapie;
     }
-
-    /**
-     * @return integer
-     */
-    public function getPreviousLocationHealthId()
-    {
-        return $this->previousLocationHealthId;
-    }
-
-    /**
-     * @param integer $previousLocationHealthId
-     */
-    public function setPreviousLocationHealthId($previousLocationHealthId)
-    {
-        $this->previousLocationHealthId = $previousLocationHealthId;
-    }
-
-
-
 
 }
