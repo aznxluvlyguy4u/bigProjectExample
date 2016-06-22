@@ -11,12 +11,12 @@ use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
 
 /**
- * Class FootRotRecord
+ * Class CaseousLymphadenitis
  * @package AppBundle\Entity
- * @ORM\Entity(repositoryClass="AppBundle\Entity\FootRotRecordRepository")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\CaseousLymphadenitisRepository")
  * @ExclusionPolicy("all")
  */
-class FootRotRecord
+class CaseousLymphadenitis
 {
     /**
      * @var integer
@@ -43,7 +43,7 @@ class FootRotRecord
      * @JMS\Type("string")
      * @Expose
      */
-    private $footRotStatus;
+    private $status;
 
     /**
      * @var \DateTime
@@ -53,7 +53,7 @@ class FootRotRecord
      * @JMS\Type("DateTime")
      * @Expose
      */
-    private $footRotEndDate;
+    private $endDate;
 
     /**
      * @var \DateTime
@@ -69,16 +69,16 @@ class FootRotRecord
      * @ORM\OneToOne(targetEntity="DeclareArrival")
      * @ORM\JoinColumn(name="arrival_id", referencedColumnName="id")
      */
-    private $arrival;
+    private $arrivalRequest;
 
     /**
      * @ORM\OneToOne(targetEntity="DeclareImport")
      * @ORM\JoinColumn(name="import_id", referencedColumnName="id")
      */
-    private $import;
+    private $importRequest;
 
     /**
-     * @ORM\ManyToOne(targetEntity="LocationHealth", inversedBy="footRotRecords")
+     * @ORM\ManyToOne(targetEntity="LocationHealth", inversedBy="caseousLymphadenitis")
      * @JMS\Type("AppBundle\Entity\LocationHealth")
      */
     private $locationHealth;
@@ -92,11 +92,11 @@ class FootRotRecord
     private $isHidden;
 
     /**
-     * FootRotRecord constructor.
+     * CaseousLymphadenitis constructor.
      */
     public function __construct()
     {
-        $this->logDate(new DateTime('now'));
+        $this->logDate(new DateTime());
         $this->isHidden = false;
     }
 
@@ -115,7 +115,7 @@ class FootRotRecord
      *
      * @param \DateTime $logDate
      *
-     * @return FootRotRecord
+     * @return CaseousLymphadenitis
      */
     public function setLogDate($logDate)
     {
@@ -135,51 +135,51 @@ class FootRotRecord
     }
 
     /**
-     * Set footRotStatus
+     * Set status
      *
-     * @param string $footRotStatus
+     * @param string $status
      *
-     * @return FootRotRecord
+     * @return CaseousLymphadenitis
      */
-    public function setFootRotStatus($footRotStatus)
+    public function setStatus($status)
     {
-        $this->footRotStatus = $footRotStatus;
+        $this->status = $status;
 
         return $this;
     }
 
     /**
-     * Get footRotStatus
+     * Get status
      *
      * @return string
      */
-    public function getFootRotStatus()
+    public function getStatus()
     {
-        return $this->footRotStatus;
+        return $this->status;
     }
 
     /**
-     * Set footRotEndDate
+     * Set endDate
      *
-     * @param \DateTime $footRotEndDate
+     * @param \DateTime $endDate
      *
-     * @return FootRotRecord
+     * @return CaseousLymphadenitis
      */
-    public function setFootRotEndDate($footRotEndDate)
+    public function setEndDate($endDate)
     {
-        $this->footRotEndDate = $footRotEndDate;
+        $this->endDate = $endDate;
 
         return $this;
     }
 
     /**
-     * Get footRotEndDate
+     * Get endDate
      *
      * @return \DateTime
      */
-    public function getFootRotEndDate()
+    public function getEndDate()
     {
-        return $this->footRotEndDate;
+        return $this->endDate;
     }
 
     /**
@@ -187,7 +187,7 @@ class FootRotRecord
      *
      * @param \DateTime $checkDate
      *
-     * @return FootRotRecord
+     * @return CaseousLymphadenitis
      */
     public function setCheckDate($checkDate)
     {
@@ -211,7 +211,7 @@ class FootRotRecord
      *
      * @param boolean $isHidden
      *
-     * @return FootRotRecord
+     * @return CaseousLymphadenitis
      */
     public function setIsHidden($isHidden)
     {
@@ -231,51 +231,51 @@ class FootRotRecord
     }
 
     /**
-     * Set arrival
+     * Set arrivalRequest
      *
-     * @param \AppBundle\Entity\DeclareArrival $arrival
+     * @param \AppBundle\Entity\DeclareArrival $arrivalRequest
      *
-     * @return FootRotRecord
+     * @return CaseousLymphadenitis
      */
-    public function setArrival(\AppBundle\Entity\DeclareArrival $arrival = null)
+    public function setArrivalRequest(\AppBundle\Entity\DeclareArrival $arrivalRequest = null)
     {
-        $this->arrival = $arrival;
+        $this->arrivalRequest = $arrivalRequest;
 
         return $this;
     }
 
     /**
-     * Get arrival
+     * Get arrivalRequest
      *
      * @return \AppBundle\Entity\DeclareArrival
      */
-    public function getArrival()
+    public function getArrivalRequest()
     {
-        return $this->arrival;
+        return $this->arrivalRequest;
     }
 
     /**
-     * Set import
+     * Set importRequest
      *
-     * @param \AppBundle\Entity\DeclareImport $import
+     * @param \AppBundle\Entity\DeclareImport $importRequest
      *
-     * @return FootRotRecord
+     * @return CaseousLymphadenitis
      */
-    public function setImport(\AppBundle\Entity\DeclareImport $import = null)
+    public function setImportRequest(\AppBundle\Entity\DeclareImport $importRequest = null)
     {
-        $this->import = $import;
+        $this->importRequest = $importRequest;
 
         return $this;
     }
 
     /**
-     * Get import
+     * Get importRequest
      *
      * @return \AppBundle\Entity\DeclareImport
      */
-    public function getImport()
+    public function getImportRequest()
     {
-        return $this->import;
+        return $this->importRequest;
     }
 
     /**
@@ -283,7 +283,7 @@ class FootRotRecord
      *
      * @param \AppBundle\Entity\LocationHealth $locationHealth
      *
-     * @return FootRotRecord
+     * @return CaseousLymphadenitis
      */
     public function setLocationHealth(\AppBundle\Entity\LocationHealth $locationHealth = null)
     {

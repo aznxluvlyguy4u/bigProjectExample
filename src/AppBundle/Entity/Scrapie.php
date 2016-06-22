@@ -11,12 +11,12 @@ use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
 
 /**
- * Class CaseousLymphadenitisRecord
+ * Class Scrapie
  * @package AppBundle\Entity
- * @ORM\Entity(repositoryClass="AppBundle\Entity\CaseousLymphadenitisRecordRepository")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\ScrapieRepository")
  * @ExclusionPolicy("all")
  */
-class CaseousLymphadenitisRecord
+class Scrapie
 {
     /**
      * @var integer
@@ -43,7 +43,7 @@ class CaseousLymphadenitisRecord
      * @JMS\Type("string")
      * @Expose
      */
-    private $caseousLymphadenitisStatus;
+    private $status;
 
     /**
      * @var \DateTime
@@ -53,7 +53,7 @@ class CaseousLymphadenitisRecord
      * @JMS\Type("DateTime")
      * @Expose
      */
-    private $caseousLymphadenitisEndDate;
+    private $endDate;
 
     /**
      * @var \DateTime
@@ -69,16 +69,16 @@ class CaseousLymphadenitisRecord
      * @ORM\OneToOne(targetEntity="DeclareArrival")
      * @ORM\JoinColumn(name="arrival_id", referencedColumnName="id")
      */
-    private $arrival;
+    private $arrivalRequest;
 
     /**
      * @ORM\OneToOne(targetEntity="DeclareImport")
      * @ORM\JoinColumn(name="import_id", referencedColumnName="id")
      */
-    private $import;
+    private $importRequest;
 
     /**
-     * @ORM\ManyToOne(targetEntity="LocationHealth", inversedBy="caseousLymphadenitisRecords")
+     * @ORM\ManyToOne(targetEntity="LocationHealth", inversedBy="scrapies")
      * @JMS\Type("AppBundle\Entity\LocationHealth")
      */
     private $locationHealth;
@@ -92,13 +92,14 @@ class CaseousLymphadenitisRecord
     private $isHidden;
 
     /**
-     * CaseousLymphadenitisRecord constructor.
+     * Scrapie constructor.
      */
     public function __construct()
     {
-        $this->logDate(new DateTime('now'));
+        $this->logDate(new DateTime());
         $this->isHidden = false;
     }
+
 
     /**
      * Get id
@@ -115,7 +116,7 @@ class CaseousLymphadenitisRecord
      *
      * @param \DateTime $logDate
      *
-     * @return CaseousLymphadenitisRecord
+     * @return Scrapie
      */
     public function setLogDate($logDate)
     {
@@ -135,51 +136,51 @@ class CaseousLymphadenitisRecord
     }
 
     /**
-     * Set caseousLymphadenitisStatus
+     * Set status
      *
-     * @param string $caseousLymphadenitisStatus
+     * @param string $status
      *
-     * @return CaseousLymphadenitisRecord
+     * @return Scrapie
      */
-    public function setCaseousLymphadenitisStatus($caseousLymphadenitisStatus)
+    public function setStatus($status)
     {
-        $this->caseousLymphadenitisStatus = $caseousLymphadenitisStatus;
+        $this->status = $status;
 
         return $this;
     }
 
     /**
-     * Get caseousLymphadenitisStatus
+     * Get status
      *
      * @return string
      */
-    public function getCaseousLymphadenitisStatus()
+    public function getStatus()
     {
-        return $this->caseousLymphadenitisStatus;
+        return $this->status;
     }
 
     /**
-     * Set caseousLymphadenitisEndDate
+     * Set endDate
      *
-     * @param \DateTime $caseousLymphadenitisEndDate
+     * @param \DateTime $endDate
      *
-     * @return CaseousLymphadenitisRecord
+     * @return Scrapie
      */
-    public function setCaseousLymphadenitisEndDate($caseousLymphadenitisEndDate)
+    public function setEndDate($endDate)
     {
-        $this->caseousLymphadenitisEndDate = $caseousLymphadenitisEndDate;
+        $this->endDate = $endDate;
 
         return $this;
     }
 
     /**
-     * Get caseousLymphadenitisEndDate
+     * Get endDate
      *
      * @return \DateTime
      */
-    public function getCaseousLymphadenitisEndDate()
+    public function getEndDate()
     {
-        return $this->caseousLymphadenitisEndDate;
+        return $this->endDate;
     }
 
     /**
@@ -187,7 +188,7 @@ class CaseousLymphadenitisRecord
      *
      * @param \DateTime $checkDate
      *
-     * @return CaseousLymphadenitisRecord
+     * @return Scrapie
      */
     public function setCheckDate($checkDate)
     {
@@ -211,7 +212,7 @@ class CaseousLymphadenitisRecord
      *
      * @param boolean $isHidden
      *
-     * @return CaseousLymphadenitisRecord
+     * @return Scrapie
      */
     public function setIsHidden($isHidden)
     {
@@ -231,51 +232,51 @@ class CaseousLymphadenitisRecord
     }
 
     /**
-     * Set arrival
+     * Set arrivalRequest
      *
-     * @param \AppBundle\Entity\DeclareArrival $arrival
+     * @param \AppBundle\Entity\DeclareArrival $arrivalRequest
      *
-     * @return CaseousLymphadenitisRecord
+     * @return Scrapie
      */
-    public function setArrival(\AppBundle\Entity\DeclareArrival $arrival = null)
+    public function setArrivalRequest(\AppBundle\Entity\DeclareArrival $arrivalRequest = null)
     {
-        $this->arrival = $arrival;
+        $this->arrivalRequest = $arrivalRequest;
 
         return $this;
     }
 
     /**
-     * Get arrival
+     * Get arrivalRequest
      *
      * @return \AppBundle\Entity\DeclareArrival
      */
-    public function getArrival()
+    public function getArrivalRequest()
     {
-        return $this->arrival;
+        return $this->arrivalRequest;
     }
 
     /**
-     * Set import
+     * Set importRequest
      *
-     * @param \AppBundle\Entity\DeclareImport $import
+     * @param \AppBundle\Entity\DeclareImport $importRequest
      *
-     * @return CaseousLymphadenitisRecord
+     * @return Scrapie
      */
-    public function setImport(\AppBundle\Entity\DeclareImport $import = null)
+    public function setImportRequest(\AppBundle\Entity\DeclareImport $importRequest = null)
     {
-        $this->import = $import;
+        $this->importRequest = $importRequest;
 
         return $this;
     }
 
     /**
-     * Get import
+     * Get importRequest
      *
      * @return \AppBundle\Entity\DeclareImport
      */
-    public function getImport()
+    public function getImportRequest()
     {
-        return $this->import;
+        return $this->importRequest;
     }
 
     /**
@@ -283,7 +284,7 @@ class CaseousLymphadenitisRecord
      *
      * @param \AppBundle\Entity\LocationHealth $locationHealth
      *
-     * @return CaseousLymphadenitisRecord
+     * @return Scrapie
      */
     public function setLocationHealth(\AppBundle\Entity\LocationHealth $locationHealth = null)
     {

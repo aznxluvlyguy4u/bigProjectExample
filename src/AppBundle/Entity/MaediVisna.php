@@ -11,12 +11,14 @@ use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
 
 /**
- * Class ScrapieRecord
+ * In Dutch maedi_visna is named 'zwoegerziekte'.
+ *
+ * Class MaediVisna
  * @package AppBundle\Entity
- * @ORM\Entity(repositoryClass="AppBundle\Entity\ScrapieRecordRepository")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\MaediVisnaRepository")
  * @ExclusionPolicy("all")
  */
-class ScrapieRecord
+class MaediVisna
 {
     /**
      * @var integer
@@ -43,7 +45,7 @@ class ScrapieRecord
      * @JMS\Type("string")
      * @Expose
      */
-    private $scrapieStatus;
+    private $status;
 
     /**
      * @var \DateTime
@@ -53,7 +55,7 @@ class ScrapieRecord
      * @JMS\Type("DateTime")
      * @Expose
      */
-    private $scrapieEndDate;
+    private $endDate;
 
     /**
      * @var \DateTime
@@ -69,16 +71,16 @@ class ScrapieRecord
      * @ORM\OneToOne(targetEntity="DeclareArrival")
      * @ORM\JoinColumn(name="arrival_id", referencedColumnName="id")
      */
-    private $arrival;
+    private $arrivalRequest;
 
     /**
      * @ORM\OneToOne(targetEntity="DeclareImport")
      * @ORM\JoinColumn(name="import_id", referencedColumnName="id")
      */
-    private $import;
+    private $importRequest;
 
     /**
-     * @ORM\ManyToOne(targetEntity="LocationHealth", inversedBy="scrapieRecords")
+     * @ORM\ManyToOne(targetEntity="LocationHealth", inversedBy="maediVisnas")
      * @JMS\Type("AppBundle\Entity\LocationHealth")
      */
     private $locationHealth;
@@ -89,16 +91,17 @@ class ScrapieRecord
      * @Assert\NotBlank
      * @Expose
      */
-    private $isHidden;
+    private $hide;
 
     /**
-     * ScrapieRecord constructor.
+     * MaediVisna constructor.
      */
     public function __construct()
     {
-        $this->logDate(new DateTime('now'));
-        $this->isHidden = false;
+        $this->logDate(new DateTime());
+        $this->hide = false;
     }
+
 
     /**
      * Get id
@@ -115,7 +118,7 @@ class ScrapieRecord
      *
      * @param \DateTime $logDate
      *
-     * @return ScrapieRecord
+     * @return MaediVisna
      */
     public function setLogDate($logDate)
     {
@@ -135,51 +138,51 @@ class ScrapieRecord
     }
 
     /**
-     * Set scrapieStatus
+     * Set status
      *
-     * @param string $scrapieStatus
+     * @param string $status
      *
-     * @return ScrapieRecord
+     * @return MaediVisna
      */
-    public function setScrapieStatus($scrapieStatus)
+    public function setStatus($status)
     {
-        $this->scrapieStatus = $scrapieStatus;
+        $this->status = $status;
 
         return $this;
     }
 
     /**
-     * Get scrapieStatus
+     * Get status
      *
      * @return string
      */
-    public function getScrapieStatus()
+    public function getStatus()
     {
-        return $this->scrapieStatus;
+        return $this->status;
     }
 
     /**
-     * Set scrapieEndDate
+     * Set endDate
      *
-     * @param \DateTime $scrapieEndDate
+     * @param \DateTime $endDate
      *
-     * @return ScrapieRecord
+     * @return MaediVisna
      */
-    public function setScrapieEndDate($scrapieEndDate)
+    public function setEndDate($endDate)
     {
-        $this->scrapieEndDate = $scrapieEndDate;
+        $this->endDate = $endDate;
 
         return $this;
     }
 
     /**
-     * Get scrapieEndDate
+     * Get endDate
      *
      * @return \DateTime
      */
-    public function getScrapieEndDate()
+    public function getEndDate()
     {
-        return $this->scrapieEndDate;
+        return $this->endDate;
     }
 
     /**
@@ -187,7 +190,7 @@ class ScrapieRecord
      *
      * @param \DateTime $checkDate
      *
-     * @return ScrapieRecord
+     * @return MaediVisna
      */
     public function setCheckDate($checkDate)
     {
@@ -207,75 +210,75 @@ class ScrapieRecord
     }
 
     /**
-     * Set isHidden
+     * Set hide
      *
-     * @param boolean $isHidden
+     * @param boolean $hide
      *
-     * @return ScrapieRecord
+     * @return MaediVisna
      */
-    public function setIsHidden($isHidden)
+    public function setHide($hide)
     {
-        $this->isHidden = $isHidden;
+        $this->hide = $hide;
 
         return $this;
     }
 
     /**
-     * Get isHidden
+     * Get hide
      *
      * @return boolean
      */
-    public function getIsHidden()
+    public function getHide()
     {
-        return $this->isHidden;
+        return $this->hide;
     }
 
     /**
-     * Set arrival
+     * Set arrivalRequest
      *
-     * @param \AppBundle\Entity\DeclareArrival $arrival
+     * @param \AppBundle\Entity\DeclareArrival $arrivalRequest
      *
-     * @return ScrapieRecord
+     * @return MaediVisna
      */
-    public function setArrival(\AppBundle\Entity\DeclareArrival $arrival = null)
+    public function setArrivalRequest(\AppBundle\Entity\DeclareArrival $arrivalRequest = null)
     {
-        $this->arrival = $arrival;
+        $this->arrivalRequest = $arrivalRequest;
 
         return $this;
     }
 
     /**
-     * Get arrival
+     * Get arrivalRequest
      *
      * @return \AppBundle\Entity\DeclareArrival
      */
-    public function getArrival()
+    public function getArrivalRequest()
     {
-        return $this->arrival;
+        return $this->arrivalRequest;
     }
 
     /**
-     * Set import
+     * Set importRequest
      *
-     * @param \AppBundle\Entity\DeclareImport $import
+     * @param \AppBundle\Entity\DeclareImport $importRequest
      *
-     * @return ScrapieRecord
+     * @return MaediVisna
      */
-    public function setImport(\AppBundle\Entity\DeclareImport $import = null)
+    public function setImportRequest(\AppBundle\Entity\DeclareImport $importRequest = null)
     {
-        $this->import = $import;
+        $this->importRequest = $importRequest;
 
         return $this;
     }
 
     /**
-     * Get import
+     * Get importRequest
      *
      * @return \AppBundle\Entity\DeclareImport
      */
-    public function getImport()
+    public function getImportRequest()
     {
-        return $this->import;
+        return $this->importRequest;
     }
 
     /**
@@ -283,7 +286,7 @@ class ScrapieRecord
      *
      * @param \AppBundle\Entity\LocationHealth $locationHealth
      *
-     * @return ScrapieRecord
+     * @return MaediVisna
      */
     public function setLocationHealth(\AppBundle\Entity\LocationHealth $locationHealth = null)
     {

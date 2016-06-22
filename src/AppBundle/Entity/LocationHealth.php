@@ -46,30 +46,30 @@ class LocationHealth
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="MaediVisnaRecord", mappedBy="locationHealth")
+     * @ORM\OneToMany(targetEntity="MaediVisna", mappedBy="locationHealth")
      */
-    private $maediVisnaRecords;
+    private $maediVisnas;
 
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="ScrapieRecord", mappedBy="locationHealth")
+     * @ORM\OneToMany(targetEntity="Scrapie", mappedBy="locationHealth")
      */
-    private $scrapieRecords;
+    private $scrapies;
 
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="CaseousLymphadenitisRecord", mappedBy="locationHealth")
+     * @ORM\OneToMany(targetEntity="CaseousLymphadenitis", mappedBy="locationHealth")
      */
-    private $caseousLymphadenitisRecords;
+    private $caseousLymphadenitis;
 
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="FootRotRecord", mappedBy="locationHealth")
+     * @ORM\OneToMany(targetEntity="FootRot", mappedBy="locationHealth")
      */
-    private $footRotRecords;
+    private $footRots;
 
     /**
      * @var string
@@ -164,10 +164,10 @@ class LocationHealth
         $this->logDate = new DateTime('now');
         $this->isRevoked = false;
 
-        $this->maediVisnaRecords = new ArrayCollection();
-        $this->scrapieRecords = new ArrayCollection();
-        $this->caseousLymphadenitisRecords = new ArrayCollection();
-        $this->footRotRecords = new ArrayCollection();
+        $this->maediVisnas = new ArrayCollection();
+        $this->scrapies = new ArrayCollection();
+        $this->caseousLymphadenitis = new ArrayCollection();
+        $this->footRots = new ArrayCollection();
     }
 
     /**
@@ -179,8 +179,6 @@ class LocationHealth
     {
         return $this->id;
     }
-
-
 
     /**
      * Set logDate
@@ -204,190 +202,6 @@ class LocationHealth
     public function getLogDate()
     {
         return $this->logDate;
-    }
-
-    /**
-     * Set locationHealthStatus
-     *
-     * @param string $locationHealthStatus
-     *
-     * @return LocationHealth
-     */
-    public function setLocationHealthStatus($locationHealthStatus)
-    {
-        $this->locationHealthStatus = $locationHealthStatus;
-
-        return $this;
-    }
-
-    /**
-     * Get locationHealthStatus
-     *
-     * @return string
-     */
-    public function getLocationHealthStatus()
-    {
-        return $this->locationHealthStatus;
-    }
-
-    /**
-     * Set location
-     *
-     * @param \AppBundle\Entity\Location $location
-     *
-     * @return LocationHealth
-     */
-    public function setLocation(\AppBundle\Entity\Location $location = null)
-    {
-        $this->location = $location;
-
-        return $this;
-    }
-
-    /**
-     * Get location
-     *
-     * @return \AppBundle\Entity\Location
-     */
-    public function getLocation()
-    {
-        return $this->location;
-    }
-
-    /**
-     * Add maediVisnaRecord
-     *
-     * @param \AppBundle\Entity\MaediVisnaRecord $maediVisnaRecord
-     *
-     * @return LocationHealth
-     */
-    public function addMaediVisnaRecord(\AppBundle\Entity\MaediVisnaRecord $maediVisnaRecord)
-    {
-        $this->maediVisnaRecords[] = $maediVisnaRecord;
-
-        return $this;
-    }
-
-    /**
-     * Remove maediVisnaRecord
-     *
-     * @param \AppBundle\Entity\MaediVisnaRecord $maediVisnaRecord
-     */
-    public function removeMaediVisnaRecord(\AppBundle\Entity\MaediVisnaRecord $maediVisnaRecord)
-    {
-        $this->maediVisnaRecords->removeElement($maediVisnaRecord);
-    }
-
-    /**
-     * Get maediVisnaRecords
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getMaediVisnaRecords()
-    {
-        return $this->maediVisnaRecords;
-    }
-
-    /**
-     * Add scrapieRecord
-     *
-     * @param \AppBundle\Entity\ScrapieRecord $scrapieRecord
-     *
-     * @return LocationHealth
-     */
-    public function addScrapieRecord(\AppBundle\Entity\ScrapieRecord $scrapieRecord)
-    {
-        $this->scrapieRecords[] = $scrapieRecord;
-
-        return $this;
-    }
-
-    /**
-     * Remove scrapieRecord
-     *
-     * @param \AppBundle\Entity\ScrapieRecord $scrapieRecord
-     */
-    public function removeScrapieRecord(\AppBundle\Entity\ScrapieRecord $scrapieRecord)
-    {
-        $this->scrapieRecords->removeElement($scrapieRecord);
-    }
-
-    /**
-     * Get scrapieRecords
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getScrapieRecords()
-    {
-        return $this->scrapieRecords;
-    }
-
-    /**
-     * Add caseousLymphadenitisRecord
-     *
-     * @param \AppBundle\Entity\CaseousLymphadenitisRecord $caseousLymphadenitisRecord
-     *
-     * @return LocationHealth
-     */
-    public function addCaseousLymphadenitisRecord(\AppBundle\Entity\CaseousLymphadenitisRecord $caseousLymphadenitisRecord)
-    {
-        $this->caseousLymphadenitisRecords[] = $caseousLymphadenitisRecord;
-
-        return $this;
-    }
-
-    /**
-     * Remove caseousLymphadenitisRecord
-     *
-     * @param \AppBundle\Entity\CaseousLymphadenitisRecord $caseousLymphadenitisRecord
-     */
-    public function removeCaseousLymphadenitisRecord(\AppBundle\Entity\CaseousLymphadenitisRecord $caseousLymphadenitisRecord)
-    {
-        $this->caseousLymphadenitisRecords->removeElement($caseousLymphadenitisRecord);
-    }
-
-    /**
-     * Get caseousLymphadenitisRecords
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getCaseousLymphadenitisRecords()
-    {
-        return $this->caseousLymphadenitisRecords;
-    }
-
-    /**
-     * Add footRotRecord
-     *
-     * @param \AppBundle\Entity\FootRotRecord $footRotRecord
-     *
-     * @return LocationHealth
-     */
-    public function addFootRotRecord(\AppBundle\Entity\FootRotRecord $footRotRecord)
-    {
-        $this->footRotRecords[] = $footRotRecord;
-
-        return $this;
-    }
-
-    /**
-     * Remove footRotRecord
-     *
-     * @param \AppBundle\Entity\FootRotRecord $footRotRecord
-     */
-    public function removeFootRotRecord(\AppBundle\Entity\FootRotRecord $footRotRecord)
-    {
-        $this->footRotRecords->removeElement($footRotRecord);
-    }
-
-    /**
-     * Get footRotRecords
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getFootRotRecords()
-    {
-        return $this->footRotRecords;
     }
 
     /**
@@ -580,5 +394,189 @@ class LocationHealth
     public function getCurrentFootRotEndDate()
     {
         return $this->currentFootRotEndDate;
+    }
+
+    /**
+     * Set locationHealthStatus
+     *
+     * @param string $locationHealthStatus
+     *
+     * @return LocationHealth
+     */
+    public function setLocationHealthStatus($locationHealthStatus)
+    {
+        $this->locationHealthStatus = $locationHealthStatus;
+
+        return $this;
+    }
+
+    /**
+     * Get locationHealthStatus
+     *
+     * @return string
+     */
+    public function getLocationHealthStatus()
+    {
+        return $this->locationHealthStatus;
+    }
+
+    /**
+     * Set location
+     *
+     * @param \AppBundle\Entity\Location $location
+     *
+     * @return LocationHealth
+     */
+    public function setLocation(\AppBundle\Entity\Location $location = null)
+    {
+        $this->location = $location;
+
+        return $this;
+    }
+
+    /**
+     * Get location
+     *
+     * @return \AppBundle\Entity\Location
+     */
+    public function getLocation()
+    {
+        return $this->location;
+    }
+
+    /**
+     * Add maediVisna
+     *
+     * @param \AppBundle\Entity\MaediVisna $maediVisna
+     *
+     * @return LocationHealth
+     */
+    public function addMaediVisna(\AppBundle\Entity\MaediVisna $maediVisna)
+    {
+        $this->maediVisnas[] = $maediVisna;
+
+        return $this;
+    }
+
+    /**
+     * Remove maediVisna
+     *
+     * @param \AppBundle\Entity\MaediVisna $maediVisna
+     */
+    public function removeMaediVisna(\AppBundle\Entity\MaediVisna $maediVisna)
+    {
+        $this->maediVisnas->removeElement($maediVisna);
+    }
+
+    /**
+     * Get maediVisnas
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getMaediVisnas()
+    {
+        return $this->maediVisnas;
+    }
+
+    /**
+     * Add scrapy
+     *
+     * @param \AppBundle\Entity\Scrapie $scrapy
+     *
+     * @return LocationHealth
+     */
+    public function addScrapy(\AppBundle\Entity\Scrapie $scrapy)
+    {
+        $this->scrapies[] = $scrapy;
+
+        return $this;
+    }
+
+    /**
+     * Remove scrapy
+     *
+     * @param \AppBundle\Entity\Scrapie $scrapy
+     */
+    public function removeScrapy(\AppBundle\Entity\Scrapie $scrapy)
+    {
+        $this->scrapies->removeElement($scrapy);
+    }
+
+    /**
+     * Get scrapies
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getScrapies()
+    {
+        return $this->scrapies;
+    }
+
+    /**
+     * Add caseousLymphadeniti
+     *
+     * @param \AppBundle\Entity\CaseousLymphadenitis $caseousLymphadeniti
+     *
+     * @return LocationHealth
+     */
+    public function addCaseousLymphadeniti(\AppBundle\Entity\CaseousLymphadenitis $caseousLymphadeniti)
+    {
+        $this->caseousLymphadenitis[] = $caseousLymphadeniti;
+
+        return $this;
+    }
+
+    /**
+     * Remove caseousLymphadeniti
+     *
+     * @param \AppBundle\Entity\CaseousLymphadenitis $caseousLymphadeniti
+     */
+    public function removeCaseousLymphadeniti(\AppBundle\Entity\CaseousLymphadenitis $caseousLymphadeniti)
+    {
+        $this->caseousLymphadenitis->removeElement($caseousLymphadeniti);
+    }
+
+    /**
+     * Get caseousLymphadenitis
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getCaseousLymphadenitis()
+    {
+        return $this->caseousLymphadenitis;
+    }
+
+    /**
+     * Add footRot
+     *
+     * @param \AppBundle\Entity\FootRot $footRot
+     *
+     * @return LocationHealth
+     */
+    public function addFootRot(\AppBundle\Entity\FootRot $footRot)
+    {
+        $this->footRots[] = $footRot;
+
+        return $this;
+    }
+
+    /**
+     * Remove footRot
+     *
+     * @param \AppBundle\Entity\FootRot $footRot
+     */
+    public function removeFootRot(\AppBundle\Entity\FootRot $footRot)
+    {
+        $this->footRots->removeElement($footRot);
+    }
+
+    /**
+     * Get footRots
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getFootRots()
+    {
+        return $this->footRots;
     }
 }

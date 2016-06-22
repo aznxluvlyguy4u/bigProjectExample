@@ -11,14 +11,12 @@ use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
 
 /**
- * In Dutch maedi_visna is named 'zwoegerziekte'.
- *
- * Class MaediVisnaRecord
+ * Class FootRot
  * @package AppBundle\Entity
- * @ORM\Entity(repositoryClass="AppBundle\Entity\MaediVisnaRecordRepository")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\FootRotRepository")
  * @ExclusionPolicy("all")
  */
-class MaediVisnaRecord
+class FootRot
 {
     /**
      * @var integer
@@ -45,7 +43,7 @@ class MaediVisnaRecord
      * @JMS\Type("string")
      * @Expose
      */
-    private $maediVisnaStatus;
+    private $status;
 
     /**
      * @var \DateTime
@@ -55,7 +53,7 @@ class MaediVisnaRecord
      * @JMS\Type("DateTime")
      * @Expose
      */
-    private $maediVisnaEndDate;
+    private $endDate;
 
     /**
      * @var \DateTime
@@ -71,16 +69,16 @@ class MaediVisnaRecord
      * @ORM\OneToOne(targetEntity="DeclareArrival")
      * @ORM\JoinColumn(name="arrival_id", referencedColumnName="id")
      */
-    private $arrival;
+    private $arrivalRequest;
 
     /**
      * @ORM\OneToOne(targetEntity="DeclareImport")
      * @ORM\JoinColumn(name="import_id", referencedColumnName="id")
      */
-    private $import;
+    private $importRequest;
 
     /**
-     * @ORM\ManyToOne(targetEntity="LocationHealth", inversedBy="maediVisnaRecords")
+     * @ORM\ManyToOne(targetEntity="LocationHealth", inversedBy="footRots")
      * @JMS\Type("AppBundle\Entity\LocationHealth")
      */
     private $locationHealth;
@@ -91,16 +89,18 @@ class MaediVisnaRecord
      * @Assert\NotBlank
      * @Expose
      */
-    private $hide;
+    private $isHidden;
 
     /**
-     * MaediVisnaRecord constructor.
+     * FootRot constructor.
      */
     public function __construct()
     {
-        $this->logDate(new DateTime('now'));
-        $this->hide = false;
+        $this->logDate(new DateTime());
+        $this->isHidden = false;
     }
+
+
 
     /**
      * Get id
@@ -117,7 +117,7 @@ class MaediVisnaRecord
      *
      * @param \DateTime $logDate
      *
-     * @return MaediVisnaRecord
+     * @return FootRot
      */
     public function setLogDate($logDate)
     {
@@ -137,51 +137,51 @@ class MaediVisnaRecord
     }
 
     /**
-     * Set maediVisnaStatus
+     * Set status
      *
-     * @param string $maediVisnaStatus
+     * @param string $status
      *
-     * @return MaediVisnaRecord
+     * @return FootRot
      */
-    public function setMaediVisnaStatus($maediVisnaStatus)
+    public function setStatus($status)
     {
-        $this->maediVisnaStatus = $maediVisnaStatus;
+        $this->status = $status;
 
         return $this;
     }
 
     /**
-     * Get maediVisnaStatus
+     * Get status
      *
      * @return string
      */
-    public function getMaediVisnaStatus()
+    public function getStatus()
     {
-        return $this->maediVisnaStatus;
+        return $this->status;
     }
 
     /**
-     * Set maediVisnaEndDate
+     * Set endDate
      *
-     * @param \DateTime $maediVisnaEndDate
+     * @param \DateTime $endDate
      *
-     * @return MaediVisnaRecord
+     * @return FootRot
      */
-    public function setMaediVisnaEndDate($maediVisnaEndDate)
+    public function setEndDate($endDate)
     {
-        $this->maediVisnaEndDate = $maediVisnaEndDate;
+        $this->endDate = $endDate;
 
         return $this;
     }
 
     /**
-     * Get maediVisnaEndDate
+     * Get endDate
      *
      * @return \DateTime
      */
-    public function getMaediVisnaEndDate()
+    public function getEndDate()
     {
-        return $this->maediVisnaEndDate;
+        return $this->endDate;
     }
 
     /**
@@ -189,7 +189,7 @@ class MaediVisnaRecord
      *
      * @param \DateTime $checkDate
      *
-     * @return MaediVisnaRecord
+     * @return FootRot
      */
     public function setCheckDate($checkDate)
     {
@@ -209,75 +209,75 @@ class MaediVisnaRecord
     }
 
     /**
-     * Set hide
+     * Set isHidden
      *
-     * @param boolean $hide
+     * @param boolean $isHidden
      *
-     * @return MaediVisnaRecord
+     * @return FootRot
      */
-    public function setHide($hide)
+    public function setIsHidden($isHidden)
     {
-        $this->hide = $hide;
+        $this->isHidden = $isHidden;
 
         return $this;
     }
 
     /**
-     * Get hide
+     * Get isHidden
      *
      * @return boolean
      */
-    public function getHide()
+    public function getIsHidden()
     {
-        return $this->hide;
+        return $this->isHidden;
     }
 
     /**
-     * Set arrival
+     * Set arrivalRequest
      *
-     * @param \AppBundle\Entity\DeclareArrival $arrival
+     * @param \AppBundle\Entity\DeclareArrival $arrivalRequest
      *
-     * @return MaediVisnaRecord
+     * @return FootRot
      */
-    public function setArrival(\AppBundle\Entity\DeclareArrival $arrival = null)
+    public function setArrivalRequest(\AppBundle\Entity\DeclareArrival $arrivalRequest = null)
     {
-        $this->arrival = $arrival;
+        $this->arrivalRequest = $arrivalRequest;
 
         return $this;
     }
 
     /**
-     * Get arrival
+     * Get arrivalRequest
      *
      * @return \AppBundle\Entity\DeclareArrival
      */
-    public function getArrival()
+    public function getArrivalRequest()
     {
-        return $this->arrival;
+        return $this->arrivalRequest;
     }
 
     /**
-     * Set import
+     * Set importRequest
      *
-     * @param \AppBundle\Entity\DeclareImport $import
+     * @param \AppBundle\Entity\DeclareImport $importRequest
      *
-     * @return MaediVisnaRecord
+     * @return FootRot
      */
-    public function setImport(\AppBundle\Entity\DeclareImport $import = null)
+    public function setImportRequest(\AppBundle\Entity\DeclareImport $importRequest = null)
     {
-        $this->import = $import;
+        $this->importRequest = $importRequest;
 
         return $this;
     }
 
     /**
-     * Get import
+     * Get importRequest
      *
      * @return \AppBundle\Entity\DeclareImport
      */
-    public function getImport()
+    public function getImportRequest()
     {
-        return $this->import;
+        return $this->importRequest;
     }
 
     /**
@@ -285,7 +285,7 @@ class MaediVisnaRecord
      *
      * @param \AppBundle\Entity\LocationHealth $locationHealth
      *
-     * @return MaediVisnaRecord
+     * @return FootRot
      */
     public function setLocationHealth(\AppBundle\Entity\LocationHealth $locationHealth = null)
     {
