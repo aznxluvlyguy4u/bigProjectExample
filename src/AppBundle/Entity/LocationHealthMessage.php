@@ -420,30 +420,6 @@ class LocationHealthMessage
     }
 
     /**
-     * Set animal
-     *
-     * @param \AppBundle\Entity\Animal $animal
-     *
-     * @return LocationHealthMessage
-     */
-    public function setAnimal(\AppBundle\Entity\Animal $animal = null)
-    {
-        $this->animal = $animal;
-
-        return $this;
-    }
-
-    /**
-     * Get animal
-     *
-     * @return \AppBundle\Entity\Animal
-     */
-    public function getAnimal()
-    {
-        return $this->animal;
-    }
-
-    /**
      * Get checkForMaediVisna
      *
      * @return boolean
