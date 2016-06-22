@@ -156,7 +156,7 @@ class RequestMessageBuilder
                 return $this->tagTransferMessageBuilder->buildMessage($declareTagsTransferRequest, $person, $location);
             case RequestType::DECLARE_TAG_REPLACE:
                 $declareTagReplaceRequest = $this->irSerializer->parseDeclareTagReplace($contentArray, $person, $isEditMessage);
-                return $this->tagReplaceMessageBuilder->buildMessage($declareTagReplaceRequest, $person);
+                return $this->tagReplaceMessageBuilder->buildMessage($declareTagReplaceRequest, $person, $location);
             case RequestType::DECLARE_LOSS_ENTITY:
                 $declareLossRequest = $this->irSerializer->parseDeclareLoss($contentArray, $person, $isEditMessage);
                 return $this->lossMessageBuilder->buildMessage($declareLossRequest, $person, $location);
