@@ -136,11 +136,10 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $janVanRijnsbergenCompany->setTelephoneNumber("+313131313131");
 
     $janVanRijnsbergenLocationHealth = new LocationHealth();
-    $janVanRijnsbergenLocationHealth->setMaediVisnaStatus(MaediVisnaStatus::FREE_2_YEAR);
-    $janVanRijnsbergenLocationHealth->setMaediVisnaEndDate(new \DateTime('2016-08-04'));
-    $janVanRijnsbergenLocationHealth->setScrapieStatus(ScrapieStatus::RESISTANT);
-    $janVanRijnsbergenLocationHealth->setScrapieEndDate(new \DateTime('2016-10-04'));
-    $janVanRijnsbergenLocationHealth->setCheckDate(new \DateTime('2016-07-04'));
+    $janVanRijnsbergenLocationHealth->setCurrentMaediVisnaStatus(MaediVisnaStatus::FREE_2_YEAR);
+    $janVanRijnsbergenLocationHealth->setCurrentMaediVisnaEndDate(new \DateTime('2016-08-04'));
+    $janVanRijnsbergenLocationHealth->setCurrentScrapieStatus(ScrapieStatus::RESISTANT);
+    $janVanRijnsbergenLocationHealth->setCurrentScrapieEndDate(new \DateTime('2016-10-04'));
 
     $janVanRijnsbergenLocation = new Location();
     $janVanRijnsbergenLocation->setAddress($janVanRijnsbergenLocationAddress);
@@ -198,11 +197,10 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $reinardEvertsCompany->setTelephoneNumber("+313131313131");
 
     $reinardEvertsLocationHealth = new LocationHealth();
-    $reinardEvertsLocationHealth->setMaediVisnaStatus(MaediVisnaStatus::FREE_2_YEAR);
-    $reinardEvertsLocationHealth->setMaediVisnaEndDate(new \DateTime('2016-08-04'));
-    $reinardEvertsLocationHealth->setScrapieStatus(ScrapieStatus::RESISTANT);
-    $reinardEvertsLocationHealth->setScrapieEndDate(new \DateTime('2016-10-04'));
-    $reinardEvertsLocationHealth->setCheckDate(new \DateTime('2016-07-04'));
+    $reinardEvertsLocationHealth->setCurrentMaediVisnaStatus(MaediVisnaStatus::FREE_2_YEAR);
+    $reinardEvertsLocationHealth->setCurrentMaediVisnaEndDate(new \DateTime('2016-08-04'));
+    $reinardEvertsLocationHealth->setCurrentScrapieStatus(ScrapieStatus::RESISTANT);
+    $reinardEvertsLocationHealth->setCurrentScrapieEndDate(new \DateTime('2016-10-04'));
 
     $reinardEvertsLocation = new Location();
     $reinardEvertsLocation->setAddress($reinardEvertsLocationAddress);
@@ -260,11 +258,10 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $nsfoTestAccountCompany->setTelephoneNumber("+313131313131");
 
     $nsfoTestAccountLocationHealth = new LocationHealth();
-    $nsfoTestAccountLocationHealth->setMaediVisnaStatus(MaediVisnaStatus::FREE_2_YEAR);
-    $nsfoTestAccountLocationHealth->setMaediVisnaEndDate(new \DateTime('2016-08-04'));
-    $nsfoTestAccountLocationHealth->setScrapieStatus(ScrapieStatus::RESISTANT);
-    $nsfoTestAccountLocationHealth->setScrapieEndDate(new \DateTime('2016-10-04'));
-    $nsfoTestAccountLocationHealth->setCheckDate(new \DateTime('2016-07-04'));
+    $nsfoTestAccountLocationHealth->setCurrentMaediVisnaStatus(MaediVisnaStatus::FREE_2_YEAR);
+    $nsfoTestAccountLocationHealth->setCurrentMaediVisnaEndDate(new \DateTime('2016-08-04'));
+    $nsfoTestAccountLocationHealth->setCurrentScrapieStatus(ScrapieStatus::RESISTANT);
+    $nsfoTestAccountLocationHealth->setCurrentMaediVisnaStatus(new \DateTime('2016-10-04'));
 
     $nsfoTestAccountLocation = new Location();
     $nsfoTestAccountLocation->setAddress($nsfoTestAccountLocationAddress);
