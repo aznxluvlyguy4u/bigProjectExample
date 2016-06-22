@@ -261,7 +261,7 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $nsfoTestAccountLocationHealth->setCurrentMaediVisnaStatus(MaediVisnaStatus::FREE_2_YEAR);
     $nsfoTestAccountLocationHealth->setCurrentMaediVisnaEndDate(new \DateTime('2016-08-04'));
     $nsfoTestAccountLocationHealth->setCurrentScrapieStatus(ScrapieStatus::RESISTANT);
-    $nsfoTestAccountLocationHealth->setCurrentMaediVisnaStatus(new \DateTime('2016-10-04'));
+    $nsfoTestAccountLocationHealth->setCurrentScrapieEndDate(new \DateTime('2016-10-04'));
 
     $nsfoTestAccountLocation = new Location();
     $nsfoTestAccountLocation->setAddress($nsfoTestAccountLocationAddress);
