@@ -96,10 +96,13 @@ class MaediVisna
     /**
      * MaediVisna constructor.
      */
-    public function __construct()
+    public function __construct($status = null, $endDate = null)
     {
-        $this->logDate(new DateTime());
+        $this->logDate = new DateTime();
         $this->hide = false;
+
+        $this->status = $status;
+        $this->endDate = $endDate;
     }
 
 

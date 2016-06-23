@@ -94,10 +94,13 @@ class Scrapie
     /**
      * Scrapie constructor.
      */
-    public function __construct()
+    public function __construct($status = null, $endDate = null)
     {
-        $this->logDate(new DateTime());
+        $this->logDate = new DateTime();
         $this->isHidden = false;
+
+        $this->status = $status;
+        $this->endDate = $endDate;
     }
 
 
