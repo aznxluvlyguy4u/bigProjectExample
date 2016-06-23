@@ -579,4 +579,28 @@ class LocationHealth
     {
         return $this->footRots;
     }
+
+    /**
+     * Add scrapy
+     *
+     * @param \AppBundle\Entity\Scrapie $scrapy
+     *
+     * @return LocationHealth
+     */
+    public function addScrapy(\AppBundle\Entity\Scrapie $scrapy)
+    {
+        $this->scrapies[] = $scrapy;
+
+        return $this;
+    }
+
+    /**
+     * Remove scrapy
+     *
+     * @param \AppBundle\Entity\Scrapie $scrapy
+     */
+    public function removeScrapy(\AppBundle\Entity\Scrapie $scrapy)
+    {
+        $this->scrapies->removeElement($scrapy);
+    }
 }
