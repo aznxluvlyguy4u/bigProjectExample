@@ -37,7 +37,7 @@ class DashboardAPIController extends APIController {
         ->getLatestLogDatesForDashboardDeclarationsPerLocation($location);
 
     //Update LocationHealth, before displaying it in the Dashboard
-    $this->getHealthService()->processLocationHealthQueue();
+//    $this->getHealthService()->processLocationHealthQueue();  FIXME
 
     $outputArray = DashboardOutput::create($client, $declarationLogDate, $location);
 
