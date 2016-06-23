@@ -154,7 +154,7 @@ class AuthAPIController extends APIController {
     list($emailAddress, $password) = explode(":", $credentials);
     if($emailAddress != null && $password != null) {
       $encoder = $this->get('security.password_encoder');
-
+      $emailAddress = strtolower($emailAddress);
       $client = $this->getDoctrine()->getRepository('AppBundle:Client')->findOneBy(array("emailAddress"=>$emailAddress));
       if($client == null) {
         return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
@@ -284,7 +284,7 @@ class AuthAPIController extends APIController {
     }
     */
     $content = $this->getContentAsArray($request);
-    $emailAddress = $content->get('email_address');
+    $emailAddress = strtolower($content->get('email_address'));
 
     $client = $this->getClientByEmail($emailAddress);
     //Verify if email is correct
