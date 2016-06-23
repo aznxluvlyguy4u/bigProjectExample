@@ -37,15 +37,15 @@ class CompanyProfile
         $billingAddress->setStreetName($billingAddressArray['street_name']);
         $billingAddress->setAddressNumberSuffix($billingAddressArray['suffix']);
         $billingAddress->setAddressNumber($billingAddressArray['address_number']);
-        $billingAddress->setPostalCode($billingAddressArray['postal_code']);
-        $billingAddress->setCity($billingAddressArray['city']);
+        $billingAddress->setPostalCode(strtoupper($billingAddressArray['postal_code']));
+        $billingAddress->setCity(strtoupper($billingAddressArray['city']));
         $billingAddress->setState($billingAddressArray['state']);
 
         $address->setStreetName($addressArray['street_name']);
         $address->setAddressNumberSuffix($addressArray['suffix']);
         $address->setAddressNumber($addressArray['address_number']);
-        $address->setPostalCode($addressArray['postal_code']);
-        $address->setCity($addressArray['city']);
+        $address->setPostalCode(strtoupper($addressArray['postal_code']));
+        $address->setCity(strtoupper($addressArray['city']));
         $address->setState($addressArray['state']);
 
         $client->setFirstName($contactPersonArray['first_name']);
