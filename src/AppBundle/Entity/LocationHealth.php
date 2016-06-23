@@ -479,27 +479,27 @@ class LocationHealth
     }
 
     /**
-     * Add scrapy
+     * Add scrapie
      *
-     * @param \AppBundle\Entity\Scrapie $scrapy
+     * @param Scrapie $scrapie
      *
      * @return LocationHealth
      */
-    public function addScrapy(\AppBundle\Entity\Scrapie $scrapy)
+    public function addScrapie($scrapie)
     {
-        $this->scrapies[] = $scrapy;
+        $this->scrapies[] = $scrapie;
 
         return $this;
     }
 
     /**
-     * Remove scrapy
+     * Remove scrapie
      *
-     * @param \AppBundle\Entity\Scrapie $scrapy
+     * @param Scrapie $scrapie
      */
-    public function removeScrapy(\AppBundle\Entity\Scrapie $scrapy)
+    public function removeScrapie($scrapie)
     {
-        $this->scrapies->removeElement($scrapy);
+        $this->scrapies->removeElement($scrapie);
     }
 
     /**
