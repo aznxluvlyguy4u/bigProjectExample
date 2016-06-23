@@ -128,7 +128,10 @@ class Constant
     const COUNTRY_REPOSITORY = 'AppBundle:Country';
     const COMPANY_REPOSITORY = 'AppBundle:Company';
     const LOCATION_REPOSITORY = 'AppBundle:Location';
+
     const LOCATION_HEALTH_REPOSITORY = 'AppBundle:LocationHealth';
     const PROCESSOR_REPOSITORY = 'AppBundle:Processor';
     const LOCATION_HEALTH_QUEUE_REPOSITORY = 'AppBundle:LocationHealthQueue';
+
+    const ANIMAL_RESIDENCE_REPOSITORY = 'AppBundle:AnimalResidence';
 }

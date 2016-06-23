@@ -178,6 +178,9 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     $this->persist($messageObject);
     $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
 
+    //log Animal location history
+    $this->getAnimalLocationHistoryService()->logAnimalResidenceOut($messageObject);
+
     return new JsonResponse($messageArray, 200);
   }
 
@@ -254,6 +257,8 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     //First Persist object to Database, before sending it to the queue
     $this->persist($messageObject);
     $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
+
+    //updating the Animal location history is done completely in the worker
 
     return new JsonResponse($messageArray, 200);
   }
