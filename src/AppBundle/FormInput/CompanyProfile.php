@@ -56,7 +56,7 @@ class CompanyProfile
         $company->setVeterinarianDapNumber($veterinarianArray['dap_number']);
         $company->setVeterinarianCompanyName($veterinarianArray['company_name']);
         $company->setVeterinarianTelephoneNumber($veterinarianArray['telephone_number']);
-        $company->setVeterinarianEmailAddress($veterinarianArray['email_address']);
+        $company->setVeterinarianEmailAddress(strtolower($veterinarianArray['email_address']));
         
         return $client;
     }
