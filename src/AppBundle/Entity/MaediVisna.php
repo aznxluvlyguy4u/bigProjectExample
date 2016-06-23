@@ -99,7 +99,7 @@ class MaediVisna
     public function __construct($status = null, $endDate = null)
     {
         $this->logDate = new DateTime();
-        $this->hide = false;
+        $this->isHidden = false;
 
         $this->status = $status;
         $this->endDate = $endDate;
