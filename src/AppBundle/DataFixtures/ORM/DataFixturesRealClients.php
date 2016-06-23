@@ -144,6 +144,8 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $janVanRijnsbergenLocationHealth->setCurrentMaediVisnaEndDate($janVanRijnsbergenMaediVisna->getEndDate());
     $janVanRijnsbergenLocationHealth->setCurrentScrapieStatus($janVanRijnsbergenScrapie->getStatus());
     $janVanRijnsbergenLocationHealth->setCurrentScrapieEndDate($janVanRijnsbergenScrapie->getEndDate());
+    $janVanRijnsbergenScrapie->setLocationHealth($janVanRijnsbergenLocationHealth);
+    $janVanRijnsbergenMaediVisna->setLocationHealth($janVanRijnsbergenLocationHealth);
     $janVanRijnsbergenLocationHealth->addScrapie($janVanRijnsbergenScrapie);
     $janVanRijnsbergenLocationHealth->addMaediVisna($janVanRijnsbergenMaediVisna);
 
@@ -209,6 +211,8 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $reinardEvertsLocationHealth->setCurrentMaediVisnaEndDate($reinardEvertsMaediVisna->getEndDate());
     $reinardEvertsLocationHealth->setCurrentScrapieStatus($reinardEvertsScrapie->getStatus());
     $reinardEvertsLocationHealth->setCurrentScrapieEndDate($reinardEvertsScrapie->getEndDate());
+    $reinardEvertsScrapie->setLocationHealth($reinardEvertsLocationHealth);
+    $reinardEvertsMaediVisna->setLocationHealth($reinardEvertsLocationHealth);
     $reinardEvertsLocationHealth->addScrapie($reinardEvertsScrapie);
     $reinardEvertsLocationHealth->addMaediVisna($reinardEvertsMaediVisna);
 
@@ -274,6 +278,8 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $nsfoTestAccountLocationHealth->setCurrentMaediVisnaEndDate($nsfoTestAccountMaediVisna->getEndDate());
     $nsfoTestAccountLocationHealth->setCurrentScrapieStatus($nsfoTestAccountScrapie->getStatus());
     $nsfoTestAccountLocationHealth->setCurrentScrapieEndDate($nsfoTestAccountScrapie->getEndDate());
+    $nsfoTestAccountScrapie->setLocationHealth($nsfoTestAccountLocationHealth);
+    $nsfoTestAccountMaediVisna->setLocationHealth($nsfoTestAccountLocationHealth);
     $nsfoTestAccountLocationHealth->addScrapie($nsfoTestAccountScrapie);
     $nsfoTestAccountLocationHealth->addMaediVisna($nsfoTestAccountMaediVisna);
 
