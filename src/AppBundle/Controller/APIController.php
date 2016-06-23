@@ -686,7 +686,10 @@ class APIController extends Controller implements APIControllerInterface
     return Utils::buildValidationArray($isValid, $code, $messageBody, array('messageNumber' => $messageNumber));
   }
 
-
+  /**
+   * @param Request $request
+   * @return Location|null
+   */
   public function getSelectedLocation(Request $request)
   {
 
