@@ -5,6 +5,8 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthQueue;
+use AppBundle\Entity\MaediVisna;
+use AppBundle\Entity\Scrapie;
 use AppBundle\Entity\WeightMeasurement;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -145,10 +147,23 @@ class Utils
      * @param Collection $responses
      * @return mixed|null
      */
-    public static function returnLastResponse(Collection $responses)
-    {
-        return self::returnLastItemFromCollectionByLogDate($responses);
-    }
+    public static function returnLastResponse(Collection $responses) {
+        return self::returnLastItemFromCollectionByLogDate($responses); }
+
+    /**
+     * @param Collection $scrapies
+     * @return Scrapie|null
+     */
+    public static function returnlastScrapie(Collection $scrapies) {
+        return self::returnLastItemFromCollectionByLogDate($scrapies); }
+
+    /**
+     * @param Collection $maediVisnas
+     * @return MaediVisna|null
+     */
+    public static function returnlastMaediVisna(Collection $maediVisnas) {
+        return self::returnLastItemFromCollectionByLogDate($maediVisnas); }
+
 
     /**
      * @param Collection $locationHealths
