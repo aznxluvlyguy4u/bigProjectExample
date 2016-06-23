@@ -69,20 +69,23 @@ abstract class Output
 
         $scrapieStatus = null;
         $scrapieEndDate = null;
-        
-        $lastScrapie = Utils::returnlastScrapie(self::$locationHealth->getScrapies());
-        if($lastScrapie != null) {
-            $scrapieStatus = $lastScrapie->getStatus();
-            $scrapieEndDate = $lastScrapie->getEndDate();
-        }
 
         $maediVisnaStatus = null;
         $maediVisnaEndDate = null;
-        $lastMaediVisna = Utils::returnlastMaediVisna(self::$locationHealth->getMaediVisnas());
 
-        if($lastMaediVisna != null) {
-            $maediVisnaStatus = $lastMaediVisna->getStatus();
-            $maediVisnaEndDate = $lastMaediVisna->getEndDate();
+        if(self::$locationHealth != null) {
+            $lastScrapie = Utils::returnlastScrapie(self::$locationHealth->getScrapies());
+            if($lastScrapie != null) {
+                $scrapieStatus = $lastScrapie->getStatus();
+                $scrapieEndDate = $lastScrapie->getEndDate();
+            }
+
+            $lastMaediVisna = Utils::returnlastMaediVisna(self::$locationHealth->getMaediVisnas());
+
+            if($lastMaediVisna != null) {
+                $maediVisnaStatus = $lastMaediVisna->getStatus();
+                $maediVisnaEndDate = $lastMaediVisna->getEndDate();
+            }
         }
 
         if(self::$locationHealth != null) {
