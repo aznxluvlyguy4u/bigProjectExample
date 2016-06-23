@@ -167,7 +167,6 @@ class Location
     $this->tagTransfers = new ArrayCollection();
     $this->flags = new ArrayCollection();
     $this->revokes = new ArrayCollection();
-    $this->healths = new ArrayCollection();
     $this->healthMessages = new ArrayCollection();
   }
 
@@ -619,42 +618,6 @@ class Location
     {
         return $this->locationHolder;
     }
-
-    /**
-     * @return ArrayCollection
-     */
-    public function getHealths()
-    {
-      return $this->healths;
-    }
-
-    /**
-     * Add health
-     *
-     * @param LocationHealth $health
-     *
-     * @return Location
-     */
-    public function addHealth(LocationHealth $health)
-    {
-      $this->healths->add($health);
-      $health->setLocation($this);
-
-      return $this;
-    }
-
-    /**
-     * Remove health
-     *
-     * @param LocationHealth $health
-     */
-    public function removeHealth(LocationHealth $health)
-    {
-      $this->healths->removeElement($health);
-    }
-
-
-
 
     /**
      * Add healthMessage
