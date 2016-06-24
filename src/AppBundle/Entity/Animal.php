@@ -329,7 +329,7 @@ abstract class Animal
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="AnimalResidence", mappedBy="animal")
+     * @ORM\OneToMany(targetEntity="AnimalResidence", mappedBy="animal", cascade={"persist"})
      * @ORM\OrderBy({"startDate" = "ASC"})
      * @JMS\Type("AppBundle\Entity\AnimalResidence")
      */
