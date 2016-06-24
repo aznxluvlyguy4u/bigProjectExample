@@ -106,7 +106,11 @@ class BaseRepository extends EntityRepository
         $query = $this->getEntityManager()->getConnection()->prepare($sql);
         $query->execute();
 
-        return new \DateTime($query->fetchColumn());
+        if($query->fetchColumn() == null) {
+            return null;
+        } else {
+            return new \DateTime($query->fetchColumn());
+        }
     }
 
     /**
