@@ -20,4 +20,8 @@ class JsonInputConstant
     const UBN_PREVIOUS_OWNER = 'ubn_previous_owner';
     const ARRIVAL_DATE = 'arrival_date';
     const IS_ARRIVED_FROM_OTHER_NSFO_CLIENT = 'is_arrived_from_other_nsfo_client';
+
+    //Locations
+    const PROVINCES = 'provinces';
+    const CODES = 'codes';
 }
