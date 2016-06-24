@@ -19,6 +19,19 @@ class AnimalDetailsOutput
      */
     public static function create(Animal $animal)
     {
+        $mother = $animal->getParentMother();
+        if($mother == null) {
+            $ulnMother = strtoupper(Constant::UNKNOWN_NAMESPACE);
+        } else {
+            $ulnMother = Utils::getUlnStringFromAnimal($mother);
+        }
+
+        $father = $animal->getParentFather();
+        if($father == null) {
+            $ulnFather = strtoupper(Constant::UNKNOWN_NAMESPACE);
+        } else {
+            $ulnFather = Utils::getUlnStringFromAnimal($father);
+        }
 
         $result = array(
                   Constant::ULN_COUNTRY_CODE_NAMESPACE => $animal->getUlnCountryCode(),
@@ -32,8 +45,8 @@ class AnimalDetailsOutput
                   "inbred_coefficient" => "",
                   Constant::GENDER_NAMESPACE => $animal->getGender(),
                   "litter_size" => "",
-                  Constant::MOTHER_NAMESPACE => Utils::getUlnStringFromAnimal($animal->getParentMother()),
-                  Constant::FATHER_NAMESPACE => Utils::getUlnStringFromAnimal($animal->getParentFather()),
+                  Constant::MOTHER_NAMESPACE => $ulnMother,
+                  Constant::FATHER_NAMESPACE => $ulnFather,
                   "rearing" => "",
                   "suction_size" => "",
                   "blind_factor" => "",
