@@ -12,4 +12,7 @@ class JsonInputConstant
     const DATE_OF_MEASUREMENT = 'date_of_measurement';
     const WEIGHT_MEASUREMENTS = 'weight_measurements';
     const WEIGHT = 'weight';
+
+    //Loss
+    const UBN_DESTRUCTOR = "ubn_destructor";
 }
