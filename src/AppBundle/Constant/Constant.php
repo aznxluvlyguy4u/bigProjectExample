@@ -82,6 +82,8 @@ class Constant
     const SCRAPIE_STATUS = "scrapie_status";
     const SCRAPIE_END_DATE = "scrapie_end_date";
     const CHECK_DATE = "check_date";
+    const LOCATION_HEALTH_ORIGIN = "location_health_origin";
+    const LOCATION_HEALTH_DESTINATION = "location_health_destination";
 
     //Declaration specific variables
     const RELATION_NUMBER_ACCEPTANT_SNAKE_CASE_NAMESPACE = "relation_number_acceptant";

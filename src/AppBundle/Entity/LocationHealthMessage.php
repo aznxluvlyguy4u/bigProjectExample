@@ -138,6 +138,78 @@ class LocationHealthMessage
     private $import;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $originScrapieStatus;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $originMaediVisnaStatus;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $originCaseousLymphadenitisStatus;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $originFootRotStatus;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $destinationScrapieStatus;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $destinationMaediVisnaStatus;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $destinationCaseousLymphadenitisStatus;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $destinationFootRotStatus;
+
+    /**
      * LocationHealthMessage constructor.
      */
     public function __construct()
@@ -438,5 +510,135 @@ class LocationHealthMessage
     {
         return $this->checkForScrapie;
     }
+
+    /**
+     * @return string
+     */
+    public function getOriginScrapieStatus()
+    {
+        return $this->originScrapieStatus;
+    }
+
+    /**
+     * @param string $originScrapieStatus
+     */
+    public function setOriginScrapieStatus($originScrapieStatus)
+    {
+        $this->originScrapieStatus = $originScrapieStatus;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOriginMaediVisnaStatus()
+    {
+        return $this->originMaediVisnaStatus;
+    }
+
+    /**
+     * @param string $originMaediVisnaStatus
+     */
+    public function setOriginMaediVisnaStatus($originMaediVisnaStatus)
+    {
+        $this->originMaediVisnaStatus = $originMaediVisnaStatus;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOriginCaseousLymphadenitisStatus()
+    {
+        return $this->originCaseousLymphadenitisStatus;
+    }
+
+    /**
+     * @param string $originCaseousLymphadenitisStatus
+     */
+    public function setOriginCaseousLymphadenitisStatus($originCaseousLymphadenitisStatus)
+    {
+        $this->originCaseousLymphadenitisStatus = $originCaseousLymphadenitisStatus;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOriginFootRotStatus()
+    {
+        return $this->originFootRotStatus;
+    }
+
+    /**
+     * @param string $originFootRotStatus
+     */
+    public function setOriginFootRotStatus($originFootRotStatus)
+    {
+        $this->originFootRotStatus = $originFootRotStatus;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDestinationScrapieStatus()
+    {
+        return $this->destinationScrapieStatus;
+    }
+
+    /**
+     * @param string $destinationScrapieStatus
+     */
+    public function setDestinationScrapieStatus($destinationScrapieStatus)
+    {
+        $this->destinationScrapieStatus = $destinationScrapieStatus;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDestinationMaediVisnaStatus()
+    {
+        return $this->destinationMaediVisnaStatus;
+    }
+
+    /**
+     * @param string $destinationMaediVisnaStatus
+     */
+    public function setDestinationMaediVisnaStatus($destinationMaediVisnaStatus)
+    {
+        $this->destinationMaediVisnaStatus = $destinationMaediVisnaStatus;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDestinationCaseousLymphadenitisStatus()
+    {
+        return $this->destinationCaseousLymphadenitisStatus;
+    }
+
+    /**
+     * @param string $destinationCaseousLymphadenitisStatus
+     */
+    public function setDestinationCaseousLymphadenitisStatus($destinationCaseousLymphadenitisStatus)
+    {
+        $this->destinationCaseousLymphadenitisStatus = $destinationCaseousLymphadenitisStatus;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDestinationFootRotStatus()
+    {
+        return $this->destinationFootRotStatus;
+    }
+
+    /**
+     * @param string $destinationFootRotStatus
+     */
+    public function setDestinationFootRotStatus($destinationFootRotStatus)
+    {
+        $this->destinationFootRotStatus = $destinationFootRotStatus;
+    }
+
+
 
 }

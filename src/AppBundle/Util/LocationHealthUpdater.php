@@ -5,10 +5,12 @@ namespace AppBundle\Util;
 use AppBundle\Component\Utils;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
+use AppBundle\Entity\MaediVisna;
+use AppBundle\Entity\Scrapie;
 use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Constant\Constant;
-use AppBundle\Enumerator\LocationHealthStatus;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 
 //TODO Nothing is done with the endDates yet.
@@ -20,23 +22,24 @@ use Doctrine\Common\Persistence\ObjectManager;
 class LocationHealthUpdater
 {
 
+
     /**
      * @param ObjectManager $em
-     * @param Location $location
+     * @param Location $locationOfDestination
      * @param string $ubnPreviousOwner
-     * @return Location
+     * @return ArrayCollection
      */
-    public static function updateByGivenUbnOfOrigin(ObjectManager $em, Location $location, $ubnPreviousOwner)
+    public static function updateByGivenUbnOfOrigin(ObjectManager $em, Location $locationOfDestination, $ubnPreviousOwner)
     {
         $locationOfOrigin = $em->getRepository(Constant::LOCATION_REPOSITORY)->findByUbn($ubnPreviousOwner);
-        return self::updateByGivenLocationOfOrigin($em, $location, $locationOfOrigin);
+        return self::updateByGivenLocationOfOrigin($em, $locationOfDestination, $locationOfOrigin);
     }
 
 
     /**
      * @param ObjectManager $em
      * @param Location $locationOfDestination
-     * @return Location
+     * @return ArrayCollection
      */
     public static function updateWithoutOriginHealthData(ObjectManager $em,Location $locationOfDestination)
     {
@@ -49,145 +52,172 @@ class LocationHealthUpdater
      * @param ObjectManager $em
      * @param Location $locationOfDestination
      * @param Location $locationOfOrigin
-     * @return Location
+     * @return ArrayCollection
      */
-    public static function updateByGivenLocationOfOrigin(ObjectManager $em, Location $locationOfDestination,
+    private static function updateByGivenLocationOfOrigin(ObjectManager $em, Location $locationOfDestination,
                                                          $locationOfOrigin = null)
     {
-        //If either or both the Destination or Origin location have a LocationHealth of null
-        //Then create a new LocationHealth and set all values to "under observation".
-        if($locationOfOrigin == null) { //case of Import
-            
-            if(HealthChecker::verifyIsLocationCompletelyNotHealthy($locationOfDestination)) {
-                //Don't create a new LocationHealth. This will lead to a duplicate.
-                return $locationOfDestination;
-                
-            } else {
-                //Use the previous nonHealthy health statuses when available
-                $newLocationHealth = self::createNewLocationHealthWithInitialValues($locationOfDestination);                
-                $em->persist($newLocationHealth); $em->flush();
-                $locationOfDestination->addHealth($newLocationHealth);
-            }
-            
-            return $locationOfDestination;
-        }
+        $locationOfDestination = self::persistInitialLocationHealthIfNull($em, $locationOfDestination);
 
-        $healthsDestination = $locationOfDestination->getHealths();
-        $healthsOrigin = $locationOfOrigin->getHealths();
-
-        if($healthsOrigin->isEmpty() || $healthsDestination->isEmpty()) {
-            $newLocationHealth = self::createNewLocationHealthWithInitialValues();
-            $em->persist($newLocationHealth); $em->flush();
-            $locationOfDestination->addHealth($newLocationHealth);
-            return $locationOfDestination;
-        }
-
-        //If both do have a LocationHealth ...
-        $healthOrigin = Utils::returnLastLocationHealth($healthsOrigin);
-        $originLocationIsHealthy = HealthChecker::verifyIsLocationHealthy($healthOrigin);
-
-        if($originLocationIsHealthy) { //do nothing
-            return $locationOfDestination;
-        }
-
-        //If origin is not verified as completely healthy ...
-
-        $healthDestination = Utils::returnLastLocationHealth($locationOfDestination->getHealths());
-        $locationHealthStatusesAreIdentical = HealthChecker::verifyHealthStatusesAreAtIdenticalLevel($healthDestination, $healthOrigin);
-        if($locationHealthStatusesAreIdentical) { //do nothing
-            return $locationOfDestination;
-        }
-
-        //If origin is not verified as completely healthy and the location health statuses are not identical, a new LocationHealth has to be added
-        $newLocationHealth = new LocationHealth();
-        //And we know the overall location is already not completely healthy at this point
-        $newLocationHealth->setLocationHealthStatus(LocationHealthStatus::UNDER_OBSERVATION);
-
-
-        //Now check each disease status separately ...
+        $locationHealthDestination = $locationOfDestination->getLocationHealth();
+        $maediVisnaDestination = Utils::returnlastMaediVisna($locationHealthDestination->getMaediVisnas());
+        $scrapieDestination = Utils::returnlastScrapie($locationHealthDestination->getScrapies());
+        $maediVisnaDestinationIsHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($maediVisnaDestination->getStatus());
+        $scrapieDestinationIsHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieDestination->getStatus());
         
-        //Scrapie
-        $scrapieStatusOrigin = $healthOrigin->getScrapieStatus();
-        $scrapieStatusDestination = $healthDestination->getScrapieStatus();
+        if($locationOfOrigin == null) { //an import or Location that is not in our NSFO database
 
-        $isOriginScrapieHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieStatusOrigin);
-        $isDestinationScrapieHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieStatusDestination);
+            if( $maediVisnaDestinationIsHealthy ){
+                self::persistNewDefaultMaediVisna($em, $locationHealthDestination);
+            } //else do nothing
 
-        if($isOriginScrapieHealthy && $isDestinationScrapieHealthy) {
-         $newLocationHealth->setScrapieStatus($scrapieStatusDestination);
+            if( $scrapieDestinationIsHealthy ){
+                self::persistNewDefaultScrapie($em, $locationHealthDestination);
+            } //else do nothing
 
-        } else if(!$isOriginScrapieHealthy && $isDestinationScrapieHealthy) {
-            $newLocationHealth->setScrapieStatus(ScrapieStatus::UNDER_OBSERVATION);
+            $locationHealthOrigin = null;
 
-        } else if($isOriginScrapieHealthy && !$isDestinationScrapieHealthy) {
-            $newLocationHealth->setScrapieStatus($scrapieStatusDestination);
 
-        } else { //(!$isOriginScrapieHealthy && !$isDestinationScrapieHealthy)
-            $newLocationHealth->setScrapieStatus($scrapieStatusDestination);
-        }
-        
-        //MaediVisna
-        $maediVisnaStatusOrigin = $healthOrigin->getMaediVisnaStatus();
-        $maediVisnaStatusDestination = $healthDestination->getMaediVisnaStatus();
-        
-        $isOriginMaediVisnaHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($maediVisnaStatusOrigin);
-        $isDestinationMaediVisnaHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($maediVisnaStatusDestination);
+        } else { //location of origin is known and in the NSFO database
 
-        if($isOriginMaediVisnaHealthy && $isDestinationMaediVisnaHealthy) {
-            $newLocationHealth->setMaediVisnaStatus($maediVisnaStatusDestination);
+            $locationOfOrigin = self::persistInitialLocationHealthIfNull($em, $locationOfOrigin);
 
-        } else if(!$isOriginMaediVisnaHealthy && $isDestinationMaediVisnaHealthy) {
-            $newLocationHealth->setMaediVisnaStatus(maediVisnaStatus::UNDER_OBSERVATION);
+            $locationHealthOrigin = $locationOfOrigin->getLocationHealth();
+            $maediVisnaOrigin = Utils::returnlastMaediVisna($locationHealthOrigin->getMaediVisnas());
+            $scrapieOrigin = Utils::returnlastScrapie($locationHealthOrigin->getScrapies());
+            $maediVisnaOriginIsHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($maediVisnaOrigin->getStatus());
+            $scrapieOriginIsHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieOrigin->getStatus());
 
-        } else if($isOriginMaediVisnaHealthy && !$isDestinationMaediVisnaHealthy) {
-            $newLocationHealth->setMaediVisnaStatus($maediVisnaStatusDestination);
+            if(!$maediVisnaOriginIsHealthy && $maediVisnaDestinationIsHealthy){
+                self::persistNewDefaultMaediVisna($em, $locationHealthDestination);
+            } //else do nothing
 
-        } else { //(!$isOriginMaediVisnaHealthy && !$isDestinationMaediVisnaHealthy)
-            $newLocationHealth->setMaediVisnaStatus($maediVisnaStatusDestination);
+            if(!$scrapieOriginIsHealthy && $scrapieDestinationIsHealthy) {
+                self::persistNewDefaultScrapie($em, $locationHealthDestination);
+            } //else do nothing
+
+            self::persistTheOverallLocationHealthStatus($em, $locationOfOrigin); //FIXME see function
         }
 
-        $locationOfDestination->addHealth($newLocationHealth);
+        self::persistTheOverallLocationHealthStatus($em, $locationOfDestination); //FIXME see function
 
-        $em->persist($newLocationHealth); $em->flush();
-        
-        return $locationOfDestination;
+
+        $results = new ArrayCollection();
+        $results->set(Constant::LOCATION_HEALTH_DESTINATION, $locationHealthDestination);
+        $results->set(Constant::LOCATION_HEALTH_ORIGIN, $locationHealthOrigin);
+
+        return $results;
     }
 
     /**
      * @param Location $locationOfDestination
+     * @return Location
+     */
+    private static function persistNewLocationHealthWithInitialValues(ObjectManager $em, Location $locationOfDestination)
+    {
+        //Create a LocationHealth with a MaediVisna and Scrapie with all statusses set to Under Observation
+        $createWithDefaultUnderObservationIllnesses = true;
+        $locationHealth = new LocationHealth($createWithDefaultUnderObservationIllnesses);
+        $locationOfDestination->setLocationHealth($locationHealth);
+        $locationHealth->setLocation($locationOfDestination);
+
+        $em->persist($locationHealth->getMaediVisnas()->get(0));
+        $em->persist($locationHealth->getScrapies()->get(0));
+        $em->persist($locationHealth);
+        $em->persist($locationOfDestination);
+        $em->flush();
+
+        return $locationOfDestination;
+    }
+
+    /**
+     * @param ObjectManager $em
+     * @param LocationHealth $locationHealth
      * @return LocationHealth
      */
-    public static function createNewLocationHealthWithInitialValues(Location $locationOfDestination = null)
+    private static function persistNewDefaultMaediVisna(ObjectManager $em, LocationHealth $locationHealth)
     {
-        $locationHealth = new LocationHealth();
+        $maediVisna = new MaediVisna(MaediVisnaStatus::UNDER_OBSERVATION);
+        $maediVisna->setLocationHealth($locationHealth);
+        $locationHealth->addMaediVisna($maediVisna);
+        $locationHealth->setCurrentMaediVisnaStatus($maediVisna->getStatus());
 
-        //Default values
-        $locationHealth->setMaediVisnaStatus(MaediVisnaStatus::UNDER_OBSERVATION);
-        $locationHealth->setScrapieStatus(ScrapieStatus::UNDER_OBSERVATION);
-        $locationHealth->setLocationHealthStatus(LocationHealthStatus::UNDER_OBSERVATION);
+        $em->persist($maediVisna);
+        $em->persist($locationHealth);
+        $em->flush();
+
+        return $locationHealth;
+    }
+
+    /**
+     * @param ObjectManager $em
+     * @param LocationHealth $locationHealth
+     * @return LocationHealth
+     */
+    private static function persistNewDefaultScrapie(ObjectManager $em, LocationHealth $locationHealth)
+    {
+        $scrapie = new Scrapie(ScrapieStatus::UNDER_OBSERVATION);
+        $scrapie->setLocationHealth($locationHealth);
+        $locationHealth->addScrapie($scrapie);
+        $locationHealth->setCurrentScrapieStatus($scrapie->getStatus());
+
+        $em->persist($scrapie);
+        $em->persist($locationHealth);
+        $em->flush();
+
+        return $locationHealth;
+    }
+
+    /**
+     * Initialize LocationHealth entities and values of destination where necessary
+     *
+     * @param ObjectManager $em
+     * @param Location $locationOfDestination
+     * @return Location
+     */
+    private static function persistInitialLocationHealthIfNull(ObjectManager $em, Location $locationOfDestination)
+    {
+        if($locationOfDestination == null) {
+            return null;
+        }
         
-        //Override default values if necessary
-        if($locationOfDestination != null) {
-            $previousLocationHealth = Utils::returnLastLocationHealth($locationOfDestination->getHealths());
+        $locationHealthDestination = $locationOfDestination->getLocationHealth();
 
-            $previousScrapieStatus = $previousLocationHealth->getScrapieStatus();
-            if(!HealthChecker::verifyIsScrapieStatusHealthy($previousScrapieStatus)){
-                $locationHealth->setScrapieStatus($previousScrapieStatus);
+        if($locationHealthDestination == null) {
+            self::persistNewLocationHealthWithInitialValues($em, $locationOfDestination);
+
+        } else {
+
+            $maediVisnaDestination = Utils::returnlastMaediVisna($locationHealthDestination->getMaediVisnas());
+            if ($maediVisnaDestination == null) {
+                self::persistNewDefaultMaediVisna($em, $locationHealthDestination);
             }
 
-            $previousMaediVisnaStatus = $previousLocationHealth->getMaediVisnaStatus();
-            if(!HealthChecker::verifyIsMaediVisnaStatusHealthy($previousMaediVisnaStatus)){
-                $locationHealth->setMaediVisnaStatus($previousMaediVisnaStatus);
-            }
-
-            $previousOverallLocationStatus = $previousLocationHealth->getLocationHealthStatus();
-            if(!HealthChecker::verifyIsOverallLocationStatusHealthy($previousOverallLocationStatus)
-            && $previousOverallLocationStatus != null){
-                $locationHealth->setLocationHealthStatus($previousOverallLocationStatus);
+            $scrapieDestination = Utils::returnlastScrapie($locationHealthDestination->getScrapies());
+            if ($scrapieDestination == null) {
+                self::persistNewDefaultScrapie($em, $locationHealthDestination);
             }
         }
 
-        return $locationHealth;
+        return $locationOfDestination;
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Location $location
+     * @return Location
+     */
+    private static function persistTheOverallLocationHealthStatus(ObjectManager $em, Location $location)
+    {
+        //TODO remove the (overall) locationHealthStatus from LocationHealth in conjuction with the Java entities.
+        //For now the value is just set to null.
+
+        $location->getLocationHealth()->setLocationHealthStatus(null);
+        $em->persist($location);
+        $em->flush();
+
+        return $location;
     }
 
 }

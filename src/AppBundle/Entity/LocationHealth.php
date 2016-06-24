@@ -2,6 +2,8 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\MaediVisnaStatus;
+use AppBundle\Enumerator\ScrapieStatus;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -159,7 +161,7 @@ class LocationHealth
     /**
      * LocationHealth constructor.
      */
-    public function __construct()
+    public function __construct($createWithDefaultUnderObservationIllnesses = false)
     {
         $this->logDate = new DateTime('now');
         $this->isRevoked = false;
@@ -168,6 +170,20 @@ class LocationHealth
         $this->scrapies = new ArrayCollection();
         $this->caseousLymphadenitis = new ArrayCollection();
         $this->footRots = new ArrayCollection();
+
+        if($createWithDefaultUnderObservationIllnesses) {
+            $defaultMaediVisnaStatus = MaediVisnaStatus::UNDER_OBSERVATION;
+            $defaultScrapieStatus = ScrapieStatus::UNDER_OBSERVATION;
+
+            $this->setCurrentMaediVisnaStatus($defaultMaediVisnaStatus);
+            $this->setCurrentScrapieStatus($defaultScrapieStatus);
+            $scrapie = new Scrapie($defaultScrapieStatus);
+            $maediVisna = new MaediVisna($defaultMaediVisnaStatus);
+            $this->addScrapie($scrapie);
+            $this->addMaediVisna($maediVisna);
+            $scrapie->setLocationHealth($this);
+            $maediVisna->setLocationHealth($this);
+        }
     }
 
     /**

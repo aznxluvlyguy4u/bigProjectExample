@@ -197,8 +197,8 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $this->persist($messageObject);
     $this->getDoctrine()->getManager()->flush();
 
-    //Place the DeclareArrival or DeclareImport in the LocationHealthQueue
-    $this->getHealthService()->updateLocationHealthQueue($messageObject);
+    //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
+    $this->getHealthService()->updateLocationHealth($messageObject);
 
 //    return new JsonResponse(array("status"=>"sent"), 200);
     return new JsonResponse($messageArray, 200);
@@ -273,7 +273,8 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $this->persist($messageObject);
     $this->getDoctrine()->getManager()->flush();
 
-    /* LocationHealth status updates are not necessary (except in one case) */
+
+    /* LocationHealth status updates are not necessary */
 
     /*
      * Import: An import (POST & PUT) always leads to the same LocationHealth update.
@@ -281,13 +282,8 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
      * Arrival: Only the arrival date is editable for Animals from other NSFO clients. The ubnPreviousOwner is editable for unknown locations.
      * In both cases the health status change would be identical to the change by the original arrival.
      *
-     * The only exception would be an PUT of an Arrival with a failed response, which should be considered
-     * a new arrival for purposes of calculating the LocationHealth
+     * We do not discriminate between successful and failed requests at this moment.
      */
-    if($isFailedMessage) {
-      //Place the DeclareArrival or DeclareImport in the LocationHealthQueue
-      $this->getHealthService()->updateLocationHealthQueue($messageObject);
-    }
 
 
     return new JsonResponse($messageArray, 200);
