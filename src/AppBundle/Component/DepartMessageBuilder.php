@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\Location;
@@ -54,6 +55,8 @@ class DepartMessageBuilder extends MessageBuilderBase
     {
         $animal = $messageObject->getAnimal();
 
+        Utils::setResidenceToPending($animal, $location);
+
         $messageObject->setUlnCountryCode($animal->getUlnCountryCode());
         $messageObject->setUlnNumber($animal->getUlnNumber());
         $messageObject->setPedigreeCountryCode($animal->getPedigreeCountryCode());
@@ -62,7 +65,7 @@ class DepartMessageBuilder extends MessageBuilderBase
         $messageObject->setIsDepartedAnimal(true);
         $messageObject->setAnimalType(AnimalType::sheep);
         $messageObject->setLocation($location);
-        
+
         if(ActionFlagSetting::DECLARE_DEPART != null) {
             $messageObject->setAction(ActionFlagSetting::DECLARE_DEPART);
         }
