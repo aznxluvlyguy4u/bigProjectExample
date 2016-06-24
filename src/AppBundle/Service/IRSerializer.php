@@ -470,7 +470,14 @@ class IRSerializer implements IRSerializerInterface
 
         $animal = $contentArray['animal'];
         $tag = $contentArray['tag'];
-        $replaceDate = $contentArray['replace_date'];
+
+        $replaceDate = null;
+        if($contentArray->containsKey('replace_date')) {
+            if($contentArray->get('replace_date') != "" && $contentArray->get('replace_date') != null) {
+                $replaceDate = $contentArray['replace_date'];
+            }
+        }
+        //Set replaceDate = logDate in MessageBuilder if 'replace_date' was not given.
 
         $ulnCountryCodeToReplace = $animal['uln_country_code'];
         $ulnNumberToReplace = $animal['uln_number'];

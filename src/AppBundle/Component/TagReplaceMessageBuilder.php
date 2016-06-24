@@ -50,6 +50,10 @@ class TagReplaceMessageBuilder extends MessageBuilderBase {
    */
   private function addDeclareTagReplaceData(DeclareTagReplace $messageObject, $location) {
 
+    if($messageObject->getReplaceDate() == null) {
+      $messageObject->setReplaceDate($messageObject->getLogDate());
+    }
+
     $messageObject->setLocation($location);
     return $messageObject;
   }
