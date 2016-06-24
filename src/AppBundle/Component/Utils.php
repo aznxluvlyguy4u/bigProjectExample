@@ -3,6 +3,7 @@
 namespace AppBundle\Component;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthQueue;
 use AppBundle\Entity\MaediVisna;
@@ -378,5 +379,19 @@ class Utils
         }
 
         return $combinedLocationHealthQueue;
+    }
+
+    public static function setResidenceToPending(Animal $animal, Location $location)
+    {
+        $residenceList =  $animal->getAnimalResidenceHistory();
+        $residenceToUpdate = $residenceList->last();
+
+        if($residenceToUpdate->getLocation()->getUbn() == $location->getUbn()
+          && $residenceToUpdate->getEndDate() == null) {
+            //Set current residentState to pending
+            $residenceToUpdate->setIsPending(true);
+        }
+
+        return $animal;
     }
 }
