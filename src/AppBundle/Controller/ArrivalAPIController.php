@@ -15,6 +15,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\HealthChecker;
 use AppBundle\Util\LocationHealthUpdater;
+use AppBundle\Validation\TagValidator;
 use AppBundle\Validation\UbnValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -173,6 +174,12 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     //Convert the array into an object and add the mandatory values retrieved from the database
     if($isImportAnimal) { //DeclareImport
+      //Validate if ulnNumber matches that of an unassigned Tag in the tag collection of the client
+      $tagValidator = new TagValidator($this->getDoctrine()->getManager(), $client, $content);
+      if($tagValidator->getIsTagCollectionEmpty() || !$tagValidator->getIsTagValid() || $tagValidator->getIsInputEmpty()) {
+        return $tagValidator->createImportJsonErrorResponse();
+      }
+
       //TODO Phase 2: Filter between non-EU countries and EU countries. At the moment we only process sheep from EU countries
       $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client, $location);
 
