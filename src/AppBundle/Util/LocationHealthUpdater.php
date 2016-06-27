@@ -2,6 +2,9 @@
 
 namespace AppBundle\Util;
 
+use AppBundle\Component\LocationHealthMessageBuilder;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\MaediVisna;
@@ -25,27 +28,30 @@ class LocationHealthUpdater
     /**
      * @param ObjectManager $em
      * @param Location $locationOfDestination
-     * @param string $ubnPreviousOwner
-     * @param \DateTime $checkDate
+     * @param DeclareArrival $declareArrival
      * @return ArrayCollection
      */
     public static function updateByGivenUbnOfOrigin(ObjectManager $em, Location $locationOfDestination,
-                                                    $ubnPreviousOwner, \DateTime $checkDate)
+                                                    DeclareArrival $declareArrival)
     {
+        $ubnPreviousOwner = $declareArrival->getUbnPreviousOwner();
+        $checkDate = $declareArrival->getArrivalDate();
+
         $locationOfOrigin = $em->getRepository(Constant::LOCATION_REPOSITORY)->findByUbn($ubnPreviousOwner);
-        return self::updateByGivenLocationOfOrigin($em, $locationOfDestination, $checkDate, $locationOfOrigin);
+        return self::updateByGivenLocationOfOrigin($em, $declareArrival ,$locationOfDestination, $checkDate, $locationOfOrigin);
     }
 
 
     /**
      * @param ObjectManager $em
      * @param Location $locationOfDestination
-     * @param \DateTime $checkDate
+     * @param DeclareImport $declareImport
      * @return ArrayCollection
      */
-    public static function updateWithoutOriginHealthData(ObjectManager $em, Location $locationOfDestination, \DateTime $checkDate)
+    public static function updateWithoutOriginHealthData(ObjectManager $em, Location $locationOfDestination, DeclareImport $declareImport)
     {
-        return self::updateByGivenLocationOfOrigin($em,$locationOfDestination, $checkDate, null);
+        $checkDate = $declareImport->getImportDate();
+        return self::updateByGivenLocationOfOrigin($em, $declareImport, $locationOfDestination, $checkDate, null);
     }
 
 
@@ -53,11 +59,12 @@ class LocationHealthUpdater
     /**
      * @param ObjectManager $em
      * @param Location $locationOfDestination
+     * @param DeclareArrival|DeclareImport $declareIn
      * @param \DateTime $checkDate
      * @param Location $locationOfOrigin
      * @return ArrayCollection
      */
-    private static function updateByGivenLocationOfOrigin(ObjectManager $em, Location $locationOfDestination,
+    private static function updateByGivenLocationOfOrigin(ObjectManager $em, $declareIn, Location $locationOfDestination,
                                                           \DateTime $checkDate, $locationOfOrigin = null)
     {
         $locationOfDestination = self::persistInitialLocationHealthIfNull($em, $locationOfDestination, $checkDate);
@@ -67,15 +74,19 @@ class LocationHealthUpdater
         $scrapieDestination = $locationHealthDestination->getScrapies()->last();
         $maediVisnaDestinationIsHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($maediVisnaDestination->getStatus());
         $scrapieDestinationIsHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieDestination->getStatus());
+
+        //by default...
+        $latestMaediVisna = $maediVisnaDestination;
+        $latestScrapie = $scrapieDestination;
         
         if($locationOfOrigin == null) { //an import or Location that is not in our NSFO database
 
             if( $maediVisnaDestinationIsHealthy ){
-                self::persistNewDefaultMaediVisna($em, $locationHealthDestination, $checkDate);
+                $latestMaediVisna = self::persistNewDefaultMaediVisna($em, $locationHealthDestination, $checkDate);
             } //else do nothing
 
             if( $scrapieDestinationIsHealthy ){
-                self::persistNewDefaultScrapie($em, $locationHealthDestination, $checkDate);
+                $latestScrapie = self::persistNewDefaultScrapie($em, $locationHealthDestination, $checkDate);
             } //else do nothing
 
             $locationHealthOrigin = null;
@@ -92,11 +103,11 @@ class LocationHealthUpdater
             $scrapieOriginIsHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieOrigin->getStatus());
 
             if(!$maediVisnaOriginIsHealthy && $maediVisnaDestinationIsHealthy){
-                self::persistNewDefaultMaediVisna($em, $locationHealthDestination, $checkDate);
+                $latestMaediVisna = self::persistNewDefaultMaediVisna($em, $locationHealthDestination, $checkDate);
             } //else do nothing
 
             if(!$scrapieOriginIsHealthy && $scrapieDestinationIsHealthy) {
-                self::persistNewDefaultScrapie($em, $locationHealthDestination, $checkDate);
+                $latestScrapie = self::persistNewDefaultScrapie($em, $locationHealthDestination, $checkDate);
             } //else do nothing
 
             self::persistTheOverallLocationHealthStatus($em, $locationOfOrigin); //FIXME see function
@@ -105,11 +116,43 @@ class LocationHealthUpdater
         self::persistTheOverallLocationHealthStatus($em, $locationOfDestination); //FIXME see function
 
 
+        $illnesses = new ArrayCollection();
+        $illnesses->set(Constant::MAEDI_VISNA, $latestMaediVisna);
+        $illnesses->set(Constant::SCRAPIE, $latestScrapie);
+
+        /* The LocationHealthMessage contains the LocationHealth history
+            and must be calculated AFTER the locationHealth has been updated.
+        */
+        self::persistNewLocationHealthMessage($em, $declareIn, $locationHealthDestination, $locationHealthOrigin, $illnesses);
+
+
         $results = new ArrayCollection();
         $results->set(Constant::LOCATION_HEALTH_DESTINATION, $locationHealthDestination);
         $results->set(Constant::LOCATION_HEALTH_ORIGIN, $locationHealthOrigin);
+        $results->set(Constant::ILLNESSES, $illnesses);
 
         return $results;
+    }
+
+    /**
+     * @param ObjectManager $em
+     * @param DeclareArrival|DeclareImport $messageObject
+     * @param LocationHealth $locationHealthDestination
+     * @param LocationHealth $locationHealthOrigin
+     * @param ArrayCollection $illnesses
+     */
+    private static function persistNewLocationHealthMessage(ObjectManager $em, $messageObject, $locationHealthDestination, $locationHealthOrigin, $illnesses)
+    {
+        $locationHealthMessage = LocationHealthMessageBuilder::build($em, $messageObject, $illnesses, $locationHealthDestination, $locationHealthOrigin);
+        $location = $messageObject->getLocation();
+
+        //Set LocationHealthMessage relationships
+        $messageObject->setHealthMessage($locationHealthMessage);
+        $location->addHealthMessage($locationHealthMessage);
+
+        //Persist LocationHealthMessage
+        $em->persist($locationHealthMessage);
+        $em->flush();
     }
 
     /**
@@ -152,7 +195,7 @@ class LocationHealthUpdater
         $em->persist($locationHealth);
         $em->flush();
 
-        return $locationHealth;
+        return $maediVisna;
     }
 
     /**
@@ -173,7 +216,7 @@ class LocationHealthUpdater
         $em->persist($locationHealth);
         $em->flush();
 
-        return $locationHealth;
+        return $scrapie;
     }
 
     /**

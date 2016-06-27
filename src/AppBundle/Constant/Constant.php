@@ -77,8 +77,11 @@ class Constant
     const IS_IMPORT_ANIMAL = 'is_import_animal';
 
     //Health Status
+    const ILLNESSES = "illnesses";
+    const MAEDI_VISNA = "maedi_visna";
     const MAEDI_VISNA_STATUS = "maedi_visna_status";
     const MAEDI_VISNA_END_DATE = "maedi_visna_end_date";
+    const SCRAPIE = "scrapie";
     const SCRAPIE_STATUS = "scrapie_status";
     const SCRAPIE_END_DATE = "scrapie_end_date";
     const CHECK_DATE = "check_date";

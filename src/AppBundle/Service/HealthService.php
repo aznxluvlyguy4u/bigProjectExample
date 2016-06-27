@@ -45,45 +45,13 @@ class HealthService
         $em = $this->entityManager;
 
         if($declareIn instanceof DeclareArrival) {
-            $ubnPreviousOwner = $declareIn->getUbnPreviousOwner();
-            $checkDate = $declareIn->getArrivalDate();
-            $result = LocationHealthUpdater::updateByGivenUbnOfOrigin($em, $location, $ubnPreviousOwner, $checkDate);
+            $result = LocationHealthUpdater::updateByGivenUbnOfOrigin($em, $location, $declareIn);
 
         } else if ($declareIn instanceof DeclareImport) {
-            $checkDate = $declareIn->getImportDate();
-            $result = LocationHealthUpdater::updateWithoutOriginHealthData($em, $location, $checkDate);
+            $result = LocationHealthUpdater::updateWithoutOriginHealthData($em, $location, $declareIn);
 
         } else {
             return null;
         }
-
-        /* The LocationHealthMessage contains the LocationHealth history
-          and must be calculated AFTER the locationHealth has been updated.
-        */
-        $locationHealthDestination = $result->get(Constant::LOCATION_HEALTH_DESTINATION);
-        $locationHealthOrigin = $result->get(Constant::LOCATION_HEALTH_ORIGIN);
-        $this->persistNewLocationHealthMessage($declareIn, $locationHealthDestination, $locationHealthOrigin);
-
-        return $result;
-    }
-
-
-    /**
-     * @param DeclareArrival|DeclareImport $messageObject
-     * @param LocationHealth $locationHealthDestination
-     * @param LocationHealth $locationHealthOrigin
-     */
-    private function persistNewLocationHealthMessage($messageObject, $locationHealthDestination, $locationHealthOrigin)
-    {
-        $locationHealthMessage = LocationHealthMessageBuilder::build($this->entityManager, $messageObject, $locationHealthDestination, $locationHealthOrigin);
-        $location = $messageObject->getLocation();
-
-        //Set LocationHealthMessage relationships
-        $messageObject->setHealthMessage($locationHealthMessage);
-        $location->addHealthMessage($locationHealthMessage);
-
-        //Persist LocationHealthMessage
-        $this->entityManager->persist($locationHealthMessage);
-        $this->entityManager->flush();
     }
 }
