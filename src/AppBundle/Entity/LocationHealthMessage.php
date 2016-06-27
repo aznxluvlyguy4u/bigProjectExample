@@ -210,6 +210,38 @@ class LocationHealthMessage
     private $destinationFootRotStatus;
 
     /**
+     * @ORM\Column(type="datetime")
+     * @Assert\Date
+     * @Assert\NotBlank
+     * @JMS\Type("DateTime")
+     */
+    private $arrivalDate;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="MaediVisna")
+     * @ORM\JoinColumn(name="maedi_visna_id", referencedColumnName="id")
+     */
+    private $maediVisna;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Scrapie")
+     * @ORM\JoinColumn(name="scrapie_id", referencedColumnName="id")
+     */
+    private $scrapie;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="CaseousLymphadenitis")
+     * @ORM\JoinColumn(name="caseous_lymphadenitis_id", referencedColumnName="id")
+     */
+    private $caseousLymphadenitis;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="FootRot")
+     * @ORM\JoinColumn(name="foot_rot_id", referencedColumnName="id")
+     */
+    private $footRot;
+
+    /**
      * LocationHealthMessage constructor.
      */
     public function __construct()
@@ -637,6 +669,86 @@ class LocationHealthMessage
     public function setDestinationFootRotStatus($destinationFootRotStatus)
     {
         $this->destinationFootRotStatus = $destinationFootRotStatus;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getArrivalDate()
+    {
+        return $this->arrivalDate;
+    }
+
+    /**
+     * @param \DateTime $arrivalDate
+     */
+    public function setArrivalDate($arrivalDate)
+    {
+        $this->arrivalDate = $arrivalDate;
+    }
+
+    /**
+     * @return MaediVisna
+     */
+    public function getMaediVisna()
+    {
+        return $this->maediVisna;
+    }
+
+    /**
+     * @param MaediVisna $maediVisna
+     */
+    public function setMaediVisna($maediVisna)
+    {
+        $this->maediVisna = $maediVisna;
+    }
+
+    /**
+     * @return Scrapie
+     */
+    public function getScrapie()
+    {
+        return $this->scrapie;
+    }
+
+    /**
+     * @param Scrapie $scrapie
+     */
+    public function setScrapie($scrapie)
+    {
+        $this->scrapie = $scrapie;
+    }
+
+    /**
+     * @return CaseousLymphadenitis
+     */
+    public function getCaseousLymphadenitis()
+    {
+        return $this->caseousLymphadenitis;
+    }
+
+    /**
+     * @param CaseousLymphadenitis $caseousLymphadenitis
+     */
+    public function setCaseousLymphadenitis($caseousLymphadenitis)
+    {
+        $this->caseousLymphadenitis = $caseousLymphadenitis;
+    }
+
+    /**
+     * @return FootRot
+     */
+    public function getFootRot()
+    {
+        return $this->footRot;
+    }
+
+    /**
+     * @param FootRot $footRot
+     */
+    public function setFootRot($footRot)
+    {
+        $this->footRot = $footRot;
     }
 
 
