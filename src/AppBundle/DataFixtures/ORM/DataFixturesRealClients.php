@@ -140,6 +140,8 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $janVanRijnsbergenLocationHealth = new LocationHealth();
     $janVanRijnsbergenScrapie = new Scrapie(ScrapieStatus::FREE, new \DateTime('2017-08-04'));
     $janVanRijnsbergenMaediVisna = new MaediVisna(MaediVisnaStatus::FREE, new \DateTime('2017-01-03'));
+    $janVanRijnsbergenScrapie->setCheckDate(new \DateTime());
+    $janVanRijnsbergenMaediVisna->setCheckDate(new \DateTime());
     $janVanRijnsbergenLocationHealth->setCurrentMaediVisnaStatus($janVanRijnsbergenMaediVisna->getStatus());
     $janVanRijnsbergenLocationHealth->setCurrentMaediVisnaEndDate($janVanRijnsbergenMaediVisna->getEndDate());
     $janVanRijnsbergenLocationHealth->setCurrentScrapieStatus($janVanRijnsbergenScrapie->getStatus());
@@ -207,9 +209,11 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $reinardEvertsLocationHealth = new LocationHealth();
     $reinardEvertsScrapie = new Scrapie(ScrapieStatus::RESISTANT, new \DateTime('2016-10-04'));
     $reinardEvertsMaediVisna = new MaediVisna(MaediVisnaStatus::FREE_2_YEAR, new \DateTime('2016-08-04'));
-    $reinardEvertsLocationHealth->setCurrentMaediVisnaStatus($reinardEvertsMaediVisna->getStatus());
+    $reinardEvertsScrapie->setCheckDate(new \DateTime());
+    $reinardEvertsMaediVisna->setCheckDate(new \DateTime());
     $reinardEvertsLocationHealth->setCurrentMaediVisnaEndDate($reinardEvertsMaediVisna->getEndDate());
     $reinardEvertsLocationHealth->setCurrentScrapieStatus($reinardEvertsScrapie->getStatus());
+    $reinardEvertsLocationHealth->setCurrentMaediVisnaStatus($reinardEvertsMaediVisna->getStatus());
     $reinardEvertsLocationHealth->setCurrentScrapieEndDate($reinardEvertsScrapie->getEndDate());
     $reinardEvertsScrapie->setLocationHealth($reinardEvertsLocationHealth);
     $reinardEvertsMaediVisna->setLocationHealth($reinardEvertsLocationHealth);
@@ -274,6 +278,8 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $nsfoTestAccountLocationHealth = new LocationHealth();
     $nsfoTestAccountScrapie = new Scrapie(ScrapieStatus::RESISTANT, new \DateTime('2016-10-04'));
     $nsfoTestAccountMaediVisna = new MaediVisna(MaediVisnaStatus::FREE_2_YEAR, new \DateTime('2016-08-04'));
+    $nsfoTestAccountScrapie->setCheckDate(new \DateTime());
+    $nsfoTestAccountMaediVisna->setCheckDate(new \DateTime());
     $nsfoTestAccountLocationHealth->setCurrentMaediVisnaStatus($nsfoTestAccountMaediVisna->getStatus());
     $nsfoTestAccountLocationHealth->setCurrentMaediVisnaEndDate($nsfoTestAccountMaediVisna->getEndDate());
     $nsfoTestAccountLocationHealth->setCurrentScrapieStatus($nsfoTestAccountScrapie->getStatus());
