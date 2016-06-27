@@ -135,7 +135,7 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $janVanRijnsbergenCompany->setCompanyRelationNumber("111111");
     $janVanRijnsbergenCompany->setChamberOfCommerceNumber("222222");
     $janVanRijnsbergenCompany->setVatNumber("333333");
-    $janVanRijnsbergenCompany->setTelephoneNumber("+313131313131");
+    $janVanRijnsbergenCompany->setTelephoneNumber("0313131313");
 
     $janVanRijnsbergenLocationHealth = new LocationHealth();
     $janVanRijnsbergenScrapie = new Scrapie(ScrapieStatus::FREE, new \DateTime('2017-08-04'));
@@ -204,7 +204,7 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $reinardEvertsCompany->setCompanyRelationNumber("111111");
     $reinardEvertsCompany->setChamberOfCommerceNumber("222222");
     $reinardEvertsCompany->setVatNumber("333333");
-    $reinardEvertsCompany->setTelephoneNumber("+313131313131");
+    $reinardEvertsCompany->setTelephoneNumber("0313131315");
 
     $reinardEvertsLocationHealth = new LocationHealth();
     $reinardEvertsScrapie = new Scrapie(ScrapieStatus::RESISTANT, new \DateTime('2016-10-04'));
@@ -273,7 +273,7 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $nsfoTestAccountCompany->setCompanyRelationNumber("111111");
     $nsfoTestAccountCompany->setChamberOfCommerceNumber("222222");
     $nsfoTestAccountCompany->setVatNumber("333333");
-    $nsfoTestAccountCompany->setTelephoneNumber("+313131313131");
+    $nsfoTestAccountCompany->setTelephoneNumber("0313131313");
 
     $nsfoTestAccountLocationHealth = new LocationHealth();
     $nsfoTestAccountScrapie = new Scrapie(ScrapieStatus::RESISTANT, new \DateTime('2016-10-04'));
