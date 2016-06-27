@@ -24,4 +24,7 @@ class JsonInputConstant
     //Locations
     const PROVINCES = 'provinces';
     const CODES = 'codes';
+
+    //Loss
+    const UBN_DESTRUCTOR = "ubn_destructor";
 }

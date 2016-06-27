@@ -80,6 +80,14 @@ class DeclareLoss extends DeclareBase
     private $reasonOfLoss;
 
     /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 10)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $ubnDestructor;
+
+    /**
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="losses", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
@@ -346,6 +354,22 @@ class DeclareLoss extends DeclareBase
     public function setAnimalObjectType($animalObjectType)
     {
         $this->animalObjectType = $animalObjectType;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUbnDestructor()
+    {
+        return $this->ubnDestructor;
+    }
+
+    /**
+     * @param string $ubnDestructor
+     */
+    public function setUbnDestructor($ubnDestructor)
+    {
+        $this->ubnDestructor = $ubnDestructor;
     }
 
 

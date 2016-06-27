@@ -30,6 +30,7 @@ class DeclareLossResponseOutput
             "pedigree_number" => $loss->getAnimal()->getPedigreeNumber(),
             "date_of_death" => $loss->getDateOfDeath(),
             "reason_of_loss" => $loss->getReasonOfLoss(),
+            "ubn_destructor" => $loss->getUbnDestructor(),
             "request_state" => $loss->getRequestState(),
             "message_number" => $messageNumber
         );
@@ -67,6 +68,7 @@ class DeclareLossResponseOutput
             "pedigree_number" => $loss->getAnimal()->getPedigreeNumber(),
             "date_of_death" => $loss->getDateOfDeath(),
             "reason_of_loss" => $loss->getReasonOfLoss(),
+            "ubn_destructor" => $loss->getUbnDestructor(),
             "request_state" => $loss->getRequestState(),
             "error_code" => $errorCode,
             "error_message" => $errorMessage,
