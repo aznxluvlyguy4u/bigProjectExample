@@ -24,6 +24,8 @@ class AnimalDetails
         //The ULN should be changed using a separate process, TagReplace (Omnummering).
 
         $animal->setDateOfBirth(new \DateTime($content->get(Constant::DATE_OF_BIRTH_NAMESPACE)));
+        $animal->setPedigreeCountryCode($content->get(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE));
+        $animal->setPedigreeNumber($content->get(Constant::PEDIGREE_NUMBER_NAMESPACE));
 
         return $animal;
     }
