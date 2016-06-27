@@ -57,7 +57,6 @@ class DeclareLossResponse extends DeclareBaseResponse {
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 10)
      * @JMS\Type("string")
-     * @Expose
      */
     private $ubnDestructor;
 
