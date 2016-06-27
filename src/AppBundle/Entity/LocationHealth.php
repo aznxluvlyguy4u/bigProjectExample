@@ -49,6 +49,7 @@ class LocationHealth
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="MaediVisna", mappedBy="locationHealth")
+     * @ORM\OrderBy({"checkDate" = "ASC"})
      */
     private $maediVisnas;
 
@@ -56,6 +57,7 @@ class LocationHealth
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="Scrapie", mappedBy="locationHealth")
+     * @ORM\OrderBy({"checkDate" = "ASC"})
      */
     private $scrapies;
 
@@ -63,6 +65,7 @@ class LocationHealth
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="CaseousLymphadenitis", mappedBy="locationHealth")
+     * @ORM\OrderBy({"checkDate" = "ASC"})
      */
     private $caseousLymphadenitis;
 
@@ -70,6 +73,7 @@ class LocationHealth
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="FootRot", mappedBy="locationHealth")
+     * @ORM\OrderBy({"checkDate" = "ASC"})
      */
     private $footRots;
 
@@ -160,8 +164,10 @@ class LocationHealth
 
     /**
      * LocationHealth constructor.
+     * @param boolean $createWithDefaultUnderObservationIllnesses
+     * @param \DateTime $checkDate only has an effect if $createWithDefaultUnderObservationIllnesses = true
      */
-    public function __construct($createWithDefaultUnderObservationIllnesses = false)
+    public function __construct($createWithDefaultUnderObservationIllnesses = false, \DateTime $checkDate = null)
     {
         $this->logDate = new DateTime('now');
         $this->isRevoked = false;
@@ -177,8 +183,13 @@ class LocationHealth
 
             $this->setCurrentMaediVisnaStatus($defaultMaediVisnaStatus);
             $this->setCurrentScrapieStatus($defaultScrapieStatus);
+
             $scrapie = new Scrapie($defaultScrapieStatus);
+            $scrapie->setCheckDate($checkDate);
+
             $maediVisna = new MaediVisna($defaultMaediVisnaStatus);
+            $maediVisna->setCheckDate($checkDate);
+
             $this->addScrapie($scrapie);
             $this->addMaediVisna($maediVisna);
             $scrapie->setLocationHealth($this);

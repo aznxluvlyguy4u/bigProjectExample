@@ -53,6 +53,7 @@ class Location
    * @var array
    *
    * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="location")
+   * @ORM\OrderBy({"arrivalDate" = "ASC"})
    */
   protected $arrivals;
 
@@ -60,6 +61,7 @@ class Location
    * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="location")
+   * @ORM\OrderBy({"dateOfBirth" = "ASC"})
    */
   protected $births;
 
@@ -67,6 +69,7 @@ class Location
    * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="DeclareDepart", mappedBy="location")
+   * @ORM\OrderBy({"departDate" = "ASC"})
    */
   protected $departures;
 
@@ -82,6 +85,7 @@ class Location
    * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="location")
+   * @ORM\OrderBy({"importDate" = "ASC"})
    */
   protected $imports;
 
@@ -89,6 +93,7 @@ class Location
    * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="DeclareExport", mappedBy="location")
+   * @ORM\OrderBy({"exportDate" = "ASC"})
    */
   protected $exports;
 
@@ -103,6 +108,7 @@ class Location
    * @var ArrayCollection
    * 
    * @ORM\OneToMany(targetEntity="DeclareLoss", mappedBy="location")
+   * @ORM\OrderBy({"dateOfDeath" = "ASC"})
    */
   protected $losses;
 
@@ -148,6 +154,7 @@ class Location
    *
    * @ORM\OneToMany(targetEntity="LocationHealthMessage", mappedBy="location")
    * @ORM\JoinColumn(name="health_message_id", referencedColumnName="id", nullable=true)
+   * @ORM\OrderBy({"arrivalDate" = "ASC"})
    * @JMS\Type("AppBundle\Entity\LocationHealthMessage")
    */
   private $healthMessages;
