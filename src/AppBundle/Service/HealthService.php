@@ -10,6 +10,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthQueue;
 use AppBundle\Entity\LocationHealthQueueRepository;
 use AppBundle\Entity\LocationHealthRepository;
@@ -44,10 +45,13 @@ class HealthService
         $em = $this->entityManager;
 
         if($declareIn instanceof DeclareArrival) {
-            $result = LocationHealthUpdater::updateByGivenUbnOfOrigin($em, $location, $declareIn->getUbnPreviousOwner());
+            $ubnPreviousOwner = $declareIn->getUbnPreviousOwner();
+            $checkDate = $declareIn->getArrivalDate();
+            $result = LocationHealthUpdater::updateByGivenUbnOfOrigin($em, $location, $ubnPreviousOwner, $checkDate);
 
         } else if ($declareIn instanceof DeclareImport) {
-            $result = LocationHealthUpdater::updateWithoutOriginHealthData($em, $location);
+            $checkDate = $declareIn->getImportDate();
+            $result = LocationHealthUpdater::updateWithoutOriginHealthData($em, $location, $checkDate);
 
         } else {
             return null;
@@ -66,6 +70,8 @@ class HealthService
 
     /**
      * @param DeclareArrival|DeclareImport $messageObject
+     * @param LocationHealth $locationHealthDestination
+     * @param LocationHealth $locationHealthOrigin
      */
     private function persistNewLocationHealthMessage($messageObject, $locationHealthDestination, $locationHealthOrigin)
     {

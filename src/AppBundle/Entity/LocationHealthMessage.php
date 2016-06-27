@@ -711,6 +711,7 @@ class LocationHealthMessage
         return $this->scrapie;
     }
 
+
     /**
      * @param Scrapie $scrapie
      */

@@ -19,7 +19,7 @@ class LocationHealthMessageBuilder
 {
     /**
      * @param ObjectManager $em
-     * @param $declareIn
+     * @param DeclareArrival|DeclareImport $declareIn
      * @param LocationHealth $locationHealthDestination
      * @param LocationHealth|null $locationHealthOrigin
      * @return LocationHealthMessage
@@ -64,11 +64,13 @@ class LocationHealthMessageBuilder
                 $healthMessage->setArrival($declareIn);
                 $ubnPreviousOwner = $declareIn->getUbnPreviousOwner();
                 $healthMessage->setUbnPreviousOwner($ubnPreviousOwner); //animalCountryOrigin for arrivals is null.
+                $healthMessage->setArrivalDate($declareIn->getArrivalDate());
                 break;
 
             case RequestType::DECLARE_IMPORT_ENTITY;
                 $healthMessage->setImport($declareIn);
                 $healthMessage->setAnimalCountryOrigin($declareIn->getAnimalCountryOrigin()); //ubnPreviousOwner for imports is null.
+                $healthMessage->setArrivalDate($declareIn->getImportDate());
                 break;
 
             default:
