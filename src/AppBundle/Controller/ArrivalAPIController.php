@@ -178,12 +178,12 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     } else { //DeclareArrival
 
-      //Validate if ubnPreviousOwner matches the ubn of the animal with the given ULN, if the animal is in our database
-      $ubnValidator = new UbnValidator($this->getDoctrine()->getManager(), $content);
-      if(!$ubnValidator->getIsUbnValid()) {
-        return $ubnValidator->createArrivalJsonErrorResponse();
-      }
-      $content->set(JsonInputConstant::IS_ARRIVED_FROM_OTHER_NSFO_CLIENT, $ubnValidator->getIsArrivedFromOtherNsfoClient());
+      //TODO Validate if ubnPreviousOwner matches the ubn of the animal with the given ULN, if the animal is in our database
+//      $ubnValidator = new UbnValidator($this->getDoctrine()->getManager(), $content);
+//      if(!$ubnValidator->getIsUbnValid()) {
+//        return $ubnValidator->createArrivalJsonErrorResponse();
+//      }
+      $content->set(JsonInputConstant::IS_ARRIVED_FROM_OTHER_NSFO_CLIENT, true);
 
       $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $location);
     }
@@ -256,11 +256,11 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client, $location);
 
     } else { //For DeclareArrival
-      //Validate if ubnPreviousOwner matches the ubn of the animal with the given ULN, if the animal is in our database
-      $ubnValidator = new UbnValidator($this->getDoctrine()->getManager(), $content, $messageObject);
-      if(!$ubnValidator->getIsUbnValid()) {
-        return $ubnValidator->createArrivalJsonErrorResponse();
-      }
+      //TODO Validate if ubnPreviousOwner matches the ubn of the animal with the given ULN, if the animal is in our database
+//      $ubnValidator = new UbnValidator($this->getDoctrine()->getManager(), $content, $messageObject);
+//      if(!$ubnValidator->getIsUbnValid()) {
+//        return $ubnValidator->createArrivalJsonErrorResponse();
+//      }
 
       //Convert the array into an object and add the mandatory values retrieved from the database
       $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $location);
