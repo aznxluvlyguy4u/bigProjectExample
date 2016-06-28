@@ -69,7 +69,7 @@ class ClientMigration
             $em->flush();
 
             //Migration data
-            file_put_contents('/tmp/nsfo_passwords.txt', $emailAddress." ".$newPassword."/n", FILE_APPEND);
+            file_put_contents('/tmp/nsfo_passwords.txt', $emailAddress." ".$newPassword."\n", FILE_APPEND);
 
             //Counters
             $totalMigrationCount++;
