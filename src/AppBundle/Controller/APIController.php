@@ -34,6 +34,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\EntityGetter;
+use AppBundle\Util\Finder;
 use AppBundle\Validation\HeaderValidation;
 use Doctrine\ORM\Query;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -713,11 +714,18 @@ class APIController extends Controller implements APIControllerInterface
     $headerValidation = new HeaderValidation($this->getDoctrine()->getManager(), $request, $client);
 
     if($headerValidation->isInputValid()) {
-      //TODO when frontend is ready, get the ubn from the header
       return $headerValidation->getLocation();
 
-    } else { //pick the first available UBN as default
-      return $client->getCompanies()->get(0)->getLocations()->get(0);
+    } else {
+
+      $ubns = Finder::findUbnsOfClient($client);
+      if($ubns->count() > 0) {
+        //pick the first available UBN as default
+        return $ubns->get(0);
+
+      } else {
+        return null;
+      }
     }
   }
 

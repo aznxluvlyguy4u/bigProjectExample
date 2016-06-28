@@ -4,6 +4,7 @@ namespace AppBundle\Util;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
@@ -141,5 +142,28 @@ class Finder
         }
 
         return null;
+    }
+
+    /**
+     * @param Client $client
+     * @return ArrayCollection
+     */
+    public static function findUbnsOfClient(Client $client)
+    {
+        $ubns = new ArrayCollection();
+
+        $companies = $client->getCompanies();
+        if(sizeof($companies) > 0) {
+            foreach($companies as $company) {
+                $locations = $company->getLocations();
+                if(sizeof($locations) > 0) {
+                    foreach($locations as $location) {
+                        $ubns->add($location->getUbn());
+                    }
+                }
+            }
+        }
+
+        return $ubns;
     }
 }
