@@ -13,6 +13,7 @@ use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
@@ -49,12 +50,36 @@ class Count
     }
 
     /**
+     * @param Location $location
+     * @return ArrayCollection
+     */
+    public static function getErrorCountDeclarationsPerLocation(Location $location)
+    {
+        $errorCounts = new ArrayCollection();
+        $errorCounts->set(RequestType::DECLARE_ARRIVAL, Count::getErrorCountArrivalsAndImportsPerLocation($location));
+        $errorCounts->set(RequestType::DECLARE_DEPART, Count::getErrorCountDepartsAndExportsPerLocation($location));
+        $errorCounts->set(RequestType::DECLARE_LOSS, Count::getErrorCountLossesLocation($location));
+        $errorCounts->set(RequestType::DECLARE_BIRTH, Count::getErrorCountBirthsLocation($location));
+
+        return $errorCounts;
+    }
+
+    /**
      * @param Client $client
      * @return int
      */
     public static function getErrorCountArrivalsAndImports(Client $client)
     {
         return self::getErrorCountArrivals($client) + self::getErrorCountImports($client);
+    }
+
+    /**
+     * @param Location $location
+     * @return int
+     */
+    public static function getErrorCountArrivalsAndImportsPerLocation(Location $location)
+    {
+        return self::getErrorCountArrivalsLocation($location) + self::getErrorCountImportsLocation($location);
     }
 
     /**
@@ -67,6 +92,16 @@ class Count
     }
 
     /**
+     * @param Location $location
+     * @return int
+     */
+    public static function getErrorCountDepartsAndExportsPerLocation(Location $location)
+    {
+        return self::getErrorCountDepartsLocation($location) + self::getErrorCountExportsLocation($location);
+    }
+
+
+    /**
      * @param Client $client
      * @return int
      */
@@ -76,11 +111,24 @@ class Count
 
         foreach($client->getCompanies() as $company){
             foreach($company->getLocations() as $location){
-                foreach($location->getArrivals() as $arrival){
-                    if(self::countAsErrorResponse($arrival)) {
-                        $count++;
-                    }
-                }
+                self::getErrorCountArrivalsLocation($location);
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * @param Location $location
+     * @return int
+     */
+    public static function getErrorCountArrivalsLocation(Location $location)
+    {
+        $count = 0;
+
+        foreach($location->getArrivals() as $arrival){
+            if(self::countAsErrorResponse($arrival)) {
+                $count++;
             }
         }
 
@@ -97,11 +145,24 @@ class Count
 
         foreach($client->getCompanies() as $company){
             foreach($company->getLocations() as $location){
-                foreach($location->getImports() as $arrival){
-                    if(self::countAsErrorResponse($arrival)) {
-                        $count++;
-                    }
-                }
+                self::getErrorCountImportsLocation($location);
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * @param Location $location
+     * @return int
+     */
+    public static function getErrorCountImportsLocation(Location $location)
+    {
+        $count = 0;
+
+        foreach($location->getImports() as $import){
+            if(self::countAsErrorResponse($import)) {
+                $count++;
             }
         }
 
@@ -118,11 +179,24 @@ class Count
 
         foreach($client->getCompanies() as $company){
             foreach($company->getLocations() as $location){
-                foreach($location->getDepartures() as $arrival){
-                    if(self::countAsErrorResponse($arrival)) {
-                        $count++;
-                    }
-                }
+                self::getErrorCountDepartsLocation($location);
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * @param Location $location
+     * @return int
+     */
+    public static function getErrorCountDepartsLocation(Location $location)
+    {
+        $count = 0;
+
+        foreach($location->getDepartures() as $departure){
+            if(self::countAsErrorResponse($departure)) {
+                $count++;
             }
         }
 
@@ -139,11 +213,24 @@ class Count
 
         foreach($client->getCompanies() as $company){
             foreach($company->getLocations() as $location){
-                foreach($location->getExports() as $arrival){
-                    if(self::countAsErrorResponse($arrival)) {
-                        $count++;
-                    }
-                }
+                self::getErrorCountExportsLocation($location);
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * @param Location $location
+     * @return int
+     */
+    public static function getErrorCountExportsLocation(Location $location)
+    {
+        $count = 0;
+
+        foreach($location->getExports() as $export){
+            if(self::countAsErrorResponse($export)) {
+                $count++;
             }
         }
 
@@ -160,11 +247,24 @@ class Count
 
         foreach($client->getCompanies() as $company){
             foreach($company->getLocations() as $location){
-                foreach($location->getLosses() as $arrival){
-                    if(self::countAsErrorResponse($arrival)) {
-                        $count++;
-                    }
-                }
+                self::getErrorCountLossesLocation($location);
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * @param Location $location
+     * @return int
+     */
+    public static function getErrorCountLossesLocation(Location $location)
+    {
+        $count = 0;
+
+        foreach($location->getLosses() as $loss){
+            if(self::countAsErrorResponse($loss)) {
+                $count++;
             }
         }
 
@@ -181,11 +281,24 @@ class Count
 
         foreach($client->getCompanies() as $company){
             foreach($company->getLocations() as $location){
-                foreach($location->getBirths() as $arrival){
-                    if(self::countAsErrorResponse($arrival)) {
-                        $count++;
-                    }
-                }
+                self::getErrorCountBirthsLocation($location);
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * @param Location $location
+     * @return int
+     */
+    public static function getErrorCountBirthsLocation(Location $location)
+    {
+        $count = 0;
+
+        foreach($location->getBirths() as $birth){
+            if(self::countAsErrorResponse($birth)) {
+                $count++;
             }
         }
 
@@ -226,6 +339,86 @@ class Count
         }
 
         return false;
+    }
+
+    /**
+     * Return an ArrayCollection with keys:
+     * - pedigree
+     * - non-pedigree
+     * - total
+     * having an integer value for the amount of animals in that category.
+     *
+     * @param Location $location
+     * @return ArrayCollection
+     */
+    public static function getLiveStockCountLocation(Location $location)
+    {
+        //Settings
+        $isAlive = true;
+        $isDepartedOption = false;
+        $isExportedOption = false;
+        $countTransferring = false;
+
+        if($countTransferring) {
+            $transferState = AnimalTransferStatus::TRANSFERRING;
+        } else {
+            $transferState = AnimalTransferStatus::NULL;
+        }
+
+        //Initialize counters
+        $pedigreeAdults = 0;
+        $pedigreeLambs = 0;
+        $nonPedigreeAdults = 0;
+        $nonPedigreeLambs = 0;
+
+        $adultDateOfBirthLimit = Utils::getAdultDateOfBirthLimit();
+
+        foreach($location->getAnimals() as $animal) {
+
+            $isOwnedAnimal = $animal->getIsAlive() == $isAlive
+                && $animal->getIsExportAnimal() == $isExportedOption
+                && $animal->getIsDepartedAnimal() == $isDepartedOption
+                && ($animal->getTransferState() == AnimalTransferStatus::NULL
+                    || $animal->getTransferState() == $transferState);
+
+            $isPedigree = $animal->getPedigreeCountryCode() != null
+                && $animal->getPedigreeNumber() != null;
+
+            $dateOfBirth = $animal->getDateOfBirth();
+
+            if($isOwnedAnimal) {
+                if($isPedigree) {
+                    if($dateOfBirth > $adultDateOfBirthLimit) { // is under 1 years old
+                        $pedigreeLambs++;
+                    } else { // is adult
+                        $pedigreeAdults++;
+                    }
+
+                } else { //is non-pedigree
+                    if($dateOfBirth > $adultDateOfBirthLimit) { // is under 1 years old
+                        $nonPedigreeLambs++;
+                    } else { // is adult
+                        $nonPedigreeAdults++;
+                    }
+                }
+            }
+        }
+
+        $pedigreeTotal = $pedigreeAdults + $pedigreeLambs;
+        $nonPedigreeTotal = $nonPedigreeAdults + $nonPedigreeLambs;
+
+        $count = new ArrayCollection();
+        $count->set(LiveStockType::PEDIGREE_ADULT, $pedigreeAdults);
+        $count->set(LiveStockType::PEDIGREE_LAMB, $pedigreeLambs);
+        $count->set(LiveStockType::PEDIGREE_TOTAL, $pedigreeTotal);
+        $count->set(LiveStockType::NON_PEDIGREE_ADULT, $nonPedigreeAdults);
+        $count->set(LiveStockType::NON_PEDIGREE_LAMB, $nonPedigreeLambs);
+        $count->set(LiveStockType::NON_PEDIGREE_TOTAL, $nonPedigreeTotal);
+        $count->set(LiveStockType::ADULT, $nonPedigreeAdults + $pedigreeAdults);
+        $count->set(LiveStockType::LAMB, $nonPedigreeLambs + $pedigreeLambs);
+        $count->set(LiveStockType::TOTAL, $nonPedigreeTotal + $pedigreeTotal);
+
+        return $count;
     }
 
     /**

@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Country;
+use AppBundle\Output\ProvinceOutput;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\HttpFoundation\Request;
@@ -81,9 +82,11 @@ class CountryAPIController extends APIController implements CountryAPIController
   {
     //Get content to array
     $content = $this->getContentAsArray($request);
+    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $retrieveCountries = $this->buildMessageObject(RequestType::RETRIEVE_COUNTRIES_ENTITY, $content, $this->getAuthenticatedUser($request));
+    $retrieveCountries = $this->buildMessageObject(RequestType::RETRIEVE_COUNTRIES_ENTITY, $content, $client, $location);
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($retrieveCountries);
@@ -93,5 +96,35 @@ class CountryAPIController extends APIController implements CountryAPIController
 
     return new JsonResponse($retrieveCountries, 200);
 
+  }
+
+  /**
+   * Get list of Dutch provinces with their full name and code.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Get list of Dutch provinces with their full name and code",
+   *   output = "AppBundle\Entity\Province"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/nl/provinces")
+   * @Method("GET")
+   */
+  function getDutchProvinces(Request $request)
+  {
+    //Convert the array into an object and add the mandatory values retrieved from the database
+    $provinces = $this->getDoctrine()->getRepository(Constant::PROVINCE_REPOSITORY)->findDutchProvinces();
+    $output = ProvinceOutput::create($provinces, true);
+
+    return new JsonResponse($output, 200);
   }
 }

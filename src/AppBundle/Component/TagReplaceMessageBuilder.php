@@ -3,6 +3,7 @@
 namespace AppBundle\Component;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareTagReplace;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
@@ -31,24 +32,29 @@ class TagReplaceMessageBuilder extends MessageBuilderBase {
    *
    * @param DeclareTagReplace $messageObject the message received
    * @param Client|Person $person
+   * @param Location $location
    * @return ArrayCollection
    */
-  public function buildMessage(DeclareTagReplace $messageObject, $person) {
+  public function buildMessage(DeclareTagReplace $messageObject, $person, $location) {
     $this->person = $person;
     $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
-    $completeMessageObject = $this->addDeclareTagReplaceData($baseMessageObject);
+    $completeMessageObject = $this->addDeclareTagReplaceData($baseMessageObject, $location);
 
     return $completeMessageObject;
   }
 
   /**
    * @param DeclareTagReplace $messageObject the message received
+   * @param Location $location
    * @return DeclareTagReplace
    */
-  private function addDeclareTagReplaceData(DeclareTagReplace $messageObject) {
+  private function addDeclareTagReplaceData(DeclareTagReplace $messageObject, $location) {
 
-    //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
-    $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
+    if($messageObject->getReplaceDate() == null) {
+      $messageObject->setReplaceDate($messageObject->getLogDate());
+    }
+
+    $messageObject->setLocation($location);
     return $messageObject;
   }
 }

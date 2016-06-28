@@ -178,7 +178,7 @@ abstract class Address {
      */
     public function setPostalCode($postalCode)
     {
-        $this->postalCode = $postalCode;
+        $this->postalCode = strtoupper($postalCode);
 
         return $this;
     }
@@ -202,7 +202,7 @@ abstract class Address {
      */
     public function setCity($city)
     {
-        $this->city = $city;
+        $this->city = strtoupper($city);
 
         return $this;
     }

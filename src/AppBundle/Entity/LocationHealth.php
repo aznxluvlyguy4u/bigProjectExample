@@ -2,7 +2,10 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\MaediVisnaStatus;
+use AppBundle\Enumerator\ScrapieStatus;
 use \DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -30,9 +33,7 @@ class LocationHealth
     /**
      * @var Location
      *
-     * @ORM\ManyToOne(targetEntity="Location", inversedBy="healths", cascade={"persist"})
-     * @JMS\Type("AppBundle\Entity\Location")
-     * @Expose
+     * @ORM\OneToOne(targetEntity="Location", mappedBy="locationHealth")
      */
     private $location;
 
@@ -42,18 +43,58 @@ class LocationHealth
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      */
-    protected $logDate;
+    private $logDate;
 
     /**
-     * maedi_visna is 'zwoegerziekte' in Dutch
+     * @var ArrayCollection
      *
+     * @ORM\OneToMany(targetEntity="MaediVisna", mappedBy="locationHealth")
+     * @ORM\OrderBy({"checkDate" = "ASC"})
+     */
+    private $maediVisnas;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="Scrapie", mappedBy="locationHealth")
+     * @ORM\OrderBy({"checkDate" = "ASC"})
+     */
+    private $scrapies;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="CaseousLymphadenitis", mappedBy="locationHealth")
+     * @ORM\OrderBy({"checkDate" = "ASC"})
+     */
+    private $caseousLymphadenitis;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="FootRot", mappedBy="locationHealth")
+     * @ORM\OrderBy({"checkDate" = "ASC"})
+     */
+    private $footRots;
+
+    /**
      * @var string
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      * @Expose
      */
-    private $maediVisnaStatus;
+    private $currentScrapieStatus;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @Expose
+     */
+    private $currentScrapieEndDate;
 
     /**
      * @var string
@@ -62,29 +103,55 @@ class LocationHealth
      * @JMS\Type("string")
      * @Expose
      */
-    private $scrapieStatus;
+    private $currentMaediVisnaStatus;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @Expose
+     */
+    private $currentMaediVisnaEndDate;
 
     /**
      * @var string
-     *
-     * CL (CLA)
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      * @Expose
      */
-    private $caseousLymphadenitisStatus;
+    private $currentCaseousLymphadenitisStatus;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @Expose
+     */
+    private $currentCaseousLymphadenitisEndDate;
 
     /**
      * @var string
-     *
-     * rotkreupel
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      * @Expose
      */
-    private $footRotStatus;
+    private $currentFootRotStatus;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @Expose
+     */
+    private $currentFootRotEndDate;
 
     /**
      * @var string
@@ -96,64 +163,38 @@ class LocationHealth
     private $locationHealthStatus;
 
     /**
-     * maedi_visna is 'zwoegerziekte' in Dutch
-     *
-     * @var \DateTime
-     *
-     * @ORM\Column(type="datetime", nullable=true)
-     * @Assert\Date
-     * @JMS\Type("DateTime")
-     * @Expose
+     * LocationHealth constructor.
+     * @param boolean $createWithDefaultUnderObservationIllnesses
+     * @param \DateTime $checkDate only has an effect if $createWithDefaultUnderObservationIllnesses = true
      */
-    private $maediVisnaEndDate;
-
-    /**
-     * @var \DateTime
-     *
-     * @ORM\Column(type="datetime", nullable=true)
-     * @Assert\Date
-     * @JMS\Type("DateTime")
-     * @Expose
-     */
-    private $scrapieEndDate;
-
-    /**
-     * CL (CLA)
-     *
-     * @var \DateTime
-     *
-     * @ORM\Column(type="datetime", nullable=true)
-     * @Assert\Date
-     * @JMS\Type("DateTime")
-     * @Expose
-     */
-    private $caseousLymphadenitisEndDate;
-
-    /**
-     * rotkreupel
-     *
-     * @var \DateTime
-     *
-     * @ORM\Column(type="datetime", nullable=true)
-     * @Assert\Date
-     * @JMS\Type("DateTime")
-     * @Expose
-     */
-    private $footRotEndDate;
-
-    /**
-     * @var \DateTime
-     *
-     * @ORM\Column(type="datetime", nullable=true)
-     * @Assert\Date
-     * @JMS\Type("DateTime")
-     * @Expose
-     */
-    private $checkDate;
-
-    public function __construct()
+    public function __construct($createWithDefaultUnderObservationIllnesses = false, \DateTime $checkDate = null)
     {
-        $this->setLogDate(new DateTime('now'));
+        $this->logDate = new DateTime('now');
+        $this->isRevoked = false;
+
+        $this->maediVisnas = new ArrayCollection();
+        $this->scrapies = new ArrayCollection();
+        $this->caseousLymphadenitis = new ArrayCollection();
+        $this->footRots = new ArrayCollection();
+
+        if($createWithDefaultUnderObservationIllnesses) {
+            $defaultMaediVisnaStatus = MaediVisnaStatus::UNDER_OBSERVATION;
+            $defaultScrapieStatus = ScrapieStatus::UNDER_OBSERVATION;
+
+            $this->setCurrentMaediVisnaStatus($defaultMaediVisnaStatus);
+            $this->setCurrentScrapieStatus($defaultScrapieStatus);
+
+            $scrapie = new Scrapie($defaultScrapieStatus);
+            $scrapie->setCheckDate($checkDate);
+
+            $maediVisna = new MaediVisna($defaultMaediVisnaStatus);
+            $maediVisna->setCheckDate($checkDate);
+
+            $this->addScrapie($scrapie);
+            $this->addMaediVisna($maediVisna);
+            $scrapie->setLocationHealth($this);
+            $maediVisna->setLocationHealth($this);
+        }
     }
 
     /**
@@ -167,7 +208,23 @@ class LocationHealth
     }
 
     /**
-     * @return mixed
+     * Set logDate
+     *
+     * @param \DateTime $logDate
+     *
+     * @return LocationHealth
+     */
+    public function setLogDate($logDate)
+    {
+        $this->logDate = $logDate;
+
+        return $this;
+    }
+
+    /**
+     * Get logDate
+     *
+     * @return \DateTime
      */
     public function getLogDate()
     {
@@ -175,14 +232,214 @@ class LocationHealth
     }
 
     /**
-     * @param mixed $logDate
+     * Set currentScrapieStatus
+     *
+     * @param string $currentScrapieStatus
+     *
+     * @return LocationHealth
      */
-    public function setLogDate($logDate)
+    public function setCurrentScrapieStatus($currentScrapieStatus)
     {
-        $this->logDate = $logDate;
+        $this->currentScrapieStatus = $currentScrapieStatus;
+
+        return $this;
     }
 
     /**
+     * Get currentScrapieStatus
+     *
+     * @return string
+     */
+    public function getCurrentScrapieStatus()
+    {
+        return $this->currentScrapieStatus;
+    }
+
+    /**
+     * Set currentScrapieEndDate
+     *
+     * @param \DateTime $currentScrapieEndDate
+     *
+     * @return LocationHealth
+     */
+    public function setCurrentScrapieEndDate($currentScrapieEndDate)
+    {
+        $this->currentScrapieEndDate = $currentScrapieEndDate;
+
+        return $this;
+    }
+
+    /**
+     * Get currentScrapieEndDate
+     *
+     * @return \DateTime
+     */
+    public function getCurrentScrapieEndDate()
+    {
+        return $this->currentScrapieEndDate;
+    }
+
+    /**
+     * Set currentMaediVisnaStatus
+     *
+     * @param string $currentMaediVisnaStatus
+     *
+     * @return LocationHealth
+     */
+    public function setCurrentMaediVisnaStatus($currentMaediVisnaStatus)
+    {
+        $this->currentMaediVisnaStatus = $currentMaediVisnaStatus;
+
+        return $this;
+    }
+
+    /**
+     * Get currentMaediVisnaStatus
+     *
+     * @return string
+     */
+    public function getCurrentMaediVisnaStatus()
+    {
+        return $this->currentMaediVisnaStatus;
+    }
+
+    /**
+     * Set currentMaediVisnaEndDate
+     *
+     * @param \DateTime $currentMaediVisnaEndDate
+     *
+     * @return LocationHealth
+     */
+    public function setCurrentMaediVisnaEndDate($currentMaediVisnaEndDate)
+    {
+        $this->currentMaediVisnaEndDate = $currentMaediVisnaEndDate;
+
+        return $this;
+    }
+
+    /**
+     * Get currentMaediVisnaEndDate
+     *
+     * @return \DateTime
+     */
+    public function getCurrentMaediVisnaEndDate()
+    {
+        return $this->currentMaediVisnaEndDate;
+    }
+
+    /**
+     * Set currentCaseousLymphadenitisStatus
+     *
+     * @param string $currentCaseousLymphadenitisStatus
+     *
+     * @return LocationHealth
+     */
+    public function setCurrentCaseousLymphadenitisStatus($currentCaseousLymphadenitisStatus)
+    {
+        $this->currentCaseousLymphadenitisStatus = $currentCaseousLymphadenitisStatus;
+
+        return $this;
+    }
+
+    /**
+     * Get currentCaseousLymphadenitisStatus
+     *
+     * @return string
+     */
+    public function getCurrentCaseousLymphadenitisStatus()
+    {
+        return $this->currentCaseousLymphadenitisStatus;
+    }
+
+    /**
+     * Set currentCaseousLymphadenitisEndDate
+     *
+     * @param \DateTime $currentCaseousLymphadenitisEndDate
+     *
+     * @return LocationHealth
+     */
+    public function setCurrentCaseousLymphadenitisEndDate($currentCaseousLymphadenitisEndDate)
+    {
+        $this->currentCaseousLymphadenitisEndDate = $currentCaseousLymphadenitisEndDate;
+
+        return $this;
+    }
+
+    /**
+     * Get currentCaseousLymphadenitisEndDate
+     *
+     * @return \DateTime
+     */
+    public function getCurrentCaseousLymphadenitisEndDate()
+    {
+        return $this->currentCaseousLymphadenitisEndDate;
+    }
+
+    /**
+     * Set currentFootRotStatus
+     *
+     * @param string $currentFootRotStatus
+     *
+     * @return LocationHealth
+     */
+    public function setCurrentFootRotStatus($currentFootRotStatus)
+    {
+        $this->currentFootRotStatus = $currentFootRotStatus;
+
+        return $this;
+    }
+
+    /**
+     * Get currentFootRotStatus
+     *
+     * @return string
+     */
+    public function getCurrentFootRotStatus()
+    {
+        return $this->currentFootRotStatus;
+    }
+
+    /**
+     * Set currentFootRotEndDate
+     *
+     * @param \DateTime $currentFootRotEndDate
+     *
+     * @return LocationHealth
+     */
+    public function setCurrentFootRotEndDate($currentFootRotEndDate)
+    {
+        $this->currentFootRotEndDate = $currentFootRotEndDate;
+
+        return $this;
+    }
+
+    /**
+     * Get currentFootRotEndDate
+     *
+     * @return \DateTime
+     */
+    public function getCurrentFootRotEndDate()
+    {
+        return $this->currentFootRotEndDate;
+    }
+
+    /**
+     * Set locationHealthStatus
+     *
+     * @param string $locationHealthStatus
+     *
+     * @return LocationHealth
+     */
+    public function setLocationHealthStatus($locationHealthStatus)
+    {
+        $this->locationHealthStatus = $locationHealthStatus;
+
+        return $this;
+    }
+
+    /**
+     * Get locationHealthStatus
+     *
      * @return string
      */
     public function getLocationHealthStatus()
@@ -191,63 +448,23 @@ class LocationHealth
     }
 
     /**
-     * @param string $locationHealthStatus
+     * Set location
+     *
+     * @param \AppBundle\Entity\Location $location
+     *
+     * @return LocationHealth
      */
-    public function setLocationHealthStatus($locationHealthStatus)
+    public function setLocation(\AppBundle\Entity\Location $location = null)
     {
-        $this->locationHealthStatus = $locationHealthStatus;
+        $this->location = $location;
+
+        return $this;
     }
 
     /**
-     * @return \DateTime
-     */
-    public function getMaediVisnaEndDate()
-    {
-        return $this->maediVisnaEndDate;
-    }
-
-    /**
-     * @param \DateTime $maediVisnaEndDate
-     */
-    public function setMaediVisnaEndDate($maediVisnaEndDate)
-    {
-        $this->maediVisnaEndDate = $maediVisnaEndDate;
-    }
-
-    /**
-     * @return \DateTime
-     */
-    public function getScrapieEndDate()
-    {
-        return $this->scrapieEndDate;
-    }
-
-    /**
-     * @param \DateTime $scrapieEndDate
-     */
-    public function setScrapieEndDate($scrapieEndDate)
-    {
-        $this->scrapieEndDate = $scrapieEndDate;
-    }
-
-    /**
-     * @return \DateTime
-     */
-    public function getCheckDate()
-    {
-        return $this->checkDate;
-    }
-
-    /**
-     * @param \DateTime $checkDate
-     */
-    public function setCheckDate($checkDate)
-    {
-        $this->checkDate = $checkDate;
-    }
-
-    /**
-     * @return Location
+     * Get location
+     *
+     * @return \AppBundle\Entity\Location
      */
     public function getLocation()
     {
@@ -255,109 +472,162 @@ class LocationHealth
     }
 
     /**
-     * @param Location $location
+     * Add maediVisna
+     *
+     * @param \AppBundle\Entity\MaediVisna $maediVisna
+     *
+     * @return LocationHealth
      */
-    public function setLocation($location)
+    public function addMaediVisna(\AppBundle\Entity\MaediVisna $maediVisna)
     {
-        $this->location = $location;
+        $this->maediVisnas[] = $maediVisna;
+
+        return $this;
     }
 
     /**
-     * @return string
+     * Remove maediVisna
+     *
+     * @param \AppBundle\Entity\MaediVisna $maediVisna
      */
-    public function getMaediVisnaStatus()
+    public function removeMaediVisna(\AppBundle\Entity\MaediVisna $maediVisna)
     {
-        return $this->maediVisnaStatus;
+        $this->maediVisnas->removeElement($maediVisna);
     }
 
     /**
-     * @param string $maediVisnaStatus
+     * Get maediVisnas
+     *
+     * @return \Doctrine\Common\Collections\Collection
      */
-    public function setMaediVisnaStatus($maediVisnaStatus)
+    public function getMaediVisnas()
     {
-        $this->maediVisnaStatus = $maediVisnaStatus;
+        return $this->maediVisnas;
     }
 
     /**
-     * @return string
+     * Add scrapie
+     *
+     * @param Scrapie $scrapie
+     *
+     * @return LocationHealth
      */
-    public function getScrapieStatus()
+    public function addScrapie($scrapie)
     {
-        return $this->scrapieStatus;
+        $this->scrapies[] = $scrapie;
+
+        return $this;
     }
 
     /**
-     * @param string $scrapieStatus
+     * Remove scrapie
+     *
+     * @param Scrapie $scrapie
      */
-    public function setScrapieStatus($scrapieStatus)
+    public function removeScrapie($scrapie)
     {
-        $this->scrapieStatus = $scrapieStatus;
+        $this->scrapies->removeElement($scrapie);
     }
 
     /**
-     * @return string
+     * Get scrapies
+     *
+     * @return \Doctrine\Common\Collections\Collection
      */
-    public function getCaseousLymphadenitisStatus()
+    public function getScrapies()
     {
-        return $this->caseousLymphadenitisStatus;
+        return $this->scrapies;
     }
 
     /**
-     * @param string $caseousLymphadenitisStatus
+     * Add caseousLymphadeniti
+     *
+     * @param \AppBundle\Entity\CaseousLymphadenitis $caseousLymphadeniti
+     *
+     * @return LocationHealth
      */
-    public function setCaseousLymphadenitisStatus($caseousLymphadenitisStatus)
+    public function addCaseousLymphadeniti(\AppBundle\Entity\CaseousLymphadenitis $caseousLymphadeniti)
     {
-        $this->caseousLymphadenitisStatus = $caseousLymphadenitisStatus;
+        $this->caseousLymphadenitis[] = $caseousLymphadeniti;
+
+        return $this;
     }
 
     /**
-     * @return string
+     * Remove caseousLymphadeniti
+     *
+     * @param \AppBundle\Entity\CaseousLymphadenitis $caseousLymphadeniti
      */
-    public function getFootRotStatus()
+    public function removeCaseousLymphadeniti(\AppBundle\Entity\CaseousLymphadenitis $caseousLymphadeniti)
     {
-        return $this->footRotStatus;
+        $this->caseousLymphadenitis->removeElement($caseousLymphadeniti);
     }
 
     /**
-     * @param string $footRotStatus
+     * Get caseousLymphadenitis
+     *
+     * @return \Doctrine\Common\Collections\Collection
      */
-    public function setFootRotStatus($footRotStatus)
+    public function getCaseousLymphadenitis()
     {
-        $this->footRotStatus = $footRotStatus;
+        return $this->caseousLymphadenitis;
     }
 
     /**
-     * @return DateTime
+     * Add footRot
+     *
+     * @param \AppBundle\Entity\FootRot $footRot
+     *
+     * @return LocationHealth
      */
-    public function getCaseousLymphadenitisEndDate()
+    public function addFootRot(\AppBundle\Entity\FootRot $footRot)
     {
-        return $this->caseousLymphadenitisEndDate;
+        $this->footRots[] = $footRot;
+
+        return $this;
     }
 
     /**
-     * @param DateTime $caseousLymphadenitisEndDate
+     * Remove footRot
+     *
+     * @param \AppBundle\Entity\FootRot $footRot
      */
-    public function setCaseousLymphadenitisEndDate($caseousLymphadenitisEndDate)
+    public function removeFootRot(\AppBundle\Entity\FootRot $footRot)
     {
-        $this->caseousLymphadenitisEndDate = $caseousLymphadenitisEndDate;
+        $this->footRots->removeElement($footRot);
     }
 
     /**
-     * @return DateTime
+     * Get footRots
+     *
+     * @return \Doctrine\Common\Collections\Collection
      */
-    public function getFootRotEndDate()
+    public function getFootRots()
     {
-        return $this->footRotEndDate;
+        return $this->footRots;
     }
 
     /**
-     * @param DateTime $footRotEndDate
+     * Add scrapy
+     *
+     * @param \AppBundle\Entity\Scrapie $scrapy
+     *
+     * @return LocationHealth
      */
-    public function setFootRotEndDate($footRotEndDate)
+    public function addScrapy(\AppBundle\Entity\Scrapie $scrapy)
     {
-        $this->footRotEndDate = $footRotEndDate;
+        $this->scrapies[] = $scrapy;
+
+        return $this;
     }
 
-
-
+    /**
+     * Remove scrapy
+     *
+     * @param \AppBundle\Entity\Scrapie $scrapy
+     */
+    public function removeScrapy(\AppBundle\Entity\Scrapie $scrapy)
+    {
+        $this->scrapies->removeElement($scrapy);
+    }
 }

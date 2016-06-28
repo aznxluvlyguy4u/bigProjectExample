@@ -314,8 +314,6 @@ class Ewe extends Animal
         return $this->flags;
     }
 
-
-
     /**
      * Add weightMeasurement
      *

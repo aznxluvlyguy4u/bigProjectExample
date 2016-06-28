@@ -3,6 +3,7 @@
 namespace AppBundle\Output;
 
 
+use AppBundle\Component\Utils;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Neuter;
@@ -36,6 +37,16 @@ class AnimalOutput
     public static function createAnimalArray($animal)
     {
 
+        $lastWeightMeasurement = Utils::returnLastWeightMeasurement($animal->getWeightMeasurements());
+
+        if($lastWeightMeasurement == null){
+            $weight = '';
+            $weightMeasurementDate = '';
+        } else {
+            $weight = $lastWeightMeasurement->getWeight();
+            $weightMeasurementDate = $lastWeightMeasurement->getWeightMeasurementDate();
+        }
+
         $result = array("id" => $animal->getId(),
             "uln_country_code" => $animal->getUlnCountryCode(),
             "uln_number" => $animal->getUlnNumber(),
@@ -49,6 +60,8 @@ class AnimalOutput
 //            "inflow_date" => "unknown", //TODO not available in phase 1
             "is_alive" => $animal->getIsAlive(),
             "is_departed_animal" => $animal->getIsDepartedAnimal(),
+            'weight' => $weight,
+            'weight_measurement_date' => $weightMeasurementDate
         );
 
         return $result;

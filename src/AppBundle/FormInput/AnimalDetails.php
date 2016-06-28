@@ -21,13 +21,11 @@ class AnimalDetails
      */
     public static function update($animal, ArrayCollection $content)
     {
-        //The ULN should be changed using a separate process. Not though updating the AnimalDetails.
+        //The ULN should be changed using a separate process, TagReplace (Omnummering).
 
-        //TODO Update Animal Details here, but don't persist them yet. Persist in the controller (?)
-
+        $animal->setDateOfBirth(new \DateTime($content->get(Constant::DATE_OF_BIRTH_NAMESPACE)));
         $animal->setPedigreeCountryCode($content->get(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE));
         $animal->setPedigreeNumber($content->get(Constant::PEDIGREE_NUMBER_NAMESPACE));
-        $animal->setAnimalOrderNumber($content->get(JsonInputConstant::WORK_NUMBER));
 
         return $animal;
     }

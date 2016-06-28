@@ -4,6 +4,7 @@ namespace AppBundle\Component;
 
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\Location;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,32 +33,33 @@ class BirthMessageBuilder extends MessageBuilderBase
      *
      * @param DeclareBirth $messageObject the message received from the front-end
      * @param Client|Person $person
+     * @param Location $location
      * @return DeclareBirth
      */
-    public function buildMessage(DeclareBirth $messageObject, $person)
+    public function buildMessage(DeclareBirth $messageObject, $person, $location)
     {
         $this->person = $person;
         $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
-        $completeMessageObject = $this->addDeclareBirthData($baseMessageObject);
+        $completeMessageObject = $this->addDeclareBirthData($baseMessageObject, $location);
 
         return $completeMessageObject;
     }
 
     /**
      * @param DeclareBirth $declareBirth the message received from the front-end
+     * @param Location $location
      * @return DeclareBirth
      */
-    private function addDeclareBirthData(DeclareBirth $declareBirth)
+    private function addDeclareBirthData(DeclareBirth $declareBirth, $location)
     {
         $animal = $declareBirth->getAnimal();
         $animal->setDateOfBirth($declareBirth->getDateOfBirth());
+        $declareBirth->setLocation($location);
 
         if(ActionFlagSetting::DECLARE_BIRTH != null) {
             $declareBirth->setAction(ActionFlagSetting::DECLARE_BIRTH);
         }
-        
-        //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
-        $declareBirth->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
+
         return $declareBirth;
     }
 

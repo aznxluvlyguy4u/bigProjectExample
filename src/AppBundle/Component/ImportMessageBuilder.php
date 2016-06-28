@@ -4,6 +4,7 @@ namespace AppBundle\Component;
 
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
@@ -33,22 +34,24 @@ class ImportMessageBuilder extends MessageBuilderBase
    *
    * @param DeclareImport $messageObject the message received from the front-end
    * @param Client|Person $person
+   * @param Location $location
    * @return DeclareImport
    */
-  public function buildMessage(DeclareImport $messageObject, $person)
+  public function buildMessage(DeclareImport $messageObject, $person, $location)
   {
     $this->person = $person;
     $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
-    $completeMessageObject = $this->addDeclareImportData($baseMessageObject);
+    $completeMessageObject = $this->addDeclareImportData($baseMessageObject, $location);
 
     return $completeMessageObject;
   }
 
   /**
    * @param DeclareImport $declareImport the message received from the front-end
+   * @param Location $location
    * @return DeclareImport
    */
-  private function addDeclareImportData(DeclareImport $declareImport)
+  private function addDeclareImportData(DeclareImport $declareImport, $location)
   {
     $animal = $declareImport->getAnimal();
     if($animal != null) {
@@ -61,8 +64,7 @@ class ImportMessageBuilder extends MessageBuilderBase
       $declareImport->setAction(ActionFlagSetting::DECLARE_IMPORT);
     }
 
-    //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
-    $declareImport->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
+    $declareImport->setLocation($location);
     return $declareImport;
   }
 }

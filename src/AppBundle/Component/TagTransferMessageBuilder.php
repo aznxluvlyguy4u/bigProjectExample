@@ -4,6 +4,7 @@ namespace AppBundle\Component;
 
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\Location;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
@@ -35,25 +36,25 @@ class TagTransferMessageBuilder extends MessageBuilderBase {
    *
    * @param DeclareTagsTransfer $messageObject the message received
    * @param Client|Person $person
+   * @param Location $location
    * @return ArrayCollection
    */
-  public function buildMessage(DeclareTagsTransfer $messageObject, $person)
+  public function buildMessage(DeclareTagsTransfer $messageObject, $person, $location)
   {
     $this->person = $person;
     $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
-    $completeMessageObject = $this->addDeclareEartagsTransferData($baseMessageObject);
+    $completeMessageObject = $this->addDeclareEartagsTransferData($baseMessageObject, $location);
 
     return $completeMessageObject;
   }
 
   /**
    * @param DeclareTagsTransfer $messageObject the message received
+   * @param Location $location
    * @return DeclareTagsTransfer
    */
-  private function addDeclareEartagsTransferData(DeclareTagsTransfer $messageObject)
+  private function addDeclareEartagsTransferData(DeclareTagsTransfer $messageObject, $location)
   {
-    //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
-    $location = $this->person->getCompanies()[0]->getLocations()[0];
     $messageObject->setLocation($location);
 
     foreach($messageObject->getTags() as $tag) {

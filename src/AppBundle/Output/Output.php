@@ -58,20 +58,41 @@ abstract class Output
     {
         if($location != null) {
             self::$ubn = $location->getUbn();
-            self::$locationHealth = $location->getHealths()->last();
+            self::$locationHealth = $location->getLocationHealth();
 
         } else {
             self::$ubn = null;
             self::$locationHealth = null;
         }
 
+
+        $scrapieStatus = null;
+        $scrapieEndDate = null;
+
+        $maediVisnaStatus = null;
+        $maediVisnaEndDate = null;
+
+        if(self::$locationHealth != null) {
+            $lastScrapie = self::$locationHealth->getScrapies()->last();
+            if($lastScrapie != null) {
+                $scrapieStatus = $lastScrapie->getStatus();
+                $scrapieEndDate = $lastScrapie->getEndDate();
+            }
+
+            $lastMaediVisna = self::$locationHealth->getMaediVisnas()->last();
+
+            if($lastMaediVisna != null) {
+                $maediVisnaStatus = $lastMaediVisna->getStatus();
+                $maediVisnaEndDate = $lastMaediVisna->getEndDate();
+            }
+        }
+
         if(self::$locationHealth != null) {
             self::$locationHealthStatus = self::$locationHealth->getLocationHealthStatus();
-            self::$maediVisnaStatus = self::$locationHealth->getMaediVisnaStatus();
-            self::$scrapieStatus = self::$locationHealth->getScrapieStatus();
-            self::$maediVisnaEndDate = self::$locationHealth->getMaediVisnaEndDate();
-            self::$scrapieEndDate = self::$locationHealth->getScrapieEndDate();
-            self::$checkDate = self::$locationHealth->getCheckDate();
+            self::$maediVisnaStatus = $maediVisnaStatus;
+            self::$scrapieStatus = $scrapieStatus;
+            self::$maediVisnaEndDate = $maediVisnaEndDate;
+            self::$scrapieEndDate = $scrapieEndDate;
             
         //The default values    
         } else {
@@ -81,6 +102,22 @@ abstract class Output
             self::$maediVisnaEndDate = "";
             self::$scrapieEndDate = "";
             self::$checkDate = "";
+        }
+    }
+
+    /**
+     * Replace null values with empty strings for the frontend.
+     * This only works with strings!
+     *
+     * @param string|null $value
+     * @return string
+     */
+    public static function fillNull($value)
+    {
+        if($value == null) {
+            return "";
+        } else {
+            return $value;
         }
     }
     

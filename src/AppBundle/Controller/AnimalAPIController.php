@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Employee;
 use AppBundle\FormInput\AnimalDetails;
 use AppBundle\FormInput\WeightMeasurements;
 use AppBundle\Output\AnimalDetailsOutput;
@@ -144,8 +145,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function getLiveStock(Request $request) {
     $client = $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $animals = $this->getDoctrine()
-        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($client);
+        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($location);
 
     $minimizedOutput = AnimalOutput::createAnimalsArray($animals);
 
@@ -178,9 +180,11 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     {
       //Get content to array
       $content = $this->getContentAsArray($request);
+      $client = $this->getAuthenticatedUser($request);
+      $location = $this->getSelectedLocation($request);
 
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $this->getAuthenticatedUser($request));
+      $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $location);
 
       //First Persist object to Database, before sending it to the queue
       $this->persist($messageObject);
@@ -189,6 +193,37 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       $messageArray = $this->sendMessageObjectToQueue($messageObject);
 
       return new JsonResponse($messageArray, 200);
+    }
+  }
+
+  /**
+   * Create RetrieveAnimal requests for all clients.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Create RetrieveAnimal requests for all clients",
+   *   input = "AppBundle\Entity\RetrieveAnimals",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-sync-all")
+   * @Method("POST")
+   */
+  public function createRetrieveAnimalsForAllLocations(Request $request) {
+    {
+      //Any logged in user can sync all animals
+      $message = $this->syncAnimalsForAllLocations()[Constant::MESSAGE_NAMESPACE];
+
+      return new JsonResponse(array(Constant::RESULT_NAMESPACE => $message), 200);
     }
   }
 
@@ -217,9 +252,11 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   function createAnimalDetails(Request $request) {
     //Get content to array
     $content = $this->getContentAsArray($request);
+    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY, $content, $this->getAuthenticatedUser($request));
+    $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY, $content, $client, $location);
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($messageObject);
@@ -338,8 +375,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   public function getLastWeightMeasurements(Request $request)
   {
     $client = $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $animals = $this->getDoctrine()
-        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($client);
+        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($location);
 
     $minimizedOutput = WeightMeasurementsOutput::createForAnimals($animals);
 
@@ -382,9 +420,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       return $weightValidator->createJsonErrorResponse();
     }
 
-    $client = $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $livestockAnimals = $this->getDoctrine()
-        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($client);
+        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($location);
 
     //Persist updated changes and return the updated values
     $manager = $this->getDoctrine()->getManager();

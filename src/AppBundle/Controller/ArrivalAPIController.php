@@ -2,14 +2,21 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\LocationHealthMessageBuilder;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareImport;
 use AppBundle\Output\DeclareArrivalOutput;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Util\HealthChecker;
+use AppBundle\Util\LocationHealthUpdater;
+use AppBundle\Validation\TagValidator;
+use AppBundle\Validation\UbnValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -50,10 +57,10 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivalById(Request $request, $Id)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
 
-    $arrival = $repository->getArrivalByRequestId($client, $Id);
+    $arrival = $repository->getArrivalByRequestId($location, $Id);
 
     return new JsonResponse($arrival, 200);
   }
@@ -98,29 +105,29 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivals(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
 
     if(!$stateExists) {
-      $declareArrivals = $repository->getArrivals($client);
+      $declareArrivals = $repository->getArrivals($location);
 
     } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
 
       $declareArrivals = new ArrayCollection();
-      foreach($repository->getArrivals($client, RequestStateType::OPEN) as $arrival) {
+      foreach($repository->getArrivals($location, RequestStateType::OPEN) as $arrival) {
         $declareArrivals->add($arrival);
       }
-      foreach($repository->getArrivals($client, RequestStateType::REVOKING) as $arrival) {
+      foreach($repository->getArrivals($location, RequestStateType::REVOKING) as $arrival) {
         $declareArrivals->add($arrival);
       }
-      foreach($repository->getArrivals($client, RequestStateType::FINISHED) as $arrival) {
+      foreach($repository->getArrivals($location, RequestStateType::FINISHED) as $arrival) {
         $declareArrivals->add($arrival);
       }
 
     } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareArrivals = $repository->getArrivals($client, $state);
+      $declareArrivals = $repository->getArrivals($location, $state);
     }
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareArrivals), 200);
@@ -152,39 +159,53 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
   public function createArrival(Request $request)
   {
     $content = $this->getContentAsArray($request);
+    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
     //Only verify if pedigree exists in our database. Unknown ULNs are allowed
-    $verification = $this->verifyOnlyPedigreeCodeInAnimal($content->get(Constant::ANIMAL_NAMESPACE));
-    if(!$verification->get('isValid')){
+    $ulnVerification = $this->verifyOnlyPedigreeCodeInAnimal($content->get(Constant::ANIMAL_NAMESPACE));
+    if(!$ulnVerification->get('isValid')){
       return new JsonResponse(array('code'=>428,
-                               "pedigree" => $verification->get(Constant::PEDIGREE_NAMESPACE),
+                               "pedigree" => $ulnVerification->get(Constant::PEDIGREE_NAMESPACE),
                                 "message" => "PEDIGREE VALUE IS NOT REGISTERED WITH NSFO"), 428);
     }
 
-    $client = $this->getAuthenticatedUser($request);
-    $repository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-
-    $isImportAnimal = $content->get('is_import_animal');
+    $isImportAnimal = $content->get(Constant::IS_IMPORT_ANIMAL);
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    if($isImportAnimal) {
-      //TODO Phase 2: Filter between non-EU countries and EU countries. At the moment we only process sheep from EU countries
-      $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client);
+    if($isImportAnimal) { //DeclareImport
+      //Validate if ulnNumber matches that of an unassigned Tag in the tag collection of the client
+      $tagValidator = new TagValidator($this->getDoctrine()->getManager(), $client, $content);
+      if($tagValidator->getIsTagCollectionEmpty() || !$tagValidator->getIsTagValid() || $tagValidator->getIsInputEmpty()) {
+        return $tagValidator->createImportJsonErrorResponse();
+      }
 
-    } else {
-      $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client);
+      //TODO Phase 2: Filter between non-EU countries and EU countries. At the moment we only process sheep from EU countries
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client, $location);
+
+    } else { //DeclareArrival
+
+      //Validate if ubnPreviousOwner matches the ubn of the animal with the given ULN, if the animal is in our database
+      $ubnValidator = new UbnValidator($this->getDoctrine()->getManager(), $content);
+      if(!$ubnValidator->getIsUbnValid()) {
+        return $ubnValidator->createArrivalJsonErrorResponse();
+      }
+      $content->set(JsonInputConstant::IS_ARRIVED_FROM_OTHER_NSFO_CLIENT, $ubnValidator->getIsArrivedFromOtherNsfoClient());
+
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $location);
     }
 
     //Send it to the queue and persist/update any changed state to the database
     $messageArray = $this->sendMessageObjectToQueue($messageObject);
+    $animal = $messageObject->getAnimal();
     $messageObject->setAnimal(null);
 
     //Persist message without animal. That is done after a successful response
     $this->persist($messageObject);
-
-    //Persist HealthStatus
-    $this->getDoctrine()->getManager()->persist($messageObject->getLocation()->getHealths()->last());
     $this->getDoctrine()->getManager()->flush();
+
+    //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
+    $this->getHealthService()->updateLocationHealth($messageObject);
 
 //    return new JsonResponse(array("status"=>"sent"), 200);
     return new JsonResponse($messageArray, 200);
@@ -220,12 +241,13 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $content->set("request_id", $requestId);
 
     $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
     //verify requestId for arrivals
-    $messageObject = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivalByRequestId($client, $requestId);
+    $messageObject = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivalByRequestId($location, $requestId);
 
     if($messageObject == null) { //verify requestId for imports
-      $messageObject = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->getImportByRequestId($client, $requestId);
+      $messageObject = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->getImportByRequestId($location, $requestId);
     }
 
     if($messageObject == null) {
@@ -234,16 +256,21 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     }
 
     $isImportAnimal = $messageObject->getIsImportAnimal();
+    $isFailedMessage = $messageObject->getRequestState() == RequestStateType::FAILED;
 
-    if($isImportAnimal) {
+    if($isImportAnimal) { //For DeclareImport
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_IMPORT_ENTITY,
-          $content, $this->getAuthenticatedUser($request));
+      $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client, $location);
 
-    } else {
+    } else { //For DeclareArrival
+      //Validate if ubnPreviousOwner matches the ubn of the animal with the given ULN, if the animal is in our database
+      $ubnValidator = new UbnValidator($this->getDoctrine()->getManager(), $content, $messageObject);
+      if(!$ubnValidator->getIsUbnValid()) {
+        return $ubnValidator->createArrivalJsonErrorResponse();
+      }
+
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY,
-          $content, $this->getAuthenticatedUser($request));
+      $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $location);
     }
 
     //Send it to the queue and persist/update any changed requestState to the database
@@ -251,10 +278,20 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     //Persist the update
     $this->persist($messageObject);
-
-    //Persist HealthStatus
-    $this->getDoctrine()->getManager()->persist($messageObject->getLocation()->getHealths()->last());
     $this->getDoctrine()->getManager()->flush();
+
+
+    /* LocationHealth status updates are not necessary */
+
+    /*
+     * Import: An import (POST & PUT) always leads to the same LocationHealth update.
+     *
+     * Arrival: Only the arrival date is editable for Animals from other NSFO clients. The ubnPreviousOwner is editable for unknown locations.
+     * In both cases the health status change would be identical to the change by the original arrival.
+     *
+     * We do not discriminate between successful and failed requests at this moment.
+     */
+
 
     return new JsonResponse($messageArray, 200);
   }
@@ -286,13 +323,13 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivalErrors(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
-    $declareArrivals = $repository->getArrivalsWithLastErrorResponses($client);
+    $declareArrivals = $repository->getArrivalsWithLastErrorResponses($location);
 
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_RESPONSE_REPOSITORY);
-    $declareImports = $repository->getImportsWithLastErrorResponses($client);
+    $declareImports = $repository->getImportsWithLastErrorResponses($location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('arrivals' => $declareArrivals, 'imports' => $declareImports)), 200);
   }
@@ -324,13 +361,13 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function getArrivalHistory(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
-    $declareArrivals = $repository->getArrivalsWithLastHistoryResponses($client);
+    $declareArrivals = $repository->getArrivalsWithLastHistoryResponses($location);
 
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_RESPONSE_REPOSITORY);
-    $declareImports = $repository->getImportsWithLastHistoryResponses($client);
+    $declareImports = $repository->getImportsWithLastHistoryResponses($location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('arrivals' => $declareArrivals, 'imports' => $declareImports)), 200);
   }

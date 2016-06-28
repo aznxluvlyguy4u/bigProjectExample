@@ -44,10 +44,10 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    */
   public function getDepartById(Request $request, $Id)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_DEPART_REPOSITORY);
 
-    $depart = $repository->getDepartureByRequestId($client, $Id);
+    $depart = $repository->getDepartureByRequestId($location, $Id);
 
     return new JsonResponse($depart, 200);
   }
@@ -91,29 +91,29 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    */
   public function getDepartures(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_DEPART_REPOSITORY);
 
     if(!$stateExists) {
-      $declareDepartures = $repository->getDepartures($client);
+      $declareDepartures = $repository->getDepartures($location);
 
     } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
 
-      $declareDeparts = new ArrayCollection();
-      foreach($repository->getDepartures($client, RequestStateType::OPEN) as $depart) {
-        $declareDeparts->add($depart);
+      $declareDepartures = new ArrayCollection();
+      foreach($repository->getDepartures($location, RequestStateType::OPEN) as $depart) {
+        $declareDepartures->add($depart);
       }
-      foreach($repository->getDepartures($client, RequestStateType::REVOKING) as $depart) {
-        $declareDeparts->add($depart);
+      foreach($repository->getDepartures($location, RequestStateType::REVOKING) as $depart) {
+        $declareDepartures->add($depart);
       }
-      foreach($repository->getDepartures($client, RequestStateType::FINISHED) as $depart) {
-        $declareDeparts->add($depart);
+      foreach($repository->getDepartures($location, RequestStateType::FINISHED) as $depart) {
+        $declareDepartures->add($depart);
       }
       
     } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareDepartures = $repository->getDepartures($client, $state);
+      $declareDepartures = $repository->getDepartures($location, $state);
     }
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareDepartures), 200);
@@ -146,9 +146,10 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
   public function createDepart(Request $request)
   {
     $content = $this->getContentAsArray($request);
+    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
     //Client can only depart/export own animals
-    $client = $this->getAuthenticatedUser($request);
     $animal = $content->get(Constant::ANIMAL_NAMESPACE);
     $isAnimalOfClient = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->verifyIfClientOwnsAnimal($client, $animal);
 
@@ -160,11 +161,11 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
     if($isExportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $this->getAuthenticatedUser($request));
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $location);
 
     } else {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $this->getAuthenticatedUser($request));
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $client, $location);
     }
 
     //Send it to the queue and persist/update any changed state to the database
@@ -211,11 +212,11 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
     //Client can only depart/export own animals
     $client = $this->getAuthenticatedUser($request);
-    $animal = $content->get(Constant::ANIMAL_NAMESPACE);
+    $location = $this->getSelectedLocation($request);
 
     //NOTE!!! Don't try to verify any animals directly. Because they will have the isDeparted=true state.
     //Verify this request using the requestId
-
+    $animal = $content->get(Constant::ANIMAL_NAMESPACE);
     //TODO verify if Updated request had was successful or not. DON'T Update successful departs and imports! They have to be revoked. And posted as a new request.
 
     $isExportAnimal = $content['is_export_animal'];
@@ -224,11 +225,10 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
     if($isExportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $declareExportUpdate = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY,
-          $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+      $declareExportUpdate = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $location);
 
       $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY);
-      $messageObject = $entityManager->updateDeclareExportMessage($declareExportUpdate, $client, $Id);
+      $messageObject = $entityManager->updateDeclareExportMessage($declareExportUpdate, $location, $Id);
 
       if($messageObject == null) {
         return new JsonResponse(array("message"=>"No DeclareExport found with request_id: " . $Id), 204);
@@ -236,11 +236,10 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
     } else {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $declareDepartUpdate = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY,
-          $this->getContentAsArray($request), $this->getAuthenticatedUser($request));
+      $declareDepartUpdate = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $client, $location);
 
       $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_DEPART_REPOSITORY);
-      $messageObject = $entityManager->updateDeclareDepartMessage($declareDepartUpdate, $client, $Id);
+      $messageObject = $entityManager->updateDeclareDepartMessage($declareDepartUpdate, $location, $Id);
 
       if($messageObject == null) {
         return new JsonResponse(array("message"=>"No DeclareDepart found with request_id: " . $Id), 204);
@@ -285,13 +284,13 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    */
   public function getDepartErrors(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_DEPART_RESPONSE_REPOSITORY);
-    $declareDeparts = $repository->getDeparturesWithLastErrorResponses($client);
+    $declareDeparts = $repository->getDeparturesWithLastErrorResponses($location);
 
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_RESPONSE_REPOSITORY);
-    $declareExports = $repository->getExportsWithLastErrorResponses($client);
+    $declareExports = $repository->getExportsWithLastErrorResponses($location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('departs' => $declareDeparts, 'exports' => $declareExports)), 200);
   }
@@ -323,13 +322,13 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    */
   public function getDepartHistory(Request $request)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_DEPART_RESPONSE_REPOSITORY);
-    $declareDeparts = $repository->getDeparturesWithLastHistoryResponses($client);
+    $declareDeparts = $repository->getDeparturesWithLastHistoryResponses($location);
 
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_RESPONSE_REPOSITORY);
-    $declareExports = $repository->getExportsWithLastHistoryResponses($client);
+    $declareExports = $repository->getExportsWithLastHistoryResponses($location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('departs' => $declareDeparts, 'exports' => $declareExports)), 200);
   }

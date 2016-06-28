@@ -403,7 +403,7 @@ class Company
      */
     public function setVeterinarianEmailAddress($veterinarianEmailAddress)
     {
-        $this->veterinarianEmailAddress = $veterinarianEmailAddress;
+        $this->veterinarianEmailAddress = strtolower($veterinarianEmailAddress);
     }
 
 

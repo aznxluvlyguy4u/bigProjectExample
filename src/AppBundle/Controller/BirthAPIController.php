@@ -190,6 +190,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     }
 
     $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
     foreach($children as $child) {
 
@@ -198,7 +199,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         if($child['is_alive'] == true) { //DeclareBirth with sending a request to IenR
             //Convert the array into an object and add the mandatory values retrieved from the database
-            $declareBirthObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $contentPerChild, $this->getAuthenticatedUser($request));
+            $declareBirthObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $contentPerChild, $client, $location);
 
             //Send it to the queue and persist/update any changed state to the database
             $messageArray = $this->sendMessageObjectToQueue($declareBirthObject);
@@ -246,8 +247,9 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
   public function updateBirth(Request $request, $Id) {
 
       $content = $this->getContentAsArray($request);
-
       $client = $this->getAuthenticatedUser($request);
+      $location = $this->getSelectedLocation($request);
+
       $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
       $declareBirth = $entityManager->getBirthByRequestId($client, $content->get("request_id"));
 
@@ -280,7 +282,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
       //Convert the array into an object and add the mandatory values retrieved from the database
       $declareBirthUpdate = $this->buildEditMessageObject(RequestType::DECLARE_BIRTH_ENTITY,
-          $content, $this->getAuthenticatedUser($request));
+          $content, $client, $location);
 
       //First Persist object to Database, before sending it to the queue
       $this->persist($declareBirthUpdate);
@@ -317,11 +319,11 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      */
     public function getBirthErrors(Request $request)
     {
-        $client = $this->getAuthenticatedUser($request);
+        $location = $this->getSelectedLocation($request);
 
         $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
         $birthRepository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_RESPONSE_REPOSITORY);
-        $declareBirths = $birthRepository->getBirthsWithLastErrorResponses($client, $animalRepository);
+        $declareBirths = $birthRepository->getBirthsWithLastErrorResponses($location, $animalRepository);
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('births' => $declareBirths)), 200);
     }
@@ -355,11 +357,10 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      */
     public function getBirthHistory(Request $request)
     {
-        $client = $this->getAuthenticatedUser($request);
-
+        $location = $this->getSelectedLocation($request);
         $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
         $birthRepository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_RESPONSE_REPOSITORY);
-        $declareBirths = $birthRepository->getBirthsWithLastHistoryResponses($client, $animalRepository);
+        $declareBirths = $birthRepository->getBirthsWithLastHistoryResponses($location, $animalRepository);
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('births' => $declareBirths)), 200);
     }

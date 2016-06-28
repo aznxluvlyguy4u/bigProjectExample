@@ -23,6 +23,9 @@ class Constant
     const MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE = 'message_number';
     const MESSAGE_NUMBER_CAMEL_CASE_NAMESPACE = 'messageNumber';
 
+    //Identity
+    const NAME_NAMESPACE = 'name';
+
     //Json response
     const MESSAGE_NAMESPACE = 'message';
     const RESULT_NAMESPACE = "result";
@@ -46,6 +49,7 @@ class Constant
     const IS_VALID_NAMESPACE = 'isValid';
     const CODE_NAMESPACE = 'code';
     const ERRORS_NAMESPACE = 'errors';
+    const TYPE_NAMESPACE = 'type';
 
     //Animal identification
     const ULN_NAMESPACE = 'uln';
@@ -62,6 +66,7 @@ class Constant
     const GENDER_NAMESPACE = 'gender';
     const ANIMAL_ORDER_NUMBER_NAMESPACE = 'animal_order_number';
     const UBN_NEW_OWNER_NAMESPACE = 'ubn_new_owner';
+    const UBN_PREVIOUS_OWNER_NAMESPACE = 'ubn_previous_owner';
     const ANIMAL_TYPE_NAMESPACE = 'type';
     const ANIMAL_NAMESPACE = 'animal';
     const ANIMALS_NAMESPACE = 'animals';
@@ -69,6 +74,7 @@ class Constant
     const ANIMAL_TYPE_SNAKE_CASE_NAMESPACE = "animal_type";
     const DATE_OF_BIRTH_NAMESPACE  = 'date_of_birth';
     const DATE_OF_DEATH_NAMESPACE  = 'date_of_death';
+    const IS_IMPORT_ANIMAL = 'is_import_animal';
 
     //Health Status
     const MAEDI_VISNA_STATUS = "maedi_visna_status";
@@ -76,6 +82,8 @@ class Constant
     const SCRAPIE_STATUS = "scrapie_status";
     const SCRAPIE_END_DATE = "scrapie_end_date";
     const CHECK_DATE = "check_date";
+    const LOCATION_HEALTH_ORIGIN = "location_health_origin";
+    const LOCATION_HEALTH_DESTINATION = "location_health_destination";
 
     //Declaration specific variables
     const RELATION_NUMBER_ACCEPTANT_SNAKE_CASE_NAMESPACE = "relation_number_acceptant";
@@ -128,4 +136,10 @@ class Constant
     const LOCATION_REPOSITORY = 'AppBundle:Location';
 
     const CLIENT_MIGRATION_DATA_REPOSITORY = 'AppBundle:ClientMigrationData';
+
+    const LOCATION_HEALTH_REPOSITORY = 'AppBundle:LocationHealth';
+    const PROCESSOR_REPOSITORY = 'AppBundle:Processor';
+    const PROVINCE_REPOSITORY = 'AppBundle:Province';
+    const LOCATION_HEALTH_QUEUE_REPOSITORY = 'AppBundle:LocationHealthQueue';
+
 }

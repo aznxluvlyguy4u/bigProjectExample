@@ -15,6 +15,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Company;
 use AppBundle\Enumerator\MigrationStatus;
 use AppBundle\Setting\MigrationSetting;
+use AppBundle\Validation\HeaderValidation;
 use AppBundle\Validation\PasswordValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -200,9 +201,16 @@ class AuthAPIController extends APIController {
         "new_password":"Tm90TXlGaXJzdFBhc3N3b3JkMQ==" //base64 encoded 'NotMyFirstPassword1'
     }
     */
+    $encoder = $this->get('security.password_encoder');
 
     $client = $this->getAuthenticatedUser($request);
     $content = $this->getContentAsArray($request);
+    $enteredOldPassword = base64_decode($content->get('current_password'));
+
+    if(!$encoder->isPasswordValid($client, $enteredOldPassword)) {
+      return new JsonResponse(array(Constant::MESSAGE_NAMESPACE => "CURRENT PASSWORD NOT VALID", Constant::CODE_NAMESPACE => 401), 401);
+    }
+
     $newPassword = base64_decode($content->get('new_password'));
 
     //Validate password format
@@ -212,7 +220,6 @@ class AuthAPIController extends APIController {
     }
 
     $encodedOldPassword = $client->getPassword();
-    $encoder = $this->get('security.password_encoder');
     $encodedNewPassword = $encoder->encodePassword($client, $newPassword);
     $client->setPassword($encodedNewPassword);
 
@@ -360,6 +367,40 @@ class AuthAPIController extends APIController {
     $migrationResults = ClientMigration::generateNewPasswordsAndEmailsForMigratedClients($newClients, $doctrine, $encoder, $content);
 
     return new JsonResponse($migrationResults, 200);
+  }
+
+
+  /**
+   * Validate whether a ubn in the header is valid or not.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Validate whether a ubn in the header is valid or not.",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/validate-ubn")
+   * @Method("GET")
+   */
+  public function validateUbnInHeader(Request $request)
+  {
+    $client = $this->getAuthenticatedUser($request);
+    $headerValidation = new HeaderValidation($this->getDoctrine()->getManager(), $request, $client);
+
+    if($headerValidation->isInputValid()) {
+      return new JsonResponse("UBN IS VALID", 200);
+    } else {
+      return $headerValidation->createJsonErrorResponse();
+    }
   }
 
 }

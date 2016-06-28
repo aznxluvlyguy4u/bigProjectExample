@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Constant\Constant;
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * Class DeclareImportRepository
@@ -12,8 +13,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 class DeclareImportRepository extends BaseRepository {
 
   /**
-   * @param $declareImportUpdate
-   * @param $Id
+   * @param DeclareImport $declareImportUpdate
+   * @param integer $Id
    * @return JsonResponse|null|object
    */
   public function updateDeclareImportMessage($declareImportUpdate, $Id) {
@@ -47,26 +48,25 @@ class DeclareImportRepository extends BaseRepository {
   }
 
   /**
-   * @param Client $client
+   * @param Location $location
    * @param string $state
    * @return ArrayCollection
    */
-  public function getImports(Client $client, $state = null)
+  public function getImports(Location $location, $state = null)
   {
-    $location = $client->getCompanies()->get(0)->getLocations()->get(0);
     $retrievedImports = $location->getImports();
 
     return $this->getRequests($retrievedImports, $state);
   }
 
   /**
-   * @param Client $client
+   * @param Location $location
    * @param string $requestId
    * @return DeclareImport|null
    */
-  public function getImportByRequestId(Client $client, $requestId)
+  public function getImportByRequestId(Location $location, $requestId)
   {
-    $imports = $this->getImports($client);
+    $imports = $this->getImports($location);
 
     return $this->getRequestByRequestId($imports, $requestId);
   }

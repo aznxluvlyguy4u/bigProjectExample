@@ -3,6 +3,7 @@
 namespace AppBundle\Component;
 
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
@@ -38,13 +39,14 @@ class RevokeMessageBuilder extends MessageBuilderBase
      *
      * @param RevokeDeclaration $messageObject the message received from the front-end
      * @param Client|Person $person
+     * @param Location $location
      * @return RevokeDeclaration
      */
-    public function buildMessage(RevokeDeclaration $messageObject, $person)
+    public function buildMessage(RevokeDeclaration $messageObject, $person, $location)
     {
         $this->person = $person;
         $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
-        $completeMessageObject = $this->addRevokeDeclarationData($baseMessageObject, $person);
+        $completeMessageObject = $this->addRevokeDeclarationData($baseMessageObject, $person, $location);
 
         return $completeMessageObject;
     }
@@ -52,9 +54,10 @@ class RevokeMessageBuilder extends MessageBuilderBase
     /**
      * @param RevokeDeclaration $revokeDeclaration the baseMessageObject
      * @param Client|Person $person
+     * @param Location $location
      * @return RevokeDeclaration
      */
-    private function addRevokeDeclarationData(RevokeDeclaration $revokeDeclaration, $person)
+    private function addRevokeDeclarationData(RevokeDeclaration $revokeDeclaration, $person, $location)
     {
 
 
@@ -67,7 +70,7 @@ class RevokeMessageBuilder extends MessageBuilderBase
 
         $revokeDeclaration->setRelationNumberKeeper($person->getRelationNumberKeeper());
         $revokeDeclaration->setUbn($retrievedDeclaration->getUbn());
-        $revokeDeclaration->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
+        $revokeDeclaration->setLocation($location);
 
         //Set related request
         $retrievedDeclaration->setRevoke($revokeDeclaration);

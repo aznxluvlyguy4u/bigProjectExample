@@ -14,8 +14,10 @@ use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\RetrieveAnimalDetails;
 use AppBundle\Entity\RetrieveAnimals;
+use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RetrieveUBNDetails;
 use AppBundle\Entity\RevokeDeclaration;
@@ -99,10 +101,11 @@ interface IRSerializerInterface
     /**
      * @param ArrayCollection $contentArray
      * @param Client $client
+     * @param Location $location
      * @param boolean $isEditMessage
      * @return DeclareImport
      */
-    function parseDeclareImport(ArrayCollection $contentArray, Client $client, $isEditMessage);
+    function parseDeclareImport(ArrayCollection $contentArray, Client $client, $location, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray
@@ -139,8 +142,8 @@ interface IRSerializerInterface
     /**
      * @param ArrayCollection $contentArray
      * @param Client $client
-     * @param $isEditMessage
-     * @return mixed
+     * @param boolean $isEditMessage
+     * @return RetrieveCountries
      */
     function parseRetrieveEUCountries(ArrayCollection $contentArray, Client $client, $isEditMessage);
 

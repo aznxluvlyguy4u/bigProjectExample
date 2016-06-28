@@ -27,6 +27,7 @@ class DeclareLossOutput
             "ubn" => $loss->getUbn(),
             "date_of_death" => $loss->getDateOfDeath(),
             "reason_of_loss" => $loss->getReasonOfLoss(),
+            "ubn_destructor" => $loss->getUbnDestructor(),
             "type" => "DeclareLoss",
             "animal" =>
             array(
