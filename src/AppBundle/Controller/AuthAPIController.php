@@ -353,10 +353,7 @@ class AuthAPIController extends APIController {
    */
   public function generatePasswordsForNewClients(Request $request)
   {
-//    $employee = $this->getAuthenticatedEmployee($request);
-//    if($employee == null) {
-//      return new JsonResponse(array("errorCode" => 403, "errorMessage" => "Forbidden"), 403);
-//    }
+    return new JsonResponse(array("code" => 403, "message" => "Forbidden"), 403);
 
     $doctrine = $this->getDoctrine();
     $em = $doctrine->getEntityManager();
