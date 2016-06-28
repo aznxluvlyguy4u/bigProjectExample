@@ -44,6 +44,7 @@ class JsonResponse extends Response
     protected function update()
     {
         $this->headers->set('Content-Type', 'application/json');
+//        $this->headers->set("Access-Control-Allow-Origin", '*');
         $this->setContent($this->data);
     }
 }
