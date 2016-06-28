@@ -166,4 +166,22 @@ class Finder
 
         return $ubns;
     }
+
+    /**
+     * @param Client $client
+     * @return ArrayCollection
+     */
+    public static function findLocationsOfClient(Client $client)
+    {
+        $locations = new ArrayCollection();
+
+        $companies = $client->getCompanies();
+        if(sizeof($companies) > 0) {
+            foreach($companies as $company) {
+                $locations = $company->getLocations();
+            }
+        }
+
+        return $locations;
+    }
 }
