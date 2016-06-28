@@ -53,10 +53,19 @@ class HealthService
         $isDeclareInBase = true;
         $this->updateLocationHealthByArrivalOrImport($location, $declareInBase, $isDeclareInBase);
 
-        $criteria = Criteria::create()
-            ->where(Criteria::expr()->gt('arrivalDate', $declareInBase->getArrivalDate()))
-            ->andWhere(Criteria::expr()->eq('location', $location))
-            ->orderBy(['arrivalDate' => Criteria::ASC]);
+        if($declareInBase instanceof DeclareArrival) {
+            $criteria = Criteria::create()
+                ->where(Criteria::expr()->gt('arrivalDate', $declareInBase->getArrivalDate()))
+                ->andWhere(Criteria::expr()->eq('location', $location))
+                ->orderBy(['arrivalDate' => Criteria::ASC]);
+        } else { //DeclareImport
+            $criteria = Criteria::create()
+                ->where(Criteria::expr()->gt('arrivalDate', $declareInBase->getImportDate()))
+                ->andWhere(Criteria::expr()->eq('location', $location))
+                ->orderBy(['arrivalDate' => Criteria::ASC]);
+        }
+
+
 
         $locationHealthMessages = $this->entityManager->getRepository('AppBundle:LocationHealthMessage')
             ->matching($criteria);

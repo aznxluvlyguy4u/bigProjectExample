@@ -105,6 +105,7 @@ class Finder
 
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('locationHealth', $locationHealth))
+            ->andWhere(Criteria::expr()->eq('isHidden', false))
             ->orderBy(['checkDate' => Criteria::DESC])
             ->setMaxResults(1);
 
@@ -126,6 +127,7 @@ class Finder
     {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
+            ->andWhere(Criteria::expr()->eq('isHidden', false))
             ->orderBy(['checkDate' => Criteria::ASC]);
 
         return $em->getRepository('AppBundle:MaediVisna')
@@ -136,6 +138,7 @@ class Finder
     {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
+            ->andWhere(Criteria::expr()->eq('isHidden', false))
             ->orderBy(['checkDate' => Criteria::ASC]);
 
         return $em->getRepository('AppBundle:Scrapie')

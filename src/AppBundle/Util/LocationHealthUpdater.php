@@ -82,12 +82,19 @@ class LocationHealthUpdater
         //'previous' refers to the non-revoked LocationHealthMessage-DeclareArrival/DeclareImport and the related
         //illnesses right before the given one.
 
-
-        $criteria = Criteria::create()
-            ->where(Criteria::expr()->lt('arrivalDate', $declareIn->getArrivalDate()))
-            ->andWhere(Criteria::expr()->eq('location', $locationOfDestination))
-            ->orderBy(['arrivalDate' => Criteria::DESC])
-            ->setMaxResults(1);
+        if($declareIn instanceof DeclareArrival) {
+            $criteria = Criteria::create()
+                ->where(Criteria::expr()->lt('arrivalDate', $declareIn->getArrivalDate()))
+                ->andWhere(Criteria::expr()->eq('location', $locationOfDestination))
+                ->orderBy(['arrivalDate' => Criteria::DESC])
+                ->setMaxResults(1);
+        } else { //DeclareImport
+            $criteria = Criteria::create()
+                ->where(Criteria::expr()->lt('arrivalDate', $declareIn->getImportDate()))
+                ->andWhere(Criteria::expr()->eq('location', $locationOfDestination))
+                ->orderBy(['arrivalDate' => Criteria::DESC])
+                ->setMaxResults(1);
+        }
 
         $previousHealthMessage = $em->getRepository('AppBundle:LocationHealthMessage')
             ->matching($criteria);
