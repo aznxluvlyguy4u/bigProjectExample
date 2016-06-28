@@ -5,7 +5,6 @@ namespace AppBundle\Controller;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
-use AppBundle\Entity\ClientMigrationData;
 use AppBundle\Migration\ClientMigration;
 use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\Employee;
@@ -354,10 +353,10 @@ class AuthAPIController extends APIController {
    */
   public function generatePasswordsForNewClients(Request $request)
   {
-    $employee = $this->getAuthenticatedEmployee($request);
-    if($employee == null) {
-      return new JsonResponse(array("errorCode" => 403, "errorMessage" => "Forbidden"), 403);
-    }
+//    $employee = $this->getAuthenticatedEmployee($request);
+//    if($employee == null) {
+//      return new JsonResponse(array("errorCode" => 403, "errorMessage" => "Forbidden"), 403);
+//    }
 
     $doctrine = $this->getDoctrine();
     $encoder = $this->get('security.password_encoder');
