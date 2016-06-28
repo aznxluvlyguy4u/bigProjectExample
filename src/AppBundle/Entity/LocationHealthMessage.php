@@ -253,6 +253,20 @@ class LocationHealthMessage
     /**
      * @return null|string
      */
+    public function getRequestState()
+    {
+        if($this->arrival != null) {
+            return $this->arrival->getRequestState();
+        } else if($this->import != null) {
+            return $this->import->getRequestState();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * @return null|string
+     */
     public function getRequestId()
     {
         if($this->arrival != null) {
