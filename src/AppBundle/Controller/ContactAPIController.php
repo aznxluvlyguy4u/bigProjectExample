@@ -42,7 +42,7 @@ class ContactAPIController extends APIController implements ContactAPIController
     //Message to NSFO
     $emailAddressReceiver = $this->container->getParameter('mailer_contact_form_receiver');
     $message = \Swift_Message::newInstance()
-        ->setSubject('Contact: ' . $userName . ". Categorie: " . $category . " - " . $mood)
+        ->setSubject('NSFO Online Contactformulier Confirmatie')
         ->setFrom('info@stormdelta.com')
         ->setTo($emailAddressReceiver)
         ->setBody(
@@ -66,7 +66,7 @@ class ContactAPIController extends APIController implements ContactAPIController
 
     //Confirmation message back to the sender
     $messageConfirmation = \Swift_Message::newInstance()
-        ->setSubject('NSFO Contact formulier is verzonden! Categorie: ' . $category . " - " . $mood)
+        ->setSubject('NSFO Online Contactformulier')
         ->setFrom('info@stormdelta.com')
         ->setTo($emailAddressUser)
         ->setBody(

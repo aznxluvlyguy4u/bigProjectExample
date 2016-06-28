@@ -232,7 +232,7 @@ class AuthAPIController extends APIController {
 
       //Confirmation message back to the sender
       $message = \Swift_Message::newInstance()
-          ->setSubject('Nieuw wachtwoord voor NSFO dierregistratiesysteem')
+          ->setSubject('Gewijzigd NSFO Online Wachtwoord')
           ->setFrom('info@stormdelta.com')
           ->setTo($emailAddress)
           ->setBody(
@@ -313,7 +313,7 @@ class AuthAPIController extends APIController {
 
     //Confirmation message back to the sender
     $message = \Swift_Message::newInstance()
-        ->setSubject('Nieuw wachtwoord voor NSFO dierregistratiesysteem')
+        ->setSubject('Gewijzigd NSFO Online Wachtwoord')
         ->setFrom('info@stormdelta.com')
         ->setTo($emailAddress)
         ->setBody(
