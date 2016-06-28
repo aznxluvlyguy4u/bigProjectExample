@@ -8,12 +8,16 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthMessage;
 use AppBundle\Entity\Scrapie;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
+use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManager;
 
 /**
  * This class contains methods to find objects or values in given
@@ -61,7 +65,7 @@ class Finder
         if ($messageCount == 0) {
             return null;
 
-        } else {
+        } else {            
             //Loop backwards to start from the most recent arrival/import
             for ($i = $messageCount-1; $i >= 0; $i--) {
                 $locationHealthMessage = $locationHealthMessages->get($i);
@@ -95,33 +99,47 @@ class Finder
      * @param Location $location
      * @return ArrayCollection
      */
-    public static function findLatestActiveIllnessesOfLocation(Location $location)
+    public static function findLatestActiveIllnessesOfLocation(Location $location, ObjectManager $em)
     {
         $locationHealth = $location->getLocationHealth();
-        $scrapies = $locationHealth->getScrapies();
-        $maediVisnas = $locationHealth->getMaediVisnas();
-        $scrapieCount = $scrapies->count();
-        $maediVisnaCount = $maediVisnas->count();
+
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('locationHealth', $locationHealth))
+            ->orderBy(['checkDate' => Criteria::DESC])
+            ->setMaxResults(1);
+
+        $lastMaediVisna = $em->getRepository('AppBundle:MaediVisna')
+            ->matching($criteria)->get(0);
+
+        $lastScrapie = $em->getRepository('AppBundle:Scrapie')
+            ->matching($criteria)->get(0);
 
         $illnesses = new ArrayCollection();
-        
-        //Loop backwards to start from the most recent illnesses
-                
-        for($i = $scrapieCount-1; $i >=0; $i--) {
-            $scrapie = $scrapies->get($i);
-            if($scrapie->getIsHidden() == false) {
-                $illnesses->set(Constant::SCRAPIE, $scrapie);
-            }            
-        }
-
-        for($i = $maediVisnaCount-1; $i >=0; $i--) {
-            $maediVisna = $maediVisnas->get($i);
-            if($maediVisna->getIsHidden() == false) {
-                $illnesses->set(Constant::MAEDI_VISNA, $maediVisna);
-            }
-        }
+        $illnesses->set(Constant::SCRAPIE, $lastScrapie);
+        $illnesses->set(Constant::MAEDI_VISNA, $lastMaediVisna);
 
         return $illnesses;
+    }
+
+
+    public static function getMaediVisnas(Location $location, ObjectManager $em)
+    {
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
+            ->orderBy(['checkDate' => Criteria::ASC]);
+
+        return $em->getRepository('AppBundle:MaediVisna')
+            ->matching($criteria);
+    }
+
+    public static function getScrapies(Location $location, ObjectManager $em)
+    {
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
+            ->orderBy(['checkDate' => Criteria::ASC]);
+
+        return $em->getRepository('AppBundle:Scrapie')
+            ->matching($criteria);
     }
 
     /**

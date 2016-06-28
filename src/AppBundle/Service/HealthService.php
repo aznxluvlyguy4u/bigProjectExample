@@ -11,6 +11,7 @@ use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
+use AppBundle\Entity\LocationHealthMessage;
 use AppBundle\Entity\LocationHealthQueue;
 use AppBundle\Entity\LocationHealthQueueRepository;
 use AppBundle\Entity\LocationHealthRepository;
@@ -19,6 +20,7 @@ use AppBundle\Util\Finder;
 use AppBundle\Util\HealthChecker;
 use AppBundle\Util\LocationHealthUpdater;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManager;
 
 class HealthService
@@ -51,14 +53,19 @@ class HealthService
         $isDeclareInBase = true;
         $this->updateLocationHealthByArrivalOrImport($location, $declareInBase, $isDeclareInBase);
 
-        if($baseKey < $messageCount) {
-            $isDeclareInBase = false;
-            for($i = $baseKey+1; $i < $messageCount; $i++) {
-                $declareIn = $locationHealthMessages->get($i)->getRequest();
-                $this->updateLocationHealthByArrivalOrImport($location, $declareIn, $isDeclareInBase);
-            }
-        }
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->gt('arrivalDate', $declareInBase->getArrivalDate()))
+            ->andWhere(Criteria::expr()->eq('location', $location))
+            ->orderBy(['arrivalDate' => Criteria::ASC]);
 
+        $locationHealthMessages = $this->entityManager->getRepository('AppBundle:LocationHealthMessage')
+            ->matching($criteria);
+
+        $isDeclareInBase = false;
+        foreach($locationHealthMessages as $locationHealthMessage) {
+            $declareIn = $locationHealthMessage->getRequest();
+            $this->updateLocationHealthByArrivalOrImport($location, $declareIn, $isDeclareInBase);
+        }
     }
 
     /**

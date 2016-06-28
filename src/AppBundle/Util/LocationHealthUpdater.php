@@ -14,6 +14,7 @@ use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Constant\Constant;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
 
 //TODO Nothing is done with the endDates yet.
@@ -74,28 +75,36 @@ class LocationHealthUpdater
         //Initializing the locationHealth if necessary. This is a fail safe. All locations should be created with their own locationHealth.
         $locationOfDestination = self::persistInitialLocationHealthIfNull($em, $locationOfDestination, $checkDate);
 
+        //Persist a new LocationHealthMessage for declareIn, without the healthValues
+        self::persistNewLocationHealthMessage($em, $declareIn);
 
         //Find the previous entities in the history
-        //'previous' refers to the non-revoked LocationHealthMessage-DeclareArrival/DeclareImport and the related illnesses right before the given one.
+        //'previous' refers to the non-revoked LocationHealthMessage-DeclareArrival/DeclareImport and the related
+        //illnesses right before the given one.
 
-        $locationHealthMessages = $locationOfDestination->getHealthMessages();
-        $messageCount = $locationHealthMessages->count();
-        $keyCurrentLocationHealthMessage = Finder::findLocationHealthMessageArrayKey($declareIn);
 
-        if($messageCount == 0 || $keyCurrentLocationHealthMessage == 0) {
-            $latestActiveIllnessesDestination = Finder::findLatestActiveIllnessesOfLocation($locationOfDestination);
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->lt('arrivalDate', $declareIn->getArrivalDate()))
+            ->andWhere(Criteria::expr()->eq('location', $locationOfDestination))
+            ->orderBy(['arrivalDate' => Criteria::DESC])
+            ->setMaxResults(1);
+
+        $previousHealthMessage = $em->getRepository('AppBundle:LocationHealthMessage')
+            ->matching($criteria);
+
+
+        if($previousHealthMessage->isEmpty()) {
+            $latestActiveIllnessesDestination = Finder::findLatestActiveIllnessesOfLocation($locationOfDestination, $em);
+            $previousMaediVisnaDestination = $latestActiveIllnessesDestination->get(Constant::MAEDI_VISNA);
+            $previousScrapieDestination = $latestActiveIllnessesDestination->get(Constant::SCRAPIE);
         } else {
-            $keyPreviousLocationHealthMessage = Finder::findKeyPreviousNonRevokedLocationHealthMessage($locationHealthMessages, $keyCurrentLocationHealthMessage);
-
-            if($keyPreviousLocationHealthMessage == null) {
-                $latestActiveIllnessesDestination = Finder::findLatestActiveIllnessesOfLocation($locationOfDestination);
-            } else {
-                $latestActiveIllnessesDestination = Finder::findIllnessesByArrayKey($locationHealthMessages, $keyPreviousLocationHealthMessage);
-            }
+            $previousMaediVisnaDestination = $previousHealthMessage->get(0)->getMaediVisna();
+            $previousScrapieDestination = $previousHealthMessage->get(0)->getScrapie();
+            $latestActiveIllnessesDestination = new ArrayCollection();
+            $latestActiveIllnessesDestination->set(Constant::MAEDI_VISNA, $previousMaediVisnaDestination);
+            $latestActiveIllnessesDestination->set(Constant::SCRAPIE, $previousScrapieDestination);
         }
 
-        $previousMaediVisnaDestination = $latestActiveIllnessesDestination->get(Constant::MAEDI_VISNA);
-        $previousScrapieDestination = $latestActiveIllnessesDestination->get(Constant::SCRAPIE);
         $locationHealthDestination = $locationOfDestination->getLocationHealth();
         $previousMaediVisnaDestinationIsHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($previousMaediVisnaDestination->getStatus());
         $previousScrapieDestinationIsHealthy = HealthChecker::verifyIsScrapieStatusHealthy($previousScrapieDestination->getStatus());
@@ -155,9 +164,28 @@ class LocationHealthUpdater
         /* The LocationHealthMessage contains the LocationHealth history
             and must be calculated AFTER the locationHealth has been updated.
         */
-        self::persistNewLocationHealthMessage($em, $declareIn, $locationHealthDestination, $locationHealthOrigin, $illnesses);
+        self::finalizeLocationHealthMessage($em, $declareIn, $locationHealthDestination, $locationHealthOrigin, $illnesses);
 
         return $declareIn;
+    }
+
+    /**
+     * @param ObjectManager $em
+     * @param DeclareArrival|DeclareImport $messageObject
+     */
+    private static function persistNewLocationHealthMessage(ObjectManager $em, $messageObject)
+    {
+        $locationHealthMessage = LocationHealthMessageBuilder::prepare($messageObject);
+        $location = $messageObject->getLocation();
+
+        //Set LocationHealthMessage relationships
+        $messageObject->setHealthMessage($locationHealthMessage);
+        $location->addHealthMessage($locationHealthMessage);
+
+        //Persist LocationHealthMessage
+        $em->persist($location);
+        $em->persist($locationHealthMessage);
+        $em->flush();
     }
 
     /**
@@ -167,14 +195,9 @@ class LocationHealthUpdater
      * @param LocationHealth $locationHealthOrigin
      * @param ArrayCollection $illnesses
      */
-    private static function persistNewLocationHealthMessage(ObjectManager $em, $messageObject, $locationHealthDestination, $locationHealthOrigin, $illnesses)
+    private static function finalizeLocationHealthMessage(ObjectManager $em, $messageObject, $locationHealthDestination, $locationHealthOrigin, $illnesses)
     {
-        $locationHealthMessage = LocationHealthMessageBuilder::build($em, $messageObject, $illnesses, $locationHealthDestination, $locationHealthOrigin);
-        $location = $messageObject->getLocation();
-
-        //Set LocationHealthMessage relationships
-        $messageObject->setHealthMessage($locationHealthMessage);
-        $location->addHealthMessage($locationHealthMessage);
+        $locationHealthMessage = LocationHealthMessageBuilder::finalize($em, $messageObject, $illnesses, $locationHealthDestination, $locationHealthOrigin);
 
         //Persist LocationHealthMessage
         $em->persist($locationHealthMessage);
@@ -305,59 +328,36 @@ class LocationHealthUpdater
      */
     private static function hideAllFollowingIllnesses(ObjectManager $em, Location $location, ArrayCollection $latestActiveIllnesses)
     {
-        $maediVisnas = $location->getLocationHealth()->getMaediVisnas(); //ordered by checkDate
-        $scrapies = $location->getLocationHealth()->getScrapies(); //ordered by checkDate
-
         $maediVisna = $latestActiveIllnesses->get(Constant::MAEDI_VISNA);
+
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
+            ->andWhere(Criteria::expr()->gt('checkDate', $maediVisna->getCheckDate()))
+            ->orderBy(['checkDate' => Criteria::ASC]);
+
+        $maediVisnas = $em->getRepository('AppBundle:MaediVisna')
+            ->matching($criteria);
+
+        foreach($maediVisnas as $maediVisna) {
+            $maediVisna->setIsHidden(true);
+            $em->persist($maediVisna);
+        }
+        $em->flush();
+
         $scrapie = $latestActiveIllnesses->get(Constant::SCRAPIE);
 
-        self::hideFollowingMaediVisnas($em, $maediVisnas, $maediVisna);
-        self::hideFollowingScrapies($em, $scrapies, $scrapie);
-    }
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
+            ->andWhere(Criteria::expr()->gt('checkDate', $scrapie->getCheckDate()))
+            ->orderBy(['checkDate' => Criteria::ASC]);
 
-    /**
-     * @param ObjectManager $em
-     * @param Collection $maediVisnas ordered in ascending order by checkDate
-     * @param MaediVisna $baseMaediVisna
-     * @return int
-     */
-    private static function hideFollowingMaediVisnas(ObjectManager $em, $maediVisnas, $baseMaediVisna)
-    {
-        $idBase = $baseMaediVisna->getId();
-        $maediVisnaCount = $maediVisnas->count();
+        $scrapies = $em->getRepository('AppBundle:Scrapie')
+            ->matching($criteria);
 
-        for($i = $maediVisnaCount-1; $i >=0; $i--) {
-            $maediVisna = $maediVisnas->get($i);
-            if($idBase == $maediVisna->getId()) {
-                return $maediVisnaCount-$i+1; //number of MaediVisnas made hidden
-            } else {
-                $maediVisna->setIsHidden(true);
-                $em->persist($maediVisna);
-                $em->flush();
-            }
+        foreach($scrapies as $scrapie) {
+            $scrapie->setIsHidden(true);
+            $em->persist($scrapie);
         }
-    }
-
-    /**
-     * @param ObjectManager $em
-     * @param Collection $scrapies ordered in ascending order by checkDate
-     * @param Scrapie $baseScrapie
-     * @return int
-     */
-    private static function hideFollowingScrapies(ObjectManager $em, $scrapies, $baseScrapie)
-    {
-        $idBase = $baseScrapie->getId();
-        $scrapieCount = $scrapies->count();
-
-        for($i = $scrapieCount-1; $i >=0; $i--) {
-            $scrapie = $scrapies->get($i);
-            if($idBase == $scrapie->getId()) {
-                return $scrapieCount-$i+1;//number of Scrapies made hidden
-            } else {
-                $scrapie->setIsHidden(true);
-                $em->persist($scrapie);
-                $em->flush();
-            }
-        }
+        $em->flush();
     }
 }

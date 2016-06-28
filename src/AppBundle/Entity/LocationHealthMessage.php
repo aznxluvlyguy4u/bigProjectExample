@@ -51,18 +51,16 @@ class LocationHealthMessage
 
     /**
      * @var boolean
-     * @ORM\Column(type="boolean")
+     * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * @Assert\NotBlank
      * @Expose
      */
     private $checkForMaediVisna;
 
     /**
      * @var boolean
-     * @ORM\Column(type="boolean")
+     * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * @Assert\NotBlank
      * @Expose
      */
     private $checkForScrapie;
