@@ -82,6 +82,8 @@ class Constant
     const SCRAPIE_STATUS = "scrapie_status";
     const SCRAPIE_END_DATE = "scrapie_end_date";
     const CHECK_DATE = "check_date";
+    const LOCATION_HEALTH_ORIGIN = "location_health_origin";
+    const LOCATION_HEALTH_DESTINATION = "location_health_destination";
 
     //Declaration specific variables
     const RELATION_NUMBER_ACCEPTANT_SNAKE_CASE_NAMESPACE = "relation_number_acceptant";
@@ -131,6 +133,7 @@ class Constant
 
     const LOCATION_HEALTH_REPOSITORY = 'AppBundle:LocationHealth';
     const PROCESSOR_REPOSITORY = 'AppBundle:Processor';
+    const PROVINCE_REPOSITORY = 'AppBundle:Province';
     const LOCATION_HEALTH_QUEUE_REPOSITORY = 'AppBundle:LocationHealthQueue';
 
     const ANIMAL_RESIDENCE_REPOSITORY = 'AppBundle:AnimalResidence';

@@ -162,7 +162,7 @@ abstract class Person implements UserInterface
    */
   public function setEmailAddress($emailAddress)
   {
-    $this->emailAddress = $emailAddress;
+    $this->emailAddress = strtolower($emailAddress);
 
     return $this;
   }

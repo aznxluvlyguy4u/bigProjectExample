@@ -54,9 +54,9 @@ class HealthChecker
      */
     public static function verifyIsLocationCompletelyHealthy($location)
     {
-        $locationHealth = Utils::returnLastLocationHealth($location->getHealths());
-        $maediVisnaStatus = $locationHealth->getMaediVisnaStatus();
-        $scrapieStatus = $locationHealth->getScrapieStatus();
+        $locationHealth = $locationHealth = $location->getLocationHealth();
+        $maediVisnaStatus = $locationHealth->getCurrentMaediVisnaStatus();
+        $scrapieStatus = $locationHealth->getCurrentScrapieStatus();
 
         if(self::verifyIsMaediVisnaStatusHealthy($maediVisnaStatus)
         && self::verifyIsScrapieStatusHealthy($scrapieStatus)) {
@@ -72,9 +72,9 @@ class HealthChecker
      */
     public static function verifyIsLocationCompletelyNotHealthy($location)
     {
-        $locationHealth = Utils::returnLastLocationHealth($location->getHealths());
-        $maediVisnaStatus = $locationHealth->getMaediVisnaStatus();
-        $scrapieStatus = $locationHealth->getScrapieStatus();
+        $locationHealth = $location->getLocationHealth();
+        $maediVisnaStatus = $locationHealth->getCurrentMaediVisnaStatus();
+        $scrapieStatus = $locationHealth->getCurrentScrapieStatus();
 
         if(!self::verifyIsMaediVisnaStatusHealthy($maediVisnaStatus)
             && !self::verifyIsScrapieStatusHealthy($scrapieStatus)) {
@@ -90,8 +90,8 @@ class HealthChecker
      */
     public static function verifyIsLocationHealthy(LocationHealth $locationHealth)
     {
-        $scrapieStatusHealthy = HealthChecker::verifyIsScrapieStatusHealthy($locationHealth->getScrapieStatus());
-        $maediVisnaStatusHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($locationHealth->getMaediVisnaStatus());
+        $scrapieStatusHealthy = HealthChecker::verifyIsScrapieStatusHealthy($locationHealth->getCurrentScrapieStatus());
+        $maediVisnaStatusHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($locationHealth->getCurrentMaediVisnaStatus());
 
         if($scrapieStatusHealthy && $maediVisnaStatusHealthy) {
             return true;
@@ -107,10 +107,10 @@ class HealthChecker
      */
     public static function verifyHealthStatusesAreAtIdenticalLevel(LocationHealth $destination, LocationHealth $origin)
     {
-        $destinationScrapieStatus = self::verifyIsScrapieStatusHealthy($destination->getScrapieStatus());
-        $originScrapieStatus = self::verifyIsScrapieStatusHealthy($origin->getScrapieStatus());
-        $destinationMaediVisnaStatus = self::verifyIsMaediVisnaStatusHealthy($destination->getMaediVisnaStatus());
-        $originMaediVisnaStatus = self::verifyIsMaediVisnaStatusHealthy($origin->getMaediVisnaStatus());
+        $destinationScrapieStatus = self::verifyIsScrapieStatusHealthy($destination->getCurrentScrapieStatus());
+        $originScrapieStatus = self::verifyIsScrapieStatusHealthy($origin->getCurrentScrapieStatus());
+        $destinationMaediVisnaStatus = self::verifyIsMaediVisnaStatusHealthy($destination->getCurrentMaediVisnaStatus());
+        $originMaediVisnaStatus = self::verifyIsMaediVisnaStatusHealthy($origin->getCurrentMaediVisnaStatus());
 
         if($destinationScrapieStatus == $originScrapieStatus
             && $destinationMaediVisnaStatus == $originMaediVisnaStatus) {
@@ -150,10 +150,10 @@ class HealthChecker
      * @return bool
      */
     public static function verifyHasLocationHealthChanged($previousLocationHealthDestination, $newLocationHealthDestination){
-        $previousScrapieStatus = $previousLocationHealthDestination->getScrapieStatus();
-        $newScrapieStatus = $newLocationHealthDestination->getScrapieStatus();
-        $previousMaediVisnaStatus = $previousLocationHealthDestination->getMaediVisnaStatus();
-        $newMaediVisnaStatus = $newLocationHealthDestination->getMaediVisnaStatus();
+        $previousScrapieStatus = $previousLocationHealthDestination->getCurrentScrapieStatus();
+        $newScrapieStatus = $newLocationHealthDestination->getCurrentScrapieStatus();
+        $previousMaediVisnaStatus = $previousLocationHealthDestination->getCurrentMaediVisnaStatus();
+        $newMaediVisnaStatus = $newLocationHealthDestination->getCurrentMaediVisnaStatus();
 
         if($previousScrapieStatus == $newScrapieStatus
             && $previousMaediVisnaStatus == $newMaediVisnaStatus) {

@@ -18,12 +18,12 @@ class ProcessorOutput extends Output
     {
         if($includeName) {
             $result = array(
-                "processors" => self::createUbnsAndNameArray($processors)
+                Constant::RESULT_NAMESPACE => self::createUbnsAndNameArray($processors)
             );
 
         } else {
             $result = array(
-                "ubns" => self::createUbnsArray($processors)
+                Constant::RESULT_NAMESPACE => self::createUbnsArray($processors)
             );
         }
         return $result;

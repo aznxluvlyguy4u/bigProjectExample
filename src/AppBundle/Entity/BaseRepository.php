@@ -106,7 +106,11 @@ class BaseRepository extends EntityRepository
         $query = $this->getEntityManager()->getConnection()->prepare($sql);
         $query->execute();
 
-        return new \DateTime($query->fetchColumn());
+        if($query->fetchColumn() == null) {
+            return null;
+        } else {
+            return new \DateTime($query->fetchColumn());
+        }
     }
 
     /**
@@ -152,24 +156,48 @@ class BaseRepository extends EntityRepository
 
         $query = $this->getEntityManager()->getConnection()->prepare($sql);
         $query->execute();
-
-        return new \DateTime($query->fetchColumn());
+        
+        if($query->fetchColumn() == null) {
+            return null;
+        } else {
+            return new \DateTime($query->fetchColumn());
+        }
     }
 
     /**
      * @param Location $location
+     * @param string $errorMessageForDateIsNull
      * @return ArrayCollection
      */
-    public function getLatestLogDatesForDashboardDeclarationsPerLocation(Location $location)
+    public function getLatestLogDatesForDashboardDeclarationsPerLocation(Location $location, $errorMessageForDateIsNull = null)
     {
         $repository = $this->getEntityManager()->getRepository(Constant::DECLARE_BASE_REPOSITORY);
         $ubn = $location->getUbn();
 
         $latestArrivalLogdate = $repository->getLatestLogDatePerUbn($ubn,RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_IMPORT_ENTITY);
+        if($latestArrivalLogdate == null) {
+            $latestArrivalLogdate = $errorMessageForDateIsNull;
+        }
+
         $latestDepartLogdate = $repository->getLatestLogDatePerUbn($ubn,RequestType::DECLARE_DEPART_ENTITY, RequestType::DECLARE_EXPORT_ENTITY);
+        if($latestDepartLogdate == null) {
+            $latestDepartLogdate = $errorMessageForDateIsNull;
+        }
+
         $latestLossLogdate = $repository->getLatestLogDatePerUbn($ubn,RequestType::DECLARE_LOSS_ENTITY);
+        if($latestLossLogdate == null) {
+            $latestLossLogdate = $errorMessageForDateIsNull;
+        }
+
         $latestTagTransferLogdate = $repository->getLatestLogDatePerUbn($ubn,RequestType::DECLARE_TAGS_TRANSFER_ENTITY);
+        if($latestTagTransferLogdate == null) {
+            $latestTagTransferLogdate = $errorMessageForDateIsNull;
+        }
+
         $latestBirthLogdate = $repository->getLatestLogDatePerUbn($ubn,RequestType::DECLARE_BIRTH_ENTITY);
+        if($latestBirthLogdate == null) {
+            $latestBirthLogdate = $errorMessageForDateIsNull;
+        }
 
         $declarationLogDate = new ArrayCollection();
         $declarationLogDate->set(RequestType::DECLARE_ARRIVAL_ENTITY, $latestArrivalLogdate);

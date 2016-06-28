@@ -9,6 +9,7 @@ use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthMessage;
+use AppBundle\Enumerator\LocationHealthStatus;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\HealthChecker;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -17,22 +18,18 @@ use Symfony\Component\Console\Event\ConsoleCommandEvent;
 class LocationHealthMessageBuilder
 {
     /**
+     * @param ObjectManager $em
      * @param DeclareArrival|DeclareImport $declareIn
-     * @param integer $idPreviousLocationHealthOfDestination
-     * @param Animal $animal
+     * @param LocationHealth $locationHealthDestination
+     * @param LocationHealth|null $locationHealthOrigin
      * @return LocationHealthMessage
      */
-    public static function build(ObjectManager $em, $declareIn, $idPreviousLocationHealthOfDestination = null, Animal $animal = null)
+    public static function build(ObjectManager $em, $declareIn, LocationHealth $locationHealthDestination, LocationHealth $locationHealthOrigin = null)
     {
-        if($animal == null) {
-            $animal = $declareIn->getAnimal();
-        }
-
         $location = $declareIn->getLocation();
 
         $healthMessage = new LocationHealthMessage();
         $healthMessage->setLocation($location);
-        $healthMessage->setAnimal($animal);
         $healthMessage->setUbnNewOwner($location->getUbn());
         $healthMessage->setUlnCountryCode($declareIn->getUlnCountryCode());
         $healthMessage->setUlnNumber($declareIn->getUlnNumber());
@@ -41,33 +38,39 @@ class LocationHealthMessageBuilder
         $declareType = Utils::getClassName($declareIn);
         $healthMessage->setReasonOfHealthStatusDemotion(Utils::getClassName($declareIn));
 
-        //By default the healthStatuses are false, like for DeclareImport. But DeclareArrival can override these values.
-        $isMaediVisnaStatusHealthy = false;
-        $isScrapieStatusHealthy = false;
+        //Destination
+        $maediVisnaStatusDestination = $locationHealthDestination->getCurrentMaediVisnaStatus();
+        $scrapieStatusDestination = $locationHealthDestination->getCurrentScrapieStatus();
+        $healthMessage->setDestinationMaediVisnaStatus($maediVisnaStatusDestination);
+        $healthMessage->setDestinationScrapieStatus($scrapieStatusDestination);
+
+        //Origin
+        if($locationHealthOrigin == null) {
+            $maediVisnaStatusOrigin = LocationHealthStatus::UNKNOWN;
+            $scrapieStatusOrigin = LocationHealthStatus::UNKNOWN;
+        } else {
+            $maediVisnaStatusOrigin = $locationHealthOrigin->getCurrentMaediVisnaStatus();
+            $scrapieStatusOrigin = $locationHealthOrigin->getCurrentScrapieStatus();
+        }
+        $healthMessage->setOriginMaediVisnaStatus($maediVisnaStatusOrigin);
+        $healthMessage->setOriginScrapieStatus($scrapieStatusOrigin);
+
+        $isMaediVisnaStatusOriginHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($maediVisnaStatusOrigin);
+        $isScrapieStatusOriginHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieStatusOrigin);
+
 
         switch($declareType) {
             case RequestType::DECLARE_ARRIVAL_ENTITY:
                 $healthMessage->setArrival($declareIn);
                 $ubnPreviousOwner = $declareIn->getUbnPreviousOwner();
                 $healthMessage->setUbnPreviousOwner($ubnPreviousOwner); //animalCountryOrigin for arrivals is null.
-
-                $locationOrigin = $em->getRepository(Constant::LOCATION_REPOSITORY)->findByUbn($ubnPreviousOwner);
-                if($locationOrigin != null) {
-                    $locationHealthOrigin = Utils::returnLastLocationHealth($locationOrigin->getHealths());
-                    $isMaediVisnaStatusHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($locationHealthOrigin->getMaediVisnaStatus());
-                    $isScrapieStatusHealthy = HealthChecker::verifyIsScrapieStatusHealthy($locationHealthOrigin->getScrapieStatus());
-                } else {
-                    $isMaediVisnaStatusHealthy = false;
-                    $isScrapieStatusHealthy = false;
-                }
+                $healthMessage->setArrivalDate($declareIn->getArrivalDate());
                 break;
 
             case RequestType::DECLARE_IMPORT_ENTITY;
                 $healthMessage->setImport($declareIn);
                 $healthMessage->setAnimalCountryOrigin($declareIn->getAnimalCountryOrigin()); //ubnPreviousOwner for imports is null.
-
-                $isMaediVisnaStatusHealthy = false;
-                $isScrapieStatusHealthy = false;
+                $healthMessage->setArrivalDate($declareIn->getImportDate());
                 break;
 
             default:
@@ -75,20 +78,16 @@ class LocationHealthMessageBuilder
         }
 
         //Set illness  booleans
-        if($isMaediVisnaStatusHealthy) {
+        if($isMaediVisnaStatusOriginHealthy) {
             $healthMessage->setCheckForMaediVisna(false);
         } else {
             $healthMessage->setCheckForMaediVisna(true);
         }
 
-        if($isScrapieStatusHealthy) {
+        if($isScrapieStatusOriginHealthy) {
             $healthMessage->setCheckForScrapie(false);
         } else {
             $healthMessage->setCheckForScrapie(true);
-        }
-        //id of previousLocationHealth
-        if($idPreviousLocationHealthOfDestination != null) {
-            $healthMessage->setPreviousLocationHealthId($idPreviousLocationHealthOfDestination);
         }
 
         return $healthMessage;

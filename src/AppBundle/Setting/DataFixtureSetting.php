@@ -7,6 +7,7 @@ class DataFixtureSetting
 {
     const USE_REAL_CLIENT_DATA = true;
     const USE_MOCKED_COUNTRIES = true;
+    const USE_REAL_PROVINCES = true;
     const USE_REAL_PROCESSOR_DATA = true;
 
     const USE_MOCKED_CLIENT = false;

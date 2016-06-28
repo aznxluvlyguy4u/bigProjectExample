@@ -99,6 +99,23 @@ class TagRepository extends BaseRepository {
 
   /**
    * @param Client $client
+   * @param string $ulnNumber
+   * @return bool
+   */
+  public function isAnUnassignedTag(Client $client, $ulnNumber)
+  {
+    foreach($client->getTags() as $tag){
+      if($tag->getTagStatus() == TagStateType::UNASSIGNED
+      && $tag->getUlnNumber() == $ulnNumber) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * @param Client $client
    * @param Ram|Ewe|Neuter $animal
    * @return Tag|null
    */

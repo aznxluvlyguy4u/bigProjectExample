@@ -110,6 +110,6 @@ class MockedCountries implements FixtureInterface, ContainerAwareInterface, Orde
    */
   public function getOrder()
   {
-    return 4;
+    return 1;
   }
 }

@@ -152,20 +152,6 @@ class Utils
     public static function returnLastResponse(Collection $responses) {
         return self::returnLastItemFromCollectionByLogDate($responses); }
 
-    /**
-     * @param Collection $scrapies
-     * @return Scrapie|null
-     */
-    public static function returnlastScrapie(Collection $scrapies) {
-        return self::returnLastItemFromCollectionByLogDate($scrapies); }
-
-    /**
-     * @param Collection $maediVisnas
-     * @return MaediVisna|null
-     */
-    public static function returnlastMaediVisna(Collection $maediVisnas) {
-        return self::returnLastItemFromCollectionByLogDate($maediVisnas); }
-
 
     /**
      * @param Collection $locationHealths
