@@ -26,6 +26,9 @@ class Constant
     //Identity
     const NAME_NAMESPACE = 'name';
 
+    //Array
+    const KEY = 'key';
+
     //Json response
     const MESSAGE_NAMESPACE = 'message';
     const RESULT_NAMESPACE = "result";
@@ -77,8 +80,11 @@ class Constant
     const IS_IMPORT_ANIMAL = 'is_import_animal';
 
     //Health Status
+    const ILLNESSES = "illnesses";
+    const MAEDI_VISNA = "maedi_visna";
     const MAEDI_VISNA_STATUS = "maedi_visna_status";
     const MAEDI_VISNA_END_DATE = "maedi_visna_end_date";
+    const SCRAPIE = "scrapie";
     const SCRAPIE_STATUS = "scrapie_status";
     const SCRAPIE_END_DATE = "scrapie_end_date";
     const CHECK_DATE = "check_date";
@@ -135,11 +141,14 @@ class Constant
     const COMPANY_REPOSITORY = 'AppBundle:Company';
     const LOCATION_REPOSITORY = 'AppBundle:Location';
 
+
     const CLIENT_MIGRATION_DATA_REPOSITORY = 'AppBundle:ClientMigrationData';
 
     const LOCATION_HEALTH_REPOSITORY = 'AppBundle:LocationHealth';
     const PROCESSOR_REPOSITORY = 'AppBundle:Processor';
     const PROVINCE_REPOSITORY = 'AppBundle:Province';
     const LOCATION_HEALTH_QUEUE_REPOSITORY = 'AppBundle:LocationHealthQueue';
+
+    const ANIMAL_RESIDENCE_REPOSITORY = 'AppBundle:AnimalResidence';
 
 }

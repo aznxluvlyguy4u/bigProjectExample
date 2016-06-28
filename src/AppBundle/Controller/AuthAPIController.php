@@ -327,6 +327,7 @@ class AuthAPIController extends APIController {
                 array('firstName' => $client->getFirstName(),
                     'lastName' => $client->getLastName(),
                     'userName' => $client->getUsername(),
+                    'email' => $client->getEmailAddress(),
                     'relationNumberKeeper' => $client->getRelationNumberKeeper(),
                     'password' => $newPassword)
             ),

@@ -204,7 +204,7 @@ class TagValidator
         $result = array(
             Constant::CODE_NAMESPACE => $code,
             Constant::MESSAGE_NAMESPACE => $message,
-            Constant::TAG_NAMESPACE => $this->ulnCountryCode . $this->ulnNumberTag);
+            Constant::ULN_NAMESPACE => $this->ulnCountryCode . $this->ulnNumberTag);
 
         return new JsonResponse($result, $code);
     }

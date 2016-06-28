@@ -15,6 +15,7 @@ use AppBundle\Entity\LocationHealthQueue;
 use AppBundle\Entity\LocationHealthQueueRepository;
 use AppBundle\Entity\LocationHealthRepository;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Util\Finder;
 use AppBundle\Util\HealthChecker;
 use AppBundle\Util\LocationHealthUpdater;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -36,54 +37,47 @@ class HealthService
 
 
     /**
-     * @param DeclareArrival|DeclareImport $declareIn
-     * @return null|ArrayCollection
+     * @param DeclareArrival|DeclareImport $declareInBase
      */
-    public function updateLocationHealth($declareIn)
+    public function updateLocationHealth($declareInBase)
     {
-        $location = $declareIn->getLocation();
+        $location = $declareInBase->getLocation();
+
+        $locationHealthMessages = $declareInBase->getLocation()->getHealthMessages(); //ordered ascending by checkDate
+        $baseKey = Finder::findLocationHealthMessageArrayKey($declareInBase); //found anti-chronologically by checkDate
+        $messageCount = $locationHealthMessages->count();
+
+        //update locationHealth chronologically
+        $isDeclareInBase = true;
+        $this->updateLocationHealthByArrivalOrImport($location, $declareInBase, $isDeclareInBase);
+
+        if($baseKey < $messageCount) {
+            $isDeclareInBase = false;
+            for($i = $baseKey+1; $i < $messageCount; $i++) {
+                $declareIn = $locationHealthMessages->get($i)->getRequest();
+                $this->updateLocationHealthByArrivalOrImport($location, $declareIn, $isDeclareInBase);
+            }
+        }
+
+    }
+
+    /**
+     * @param Location $location
+     * @param DeclareArrival|DeclareImport $declareIn
+     * @param boolean $isDeclareBaseIn
+     */
+    private function updateLocationHealthByArrivalOrImport(Location $location, $declareIn, $isDeclareBaseIn)
+    {
         $em = $this->entityManager;
 
         if($declareIn instanceof DeclareArrival) {
-            $ubnPreviousOwner = $declareIn->getUbnPreviousOwner();
-            $checkDate = $declareIn->getArrivalDate();
-            $result = LocationHealthUpdater::updateByGivenUbnOfOrigin($em, $location, $ubnPreviousOwner, $checkDate);
+            LocationHealthUpdater::updateByGivenUbnOfOrigin($em, $location, $declareIn, $isDeclareBaseIn);
 
         } else if ($declareIn instanceof DeclareImport) {
-            $checkDate = $declareIn->getImportDate();
-            $result = LocationHealthUpdater::updateWithoutOriginHealthData($em, $location, $checkDate);
+            LocationHealthUpdater::updateWithoutOriginHealthData($em, $location, $declareIn, $isDeclareBaseIn);
 
         } else {
-            return null;
+            //do nothing
         }
-
-        /* The LocationHealthMessage contains the LocationHealth history
-          and must be calculated AFTER the locationHealth has been updated.
-        */
-        $locationHealthDestination = $result->get(Constant::LOCATION_HEALTH_DESTINATION);
-        $locationHealthOrigin = $result->get(Constant::LOCATION_HEALTH_ORIGIN);
-        $this->persistNewLocationHealthMessage($declareIn, $locationHealthDestination, $locationHealthOrigin);
-
-        return $result;
-    }
-
-
-    /**
-     * @param DeclareArrival|DeclareImport $messageObject
-     * @param LocationHealth $locationHealthDestination
-     * @param LocationHealth $locationHealthOrigin
-     */
-    private function persistNewLocationHealthMessage($messageObject, $locationHealthDestination, $locationHealthOrigin)
-    {
-        $locationHealthMessage = LocationHealthMessageBuilder::build($this->entityManager, $messageObject, $locationHealthDestination, $locationHealthOrigin);
-        $location = $messageObject->getLocation();
-
-        //Set LocationHealthMessage relationships
-        $messageObject->setHealthMessage($locationHealthMessage);
-        $location->addHealthMessage($locationHealthMessage);
-
-        //Persist LocationHealthMessage
-        $this->entityManager->persist($locationHealthMessage);
-        $this->entityManager->flush();
     }
 }

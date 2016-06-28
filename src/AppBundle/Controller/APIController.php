@@ -70,6 +70,9 @@ class APIController extends Controller implements APIControllerInterface
   /** @var \AppBundle\Service\HealthService */
   private $healthService;
 
+  /** @var \AppBundle\Service\EntityGetter */
+  private $animalLocationHistoryService;
+
   /**
    * @return \AppBundle\Service\EntityGetter
    */
@@ -118,6 +121,19 @@ class APIController extends Controller implements APIControllerInterface
 
     return $this->queueService;
   }
+
+
+  /**
+   * @return \AppBundle\Service\AnimalLocationHistoryService
+   */
+  protected function getAnimalLocationHistoryService(){
+    if($this->animalLocationHistoryService == null){
+      $this->animalLocationHistoryService = $this->get('app.animallocation.history');
+    }
+
+    return $this->animalLocationHistoryService;
+  }
+
 
   /**
    * @return \AppBundle\Service\HealthService

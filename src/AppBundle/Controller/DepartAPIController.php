@@ -255,6 +255,8 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     $this->persist($messageObject);
     $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
 
+    //updating the Animal location history is done completely in the worker
+
     return new JsonResponse($messageArray, 200);
   }
 

@@ -312,4 +312,28 @@ class Ram extends Animal
     {
         return $this->weightMeasurements;
     }
+
+    /**
+     * Add animalResidenceHistory
+     *
+     * @param \AppBundle\Entity\AnimalResidence $animalResidenceHistory
+     *
+     * @return Ram
+     */
+    public function addAnimalResidenceHistory(\AppBundle\Entity\AnimalResidence $animalResidenceHistory)
+    {
+        $this->animalResidenceHistory[] = $animalResidenceHistory;
+
+        return $this;
+    }
+
+    /**
+     * Remove animalResidenceHistory
+     *
+     * @param \AppBundle\Entity\AnimalResidence $animalResidenceHistory
+     */
+    public function removeAnimalResidenceHistory(\AppBundle\Entity\AnimalResidence $animalResidenceHistory)
+    {
+        $this->animalResidenceHistory->removeElement($animalResidenceHistory);
+    }
 }
