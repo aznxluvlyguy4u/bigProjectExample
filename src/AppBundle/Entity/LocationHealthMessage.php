@@ -249,6 +249,36 @@ class LocationHealthMessage
         $this->setLogDate(new \DateTime('now'));
     }
 
+
+    /**
+     * @return null|string
+     */
+    public function getRequestId()
+    {
+        if($this->arrival != null) {
+            return $this->arrival->getRequestId();
+        } else if($this->import != null) {
+            return $this->import->getRequestId();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * @return DeclareArrival|DeclareImport|null
+     */
+    public function getRequest()
+    {
+        if($this->arrival != null) {
+            return $this->arrival;
+        } else if($this->import != null) {
+            return $this->import;
+        } else {
+            return null;
+        }
+    }
+
+
     /**
      * Get id
      *
