@@ -3,6 +3,8 @@
 namespace AppBundle\Component;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthQueue;
 use AppBundle\Entity\MaediVisna;

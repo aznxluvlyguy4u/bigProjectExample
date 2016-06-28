@@ -26,6 +26,9 @@ class Constant
     //Identity
     const NAME_NAMESPACE = 'name';
 
+    //Array
+    const KEY = 'key';
+
     //Json response
     const MESSAGE_NAMESPACE = 'message';
     const RESULT_NAMESPACE = "result";
