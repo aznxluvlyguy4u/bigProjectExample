@@ -6,8 +6,6 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthQueue;
-use AppBundle\Entity\MaediVisna;
-use AppBundle\Entity\Scrapie;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\WeightMeasurement;
 use AppBundle\Enumerator\RequestStateType;

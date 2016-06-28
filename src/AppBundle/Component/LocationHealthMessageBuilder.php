@@ -12,6 +12,7 @@ use AppBundle\Entity\LocationHealthMessage;
 use AppBundle\Enumerator\LocationHealthStatus;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\HealthChecker;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Console\Event\ConsoleCommandEvent;
 
@@ -20,11 +21,12 @@ class LocationHealthMessageBuilder
     /**
      * @param ObjectManager $em
      * @param DeclareArrival|DeclareImport $declareIn
+     * @param ArrayCollection $illnesses
      * @param LocationHealth $locationHealthDestination
      * @param LocationHealth|null $locationHealthOrigin
      * @return LocationHealthMessage
      */
-    public static function build(ObjectManager $em, $declareIn, LocationHealth $locationHealthDestination, LocationHealth $locationHealthOrigin = null)
+    public static function build(ObjectManager $em, $declareIn, ArrayCollection $illnesses, LocationHealth $locationHealthDestination, LocationHealth $locationHealthOrigin = null)
     {
         $location = $declareIn->getLocation();
 
@@ -33,6 +35,10 @@ class LocationHealthMessageBuilder
         $healthMessage->setUbnNewOwner($location->getUbn());
         $healthMessage->setUlnCountryCode($declareIn->getUlnCountryCode());
         $healthMessage->setUlnNumber($declareIn->getUlnNumber());
+
+        //Set Illnesses
+        $healthMessage->setMaediVisna($illnesses->get(Constant::MAEDI_VISNA));
+        $healthMessage->setScrapie($illnesses->get(Constant::SCRAPIE));
 
         //Set values related to declare type, DeclareArrival or DeclareImport
         $declareType = Utils::getClassName($declareIn);
