@@ -7,7 +7,9 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
 use AppBundle\Enumerator\MigrationStatus;
 use AppBundle\Setting\MigrationSetting;
+use AppBundle\Util\Finder;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\EntityManager;
 use Monolog\Handler\Curl\Util;
 
 /**
@@ -18,16 +20,13 @@ class ClientMigration
 {
     /**
      * @param $newClients
-     * @param $doctrine
+     * @param EntityManager $em
      * @param $encoder
      * @param ArrayCollection $content
      * @return array
      */
-    public static function generateNewPasswordsAndEmailsForMigratedClients($newClients, $doctrine, $encoder, ArrayCollection $content)
+    public static function generateNewPasswordsAndEmailsForMigratedClients($newClients, $em, $encoder, ArrayCollection $content)
     {
-        $em = $doctrine->getEntityManager();
-        $migrationDataRepository = $doctrine->getRepository(Constant::CLIENT_MIGRATION_DATA_REPOSITORY);
-
         //Settings
         $defaultRunTimeLimitInMinutes = 0; //if set on 0, it will have no run-time-limit
         $runTimeLimitInMinutes = Utils::getValueFromArrayCollectionKeyIfItExists($content, Constant::RUN_TIME_LIMIT_IN_MINUTES, $defaultRunTimeLimitInMinutes);
@@ -44,22 +43,33 @@ class ClientMigration
             $emailAddress = $newClient->getEmailAddress();
             $clientHasEmailAddress = $emailAddress != null && $emailAddress != MigrationSetting::EMPTY_EMAIL_ADDRESS_INDICATOR;
 
-            if($clientHasEmailAddress) {
+            $ubns = Finder::findUbnsOfClient($newClient);
+            $clientHasUbn = false;
+            if($ubns->count() > 0) {
+                $clientHasUbn = true;
+                $ubn = $ubns->get(0); //use the first ubn
+            }
+
+            if($clientHasEmailAddress && $clientHasUbn) { //client can manage their own account
                 $newPassword = Utils::randomString($passwordLength);
 
-            } else { //Client has no email address
-                $newPassword = MigrationSetting::DEFAULT_MIGRATION_PASSWORD . Utils::randomString(3)
-                    . "-" . Utils::randomString(2) . "-" . Utils::randomString(3);
+            } else { //Client has no email address and/or no ubn
+                $newPassword = MigrationSetting::DEFAULT_MIGRATION_PASSWORD;
 
                 $emailAddress = self::generateNewEmailAddress($newClient);
+                $newClient->setEmailAddress($emailAddress);
 
                 $migrationsWithNewEmailAddress++;
             }
 
             $encryptedPassword = $encoder->encodePassword($newClient, $newPassword);
+            $newClient->setPassword($encryptedPassword);
+
+            $em->persist($newClient);
+            $em->flush();
 
             //Migration data
-            file_put_contents('/tmp/nsfo_passwords.txt', $emailAddress." ".$newPassword, FILE_APPEND);
+            file_put_contents('/tmp/nsfo_passwords.txt', $emailAddress." ".$newPassword."/n", FILE_APPEND);
 
             //Counters
             $totalMigrationCount++;
@@ -74,11 +84,11 @@ class ClientMigration
         $companies = $newClient->getCompanies();
         $location = null; //default value
         $address = null; //default value
-        if(sizeof($companies > 0 )) {
+        if(sizeof($companies) > 0 ) {
             foreach($companies as $company) {
                 $locations = $company->getLocations();
                 $address = $company->getAddress();
-                if(sizeof($locations > 0)) {
+                if(sizeof($locations) > 0) {
                     $location = $locations->get(0); //just return the first location found in any company
                 }
             }

@@ -141,9 +141,6 @@ class Constant
     const COMPANY_REPOSITORY = 'AppBundle:Company';
     const LOCATION_REPOSITORY = 'AppBundle:Location';
 
-
-    const CLIENT_MIGRATION_DATA_REPOSITORY = 'AppBundle:ClientMigrationData';
-
     const LOCATION_HEALTH_REPOSITORY = 'AppBundle:LocationHealth';
     const PROCESSOR_REPOSITORY = 'AppBundle:Processor';
     const PROVINCE_REPOSITORY = 'AppBundle:Province';

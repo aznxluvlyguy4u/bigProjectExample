@@ -359,12 +359,13 @@ class AuthAPIController extends APIController {
 //    }
 
     $doctrine = $this->getDoctrine();
+    $em = $doctrine->getEntityManager();
     $encoder = $this->get('security.password_encoder');
     $content = $this->getContentAsArray($request);
 
     $newClients = $doctrine->getRepository(Constant::CLIENT_REPOSITORY)->getClientsWithoutAPassword();
     
-    $migrationResults = ClientMigration::generateNewPasswordsAndEmailsForMigratedClients($newClients, $doctrine, $encoder, $content);
+    $migrationResults = ClientMigration::generateNewPasswordsAndEmailsForMigratedClients($newClients, $em, $encoder, $content);
 
     return new JsonResponse($migrationResults, 200);
   }
