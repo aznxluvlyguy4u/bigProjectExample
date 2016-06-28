@@ -734,10 +734,10 @@ class APIController extends Controller implements APIControllerInterface
 
     } else {
 
-      $ubns = Finder::findUbnsOfClient($client);
-      if($ubns->count() > 0) {
-        //pick the first available UBN as default
-        return $ubns->get(0);
+      $locations = Finder::findLocationsOfClient($client);
+      if($locations->count() > 0) {
+        //pick the first available Location as default
+        return $locations->get(0);
 
       } else {
         return null;
