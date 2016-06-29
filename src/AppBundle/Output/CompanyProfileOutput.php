@@ -30,7 +30,7 @@ class CompanyProfileOutput extends Output
                     "ubn" => self::fillNull($location->getUbn()),
                     "vat_number" => self::fillNull($company->getVatNumber()),
                     "chamber_of_commerce_number" => self::fillNull($company->getChamberOfCommerceNumber()),
-                    "company_relation_number" => self::fillNull($company->getCompanyRelationNumber()),
+                    "company_relation_number" => self::fillNull($client->getRelationNumberKeeper()),
                     "billing_address" =>
                         array(
                             "street_name" => self::fillNull($billingAddress->getStreetName()),
