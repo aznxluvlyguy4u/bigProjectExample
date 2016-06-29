@@ -42,10 +42,10 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
    * @Method("GET")
    */
   public function getExportById(Request $request, $Id) {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY);
 
-    $export = $repository->getExportByRequestId($client, $Id);
+    $export = $repository->getExportByRequestId($location, $Id);
 
     return new JsonResponse($export, 200);
   }
@@ -73,7 +73,7 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
    *        "name"="state",
    *        "dataType"="string",
    *        "required"=false,
-   *        "description"=" DeclareExportss to filter on",
+   *        "description"=" DeclareExports to filter on",
    *        "format"="?state=state-type"
    *      }
    *   },
@@ -87,30 +87,30 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
    * @Method("GET")
    */
   public function getExports(Request $request) {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY);
 
     if(!$stateExists) {
-      $declareExports = $repository->getExports($client);
+      $declareExports = $repository->getExports($location);
 
     } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
 
       $declareExports = new ArrayCollection();
-      foreach($repository->getExports($client, RequestStateType::OPEN) as $export) {
+      foreach($repository->getExports($location, RequestStateType::OPEN) as $export) {
         $declareExports->add($export);
       }
 
-      foreach($repository->getExports($client, RequestStateType::REVOKING) as $export) {
+      foreach($repository->getExports($location, RequestStateType::REVOKING) as $export) {
         $declareExports->add($export);
       }
-      foreach($repository->getExports($client, RequestStateType::FINISHED) as $export) {
+      foreach($repository->getExports($location, RequestStateType::FINISHED) as $export) {
         $declareExports->add($export);
       }
 
     } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareExports = $repository->getExports($client, $state);
+      $declareExports = $repository->getExports($location, $state);
     }
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareExports), 200);

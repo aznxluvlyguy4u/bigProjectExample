@@ -43,6 +43,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
   public function getHealthByLocation(Request $request, $ubn) {
 
     $client = $this->getAuthenticatedUser($request);
+    //TODO if ubn is in header change route and use $location = $this->getSelectedLocation($request);
     $location = $this->getLocationByUbn($client, $ubn);
 
     if($location == null) {
@@ -54,4 +55,30 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
   }
 
+  /**
+   *
+   * Update Health status for all ubns based on the DeclareArrivals and DeclareImports in the LocationHealthQueue.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Update Health status for all ubns based on the DeclareArrivals and DeclareImports in the LocationHealthQueue",
+   *   output = "AppBundle\Entity\HealthOutput"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/healths")
+   * @Method("PUT")
+   */
+  public function updateHealthStatus(Request $request) {
+    $this->getHealthService()->processLocationHealthQueue();
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => "OK"), 200);
+  }
 }

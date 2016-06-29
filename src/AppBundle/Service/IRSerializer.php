@@ -3,7 +3,15 @@
 namespace AppBundle\Service;
 
 use AppBundle\Component\Utils;
+use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\DeclarationDetail;
+use AppBundle\Entity\DeclareAnimalFlag;
+use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareExport;
+use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Employee;
@@ -28,7 +36,6 @@ use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
 use AppBundle\Enumerator\UIDType;
 use AppBundle\Setting\ActionFlagSetting;
-use AppBundle\Util\LocationHealthUpdater;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Types\JsonArrayType;
 use Doctrine\ORM\EntityManager;
@@ -89,7 +96,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @param $json
      * @param $messageClassNameSpace
-     * @return array|\JMS\Serializer\scalar|mixed|object
+     * @return array|\JMS\Serializer\scalar|mixed|object|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|DeclareTagReplace
      */
     public function deserializeToObject($json, $messageClassNameSpace)
     {
@@ -190,11 +197,6 @@ class IRSerializer implements IRSerializerInterface
             $declareArrivalRequest->setUbnPreviousOwner($ubnPreviousOwner);
             $declareArrivalRequest->setRequestState(RequestStateType::OPEN);
 
-            //Update health status based on UbnPreviousOwner
-            $locationOfDestination = $declareArrivalRequest->getLocation();
-            $locationOfDestination = LocationHealthUpdater::updateByGivenUbnOfOrigin($this->entityManager, $locationOfDestination, $ubnPreviousOwner);
-            $declareArrivalRequest->setLocation($locationOfDestination);
-
             $requestState = $declareArrivalContentArray['request_state'];
             if(Utils::hasSuccessfulLastResponse($requestState)) {
                 $declareArrivalRequest->setRecoveryIndicator(RecoveryIndicatorType::J);
@@ -216,15 +218,10 @@ class IRSerializer implements IRSerializerInterface
             $json = $this->serializeToJSON($declareArrivalContentArray);
             $declareArrivalRequest = $this->deserializeToObject($json, RequestType::DECLARE_ARRIVAL_ENTITY);
 
-            //Get the location from the animal before the new location is set on the animal
-            $locationOfDestination = $client->getCompanies()->get(0)->getLocations()->get(0); //TODO Phase 2: Acceptt given Location
-            $locationOfOrigin = $retrievedAnimal->getLocation();
-            $locationOfDestination = LocationHealthUpdater::updateByGivenLocationOfOrigin($locationOfDestination, $locationOfOrigin);
-            $declareArrivalRequest->setLocation($locationOfDestination);
-
             //Add retrieved animal to DeclareArrival
             $declareArrivalRequest->setAnimal($retrievedAnimal);
             $declareArrivalRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
+            $declareArrivalRequest->setIsArrivedFromOtherNsfoClient($declareArrivalContentArray->get(JsonInputConstant::IS_ARRIVED_FROM_OTHER_NSFO_CLIENT));
 
             $contentAnimal = $declareArrivalContentArray['animal'];
 
@@ -603,7 +600,7 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareImport(ArrayCollection $declareImportContentArray, Client $client, $isEditMessage)
+    function parseDeclareImport(ArrayCollection $declareImportContentArray, Client $client, $locationOfDestination, $isEditMessage)
     {
         //TODO Phase 2: Built in explicit check for non-EU/EU countries. Now it is filtered by animalUlnNumberOrigin field being null or not.
 
@@ -694,8 +691,6 @@ class IRSerializer implements IRSerializerInterface
         }
 
         //At the moment all imports are from location with unknown health status
-        $locationOfDestination = $client->getCompanies()->get(0)->getLocations()->get(0); //TODO Phase 2+, accept different Locations
-        $locationOfDestination = LocationHealthUpdater::updateWithoutOriginHealthData($locationOfDestination);
         $declareImportRequest->setLocation($locationOfDestination);
 
         return $declareImportRequest;

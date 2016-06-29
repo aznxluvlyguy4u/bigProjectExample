@@ -3,6 +3,10 @@
 namespace AppBundle\Component;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\LocationHealth;
+use AppBundle\Entity\LocationHealthQueue;
+use AppBundle\Entity\MaediVisna;
+use AppBundle\Entity\Scrapie;
 use AppBundle\Entity\WeightMeasurement;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -143,9 +147,70 @@ class Utils
      * @param Collection $responses
      * @return mixed|null
      */
-    public static function returnLastResponse(Collection $responses)
+    public static function returnLastResponse(Collection $responses) {
+        return self::returnLastItemFromCollectionByLogDate($responses); }
+
+    /**
+     * @param Collection $scrapies
+     * @return Scrapie|null
+     */
+    public static function returnlastScrapie(Collection $scrapies) {
+        return self::returnLastItemFromCollectionByLogDate($scrapies); }
+
+    /**
+     * @param Collection $maediVisnas
+     * @return MaediVisna|null
+     */
+    public static function returnlastMaediVisna(Collection $maediVisnas) {
+        return self::returnLastItemFromCollectionByLogDate($maediVisnas); }
+
+
+    /**
+     * @param Collection $locationHealths
+     * @return LocationHealth|null
+     */
+    public static function returnLastLocationHealth(Collection $locationHealths, $includeRevoked = false)
     {
-        return self::returnLastItemFromCollectionByLogDate($responses);
+        if($locationHealths->count() == 0) {
+            return null;
+        }
+
+        if($includeRevoked == true) {
+            return self::returnLastItemFromCollectionByLogDate($locationHealths);
+        }
+
+        $length = $locationHealths->count();
+
+        //initialize values
+        $lastItemIndex = 0;
+        $startIndex = 0;
+
+        $latestLogDate = null;
+
+        //find the first LocationHealth that is not revoked
+        foreach($locationHealths as $locationHealth) {
+            if($locationHealth->getIsRevoked() == false) {
+                $latestLogDate = $locationHealth->getLogDate();
+                break;
+            }
+        }
+
+
+        if($latestLogDate == null) {
+            //no LocationHealths found that are not revoked
+            return null;
+        }
+
+        for($i = $startIndex + 1; $i < $length; $i++) {
+            $locationHealth = $locationHealths->get($i);
+            $itemLogDate = $locationHealth->getLogDate();
+            if($itemLogDate > $latestLogDate && $locationHealth->getIsRevoked() == false) {
+                $lastItemIndex = $i;
+                $latestLogDate = $itemLogDate;
+            }
+        }
+
+        return $locationHealths->get($lastItemIndex);
     }
 
     /**
@@ -200,6 +265,7 @@ class Utils
 
         //Gather the weightMeasurements with the latest weightMeasurementDate
         for($i = $startIndex + 1; $i < $length; $i++) {
+
             $weightMeasurement = $weightMeasurements->get($i);
             $weightMeasurementDate = $weightMeasurement->getWeightMeasurementDate();
 
@@ -261,4 +327,25 @@ class Utils
         return $animal->getUlnCountryCode() . $animal->getUlnNumber();
     }
 
+    /**
+     * @param array $locationHealthQueuesArray
+     * @return LocationHealthQueue
+     */
+    public static function combineLocationHealthQueues($locationHealthQueuesArray)
+    {
+        $combinedLocationHealthQueue = new LocationHealthQueue();
+
+        foreach($locationHealthQueuesArray as $locationHealthQueue) {
+
+            foreach($locationHealthQueue->getArrivals() as $arrival) {
+                $combinedLocationHealthQueue->addArrival($arrival);
+            }
+
+            foreach($locationHealthQueue->getImports() as $import) {
+                $combinedLocationHealthQueue->addImport($import);
+            }
+        }
+
+        return $combinedLocationHealthQueue;
+    }
 }

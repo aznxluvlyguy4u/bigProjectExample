@@ -12,26 +12,25 @@ use Doctrine\Common\Collections\ArrayCollection;
 class DeclareBirthRepository extends BaseRepository {
 
   /**
-   * @param Client $client
+   * @param Location $location
    * @param string $state
    * @return ArrayCollection
    */
-  public function getBirths(Client $client, $state = null)
+  public function getBirths(Location $location, $state = null)
   {
-    $location = $client->getCompanies()->get(0)->getLocations()->get(0);
     $retrievedBirths = $location->getBirths();
 
     return $this->getRequests($retrievedBirths, $state);
   }
 
   /**
-   * @param Client $client
+   * @param Location $location
    * @param string $requestId
    * @return DeclareBirth|null
    */
-  public function getBirthByRequestId(Client $client, $requestId)
+  public function getBirthByRequestId(Location $location, $requestId)
   {
-    $births = $this->getBirths($client);
+    $births = $this->getBirths($location);
 
     return $this->getRequestByRequestId($births, $requestId);
   }

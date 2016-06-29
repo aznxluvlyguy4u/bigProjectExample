@@ -11,7 +11,7 @@ use AppBundle\Enumerator\TagStateType;
 /**
  * Class DeclareAnimalDetailsOutput
  */
-class CompanyProfileOutput
+class CompanyProfileOutput extends Output
 {
     /**
      * @param Client $client
@@ -19,56 +19,48 @@ class CompanyProfileOutput
      * @param Location $location
      * @return array
      */
-    public static function create(Client $client, Company $company = null, Location $location = null)
+    public static function create(Client $client, Company $company, Location $location)
     {
-        if($company == null) {
-            $company = $client->getCompanies()->get(0);
-        }
-
-        if($location == null) {
-            $location = $company->getLocations()->get(0);
-        }
-
         $billingAddress = $company->getBillingAddress();
         $address = $company->getAddress();
 
         $result = array(
-                    "company_name" => $company->getCompanyName(),
-                    "telephone_number" => $company->getTelephoneNumber(),
-                    "ubn" => $location->getUbn(),
-                    "vat_number" => $company->getVatNumber(),
-                    "chamber_of_commerce_number" => $company->getChamberOfCommerceNumber(),
-                    "company_relation_number" => $company->getCompanyRelationNumber(),
+                    "company_name" => self::fillNull($company->getCompanyName()),
+                    "telephone_number" => self::fillNull($company->getTelephoneNumber()),
+                    "ubn" => self::fillNull($location->getUbn()),
+                    "vat_number" => self::fillNull($company->getVatNumber()),
+                    "chamber_of_commerce_number" => self::fillNull($company->getChamberOfCommerceNumber()),
+                    "company_relation_number" => self::fillNull($company->getCompanyRelationNumber()),
                     "billing_address" =>
                         array(
-                            "street_name" => $billingAddress->getStreetName(),
-                            "suffix" => $billingAddress->getAddressNumberSuffix(),
-                            "address_number" => $billingAddress->getAddressNumber(),
-                            "postal_code" => $billingAddress->getPostalCode(),
-                            "city" => $billingAddress->getCity(),
-                            "state" => $billingAddress->getState()
+                            "street_name" => self::fillNull($billingAddress->getStreetName()),
+                            "suffix" => self::fillNull($billingAddress->getAddressNumberSuffix()),
+                            "address_number" => self::fillNull($billingAddress->getAddressNumber()),
+                            "postal_code" => self::fillNull($billingAddress->getPostalCode()),
+                            "city" => self::fillNull($billingAddress->getCity()),
+                            "state" => self::fillNull($billingAddress->getState())
                         ),
                     "address" =>
                         array(
-                            "street_name" => $address->getStreetName(),
-                            "address_number" => $address->getAddressNumber(),
-                            "suffix" => $address->getAddressNumberSuffix(),
-                            "postal_code" => $address->getPostalCode(),
-                            "city" => $address->getCity(),
-                            "state" => $address->getState()
-                        ),
+                            "street_name" => self::fillNull($address->getStreetName()),
+                            "address_number" => $address->getAddressNumber(), //this is an integer
+                            "suffix" => self::fillNull($address->getAddressNumberSuffix()),
+                            "postal_code" => self::fillNull($address->getPostalCode()),
+                            "city" => self::fillNull($address->getCity()),
+                            "state" => self::fillNull($address->getState()
+                        )),
                     "contact_person" =>
                         array(
-                            "first_name" => $client->getFirstName(),
-                            "last_name" => $client->getLastName(),
-                            "cellphone_number" => $client->getCellphoneNumber()
+                            "first_name" => self::fillNull($client->getFirstName()),
+                            "last_name" => self::fillNull($client->getLastName()),
+                            "cellphone_number" => self::fillNull($client->getCellphoneNumber())
                         ),
                     "veterinarian" =>
                         array(
-                            "dap_number" => $company->getVeterinarianDapNumber(),
-                            "company_name" => $company->getVeterinarianCompanyName(),
-                            "telephone_number" => $company->getVeterinarianTelephoneNumber(),
-                            "email_address" => $company->getVeterinarianEmailAddress()
+                            "dap_number" => self::fillNull($company->getVeterinarianDapNumber()),
+                            "company_name" => self::fillNull($company->getVeterinarianCompanyName()),
+                            "telephone_number" => self::fillNull($company->getVeterinarianTelephoneNumber()),
+                            "email_address" => self::fillNull($company->getVeterinarianEmailAddress())
                         )
                 );
 

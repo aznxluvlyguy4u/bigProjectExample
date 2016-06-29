@@ -3,6 +3,8 @@
 namespace AppBundle\DataFixtures\ORM;
 
 use AppBundle\Entity\LocationHealth;
+use AppBundle\Entity\MaediVisna;
+use AppBundle\Entity\Scrapie;
 use AppBundle\Enumerator\LocationHealthStatus;
 use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\ScrapieStatus;
@@ -136,16 +138,21 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $janVanRijnsbergenCompany->setTelephoneNumber("+313131313131");
 
     $janVanRijnsbergenLocationHealth = new LocationHealth();
-    $janVanRijnsbergenLocationHealth->setMaediVisnaStatus(MaediVisnaStatus::FREE_2_YEAR);
-    $janVanRijnsbergenLocationHealth->setMaediVisnaEndDate(new \DateTime('2016-08-04'));
-    $janVanRijnsbergenLocationHealth->setScrapieStatus(ScrapieStatus::RESISTANT);
-    $janVanRijnsbergenLocationHealth->setScrapieEndDate(new \DateTime('2016-10-04'));
-    $janVanRijnsbergenLocationHealth->setCheckDate(new \DateTime('2016-07-04'));
+    $janVanRijnsbergenScrapie = new Scrapie(ScrapieStatus::FREE, new \DateTime('2017-08-04'));
+    $janVanRijnsbergenMaediVisna = new MaediVisna(MaediVisnaStatus::FREE, new \DateTime('2017-01-03'));
+    $janVanRijnsbergenLocationHealth->setCurrentMaediVisnaStatus($janVanRijnsbergenMaediVisna->getStatus());
+    $janVanRijnsbergenLocationHealth->setCurrentMaediVisnaEndDate($janVanRijnsbergenMaediVisna->getEndDate());
+    $janVanRijnsbergenLocationHealth->setCurrentScrapieStatus($janVanRijnsbergenScrapie->getStatus());
+    $janVanRijnsbergenLocationHealth->setCurrentScrapieEndDate($janVanRijnsbergenScrapie->getEndDate());
+    $janVanRijnsbergenScrapie->setLocationHealth($janVanRijnsbergenLocationHealth);
+    $janVanRijnsbergenMaediVisna->setLocationHealth($janVanRijnsbergenLocationHealth);
+    $janVanRijnsbergenLocationHealth->addScrapie($janVanRijnsbergenScrapie);
+    $janVanRijnsbergenLocationHealth->addMaediVisna($janVanRijnsbergenMaediVisna);
 
     $janVanRijnsbergenLocation = new Location();
     $janVanRijnsbergenLocation->setAddress($janVanRijnsbergenLocationAddress);
     $janVanRijnsbergenLocation->setCompany($janVanRijnsbergenCompany);
-    $janVanRijnsbergenLocation->addHealth($janVanRijnsbergenLocationHealth);
+    $janVanRijnsbergenLocation->setLocationHealth($janVanRijnsbergenLocationHealth);
 
     $janVanRijnsbergenLocation->setUbn($ubnJanVanRijnsbergen); //NOTE! Echte UBN nodig voor successvolle IenR melding!
 
@@ -198,16 +205,21 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $reinardEvertsCompany->setTelephoneNumber("+313131313131");
 
     $reinardEvertsLocationHealth = new LocationHealth();
-    $reinardEvertsLocationHealth->setMaediVisnaStatus(MaediVisnaStatus::FREE_2_YEAR);
-    $reinardEvertsLocationHealth->setMaediVisnaEndDate(new \DateTime('2016-08-04'));
-    $reinardEvertsLocationHealth->setScrapieStatus(ScrapieStatus::RESISTANT);
-    $reinardEvertsLocationHealth->setScrapieEndDate(new \DateTime('2016-10-04'));
-    $reinardEvertsLocationHealth->setCheckDate(new \DateTime('2016-07-04'));
+    $reinardEvertsScrapie = new Scrapie(ScrapieStatus::RESISTANT, new \DateTime('2016-10-04'));
+    $reinardEvertsMaediVisna = new MaediVisna(MaediVisnaStatus::FREE_2_YEAR, new \DateTime('2016-08-04'));
+    $reinardEvertsLocationHealth->setCurrentMaediVisnaStatus($reinardEvertsMaediVisna->getStatus());
+    $reinardEvertsLocationHealth->setCurrentMaediVisnaEndDate($reinardEvertsMaediVisna->getEndDate());
+    $reinardEvertsLocationHealth->setCurrentScrapieStatus($reinardEvertsScrapie->getStatus());
+    $reinardEvertsLocationHealth->setCurrentScrapieEndDate($reinardEvertsScrapie->getEndDate());
+    $reinardEvertsScrapie->setLocationHealth($reinardEvertsLocationHealth);
+    $reinardEvertsMaediVisna->setLocationHealth($reinardEvertsLocationHealth);
+    $reinardEvertsLocationHealth->addScrapie($reinardEvertsScrapie);
+    $reinardEvertsLocationHealth->addMaediVisna($reinardEvertsMaediVisna);
 
     $reinardEvertsLocation = new Location();
     $reinardEvertsLocation->setAddress($reinardEvertsLocationAddress);
     $reinardEvertsLocation->setCompany($reinardEvertsCompany);
-    $reinardEvertsLocation->addHealth($reinardEvertsLocationHealth);
+    $reinardEvertsLocation->setLocationHealth($reinardEvertsLocationHealth);
 
     $reinardEvertsLocation->setUbn($ubnReinardEverts); //NOTE! Echte UBN nodig voor successvolle IenR melding!
 
@@ -260,16 +272,21 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $nsfoTestAccountCompany->setTelephoneNumber("+313131313131");
 
     $nsfoTestAccountLocationHealth = new LocationHealth();
-    $nsfoTestAccountLocationHealth->setMaediVisnaStatus(MaediVisnaStatus::FREE_2_YEAR);
-    $nsfoTestAccountLocationHealth->setMaediVisnaEndDate(new \DateTime('2016-08-04'));
-    $nsfoTestAccountLocationHealth->setScrapieStatus(ScrapieStatus::RESISTANT);
-    $nsfoTestAccountLocationHealth->setScrapieEndDate(new \DateTime('2016-10-04'));
-    $nsfoTestAccountLocationHealth->setCheckDate(new \DateTime('2016-07-04'));
+    $nsfoTestAccountScrapie = new Scrapie(ScrapieStatus::RESISTANT, new \DateTime('2016-10-04'));
+    $nsfoTestAccountMaediVisna = new MaediVisna(MaediVisnaStatus::FREE_2_YEAR, new \DateTime('2016-08-04'));
+    $nsfoTestAccountLocationHealth->setCurrentMaediVisnaStatus($nsfoTestAccountMaediVisna->getStatus());
+    $nsfoTestAccountLocationHealth->setCurrentMaediVisnaEndDate($nsfoTestAccountMaediVisna->getEndDate());
+    $nsfoTestAccountLocationHealth->setCurrentScrapieStatus($nsfoTestAccountScrapie->getStatus());
+    $nsfoTestAccountLocationHealth->setCurrentScrapieEndDate($nsfoTestAccountScrapie->getEndDate());
+    $nsfoTestAccountScrapie->setLocationHealth($nsfoTestAccountLocationHealth);
+    $nsfoTestAccountMaediVisna->setLocationHealth($nsfoTestAccountLocationHealth);
+    $nsfoTestAccountLocationHealth->addScrapie($nsfoTestAccountScrapie);
+    $nsfoTestAccountLocationHealth->addMaediVisna($nsfoTestAccountMaediVisna);
 
     $nsfoTestAccountLocation = new Location();
     $nsfoTestAccountLocation->setAddress($nsfoTestAccountLocationAddress);
     $nsfoTestAccountLocation->setCompany($nsfoTestAccountCompany);
-    $nsfoTestAccountLocation->addHealth($nsfoTestAccountLocationHealth);
+    $nsfoTestAccountLocation->setLocationHealth($nsfoTestAccountLocationHealth);
 
     $nsfoTestAccountLocation->setUbn($ubnNsfoTestAccount); //NOTE! Echte UBN nodig voor successvolle IenR melding!
 
@@ -278,8 +295,17 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     
     //persist data
     $manager->persist(self::$janVanRijnsbergen);
+    $manager->persist($janVanRijnsbergenLocationHealth);
+    $manager->persist($janVanRijnsbergenScrapie);
+    $manager->persist($janVanRijnsbergenMaediVisna);
     $manager->persist(self::$reinardEverts);
+    $manager->persist($reinardEvertsLocationHealth);
+    $manager->persist($reinardEvertsScrapie);
+    $manager->persist($reinardEvertsMaediVisna);
     $manager->persist(self::$nsfoTestAccount);
+    $manager->persist($nsfoTestAccountLocationHealth);
+    $manager->persist($nsfoTestAccountScrapie);
+    $manager->persist($nsfoTestAccountMaediVisna);
     $manager->flush();
 
 

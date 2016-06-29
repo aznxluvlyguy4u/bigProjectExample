@@ -8,19 +8,34 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\DeclarationDetail;
+use AppBundle\Entity\DeclareAnimalFlag;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareExport;
+use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareLoss;
+use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\RetrieveAnimals;
+use AppBundle\Entity\RetrieveCountries;
+use AppBundle\Entity\RetrieveTags;
+use AppBundle\Entity\RetrieveAnimalDetails;
+use AppBundle\Entity\RetrieveUbnDetails;
+use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\AnimalType;
-use AppBundle\Enumerator\LocationHealthStatus;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\EntityGetter;
-use AppBundle\Entity\RevokeDeclaration;
+use AppBundle\Validation\HeaderValidation;
+use Doctrine\ORM\Query;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -39,25 +54,20 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
  */
 class APIController extends Controller implements APIControllerInterface
 {
-  /**
-   * @var RequestMessageBuilder
-   */
+  /** @var RequestMessageBuilder */
   private $requestMessageBuilder;
 
-  /**
-   * @var
-   */
+  /** @var */
   private $serializer;
 
-  /**
-   * @var \AppBundle\Service\AWSQueueService
-   */
+  /** @var \AppBundle\Service\AWSQueueService */
   private $queueService;
 
-  /**
-   * @var \AppBundle\Service\EntityGetter
-   */
+  /** @var \AppBundle\Service\EntityGetter */
   private $entityGetter;
+
+  /** @var \AppBundle\Service\HealthService */
+  private $healthService;
 
   /**
    * @return \AppBundle\Service\EntityGetter
@@ -106,6 +116,17 @@ class APIController extends Controller implements APIControllerInterface
     }
 
     return $this->queueService;
+  }
+
+  /**
+   * @return \AppBundle\Service\HealthService
+   */
+  protected function getHealthService(){
+    if($this->healthService == null){
+      $this->healthService = $this->get('app.health.updater');
+    }
+
+    return $this->healthService;
   }
 
   /**
@@ -159,14 +180,15 @@ class APIController extends Controller implements APIControllerInterface
    * @param $messageClassNameSpace
    * @param ArrayCollection $contentArray
    * @param $user
-   * @return object|null
+   * @param Location $location
+   * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
    * @throws \Exception
    */
-  protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user)
+  protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $location)
   {
     $isEditMessage = true;
     $messageObject = $this->getRequestMessageBuilder()
-      ->build($messageClassNameSpace, $contentArray, $user, $isEditMessage);
+      ->build($messageClassNameSpace, $contentArray, $user, $location, $isEditMessage);
 
     return $messageObject;
   }
@@ -175,21 +197,22 @@ class APIController extends Controller implements APIControllerInterface
    * @param $messageClassNameSpace
    * @param ArrayCollection $contentArray
    * @param $user
-   * @return mixed
+   * @param Location $location
+   * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
    * @throws \Exception
    */
-  protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user)
+  protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $location)
   {
     $isEditMessage = false;
     $messageObject = $this->getRequestMessageBuilder()
-        ->build($messageClassNameSpace, $contentArray, $user, $isEditMessage);
+        ->build($messageClassNameSpace, $contentArray, $user, $location, $isEditMessage);
 
     return $messageObject;
   }
 
   /**
    * @param $messageObject
-   * @return mixed
+   * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
    */
   public function persist($messageObject)
   {
@@ -661,5 +684,52 @@ class APIController extends Controller implements APIControllerInterface
     }
 
     return Utils::buildValidationArray($isValid, $code, $messageBody, array('messageNumber' => $messageNumber));
+  }
+
+  /**
+   * @param Request $request
+   * @return Location|null
+   */
+  public function getSelectedLocation(Request $request)
+  {
+
+    $client = $this->getAuthenticatedUser($request);
+    $headerValidation = new HeaderValidation($this->getDoctrine()->getManager(), $request, $client);
+
+    if($headerValidation->isInputValid()) {
+      //TODO when frontend is ready, get the ubn from the header
+      return $headerValidation->getLocation();
+
+    } else { //pick the first available UBN as default
+      return $client->getCompanies()->get(0)->getLocations()->get(0);
+    }
+  }
+
+  public function syncAnimalsForAllLocations()
+  {
+    $allLocations = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY)->findAll();
+    $content = new ArrayCollection();
+    $count = 0;
+
+    foreach($allLocations as $location) {
+      $client = $location->getCompany()->getOwner();
+
+      //Convert the array into an object and add the mandatory values retrieved from the database
+      $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $location);
+
+      //First Persist object to Database, before sending it to the queue
+      $this->persist($messageObject);
+
+      //Send it to the queue and persist/update any changed state to the database
+      $messageArray = $this->sendMessageObjectToQueue($messageObject);
+
+      $count++;
+    }
+
+    $total = sizeof($allLocations);
+    $message = "THE ANIMALS HAVE BEEN SYNCED FOR " . $count . " OUT OF " . $total . " TOTAL LOCATIONS (UBNS)";
+
+    return array('message' => $message,
+        'count' => $count);
   }
 }

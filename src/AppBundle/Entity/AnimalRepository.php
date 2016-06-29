@@ -218,9 +218,13 @@ class AnimalRepository extends BaseRepository
 
   /**
    * @param Client $client
-   * @return array|null
+   * @param bool $isAlive
+   * @param bool $isDeparted
+   * @param bool $isExported
+   * @param bool $showTransferring
+   * @return array
    */
-  public function getLiveStock(Client $client, $isAlive = true, $isDeparted = false, $isExported = false, $showTransferring = false)
+  public function getLiveStockAllLocations(Client $client, $isAlive = true, $isDeparted = false, $isExported = false, $showTransferring = false)
   {
     $animals = array();
 
@@ -245,6 +249,40 @@ class AnimalRepository extends BaseRepository
           }
 
         }
+      }
+    }
+
+    return $animals;
+  }
+
+  /**
+   * @param Location $location
+   * @param bool $isAlive
+   * @param bool $isDeparted
+   * @param bool $isExported
+   * @param bool $showTransferring
+   * @return array
+   */
+  public function getLiveStock(Location $location, $isAlive = true, $isDeparted = false, $isExported = false, $showTransferring = false)
+  {
+    $animals = array();
+
+    if ($showTransferring) {
+      $transferState = AnimalTransferStatus::TRANSFERRING;
+    } else {
+      $transferState = AnimalTransferStatus::NULL;
+    }
+
+    foreach ($location->getAnimals() as $animal) {
+
+      $showAnimal = $animal->getIsAlive() == $isAlive
+          && $animal->getIsExportAnimal() == $isExported
+          && $animal->getIsDepartedAnimal() == $isDeparted
+          && ($animal->getTransferState() == AnimalTransferStatus::NULL
+              || $animal->getTransferState() == $transferState);
+
+      if ($showAnimal) {
+        $animals[] = $animal;
       }
     }
 

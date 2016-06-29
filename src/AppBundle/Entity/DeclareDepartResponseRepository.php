@@ -14,20 +14,24 @@ use Doctrine\Common\Collections\ArrayCollection;
 class DeclareDepartResponseRepository extends BaseRepository {
 
     /**
-     * @param Client $client
+     * @param Location $location
      * @param $messageNumber
      * @return DeclareDepartResponse|null
      */
-    public function getDepartResponseByMessageNumber(Client $client, $messageNumber)
+    public function getDepartResponseByMessageNumber(Location $location, $messageNumber)
     {
-        $retrievedDepartures = $this->_em->getRepository(Constant::DECLARE_DEPART_REPOSITORY)->getDepartures($client);
+        $retrievedDepartures = $this->_em->getRepository(Constant::DECLARE_DEPART_REPOSITORY)->getDepartures($location);
 
         return $this->getResponseMessageFromRequestsByMessageNumber($retrievedDepartures, $messageNumber);
     }
 
-    public function getDeparturesWithLastHistoryResponses(Client $client)
+    /**
+     * @param Location $location
+     * @return ArrayCollection
+     */
+    public function getDeparturesWithLastHistoryResponses(Location $location)
     {
-        $retrievedDepartures = $this->_em->getRepository(Constant::DECLARE_DEPART_REPOSITORY)->getDepartures($client);
+        $retrievedDepartures = $this->_em->getRepository(Constant::DECLARE_DEPART_REPOSITORY)->getDepartures($location);
 
         $results = new ArrayCollection();
 
@@ -46,9 +50,13 @@ class DeclareDepartResponseRepository extends BaseRepository {
         return $results;
     }
 
-    public function getDeparturesWithLastErrorResponses(Client $client)
+    /**
+     * @param Location $location
+     * @return array
+     */
+    public function getDeparturesWithLastErrorResponses(Location $location)
     {
-        $retrievedDepartures = $this->_em->getRepository(Constant::DECLARE_DEPART_REPOSITORY)->getDepartures($client);
+        $retrievedDepartures = $this->_em->getRepository(Constant::DECLARE_DEPART_REPOSITORY)->getDepartures($location);
 
         $results = array();
 

@@ -46,6 +46,7 @@ class TagsReplaceAPIController extends APIController {
   {
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
     $animal = $content->get(Constant::ANIMAL_NAMESPACE);
     $isAnimalOfClient = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->verifyIfClientOwnsAnimal($client, $animal);
@@ -79,7 +80,7 @@ class TagsReplaceAPIController extends APIController {
     }
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareTagReplace = $this->buildMessageObject(RequestType::DECLARE_TAG_REPLACE, $content, $this->getAuthenticatedUser($request));
+    $declareTagReplace = $this->buildMessageObject(RequestType::DECLARE_TAG_REPLACE, $content, $client, $location);
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($declareTagReplace);

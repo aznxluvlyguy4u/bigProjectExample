@@ -43,10 +43,10 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    */
   public function getImportById(Request $request, $Id)
   {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY);
 
-    $import = $repository->getImportByRequestId($client, $Id);
+    $import = $repository->getImportByRequestId($location, $Id);
 
     return new JsonResponse($import, 200);
   }
@@ -88,30 +88,30 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    * @Method("GET")
    */
   public function getImports(Request $request) {
-    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $stateExists = $request->query->has(Constant::STATE_NAMESPACE);
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_REPOSITORY);
 
     if(!$stateExists) {
-      $declareImports = $repository->getImports($client);
+      $declareImports = $repository->getImports($location);
 
     } else if ($request->query->get(Constant::STATE_NAMESPACE) == Constant::HISTORY_NAMESPACE ) {
 
       $declareImports = new ArrayCollection();
-      foreach($repository->getImports($client, RequestStateType::OPEN) as $import) {
+      foreach($repository->getImports($location, RequestStateType::OPEN) as $import) {
         $declareImports->add($import);
       }
 
-      foreach($repository->getImports($client, RequestStateType::REVOKING) as $import) {
+      foreach($repository->getImports($location, RequestStateType::REVOKING) as $import) {
         $declareImports->add($import);
       }
-      foreach($repository->getImports($client, RequestStateType::FINISHED) as $import) {
+      foreach($repository->getImports($location, RequestStateType::FINISHED) as $import) {
         $declareImports->add($import);
       }
       
     } else { //A state parameter was given, use custom filter to find subset
       $state = $request->query->get(Constant::STATE_NAMESPACE);
-      $declareImports = $repository->getImports($client, $state);
+      $declareImports = $repository->getImports($location, $state);
     }
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareImports), 200);

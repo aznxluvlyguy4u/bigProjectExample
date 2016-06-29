@@ -23,6 +23,9 @@ class Constant
     const MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE = 'message_number';
     const MESSAGE_NUMBER_CAMEL_CASE_NAMESPACE = 'messageNumber';
 
+    //Identity
+    const NAME_NAMESPACE = 'name';
+
     //Json response
     const MESSAGE_NAMESPACE = 'message';
     const RESULT_NAMESPACE = "result";
@@ -46,6 +49,7 @@ class Constant
     const IS_VALID_NAMESPACE = 'isValid';
     const CODE_NAMESPACE = 'code';
     const ERRORS_NAMESPACE = 'errors';
+    const TYPE_NAMESPACE = 'type';
 
     //Animal identification
     const ULN_NAMESPACE = 'uln';
@@ -62,6 +66,7 @@ class Constant
     const GENDER_NAMESPACE = 'gender';
     const ANIMAL_ORDER_NUMBER_NAMESPACE = 'animal_order_number';
     const UBN_NEW_OWNER_NAMESPACE = 'ubn_new_owner';
+    const UBN_PREVIOUS_OWNER_NAMESPACE = 'ubn_previous_owner';
     const ANIMAL_TYPE_NAMESPACE = 'type';
     const ANIMAL_NAMESPACE = 'animal';
     const ANIMALS_NAMESPACE = 'animals';
@@ -69,6 +74,7 @@ class Constant
     const ANIMAL_TYPE_SNAKE_CASE_NAMESPACE = "animal_type";
     const DATE_OF_BIRTH_NAMESPACE  = 'date_of_birth';
     const DATE_OF_DEATH_NAMESPACE  = 'date_of_death';
+    const IS_IMPORT_ANIMAL = 'is_import_animal';
 
     //Health Status
     const MAEDI_VISNA_STATUS = "maedi_visna_status";
@@ -122,4 +128,8 @@ class Constant
     const COUNTRY_REPOSITORY = 'AppBundle:Country';
     const COMPANY_REPOSITORY = 'AppBundle:Company';
     const LOCATION_REPOSITORY = 'AppBundle:Location';
+    const LOCATION_HEALTH_REPOSITORY = 'AppBundle:LocationHealth';
+    const PROCESSOR_REPOSITORY = 'AppBundle:Processor';
+    const PROVINCE_REPOSITORY = 'AppBundle:Province';
+    const LOCATION_HEALTH_QUEUE_REPOSITORY = 'AppBundle:LocationHealthQueue';
 }

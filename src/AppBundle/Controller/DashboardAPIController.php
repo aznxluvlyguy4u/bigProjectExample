@@ -31,10 +31,15 @@ class DashboardAPIController extends APIController {
    */
   public function getDashBoard(Request $request) {
     $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
-    $declarationLogDate = $this->getDoctrine()->getRepository(Constant::DECLARE_BASE_REPOSITORY)->getLatestLogDatesForDashboardDeclarations($client);
+    $declarationLogDate = $this->getDoctrine()->getRepository(Constant::DECLARE_BASE_REPOSITORY)
+        ->getLatestLogDatesForDashboardDeclarationsPerLocation($location);
 
-    $outputArray = DashboardOutput::create($client, $declarationLogDate);
+    //Update LocationHealth, before displaying it in the Dashboard
+//    $this->getHealthService()->processLocationHealthQueue();  FIXME
+
+    $outputArray = DashboardOutput::create($client, $declarationLogDate, $location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
   }

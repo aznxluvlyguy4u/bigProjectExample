@@ -47,6 +47,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
     {
         $content = $this->getContentAsArray($request);
         $client = $this->getAuthenticatedUser($request);
+        $location = $this->getSelectedLocation($request);
 
         //Validate if there is a message_number. It is mandatory for IenR
         $validation = $this->hasMessageNumber($content);
@@ -55,7 +56,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
         }
 
         //Convert the array into an object and add the mandatory values retrieved from the database
-        $revokeDeclarationObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $content, $client);
+        $revokeDeclarationObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $content, $client, $location);
 
         //First Persist object to Database, before sending it to the queue
         $this->persist($revokeDeclarationObject);
@@ -65,6 +66,15 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
 
         //Send it to the queue and persist/update any changed state to the database
         $messageArray = $this->sendMessageObjectToQueue($revokeDeclarationObject);
+
+
+        //If an Arrival of Import is revoked, add it to the LocationHealthQueue
+        if($revokeDeclarationObject->getRequestTypeToRevoke() == RequestType::DECLARE_ARRIVAL_ENTITY) {
+            $this->getHealthService()->updateLocationHealthQueue($revokeDeclarationObject->getArrival());
+
+        } else if($revokeDeclarationObject->getRequestTypeToRevoke() == RequestType::DECLARE_IMPORT_ENTITY) {
+            $this->getHealthService()->updateLocationHealthQueue($revokeDeclarationObject->getImport());
+        }
 
         return new JsonResponse($messageArray, 200);
     }

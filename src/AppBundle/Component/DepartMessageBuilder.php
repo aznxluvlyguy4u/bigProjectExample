@@ -4,6 +4,7 @@ namespace AppBundle\Component;
 
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
@@ -32,22 +33,24 @@ class DepartMessageBuilder extends MessageBuilderBase
      *
      * @param DeclareDepart $messageObject the message received from the front-end
      * @param Client|Person $person
+     * @param Location $location
      * @return DeclareDepart
      */
-    public function buildMessage(DeclareDepart $messageObject, $person)
+    public function buildMessage(DeclareDepart $messageObject, $person, $location)
     {
         $this->person = $person;
         $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
-        $completeMessageObject = $this->addDeclareDepartData($baseMessageObject);
+        $completeMessageObject = $this->addDeclareDepartData($baseMessageObject, $location);
 
         return $completeMessageObject;
     }
 
     /**
      * @param DeclareDepart $messageObject the message received from the front-end
+     * @param Location $location
      * @return DeclareDepart
      */
-    private function addDeclareDepartData(DeclareDepart $messageObject)
+    private function addDeclareDepartData(DeclareDepart $messageObject, $location)
     {
         $animal = $messageObject->getAnimal();
 
@@ -58,13 +61,12 @@ class DepartMessageBuilder extends MessageBuilderBase
         $messageObject->setIsExportAnimal(false);
         $messageObject->setIsDepartedAnimal(true);
         $messageObject->setAnimalType(AnimalType::sheep);
-
+        $messageObject->setLocation($location);
+        
         if(ActionFlagSetting::DECLARE_DEPART != null) {
             $messageObject->setAction(ActionFlagSetting::DECLARE_DEPART);
         }
 
-        //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
-        $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
         return $messageObject;
     }
 

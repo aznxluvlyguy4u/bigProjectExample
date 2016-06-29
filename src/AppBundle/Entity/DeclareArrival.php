@@ -116,6 +116,13 @@ class DeclareArrival extends DeclareBase {
     private $isImportAnimal;
 
     /**
+     * @ORM\Column(type="boolean")
+     * @JMS\Type("boolean")
+     * @Expose
+     */
+    private $isArrivedFromOtherNsfoClient;
+
+    /**
      * @ORM\OneToMany(targetEntity="DeclareArrivalResponse", mappedBy="declareArrivalRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_arrival_request_message_id", referencedColumnName="id")
      * @JMS\Type("array")
@@ -130,6 +137,18 @@ class DeclareArrival extends DeclareBase {
      * @Expose
      */
     private $revoke;
+
+    /**
+     * @ORM\OneToOne(targetEntity="LocationHealthMessage", inversedBy="arrival")
+     * @JMS\Type("AppBundle\Entity\LocationHealthMessage")
+     */
+    private $healthMessage;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="LocationHealthQueue", inversedBy="arrivals")
+     * @JMS\Type("AppBundle\Entity\LocationHealthQueue")
+     */
+    private $locationHealthQueue;
 
     /**
      * DeclareArrival constructor.
@@ -213,6 +232,22 @@ class DeclareArrival extends DeclareBase {
     public function getIsImportAnimal()
     {
         return $this->isImportAnimal;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getIsArrivedFromOtherNsfoClient()
+    {
+        return $this->isArrivedFromOtherNsfoClient;
+    }
+
+    /**
+     * @param boolean $isArrivedFromOtherNsfoClient
+     */
+    public function setIsArrivedFromOtherNsfoClient($isArrivedFromOtherNsfoClient)
+    {
+        $this->isArrivedFromOtherNsfoClient = $isArrivedFromOtherNsfoClient;
     }
 
     /**
@@ -457,6 +492,44 @@ class DeclareArrival extends DeclareBase {
         $this->animalObjectType = $animalObjectType;
     }
 
+    /**
+     * Set healthMessage
+     *
+     * @param \AppBundle\Entity\LocationHealthMessage $healthMessage
+     *
+     * @return DeclareArrival
+     */
+    public function setHealthMessage(\AppBundle\Entity\LocationHealthMessage $healthMessage = null)
+    {
+        $this->healthMessage = $healthMessage;
+
+        return $this;
+    }
+
+    /**
+     * Get healthMessage
+     *
+     * @return \AppBundle\Entity\LocationHealthMessage
+     */
+    public function getHealthMessage()
+    {
+        return $this->healthMessage;
+    }
 
 
+    /**
+     * @return LocationHealthQueue
+     */
+    public function getLocationHealthQueue()
+    {
+        return $this->locationHealthQueue;
+    }
+
+    /**
+     * @param LocationHealthQueue $locationHealthQueue
+     */
+    public function setLocationHealthQueue($locationHealthQueue)
+    {
+        $this->locationHealthQueue = $locationHealthQueue;
+    }
 }

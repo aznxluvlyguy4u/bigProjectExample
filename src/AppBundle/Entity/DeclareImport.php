@@ -115,6 +115,12 @@ class DeclareImport extends DeclareBase
   private $location;
 
   /**
+   * @ORM\ManyToOne(targetEntity="LocationHealthQueue", inversedBy="imports")
+   * @JMS\Type("AppBundle\Entity\LocationHealthQueue")
+   */
+  private $locationHealthQueue;
+
+  /**
    * @ORM\Column(type="boolean")
    * @JMS\Type("boolean")
    * @Expose
@@ -137,7 +143,11 @@ class DeclareImport extends DeclareBase
    */
   private $revoke;
 
-
+    /**
+     * @ORM\OneToOne(targetEntity="LocationHealthMessage", inversedBy="import")
+     * @JMS\Type("AppBundle\Entity\LocationHealthMessage")
+     */
+    private $healthMessage;
 
   /**
    * DeclareArrival constructor.
@@ -458,4 +468,46 @@ class DeclareImport extends DeclareBase
     {
         return $this->animalUlnNumberOrigin;
     }
+
+    /**
+     * Set healthMessage
+     *
+     * @param \AppBundle\Entity\LocationHealthMessage $healthMessage
+     *
+     * @return DeclareImport
+     */
+    public function setHealthMessage(\AppBundle\Entity\LocationHealthMessage $healthMessage = null)
+    {
+        $this->healthMessage = $healthMessage;
+
+        return $this;
+    }
+
+    /**
+     * Get healthMessage
+     *
+     * @return \AppBundle\Entity\LocationHealthMessage
+     */
+    public function getHealthMessage()
+    {
+        return $this->healthMessage;
+    }
+
+    /**
+     * @return LocationHealthQueue
+     */
+    public function getLocationHealthQueue()
+    {
+        return $this->locationHealthQueue;
+    }
+
+    /**
+     * @param LocationHealthQueue $locationHealthQueue
+     */
+    public function setLocationHealthQueue($locationHealthQueue)
+    {
+        $this->locationHealthQueue = $locationHealthQueue;
+    }
+
+
 }

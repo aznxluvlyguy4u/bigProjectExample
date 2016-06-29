@@ -16,7 +16,6 @@ use JMS\Serializer\Annotation\Expose;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\LocationRepository")
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
-
  */
 class Location
 {
@@ -139,14 +138,19 @@ class Location
   protected $revokes;
 
   /**
+   * @ORM\OneToOne(targetEntity="LocationHealth", inversedBy="location")
+   * @JMS\Type("AppBundle\Entity\LocationHealth")
+   */
+  private $locationHealth;
+
+  /**
    * @var ArrayCollection
    *
-   * @ORM\OneToMany(targetEntity="LocationHealth", mappedBy="location", cascade={"persist"})
-   * @ORM\JoinColumn(name="health_id", referencedColumnName="id", nullable=true)
-   * @JMS\Type("AppBundle\Entity\LocationHealth")
-   * @Expose
+   * @ORM\OneToMany(targetEntity="LocationHealthMessage", mappedBy="location")
+   * @ORM\JoinColumn(name="health_message_id", referencedColumnName="id", nullable=true)
+   * @JMS\Type("AppBundle\Entity\LocationHealthMessage")
    */
-  private $healths;
+  private $healthMessages;
 
   /*
   * Constructor
@@ -163,7 +167,7 @@ class Location
     $this->tagTransfers = new ArrayCollection();
     $this->flags = new ArrayCollection();
     $this->revokes = new ArrayCollection();
-    $this->healths = new ArrayCollection();
+    $this->healthMessages = new ArrayCollection();
   }
 
   /**
@@ -616,38 +620,60 @@ class Location
     }
 
     /**
-     * @return ArrayCollection
-     */
-    public function getHealths()
-    {
-      return $this->healths;
-    }
-
-    /**
-     * Add health
+     * Add healthMessage
      *
-     * @param LocationHealth $health
+     * @param \AppBundle\Entity\LocationHealthMessage $healthMessage
      *
      * @return Location
      */
-    public function addHealth(LocationHealth $health)
+    public function addHealthMessage(\AppBundle\Entity\LocationHealthMessage $healthMessage)
     {
-      $this->healths->add($health);
-      $health->setLocation($this);
+        $this->healthMessages[] = $healthMessage;
 
-      return $this;
+        return $this;
     }
 
     /**
-     * Remove health
+     * Remove healthMessage
      *
-     * @param LocationHealth $health
+     * @param \AppBundle\Entity\LocationHealthMessage $healthMessage
      */
-    public function removeHealth(LocationHealth $health)
+    public function removeHealthMessage(\AppBundle\Entity\LocationHealthMessage $healthMessage)
     {
-      $this->healths->removeElement($health);
+        $this->healthMessages->removeElement($healthMessage);
     }
 
+    /**
+     * Get healthMessages
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getHealthMessages()
+    {
+        return $this->healthMessages;
+    }
 
+    /**
+     * Set locationHealth
+     *
+     * @param \AppBundle\Entity\LocationHealth $locationHealth
+     *
+     * @return Location
+     */
+    public function setLocationHealth(\AppBundle\Entity\LocationHealth $locationHealth = null)
+    {
+        $this->locationHealth = $locationHealth;
 
+        return $this;
+    }
+
+    /**
+     * Get locationHealth
+     *
+     * @return \AppBundle\Entity\LocationHealth
+     */
+    public function getLocationHealth()
+    {
+        return $this->locationHealth;
+    }
 }

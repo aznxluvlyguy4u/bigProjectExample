@@ -3,6 +3,7 @@
 namespace AppBundle\Component;
 
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\RetrieveTags;
 use Doctrine\ORM\EntityManager;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -33,26 +34,26 @@ class TagSyncMessageBuilder extends MessageBuilderBase {
    *
    * @param RetrieveTags $messageObject the message received
    * @param Client|Person $person
+   * @param Location $location
    * @return ArrayCollection
    */
-  public function buildMessage(RetrieveTags $messageObject, $person)
+  public function buildMessage(RetrieveTags $messageObject, $person, $location)
   {
     $this->person = $person;
     $baseMessageObject = $this->buildBaseRetrieveMessageObject($messageObject, $person);
-    $completeMessageObject = $this->addRetrieveEartagsData($baseMessageObject);
+    $completeMessageObject = $this->addRetrieveEartagsData($baseMessageObject, $location);
 
     return $completeMessageObject;
   }
 
   /**
    * @param RetrieveTags $messageObject the message received
+   * @param Location $location
    * @return RetrieveTags
    */
-  private function addRetrieveEartagsData(RetrieveTags $messageObject)
+  private function addRetrieveEartagsData(RetrieveTags $messageObject, $location)
   {
-
-    //TODO For FASE 2 retrieve the correct location & company for someone having more than one location and/or company.
-    $messageObject->setLocation($this->person->getCompanies()[0]->getLocations()[0]);
+    $messageObject->setLocation($location);
     return $messageObject;
   }
 }
