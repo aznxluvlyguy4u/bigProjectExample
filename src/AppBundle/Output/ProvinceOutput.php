@@ -21,7 +21,7 @@ class ProvinceOutput extends Output
     {
         if($includeName) {
             $result = array(
-                JsonInputConstant::PROVINCES => self::createProvinceNameAndCodeArray($provinces)
+                Constant::RESULT_NAMESPACE => self::createProvinceNameAndCodeArray($provinces)
             );
 
         } else {

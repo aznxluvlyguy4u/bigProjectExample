@@ -26,6 +26,9 @@ class Constant
     //Identity
     const NAME_NAMESPACE = 'name';
 
+    //Array
+    const KEY = 'key';
+
     //Json response
     const MESSAGE_NAMESPACE = 'message';
     const RESULT_NAMESPACE = "result";
@@ -77,11 +80,16 @@ class Constant
     const IS_IMPORT_ANIMAL = 'is_import_animal';
 
     //Health Status
+    const ILLNESSES = "illnesses";
+    const MAEDI_VISNA = "maedi_visna";
     const MAEDI_VISNA_STATUS = "maedi_visna_status";
     const MAEDI_VISNA_END_DATE = "maedi_visna_end_date";
+    const SCRAPIE = "scrapie";
     const SCRAPIE_STATUS = "scrapie_status";
     const SCRAPIE_END_DATE = "scrapie_end_date";
     const CHECK_DATE = "check_date";
+    const LOCATION_HEALTH_ORIGIN = "location_health_origin";
+    const LOCATION_HEALTH_DESTINATION = "location_health_destination";
 
     //Declaration specific variables
     const RELATION_NUMBER_ACCEPTANT_SNAKE_CASE_NAMESPACE = "relation_number_acceptant";
@@ -92,6 +100,10 @@ class Constant
     const CHILDREN_NAMESPACE = 'children';
     const SURROGATE_NAMESPACE = 'surrogate';
     const SURROGATE_CHILDREN_NAMESPACE = 'surrogate_children';
+
+    //Process runtime
+    const RUN_TIME_LIMIT_IN_MINUTES = 'run_time_limit_in_minutes';
+    const TEST_RUN_WITH_DEFAULT_UBNS = 'test_run_with_default_ubns';
 
     //Request repositories
     const DECLARE_ARRIVAL_REPOSITORY = 'AppBundle:DeclareArrival';
@@ -128,8 +140,12 @@ class Constant
     const COUNTRY_REPOSITORY = 'AppBundle:Country';
     const COMPANY_REPOSITORY = 'AppBundle:Company';
     const LOCATION_REPOSITORY = 'AppBundle:Location';
+
     const LOCATION_HEALTH_REPOSITORY = 'AppBundle:LocationHealth';
     const PROCESSOR_REPOSITORY = 'AppBundle:Processor';
     const PROVINCE_REPOSITORY = 'AppBundle:Province';
     const LOCATION_HEALTH_QUEUE_REPOSITORY = 'AppBundle:LocationHealthQueue';
+
+    const ANIMAL_RESIDENCE_REPOSITORY = 'AppBundle:AnimalResidence';
+
 }

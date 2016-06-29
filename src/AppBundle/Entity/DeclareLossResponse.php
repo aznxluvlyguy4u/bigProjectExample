@@ -53,6 +53,13 @@ class DeclareLossResponse extends DeclareBaseResponse {
      */
     private $reasonOfLoss;
 
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 10)
+     * @JMS\Type("string")
+     */
+    private $ubnDestructor;
+
 
     /**
      * Set declareLossRequestMessage
@@ -176,6 +183,23 @@ class DeclareLossResponse extends DeclareBaseResponse {
     {
         $this->reasonOfLoss = $reasonOfLoss;
     }
+
+    /**
+     * @return string
+     */
+    public function getUbnDestructor()
+    {
+        return $this->ubnDestructor;
+    }
+
+    /**
+     * @param string $ubnDestructor
+     */
+    public function setUbnDestructor($ubnDestructor)
+    {
+        $this->ubnDestructor = $ubnDestructor;
+    }
+
 
 
 }

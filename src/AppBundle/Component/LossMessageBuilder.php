@@ -57,6 +57,8 @@ class LossMessageBuilder extends MessageBuilderBase
         $declareLoss->setAnimal($animal);
         $declareLoss->setLocation($location);
 
+        Utils::setResidenceToPending($animal, $location);
+
         if(ActionFlagSetting::DECLARE_LOSS != null) {
             $declareLoss->setAction(ActionFlagSetting::DECLARE_LOSS);
         }

@@ -67,15 +67,6 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
         //Send it to the queue and persist/update any changed state to the database
         $messageArray = $this->sendMessageObjectToQueue($revokeDeclarationObject);
 
-
-        //If an Arrival of Import is revoked, add it to the LocationHealthQueue
-        if($revokeDeclarationObject->getRequestTypeToRevoke() == RequestType::DECLARE_ARRIVAL_ENTITY) {
-            $this->getHealthService()->updateLocationHealthQueue($revokeDeclarationObject->getArrival());
-
-        } else if($revokeDeclarationObject->getRequestTypeToRevoke() == RequestType::DECLARE_IMPORT_ENTITY) {
-            $this->getHealthService()->updateLocationHealthQueue($revokeDeclarationObject->getImport());
-        }
-
         return new JsonResponse($messageArray, 200);
     }
 }

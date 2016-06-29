@@ -33,11 +33,9 @@ class DashboardAPIController extends APIController {
     $client = $this->getAuthenticatedUser($request);
     $location = $this->getSelectedLocation($request);
 
+    $errorMessageForDateIsNull = "";
     $declarationLogDate = $this->getDoctrine()->getRepository(Constant::DECLARE_BASE_REPOSITORY)
-        ->getLatestLogDatesForDashboardDeclarationsPerLocation($location);
-
-    //Update LocationHealth, before displaying it in the Dashboard
-//    $this->getHealthService()->processLocationHealthQueue();  FIXME
+        ->getLatestLogDatesForDashboardDeclarationsPerLocation($location, $errorMessageForDateIsNull);
 
     $outputArray = DashboardOutput::create($client, $declarationLogDate, $location);
 

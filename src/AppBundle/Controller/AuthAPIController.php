@@ -5,12 +5,15 @@ namespace AppBundle\Controller;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
+use AppBundle\Migration\ClientMigration;
 use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Company;
+use AppBundle\Enumerator\MigrationStatus;
+use AppBundle\Setting\MigrationSetting;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Validation\PasswordValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -232,7 +235,7 @@ class AuthAPIController extends APIController {
 
       //Confirmation message back to the sender
       $message = \Swift_Message::newInstance()
-          ->setSubject('Nieuw wachtwoord voor NSFO dierregistratiesysteem')
+          ->setSubject('Gewijzigd NSFO Online Wachtwoord')
           ->setFrom('info@stormdelta.com')
           ->setTo($emailAddress)
           ->setBody(
@@ -313,7 +316,7 @@ class AuthAPIController extends APIController {
 
     //Confirmation message back to the sender
     $message = \Swift_Message::newInstance()
-        ->setSubject('Nieuw wachtwoord voor NSFO dierregistratiesysteem')
+        ->setSubject('Gewijzigd NSFO Online Wachtwoord')
         ->setFrom('info@stormdelta.com')
         ->setTo($emailAddress)
         ->setBody(
@@ -323,6 +326,7 @@ class AuthAPIController extends APIController {
                 array('firstName' => $client->getFirstName(),
                     'lastName' => $client->getLastName(),
                     'userName' => $client->getUsername(),
+                    'email' => $client->getEmailAddress(),
                     'relationNumberKeeper' => $client->getRelationNumberKeeper(),
                     'password' => $newPassword)
             ),
@@ -335,6 +339,32 @@ class AuthAPIController extends APIController {
 
     return new JsonResponse(array("code" => 200,
         "message"=>"Your new password has been emailed to: " . $emailAddress), 200);
+  }
+
+  /**
+   * Generate new passwords for new clients and store them.
+   *
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/generate-passwords")
+   * @Method("POST")
+   *
+   * @param Request $request
+   */
+  public function generatePasswordsForNewClients(Request $request)
+  {
+    return new JsonResponse(array("code" => 403, "message" => "Forbidden"), 403);
+
+    $doctrine = $this->getDoctrine();
+    $em = $doctrine->getEntityManager();
+    $encoder = $this->get('security.password_encoder');
+    $content = $this->getContentAsArray($request);
+
+    $newClients = $doctrine->getRepository(Constant::CLIENT_REPOSITORY)->getClientsWithoutAPassword();
+    
+    $migrationResults = ClientMigration::generateNewPasswordsAndEmailsForMigratedClients($newClients, $em, $encoder, $content);
+
+    return new JsonResponse($migrationResults, 200);
   }
 
 
@@ -370,4 +400,5 @@ class AuthAPIController extends APIController {
       return $headerValidation->createJsonErrorResponse();
     }
   }
+
 }

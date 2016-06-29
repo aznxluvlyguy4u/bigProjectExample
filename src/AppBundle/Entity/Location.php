@@ -53,6 +53,7 @@ class Location
    * @var array
    *
    * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="location")
+   * @ORM\OrderBy({"arrivalDate" = "ASC"})
    */
   protected $arrivals;
 
@@ -60,6 +61,7 @@ class Location
    * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="location")
+   * @ORM\OrderBy({"dateOfBirth" = "ASC"})
    */
   protected $births;
 
@@ -67,6 +69,7 @@ class Location
    * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="DeclareDepart", mappedBy="location")
+   * @ORM\OrderBy({"departDate" = "ASC"})
    */
   protected $departures;
 
@@ -82,6 +85,7 @@ class Location
    * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="location")
+   * @ORM\OrderBy({"importDate" = "ASC"})
    */
   protected $imports;
 
@@ -89,6 +93,7 @@ class Location
    * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="DeclareExport", mappedBy="location")
+   * @ORM\OrderBy({"exportDate" = "ASC"})
    */
   protected $exports;
 
@@ -103,6 +108,7 @@ class Location
    * @var ArrayCollection
    * 
    * @ORM\OneToMany(targetEntity="DeclareLoss", mappedBy="location")
+   * @ORM\OrderBy({"dateOfDeath" = "ASC"})
    */
   protected $losses;
 
@@ -148,9 +154,18 @@ class Location
    *
    * @ORM\OneToMany(targetEntity="LocationHealthMessage", mappedBy="location")
    * @ORM\JoinColumn(name="health_message_id", referencedColumnName="id", nullable=true)
+   * @ORM\OrderBy({"arrivalDate" = "ASC"})
    * @JMS\Type("AppBundle\Entity\LocationHealthMessage")
    */
   private $healthMessages;
+
+  /**
+   * @var ArrayCollection
+   *
+   * @ORM\OneToMany(targetEntity="AnimalResidence", mappedBy="location")
+   * @JMS\Type("AppBundle\Entity\AnimalResidence")
+   */
+  private $animalResidenceHistory;
 
   /*
   * Constructor
@@ -168,6 +183,7 @@ class Location
     $this->flags = new ArrayCollection();
     $this->revokes = new ArrayCollection();
     $this->healthMessages = new ArrayCollection();
+    $this->animalResidenceHistory = new ArrayCollection();
   }
 
   /**
@@ -672,8 +688,41 @@ class Location
      *
      * @return \AppBundle\Entity\LocationHealth
      */
-    public function getLocationHealth()
+    public function getLocationHealth() {
+      return $this->locationHealth;
+    }
+
+    /**
+     * Add animalResidenceHistory
+     *
+     * @param \AppBundle\Entity\AnimalResidence $animalResidenceHistory
+     *
+     * @return Location
+     */
+    public function addAnimalResidenceHistory(\AppBundle\Entity\AnimalResidence $animalResidenceHistory)
     {
-        return $this->locationHealth;
+        $this->animalResidenceHistory[] = $animalResidenceHistory;
+
+        return $this;
+    }
+
+    /**
+     * Remove animalResidenceHistory
+     *
+     * @param \AppBundle\Entity\AnimalResidence $animalResidenceHistory
+     */
+    public function removeAnimalResidenceHistory(\AppBundle\Entity\AnimalResidence $animalResidenceHistory)
+    {
+        $this->animalResidenceHistory->removeElement($animalResidenceHistory);
+    }
+
+    /**
+     * Get animalResidenceHistory
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getAnimalResidenceHistory()
+    {
+        return $this->animalResidenceHistory;
     }
 }

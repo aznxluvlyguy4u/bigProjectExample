@@ -3,10 +3,10 @@
 namespace AppBundle\Component;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthQueue;
-use AppBundle\Entity\MaediVisna;
-use AppBundle\Entity\Scrapie;
+use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\WeightMeasurement;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -150,20 +150,6 @@ class Utils
     public static function returnLastResponse(Collection $responses) {
         return self::returnLastItemFromCollectionByLogDate($responses); }
 
-    /**
-     * @param Collection $scrapies
-     * @return Scrapie|null
-     */
-    public static function returnlastScrapie(Collection $scrapies) {
-        return self::returnLastItemFromCollectionByLogDate($scrapies); }
-
-    /**
-     * @param Collection $maediVisnas
-     * @return MaediVisna|null
-     */
-    public static function returnlastMaediVisna(Collection $maediVisnas) {
-        return self::returnLastItemFromCollectionByLogDate($maediVisnas); }
-
 
     /**
      * @param Collection $locationHealths
@@ -241,6 +227,36 @@ class Utils
         return $items->get($lastItemIndex);
     }
 
+
+    /**
+     * @param array $residences
+     * @return AnimalResidence|null
+     */
+    public static function returnLastAnimalResidenceByStartDate(array $residences)
+    {
+        $length = sizeof($residences);
+
+        if($length == 0) {
+            return null;
+        }
+
+        //initialize values
+        $lastItemIndex = 0;
+        $startIndex = 0;
+        $latestStartDate = $residences[$startIndex]->getStartDate();
+
+        for($i = $startIndex + 1; $i < $length; $i++) {
+            $itemStartDate = $residences[$i]->getStartDate();
+            if($itemStartDate > $latestStartDate) {
+                $lastItemIndex = $i;
+                $latestStartDate = $itemStartDate;
+            }
+        }
+
+        return $residences[$lastItemIndex];
+    }
+    
+    
     /**
      * WeightMeasurement are sorted first by weightMeasurementDate and then on logDate
      *
@@ -328,6 +344,26 @@ class Utils
     }
 
     /**
+     * @param ArrayCollection $content
+     * @param string $key
+     * @param string $defaultValue
+     * @return mixed|null
+     */
+    public static function getValueFromArrayCollectionKeyIfItExists(ArrayCollection $content, $key, $defaultValue)
+    {
+        if($content->containsKey($key)) {
+            $valueInKey = $content->get($key);
+            if($valueInKey != null && $valueInKey != "") {
+                return $valueInKey;
+            } else {
+                return $defaultValue;
+            }
+        } else {
+            return $defaultValue;
+        }
+    }
+
+    /**
      * @param array $locationHealthQueuesArray
      * @return LocationHealthQueue
      */
@@ -348,4 +384,19 @@ class Utils
 
         return $combinedLocationHealthQueue;
     }
+
+    public static function setResidenceToPending(Animal $animal, Location $location)
+    {
+        $residenceList =  $animal->getAnimalResidenceHistory();
+        $residenceToUpdate = $residenceList->last();
+
+        if($residenceToUpdate->getLocation()->getUbn() == $location->getUbn()
+          && $residenceToUpdate->getEndDate() == null) {
+            //Set current residentState to pending
+            $residenceToUpdate->setIsPending(true);
+        }
+
+        return $animal;
+    }
+
 }

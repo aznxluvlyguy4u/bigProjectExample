@@ -1,7 +1,6 @@
 <?php
 
 namespace AppBundle\Output;
-use AppBundle\Component\Utils;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
 
@@ -74,13 +73,13 @@ abstract class Output
         $maediVisnaEndDate = null;
 
         if(self::$locationHealth != null) {
-            $lastScrapie = Utils::returnlastScrapie(self::$locationHealth->getScrapies());
+            $lastScrapie = self::$locationHealth->getScrapies()->last();
             if($lastScrapie != null) {
                 $scrapieStatus = $lastScrapie->getStatus();
                 $scrapieEndDate = $lastScrapie->getEndDate();
             }
 
-            $lastMaediVisna = Utils::returnlastMaediVisna(self::$locationHealth->getMaediVisnas());
+            $lastMaediVisna = self::$locationHealth->getMaediVisnas()->last();
 
             if($lastMaediVisna != null) {
                 $maediVisnaStatus = $lastMaediVisna->getStatus();

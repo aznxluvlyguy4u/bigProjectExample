@@ -237,7 +237,7 @@ class UbnValidator
             Constant::UBN_NAMESPACE => $this->ubnOriginAnimal,
             Constant::UBN_PREVIOUS_OWNER_NAMESPACE => $this->ubnPreviousOwner);
 
-        return new JsonResponse($result, UbnValidator::ERROR_CODE);
+        return new JsonResponse($result, $code);
     }
 
     /**

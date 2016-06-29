@@ -8,6 +8,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Employee;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -34,6 +35,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\EntityGetter;
+use AppBundle\Util\Finder;
 use AppBundle\Validation\HeaderValidation;
 use Doctrine\ORM\Query;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -68,6 +70,9 @@ class APIController extends Controller implements APIControllerInterface
 
   /** @var \AppBundle\Service\HealthService */
   private $healthService;
+
+  /** @var \AppBundle\Service\EntityGetter */
+  private $animalLocationHistoryService;
 
   /**
    * @return \AppBundle\Service\EntityGetter
@@ -117,6 +122,19 @@ class APIController extends Controller implements APIControllerInterface
 
     return $this->queueService;
   }
+
+
+  /**
+   * @return \AppBundle\Service\AnimalLocationHistoryService
+   */
+  protected function getAnimalLocationHistoryService(){
+    if($this->animalLocationHistoryService == null){
+      $this->animalLocationHistoryService = $this->get('app.animallocation.history');
+    }
+
+    return $this->animalLocationHistoryService;
+  }
+
 
   /**
    * @return \AppBundle\Service\HealthService
@@ -289,9 +307,9 @@ class APIController extends Controller implements APIControllerInterface
   }
 
   /**
-   * @param Request|null $request
-   * @param null $token
-   * @return \AppBundle\Entity\Person|Client|null|object
+   * @param Request $request
+   * @param string $token
+   * @return Employee|Client|null
    */
   public function getAuthenticatedUser(Request $request= null, $token = null)
   {
@@ -301,6 +319,21 @@ class APIController extends Controller implements APIControllerInterface
     $em = $this->getDoctrine()->getEntityManager();
 
     return $em->getRepository('AppBundle:Person')->findOneBy(array("accessToken" => $token));
+  }
+
+  /**
+   * @param Request $request
+   * @param string $token
+   * @return Employee|null
+   */
+  public function getAuthenticatedEmployee(Request $request = null, $token = null)
+  {
+    $person = $this->getAuthenticatedUser($request, $token);
+    if($person instanceof Employee) {
+      return $person;
+    } else {
+      return null;
+    }
   }
 
   public function isUlnOrPedigreeCodeValid(Request $request, $ulnCode = null)
@@ -697,11 +730,18 @@ class APIController extends Controller implements APIControllerInterface
     $headerValidation = new HeaderValidation($this->getDoctrine()->getManager(), $request, $client);
 
     if($headerValidation->isInputValid()) {
-      //TODO when frontend is ready, get the ubn from the header
       return $headerValidation->getLocation();
 
-    } else { //pick the first available UBN as default
-      return $client->getCompanies()->get(0)->getLocations()->get(0);
+    } else {
+
+      $locations = Finder::findLocationsOfClient($client);
+      if($locations->count() > 0) {
+        //pick the first available Location as default
+        return $locations->get(0);
+
+      } else {
+        return null;
+      }
     }
   }
 

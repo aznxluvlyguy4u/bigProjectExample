@@ -15,6 +15,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\HealthChecker;
 use AppBundle\Util\LocationHealthUpdater;
+use AppBundle\Validation\TagValidator;
 use AppBundle\Validation\UbnValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -173,17 +174,23 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     //Convert the array into an object and add the mandatory values retrieved from the database
     if($isImportAnimal) { //DeclareImport
+      //Validate if ulnNumber matches that of an unassigned Tag in the tag collection of the client
+      $tagValidator = new TagValidator($this->getDoctrine()->getManager(), $client, $content);
+      if($tagValidator->getIsTagCollectionEmpty() || !$tagValidator->getIsTagValid() || $tagValidator->getIsInputEmpty()) {
+        return $tagValidator->createImportJsonErrorResponse();
+      }
+
       //TODO Phase 2: Filter between non-EU countries and EU countries. At the moment we only process sheep from EU countries
       $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client, $location);
 
     } else { //DeclareArrival
 
-      //Validate if ubnPreviousOwner matches the ubn of the animal with the given ULN, if the animal is in our database
-      $ubnValidator = new UbnValidator($this->getDoctrine()->getManager(), $content);
-      if(!$ubnValidator->getIsUbnValid()) {
-        return $ubnValidator->createArrivalJsonErrorResponse();
-      }
-      $content->set(JsonInputConstant::IS_ARRIVED_FROM_OTHER_NSFO_CLIENT, $ubnValidator->getIsArrivedFromOtherNsfoClient());
+      //TODO Validate if ubnPreviousOwner matches the ubn of the animal with the given ULN, if the animal is in our database
+//      $ubnValidator = new UbnValidator($this->getDoctrine()->getManager(), $content);
+//      if(!$ubnValidator->getIsUbnValid()) {
+//        return $ubnValidator->createArrivalJsonErrorResponse();
+//      }
+      $content->set(JsonInputConstant::IS_ARRIVED_FROM_OTHER_NSFO_CLIENT, true);
 
       $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $location);
     }
@@ -197,8 +204,8 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $this->persist($messageObject);
     $this->getDoctrine()->getManager()->flush();
 
-    //Place the DeclareArrival or DeclareImport in the LocationHealthQueue
-    $this->getHealthService()->updateLocationHealthQueue($messageObject);
+    //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
+    $this->getHealthService()->updateLocationHealth($messageObject);
 
 //    return new JsonResponse(array("status"=>"sent"), 200);
     return new JsonResponse($messageArray, 200);
@@ -256,11 +263,11 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client, $location);
 
     } else { //For DeclareArrival
-      //Validate if ubnPreviousOwner matches the ubn of the animal with the given ULN, if the animal is in our database
-      $ubnValidator = new UbnValidator($this->getDoctrine()->getManager(), $content, $messageObject);
-      if(!$ubnValidator->getIsUbnValid()) {
-        return $ubnValidator->createArrivalJsonErrorResponse();
-      }
+      //TODO Validate if ubnPreviousOwner matches the ubn of the animal with the given ULN, if the animal is in our database
+//      $ubnValidator = new UbnValidator($this->getDoctrine()->getManager(), $content, $messageObject);
+//      if(!$ubnValidator->getIsUbnValid()) {
+//        return $ubnValidator->createArrivalJsonErrorResponse();
+//      }
 
       //Convert the array into an object and add the mandatory values retrieved from the database
       $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $location);
@@ -273,7 +280,8 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $this->persist($messageObject);
     $this->getDoctrine()->getManager()->flush();
 
-    /* LocationHealth status updates are not necessary (except in one case) */
+
+    /* LocationHealth status updates are not necessary */
 
     /*
      * Import: An import (POST & PUT) always leads to the same LocationHealth update.
@@ -281,14 +289,11 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
      * Arrival: Only the arrival date is editable for Animals from other NSFO clients. The ubnPreviousOwner is editable for unknown locations.
      * In both cases the health status change would be identical to the change by the original arrival.
      *
-     * The only exception would be an PUT of an Arrival with a failed response, which should be considered
-     * a new arrival for purposes of calculating the LocationHealth
+     * We do not discriminate between successful and failed requests at this moment.
      */
-    if($isFailedMessage) {
-      //Place the DeclareArrival or DeclareImport in the LocationHealthQueue
-      $this->getHealthService()->updateLocationHealthQueue($messageObject);
-    }
 
+    //log Animal location history
+    $this->getAnimalLocationHistoryService()->logAnimalResidenceInEdit($messageObject);
 
     return new JsonResponse($messageArray, 200);
   }
