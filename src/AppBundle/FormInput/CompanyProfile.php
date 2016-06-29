@@ -32,7 +32,8 @@ class CompanyProfile
         //If they change it to the UBN of another user, they can edit their data!
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
-        $company->setCompanyRelationNumber($content->get('company_relation_number'));
+//        $company->setCompanyRelationNumber($content->get('company_relation_number'));
+//        in the front-end company_relation_number refers to the client 'relationNumberKeeper'.
 
         $billingAddress->setStreetName($billingAddressArray['street_name']);
         $billingAddress->setAddressNumberSuffix($billingAddressArray['suffix']);
