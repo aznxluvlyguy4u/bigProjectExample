@@ -331,11 +331,17 @@ class Count
         if($declaration->getRequestState() == RequestStateType::FAILED) {
 
             $responses = $declaration->getResponses();
-            $lastResponse = $responses[sizeof($responses)-1];
 
-            if($lastResponse->getIsRemovedByUser() == false) {
-                return true;
+            if(sizeof($responses) > 0) {
+                $lastResponse = $responses[sizeof($responses)-1];
+
+
+
+                if($lastResponse->getIsRemovedByUser() == false) {
+                    return true;
+                }
             }
+
         }
 
         return false;
