@@ -335,8 +335,6 @@ class Count
             if(sizeof($responses) > 0) {
                 $lastResponse = $responses[sizeof($responses)-1];
 
-
-
                 if($lastResponse->getIsRemovedByUser() == false) {
                     return true;
                 }
