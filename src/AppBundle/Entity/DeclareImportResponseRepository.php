@@ -39,7 +39,8 @@ class DeclareImportResponseRepository extends BaseRepository {
             $isHistoryRequestStateType = $import->getRequestState() == RequestStateType::OPEN ||
                 $import->getRequestState() == RequestStateType::REVOKING ||
                 $import->getRequestState() == RequestStateType::REVOKED ||
-                $import->getRequestState() == RequestStateType::FINISHED;
+                $import->getRequestState() == RequestStateType::FINISHED ||
+                $import->getRequestState() == RequestStateType::FINISHED_WITH_WARNING;
 
             if($isHistoryRequestStateType) {
                 $results->add(DeclareImportResponseOutput::createHistoryResponse($import));
