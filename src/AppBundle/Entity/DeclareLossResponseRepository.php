@@ -45,7 +45,8 @@ class DeclareLossResponseRepository extends BaseRepository {
             $isHistoryRequestStateType = $loss->getRequestState() == RequestStateType::OPEN ||
                 $loss->getRequestState() == RequestStateType::REVOKING ||
                 $loss->getRequestState() == RequestStateType::REVOKED ||
-                $loss->getRequestState() == RequestStateType::FINISHED;
+                $loss->getRequestState() == RequestStateType::FINISHED ||
+                $loss->getRequestState() == RequestStateType::FINISHED_WITH_WARNING;
 
             if($isHistoryRequestStateType) {
                 $results->add(DeclareLossResponseOutput::createHistoryResponse($loss));
