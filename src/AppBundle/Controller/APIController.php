@@ -745,6 +745,32 @@ class APIController extends Controller implements APIControllerInterface
     }
   }
 
+  /**
+   * @param Request $request
+   * @return Location|null
+   */
+  public function getSelectedUbn(Request $request)
+  {
+
+    $client = $this->getAuthenticatedUser($request);
+    $headerValidation = new HeaderValidation($this->getDoctrine()->getManager(), $request, $client);
+
+    if($headerValidation->isInputValid()) {
+      return $headerValidation->getUbn();
+
+    } else {
+
+      $locations = Finder::findLocationsOfClient($client);
+      if($locations->count() > 0) {
+        //pick the first available Location as default
+        return $locations->get(0)->getUbn();
+
+      } else {
+        return null;
+      }
+    }
+  }
+
   public function syncAnimalsForAllLocations()
   {
     $allLocations = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY)->findAll();
