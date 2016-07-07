@@ -27,11 +27,11 @@ class ContactAPIController extends APIController implements ContactAPIController
 
     $content = $this->getContentAsArray($request);
     $user = $this->getAuthenticatedUser($request);
-
+    $ubn = $this->getSelectedUbn($request);
+    
     $lastName = $user->getLastName();
     $firstName = $user->getFirstName();
     $userName = $lastName . ", " . $firstName;
-    $relationNumberKeeper = $user->getRelationNumberKeeper();
 
     //Content format
     $emailAddressUser = $content->get('email');
@@ -40,18 +40,22 @@ class ContactAPIController extends APIController implements ContactAPIController
     $messageBody = $content->get('message');
 
     //Message to NSFO
-    $emailAddressReceiver = $this->container->getParameter('mailer_contact_form_receiver');
+    $emailSourceAddress = $this->getParameter('mailer_source_address');
+    $emailSender = 'info@stormdelta.com';
+//    $emailSender = $emailSourceAddress;
+
     $message = \Swift_Message::newInstance()
-        ->setSubject('NSFO Online Contactformulier Confirmatie')
-        ->setFrom('info@stormdelta.com')
-        ->setTo($emailAddressReceiver)
+        ->setSubject(Constant::CONTACT_CONFIRMATION_MAIL_SUBJECT_HEADER)
+        ->setFrom($emailSender)
+        ->setTo($emailSourceAddress)
         ->setBody(
             $this->renderView(
             // app/Resources/views/...
                 'User/contact_email.html.twig',
-                array('firstName' => $firstName,
+                array('userName' => $userName,
+                      'firstName' => $firstName,
                       'lastName' => $lastName,
-                      'relationNumberKeeper' => $relationNumberKeeper,
+                      'ubn' => $ubn,
                       'emailAddressUser' => $emailAddressUser,
                       'body' => $messageBody,
                       'category' => $category,
@@ -59,23 +63,24 @@ class ContactAPIController extends APIController implements ContactAPIController
             ),
             'text/html'
         )
-        ->setSender('info@stormdelta.com')
+        ->setSender($emailSender)
     ;
 
     $this->get('mailer')->send($message);
 
     //Confirmation message back to the sender
     $messageConfirmation = \Swift_Message::newInstance()
-        ->setSubject('NSFO Online Contactformulier')
-        ->setFrom('info@stormdelta.com')
+        ->setSubject(Constant::CONTACT_MAIL_SUBJECT_HEADER)
+        ->setFrom($emailSender)
         ->setTo($emailAddressUser)
         ->setBody(
             $this->renderView(
             // app/Resources/views/...
                 'User/contact_verification_email.html.twig',
-                array('firstName' => $firstName,
+                array('userName' => $userName,
+                    'firstName' => $firstName,
                     'lastName' => $lastName,
-                    'relationNumberKeeper' => $relationNumberKeeper,
+                    'ubn' => $ubn,
                     'emailAddressUser' => $emailAddressUser,
                     'body' => $messageBody,
                     'category' => $category,
@@ -83,7 +88,7 @@ class ContactAPIController extends APIController implements ContactAPIController
             ),
             'text/html'
         )
-        ->setSender('info@stormdelta.com')
+        ->setSender($emailSender)
     ;
 
     $this->get('mailer')->send($messageConfirmation);
