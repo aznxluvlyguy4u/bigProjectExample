@@ -785,7 +785,7 @@ class IRSerializer implements IRSerializerInterface
      * @param $isEditMessage
      * @return RetrieveUbnDetails
      */
-    function parseRetrieveUBNDetails(ArrayCollection $contentArray, Client $client, $isEditMessage) {
+    function parseRetrieveUbnDetails(ArrayCollection $contentArray, Client $client, $isEditMessage) {
         $retrieveUbnDetails = new RetrieveUbnDetails();
 
         return $retrieveUbnDetails;
