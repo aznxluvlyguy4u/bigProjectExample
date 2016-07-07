@@ -43,7 +43,7 @@ class ContactAPIController extends APIController implements ContactAPIController
     $emailSourceAddress = $this->getParameter('mailer_source_address');
 
     $message = \Swift_Message::newInstance()
-        ->setSubject(Constant::CONTACT_CONFIRMATION_MAIL_SUBJECT_HEADER)
+        ->setSubject(Constant::CONTACT_MAIL_SUBJECT_HEADER)
         ->setFrom($emailSourceAddress)
         ->setTo($emailAddressUser)
         ->setBody(
@@ -68,7 +68,7 @@ class ContactAPIController extends APIController implements ContactAPIController
 
     //Confirmation message back to the sender
     $messageConfirmation = \Swift_Message::newInstance()
-        ->setSubject(Constant::CONTACT_MAIL_SUBJECT_HEADER)
+        ->setSubject(Constant::CONTACT_CONFIRMATION_MAIL_SUBJECT_HEADER)
         ->setFrom($emailSourceAddress)
         ->setTo($emailAddressUser)
         ->setBody(
