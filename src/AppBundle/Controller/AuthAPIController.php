@@ -233,23 +233,21 @@ class AuthAPIController extends APIController {
 
       $emailAddress = $client->getEmailAddress();
 
+      $mailerSourceAddress = $this->getParameter('mailer_source_address');
+
       //Confirmation message back to the sender
       $message = \Swift_Message::newInstance()
-          ->setSubject('Gewijzigd NSFO Online Wachtwoord')
-          ->setFrom('info@stormdelta.com')
+          ->setSubject(Constant::NEW_PASSWORD_MAIL_SUBJECT_HEADER)
+          ->setFrom($mailerSourceAddress)
           ->setTo($emailAddress)
           ->setBody(
               $this->renderView(
-              // app/Resources/views/...
-                  'User/change_password_email.html.twig',
-                  array('firstName' => $client->getFirstName(),
-                      'lastName' => $client->getLastName(),
-                      'relationNumberKeeper' => $client->getRelationNumberKeeper())
+                // app/Resources/views/...
+                'User/change_password_email.html.twig'
               ),
               'text/html'
           )
-          ->setSender('info@stormdelta.com')
-      ;
+          ->setSender($mailerSourceAddress);
 
       $this->get('mailer')->send($message);
 
@@ -290,13 +288,14 @@ class AuthAPIController extends APIController {
   {
     /*
     {
-        "email_address":"name@email.com"
+        "email_address":"example@example.com"
     }
     */
     $content = $this->getContentAsArray($request);
     $emailAddress = strtolower($content->get('email_address'));
 
     $client = $this->getClientByEmail($emailAddress);
+
     //Verify if email is correct
     if($client == null) {
       return new JsonResponse(array("code" => 428, "message"=>"No user found with emailaddress: " . $emailAddress), 428);
@@ -313,11 +312,12 @@ class AuthAPIController extends APIController {
     $this->getDoctrine()->getEntityManager()->persist($client);
     $this->getDoctrine()->getEntityManager()->flush();
 
+    $mailerSourceAddress = $this->getParameter('mailer_source_address');
 
     //Confirmation message back to the sender
     $message = \Swift_Message::newInstance()
-        ->setSubject('Gewijzigd NSFO Online Wachtwoord')
-        ->setFrom('info@stormdelta.com')
+        ->setSubject(Constant::NEW_PASSWORD_MAIL_SUBJECT_HEADER)
+        ->setFrom($mailerSourceAddress)
         ->setTo($emailAddress)
         ->setBody(
             $this->renderView(
@@ -332,7 +332,7 @@ class AuthAPIController extends APIController {
             ),
             'text/html'
         )
-        ->setSender('info@stormdelta.com')
+        ->setSender($mailerSourceAddress)
     ;
 
     $this->get('mailer')->send($message);
