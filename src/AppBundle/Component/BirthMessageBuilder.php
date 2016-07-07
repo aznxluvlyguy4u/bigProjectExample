@@ -5,7 +5,6 @@ namespace AppBundle\Component;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\Location;
-use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -22,9 +21,9 @@ class BirthMessageBuilder extends MessageBuilderBase
      */
     private $person;
 
-    public function __construct(EntityManager $em)
+    public function __construct(EntityManager $em, $currentEnvironment)
     {
-        parent::__construct($em);
+        parent::__construct($em, $currentEnvironment);
     }
 
     /**
@@ -55,10 +54,6 @@ class BirthMessageBuilder extends MessageBuilderBase
         $animal = $declareBirth->getAnimal();
         $animal->setDateOfBirth($declareBirth->getDateOfBirth());
         $declareBirth->setLocation($location);
-
-        if(ActionFlagSetting::DECLARE_BIRTH != null) {
-            $declareBirth->setAction(ActionFlagSetting::DECLARE_BIRTH);
-        }
 
         return $declareBirth;
     }

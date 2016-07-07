@@ -6,7 +6,6 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AnimalType;
-use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -23,9 +22,9 @@ class ArrivalMessageBuilder extends MessageBuilderBase
      */
     private $person;
 
-    public function __construct(EntityManager $em)
+    public function __construct(EntityManager $em, $currentEnvironment)
     {
-        parent::__construct($em);
+        parent::__construct($em, $currentEnvironment);
     }
 
     /**
@@ -54,9 +53,6 @@ class ArrivalMessageBuilder extends MessageBuilderBase
     private function addDeclareArrivalData(DeclareArrival $messageObject, $location)
     {
         $messageObject->setAnimalType(AnimalType::sheep);
-        if(ActionFlagSetting::DECLARE_ARRIVAL != null) {
-            $messageObject->setAction(ActionFlagSetting::DECLARE_ARRIVAL);
-        }
 
         $messageObject->setLocation($location);
         return $messageObject;

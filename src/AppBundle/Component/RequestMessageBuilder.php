@@ -34,92 +34,69 @@ use AppBundle\Entity\Person;
  */
 class RequestMessageBuilder
 {
-    /**
-     * @var ImportMessageBuilder
-     */
+    /** @var ImportMessageBuilder */
     private $importMessageBuilder;
 
-    /**
-     * @var ExportMessageBuilder
-     */
+    /** @var ExportMessageBuilder */
     private $exportMessageBuilder;
 
-    /**
-     * @var ArrivalMessageBuilder
-     */
+    /** @var ArrivalMessageBuilder */
     private $arrivalMessageBuilder;
 
-    /**
-     * @var BirthMessageBuilder
-     */
+    /** @var BirthMessageBuilder */
     private $birthMessageBuilder;
 
-    /**
-     * @var TagSyncMessageBuilder
-     */
+    /** @var TagSyncMessageBuilder */
     private $tagSyncMessageBuilder;
 
-    /**
-     * @var TagTransferMessageBuilder
-     */
+    /** @var TagTransferMessageBuilder */
     private $tagTransferMessageBuilder;
 
-    /**
-     * @var RetrieveAnimals
-     */
+    /** @var RetrieveAnimals */
     private $retrieveAnimalsMessageBuilder;
 
-    /**
-     * @var RetrieveAnimalDetails
-     */
+    /** @var RetrieveAnimalDetails */
     private $retrieveAnimalDetailsBuilder;
 
-    /**
-     * @var RetrieveUbnDetailsMessageBuilder
-     */
+    /** @var RetrieveUbnDetailsMessageBuilder */
     private $retrieveUbnDetailsBuilder;
 
-    /**
-     * @var TagReplaceMessageBuilder
-     */
+    /** @var TagReplaceMessageBuilder */
     private $tagReplaceMessageBuilder;
-    /*
-     * @var LossMessageBuilder
-     */
+
+    /** @var LossMessageBuilder */
     private $lossMessageBuilder;
 
-    /**
-     * @var RevokeMessageBuilder
-     */
+    /** @var RevokeMessageBuilder */
     private $revokeMessageBuilder;
 
-    /**
-     * @var IRSerializer
-     */
+    /** @var IRSerializer */
     private $irSerializer;
 
-    /**
-     * @var EntityManager
-     */
+    /** @var EntityManager */
     private $entityManager;
 
-    public function __construct($em, $irSerializer)
+    /** @var string */
+    private $currentEnvironment;
+
+    public function __construct($em, $irSerializer, $currentEnvironment)
     {
         $this->entityManager = $em;
         $this->irSerializer = $irSerializer;
-        $this->arrivalMessageBuilder = new ArrivalMessageBuilder($em);
-        $this->departMessageBuilder = new DepartMessageBuilder($em);
-        $this->importMessageBuilder = new ImportMessageBuilder($em);
-        $this->birthMessageBuilder = new BirthMessageBuilder($em);
-        $this->exportMessageBuilder = new ExportMessageBuilder($em);
-        $this->tagSyncMessageBuilder = new TagSyncMessageBuilder($em);
-        $this->tagTransferMessageBuilder = new TagTransferMessageBuilder($em);
-        $this->lossMessageBuilder = new LossMessageBuilder($em);
-        $this->revokeMessageBuilder = new RevokeMessageBuilder($em);
-        $this->retrieveAnimalsMessageBuilder = new RetrieveAnimalsMessageBuilder($em);
-        $this->retrieveAnimalDetailsBuilder = new RetrieveAnimalDetailsMessageBuilder($em);
-        $this->retrieveUbnDetailsBuilder = new RetrieveUbnDetailsMessageBuilder($em);
-        $this->tagReplaceMessageBuilder = new TagReplaceMessageBuilder($em);
+        $this->currentEnvironment = $currentEnvironment;
+        $this->arrivalMessageBuilder = new ArrivalMessageBuilder($em, $currentEnvironment);
+        $this->departMessageBuilder = new DepartMessageBuilder($em, $currentEnvironment);
+        $this->importMessageBuilder = new ImportMessageBuilder($em, $currentEnvironment);
+        $this->birthMessageBuilder = new BirthMessageBuilder($em, $currentEnvironment);
+        $this->exportMessageBuilder = new ExportMessageBuilder($em, $currentEnvironment);
+        $this->tagSyncMessageBuilder = new TagSyncMessageBuilder($em, $currentEnvironment);
+        $this->tagTransferMessageBuilder = new TagTransferMessageBuilder($em, $currentEnvironment);
+        $this->lossMessageBuilder = new LossMessageBuilder($em, $currentEnvironment);
+        $this->revokeMessageBuilder = new RevokeMessageBuilder($em, $currentEnvironment);
+        $this->retrieveAnimalsMessageBuilder = new RetrieveAnimalsMessageBuilder($em, $currentEnvironment);
+        $this->retrieveAnimalDetailsBuilder = new RetrieveAnimalDetailsMessageBuilder($em, $currentEnvironment);
+        $this->retrieveUbnDetailsBuilder = new RetrieveUbnDetailsMessageBuilder($em, $currentEnvironment);
+        $this->tagReplaceMessageBuilder = new TagReplaceMessageBuilder($em, $currentEnvironment);
     }
 
     /**

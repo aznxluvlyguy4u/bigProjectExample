@@ -106,7 +106,8 @@ class APIController extends Controller implements APIControllerInterface
     if($this->requestMessageBuilder == null) {
       $serializer = $this->getSerializer();
       $em = $this->getDoctrine()->getEntityManager();
-      $this->requestMessageBuilder = new RequestMessageBuilder($em, $serializer);
+      $currentEnvironment = $this->getCurrentEnvironment();
+      $this->requestMessageBuilder = new RequestMessageBuilder($em, $serializer, $currentEnvironment);
     }
 
     return $this->requestMessageBuilder;
@@ -145,6 +146,12 @@ class APIController extends Controller implements APIControllerInterface
     }
 
     return $this->healthService;
+  }
+  
+  
+  protected function getCurrentEnvironment()
+  {
+    return $this->get('kernel')->getEnvironment();
   }
 
   /**
