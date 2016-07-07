@@ -20,7 +20,8 @@ class MenuBarOutput extends Output
         $result = array(
                   "first_name" => $client->getFirstName(),
                   "last_name" => $client->getLastName(),
-                  "ubns" => self::createUbnsArray($client)
+                  "ubns" => self::createUbnsArray($client),
+                  "email_address" => $client->getEmailAddress()
         );
 
         return $result;
