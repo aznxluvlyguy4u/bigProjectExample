@@ -41,13 +41,11 @@ class ContactAPIController extends APIController implements ContactAPIController
 
     //Message to NSFO
     $emailSourceAddress = $this->getParameter('mailer_source_address');
-    $emailSender = 'info@stormdelta.com';
-//    $emailSender = $emailSourceAddress;
 
     $message = \Swift_Message::newInstance()
         ->setSubject(Constant::CONTACT_CONFIRMATION_MAIL_SUBJECT_HEADER)
-        ->setFrom($emailSender)
-        ->setTo($emailSourceAddress)
+        ->setFrom($emailSourceAddress)
+        ->setTo($emailAddressUser)
         ->setBody(
             $this->renderView(
             // app/Resources/views/...
@@ -63,7 +61,7 @@ class ContactAPIController extends APIController implements ContactAPIController
             ),
             'text/html'
         )
-        ->setSender($emailSender)
+        ->setSender($emailSourceAddress)
     ;
 
     $this->get('mailer')->send($message);
@@ -71,7 +69,7 @@ class ContactAPIController extends APIController implements ContactAPIController
     //Confirmation message back to the sender
     $messageConfirmation = \Swift_Message::newInstance()
         ->setSubject(Constant::CONTACT_MAIL_SUBJECT_HEADER)
-        ->setFrom($emailSender)
+        ->setFrom($emailSourceAddress)
         ->setTo($emailAddressUser)
         ->setBody(
             $this->renderView(
@@ -88,7 +86,7 @@ class ContactAPIController extends APIController implements ContactAPIController
             ),
             'text/html'
         )
-        ->setSender($emailSender)
+        ->setSender($emailSourceAddress)
     ;
 
     $this->get('mailer')->send($messageConfirmation);
