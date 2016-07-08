@@ -51,10 +51,6 @@ class DeclareTagsTransferResponseOutput
             $isRemovedByUser = true;
         }
 
-        if($isRemovedByUser) {
-            return null;
-        }
-
         $res = array(
             "request_id" => $tagTransfer->getRequestId(),
             "log_date" => $tagTransfer->getLogDate(),
@@ -64,6 +60,7 @@ class DeclareTagsTransferResponseOutput
             "request_state" => $tagTransfer->getRequestState(),
             "error_code" => $errorCode,
             "error_message" => $errorMessage,
+            "is_removed_by_user" => $isRemovedByUser,
             "message_number" => $messageNumber
         );
 
