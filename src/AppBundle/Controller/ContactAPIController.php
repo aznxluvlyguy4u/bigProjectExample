@@ -44,8 +44,8 @@ class ContactAPIController extends APIController implements ContactAPIController
 
     $message = \Swift_Message::newInstance()
         ->setSubject(Constant::CONTACT_MAIL_SUBJECT_HEADER)
-        ->setFrom($emailSourceAddress)
-        ->setTo($emailAddressUser)
+        ->setFrom($emailSourceAddress) // EMAIL IS ONLY SENT IF THIS IS THE EMAIL ADDRESS!
+        ->setTo($emailSourceAddress) //Send the original to kantoor@nsfo.nl
         ->setBody(
             $this->renderView(
             // app/Resources/views/...
@@ -69,8 +69,8 @@ class ContactAPIController extends APIController implements ContactAPIController
     //Confirmation message back to the sender
     $messageConfirmation = \Swift_Message::newInstance()
         ->setSubject(Constant::CONTACT_CONFIRMATION_MAIL_SUBJECT_HEADER)
-        ->setFrom($emailSourceAddress)
-        ->setTo($emailAddressUser)
+        ->setFrom($emailSourceAddress) // EMAIL IS ONLY SENT IF THIS IS THE EMAIL ADDRESS!
+        ->setTo($emailAddressUser) //Send the confirmation back to the original sender
         ->setBody(
             $this->renderView(
             // app/Resources/views/...
