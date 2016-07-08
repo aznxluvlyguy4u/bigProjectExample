@@ -35,7 +35,9 @@ services:
 
     app.messagebuilder.base:
         class: AppBundle\Component\MessageBuilderBase
-        arguments: ['@doctrine.orm.entity_manager']
+        arguments:
+          entityManager: ['@doctrine.orm.entity_manager']
+          currentEnv: %kernel.environment%
 
     app.serializer.ir:
         class: AppBundle\Service\IRSerializer

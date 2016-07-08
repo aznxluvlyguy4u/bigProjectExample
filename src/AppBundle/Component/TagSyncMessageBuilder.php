@@ -22,10 +22,11 @@ class TagSyncMessageBuilder extends MessageBuilderBase {
   /**
    * TagSyncMessageBuilder constructor.
    * @param EntityManager $em
+   * @param string $currentEnvironment
    */
-  public function __construct(EntityManager $em)
+  public function __construct(EntityManager $em, $currentEnvironment)
   {
-    parent::__construct($em);
+    parent::__construct($em, $currentEnvironment);
   }
 
   /**
