@@ -15,7 +15,6 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
  */
 class ContactAPIController extends APIController implements ContactAPIControllerInterface {
 
-
   /**
    *
    * Create a Client
@@ -28,6 +27,10 @@ class ContactAPIController extends APIController implements ContactAPIController
     $content = $this->getContentAsArray($request);
     $user = $this->getAuthenticatedUser($request);
     $ubn = $this->getSelectedUbn($request);
+
+    if($ubn == null) {
+        $ubn = 'geen';
+    }
     
     $lastName = $user->getLastName();
     $firstName = $user->getFirstName();
@@ -39,11 +42,13 @@ class ContactAPIController extends APIController implements ContactAPIController
     $mood = $content->get('mood');
     $messageBody = $content->get('message');
 
+    $contactMailSubjectHeader = 'NSFO Contactformulier '.$category.' | UBN '.$ubn.' ('.$lastName.') | '.$mood;
+
     //Message to NSFO
     $emailSourceAddress = $this->getParameter('mailer_source_address');
-
+      
     $message = \Swift_Message::newInstance()
-        ->setSubject(Constant::CONTACT_MAIL_SUBJECT_HEADER)
+        ->setSubject($contactMailSubjectHeader)
         ->setFrom($emailSourceAddress) // EMAIL IS ONLY SENT IF THIS IS THE EMAIL ADDRESS!
         ->setTo($emailSourceAddress) //Send the original to kantoor@nsfo.nl
         ->setBody(
