@@ -20,13 +20,69 @@ class BodyFat extends Measurement {
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
-    private $bodyFat;
-  
+    private $fat;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="bodyFatMeasurements")
+     * @JMS\Type("AppBundle\Entity\Animal")
+     */
+    private $animal;
+
+    /**
+    * BodyFat constructor.
+    */
     public function __construct()
     {
       parent::__construct();
-      $this->bodyFat = 0.00;
+      
+      $this->fat = 0.00;
     }
 
-   
+    /**
+     * Set bodyFat
+     *
+     * @param float $fat
+     *
+     * @return BodyFat
+     */
+    public function setFat($fat)
+    {
+        $this->fat = $fat;
+
+        return $this;
+    }
+
+    /**
+     * Get bodyFat
+     *
+     * @return float
+     */
+    public function getFat()
+    {
+        return $this->fat;
+    }
+
+    /**
+     * Set animal
+     *
+     * @param \AppBundle\Entity\BodyFat $animal
+     *
+     * @return BodyFat
+     */
+    public function setAnimal(\AppBundle\Entity\BodyFat $animal = null)
+    {
+        $this->animal = $animal;
+
+        return $this;
+    }
+
+    /**
+     * Get animal
+     *
+     * @return \AppBundle\Entity\BodyFat
+     */
+    public function getAnimal()
+    {
+        return $this->animal;
+    }
 }

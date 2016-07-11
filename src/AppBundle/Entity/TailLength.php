@@ -20,7 +20,13 @@ class TailLength extends Measurement {
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
-    private $tailLength;
+    private $length;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="tailLengthMeasurements")
+     * @JMS\Type("AppBundle\Entity\Animal")
+     */
+    private $animal;
 
     /**
     * TailLength constructor.
@@ -28,8 +34,55 @@ class TailLength extends Measurement {
     public function __construct() 
     {
       parent::__construct();
-      $this->tailLength = 0.00;
+        
+      $this->length = 0.00;
+    }
+    
+    /**
+     * Set tailLength
+     *
+     * @param float $length
+     *
+     * @return TailLength
+     */
+    public function setLength($length)
+    {
+        $this->length = $length;
+
+        return $this;
     }
 
-   
+    /**
+     * Get tailLength
+     *
+     * @return float
+     */
+    public function getLength()
+    {
+        return $this->length;
+    }
+
+    /**
+     * Set animal
+     *
+     * @param \AppBundle\Entity\Animal $animal
+     *
+     * @return TailLength
+     */
+    public function setAnimal(\AppBundle\Entity\Animal $animal = null)
+    {
+        $this->animal = $animal;
+
+        return $this;
+    }
+
+    /**
+     * Get animal
+     *
+     * @return \AppBundle\Entity\Animal
+     */
+    public function getAnimal()
+    {
+        return $this->animal;
+    }
 }
