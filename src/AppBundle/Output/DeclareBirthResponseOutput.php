@@ -61,10 +61,6 @@ class DeclareBirthResponseOutput extends Output
             $isRemovedByUser = true;
         }
 
-        if($isRemovedByUser) {
-            return null;
-        }
-
         $pedigree = $animalRepository->getPedigreeByUln($birth->getUlnCountryCode(), $birth->getUlnNumber());
 
         $res = array("request_id" => $birth->getRequestId(),
@@ -78,6 +74,7 @@ class DeclareBirthResponseOutput extends Output
             "request_state" => $birth->getRequestState(),
             "error_code" => $errorCode,
             "error_message" => $errorMessage,
+            "is_removed_by_user" => $isRemovedByUser,
             "message_number" => $messageNumber
         );
 
