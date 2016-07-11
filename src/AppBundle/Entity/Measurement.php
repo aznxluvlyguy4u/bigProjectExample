@@ -11,7 +11,11 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\MeasurementRepository")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
- * @ORM\DiscriminatorMap({"BodyFat" = "BodyFat", "MuscleThickness" = "MuscleThickness", "TailLength" = "TailLength", "Weight" = "Weight"})
+ * @ORM\DiscriminatorMap({"BodyFat" = "BodyFat",
+ *                        "MuscleThickness" = "MuscleThickness",
+ *                        "TailLength" = "TailLength",
+ *                        "Weight" = "Weight"
+ * })
  * @package AppBundle\Entity
  */
 abstract class Measurement {
@@ -44,8 +48,6 @@ abstract class Measurement {
      * @JMS\Type("DateTime")
      */
     protected $measurementDate;
-
-
   
    /**
     * Measurement constructor.
@@ -110,29 +112,5 @@ abstract class Measurement {
     public function getMeasurementDate()
     {
         return $this->measurementDate;
-    }
-
-    /**
-     * Set animal
-     *
-     * @param \AppBundle\Entity\Animal $animal
-     *
-     * @return Measurement
-     */
-    public function setAnimal(\AppBundle\Entity\Animal $animal = null)
-    {
-        $this->animal = $animal;
-
-        return $this;
-    }
-
-    /**
-     * Get animal
-     *
-     * @return \AppBundle\Entity\Animal
-     */
-    public function getAnimal()
-    {
-        return $this->animal;
     }
 }
