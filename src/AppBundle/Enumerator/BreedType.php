@@ -1,14 +1,10 @@
 <?php
-/**
- * Created by IntelliJ IDEA.
- * User: c0d3
- * Date: 11/07/16
- * Time: 12:59
- */
 
 namespace AppBundle\Enumerator;
 
-
-class BreedType {
-
+class BreedType
+{
+  const CROSS_BRED = "CROSS_BRED";
+  const PURE_BRED = "PURE_BRED";
+  const REGISTERED = "REGISTERED";
 }
