@@ -365,6 +365,28 @@ abstract class Animal
     protected $weightMeasurements;
 
     /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
+    protected $breedType;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
+    protected $breedCode;
+
+    /*
+     * @ORM\ManyToOne((targetEntity="Breeder")
+     * @ORM\JoinColumn(name="breeder_id", referencedColumnName="id")
+     */
+    protected $breeder;
+
+    /**
      * Animal constructor.
      */
     public function __construct() {
@@ -1519,5 +1541,53 @@ abstract class Animal
     public function getWeightMeasurements()
     {
         return $this->weightMeasurements;
+    }
+
+    /**
+     * Set breedType
+     *
+     * @param string $breedType
+     *
+     * @return Animal
+     */
+    public function setBreedType($breedType)
+    {
+        $this->breedType = $breedType;
+
+        return $this;
+    }
+
+    /**
+     * Get breedType
+     *
+     * @return string
+     */
+    public function getBreedType()
+    {
+        return $this->breedType;
+    }
+
+    /**
+     * Set breedCode
+     *
+     * @param string $breedCode
+     *
+     * @return Animal
+     */
+    public function setBreedCode($breedCode)
+    {
+        $this->breedCode = $breedCode;
+
+        return $this;
+    }
+
+    /**
+     * Get breedCode
+     *
+     * @return string
+     */
+    public function getBreedCode()
+    {
+        return $this->breedCode;
     }
 }

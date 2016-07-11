@@ -296,4 +296,52 @@ class Neuter extends Animal
     {
         $this->animalResidenceHistory->removeElement($animalResidenceHistory);
     }
+
+    /**
+     * Set breedType
+     *
+     * @param string $breedType
+     *
+     * @return Neuter
+     */
+    public function setBreedType($breedType)
+    {
+        $this->breedType = $breedType;
+
+        return $this;
+    }
+
+    /**
+     * Get breedType
+     *
+     * @return string
+     */
+    public function getBreedType()
+    {
+        return $this->breedType;
+    }
+
+    /**
+     * Set breedCode
+     *
+     * @param string $breedCode
+     *
+     * @return Neuter
+     */
+    public function setBreedCode($breedCode)
+    {
+        $this->breedCode = $breedCode;
+
+        return $this;
+    }
+
+    /**
+     * Get breedCode
+     *
+     * @return string
+     */
+    public function getBreedCode()
+    {
+        return $this->breedCode;
+    }
 }
