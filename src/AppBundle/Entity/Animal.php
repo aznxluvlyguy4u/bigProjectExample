@@ -226,13 +226,6 @@ abstract class Animal
     protected $flags;
 
     /**
-     * @var ArrayCollection
-     * @JMS\Type("AppBundle\Entity\Measurement")
-     * @ORM\OneToMany(targetEntity="Measurement", mappedBy="animal")
-     */
-    protected $measurements;
-
-    /**
      * @var array
      * @JMS\Type("AppBundle\Entity\DeclareTagReplace")
      * @ORM\OneToMany(targetEntity="DeclareTagReplace", mappedBy="animal", cascade={"persist"})
@@ -338,8 +331,8 @@ abstract class Animal
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="BodyFat", mappedBy="measurement", cascade={"persist"})
-     * @ORM\OrderBy({"startDate" = "ASC"})
+     * @ORM\OneToMany(targetEntity="BodyFat", mappedBy="animal", cascade={"persist"})
+     * @ORM\OrderBy({"measurementDate" = "ASC"})
      * @JMS\Type("AppBundle\Entity\BodyFat")
      */
     protected $bodyFatMeasurements;
@@ -347,8 +340,8 @@ abstract class Animal
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="MuscleThickness", mappedBy="measurement", cascade={"persist"})
-     * @ORM\OrderBy({"startDate" = "ASC"})
+     * @ORM\OneToMany(targetEntity="MuscleThickness", mappedBy="animal", cascade={"persist"})
+     * @ORM\OrderBy({"measurementDate" = "ASC"})
      * @JMS\Type("AppBundle\Entity\MuscleThickness")
      */
     protected $muscleThicknessMeasurements;
@@ -356,8 +349,8 @@ abstract class Animal
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="TailLength", mappedBy="measurement", cascade={"persist"})
-     * @ORM\OrderBy({"startDate" = "ASC"})
+     * @ORM\OneToMany(targetEntity="TailLength", mappedBy="animal", cascade={"persist"})
+     * @ORM\OrderBy({"measurementDate" = "ASC"})
      * @JMS\Type("AppBundle\Entity\TailLength")
      */
     protected $tailLengthMeasurements;
@@ -365,8 +358,8 @@ abstract class Animal
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="Weight", mappedBy="measurement", cascade={"persist"})
-     * @ORM\OrderBy({"startDate" = "ASC"})
+     * @ORM\OneToMany(targetEntity="Weight", mappedBy="animal", cascade={"persist"})
+     * @ORM\OrderBy({"measurementDate" = "ASC"})
      * @JMS\Type("AppBundle\Entity\Weight")
      */
     protected $weightMeasurements;
@@ -382,7 +375,6 @@ abstract class Animal
         $this->exports = new ArrayCollection();
         $this->births = new ArrayCollection();
         $this->deaths = new ArrayCollection();
-        $this->measurements = new ArrayCollection();
         $this->animalResidenceHistory = new ArrayCollection();
         $this->bodyFatMeasurements = new ArrayCollection();
         $this->muscleThicknessMeasurements = new ArrayCollection();
