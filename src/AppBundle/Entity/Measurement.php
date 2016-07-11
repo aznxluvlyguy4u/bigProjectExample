@@ -14,7 +14,8 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\DiscriminatorMap({"BodyFat" = "BodyFat",
  *                        "MuscleThickness" = "MuscleThickness",
  *                        "TailLength" = "TailLength",
- *                        "Weight" = "Weight"
+ *                        "Weight" = "Weight",
+ *                        "PerformanceMeasurement" = "PerformanceMeasurement"
  * })
  * @package AppBundle\Entity
  */
