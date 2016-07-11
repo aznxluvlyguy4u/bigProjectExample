@@ -226,11 +226,11 @@ abstract class Animal
     protected $flags;
 
     /**
-     * @var array
-     * @JMS\Type("AppBundle\Entity\WeightMeasurement")
-     * @ORM\OneToMany(targetEntity="WeightMeasurement", mappedBy="animal")
+     * @var ArrayCollection
+     * @JMS\Type("AppBundle\Entity\Measurement")
+     * @ORM\OneToMany(targetEntity="Measurement", mappedBy="animal")
      */
-    protected $weightMeasurements;
+    protected $measurements;
 
     /**
      * @var array
@@ -336,6 +336,42 @@ abstract class Animal
     protected $animalResidenceHistory;
 
     /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="BodyFat", mappedBy="measurement", cascade={"persist"})
+     * @ORM\OrderBy({"startDate" = "ASC"})
+     * @JMS\Type("AppBundle\Entity\BodyFat")
+     */
+    protected $bodyFatMeasurements;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="MuscleThickness", mappedBy="measurement", cascade={"persist"})
+     * @ORM\OrderBy({"startDate" = "ASC"})
+     * @JMS\Type("AppBundle\Entity\MuscleThickness")
+     */
+    protected $muscleThicknessMeasurements;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="TailLength", mappedBy="measurement", cascade={"persist"})
+     * @ORM\OrderBy({"startDate" = "ASC"})
+     * @JMS\Type("AppBundle\Entity\TailLength")
+     */
+    protected $tailLengthMeasurements;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="Weight", mappedBy="measurement", cascade={"persist"})
+     * @ORM\OrderBy({"startDate" = "ASC"})
+     * @JMS\Type("AppBundle\Entity\Weight")
+     */
+    protected $weightMeasurements;
+
+    /**
      * Animal constructor.
      */
     public function __construct() {
@@ -346,12 +382,16 @@ abstract class Animal
         $this->exports = new ArrayCollection();
         $this->births = new ArrayCollection();
         $this->deaths = new ArrayCollection();
-        $this->weightMeasurements = new ArrayCollection();
+        $this->measurements = new ArrayCollection();
         $this->animalResidenceHistory = new ArrayCollection();
-
+        $this->bodyFatMeasurements = new ArrayCollection();
+        $this->muscleThicknessMeasurements = new ArrayCollection();
+        $this->tailLengthMeasurements = new ArrayCollection();
+        $this->weightMeasurements = new ArrayCollection();
         $this->flags = new ArrayCollection();
         $this->ulnHistory = new ArrayCollection();
         $this->tagReplacements = new ArrayCollection();
+        
         $this->isAlive = true;
         $this->ulnCountryCode = '';
         $this->ulnNumber = '';
@@ -1190,37 +1230,37 @@ abstract class Animal
 
 
     /**
-     * Add weightMeasurement
+     * Add measurement
      *
-     * @param WeightMeasurement $weightMeasurement
+     * @param Measurement $measurement
      *
      * @return Animal
      */
-    public function addWeightMeasurement(WeightMeasurement $weightMeasurement)
+    public function addMeasurement(Measurement $measurement)
     {
-        $this->weightMeasurements[] = $weightMeasurement;
+        $this->measurements[] = $measurement;
 
         return $this;
     }
 
     /**
-     * Remove weightMeasurement
+     * Remove measurement
      *
-     * @param WeightMeasurement $weightMeasurement
+     * @param Measurement $measurement
      */
-    public function removeWeightMeasurement(\AppBundle\Entity\WeightMeasurement $weightMeasurement)
+    public function removeMeasurement(\AppBundle\Entity\Measurement $measurement)
     {
-        $this->weightMeasurements->removeElement($weightMeasurement);
+        $this->measurements->removeElement($measurement);
     }
 
     /**
-     * Get weightMeasurements
+     * Get measurements
      *
      * @return Collection
      */
-    public function getWeightMeasurements()
+    public function getMeasurements()
     {
-        return $this->weightMeasurements;
+        return $this->measurements;
     }
 
     /**
@@ -1351,5 +1391,141 @@ abstract class Animal
     public function getTagReplacements()
     {
         return $this->tagReplacements;
+    }
+
+    /**
+     * Add bodyFatMeasurement
+     *
+     * @param \AppBundle\Entity\BodyFat $bodyFatMeasurement
+     *
+     * @return Animal
+     */
+    public function addBodyFatMeasurement(\AppBundle\Entity\BodyFat $bodyFatMeasurement)
+    {
+        $this->bodyFatMeasurements[] = $bodyFatMeasurement;
+
+        return $this;
+    }
+
+    /**
+     * Remove bodyFatMeasurement
+     *
+     * @param \AppBundle\Entity\BodyFat $bodyFatMeasurement
+     */
+    public function removeBodyFatMeasurement(\AppBundle\Entity\BodyFat $bodyFatMeasurement)
+    {
+        $this->bodyFatMeasurements->removeElement($bodyFatMeasurement);
+    }
+
+    /**
+     * Get bodyFatMeasurements
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getBodyFatMeasurements()
+    {
+        return $this->bodyFatMeasurements;
+    }
+
+    /**
+     * Add muscleThicknessMeasurement
+     *
+     * @param \AppBundle\Entity\MuscleThickness $muscleThicknessMeasurement
+     *
+     * @return Animal
+     */
+    public function addMuscleThicknessMeasurement(\AppBundle\Entity\MuscleThickness $muscleThicknessMeasurement)
+    {
+        $this->muscleThicknessMeasurements[] = $muscleThicknessMeasurement;
+
+        return $this;
+    }
+
+    /**
+     * Remove muscleThicknessMeasurement
+     *
+     * @param \AppBundle\Entity\MuscleThickness $muscleThicknessMeasurement
+     */
+    public function removeMuscleThicknessMeasurement(\AppBundle\Entity\MuscleThickness $muscleThicknessMeasurement)
+    {
+        $this->muscleThicknessMeasurements->removeElement($muscleThicknessMeasurement);
+    }
+
+    /**
+     * Get muscleThicknessMeasurements
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getMuscleThicknessMeasurements()
+    {
+        return $this->muscleThicknessMeasurements;
+    }
+
+    /**
+     * Add tailLengthMeasurement
+     *
+     * @param \AppBundle\Entity\TailLength $tailLengthMeasurement
+     *
+     * @return Animal
+     */
+    public function addTailLengthMeasurement(\AppBundle\Entity\TailLength $tailLengthMeasurement)
+    {
+        $this->tailLengthMeasurements[] = $tailLengthMeasurement;
+
+        return $this;
+    }
+
+    /**
+     * Remove tailLengthMeasurement
+     *
+     * @param \AppBundle\Entity\TailLength $tailLengthMeasurement
+     */
+    public function removeTailLengthMeasurement(\AppBundle\Entity\TailLength $tailLengthMeasurement)
+    {
+        $this->tailLengthMeasurements->removeElement($tailLengthMeasurement);
+    }
+
+    /**
+     * Get tailLengthMeasurements
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getTailLengthMeasurements()
+    {
+        return $this->tailLengthMeasurements;
+    }
+
+    /**
+     * Add weightMeasurement
+     *
+     * @param \AppBundle\Entity\Weight $weightMeasurement
+     *
+     * @return Animal
+     */
+    public function addWeightMeasurement(\AppBundle\Entity\Weight $weightMeasurement)
+    {
+        $this->weightMeasurements[] = $weightMeasurement;
+
+        return $this;
+    }
+
+    /**
+     * Remove weightMeasurement
+     *
+     * @param \AppBundle\Entity\Weight $weightMeasurement
+     */
+    public function removeWeightMeasurement(\AppBundle\Entity\Weight $weightMeasurement)
+    {
+        $this->weightMeasurements->removeElement($weightMeasurement);
+    }
+
+    /**
+     * Get weightMeasurements
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getWeightMeasurements()
+    {
+        return $this->weightMeasurements;
     }
 }
