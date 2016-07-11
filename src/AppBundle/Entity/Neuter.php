@@ -344,4 +344,28 @@ class Neuter extends Animal
     {
         return $this->breedCode;
     }
+
+    /**
+     * Set exterior
+     *
+     * @param \AppBundle\Entity\Exterior $exterior
+     *
+     * @return Neuter
+     */
+    public function setExterior(\AppBundle\Entity\Exterior $exterior = null)
+    {
+        $this->exterior = $exterior;
+
+        return $this;
+    }
+
+    /**
+     * Get exterior
+     *
+     * @return \AppBundle\Entity\Exterior
+     */
+    public function getExterior()
+    {
+        return $this->exterior;
+    }
 }

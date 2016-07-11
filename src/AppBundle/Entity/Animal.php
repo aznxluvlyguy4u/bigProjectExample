@@ -385,7 +385,16 @@ abstract class Animal
      * @ORM\JoinColumn(name="breeder_id", referencedColumnName="id")
      */
     protected $breeder;
-
+  
+    /**
+     * @var Exterior
+     *
+     * @ORM\OneToOne(targetEntity="Exterior", inversedBy="animal", cascade={"persist"})
+     * @ORM\JoinColumn(name="exterior_id", referencedColumnName="id", nullable=true)
+     * @JMS\Type("AppBundle\Entity\Exterior")
+     */
+    protected $exterior;
+  
     /**
      * Animal constructor.
      */
@@ -413,6 +422,9 @@ abstract class Animal
         $this->isImportAnimal = false;
         $this->isExportAnimal = false;
         $this->isDepartedAnimal = false;
+      
+        $this->exterior = new Exterior();
+        $this->exterior->setAnimal($this);
     }
 
     /**
@@ -1589,5 +1601,29 @@ abstract class Animal
     public function getBreedCode()
     {
         return $this->breedCode;
+    }
+
+    /**
+     * Set exterior
+     *
+     * @param \AppBundle\Entity\Exterior $exterior
+     *
+     * @return Animal
+     */
+    public function setExterior(\AppBundle\Entity\Exterior $exterior = null)
+    {
+        $this->exterior = $exterior;
+
+        return $this;
+    }
+
+    /**
+     * Get exterior
+     *
+     * @return \AppBundle\Entity\Exterior
+     */
+    public function getExterior()
+    {
+        return $this->exterior;
     }
 }
