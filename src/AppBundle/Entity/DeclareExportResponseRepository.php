@@ -65,9 +65,7 @@ class DeclareExportResponseRepository extends BaseRepository {
 
                 $lastResponse = Utils::returnLastResponse($export->getResponses());
                 if($lastResponse != false) {
-                    if($lastResponse->getIsRemovedByUser() != true) {
-                        $results[] = DeclareExportResponseOutput::createErrorResponse($export);
-                    }
+                    $results[] = DeclareExportResponseOutput::createErrorResponse($export);
                 }
             }
         }

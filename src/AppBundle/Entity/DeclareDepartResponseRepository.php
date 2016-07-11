@@ -66,9 +66,7 @@ class DeclareDepartResponseRepository extends BaseRepository {
 
                 $lastResponse = Utils::returnLastResponse($depart->getResponses());
                 if($lastResponse != false) {
-                    if($lastResponse->getIsRemovedByUser() != true) {
-                        $results[] = DeclareDepartResponseOutput::createErrorResponse($depart);
-                    }
+                    $results[] = DeclareDepartResponseOutput::createErrorResponse($depart);
                 }
             }
         }
