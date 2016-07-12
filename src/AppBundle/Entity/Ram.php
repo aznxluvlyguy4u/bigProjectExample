@@ -372,38 +372,4 @@ class Ram extends Animal
     {
         return $this->exterior;
     }
-
-    /**
-     * Add mating
-     *
-     * @param \AppBundle\Entity\Mating $mating
-     *
-     * @return Ram
-     */
-    public function addMating(\AppBundle\Entity\Mating $mating)
-    {
-        $this->matings[] = $mating;
-
-        return $this;
-    }
-
-    /**
-     * Remove mating
-     *
-     * @param \AppBundle\Entity\Mating $mating
-     */
-    public function removeMating(\AppBundle\Entity\Mating $mating)
-    {
-        $this->matings->removeElement($mating);
-    }
-
-    /**
-     * Get matings
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getMatings()
-    {
-        return $this->matings;
-    }
 }

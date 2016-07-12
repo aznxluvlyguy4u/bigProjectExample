@@ -39,11 +39,13 @@ class Ewe extends Animal
      */
      protected $objectType;
 
-    /**
-     * @ORM\OneToMany(targetEntity="Litter", mappedBy="animalMother")
-     * @JMS\Type("AppBundle\Entity\Ewe")
-     */
-    protected $litters;
+      /**
+       * @var ArrayCollection
+       * 
+       * @ORM\OneToMany(targetEntity="Litter", mappedBy="animalMother")
+       * @JMS\Type("AppBundle\Entity\Ewe")
+       */
+      protected $litters;
 
     /**
      * Ewe constructor.
@@ -56,7 +58,8 @@ class Ewe extends Animal
          $this->setAnimalType(AnimalType::sheep);
          $this->setGender(GenderType::FEMALE);
          $this->setAnimalCategory(3);
-
+       
+         $this->litters = new ArrayCollection();
          $this->children = new ArrayCollection();
      }
 
@@ -458,39 +461,5 @@ class Ewe extends Animal
     public function getLitters()
     {
         return $this->litters;
-    }
-
-    /**
-     * Add mating
-     *
-     * @param \AppBundle\Entity\Mating $mating
-     *
-     * @return Ewe
-     */
-    public function addMating(\AppBundle\Entity\Mating $mating)
-    {
-        $this->matings[] = $mating;
-
-        return $this;
-    }
-
-    /**
-     * Remove mating
-     *
-     * @param \AppBundle\Entity\Mating $mating
-     */
-    public function removeMating(\AppBundle\Entity\Mating $mating)
-    {
-        $this->matings->removeElement($mating);
-    }
-
-    /**
-     * Get matings
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getMatings()
-    {
-        return $this->matings;
     }
 }

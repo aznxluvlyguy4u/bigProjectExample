@@ -1598,11 +1598,11 @@ abstract class Animal
     /**
      * Add mating
      *
-     * @param \AppBundle\Entity\Mating $mating
+     * @param \AppBundle\Entity\Mate $mating
      *
      * @return Animal
      */
-    public function addMating(\AppBundle\Entity\Mating $mating)
+    public function addMating(\AppBundle\Entity\Mate $mating)
     {
         $this->matings[] = $mating;
 
@@ -1612,9 +1612,9 @@ abstract class Animal
     /**
      * Remove mating
      *
-     * @param \AppBundle\Entity\Mating $mating
+     * @param \AppBundle\Entity\Mate $mating
      */
-    public function removeMating(\AppBundle\Entity\Mating $mating)
+    public function removeMating(\AppBundle\Entity\Mate $mating)
     {
         $this->matings->removeElement($mating);
     }
