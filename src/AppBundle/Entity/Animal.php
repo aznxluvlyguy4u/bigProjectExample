@@ -385,15 +385,24 @@ abstract class Animal
      * @ORM\JoinColumn(name="breeder_id", referencedColumnName="id")
      */
     protected $breeder;
-  
+
     /**
-     * @var Exterior
-     *
-     * @ORM\OneToOne(targetEntity="Exterior", inversedBy="animal", cascade={"persist"})
-     * @ORM\JoinColumn(name="exterior_id", referencedColumnName="id", nullable=true)
+     * @ORM\OneToOne(targetEntity="Exterior")
+     * @ORM\JoinColumn(name="exterior_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Exterior")
      */
     protected $exterior;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\ManyToMany(targetEntity="Mate")
+     * @ORM\JoinTable(name="animal_matings",
+     *      joinColumns={@ORM\JoinColumn(name="animal_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="mate_id", referencedColumnName="id")}
+     *      )
+     */
+    protected $matings;
   
     /**
      * Animal constructor.
@@ -424,7 +433,6 @@ abstract class Animal
         $this->isDepartedAnimal = false;
       
         $this->exterior = new Exterior();
-        $this->exterior->setAnimal($this);
     }
 
     /**
@@ -1253,42 +1261,6 @@ abstract class Animal
         $this->transferState = $transferState;
     }
 
-
-
-    /**
-     * Add measurement
-     *
-     * @param Measurement $measurement
-     *
-     * @return Animal
-     */
-    public function addMeasurement(Measurement $measurement)
-    {
-        $this->measurements[] = $measurement;
-
-        return $this;
-    }
-
-    /**
-     * Remove measurement
-     *
-     * @param Measurement $measurement
-     */
-    public function removeMeasurement(\AppBundle\Entity\Measurement $measurement)
-    {
-        $this->measurements->removeElement($measurement);
-    }
-
-    /**
-     * Get measurements
-     *
-     * @return Collection
-     */
-    public function getMeasurements()
-    {
-        return $this->measurements;
-    }
-
     /**
      * @return ArrayCollection
      */
@@ -1304,8 +1276,6 @@ abstract class Animal
     {
         $this->animalResidenceHistory = $animalResidenceHistory;
     }
-
-
 
     /**
      * Add animalResidenceHistory
@@ -1338,8 +1308,6 @@ abstract class Animal
         $this->setUlnCountryCode($ulnCountryCode);
         $this->setUlnNumber($ulnNumber);
     }
-
-
 
     /**
      * Add ulnHistory
@@ -1625,5 +1593,39 @@ abstract class Animal
     public function getExterior()
     {
         return $this->exterior;
+    }
+
+    /**
+     * Add mating
+     *
+     * @param \AppBundle\Entity\Mating $mating
+     *
+     * @return Animal
+     */
+    public function addMating(\AppBundle\Entity\Mating $mating)
+    {
+        $this->matings[] = $mating;
+
+        return $this;
+    }
+
+    /**
+     * Remove mating
+     *
+     * @param \AppBundle\Entity\Mating $mating
+     */
+    public function removeMating(\AppBundle\Entity\Mating $mating)
+    {
+        $this->matings->removeElement($mating);
+    }
+
+    /**
+     * Get matings
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getMatings()
+    {
+        return $this->matings;
     }
 }
