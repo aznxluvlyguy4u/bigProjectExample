@@ -43,12 +43,14 @@ class Employee extends Person
 
     /**
      * Constructor
+     * @param string $accessLevel use the AccessLevelType enumerator values to set the accessLevel
      */
-    public function __construct()
+    public function __construct($accessLevel)
     {
         //Call super constructor first
         parent::__construct();
 
+        $this->accessLevel = $accessLevel;
         $this->objectType = "Employee";
     }
 
