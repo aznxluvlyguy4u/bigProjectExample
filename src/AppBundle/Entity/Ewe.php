@@ -40,6 +40,12 @@ class Ewe extends Animal
      protected $objectType;
 
     /**
+     * @ORM\OneToMany(targetEntity="Litter", mappedBy="animalMother")
+     * @JMS\Type("AppBundle\Entity\Ewe")
+     */
+    protected $litters;
+
+    /**
      * Ewe constructor.
      */
      public function __construct() {
@@ -418,5 +424,73 @@ class Ewe extends Animal
     public function getExterior()
     {
         return $this->exterior;
+    }
+
+    /**
+     * Add litter
+     *
+     * @param \AppBundle\Entity\Litter $litter
+     *
+     * @return Ewe
+     */
+    public function addLitter(\AppBundle\Entity\Litter $litter)
+    {
+        $this->litters[] = $litter;
+
+        return $this;
+    }
+
+    /**
+     * Remove litter
+     *
+     * @param \AppBundle\Entity\Litter $litter
+     */
+    public function removeLitter(\AppBundle\Entity\Litter $litter)
+    {
+        $this->litters->removeElement($litter);
+    }
+
+    /**
+     * Get litters
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getLitters()
+    {
+        return $this->litters;
+    }
+
+    /**
+     * Add mating
+     *
+     * @param \AppBundle\Entity\Mating $mating
+     *
+     * @return Ewe
+     */
+    public function addMating(\AppBundle\Entity\Mating $mating)
+    {
+        $this->matings[] = $mating;
+
+        return $this;
+    }
+
+    /**
+     * Remove mating
+     *
+     * @param \AppBundle\Entity\Mating $mating
+     */
+    public function removeMating(\AppBundle\Entity\Mating $mating)
+    {
+        $this->matings->removeElement($mating);
+    }
+
+    /**
+     * Get matings
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getMatings()
+    {
+        return $this->matings;
     }
 }
