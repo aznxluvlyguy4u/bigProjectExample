@@ -69,4 +69,22 @@ class LocationRepository extends BaseRepository
   {
     return $this->findByUbn($location[Constant::UBN_NAMESPACE]);
   }
+
+  /**
+   * @param Client $client
+   * @return ArrayCollection
+   */
+  public function findAllLocationsOfClient(Client $client)
+  {
+    $locations = new ArrayCollection();
+
+    foreach ($client->getCompanies() as $company) {
+      foreach ($company->getLocations() as $location) {
+        $locations->add($location);
+      }
+    }
+
+    return $locations;
+  }
+
 }

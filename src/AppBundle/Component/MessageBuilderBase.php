@@ -21,10 +21,10 @@ use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\Client as Client;
+use AppBundle\Enumerator\ActionType;
 use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\EntityGetter;
-use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -37,20 +37,44 @@ use AppBundle\Entity\Person;
 class MessageBuilderBase
 {
 
-    /**
-     * @var EntityManager
-     */
+    /** @var EntityManager */
     protected $em;
 
-    /**
-     * @var EntityGetter
-     */
+    /** @var EntityGetter */
     protected $entityGetter;
 
-    public function __construct(EntityManager $em)
+    /** @var string */
+    protected $actionType;
+
+
+    /**
+     * MessageBuilderBase constructor.
+     * @param EntityManager $em
+     * @param string $currentEnvironment
+     */
+    public function __construct(EntityManager $em, $currentEnvironment = null)
     {
         $this->em = $em;
         $this->entityGetter = new EntityGetter($em);
+        
+        /* Set actionType based on environment */
+        switch($currentEnvironment) {
+            case 'prod':
+                $this->actionType = ActionType::V_MUTATE;
+                break;
+            case 'dev':
+                $this->actionType = ActionType::C_READ_ONLY;
+                break;
+            case 'test':
+                $this->actionType = ActionType::C_READ_ONLY;
+                break;
+            case 'local':
+                $this->actionType = ActionType::C_READ_ONLY;
+                break;
+            default; //dev
+                $this->actionType = ActionType::C_READ_ONLY;
+                break;
+        }
     }
 
     /**
@@ -73,7 +97,7 @@ class MessageBuilderBase
         }
 
         if($messageObject->getAction() == null) {
-            $messageObject->setAction(ActionFlagSetting::DEFAULT_ACTION);
+            $messageObject->setAction($this->actionType);
         }
 
         $messageObject->setLogDate(new \DateTime());
@@ -138,8 +162,4 @@ class MessageBuilderBase
         return uniqid(mt_rand(0,9999999));
     }
 
-    protected function updateLocationHealthStatus()
-    {
-
-    }
 }

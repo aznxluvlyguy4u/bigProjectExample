@@ -56,10 +56,6 @@ class DeclareExportResponseOutput
             $isRemovedByUser = true;
         }
 
-        if($isRemovedByUser) {
-            return null;
-        }
-
         $res = array("request_id" => $export->getRequestId(),
             "log_date" => $export->getLogDate(),
             "uln_country_code" => $export->getUlnCountryCode(),
@@ -72,6 +68,7 @@ class DeclareExportResponseOutput
             "request_state" => $export->getRequestState(),
             "error_code" => $errorCode,
             "error_message" => $errorMessage,
+            "is_removed_by_user" => $isRemovedByUser,
             "message_number" => $messageNumber
         );
 

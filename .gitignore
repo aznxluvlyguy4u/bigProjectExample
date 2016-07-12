@@ -107,3 +107,4 @@ web/app_dev.php
 # database dump files:
 *.gz
 nsfo_dev
+*.backup

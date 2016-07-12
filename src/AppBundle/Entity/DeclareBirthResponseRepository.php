@@ -36,7 +36,8 @@ class DeclareBirthResponseRepository extends BaseRepository {
             $isHistoryRequestStateType = $birth->getRequestState() == RequestStateType::OPEN ||
                 $birth->getRequestState() == RequestStateType::REVOKING ||
                 $birth->getRequestState() == RequestStateType::REVOKED ||
-                $birth->getRequestState() == RequestStateType::FINISHED;
+                $birth->getRequestState() == RequestStateType::FINISHED ||
+                $birth->getRequestState() == RequestStateType::FINISHED_WITH_WARNING;
 
             if($isHistoryRequestStateType) {
                 $results->add(DeclareBirthResponseOutput::createHistoryResponse($birth, $animalRepository));
@@ -57,8 +58,7 @@ class DeclareBirthResponseRepository extends BaseRepository {
 
                 $lastResponse = Utils::returnLastResponse($birth->getResponses());
                 if($lastResponse != false) {
-                    if($lastResponse->getIsRemovedByUser() != true) {
-                        $results[] = DeclareBirthResponseOutput::createErrorResponse($birth, $animalRepository);                    }
+                    $results[] = DeclareBirthResponseOutput::createErrorResponse($birth, $animalRepository);
                 }
             }
         }

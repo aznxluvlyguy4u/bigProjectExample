@@ -40,7 +40,8 @@ class DeclareDepartResponseRepository extends BaseRepository {
             $isHistoryRequestStateType = $depart->getRequestState() == RequestStateType::OPEN ||
                 $depart->getRequestState() == RequestStateType::REVOKING ||
                 $depart->getRequestState() == RequestStateType::REVOKED ||
-                $depart->getRequestState() == RequestStateType::FINISHED;
+                $depart->getRequestState() == RequestStateType::FINISHED ||
+                $depart->getRequestState() == RequestStateType::FINISHED_WITH_WARNING;
 
             if($isHistoryRequestStateType) {
                 $results->add(DeclareDepartResponseOutput::createHistoryResponse($depart));
@@ -65,9 +66,7 @@ class DeclareDepartResponseRepository extends BaseRepository {
 
                 $lastResponse = Utils::returnLastResponse($depart->getResponses());
                 if($lastResponse != false) {
-                    if($lastResponse->getIsRemovedByUser() != true) {
-                        $results[] = DeclareDepartResponseOutput::createErrorResponse($depart);
-                    }
+                    $results[] = DeclareDepartResponseOutput::createErrorResponse($depart);
                 }
             }
         }

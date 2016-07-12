@@ -18,6 +18,7 @@ class RequestStateType
 {
     const OPEN = "OPEN";
     const FINISHED = "FINISHED";
+    const FINISHED_WITH_WARNING = "FINISHED_WITH_WARNING";
     const FAILED = "FAILED";
     const CANCELLED = "CANCELLED";
     const REVOKED = "REVOKED";

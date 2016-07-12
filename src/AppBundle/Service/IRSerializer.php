@@ -34,10 +34,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
-use AppBundle\Enumerator\UIDType;
-use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\DBAL\Types\JsonArrayType;
 use Doctrine\ORM\EntityManager;
 
 /**
@@ -788,7 +785,7 @@ class IRSerializer implements IRSerializerInterface
      * @param $isEditMessage
      * @return RetrieveUbnDetails
      */
-    function parseRetrieveUBNDetails(ArrayCollection $contentArray, Client $client, $isEditMessage) {
+    function parseRetrieveUbnDetails(ArrayCollection $contentArray, Client $client, $isEditMessage) {
         $retrieveUbnDetails = new RetrieveUbnDetails();
 
         return $retrieveUbnDetails;

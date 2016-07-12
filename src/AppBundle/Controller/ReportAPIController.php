@@ -2,9 +2,11 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
+use AppBundle\Validation\UlnValidator;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\EntityManager;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -18,22 +20,9 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
  * @Route("/api/v1/reports")
  */
 class ReportAPIController extends APIController {
-  
 
   /**
-   *
-   * Debug endpoint
-   *
-   * @Route("/debug")
-   * @Method("GET")
-   */
-  public function debugAPI(Request $request) {
-    return new JsonResponse("ok", 200);
-  }
-
-
-  /**
-   * Get the pedigree certificates of the given animals.
+   * Generate pedigree certificates for multiple sheep and return a download link for the pdf.
    *
    * @ApiDoc(
    *   requirements={
@@ -45,32 +34,41 @@ class ReportAPIController extends APIController {
    *     }
    *   },
    *   resource = true,
-   *   description = "Get the pedigree certificates of the given animals",
+   *   description = "Generate pedigree certificates for multiple sheep and return a download link for the pdf",
    *   output = "AppBundle\Entity\Animal"
    * )
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/pedigree-certificates")
+   * @Route("/{Id}")
+   * @ParamConverter("Id", class="AppBundle\Entity\AnimalRepository")
    * @Method("POST")
    */
-  public function pedigreeCertificate(Request $request) {
-
+  public function getPedigreeCertificates(Request $request) {
+    $client = $this->getAuthenticatedUser($request);
     $content = $this->getContentAsArray($request);
-    $client  = $this->getAuthenticatedUser($request);
-
-    //Validate if animals belong to the client
-    $animals = $content->get(Constant::ANIMALS_NAMESPACE);
-    foreach($animals as $animal) {
-      $isAnimalOfClient = $this->getDoctrine()->getRepository(Animal::class)->verifyIfClientOwnsAnimal($client, $animal);
-      $uln = $animal[Constant::ULN_COUNTRY_CODE_NAMESPACE] . $animal[Constant::ULN_NUMBER_NAMESPACE];
-      //Check if uln is valid
-      if(!$isAnimalOfClient) {
-        return new JsonResponse(array('code'=>428, "message" => "Animal ".$uln." doesn't belong to this account."), 428);
-      }
+    $em = $this->getDoctrine()->getEntityManager();
+      
+    $ulnValidator = new UlnValidator($em, $content, true, $client);
+    if(!$ulnValidator->getIsUlnSetValid()) {
+      return $ulnValidator->createArrivalJsonErrorResponse();
     }
 
-    
+    $result = 'success!';
 
-    return new JsonResponse("ok", 200);
+    //TODO Retrieve the Animals and bloodline/pedigree
+
+    //TODO Generate pdf document from twig view
+    //https://github.com/KnpLabs/KnpSnappyBundle#generate-a-pdf-document-from-a-twig-view
+//    $this->get('knp_snappy.pdf')->generateFromHtml(
+//        $this->renderView(
+//            'MyBundle:Foo:bar.html.twig',
+//            array(
+//                'some'  => $vars
+//            )
+//        ),
+//        '/path/to/the/file.pdf'
+//    );
+
+    return new JsonResponse($result, 200);
   }
 }

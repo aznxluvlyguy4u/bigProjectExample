@@ -153,6 +153,6 @@ interface IRSerializerInterface
      * @param boolean $isEditMessage
      * @return RetrieveUBNDetails
      */
-    function parseRetrieveUBNDetails(ArrayCollection $contentArray, Client $client, $isEditMessage);
+    function parseRetrieveUbnDetails(ArrayCollection $contentArray, Client $client, $isEditMessage);
 
 }

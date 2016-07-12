@@ -6,7 +6,6 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AnimalType;
-use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
@@ -18,9 +17,9 @@ class ExportMessageBuilder extends MessageBuilderBase
    */
   private $person;
 
-  public function __construct(EntityManager $em)
+  public function __construct(EntityManager $em, $currentEnvironment)
   {
-    parent::__construct($em);
+    parent::__construct($em, $currentEnvironment);
   }
 
   /**
@@ -57,10 +56,6 @@ class ExportMessageBuilder extends MessageBuilderBase
     $messageObject->setIsExportAnimal(true);
     $messageObject->setAnimalType(AnimalType::sheep);
     $messageObject->setLocation($location);
-
-    if(ActionFlagSetting::DECLARE_EXPORT != null) {
-      $messageObject->setAction(ActionFlagSetting::DECLARE_EXPORT);
-    }
 
     return $messageObject;
   }

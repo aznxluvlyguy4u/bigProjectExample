@@ -6,7 +6,6 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AnimalType;
-use AppBundle\Setting\ActionFlagSetting;
 use Doctrine\ORM\EntityManager;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
@@ -23,9 +22,9 @@ class ImportMessageBuilder extends MessageBuilderBase
    */
   private $person;
 
-  public function __construct(EntityManager $em)
+  public function __construct(EntityManager $em, $currentEnvironment)
   {
-    parent::__construct($em);
+    parent::__construct($em, $currentEnvironment);
   }
 
   /**
@@ -59,10 +58,6 @@ class ImportMessageBuilder extends MessageBuilderBase
     }
 
     $declareImport->setAnimalType(AnimalType::sheep);
-
-    if(ActionFlagSetting::DECLARE_IMPORT != null) {
-      $declareImport->setAction(ActionFlagSetting::DECLARE_IMPORT);
-    }
 
     $declareImport->setLocation($location);
     return $declareImport;

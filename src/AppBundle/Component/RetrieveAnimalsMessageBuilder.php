@@ -15,9 +15,9 @@ class RetrieveAnimalsMessageBuilder extends MessageBuilderBase
    */
   private $person;
 
-  public function __construct(EntityManager $em)
+  public function __construct(EntityManager $em, $currentEnvironment)
   {
-    parent::__construct($em);
+    parent::__construct($em, $currentEnvironment);
   }
 
   /**
