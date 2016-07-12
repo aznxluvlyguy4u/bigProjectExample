@@ -423,6 +423,7 @@ abstract class Animal
         $this->flags = new ArrayCollection();
         $this->ulnHistory = new ArrayCollection();
         $this->tagReplacements = new ArrayCollection();
+        $this->matings = new ArrayCollection();
         
         $this->isAlive = true;
         $this->ulnCountryCode = '';
