@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -60,6 +61,14 @@ abstract class Person implements UserInterface
    * @JMS\Type("string")
    */
   protected $accessToken;
+  
+  /**
+   * @var ArrayCollection
+   *
+   * @ORM\OneToMany(targetEntity="Token", mappedBy="owner", cascade={"persist"})
+   * @JMS\Type("array")
+   */
+  protected $tokens;
 
   /**
    * @ORM\Column(name="is_active", type="boolean")
@@ -90,7 +99,9 @@ abstract class Person implements UserInterface
 
   public function __construct()
   {
-    $this->accessToken = sha1(uniqid(rand(), true));
+    $this->tokens = new ArrayCollection();
+    
+//    $this->accessToken = $accessToken;
     $this->setPassword('');
     $this->setIsActive(true);
   }
@@ -346,5 +357,44 @@ abstract class Person implements UserInterface
     $this->cellphoneNumber = $cellphoneNumber;
   }
 
+  /**
+   * @return ArrayCollection
+   */
+  public function getTokens()
+  {
+    return $this->tokens;
+  }
+
+  /**
+   * @param ArrayCollection $tokens
+   */
+  public function setTokens($tokens)
+  {
+    $this->tokens = $tokens;
+  }
+
+  /**
+   * Add Token
+   *
+   * @param Token $token
+   *
+   * @return Animal
+   */
+  public function addToken(Token $token)
+  {
+    $this->tokens[] = $token;
+
+    return $this;
+  }
+
+  /**
+   * Remove Token
+   *
+   * @param Token $token
+   */
+  public function removeToken(Token $token)
+  {
+    $this->tokens->removeElement($token);
+  }
 
 }

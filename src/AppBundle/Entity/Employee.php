@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -22,6 +23,23 @@ class Employee extends Person
      * @JMS\Type("string")
      */
     private $objectType;
+
+    /**
+     * @var string
+     *
+     * @Assert\NotBlank
+     * @ORM\Column(type="string")
+     * @JMS\Type("string")
+     */
+    private $accessLevel;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="Token", mappedBy="admin", cascade={"persist"})
+     * @JMS\Type("array")
+     */
+    private $ghostTokens;
 
     /**
      * Constructor
@@ -95,4 +113,39 @@ class Employee extends Person
 
         return $this;
     }
+
+    /**
+     * @return string
+     */
+    public function getAccessLevel()
+    {
+        return $this->accessLevel;
+    }
+
+    /**
+     * @param string $accessLevel
+     */
+    public function setAccessLevel($accessLevel)
+    {
+        $this->accessLevel = $accessLevel;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getGhostTokens()
+    {
+        return $this->ghostTokens;
+    }
+
+    /**
+     * @param ArrayCollection $ghostTokens
+     */
+    public function setGhostTokens($ghostTokens)
+    {
+        $this->ghostTokens = $ghostTokens;
+    }
+
+    
+
 }
