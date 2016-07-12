@@ -189,7 +189,7 @@ class Token
     /**
      * @return boolean
      */
-    public function isIsVerified()
+    public function getIsVerified()
     {
         return $this->isVerified;
     }
