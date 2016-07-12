@@ -22,6 +22,14 @@ use Doctrine\Common\Collections\Collection;
 class Utils
 {
     /**
+     * @return string
+     */
+    static function generateTokenCode()
+    {
+        return sha1(uniqid(rand(), true));
+    }
+
+    /**
      * @param object $object
      * @return string
      */
