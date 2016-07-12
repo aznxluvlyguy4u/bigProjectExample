@@ -68,8 +68,8 @@ class Mate {
      * @var ArrayCollection
      *
      * @ORM\ManyToMany(targetEntity="Animal")
-     * @ORM\JoinTable(name="litter_stud_ewes",
-     *      joinColumns={@ORM\JoinColumn(name="litter_id", referencedColumnName="id")},
+     * @ORM\JoinTable(name="mate_stud_ewes",
+     *      joinColumns={@ORM\JoinColumn(name="mate_id", referencedColumnName="id")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="animal_id", referencedColumnName="id")}
      *      )
      */
