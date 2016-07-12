@@ -23,14 +23,6 @@ class Exterior {
     private $id;
 
     /**
-     * @var Animal
-     * @ORM\OneToOne(targetEntity="Animal", mappedBy="exterior", cascade={"persist"})
-     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", nullable=true)
-     * @JMS\Type("AppBundle\Entity\Animal")
-     */
-    private $animal;
-
-    /**
      * @var float
      *
      * @ORM\Column(type="float")
@@ -415,29 +407,5 @@ class Exterior {
     public function getMarkings()
     {
         return $this->markings;
-    }
-
-    /**
-     * Set animal
-     *
-     * @param \AppBundle\Entity\Animal $animal
-     *
-     * @return Exterior
-     */
-    public function setAnimal(\AppBundle\Entity\Animal $animal = null)
-    {
-        $this->animal = $animal;
-
-        return $this;
-    }
-
-    /**
-     * Get animal
-     *
-     * @return \AppBundle\Entity\Animal
-     */
-    public function getAnimal()
-    {
-        return $this->animal;
     }
 }
