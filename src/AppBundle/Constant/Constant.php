@@ -7,6 +7,7 @@ class Constant
     //Auth
     const AUTHORIZATION_HEADER_NAMESPACE = 'Authorization';
     const ACCESS_TOKEN_HEADER_NAMESPACE = 'AccessToken';
+    const GHOST_TOKEN_HEADER_NAMESPACE = 'GhostToken';
 
     //DeclareBase
     const STATE_NAMESPACE = 'state';

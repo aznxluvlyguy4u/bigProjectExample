@@ -28,4 +28,7 @@ class JsonInputConstant
 
     //Loss
     const UBN_DESTRUCTOR = "ubn_destructor";
+    
+    //Admin
+    const COMPANY_ID = 'company_id';
 }
