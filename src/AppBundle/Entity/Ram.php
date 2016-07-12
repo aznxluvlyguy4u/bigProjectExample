@@ -372,4 +372,28 @@ class Ram extends Animal
     {
         return $this->exterior;
     }
+
+    /**
+     * Set scrapieGenotype
+     *
+     * @param string $scrapieGenotype
+     *
+     * @return Ram
+     */
+    public function setScrapieGenotype($scrapieGenotype)
+    {
+        $this->scrapieGenotype = $scrapieGenotype;
+
+        return $this;
+    }
+
+    /**
+     * Get scrapieGenotype
+     *
+     * @return string
+     */
+    public function getScrapieGenotype()
+    {
+        return $this->scrapieGenotype;
+    }
 }

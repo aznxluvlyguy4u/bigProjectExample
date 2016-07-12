@@ -368,4 +368,28 @@ class Neuter extends Animal
     {
         return $this->exterior;
     }
+
+    /**
+     * Set scrapieGenotype
+     *
+     * @param string $scrapieGenotype
+     *
+     * @return Neuter
+     */
+    public function setScrapieGenotype($scrapieGenotype)
+    {
+        $this->scrapieGenotype = $scrapieGenotype;
+
+        return $this;
+    }
+
+    /**
+     * Get scrapieGenotype
+     *
+     * @return string
+     */
+    public function getScrapieGenotype()
+    {
+        return $this->scrapieGenotype;
+    }
 }

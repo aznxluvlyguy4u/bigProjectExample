@@ -403,7 +403,14 @@ abstract class Animal
      *      )
      */
     protected $matings;
-  
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    protected $scrapieGenotype;
+
     /**
      * Animal constructor.
      */
@@ -1628,5 +1635,29 @@ abstract class Animal
     public function getMatings()
     {
         return $this->matings;
+    }
+
+    /**
+     * Set scrapieGenotype
+     *
+     * @param string $scrapieGenotype
+     *
+     * @return Animal
+     */
+    public function setScrapieGenotype($scrapieGenotype)
+    {
+        $this->scrapieGenotype = $scrapieGenotype;
+
+        return $this;
+    }
+
+    /**
+     * Get scrapieGenotype
+     *
+     * @return string
+     */
+    public function getScrapieGenotype()
+    {
+        return $this->scrapieGenotype;
     }
 }
