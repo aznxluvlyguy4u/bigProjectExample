@@ -10,6 +10,7 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\Token;
 use AppBundle\Enumerator\TokenType;
+use AppBundle\Validation\EmployeeValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -33,9 +34,11 @@ class AdminAPIController extends APIController {
    */
   public function getTemporaryGhostToken(Request $request) {
 
+    //User must be an Employee and not a Client
     $employee = $this->getAuthenticatedEmployee($request);
-    if($employee == null) {
-      return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
+    $employeeValidation = new EmployeeValidator($employee);
+    if(!$employeeValidation->getIsValid()) {
+      return $employeeValidation->createJsonErrorResponse();
     }
 
     $content = $this->getContentAsArray($request);
@@ -74,15 +77,25 @@ class AdminAPIController extends APIController {
 
     /* This endpoint has no prehook accesstoken & verified ghosttoken validation,
        because this is where the ghosttoken needs to be verified.
-       Therefore this endpoint needs its own custom verification
+       Therefore this endpoint needs its own custom verification:
+       1. validate if accessToken is a valid accessToken
+       2. validate if accessToken belongs to an Employee and not a Client
     */
+
+    //User must have a valid accessToken
     $tokenValidation = $this->isAccessTokenValid($request);
     if($tokenValidation->getStatusCode() != 200) {
       return $tokenValidation;
     }
 
+    //User must be an Employee and not a Client
     $employee = $this->getAuthenticatedEmployee($request);
+    $employeeValidation = new EmployeeValidator($employee);
+    if(!$employeeValidation->getIsValid()) {
+      return $employeeValidation->createJsonErrorResponse();
+    }
 
+    /* GhostToken verification */
     $ghostTokenCode = null;
     if ($request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE)) {
       $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
@@ -150,6 +163,14 @@ class AdminAPIController extends APIController {
    * @Method("POST")
    */
   public function migrateTokensToArray(Request $request) {
+
+    //User must be an Employee and not a Client
+    $employee = $this->getAuthenticatedEmployee($request);
+    $employeeValidation = new EmployeeValidator($employee);
+    if(!$employeeValidation->getIsValid()) {
+      return $employeeValidation->createJsonErrorResponse();
+    }
+
     $persons = $this->getDoctrine()->getRepository(Person::class)->findAll();
 
     foreach ($persons as $person) {

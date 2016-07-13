@@ -349,13 +349,17 @@ class APIController extends Controller implements APIControllerInterface
 
     $token = $em->getRepository(Token::class)->findOneBy(array("code" => $tokenCode));
     if($token != null) {
-      return $token->getOwner();
-    } else {
-      return null;
-      /* Note that returning null will break a lot of code in the controllers. That is why it is essential that both the AccessToken and _verified_ GhostToken
-        are validated in the TokenAuthenticator Prehook.
-      */
+      $owner = $token->getOwner();
+      if($owner instanceof Employee) {
+        return $owner;
+      }
     }
+    
+    return null;
+    /* Note that returning null will break a lot of code in the controllers. That is why it is essential that both the AccessToken and _verified_ GhostToken
+      are validated in the TokenAuthenticator Prehook.
+    */
+
   }
 
   public function isUlnOrPedigreeCodeValid(Request $request, $ulnCode = null)
