@@ -399,4 +399,20 @@ class Utils
         return $animal;
     }
 
+    /**
+     * Replace null values with empty strings for the frontend.
+     * This only works with strings!
+     *
+     * @param string|null $value
+     * @return string
+     */
+    public static function fillNull($value)
+    {
+        if($value == null) {
+            return "";
+        } else {
+            return $value;
+        }
+    }
+
 }
