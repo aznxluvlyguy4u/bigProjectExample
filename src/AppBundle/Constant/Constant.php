@@ -54,6 +54,7 @@ class Constant
     const CODE_NAMESPACE = 'code';
     const ERRORS_NAMESPACE = 'errors';
     const TYPE_NAMESPACE = 'type';
+    const GHOST_TOKEN_NAMESPACE = 'ghost_token';
 
     //Animal identification
     const ULN_NAMESPACE = 'uln';
