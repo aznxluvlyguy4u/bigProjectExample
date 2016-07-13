@@ -39,8 +39,7 @@ class ReportAPIController extends APIController {
    * )
    * @param Request $request the request object
    * @return JsonResponse
-   * @Route("/{Id}")
-   * @ParamConverter("Id", class="AppBundle\Entity\AnimalRepository")
+   * @Route("/pedigree-certificates")
    * @Method("POST")
    */
   public function getPedigreeCertificates(Request $request) {
@@ -58,16 +57,14 @@ class ReportAPIController extends APIController {
     //TODO Retrieve the Animals and bloodline/pedigree
 
     //TODO Generate pdf document from twig view
-    //https://github.com/KnpLabs/KnpSnappyBundle#generate-a-pdf-document-from-a-twig-view
-//    $this->get('knp_snappy.pdf')->generateFromHtml(
-//        $this->renderView(
-//            'MyBundle:Foo:bar.html.twig',
-//            array(
-//                'some'  => $vars
-//            )
-//        ),
-//        '/path/to/the/file.pdf'
-//    );
+
+    $generatedPdfPath = '/home/data/JVT/projects/NSFO/generatedpdf/pedigree_certificate_001.pdf'; //FIXME autoincrement filenames and get path from parameters.yml
+
+    $variables = array(
+//        'some'  => $vars //Just an example
+    );
+    $html = $this->renderView('Report/pedigree_certificate.html.twig', $variables);
+    $this->get('knp_snappy.pdf')->generateFromHtml($html, $generatedPdfPath);
 
     return new JsonResponse($result, 200);
   }
