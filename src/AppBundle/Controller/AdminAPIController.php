@@ -72,6 +72,17 @@ class AdminAPIController extends APIController {
    */
   public function verifyGhostToken(Request $request) {
 
+    /* This endpoint has no prehook accesstoken & verified ghosttoken validation,
+       because this is where the ghosttoken needs to be verified.
+       Therefore this endpoint needs its own custom verification
+    */
+    $tokenValidation = $this->isAccessTokenValid($request);
+    if($tokenValidation->getStatusCode() != 200) {
+      return $tokenValidation;
+    }
+
+    $employee = $this->getAuthenticatedEmployee($request);
+
     $ghostTokenCode = null;
     if ($request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE)) {
       $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
@@ -80,28 +91,35 @@ class AdminAPIController extends APIController {
         $ghostToken = $this->getDoctrine()->getRepository(Token::class)->findOneBy(array('code' => $ghostTokenCode));
         if ($ghostToken != null) {
 
-          //First verify if ghostToken has already been verified or not
-          if($ghostToken->getIsVerified()) {
-            $message = 'GHOST TOKEN HAS ALREADY BEEN VERIFIED';
-            $code = 200;
-
+          //First verify if the employee verifying this ghost token is the same employee as the one that created the ghost token
+          if($ghostToken->getAdmin() != $employee ) {
+            $message = 'UNAUTHORIZED, VERIFYING EMPLOYEE MUST BY IDENTICAL TO THE ONE THAT CREATED THE GHOST TOKEN';
+            $code = 401;
           } else {
-            $now = new \DateTime();
-            $timeExpiredInMinutes = ($now->getTimestamp() - $ghostToken->getCreationDateTime()->getTimeStamp())/60;
-            $isGhostTokenExpired = $timeExpiredInMinutes > self::timeLimitInMinutes;
-
-            if ($isGhostTokenExpired){
-              $this->getDoctrine()->getEntityManager()->remove($ghostToken);
-              $message = 'GHOST TOKEN EXPIRED AND WAS DELETED. VERIFY GHOST TOKENS WITHIN 3 MINUTES';
-              $code = 428;
-
-            } else { //not expired
-              $ghostToken->setIsVerified(true);
-              $this->getDoctrine()->getEntityManager()->persist($ghostToken);
-              $message = 'GHOST TOKEN IS VERIFIED';
+            
+            //Then verify if ghostToken has already been verified or not
+            if($ghostToken->getIsVerified()) {
+              $message = 'GHOST TOKEN HAS ALREADY BEEN VERIFIED';
               $code = 200;
-            }
-            $this->getDoctrine()->getEntityManager()->flush();
+
+            } else {
+              $now = new \DateTime();
+              $timeExpiredInMinutes = ($now->getTimestamp() - $ghostToken->getCreationDateTime()->getTimeStamp())/60;
+              $isGhostTokenExpired = $timeExpiredInMinutes > self::timeLimitInMinutes;
+
+              if ($isGhostTokenExpired){
+                $this->getDoctrine()->getEntityManager()->remove($ghostToken);
+                $message = 'GHOST TOKEN EXPIRED AND WAS DELETED. VERIFY GHOST TOKENS WITHIN 3 MINUTES';
+                $code = 428;
+
+              } else { //not expired
+                $ghostToken->setIsVerified(true);
+                $this->getDoctrine()->getEntityManager()->persist($ghostToken);
+                $message = 'GHOST TOKEN IS VERIFIED';
+                $code = 200;
+              }
+              $this->getDoctrine()->getEntityManager()->flush();
+            } 
           }
 
         } else {
