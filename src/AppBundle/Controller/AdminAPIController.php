@@ -153,7 +153,7 @@ class AdminAPIController extends APIController {
         Constant::MESSAGE_NAMESPACE => $message,
         Constant::GHOST_TOKEN_NAMESPACE => $ghostTokenCode);
 
-    return new JsonResponse([Constant::RESULT_NAMESPACE => $result], 200);
+    return new JsonResponse([Constant::RESULT_NAMESPACE => $result], $code);
   }
 
   /**
