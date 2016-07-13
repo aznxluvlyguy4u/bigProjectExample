@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
+use AppBundle\Output\PedigreeCertificate;
 use AppBundle\Validation\UlnValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
@@ -60,9 +61,7 @@ class ReportAPIController extends APIController {
 
     $generatedPdfPath = '/home/data/JVT/projects/NSFO/generatedpdf/pedigree_certificate_001.pdf'; //FIXME autoincrement filenames and get path from parameters.yml
 
-    $variables = array(
-//        'some'  => $vars //Just an example
-    );
+    $variables = PedigreeCertificate::create($em, $content, $client); 
     $html = $this->renderView('Report/pedigree_certificate.html.twig', $variables);
     $this->get('knp_snappy.pdf')->generateFromHtml($html, $generatedPdfPath);
 
