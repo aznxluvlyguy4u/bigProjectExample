@@ -58,7 +58,9 @@ class AdminAPIController extends APIController {
     $this->getDoctrine()->getEntityManager()->persist($client);
     $this->getDoctrine()->getEntityManager()->flush();
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $ghostToken->getCode()), 200);
+    $result = array(Constant::GHOST_TOKEN_NAMESPACE => $ghostToken->getCode());
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
   }
 
   /**
@@ -70,6 +72,7 @@ class AdminAPIController extends APIController {
    */
   public function verifyGhostToken(Request $request) {
 
+    $ghostTokenCode = null;
     if ($request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE)) {
       $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
 
@@ -80,6 +83,8 @@ class AdminAPIController extends APIController {
           //First verify if ghostToken has already been verified or not
           if($ghostToken->getIsVerified()) {
             $message = 'GHOST TOKEN HAS ALREADY BEEN VERIFIED';
+            $code = 200;
+
           } else {
             $now = new \DateTime();
             $timeExpiredInMinutes = ($now->getTimestamp() - $ghostToken->getCreationDateTime()->getTimeStamp())/60;
@@ -88,26 +93,36 @@ class AdminAPIController extends APIController {
             if ($isGhostTokenExpired){
               $this->getDoctrine()->getEntityManager()->remove($ghostToken);
               $message = 'GHOST TOKEN EXPIRED AND WAS DELETED. VERIFY GHOST TOKENS WITHIN 3 MINUTES';
+              $code = 428;
 
             } else { //not expired
               $ghostToken->setIsVerified(true);
               $this->getDoctrine()->getEntityManager()->persist($ghostToken);
               $message = 'GHOST TOKEN IS VERIFIED';
+              $code = 200;
             }
             $this->getDoctrine()->getEntityManager()->flush();
           }
 
         } else {
           $message = 'NO GHOST TOKEN FOUND FOR GIVEN CODE';
+          $code = 428; 
         }
       } else {
         $message = 'GHOST TOKEN FIELD IS EMPTY';
+        $code = 428;
       }
     } else {
       $message = 'GHOST TOKEN HEADER MISSING';
+      $code = 428;
     }
 
-    return new JsonResponse([Constant::RESULT_NAMESPACE => $message], 200);
+    $result = array(
+        Constant::CODE_NAMESPACE => $code,
+        Constant::MESSAGE_NAMESPACE => $message,
+        Constant::GHOST_TOKEN_NAMESPACE => $ghostTokenCode);
+
+    return new JsonResponse([Constant::RESULT_NAMESPACE => $result], 200);
   }
 
   /**
