@@ -111,7 +111,7 @@ class PedigreeCertificates
     public function getFilePath($mainDirectory)
     {
         $dateTimeNow = new \DateTime();
-        $datePrint = $dateTimeNow->format('Y-m-d_H.i.s');
+        $datePrint = $dateTimeNow->format('Y-m-d_').$dateTimeNow->format('H').'h'.$dateTimeNow->format('i').'m'.$dateTimeNow->format('s').'s';
         $randString = Utils::randomString(4); //to prevent identical names if pdfs are generated within the same second
 
         //TODO when each client has a permanent unique identifier, replace the id with that identifier.
