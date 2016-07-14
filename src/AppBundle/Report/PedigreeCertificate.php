@@ -1,71 +1,127 @@
 <?php
 
-namespace AppBundle\Output;
+namespace AppBundle\Report;
 
 
-use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
+use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Ewe;
-use AppBundle\Entity\Neuter;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\Ram;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\EntityManager;
 
-/**
- * Class PedigreeCertificate
- */
 class PedigreeCertificate
 {
+
+    /** @var array */
+    private $data;
+
+    /** @var int */
+    private $generationOfAscendants;
+
     /**
-     * Create the data for the PedigreeCertificate.
-     * Before this is run, it is assumed all the ulns have been verified.
-     *
-     * @param EntityManager $em
-     * @param Collection $content containing the ulns of multiple animals
-     * @return array
+     * PedigreeCertificate constructor.
+     * @param Client $client
+     * @param Location $location
+     * @param Animal $animal
+     * @param int $generationOfAscendants
      */
-    public static function create(EntityManager $em, Collection $content, Client $client)
+    public function __construct(Client $client, Location $location, Animal $animal, $generationOfAscendants = 3)
     {
-        $animals = self::getAnimalsInContentArray($em, $content);
+        $this->data = array();
+        $this->generationOfAscendants = $generationOfAscendants;
 
-        //TODO Generate an array containing properly labelled variables for twig file.
+        $this->data[ReportLabel::OWNER] = $client;
+        $this->data[ReportLabel::OWNER_NAME] = $client->getFirstName() . " " . $client->getLastName();
+        $this->data[ReportLabel::ADDRESS] = $location->getCompany()->getAddress();
+        $this->data[ReportLabel::UBN] = $location->getUbn();
 
-        //FIXME this is a mock result
-        $result = array(
-//        'some'  => $vars //Just an example
-        );
+        //TODO Add breeder information
+//            $this->data[ReportLabel::BREEDER] = $breeder;
+        $this->data[ReportLabel::BREEDER_NAME] = '-'; //TODO
+//        $this->data[ReportLabel::ADDRESS_BREEDER] = $address; //TODO
 
-        return $result;
+        $this->data[ReportLabel::ANIMALS][ReportLabel::CHILD] = $animal;
+
+        $generation = 0;
+        $labelAnimal = ReportLabel::CHILD;
+        $this->addParents($animal, $labelAnimal, $generation);
     }
 
     /**
-     * @param EntityManager $em
-     * @param Collection $content
-     * @return ArrayCollection
+     * Recursively add the previous generations of ascendants.
+     *
+     * @param Animal $animal
+     * @param string $labelAnimal
+     * @param int $generation
      */
-    private static function getAnimalsInContentArray(EntityManager $em, Collection $content)
+    private function addParents(Animal $animal = null, $labelAnimal, $generation)
     {
-        $animals = new ArrayCollection();
+        if($generation < $this->generationOfAscendants) {
 
-        foreach ($content->getKeys() as $key) {
-            if ($key == Constant::ANIMALS_NAMESPACE) {
-                $animalArrays = $content->get($key);
-
-                foreach ($animalArrays as $animalArray) {
-                    $ulnNumber = $animalArray[Constant::ULN_NUMBER_NAMESPACE];
-                    $ulnCountryCode = $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
-                    $animal = $em->getRepository(Animal::class)->findByUlnCountryCodeAndNumber($ulnCountryCode, $ulnNumber);
-
-                    $animals->add($animals);
-                }
+            if($animal != null) {
+                $father = $animal->getParentFather();
+                $mother = $animal->getParentMother();
+            } else {
+                $father = null;
+                $mother = null;
             }
+
+            if($father == null) { $father = new Ram(); }
+            if($mother == null) { $mother = new Ewe(); }
+
+            $labelFather = self::getFatherLabel($labelAnimal);
+            $labelMother = self::getMotherLabel($labelAnimal);
+
+            $this->data[ReportLabel::ANIMALS][$labelFather] = $father;
+            $this->data[ReportLabel::ANIMALS][$labelMother] = $mother;
+
+            $generation++;
+
+            //Recursive loop for both parents AFTER increasing the generationCount
+            $this->addParents($father, $labelFather, $generation);
+            $this->addParents($mother, $labelMother, $generation);
+        }
+    }
+
+    /**
+     * @param string $labelAnimal
+     * @return string
+     */
+    public static function getFatherLabel($labelAnimal)
+    {
+        if($labelAnimal == ReportLabel::CHILD) {
+            $labelFather = ReportLabel::FATHER;
+        } else {
+            $labelFather = $labelAnimal . ReportLabel::_S_FATHER;
         }
 
-        
-        return $animals;
+        return $labelFather;
     }
+
+    /**
+     * @param string $labelAnimal
+     * @return string
+     */
+    public static function getMotherLabel($labelAnimal)
+    {
+        if($labelAnimal == ReportLabel::CHILD) {
+            $labelMother = ReportLabel::MOTHER;
+        } else {
+            $labelMother = $labelAnimal . ReportLabel::_S_MOTHER;
+        }
+
+        return $labelMother;
+    }
+
+    /**
+     * @return array
+     */
+    public function getData()
+    {
+        return $this->data;
+    }
+
+
 
 }
