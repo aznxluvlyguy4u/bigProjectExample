@@ -775,7 +775,7 @@ class APIController extends Controller implements APIControllerInterface
 
   /**
    * @param Request $request
-   * @return Location|null
+   * @return string|null
    */
   public function getSelectedUbn(Request $request)
   {
