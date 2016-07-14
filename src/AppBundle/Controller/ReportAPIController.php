@@ -2,9 +2,11 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Entity\Animal;
-use AppBundle\Entity\Client;
-use AppBundle\Output\PedigreeCertificate;
+use AppBundle\AppBundle;
+use AppBundle\Constant\Constant;
+use AppBundle\Constant\ReportLabel;
+use AppBundle\Entity\Country;
+use AppBundle\Report\PedigreeCertificates;
 use AppBundle\Validation\UlnValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
@@ -14,6 +16,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
  * Class ReportAPIController
@@ -45,26 +48,42 @@ class ReportAPIController extends APIController {
    */
   public function getPedigreeCertificates(Request $request) {
     $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $content = $this->getContentAsArray($request);
     $em = $this->getDoctrine()->getEntityManager();
-      
+
+    //Validate if given ULNs are correct AND there should at least be one ULN given
     $ulnValidator = new UlnValidator($em, $content, true, $client);
     if(!$ulnValidator->getIsUlnSetValid()) {
       return $ulnValidator->createArrivalJsonErrorResponse();
     }
 
-    $result = 'success!';
+    //TODO TEST Retrieve the Animals and bloodline/pedigree
 
-    //TODO Retrieve the Animals and bloodline/pedigree
+    //TODO Prettify pdf document from twig view
 
-    //TODO Generate pdf document from twig view
+    $pedigreeCertificateData = new PedigreeCertificates($em, $content, $client, $location);
+    $generatedPdfPath = $pedigreeCertificateData->getFilePath($this->getParameter('report_directory_path'));
+    $variables = $pedigreeCertificateData->getReports();
 
-    $generatedPdfPath = '/home/data/JVT/projects/NSFO/generatedpdf/pedigree_certificate_001.pdf'; //FIXME autoincrement filenames and get path from parameters.yml
-
-    $variables = PedigreeCertificate::create($em, $content, $client); 
-    $html = $this->renderView('Report/pedigree_certificate.html.twig', $variables);
+    $html = $this->renderView('Report/pedigree_certificates.html.twig', ['variables' => $variables]);
     $this->get('knp_snappy.pdf')->generateFromHtml($html, $generatedPdfPath);
 
-    return new JsonResponse($result, 200);
+    //TODO Save the report link, delete the file on S3 each time a new report is requested and overwrite the saved report link
+
+    $result = 'success!'; //TODO return the S3 download link
+
+    return new JsonResponse([Constant::RESULT_NAMESPACE => $result], 200);
+  }
+
+  /**
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/testdata")
+   * @Method("POST")
+   */
+  public function test(Request $request)
+  {
+
   }
 }

@@ -1,0 +1,123 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+    {% for x in variables %}
+
+        <div id="wrapper">
+            <div class="container">
+            <h4>NFSO Afstammmingsbewijs</h4>
+
+            <div class="person-item">
+                <p> <b>Eigenaar</b> <br>
+                    {{ x.owner_name }} <br>
+                    {{ x.address.streetName }} {{ x.address.addressNumber }}{{ x.address.addressNumberSuffix }} <br>
+                    {{ x.address.postalCode }} <br>
+                    UBN: {{ x.ubn }}
+                </p>
+
+                <p>
+                    <b>Fokker</b>
+                    {{ x.breeder_name }} <br>
+                    - <br> {# TODO add breeder data #}
+                    - <br>
+                    - <br>
+                </p>
+            </div>
+
+        {% for key,value in x.animals %}
+            <div class="animal-item">
+                <p>
+                    {% if key == 'child' %}
+
+                        {% if value.gender == 'Ram' %}
+                            {% set gender = 'Ram' %}
+                        {% elseif value.gender == 'Ewe'%}
+                            {% set gender = 'Ooi' %}
+                        {% else %}
+                            {% set gender = 'Onbekend' %}
+                        {% endif %}
+
+                        <b>Geslacht: {{ gender }}</b> <br>
+
+                    {% else %}
+
+                        {% set seperatedkey = key|split('_') %}
+                        {% set newkeylabel = {} %}
+
+                        <b>
+                        {% for keypart in seperatedkey %}
+                            {% if keypart == 's' %}
+                                {% set newkeylabel = newkeylabel|merge(['\'s ']) %}
+                            {% elseif keypart == 'mother' %}
+                                {% set newkeylabel = newkeylabel|merge(['moeder']) %}
+                            {% elseif keypart == 'father' %}
+                                {% set newkeylabel = newkeylabel|merge(['vader']) %}
+                            {% endif %}
+                        {% endfor %}
+                            {{ newkeylabel|join }}
+                        </b> <br>
+                    {% endif %}
+
+                    ULN: {{ value.ulnCountryCode }} {{ value.ulnNumber }}    <br>
+                    STN: {{ value.pedigreeCountryCode }} {{ value.pedigreeNumber }} <br>
+                    {% if value.dateOfBirth == null %}
+                        Geb: - <br>
+                    {% else %}
+                        Geb: {{ value.dateOfBirth|date('Y-m-d') }} <br> {#TODO add n-ling & TE8?#}
+                    {% endif %}
+                    Scrapie: -/-   Blf: - <br>  {#TODO#}
+                    Productie: - <br> {#TODO#}
+                    Status: - <br> {#TODO#}
+                    Pred: - <br> {#TODO#}
+                    Keurdat: - <br> {#TODO#}
+                </p>
+            </div>
+        {% endfor %}
+
+                {% if loop.last == false %}
+                   <footer></footer> {#necessary to enforce a pagebreak using css#}
+                {% endif %}
+
+            </div>
+        </div>
+    {% endfor %}
+
+{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        .container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .person-item {
+            float: left;
+            background: none;
+            border: 2px solid black;
+            width: 290px;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        .animal-item {
+            float: left;
+            background: none;
+            border: 2px solid black;
+            width: 290px;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        p {
+            font-size: small;
+        }
+
+        /* Always insert a page break after each <footer> element (when printing) */
+        @media print {
+            footer {page-break-after: always;}
+        }
+
+    </style>
+{% endblock %}
