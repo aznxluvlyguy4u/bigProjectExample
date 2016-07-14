@@ -58,10 +58,6 @@ class DeclareDepartResponseOutput
             $isRemovedByUser = true;
         }
 
-        if($isRemovedByUser) {
-            return null;
-        }
-
         $res = array("request_id" => $depart->getRequestId(),
             "log_date" => $depart->getLogDate(),
             "uln_country_code" => $depart->getUlnCountryCode(),
@@ -75,6 +71,7 @@ class DeclareDepartResponseOutput
             "request_state" => $depart->getRequestState(),
             "error_code" => $errorCode,
             "error_message" => $errorMessage,
+            "is_removed_by_user" => $isRemovedByUser,
             "message_number" => $messageNumber
         );
 

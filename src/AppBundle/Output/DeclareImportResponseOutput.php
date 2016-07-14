@@ -56,10 +56,6 @@ class DeclareImportResponseOutput
             $isRemovedByUser = true;
         }
 
-        if($isRemovedByUser) {
-            return null;
-        }
-
         $res = array("request_id" => $import->getRequestId(),
             "log_date" => $import->getLogDate(),
             "uln_country_code" => $import->getUlnCountryCode(),
@@ -73,6 +69,7 @@ class DeclareImportResponseOutput
             "request_state" => $import->getRequestState(),
             "error_code" => $errorCode,
             "error_message" => $errorMessage,
+            "is_removed_by_user" => $isRemovedByUser,
             "message_number" => $messageNumber
         );
 
