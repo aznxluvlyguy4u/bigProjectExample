@@ -41,6 +41,9 @@ class UlnValidator
     /** @var string */
     private $ulnNumber;
 
+    /** @var int */
+    private $numberOfAnimals;
+
     /** @var ArrayCollection */
     private $locations;
 
@@ -66,6 +69,7 @@ class UlnValidator
         $this->isInputMissing = true;
         $this->isUlnSetValid = false;
         $this->isInDatabase = true;
+        $this->numberOfAnimals = 0;
 
         if($multipleAnimals == false) {
 
@@ -78,6 +82,7 @@ class UlnValidator
                     $this->isUlnSetValid = true;
 
                     $this->isUlnSetValid = $this->validateUlnInput($animalArray, $client);
+                    $this->numberOfAnimals++;
                 }
             }
 
@@ -97,18 +102,16 @@ class UlnValidator
                         if(!$isUlnValid) {
                             $this->isUlnSetValid = false;
                         }
+                        $this->numberOfAnimals++;
                     }
                 }
             }
         }
+        if($this->numberOfAnimals == 0) {
+            $this->isInputMissing = true;
+            $this->isUlnSetValid = false;
+        }
 
-    }
-
-    /**
-     * @return bool
-     */
-    public function getIsUlnSetValid() {
-        return $this->isUlnSetValid;
     }
 
     /**
@@ -196,5 +199,30 @@ class UlnValidator
 
         return new JsonResponse($result, $code);
     }
+
+
+    /**
+     * @return bool
+     */
+    public function getIsUlnSetValid() {
+        return $this->isUlnSetValid;
+    }
+
+    /**
+     * @return int
+     */
+    public function getNumberOfAnimals()
+    {
+        return $this->numberOfAnimals;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUlnCode()
+    {
+        return $this->ulnCountryCode . $this->ulnNumber;
+    }
+
 
 }
