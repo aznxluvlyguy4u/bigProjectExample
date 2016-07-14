@@ -28,3 +28,5 @@ parameters:
     aws_sqs_queue_dev: ~
     aws_sqs_queue_test: ~
     aws_sqs_queue_local: ~
+
+    report_directory_path: ~
