@@ -2,7 +2,6 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\TagTransferItemResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -81,7 +80,7 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
 
   /**
    *
-   * Get DeclareLosses which have failed last responses.
+   * Get TagTransferItemRequests which have failed last responses.
    *
    * @ApiDoc(
    *   requirements={
@@ -93,8 +92,8 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
    *     }
    *   },
    *   resource = true,
-   *   description = "Get DeclareLosses which have failed last responses",
-   *   input = "AppBundle\Entity\DeclareLoss",
+   *   description = "Get TagTransferItemRequests which have failed last responses",
+   *   input = "AppBundle\Entity\TagTransferItemRequest",
    *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
    * )
    *
@@ -116,7 +115,8 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
 
   /**
    *
-   * For the history view, get DeclareLosses which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED
+   * For the history view, get TagTransferItemRequests which have the following requestState:
+   * OPEN, REVOKING, REVOKED, FINISHED or FINISHED_WITH_WARNING.
    *
    * @ApiDoc(
    *   requirements={
@@ -128,8 +128,8 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
    *     }
    *   },
    *   resource = true,
-   *   description = "Get DeclareLosses which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED",
-   *   input = "AppBundle\Entity\DeclareLosses",
+   *   description = "Get TagTransferItemRequests which have the following requestState: OPEN, REVOKING, REVOKED, FINISHED or FINISHED_WITH_WARNING",
+   *   input = "AppBundle\Entity\TagTransferItemRequest",
    *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
    * )
    *
