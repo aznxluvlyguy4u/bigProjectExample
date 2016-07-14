@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\TagTransferItemResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -76,4 +77,74 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
     return new JsonResponse($messageArray, 200);
   }
 
+
+  /**
+   *
+   * Get TagTransferItemRequests which have failed last responses.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Get TagTransferItemRequests which have failed last responses",
+   *   input = "AppBundle\Entity\TagTransferItemRequest",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-errors")
+   * @Method("GET")
+   */
+  public function getTagTransferItemErrors(Request $request)
+  {
+    $client = $this->getAuthenticatedUser($request);
+
+    $repository = $this->getDoctrine()->getRepository(TagTransferItemResponse::class);
+    $tagTransfers = $repository->getTagTransferItemRequestsWithLastErrorResponses($client);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $tagTransfers), 200);
+  }
+
+
+  /**
+   *
+   * For the history view, get TagTransferItemRequests which have the following requestState:
+   * OPEN, REVOKING, REVOKED, FINISHED or FINISHED_WITH_WARNING.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Get TagTransferItemRequests which have the following requestState: OPEN, REVOKING, REVOKED, FINISHED or FINISHED_WITH_WARNING",
+   *   input = "AppBundle\Entity\TagTransferItemRequest",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-history")
+   * @Method("GET")
+   */
+  public function getTagTransferItemHistory(Request $request)
+  {
+    $client = $this->getAuthenticatedUser($request);
+
+    $repository = $this->getDoctrine()->getRepository(TagTransferItemResponse::class);
+    $tagTransfers = $repository->getTagTransferItemRequestsWithLastHistoryResponses($client);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $tagTransfers),200);
+  }
 }

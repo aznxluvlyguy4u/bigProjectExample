@@ -70,9 +70,7 @@ class DeclareArrivalResponseRepository extends BaseRepository {
 
                 $lastResponse = Utils::returnLastResponse($arrival->getResponses());
                 if($lastResponse != false) {
-                    if($lastResponse->getIsRemovedByUser() != true) {
-                        $results[] = DeclareArrivalResponseOutput::createErrorResponse($arrival);
-                    }
+                    $results[] = DeclareArrivalResponseOutput::createErrorResponse($arrival);
                 }
             }
         }

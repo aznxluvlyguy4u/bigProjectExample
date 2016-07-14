@@ -57,10 +57,6 @@ class DeclareArrivalResponseOutput
             $isRemovedByUser = true;
         }
 
-        if($isRemovedByUser) {
-            return null;
-        }
-
         $res = array("request_id" => $arrival->getRequestId(),
             "log_date" => $arrival->getLogDate(),
             "uln_country_code" => $arrival->getUlnCountryCode(),
@@ -73,6 +69,7 @@ class DeclareArrivalResponseOutput
             "request_state" => $arrival->getRequestState(),
             "error_code" => $errorCode,
             "error_message" => $errorMessage,
+            "is_removed_by_user" => $isRemovedByUser,
             "message_number" => $messageNumber
         );
 
