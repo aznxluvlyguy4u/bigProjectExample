@@ -112,14 +112,15 @@ class PedigreeCertificates
     {
         $dateTimeNow = new \DateTime();
         $datePrint = $dateTimeNow->format('Y-m-d_H.i.s');
+        $randString = Utils::randomString(4); //to prevent identical names if pdfs are generated within the same second
 
         //TODO when each client has a permanent unique identifier, replace the id with that identifier.
         $subFolder = '/pedigree-certificates/' . $this->client->getId() . '/';
 
         if($this->animalCount > 1) {
-            $filename = 'pedigree_certificates_for_' . $this->animalCount . '_animals_' . $datePrint . '.pdf';
+            $filename = 'pedigree_certificates_for_'.$this->animalCount.'_animals_'.$datePrint.'__'.$randString.'.pdf';
         } else { //only one animal
-            $filename = 'pedigree_certificate_' . $this->ulnOfLastChild . '_' . $datePrint . '.pdf';
+            $filename = 'pedigree_certificate_'.$this->ulnOfLastChild.'_'.$datePrint.'__'.$randString.'.pdf';
         }
 
         return $mainDirectory . $subFolder . $filename;
