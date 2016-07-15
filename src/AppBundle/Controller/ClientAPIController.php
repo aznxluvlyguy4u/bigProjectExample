@@ -61,6 +61,12 @@ class ClientAPIController extends APIController {
    */
   public function getClients(Request $request)
   {
+    $admin = $this->getAuthenticatedEmployee($request);
+    $adminValidator = new AdminValidator($admin);
+    if(!$adminValidator->getIsAccessGranted()) { //validate if user is an admin
+      return $adminValidator->createJsonErrorResponse();
+    }
+
     $ubnExists = $request->query->has(Constant::UBN_NAMESPACE);
     $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
 
@@ -88,6 +94,12 @@ class ClientAPIController extends APIController {
    * @Method("POST")
    */
   public function createClient(Request $request) {
+    $admin = $this->getAuthenticatedEmployee($request);
+    $adminValidator = new AdminValidator($admin);
+    if(!$adminValidator->getIsAccessGranted()) { //validate if user is an admin
+      return $adminValidator->createJsonErrorResponse();
+    }
+
     return new JsonResponse("ok", 200);
   }
 
