@@ -387,12 +387,12 @@ abstract class Animal
     protected $breeder;
 
     /**
-     * @ORM\OneToOne(targetEntity="Exterior")
-     * @ORM\JoinColumn(name="exterior_id", referencedColumnName="id")
+     * @ManyToOne(targetEntity="Exterior")
+     * @JoinColumn(name="exterior_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Exterior")
      */
     protected $exterior;
-
+    
     /**
      * @var ArrayCollection
      *
@@ -440,7 +440,7 @@ abstract class Animal
         $this->isExportAnimal = false;
         $this->isDepartedAnimal = false;
       
-        $this->exterior = new Exterior();
+        $this->exterior = new ArrayCollection();
     }
 
     /**
@@ -1577,30 +1577,6 @@ abstract class Animal
     public function getBreedCode()
     {
         return $this->breedCode;
-    }
-
-    /**
-     * Set exterior
-     *
-     * @param \AppBundle\Entity\Exterior $exterior
-     *
-     * @return Animal
-     */
-    public function setExterior(\AppBundle\Entity\Exterior $exterior = null)
-    {
-        $this->exterior = $exterior;
-
-        return $this;
-    }
-
-    /**
-     * Get exterior
-     *
-     * @return \AppBundle\Entity\Exterior
-     */
-    public function getExterior()
-    {
-        return $this->exterior;
     }
 
     /**
