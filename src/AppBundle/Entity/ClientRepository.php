@@ -28,6 +28,19 @@ class ClientRepository extends BaseRepository {
         return $client;
     }
 
+    public function getByUbn($ubn)
+    {
+        $repository = $this->getEntityManager()->getRepository(Constant::LOCATION_REPOSITORY);
+        $location = $repository->findOneBy(array("ubn" => $ubn));
+        if($location == null) {
+            return null;
+        } else {
+            $client = $location->getCompany()->getOwner();
+        }
+
+        return $client;
+    }
+
     /**
      * Get all clients that do not have a password yet.
      *
