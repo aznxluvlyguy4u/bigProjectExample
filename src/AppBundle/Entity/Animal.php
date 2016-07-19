@@ -365,6 +365,15 @@ abstract class Animal
     protected $weightMeasurements;
 
     /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="Exterior", mappedBy="animal", cascade={"persist"})
+     * @ORM\OrderBy({"measurementDate" = "ASC"})
+     * @JMS\Type("AppBundle\Entity\Exterior")
+     */
+    protected $exteriorMeasurements;
+
+    /**
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
@@ -385,13 +394,6 @@ abstract class Animal
      * @ORM\JoinColumn(name="breeder_id", referencedColumnName="id")
      */
     protected $breeder;
-
-    /**
-     * @ManyToOne(targetEntity="Exterior")
-     * @JoinColumn(name="exterior_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\Exterior")
-     */
-    protected $exterior;
     
     /**
      * @var ArrayCollection
@@ -439,8 +441,6 @@ abstract class Animal
         $this->isImportAnimal = false;
         $this->isExportAnimal = false;
         $this->isDepartedAnimal = false;
-      
-        $this->exterior = new ArrayCollection();
     }
 
     /**
@@ -1635,5 +1635,39 @@ abstract class Animal
     public function getScrapieGenotype()
     {
         return $this->scrapieGenotype;
+    }
+
+    /**
+     * Add exteriorMeasurement
+     *
+     * @param \AppBundle\Entity\Exterior $exteriorMeasurement
+     *
+     * @return Animal
+     */
+    public function addExteriorMeasurement(\AppBundle\Entity\Exterior $exteriorMeasurement)
+    {
+        $this->exteriorMeasurements[] = $exteriorMeasurement;
+
+        return $this;
+    }
+
+    /**
+     * Remove exteriorMeasurement
+     *
+     * @param \AppBundle\Entity\Exterior $exteriorMeasurement
+     */
+    public function removeExteriorMeasurement(\AppBundle\Entity\Exterior $exteriorMeasurement)
+    {
+        $this->exteriorMeasurements->removeElement($exteriorMeasurement);
+    }
+
+    /**
+     * Get exteriorMeasurements
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getExteriorMeasurements()
+    {
+        return $this->exteriorMeasurements;
     }
 }
