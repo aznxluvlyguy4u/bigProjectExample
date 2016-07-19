@@ -371,4 +371,38 @@ class Ram extends Animal
     {
         return $this->scrapieGenotype;
     }
+
+    /**
+     * Add exteriorMeasurement
+     *
+     * @param \AppBundle\Entity\Exterior $exteriorMeasurement
+     *
+     * @return Ram
+     */
+    public function addExteriorMeasurement(\AppBundle\Entity\Exterior $exteriorMeasurement)
+    {
+        $this->exteriorMeasurements[] = $exteriorMeasurement;
+
+        return $this;
+    }
+
+    /**
+     * Remove exteriorMeasurement
+     *
+     * @param \AppBundle\Entity\Exterior $exteriorMeasurement
+     */
+    public function removeExteriorMeasurement(\AppBundle\Entity\Exterior $exteriorMeasurement)
+    {
+        $this->exteriorMeasurements->removeElement($exteriorMeasurement);
+    }
+
+    /**
+     * Get exteriorMeasurements
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getExteriorMeasurements()
+    {
+        return $this->exteriorMeasurements;
+    }
 }
