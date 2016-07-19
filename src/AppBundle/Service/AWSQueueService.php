@@ -77,9 +77,10 @@ class AWSQueueService
      * 3 = test
      * 4 = local
      */
+    $currentEnvironment = 'stage';
     switch($currentEnvironment) {
       case 'prod':
-        $queueId = $queueIds[1];
+        $queueId = $queueIds[1]; // set 0 for deployment to production, set 1 for deployement to staging!
         break;
       case 'stage':
         $queueId = $queueIds[1];
