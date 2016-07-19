@@ -24,6 +24,7 @@ parameters:
     aws_secret_key: ~
     aws_sqs_region: ~
     aws_sqs_version: ~
+    aws_sqs_queue_stage: ~
     aws_sqs_queue_prod: ~
     aws_sqs_queue_dev: ~
     aws_sqs_queue_test: ~
