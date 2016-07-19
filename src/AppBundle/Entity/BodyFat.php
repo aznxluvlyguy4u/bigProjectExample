@@ -85,4 +85,28 @@ class BodyFat extends Measurement {
     {
         return $this->animal;
     }
+
+    /**
+     * Set inspector
+     *
+     * @param \AppBundle\Entity\Inspector $inspector
+     *
+     * @return BodyFat
+     */
+    public function setInspector(\AppBundle\Entity\Inspector $inspector = null)
+    {
+        $this->inspector = $inspector;
+
+        return $this;
+    }
+
+    /**
+     * Get inspector
+     *
+     * @return \AppBundle\Entity\Inspector
+     */
+    public function getInspector()
+    {
+        return $this->inspector;
+    }
 }

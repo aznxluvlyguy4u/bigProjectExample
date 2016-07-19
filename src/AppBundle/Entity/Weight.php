@@ -118,4 +118,28 @@ class Weight extends Measurement {
     {
         return $this->isBirthWeight;
     }
+
+    /**
+     * Set inspector
+     *
+     * @param \AppBundle\Entity\Inspector $inspector
+     *
+     * @return Weight
+     */
+    public function setInspector(\AppBundle\Entity\Inspector $inspector = null)
+    {
+        $this->inspector = $inspector;
+
+        return $this;
+    }
+
+    /**
+     * Get inspector
+     *
+     * @return \AppBundle\Entity\Inspector
+     */
+    public function getInspector()
+    {
+        return $this->inspector;
+    }
 }
