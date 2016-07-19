@@ -11,17 +11,8 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\ExteriorRepository")
  * @package AppBundle\Entity
  */
-class Exterior {
-
-    /**
-     * @var integer
-     *
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private $id;
-
+class Exterior extends Measurement {
+  
     /**
      * @var float
      *
@@ -56,7 +47,7 @@ class Exterior {
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
-    private $type;
+    private $exteriorType;
 
     /**
      * @var float
@@ -121,7 +112,14 @@ class Exterior {
      */
     private $markings;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="exteriorMeasurements")
+     * @JMS\Type("AppBundle\Entity\Animal")
+     */
+    private $animal;
+
     public function __construct() {
+      parent::__construct();
       $this->skull = 0.00;
       $this->muscularity = 0.00;
       $this->proportion = 0.00;
@@ -215,30 +213,6 @@ class Exterior {
     public function getProportion()
     {
         return $this->proportion;
-    }
-
-    /**
-     * Set type
-     *
-     * @param float $type
-     *
-     * @return Exterior
-     */
-    public function setType($type)
-    {
-        $this->type = $type;
-
-        return $this;
-    }
-
-    /**
-     * Get type
-     *
-     * @return float
-     */
-    public function getType()
-    {
-        return $this->type;
     }
 
     /**
@@ -407,5 +381,77 @@ class Exterior {
     public function getMarkings()
     {
         return $this->markings;
+    }
+
+    /**
+     * Set animal
+     *
+     * @param \AppBundle\Entity\Animal $animal
+     *
+     * @return Exterior
+     */
+    public function setAnimal(\AppBundle\Entity\Animal $animal = null)
+    {
+        $this->animal = $animal;
+
+        return $this;
+    }
+
+    /**
+     * Get animal
+     *
+     * @return \AppBundle\Entity\Animal
+     */
+    public function getAnimal()
+    {
+        return $this->animal;
+    }
+
+    /**
+     * Set exteriorType
+     *
+     * @param float $exteriorType
+     *
+     * @return Exterior
+     */
+    public function setExteriorType($exteriorType)
+    {
+        $this->exteriorType = $exteriorType;
+
+        return $this;
+    }
+
+    /**
+     * Get exteriorType
+     *
+     * @return float
+     */
+    public function getExteriorType()
+    {
+        return $this->exteriorType;
+    }
+
+    /**
+     * Set inspector
+     *
+     * @param \AppBundle\Entity\Inspector $inspector
+     *
+     * @return Exterior
+     */
+    public function setInspector(\AppBundle\Entity\Inspector $inspector = null)
+    {
+        $this->inspector = $inspector;
+
+        return $this;
+    }
+
+    /**
+     * Get inspector
+     *
+     * @return \AppBundle\Entity\Inspector
+     */
+    public function getInspector()
+    {
+        return $this->inspector;
     }
 }
