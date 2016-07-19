@@ -87,7 +87,7 @@ class PerformanceMeasurement extends Measurement {
      *
      * @return PerformanceMeasurement
      */
-    public function setMuscleThickness(\AppBundle\Entity\MusleThickness $muscleThickness = null)
+    public function setMuscleThickness(\AppBundle\Entity\MuscleThickness $muscleThickness = null)
     {
         $this->muscleThickness = $muscleThickness;
 
