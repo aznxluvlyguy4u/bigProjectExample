@@ -55,10 +55,6 @@ class DeclareLossResponseOutput
             $isRemovedByUser = true;
         }
 
-        if($isRemovedByUser) {
-            return null;
-        }
-
         $res = array(
             "request_id" => $loss->getRequestId(),
             "log_date" => $loss->getLogDate(),
@@ -72,6 +68,7 @@ class DeclareLossResponseOutput
             "request_state" => $loss->getRequestState(),
             "error_code" => $errorCode,
             "error_message" => $errorMessage,
+            "is_removed_by_user" => $isRemovedByUser,
             "message_number" => $messageNumber
         );
 

@@ -65,9 +65,7 @@ class DeclareImportResponseRepository extends BaseRepository {
 
                 $lastResponse = Utils::returnLastResponse($import->getResponses());
                 if($lastResponse != false) {
-                    if($lastResponse->getIsRemovedByUser() != true) {
-                        $results[] = DeclareImportResponseOutput::createErrorResponse($import);
-                    }
+                    $results[] = DeclareImportResponseOutput::createErrorResponse($import);
                 }
             }
         }

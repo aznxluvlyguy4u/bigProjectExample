@@ -71,9 +71,7 @@ class DeclareLossResponseRepository extends BaseRepository {
 
                 $lastResponse = Utils::returnLastResponse($loss->getResponses());
                 if($lastResponse != false) {
-                    if($lastResponse->getIsRemovedByUser() != true) {
-                        $results[] = DeclareLossResponseOutput::createErrorResponse($loss);
-                    }
+                    $results[] = DeclareLossResponseOutput::createErrorResponse($loss);
                 }
             }
         }

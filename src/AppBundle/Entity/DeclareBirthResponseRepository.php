@@ -58,8 +58,7 @@ class DeclareBirthResponseRepository extends BaseRepository {
 
                 $lastResponse = Utils::returnLastResponse($birth->getResponses());
                 if($lastResponse != false) {
-                    if($lastResponse->getIsRemovedByUser() != true) {
-                        $results[] = DeclareBirthResponseOutput::createErrorResponse($birth, $animalRepository);                    }
+                    $results[] = DeclareBirthResponseOutput::createErrorResponse($birth, $animalRepository);
                 }
             }
         }
