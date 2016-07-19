@@ -71,7 +71,7 @@ class ReportAPIController extends APIController {
 
     //TODO Save the report link, delete the file on S3 each time a new report is requested and overwrite the saved report link
 
-    $result = 'success!'; //TODO return the S3 download link
+    $result = 'http://exampleurl.amazons3bucket.com/nsfo/reports/pedigree-certificates/userid/pedigree_certificates_for_10_animals_2016-07-19_11h20m06s__KD1J'; //TODO return the S3 download link
 
     return new JsonResponse([Constant::RESULT_NAMESPACE => $result], 200);
   }
