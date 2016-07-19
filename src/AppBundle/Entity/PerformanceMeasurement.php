@@ -83,7 +83,7 @@ class PerformanceMeasurement extends Measurement {
     /**
      * Set muscleThickness
      *
-     * @param \AppBundle\Entity\MusleThickness $muscleThickness
+     * @param \AppBundle\Entity\MuscleThickness $muscleThickness
      *
      * @return PerformanceMeasurement
      */
@@ -97,7 +97,7 @@ class PerformanceMeasurement extends Measurement {
     /**
      * Get muscleThickness
      *
-     * @return \AppBundle\Entity\MusleThickness
+     * @return \AppBundle\Entity\MuscleThickness
      */
     public function getMuscleThickness()
     {
