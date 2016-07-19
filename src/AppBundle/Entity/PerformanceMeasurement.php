@@ -13,15 +13,6 @@ use Doctrine\Common\Collections\ArrayCollection;
  * @package AppBundle\Entity
  */
 class PerformanceMeasurement extends Measurement {
-
-    /**
-     * @var Inspector
-     *
-     * @ORM\ManyToOne(targetEntity="Inspector", cascade={"persist"})
-     * @ORM\JoinColumn(name="inspector_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\Inspector")
-     */
-    private $inspector;
   
     /**
      * @ORM\ManyToMany(targetEntity="BodyFat")
@@ -53,30 +44,6 @@ class PerformanceMeasurement extends Measurement {
      */
     public function __construct() {
         parent::__construct();
-    }
-
-    /**
-     * Set inspector
-     *
-     * @param \AppBundle\Entity\Inspector $inspector
-     *
-     * @return PerformanceMeasurement
-     */
-    public function setInspector(\AppBundle\Entity\Inspector $inspector = null)
-    {
-        $this->inspector = $inspector;
-
-        return $this;
-    }
-
-    /**
-     * Get inspector
-     *
-     * @return \AppBundle\Entity\Inspector
-     */
-    public function getInspector()
-    {
-        return $this->inspector;
     }
 
     /**
@@ -159,5 +126,29 @@ class PerformanceMeasurement extends Measurement {
     public function getAnimal()
     {
         return $this->animal;
+    }
+
+    /**
+     * Set inspector
+     *
+     * @param \AppBundle\Entity\Inspector $inspector
+     *
+     * @return PerformanceMeasurement
+     */
+    public function setInspector(\AppBundle\Entity\Inspector $inspector = null)
+    {
+        $this->inspector = $inspector;
+
+        return $this;
+    }
+
+    /**
+     * Get inspector
+     *
+     * @return \AppBundle\Entity\Inspector
+     */
+    public function getInspector()
+    {
+        return $this->inspector;
     }
 }

@@ -15,7 +15,8 @@ use JMS\Serializer\Annotation as JMS;
  *                        "MuscleThickness" = "MuscleThickness",
  *                        "TailLength" = "TailLength",
  *                        "Weight" = "Weight",
- *                        "PerformanceMeasurement" = "PerformanceMeasurement"
+ *                        "PerformanceMeasurement" = "PerformanceMeasurement",
+ *                        "Exterior" = "Exterior"
  * })
  * @package AppBundle\Entity
  */
@@ -49,8 +50,16 @@ abstract class Measurement {
      * @JMS\Type("DateTime")
      */
     protected $measurementDate;
-  
-   /**
+
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Inspector")
+     * @ORM\JoinColumn(name="inspector_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\Inspector")
+     */
+    protected $inspector;
+
+    /**
     * Measurement constructor.
     */
     public function __construct() {
@@ -113,5 +122,29 @@ abstract class Measurement {
     public function getMeasurementDate()
     {
         return $this->measurementDate;
+    }
+
+    /**
+     * Set inspector
+     *
+     * @param \AppBundle\Entity\Inspector $inspector
+     *
+     * @return Measurement
+     */
+    public function setInspector(\AppBundle\Entity\Inspector $inspector = null)
+    {
+        $this->inspector = $inspector;
+
+        return $this;
+    }
+
+    /**
+     * Get inspector
+     *
+     * @return \AppBundle\Entity\Inspector
+     */
+    public function getInspector()
+    {
+        return $this->inspector;
     }
 }
