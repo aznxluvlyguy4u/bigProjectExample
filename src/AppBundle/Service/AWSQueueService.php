@@ -72,21 +72,26 @@ class AWSQueueService
      * Get current environment, set queueId based on environment.
      *
      * 0 = (prod)uction
-     * 1 = (dev)elopment
-     * 2 = test
+     * 1 = (stage)ing
+     * 2 = (dev)elopment
+     * 3 = test
+     * 4 = local
      */
     switch($currentEnvironment) {
       case 'prod':
-        $queueId = $queueIds[0];
-        break;
-      case 'dev':
         $queueId = $queueIds[1];
         break;
-      case 'test':
+      case 'stage':
+        $queueId = $queueIds[1];
+        break;
+      case 'dev':
         $queueId = $queueIds[2];
         break;
-      case 'local':
+      case 'test':
         $queueId = $queueIds[3];
+        break;
+      case 'local':
+        $queueId = $queueIds[4];
         break;
       default; //dev
         $queueId = $queueIds[1];
