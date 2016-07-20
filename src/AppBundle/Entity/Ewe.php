@@ -39,6 +39,14 @@ class Ewe extends Animal
      */
      protected $objectType;
 
+      /**
+       * @var ArrayCollection
+       * 
+       * @ORM\OneToMany(targetEntity="Litter", mappedBy="animalMother")
+       * @JMS\Type("AppBundle\Entity\Ewe")
+       */
+      protected $litters;
+
     /**
      * Ewe constructor.
      */
@@ -50,7 +58,8 @@ class Ewe extends Animal
          $this->setAnimalType(AnimalType::sheep);
          $this->setGender(GenderType::FEMALE);
          $this->setAnimalCategory(3);
-
+       
+         $this->litters = new ArrayCollection();
          $this->children = new ArrayCollection();
      }
 
@@ -315,30 +324,6 @@ class Ewe extends Animal
     }
 
     /**
-     * Add weightMeasurement
-     *
-     * @param \AppBundle\Entity\WeightMeasurement $weightMeasurement
-     *
-     * @return Ewe
-     */
-    public function addWeightMeasurement(\AppBundle\Entity\WeightMeasurement $weightMeasurement)
-    {
-        $this->weightMeasurements[] = $weightMeasurement;
-
-        return $this;
-    }
-
-    /**
-     * Remove weightMeasurement
-     *
-     * @param \AppBundle\Entity\WeightMeasurement $weightMeasurement
-     */
-    public function removeWeightMeasurement(\AppBundle\Entity\WeightMeasurement $weightMeasurement)
-    {
-        $this->weightMeasurements->removeElement($weightMeasurement);
-    }
-
-    /**
      * Get weightMeasurements
      *
      * @return \Doctrine\Common\Collections\Collection
@@ -370,5 +355,145 @@ class Ewe extends Animal
     public function removeAnimalResidenceHistory(\AppBundle\Entity\AnimalResidence $animalResidenceHistory)
     {
         $this->animalResidenceHistory->removeElement($animalResidenceHistory);
+    }
+
+    /**
+     * Set breedType
+     *
+     * @param string $breedType
+     *
+     * @return Ewe
+     */
+    public function setBreedType($breedType)
+    {
+        $this->breedType = $breedType;
+
+        return $this;
+    }
+
+    /**
+     * Get breedType
+     *
+     * @return string
+     */
+    public function getBreedType()
+    {
+        return $this->breedType;
+    }
+
+    /**
+     * Set breedCode
+     *
+     * @param string $breedCode
+     *
+     * @return Ewe
+     */
+    public function setBreedCode($breedCode)
+    {
+        $this->breedCode = $breedCode;
+
+        return $this;
+    }
+
+    /**
+     * Get breedCode
+     *
+     * @return string
+     */
+    public function getBreedCode()
+    {
+        return $this->breedCode;
+    }
+
+    /**
+     * Add litter
+     *
+     * @param \AppBundle\Entity\Litter $litter
+     *
+     * @return Ewe
+     */
+    public function addLitter(\AppBundle\Entity\Litter $litter)
+    {
+        $this->litters[] = $litter;
+
+        return $this;
+    }
+
+    /**
+     * Remove litter
+     *
+     * @param \AppBundle\Entity\Litter $litter
+     */
+    public function removeLitter(\AppBundle\Entity\Litter $litter)
+    {
+        $this->litters->removeElement($litter);
+    }
+
+    /**
+     * Get litters
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getLitters()
+    {
+        return $this->litters;
+    }
+
+    /**
+     * Set scrapieGenotype
+     *
+     * @param string $scrapieGenotype
+     *
+     * @return Ewe
+     */
+    public function setScrapieGenotype($scrapieGenotype)
+    {
+        $this->scrapieGenotype = $scrapieGenotype;
+
+        return $this;
+    }
+
+    /**
+     * Get scrapieGenotype
+     *
+     * @return string
+     */
+    public function getScrapieGenotype()
+    {
+        return $this->scrapieGenotype;
+    }
+
+    /**
+     * Add exteriorMeasurement
+     *
+     * @param \AppBundle\Entity\Exterior $exteriorMeasurement
+     *
+     * @return Ewe
+     */
+    public function addExteriorMeasurement(\AppBundle\Entity\Exterior $exteriorMeasurement)
+    {
+        $this->exteriorMeasurements[] = $exteriorMeasurement;
+
+        return $this;
+    }
+
+    /**
+     * Remove exteriorMeasurement
+     *
+     * @param \AppBundle\Entity\Exterior $exteriorMeasurement
+     */
+    public function removeExteriorMeasurement(\AppBundle\Entity\Exterior $exteriorMeasurement)
+    {
+        $this->exteriorMeasurements->removeElement($exteriorMeasurement);
+    }
+
+    /**
+     * Get exteriorMeasurements
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getExteriorMeasurements()
+    {
+        return $this->exteriorMeasurements;
     }
 }
