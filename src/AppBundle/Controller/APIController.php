@@ -65,6 +65,9 @@ class APIController extends Controller implements APIControllerInterface
   /** @var \AppBundle\Service\AWSQueueService */
   private $queueService;
 
+  /** @var \AppBundle\Service\AWSSimpleStorageService */
+  private $storageService;
+
   /** @var \AppBundle\Service\EntityGetter */
   private $entityGetter;
 
@@ -122,6 +125,17 @@ class APIController extends Controller implements APIControllerInterface
     }
 
     return $this->queueService;
+  }
+
+  /**
+   * @return \AppBundle\Service\AWSSimpleStorageService
+   */
+  protected function getStorageService(){
+    if($this->storageService == null){
+      $this->storageService = $this->get('app.aws.storageservice');
+    }
+
+    return $this->storageService;
   }
 
 

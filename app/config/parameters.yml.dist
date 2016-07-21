@@ -30,4 +30,6 @@ parameters:
     aws_sqs_queue_test: ~
     aws_sqs_queue_local: ~
 
-    report_directory_path: ~
+    aws_s3_region: ~
+    aws_s3_version: ~
+    aws_s3_bucket: ~
