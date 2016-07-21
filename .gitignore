@@ -108,3 +108,4 @@ web/app_dev.php
 *.gz
 nsfo_dev
 *.backup
+*.sql
