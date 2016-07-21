@@ -414,6 +414,14 @@ abstract class Animal
     protected $scrapieGenotype;
 
     /**
+     * @var
+     * @JMS\Type("AppBundle\Entity\Litter")
+     * @ORM\ManyToOne(targetEntity="Litter", inversedBy="children")
+     * @ORM\JoinColumn(name="litter_id", referencedColumnName="id")
+     */
+    protected $litter;
+
+    /**
      * Animal constructor.
      */
     public function __construct() {
@@ -1670,4 +1678,22 @@ abstract class Animal
     {
         return $this->exteriorMeasurements;
     }
+
+    /**
+     * @return Litter
+     */
+    public function getLitter()
+    {
+        return $this->litter;
+    }
+
+    /**
+     * @param Litter $litter
+     */
+    public function setLitter($litter)
+    {
+        $this->litter = $litter;
+    }
+
+
 }

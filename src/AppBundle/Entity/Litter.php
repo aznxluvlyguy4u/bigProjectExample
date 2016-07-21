@@ -2,7 +2,9 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Entity\Animal;
 use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -67,10 +69,16 @@ class Litter {
     private $size;
 
     /**
+     * @ORM\OneToMany(targetEntity="Animal", mappedBy="litter")
+     * @JMS\Type("AppBundle\Entity\Animal")
+     */
+    private $children;
+    
+    /**
      * Litter constructor.
      */
     public function __construct() {
-
+        $this->children = new ArrayCollection();
     }
 
     /**
@@ -201,5 +209,39 @@ class Litter {
     public function getAnimalMother()
     {
         return $this->animalMother;
+    }
+
+    /**
+     * Add child
+     *
+     * @param Animal $child
+     *
+     * @return Litter
+     */
+    public function addChild(Animal $child)
+    {
+        $this->children[] = $child;
+
+        return $this;
+    }
+
+    /**
+     * Remove child
+     *
+     * @param Animal $child
+     */
+    public function removeChild(Animal $child)
+    {
+        $this->children->removeElement($child);
+    }
+
+    /**
+     * Get children
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getChildren()
+    {
+        return $this->children;
     }
 }
