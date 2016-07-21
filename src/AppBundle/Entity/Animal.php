@@ -414,7 +414,7 @@ abstract class Animal
     protected $scrapieGenotype;
 
     /**
-     * @var
+     * @var Litter
      * @JMS\Type("AppBundle\Entity\Litter")
      * @ORM\ManyToOne(targetEntity="Litter", inversedBy="children")
      * @ORM\JoinColumn(name="litter_id", referencedColumnName="id")
