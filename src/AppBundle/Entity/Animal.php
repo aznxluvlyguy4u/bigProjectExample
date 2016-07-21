@@ -1695,5 +1695,21 @@ abstract class Animal
         $this->litter = $litter;
     }
 
+    /**
+     * @return Breeder
+     */
+    public function getBreeder()
+    {
+        return $this->breeder;
+    }
+
+    /**
+     * @param Breeder $breeder
+     */
+    public function setBreeder($breeder)
+    {
+        $this->breeder = $breeder;
+    }
+
 
 }
