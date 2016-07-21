@@ -107,3 +107,4 @@ app/*.cache
 *.gz
 nsfo_dev
 *.backup
+*.sql

@@ -277,42 +277,6 @@ class Ram extends Animal
         return $this->flags;
     }
 
-
-
-    /**
-     * Add weightMeasurement
-     *
-     * @param \AppBundle\Entity\WeightMeasurement $weightMeasurement
-     *
-     * @return Ram
-     */
-    public function addWeightMeasurement(\AppBundle\Entity\WeightMeasurement $weightMeasurement)
-    {
-        $this->weightMeasurements[] = $weightMeasurement;
-
-        return $this;
-    }
-
-    /**
-     * Remove weightMeasurement
-     *
-     * @param \AppBundle\Entity\WeightMeasurement $weightMeasurement
-     */
-    public function removeWeightMeasurement(\AppBundle\Entity\WeightMeasurement $weightMeasurement)
-    {
-        $this->weightMeasurements->removeElement($weightMeasurement);
-    }
-
-    /**
-     * Get weightMeasurements
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getWeightMeasurements()
-    {
-        return $this->weightMeasurements;
-    }
-
     /**
      * Add animalResidenceHistory
      *
@@ -335,5 +299,110 @@ class Ram extends Animal
     public function removeAnimalResidenceHistory(\AppBundle\Entity\AnimalResidence $animalResidenceHistory)
     {
         $this->animalResidenceHistory->removeElement($animalResidenceHistory);
+    }
+
+    /**
+     * Set breedType
+     *
+     * @param string $breedType
+     *
+     * @return Ram
+     */
+    public function setBreedType($breedType)
+    {
+        $this->breedType = $breedType;
+
+        return $this;
+    }
+
+    /**
+     * Get breedType
+     *
+     * @return string
+     */
+    public function getBreedType()
+    {
+        return $this->breedType;
+    }
+
+    /**
+     * Set breedCode
+     *
+     * @param string $breedCode
+     *
+     * @return Ram
+     */
+    public function setBreedCode($breedCode)
+    {
+        $this->breedCode = $breedCode;
+
+        return $this;
+    }
+
+    /**
+     * Get breedCode
+     *
+     * @return string
+     */
+    public function getBreedCode() {
+        return $this->breedCode;
+    }
+
+    /**
+     * Set scrapieGenotype
+     *
+     * @param string $scrapieGenotype
+     *
+     * @return Ram
+     */
+    public function setScrapieGenotype($scrapieGenotype)
+    {
+        $this->scrapieGenotype = $scrapieGenotype;
+
+        return $this;
+    }
+
+    /**
+     * Get scrapieGenotype
+     *
+     * @return string
+     */
+    public function getScrapieGenotype()
+    {
+        return $this->scrapieGenotype;
+    }
+
+    /**
+     * Add exteriorMeasurement
+     *
+     * @param \AppBundle\Entity\Exterior $exteriorMeasurement
+     *
+     * @return Ram
+     */
+    public function addExteriorMeasurement(\AppBundle\Entity\Exterior $exteriorMeasurement)
+    {
+        $this->exteriorMeasurements[] = $exteriorMeasurement;
+
+        return $this;
+    }
+
+    /**
+     * Remove exteriorMeasurement
+     *
+     * @param \AppBundle\Entity\Exterior $exteriorMeasurement
+     */
+    public function removeExteriorMeasurement(\AppBundle\Entity\Exterior $exteriorMeasurement)
+    {
+        $this->exteriorMeasurements->removeElement($exteriorMeasurement);
+    }
+
+    /**
+     * Get exteriorMeasurements
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getExteriorMeasurements()
+    {
+        return $this->exteriorMeasurements;
     }
 }
