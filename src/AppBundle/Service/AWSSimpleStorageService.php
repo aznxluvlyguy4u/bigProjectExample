@@ -111,9 +111,11 @@ class AWSSimpleStorageService
      */
     public function upload($filepath, $key, $contentType)
     {
+        $key = $this->pathApppendage.$key;
+
         $result = $this->s3Service->putObject(array(
             'Bucket' => $this->bucket,
-            'Key'    => $this->pathApppendage.$key,
+            'Key'    => $key,
             'Body'   => file_get_contents($filepath),
             'ACL'    => 'private', //protect access to the uploaded file
             'ContentType' => $contentType
