@@ -110,19 +110,20 @@ class PedigreeCertificates
      */
     public function getFilePath($mainDirectory)
     {
+        return $mainDirectory.'/'.$this->getS3Key();
+    }
+
+    public function getFileName()
+    {
         $dateTimeNow = new \DateTime();
         $datePrint = $dateTimeNow->format('Y-m-d_').$dateTimeNow->format('H').'h'.$dateTimeNow->format('i').'m'.$dateTimeNow->format('s').'s';
-        $randString = Utils::randomString(4); //to prevent identical names if pdfs are generated within the same second
 
+        return 'afstammingsbewijs-'.$datePrint.'.pdf';
+    }
+
+    public function getS3Key()
+    {
         //TODO when each client has a permanent unique identifier, replace the id with that identifier.
-        $subFolder = '/pedigree-certificates/' . $this->client->getId() . '/';
-
-        if($this->animalCount > 1) {
-            $filename = 'pedigree_certificates_for_'.$this->animalCount.'_animals_'.$datePrint.'__'.$randString.'.pdf';
-        } else { //only one animal
-            $filename = 'pedigree_certificate_'.$this->ulnOfLastChild.'_'.$datePrint.'__'.$randString.'.pdf';
-        }
-
-        return $mainDirectory . $subFolder . $filename;
+        return 'reports/'.$this->client->getId().'/'.$this->getFileName();
     }
 }

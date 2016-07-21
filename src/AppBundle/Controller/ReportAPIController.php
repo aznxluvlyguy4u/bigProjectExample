@@ -8,6 +8,7 @@ use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Country;
 use AppBundle\Report\PedigreeCertificates;
 use AppBundle\Validation\UlnValidator;
+use Aws\S3\S3Client;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -58,22 +59,23 @@ class ReportAPIController extends APIController {
       return $ulnValidator->createArrivalJsonErrorResponse();
     }
 
-    //TODO TEST Retrieve the Animals and bloodline/pedigree
-
     //TODO Prettify pdf document from twig view
 
     $pedigreeCertificateData = new PedigreeCertificates($em, $content, $client, $location);
-    $generatedPdfPath = $pedigreeCertificateData->getFilePath($this->getParameter('report_directory_path'));
+    $folderPath = $this->getParameter('kernel.cache_dir');
+    $generatedPdfPath = $pedigreeCertificateData->getFilePath($folderPath);
     $variables = $pedigreeCertificateData->getReports();
-
+    
     $html = $this->renderView('Report/pedigree_certificates.html.twig', ['variables' => $variables]);
     $this->get('knp_snappy.pdf')->generateFromHtml($html, $generatedPdfPath);
 
-    //TODO Save the report link, delete the file on S3 each time a new report is requested and overwrite the saved report link
+    $s3Service = $this->getStorageService();
+    $url = $s3Service->uploadPdf($generatedPdfPath, $pedigreeCertificateData->getS3Key());
 
-    $result = 'http://exampleurl.amazons3bucket.com/nsfo/reports/pedigree-certificates/userid/pedigree_certificates_for_10_animals_2016-07-19_11h20m06s__KD1J'; //TODO return the S3 download link
+    //Delete file from local cache
+    unlink($generatedPdfPath);
 
-    return new JsonResponse([Constant::RESULT_NAMESPACE => $result], 200);
+    return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
   }
 
   /**
