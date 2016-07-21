@@ -50,7 +50,7 @@ class PedigreeCertificates
         $this->animalCount = 0;
 
         foreach ($animals as $animal) {
-            $pedigreeCertificate = new PedigreeCertificate($client, $location, $animal, $generationOfAscendants);
+            $pedigreeCertificate = new PedigreeCertificate($em, $client, $location, $animal, $generationOfAscendants);
 
             $this->reports[$this->animalCount] = $pedigreeCertificate->getData();
 

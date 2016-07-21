@@ -7,6 +7,7 @@ class ReportLabel
 {
     //General
     const DATE = 'date';
+    const ENTITY = 'entity';
 
     //Person
     const FIRST_NAME = "first_name";
@@ -17,18 +18,12 @@ class ReportLabel
     //Breeder
     const BREEDER = 'breeder';
     const BREEDER_NAME = "breeder_name";
+    const BREEDER_NAME_CROPPED = "breeder_name_cropped";
     const BREEDER_NUMBER = 'breeder_number';
 
     //Address
     const ADDRESS = 'address';
     const ADDRESS_BREEDER = 'address_breeder';
-    const STREET_NAME = 'street_name';
-    const ADDRESS_NUMBER = 'address_number';
-    const ADDRESS_NUMBER_SUFFIX = 'address_number_suffix';
-    const POSTAL_CODE = 'postal_code';
-    const CITY = 'city';
-    const STATE = 'state';
-    const COUNTRY = 'country';
     const UBN = 'ubn';
 
     //Animal
@@ -41,12 +36,18 @@ class ReportLabel
     const PEDIGREE_NUMBER = 'pedrigree_number';
     const PEDIGREE_CODE_FULL = 'pedrigree_code_full';
     const DATE_OF_BIRTH = 'date_of_birth';
+    const LITTER_SIZE = 'litter_size';
     const LITTER_GROUP = 'litter_group';
     const SCRAPIE_GENE = 'scrapie_gene';
     const PRODUCTION_CODE = 'production_code';
     const BREED_STATUS = 'breed_status';
     const INSPECTION_DATE = 'inspection_date';
     const PREDICATE = 'predicate';
+    const LATEST_EXTERIOR = 'latest_exterior';
+    const MEASUREMENT_DATE = 'measurement_date';
+    const LATEST_MUSCLE_THICKNESS = 'latest_muscle_thickness';
+    const LATEST_BODY_FAT = 'latest_body_fat';
+    const LATEST_TAIL_LENGTH = 'latest_tail_length';
 
     //Pedrigree / Bloodline
     const GENERATION = 'generation';

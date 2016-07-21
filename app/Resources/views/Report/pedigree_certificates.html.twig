@@ -12,27 +12,32 @@
                 <p> <b>Eigenaar</b> <br>
                     {{ x.owner_name }} <br>
                     {{ x.address.streetName }} {{ x.address.addressNumber }}{{ x.address.addressNumberSuffix }} <br>
-                    {{ x.address.postalCode }} <br>
+                    {{ x.address.postalCode }} {{ x.address.city }} <br>
                     UBN: {{ x.ubn }}
                 </p>
 
                 <p>
-                    <b>Fokker</b>
+                    <b>Fokker</b> <br>
                     {{ x.breeder_name }} <br>
-                    - <br> {# TODO add breeder data #}
-                    - <br>
-                    - <br>
+                    {{ x.address_breeder.streetName }} {{ x.address_breeder.addressNumber }}{{ x.address_breeder.addressNumberSuffix }} <br>
+                    {{ x.address_breeder.postalCode }} {{ x.address_breeder.city }} <br>
+                    {{ x.breeder_number }} <br>
                 </p>
             </div>
 
         {% for key,value in x.animals %}
+            {#TODO REPLACE THE FORLOOP WITH CUSTOMIZED HTML CODE FOR EACH ANIMAL#}
+                {#{% set key = 'child' %}#}
+                {#{% set value = x.animals[key] %}#}
+
+
             <div class="animal-item">
                 <p>
                     {% if key == 'child' %}
 
-                        {% if value.gender == 'Ram' %}
+                        {% if value.entity.gender == 'Ram' %}
                             {% set gender = 'Ram' %}
-                        {% elseif value.gender == 'Ewe'%}
+                        {% elseif value.entity.gender == 'Ewe'%}
                             {% set gender = 'Ooi' %}
                         {% else %}
                             {% set gender = 'Onbekend' %}
@@ -59,21 +64,163 @@
                         </b> <br>
                     {% endif %}
 
-                    ULN: {{ value.ulnCountryCode }} {{ value.ulnNumber }}    <br>
-                    STN: {{ value.pedigreeCountryCode }} {{ value.pedigreeNumber }} <br>
-                    {% if value.dateOfBirth == null %}
-                        Geb: - <br>
+                    ULN: {{ value.entity.ulnCountryCode }} {{ value.entity.ulnNumber }}    <br>
+                    STN: {{ value.entity.pedigreeCountryCode }} {{ value.entity.pedigreeNumber }} <br>
+
+                    {% if value.entity.dateOfBirth == null %}
+                        {% set dateOfBirth = '-' %}
                     {% else %}
-                        Geb: {{ value.dateOfBirth|date('Y-m-d') }} <br> {#TODO add n-ling & TE8?#}
+                        {% set dateOfBirth = value.entity.dateOfBirth|date('Y-m-d') %}
                     {% endif %}
-                    Scrapie: -/-   Blf: - <br>  {#TODO#}
-                    Productie: - <br> {#TODO#}
-                    Status: - <br> {#TODO#}
-                    Pred: - <br> {#TODO#}
-                    Keurdat: - <br> {#TODO#}
+
+                    {% if value.entity.scrapieGenotype == null %}
+                        {% set scrapieGenotype = '-/-' %}
+                    {% else %}
+                        {% set scrapieGenotype = value.entity.scrapieGenotype %}
+                    {% endif %}
+
+                    {% if value.entity.breedType == null %}
+                        {% set breedType = '-' %}
+                    {% else %}
+                        {% set breedType = value.entity.breedType %}
+                    {% endif %}
+
+                    {% if value.entity.breedCode == null %}
+                        {% set breedCode = '-' %}
+                    {% else %}
+                        {% set breedCode = value.entity.breedCode %}
+                    {% endif %}
+
+                    {% if value.litter_size == null %}
+                        {% set litterSizeMessage = '-' %}
+                    {% else %}
+                        {% set litterSizeMessage = value.litter_size ~ '-ling' %}
+                    {% endif %}
+
+                    Geb: {{ dateOfBirth }} {{ litterSizeMessage }} {{ breedCode }} <br>
+
+                    Scrapie: {{ scrapieGenotype }}   Blf: - <br>  {#TODO#}
+                    Productie: ? <br> {#TODO#}
+                    Status: {{ breedType }} <br> {#TODO#}
+                    Pred: ?? <br> {#TODO#}
+                    <br>
+
+                  {# Null check exterior values #}
+                    {% if value.latest_exterior.skull == 0 %}
+                        {% set skull = '-' %}
+                    {% else %}
+                        {% set skull = value.latest_exterior.skull %}
+                    {% endif %}
+
+                    {% if value.latest_exterior.muscularity == 0 %}
+                        {% set muscularity = '-' %}
+                    {% else %}
+                        {% set muscularity = value.latest_exterior.muscularity %}
+                    {% endif %}
+
+                    {% if value.latest_exterior.proportion == 0 %}
+                        {% set proportion = '-' %}
+                    {% else %}
+                        {% set proportion = value.latest_exterior.proportion %}
+                    {% endif %}
+
+                    {% if value.latest_exterior.type == 0 %}
+                        {% set type = '-' %}
+                    {% else %}
+                        {% set type = value.latest_exterior.type %}
+                    {% endif %}
+
+                    {% if value.latest_exterior.legWork == 0 %}
+                        {% set legWork = '-' %}
+                    {% else %}
+                        {% set legWork = value.latest_exterior.legWork %}
+                    {% endif %}
+
+                    {% if value.latest_exterior.fur == 0 %}
+                        {% set fur = '-' %}
+                    {% else %}
+                        {% set fur = value.latest_exterior.fur %}
+                    {% endif %}
+
+                    {% if value.latest_exterior.generalAppearence == 0 %}
+                        {% set generalAppearence = '-' %}
+                    {% else %}
+                        {% set generalAppearence = value.latest_exterior.generalAppearence %}
+                    {% endif %}
+
+                    {% if value.latest_exterior.height == 0 %}
+                        {% set height = '-' %}
+                    {% else %}
+                        {% set height = value.latest_exterior.height %}
+                    {% endif %}
+
+                    {% if value.latest_exterior.breastDepth == 0 %}
+                        {% set breastDepth = '-' %}
+                    {% else %}
+                        {% set breastDepth = value.latest_exterior.breastDepth %}
+                    {% endif %}
+
+                    {% if value.latest_exterior.torsoLength == 0 %}
+                        {% set torsoLength = '-' %}
+                    {% else %}
+                        {% set torsoLength = value.latest_exterior.torsoLength %}
+                    {% endif %}
+
+                    {% if value.latest_exterior.markings == 0 %}
+                        {% set markings = '-' %}
+                    {% else %}
+                        {% set markings = value.latest_exterior.markings %}
+                    {% endif %}
+
+                    KOP: {{ skull }}
+                    ONT: ??
+                    BES: {{ muscularity }}
+                    EVE: ??
+                    TYP: {{ type }}
+                    BEE: {{ legWork }}
+                    VAC: {{ fur }}
+                    ALG: {{ generalAppearence }}
+                    HGT: {{ height }}
+                    LGT: {{ torsoLength }}
+                    BDP: {{ breastDepth }}
+                    STT: ??
+
+                    {% if value.litter_group != null %}
+                        {% set litterGroup = value.litter_group %}
+                    {% else %}
+                        {% set litterGroup = '-/-' %}
+                    {% endif %}
+
+                    {% if value.latest_muscle_thickness != null %}
+                        {% set muscleThickness = latest_muscle_thickness %}
+                    {% else %}
+                        {% set muscleThickness = '-' %}
+                    {% endif %}
+
+                    {% if value.latest_body_fat != null %}
+                        {% set bodyFat = value.body_fat %}
+                    {% else %}
+                        {% set bodyFat = '-' %}
+                    {% endif %}
+
+                    {% if value.latest_tail_length != null %}
+                        {% set tailLength = value.latest_tail_length %}
+                    {% else %}
+                        {% set tailLength = '-' %}
+                    {% endif %}
+
+                    <br>
+                    worpgr: {{ litterGroup }} <br>
+                    groei: ?? <br>
+                    spier: {{ muscleThickness }} <br>
+                    vet: {{ bodyFat }} <br>
+                    VL: ?? <br>
+                    sl: {{ tailLength }} <br>
                 </p>
             </div>
+
         {% endfor %}
+
 
                 {% if loop.last == false %}
                    <footer></footer> {#necessary to enforce a pagebreak using css#}
