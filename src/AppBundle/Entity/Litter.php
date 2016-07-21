@@ -61,6 +61,14 @@ class Litter {
     private $animalMother;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @JMS\Type("string")
+     */
+    private $litterGroup;
+
+    /**
      * @var integer
      *
      * @ORM\Column(type="integer")
@@ -244,4 +252,22 @@ class Litter {
     {
         return $this->children;
     }
+
+    /**
+     * @return string
+     */
+    public function getLitterGroup()
+    {
+        return $this->litterGroup;
+    }
+
+    /**
+     * @param string $litterGroup
+     */
+    public function setLitterGroup($litterGroup)
+    {
+        $this->litterGroup = $litterGroup;
+    }
+
+    
 }
