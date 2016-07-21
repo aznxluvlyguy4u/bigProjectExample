@@ -45,9 +45,9 @@ class Litter {
     private $litterDate;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Animal")
+     * @ORM\ManyToOne(targetEntity="Ram", inversedBy="litters")
      * @ORM\JoinColumn(name="animal_father_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\Animal")
+     * @JMS\Type("AppBundle\Entity\Ram")
      */
     private $animalFather;
 
