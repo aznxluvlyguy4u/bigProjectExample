@@ -3,22 +3,28 @@
 namespace AppBundle\Report;
 
 
+use AppBundle\Component\Utils;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Exterior;
+use AppBundle\Entity\Litter;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\MuscleThickness;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\TailLength;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManager;
 
 class PedigreeCertificate
 {
+    const LITTER_SIZE = 'litterSize';
+    const LITTER_GROUP = 'litterGroup';
+    const N_LING = 'nLing';
 
     /** @var array */
     private $data;
@@ -60,24 +66,24 @@ class PedigreeCertificate
         $emptyAddress->setPostalCode('-');
         $emptyAddress->setCity('-');
         $this->data[ReportLabel::ADDRESS_BREEDER] = $emptyAddress; //TODO pass real Address entity
-        $this->data[ReportLabel::BREEDER_NUMBER] = '-000'; //TODO pass real Address entity
-//
-        $this->data[ReportLabel::ANIMALS][ReportLabel::CHILD][ReportLabel::ENTITY] = $animal;
+        $this->data[ReportLabel::BREEDER_NUMBER] = '-'; //TODO pass real breeder number
+
+        $keyAnimal = ReportLabel::CHILD_KEY;
+        $this->data[ReportLabel::ANIMALS][$keyAnimal][ReportLabel::ENTITY] = $animal;
 
         $generation = 0;
-        $labelAnimal = ReportLabel::CHILD;
-        $this->addParents($animal, $labelAnimal, $generation);
-        $this->addAnimalValuesToArray(ReportLabel::CHILD, $animal);
+        $this->addParents($animal, $keyAnimal, $generation);
+        $this->addAnimalValuesToArray($keyAnimal, $animal);
     }
 
     /**
      * Recursively add the previous generations of ascendants.
      *
      * @param Animal $animal
-     * @param string $labelAnimal
+     * @param string $keyAnimal
      * @param int $generation
      */
-    private function addParents(Animal $animal = null, $labelAnimal, $generation)
+    private function addParents(Animal $animal = null, $keyAnimal, $generation)
     {
         if($generation < $this->generationOfAscendants) {
 
@@ -92,51 +98,51 @@ class PedigreeCertificate
             if($father == null) { $father = new Ram(); }
             if($mother == null) { $mother = new Ewe(); }
 
-            $labelFather = self::getFatherLabel($labelAnimal);
-            $labelMother = self::getMotherLabel($labelAnimal);
+            $keyFather = self::getFatherKey($keyAnimal);
+            $keyMother = self::getMotherKey($keyAnimal);
 
-            $this->data[ReportLabel::ANIMALS][$labelFather][ReportLabel::ENTITY] = $father;
-            $this->data[ReportLabel::ANIMALS][$labelMother][ReportLabel::ENTITY] = $mother;
+            $this->data[ReportLabel::ANIMALS][$keyFather][ReportLabel::ENTITY] = $father;
+            $this->data[ReportLabel::ANIMALS][$keyMother][ReportLabel::ENTITY] = $mother;
             
-            $this->addAnimalValuesToArray($labelFather, $father);
-            $this->addAnimalValuesToArray($labelMother, $mother);
+            $this->addAnimalValuesToArray($keyFather, $father);
+            $this->addAnimalValuesToArray($keyMother, $mother);
 
             $generation++;
 
             //Recursive loop for both parents AFTER increasing the generationCount
-            $this->addParents($father, $labelFather, $generation);
-            $this->addParents($mother, $labelMother, $generation);
+            $this->addParents($father, $keyFather, $generation);
+            $this->addParents($mother, $keyMother, $generation);
         }
     }
 
     /**
-     * @param string $labelAnimal
+     * @param string $keyAnimal
      * @return string
      */
-    public static function getFatherLabel($labelAnimal)
+    public static function getFatherKey($keyAnimal)
     {
-        if($labelAnimal == ReportLabel::CHILD) {
-            $labelFather = ReportLabel::FATHER;
+        if($keyAnimal == ReportLabel::CHILD_KEY) {
+            $keyFather = ReportLabel::FATHER_KEY;
         } else {
-            $labelFather = $labelAnimal . ReportLabel::_S_FATHER;
+            $keyFather = $keyAnimal . ReportLabel::FATHER_KEY;
         }
 
-        return $labelFather;
+        return $keyFather;
     }
 
     /**
-     * @param string $labelAnimal
+     * @param string $keyAnimal
      * @return string
      */
-    public static function getMotherLabel($labelAnimal)
+    public static function getMotherKey($keyAnimal)
     {
-        if($labelAnimal == ReportLabel::CHILD) {
-            $labelMother = ReportLabel::MOTHER;
+        if($keyAnimal == ReportLabel::CHILD_KEY) {
+            $keyMother = ReportLabel::MOTHER_KEY;
         } else {
-            $labelMother = $labelAnimal . ReportLabel::_S_MOTHER;
+            $keyMother = $keyAnimal . ReportLabel::MOTHER_KEY;
         }
 
-        return $labelMother;
+        return $keyMother;
     }
 
     /**
@@ -149,88 +155,135 @@ class PedigreeCertificate
 
 
     /**
-     * @param string $label
-     * @param Animal $animal
+     * @param string $key
+     * @param Animal|Ewe|Ram $animal
      */
-    private function addAnimalValuesToArray($label, $animal)
+    private function addAnimalValuesToArray($key, $animal)
     {
-        //Measurement Criteria
-        $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq('animal', $animal))
-            ->orderBy(['measurementDate' => Criteria::DESC])
-            ->setMaxResults(1);
-
-        //Exterior
-        $latestExterior = $this->em->getRepository(Exterior::class)
-            ->matching($criteria);
-
-        if(sizeof($latestExterior) > 0) {
-            $latestExterior = $latestExterior->get(0);
-        } else { //create an empty default Exterior
-            $latestExterior = new Exterior();
-        }
-
-        //MuscleThickness
-        $latestMuscleThickness = $this->em->getRepository(MuscleThickness::class)
-            ->matching($criteria);
-
-        if(sizeof($latestMuscleThickness) > 0) {
-            $latestMuscleThickness = $latestMuscleThickness->get(0);
-        } else { //create an empty default Exterior
-            $latestMuscleThickness = new MuscleThickness();
-        }
-        $latestMuscleThickness = $latestMuscleThickness->getMuscleThickness();
-
-        //BodyFat
-        $latestBodyFat = $this->em->getRepository(BodyFat::class)
-            ->matching($criteria);
-
-        if(sizeof($latestBodyFat) > 0) {
-            $latestBodyFat = $latestBodyFat->get(0);
-        } else { //create an empty default Exterior
-            $latestBodyFat = new BodyFat();
-        }
-        $latestBodyFat = $latestBodyFat->getFat();
-
-        //TailLength
-        $latestTailLength = $this->em->getRepository(TailLength::class)
-            ->matching($criteria);
-
-        if(sizeof($latestTailLength) > 0) {
-            $latestTailLength = $latestTailLength->get(0);
-        } else { //create an empty default Exterior
-            $latestTailLength = new TailLength();
-        }
-        $latestTailLength = $latestTailLength->getLength();
-
-        //Set latest measurement values
-        $this->data[ReportLabel::ANIMALS][$label][ReportLabel::LATEST_EXTERIOR] = $latestExterior;
-        $this->data[ReportLabel::ANIMALS][$label][ReportLabel::LATEST_MUSCLE_THICKNESS] = $latestMuscleThickness;
-        $this->data[ReportLabel::ANIMALS][$label][ReportLabel::LATEST_BODY_FAT] = $latestBodyFat;
-        $this->data[ReportLabel::ANIMALS][$label][ReportLabel::LATEST_TAIL_LENGTH] = $latestTailLength;
+        //Body Measurement Values
+        $latestMuscleThickness = $this->em->getRepository(MuscleThickness::class)->getLatestMuscleThickness($animal);
+        $latestBodyFat = $this->em->getRepository(BodyFat::class)->getLatestBodyFat($animal);
+        $latestTailLength = $this->em->getRepository(TailLength::class)->getLatestTailLength($animal);
+        $latestExterior = $this->em->getRepository(Exterior::class)->getLatestExterior($animal);
         
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] =Utils::fillZero( $latestMuscleThickness);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = Utils::fillZero($latestBodyFat);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TAIL_LENGTH] = Utils::fillZero($latestTailLength);
         
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SKULL] = Utils::fillZero($latestExterior->getSkull());
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DEVELOPMENT] = Utils::fillZero(0.00); //TODO Add development variable to Exterior Entity
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCULARITY] = Utils::fillZero($latestExterior->getMuscularity());
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PROPORTION] = Utils::fillZero($latestExterior->getProportion());
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TYPE] = Utils::fillZero($latestExterior->getExteriorType());
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LEGWORK] = Utils::fillZero($latestExterior->getLegWork());
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::FUR] = Utils::fillZero($latestExterior->getFur());
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENERAL_APPEARANCE] = Utils::fillZero($latestExterior->getGeneralAppearence());
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::HEIGHT] = Utils::fillZero($latestExterior->getHeight());
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TORSO_LENGTH] = Utils::fillZero($latestExterior->getTorsoLength());
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREAST_DEPTH] = Utils::fillZero($latestExterior->getBreastDepth());
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MARKINGS] = Utils::fillZero($latestExterior->getMarkings());
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GROWTH] = Utils::fillZero(0.00); //TODO Add growth variable to Exterior Entity ???
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::VL] = Utils::fillZero(0.00); //TODO Add Vl variable to Exterior Entity ???
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SL] = Utils::fillZero(0.00); //TODO Add sl variable to Exterior Entity ??? Or is this just Tail Length?
+
+        //Litter
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_SIZE] = $this->getLitterValues($animal)->get(self::LITTER_SIZE);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_GROUP] = $this->getLitterValues($animal)->get(self::LITTER_GROUP);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::N_LING] = $this->getLitterValues($animal)->get(self::N_LING);
+        
+        //Offspring
+        $litterCount = $this->em->getRepository(Litter::class)->getLitters($animal)->count();
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_COUNT] = Utils::fillZero($litterCount);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::OFFSPRING_COUNT] =  Utils::fillZero($this->getOffspringCount($animal));
+
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::ULN] = Utils::fillNullOrEmptyString($animal->getUlnCountryCode().$animal->getUlnNumber());
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PEDIGREE] = Utils::fillNullOrEmptyString($animal->getPedigreeCountryCode().$animal->getPedigreeNumber());
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::NAME] = Utils::fillNullOrEmptyString($animal->getName());
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SCRAPIE] = Utils::fillNullOrEmptyString($animal->getScrapieGenotype(), '-/-');
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_TYPE] = Utils::fillNullOrEmptyString($animal->getBreedType());
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_CODE] = Utils::fillNullOrEmptyString($animal->getBreedCode());
+
+        /* Dates. The null checks for dates are in the twig file, because it has to be combined with the formatting */
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DATE_OF_BIRTH] = $animal->getDateOfBirth();
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::INSPECTION_DATE] = null; //TODO
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MEASUREMENT_DATE] = $latestExterior; //TODO
+
+        /* variables translated to Dutch */
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENDER] = $this->getGenderInDutch($animal);
+
+        //TODO Add these variables to the entities INCLUDING NULL CHECKS!!!
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BLINDNESS_FACTOR] = '-';
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PREDICATE] = '-';
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PRODUCTION] = '-/-/-/-';
+
+    }
+
+    /**
+     * @param Animal $animal
+     * @return string
+     */
+    private function getGenderInDutch(Animal $animal)
+    {
+        /* variables translated to Dutch */
+        if($animal->getGender() == 'Ram') {
+            $gender = 'Ram';
+        } elseif ($animal->getGender() == 'Ewe') {
+            $gender = 'Ooi';
+        } else {
+            $gender = 'Onbekend';
+        }
+        return $gender;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return ArrayCollection
+     */
+    private function getLitterValues(Animal $animal)
+    {
+        $litterValues = new ArrayCollection();
+
+        //Litter animal was born in
         if($animal->getLitter() != null) {
             $litter = $animal->getLitter();
             if($litter->getSize() != null) {
                 $litterSize = $litter->getSize();
+                $nLing = $litter->getSize().'-ling';
             } else {
-                $litterSize = null;
+                $litterSize = '-';
+                $nLing = '-';
             }
 
             if($litter->getLitterGroup() != null) {
                 $litterGroup = $litter->getLitterGroup();
             } else {
-                $litterGroup = null;
+                $litterGroup = '-';
             }
+
         } else {
-            $litterSize = null;
-            $litterGroup = null;
+            $litterSize = '-';
+            $litterGroup = '-';
+            $nLing = '-';
         }
-        
-        $this->data[ReportLabel::ANIMALS][$label][ReportLabel::LITTER_SIZE] = $litterSize;
-        $this->data[ReportLabel::ANIMALS][$label][ReportLabel::LITTER_GROUP] = $litterGroup;
-        $this->data[ReportLabel::ANIMALS][$label][ReportLabel::LITTER_GROUP] = $litterGroup;
+
+        $litterValues->set(self::LITTER_SIZE, $litterSize);
+        $litterValues->set(self::LITTER_GROUP, $litterGroup);
+        $litterValues->set(self::N_LING, $nLing);
+
+        return $litterValues;
     }
 
+    /**
+     * @param Ewe|Ram $parent
+     * @return int
+     */
+    private function getOffspringCount($parent)
+    {
+        if($parent instanceof Ram || $parent instanceof Ewe) {
+            return $parent->getChildren()->count();
+        } else {
+            return 0;
+        }
+    }
 }
