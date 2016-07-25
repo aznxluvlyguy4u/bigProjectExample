@@ -4,262 +4,786 @@
 
     {% for x in variables %}
 
-        <div id="wrapper">
-            <div class="container">
-            <h4>NFSO Afstammmingsbewijs</h4>
+{# PART 1: CONVERT VARIABLES IN ARRAYS TO SHORT VARIABLES FOR EASY USE IN THE HTML/PDF REPORT OUTPUT #}
 
-            <div class="person-item">
-                <p> <b>Eigenaar</b> <br>
-                    {{ x.owner_name }} <br>
-                    {{ x.address.streetName }} {{ x.address.addressNumber }}{{ x.address.addressNumberSuffix }} <br>
-                    {{ x.address.postalCode }} {{ x.address.city }} <br>
-                    UBN: {{ x.ubn }}
-                </p>
+    {# Owner #}
 
-                <p>
-                    <b>Fokker</b> <br>
-                    {{ x.breeder_name }} <br>
-                    {{ x.address_breeder.streetName }} {{ x.address_breeder.addressNumber }}{{ x.address_breeder.addressNumberSuffix }} <br>
-                    {{ x.address_breeder.postalCode }} {{ x.address_breeder.city }} <br>
-                    {{ x.breeder_number }} <br>
-                </p>
-            </div>
+        {% set ubn = x.ubn %}
+        {% set ownerName = x.ownerName %}
+        {% set ownerAddress = x.address.streetName ~ ' ' ~ x.address.addressNumber~x.address.addressNumberSuffix %}
+        {% set ownerPostalCodeAndCity = x.address.postalCode ~ '  ' ~ x.address.city %}
 
-        {% for key,value in x.animals %}
-            {#TODO REPLACE THE FORLOOP WITH CUSTOMIZED HTML CODE FOR EACH ANIMAL#}
-                {#{% set key = 'child' %}#}
-                {#{% set value = x.animals[key] %}#}
+    {# Breeder #}
 
+        {% set breederName = x. breederName %}
+        {% set breederAddress = x.addressBreeder.streetName ~ ' ' ~ x.addressBreeder.addressNumber~x.addressBreeder.addressNumberSuffix %}
+        {% set breederPostalCodeAndCity = x.addressBreeder.postalCode ~ '  ' ~ x.addressBreeder.city %}
+        {% set breederNumber = x.breederNumber %}
 
-            <div class="animal-item">
-                <p>
-                    {% if key == 'child' %}
+    {# Animals, 'animals' #}
 
-                        {% if value.entity.gender == 'Ram' %}
-                            {% set gender = 'Ram' %}
-                        {% elseif value.entity.gender == 'Ewe'%}
-                            {% set gender = 'Ooi' %}
-                        {% else %}
-                            {% set gender = 'Onbekend' %}
-                        {% endif %}
+      {# child, 'c' #}
 
-                        <b>Geslacht: {{ gender }}</b> <br>
+        {% set c_gender = x.animals['c'].gender %}
+        {% set c_uln = x.animals['c'].uln %}
+        {% set c_pedigree = x.animals['c'].pedigree %}
+        {% set c_name = x.animals['c'].name %}
+        {% set c_scrapie = x.animals['c'].scrapie %}
+        {% set c_breedType = x.animals['c'].breedType %}
+        {% set c_breedCode = x.animals['c'].breedCode %}
+        {% set c_litterSize = x.animals['c'].litterSize %}
+        {% set c_litterGroup = x.animals['c'].litterGroup %}
+        {% set c_nLing = x.animals['c'].nLing %}
+        {% set c_blf = x.animals['c'].blindnessFactor %}
+        {% set c_predicate = x.animals['c'].predicate %}
+        {% set c_production = x.animals['c'].production %}
 
-                    {% else %}
+        {# Measurements #}
+        {% set c_skull = x.animals['c'].skull %}
+        {% set c_development = x.animals['c'].development %}
+        {% set c_muscularity = x.animals['c'].muscularity %}
+        {% set c_proportion = x.animals['c'].proportion %}
+        {% set c_type = x.animals['c'].type %}
+        {% set c_legWork = x.animals['c'].legWork %}
+        {% set c_fur = x.animals['c'].fur %}
+        {% set c_generalAppearance = x.animals['c'].generalAppearance %}
+        {% set c_height = x.animals['c'].height %}
+        {% set c_torsoLength = x.animals['c'].torsoLength %}
+        {% set c_breastDepth = x.animals['c'].breastDepth %}
+        {% set c_tailLength = x.animals['c'].tailLength %}
+        {% set c_litterGroup = x.animals['c'].litterGroup %}
+        {% set c_growth = x.animals['c'].growth %}
+        {% set c_muscleThickness = x.animals['c'].muscleThickness %}
+        {% set c_bodyFat = x.animals['c'].bodyFat %}
+        {% set c_vl = x.animals['c'].vl %}
+        {% set c_sl = x.animals['c'].sl %}
 
-                        {% set seperatedkey = key|split('_') %}
-                        {% set newkeylabel = {} %}
+        {# dates #}
+        {% if x.animals['c'].dateOfBirth == null %}
+            {% set c_dateOfBirth = '-' %}
+        {% else %}
+            {% set c_dateOfBirth = x.animals['c'].dateOfBirth|date('Y-m-d') %}
+        {% endif %}
 
-                        <b>
-                        {% for keypart in seperatedkey %}
-                            {% if keypart == 's' %}
-                                {% set newkeylabel = newkeylabel|merge(['\'s ']) %}
-                            {% elseif keypart == 'mother' %}
-                                {% set newkeylabel = newkeylabel|merge(['moeder']) %}
-                            {% elseif keypart == 'father' %}
-                                {% set newkeylabel = newkeylabel|merge(['vader']) %}
-                            {% endif %}
-                        {% endfor %}
-                            {{ newkeylabel|join }}
-                        </b> <br>
-                    {% endif %}
+        {% if x.animals['c'].inspectionDate == null %}
+            {% set c_inspectionDate = '-' %}
+        {% else %}
+            {% set c_inspectionDate= x.animals['c'].inspectionDate|date('Y-m-d') %}
+        {% endif %}
 
-                    ULN: {{ value.entity.ulnCountryCode }} {{ value.entity.ulnNumber }}    <br>
-                    STN: {{ value.entity.pedigreeCountryCode }} {{ value.entity.pedigreeNumber }} <br>
+      {# father, 'f' #}
 
-                    {% if value.entity.dateOfBirth == null %}
-                        {% set dateOfBirth = '-' %}
-                    {% else %}
-                        {% set dateOfBirth = value.entity.dateOfBirth|date('Y-m-d') %}
-                    {% endif %}
+        {% set f_gender = x.animals['f'].gender %}
+        {% set f_uln = x.animals['f'].uln %}
+        {% set f_pedigree = x.animals['f'].pedigree %}
+        {% set f_name = x.animals['f'].name %}
+        {% set f_scrapie = x.animals['f'].scrapie %}
+        {% set f_breedType = x.animals['f'].breedType %}
+        {% set f_breedCode = x.animals['f'].breedCode %}
+        {% set f_litterSize = x.animals['f'].litterSize %}
+        {% set f_litterGroup = x.animals['f'].litterGroup %}
+        {% set f_nLing = x.animals['f'].nLing %}
+        {% set f_blf = x.animals['f'].blindnessFactor %}
+        {% set f_predicate = x.animals['f'].predicate %}
+        {% set f_production = x.animals['f'].production %}
 
-                    {% if value.entity.scrapieGenotype == null %}
-                        {% set scrapieGenotype = '-/-' %}
-                    {% else %}
-                        {% set scrapieGenotype = value.entity.scrapieGenotype %}
-                    {% endif %}
+        {# Measurements #}
+        {% set f_skull = x.animals['f'].skull %}
+        {% set f_development = x.animals['f'].development %}
+        {% set f_muscularity = x.animals['f'].muscularity %}
+        {% set f_proportion = x.animals['f'].proportion %}
+        {% set f_type = x.animals['f'].type %}
+        {% set f_legWork = x.animals['f'].legWork %}
+        {% set f_fur = x.animals['f'].fur %}
+        {% set f_generalAppearance = x.animals['f'].generalAppearance %}
+        {% set f_height = x.animals['f'].height %}
+        {% set f_torsoLength = x.animals['f'].torsoLength %}
+        {% set f_breastDepth = x.animals['f'].breastDepth %}
+        {% set f_tailLength = x.animals['f'].tailLength %}
+        {% set f_litterGroup = x.animals['f'].litterGroup %}
+        {% set f_growth = x.animals['f'].growth %}
+        {% set f_muscleThickness = x.animals['f'].muscleThickness %}
+        {% set f_bodyFat = x.animals['f'].bodyFat %}
+        {% set f_vl = x.animals['f'].vl %}
+        {% set f_sl = x.animals['f'].sl %}
 
-                    {% if value.entity.breedType == null %}
-                        {% set breedType = '-' %}
-                    {% else %}
-                        {% set breedType = value.entity.breedType %}
-                    {% endif %}
+        {# dates #}
+        {% if x.animals['f'].dateOfBirth == null %}
+            {% set f_dateOfBirth = '-' %}
+        {% else %}
+            {% set f_dateOfBirth = x.animals['f'].dateOfBirth|date('Y-m-d') %}
+        {% endif %}
 
-                    {% if value.entity.breedCode == null %}
-                        {% set breedCode = '-' %}
-                    {% else %}
-                        {% set breedCode = value.entity.breedCode %}
-                    {% endif %}
+        {% if x.animals['f'].inspectionDate == null %}
+            {% set f_inspectionDate = '-' %}
+        {% else %}
+            {% set f_inspectionDate= x.animals['f'].inspectionDate|date('Y-m-d') %}
+        {% endif %}
 
-                    {% if value.litter_size == null %}
-                        {% set litterSizeMessage = '-' %}
-                    {% else %}
-                        {% set litterSizeMessage = value.litter_size ~ '-ling' %}
-                    {% endif %}
+      {# mother, 'm' #}
 
-                    Geb: {{ dateOfBirth }} {{ litterSizeMessage }} {{ breedCode }} <br>
+        {% set m_gender = x.animals['m'].gender %}
+        {% set m_uln = x.animals['m'].uln %}
+        {% set m_pedigree = x.animals['m'].pedigree %}
+        {% set m_name = x.animals['m'].name %}
+        {% set m_scrapie = x.animals['m'].scrapie %}
+        {% set m_breedType = x.animals['m'].breedType %}
+        {% set m_breedCode = x.animals['m'].breedCode %}
+        {% set m_litterSize = x.animals['m'].litterSize %}
+        {% set m_litterGroup = x.animals['m'].litterGroup %}
+        {% set m_nLing = x.animals['m'].nLing %}
+        {% set m_blf = x.animals['m'].blindnessFactor %}
+        {% set m_predicate = x.animals['m'].predicate %}
+        {% set m_production = x.animals['m'].production %}
 
-                    Scrapie: {{ scrapieGenotype }}   Blf: - <br>  {#TODO#}
-                    Productie: ? <br> {#TODO#}
-                    Status: {{ breedType }} <br> {#TODO#}
-                    Pred: ?? <br> {#TODO#}
-                    <br>
+        {# Measurements #}
+        {% set m_skull = x.animals['m'].skull %}
+        {% set m_development = x.animals['m'].development %}
+        {% set m_muscularity = x.animals['m'].muscularity %}
+        {% set m_proportion = x.animals['m'].proportion %}
+        {% set m_type = x.animals['m'].type %}
+        {% set m_legWork = x.animals['m'].legWork %}
+        {% set m_fur = x.animals['m'].fur %}
+        {% set m_generalAppearance = x.animals['m'].generalAppearance %}
+        {% set m_height = x.animals['m'].height %}
+        {% set m_torsoLength = x.animals['m'].torsoLength %}
+        {% set m_breastDepth = x.animals['m'].breastDepth %}
+        {% set m_tailLength = x.animals['m'].tailLength %}
+        {% set m_litterGroup = x.animals['m'].litterGroup %}
+        {% set m_growth = x.animals['m'].growth %}
+        {% set m_muscleThickness = x.animals['m'].muscleThickness %}
+        {% set m_bodyFat = x.animals['m'].bodyFat %}
+        {% set m_vl = x.animals['m'].vl %}
+        {% set m_sl = x.animals['m'].sl %}
 
-                  {# Null check exterior values #}
-                    {% if value.latest_exterior.skull == 0 %}
-                        {% set skull = '-' %}
-                    {% else %}
-                        {% set skull = value.latest_exterior.skull %}
-                    {% endif %}
+        {# dates #}
+        {% if x.animals['m'].dateOfBirth == null %}
+            {% set m_dateOfBirth = '-' %}
+        {% else %}
+            {% set m_dateOfBirth = x.animals['m'].dateOfBirth|date('Y-m-d') %}
+        {% endif %}
 
-                    {% if value.latest_exterior.muscularity == 0 %}
-                        {% set muscularity = '-' %}
-                    {% else %}
-                        {% set muscularity = value.latest_exterior.muscularity %}
-                    {% endif %}
-
-                    {% if value.latest_exterior.proportion == 0 %}
-                        {% set proportion = '-' %}
-                    {% else %}
-                        {% set proportion = value.latest_exterior.proportion %}
-                    {% endif %}
-
-                    {% if value.latest_exterior.type == 0 %}
-                        {% set type = '-' %}
-                    {% else %}
-                        {% set type = value.latest_exterior.type %}
-                    {% endif %}
-
-                    {% if value.latest_exterior.legWork == 0 %}
-                        {% set legWork = '-' %}
-                    {% else %}
-                        {% set legWork = value.latest_exterior.legWork %}
-                    {% endif %}
-
-                    {% if value.latest_exterior.fur == 0 %}
-                        {% set fur = '-' %}
-                    {% else %}
-                        {% set fur = value.latest_exterior.fur %}
-                    {% endif %}
-
-                    {% if value.latest_exterior.generalAppearence == 0 %}
-                        {% set generalAppearence = '-' %}
-                    {% else %}
-                        {% set generalAppearence = value.latest_exterior.generalAppearence %}
-                    {% endif %}
-
-                    {% if value.latest_exterior.height == 0 %}
-                        {% set height = '-' %}
-                    {% else %}
-                        {% set height = value.latest_exterior.height %}
-                    {% endif %}
-
-                    {% if value.latest_exterior.breastDepth == 0 %}
-                        {% set breastDepth = '-' %}
-                    {% else %}
-                        {% set breastDepth = value.latest_exterior.breastDepth %}
-                    {% endif %}
-
-                    {% if value.latest_exterior.torsoLength == 0 %}
-                        {% set torsoLength = '-' %}
-                    {% else %}
-                        {% set torsoLength = value.latest_exterior.torsoLength %}
-                    {% endif %}
-
-                    {% if value.latest_exterior.markings == 0 %}
-                        {% set markings = '-' %}
-                    {% else %}
-                        {% set markings = value.latest_exterior.markings %}
-                    {% endif %}
-
-                    KOP: {{ skull }}
-                    ONT: ??
-                    BES: {{ muscularity }}
-                    EVE: ??
-                    TYP: {{ type }}
-                    BEE: {{ legWork }}
-                    VAC: {{ fur }}
-                    ALG: {{ generalAppearence }}
-                    HGT: {{ height }}
-                    LGT: {{ torsoLength }}
-                    BDP: {{ breastDepth }}
-                    STT: ??
-
-                    {% if value.litter_group != null %}
-                        {% set litterGroup = value.litter_group %}
-                    {% else %}
-                        {% set litterGroup = '-/-' %}
-                    {% endif %}
-
-                    {% if value.latest_muscle_thickness != null %}
-                        {% set muscleThickness = latest_muscle_thickness %}
-                    {% else %}
-                        {% set muscleThickness = '-' %}
-                    {% endif %}
-
-                    {% if value.latest_body_fat != null %}
-                        {% set bodyFat = value.body_fat %}
-                    {% else %}
-                        {% set bodyFat = '-' %}
-                    {% endif %}
-
-                    {% if value.latest_tail_length != null %}
-                        {% set tailLength = value.latest_tail_length %}
-                    {% else %}
-                        {% set tailLength = '-' %}
-                    {% endif %}
-
-                    <br>
-                    worpgr: {{ litterGroup }} <br>
-                    groei: ?? <br>
-                    spier: {{ muscleThickness }} <br>
-                    vet: {{ bodyFat }} <br>
-                    VL: ?? <br>
-                    sl: {{ tailLength }} <br>
-                </p>
-            </div>
-
-        {% endfor %}
+        {% if x.animals['m'].inspectionDate == null %}
+            {% set m_inspectionDate = '-' %}
+        {% else %}
+            {% set m_inspectionDate= x.animals['m'].inspectionDate|date('Y-m-d') %}
+        {% endif %}
 
 
-                {% if loop.last == false %}
-                   <footer></footer> {#necessary to enforce a pagebreak using css#}
-                {% endif %}
+      {# father's father, 'ff' #}
 
-            </div>
-        </div>
+        {% set ff_gender = x.animals['ff'].gender %}
+        {% set ff_uln = x.animals['ff'].uln %}
+        {% set ff_pedigree = x.animals['ff'].pedigree %}
+        {% set ff_name = x.animals['ff'].name %}
+        {% set ff_scrapie = x.animals['ff'].scrapie %}
+        {% set ff_breedType = x.animals['ff'].breedType %}
+        {% set ff_breedCode = x.animals['ff'].breedCode %}
+        {% set ff_litterSize = x.animals['ff'].litterSize %}
+        {% set ff_litterGroup = x.animals['ff'].litterGroup %}
+        {% set ff_nLing = x.animals['ff'].nLing %}
+        {% set ff_blf = x.animals['ff'].blindnessFactor %}
+        {% set ff_predicate = x.animals['ff'].predicate %}
+        {% set ff_production = x.animals['ff'].production %}
+
+        {# Measurements #}
+        {% set ff_skull = x.animals['ff'].skull %}
+        {% set ff_development = x.animals['ff'].development %}
+        {% set ff_muscularity = x.animals['ff'].muscularity %}
+        {% set ff_proportion = x.animals['ff'].proportion %}
+        {% set ff_type = x.animals['ff'].type %}
+        {% set ff_legWork = x.animals['ff'].legWork %}
+        {% set ff_fur = x.animals['ff'].fur %}
+        {% set ff_generalAppearance = x.animals['ff'].generalAppearance %}
+        {% set ff_height = x.animals['ff'].height %}
+        {% set ff_torsoLength = x.animals['ff'].torsoLength %}
+        {% set ff_breastDepth = x.animals['ff'].breastDepth %}
+        {% set ff_tailLength = x.animals['ff'].tailLength %}
+        {% set ff_litterGroup = x.animals['ff'].litterGroup %}
+        {% set ff_growth = x.animals['ff'].growth %}
+        {% set ff_muscleThickness = x.animals['ff'].muscleThickness %}
+        {% set ff_bodyFat = x.animals['ff'].bodyFat %}
+        {% set ff_vl = x.animals['ff'].vl %}
+        {% set ff_sl = x.animals['ff'].sl %}
+
+        {# dates #}
+        {% if x.animals['ff'].dateOfBirth == null %}
+            {% set ff_dateOfBirth = '-' %}
+        {% else %}
+            {% set ff_dateOfBirth = x.animals['ff'].dateOfBirth|date('Y-m-d') %}
+        {% endif %}
+
+        {% if x.animals['ff'].inspectionDate == null %}
+            {% set ff_inspectionDate = '-' %}
+        {% else %}
+            {% set ff_inspectionDate= x.animals['ff'].inspectionDate|date('Y-m-d') %}
+        {% endif %}
+
+
+       {# father's mother, 'fm' #}
+
+        {% set fm_gender = x.animals['fm'].gender %}
+        {% set fm_uln = x.animals['fm'].uln %}
+        {% set fm_pedigree = x.animals['fm'].pedigree %}
+        {% set fm_name = x.animals['fm'].name %}
+        {% set fm_scrapie = x.animals['fm'].scrapie %}
+        {% set fm_breedType = x.animals['fm'].breedType %}
+        {% set fm_breedCode = x.animals['fm'].breedCode %}
+        {% set fm_litterSize = x.animals['fm'].litterSize %}
+        {% set fm_litterGroup = x.animals['fm'].litterGroup %}
+        {% set fm_nLing = x.animals['fm'].nLing %}
+        {% set fm_blf = x.animals['fm'].blindnessFactor %}
+        {% set fm_predicate = x.animals['fm'].predicate %}
+        {% set fm_production = x.animals['fm'].production %}
+
+        {# Measurements #}
+        {% set fm_skull = x.animals['fm'].skull %}
+        {% set fm_development = x.animals['fm'].development %}
+        {% set fm_muscularity = x.animals['fm'].muscularity %}
+        {% set fm_proportion = x.animals['fm'].proportion %}
+        {% set fm_type = x.animals['fm'].type %}
+        {% set fm_legWork = x.animals['fm'].legWork %}
+        {% set fm_fur = x.animals['fm'].fur %}
+        {% set fm_generalAppearance = x.animals['fm'].generalAppearance %}
+        {% set fm_height = x.animals['fm'].height %}
+        {% set fm_torsoLength = x.animals['fm'].torsoLength %}
+        {% set fm_breastDepth = x.animals['fm'].breastDepth %}
+        {% set fm_tailLength = x.animals['fm'].tailLength %}
+        {% set fm_litterGroup = x.animals['fm'].litterGroup %}
+        {% set fm_growth = x.animals['fm'].growth %}
+        {% set fm_muscleThickness = x.animals['fm'].muscleThickness %}
+        {% set fm_bodyFat = x.animals['fm'].bodyFat %}
+        {% set fm_vl = x.animals['fm'].vl %}
+        {% set fm_sl = x.animals['fm'].sl %}
+
+        {# dates #}
+        {% if x.animals['fm'].dateOfBirth == null %}
+            {% set fm_dateOfBirth = '-' %}
+        {% else %}
+            {% set fm_dateOfBirth = x.animals['fm'].dateOfBirth|date('Y-m-d') %}
+        {% endif %}
+
+        {% if x.animals['fm'].inspectionDate == null %}
+            {% set fm_inspectionDate = '-' %}
+        {% else %}
+            {% set fm_inspectionDate= x.animals['fm'].inspectionDate|date('Y-m-d') %}
+        {% endif %}
+
+
+      {# mother's father, 'mf' #}
+
+        {% set mf_gender = x.animals['mf'].gender %}
+        {% set mf_uln = x.animals['mf'].uln %}
+        {% set mf_pedigree = x.animals['mf'].pedigree %}
+        {% set mf_name = x.animals['mf'].name %}
+        {% set mf_scrapie = x.animals['mf'].scrapie %}
+        {% set mf_breedType = x.animals['mf'].breedType %}
+        {% set mf_breedCode = x.animals['mf'].breedCode %}
+        {% set mf_litterSize = x.animals['mf'].litterSize %}
+        {% set mf_litterGroup = x.animals['mf'].litterGroup %}
+        {% set mf_nLing = x.animals['mf'].nLing %}
+        {% set mf_blf = x.animals['mf'].blindnessFactor %}
+        {% set mf_predicate = x.animals['mf'].predicate %}
+        {% set mf_production = x.animals['mf'].production %}
+
+        {# Measurements #}
+        {% set mf_skull = x.animals['mf'].skull %}
+        {% set mf_development = x.animals['mf'].development %}
+        {% set mf_muscularity = x.animals['mf'].muscularity %}
+        {% set mf_proportion = x.animals['mf'].proportion %}
+        {% set mf_type = x.animals['mf'].type %}
+        {% set mf_legWork = x.animals['mf'].legWork %}
+        {% set mf_fur = x.animals['mf'].fur %}
+        {% set mf_generalAppearance = x.animals['mf'].generalAppearance %}
+        {% set mf_height = x.animals['mf'].height %}
+        {% set mf_torsoLength = x.animals['mf'].torsoLength %}
+        {% set mf_breastDepth = x.animals['mf'].breastDepth %}
+        {% set mf_tailLength = x.animals['mf'].tailLength %}
+        {% set mf_litterGroup = x.animals['mf'].litterGroup %}
+        {% set mf_growth = x.animals['mf'].growth %}
+        {% set mf_muscleThickness = x.animals['mf'].muscleThickness %}
+        {% set mf_bodyFat = x.animals['mf'].bodyFat %}
+        {% set mf_vl = x.animals['mf'].vl %}
+        {% set mf_sl = x.animals['mf'].sl %}
+
+        {# dates #}
+        {% if x.animals['mf'].dateOfBirth == null %}
+            {% set mf_dateOfBirth = '-' %}
+        {% else %}
+            {% set mf_dateOfBirth = x.animals['mf'].dateOfBirth|date('Y-m-d') %}
+        {% endif %}
+
+        {% if x.animals['mf'].inspectionDate == null %}
+            {% set mf_inspectionDate = '-' %}
+        {% else %}
+            {% set mf_inspectionDate= x.animals['mf'].inspectionDate|date('Y-m-d') %}
+        {% endif %}
+
+
+      {# mother's mother, 'mm' #}
+
+        {% set mm_gender = x.animals['mm'].gender %}
+        {% set mm_uln = x.animals['mm'].uln %}
+        {% set mm_pedigree = x.animals['mm'].pedigree %}
+        {% set mm_name = x.animals['mm'].name %}
+        {% set mm_scrapie = x.animals['mm'].scrapie %}
+        {% set mm_breedType = x.animals['mm'].breedType %}
+        {% set mm_breedCode = x.animals['mm'].breedCode %}
+        {% set mm_litterSize = x.animals['mm'].litterSize %}
+        {% set mm_litterGroup = x.animals['mm'].litterGroup %}
+        {% set mm_nLing = x.animals['mm'].nLing %}
+        {% set mm_blf = x.animals['mm'].blindnessFactor %}
+        {% set mm_predicate = x.animals['mm'].predicate %}
+        {% set mm_production = x.animals['mm'].production %}
+
+        {# Measurements #}
+        {% set mm_skull = x.animals['mm'].skull %}
+        {% set mm_development = x.animals['mm'].development %}
+        {% set mm_muscularity = x.animals['mm'].muscularity %}
+        {% set mm_proportion = x.animals['mm'].proportion %}
+        {% set mm_type = x.animals['mm'].type %}
+        {% set mm_legWork = x.animals['mm'].legWork %}
+        {% set mm_fur = x.animals['mm'].fur %}
+        {% set mm_generalAppearance = x.animals['mm'].generalAppearance %}
+        {% set mm_height = x.animals['mm'].height %}
+        {% set mm_torsoLength = x.animals['mm'].torsoLength %}
+        {% set mm_breastDepth = x.animals['mm'].breastDepth %}
+        {% set mm_tailLength = x.animals['mm'].tailLength %}
+        {% set mm_litterGroup = x.animals['mm'].litterGroup %}
+        {% set mm_growth = x.animals['mm'].growth %}
+        {% set mm_muscleThickness = x.animals['mm'].muscleThickness %}
+        {% set mm_bodyFat = x.animals['mm'].bodyFat %}
+        {% set mm_vl = x.animals['mm'].vl %}
+        {% set mm_sl = x.animals['mm'].sl %}
+
+        {# dates #}
+        {% if x.animals['mm'].dateOfBirth == null %}
+            {% set mm_dateOfBirth = '-' %}
+        {% else %}
+            {% set mm_dateOfBirth = x.animals['mm'].dateOfBirth|date('Y-m-d') %}
+        {% endif %}
+
+        {% if x.animals['mm'].inspectionDate == null %}
+            {% set mm_inspectionDate = '-' %}
+        {% else %}
+            {% set mm_inspectionDate= x.animals['mm'].inspectionDate|date('Y-m-d') %}
+        {% endif %}
+
+
+      {# father's father's father, 'fff' #}
+
+        {% set fff_gender = x.animals['fff'].gender %}
+        {% set fff_uln = x.animals['fff'].uln %}
+        {% set fff_pedigree = x.animals['fff'].pedigree %}
+        {% set fff_name = x.animals['fff'].name %}
+        {% set fff_scrapie = x.animals['fff'].scrapie %}
+        {% set fff_breedType = x.animals['fff'].breedType %}
+        {% set fff_breedCode = x.animals['fff'].breedCode %}
+        {% set fff_litterSize = x.animals['fff'].litterSize %}
+        {% set fff_litterGroup = x.animals['fff'].litterGroup %}
+        {% set fff_nLing = x.animals['fff'].nLing %}
+        {% set fff_blf = x.animals['fff'].blindnessFactor %}
+        {% set fff_predicate = x.animals['fff'].predicate %}
+        {% set fff_production = x.animals['fff'].production %}
+
+        {# Measurements #}
+        {% set fff_skull = x.animals['fff'].skull %}
+        {% set fff_development = x.animals['fff'].development %}
+        {% set fff_muscularity = x.animals['fff'].muscularity %}
+        {% set fff_proportion = x.animals['fff'].proportion %}
+        {% set fff_type = x.animals['fff'].type %}
+        {% set fff_legWork = x.animals['fff'].legWork %}
+        {% set fff_fur = x.animals['fff'].fur %}
+        {% set fff_generalAppearance = x.animals['fff'].generalAppearance %}
+        {% set fff_height = x.animals['fff'].height %}
+        {% set fff_torsoLength = x.animals['fff'].torsoLength %}
+        {% set fff_breastDepth = x.animals['fff'].breastDepth %}
+        {% set fff_tailLength = x.animals['fff'].tailLength %}
+        {% set fff_litterGroup = x.animals['fff'].litterGroup %}
+        {% set fff_growth = x.animals['fff'].growth %}
+        {% set fff_muscleThickness = x.animals['fff'].muscleThickness %}
+        {% set fff_bodyFat = x.animals['fff'].bodyFat %}
+        {% set fff_vl = x.animals['fff'].vl %}
+        {% set fff_sl = x.animals['fff'].sl %}
+
+        {# dates #}
+        {% if x.animals['fff'].dateOfBirth == null %}
+            {% set fff_dateOfBirth = '-' %}
+        {% else %}
+            {% set fff_dateOfBirth = x.animals['fff'].dateOfBirth|date('Y-m-d') %}
+        {% endif %}
+
+        {% if x.animals['fff'].inspectionDate == null %}
+            {% set fff_inspectionDate = '-' %}
+        {% else %}
+            {% set fff_inspectionDate= x.animals['fff'].inspectionDate|date('Y-m-d') %}
+        {% endif %}
+
+
+      {# father's father's mother, 'ffm' #}
+
+        {% set ffm_gender = x.animals['ffm'].gender %}
+        {% set ffm_uln = x.animals['ffm'].uln %}
+        {% set ffm_pedigree = x.animals['ffm'].pedigree %}
+        {% set ffm_name = x.animals['ffm'].name %}
+        {% set ffm_scrapie = x.animals['ffm'].scrapie %}
+        {% set ffm_breedType = x.animals['ffm'].breedType %}
+        {% set ffm_breedCode = x.animals['ffm'].breedCode %}
+        {% set ffm_litterSize = x.animals['ffm'].litterSize %}
+        {% set ffm_litterGroup = x.animals['ffm'].litterGroup %}
+        {% set ffm_nLing = x.animals['ffm'].nLing %}
+        {% set ffm_blf = x.animals['ffm'].blindnessFactor %}
+        {% set ffm_predicate = x.animals['ffm'].predicate %}
+        {% set ffm_production = x.animals['ffm'].production %}
+
+        {# Measurements #}
+        {% set ffm_skull = x.animals['ffm'].skull %}
+        {% set ffm_development = x.animals['ffm'].development %}
+        {% set ffm_muscularity = x.animals['ffm'].muscularity %}
+        {% set ffm_proportion = x.animals['ffm'].proportion %}
+        {% set ffm_type = x.animals['ffm'].type %}
+        {% set ffm_legWork = x.animals['ffm'].legWork %}
+        {% set ffm_fur = x.animals['ffm'].fur %}
+        {% set ffm_generalAppearance = x.animals['ffm'].generalAppearance %}
+        {% set ffm_height = x.animals['ffm'].height %}
+        {% set ffm_torsoLength = x.animals['ffm'].torsoLength %}
+        {% set ffm_breastDepth = x.animals['ffm'].breastDepth %}
+        {% set ffm_tailLength = x.animals['ffm'].tailLength %}
+        {% set ffm_litterGroup = x.animals['ffm'].litterGroup %}
+        {% set ffm_growth = x.animals['ffm'].growth %}
+        {% set ffm_muscleThickness = x.animals['ffm'].muscleThickness %}
+        {% set ffm_bodyFat = x.animals['ffm'].bodyFat %}
+        {% set ffm_vl = x.animals['ffm'].vl %}
+        {% set ffm_sl = x.animals['ffm'].sl %}
+
+        {# dates #}
+        {% if x.animals['ffm'].dateOfBirth == null %}
+            {% set ffm_dateOfBirth = '-' %}
+        {% else %}
+            {% set ffm_dateOfBirth = x.animals['ffm'].dateOfBirth|date('Y-m-d') %}
+        {% endif %}
+
+        {% if x.animals['ffm'].inspectionDate == null %}
+            {% set ffm_inspectionDate = '-' %}
+        {% else %}
+            {% set ffm_inspectionDate= x.animals['ffm'].inspectionDate|date('Y-m-d') %}
+        {% endif %}
+
+
+      {# father's mother's father, 'fmf' #}
+
+        {% set fmf_gender = x.animals['fmf'].gender %}
+        {% set fmf_uln = x.animals['fmf'].uln %}
+        {% set fmf_pedigree = x.animals['fmf'].pedigree %}
+        {% set fmf_name = x.animals['fmf'].name %}
+        {% set fmf_scrapie = x.animals['fmf'].scrapie %}
+        {% set fmf_breedType = x.animals['fmf'].breedType %}
+        {% set fmf_breedCode = x.animals['fmf'].breedCode %}
+        {% set fmf_litterSize = x.animals['fmf'].litterSize %}
+        {% set fmf_litterGroup = x.animals['fmf'].litterGroup %}
+        {% set fmf_nLing = x.animals['fmf'].nLing %}
+        {% set fmf_blf = x.animals['fmf'].blindnessFactor %}
+        {% set fmf_predicate = x.animals['fmf'].predicate %}
+        {% set fmf_production = x.animals['fmf'].production %}
+
+        {# Measurements #}
+        {% set fmf_skull = x.animals['fmf'].skull %}
+        {% set fmf_development = x.animals['fmf'].development %}
+        {% set fmf_muscularity = x.animals['fmf'].muscularity %}
+        {% set fmf_proportion = x.animals['fmf'].proportion %}
+        {% set fmf_type = x.animals['fmf'].type %}
+        {% set fmf_legWork = x.animals['fmf'].legWork %}
+        {% set fmf_fur = x.animals['fmf'].fur %}
+        {% set fmf_generalAppearance = x.animals['fmf'].generalAppearance %}
+        {% set fmf_height = x.animals['fmf'].height %}
+        {% set fmf_torsoLength = x.animals['fmf'].torsoLength %}
+        {% set fmf_breastDepth = x.animals['fmf'].breastDepth %}
+        {% set fmf_tailLength = x.animals['fmf'].tailLength %}
+        {% set fmf_litterGroup = x.animals['fmf'].litterGroup %}
+        {% set fmf_growth = x.animals['fmf'].growth %}
+        {% set fmf_muscleThickness = x.animals['fmf'].muscleThickness %}
+        {% set fmf_bodyFat = x.animals['fmf'].bodyFat %}
+        {% set fmf_vl = x.animals['fmf'].vl %}
+        {% set fmf_sl = x.animals['fmf'].sl %}
+
+        {# dates #}
+        {% if x.animals['fmf'].dateOfBirth == null %}
+            {% set fmf_dateOfBirth = '-' %}
+        {% else %}
+            {% set fmf_dateOfBirth = x.animals['fmf'].dateOfBirth|date('Y-m-d') %}
+        {% endif %}
+
+        {% if x.animals['fmf'].inspectionDate == null %}
+            {% set fmf_inspectionDate = '-' %}
+        {% else %}
+            {% set fmf_inspectionDate= x.animals['fmf'].inspectionDate|date('Y-m-d') %}
+        {% endif %}
+
+
+      {# father's mother's mother, 'fmm' #}
+
+        {% set fmm_gender = x.animals['fmm'].gender %}
+        {% set fmm_uln = x.animals['fmm'].uln %}
+        {% set fmm_pedigree = x.animals['fmm'].pedigree %}
+        {% set fmm_name = x.animals['fmm'].name %}
+        {% set fmm_scrapie = x.animals['fmm'].scrapie %}
+        {% set fmm_breedType = x.animals['fmm'].breedType %}
+        {% set fmm_breedCode = x.animals['fmm'].breedCode %}
+        {% set fmm_litterSize = x.animals['fmm'].litterSize %}
+        {% set fmm_litterGroup = x.animals['fmm'].litterGroup %}
+        {% set fmm_nLing = x.animals['fmm'].nLing %}
+        {% set fmm_blf = x.animals['fmm'].blindnessFactor %}
+        {% set fmm_predicate = x.animals['fmm'].predicate %}
+        {% set fmm_production = x.animals['fmm'].production %}
+
+        {# Measurements #}
+        {% set fmm_skull = x.animals['fmm'].skull %}
+        {% set fmm_development = x.animals['fmm'].development %}
+        {% set fmm_muscularity = x.animals['fmm'].muscularity %}
+        {% set fmm_proportion = x.animals['fmm'].proportion %}
+        {% set fmm_type = x.animals['fmm'].type %}
+        {% set fmm_legWork = x.animals['fmm'].legWork %}
+        {% set fmm_fur = x.animals['fmm'].fur %}
+        {% set fmm_generalAppearance = x.animals['fmm'].generalAppearance %}
+        {% set fmm_height = x.animals['fmm'].height %}
+        {% set fmm_torsoLength = x.animals['fmm'].torsoLength %}
+        {% set fmm_breastDepth = x.animals['fmm'].breastDepth %}
+        {% set fmm_tailLength = x.animals['fmm'].tailLength %}
+        {% set fmm_litterGroup = x.animals['fmm'].litterGroup %}
+        {% set fmm_growth = x.animals['fmm'].growth %}
+        {% set fmm_muscleThickness = x.animals['fmm'].muscleThickness %}
+        {% set fmm_bodyFat = x.animals['fmm'].bodyFat %}
+        {% set fmm_vl = x.animals['fmm'].vl %}
+        {% set fmm_sl = x.animals['fmm'].sl %}
+
+        {# dates #}
+        {% if x.animals['fmm'].dateOfBirth == null %}
+            {% set fmm_dateOfBirth = '-' %}
+        {% else %}
+            {% set fmm_dateOfBirth = x.animals['fmm'].dateOfBirth|date('Y-m-d') %}
+        {% endif %}
+
+        {% if x.animals['fmm'].inspectionDate == null %}
+            {% set fmm_inspectionDate = '-' %}
+        {% else %}
+            {% set fmm_inspectionDate= x.animals['fmm'].inspectionDate|date('Y-m-d') %}
+        {% endif %}
+
+
+      {# mother's father's father, 'mff' #}
+
+        {% set mff_gender = x.animals['mff'].gender %}
+        {% set mff_uln = x.animals['mff'].uln %}
+        {% set mff_pedigree = x.animals['mff'].pedigree %}
+        {% set mff_name = x.animals['mff'].name %}
+        {% set mff_scrapie = x.animals['mff'].scrapie %}
+        {% set mff_breedType = x.animals['mff'].breedType %}
+        {% set mff_breedCode = x.animals['mff'].breedCode %}
+        {% set mff_litterSize = x.animals['mff'].litterSize %}
+        {% set mff_litterGroup = x.animals['mff'].litterGroup %}
+        {% set mff_nLing = x.animals['mff'].nLing %}
+        {% set mff_blf = x.animals['mff'].blindnessFactor %}
+        {% set mff_predicate = x.animals['mff'].predicate %}
+        {% set mff_production = x.animals['mff'].production %}
+
+        {# Measurements #}
+        {% set mff_skull = x.animals['mff'].skull %}
+        {% set mff_development = x.animals['mff'].development %}
+        {% set mff_muscularity = x.animals['mff'].muscularity %}
+        {% set mff_proportion = x.animals['mff'].proportion %}
+        {% set mff_type = x.animals['mff'].type %}
+        {% set mff_legWork = x.animals['mff'].legWork %}
+        {% set mff_fur = x.animals['mff'].fur %}
+        {% set mff_generalAppearance = x.animals['mff'].generalAppearance %}
+        {% set mff_height = x.animals['mff'].height %}
+        {% set mff_torsoLength = x.animals['mff'].torsoLength %}
+        {% set mff_breastDepth = x.animals['mff'].breastDepth %}
+        {% set mff_tailLength = x.animals['mff'].tailLength %}
+        {% set mff_litterGroup = x.animals['mff'].litterGroup %}
+        {% set mff_growth = x.animals['mff'].growth %}
+        {% set mff_muscleThickness = x.animals['mff'].muscleThickness %}
+        {% set mff_bodyFat = x.animals['mff'].bodyFat %}
+        {% set mff_vl = x.animals['mff'].vl %}
+        {% set mff_sl = x.animals['mff'].sl %}
+
+        {# dates #}
+        {% if x.animals['mff'].dateOfBirth == null %}
+            {% set mff_dateOfBirth = '-' %}
+        {% else %}
+            {% set mff_dateOfBirth = x.animals['mff'].dateOfBirth|date('Y-m-d') %}
+        {% endif %}
+
+        {% if x.animals['mff'].inspectionDate == null %}
+            {% set mff_inspectionDate = '-' %}
+        {% else %}
+            {% set mff_inspectionDate= x.animals['mff'].inspectionDate|date('Y-m-d') %}
+        {% endif %}
+
+
+      {# mother's father's mother, 'mfm' #}
+
+        {% set mfm_gender = x.animals['mfm'].gender %}
+        {% set mfm_uln = x.animals['mfm'].uln %}
+        {% set mfm_pedigree = x.animals['mfm'].pedigree %}
+        {% set mfm_name = x.animals['mfm'].name %}
+        {% set mfm_scrapie = x.animals['mfm'].scrapie %}
+        {% set mfm_breedType = x.animals['mfm'].breedType %}
+        {% set mfm_breedCode = x.animals['mfm'].breedCode %}
+        {% set mfm_litterSize = x.animals['mfm'].litterSize %}
+        {% set mfm_litterGroup = x.animals['mfm'].litterGroup %}
+        {% set mfm_nLing = x.animals['mfm'].nLing %}
+        {% set mfm_blf = x.animals['mfm'].blindnessFactor %}
+        {% set mfm_predicate = x.animals['mfm'].predicate %}
+        {% set mfm_production = x.animals['mfm'].production %}
+
+        {# Measurements #}
+        {% set mfm_skull = x.animals['mfm'].skull %}
+        {% set mfm_development = x.animals['mfm'].development %}
+        {% set mfm_muscularity = x.animals['mfm'].muscularity %}
+        {% set mfm_proportion = x.animals['mfm'].proportion %}
+        {% set mfm_type = x.animals['mfm'].type %}
+        {% set mfm_legWork = x.animals['mfm'].legWork %}
+        {% set mfm_fur = x.animals['mfm'].fur %}
+        {% set mfm_generalAppearance = x.animals['mfm'].generalAppearance %}
+        {% set mfm_height = x.animals['mfm'].height %}
+        {% set mfm_torsoLength = x.animals['mfm'].torsoLength %}
+        {% set mfm_breastDepth = x.animals['mfm'].breastDepth %}
+        {% set mfm_tailLength = x.animals['mfm'].tailLength %}
+        {% set mfm_litterGroup = x.animals['mfm'].litterGroup %}
+        {% set mfm_growth = x.animals['mfm'].growth %}
+        {% set mfm_muscleThickness = x.animals['mfm'].muscleThickness %}
+        {% set mfm_bodyFat = x.animals['mfm'].bodyFat %}
+        {% set mfm_vl = x.animals['mfm'].vl %}
+        {% set mfm_sl = x.animals['mfm'].sl %}
+
+        {# dates #}
+        {% if x.animals['mfm'].dateOfBirth == null %}
+            {% set mfm_dateOfBirth = '-' %}
+        {% else %}
+            {% set mfm_dateOfBirth = x.animals['mfm'].dateOfBirth|date('Y-m-d') %}
+        {% endif %}
+
+        {% if x.animals['mfm'].inspectionDate == null %}
+            {% set mfm_inspectionDate = '-' %}
+        {% else %}
+            {% set mfm_inspectionDate= x.animals['mfm'].inspectionDate|date('Y-m-d') %}
+        {% endif %}
+
+
+      {# mother's mother's father, 'mmf' #}
+
+        {% set mmf_gender = x.animals['mmf'].gender %}
+        {% set mmf_uln = x.animals['mmf'].uln %}
+        {% set mmf_pedigree = x.animals['mmf'].pedigree %}
+        {% set mmf_name = x.animals['mmf'].name %}
+        {% set mmf_scrapie = x.animals['mmf'].scrapie %}
+        {% set mmf_breedType = x.animals['mmf'].breedType %}
+        {% set mmf_breedCode = x.animals['mmf'].breedCode %}
+        {% set mmf_litterSize = x.animals['mmf'].litterSize %}
+        {% set mmf_litterGroup = x.animals['mmf'].litterGroup %}
+        {% set mmf_nLing = x.animals['mmf'].nLing %}
+        {% set mmf_blf = x.animals['mmf'].blindnessFactor %}
+        {% set mmf_predicate = x.animals['mmf'].predicate %}
+        {% set mmf_production = x.animals['mmf'].production %}
+
+        {# Measurements #}
+        {% set mmf_skull = x.animals['mmf'].skull %}
+        {% set mmf_development = x.animals['mmf'].development %}
+        {% set mmf_muscularity = x.animals['mmf'].muscularity %}
+        {% set mmf_proportion = x.animals['mmf'].proportion %}
+        {% set mmf_type = x.animals['mmf'].type %}
+        {% set mmf_legWork = x.animals['mmf'].legWork %}
+        {% set mmf_fur = x.animals['mmf'].fur %}
+        {% set mmf_generalAppearance = x.animals['mmf'].generalAppearance %}
+        {% set mmf_height = x.animals['mmf'].height %}
+        {% set mmf_torsoLength = x.animals['mmf'].torsoLength %}
+        {% set mmf_breastDepth = x.animals['mmf'].breastDepth %}
+        {% set mmf_tailLength = x.animals['mmf'].tailLength %}
+        {% set mmf_litterGroup = x.animals['mmf'].litterGroup %}
+        {% set mmf_growth = x.animals['mmf'].growth %}
+        {% set mmf_muscleThickness = x.animals['mmf'].muscleThickness %}
+        {% set mmf_bodyFat = x.animals['mmf'].bodyFat %}
+        {% set mmf_vl = x.animals['mmf'].vl %}
+        {% set mmf_sl = x.animals['mmf'].sl %}
+
+        {# dates #}
+        {% if x.animals['mmf'].dateOfBirth == null %}
+            {% set mmf_dateOfBirth = '-' %}
+        {% else %}
+            {% set mmf_dateOfBirth = x.animals['mmf'].dateOfBirth|date('Y-m-d') %}
+        {% endif %}
+
+        {% if x.animals['mmf'].inspectionDate == null %}
+            {% set mmf_inspectionDate = '-' %}
+        {% else %}
+            {% set mmf_inspectionDate= x.animals['mmf'].inspectionDate|date('Y-m-d') %}
+        {% endif %}
+
+
+      {# mother's mother's mother, 'mmm' #}
+
+        {% set mmm_gender = x.animals['mmm'].gender %}
+        {% set mmm_uln = x.animals['mmm'].uln %}
+        {% set mmm_pedigree = x.animals['mmm'].pedigree %}
+        {% set mmm_name = x.animals['mmm'].name %}
+        {% set mmm_scrapie = x.animals['mmm'].scrapie %}
+        {% set mmm_breedType = x.animals['mmm'].breedType %}
+        {% set mmm_breedCode = x.animals['mmm'].breedCode %}
+        {% set mmm_litterSize = x.animals['mmm'].litterSize %}
+        {% set mmm_litterGroup = x.animals['mmm'].litterGroup %}
+        {% set mmm_nLing = x.animals['mmm'].nLing %}
+        {% set mmm_blf = x.animals['mmm'].blindnessFactor %}
+        {% set mmm_predicate = x.animals['mmm'].predicate %}
+        {% set mmm_production = x.animals['mmm'].production %}
+
+        {# Measurements #}
+        {% set mmm_skull = x.animals['mmm'].skull %}
+        {% set mmm_development = x.animals['mmm'].development %}
+        {% set mmm_muscularity = x.animals['mmm'].muscularity %}
+        {% set mmm_proportion = x.animals['mmm'].proportion %}
+        {% set mmm_type = x.animals['mmm'].type %}
+        {% set mmm_legWork = x.animals['mmm'].legWork %}
+        {% set mmm_fur = x.animals['mmm'].fur %}
+        {% set mmm_generalAppearance = x.animals['mmm'].generalAppearance %}
+        {% set mmm_height = x.animals['mmm'].height %}
+        {% set mmm_torsoLength = x.animals['mmm'].torsoLength %}
+        {% set mmm_breastDepth = x.animals['mmm'].breastDepth %}
+        {% set mmm_tailLength = x.animals['mmm'].tailLength %}
+        {% set mmm_litterGroup = x.animals['mmm'].litterGroup %}
+        {% set mmm_growth = x.animals['mmm'].growth %}
+        {% set mmm_muscleThickness = x.animals['mmm'].muscleThickness %}
+        {% set mmm_bodyFat = x.animals['mmm'].bodyFat %}
+        {% set mmm_vl = x.animals['mmm'].vl %}
+        {% set mmm_sl = x.animals['mmm'].sl %}
+
+        {# dates #}
+        {% if x.animals['mmm'].dateOfBirth == null %}
+            {% set mmm_dateOfBirth = '-' %}
+        {% else %}
+            {% set mmm_dateOfBirth = x.animals['mmm'].dateOfBirth|date('Y-m-d') %}
+        {% endif %}
+
+        {% if x.animals['mmm'].inspectionDate == null %}
+            {% set mmm_inspectionDate = '-' %}
+        {% else %}
+            {% set mmm_inspectionDate= x.animals['mmm'].inspectionDate|date('Y-m-d') %}
+        {% endif %}
+
+
+{# PART 2: THE HTML/PDF OUTPUT #}
+
+        {# TODO #}
+
+        {% if loop.last == false %}
+            <footer></footer> {# necessary to enforce a pagebreak using css #}
+        {% endif %}
+
     {% endfor %}
 
 {% endblock %}
 
 {% block stylesheets %}
     <style>
-        .container {
-            width: 100%;
-            height: 100%;
-        }
-
-        .person-item {
-            float: left;
-            background: none;
-            border: 2px solid black;
-            width: 290px;
-            padding: 5px;
-            margin: 5px;
-        }
-
-        .animal-item {
-            float: left;
-            background: none;
-            border: 2px solid black;
-            width: 290px;
-            padding: 5px;
-            margin: 5px;
-        }
-
-        p {
-            font-size: small;
-        }
 
         /* Always insert a page break after each <footer> element (when printing) */
         @media print {
