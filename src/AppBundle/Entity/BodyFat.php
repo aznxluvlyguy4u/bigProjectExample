@@ -69,7 +69,7 @@ class BodyFat extends Measurement {
      *
      * @return BodyFat
      */
-    public function setAnimal(\AppBundle\Entity\BodyFat $animal = null)
+    public function setAnimal(\AppBundle\Entity\Animal $animal = null)
     {
         $this->animal = $animal;
 
