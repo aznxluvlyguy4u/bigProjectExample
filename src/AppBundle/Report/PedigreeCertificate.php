@@ -215,6 +215,8 @@ class PedigreeCertificate
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BLINDNESS_FACTOR] = '-';
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PREDICATE] = '-';
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PRODUCTION] = '-/-/-/-';
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NAME] = '-';
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NUMBER] = '-';
 
     }
 
