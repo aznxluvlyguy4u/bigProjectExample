@@ -415,4 +415,35 @@ class Utils
         }
     }
 
+    /**
+     * Replace null values and empty strings with replacement text.
+     * This only works with strings!
+     *
+     * @param string|null $value
+     * @return string
+     */
+    public static function fillNullOrEmptyString($value, $replacementText = "-")
+    {
+        if($value == null || $value == "") {
+            return $replacementText;
+        } else {
+            return $value;
+        }
+    }
+
+    /**
+     * Replace zeroes with replacement text.
+     *
+     * @param string|null $value
+     * @return string
+     */
+    public static function fillZero($value, $replacementText = "-")
+    {
+        if($value == 0 || $value == 0.0) {
+            return $replacementText;
+        } else {
+            return $value;
+        }
+    }
+    
 }
