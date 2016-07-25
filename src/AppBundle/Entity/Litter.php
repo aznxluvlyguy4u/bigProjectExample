@@ -87,6 +87,7 @@ class Litter {
      */
     public function __construct() {
         $this->children = new ArrayCollection();
+        $this->logDate = new \DateTime();
     }
 
     /**
