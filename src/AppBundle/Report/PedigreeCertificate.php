@@ -16,9 +16,12 @@ use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\MuscleThickness;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\TailLength;
+use AppBundle\Util\Translation;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManager;
+use Symfony\Component\CssSelector\XPath\Translator;
+use Symfony\Component\Translation\Loader\ArrayLoader;
 
 class PedigreeCertificate
 {
@@ -200,7 +203,7 @@ class PedigreeCertificate
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PEDIGREE] = Utils::fillNullOrEmptyString($animal->getPedigreeCountryCode().$animal->getPedigreeNumber());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::NAME] = Utils::fillNullOrEmptyString($animal->getName());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SCRAPIE] = Utils::fillNullOrEmptyString($animal->getScrapieGenotype(), '-/-');
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_TYPE] = Utils::fillNullOrEmptyString($animal->getBreedType());
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_TYPE] = Utils::fillNullOrEmptyString(Translation::translateBreedType($animal->getBreedType()));
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_CODE] = Utils::fillNullOrEmptyString($animal->getBreedCode());
 
         /* Dates. The null checks for dates are in the twig file, because it has to be combined with the formatting */
@@ -209,7 +212,7 @@ class PedigreeCertificate
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MEASUREMENT_DATE] = $latestExterior; //TODO
 
         /* variables translated to Dutch */
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENDER] = $this->getGenderInDutch($animal);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENDER] = Translation::getGenderInDutch($animal);
 
         //TODO Add these variables to the entities INCLUDING NULL CHECKS!!!
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BLINDNESS_FACTOR] = '-';
@@ -218,23 +221,6 @@ class PedigreeCertificate
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NAME] = '-';
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NUMBER] = '-';
 
-    }
-
-    /**
-     * @param Animal $animal
-     * @return string
-     */
-    private function getGenderInDutch(Animal $animal)
-    {
-        /* variables translated to Dutch */
-        if($animal->getGender() == 'Ram') {
-            $gender = 'Ram';
-        } elseif ($animal->getGender() == 'Ewe') {
-            $gender = 'Ooi';
-        } else {
-            $gender = 'Onbekend';
-        }
-        return $gender;
     }
 
 
