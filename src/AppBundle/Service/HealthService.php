@@ -90,4 +90,82 @@ class HealthService
             //do nothing
         }
     }
+
+    /**
+     * @param Location $location
+     */
+    public function fixLocationHealthMessagesWithNullValues(Location $location)
+    {
+        $em = $this->entityManager;
+
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('location', $location))
+            ->andWhere(Criteria::expr()->eq('maediVisna', null))
+            ->orWhere(Criteria::expr()->eq('scrapie', null))
+            ->orderBy(['arrivalDate' => Criteria::ASC]);
+
+        $locationHealthMessagesWithNull = $em->getRepository(LocationHealthMessage::class)
+            ->matching($criteria);
+
+
+        if($locationHealthMessagesWithNull->count() > 0) {
+
+            foreach ($locationHealthMessagesWithNull as $locationHealthMessage) {
+                $messageObject = $locationHealthMessage->getRequest();
+                if ($messageObject == null) {
+                    $em->remove($locationHealthMessage);
+                }
+            }
+            $em->flush();
+
+            foreach ($locationHealthMessagesWithNull as $locationHealthMessage) {
+                $messageObject = $locationHealthMessage->getRequest();
+
+                if($messageObject != null) {
+                    if($messageObject->getLocation() == null) {
+                        $messageObject->setLocation($location);
+                    }
+
+                    $this->updateLocationHealth($messageObject);
+                }
+            }
+
+        }
+    }
+
+    /**
+     * @param Location $location
+     */
+    public function fixArrivalsAndImportsWithoutLocationHealthMessage(Location $location)
+    {
+        $em = $this->entityManager;
+        
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('location', $location))
+            ->andWhere(Criteria::expr()->eq('healthMessage', null))
+            ->orderBy(['arrivalDate' => Criteria::ASC]);
+
+        $arrivalsWithoutLocationHealthMessage = $em->getRepository(DeclareArrival::class)
+            ->matching($criteria);
+
+        if($arrivalsWithoutLocationHealthMessage->count() > 0) {
+            foreach ($arrivalsWithoutLocationHealthMessage as $arrival) {
+                $this->updateLocationHealth($arrival);
+            }
+        }
+
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('location', $location))
+            ->andWhere(Criteria::expr()->eq('healthMessage', null))
+            ->orderBy(['importDate' => Criteria::ASC]);
+
+        $importsWithoutLocationHealthMessage = $em->getRepository(DeclareImport::class)
+            ->matching($criteria);
+
+        if($importsWithoutLocationHealthMessage->count() > 0) {
+            foreach ($importsWithoutLocationHealthMessage as $import) {
+                $this->updateLocationHealth($import);
+            }
+        }
+    }
 }
