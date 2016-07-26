@@ -7,6 +7,7 @@ use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
+use AppBundle\Entity\LocationHealthMessage;
 use AppBundle\Entity\MaediVisna;
 use AppBundle\Entity\Scrapie;
 use AppBundle\Enumerator\MaediVisnaStatus;
@@ -143,7 +144,7 @@ class LocationHealthUpdater
 
         //Hide/Deactivate all illness records after that one. Even for statuses that didn't change to simplify the logic.
         if($isDeclareInBase) {
-            self::hideAllFollowingIllnesses($em, $locationOfDestination, $latestActiveIllnessesDestination);
+            self::hideAllFollowingIllnesses($em, $locationOfDestination, $checkDate);
         }
 
         //Do the health check ...
@@ -371,13 +372,12 @@ class LocationHealthUpdater
      * @param Location $location
      * @param ArrayCollection $latestActiveIllnesses
      */
-    private static function hideAllFollowingIllnesses(ObjectManager $em, Location $location, ArrayCollection $latestActiveIllnesses)
+    private static function hideAllFollowingIllnesses(ObjectManager $em, Location $location, \DateTime $checkDate)
     {
-        $maediVisna = $latestActiveIllnesses->get(Constant::MAEDI_VISNA);
 
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
-            ->andWhere(Criteria::expr()->gt('checkDate', $maediVisna->getCheckDate()))
+            ->andWhere(Criteria::expr()->gt('checkDate', $checkDate))
             ->orderBy(['checkDate' => Criteria::ASC]);
 
         $maediVisnas = $em->getRepository('AppBundle:MaediVisna')
@@ -389,11 +389,9 @@ class LocationHealthUpdater
         }
         $em->flush();
 
-        $scrapie = $latestActiveIllnesses->get(Constant::SCRAPIE);
-
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
-            ->andWhere(Criteria::expr()->gt('checkDate', $scrapie->getCheckDate()))
+            ->andWhere(Criteria::expr()->gt('checkDate', $checkDate))
             ->orderBy(['checkDate' => Criteria::ASC]);
 
         $scrapies = $em->getRepository('AppBundle:Scrapie')
