@@ -97,12 +97,17 @@ abstract class Person implements UserInterface
    */
   private $cellphoneNumber;
 
-  public function __construct()
+  public function __construct($firstName = null, $lastName = null, $emailAddress = null,
+                              $password = '', $username = null, $cellphoneNumber = null)
   {
     $this->tokens = new ArrayCollection();
-    
-//    $this->accessToken = $accessToken;
-    $this->setPassword('');
+
+    $this->setFirstName($firstName);
+    $this->setLastName($lastName);
+    $this->setEmailAddress($emailAddress);
+    $this->setPassword($password);
+    $this->setUsername($username);
+    $this->setCellphoneNumber($cellphoneNumber);
     $this->setIsActive(true);
   }
 

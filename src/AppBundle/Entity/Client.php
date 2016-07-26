@@ -51,11 +51,13 @@ class Client extends Person
   /**
    * Constructor
    */
-  public function __construct()
+  public function __construct($firstName = null, $lastName = null, $emailAddress = null,
+                              $password = '', $username = null, $cellphoneNumber = null, $relationNumberKeeper = null)
   {
     //Call super constructor first
-    parent::__construct();
+    parent::__construct($firstName, $lastName, $emailAddress, $password, $username, $cellphoneNumber);
 
+    $this->setRelationNumberKeeper($relationNumberKeeper);
     $this->objectType = "Client";
     $this->companies = new ArrayCollection();
     $this->tags = new ArrayCollection();
