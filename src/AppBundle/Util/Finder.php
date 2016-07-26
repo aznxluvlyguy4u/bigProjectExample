@@ -51,51 +51,6 @@ class Finder
     }
 
     /**
-     * @param DeclareArrival|DeclareImport $declareIn
-     * @return int|null
-     */
-    public static function findLocationHealthMessageArrayKey($declareIn)
-    {
-        //returned in ascending order, ordered by arrivalDate/importDate
-        $locationHealthMessages = $declareIn->getLocation()->getHealthMessages();
-
-        $messageCount = $locationHealthMessages->count();
-        $requestId = $declareIn->getRequestId();
-
-        if ($messageCount == 0) {
-            return null;
-
-        } else {            
-            //Loop backwards to start from the most recent arrival/import
-            for ($i = $messageCount-1; $i >= 0; $i--) {
-                $locationHealthMessage = $locationHealthMessages->get($i);
-
-                if($requestId == $locationHealthMessage->getRequestId()) {
-                    return $i;
-                }
-            }
-
-            return null;
-        }
-    }
-
-    /**
-     * @param Collection $locationHealthMessages returned in ascending order, ordered by arrivalDate/importDate
-     * @param int $locationHealthMessageArrayKey
-     * @return ArrayCollection|null
-     */
-    public static function findIllnessesByArrayKey(Collection $locationHealthMessages, $locationHealthMessageArrayKey)
-    {
-        $locationHealthMessage = $locationHealthMessages->get($locationHealthMessageArrayKey);
-
-        $illnesses = new ArrayCollection();
-        $illnesses->set(Constant::MAEDI_VISNA, $locationHealthMessage->getMaediVisna());
-        $illnesses->set(Constant::SCRAPIE, $locationHealthMessage->getScrapie());
-
-        return $illnesses;
-    }
-
-    /**
      * @param Location $location
      * @return ArrayCollection
      */

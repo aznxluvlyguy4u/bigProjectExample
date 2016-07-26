@@ -45,10 +45,6 @@ class HealthService
     {
         $location = $declareInBase->getLocation();
 
-        $locationHealthMessages = $declareInBase->getLocation()->getHealthMessages(); //ordered ascending by checkDate
-        $baseKey = Finder::findLocationHealthMessageArrayKey($declareInBase); //found anti-chronologically by checkDate
-        $messageCount = $locationHealthMessages->count();
-
         //update locationHealth chronologically
         $isDeclareInBase = true;
         $this->updateLocationHealthByArrivalOrImport($location, $declareInBase, $isDeclareInBase);
@@ -64,8 +60,6 @@ class HealthService
                 ->andWhere(Criteria::expr()->eq('location', $location))
                 ->orderBy(['arrivalDate' => Criteria::ASC]);
         }
-
-
 
         $locationHealthMessages = $this->entityManager->getRepository('AppBundle:LocationHealthMessage')
             ->matching($criteria);
