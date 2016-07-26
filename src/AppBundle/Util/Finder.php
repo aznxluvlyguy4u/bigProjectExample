@@ -109,11 +109,23 @@ class Finder
             ->orderBy(['checkDate' => Criteria::DESC])
             ->setMaxResults(1);
 
-        $lastMaediVisna = $em->getRepository('AppBundle:MaediVisna')
-            ->matching($criteria)->get(0);
+        $lastMaediVisnaResults = $em->getRepository('AppBundle:MaediVisna')
+            ->matching($criteria);
 
-        $lastScrapie = $em->getRepository('AppBundle:Scrapie')
-            ->matching($criteria)->get(0);
+        if($lastMaediVisnaResults->count() > 0) {
+            $lastMaediVisna = $lastMaediVisnaResults->get(0);
+        } else {
+            $lastMaediVisna = null;
+        }
+
+        $lastScrapieResults = $em->getRepository('AppBundle:Scrapie')
+            ->matching($criteria);
+
+        if($lastScrapieResults->count() > 0) {
+            $lastScrapie = $lastScrapieResults->get(0);
+        } else {
+            $lastScrapie = null;
+        }
 
         $illnesses = new ArrayCollection();
         $illnesses->set(Constant::SCRAPIE, $lastScrapie);
