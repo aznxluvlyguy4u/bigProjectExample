@@ -8,6 +8,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
+use Doctrine\ORM\EntityManager;
 
 /**
  * Class AnimalOutput
@@ -16,14 +17,15 @@ class AnimalOutput
 {
     /**
      * @param Ram[]|Ewe[]|Neuter[] $animals
+     * @param EntityManager $em
      * @return array
      */
-    public static function createAnimalsArray($animals)
+    public static function createAnimalsArray($animals, EntityManager $em)
     {
         $animalsArray = array();
 
         foreach($animals as $animal) {
-            $animalsArray[] = self::createAnimalArray($animal);
+            $animalsArray[] = self::createAnimalArray($animal, $em);
         }
 
         return $animalsArray;
@@ -32,19 +34,20 @@ class AnimalOutput
 
     /**
      * @param Ram|Ewe|Neuter $animal
+     * @param EntityManager $em
      * @return array
      */
-    public static function createAnimalArray($animal)
+    public static function createAnimalArray($animal, EntityManager $em)
     {
 
-        $lastWeightMeasurement = Utils::returnLastWeightMeasurement($animal->getWeightMeasurements());
+        $lastWeightMeasurement = Utils::returnLastWeightMeasurement($animal, $em);
 
         if($lastWeightMeasurement == null){
             $weight = '';
             $weightMeasurementDate = '';
         } else {
             $weight = $lastWeightMeasurement->getWeight();
-            $weightMeasurementDate = $lastWeightMeasurement->getWeightMeasurementDate();
+            $weightMeasurementDate = $lastWeightMeasurement->getMeasurementDate();
         }
 
         $result = array("id" => $animal->getId(),

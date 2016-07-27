@@ -148,7 +148,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $animals = $this->getDoctrine()
         ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($location);
 
-    $minimizedOutput = AnimalOutput::createAnimalsArray($animals);
+    $minimizedOutput = AnimalOutput::createAnimalsArray($animals, $this->getDoctrine()->getEntityManager());
 
     return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
   }
