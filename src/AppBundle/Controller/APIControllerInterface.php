@@ -10,10 +10,10 @@ use Symfony\Component\HttpFoundation\Request;
 interface APIControllerInterface {
   /**
    * @param Request $request
-   * @param $token
+   * @param $tokenCode
    * @return mixed
    */
-  public function getAuthenticatedUser(Request $request, $token);
+  public function getAuthenticatedUser(Request $request, $tokenCode);
 
   /**
    * @param Request $request

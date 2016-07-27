@@ -79,7 +79,6 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     }
 
     //TODO Phase 2 Admin must be able to search all animals for which he is authorized.
-//    $x =  $this->getDoctrine()->getRepository('AppBundle:Employee')->findOneBy(array("accessToken" => $token));
 
     $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
     $client = $this->getAuthenticatedUser($request);
@@ -149,7 +148,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $animals = $this->getDoctrine()
         ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($location);
 
-    $minimizedOutput = AnimalOutput::createAnimalsArray($animals);
+    $minimizedOutput = AnimalOutput::createAnimalsArray($animals, $this->getDoctrine()->getEntityManager());
 
     return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
   }

@@ -1,16 +1,20 @@
 <?php
 
 namespace AppBundle\Component;
+use AppBundle\AppBundle;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthQueue;
 use AppBundle\Entity\AnimalResidence;
+use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightMeasurement;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\EntityManager;
 
 /**
  * Class Utils
@@ -21,6 +25,14 @@ use Doctrine\Common\Collections\Collection;
  */
 class Utils
 {
+    /**
+     * @return string
+     */
+    static function generateTokenCode()
+    {
+        return sha1(uniqid(rand(), true));
+    }
+
     /**
      * @param object $object
      * @return string
@@ -258,45 +270,30 @@ class Utils
     
     
     /**
-     * WeightMeasurement are sorted first by weightMeasurementDate and then on logDate
+     * Weights are sorted first by measurementDate and then on logDate
      *
-     * @param Collection $weightMeasurements
-     * @return WeightMeasurement|null
+     * @param Animal $animal
+     * @param EntityManager $em
+     * @return Weight|null
      */
-    public static function returnLastWeightMeasurement(Collection $weightMeasurements)
+    public static function returnLastWeightMeasurement(Animal $animal, EntityManager $em)
     {
-        if($weightMeasurements->count() == 0) {
-            return null;
+
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('animal', $animal))
+            ->orderBy(['measurementDate' => Criteria::DESC, 'logDate' => Criteria::DESC])
+            ->setMaxResults(1);
+
+        $weightMeasurementResult = $em->getRepository(Weight::class)
+            ->matching($criteria);
+
+        if($weightMeasurementResult->count() == 0) {
+            $weightMeasurement = null;
+        } else {
+            $weightMeasurement = $weightMeasurementResult->get(0);
         }
 
-        $length = $weightMeasurements->count();
-
-        $measurementsOnLastWeightMeasurementDate = new ArrayCollection();
-
-        //initialize values
-        $startIndex = 0;
-        $firstWeightMeasurement = $weightMeasurements->get($startIndex);
-        $latestWeightMeasurementDate = $firstWeightMeasurement->getWeightMeasurementDate();
-        $measurementsOnLastWeightMeasurementDate->add($firstWeightMeasurement);
-
-        //Gather the weightMeasurements with the latest weightMeasurementDate
-        for($i = $startIndex + 1; $i < $length; $i++) {
-
-            $weightMeasurement = $weightMeasurements->get($i);
-            $weightMeasurementDate = $weightMeasurement->getWeightMeasurementDate();
-
-            if($weightMeasurementDate > $latestWeightMeasurementDate) {
-                $measurementsOnLastWeightMeasurementDate->clear();
-                $measurementsOnLastWeightMeasurementDate->add($weightMeasurement);
-                $latestWeightMeasurementDate = $weightMeasurementDate;
-
-            } else if($weightMeasurementDate == $latestWeightMeasurementDate) {
-                $measurementsOnLastWeightMeasurementDate->add($weightMeasurement);
-            }
-        }
-
-        //Then find the one with the latest logDate
-        return self::returnLastItemFromCollectionByLogDate($measurementsOnLastWeightMeasurementDate);
+        return $weightMeasurement;
     }
 
     /**

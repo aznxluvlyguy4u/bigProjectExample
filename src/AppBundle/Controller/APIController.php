@@ -28,11 +28,13 @@ use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
+use AppBundle\Entity\Token;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Enumerator\TokenType;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Util\Finder;
@@ -198,24 +200,6 @@ class APIController extends Controller implements APIControllerInterface
   }
 
   /**
-   * @param $request
-   * @return JsonResponse|\AppBundle\Entity\Person|null|object
-   */
-  public function isTokenValid($request)
-  {
-    $token = $this->getToken($request);
-
-    $em = $this->getDoctrine()->getEntityManager();
-    $person = $em->getRepository('AppBundle:Person')
-        ->findOneBy(array('accessToken' => $token));
-    if($person == null) {
-      return new JsonResponse(array("errorCode" => 403, "errorMessage"=>"Forbidden"), 403);
-    }
-
-    return $person;
-  }
-
-  /**
    * @param $messageClassNameSpace
    * @param ArrayCollection $contentArray
    * @param $user
@@ -329,32 +313,67 @@ class APIController extends Controller implements APIControllerInterface
 
   /**
    * @param Request $request
-   * @param string $token
-   * @return Employee|Client|null
+   * @param string $tokenCode
+   * @return Client|null
    */
-  public function getAuthenticatedUser(Request $request= null, $token = null)
+  public function getAuthenticatedUser(Request $request= null, $tokenCode = null)
   {
-    if($token == null) {
-      $token = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
-    }
     $em = $this->getDoctrine()->getEntityManager();
 
-    return $em->getRepository('AppBundle:Person')->findOneBy(array("accessToken" => $token));
+    if($request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE) && $tokenCode == null) {
+      $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
+      $ghostToken = $em->getRepository(Token::class)->findOneBy(array("code" => $ghostTokenCode));
+
+      if($ghostToken != null) {
+        if($ghostToken->getIsVerified()) {
+          return $ghostToken->getOwner(); //client
+        }
+      }
+      return null;
+    }
+
+    if($tokenCode == null) {
+      $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
+    }
+
+    $token = $em->getRepository(Token::class)->findOneBy(array("code" => $tokenCode));
+    if($token != null) {
+      return $token->getOwner();
+    } else {
+      return null;
+      /* Note that returning null will break a lot of code in the controllers. That is why it is essential that both the AccessToken and _verified_ GhostToken
+        are validated in the TokenAuthenticator Prehook.
+      */
+    }
+
   }
 
   /**
    * @param Request $request
-   * @param string $token
+   * @param string $tokenCode
    * @return Employee|null
    */
-  public function getAuthenticatedEmployee(Request $request = null, $token = null)
+  public function getAuthenticatedEmployee(Request $request = null, $tokenCode = null)
   {
-    $person = $this->getAuthenticatedUser($request, $token);
-    if($person instanceof Employee) {
-      return $person;
-    } else {
-      return null;
+    $em = $this->getDoctrine()->getEntityManager();
+
+    if($tokenCode == null) {
+      $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
     }
+
+    $token = $em->getRepository(Token::class)->findOneBy(array("code" => $tokenCode));
+    if($token != null) {
+      $owner = $token->getOwner();
+      if($owner instanceof Employee) {
+        return $owner;
+      }
+    }
+    
+    return null;
+    /* Note that returning null will break a lot of code in the controllers. That is why it is essential that both the AccessToken and _verified_ GhostToken
+      are validated in the TokenAuthenticator Prehook.
+    */
+
   }
 
   public function isUlnOrPedigreeCodeValid(Request $request, $ulnCode = null)
@@ -602,29 +621,31 @@ class APIController extends Controller implements APIControllerInterface
 
     //Get token header to read token value
     if($request->headers->has(Constant::ACCESS_TOKEN_HEADER_NAMESPACE)) {
-      $token = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
+      $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
 
-      // A user was found with given token
-      if($this->getAuthenticatedUser($request, $token) != null) {
+      $token = $this->getDoctrine()->getRepository(Token::class)
+          ->findOneBy(array("code" => $tokenCode, "type" => TokenType::ACCESS));
+      
+      if($token != null) {
         $response = array(
-          'token_status' => 'valid',
-          'token' => $token
+            'token_status' => 'valid',
+            'token' => $tokenCode
         );
-
         return new JsonResponse($response, 200);
-      } else { // No user found for given token
+        
+      } else {
         $response = array(
-          'error'=> 401,
-          'errorMessage'=> 'No AccessToken provided'
+            'error'=> 401,
+            'errorMessage'=> 'No AccessToken provided'
         );
       }
+    } else {
+      //Mandatory AccessToken was not provided
+      $response = array(
+          'error'=> 401,
+          'errorMessage'=> 'Mandatory AccessToken header was not provided'
+      ); 
     }
-
-    //Mandatory AccessToken was not provided
-    $response = array(
-      'error'=> 401,
-      'errorMessage'=> 'Mandatory AccessToken header was not provided'
-    );
 
     return new JsonResponse($response, 401);
   }

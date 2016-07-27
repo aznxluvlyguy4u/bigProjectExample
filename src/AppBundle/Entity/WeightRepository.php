@@ -6,6 +6,6 @@ namespace AppBundle\Entity;
  * Class WeightRepository
  * @package AppBundle\Entity
  */
-class WeightRepository {
+class WeightRepository extends BaseRepository {
 
 }
