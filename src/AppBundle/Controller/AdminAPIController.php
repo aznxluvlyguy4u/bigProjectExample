@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
@@ -14,6 +15,7 @@ use AppBundle\Enumerator\TokenType;
 use AppBundle\Output\AccessLevelOverviewOutput;
 use AppBundle\Output\AdminOverviewOutput;
 use AppBundle\Validation\AdminValidator;
+use AppBundle\Validation\CreateAdminValidator;
 use AppBundle\Validation\EmployeeValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -58,6 +60,77 @@ class AdminAPIController extends APIController {
     if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
       return $adminValidator->createJsonErrorResponse();
     }
+    
+    $repository = $this->getDoctrine()->getRepository(Employee::class);
+
+    $admins = $repository->findAll();
+    $result = AdminOverviewOutput::createAdminsOverview($admins);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+  }
+
+
+  /**
+   *
+   * Create new Admins
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the admin that is registered with the API"
+   *     }
+   *   },
+   *
+   *   resource = true,
+   *   description = "Create new Admins",
+   *   output = "AppBundle\Entity\Employee"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("")
+   * @Method("POST")
+   */
+  public function createClient(Request $request)
+  {
+    $admin = $this->getAuthenticatedEmployee($request);
+    $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
+    if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
+      return $adminValidator->createJsonErrorResponse();
+    }
+
+    $em = $this->getDoctrine()->getEntityManager();
+    $content = $this->getContentAsArray($request);
+    $admins = $clients = $content->get(JsonInputConstant::ADMINS);
+
+    //Validate input
+    $inputValidator = new CreateAdminValidator($em, $admins);
+    if (!$inputValidator->getIsValid()) {
+      return $inputValidator->createJsonResponse();
+    }
+
+    foreach ($admins as $admin) {
+
+      $firstName = Utils::getNullCheckedArrayValue(JsonInputConstant::FIRST_NAME, $admin);
+      $lastName = Utils::getNullCheckedArrayValue(JsonInputConstant::LAST_NAME, $admin);
+      $emailAddress = Utils::getNullCheckedArrayValue(JsonInputConstant::EMAIL_ADDRESS, $admin);
+      $accessLevel = Utils::getNullCheckedArrayValue(JsonInputConstant::ACCESS_LEVEL, $admin);
+      
+      $newAdmin = new Employee($accessLevel, $firstName, $lastName, $emailAddress);
+
+      //Create a new password
+      $passwordLength = 9;
+      $newPassword = Utils::randomString($passwordLength);
+
+      $encoder = $this->get('security.password_encoder');
+      $encodedNewPassword = $encoder->encodePassword($newAdmin, $newPassword);
+      $newAdmin->setPassword($encodedNewPassword);
+      
+      $em->persist($newAdmin);
+    }
+    $em->flush();
     
     $repository = $this->getDoctrine()->getRepository(Employee::class);
 

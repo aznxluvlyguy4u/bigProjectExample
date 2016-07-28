@@ -11,6 +11,14 @@ class AccessLevelOverviewOutput
      */
     public static function create()
     {
+        return self::getTypes(); //for now the output is identical to an array of the types
+    }
+
+    /**
+     * @return array
+     */
+    public static function getTypes()
+    {
         $results = array();
 
         $results[] = AccessLevelType::ADMIN;
