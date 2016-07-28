@@ -436,7 +436,7 @@ class Utils
      */
     public static function fillZero($value, $replacementText = "-")
     {
-        if($value == 0 || $value == 0.0) {
+        if($value == 0 || $value == 0.0 || $value == null) {
             return $replacementText;
         } else {
             return $value;
