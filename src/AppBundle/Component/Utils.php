@@ -442,5 +442,39 @@ class Utils
             return $value;
         }
     }
-    
+
+    /**
+     * @param string $key
+     * @param array $array
+     * @return mixed|null
+     */
+    public static function getNullCheckedArrayValue($key, $array)
+    {
+        if(array_key_exists($key, $array)) {
+            $value = $array[$key];
+            if($value != null && $value != "") {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+
+    /**
+     * @param string $key
+     * @param ArrayCollection $array
+     * @return mixed|null
+     */
+    public static function getNullCheckedArrayCollectionValue($key, ArrayCollection $array)
+    {
+        if($array->containsKey($key)) {
+            $value = $array->get($key);
+            if($value != null && $value != "") {
+                return $value;
+            }
+        }
+
+        return null;
+    }
 }
