@@ -43,8 +43,15 @@ class JsonInputConstant
     const FIRST_NAME = 'first_name';
     const LAST_NAME = "last_name";
     const EMAIL_ADDRESS = "email_address";
+    const IS_PRIMARY_CONTACT_PERSON = "is_primary_contact_person";
+    const PREFIX = "prefix";
+    
     const PASSWORD = "password";
     const USERNAME = "username";
     const CELLPHONE_NUMBER = "cellphone_number";
     const RELATION_NUMBER_KEEPER = "relation_number_keeper";
+    
+    //Admins
+    const ADMINS = 'admins';
+    const ACCESS_LEVEL = 'access_level';
 }
