@@ -29,15 +29,7 @@ class AdminAPIController extends APIController {
   const timeLimitInMinutes = 3;
 
   /**
-   * Retrieve either a list of all Admins
-   * {
-   *    OPEN,
-   *    FINISHED,
-   *    FAILED,
-   *    CANCELLED,
-   *    REVOKING,
-   *    REVOKED
-   * }
+   * Retrieve a list of all Admins
    *
    * @ApiDoc(
    *   requirements={
@@ -45,12 +37,12 @@ class AdminAPIController extends APIController {
    *       "name"="AccessToken",
    *       "dataType"="string",
    *       "requirement"="",
-   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *       "description"="A valid accesstoken belonging to the admin that is registered with the API"
    *     }
    *   },
    *
    *   resource = true,
-   *   description = "Retrieve either a list of all Admins",
+   *   description = "Retrieve a list of all Admins",
    *   output = "AppBundle\Entity\Employee"
    * )
    * @param Request $request the request object
