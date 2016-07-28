@@ -139,7 +139,65 @@ class AdminAPIController extends APIController {
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
   }
-  
+
+
+  /**
+   * Deactivate a list of Admins
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the admin that is registered with the API"
+   *     }
+   *   },
+   *
+   *   resource = true,
+   *   description = "Deactivate a list of Admins",
+   *   output = "AppBundle\Entity\Employee"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-deactivate")
+   * @Method("PUT")
+   */
+  public function deactivateAdmins(Request $request)
+  {
+    $admin = $this->getAuthenticatedEmployee($request);
+    $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
+    if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
+      return $adminValidator->createJsonErrorResponse();
+    }
+
+    $em = $this->getDoctrine()->getEntityManager();
+    $repository = $this->getDoctrine()->getRepository(Employee::class);
+    
+    $content = $this->getContentAsArray($request);
+    $adminIds = $clients = $content->get(JsonInputConstant::ADMINS);
+
+    foreach ($adminIds as $id) {
+      $admin = $repository->find($id);
+      //Validate input
+      if($admin == null) {
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ADMIN NOT FOUND'), 428);
+      } else {
+        //deactivate
+        $admin->setIsActive(false);
+        $em->persist($admin);
+      }
+    }
+    $em->flush();
+
+    $repository = $this->getDoctrine()->getRepository(Employee::class);
+    $admins = $repository->findAll();
+    $result = AdminOverviewOutput::createAdminsOverview($admins);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+  }
+
+
   /**
    *
    * Get ghost accesstoken to 
