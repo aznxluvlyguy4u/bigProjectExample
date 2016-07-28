@@ -26,7 +26,7 @@ class AnimalDetailsOutput
      */
     public static function create(EntityManager $em, Animal $animal)
     {
-        $replacementString = strtoupper(Constant::UNKNOWN_NAMESPACE);
+        $replacementString = "";
 
         $mother = $animal->getParentMother();
         if($mother == null) {
