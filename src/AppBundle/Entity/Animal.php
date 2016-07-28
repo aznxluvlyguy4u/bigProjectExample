@@ -422,6 +422,13 @@ abstract class Animal
     protected $litter;
 
     /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    protected $note;
+
+    /**
      * Animal constructor.
      */
     public function __construct() {
@@ -1711,5 +1718,22 @@ abstract class Animal
         $this->breeder = $breeder;
     }
 
+    /**
+     * @return string
+     */
+    public function getNote()
+    {
+        return $this->note;
+    }
 
+    /**
+     * @param string $note
+     */
+    public function setNote($note)
+    {
+        $this->note = $note;
+    }
+
+    
+    
 }
