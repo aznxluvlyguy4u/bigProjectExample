@@ -9,7 +9,10 @@ use AppBundle\Entity\Company;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\Token;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\TokenType;
+use AppBundle\Output\AdminOverviewOutput;
+use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\EmployeeValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -25,6 +28,52 @@ class AdminAPIController extends APIController {
 
   const timeLimitInMinutes = 3;
 
+  /**
+   * Retrieve either a list of all Admins
+   * {
+   *    OPEN,
+   *    FINISHED,
+   *    FAILED,
+   *    CANCELLED,
+   *    REVOKING,
+   *    REVOKED
+   * }
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *
+   *   resource = true,
+   *   description = "Retrieve either a list of all Admins",
+   *   output = "AppBundle\Entity\Employee"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("")
+   * @Method("GET")
+   */
+  public function getAdmins(Request $request)
+  {
+    $admin = $this->getAuthenticatedEmployee($request);
+    $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
+    if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
+      return $adminValidator->createJsonErrorResponse();
+    }
+    
+    $repository = $this->getDoctrine()->getRepository(Employee::class);
+
+    $admins = $repository->findAll();
+    $result = AdminOverviewOutput::createAdminsOverview($admins);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+  }
+  
   /**
    *
    * Get ghost accesstoken to 
