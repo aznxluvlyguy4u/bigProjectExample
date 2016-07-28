@@ -11,6 +11,7 @@ use AppBundle\Entity\Person;
 use AppBundle\Entity\Token;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\TokenType;
+use AppBundle\Output\AccessLevelOverviewOutput;
 use AppBundle\Output\AdminOverviewOutput;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\EmployeeValidator;
@@ -225,5 +226,41 @@ class AdminAPIController extends APIController {
     }
     
     return new JsonResponse("ok", 200);
+  }
+
+
+  /**
+   * Retrieve a list of all Admin access level types
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the admin that is registered with the API"
+   *     }
+   *   },
+   *
+   *   resource = true,
+   *   description = "Retrieve a list of all Admin access level types",
+   *   output = "AppBundle\Entity\Employee"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-access-levels")
+   * @Method("GET")
+   */
+  public function getAccessLevelTypes(Request $request)
+  {
+    $admin = $this->getAuthenticatedEmployee($request);
+    $adminValidator = new AdminValidator($admin);
+    if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
+      return $adminValidator->createJsonErrorResponse();
+    }
+
+    $result = AccessLevelOverviewOutput::create();
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
   }
 }
