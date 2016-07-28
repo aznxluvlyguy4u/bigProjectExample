@@ -42,13 +42,20 @@ class Employee extends Person
     private $ghostTokens;
 
     /**
-     * Constructor
+     * Employee constructor.
      * @param string $accessLevel use the AccessLevelType enumerator values to set the accessLevel
+     * @param string $firstName
+     * @param string $lastName
+     * @param string $emailAddress
+     * @param string $password
+     * @param string $username
+     * @param string $cellphoneNumber
      */
-    public function __construct($accessLevel)
+    public function __construct($accessLevel, $firstName = null, $lastName = null, $emailAddress = null,
+                              $password = '', $username = null, $cellphoneNumber = null)
     {
         //Call super constructor first
-        parent::__construct();
+        parent::__construct($firstName, $lastName, $emailAddress, $password = '', $username, $cellphoneNumber);
 
         $this->accessLevel = $accessLevel;
         $this->objectType = "Employee";
