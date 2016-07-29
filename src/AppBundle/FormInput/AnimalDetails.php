@@ -23,8 +23,8 @@ class AnimalDetails
     {
         //The ULN should be changed using a separate process, TagReplace (Omnummering).
 
-        $animal->setPedigreeCountryCode($content->get(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE));
-        $animal->setPedigreeNumber($content->get(Constant::PEDIGREE_NUMBER_NAMESPACE));
+        //The PedigreeNumber = BreederNumber('A2C4E6')+AnimalOrderNumber+(12345),
+        //So it is better to auto-generate it from those two variables and NOT make it editable
 
         //Edit
         /*
