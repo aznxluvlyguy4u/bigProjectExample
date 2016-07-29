@@ -20,6 +20,8 @@ class ReportLabel
 
     //Address
     const ADDRESS = 'address';
+    const POSTAL_CODE = 'postalCode';
+    const POSTAL_CODE_BREEDER = 'postalCodeBreeder';
     const ADDRESS_BREEDER = 'addressBreeder';
     const UBN = 'ubn';
 

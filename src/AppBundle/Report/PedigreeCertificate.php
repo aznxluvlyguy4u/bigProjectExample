@@ -56,6 +56,13 @@ class PedigreeCertificate
         $this->data[ReportLabel::OWNER] = $client;
         $this->data[ReportLabel::OWNER_NAME] = $client->getFirstName() . " " . $client->getLastName();
         $this->data[ReportLabel::ADDRESS] = $location->getCompany()->getAddress();
+        $postalCode = $location->getCompany()->getAddress()->getPostalCode();
+        if($postalCode != null && $postalCode != '' && $postalCode != ' ') {
+            $postalCode = substr($postalCode, 0 ,4).' '.substr($postalCode, 4);
+        } else {
+            $postalCode = '-';
+        }
+        $this->data[ReportLabel::POSTAL_CODE] = $postalCode;
         $this->data[ReportLabel::UBN] = $location->getUbn();
 
         //TODO Phase 2: Add breeder information
@@ -66,9 +73,16 @@ class PedigreeCertificate
         $emptyAddress->setStreetName('-');
         $emptyAddress->setAddressNumber('-');
         $emptyAddress->setAddressNumberSuffix('-');
-        $emptyAddress->setPostalCode('-');
         $emptyAddress->setCity('-');
+        $emptyAddress->setPostalCode('-');
+        $postalCode = '-'; //TODO enter a real postalCode here later
+        if($postalCode != null && $postalCode != '' && $postalCode != ' ') {
+            $postalCode = substr($postalCode, 0 ,4).' '.substr($postalCode, 4);
+        } else {
+            $postalCode = '-';
+        }
         $this->data[ReportLabel::ADDRESS_BREEDER] = $emptyAddress; //TODO pass real Address entity
+        $this->data[ReportLabel::POSTAL_CODE_BREEDER] = $postalCode; //TODO pass real Address entity //TODO Add a space between number and last two letters in postalCode
         $this->data[ReportLabel::BREEDER_NUMBER] = '-'; //TODO pass real breeder number
 
         $keyAnimal = ReportLabel::CHILD_KEY;
