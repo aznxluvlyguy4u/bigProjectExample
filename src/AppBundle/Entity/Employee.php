@@ -157,4 +157,28 @@ class Employee extends Person
 
     
 
+
+    /**
+     * Add ghostToken
+     *
+     * @param \AppBundle\Entity\Token $ghostToken
+     *
+     * @return Employee
+     */
+    public function addGhostToken(\AppBundle\Entity\Token $ghostToken)
+    {
+        $this->ghostTokens[] = $ghostToken;
+
+        return $this;
+    }
+
+    /**
+     * Remove ghostToken
+     *
+     * @param \AppBundle\Entity\Token $ghostToken
+     */
+    public function removeGhostToken(\AppBundle\Entity\Token $ghostToken)
+    {
+        $this->ghostTokens->removeElement($ghostToken);
+    }
 }
