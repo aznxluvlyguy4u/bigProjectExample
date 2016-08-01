@@ -4,6 +4,7 @@ namespace AppBundle\Output;
 
 
 use AppBundle\Entity\DeclareArrival;
+use Doctrine\ORM\EntityManager;
 
 /**
  * Class DeclareArrivalOutput
@@ -14,7 +15,7 @@ class DeclareArrivalOutput extends Output
      * @param DeclareArrival $arrival
      * @return array
      */
-    public static function createPostRequestArray(DeclareArrival $arrival)
+    public static function createPostRequestArray(EntityManager $em, DeclareArrival $arrival)
     {
         $animal = $arrival->getAnimal();
         if($animal != null) {
@@ -23,7 +24,7 @@ class DeclareArrivalOutput extends Output
             $animalId = null;
         }
 
-        self::setUbnAndLocationHealthValues($arrival->getLocation());
+        self::setUbnAndLocationHealthValues($em, $arrival->getLocation());
 
         $result = array("id" => $arrival->getId(),
             "message_id" => $arrival->getMessageId(),
@@ -66,10 +67,10 @@ class DeclareArrivalOutput extends Output
     }
 
 
-    public static function createUpdateRequestArray(DeclareArrival $arrival)
+    public static function createUpdateRequestArray(EntityManager $em, DeclareArrival $arrival)
     {
         //At this moment the update array is identical to post array
-        return self::createPostRequestArray($arrival);
+        return self::createPostRequestArray($em, $arrival);
     }
 
 

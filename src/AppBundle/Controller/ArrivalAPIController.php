@@ -242,6 +242,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     $client = $this->getAuthenticatedUser($request);
     $location = $this->getSelectedLocation($request);
+    $content->set(Constant::LOCATION_NAMESPACE, $location);
 
     //verify requestId for arrivals
     $messageObject = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivalByRequestId($location, $requestId);
