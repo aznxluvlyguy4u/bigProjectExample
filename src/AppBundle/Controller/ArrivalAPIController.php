@@ -170,6 +170,12 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
                                 "message" => "PEDIGREE VALUE IS NOT REGISTERED WITH NSFO"), 428);
     }
 
+
+    //LocationHealth null value fixes
+    $this->getHealthService()->fixLocationHealthMessagesWithNullValues($location);
+    $this->getHealthService()->fixArrivalsAndImportsWithoutLocationHealthMessage($location);
+    
+
     $isImportAnimal = $content->get(Constant::IS_IMPORT_ANIMAL);
 
     //Convert the array into an object and add the mandatory values retrieved from the database
