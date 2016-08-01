@@ -30,6 +30,14 @@ abstract class Person implements UserInterface
   /**
    * @var string
    *
+   * @ORM\Column(type="string", nullable=true)
+   * @JMS\Type("string")
+   */
+  protected $personId;
+
+  /**
+   * @var string
+   *
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
@@ -110,7 +118,7 @@ abstract class Person implements UserInterface
                               $password = '', $username = null, $cellphoneNumber = null)
   {
     $this->tokens = new ArrayCollection();
-
+    
     $this->setFirstName($firstName);
     $this->setLastName($lastName);
     $this->setEmailAddress($emailAddress);
@@ -119,6 +127,7 @@ abstract class Person implements UserInterface
     $this->setCellphoneNumber($cellphoneNumber);
     $this->setIsActive(true);
 
+    $this->setPersonId(Utils::generatePersonId());
     $this->setAccessToken(Utils::generateTokenCode());
   }
 
@@ -428,6 +437,24 @@ abstract class Person implements UserInterface
   {
     $this->prefix = $prefix;
   }
+
+  /**
+   * @return string
+   */
+  public function getPersonId()
+  {
+    return $this->personId;
+  }
+
+  /**
+   * @param string $personId
+   */
+  public function setPersonId($personId)
+  {
+    $this->personId = $personId;
+  }
+
+
 
 
 

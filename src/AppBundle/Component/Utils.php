@@ -34,6 +34,15 @@ class Utils
     }
 
     /**
+     * @return string
+     */
+    static function generatePersonId()
+    {
+        return sha1(uniqid(rand(), true));
+    }
+
+
+    /**
      * @param object $object
      * @return string
      */
