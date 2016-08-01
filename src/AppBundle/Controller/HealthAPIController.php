@@ -45,12 +45,13 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
     $client = $this->getAuthenticatedUser($request);
     //TODO if ubn is in header change route and use $location = $this->getSelectedLocation($request);
     $location = $this->getLocationByUbn($client, $ubn);
+    $em = $this->getDoctrine()->getEntityManager();
 
     if($location == null) {
       $errorMessage = "No Location found with ubn: " . $ubn;
       return new JsonResponse(array('code'=>428, "message" => $errorMessage), 428);
     }
-    $outputArray = HealthOutput::create($client, $location);
+    $outputArray = HealthOutput::create($em, $client, $location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
   }

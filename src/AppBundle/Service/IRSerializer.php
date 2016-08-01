@@ -186,15 +186,15 @@ class IRSerializer implements IRSerializerInterface
         //Retrieve animal entity
         if($isEditMessage) {
             $requestId = $declareArrivalContentArray['request_id'];
-            $declareArrivalRequest = $this->entityManager->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivalByRequestId($client, $requestId);
+            $location = $declareArrivalContentArray[Constant::LOCATION_NAMESPACE];
+            $declareArrivalRequest = $this->entityManager->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivalByRequestId($location, $requestId);
+            $requestState = $declareArrivalRequest->getRequestState();
 
             //Update values here
             $declareArrivalRequest->setArrivalDate(new \DateTime($declareArrivalContentArray['arrival_date']));
             $ubnPreviousOwner = $declareArrivalContentArray['ubn_previous_owner'];
             $declareArrivalRequest->setUbnPreviousOwner($ubnPreviousOwner);
-            $declareArrivalRequest->setRequestState(RequestStateType::OPEN);
 
-            $requestState = $declareArrivalContentArray['request_state'];
             if(Utils::hasSuccessfulLastResponse($requestState)) {
                 $declareArrivalRequest->setRecoveryIndicator(RecoveryIndicatorType::J);
                 $lastResponse = Utils::returnLastResponse($declareArrivalRequest->getResponses());
@@ -204,7 +204,8 @@ class IRSerializer implements IRSerializerInterface
             } else {
                 $declareArrivalRequest->setRecoveryIndicator(RecoveryIndicatorType::N);
             }
-            
+            $declareArrivalRequest->setRequestState(RequestStateType::OPEN);
+
         } else {
             $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray);
 

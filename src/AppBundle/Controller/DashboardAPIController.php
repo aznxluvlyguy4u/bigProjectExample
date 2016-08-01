@@ -37,7 +37,9 @@ class DashboardAPIController extends APIController {
     $declarationLogDate = $this->getDoctrine()->getRepository(Constant::DECLARE_BASE_REPOSITORY)
         ->getLatestLogDatesForDashboardDeclarationsPerLocation($location, $errorMessageForDateIsNull);
 
-    $outputArray = DashboardOutput::create($client, $declarationLogDate, $location);
+    $em = $this->getDoctrine()->getEntityManager();
+    
+    $outputArray = DashboardOutput::create($em, $client, $declarationLogDate, $location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
   }

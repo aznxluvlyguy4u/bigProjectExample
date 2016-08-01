@@ -260,7 +260,7 @@ class APIController extends Controller implements APIControllerInterface
     $repository = $this->getDoctrine()->getRepository(Utils::getRepositoryNameSpace($messageObject));
 
     //create array and jsonMessage
-    $messageArray = RequestMessageOutputBuilder::createOutputArray($messageObject, $isUpdate);
+    $messageArray = RequestMessageOutputBuilder::createOutputArray($doctrine->getEntityManager(), $messageObject, $isUpdate);
 
     if($messageArray == null) {
       //These objects do not have a customized minimal json output for the queue yet

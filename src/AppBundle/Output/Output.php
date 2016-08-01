@@ -1,8 +1,11 @@
 <?php
 
 namespace AppBundle\Output;
+use AppBundle\Constant\Constant;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
+use AppBundle\Util\Finder;
+use Doctrine\ORM\EntityManager;
 
 /**
  * Class Output
@@ -54,7 +57,7 @@ abstract class Output
     /**
      * @param Location $location
      */
-    protected static function setUbnAndLocationHealthValues(Location $location = null)
+    protected static function setUbnAndLocationHealthValues(EntityManager $em, Location $location = null)
     {
         if($location != null) {
             self::$ubn = $location->getUbn();
@@ -66,6 +69,8 @@ abstract class Output
         }
 
 
+        $lastIllnesses = Finder::findLatestActiveIllnessesOfLocation($location, $em);
+
         $scrapieStatus = null;
         $scrapieEndDate = null;
 
@@ -73,14 +78,14 @@ abstract class Output
         $maediVisnaEndDate = null;
 
         if(self::$locationHealth != null) {
-            $lastScrapie = self::$locationHealth->getScrapies()->last();
+
+            $lastScrapie = $lastIllnesses[Constant::SCRAPIE];
             if($lastScrapie != null) {
                 $scrapieStatus = $lastScrapie->getStatus();
                 $scrapieEndDate = $lastScrapie->getEndDate();
             }
 
-            $lastMaediVisna = self::$locationHealth->getMaediVisnas()->last();
-
+            $lastMaediVisna = $lastIllnesses[Constant::MAEDI_VISNA];
             if($lastMaediVisna != null) {
                 $maediVisnaStatus = $lastMaediVisna->getStatus();
                 $maediVisnaEndDate = $lastMaediVisna->getEndDate();

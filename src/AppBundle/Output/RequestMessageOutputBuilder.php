@@ -5,10 +5,11 @@ namespace AppBundle\Output;
 
 use AppBundle\Component\Utils;
 use AppBundle\Enumerator\RequestType;
+use Doctrine\ORM\EntityManager;
 
 class RequestMessageOutputBuilder
 {
-    public static function createOutputArray($messageObject, $isUpdate = false)
+    public static function createOutputArray(EntityManager $em, $messageObject, $isUpdate = false)
     {
         $entityNameSpace = Utils::getClassName($messageObject);
 
@@ -29,16 +30,16 @@ class RequestMessageOutputBuilder
 
             case RequestType::DECLARE_ARRIVAL_ENTITY:
                 if($isUpdate) {
-                    return DeclareArrivalOutput::createUpdateRequestArray($messageObject);
+                    return DeclareArrivalOutput::createUpdateRequestArray($em, $messageObject);
                 } else {
-                    return DeclareArrivalOutput::createPostRequestArray($messageObject);
+                    return DeclareArrivalOutput::createPostRequestArray($em, $messageObject);
                 }
 
             case RequestType::DECLARE_BIRTH_ENTITY:
                 if($isUpdate) {
-                    return DeclareBirthOutput::createUpdateRequestArray($messageObject);
+                    return DeclareBirthOutput::createUpdateRequestArray($messageObject); //TODO Input EntityManager here!
                 } else {
-                    return DeclareBirthOutput::createPostRequestArray($messageObject);
+                    return DeclareBirthOutput::createPostRequestArray($messageObject); //TODO Input EntityManager here!
                 }
 
             case RequestType::DECLARE_DEPART_ENTITY:
@@ -71,9 +72,9 @@ class RequestMessageOutputBuilder
 
             case RequestType::DECLARE_IMPORT_ENTITY:
                 if($isUpdate) {
-                    return DeclareImportOutput::createUpdateRequestArray($messageObject);
+                    return DeclareImportOutput::createUpdateRequestArray($em, $messageObject);
                 } else {
-                    return DeclareImportOutput::createPostRequestArray($messageObject);
+                    return DeclareImportOutput::createPostRequestArray($em, $messageObject);
                 }
 
             case RequestType::RETRIEVE_TAGS_ENTITY:
