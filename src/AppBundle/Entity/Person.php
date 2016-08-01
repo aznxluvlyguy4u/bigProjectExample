@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Component\Utils;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
@@ -25,6 +26,14 @@ abstract class Person implements UserInterface
    * @ORM\GeneratedValue(strategy="AUTO")
    */
   protected $id;
+
+  /**
+   * @var string
+   *
+   * @ORM\Column(type="string", nullable=true)
+   * @JMS\Type("string")
+   */
+  protected $personId;
 
   /**
    * @var string
@@ -95,13 +104,21 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string", nullable=true)
    * @JMS\Type("string")
    */
+  protected $prefix;
+
+  /**
+   * @var string
+   *
+   * @ORM\Column(type="string", nullable=true)
+   * @JMS\Type("string")
+   */
   private $cellphoneNumber;
 
   public function __construct($firstName = null, $lastName = null, $emailAddress = null,
                               $password = '', $username = null, $cellphoneNumber = null)
   {
     $this->tokens = new ArrayCollection();
-
+    
     $this->setFirstName($firstName);
     $this->setLastName($lastName);
     $this->setEmailAddress($emailAddress);
@@ -109,6 +126,9 @@ abstract class Person implements UserInterface
     $this->setUsername($username);
     $this->setCellphoneNumber($cellphoneNumber);
     $this->setIsActive(true);
+
+    $this->setPersonId(Utils::generatePersonId());
+    $this->setAccessToken(Utils::generateTokenCode());
   }
 
   /**
@@ -401,5 +421,41 @@ abstract class Person implements UserInterface
   {
     $this->tokens->removeElement($token);
   }
+
+  /**
+   * @return string
+   */
+  public function getPrefix()
+  {
+    return $this->prefix;
+  }
+
+  /**
+   * @param string $prefix
+   */
+  public function setPrefix($prefix)
+  {
+    $this->prefix = $prefix;
+  }
+
+  /**
+   * @return string
+   */
+  public function getPersonId()
+  {
+    return $this->personId;
+  }
+
+  /**
+   * @param string $personId
+   */
+  public function setPersonId($personId)
+  {
+    $this->personId = $personId;
+  }
+
+
+
+
 
 }

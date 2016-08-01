@@ -34,6 +34,15 @@ class Utils
     }
 
     /**
+     * @return string
+     */
+    static function generatePersonId()
+    {
+        return sha1(uniqid(rand(), true));
+    }
+
+
+    /**
      * @param object $object
      * @return string
      */
@@ -436,11 +445,45 @@ class Utils
      */
     public static function fillZero($value, $replacementText = "-")
     {
-        if($value == 0 || $value == 0.0) {
+        if($value == 0 || $value == 0.0 || $value == null) {
             return $replacementText;
         } else {
             return $value;
         }
     }
-    
+
+    /**
+     * @param string $key
+     * @param array $array
+     * @return mixed|null
+     */
+    public static function getNullCheckedArrayValue($key, $array)
+    {
+        if(array_key_exists($key, $array)) {
+            $value = $array[$key];
+            if($value != null && $value != "") {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+
+    /**
+     * @param string $key
+     * @param ArrayCollection $array
+     * @return mixed|null
+     */
+    public static function getNullCheckedArrayCollectionValue($key, ArrayCollection $array)
+    {
+        if($array->containsKey($key)) {
+            $value = $array->get($key);
+            if($value != null && $value != "") {
+                return $value;
+            }
+        }
+
+        return null;
+    }
 }
