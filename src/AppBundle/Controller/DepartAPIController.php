@@ -217,7 +217,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     //NOTE!!! Don't try to verify any animals directly. Because they will have the isDeparted=true state.
     //Verify this request using the requestId
     $animal = $content->get(Constant::ANIMAL_NAMESPACE);
-    //TODO verify if Updated request had was successful or not. DON'T Update successful departs and imports! They have to be revoked. And posted as a new request.
+    //TODO verify if Updated request had was successful or not and set RecoveryIndicator accordingly
 
     $isExportAnimal = $content['is_export_animal'];
 
@@ -225,11 +225,11 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
     if($isExportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $declareExportUpdate = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $location);
+      $declareExportUpdate = $this->buildEditMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $location);
 
-      $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY);
-      $messageObject = $entityManager->updateDeclareExportMessage($declareExportUpdate, $location, $Id);
-
+//      $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY);
+//      $messageObject = $entityManager->updateDeclareExportMessage($declareExportUpdate, $location, $Id);
+dump($declareExportUpdate);die;
       if($messageObject == null) {
         return new JsonResponse(array("message"=>"No DeclareExport found with request_id: " . $Id), 204);
       }

@@ -20,6 +20,8 @@ class ReportLabel
 
     //Address
     const ADDRESS = 'address';
+    const POSTAL_CODE = 'postalCode';
+    const POSTAL_CODE_BREEDER = 'postalCodeBreeder';
     const ADDRESS_BREEDER = 'addressBreeder';
     const UBN = 'ubn';
 
@@ -41,6 +43,7 @@ class ReportLabel
     const N_LING = 'nLing';
     const SCRAPIE = 'scrapie';
     const PRODUCTION = 'production';
+    const BREED = 'breed';
     const BREED_TYPE = 'breedType';
     const BREED_CODE = 'breedCode';
     const INSPECTION_DATE = 'inspectionDate';
