@@ -379,6 +379,14 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @Expose
      */
+    protected $breed;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
     protected $breedType;
 
     /**
@@ -1544,6 +1552,22 @@ abstract class Animal
     public function getWeightMeasurements()
     {
         return $this->weightMeasurements;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBreed()
+    {
+        return $this->breed;
+    }
+
+    /**
+     * @param string $breed
+     */
+    public function setBreed($breed)
+    {
+        $this->breed = $breed;
     }
 
     /**

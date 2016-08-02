@@ -7,6 +7,7 @@ use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
+use AppBundle\Entity\LocationHealthMessage;
 use AppBundle\Entity\MaediVisna;
 use AppBundle\Entity\Scrapie;
 use AppBundle\Enumerator\MaediVisnaStatus;
@@ -96,18 +97,39 @@ class LocationHealthUpdater
                 ->setMaxResults(1);
         }
 
-        $previousHealthMessage = $em->getRepository('AppBundle:LocationHealthMessage')
+        $previousHealthMessageResults = $em->getRepository('AppBundle:LocationHealthMessage')
             ->matching($criteria);
 
+        if($previousHealthMessageResults->count() > 0) {
+            $previousHealthMessage = $previousHealthMessageResults->get(0);
+        } else {
+            $previousHealthMessage = null;
+        }
 
-        if($previousHealthMessage->isEmpty()) {
-            $latestActiveIllnessesDestination = Finder::findLatestActiveIllnessesOfLocation($locationOfDestination, $em);
+        if($previousHealthMessage == null) {
+            $latestActiveIllnessesDestination = self::persistNewIllnessesOfLocationIfLatestAreNull($em, $locationOfDestination, $checkDate); //includes a null check
             $previousMaediVisnaDestination = $latestActiveIllnessesDestination->get(Constant::MAEDI_VISNA);
             $previousScrapieDestination = $latestActiveIllnessesDestination->get(Constant::SCRAPIE);
+
         } else {
-            $previousMaediVisnaDestination = $previousHealthMessage->get(0)->getMaediVisna();
-            $previousScrapieDestination = $previousHealthMessage->get(0)->getScrapie();
-            $latestActiveIllnessesDestination = new ArrayCollection();
+            $previousMaediVisnaDestination = $previousHealthMessage->getMaediVisna();
+            $previousScrapieDestination = $previousHealthMessage->getScrapie();
+
+            $latestActiveIllnessesDestination = Finder::findLatestActiveIllnessesOfLocation($locationOfDestination, $em); //returns null values if null
+            if($previousMaediVisnaDestination == null) {
+                $previousMaediVisnaDestination = $latestActiveIllnessesDestination->get(Constant::MAEDI_VISNA);
+                if($previousMaediVisnaDestination == null) {
+                    $previousMaediVisnaDestination = self::persistNewDefaultMaediVisna($em, $locationOfDestination->getLocationHealth(), $checkDate);
+                }
+            }
+
+            if($previousScrapieDestination == null) {
+                $previousScrapieDestination = $latestActiveIllnessesDestination->get(Constant::SCRAPIE);
+                if($previousScrapieDestination == null) {
+                    $previousScrapieDestination = self::persistNewDefaultScrapie($em, $locationOfDestination->getLocationHealth(), $checkDate);
+                }
+            }
+
             $latestActiveIllnessesDestination->set(Constant::MAEDI_VISNA, $previousMaediVisnaDestination);
             $latestActiveIllnessesDestination->set(Constant::SCRAPIE, $previousScrapieDestination);
         }
@@ -122,7 +144,7 @@ class LocationHealthUpdater
 
         //Hide/Deactivate all illness records after that one. Even for statuses that didn't change to simplify the logic.
         if($isDeclareInBase) {
-            self::hideAllFollowingIllnesses($em, $locationOfDestination, $latestActiveIllnessesDestination);
+            self::hideAllFollowingIllnesses($em, $locationOfDestination, $checkDate);
         }
 
         //Do the health check ...
@@ -193,6 +215,23 @@ class LocationHealthUpdater
         $em->persist($location);
         $em->persist($locationHealthMessage);
         $em->flush();
+    }
+
+    private static function persistNewIllnessesOfLocationIfLatestAreNull(ObjectManager $em, Location $locationOfDestination, \DateTime $checkDate)
+    {
+        $latestActiveIllnessesDestination = Finder::findLatestActiveIllnessesOfLocation($locationOfDestination, $em);
+        $previousMaediVisnaDestination = $latestActiveIllnessesDestination->get(Constant::MAEDI_VISNA);
+        $previousScrapieDestination = $latestActiveIllnessesDestination->get(Constant::SCRAPIE);
+
+        if($previousMaediVisnaDestination == null){
+            $previousMaediVisnaDestination = self::persistNewDefaultMaediVisna($em, $locationOfDestination->getLocationHealth(), $checkDate);
+            $latestActiveIllnessesDestination->set(Constant::MAEDI_VISNA, $previousMaediVisnaDestination);
+        }
+        if($previousScrapieDestination == null){
+            $previousScrapieDestination = self::persistNewDefaultScrapie($em, $locationOfDestination->getLocationHealth(), $checkDate);
+            $latestActiveIllnessesDestination->set(Constant::SCRAPIE, $previousScrapieDestination);
+        }
+        return $latestActiveIllnessesDestination;
     }
 
     /**
@@ -333,13 +372,12 @@ class LocationHealthUpdater
      * @param Location $location
      * @param ArrayCollection $latestActiveIllnesses
      */
-    private static function hideAllFollowingIllnesses(ObjectManager $em, Location $location, ArrayCollection $latestActiveIllnesses)
+    private static function hideAllFollowingIllnesses(ObjectManager $em, Location $location, \DateTime $checkDate)
     {
-        $maediVisna = $latestActiveIllnesses->get(Constant::MAEDI_VISNA);
 
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
-            ->andWhere(Criteria::expr()->gt('checkDate', $maediVisna->getCheckDate()))
+            ->andWhere(Criteria::expr()->gt('checkDate', $checkDate))
             ->orderBy(['checkDate' => Criteria::ASC]);
 
         $maediVisnas = $em->getRepository('AppBundle:MaediVisna')
@@ -351,11 +389,9 @@ class LocationHealthUpdater
         }
         $em->flush();
 
-        $scrapie = $latestActiveIllnesses->get(Constant::SCRAPIE);
-
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
-            ->andWhere(Criteria::expr()->gt('checkDate', $scrapie->getCheckDate()))
+            ->andWhere(Criteria::expr()->gt('checkDate', $checkDate))
             ->orderBy(['checkDate' => Criteria::ASC]);
 
         $scrapies = $em->getRepository('AppBundle:Scrapie')

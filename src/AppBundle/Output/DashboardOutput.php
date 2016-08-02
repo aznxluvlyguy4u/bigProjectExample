@@ -7,6 +7,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Enumerator\RequestType;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\EntityManager;
 
 
 /**
@@ -20,13 +21,13 @@ class DashboardOutput extends Output
      * @param Location $location
      * @return array
      */
-    public static function create(Client $client, ArrayCollection $declarationLogDate, $location)
+    public static function create(EntityManager $em, Client $client, ArrayCollection $declarationLogDate, $location)
     {
         $liveStockCount = Count::getLiveStockCountLocation($location);
         $errorCounts = Count::getErrorCountDeclarationsPerLocation($location);
         $unassignedTagsCount = Count::getUnassignedTagsCount($client);
 
-        self:: setUbnAndLocationHealthValues($location);
+        self:: setUbnAndLocationHealthValues($em, $location);
 
         $result = array(
                   "introduction" => "Welkom! Geniet van ons nieuw systeem.",
