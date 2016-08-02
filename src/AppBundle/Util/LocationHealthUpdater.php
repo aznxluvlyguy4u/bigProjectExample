@@ -335,12 +335,12 @@ class LocationHealthUpdater
 
         } else {
 
-            $maediVisnaDestination = $locationHealthDestination->getMaediVisnas()->last();
+            $maediVisnaDestination = Finder::findLatestActiveMaediVisna($locationOfDestination, $em);
             if ($maediVisnaDestination == null) {
                 self::persistNewDefaultMaediVisna($em, $locationHealthDestination, $checkDate);
             }
 
-            $scrapieDestination = $locationHealthDestination->getScrapies()->last();
+            $scrapieDestination = Finder::findLatestActiveScrapie($locationOfDestination, $em);
             if ($scrapieDestination == null) {
                 self::persistNewDefaultScrapie($em, $locationHealthDestination, $checkDate);
             }
