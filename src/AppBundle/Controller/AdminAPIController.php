@@ -178,7 +178,7 @@ class AdminAPIController extends APIController {
     $adminIds = $clients = $content->get(JsonInputConstant::ADMINS);
 
     foreach ($adminIds as $id) {
-      $admin = $repository->find($id);
+      $admin = $repository->findOneBy(['personId' => $id]);
       //Validate input
       if($admin == null) {
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ADMIN NOT FOUND'), 428);
@@ -189,8 +189,7 @@ class AdminAPIController extends APIController {
       }
     }
     $em->flush();
-
-    $repository = $this->getDoctrine()->getRepository(Employee::class);
+    
     $admins = $repository->findAll();
     $result = AdminOverviewOutput::createAdminsOverview($admins);
 
