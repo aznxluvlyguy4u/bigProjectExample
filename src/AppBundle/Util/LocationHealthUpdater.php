@@ -164,13 +164,22 @@ class LocationHealthUpdater
 
         } else { //location of origin is known and in the NSFO database
 
-            $locationOfOrigin = self::persistInitialLocationHealthIfNull($em, $locationOfOrigin, $checkDate);
-
             $locationHealthOrigin = $locationOfOrigin->getLocationHealth();
-            $maediVisnaOrigin = $locationHealthOrigin->getMaediVisnas()->last();
-            $scrapieOrigin = $locationHealthOrigin->getScrapies()->last();
-            $maediVisnaOriginIsHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($maediVisnaOrigin->getStatus());
-            $scrapieOriginIsHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieOrigin->getStatus());
+
+            $maediVisnaOrigin = Finder::findLatestActiveMaediVisna($locationOfOrigin, $em);
+            if($maediVisnaOrigin != null) {
+                $maediVisnaOriginIsHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($maediVisnaOrigin->getStatus());
+            } else {
+                $maediVisnaOriginIsHealthy = false;
+            }
+
+            $scrapieOrigin = Finder::findLatestActiveScrapie($locationOfOrigin, $em);
+            if($scrapieOrigin != null) {
+                $scrapieOriginIsHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieOrigin->getStatus());
+            } else {
+                $scrapieOriginIsHealthy = false;
+            }
+
 
             if(!$maediVisnaOriginIsHealthy && $previousMaediVisnaDestinationIsHealthy){
                 $latestMaediVisnaDestination = self::persistNewDefaultMaediVisna($em, $locationHealthDestination, $checkDate);
