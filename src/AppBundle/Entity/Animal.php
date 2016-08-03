@@ -134,7 +134,7 @@ abstract class Animal
      *
      * @var ArrayCollection
      *
-     * @ORM\ManyToMany(targetEntity="Neuter")
+     * @ORM\ManyToMany(targetEntity="Animal")
      * @ORM\JoinTable(name="animal_parents",
      *      joinColumns={@ORM\JoinColumn(name="animal_id", referencedColumnName="id")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="parents_id", referencedColumnName="id", unique=false)}
