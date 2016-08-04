@@ -3,7 +3,10 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Location;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Output\HealthOutput;
+use AppBundle\Validation\AdminValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -42,16 +45,20 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
    */
   public function getHealthByLocation(Request $request, $ubn) {
 
-    $client = $this->getAuthenticatedUser($request);
-    //TODO if ubn is in header change route and use $location = $this->getSelectedLocation($request);
-    $location = $this->getLocationByUbn($client, $ubn);
+    $admin = $this->getAuthenticatedEmployee($request);
+    $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
+    if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
+      return $adminValidator->createJsonErrorResponse();
+    }
+
     $em = $this->getDoctrine()->getEntityManager();
+    $location = $em->getRepository(Location::class)->findByUbn($ubn);
 
     if($location == null) {
       $errorMessage = "No Location found with ubn: " . $ubn;
       return new JsonResponse(array('code'=>428, "message" => $errorMessage), 428);
     }
-    $outputArray = HealthOutput::create($em, $client, $location);
+    $outputArray = HealthOutput::create($em, $location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
   }
