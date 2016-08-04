@@ -10,6 +10,7 @@ use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthMessage;
+use AppBundle\Entity\MaediVisna;
 use AppBundle\Entity\Scrapie;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
@@ -64,6 +65,11 @@ class Finder
     }
 
 
+    /**
+     * @param Location $location
+     * @param ObjectManager $em
+     * @return MaediVisna|null
+     */
     public static function findLatestActiveMaediVisna(Location $location, ObjectManager $em)
     {
         $locationHealth = $location->getLocationHealth();
@@ -90,6 +96,12 @@ class Finder
         return $lastMaediVisna;
     }
 
+
+    /**
+     * @param Location $location
+     * @param ObjectManager $em
+     * @return Scrapie|null
+     */
     public static function findLatestActiveScrapie(Location $location, ObjectManager $em)
     {
         $locationHealth = $location->getLocationHealth();
