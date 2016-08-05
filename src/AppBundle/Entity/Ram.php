@@ -505,4 +505,106 @@ class Ram extends Animal
     {
         return $this->parentNeuter;
     }
+
+    /**
+     * Add fat1Measurement
+     *
+     * @param \AppBundle\Entity\Fat1 $fat1Measurement
+     *
+     * @return Ram
+     */
+    public function addFat1Measurement(\AppBundle\Entity\Fat1 $fat1Measurement)
+    {
+        $this->fat1Measurements[] = $fat1Measurement;
+
+        return $this;
+    }
+
+    /**
+     * Remove fat1Measurement
+     *
+     * @param \AppBundle\Entity\Fat1 $fat1Measurement
+     */
+    public function removeFat1Measurement(\AppBundle\Entity\Fat1 $fat1Measurement)
+    {
+        $this->fat1Measurements->removeElement($fat1Measurement);
+    }
+
+    /**
+     * Get fat1Measurements
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getFat1Measurements()
+    {
+        return $this->fat1Measurements;
+    }
+
+    /**
+     * Add fat2Measurement
+     *
+     * @param \AppBundle\Entity\Fat2 $fat2Measurement
+     *
+     * @return Ram
+     */
+    public function addFat2Measurement(\AppBundle\Entity\Fat2 $fat2Measurement)
+    {
+        $this->fat2Measurements[] = $fat2Measurement;
+
+        return $this;
+    }
+
+    /**
+     * Remove fat2Measurement
+     *
+     * @param \AppBundle\Entity\Fat2 $fat2Measurement
+     */
+    public function removeFat2Measurement(\AppBundle\Entity\Fat2 $fat2Measurement)
+    {
+        $this->fat2Measurements->removeElement($fat2Measurement);
+    }
+
+    /**
+     * Get fat2Measurements
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getFat2Measurements()
+    {
+        return $this->fat2Measurements;
+    }
+
+    /**
+     * Add fat3Measurement
+     *
+     * @param \AppBundle\Entity\Fat3 $fat3Measurement
+     *
+     * @return Ram
+     */
+    public function addFat3Measurement(\AppBundle\Entity\Fat3 $fat3Measurement)
+    {
+        $this->fat3Measurements[] = $fat3Measurement;
+
+        return $this;
+    }
+
+    /**
+     * Remove fat3Measurement
+     *
+     * @param \AppBundle\Entity\Fat3 $fat3Measurement
+     */
+    public function removeFat3Measurement(\AppBundle\Entity\Fat3 $fat3Measurement)
+    {
+        $this->fat3Measurements->removeElement($fat3Measurement);
+    }
+
+    /**
+     * Get fat3Measurements
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getFat3Measurements()
+    {
+        return $this->fat3Measurements;
+    }
 }

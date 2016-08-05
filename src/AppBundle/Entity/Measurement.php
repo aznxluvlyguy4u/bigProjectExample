@@ -12,6 +12,9 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * @ORM\DiscriminatorMap({"BodyFat" = "BodyFat",
+ *                        "Fat1" = "Fat1",
+ *                        "Fat2" = "Fat2",
+ *                        "Fat3" = "Fat3",
  *                        "MuscleThickness" = "MuscleThickness",
  *                        "TailLength" = "TailLength",
  *                        "Weight" = "Weight",
