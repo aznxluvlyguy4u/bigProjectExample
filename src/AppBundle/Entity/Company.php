@@ -7,7 +7,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use \DateTime;
 use AppBundle\Entity\Person;
+use AppBundle\Entity\Invoice;
+use AppBundle\Entity\Location;
 
 /**
  * Class Company
@@ -16,77 +19,85 @@ use AppBundle\Entity\Person;
  */
 class Company
 {
-  /**
-   * @ORM\Column(type="integer")
-   * @ORM\Id
-   * @ORM\GeneratedValue(strategy="AUTO")
-   */
-  protected $id;
+    /**
+    * @ORM\Column(type="integer")
+    * @ORM\Id
+    * @ORM\GeneratedValue(strategy="AUTO")
+    */
+    protected $id;
 
-  /**
-   * @var string
-   *
-   * @ORM\Column(type="string", nullable=true)
-   * @JMS\Type("string")
-   */
-  private $companyName;
+    /**
+    * @var string
+    *
+    * @ORM\Column(type="string", nullable=true)
+    * @JMS\Type("string")
+    */
+    private $debtorNumber;
 
-  /**
-   * @var string
-   *
-   * @ORM\Column(type="string", nullable=true)
-   * @JMS\Type("string")
-   */
-  private $vatNumber;
+    /**
+    * @var string
+    *
+    * @ORM\Column(type="string", nullable=true)
+    * @JMS\Type("string")
+    */
+    private $companyName;
 
-  /**
-   * @var string
-   *
-   * @ORM\Column(type="string", nullable=true)
-   * @JMS\Type("string")
-   */
-  private $chamberOfCommerceNumber;
+    /**
+    * @var string
+    *
+    * @ORM\Column(type="string", nullable=true)
+    * @JMS\Type("string")
+    */
+    private $vatNumber;
 
-  /**
-   * @var string
-   *
-   * @ORM\Column(type="string", nullable=true)
-   * @JMS\Type("string")
-   */
-  private $companyRelationNumber;
+    /**
+    * @var string
+    *
+    * @ORM\Column(type="string", nullable=true)
+    * @JMS\Type("string")
+    */
+    private $chamberOfCommerceNumber;
 
-  /**
-   * @var ArrayCollection
-   *
-   * @ORM\OneToMany(targetEntity="Location", mappedBy="company", cascade={"persist"})
-   * @JMS\Type("AppBundle\Entity\Location")
-   */
-  private $locations;
+    /**
+    * @var string
+    *
+    * @ORM\Column(type="string", nullable=true)
+    * @JMS\Type("string")
+    */
+    private $companyRelationNumber;
 
-  /**
-   * @var Client
-   *
-   * @Assert\NotBlank
-   * @ORM\ManyToOne(targetEntity="Client", inversedBy="companies", cascade={"persist"})
-   * @JMS\Type("AppBundle\Entity\Client")
-   */
-  protected $owner;
+    /**
+    * @var ArrayCollection
+    *
+    * @ORM\OneToMany(targetEntity="Location", mappedBy="company", cascade={"persist"})
+    * @JMS\Type("AppBundle\Entity\Location")
+    */
+    private $locations;
 
-  /**
-   * @var CompanyAddress
-   *
-   * @Assert\NotBlank
-   * @ORM\OneToOne(targetEntity="CompanyAddress", cascade={"persist"})
-   * @JMS\Type("AppBundle\Entity\CompanyAddress")
-   */
-  private $address;
+    /**
+    * @var Client
+    *
+    * @Assert\NotBlank
+    * @ORM\ManyToOne(targetEntity="Client", inversedBy="companies", cascade={"persist"})
+    * @JMS\Type("Client")
+    */
+    protected $owner;
 
-  /**
-   * @var BillingAddress
-   * @ORM\OneToOne(targetEntity="BillingAddress", cascade={"persist"})
-   * @JMS\Type("AppBundle\Entity\BillingAddress")
-   */
-  private $billingAddress;
+    /**
+    * @var CompanyAddress
+    *
+    * @Assert\NotBlank
+    * @ORM\OneToOne(targetEntity="CompanyAddress", cascade={"persist"})
+    * @JMS\Type("AppBundle\Entity\CompanyAddress")
+    */
+    private $address;
+
+    /**
+    * @var BillingAddress
+    * @ORM\OneToOne(targetEntity="BillingAddress", cascade={"persist"})
+    * @JMS\Type("AppBundle\Entity\BillingAddress")
+    */
+    private $billingAddress;
 
     /**
      * @var string
@@ -95,6 +106,55 @@ class Company
      * @JMS\Type("string")
      */
     private $telephoneNumber;
+
+    /**
+     * @var DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    private $subscriptionDate;
+
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $animalHealthSubscription;
+
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", options={"default":true})
+     * @JMS\Type("boolean")
+     */
+    private $isActive;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="Invoice", mappedBy="company")
+     * @JMS\Type("array")
+     */
+    private $invoices;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="Client", mappedBy="employer")
+     * @JMS\Type("array")
+     */
+    private $companyUsers;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="Pedigree", mappedBy="company")
+     * @JMS\Type("array")
+     */
+    private $pedigrees;
 
     /**
      * @var string
@@ -128,12 +188,21 @@ class Company
      */
     private $veterinarianEmailAddress;
 
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $notes;
+
   /**
    * Company constructor.
    */
   public function __construct()
   {
     $this->locations = new ArrayCollection();
+    $this->companyUsers = new ArrayCollection();
   }
 
 
@@ -178,7 +247,7 @@ class Company
      *
      * @return Company
      */
-    public function addLocation(\AppBundle\Entity\Location $location)
+    public function addLocation(Location $location)
     {
         $this->locations[] = $location;
 
@@ -190,7 +259,7 @@ class Company
      *
      * @param \AppBundle\Entity\Location $location
      */
-    public function removeLocation(\AppBundle\Entity\Location $location)
+    public function removeLocation(Location $location)
     {
         $this->locations->removeElement($location);
     }
@@ -408,5 +477,148 @@ class Company
 
 
 
+    /**
+     * @return string
+     */
+    public function getDebtorNumber()
+    {
+        return $this->debtorNumber;
+    }
 
+    /**
+     * @param string $debtorNumber
+     */
+    public function setDebtorNumber($debtorNumber)
+    {
+        $this->debtorNumber = $debtorNumber;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getSubscriptionDate()
+    {
+        return $this->subscriptionDate;
+    }
+
+    /**
+     * @param DateTime $subscriptionDate
+     */
+    public function setSubscriptionDate($subscriptionDate)
+    {
+        $this->subscriptionDate = $subscriptionDate;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getAnimalHealthSubscription()
+    {
+        return $this->animalHealthSubscription;
+    }
+
+    /**
+     * @param mixed $animalHealthSubscription
+     */
+    public function setAnimalHealthSubscription($animalHealthSubscription)
+    {
+        $this->animalHealthSubscription = $animalHealthSubscription;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isActive()
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param boolean $isActive
+     */
+    public function setIsActive($isActive)
+    {
+        $this->isActive = $isActive;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getInvoices()
+    {
+        return $this->invoices;
+    }
+
+    /**
+     * @param ArrayCollection $invoices
+     */
+    public function setInvoices($invoices)
+    {
+        $this->invoices = $invoices;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getCompanyUsers()
+    {
+        return $this->companyUsers;
+    }
+
+    /**
+     * Add companyUser
+     *
+     * @param Client $user
+     *
+     * @return Company
+     */
+    public function addCompanyUser(Client $user)
+    {
+        $this->companyUsers[] = $user;
+
+        return $this;
+    }
+
+    /**
+     * Remove companyUser
+     *
+     * @param Client $user
+     */
+    public function removeCompanyUser(Client $user)
+    {
+        $this->companyUsers->removeElement($user);
+    }
+
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getPedigrees()
+    {
+        return $this->pedigrees;
+    }
+
+    /**
+     * @param ArrayCollection $pedigrees
+     */
+    public function setPedigrees($pedigrees)
+    {
+        $this->pedigrees = $pedigrees;
+    }
+
+    /**
+     * @return string
+     */
+    public function getNotes()
+    {
+        return $this->notes;
+    }
+
+    /**
+     * @param string $notes
+     */
+    public function setNotes($notes)
+    {
+        $this->notes = $notes;
+    }
 }

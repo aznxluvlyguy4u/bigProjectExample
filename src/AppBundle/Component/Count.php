@@ -4,6 +4,8 @@ namespace AppBundle\Component;
 
 
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Company;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -507,6 +509,129 @@ class Count
         $count->set(LiveStockType::ADULT, $nonPedigreeAdults + $pedigreeAdults);
         $count->set(LiveStockType::LAMB, $nonPedigreeLambs + $pedigreeLambs);
         $count->set(LiveStockType::TOTAL, $nonPedigreeTotal + $pedigreeTotal);
+
+        return $count;
+    }
+
+    /**
+     * Return an ArrayCollection with keys:
+     * - ram
+     * - ewe
+     * - total
+     * having an integer value for the amount of animals in that category.
+     *
+     * @param Company $company
+     * @return ArrayCollection
+     */
+    public static function getCompanyLiveStockCount(Company $company)
+    {
+
+        //Settings
+        $isAlive = true;
+        $isDepartedOption = false;
+        $isExportedOption = false;
+        $countTransferring = false;
+
+        if($countTransferring) {
+            $transferState = AnimalTransferStatus::TRANSFERRING;
+        } else {
+            $transferState = AnimalTransferStatus::NULL;
+        }
+
+        //Initialize counters
+        $ramUnderSix = 0;
+        $ramBetweenSixAndTwelve = 0;
+        $ramOverTwelve = 0;
+
+        $eweUnderSix = 0;
+        $eweBetweenSixAndTwelve = 0;
+        $eweOverTwelve = 0;
+
+        $neuterUnderSix = 0;
+        $neuterBetweenSixAndTwelve = 0;
+        $neuterOverTwelve = 0;
+
+
+        foreach($company->getLocations() as $location) {
+            foreach($location->getAnimals() as $animal) {
+
+                /**
+                 * @var Animal $animal
+                 */
+
+                $isOwnedAnimal = $animal->getIsAlive() == $isAlive
+                    && $animal->getIsExportAnimal() == $isExportedOption
+                    && $animal->getIsDepartedAnimal() == $isDepartedOption
+                    && ($animal->getTransferState() == AnimalTransferStatus::NULL
+                        || $animal->getTransferState() == $transferState);
+
+                $dateOfBirth = $animal->getDateOfBirth();
+
+                // TODO Change Gender when switching to CLASS based distinction
+                $gender = $animal->getGender();
+
+                $ageLimitYoungerSix = Utils::getDateLimitForAge(1, false);
+                $ageLimitOlderTwelve = Utils::getDateLimitForAge(1, false);
+
+
+                if($isOwnedAnimal) {
+                    if($gender == 'MALE') {
+                       if($dateOfBirth < $ageLimitYoungerSix) {
+                           $ramUnderSix++;
+                       }
+                       if($dateOfBirth >= $ageLimitYoungerSix && $dateOfBirth <= $ageLimitOlderTwelve) {
+                           $ramBetweenSixAndTwelve++;
+                       }
+                       if($dateOfBirth > $ageLimitOlderTwelve) {
+                           $ramOverTwelve++;
+                       }
+                    }
+                    if($gender == 'FEMALE') {
+                        if($dateOfBirth < $ageLimitYoungerSix) {
+                            $eweUnderSix++;
+                        }
+                        if($dateOfBirth >= $ageLimitYoungerSix && $dateOfBirth <= $ageLimitOlderTwelve) {
+                            $eweBetweenSixAndTwelve++;
+                        }
+                        if($dateOfBirth > $ageLimitOlderTwelve) {
+                            $eweOverTwelve++;
+                        }
+                    }
+                    if($gender == 'NEUTER') {
+                        if($dateOfBirth < $ageLimitYoungerSix) {
+                            $neuterUnderSix++;
+                        }
+                        if($dateOfBirth >= $ageLimitYoungerSix && $dateOfBirth <= $ageLimitOlderTwelve) {
+                            $neuterBetweenSixAndTwelve++;
+                        }
+                        if($dateOfBirth > $ageLimitOlderTwelve) {
+                            $neuterOverTwelve++;
+                        }
+                    }
+                }
+
+            }
+        }
+
+        $ramTotal = $ramUnderSix + $ramBetweenSixAndTwelve + $ramOverTwelve;
+        $eweTotal = $eweUnderSix + $eweBetweenSixAndTwelve + $eweOverTwelve;
+        $neuterTotal = $neuterUnderSix + $neuterBetweenSixAndTwelve + $neuterOverTwelve;
+
+        $count = new ArrayCollection();
+        $count->set("RAM_TOTAL", $ramTotal);
+        $count->set("RAM_UNDER_SIX", $ramUnderSix);
+        $count->set("RAM_BETWEEN_SIX_AND_TWELVE", $ramBetweenSixAndTwelve);
+        $count->set("RAM_OVER_TWELVE", $ramBetweenSixAndTwelve);
+
+        $count->set("EWE_TOTAL", $eweTotal);
+        $count->set("EWE_UNDER_SIX", $eweUnderSix);
+        $count->set("EWE_BETWEEN_SIX_AND_TWELVE", $eweBetweenSixAndTwelve);
+        $count->set("EWE_OVER_TWELVE", $eweBetweenSixAndTwelve);
+
+        $count->set("NEUTER_TOTAL", $neuterTotal);
+        $count->set("NEUTER_UNDER_SIX", $neuterUnderSix);
+        $count->set("NEUTER_BETWEEN_SIX_AND_TWELVE", $neuterBetweenSixAndTwelve);
+        $count->set("NEUTER_OVER_TWELVE", $neuterBetweenSixAndTwelve);
 
         return $count;
     }
