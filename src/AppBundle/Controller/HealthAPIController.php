@@ -5,7 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AccessLevelType;
-use AppBundle\FormInput\LocationHealth;
+use AppBundle\FormInput\LocationHealthEditor;
 use AppBundle\Output\HealthOutput;
 use AppBundle\Validation\AdminValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -91,7 +91,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
     }
     
     $content = $this->getContentAsArray($request);    
-    $location = LocationHealth::update($em, $location, $content); //includes persisting changes
+    $location = LocationHealthEditor::edit($em, $location, $content); //includes persisting changes
     
     $outputArray = HealthOutput::create($em, $location);
 
