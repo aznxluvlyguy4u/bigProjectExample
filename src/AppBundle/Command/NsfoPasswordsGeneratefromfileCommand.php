@@ -2,96 +2,104 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Component\Utils;
+use AppBundle\Entity\Client;
+use AppBundle\Util\CommandUtil;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\Question;
 
+/**
+ * Class NsfoPasswordsGeneratefromfileCommand
+ * @package AppBundle\Command
+ */
 class NsfoPasswordsGeneratefromfileCommand extends ContainerAwareCommand
 {
+    const DEFAULT_PASSWORD = 'nsf0nline123!';
+    const PASSWORD_LENGTH = 9;
+
     protected function configure()
     {
         $this
             ->setName('nsfo:passwords:generatefromfile')
-            ->setDescription('...')
-            ->addArgument('argument', InputArgument::OPTIONAL, 'Argument description')
+            ->setDescription('Change the passwords of clients, by a text file containing their emails')
             ->addOption('option', null, InputOption::VALUE_NONE, 'Option description')
         ;
     }
 
+    /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $argument = $input->getArgument('argument');
+        $helper = $this->getHelper('question');
+        $cmdUtil = new CommandUtil($input, $output, $helper);
 
-        if ($input->getOption('option')) {
-            // ...
-        }
+        //Print intro
+        $output->writeln(CommandUtil::generateTitle('Change client passwords from list of email adresses in a text file'));
 
-        //ACTIVATE THE DESIRED PATH
-//    $sourceFilePath = '/home/data/JVT/projects/NSFO/Migratie/FirstEmailList/nsfo_passwords_2016-08-04_NieuweEmailAdressen_GebruikersMetUbn';
-//    $sourceFilePath = '/home/data/JVT/projects/NSFO/Migratie/FirstEmailList/nsfo_passwords_2016-08-04_NieuweEmailAdressen_GebruikersZonderUbn';
-        $sourceFilePath = '/home/data/JVT/projects/NSFO/Migratie/FirstEmailList/nsfo_passwords_2016-08-04_NieuweEmailAdressen_GebruikersZonderUbn2';
+        //Source file input
+        $sourceFilePath = $cmdUtil->generateQuestion('Please enter inputfile path (containing the email addresses of the clients)',
+                                                     '/tmp/nsfo_passwords.txt');
 
-        $changedPasswordsPath = '/home/data/JVT/projects/NSFO/Migratie/FirstEmailList/dump/nsfo_changed_passwords.txt';
-        $missingClientsPath = '/home/data/JVT/projects/NSFO/Migratie/FirstEmailList/dump/nsfo_changed_passwords_missing_clients.txt';
+        //Output folder input
+        $outputFolderPath = $cmdUtil->generateQuestion('Please enter output folder path', '/tmp/dump-clients/');
+        $changedPasswordsPath = $outputFolderPath.'/nsfo_changed_passwords.txt';
+        $missingClientsPath = $outputFolderPath.'/nsfo_changed_passwords_missing_clients.txt';
         
         $em = $this->getContainer()->get('doctrine.orm.entity_manager');
 
         $fileContents = file_get_contents($sourceFilePath);
-        $data = explode(" nsf0nline123!", $fileContents);
+        $data = explode(" ".self::DEFAULT_PASSWORD, $fileContents);
         $arrayOfEmails = array();
         foreach ($data as $email) {
-            $email = str_replace(array(' ', "\n", "\t", "\r", "nsf0nline123!"), '', $email);
-
-            if($email == 'weggemansa@kpnmail.nl ') {
-                $email = 'weggemansa@kpnmail.nl';
-            }
+            $email = str_replace(array(' ', "\n", "\t", "\r", self::DEFAULT_PASSWORD), '', $email);
 
             if($email != ''){
                 $arrayOfEmails[] = $email;
             }
         }
 
-//    foreach ($arrayOfEmails as $email){
-//      dump($email);
-//    }die;
+        //Confirmation Check
+        if(!$cmdUtil->generateConfirmationQuestion('Reset client passwords?')){
+            $output->writeln('=== PROCESS ABORTED ===');
+            return; //Exit
+        };
 
+        //Change passwords
         $successCount = 0;
         $failCount = 0;
+        foreach ($arrayOfEmails as $email) {
 
-        //FIXME UNCOMMENT TO ACTIVATE
-//        foreach ($arrayOfEmails as $email) {
-//            $client = $em->getRepository(Client::class)->findOneBy(['emailAddress' => $email]);
-//
-//            if($client != null) {
-//                //Create a new password
-//                $passwordLength = 9;
-//                $newPassword = Utils::randomString($passwordLength);
-//
-//                $encoder = $this->get('security.password_encoder');
-//                $encodedNewPassword = $encoder->encodePassword($client, $newPassword);
-//                $client->setPassword($encodedNewPassword);
-//
-//                $this->getDoctrine()->getEntityManager()->persist($client);
-//                $this->getDoctrine()->getEntityManager()->flush();
-//
-//                file_put_contents($changedPasswordsPath, $email." ".$newPassword."\n", FILE_APPEND);
-//                $successCount++;
-//            } else {
-//                file_put_contents($missingClientsPath, $email."\n", FILE_APPEND);
-//                $failCount++;
-//            }
-//
-//        }
+            /** @var Client $client */
+            $client = $em->getRepository(Client::class)->findOneBy(['emailAddress' => $email]);
 
+            if($client != null) {
+                $newPassword = Utils::randomString(self::PASSWORD_LENGTH);
 
+                $encoder = $this->getContainer()->get('security.password_encoder');
+                $encodedNewPassword = $encoder->encodePassword($client, $newPassword);
+                $client->setPassword($encodedNewPassword);
 
+                $em->persist($client);
+                $em->flush();
 
+                file_put_contents($changedPasswordsPath, $email." ".$newPassword."\n", FILE_APPEND);
+                $successCount++;
+            } else {
+                file_put_contents($missingClientsPath, $email."\n", FILE_APPEND);
+                $failCount++;
+            }
+        }
 
-        $output->writeln(['Passwords successfully changed' => $successCount,
-            'Clients not found' => $failCount]);
-        $output->writeln('Command result.');
+        $output->writeln([
+            '=== PROCESS FINISHED ===',
+            'Passwords successfully changed; '. $successCount,
+            'Clients not found: '. $failCount]);
     }
 
 }
