@@ -37,6 +37,7 @@ class PersonAPIController extends APIController {
     $persons = $this->getDoctrine()->getRepository(Person::class)->findAll();
 
     foreach ($persons as $person) {
+      /** @var Person $person */
       if($person->getPersonId() == null || $person->getPersonId() == "") {
         $person->setPersonId(Utils::generatePersonId());
         $this->getDoctrine()->getEntityManager()->persist($person);
