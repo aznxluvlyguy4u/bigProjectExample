@@ -82,6 +82,8 @@ class LocationHealthUpdater
         //Hide/Deactivate all illness records after that one. Even for statuses that didn't change to simplify the logic.
         if($isDeclareInBase) {
             self::hideAllFollowingIllnesses($em, $locationOfDestination, $checkDate);
+            //Redo the null check in case all illnesses are made hidden
+            $locationOfDestination = self::persistInitialLocationHealthIfNull($em, $locationOfDestination, $checkDate);
         }
 
         //Get the latest values
