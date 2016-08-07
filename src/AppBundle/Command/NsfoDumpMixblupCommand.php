@@ -2,6 +2,7 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Util\CommandUtil;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -10,25 +11,28 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class NsfoDumpMixblupCommand extends ContainerAwareCommand
 {
+    const TITLE = 'Generate NSFO MiXBLUP files';
+
     protected function configure()
     {
         $this
             ->setName('nsfo:dump:mixblup')
-            ->setDescription('...')
-            ->addArgument('argument', InputArgument::OPTIONAL, 'Argument description')
-            ->addOption('option', null, InputOption::VALUE_NONE, 'Option description')
+            ->setDescription(self::TITLE)
         ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $argument = $input->getArgument('argument');
+        $helper = $this->getHelper('question');
+        $cmdUtil = new CommandUtil($input, $output, $helper);
 
-        if ($input->getOption('option')) {
-            // ...
-        }
+        //Print intro
+        $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
-        $output->writeln('Command result.');
+        //Output folder input
+        $outputFolderPath = $cmdUtil->generateQuestion('Please enter output folder path', '/tmp/mixblup-dump/');
+
+
     }
 
 }
