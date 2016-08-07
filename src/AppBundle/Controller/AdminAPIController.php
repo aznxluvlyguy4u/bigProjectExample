@@ -214,10 +214,10 @@ class AdminAPIController extends APIController {
     }
 
     $content = $this->getContentAsArray($request);
-    $companyId = $content->get(JsonInputConstant::COMPANY_ID);
+    $personId = $content->get(JsonInputConstant::PERSON_ID);
 
-    $company = $this->getDoctrine()->getRepository(Company::class)->find($companyId);
-    $client = $company->getOwner();
+    /** @var Client $client */
+    $client = $this->getDoctrine()->getRepository(Client::class)->findOneBy(['personId' => $personId]);
 
     $existingGhostToken = $this->getDoctrine()->getRepository(Token::class)->findOneBy(array('owner' => $client, 'admin' => $employee));
     if($existingGhostToken != null) {
