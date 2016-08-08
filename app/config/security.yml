@@ -1,24 +1,33 @@
 # To get started with security, check out the documentation:
-# http://symfony.com/doc/current/book/security.html
+# RTFM http://symfony.com/doc/current/book/security.html
+# RTFM http://symfony.com/doc/current/book/security.html#where-do-users-come-from-user-providers
 security:
+
+    encoders:
+        AppBundle\Entity\Person:
+            algorithm: bcrypt
 
     # http://symfony.com/doc/current/book/security.html#where-do-users-come-from-user-providers
     providers:
-        in_memory:
-            memory: ~
+        token_user_provider:
+            entity:
+                class: AppBundle:Person
+                property: username
 
     firewalls:
-        # disables authentication for assets and the profiler, adapt it according to your needs
+        # To disable authentication on dev mode, comment out below DEV section
         dev:
-            pattern: ^/(_(profiler|wdt)|css|images|js)/
-            security: false
+            pattern: ^(?:(?!doc|register|authorize|validate-token|password-reset|verify-ghost-token).)*$
+            security: true
+            stateless: true
+            guard:
+                authenticators:
+                    - app.authenticator.token
 
-        main:
-            anonymous: ~
-            # activate different ways to authenticate
-
-            # http_basic: ~
-            # http://symfony.com/doc/current/book/security.html#a-configuring-how-your-users-will-authenticate
-
-            # form_login: ~
-            # http://symfony.com/doc/current/cookbook/security/form_login_setup.html
+        secured_area:
+            pattern: ^(?:(?!doc|register|authorize|validate-token|password-reset|verify-ghost-token).)*$
+            security: true
+            stateless: true
+            guard:
+                authenticators:
+                    - app.authenticator.token

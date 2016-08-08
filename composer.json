@@ -1,5 +1,5 @@
 {
-    "name": "brian/nsfo.api",
+    "name": "jongensvantechniek/nsfo-api",
     "license": "proprietary",
     "type": "project",
     "autoload": {
@@ -13,7 +13,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/"
+            "Tests\\": "src/AppBundle/Tests/Controller/"
         }
     },
     "require": {
@@ -26,11 +26,21 @@
         "symfony/monolog-bundle": "^2.8",
         "sensio/distribution-bundle": "^5.0",
         "sensio/framework-extra-bundle": "^3.0.2",
-        "incenteev/composer-parameter-handler": "^2.0"
+        "incenteev/composer-parameter-handler": "^2.0",
+        "snc/redis-bundle": "2.x-dev",
+        "predis/predis": "^1.0",
+        "jms/serializer-bundle": "^1.1",
+        "aws/aws-sdk-php-symfony": "^1.1",
+        "nelmio/cors-bundle": "^1.4",
+        "nelmio/api-doc-bundle": "^2.12",
+        "symfony/finder": "^3.0",
+        "knplabs/knp-snappy-bundle": "~1.4"
     },
     "require-dev": {
         "sensio/generator-bundle": "^3.0",
-        "symfony/phpunit-bridge": "^3.0"
+        "symfony/phpunit-bridge": "^3.0",
+        "doctrine/doctrine-fixtures-bundle": "^2.3",
+        "liip/functional-test-bundle": "^1.6"
     },
     "scripts": {
         "post-install-cmd": [
@@ -53,14 +63,15 @@
     "config": {
         "platform": {
             "php": "5.5.9"
-        }
+        },
+        "bin-dir": "bin"
     },
     "extra": {
         "symfony-app-dir": "app",
         "symfony-bin-dir": "bin",
         "symfony-var-dir": "var",
         "symfony-web-dir": "web",
-        "symfony-tests-dir": "tests",
+        "symfony-tests-dir": "src/AppBundle/Tests/Controller",
         "symfony-assets-install": "relative",
         "incenteev-parameters": {
             "file": "app/config/parameters.yml"

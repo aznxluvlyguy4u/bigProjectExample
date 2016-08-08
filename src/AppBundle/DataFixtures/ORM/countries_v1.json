@@ -1,0 +1,132 @@
+[
+  {
+    "continent": "Europe",
+    "name": "Belgium",
+    "code": "BE"
+  },
+  {
+    "continent": "Europe",
+    "name": "Bulgaria",
+    "code": "BG"
+  },
+  {
+    "continent": "Europe",
+    "name": "Cyprus",
+    "code": "CY"
+  },
+  {
+    "continent": "Europe",
+    "name": "Denmark",
+    "code": "DK"
+  },
+  {
+    "continent": "Europe",
+    "name": "Germany",
+    "code": "DE"
+  },
+  {
+    "continent": "Europe",
+    "name": "Estland",
+    "code": "EE"
+  },
+  {
+    "continent": "Europe",
+    "name": "Finland",
+    "code": "FI"
+  },
+  {
+    "continent": "Europe",
+    "name": "France",
+    "code": "FR"
+  },
+  {
+    "continent": "Europe",
+    "name": "Greece",
+    "code": "EL"
+  },
+  {
+    "continent": "Europe",
+    "name": "United Kingdom",
+    "code": "UK"
+  },
+  {
+    "continent": "Europe",
+    "name": "Hungary",
+    "code": "HU"
+  },
+  {
+    "continent": "Europe",
+    "name": "Ireland",
+    "code": "IE"
+  },
+  {
+    "continent": "Europe",
+    "name": "Italy",
+    "code": "IT"
+  },
+  {
+    "continent": "Europe",
+    "name": "Latvia",
+    "code": "LV"
+  },
+  {
+    "continent": "Europe",
+    "name": "Lithuania",
+    "code": "LT"
+  },
+  {
+    "continent": "Europe",
+    "name": "Luxembourg",
+    "code": "LU"
+  },
+  {
+    "continent": "Europe",
+    "name": "Netherlands",
+    "code": "NL"
+  },
+  {
+    "continent": "Europe",
+    "name": "Austria",
+    "code": "AT"
+  },
+  {
+    "continent": "Europe",
+    "name": "Poland",
+    "code": "PL"
+  },
+  {
+    "continent": "Europe",
+    "name": "Portugal",
+    "code": "PT"
+  },
+  {
+    "continent": "Europe",
+    "name": "Romania",
+    "code": "RO"
+  },
+  {
+    "continent": "Europe",
+    "name": "Slovenia",
+    "code": "SI"
+  },
+  {
+    "continent": "Europe",
+    "name": "Slovakia",
+    "code": "SK"
+  },
+  {
+    "continent": "Europe",
+    "name": "Spain",
+    "code": "ES"
+  },
+  {
+    "continent": "Europe",
+    "name": "Czech Republic",
+    "code": "CZ"
+  },
+  {
+    "continent": "Europe",
+    "name": "Sweden",
+    "code": "SE"
+  }
+]
