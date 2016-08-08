@@ -216,25 +216,25 @@ class LocationHealthMessage
     private $arrivalDate;
 
     /**
-     * @ORM\ManyToOne(targetEntity="MaediVisna")
+     * @ORM\ManyToOne(targetEntity="MaediVisna", fetch="EAGER")
      * @ORM\JoinColumn(name="maedi_visna_id", referencedColumnName="id")
      */
     private $maediVisna;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Scrapie")
+     * @ORM\ManyToOne(targetEntity="Scrapie", fetch="EAGER")
      * @ORM\JoinColumn(name="scrapie_id", referencedColumnName="id")
      */
     private $scrapie;
 
     /**
-     * @ORM\ManyToOne(targetEntity="CaseousLymphadenitis")
+     * @ORM\ManyToOne(targetEntity="CaseousLymphadenitis", fetch="EAGER")
      * @ORM\JoinColumn(name="caseous_lymphadenitis_id", referencedColumnName="id")
      */
     private $caseousLymphadenitis;
 
     /**
-     * @ORM\ManyToOne(targetEntity="FootRot")
+     * @ORM\ManyToOne(targetEntity="FootRot", fetch="EAGER")
      * @ORM\JoinColumn(name="foot_rot_id", referencedColumnName="id")
      */
     private $footRot;

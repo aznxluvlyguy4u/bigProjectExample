@@ -56,12 +56,26 @@ class Finder
      */
     public static function findLatestActiveIllnessesOfLocation(Location $location, ObjectManager $em)
     {
+        $illnesses = new ArrayCollection();
+        $illnesses->set(Constant::SCRAPIE, self::findLatestActiveScrapie($location, $em));
+        $illnesses->set(Constant::MAEDI_VISNA, self::findLatestActiveMaediVisna($location, $em));
+
+        return $illnesses;
+    }
+
+
+    public static function findLatestActiveMaediVisna(Location $location, ObjectManager $em)
+    {
         $locationHealth = $location->getLocationHealth();
+
+        if($locationHealth == null) {
+            return null;
+        }
 
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('locationHealth', $locationHealth))
             ->andWhere(Criteria::expr()->eq('isHidden', false))
-            ->orderBy(['checkDate' => Criteria::DESC])
+            ->orderBy(['checkDate' => Criteria::DESC, 'logDate' => Criteria::DESC])
             ->setMaxResults(1);
 
         $lastMaediVisnaResults = $em->getRepository('AppBundle:MaediVisna')
@@ -73,6 +87,23 @@ class Finder
             $lastMaediVisna = null;
         }
 
+        return $lastMaediVisna;
+    }
+
+    public static function findLatestActiveScrapie(Location $location, ObjectManager $em)
+    {
+        $locationHealth = $location->getLocationHealth();
+
+        if($locationHealth == null) {
+            return null;
+        }
+
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('locationHealth', $locationHealth))
+            ->andWhere(Criteria::expr()->eq('isHidden', false))
+            ->orderBy(['checkDate' => Criteria::DESC, 'logDate' => Criteria::DESC])
+            ->setMaxResults(1);
+
         $lastScrapieResults = $em->getRepository('AppBundle:Scrapie')
             ->matching($criteria);
 
@@ -82,11 +113,7 @@ class Finder
             $lastScrapie = null;
         }
 
-        $illnesses = new ArrayCollection();
-        $illnesses->set(Constant::SCRAPIE, $lastScrapie);
-        $illnesses->set(Constant::MAEDI_VISNA, $lastMaediVisna);
-
-        return $illnesses;
+        return $lastScrapie;
     }
 
 
@@ -95,7 +122,7 @@ class Finder
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
             ->andWhere(Criteria::expr()->eq('isHidden', false))
-            ->orderBy(['checkDate' => Criteria::ASC]);
+            ->orderBy(['checkDate' => Criteria::ASC, 'logDate' => Criteria::ASC]);
 
         return $em->getRepository('AppBundle:MaediVisna')
             ->matching($criteria);
@@ -106,7 +133,7 @@ class Finder
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
             ->andWhere(Criteria::expr()->eq('isHidden', false))
-            ->orderBy(['checkDate' => Criteria::ASC]);
+            ->orderBy(['checkDate' => Criteria::ASC, 'logDate' => Criteria::ASC]);
 
         return $em->getRepository('AppBundle:Scrapie')
             ->matching($criteria);
