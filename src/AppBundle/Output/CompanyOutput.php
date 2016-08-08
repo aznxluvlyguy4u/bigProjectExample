@@ -11,26 +11,27 @@ use AppBundle\Entity\Pedigree;
 use Doctrine\Common\Collections\Collection;
 use AppBundle\Component\Count;
 
-class CompanyOutput {
-
+class CompanyOutput
+{
     /**
      * @param Collection $companies
+     *
      * @return array
      */
     public static function createCompaniesOverview($companies)
     {
         $res = array();
 
-        foreach($companies as $company) {
+        foreach ($companies as $company) {
 
-            /**
+            /*
              * @var $company Company
              */
             $locations = $company->getLocations();
             $ubns = array();
-            foreach($locations as $location) {
+            foreach ($locations as $location) {
 
-                /**
+                /*
                  * @var $location Location
                  */
                 $ubns[] = $location->getUbn();
@@ -38,9 +39,9 @@ class CompanyOutput {
 
             $pedigrees = $company->getPedigrees();
             $pedigreeNumbers = array();
-            foreach($pedigrees as $pedigree) {
+            foreach ($pedigrees as $pedigree) {
 
-                /**
+                /*
                  * @var $pedigree Pedigree
                  */
                 $pedigreeNumbers[] = $pedigree->getPedigreeCode();
@@ -56,13 +57,13 @@ class CompanyOutput {
                     'suffix' => Utils::fillNull($company->getAddress()->getAddressNumberSuffix()),
                     'postal_code' => Utils::fillNull($company->getAddress()->getPostalCode()),
                     'city' => Utils::fillNull($company->getAddress()->getCity()),
-                    'state' => Utils::fillNull($company->getAddress()->getState())
+                    'state' => Utils::fillNull($company->getAddress()->getState()),
                 ),
                 'owner' => array(
                     'person_id' => $company->getOwner()->getPersonId(),
                     'email_address' => $company->getOwner()->getEmailAddress(),
                     'first_name' => $company->getOwner()->getFirstName(),
-                    'last_name' => $company->getOwner()->getLastName()
+                    'last_name' => $company->getOwner()->getLastName(),
                 ),
                 'users' => $company->getCompanyUsers()->filter(
                     function (Client $client) {
@@ -78,7 +79,7 @@ class CompanyOutput {
                 ),
                 'subscription_date' => Utils::fillNull($company->getDebtorNumber()),
                 'animal_health_subscription' => $company->getAnimalHealthSubscription(),
-                'status' => $company->isActive()
+                'status' => $company->isActive(),
             );
         }
 
@@ -87,6 +88,7 @@ class CompanyOutput {
 
     /**
      * @param Company $company
+     *
      * @return array
      */
     public static function createCompany($company)
@@ -117,7 +119,7 @@ class CompanyOutput {
             'postal_code' => Utils::fillNull($company->getAddress()->getCity()),
             'city' => Utils::fillNull($company->getAddress()->getCity()),
             'state' => Utils::fillNull($company->getAddress()->getState()),
-            'country' => Utils::fillNull($company->getAddress()->getCountry())
+            'country' => Utils::fillNull($company->getAddress()->getCountry()),
         );
 
         $res['billing_address'] = array(
@@ -127,11 +129,20 @@ class CompanyOutput {
             'postal_code' => Utils::fillNull($company->getBillingAddress()->getCity()),
             'city' => Utils::fillNull($company->getBillingAddress()->getCity()),
             'state' => Utils::fillNull($company->getBillingAddress()->getState()),
-            'country' => Utils::fillNull($company->getBillingAddress()->getCountry())
+            'country' => Utils::fillNull($company->getBillingAddress()->getCountry()),
         );
 
-        $res['locations'] = $company->getLocations()->count();
-        dump($company->getLocations()->get(0)->getUbn());
+        $res['locations'] = [];
+        $locations = $company->getLocations();
+
+        foreach ($locations as $location) {
+            $res['locations'][] = $location;
+        }
+
+        // //dump($company->getLocations());
+        // dump($res);
+        // die();
+        //dump($company->getLocations()->get(0)->getUbn());
 //        $newLocations->;
 
 
@@ -177,70 +188,71 @@ class CompanyOutput {
 
     /**
      * @param Company $company
+     *
      * @return array
      */
     public static function createCompanyDetails($company)
     {
         $res = array();
-        $res["company_id"] = Utils::fillNull($company->getCompanyId());
-        $res["company_name"] = Utils::fillNull($company->getCompanyName());
-        $res["telephone_number"] = Utils::fillNull($company->getTelephoneNumber());
-        $res["owner"] = array(
-            "email_address" => Utils::fillNull($company->getOwner()->getEmailAddress()),
-            "prefix" => Utils::fillNull($company->getOwner()->getPrefix()),
-            "first_name" => Utils::fillNull($company->getOwner()->getFirstName()),
-            "last_name" => Utils::fillNull($company->getOwner()->getLastName())
+        $res['company_id'] = Utils::fillNull($company->getCompanyId());
+        $res['company_name'] = Utils::fillNull($company->getCompanyName());
+        $res['telephone_number'] = Utils::fillNull($company->getTelephoneNumber());
+        $res['owner'] = array(
+            'email_address' => Utils::fillNull($company->getOwner()->getEmailAddress()),
+            'prefix' => Utils::fillNull($company->getOwner()->getPrefix()),
+            'first_name' => Utils::fillNull($company->getOwner()->getFirstName()),
+            'last_name' => Utils::fillNull($company->getOwner()->getLastName()),
         );
-        $res["status"] = $company->isActive();
-        $res["subscription_date"] = Utils::fillNull($company->getSubscriptionDate());
-        $res["address"] = array(
-            "street_name" => Utils::fillNull($company->getAddress()->getStreetName()),
-            "address_number" => Utils::fillNull($company->getAddress()->getAddressNumber()),
-            "suffix" => Utils::fillNull($company->getAddress()->getAddressNumberSuffix()),
-            "postal_code" => Utils::fillNull($company->getAddress()->getPostalCode()),
-            "city" => Utils::fillNull($company->getAddress()->getCity()),
-            "state" => Utils::fillNull($company->getAddress()->getState())
+        $res['status'] = $company->isActive();
+        $res['subscription_date'] = Utils::fillNull($company->getSubscriptionDate());
+        $res['address'] = array(
+            'street_name' => Utils::fillNull($company->getAddress()->getStreetName()),
+            'address_number' => Utils::fillNull($company->getAddress()->getAddressNumber()),
+            'suffix' => Utils::fillNull($company->getAddress()->getAddressNumberSuffix()),
+            'postal_code' => Utils::fillNull($company->getAddress()->getPostalCode()),
+            'city' => Utils::fillNull($company->getAddress()->getCity()),
+            'state' => Utils::fillNull($company->getAddress()->getState()),
         );
 
         $liveStockCount = Count::getCompanyLiveStockCount($company);
-        $res["livestock"] = array(
-            "ram" => array(
-                "total" => $liveStockCount["RAM_TOTAL"],
-                "less_6_months" => $liveStockCount["RAM_UNDER_SIX"],
-                "between_6_12_months" => $liveStockCount["RAM_BETWEEN_SIX_AND_TWELVE"],
-                "greater_12_months" => $liveStockCount["RAM_OVER_TWELVE"]
+        $res['livestock'] = array(
+            'ram' => array(
+                'total' => $liveStockCount['RAM_TOTAL'],
+                'less_6_months' => $liveStockCount['RAM_UNDER_SIX'],
+                'between_6_12_months' => $liveStockCount['RAM_BETWEEN_SIX_AND_TWELVE'],
+                'greater_12_months' => $liveStockCount['RAM_OVER_TWELVE'],
             ),
-            "ewe" => array(
-                "total" => $liveStockCount["EWE_TOTAL"],
-                "less_6_months" => $liveStockCount["EWE_UNDER_SIX"],
-                "between_6_12_months" => $liveStockCount["EWE_BETWEEN_SIX_AND_TWELVE"],
-                "greater_12_months" => $liveStockCount["EWE_OVER_TWELVE"]
+            'ewe' => array(
+                'total' => $liveStockCount['EWE_TOTAL'],
+                'less_6_months' => $liveStockCount['EWE_UNDER_SIX'],
+                'between_6_12_months' => $liveStockCount['EWE_BETWEEN_SIX_AND_TWELVE'],
+                'greater_12_months' => $liveStockCount['EWE_OVER_TWELVE'],
             ),
-            "neuter" => array(
-                "total" => $liveStockCount["NEUTER_TOTAL"],
-                "less_6_months" => $liveStockCount["NEUTER_UNDER_SIX"],
-                "between_6_12_months" => $liveStockCount["NEUTER_BETWEEN_SIX_AND_TWELVE"],
-                "greater_12_months" => $liveStockCount["NEUTER_OVER_TWELVE"]
+            'neuter' => array(
+                'total' => $liveStockCount['NEUTER_TOTAL'],
+                'less_6_months' => $liveStockCount['NEUTER_UNDER_SIX'],
+                'between_6_12_months' => $liveStockCount['NEUTER_BETWEEN_SIX_AND_TWELVE'],
+                'greater_12_months' => $liveStockCount['NEUTER_OVER_TWELVE'],
             ),
         );
 
-        $res["breeder_numbers"] = array();
-        $res["invoices"] = $company->getInvoices()->toArray();
+        $res['breeder_numbers'] = array();
+        $res['invoices'] = $company->getInvoices()->toArray();
 
-        /**
+        /*
          * @var $company Company
          */
         $locations = $company->getLocations();
         $healthInspections = array();
-        foreach($locations as $location) {
+        foreach ($locations as $location) {
 
-            /**
+            /*
              * @var $location Location
              */
             $healthInspections[] = $location->getInspections();
         }
 
-        $res["health_inspections"] = $healthInspections;
+        $res['health_inspections'] = $healthInspections;
 
         return $res;
     }

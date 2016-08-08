@@ -11,22 +11,21 @@ use AppBundle\Entity\CompanyNote;
 use AppBundle\Entity\BillingAddress;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
-use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Output\CompanyOutput;
 use AppBundle\Validation\AdminValidator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 
 /**
  * @Route("/api/v1")
  */
-class CompanyAPIController extends APIController {
-
+class CompanyAPIController extends APIController
+{
     /**
      * @param Request $request the request object
+     *
      * @return JsonResponse
      * @Route("/companies")
      * @Method("GET")
@@ -37,7 +36,7 @@ class CompanyAPIController extends APIController {
         $admin = $this->getAuthenticatedEmployee($request);
         $adminValidator = new AdminValidator($admin);
 
-        if(!$adminValidator->getIsAccessGranted()) {
+        if (!$adminValidator->getIsAccessGranted()) {
             return $adminValidator->createJsonErrorResponse();
         }
 
@@ -52,8 +51,9 @@ class CompanyAPIController extends APIController {
     }
 
     /**
-     * @param Request $request the request object
+     * @param Request $request   the request object
      * @param Company $companyId
+     *
      * @return JsonResponse
      * @Route("/company/{companyId}")
      * @Method("GET")
@@ -64,7 +64,7 @@ class CompanyAPIController extends APIController {
         $admin = $this->getAuthenticatedEmployee($request);
         $adminValidator = new AdminValidator($admin);
 
-        if(!$adminValidator->getIsAccessGranted()) {
+        if (!$adminValidator->getIsAccessGranted()) {
             return $adminValidator->createJsonErrorResponse();
         }
 
@@ -75,11 +75,12 @@ class CompanyAPIController extends APIController {
         // Generate Company Details
         $result = CompanyOutput::createCompany($company);
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+        return new \AppBundle\Component\HttpFoundation\JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
 
     /**
      * @param Request $request the request object
+     *
      * @return JsonResponse
      * @Route("/company")
      * @Method("POST")
@@ -90,7 +91,7 @@ class CompanyAPIController extends APIController {
         $admin = $this->getAuthenticatedEmployee($request);
         $adminValidator = new AdminValidator($admin);
 
-        if(!$adminValidator->getIsAccessGranted()) {
+        if (!$adminValidator->getIsAccessGranted()) {
             return $adminValidator->createJsonErrorResponse();
         }
 
@@ -188,11 +189,13 @@ class CompanyAPIController extends APIController {
 
         $this->getDoctrine()->getEntityManager()->persist($company);
         $this->getDoctrine()->getEntityManager()->flush();
+
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
     }
 
     /**
      * @param Request $request the request object
+     *
      * @return JsonResponse
      * @Route("/company")
      * @Method("PUT")
@@ -203,7 +206,7 @@ class CompanyAPIController extends APIController {
         $admin = $this->getAuthenticatedEmployee($request);
         $adminValidator = new AdminValidator($admin);
 
-        if(!$adminValidator->getIsAccessGranted()) {
+        if (!$adminValidator->getIsAccessGranted()) {
             return $adminValidator->createJsonErrorResponse();
         }
 
@@ -222,8 +225,9 @@ class CompanyAPIController extends APIController {
     }
 
     /**
-     * @param Request $request the request object
-     * @param String $companyId
+     * @param Request $request   the request object
+     * @param String  $companyId
+     *
      * @return JsonResponse
      * @Route("/company/details/{companyId}")
      * @Method("GET")
@@ -234,7 +238,7 @@ class CompanyAPIController extends APIController {
         $admin = $this->getAuthenticatedEmployee($request);
         $adminValidator = new AdminValidator($admin);
 
-        if(!$adminValidator->getIsAccessGranted()) {
+        if (!$adminValidator->getIsAccessGranted()) {
             return $adminValidator->createJsonErrorResponse();
         }
 
@@ -249,8 +253,9 @@ class CompanyAPIController extends APIController {
     }
 
     /**
-     * @param Request $request the request object
-     * @param String $companyId
+     * @param Request $request   the request object
+     * @param String  $companyId
+     *
      * @return JsonResponse
      * @Route("/company/notes/{companyId}")
      * @Method("GET")
@@ -261,7 +266,7 @@ class CompanyAPIController extends APIController {
         $admin = $this->getAuthenticatedEmployee($request);
         $adminValidator = new AdminValidator($admin);
 
-        if(!$adminValidator->getIsAccessGranted()) {
+        if (!$adminValidator->getIsAccessGranted()) {
             return $adminValidator->createJsonErrorResponse();
         }
 
@@ -269,7 +274,7 @@ class CompanyAPIController extends APIController {
         $repository = $this->getDoctrine()->getRepository(Constant::COMPANY_REPOSITORY);
         $company = $repository->findOneByCompanyId($companyId);
 
-        /**
+        /*
          * @var $company Company
          */
         // Get Company Notes
@@ -279,8 +284,9 @@ class CompanyAPIController extends APIController {
     }
 
     /**
-     * @param Request $request the request object
-     * @param String $companyId
+     * @param Request $request   the request object
+     * @param String  $companyId
+     *
      * @return JsonResponse
      * @Route("/company/notes/{companyId}")
      * @Method("POST")
@@ -291,7 +297,7 @@ class CompanyAPIController extends APIController {
         $admin = $this->getAuthenticatedEmployee($request);
         $adminValidator = new AdminValidator($admin);
 
-        if(!$adminValidator->getIsAccessGranted()) {
+        if (!$adminValidator->getIsAccessGranted()) {
             return $adminValidator->createJsonErrorResponse();
         }
 
@@ -317,6 +323,7 @@ class CompanyAPIController extends APIController {
 
     /**
      * @param Request $request the request object
+     *
      * @return JsonResponse
      * @Route("/company/generate-ids")
      * @Method("POST")
@@ -327,23 +334,23 @@ class CompanyAPIController extends APIController {
         $admin = $this->getAuthenticatedEmployee($request);
         $adminValidator = new AdminValidator($admin);
 
-        if(!$adminValidator->getIsAccessGranted()) {
+        if (!$adminValidator->getIsAccessGranted()) {
             return $adminValidator->createJsonErrorResponse();
         }
 
         $companies = $this->getDoctrine()->getRepository(Constant::COMPANY_REPOSITORY)->findAll();
 
         foreach ($companies as $company) {
-            /**
-             * @var $company Company
+            /*
+             * @var Company
              */
-            if($company->getCompanyId() == null || $company->getCompanyId() == "") {
+            if ($company->getCompanyId() == null || $company->getCompanyId() == '') {
                 $company->setCompanyId(Utils::generateTokenCode());
                 $this->getDoctrine()->getEntityManager()->persist($company);
                 $this->getDoctrine()->getEntityManager()->flush();
             }
         }
 
-        return new JsonResponse("ok", 200);
+        return new JsonResponse('ok', 200);
     }
 }
