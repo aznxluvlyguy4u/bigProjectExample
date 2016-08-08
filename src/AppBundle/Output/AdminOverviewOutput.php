@@ -33,7 +33,7 @@ class AdminOverviewOutput
             return null;
         }
 
-        $res = array("id" => $admin->getId(),
+        $res = array("person_id" => $admin->getPersonId(),
             "prefix" => $admin->getPrefix(),
             "first_name" => $admin->getFirstName(),
             "last_name" => $admin->getLastName(),

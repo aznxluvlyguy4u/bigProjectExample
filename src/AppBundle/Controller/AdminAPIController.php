@@ -16,6 +16,7 @@ use AppBundle\Output\AccessLevelOverviewOutput;
 use AppBundle\Output\AdminOverviewOutput;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\CreateAdminValidator;
+use AppBundle\Validation\EditAdminValidator;
 use AppBundle\Validation\EmployeeValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -93,7 +94,7 @@ class AdminAPIController extends APIController {
    * @Route("")
    * @Method("POST")
    */
-  public function createClient(Request $request)
+  public function createAdmins(Request $request)
   {
     $admin = $this->getAuthenticatedEmployee($request);
     $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
@@ -142,6 +143,77 @@ class AdminAPIController extends APIController {
 
 
   /**
+   *
+   * Edit Admins.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the admin that is registered with the API"
+   *     }
+   *   },
+   *
+   *   resource = true,
+   *   description = "Edit Admins",
+   *   output = "AppBundle\Entity\Employee"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("")
+   * @Method("PUT")
+   */
+  public function editAdmins(Request $request)
+  {
+    $admin = $this->getAuthenticatedEmployee($request);
+    $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
+    if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
+      return $adminValidator->createJsonErrorResponse();
+    }
+
+    $em = $this->getDoctrine()->getEntityManager();
+    $content = $this->getContentAsArray($request);
+    $adminsContent = $clients = $content->get(JsonInputConstant::ADMINS);
+
+    //Validate input
+    $inputValidator = new EditAdminValidator($em, $adminsContent);
+    if (!$inputValidator->getIsValid()) {
+      return $inputValidator->createJsonResponse();
+    }
+
+    $admins = $inputValidator->getAdmins();
+
+    foreach ($adminsContent as $adminContent) {
+
+      $personId = Utils::getNullCheckedArrayValue(JsonInputConstant::PERSON_ID, $adminContent);
+      /** @var Employee $admin */
+      $admin = $admins->get($personId);
+      
+      $firstName = Utils::getNullCheckedArrayValue(JsonInputConstant::FIRST_NAME, $adminContent);
+      $lastName = Utils::getNullCheckedArrayValue(JsonInputConstant::LAST_NAME, $adminContent);
+      $emailAddress = Utils::getNullCheckedArrayValue(JsonInputConstant::EMAIL_ADDRESS, $adminContent);
+      $accessLevel = Utils::getNullCheckedArrayValue(JsonInputConstant::ACCESS_LEVEL, $adminContent);
+
+      $admin->setFirstName($firstName);
+      $admin->setLastName($lastName);
+      $admin->setEmailAddress($emailAddress);
+      $admin->setAccessLevel($accessLevel);
+      
+    }
+    $em->flush();
+
+    $repository = $this->getDoctrine()->getRepository(Employee::class);
+
+    $admins = $repository->findAll();
+    $result = AdminOverviewOutput::createAdminsOverview($admins);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+  }
+
+
+  /**
    * Deactivate a list of Admins
    *
    * @ApiDoc(
@@ -178,7 +250,7 @@ class AdminAPIController extends APIController {
     $adminIds = $clients = $content->get(JsonInputConstant::ADMINS);
 
     foreach ($adminIds as $id) {
-      $admin = $repository->find($id);
+      $admin = $repository->findOneBy(['personId' => $id]);
       //Validate input
       if($admin == null) {
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ADMIN NOT FOUND'), 428);
@@ -189,8 +261,7 @@ class AdminAPIController extends APIController {
       }
     }
     $em->flush();
-
-    $repository = $this->getDoctrine()->getRepository(Employee::class);
+    
     $admins = $repository->findAll();
     $result = AdminOverviewOutput::createAdminsOverview($admins);
 
@@ -215,10 +286,10 @@ class AdminAPIController extends APIController {
     }
 
     $content = $this->getContentAsArray($request);
-    $companyId = $content->get(JsonInputConstant::COMPANY_ID);
+    $personId = $content->get(JsonInputConstant::PERSON_ID);
 
-    $company = $this->getDoctrine()->getRepository(Company::class)->find($companyId);
-    $client = $company->getOwner();
+    /** @var Client $client */
+    $client = $this->getDoctrine()->getRepository(Client::class)->findOneBy(['personId' => $personId]);
 
     $existingGhostToken = $this->getDoctrine()->getRepository(Token::class)->findOneBy(array('owner' => $client, 'admin' => $employee));
     if($existingGhostToken != null) {

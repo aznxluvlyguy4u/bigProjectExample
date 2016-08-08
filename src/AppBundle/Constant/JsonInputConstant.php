@@ -54,4 +54,7 @@ class JsonInputConstant
     //Admins
     const ADMINS = 'admins';
     const ACCESS_LEVEL = 'access_level';
+
+    //Persons
+    const PERSON_ID = 'person_id';
 }
