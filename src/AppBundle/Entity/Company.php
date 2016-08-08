@@ -2,7 +2,7 @@
 
 namespace AppBundle\Entity;
 
-use AppBundle\Entity\ContactData;
+use AppBundle\Component\Utils;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -25,6 +25,14 @@ class Company
     * @ORM\GeneratedValue(strategy="AUTO")
     */
     protected $id;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $companyId;
 
     /**
     * @var string
@@ -69,7 +77,7 @@ class Company
     /**
     * @var ArrayCollection
     *
-    * @ORM\OneToMany(targetEntity="Location", mappedBy="company", cascade={"persist"})
+    * @ORM\OneToMany(targetEntity="Location", mappedBy="company", cascade={"persist"}, fetch="EAGER")
     * @JMS\Type("AppBundle\Entity\Location")
     */
     private $locations;
@@ -189,10 +197,10 @@ class Company
     private $veterinarianEmailAddress;
 
     /**
-     * @var string
+     * @var ArrayCollection
      *
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
+     * @ORM\OneToMany(targetEntity="CompanyNote", mappedBy="company")
+     * @JMS\Type("array")
      */
     private $notes;
 
@@ -203,8 +211,8 @@ class Company
   {
     $this->locations = new ArrayCollection();
     $this->companyUsers = new ArrayCollection();
+    $this->setCompanyId(Utils::generateTokenCode());
   }
-
 
     /**
      * Get id
@@ -214,6 +222,22 @@ class Company
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @param string $companyId
+     */
+    public function setCompanyId($companyId)
+    {
+        $this->companyId = $companyId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyId()
+    {
+        return $this->companyId;
     }
 
     /**
@@ -620,5 +644,29 @@ class Company
     public function setNotes($notes)
     {
         $this->notes = $notes;
+    }
+
+    /**
+     * Add Note
+     *
+     * @param CompanyNote $note
+     *
+     * @return Company
+     */
+    public function addNote(CompanyNote $note)
+    {
+        $this->notes[] = $note;
+
+        return $this;
+    }
+
+    /**
+     * Remove Note
+     *
+     * @param CompanyNote $note
+     */
+    public function removeNote(CompanyNote $note)
+    {
+        $this->notes->removeElement($note);
     }
 }

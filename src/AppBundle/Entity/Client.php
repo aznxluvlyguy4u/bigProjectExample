@@ -16,9 +16,8 @@ class Client extends Person
 {
 
     /**
-    * @ORM\Column(type="string")
+    * @ORM\Column(type="string", nullable=true)
     * @Assert\Length(max = 20)
-    * @Assert\NotBlank
     * @JMS\Type("string")
     */
     private $relationNumberKeeper;

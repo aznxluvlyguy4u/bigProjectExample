@@ -2,10 +2,12 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\CompanyAddress;
+use AppBundle\Entity\CompanyNote;
 use AppBundle\Entity\BillingAddress;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
@@ -19,14 +21,14 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 
 /**
- * @Route("/api/v1/company")
+ * @Route("/api/v1")
  */
 class CompanyAPIController extends APIController {
 
     /**
      * @param Request $request the request object
      * @return JsonResponse
-     * @Route("")
+     * @Route("/companies")
      * @Method("GET")
      */
     public function getCompanies(Request $request)
@@ -51,8 +53,35 @@ class CompanyAPIController extends APIController {
 
     /**
      * @param Request $request the request object
+     * @param Company $companyId
      * @return JsonResponse
-     * @Route("")
+     * @Route("/company/{companyId}")
+     * @Method("GET")
+     */
+    public function getCompany(Request $request, $companyId)
+    {
+        // Validation if user is an admin
+        $admin = $this->getAuthenticatedEmployee($request);
+        $adminValidator = new AdminValidator($admin);
+
+        if(!$adminValidator->getIsAccessGranted()) {
+            return $adminValidator->createJsonErrorResponse();
+        }
+
+        // Get Company
+        $repository = $this->getDoctrine()->getRepository(Constant::COMPANY_REPOSITORY);
+        $company = $repository->findOneByCompanyId($companyId);
+
+        // Generate Company Details
+        $result = CompanyOutput::createCompany($company);
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+    }
+
+    /**
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/company")
      * @Method("POST")
      */
     public function createCompany(Request $request)
@@ -87,6 +116,7 @@ class CompanyAPIController extends APIController {
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
         $address->setState($contentAddress['state']);
+        $address->setCountry('');
 
         // Create Billing Address
         $contentBillingAddress = $content->get('billing_address');
@@ -97,6 +127,7 @@ class CompanyAPIController extends APIController {
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
         $billingAddress->setState($contentBillingAddress['state']);
+        $billingAddress->setCountry('');
 
         // Create Company
         $company = new Company();
@@ -106,7 +137,8 @@ class CompanyAPIController extends APIController {
         $company->setDebtorNumber($content->get('debtor_number'));
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
-        $company->setNotes($content->get('notes'));
+        $company->setAnimalHealthSubscription($content->get('animal_health_subscription'));
+        $company->setIsActive(true);
         $company->setOwner($owner);
         $company->setAddress($address);
         $company->setBillingAddress($billingAddress);
@@ -124,6 +156,7 @@ class CompanyAPIController extends APIController {
             $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
             $locationAddress->setCity($contentLocationAddress['city']);
             $locationAddress->setState($contentLocationAddress['state']);
+            $locationAddress->setCountry('');
 
             $location = new Location();
             $location->setUbn($contentLocation['ubn']);
@@ -142,8 +175,7 @@ class CompanyAPIController extends APIController {
             $user->setEmailAddress($contentUser['email_address']);
             $user->setObjectType('Client');
             $user->setIsActive(true);
-
-            $company->addCompanyUser($user);
+            $user->setEmployer($company);
 
             // TODO GENERATE TOKEN
             // TODO GENERATE PASSWORD
@@ -154,13 +186,15 @@ class CompanyAPIController extends APIController {
         // TODO OWNER -> GENERATE PASSWORD
         // TODO OWNER -> EMAIL PASSWORD
 
+        $this->getDoctrine()->getEntityManager()->persist($company);
+        $this->getDoctrine()->getEntityManager()->flush();
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
     }
 
     /**
      * @param Request $request the request object
      * @return JsonResponse
-     * @Route("")
+     * @Route("/company")
      * @Method("PUT")
      */
     public function UpdateCompany(Request $request)
@@ -191,7 +225,7 @@ class CompanyAPIController extends APIController {
      * @param Request $request the request object
      * @param String $companyId
      * @return JsonResponse
-     * @Route("/details/{companyId}")
+     * @Route("/company/details/{companyId}")
      * @Method("GET")
      */
     public function GetCompanyDetails(Request $request, $companyId)
@@ -206,11 +240,110 @@ class CompanyAPIController extends APIController {
 
         // Get Company
         $repository = $this->getDoctrine()->getRepository(Constant::COMPANY_REPOSITORY);
-        $company = $repository->find($companyId);
+        $company = $repository->findOneByCompanyId($companyId);
 
         // Generate Company Details
         $result = CompanyOutput::createCompanyDetails($company);
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+    }
+
+    /**
+     * @param Request $request the request object
+     * @param String $companyId
+     * @return JsonResponse
+     * @Route("/company/notes/{companyId}")
+     * @Method("GET")
+     */
+    public function GetCompanyNotes(Request $request, $companyId)
+    {
+        // Validation if user is an admin
+        $admin = $this->getAuthenticatedEmployee($request);
+        $adminValidator = new AdminValidator($admin);
+
+        if(!$adminValidator->getIsAccessGranted()) {
+            return $adminValidator->createJsonErrorResponse();
+        }
+
+        // Get Company
+        $repository = $this->getDoctrine()->getRepository(Constant::COMPANY_REPOSITORY);
+        $company = $repository->findOneByCompanyId($companyId);
+
+        /**
+         * @var $company Company
+         */
+        // Get Company Notes
+        $result = $company->getNotes()->toArray();
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+    }
+
+    /**
+     * @param Request $request the request object
+     * @param String $companyId
+     * @return JsonResponse
+     * @Route("/company/notes/{companyId}")
+     * @Method("POST")
+     */
+    public function CreateCompanyNotes(Request $request, $companyId)
+    {
+        // Validation if user is an admin
+        $admin = $this->getAuthenticatedEmployee($request);
+        $adminValidator = new AdminValidator($admin);
+
+        if(!$adminValidator->getIsAccessGranted()) {
+            return $adminValidator->createJsonErrorResponse();
+        }
+
+        // Validate content
+        $content = $this->getContentAsArray($request);
+        // TODO VALIDATE CONTENT
+
+        // Get Company
+        $repository = $this->getDoctrine()->getRepository(Constant::COMPANY_REPOSITORY);
+        $company = $repository->findOneByCompanyId($companyId);
+
+        // Create Note
+        $note = new CompanyNote();
+        $note->setCreationDate(new \DateTime());
+        $note->setCreator($admin);
+        $note->setCompany($company);
+        $note->setNote($content['note']);
+
+        // TODO PERSIST DATA
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
+    }
+
+    /**
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/company/generate-ids")
+     * @Method("POST")
+     */
+    public function generateNewCompanyIds(Request $request)
+    {
+        // Validation if user is an admin
+        $admin = $this->getAuthenticatedEmployee($request);
+        $adminValidator = new AdminValidator($admin);
+
+        if(!$adminValidator->getIsAccessGranted()) {
+            return $adminValidator->createJsonErrorResponse();
+        }
+
+        $companies = $this->getDoctrine()->getRepository(Constant::COMPANY_REPOSITORY)->findAll();
+
+        foreach ($companies as $company) {
+            /**
+             * @var $company Company
+             */
+            if($company->getCompanyId() == null || $company->getCompanyId() == "") {
+                $company->setCompanyId(Utils::generateTokenCode());
+                $this->getDoctrine()->getEntityManager()->persist($company);
+                $this->getDoctrine()->getEntityManager()->flush();
+            }
+        }
+
+        return new JsonResponse("ok", 200);
     }
 }

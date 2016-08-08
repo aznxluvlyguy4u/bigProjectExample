@@ -7,6 +7,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
+use AppBundle\Entity\LocationHealthInspection;
 use AppBundle\Entity\DeclareArrival;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
@@ -122,7 +123,7 @@ class Location
 
   /**
    * @Assert\NotBlank
-   * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"})
+   * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"}, fetch="EAGER")
    * @JMS\Type("AppBundle\Entity\Company")
    */
   protected $company;
@@ -167,9 +168,17 @@ class Location
    */
   private $animalResidenceHistory;
 
-  /*
-  * Constructor
-  */
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="LocationHealthInspection", mappedBy="location")
+     * @JMS\Type("LocationHealthInspection")
+     */
+    private $inspections;
+
+    /**
+    * Constructor
+    */
   public function __construct()
   {
     $this->arrivals = new ArrayCollection();
@@ -724,5 +733,21 @@ class Location
     public function getAnimalResidenceHistory()
     {
         return $this->animalResidenceHistory;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getInspections()
+    {
+        return $this->inspections;
+    }
+
+    /**
+     * @param ArrayCollection $inspections
+     */
+    public function setInspections($inspections)
+    {
+        $this->inspections = $inspections;
     }
 }

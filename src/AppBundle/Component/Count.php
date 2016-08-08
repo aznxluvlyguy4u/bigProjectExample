@@ -576,35 +576,35 @@ class Count
 
                 if($isOwnedAnimal) {
                     if($gender == 'MALE') {
-                       if($dateOfBirth < $ageLimitYoungerSix) {
+                       if($dateOfBirth > $ageLimitYoungerSix) {
                            $ramUnderSix++;
                        }
                        if($dateOfBirth >= $ageLimitYoungerSix && $dateOfBirth <= $ageLimitOlderTwelve) {
                            $ramBetweenSixAndTwelve++;
                        }
-                       if($dateOfBirth > $ageLimitOlderTwelve) {
+                       if($dateOfBirth < $ageLimitOlderTwelve) {
                            $ramOverTwelve++;
                        }
                     }
                     if($gender == 'FEMALE') {
-                        if($dateOfBirth < $ageLimitYoungerSix) {
+                        if($dateOfBirth > $ageLimitYoungerSix) {
                             $eweUnderSix++;
                         }
                         if($dateOfBirth >= $ageLimitYoungerSix && $dateOfBirth <= $ageLimitOlderTwelve) {
                             $eweBetweenSixAndTwelve++;
                         }
-                        if($dateOfBirth > $ageLimitOlderTwelve) {
+                        if($dateOfBirth < $ageLimitOlderTwelve) {
                             $eweOverTwelve++;
                         }
                     }
                     if($gender == 'NEUTER') {
-                        if($dateOfBirth < $ageLimitYoungerSix) {
+                        if($dateOfBirth > $ageLimitYoungerSix) {
                             $neuterUnderSix++;
                         }
                         if($dateOfBirth >= $ageLimitYoungerSix && $dateOfBirth <= $ageLimitOlderTwelve) {
                             $neuterBetweenSixAndTwelve++;
                         }
-                        if($dateOfBirth > $ageLimitOlderTwelve) {
+                        if($dateOfBirth < $ageLimitOlderTwelve) {
                             $neuterOverTwelve++;
                         }
                     }

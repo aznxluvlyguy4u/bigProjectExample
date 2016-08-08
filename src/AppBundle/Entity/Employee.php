@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Entity\LocationHealthInspection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -40,6 +41,22 @@ class Employee extends Person
      * @JMS\Type("array")
      */
     private $ghostTokens;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="LocationHealthInspection", mappedBy="authorizedBy")
+     * @JMS\Type("LocationHealthInspection")
+     */
+    private $healthInspections;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="CompanyNote", mappedBy="creator")
+     * @JMS\Type("array")
+     */
+    private $notes;
 
     /**
      * Employee constructor.
@@ -155,9 +172,6 @@ class Employee extends Person
         $this->ghostTokens = $ghostTokens;
     }
 
-    
-
-
     /**
      * Add ghostToken
      *
@@ -180,5 +194,37 @@ class Employee extends Person
     public function removeGhostToken(\AppBundle\Entity\Token $ghostToken)
     {
         $this->ghostTokens->removeElement($ghostToken);
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getHealthInspections()
+    {
+        return $this->healthInspections;
+    }
+
+    /**
+     * @param ArrayCollection $healthInspections
+     */
+    public function setHealthInspections($healthInspections)
+    {
+        $this->healthInspections = $healthInspections;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getNotes()
+    {
+        return $this->notes;
+    }
+
+    /**
+     * @param ArrayCollection $notes
+     */
+    public function setNotes($notes)
+    {
+        $this->notes = $notes;
     }
 }
