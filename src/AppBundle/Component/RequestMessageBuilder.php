@@ -121,6 +121,7 @@ class RequestMessageBuilder
                 return $declareAnimalFlag;
             case RequestType::DECLARE_ARRIVAL_ENTITY:
                 $declareArrivalRequest = $this->irSerializer->parseDeclareArrival($contentArray, $person, $isEditMessage);
+                if($isEditMessage) { return $declareArrivalRequest; }
                 return $this->arrivalMessageBuilder->buildMessage($declareArrivalRequest, $person, $location);
             case RequestType::DECLARE_BIRTH_ENTITY:
                 $declareBirthRequest = $this->irSerializer->parseDeclareBirth($contentArray, $person, $isEditMessage);

@@ -17,6 +17,15 @@ services:
           queueIds: ['%aws_sqs_queue_prod%', '%aws_sqs_queue_stage%', '%aws_sqs_queue_dev%', '%aws_sqs_queue_test%', '%aws_sqs_queue_local%']
           currentEnv: %kernel.environment%
 
+    app.aws.storageservice:
+        class: AppBundle\Service\AWSSimpleStorageService
+        arguments:
+          credentials: ['%aws_access_key_id%', '%aws_secret_key%']
+          region: %aws_s3_region%
+          version: %aws_s3_version%
+          bucket: %aws_s3_bucket%
+          currentEnv: %kernel.environment%
+
     app.doctrine.entitygetter:
         class: AppBundle\Service\EntityGetter
         arguments: ['@doctrine.orm.entity_manager']

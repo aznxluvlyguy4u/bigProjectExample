@@ -7,6 +7,7 @@ class Constant
     //Auth
     const AUTHORIZATION_HEADER_NAMESPACE = 'Authorization';
     const ACCESS_TOKEN_HEADER_NAMESPACE = 'AccessToken';
+    const GHOST_TOKEN_HEADER_NAMESPACE = 'GhostToken';
 
     //DeclareBase
     const STATE_NAMESPACE = 'state';
@@ -53,6 +54,7 @@ class Constant
     const CODE_NAMESPACE = 'code';
     const ERRORS_NAMESPACE = 'errors';
     const TYPE_NAMESPACE = 'type';
+    const GHOST_TOKEN_NAMESPACE = 'ghost_token';
 
     //Animal identification
     const ULN_NAMESPACE = 'uln';

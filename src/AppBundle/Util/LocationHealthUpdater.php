@@ -7,6 +7,7 @@ use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
+use AppBundle\Entity\LocationHealthMessage;
 use AppBundle\Entity\MaediVisna;
 use AppBundle\Entity\Scrapie;
 use AppBundle\Enumerator\MaediVisnaStatus;
@@ -78,55 +79,27 @@ class LocationHealthUpdater
         //Persist a new LocationHealthMessage for declareIn, without the healthValues
         self::persistNewLocationHealthMessage($em, $declareIn);
 
-        //Find the previous entities in the history
-        //'previous' refers to the non-revoked LocationHealthMessage-DeclareArrival/DeclareImport and the related
-        //illnesses right before the given one.
-
-        if($declareIn instanceof DeclareArrival) {
-            $criteria = Criteria::create()
-                ->where(Criteria::expr()->lt('arrivalDate', $declareIn->getArrivalDate()))
-                ->andWhere(Criteria::expr()->eq('location', $locationOfDestination))
-                ->orderBy(['arrivalDate' => Criteria::DESC])
-                ->setMaxResults(1);
-        } else { //DeclareImport
-            $criteria = Criteria::create()
-                ->where(Criteria::expr()->lt('arrivalDate', $declareIn->getImportDate()))
-                ->andWhere(Criteria::expr()->eq('location', $locationOfDestination))
-                ->orderBy(['arrivalDate' => Criteria::DESC])
-                ->setMaxResults(1);
+        //Hide/Deactivate all illness records after that one. Even for statuses that didn't change to simplify the logic.
+        if($isDeclareInBase) {
+            self::hideAllFollowingIllnesses($em, $locationOfDestination, $checkDate);
         }
 
-        $previousHealthMessage = $em->getRepository('AppBundle:LocationHealthMessage')
-            ->matching($criteria);
+        //Get the latest values
+        $latestActiveIllnessesDestination = Finder::findLatestActiveIllnessesOfLocation($locationOfDestination, $em); //returns null values if null
+        $previousMaediVisnaDestination = $latestActiveIllnessesDestination->get(Constant::MAEDI_VISNA);
+        $previousScrapieDestination = $latestActiveIllnessesDestination->get(Constant::SCRAPIE);
 
-
-        if($previousHealthMessage->isEmpty()) {
-            $latestActiveIllnessesDestination = Finder::findLatestActiveIllnessesOfLocation($locationOfDestination, $em);
-            $previousMaediVisnaDestination = $latestActiveIllnessesDestination->get(Constant::MAEDI_VISNA);
-            $previousScrapieDestination = $latestActiveIllnessesDestination->get(Constant::SCRAPIE);
-        } else {
-            $previousMaediVisnaDestination = $previousHealthMessage->get(0)->getMaediVisna();
-            $previousScrapieDestination = $previousHealthMessage->get(0)->getScrapie();
-            $latestActiveIllnessesDestination = new ArrayCollection();
-            $latestActiveIllnessesDestination->set(Constant::MAEDI_VISNA, $previousMaediVisnaDestination);
-            $latestActiveIllnessesDestination->set(Constant::SCRAPIE, $previousScrapieDestination);
-        }
-
-        $locationHealthDestination = $locationOfDestination->getLocationHealth();
+        $locationHealthDestination = $locationOfDestination->getLocationHealth(); //Null check already done in the first command of this function
         $previousMaediVisnaDestinationIsHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($previousMaediVisnaDestination->getStatus());
         $previousScrapieDestinationIsHealthy = HealthChecker::verifyIsScrapieStatusHealthy($previousScrapieDestination->getStatus());
 
-        //Default
+        //Initialize default values
         $latestMaediVisnaDestination = $previousMaediVisnaDestination;
         $latestScrapieDestination = $previousScrapieDestination;
 
-        //Hide/Deactivate all illness records after that one. Even for statuses that didn't change to simplify the logic.
-        if($isDeclareInBase) {
-            self::hideAllFollowingIllnesses($em, $locationOfDestination, $latestActiveIllnessesDestination);
-        }
 
         //Do the health check ...
-        
+
         if($locationOfOrigin == null) { //an import or Location that is not in our NSFO database
 
             if( $previousMaediVisnaDestinationIsHealthy ){
@@ -142,13 +115,22 @@ class LocationHealthUpdater
 
         } else { //location of origin is known and in the NSFO database
 
-            $locationOfOrigin = self::persistInitialLocationHealthIfNull($em, $locationOfOrigin, $checkDate);
-
             $locationHealthOrigin = $locationOfOrigin->getLocationHealth();
-            $maediVisnaOrigin = $locationHealthOrigin->getMaediVisnas()->last();
-            $scrapieOrigin = $locationHealthOrigin->getScrapies()->last();
-            $maediVisnaOriginIsHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($maediVisnaOrigin->getStatus());
-            $scrapieOriginIsHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieOrigin->getStatus());
+
+            $maediVisnaOrigin = Finder::findLatestActiveMaediVisna($locationOfOrigin, $em);
+            if($maediVisnaOrigin != null) {
+                $maediVisnaOriginIsHealthy = HealthChecker::verifyIsMaediVisnaStatusHealthy($maediVisnaOrigin->getStatus());
+            } else {
+                $maediVisnaOriginIsHealthy = false;
+            }
+
+            $scrapieOrigin = Finder::findLatestActiveScrapie($locationOfOrigin, $em);
+            if($scrapieOrigin != null) {
+                $scrapieOriginIsHealthy = HealthChecker::verifyIsScrapieStatusHealthy($scrapieOrigin->getStatus());
+            } else {
+                $scrapieOriginIsHealthy = false;
+            }
+
 
             if(!$maediVisnaOriginIsHealthy && $previousMaediVisnaDestinationIsHealthy){
                 $latestMaediVisnaDestination = self::persistNewDefaultMaediVisna($em, $locationHealthDestination, $checkDate);
@@ -193,6 +175,23 @@ class LocationHealthUpdater
         $em->persist($location);
         $em->persist($locationHealthMessage);
         $em->flush();
+    }
+
+    private static function persistNewIllnessesOfLocationIfLatestAreNull(ObjectManager $em, Location $locationOfDestination, \DateTime $checkDate)
+    {
+        $latestActiveIllnessesDestination = Finder::findLatestActiveIllnessesOfLocation($locationOfDestination, $em);
+        $previousMaediVisnaDestination = $latestActiveIllnessesDestination->get(Constant::MAEDI_VISNA);
+        $previousScrapieDestination = $latestActiveIllnessesDestination->get(Constant::SCRAPIE);
+
+        if($previousMaediVisnaDestination == null){
+            $previousMaediVisnaDestination = self::persistNewDefaultMaediVisna($em, $locationOfDestination->getLocationHealth(), $checkDate);
+            $latestActiveIllnessesDestination->set(Constant::MAEDI_VISNA, $previousMaediVisnaDestination);
+        }
+        if($previousScrapieDestination == null){
+            $previousScrapieDestination = self::persistNewDefaultScrapie($em, $locationOfDestination->getLocationHealth(), $checkDate);
+            $latestActiveIllnessesDestination->set(Constant::SCRAPIE, $previousScrapieDestination);
+        }
+        return $latestActiveIllnessesDestination;
     }
 
     /**
@@ -296,12 +295,12 @@ class LocationHealthUpdater
 
         } else {
 
-            $maediVisnaDestination = $locationHealthDestination->getMaediVisnas()->last();
+            $maediVisnaDestination = Finder::findLatestActiveMaediVisna($locationOfDestination, $em);
             if ($maediVisnaDestination == null) {
                 self::persistNewDefaultMaediVisna($em, $locationHealthDestination, $checkDate);
             }
 
-            $scrapieDestination = $locationHealthDestination->getScrapies()->last();
+            $scrapieDestination = Finder::findLatestActiveScrapie($locationOfDestination, $em);
             if ($scrapieDestination == null) {
                 self::persistNewDefaultScrapie($em, $locationHealthDestination, $checkDate);
             }
@@ -333,13 +332,12 @@ class LocationHealthUpdater
      * @param Location $location
      * @param ArrayCollection $latestActiveIllnesses
      */
-    private static function hideAllFollowingIllnesses(ObjectManager $em, Location $location, ArrayCollection $latestActiveIllnesses)
+    private static function hideAllFollowingIllnesses(ObjectManager $em, Location $location, \DateTime $checkDate)
     {
-        $maediVisna = $latestActiveIllnesses->get(Constant::MAEDI_VISNA);
 
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
-            ->andWhere(Criteria::expr()->gt('checkDate', $maediVisna->getCheckDate()))
+            ->andWhere(Criteria::expr()->gt('checkDate', $checkDate))
             ->orderBy(['checkDate' => Criteria::ASC]);
 
         $maediVisnas = $em->getRepository('AppBundle:MaediVisna')
@@ -351,11 +349,9 @@ class LocationHealthUpdater
         }
         $em->flush();
 
-        $scrapie = $latestActiveIllnesses->get(Constant::SCRAPIE);
-
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
-            ->andWhere(Criteria::expr()->gt('checkDate', $scrapie->getCheckDate()))
+            ->andWhere(Criteria::expr()->gt('checkDate', $checkDate))
             ->orderBy(['checkDate' => Criteria::ASC]);
 
         $scrapies = $em->getRepository('AppBundle:Scrapie')

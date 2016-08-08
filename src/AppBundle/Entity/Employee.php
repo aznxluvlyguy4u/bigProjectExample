@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -24,13 +25,39 @@ class Employee extends Person
     private $objectType;
 
     /**
-     * Constructor
+     * @var string
+     *
+     * @Assert\NotBlank
+     * @ORM\Column(type="string")
+     * @JMS\Type("string")
      */
-    public function __construct()
+    private $accessLevel;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="Token", mappedBy="admin", cascade={"persist"})
+     * @JMS\Type("array")
+     */
+    private $ghostTokens;
+
+    /**
+     * Employee constructor.
+     * @param string $accessLevel use the AccessLevelType enumerator values to set the accessLevel
+     * @param string $firstName
+     * @param string $lastName
+     * @param string $emailAddress
+     * @param string $password
+     * @param string $username
+     * @param string $cellphoneNumber
+     */
+    public function __construct($accessLevel, $firstName = null, $lastName = null, $emailAddress = null,
+                              $password = '', $username = null, $cellphoneNumber = null)
     {
         //Call super constructor first
-        parent::__construct();
+        parent::__construct($firstName, $lastName, $emailAddress, $password = '', $username, $cellphoneNumber);
 
+        $this->accessLevel = $accessLevel;
         $this->objectType = "Employee";
     }
 
@@ -94,5 +121,64 @@ class Employee extends Person
         $this->accessToken = $accessToken;
 
         return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAccessLevel()
+    {
+        return $this->accessLevel;
+    }
+
+    /**
+     * @param string $accessLevel
+     */
+    public function setAccessLevel($accessLevel)
+    {
+        $this->accessLevel = $accessLevel;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getGhostTokens()
+    {
+        return $this->ghostTokens;
+    }
+
+    /**
+     * @param ArrayCollection $ghostTokens
+     */
+    public function setGhostTokens($ghostTokens)
+    {
+        $this->ghostTokens = $ghostTokens;
+    }
+
+    
+
+
+    /**
+     * Add ghostToken
+     *
+     * @param \AppBundle\Entity\Token $ghostToken
+     *
+     * @return Employee
+     */
+    public function addGhostToken(\AppBundle\Entity\Token $ghostToken)
+    {
+        $this->ghostTokens[] = $ghostToken;
+
+        return $this;
+    }
+
+    /**
+     * Remove ghostToken
+     *
+     * @param \AppBundle\Entity\Token $ghostToken
+     */
+    public function removeGhostToken(\AppBundle\Entity\Token $ghostToken)
+    {
+        $this->ghostTokens->removeElement($ghostToken);
     }
 }

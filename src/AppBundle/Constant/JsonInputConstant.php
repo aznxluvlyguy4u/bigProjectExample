@@ -28,4 +28,30 @@ class JsonInputConstant
 
     //Loss
     const UBN_DESTRUCTOR = "ubn_destructor";
+    
+    //Company
+    const COMPANY_ID = 'company_id';
+    const COMPANY_NAME = 'company_name';
+    const VAT_NUMBER = 'vat_number';
+    const CHAMBER_OF_COMMERCE_NUMBER = 'chamber_of_commerce_number';
+    const COMPANY_RELATION_NUMBER = 'company_relation_number';
+
+    //Location / UBN
+    const UBN = 'ubn';
+
+    //Clients
+    const FIRST_NAME = 'first_name';
+    const LAST_NAME = "last_name";
+    const EMAIL_ADDRESS = "email_address";
+    const IS_PRIMARY_CONTACT_PERSON = "is_primary_contact_person";
+    const PREFIX = "prefix";
+    
+    const PASSWORD = "password";
+    const USERNAME = "username";
+    const CELLPHONE_NUMBER = "cellphone_number";
+    const RELATION_NUMBER_KEEPER = "relation_number_keeper";
+    
+    //Admins
+    const ADMINS = 'admins';
+    const ACCESS_LEVEL = 'access_level';
 }

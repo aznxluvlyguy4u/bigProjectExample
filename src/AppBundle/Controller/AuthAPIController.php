@@ -4,7 +4,10 @@ namespace AppBundle\Controller;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Client;
+use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Migration\ClientMigration;
 use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\Employee;
@@ -14,6 +17,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Company;
 use AppBundle\Enumerator\MigrationStatus;
 use AppBundle\Setting\MigrationSetting;
+use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Validation\PasswordValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -401,4 +405,33 @@ class AuthAPIController extends APIController {
     }
   }
 
+
+  public function generatePersonIds(Request $request)
+  {
+    $admin = $this->getAuthenticatedEmployee($request);
+    $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
+    if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
+      return $adminValidator->createJsonErrorResponse();
+    }
+
+
+    $personsWithoutPersonId = $this->getDoctrine()->getRepository(Person::class)->findOneBy(['personId' => null]);
+
+    $i = 0;
+    $flushBatchSize = 50;
+
+    foreach ($personsWithoutPersonId as $person) {
+      $person->setPersonId(Utils::generatePersonId());
+      $this->getDoctrine()->getEntityManager()->persist($person);
+
+      $i++;
+      if($i%$flushBatchSize == 0) { //flush per batch
+        $this->getDoctrine()->getEntityManager()->flush();
+      }
+    }
+    $this->getDoctrine()->getEntityManager()->flush();
+
+    return new JsonResponse(array("code" => 200,
+        "message"=>"Person IDs have been generated for all persons that did not have one yet"), 200);
+  }
 }

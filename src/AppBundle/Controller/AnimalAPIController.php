@@ -79,7 +79,6 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     }
 
     //TODO Phase 2 Admin must be able to search all animals for which he is authorized.
-//    $x =  $this->getDoctrine()->getRepository('AppBundle:Employee')->findOneBy(array("accessToken" => $token));
 
     $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
     $client = $this->getAuthenticatedUser($request);
@@ -149,7 +148,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $animals = $this->getDoctrine()
         ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($location);
 
-    $minimizedOutput = AnimalOutput::createAnimalsArray($animals);
+    $minimizedOutput = AnimalOutput::createAnimalsArray($animals, $this->getDoctrine()->getEntityManager());
 
     return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
   }
@@ -298,7 +297,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       return new JsonResponse(array('code'=>404, "message" => "For this account, no animal was found with uln: " . $ulnString), 404);
     }
 
-    $output = AnimalDetailsOutput::create($animal);
+    $output = AnimalDetailsOutput::create($this->getDoctrine()->getEntityManager(), $animal);
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $output), 200);
   }
 
@@ -346,7 +345,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $this->getDoctrine()->getManager()->persist($animal);
     $this->getDoctrine()->getManager()->flush();
 
-    $outputArray = AnimalDetailsOutput::create($animal);
+    $outputArray = AnimalDetailsOutput::create($this->getDoctrine()->getEntityManager(), $animal);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
   }

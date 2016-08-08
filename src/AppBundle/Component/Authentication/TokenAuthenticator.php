@@ -2,6 +2,8 @@
 
 namespace AppBundle\Component\Authentication;
 
+use AppBundle\Entity\Token;
+use AppBundle\Enumerator\TokenType;
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,6 +22,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 class TokenAuthenticator extends AbstractGuardAuthenticator  {
 
   const ACCESS_TOKEN_HEADER_NAMESPACE = 'AccessToken';
+  const GHOST_TOKEN_HEADER_NAMESPACE = 'GhostToken';
   const PERSON_SHORT_ENTITY_PATH = 'AppBundle:Person';
 
   /**
@@ -107,9 +110,18 @@ class TokenAuthenticator extends AbstractGuardAuthenticator  {
     if($request->headers->has($this::ACCESS_TOKEN_HEADER_NAMESPACE)) {
       $token = $request->headers->get($this::ACCESS_TOKEN_HEADER_NAMESPACE);
 
+      if($request->headers->has($this::GHOST_TOKEN_HEADER_NAMESPACE)) {
+        $ghostToken = $request->headers->get($this::GHOST_TOKEN_HEADER_NAMESPACE);
+
+        return array(
+            'accessToken' => $token,
+            'ghostToken' => $ghostToken
+        );
+      }
+
       // What you return here will be passed to getUser() as $credentials
       return array(
-        'accessToken' => $token,
+        'accessToken' => $token
       );
     }
 
@@ -132,12 +144,33 @@ class TokenAuthenticator extends AbstractGuardAuthenticator  {
    * @return UserInterface|null
    */
   public function getUser($credentials, UserProviderInterface $userProvider) {
-    $accessToken = $credentials['accessToken'];
+    $accessTokenCode = $credentials['accessToken'];
 
     // if null, authentication will fail
     // if a User object, checkCredentials() is called
-    return $this->entityManager->getRepository($this::PERSON_SHORT_ENTITY_PATH)
-      ->findOneBy(array('accessToken' => $accessToken));
+    $accessToken = $this->entityManager->getRepository(Token::class)
+        ->findOneBy(array('code' => $accessTokenCode));
+
+    $user = null;
+    if ($accessToken != null) {
+      $user = $accessToken->getOwner();
+    }
+    //Also verify the ghostToken and return null, if ghostToken is not valid
+    if (array_key_exists('ghostToken', $credentials) && $accessToken != null) {
+      $ghostTokenCode = $credentials['ghostToken'];
+      $ghostToken = $this->entityManager->getRepository(Token::class)
+          ->findOneBy(array('code' => $ghostTokenCode));
+
+      if ($ghostToken == null) {
+        $user = null; //deny access
+      } else {
+        if ($ghostToken->getType() != TokenType::GHOST || !$ghostToken->getIsVerified()) {
+          $user = null; //deny access
+        }
+      }
+    }
+
+    return $user;
   }
 
   /**

@@ -3,6 +3,7 @@
 namespace AppBundle\Output;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
+use Doctrine\ORM\EntityManager;
 
 /**
  * Class HealthOutput
@@ -14,9 +15,9 @@ class HealthOutput extends Output
      * @param Location $location
      * @return array
      */
-    public static function create(Client $client, Location $location = null)
+    public static function create(EntityManager $em, Client $client, Location $location = null)
     {
-        self:: setUbnAndLocationHealthValues($location);
+        self:: setUbnAndLocationHealthValues($em, $location);
 
         $result = array(
                   "ubn" => self::$ubn,

@@ -4,6 +4,7 @@ namespace AppBundle\Output;
 
 
 use AppBundle\Entity\DeclareImport;
+use Doctrine\ORM\EntityManager;
 
 /**
  * Class DeclareImportOutput
@@ -14,7 +15,7 @@ class DeclareImportOutput extends Output
      * @param DeclareImport $import
      * @return array
      */
-    public static function createPostRequestArray(DeclareImport $import)
+    public static function createPostRequestArray(EntityManager $em, DeclareImport $import)
     {
         $animal = $import->getAnimal();
         if($animal != null) {
@@ -23,7 +24,7 @@ class DeclareImportOutput extends Output
             $animalId = null;
         }
 
-        self::setUbnAndLocationHealthValues($import->getLocation());
+        self::setUbnAndLocationHealthValues($em, $import->getLocation());
 
         $result = array("id" => $import->getId(),
             "request_id" => $import->getRequestId(),
@@ -67,7 +68,7 @@ class DeclareImportOutput extends Output
     }
 
 
-    public static function createUpdateRequestArray(DeclareImport $import)
+    public static function createUpdateRequestArray(EntityManager $em, DeclareImport $import)
     {
         //At this moment the update array is identical to post array
         return self::createPostRequestArray($import);

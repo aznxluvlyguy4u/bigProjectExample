@@ -379,6 +379,14 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @Expose
      */
+    protected $breed;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @Expose
+     */
     protected $breedType;
 
     /**
@@ -412,6 +420,21 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      */
     protected $scrapieGenotype;
+
+    /**
+     * @var Litter
+     * @JMS\Type("AppBundle\Entity\Litter")
+     * @ORM\ManyToOne(targetEntity="Litter", inversedBy="children")
+     * @ORM\JoinColumn(name="litter_id", referencedColumnName="id")
+     */
+    protected $litter;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    protected $note;
 
     /**
      * Animal constructor.
@@ -1532,6 +1555,22 @@ abstract class Animal
     }
 
     /**
+     * @return string
+     */
+    public function getBreed()
+    {
+        return $this->breed;
+    }
+
+    /**
+     * @param string $breed
+     */
+    public function setBreed($breed)
+    {
+        $this->breed = $breed;
+    }
+
+    /**
      * Set breedType
      *
      * @param string $breedType
@@ -1670,4 +1709,55 @@ abstract class Animal
     {
         return $this->exteriorMeasurements;
     }
+
+    /**
+     * @return Litter
+     */
+    public function getLitter()
+    {
+        return $this->litter;
+    }
+
+    /**
+     * @param Litter $litter
+     */
+    public function setLitter($litter)
+    {
+        $this->litter = $litter;
+    }
+
+    /**
+     * @return Breeder
+     */
+    public function getBreeder()
+    {
+        return $this->breeder;
+    }
+
+    /**
+     * @param Breeder $breeder
+     */
+    public function setBreeder($breeder)
+    {
+        $this->breeder = $breeder;
+    }
+
+    /**
+     * @return string
+     */
+    public function getNote()
+    {
+        return $this->note;
+    }
+
+    /**
+     * @param string $note
+     */
+    public function setNote($note)
+    {
+        $this->note = $note;
+    }
+
+    
+    
 }

@@ -7,23 +7,6 @@ use AppBundle\Setting\MigrationSetting;
 
 class ClientRepository extends BaseRepository {
 
-
-    public function getByToken($token)
-    {
-
-        $em = $this->getEntityManager();
-        $client = $em->getRepository(Constant::CLIENT_REPOSITORY)->findOneBy(array('accessToken' => $token));
-
-        return $client;
-    }
-
-    public function getRelationNumberKeeper($token)
-    {
-        $client = $this->getByToken($token);
-
-        return $client->getRelationNumberKeeper();
-    }
-
     public function getByRelationNumberKeeper($relationNumberKeeper)
     {
         $repository = $this->getEntityManager()->getRepository(Constant::CLIENT_REPOSITORY);
@@ -41,6 +24,19 @@ class ClientRepository extends BaseRepository {
     {
         $repository = $this->getEntityManager()->getRepository(Constant::CLIENT_REPOSITORY);
         $client = $repository->findOneBy(array("emailAddress" => $email));
+
+        return $client;
+    }
+
+    public function getByUbn($ubn)
+    {
+        $repository = $this->getEntityManager()->getRepository(Constant::LOCATION_REPOSITORY);
+        $location = $repository->findOneBy(array("ubn" => $ubn));
+        if($location == null) {
+            return null;
+        } else {
+            $client = $location->getCompany()->getOwner();
+        }
 
         return $client;
     }

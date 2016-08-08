@@ -2,7 +2,9 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Entity\Animal;
 use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -45,9 +47,9 @@ class Litter {
     private $litterDate;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Animal")
+     * @ORM\ManyToOne(targetEntity="Ram", inversedBy="litters")
      * @ORM\JoinColumn(name="animal_father_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\Animal")
+     * @JMS\Type("AppBundle\Entity\Ram")
      */
     private $animalFather;
 
@@ -59,6 +61,14 @@ class Litter {
     private $animalMother;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @JMS\Type("string")
+     */
+    private $litterGroup;
+
+    /**
      * @var integer
      *
      * @ORM\Column(type="integer")
@@ -67,10 +77,17 @@ class Litter {
     private $size;
 
     /**
+     * @ORM\OneToMany(targetEntity="Animal", mappedBy="litter")
+     * @JMS\Type("AppBundle\Entity\Animal")
+     */
+    private $children;
+    
+    /**
      * Litter constructor.
      */
     public function __construct() {
-
+        $this->children = new ArrayCollection();
+        $this->logDate = new \DateTime();
     }
 
     /**
@@ -202,4 +219,56 @@ class Litter {
     {
         return $this->animalMother;
     }
+
+    /**
+     * Add child
+     *
+     * @param Animal $child
+     *
+     * @return Litter
+     */
+    public function addChild(Animal $child)
+    {
+        $this->children[] = $child;
+
+        return $this;
+    }
+
+    /**
+     * Remove child
+     *
+     * @param Animal $child
+     */
+    public function removeChild(Animal $child)
+    {
+        $this->children->removeElement($child);
+    }
+
+    /**
+     * Get children
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getChildren()
+    {
+        return $this->children;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLitterGroup()
+    {
+        return $this->litterGroup;
+    }
+
+    /**
+     * @param string $litterGroup
+     */
+    public function setLitterGroup($litterGroup)
+    {
+        $this->litterGroup = $litterGroup;
+    }
+
+    
 }

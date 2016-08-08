@@ -36,6 +36,14 @@ class Ram extends Animal
      private $objectType;
 
     /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="Litter", mappedBy="animalFather")
+     * @JMS\Type("AppBundle\Entity\Ram")
+     */
+    protected $litters;
+
+    /**
      * Ram constructor.
      */
      public function __construct() {
@@ -47,7 +55,7 @@ class Ram extends Animal
          $this->setAnimalCategory(3);
          $this->setGender(GenderType::MALE);
 
-         //Create children array
+         $this->litters = new ArrayCollection();
          $this->children = new ArrayCollection();
     }
 
@@ -404,5 +412,39 @@ class Ram extends Animal
     public function getExteriorMeasurements()
     {
         return $this->exteriorMeasurements;
+    }
+
+    /**
+     * Add litter
+     *
+     * @param \AppBundle\Entity\Litter $litter
+     *
+     * @return Ram
+     */
+    public function addLitter(\AppBundle\Entity\Litter $litter)
+    {
+        $this->litters[] = $litter;
+
+        return $this;
+    }
+
+    /**
+     * Remove litter
+     *
+     * @param \AppBundle\Entity\Litter $litter
+     */
+    public function removeLitter(\AppBundle\Entity\Litter $litter)
+    {
+        $this->litters->removeElement($litter);
+    }
+
+    /**
+     * Get litters
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getLitters()
+    {
+        return $this->litters;
     }
 }

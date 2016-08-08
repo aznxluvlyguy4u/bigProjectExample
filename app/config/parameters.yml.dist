@@ -29,3 +29,7 @@ parameters:
     aws_sqs_queue_dev: ~
     aws_sqs_queue_test: ~
     aws_sqs_queue_local: ~
+
+    aws_s3_region: ~
+    aws_s3_version: ~
+    aws_s3_bucket: ~

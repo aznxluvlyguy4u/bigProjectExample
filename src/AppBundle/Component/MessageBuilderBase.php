@@ -63,16 +63,16 @@ class MessageBuilderBase
                 $this->actionType = ActionType::V_MUTATE;
                 break;
             case 'dev':
-                $this->actionType = ActionType::C_READ_ONLY;
+                $this->actionType = ActionType::V_MUTATE;
                 break;
             case 'test':
                 $this->actionType = ActionType::C_READ_ONLY;
                 break;
             case 'local':
-                $this->actionType = ActionType::C_READ_ONLY;
+                $this->actionType = ActionType::V_MUTATE;
                 break;
             default; //dev
-                $this->actionType = ActionType::C_READ_ONLY;
+                $this->actionType = ActionType::V_MUTATE;
                 break;
         }
     }
