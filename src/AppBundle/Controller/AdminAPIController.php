@@ -93,7 +93,7 @@ class AdminAPIController extends APIController {
    * @Route("")
    * @Method("POST")
    */
-  public function createClient(Request $request)
+  public function createAdmins(Request $request)
   {
     $admin = $this->getAuthenticatedEmployee($request);
     $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
