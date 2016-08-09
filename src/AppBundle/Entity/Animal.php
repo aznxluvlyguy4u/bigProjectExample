@@ -353,33 +353,6 @@ abstract class Animal
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="Fat1", mappedBy="animal", cascade={"persist"})
-     * @ORM\OrderBy({"measurementDate" = "ASC"})
-     * @JMS\Type("AppBundle\Entity\Fat1")
-     */
-    protected $fat1Measurements;
-
-    /**
-     * @var ArrayCollection
-     *
-     * @ORM\OneToMany(targetEntity="Fat2", mappedBy="animal", cascade={"persist"})
-     * @ORM\OrderBy({"measurementDate" = "ASC"})
-     * @JMS\Type("AppBundle\Entity\Fat2")
-     */
-    protected $fat2Measurements;
-
-    /**
-     * @var ArrayCollection
-     *
-     * @ORM\OneToMany(targetEntity="Fat3", mappedBy="animal", cascade={"persist"})
-     * @ORM\OrderBy({"measurementDate" = "ASC"})
-     * @JMS\Type("AppBundle\Entity\Fat3")
-     */
-    protected $fat3Measurements;
-
-    /**
-     * @var ArrayCollection
-     *
      * @ORM\OneToMany(targetEntity="MuscleThickness", mappedBy="animal", cascade={"persist"})
      * @ORM\OrderBy({"measurementDate" = "ASC"})
      * @JMS\Type("AppBundle\Entity\MuscleThickness")
@@ -489,9 +462,6 @@ abstract class Animal
         $this->deaths = new ArrayCollection();
         $this->animalResidenceHistory = new ArrayCollection();
         $this->bodyFatMeasurements = new ArrayCollection();
-        $this->fat1Measurements = new ArrayCollection();
-        $this->fat2Measurements = new ArrayCollection();
-        $this->fat3Measurements = new ArrayCollection();
         $this->muscleThicknessMeasurements = new ArrayCollection();
         $this->tailLengthMeasurements = new ArrayCollection();
         $this->weightMeasurements = new ArrayCollection();
@@ -500,7 +470,6 @@ abstract class Animal
         $this->tagReplacements = new ArrayCollection();
         $this->matings = new ArrayCollection();
         $this->parents = new ArrayCollection();
-        
         $this->isAlive = true;
         $this->ulnCountryCode = '';
         $this->ulnNumber = '';
@@ -1836,107 +1805,5 @@ abstract class Animal
     public function getParentNeuter()
     {
         return $this->parentNeuter;
-    }
-
-    /**
-     * Add fat1Measurement
-     *
-     * @param \AppBundle\Entity\Fat1 $fat1Measurement
-     *
-     * @return Animal
-     */
-    public function addFat1Measurement(\AppBundle\Entity\Fat1 $fat1Measurement)
-    {
-        $this->fat1Measurements[] = $fat1Measurement;
-
-        return $this;
-    }
-
-    /**
-     * Remove fat1Measurement
-     *
-     * @param \AppBundle\Entity\Fat1 $fat1Measurement
-     */
-    public function removeFat1Measurement(\AppBundle\Entity\Fat1 $fat1Measurement)
-    {
-        $this->fat1Measurements->removeElement($fat1Measurement);
-    }
-
-    /**
-     * Get fat1Measurements
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getFat1Measurements()
-    {
-        return $this->fat1Measurements;
-    }
-
-    /**
-     * Add fat2Measurement
-     *
-     * @param \AppBundle\Entity\Fat2 $fat2Measurement
-     *
-     * @return Animal
-     */
-    public function addFat2Measurement(\AppBundle\Entity\Fat2 $fat2Measurement)
-    {
-        $this->fat2Measurements[] = $fat2Measurement;
-
-        return $this;
-    }
-
-    /**
-     * Remove fat2Measurement
-     *
-     * @param \AppBundle\Entity\Fat2 $fat2Measurement
-     */
-    public function removeFat2Measurement(\AppBundle\Entity\Fat2 $fat2Measurement)
-    {
-        $this->fat2Measurements->removeElement($fat2Measurement);
-    }
-
-    /**
-     * Get fat2Measurements
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getFat2Measurements()
-    {
-        return $this->fat2Measurements;
-    }
-
-    /**
-     * Add fat3Measurement
-     *
-     * @param \AppBundle\Entity\Fat3 $fat3Measurement
-     *
-     * @return Animal
-     */
-    public function addFat3Measurement(\AppBundle\Entity\Fat3 $fat3Measurement)
-    {
-        $this->fat3Measurements[] = $fat3Measurement;
-
-        return $this;
-    }
-
-    /**
-     * Remove fat3Measurement
-     *
-     * @param \AppBundle\Entity\Fat3 $fat3Measurement
-     */
-    public function removeFat3Measurement(\AppBundle\Entity\Fat3 $fat3Measurement)
-    {
-        $this->fat3Measurements->removeElement($fat3Measurement);
-    }
-
-    /**
-     * Get fat3Measurements
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getFat3Measurements()
-    {
-        return $this->fat3Measurements;
     }
 }

@@ -22,12 +22,13 @@ class Fat1 extends Measurement {
    * @Assert\NotBlank
    */
   private $fat;
-
+  
   /**
-   * @ORM\ManyToOne(targetEntity="Animal", inversedBy="fat1Measurements")
-   * @JMS\Type("AppBundle\Entity\Animal")
+   * @ORM\OneToOne(targetEntity="BodyFat", mappedBy="fat1")
+   * @JMS\Type("AppBundle\Entity\BodyFat")
    */
-  private $animal;
+  private $bodyFat;
+
 
   /**
    * Fat1 constructor.
@@ -64,30 +65,6 @@ class Fat1 extends Measurement {
   }
 
   /**
-   * Set animal
-   *
-   * @param \AppBundle\Entity\Fat1 $animal
-   *
-   * @return Fat1
-   */
-  public function setAnimal(\AppBundle\Entity\Animal $animal = null)
-  {
-    $this->animal = $animal;
-
-    return $this;
-  }
-
-  /**
-   * Get animal
-   *
-   * @return \AppBundle\Entity\Fat1
-   */
-  public function getAnimal()
-  {
-    return $this->animal;
-  }
-
-  /**
    * Set inspector
    *
    * @param \AppBundle\Entity\Inspector $inspector
@@ -110,4 +87,28 @@ class Fat1 extends Measurement {
   {
     return $this->inspector;
   }
+
+    /**
+     * Set bodyFat
+     *
+     * @param \AppBundle\Entity\BodyFat $bodyFat
+     *
+     * @return Fat1
+     */
+    public function setBodyFat(\AppBundle\Entity\BodyFat $bodyFat = null)
+    {
+        $this->bodyFat = $bodyFat;
+
+        return $this;
+    }
+
+    /**
+     * Get bodyFat
+     *
+     * @return \AppBundle\Entity\BodyFat
+     */
+    public function getBodyFat()
+    {
+        return $this->bodyFat;
+    }
 }
