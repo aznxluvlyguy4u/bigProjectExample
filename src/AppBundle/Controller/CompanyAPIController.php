@@ -11,8 +11,10 @@ use AppBundle\Entity\CompanyNote;
 use AppBundle\Entity\BillingAddress;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
+use AppBundle\Output\CompanyNoteOutput;
 use AppBundle\Output\CompanyOutput;
 use AppBundle\Validation\AdminValidator;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -101,6 +103,7 @@ class CompanyAPIController extends APIController
 
         // Create Owner
         $contentOwner = $content->get('owner');
+
         $owner = new Client();
         $owner->setFirstName($contentOwner['first_name']);
         $owner->setLastName($contentOwner['last_name']);
@@ -113,7 +116,11 @@ class CompanyAPIController extends APIController
         $address = new CompanyAddress();
         $address->setStreetName($contentAddress['street_name']);
         $address->setAddressNumber($contentAddress['address_number']);
-        $address->setAddressNumberSuffix($contentAddress['suffix']);
+
+        if(isset($contentAddress['suffix'])) {
+            $address->setAddressNumberSuffix($contentAddress['suffix']);
+        }
+
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
         $address->setState($contentAddress['state']);
@@ -124,7 +131,11 @@ class CompanyAPIController extends APIController
         $billingAddress = new BillingAddress();
         $billingAddress->setStreetName($contentBillingAddress['street_name']);
         $billingAddress->setAddressNumber($contentBillingAddress['address_number']);
-        $billingAddress->setAddressNumberSuffix($contentBillingAddress['suffix']);
+
+        if(isset($contentBillingAddress['suffix'])) {
+            $billingAddress->setAddressNumberSuffix($contentBillingAddress['suffix']);
+        }
+
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
         $billingAddress->setState($contentBillingAddress['state']);
@@ -145,15 +156,19 @@ class CompanyAPIController extends APIController
         $company->setBillingAddress($billingAddress);
 
         // Create Location
+        $locations = new ArrayCollection();
         $contentLocations = $content->get('locations');
-
         foreach ($contentLocations as $contentLocation) {
             // Create Location Address
             $contentLocationAddress = $contentLocation['address'];
             $locationAddress = new LocationAddress();
             $locationAddress->setStreetName($contentLocationAddress['street_name']);
             $locationAddress->setAddressNumber($contentLocationAddress['address_number']);
-            $locationAddress->setAddressNumberSuffix($contentLocationAddress['suffix']);
+
+            if(isset($contentLocationAddress['suffix'])) {
+                $locationAddress->setAddressNumberSuffix($contentLocationAddress['suffix']);
+            }
+
             $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
             $locationAddress->setCity($contentLocationAddress['city']);
             $locationAddress->setState($contentLocationAddress['state']);
@@ -162,9 +177,11 @@ class CompanyAPIController extends APIController
             $location = new Location();
             $location->setUbn($contentLocation['ubn']);
             $location->setAddress($locationAddress);
-
-            $company->addLocation($location);
+            $location->setCompany($company);
+            $locations->add($location);
         }
+
+        $company->setLocations($locations);
 
         // Create Users
         $contentUsers = $content->get('users');
@@ -194,6 +211,7 @@ class CompanyAPIController extends APIController
     }
 
     /**
+     * @var Company $company
      * @param Request $request the request object
      *
      * @return JsonResponse
@@ -209,7 +227,6 @@ class CompanyAPIController extends APIController
         if (!$adminValidator->getIsAccessGranted()) {
             return $adminValidator->createJsonErrorResponse();
         }
-
         // Validate content
         $content = $this->getContentAsArray($request);
         // TODO VALIDATE CONTENT
@@ -217,9 +234,213 @@ class CompanyAPIController extends APIController
         // Get Company
         $contentCompanyId = $content->get('company_id');
         $repository = $this->getDoctrine()->getRepository(Constant::COMPANY_REPOSITORY);
-        $company = $repository->find($contentCompanyId);
+        $company = $repository->findOneByCompanyId($contentCompanyId);
 
-        // TODO UPDATE COMPANY
+        /**
+         * @var Company $company
+         * @var Client $owner
+         */
+
+        // Update Owner
+        $contentOwner = $content->get('owner');
+        if(isset($contentOwner['person_id'])) {
+            $contentPersonId = $contentOwner['person_id'];
+            $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
+            $owner = $repository->findOneByPersonId($contentPersonId);
+
+            $owner->setFirstName($contentOwner['first_name']);
+            $owner->setLastName($contentOwner['last_name']);
+            $owner->setEmailAddress($contentOwner['email_address']);
+
+            $this->getDoctrine()->getEntityManager()->persist($owner);
+            $this->getDoctrine()->getEntityManager()->flush();
+        } else {
+            $owner = $company->getOwner();
+            $owner->setIsActive(false);
+            $this->getDoctrine()->getEntityManager()->persist($owner);
+            $this->getDoctrine()->getEntityManager()->flush();
+
+            $owner = new Client();
+            $owner->setFirstName($contentOwner['first_name']);
+            $owner->setLastName($contentOwner['last_name']);
+            $owner->setEmailAddress($contentOwner['email_address']);
+            $owner->setObjectType('Client');
+            $owner->setIsActive(true);
+            $company->setOwner($owner);
+
+            // TODO OWNER -> GENERATE TOKEN
+            // TODO OWNER -> GENERATE PASSWORD
+            // TODO OWNER -> EMAIL PASSWORD
+        }
+
+        // Update Address
+        $address = $company->getAddress();
+        $contentAddress = $content->get('address');
+
+        $address->setStreetName($contentAddress['street_name']);
+        $address->setAddressNumber($contentAddress['address_number']);
+
+        if(isset($contentAddress['suffix'])) {
+            $address->setAddressNumberSuffix($contentAddress['suffix']);
+        } else {
+            $address->setAddressNumberSuffix('');
+        }
+
+        $address->setPostalCode($contentAddress['postal_code']);
+        $address->setCity($contentAddress['city']);
+        $address->setState($contentAddress['state']);
+        $address->setCountry('');
+
+        // Update Billing Address
+        $billingAddress = $company->getAddress();
+        $contentBillingAddress = $content->get('billing_address');
+
+        $billingAddress->setStreetName($contentBillingAddress['street_name']);
+        $billingAddress->setAddressNumber($contentBillingAddress['address_number']);
+
+        if(isset($contentBillingAddress['suffix'])) {
+            $billingAddress->setAddressNumberSuffix($contentBillingAddress['suffix']);
+        } else {
+            $billingAddress->setAddressNumberSuffix('');
+        }
+
+        $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
+        $billingAddress->setCity($contentBillingAddress['city']);
+        $billingAddress->setState($contentBillingAddress['state']);
+        $billingAddress->setCountry('');
+
+        // Update Company
+        $company->setCompanyName($content->get('company_name'));
+        $company->setTelephoneNumber($content->get('telephone_number'));
+        $company->setCompanyRelationNumber($content->get('company_relation_number'));
+        $company->setDebtorNumber($content->get('debtor_number'));
+        $company->setVatNumber($content->get('vat_number'));
+        $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
+        $company->setAnimalHealthSubscription($content->get('animal_health_subscription'));
+
+        // Update Location
+
+
+        // Deleted Locations -> Set 'isActive' to false
+        $contentDeletedLocations = $content->get('deleted_locations');
+        foreach($contentDeletedLocations as $contentDeletedLocation) {
+            $contentLocationId = $contentDeletedLocation['location_id'];
+            $repository = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY);
+            $location = $repository->findOneByLocationId($contentLocationId);
+
+            if ($location) {
+                $location->setIsActive(false);
+                $this->getDoctrine()->getEntityManager()->persist($location);
+                $this->getDoctrine()->getEntityManager()->flush();
+            }
+        }
+
+        // Updated Locations
+        $contentLocations = $content->get('locations');
+
+        foreach($contentLocations as $contentLocation) {
+            /**
+             * @var Location $location
+             */
+            if(isset($contentLocation['location_id'])) {
+                $contentLocationId = $contentLocation['location_id'];
+                $repository = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY);
+                $location = $repository->findOneByLocationId($contentLocationId);
+
+                $location->setUbn($contentLocation['ubn']);
+                $locationAddress = $location->getAddress();
+                $contentLocationAddress = $contentLocation['address'];
+                $locationAddress->setStreetName($contentLocationAddress['street_name']);
+                $locationAddress->setAddressNumber($contentLocationAddress['address_number']);
+
+                if(isset($contentLocationAddress['suffix'])) {
+                    $locationAddress->setAddressNumberSuffix($contentLocationAddress['suffix']);
+                } else {
+                    $locationAddress->setAddressNumberSuffix('');
+                }
+
+                $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
+                $locationAddress->setCity($contentLocationAddress['city']);
+                $locationAddress->setState($contentLocationAddress['state']);
+                $locationAddress->setCountry('');
+
+                $this->getDoctrine()->getEntityManager()->persist($location);
+                $this->getDoctrine()->getEntityManager()->flush();
+            } else {
+                $contentLocationAddress = $contentLocation['address'];
+                $locationAddress = new LocationAddress();
+                $locationAddress->setStreetName($contentLocationAddress['street_name']);
+                $locationAddress->setAddressNumber($contentLocationAddress['address_number']);
+
+                if(isset($contentLocationAddress['suffix'])) {
+                    $locationAddress->setAddressNumberSuffix($contentLocationAddress['suffix']);
+                }
+
+                $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
+                $locationAddress->setCity($contentLocationAddress['city']);
+                $locationAddress->setState($contentLocationAddress['state']);
+                $locationAddress->setCountry('');
+
+                $location = new Location();
+                $location->setUbn($contentLocation['ubn']);
+                $location->setAddress($locationAddress);
+                $location->setCompany($company);
+                $company->addLocation($location);
+            }
+        }
+
+        // Update Users
+
+        // Deleted Users -> Set 'isActive' to false
+        $contentDeletedUsers = $content->get('deleted_users');
+        foreach ($contentDeletedUsers as $contentDeletedUser) {
+            $contentPersonId = $contentDeletedUser['person_id'];
+            $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
+            $user = $repository->findOneByPersonId($contentPersonId);
+
+            if ($user) {
+                /**
+                 * @var Client $user
+                 */
+                $user->setIsActive(false);
+                $this->getDoctrine()->getEntityManager()->persist($user);
+                $this->getDoctrine()->getEntityManager()->flush();
+            }
+        }
+
+        // Updated Users
+        $contentUsers = $content->get('users');
+        foreach($contentUsers as $contentUser) {
+            if(isset($contentUser['person_id'])) {
+                $contentPersonId = $contentUser['person_id'];
+                $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
+                $user = $repository->findOneByPersonId($contentPersonId);
+
+                $user->setFirstName($contentUser['first_name']);
+                $user->setLastName($contentUser['last_name']);
+                $user->setEmailAddress($contentUser['email_address']);
+
+                $this->getDoctrine()->getEntityManager()->persist($user);
+                $this->getDoctrine()->getEntityManager()->flush();
+            } else {
+                $user = new Client();
+                $user->setFirstName($contentUser['first_name']);
+                $user->setLastName($contentUser['last_name']);
+                $user->setEmailAddress($contentUser['email_address']);
+                $user->setObjectType('Client');
+                $user->setIsActive(true);
+                $user->setEmployer($company);
+                $company->addCompanyUser($user);
+
+                // TODO GENERATE TOKEN
+                // TODO GENERATE PASSWORD
+                // TODO EMAIL PASSWORD
+            }
+
+        }
+
+        $this->getDoctrine()->getEntityManager()->persist($company);
+        $this->getDoctrine()->getEntityManager()->flush();
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
     }
@@ -249,7 +470,7 @@ class CompanyAPIController extends APIController
         // Generate Company Details
         $result = CompanyOutput::createCompanyDetails($company);
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+        return new \AppBundle\Component\HttpFoundation\JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
 
     /**
@@ -278,9 +499,9 @@ class CompanyAPIController extends APIController
          * @var $company Company
          */
         // Get Company Notes
-        $result = $company->getNotes()->toArray();
+        $result = CompanyNoteOutput::createNotes($company);
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+        return new \AppBundle\Component\HttpFoundation\JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
 
     /**
@@ -316,9 +537,12 @@ class CompanyAPIController extends APIController
         $note->setCompany($company);
         $note->setNote($content['note']);
 
-        // TODO PERSIST DATA
+        $this->getDoctrine()->getEntityManager()->persist($note);
+        $this->getDoctrine()->getEntityManager()->flush();
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
+        $result = CompanyNoteOutput::createNoteResponse($note);
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
 
     /**

@@ -151,7 +151,7 @@ class Company
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="Client", mappedBy="employer")
+     * @ORM\OneToMany(targetEntity="Client", mappedBy="employer", cascade={"persist"})
      * @JMS\Type("array")
      */
     private $companyUsers;
@@ -286,6 +286,14 @@ class Company
     public function removeLocation(Location $location)
     {
         $this->locations->removeElement($location);
+    }
+
+    /**
+     * @param ArrayCollection $locations
+     */
+    public function setLocations($locations)
+    {
+        $this->locations = $locations;
     }
 
     /**
@@ -588,6 +596,15 @@ class Company
     {
         return $this->companyUsers;
     }
+
+    /**
+     * @param ArrayCollection $companyUsers
+     */
+    public function setCompanyUsers($companyUsers)
+    {
+        $this->companyUsers = $companyUsers;
+    }
+
 
     /**
      * Add companyUser

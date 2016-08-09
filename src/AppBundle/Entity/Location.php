@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Component\Utils;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -29,6 +30,15 @@ class Location
    * @Expose
    */
   protected $id;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $locationId;
 
   /**
    * @var string
@@ -177,6 +187,15 @@ class Location
     private $inspections;
 
     /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", options={"default":true})
+     * @JMS\Type("boolean")
+     * @Expose
+     */
+    private $isActive;
+
+    /**
     * Constructor
     */
   public function __construct()
@@ -193,7 +212,24 @@ class Location
     $this->revokes = new ArrayCollection();
     $this->healthMessages = new ArrayCollection();
     $this->animalResidenceHistory = new ArrayCollection();
+    $this->setLocationId(Utils::generateTokenCode());
   }
+
+    /**
+     * @return string
+     */
+    public function getLocationId()
+    {
+        return $this->locationId;
+    }
+
+    /**
+     * @param string $locationId
+     */
+    public function setLocationId($locationId)
+    {
+        $this->locationId = $locationId;
+    }
 
   /**
    * Add arrival
@@ -750,4 +786,22 @@ class Location
     {
         $this->inspections = $inspections;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getIsActive()
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param mixed $isActive
+     */
+    public function setIsActive($isActive)
+    {
+        $this->isActive = $isActive;
+    }
+
+
 }

@@ -79,9 +79,12 @@ abstract class Person implements UserInterface
    */
   protected $tokens;
 
-  /**
-   * @ORM\Column(name="is_active", type="boolean")
-   */
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", options={"default":true})
+     * @JMS\Type("boolean")
+     */
   private $isActive;
 
   /**

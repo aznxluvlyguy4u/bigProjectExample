@@ -115,8 +115,8 @@ class CompanyOutput
         $res['address'] = array(
             'street_name' => Utils::fillNull($company->getAddress()->getStreetName()),
             'address_number' => Utils::fillNull($company->getAddress()->getAddressNumber()),
-            'suffix' => Utils::fillNull($company->getAddress()->getPostalCode()),
-            'postal_code' => Utils::fillNull($company->getAddress()->getCity()),
+            'suffix' => Utils::fillNull($company->getAddress()->getAddressNumberSuffix()),
+            'postal_code' => Utils::fillNull($company->getAddress()->getPostalCode()),
             'city' => Utils::fillNull($company->getAddress()->getCity()),
             'state' => Utils::fillNull($company->getAddress()->getState()),
             'country' => Utils::fillNull($company->getAddress()->getCountry()),
@@ -125,65 +125,52 @@ class CompanyOutput
         $res['billing_address'] = array(
             'street_name' => Utils::fillNull($company->getBillingAddress()->getStreetName()),
             'address_number' => Utils::fillNull($company->getBillingAddress()->getAddressNumber()),
-            'suffix' => Utils::fillNull($company->getBillingAddress()->getPostalCode()),
-            'postal_code' => Utils::fillNull($company->getBillingAddress()->getCity()),
+            'suffix' => Utils::fillNull($company->getBillingAddress()->getAddressNumberSuffix()),
+            'postal_code' => Utils::fillNull($company->getBillingAddress()->getPostalCode()),
             'city' => Utils::fillNull($company->getBillingAddress()->getCity()),
             'state' => Utils::fillNull($company->getBillingAddress()->getState()),
             'country' => Utils::fillNull($company->getBillingAddress()->getCountry()),
         );
 
-        $res['locations'] = [];
         $locations = $company->getLocations();
-
+        $res['locations'] = [];
         foreach ($locations as $location) {
-            $res['locations'][] = $location;
+            if($location->getIsActive()) {
+                $newLocation = array();
+                $newLocation['location_id'] = $location->getLocationId();
+                $newLocation['ubn'] = $location->getUbn();
+                $newLocation['is_active'] = $location->getIsActive();
+                $newLocation['address'] = array(
+                    'street_name' => Utils::fillNull($location->getAddress()->getStreetName()),
+                    'address_number' => Utils::fillNull($location->getAddress()->getAddressNumber()),
+                    'suffix' => Utils::fillNull($location->getAddress()->getAddressNumberSuffix()),
+                    'postal_code' => Utils::fillNull($location->getAddress()->getPostalCode()),
+                    'city' => Utils::fillNull($location->getAddress()->getCity()),
+                    'state' => Utils::fillNull($location->getAddress()->getState()),
+                    'country' => Utils::fillNull($location->getAddress()->getCountry()),
+                );
+                $res['locations'][] = $newLocation;
+            }
         }
 
-        // //dump($company->getLocations());
-        // dump($res);
-        // die();
-        //dump($company->getLocations()->get(0)->getUbn());
-//        $newLocations->;
+        $users = $company->getCompanyUsers();
+        $res['users'] = [];
+        foreach ($users as $user) {
+            /**
+             * @var Client $user
+             */
 
-
+            if($user->getIsActive()) {
+                $newUser = array();
+                $newUser['person_id'] = $user->getPersonId();
+                $newUser['prefix'] = $user->getPrefix();
+                $newUser['first_name'] = $user->getFirstName();
+                $newUser['last_name'] = $user->getLastName();
+                $newUser['email_address'] = $user->getEmailAddress();
+                $res['users'][] = $newUser;
+            }
+        }
         return $res;
-//        // Create Location
-//        $contentLocations = $content->get('locations');
-//
-//        foreach ($contentLocations as $contentLocation) {
-//            // Create Location Address
-//            $contentLocationAddress = $contentLocation['address'];
-//            $locationAddress = new LocationAddress();
-//            $locationAddress->setStreetName($contentLocationAddress['street_name']);
-//            $locationAddress->setAddressNumber($contentLocationAddress['address_number']);
-//            $locationAddress->setAddressNumberSuffix($contentLocationAddress['suffix']);
-//            $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
-//            $locationAddress->setCity($contentLocationAddress['city']);
-//            $locationAddress->setState($contentLocationAddress['state']);
-//            $locationAddress->setCountry('');
-//
-//            $location = new Location();
-//            $location->setUbn($contentLocation['ubn']);
-//            $location->setAddress($locationAddress);
-//
-//            $company->addLocation($location);
-//        }
-//
-//        // Create Users
-//        $contentUsers = $content->get('users');
-//
-//        foreach ($contentUsers as $contentUser) {
-//            $user = new Client();
-//            $user->setFirstName($contentUser['first_name']);
-//            $user->setLastName($contentUser['last_name']);
-//            $user->setEmailAddress($contentUser['email_address']);
-//            $user->setObjectType('Client');
-//            $user->setIsActive(true);
-//            $user->setEmployer($company);
-
-            // TODO GENERATE TOKEN
-            // TODO GENERATE PASSWORD
-            // TODO EMAIL PASSWORD
     }
 
     /**
@@ -237,7 +224,7 @@ class CompanyOutput
         );
 
         $res['breeder_numbers'] = array();
-        $res['invoices'] = $company->getInvoices()->toArray();
+        $res['invoices'] = $company->getInvoices();
 
         /*
          * @var $company Company
