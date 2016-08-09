@@ -55,6 +55,18 @@ class JsonInputConstant
     const ADMINS = 'admins';
     const ACCESS_LEVEL = 'access_level';
 
+    
     //Persons
     const PERSON_ID = 'person_id';
+    
+    //Health
+    const MAEDI_VISNA_STATUS = 'maedi_visna_status';
+    const MAEDI_VISNA_START_DATE = 'maedi_visna_start_date';
+    const MAEDI_VISNA_CHECK_DATE = 'maedi_visna_check_date';
+    const MAEDI_VISNA_END_DATE = 'maedi_visna_end_date';
+    const SCRAPIE_STATUS = 'scrapie_status';
+    const SCRAPIE_START_DATE = 'scrapie_start_date';
+    const SCRAPIE_CHECK_DATE = 'scrapie_check_date';
+    const SCRAPIE_END_DATE = 'scrapie_end_date';
+    
 }

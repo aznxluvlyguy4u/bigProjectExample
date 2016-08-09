@@ -3,6 +3,7 @@
 namespace AppBundle\Util;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
@@ -10,6 +11,7 @@ use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthMessage;
+use AppBundle\Entity\MaediVisna;
 use AppBundle\Entity\Scrapie;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
@@ -50,6 +52,43 @@ class Finder
         return null;
     }
 
+
+    /**
+     * @param Location $location
+     * @return ArrayCollection
+     */
+    public static function findLatestActiveIllnessStatusesOfLocation(Location $location, ObjectManager $em)
+    {
+        $results = new ArrayCollection();
+
+        $lastMaediVisna = self::findLatestActiveMaediVisna($location, $em);
+
+        if($lastMaediVisna == null) {
+            $results->set(JsonInputConstant::MAEDI_VISNA_STATUS, null);
+            $results->set(JsonInputConstant::MAEDI_VISNA_CHECK_DATE, null);
+            $results->set(JsonInputConstant::MAEDI_VISNA_END_DATE, null);
+        } else {
+            $results->set(JsonInputConstant::MAEDI_VISNA_STATUS, $lastMaediVisna->getStatus());
+            $results->set(JsonInputConstant::MAEDI_VISNA_CHECK_DATE, $lastMaediVisna->getCheckDate());
+            $results->set(JsonInputConstant::MAEDI_VISNA_END_DATE, $lastMaediVisna->getEndDate());
+        }
+        
+        $lastScrapie = self::findLatestActiveScrapie($location, $em);
+
+        if($lastScrapie == null) {
+            $results->set(JsonInputConstant::SCRAPIE_STATUS, null);
+            $results->set(JsonInputConstant::SCRAPIE_CHECK_DATE, null);
+            $results->set(JsonInputConstant::SCRAPIE_END_DATE, null);
+        } else {
+            $results->set(JsonInputConstant::SCRAPIE_STATUS, $lastScrapie->getStatus());
+            $results->set(JsonInputConstant::SCRAPIE_CHECK_DATE, $lastScrapie->getCheckDate());
+            $results->set(JsonInputConstant::SCRAPIE_END_DATE, $lastScrapie->getEndDate());
+        }
+
+        return $results;
+    }
+
+
     /**
      * @param Location $location
      * @return ArrayCollection
@@ -64,6 +103,11 @@ class Finder
     }
 
 
+    /**
+     * @param Location $location
+     * @param ObjectManager $em
+     * @return MaediVisna|null
+     */
     public static function findLatestActiveMaediVisna(Location $location, ObjectManager $em)
     {
         $locationHealth = $location->getLocationHealth();
@@ -90,6 +134,12 @@ class Finder
         return $lastMaediVisna;
     }
 
+
+    /**
+     * @param Location $location
+     * @param ObjectManager $em
+     * @return Scrapie|null
+     */
     public static function findLatestActiveScrapie(Location $location, ObjectManager $em)
     {
         $locationHealth = $location->getLocationHealth();

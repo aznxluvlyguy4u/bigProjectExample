@@ -23,14 +23,6 @@ class ClientAPIController extends APIController {
 
   /**
    * Retrieve either a list of all Clients or a Client belonging to a certain UBN:
-   * {
-   *    OPEN,
-   *    FINISHED,
-   *    FAILED,
-   *    CANCELLED,
-   *    REVOKING,
-   *    REVOKED
-   * }
    *
    * @ApiDoc(
    *   requirements={
