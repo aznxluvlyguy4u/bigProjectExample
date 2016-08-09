@@ -2,7 +2,6 @@
 
 namespace AppBundle\Command;
 
-use AppBundle\Component\Utils;
 use AppBundle\Entity\Animal;
 use AppBundle\Report\Mixblup;
 use AppBundle\Util\CommandUtil;
@@ -21,6 +20,8 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
     const DATA_FILENAME = 'data.txt';
     const PEDIGREE_FILENAME = 'afstamming.txt';
     const INSTRUCTIONS_FILENAME = 'mixblup_instructions.inp';
+    const START_YEAR_MEASUREMENT = 2014;
+    const END_YEAR_MEASUREMENTS = 2016;
     const DEFAULT_OUTPUT_FOLDER_PATH = '/home/data/JVT/projects/NSFO/MixBlup/dump';
 
     protected function configure()
@@ -44,8 +45,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         //Output folder input
         $outputFolderPath = $cmdUtil->generateQuestion('Please enter output folder path', self::DEFAULT_OUTPUT_FOLDER_PATH);
 
-        //includes retrieving animals, might take a very long time
-        $mixBlup = new Mixblup($em, $outputFolderPath, self::INSTRUCTIONS_FILENAME, self::DATA_FILENAME, self::PEDIGREE_FILENAME);
+        $mixBlup = new Mixblup($em, $outputFolderPath, self::INSTRUCTIONS_FILENAME, self::DATA_FILENAME, self::PEDIGREE_FILENAME, self::START_YEAR_MEASUREMENT, self::END_YEAR_MEASUREMENTS);
 
         //Generate InstructionFile
         $instructionFilePath = $mixBlup->generateInstructionFile();
