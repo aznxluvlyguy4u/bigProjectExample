@@ -486,4 +486,71 @@ class Utils
 
         return null;
     }
+
+
+    /**
+     * @param $string
+     * @param int $totalLength
+     * @param int $marginSize
+     * @param string $filler
+     * @return string
+     */
+    public static function addPaddingToStringForColumnFormatCenter($string, $totalLength, $marginSize = 2, $filler = " ")
+    {
+        if($marginSize < 0) {$marginSize = 0;}
+        if($totalLength < strlen($string)) {$totalLength = strlen($string);}
+
+        $innerPaddingSize = $totalLength - 2*$marginSize - strlen($string);
+
+        if($totalLength-strlen($string) <= 0) { //string sticks out, or just fits. No padding
+            $result = $string;
+        } else if($innerPaddingSize <= 0) {
+            $leftPaddingSize = $marginSize + $innerPaddingSize/2;
+            $rightPaddingSize = $totalLength - strlen($string) - $leftPaddingSize;
+
+            if($rightPaddingSize < 0) {$rightPaddingSize = 0;}
+            if($leftPaddingSize < 0) {$leftPaddingSize = 0;}
+
+            $result = str_repeat($filler, $leftPaddingSize).$string.str_repeat($filler, $rightPaddingSize);
+        } else if ($innerPaddingSize > 0) {
+            $marginPadding = str_repeat($filler, $marginSize);
+            $innerPadding = str_repeat($filler, $innerPaddingSize);
+            $result = $marginPadding.$string.$innerPadding.$marginPadding;
+        } else {
+            $result = $string;
+        }
+
+        return $result;
+    }
+
+
+    /**
+     * @param string $string
+     * @param int $totalLength
+     * @param bool $isLeftAligned
+     * @param string $filler
+     * @return string
+     */
+    public static function addPaddingToStringForColumnFormatSides($string, $totalLength, $isLeftAligned = true, $filler = " ")
+    {
+        if($totalLength-strlen($string) <= 0) { //string sticks out, or just fits. No padding
+            $result = $string;
+
+        } else {
+            $paddingSize = $totalLength - strlen($string);
+            if($paddingSize < 0) {$paddingSize = 0;}
+
+            if($isLeftAligned) {
+                $result = $string.str_repeat($filler, $paddingSize);
+            } else { //isRightAligned
+                $result = str_repeat($filler, $paddingSize).$string;
+            }
+
+        }
+
+        return $result;
+    }
+
+
+
 }
