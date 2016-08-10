@@ -93,6 +93,16 @@ class MaediVisna
      */
     private $isHidden;
 
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     * @Expose
+     */
+    private $isManualEdit;
+
+
     /**
      * MaediVisna constructor.
      */
@@ -100,6 +110,7 @@ class MaediVisna
     {
         $this->logDate = new DateTime();
         $this->isHidden = false;
+        $this->isManualEdit = false;
 
         $this->status = $status;
         $this->endDate = $endDate;
@@ -307,4 +318,23 @@ class MaediVisna
     {
         return $this->isHidden;
     }
+
+    /**
+     * @return boolean
+     */
+    public function getIsManualEdit()
+    {
+        return $this->isManualEdit;
+    }
+
+    /**
+     * @param boolean$isManualEdit
+     */
+    public function setIsManualEdit($isManualEdit)
+    {
+        $this->isManualEdit = $isManualEdit;
+    }
+    
+    
+    
 }

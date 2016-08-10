@@ -486,4 +486,36 @@ class Utils
 
         return null;
     }
+
+
+    /**
+     * @param string $key
+     * @param array $array
+     * @return mixed|null
+     */
+    public static function getNullCheckedArrayDateValue($key, $array)
+    {
+        $dateString = self::getNullCheckedArrayValue($key, $array);
+        if($dateString != null) {
+            return new \DateTime($dateString);
+        } else {
+            return null;
+        }
+    }
+
+
+    /**
+     * @param string $key
+     * @param ArrayCollection $array
+     * @return mixed|null
+     */
+    public static function getNullCheckedArrayCollectionDateValue($key, ArrayCollection $array)
+    {
+        $dateString = self::getNullCheckedArrayCollectionValue($key, $array);
+        if($dateString != null) {
+            return new \DateTime($dateString);
+        } else {
+            return null;
+        }
+    }
 }

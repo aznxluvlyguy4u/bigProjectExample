@@ -2,8 +2,15 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Location;
+use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\FormInput\LocationHealthEditor;
 use AppBundle\Output\HealthOutput;
+use AppBundle\Validation\AdminValidator;
+use AppBundle\Validation\HealthEditValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -42,44 +49,65 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
    */
   public function getHealthByLocation(Request $request, $ubn) {
 
-    $client = $this->getAuthenticatedUser($request);
-    //TODO if ubn is in header change route and use $location = $this->getSelectedLocation($request);
-    $location = $this->getLocationByUbn($client, $ubn);
+    $admin = $this->getAuthenticatedEmployee($request);
+    $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
+    if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
+      return $adminValidator->createJsonErrorResponse();
+    }
+
     $em = $this->getDoctrine()->getEntityManager();
+    $location = $em->getRepository(Location::class)->findByUbn($ubn);
 
     if($location == null) {
       $errorMessage = "No Location found with ubn: " . $ubn;
       return new JsonResponse(array('code'=>428, "message" => $errorMessage), 428);
     }
-    $outputArray = HealthOutput::create($em, $client, $location);
+    $outputArray = HealthOutput::create($em, $location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
   }
 
   /**
    *
-   * Update Health status for all ubns based on the DeclareArrivals and DeclareImports in the LocationHealthQueue.
+   * Edit Health statuses of the given ubn.
    *
-   * @ApiDoc(
-   *   requirements={
-   *     {
-   *       "name"="AccessToken",
-   *       "dataType"="string",
-   *       "requirement"="",
-   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-   *     }
-   *   },
-   *   resource = true,
-   *   description = "Update Health status for all ubns based on the DeclareArrivals and DeclareImports in the LocationHealthQueue",
-   *   output = "AppBundle\Entity\HealthOutput"
-   * )
    * @param Request $request the request object
+   * @param String $ubn
    * @return JsonResponse
-   * @Route("/healths")
+   * @Route("/{ubn}/health")
    * @Method("PUT")
    */
-  public function updateHealthStatus(Request $request) {
-    $this->getHealthService()->processLocationHealthQueue();
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => "OK"), 200);
+  public function updateHealthStatus(Request $request, $ubn) {
+
+    //Admin validation
+    $admin = $this->getAuthenticatedEmployee($request);
+    $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
+    if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
+      return $adminValidator->createJsonErrorResponse();
+    }
+
+    $em = $this->getDoctrine()->getEntityManager();
+    $location = $em->getRepository(Location::class)->findByUbn($ubn);
+
+    //UBN Validation
+    if($location == null) {
+      $errorMessage = "No Location found with ubn: " . $ubn;
+      return new JsonResponse(array('code'=>428, "message" => $errorMessage), 428);
+    }
+
+    $content = $this->getContentAsArray($request);
+
+    //Status and check date validation
+    $healthEditValidator = new HealthEditValidator($em, $content);
+    if(!$healthEditValidator->getIsValid()) {
+      return $healthEditValidator->createJsonResponse();
+    }
+
+    $location = LocationHealthEditor::edit($em, $location, $content); //includes persisting changes
+    
+    $outputArray = HealthOutput::create($em, $location);
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+    
   }
 }

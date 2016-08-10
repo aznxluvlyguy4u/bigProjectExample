@@ -91,6 +91,16 @@ class Scrapie
      */
     private $isHidden;
 
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     * @Expose
+     */
+    private $isManualEdit;
+    
+    
     /**
      * Scrapie constructor.
      */
@@ -98,6 +108,7 @@ class Scrapie
     {
         $this->logDate = new DateTime();
         $this->isHidden = false;
+        $this->isManualEdit = false;
 
         $this->status = $status;
         $this->endDate = $endDate;
@@ -305,4 +316,24 @@ class Scrapie
     {
         return $this->locationHealth;
     }
+
+    /**
+     * @return boolean
+     */
+    public function getIsManualEdit()
+    {
+        return $this->isManualEdit;
+    }
+
+    /**
+     * @param boolean $isManualEdit
+     */
+    public function setIsManualEdit($isManualEdit)
+    {
+        $this->isManualEdit = $isManualEdit;
+    }
+    
+    
+    
+    
 }

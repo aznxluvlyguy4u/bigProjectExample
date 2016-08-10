@@ -52,6 +52,16 @@ abstract class Output
     /**
      * @var \DateTime
      */
+    static protected $maediVisnaCheckDate;
+
+    /**
+     * @var \DateTime
+     */
+    static protected $scrapieCheckDate;
+
+    /**
+     * @var \DateTime
+     */
     static protected $checkDate;
 
     /**
@@ -67,37 +77,24 @@ abstract class Output
             self::$ubn = null;
             self::$locationHealth = null;
         }
-
-
-        $lastIllnesses = Finder::findLatestActiveIllnessesOfLocation($location, $em);
-
-        $scrapieStatus = null;
-        $scrapieEndDate = null;
-
-        $maediVisnaStatus = null;
-        $maediVisnaEndDate = null;
-
-        if(self::$locationHealth != null) {
-
-            $lastScrapie = $lastIllnesses[Constant::SCRAPIE];
-            if($lastScrapie != null) {
-                $scrapieStatus = $lastScrapie->getStatus();
-                $scrapieEndDate = $lastScrapie->getEndDate();
-            }
-
-            $lastMaediVisna = $lastIllnesses[Constant::MAEDI_VISNA];
-            if($lastMaediVisna != null) {
-                $maediVisnaStatus = $lastMaediVisna->getStatus();
-                $maediVisnaEndDate = $lastMaediVisna->getEndDate();
-            }
-        }
+        
 
         if(self::$locationHealth != null) {
             self::$locationHealthStatus = self::$locationHealth->getLocationHealthStatus();
-            self::$maediVisnaStatus = $maediVisnaStatus;
-            self::$scrapieStatus = $scrapieStatus;
-            self::$maediVisnaEndDate = $maediVisnaEndDate;
-            self::$scrapieEndDate = $scrapieEndDate;
+
+            $lastScrapie = Finder::findLatestActiveScrapie($location, $em);
+            if($lastScrapie != null) {
+                self::$scrapieStatus = $lastScrapie->getStatus();
+                self::$scrapieCheckDate = $lastScrapie->getCheckDate();
+                self::$scrapieEndDate = $lastScrapie->getEndDate();
+            }
+
+            $lastMaediVisna = Finder::findLatestActiveMaediVisna($location, $em);
+            if($lastMaediVisna != null) {
+                self::$maediVisnaStatus = $lastMaediVisna->getStatus();
+                self::$maediVisnaCheckDate = $lastMaediVisna->getCheckDate();
+                self::$maediVisnaEndDate = $lastMaediVisna->getEndDate();
+            }
             
         //The default values    
         } else {
@@ -105,7 +102,9 @@ abstract class Output
             self::$maediVisnaStatus = "";
             self::$scrapieStatus = "";
             self::$maediVisnaEndDate = "";
+            self::$maediVisnaCheckDate = "";
             self::$scrapieEndDate = "";
+            self::$scrapieCheckDate = "";
             self::$checkDate = "";
         }
     }
