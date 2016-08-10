@@ -246,6 +246,7 @@ class Mixblup
      */
     public function generateDataArray()
     {
+        $this->getMeasurementsIfNull();
         $result = array();
 
         /** @var Measurement $measurement */
