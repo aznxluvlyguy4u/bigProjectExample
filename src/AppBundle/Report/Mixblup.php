@@ -269,7 +269,7 @@ class Mixblup
             $row = $this->writeDataRecord($measurement);
             file_put_contents($this->dataFilePath, $row."\n", FILE_APPEND);
         }
-        
+
         return $this->dataFilePath;
     }
 
@@ -337,9 +337,26 @@ class Mixblup
             /** @var Fat3 $fat3 */
             $fat3 = $measurement->getFat3();
 
-            if($fat1 != null) {Utils::fillZero($fat1->getFat(), self::FAT_NULL_FILLER); } else {$fat1 = self::FAT_NULL_FILLER; }
-            if($fat2 != null) {Utils::fillZero($fat2->getFat(), self::FAT_NULL_FILLER); } else {$fat2 = self::FAT_NULL_FILLER; }
-            if($fat3 != null) {Utils::fillZero($fat3->getFat(), self::FAT_NULL_FILLER); } else {$fat3 = self::FAT_NULL_FILLER; }
+            if($fat1 != null) {
+                $fat1 = $fat1->getFat();
+                Utils::fillZero($fat1, self::FAT_NULL_FILLER);
+            } else {
+                $fat1 = self::FAT_NULL_FILLER;
+            }
+
+            if($fat2 != null) {
+                $fat2 = $fat2->getFat();
+                Utils::fillZero($fat2, self::FAT_NULL_FILLER);
+            } else {
+                $fat2 = self::FAT_NULL_FILLER;
+            }
+
+            if($fat3 != null) {
+                $fat3 = $fat3->getFat();
+                Utils::fillZero($fat3, self::FAT_NULL_FILLER);
+            } else {
+                $fat3 = self::FAT_NULL_FILLER;
+            }
 
         } else if ($measurement instanceof MuscleThickness) {
             /** @var MuscleThickness $measurement */
