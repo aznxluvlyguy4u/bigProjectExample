@@ -47,17 +47,24 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
         $output->writeln([' ', 'output folder: '.$outputFolderPath, ' ']);
 
+        $isGeneratePedigreeFile = $cmdUtil->generateConfirmationQuestion('Generate pedigreefile? (y/n): ');
+        $isGenerateDataFile = $cmdUtil->generateConfirmationQuestion('Generate datafile? (y/n): ');
+
         $output->writeln([' ', 'Preparing data... ', ' ']);
         $mixBlup = new Mixblup($em, $outputFolderPath, self::INSTRUCTIONS_FILENAME, self::DATA_FILENAME, self::PEDIGREE_FILENAME, self::START_YEAR_MEASUREMENT, self::END_YEAR_MEASUREMENTS);
 
         $output->writeln([' ', 'Generating InstructionFile... ', ' ']);
         $instructionFilePath = $mixBlup->generateInstructionFile();
 
-        $output->writeln([' ', 'Generating PedigreeFile... ', ' ']);
-        $pedigreeFilePath = $mixBlup->generatePedigreeFile();
+        if($isGeneratePedigreeFile) {
+            $output->writeln([' ', 'Generating PedigreeFile... ', ' ']);
+            $pedigreeFilePath = $mixBlup->generatePedigreeFile();
+        }
 
-        $output->writeln([' ', 'Generating DataFile... ', ' ']);
-        $dataFilePath = $mixBlup->generateDataFile();
+        if($isGenerateDataFile) {
+            $output->writeln([' ', 'Generating DataFile... ', ' ']);
+            $dataFilePath = $mixBlup->generateDataFile();
+        }
 
         $output->writeln('=== FINISHED ===');
     }

@@ -97,13 +97,7 @@ class Mixblup
 
         if($animals != null) {
             $this->animals = $animals;
-        } else {
-            $this->animals = $this->em->getRepository(Animal::class)->findAll();
         }
-
-        /** @var MeasurementRepository $measurementRepository */
-        $measurementRepository = $em->getRepository(Measurement::class);
-        $this->measurements = $measurementRepository->getMeasurementsBetweenYears($firstMeasurementYear, $lastMeasurementYear);
 
         $this->dataFileName = $dataFileName;
         $this->pedigreeFileName = $pedigreeFileName;
@@ -120,6 +114,33 @@ class Mixblup
         }
 
     }
+
+
+    /**
+     * Only retrieve the animals when they are really needed.
+     * @return array
+     */
+    private function getAnimalsIfNull()
+    {
+        if($this->animals == null) {
+            $this->animals = $this->em->getRepository(Animal::class)->findAll();
+        }
+        return $this->animals;
+    }
+
+
+    /**
+     * Only retrieve the measurements when they are really needed.
+     * @return Collection
+     */
+    private function getMeasurementsIfNull()
+    {
+        /** @var MeasurementRepository $measurementRepository */
+        $measurementRepository = $this->em->getRepository(Measurement::class);
+        $this->measurements = $measurementRepository->getMeasurementsBetweenYears($this->firstMeasurementYear, $this->lastMeasurementYear);
+        return $this->measurements;
+    }
+
 
     /**
      * @return array
@@ -193,6 +214,7 @@ class Mixblup
      */
     public function generatePedigreeArray()
     {
+        $this->getAnimalsIfNull();
         $result = array();
         
         foreach ($this->animals as $animal) {
@@ -208,9 +230,13 @@ class Mixblup
      */
     public function generatePedigreeFile()
     {
-        foreach($this->generatePedigreeArray() as $row) {
+        $this->getAnimalsIfNull();
+
+        foreach ($this->animals as $animal) {
+            $row = $this->writePedigreeRecord($animal);
             file_put_contents($this->pedigreeFilePath, $row."\n", FILE_APPEND);
         }
+
         return $this->pedigreeFilePath;
     }
 
@@ -236,9 +262,14 @@ class Mixblup
      */
     public function generateDataFile()
     {
-        foreach($this->generateDataArray() as $row) {
+        $this->getMeasurementsIfNull();
+
+        /** @var Measurement $measurement */
+        foreach ($this->measurements as $measurement) {
+            $row = $this->writeDataRecord($measurement);
             file_put_contents($this->dataFilePath, $row."\n", FILE_APPEND);
         }
+        
         return $this->dataFilePath;
     }
 
