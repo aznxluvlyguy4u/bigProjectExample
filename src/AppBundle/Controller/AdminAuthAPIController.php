@@ -66,7 +66,17 @@ class AdminAuthAPIController extends APIController {
       }
 
       if($encoder->isPasswordValid($admin, $password)) {
-        return new JsonResponse(array("access_token"=>$admin->getAccessToken()), 200);
+        /** @var Employee $admin */
+        $result = [
+            "access_token"=>$admin->getAccessToken(),
+            "user" =>[
+            "first_name" => $admin->getFirstName(),
+            "last_name" => $admin->getLastName(),
+            "access_level" => $admin->getAccessLevel()
+            ]
+        ];
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
       }
     }
 
