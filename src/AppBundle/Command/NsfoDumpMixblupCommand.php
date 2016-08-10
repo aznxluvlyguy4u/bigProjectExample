@@ -45,14 +45,19 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         //Output folder input
         $outputFolderPath = $cmdUtil->generateQuestion('Please enter output folder path', self::DEFAULT_OUTPUT_FOLDER_PATH);
 
+        $output->writeln([' ', 'output folder: '.$outputFolderPath, ' ']);
+
+        $output->writeln([' ', 'Preparing data... ', ' ']);
         $mixBlup = new Mixblup($em, $outputFolderPath, self::INSTRUCTIONS_FILENAME, self::DATA_FILENAME, self::PEDIGREE_FILENAME, self::START_YEAR_MEASUREMENT, self::END_YEAR_MEASUREMENTS);
 
-        //Generate InstructionFile
+        $output->writeln([' ', 'Generating InstructionFile... ', ' ']);
         $instructionFilePath = $mixBlup->generateInstructionFile();
-        $pedigreeFilePath = $mixBlup->generatePedigreeFile();
-        $dataFilePath = $mixBlup->generateDataFile();
 
-        $output->writeln([' ', 'output folder: '.$outputFolderPath, ' ']);
+        $output->writeln([' ', 'Generating PedigreeFile... ', ' ']);
+        $pedigreeFilePath = $mixBlup->generatePedigreeFile();
+
+        $output->writeln([' ', 'Generating DataFile... ', ' ']);
+        $dataFilePath = $mixBlup->generateDataFile();
 
         $output->writeln('=== FINISHED ===');
     }
