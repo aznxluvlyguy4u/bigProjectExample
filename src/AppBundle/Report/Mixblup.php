@@ -8,6 +8,9 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\Exterior;
+use AppBundle\Entity\Fat1;
+use AppBundle\Entity\Fat2;
+use AppBundle\Entity\Fat3;
 use AppBundle\Entity\Measurement;
 use AppBundle\Entity\MeasurementRepository;
 use AppBundle\Entity\MuscleThickness;
@@ -296,13 +299,16 @@ class Mixblup
         if($measurement instanceof BodyFat) { //Fat1, Fat2 & Fat3 are included here
             /** @var BodyFat $measurement */
             $animal = $measurement->getAnimal();
+            /** @var Fat1 $fat1 */
             $fat1 = $measurement->getFat1();
+            /** @var Fat2 $fat2 */
             $fat2 = $measurement->getFat2();
+            /** @var Fat3 $fat3 */
             $fat3 = $measurement->getFat3();
 
-            if($fat1 != null) {Utils::fillZero($fat1, self::FAT_NULL_FILLER); } else {$fat1 = self::FAT_NULL_FILLER; }
-            if($fat2 != null) {Utils::fillZero($fat2, self::FAT_NULL_FILLER); } else {$fat2 = self::FAT_NULL_FILLER; }
-            if($fat3 != null) {Utils::fillZero($fat3, self::FAT_NULL_FILLER); } else {$fat3 = self::FAT_NULL_FILLER; }
+            if($fat1 != null) {Utils::fillZero($fat1->getFat(), self::FAT_NULL_FILLER); } else {$fat1 = self::FAT_NULL_FILLER; }
+            if($fat2 != null) {Utils::fillZero($fat2->getFat(), self::FAT_NULL_FILLER); } else {$fat2 = self::FAT_NULL_FILLER; }
+            if($fat3 != null) {Utils::fillZero($fat3->getFat(), self::FAT_NULL_FILLER); } else {$fat3 = self::FAT_NULL_FILLER; }
 
         } else if ($measurement instanceof MuscleThickness) {
             /** @var MuscleThickness $measurement */
