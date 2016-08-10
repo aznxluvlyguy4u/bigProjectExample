@@ -96,6 +96,7 @@ class LocationHealthEditor
 
             $scrapie = new Scrapie($newScrapieStatus);
             $scrapie->setCheckDate($newScrapieCheckDate);
+            $scrapie->setIsManualEdit(true);
             $locationHealth->addScrapie($scrapie);
             $scrapie->setLocationHealth($locationHealth);
             $em->persist($scrapie);
@@ -108,6 +109,7 @@ class LocationHealthEditor
 
             $maediVisna = new MaediVisna($newMaediVisnaStatus, $newMaediVisnaCheckDate);
             $maediVisna->setCheckDate($newMaediVisnaCheckDate);
+            $maediVisna->setIsManualEdit(true);
             $locationHealth->addMaediVisna($maediVisna);
             $maediVisna->setLocationHealth($locationHealth);
             $em->persist($maediVisna);
