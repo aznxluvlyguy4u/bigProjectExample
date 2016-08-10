@@ -35,6 +35,10 @@ class JsonInputConstant
     const CELLPHONE_NUMBER = "cellphone_number";
     const RELATION_NUMBER_KEEPER = "relation_number_keeper";
 
+    //Content Management System (cms)
+    const DASHBOARD = 'dashboard';
+    const CONTACT_INFO = 'contact_info';
+
     //Company
     const COMPANY_ID = 'company_id';
     const COMPANY_NAME = 'company_name';
