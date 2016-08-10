@@ -20,6 +20,9 @@ class JsonInputConstant
     const IS_ARRIVED_FROM_OTHER_NSFO_CLIENT = 'is_arrived_from_other_nsfo_client';
     const COUNTRY_ORIGIN = 'country_origin';
 
+    //Authentication
+    const NEW_PASSWORD = 'new_password';
+
     //Clients
     const FIRST_NAME = 'first_name';
     const LAST_NAME = "last_name";
