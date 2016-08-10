@@ -91,6 +91,15 @@ class CaseousLymphadenitis
      */
     private $isHidden;
 
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     * @Expose
+     */
+    private $isManualEdit;
+
     /**
      * CaseousLymphadenitis constructor.
      */
@@ -98,6 +107,7 @@ class CaseousLymphadenitis
     {
         $this->logDate = new DateTime();
         $this->isHidden = false;
+        $this->isManualEdit = false;
 
         $this->status = $status;
         $this->endDate = $endDate;
@@ -304,4 +314,24 @@ class CaseousLymphadenitis
     {
         return $this->locationHealth;
     }
+
+    /**
+     * @return boolean
+     */
+    public function isIsManualEdit()
+    {
+        return $this->isManualEdit;
+    }
+
+    /**
+     * @param boolean $isManualEdit
+     */
+    public function setIsManualEdit($isManualEdit)
+    {
+        $this->isManualEdit = $isManualEdit;
+    }
+    
+    
+    
+    
 }

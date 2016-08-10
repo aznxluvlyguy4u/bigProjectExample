@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component\Authentication;
 
+use AppBundle\Entity\Person;
 use AppBundle\Entity\Token;
 use AppBundle\Enumerator\TokenType;
 use Doctrine\ORM\EntityManager;
@@ -154,6 +155,15 @@ class TokenAuthenticator extends AbstractGuardAuthenticator  {
     $user = null;
     if ($accessToken != null) {
       $user = $accessToken->getOwner();
+
+      //Block inactive users
+      /** @var Person $user */
+      if($user != null) {
+        if(!$user->getIsActive()){
+          $user = null;
+        }
+      }
+
     }
     //Also verify the ghostToken and return null, if ghostToken is not valid
     if (array_key_exists('ghostToken', $credentials) && $accessToken != null) {
