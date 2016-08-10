@@ -250,7 +250,10 @@ class Mixblup
 
         /** @var Measurement $measurement */
         foreach ($this->measurements as $measurement) {
-            $result[] = $this->writeDataRecord($measurement);
+            $row = $this->writeDataRecord($measurement);
+            if($row != null) {
+                $result[] = $row;
+            }
         }
 
         return $result;
@@ -267,7 +270,9 @@ class Mixblup
         /** @var Measurement $measurement */
         foreach ($this->measurements as $measurement) {
             $row = $this->writeDataRecord($measurement);
-            file_put_contents($this->dataFilePath, $row."\n", FILE_APPEND);
+            if($row != null) {
+                file_put_contents($this->dataFilePath, $row."\n", FILE_APPEND);
+            }
         }
 
         return $this->dataFilePath;
