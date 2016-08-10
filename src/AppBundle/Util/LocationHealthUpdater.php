@@ -329,40 +329,70 @@ class LocationHealthUpdater
         return $location;
     }
 
-    /**
-     * @param ObjectManager $em
-     * @param Location $location
-     * @param ArrayCollection $latestActiveIllnesses
-     */
-    private static function hideAllFollowingIllnesses(ObjectManager $em, Location $location, \DateTime $checkDate)
-    {
 
+    /**
+     * @param Location $location
+     * @param \DateTime $checkDate
+     * @return Criteria
+     */
+    private static function getHideCriteria(Location $location, \DateTime $checkDate)
+    {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
             ->andWhere(Criteria::expr()->gt('checkDate', $checkDate))
             ->orderBy(['checkDate' => Criteria::ASC]);
 
-        $maediVisnas = $em->getRepository('AppBundle:MaediVisna')
-            ->matching($criteria);
+        return $criteria;
+    }
 
+    /**
+     * @param ObjectManager $em
+     * @param Location $location
+     * @param \DateTime $checkDate
+     */
+    public static function hideAllFollowingIllnesses(ObjectManager $em, Location $location, \DateTime $checkDate)
+    {
+        self::hideAllFollowingMaediVisnas($em, $location, $checkDate);
+        self::hideAllFollowingScrapies($em, $location, $checkDate);
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Location $location
+     * @param \DateTime $checkDate
+     */
+    public static function hideAllFollowingMaediVisnas(ObjectManager $em, Location $location, \DateTime $checkDate)
+    {
+        $maediVisnas = $em->getRepository(MaediVisna::class)
+            ->matching(self::getHideCriteria($location, $checkDate));
+
+        /** @var MaediVisna $maediVisna */
         foreach($maediVisnas as $maediVisna) {
             $maediVisna->setIsHidden(true);
             $em->persist($maediVisna);
         }
         $em->flush();
+    }
 
-        $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
-            ->andWhere(Criteria::expr()->gt('checkDate', $checkDate))
-            ->orderBy(['checkDate' => Criteria::ASC]);
 
-        $scrapies = $em->getRepository('AppBundle:Scrapie')
-            ->matching($criteria);
+    /**
+     * @param ObjectManager $em
+     * @param Location $location
+     * @param \DateTime $checkDate
+     */
+    public static function hideAllFollowingScrapies(ObjectManager $em, Location $location, \DateTime $checkDate)
+    {
+        $scrapies = $em->getRepository(Scrapie::class)
+            ->matching(self::getHideCriteria($location, $checkDate));
 
+        /** @var Scrapie $scrapie */
         foreach($scrapies as $scrapie) {
             $scrapie->setIsHidden(true);
             $em->persist($scrapie);
         }
         $em->flush();
     }
+
+
 }
