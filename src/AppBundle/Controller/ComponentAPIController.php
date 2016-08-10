@@ -40,7 +40,6 @@ class ComponentAPIController extends APIController {
    */
   public function getMenuBar(Request $request) {
     $client = $this->getAuthenticatedUser($request);
-
     $outputArray = MenuBarOutput::create($client);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);

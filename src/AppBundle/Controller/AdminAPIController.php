@@ -302,7 +302,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
     $employee->addToken($ghostToken);
     $client->addToken($ghostToken);
 
-    $this->getDoctrine()->getEntityManager()->persist($client);
+    $this->getDoctrine()->getEntityManager()->persist($ghostToken);
     $this->getDoctrine()->getEntityManager()->flush();
 
     $result = array(Constant::GHOST_TOKEN_NAMESPACE => $ghostToken->getCode());

@@ -447,6 +447,43 @@ class CompanyAPIController extends APIController
 
     /**
      * @param Request $request   the request object
+     * @param Company $companyId
+     *
+     * @return JsonResponse
+     * @Route("/company/inactive/{companyId}")
+     * @Method("PUT")
+     */
+    public function setCompanyInactive(Request $request, $companyId)
+    {
+        // Validation if user is an admin
+        $admin = $this->getAuthenticatedEmployee($request);
+        $adminValidator = new AdminValidator($admin);
+
+        if (!$adminValidator->getIsAccessGranted()) {
+            return $adminValidator->createJsonErrorResponse();
+        }
+
+        // Validate content
+        $content = $this->getContentAsArray($request);
+        // TODO VALIDATE CONTENT
+
+        // Get Content
+        $isActive = $content->get('is_active');
+
+        // Get Company
+        $repository = $this->getDoctrine()->getRepository(Constant::COMPANY_REPOSITORY);
+        $company = $repository->findOneByCompanyId($companyId);
+
+        // Set Company inactive
+        $company->setIsActive($isActive);
+        $this->getDoctrine()->getEntityManager()->persist($company);
+        $this->getDoctrine()->getEntityManager()->flush();
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
+    }
+
+    /**
+     * @param Request $request   the request object
      * @param String  $companyId
      *
      * @return JsonResponse

@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Company;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AccessLevelType;
@@ -19,7 +20,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 
 /**
- * @Route("/api/v1/ubns")
+ * @Route("/api/v1/health")
  */
 class HealthAPIController extends APIController implements HealthAPIControllerInterface {
 
@@ -44,7 +45,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
    * @param Request $request the request object
    * @param String $ubn
    * @return JsonResponse
-   * @Route("/{ubn}/health")
+   * @Route("/ubn/{ubn}")
    * @Method("GET")
    */
   public function getHealthByLocation(Request $request, $ubn) {
@@ -74,7 +75,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
    * @param Request $request the request object
    * @param String $ubn
    * @return JsonResponse
-   * @Route("/{ubn}/health")
+   * @Route("/ubn/{ubn}")
    * @Method("PUT")
    */
   public function updateHealthStatus(Request $request, $ubn) {
@@ -110,4 +111,29 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
     
   }
+
+    /**
+     * @param Request $request the request object
+     * @param String $companyId
+     * @return JsonResponse
+     * @Route("/company/{companyId}")
+     * @Method("GET")
+     */
+    public function getHealthByCompany(Request $request, $companyId) {
+
+        $admin = $this->getAuthenticatedEmployee($request);
+        $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
+        if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
+            return $adminValidator->createJsonErrorResponse();
+        }
+
+        /**
+         * @var Company $company
+         */
+        $em = $this->getDoctrine()->getEntityManager();
+        $company = $em->getRepository(Company::class)->findOneByCompanyId($companyId);
+        $outputArray = HealthOutput::createCompanyHealth($em, $company);
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+    }
 }
