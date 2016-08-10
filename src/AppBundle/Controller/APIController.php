@@ -18,6 +18,7 @@ use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
@@ -839,5 +840,55 @@ class APIController extends Controller implements APIControllerInterface
 
     return array('message' => $message,
         'count' => $count);
+  }
+
+  
+  /**
+   * @param Person $person
+   * @param int $passwordLength
+   * @return string
+   */
+  protected function persistNewPassword($person, $passwordLength = 9)
+  {
+    $newPassword = Utils::randomString($passwordLength);
+
+    $encoder = $this->get('security.password_encoder');
+    $encodedNewPassword = $encoder->encodePassword($person, $newPassword);
+    $person->setPassword($encodedNewPassword);
+
+    $this->getDoctrine()->getManager()->persist($person);
+    $this->getDoctrine()->getManager()->flush();
+
+    return $newPassword;
+  }
+
+  /**
+   * @param Person $person
+   */
+  protected function emailNewPasswordToPerson($person, $newPassword)
+  {
+    $mailerSourceAddress = $this->getParameter('mailer_source_address');
+
+    //Confirmation message back to the sender
+    $message = \Swift_Message::newInstance()
+        ->setSubject(Constant::NEW_PASSWORD_MAIL_SUBJECT_HEADER)
+        ->setFrom($mailerSourceAddress)
+        ->setTo($person->getEmailAddress())
+        ->setBody(
+            $this->renderView(
+            // app/Resources/views/...
+                'User/reset_password_email.html.twig',
+                array('firstName' => $person->getFirstName(),
+                    'lastName' => $person->getLastName(),
+                    'userName' => $person->getUsername(),
+                    'email' => $person->getEmailAddress(),
+                    'password' => $newPassword)
+            ),
+            'text/html'
+        )
+        ->setSender($mailerSourceAddress)
+    ;
+
+    $this->get('mailer')->send($message);
   }
 }

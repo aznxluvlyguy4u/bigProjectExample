@@ -307,39 +307,8 @@ class AuthAPIController extends APIController {
 
     //Create a new password
     $passwordLength = 9;
-    $newPassword = Utils::randomString($passwordLength);
-
-    $encoder = $this->get('security.password_encoder');
-    $encodedNewPassword = $encoder->encodePassword($client, $newPassword);
-    $client->setPassword($encodedNewPassword);
-
-    $this->getDoctrine()->getEntityManager()->persist($client);
-    $this->getDoctrine()->getEntityManager()->flush();
-
-    $mailerSourceAddress = $this->getParameter('mailer_source_address');
-
-    //Confirmation message back to the sender
-    $message = \Swift_Message::newInstance()
-        ->setSubject(Constant::NEW_PASSWORD_MAIL_SUBJECT_HEADER)
-        ->setFrom($mailerSourceAddress)
-        ->setTo($emailAddress)
-        ->setBody(
-            $this->renderView(
-            // app/Resources/views/...
-                'User/reset_password_email.html.twig',
-                array('firstName' => $client->getFirstName(),
-                    'lastName' => $client->getLastName(),
-                    'userName' => $client->getUsername(),
-                    'email' => $client->getEmailAddress(),
-                    'relationNumberKeeper' => $client->getRelationNumberKeeper(),
-                    'password' => $newPassword)
-            ),
-            'text/html'
-        )
-        ->setSender($mailerSourceAddress)
-    ;
-
-    $this->get('mailer')->send($message);
+    $newPassword = $this->persistNewPassword($client);
+    $this->emailNewPasswordToPerson($client, $newPassword);
 
     return new JsonResponse(array("code" => 200,
         "message"=>"Your new password has been emailed to: " . $emailAddress), 200);
