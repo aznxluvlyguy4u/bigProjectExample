@@ -47,6 +47,24 @@ class CompanyOutput
                 $pedigreeNumbers[] = $pedigree->getPedigreeCode();
             }
 
+            $users = $company->getCompanyUsers();
+            $resUsers = array();
+            foreach ($users as $user) {
+                /**
+                 * @var Client $user
+                 */
+
+                if($user->getIsActive()) {
+                    $newUser = array();
+                    $newUser['person_id'] = $user->getPersonId();
+                    $newUser['prefix'] = $user->getPrefix();
+                    $newUser['first_name'] = $user->getFirstName();
+                    $newUser['last_name'] = $user->getLastName();
+                    $newUser['email_address'] = $user->getEmailAddress();
+                    $resUsers[] = $newUser;
+                }
+            }
+
             $res[] = array(
                 'company_id' => Utils::fillNull($company->getCompanyId()),
                 'debtor_number' => Utils::fillNull($company->getDebtorNumber()),
@@ -65,11 +83,7 @@ class CompanyOutput
                     'first_name' => $company->getOwner()->getFirstName(),
                     'last_name' => $company->getOwner()->getLastName(),
                 ),
-                'users' => $company->getCompanyUsers()->filter(
-                    function (Client $client) {
-                        return $client->getIsActive();
-                    }
-                ),
+                'users' => $resUsers,
                 'locations' => $ubns,
                 'pedigrees' => $pedigreeNumbers,
                 'unpaid_invoices' => $company->getInvoices()->filter(
@@ -185,6 +199,7 @@ class CompanyOutput
         $res['company_name'] = Utils::fillNull($company->getCompanyName());
         $res['telephone_number'] = Utils::fillNull($company->getTelephoneNumber());
         $res['owner'] = array(
+            'person_id' => $company->getOwner()->getPersonId(),
             'email_address' => Utils::fillNull($company->getOwner()->getEmailAddress()),
             'prefix' => Utils::fillNull($company->getOwner()->getPrefix()),
             'first_name' => Utils::fillNull($company->getOwner()->getFirstName()),
@@ -237,6 +252,24 @@ class CompanyOutput
              * @var $location Location
              */
             $healthInspections[] = $location->getInspections();
+        }
+
+        $users = $company->getCompanyUsers();
+        $res['users'] = [];
+        foreach ($users as $user) {
+            /**
+             * @var Client $user
+             */
+
+            if($user->getIsActive()) {
+                $newUser = array();
+                $newUser['person_id'] = $user->getPersonId();
+                $newUser['prefix'] = $user->getPrefix();
+                $newUser['first_name'] = $user->getFirstName();
+                $newUser['last_name'] = $user->getLastName();
+                $newUser['email_address'] = $user->getEmailAddress();
+                $res['users'][] = $newUser;
+            }
         }
 
         $res['health_inspections'] = $healthInspections;
