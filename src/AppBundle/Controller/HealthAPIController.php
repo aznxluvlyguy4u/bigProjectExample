@@ -2,13 +2,16 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Company;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\FormInput\LocationHealthEditor;
 use AppBundle\Output\HealthOutput;
 use AppBundle\Validation\AdminValidator;
+use AppBundle\Validation\HealthEditValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -77,6 +80,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
    */
   public function updateHealthStatus(Request $request, $ubn) {
 
+    //Admin validation
     $admin = $this->getAuthenticatedEmployee($request);
     $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
     if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
@@ -86,12 +90,20 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
     $em = $this->getDoctrine()->getEntityManager();
     $location = $em->getRepository(Location::class)->findByUbn($ubn);
 
+    //UBN Validation
     if($location == null) {
       $errorMessage = "No Location found with ubn: " . $ubn;
       return new JsonResponse(array('code'=>428, "message" => $errorMessage), 428);
     }
-    
-    $content = $this->getContentAsArray($request);    
+
+    $content = $this->getContentAsArray($request);
+
+    //Status and check date validation
+    $healthEditValidator = new HealthEditValidator($em, $content);
+    if(!$healthEditValidator->getIsValid()) {
+      return $healthEditValidator->createJsonResponse();
+    }
+
     $location = LocationHealthEditor::edit($em, $location, $content); //includes persisting changes
     
     $outputArray = HealthOutput::create($em, $location);

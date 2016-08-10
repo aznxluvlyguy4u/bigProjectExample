@@ -28,7 +28,7 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 /**
  * @Route("/api/v1/admins")
  */
-class AdminAPIController extends APIController {
+class AdminAPIController extends APIController implements AdminAPIControllerInterface {
 
   const timeLimitInMinutes = 3;
 
