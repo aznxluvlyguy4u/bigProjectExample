@@ -451,7 +451,7 @@ class Mixblup
         $record =
             Utils::addPaddingToStringForColumnFormatSides($animalUln, 15)
             .Utils::addPaddingToStringForColumnFormatCenter($gender, 5, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($breedCode, 9, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breedCode, 10, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($breedType, 16, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($scrapieGenotype, 9, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($nLing, 5, self::COLUMN_PADDING_SIZE)
