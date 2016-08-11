@@ -26,16 +26,16 @@ class EditAdminValidator extends CreateAdminValidator
 
     /**
      * PasswordValidator constructor.
-     * @param array $adminsContent
+     * @param array $profileEditContent
      * @param EntityManager $em
      */
-    public function __construct(EntityManager $em, $adminsContent)
+    public function __construct(EntityManager $em, $profileEditContent)
     {
-        parent::__construct($em, $adminsContent, false);
+        parent::__construct($em, $profileEditContent, false);
 
         $this->admins = new ArrayCollection();
 
-        $this->validate($adminsContent);
+        $this->validate($profileEditContent);
     }
 
     /**

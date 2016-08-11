@@ -9,6 +9,7 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\FormInput\AdminProfile;
 use AppBundle\Output\AdminOverviewOutput;
 use AppBundle\Validation\AdminValidator;
+use AppBundle\Validation\EditAdminProfileValidator;
 use AppBundle\Validation\PasswordValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -71,6 +72,14 @@ class AdminProfileAPIController extends APIController implements AdminProfileAPI
     $encoder = $this->get('security.password_encoder');
     $content = $this->getContentAsArray($request);
 
+    $em = $this->getDoctrine()->getEntityManager();
+    
+    //Validate input
+    $inputValidator = new EditAdminProfileValidator($em, $content, $admin);
+    if (!$inputValidator->getIsValid()) {
+      return $inputValidator->createJsonResponse();
+    }
+    
     //If password is changed: validate and encrypt it
     $newPassword = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::NEW_PASSWORD, $content);
     if($newPassword != null) {

@@ -4,6 +4,7 @@ namespace AppBundle\Validation;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Employee;
 use AppBundle\Entity\Person;
 use AppBundle\Output\AccessLevelOverviewOutput;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -20,7 +21,7 @@ class CreateAdminValidator
     const RESPONSE_INVALID_INPUT_FIRST_NAME = "FIRST NAME CANNOT BE EMPTY AND SHOULD ONLY CONTAIN ALPHANUMERIC CHARACTERS";
     const RESPONSE_INVALID_INPUT_LAST_NAME = "LAST NAME CANNOT BE EMPTY AND SHOULD ONLY CONTAIN ALPHANUMERIC CHARACTERS";
     const RESPONSE_INVALID_INPUT_EMAIL = "EMAIL ADDRESS FORMAT IS INCORRECT";
-    const RESPONSE_INPUT_EMAIL_IN_USE = "EMAIL ADDRESS IS ALREADY IN USE";
+    const RESPONSE_INPUT_EMAIL_IN_USE = "EMAIL ADDRESS IS ALREADY IN USE BY ANOTHER ADMIN";
     const RESPONSE_INVALID_ACCESS_LEVEL = "ACCESS LEVEL IS NOT VALID";
 
     const EMPTY_FIRST_NAME = 'EMPTY FIRST NAME';
@@ -44,10 +45,10 @@ class CreateAdminValidator
 
     /**
      * PasswordValidator constructor.
-     * @param array $adminsContent
+     * @param array $profileEditContent
      * @param EntityManager $em
      */
-    public function __construct(EntityManager $em, $adminsContent, $runValidator = true)
+    public function __construct(EntityManager $em, $profileEditContent, $runValidator = true)
     {
         //Initialize variables
         $this->errors = array();
@@ -57,7 +58,7 @@ class CreateAdminValidator
         $this->em = $em;
 
         if($runValidator) {
-            $this->validate($adminsContent);
+            $this->validate($profileEditContent);
         }
 
     }
@@ -129,7 +130,7 @@ class CreateAdminValidator
             $this->errors[$emailAddress] = self::RESPONSE_INVALID_INPUT_EMAIL;
 
         } else {
-            $repository = $this->em->getRepository(Person::class);
+            $repository = $this->em->getRepository(Employee::class);
 
             /** @var Person $person */
             $person = $repository->findOneBy(['emailAddress' => $emailAddress]);
