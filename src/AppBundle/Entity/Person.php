@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\TokenType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -226,7 +227,14 @@ abstract class Person implements UserInterface
    */
   public function getAccessToken()
   {
-    return $this->accessToken;
+    /** @var Token $token */
+    foreach($this->tokens as $token) {
+      if($token->getType() == TokenType::ACCESS) {
+        return $token->getCode();
+      }
+    }
+    //if no AccessToken was found
+    return null;
   }
 
   /**
