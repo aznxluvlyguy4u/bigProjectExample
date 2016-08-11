@@ -45,7 +45,7 @@ class LocationHealthInspectionDirection
     /**
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="LocationHealthInspection", inversedBy="directions", cascade={"persist"})
-     * @JMS\Type("LocationHealthInspection")
+     * @JMS\Type("AppBundle\Entity\LocationHealthInspection")
      */
     protected $inspection;
 

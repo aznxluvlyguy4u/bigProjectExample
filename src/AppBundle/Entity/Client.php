@@ -45,7 +45,7 @@ class Client extends Person
      * @var Company
      *
      * @ORM\ManyToOne(targetEntity="Company", inversedBy="companyUsers", cascade={"persist"})
-     * @JMS\Type("Company")
+     * @JMS\Type("AppBundle\Entity\Company")
      */
     private $employer;
 

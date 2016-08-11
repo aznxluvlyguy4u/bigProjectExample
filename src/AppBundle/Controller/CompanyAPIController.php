@@ -49,6 +49,7 @@ class CompanyAPIController extends APIController
         // Generate Company Overview
         $result = CompanyOutput::createCompaniesOverview($companies);
 
+
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
 

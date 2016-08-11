@@ -29,7 +29,7 @@ class LocationHealthInspection
      * @var Location
      *
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="inspections")
-     * @JMS\Type("Location")
+     * @JMS\Type("AppBundle\Entity\Location")
      */
     private $location;
 
@@ -72,7 +72,7 @@ class LocationHealthInspection
      * @var Employee
      *
      * @ORM\ManyToOne(targetEntity="Employee", inversedBy="healthInspections", cascade={"persist"})
-     * @JMS\Type("Employee")
+     * @JMS\Type("AppBundle\Entity\Employee")
      */
     private $authorizedBy;
 

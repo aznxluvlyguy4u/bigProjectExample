@@ -34,7 +34,7 @@ class CompanyNote
      * @var Employee
      *
      * @ORM\ManyToOne(targetEntity="Employee", inversedBy="notes", cascade={"persist"})
-     * @JMS\Type("Employee")
+     * @JMS\Type("AppBundle\Entity\Employee")
      */
     private $creator;
 
@@ -42,7 +42,7 @@ class CompanyNote
      * @var Company
      *
      * @ORM\ManyToOne(targetEntity="Company", inversedBy="notes", cascade={"persist"})
-     * @JMS\Type("Company")
+     * @JMS\Type("AppBundle\Entity\Company")
      */
     private $company;
 

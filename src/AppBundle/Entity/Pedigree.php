@@ -33,7 +33,7 @@ class Pedigree
      * @var Company
      *
      * @ORM\ManyToOne(targetEntity="Company", inversedBy="pedigrees", cascade={"persist"})
-     * @JMS\Type("Company")
+     * @JMS\Type("AppBundle\Entity\Company")
      */
     private $company;
 

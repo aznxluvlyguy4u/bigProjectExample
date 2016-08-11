@@ -87,7 +87,7 @@ class Company
     *
     * @Assert\NotBlank
     * @ORM\ManyToOne(targetEntity="Client", inversedBy="companies", cascade={"persist"})
-    * @JMS\Type("Client")
+    * @JMS\Type("AppBundle\Entity\Client")
     */
     protected $owner;
 

@@ -182,7 +182,7 @@ class Location
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="LocationHealthInspection", mappedBy="location")
-     * @JMS\Type("LocationHealthInspection")
+     * @JMS\Type("AppBundle\Entity\LocationHealthInspection")
      */
     private $inspections;
 

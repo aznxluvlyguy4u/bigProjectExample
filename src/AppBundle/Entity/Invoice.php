@@ -69,7 +69,7 @@ class Invoice {
      * @var Company
      *
      * @ORM\ManyToOne(targetEntity="Company", inversedBy="invoices", cascade={"persist"})
-     * @JMS\Type("Company")
+     * @JMS\Type("AppBundle\Entity\Company")
      */
     private $company;
 

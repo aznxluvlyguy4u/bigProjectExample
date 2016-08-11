@@ -46,7 +46,7 @@ class Employee extends Person
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="LocationHealthInspection", mappedBy="authorizedBy")
-     * @JMS\Type("LocationHealthInspection")
+     * @JMS\Type("AppBundle\Entity\LocationHealthInspection")
      */
     private $healthInspections;
 
