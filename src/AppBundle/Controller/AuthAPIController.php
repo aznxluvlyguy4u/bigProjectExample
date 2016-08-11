@@ -16,6 +16,7 @@ use AppBundle\Entity\Person;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Company;
 use AppBundle\Enumerator\MigrationStatus;
+use AppBundle\Output\MenuBarOutput;
 use AppBundle\Setting\MigrationSetting;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\HeaderValidation;
@@ -169,7 +170,17 @@ class AuthAPIController extends APIController {
       }
 
       if($encoder->isPasswordValid($client, $password)) {
-        return new JsonResponse(array("access_token"=>$client->getAccessToken()), 200);
+        /** @var Client $client */
+        $result = [
+            "access_token"=>$client->getAccessToken(),
+            "user" => MenuBarOutput::create($client)
+        ];
+
+        return new JsonResponse(array("access_token"=>$client->getAccessToken(),
+                         Constant::RESULT_NAMESPACE => $result), 200);
+
+        //TODO If Frontend is updated use the following JsonResponse
+        //return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
       }
     }
 
