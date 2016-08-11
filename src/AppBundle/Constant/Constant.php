@@ -151,6 +151,7 @@ class Constant
     const ANIMAL_RESIDENCE_REPOSITORY = 'AppBundle:AnimalResidence';
 
     const NEW_PASSWORD_MAIL_SUBJECT_HEADER = "Uw nieuwe NSFO Online wachtwoord";
+    const NEW_ADMIN_PASSWORD_MAIL_SUBJECT_HEADER = "Uw nieuwe NSFO Online ADMIN wachtwoord";
     const CONTACT_CONFIRMATION_MAIL_SUBJECT_HEADER = 'NSFO Online Contactformulier Confirmatie';
 
 }

@@ -865,13 +865,19 @@ class APIController extends Controller implements APIControllerInterface
   /**
    * @param Person $person
    */
-  protected function emailNewPasswordToPerson($person, $newPassword)
+  protected function emailNewPasswordToPerson($person, $newPassword, $isAdmin = false)
   {
     $mailerSourceAddress = $this->getParameter('mailer_source_address');
 
+    if($isAdmin) {
+      $subjectHeader = Constant::NEW_ADMIN_PASSWORD_MAIL_SUBJECT_HEADER;
+    } else {
+      $subjectHeader = Constant::NEW_PASSWORD_MAIL_SUBJECT_HEADER;
+    }
+    
     //Confirmation message back to the sender
     $message = \Swift_Message::newInstance()
-        ->setSubject(Constant::NEW_PASSWORD_MAIL_SUBJECT_HEADER)
+        ->setSubject($subjectHeader)
         ->setFrom($mailerSourceAddress)
         ->setTo($person->getEmailAddress())
         ->setBody(

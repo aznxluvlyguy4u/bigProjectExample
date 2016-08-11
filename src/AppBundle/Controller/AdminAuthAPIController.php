@@ -122,7 +122,7 @@ class AdminAuthAPIController extends APIController {
     //Create a new password
     $passwordLength = 9;
     $newPassword = $this->persistNewPassword($admin, $passwordLength);
-    $this->emailNewPasswordToPerson($admin, $newPassword);
+    $this->emailNewPasswordToPerson($admin, $newPassword, true);
 
     return new JsonResponse(array("code" => 200,
         "message"=>"Your new password has been emailed to: " . $emailAddress), 200);
