@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
+use AppBundle\Enumerator\TokenType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
@@ -131,7 +132,9 @@ abstract class Person implements UserInterface
     $this->setIsActive(true);
 
     $this->setPersonId(Utils::generatePersonId());
-    $this->setAccessToken(Utils::generateTokenCode());
+
+    $this->accessToken = Utils::generateTokenCode();
+    $this->addToken(new Token(TokenType::ACCESS, $this->accessToken));
   }
 
   /**
@@ -410,6 +413,7 @@ abstract class Person implements UserInterface
    */
   public function addToken(Token $token)
   {
+    $token->setOwner($this);
     $this->tokens[] = $token;
 
     return $this;
