@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Doctrine\ORM\Query;
 
 /**
  * @Route("/api/v1/companies")
@@ -43,8 +44,18 @@ class CompanyAPIController extends APIController
         }
 
         // Get all companies
-        $repository = $this->getDoctrine()->getRepository(Constant::COMPANY_REPOSITORY);
-        $companies = $repository->findAll();
+        $em = $this->getDoctrine()->getManager();
+        $query = $em->createQuery(
+            'SELECT c,a,u,l,o,p,i         
+            FROM AppBundle:Company c 
+            LEFT JOIN c.locations l 
+            LEFT JOIN c.owner o 
+            LEFT JOIN c.companyUsers u 
+            LEFT JOIN c.address a
+            LEFT JOIN c.pedigrees p
+            LEFT JOIN c.invoices i'
+        );
+        $companies = $query->getResult(Query::HYDRATE_ARRAY);
 
         // Generate Company Overview
         $result = CompanyOutput::createCompaniesOverview($companies);

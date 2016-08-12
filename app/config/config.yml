@@ -77,16 +77,16 @@ snc_redis:
             alias: default
             dsn: redis://localhost
             logging: %kernel.debug%
-    doctrine:
-        result_cache:
-            client: default
-            entity_manager: [default]
-        query_cache:
-            client: default
-            entity_manager: default
-        second_level_cache:
-            client: default
-            entity_manager: default
+    doctrine: ~
+#        result_cache:
+#            client: default
+#            entity_manager: [default]
+#        query_cache:
+#            client: default
+#            entity_manager: default
+#        second_level_cache:
+#            client: default
+#            entity_manager: default
 
 # Nelmio CORS bundle
 nelmio_cors:
