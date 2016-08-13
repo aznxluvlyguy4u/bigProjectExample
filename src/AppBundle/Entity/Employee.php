@@ -93,16 +93,6 @@ class Employee extends Person
     }
 
     /**
-     * Get accessToken
-     *
-     * @return string
-     */
-    public function getAccessToken()
-    {
-        return $this->accessToken;
-    }
-
-    /**
      * Set objectType
      *
      * @param string $objectType
@@ -124,20 +114,6 @@ class Employee extends Person
     public function getObjectType()
     {
         return $this->objectType;
-    }
-
-    /**
-     * Set accessToken
-     *
-     * @param string $accessToken
-     *
-     * @return Employee
-     */
-    public function setAccessToken($accessToken)
-    {
-        $this->accessToken = $accessToken;
-
-        return $this;
     }
 
     /**

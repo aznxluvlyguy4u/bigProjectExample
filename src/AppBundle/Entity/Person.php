@@ -3,7 +3,6 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
-use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\TokenType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -65,15 +64,6 @@ abstract class Person implements UserInterface
   protected $emailAddress;
 
   /**
-   * @var string
-   *
-   * @ORM\Column(type="string",  unique=true)
-   * @Assert\NotBlank
-   * @JMS\Type("string")
-   */
-  protected $accessToken;
-  
-  /**
    * @var ArrayCollection
    *
    * @ORM\OneToMany(targetEntity="Token", mappedBy="owner", cascade={"persist"})
@@ -134,8 +124,7 @@ abstract class Person implements UserInterface
 
     $this->setPersonId(Utils::generatePersonId());
 
-    $this->accessToken = Utils::generateTokenCode();
-    $this->addToken(new Token(TokenType::ACCESS, $this->accessToken));
+    $this->setAccessToken(Utils::generateTokenCode());
   }
 
   /**
@@ -375,9 +364,15 @@ abstract class Person implements UserInterface
      */
     public function setAccessToken($accessToken)
     {
-        $this->accessToken = $accessToken;
-
-        return $this;
+      /** @var Token $token */
+      foreach($this->tokens as $token) {
+        if($token->getType() == TokenType::ACCESS) {
+          $token->setCode($accessToken);
+          return;
+        }
+      }
+      //if no AccessTokens were found
+      $this->addToken(new Token(TokenType::ACCESS, $accessToken));
     }
 
   /**

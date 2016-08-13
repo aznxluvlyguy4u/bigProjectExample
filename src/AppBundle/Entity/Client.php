@@ -183,30 +183,6 @@ class Client extends Person
     }
 
     /**
-    * Set accessToken
-    *
-    * @param string $accessToken
-    *
-    * @return Client
-    */
-    public function setAccessToken($accessToken)
-    {
-    $this->accessToken = $accessToken;
-
-    return $this;
-    }
-
-    /**
-    * Get accessToken
-    *
-    * @return string
-    */
-    public function getAccessToken()
-    {
-    return $this->accessToken;
-    }
-
-    /**
     * Set objectType
     *
     * @param string $objectType
