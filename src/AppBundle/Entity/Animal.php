@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TagStateType;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -845,7 +846,19 @@ abstract class Animal
      */
     public function getParentFather()
     {
-        return $this->parentFather;
+        if($this->parentFather != null) {
+            return $this->parentFather;
+        } else {
+            /** @var Animal $parent */
+            foreach ($this->parents as $parent) {
+                $gender = $parent->getGender();
+                if($gender == GenderType::MALE || $gender == GenderType::M) {
+                    return $parent;
+                }
+            }
+        }
+        //if no father has been found
+        return null;
     }
 
     /**
@@ -870,7 +883,19 @@ abstract class Animal
      */
     public function getParentMother()
     {
-        return $this->parentMother;
+        if($this->parentMother != null) {
+            return $this->parentMother;
+        } else {
+            /** @var Animal $parent */
+            foreach ($this->parents as $parent) {
+                $gender = $parent->getGender();
+                if($gender == GenderType::FEMALE || $gender == GenderType::V) {
+                    return $parent;
+                }
+            }
+        }
+        //if no mother has been found
+        return null;
     }
     
     /**
