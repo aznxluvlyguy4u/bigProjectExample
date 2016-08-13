@@ -259,6 +259,11 @@ abstract class Animal
     /**
      * @var string
      * @JMS\Type("string")
+     * @Assert\Regex(
+     *     pattern="/([0-9]{12})",
+     *     message="The ULN number should consist of 12 numbers"
+     * )
+     * @Assert\Length(max = 12)
      * @ORM\Column(type="string", nullable=true)
      * @Expose
      */
@@ -268,6 +273,8 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @Assert\Regex("/([A-Z]{2})\b/")
+     * @Assert\Length(max = 2)
      * @Expose
      */
     protected $ulnCountryCode;
