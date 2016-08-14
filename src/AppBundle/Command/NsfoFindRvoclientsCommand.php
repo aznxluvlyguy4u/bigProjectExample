@@ -22,8 +22,9 @@ class NsfoFindRvoclientsCommand extends ContainerAwareCommand
 {
     const TITLE = 'Fix machtigingenRVO.csv file';
     const INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/fixed_machtigingenRVO_(edited_v1).csv';
-    const FOUND_OUTPUT_PATH = '/home/data/JVT/projects/NSFO/testing/rvoClientFound.csv';
-    const MISSING_OUTPUT_PATH = '/home/data/JVT/projects/NSFO/testing/rvoClientMissing.csv';
+    const FOUND_OUTPUT_PATH = '/home/data/JVT/projects/NSFO/testing/rvoClientsFound.csv';
+    const MISSING_OUTPUT_PATH = '/home/data/JVT/projects/NSFO/testing/rvoClientsMissing.csv';
+    const UPDATED_OUTPUT_PATH = '/home/data/JVT/projects/NSFO/testing/rvoClientsUpdated.csv';
 
     /** @var int $relationNumberFound */
     private $relationNumberFound;
@@ -155,7 +156,6 @@ class NsfoFindRvoclientsCommand extends ContainerAwareCommand
     }
 
     /**
-     * @param EntityManager $em
      * @param string $row
      * @return ArrayCollection
      */
@@ -208,7 +208,7 @@ class NsfoFindRvoclientsCommand extends ContainerAwareCommand
         }
 
         if($isRemoveFromOutput) {
-            $outputString = 'SKIPPED,SKIPPED'.','.$relationNumberKeeper.','.$relNrInDb.','.$ubn.','.$ubns.','.$fullName.','.$companyName.','.$fullAddress.','.$streetNameAndNumber;
+            $outputString = 'SKIPPED,SKIPPED,'.$relationNumberKeeper.','.$relNrInDb.','.$ubn.','.$ubns.','.$fullName.','.$companyName.','.$fullAddress.','.$streetNameAndNumber;
             $this->foundOutputs->add($outputString);
             $this->skipped++;
             return $this->foundOutputs;
@@ -244,10 +244,7 @@ class NsfoFindRvoclientsCommand extends ContainerAwareCommand
                 $this->countFoundUsersUbns($ubn);
 
                 // UPDATE DATABASE DATA
-                $check = $this->setNewRelationNumberKeeperIfMissing($client, $relationNumberKeeper);
-                if(!$check){
-                    $this->output->writeln($check);
-                }
+                $isNewRelationNumberKeeperPersisted = $this->setNewRelationNumberKeeperIfMissing($client, $relationNumberKeeper);
             }
 
             if (sizeof($results) == 0) {
@@ -286,10 +283,7 @@ class NsfoFindRvoclientsCommand extends ContainerAwareCommand
                 $this->countFoundUsersUbns($ubn);
 
                 // UPDATE DATABASE DATA
-                $check = $this->setNewRelationNumberKeeperIfMissing($client, $relationNumberKeeper);
-                if(!$check){
-                    $this->output->writeln($check);
-                }
+                $isNewRelationNumberKeeperPersisted = $this->setNewRelationNumberKeeperIfMissing($client, $relationNumberKeeper);
             }
 
             //THEN SEARCH FOR COMPANY LOCATIONS WITHOUT UBN
@@ -311,10 +305,7 @@ class NsfoFindRvoclientsCommand extends ContainerAwareCommand
                     $this->countFoundUsersUbns($ubn);
 
                     // UPDATE DATABASE DATA
-                    $check = $this->setNewRelationNumberKeeperIfMissing($client, $relationNumberKeeper);
-                    if(!$check){
-                        $this->output->writeln($check);
-                    }
+                    $isNewRelationNumberKeeperPersisted = $this->setNewRelationNumberKeeperIfMissing($client, $relationNumberKeeper);
                 }
             }
 
@@ -345,10 +336,7 @@ class NsfoFindRvoclientsCommand extends ContainerAwareCommand
                 $this->countFoundUsersUbns($ubn);
 
                 // UPDATE DATABASE DATA
-                $check = $this->setNewRelationNumberKeeperIfMissing($client, $relationNumberKeeper);
-                if(!$check){
-                    $this->output->writeln($check);
-                }
+                $isNewRelationNumberKeeperPersisted = $this->setNewRelationNumberKeeperIfMissing($client, $relationNumberKeeper);
             }
         }
 
@@ -468,27 +456,60 @@ class NsfoFindRvoclientsCommand extends ContainerAwareCommand
 
         if($relationNumberKeeper == "" || $relationNumberKeeper == null) {
             //do nothing
-            return true;
+            return false;
 
         } else if($oldRelationNumberKeeper == "" || $oldRelationNumberKeeper == null) {
+            if($this->relationNumberKeepersUpdated == 0) { $this->writeUpdatedClientsHeader(); }
+
             $client->setRelationNumberKeeper($relationNumberKeeper);
             $this->em->persist($client);
             $this->em->flush();
             $this->relationNumberKeepersUpdated++;
+            $this->writeUpdatedClientsRow($client);
 
             return true;
         } else if($relationNumberKeeper != $oldRelationNumberKeeper) {
+            if($this->relationNumberKeepersUpdated == 0) { $this->writeUpdatedClientsHeader(); }
 
             $client->setRelationNumberKeeper($relationNumberKeeper);
             $this->em->persist($client);
             $this->em->flush();
             $this->relationNumberKeepersUpdated++;
+            $this->writeUpdatedClientsRow($client);
 
-            return 'RelationNumberKeeper, old: '.$oldRelationNumberKeeper.', new: '.$relationNumberKeeper;
+            return true;
         } else {
             //If number is identical, do nothing
-            return true;
+            return false;
         }
     }
 
+    /**
+     * @param Client $client
+     * @return string
+     */
+    private function writeUpdatedClientsRow(Client $client)
+    {
+        $id = $client->getId();
+        $number = $client->getRelationNumberKeeper();
+        $firstName = $client->getFirstName();
+        $lastName = $client->getLastName();
+        $email = $client->getEmailAddress();
+
+        $outputRow = $id.','.$number.','.$firstName.','.$lastName.','.$email;
+        file_put_contents(self::UPDATED_OUTPUT_PATH, $outputRow."\n", FILE_APPEND);
+
+        return $outputRow;
+    }
+
+    /**
+     * @return string
+     */
+    private function writeUpdatedClientsHeader()
+    {
+        $outputRow = 'id,relationNumberKeeper,firstName,lastName,emailAddress';
+        file_put_contents(self::UPDATED_OUTPUT_PATH, $outputRow."\n", FILE_APPEND);
+
+        return $outputRow;
+    }
 }
