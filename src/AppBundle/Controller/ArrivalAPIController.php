@@ -15,6 +15,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\HealthChecker;
 use AppBundle\Util\LocationHealthUpdater;
+use AppBundle\Validation\ArrivalAndImportValidator;
 use AppBundle\Validation\TagValidator;
 use AppBundle\Validation\UbnValidator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -161,15 +162,13 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
     $location = $this->getSelectedLocation($request);
+    $em = $this->getDoctrine()->getEntityManager();
 
-    //Only verify if pedigree exists in our database. Unknown ULNs are allowed
-    $ulnVerification = $this->verifyOnlyPedigreeCodeInAnimal($content->get(Constant::ANIMAL_NAMESPACE));
-    if(!$ulnVerification->get('isValid')){
-      return new JsonResponse(array('code'=>428,
-                               "pedigree" => $ulnVerification->get(Constant::PEDIGREE_NAMESPACE),
-                                "message" => "PEDIGREE VALUE IS NOT REGISTERED WITH NSFO"), 428);
+    //Verify ULN or PedigreeCode input
+    $inputValidator = new ArrivalAndImportValidator($em, $content);
+    if(!$inputValidator->getIsValid()) {
+      return $inputValidator->createJsonResponse();
     }
-
 
     //LocationHealth null value fixes
     $this->getHealthService()->fixLocationHealthMessagesWithNullValues($location);
