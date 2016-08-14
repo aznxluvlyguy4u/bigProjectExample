@@ -23,80 +23,70 @@ class CompanyOutput
         $res = array();
 
         foreach ($companies as $company) {
-
-            /*
-             * @var $company Company
-             */
-            $locations = $company->getLocations();
-            $ubns = array();
-            foreach ($locations as $location) {
-
-                /*
-                 * @var $location Location
-                 */
-                $ubns[] = $location->getUbn();
+            $users = array();
+            if(sizeof($company['companyUsers']) > 0) {
+                foreach($company['companyUsers'] as $user) {
+                    $users[] = array(
+                        'person_id' => Utils::fillNull($user['personId']),
+                        'prefix' => Utils::fillNull($user['prefix']),
+                        'email_address' => Utils::fillNull($user['emailAddress']),
+                        'first_name' => Utils::fillNull($user['firstName']),
+                        'last_name' => Utils::fillNull($user['lastName'])
+                    );
+                }
             }
 
-            $pedigrees = $company->getPedigrees();
-            $pedigreeNumbers = array();
-            foreach ($pedigrees as $pedigree) {
-
-                /*
-                 * @var $pedigree Pedigree
-                 */
-                $pedigreeNumbers[] = $pedigree->getPedigreeCode();
+            $locations = array();
+            if(sizeof($company['locations']) > 0) {
+                foreach($company['locations'] as $location) {
+                    $locations[] = Utils::fillNull($location['ubn']);
+                }
             }
 
-            $users = $company->getCompanyUsers();
-            $resUsers = array();
-            foreach ($users as $user) {
-                /**
-                 * @var Client $user
-                 */
+            $pedigrees = array();
+            if(sizeof($company['pedigrees']) > 0) {
+                foreach($company['pedigrees'] as $pedigree) {
+                    $pedigrees[] = Utils::fillNull($pedigree['$pedigreeCode']);
+                }
+            }
 
-                if($user->getIsActive()) {
-                    $newUser = array();
-                    $newUser['person_id'] = $user->getPersonId();
-                    $newUser['prefix'] = $user->getPrefix();
-                    $newUser['first_name'] = $user->getFirstName();
-                    $newUser['last_name'] = $user->getLastName();
-                    $newUser['email_address'] = $user->getEmailAddress();
-                    $resUsers[] = $newUser;
+            $invoices = array();
+            if(sizeof($company['invoices']) > 0) {
+                foreach($company['invoices'] as $invoice) {
+
+                    if($invoice['status'] == 'UNPAID') {
+                        $invoices[] = $invoice;
+                    };
                 }
             }
 
             $res[] = array(
-                'company_id' => Utils::fillNull($company->getCompanyId()),
-                'debtor_number' => Utils::fillNull($company->getDebtorNumber()),
-                'company_name' => Utils::fillNull($company->getCompanyName()),
+                'company_id' => Utils::fillNull($company['companyId']),
+                'debtor_number' => Utils::fillNull($company['debtorNumber']),
+                'company_name' => Utils::fillNull($company['companyName']),
+                'subscription_date' => Utils::fillNull($company['subscriptionDate']),
+                'animal_health_subscription' => Utils::fillNull($company['animalHealthSubscription']),
+                'status' => Utils::fillNull($company['isActive']),
                 'address' => array(
-                    'street_name' => Utils::fillNull($company->getAddress()->getStreetName()),
-                    'address_number' => Utils::fillNull($company->getAddress()->getAddressNumber()),
-                    'suffix' => Utils::fillNull($company->getAddress()->getAddressNumberSuffix()),
-                    'postal_code' => Utils::fillNull($company->getAddress()->getPostalCode()),
-                    'city' => Utils::fillNull($company->getAddress()->getCity()),
-                    'state' => Utils::fillNull($company->getAddress()->getState()),
+                    'street_name' => Utils::fillNull($company['address']['streetName']),
+                    'address_number' => Utils::fillNull($company['address']['addressNumber']),
+                    'suffix' => Utils::fillNull($company['address']['addressNumber']),
+                    'postal_code' => Utils::fillNull($company['address']['postalCode']),
+                    'city' => Utils::fillNull($company['address']['city']),
+                    'state' => Utils::fillNull($company['address']['state'])
                 ),
                 'owner' => array(
-                    'person_id' => $company->getOwner()->getPersonId(),
-                    'email_address' => $company->getOwner()->getEmailAddress(),
-                    'first_name' => $company->getOwner()->getFirstName(),
-                    'last_name' => $company->getOwner()->getLastName(),
+                    'person_id' => Utils::fillNull($company['owner']['personId']),
+                    'email_address' => Utils::fillNull($company['owner']['emailAddress']),
+                    'first_name' => Utils::fillNull($company['owner']['firstName']),
+                    'last_name' => Utils::fillNull($company['owner']['lastName']),
                 ),
-                'users' => $resUsers,
-                'locations' => $ubns,
-                'pedigrees' => $pedigreeNumbers,
-                'unpaid_invoices' => $company->getInvoices()->filter(
-                    function (Invoice $invoice) {
-                        return $invoice->getStatus() == 'OPEN';
-                    }
-                ),
-                'subscription_date' => Utils::fillNull($company->getDebtorNumber()),
-                'animal_health_subscription' => $company->getAnimalHealthSubscription(),
-                'status' => $company->isActive(),
+                'users' => $users,
+                'locations' => $locations,
+                'pedigrees' => $pedigrees,
+                'unpaid_invoices' => sizeof($invoices)
             );
         }
-
         return $res;
     }
 

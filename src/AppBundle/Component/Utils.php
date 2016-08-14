@@ -75,10 +75,16 @@ class Utils
      */
     public static function verifyUlnFormat($ulnString)
     {
-        if(preg_match("([A-Z]{2}\d+)",$ulnString)) {
+        $countryCodeLength = 2;
+        $numberLength = 12;
+        $ulnLength = $countryCodeLength + $numberLength;
+
+        if(preg_match("/([A-Z]{2})+([0-9]{12})/",$ulnString)
+            && strlen($ulnString) == $ulnLength) {
             return true;
+        } else {
+            return false;
         }
-        return false;
     }
 
     public static function getUlnFromString($ulnString)

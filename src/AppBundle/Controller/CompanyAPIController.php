@@ -19,9 +19,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Doctrine\ORM\Query;
 
 /**
- * @Route("/api/v1")
+ * @Route("/api/v1/companies")
  */
 class CompanyAPIController extends APIController
 {
@@ -29,7 +30,7 @@ class CompanyAPIController extends APIController
      * @param Request $request the request object
      *
      * @return JsonResponse
-     * @Route("/companies")
+     * @Route("")
      * @Method("GET")
      */
     public function getCompanies(Request $request)
@@ -43,8 +44,18 @@ class CompanyAPIController extends APIController
         }
 
         // Get all companies
-        $repository = $this->getDoctrine()->getRepository(Constant::COMPANY_REPOSITORY);
-        $companies = $repository->findAll();
+        $em = $this->getDoctrine()->getManager();
+        $query = $em->createQuery(
+            'SELECT c,a,u,l,o,p,i         
+            FROM AppBundle:Company c 
+            LEFT JOIN c.locations l 
+            LEFT JOIN c.owner o 
+            LEFT JOIN c.companyUsers u 
+            LEFT JOIN c.address a
+            LEFT JOIN c.pedigrees p
+            LEFT JOIN c.invoices i'
+        );
+        $companies = $query->getResult(Query::HYDRATE_ARRAY);
 
         // Generate Company Overview
         $result = CompanyOutput::createCompaniesOverview($companies);
@@ -53,38 +64,10 @@ class CompanyAPIController extends APIController
     }
 
     /**
-     * @param Request $request   the request object
-     * @param Company $companyId
-     *
-     * @return JsonResponse
-     * @Route("/company/{companyId}")
-     * @Method("GET")
-     */
-    public function getCompany(Request $request, $companyId)
-    {
-        // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
-        }
-
-        // Get Company
-        $repository = $this->getDoctrine()->getRepository(Constant::COMPANY_REPOSITORY);
-        $company = $repository->findOneByCompanyId($companyId);
-
-        // Generate Company Details
-        $result = CompanyOutput::createCompany($company);
-
-        return new \AppBundle\Component\HttpFoundation\JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
-    }
-
-    /**
      * @param Request $request the request object
      *
      * @return JsonResponse
-     * @Route("/company")
+     * @Route("")
      * @Method("POST")
      */
     public function createCompany(Request $request)
@@ -211,14 +194,42 @@ class CompanyAPIController extends APIController
     }
 
     /**
+     * @param Request $request   the request object
+     * @param Company $companyId
+     *
+     * @return JsonResponse
+     * @Route("/{companyId}")
+     * @Method("GET")
+     */
+    public function getCompany(Request $request, $companyId)
+    {
+        // Validation if user is an admin
+        $admin = $this->getAuthenticatedEmployee($request);
+        $adminValidator = new AdminValidator($admin);
+
+        if (!$adminValidator->getIsAccessGranted()) {
+            return $adminValidator->createJsonErrorResponse();
+        }
+
+        // Get Company
+        $repository = $this->getDoctrine()->getRepository(Constant::COMPANY_REPOSITORY);
+        $company = $repository->findOneByCompanyId($companyId);
+
+        // Generate Company Details
+        $result = CompanyOutput::createCompany($company);
+
+        return new \AppBundle\Component\HttpFoundation\JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+    }
+
+    /**
      * @var Company $company
      * @param Request $request the request object
      *
      * @return JsonResponse
-     * @Route("/company")
+     * @Route("/{companyId}")
      * @Method("PUT")
      */
-    public function UpdateCompany(Request $request)
+    public function UpdateCompany(Request $request, $companyId)
     {
         // Validation if user is an admin
         $admin = $this->getAuthenticatedEmployee($request);
@@ -232,9 +243,8 @@ class CompanyAPIController extends APIController
         // TODO VALIDATE CONTENT
 
         // Get Company
-        $contentCompanyId = $content->get('company_id');
         $repository = $this->getDoctrine()->getRepository(Constant::COMPANY_REPOSITORY);
-        $company = $repository->findOneByCompanyId($contentCompanyId);
+        $company = $repository->findOneByCompanyId($companyId);
 
         /**
          * @var Company $company
@@ -450,7 +460,7 @@ class CompanyAPIController extends APIController
      * @param Company $companyId
      *
      * @return JsonResponse
-     * @Route("/company/inactive/{companyId}")
+     * @Route("/{companyId}/status")
      * @Method("PUT")
      */
     public function setCompanyInactive(Request $request, $companyId)
@@ -487,7 +497,7 @@ class CompanyAPIController extends APIController
      * @param String  $companyId
      *
      * @return JsonResponse
-     * @Route("/company/details/{companyId}")
+     * @Route("/{companyId}/details")
      * @Method("GET")
      */
     public function GetCompanyDetails(Request $request, $companyId)
@@ -515,7 +525,7 @@ class CompanyAPIController extends APIController
      * @param String  $companyId
      *
      * @return JsonResponse
-     * @Route("/company/notes/{companyId}")
+     * @Route("/{companyId}/notes")
      * @Method("GET")
      */
     public function GetCompanyNotes(Request $request, $companyId)
@@ -546,7 +556,7 @@ class CompanyAPIController extends APIController
      * @param String  $companyId
      *
      * @return JsonResponse
-     * @Route("/company/notes/{companyId}")
+     * @Route("/{companyId}/notes")
      * @Method("POST")
      */
     public function CreateCompanyNotes(Request $request, $companyId)
@@ -586,7 +596,7 @@ class CompanyAPIController extends APIController
      * @param Request $request the request object
      *
      * @return JsonResponse
-     * @Route("/company/generate-ids")
+     * @Route("/generate-ids")
      * @Method("POST")
      */
     public function generateNewCompanyIds(Request $request)

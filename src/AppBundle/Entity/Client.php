@@ -45,7 +45,7 @@ class Client extends Person
      * @var Company
      *
      * @ORM\ManyToOne(targetEntity="Company", inversedBy="companyUsers", cascade={"persist"})
-     * @JMS\Type("Company")
+     * @JMS\Type("AppBundle\Entity\Company")
      */
     private $employer;
 
@@ -180,30 +180,6 @@ class Client extends Person
     $this->username = $username;
 
     return $this;
-    }
-
-    /**
-    * Set accessToken
-    *
-    * @param string $accessToken
-    *
-    * @return Client
-    */
-    public function setAccessToken($accessToken)
-    {
-    $this->accessToken = $accessToken;
-
-    return $this;
-    }
-
-    /**
-    * Get accessToken
-    *
-    * @return string
-    */
-    public function getAccessToken()
-    {
-    return $this->accessToken;
     }
 
     /**
