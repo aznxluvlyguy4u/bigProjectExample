@@ -4,6 +4,7 @@ namespace AppBundle\Component;
 use AppBundle\AppBundle;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthQueue;
@@ -99,6 +100,74 @@ class Utils
 
         return array(Constant::ULN_COUNTRY_CODE_NAMESPACE => $countryCode, Constant::ULN_NUMBER_NAMESPACE => $ulnNumber);
     }
+
+
+    /**
+     * NOTE! That if no pedigreeCode is found the validation returns true, because the focus in on the array.
+     * 
+     * @param EntityManager $em
+     * @param array $animalArray
+     * @return ArrayCollection
+     */
+    public static function verifyOnlyPedigreeCodeInAnimal(EntityManager $em, $animalArray)
+    {
+        $array = new ArrayCollection();
+
+        $pedigreeNumber = Utils::getNullCheckedArrayValue(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalArray);
+        $pedigreeCountryCode = Utils::getNullCheckedArrayValue(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalArray);
+        $isPedigreeCodeGiven = $pedigreeCountryCode != null && $pedigreeNumber != null
+                            && $pedigreeCountryCode != ''   && $pedigreeNumber != '';
+
+        if ($isPedigreeCodeGiven) {
+
+            $array->set('pedigreeNumber', $pedigreeNumber);
+            $array->set('pedigreeCountryCode', $pedigreeCountryCode);
+            $array->set(Constant::PEDIGREE_NAMESPACE, $pedigreeCountryCode . $pedigreeNumber);
+            
+            $isValid = self::verifyPedigreeCode($em, $pedigreeCountryCode, $pedigreeNumber);
+            $array->set('isValid', $isValid);
+            
+        } else { //PedigreeCountryCode and/or PedigreeNumber keys do not exist, so not validating on Pedigree
+            $array->set('isValid', true);
+            $array->set('pedigreeNumber', null);
+            $array->set('pedigreeCountryCode', null);
+            $array->set(Constant::PEDIGREE_NAMESPACE, null);
+        }
+
+        return $array;
+    }
+
+
+    /**
+     * Validating if given pedigreeCode matches the ones that exists in the database.
+     * NOTE that if no pedigreeCode is given 'false' is returned.
+     *
+     * @param EntityManager $em
+     * @param string $pedigreeCountryCode
+     * @param string $pedigreeNumber
+     * @return ArrayCollection
+     */
+    public static function verifyPedigreeCode(EntityManager $em, $pedigreeCountryCode, $pedigreeNumber)
+    {
+        $isPedigreeCodeGiven = $pedigreeCountryCode != null && $pedigreeNumber != null
+                            && $pedigreeCountryCode != ''   && $pedigreeNumber != '';
+
+        if($isPedigreeCodeGiven) {
+            /** @var AnimalRepository $animalRepository */
+            $animalRepository = $em->getRepository(Constant::ANIMAL_REPOSITORY);
+            $animal = $animalRepository->findByPedigreeCountryCodeAndNumber($pedigreeCountryCode, $pedigreeNumber);
+
+            if($animal != null) {
+                return true;
+
+            } else { //Animal is not found
+                return false;
+            }
+        } else { //PedigreeCountryCode and/or PedigreeNumber is empty
+            return false;
+        }
+    }
+
 
     /**
      * Returns the minimum DateTime for when the age is at least the inserted value.
