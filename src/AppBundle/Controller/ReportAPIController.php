@@ -67,14 +67,11 @@ class ReportAPIController extends APIController {
     $variables = $pedigreeCertificateData->getReports();
     
     $html = $this->renderView('Report/pedigree_certificates.html.twig', ['variables' => $variables]);
-    $this->get('knp_snappy.pdf')->generateFromHtml($html, $generatedPdfPath, array('orientation'=>'Landscape',
+    $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html, array('orientation'=>'Landscape',
         'default-header'=>true,'disable-smart-shrinking'=>true));
 
     $s3Service = $this->getStorageService();
-    $url = $s3Service->uploadPdf($generatedPdfPath, $pedigreeCertificateData->getS3Key());
-
-    //Delete file from local cache
-    unlink($generatedPdfPath);
+    $url = $s3Service->uploadPdf($pdfOutput, $pedigreeCertificateData->getS3Key());
 
     return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
   }

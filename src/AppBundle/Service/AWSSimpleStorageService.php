@@ -89,16 +89,16 @@ class AWSSimpleStorageService
 
 
     /**
-     * Upload a file with the given filepath to the location in the S3 Bucket specified by the key.
+     * Upload a file without a filepath to the location in the S3 Bucket specified by the key.
      * And return the download url.
      *
-     * @param $filepath
+     * @param $file
      * @param $key
      * @return string
      */
-    public function uploadPdf($filepath, $key)
+    public function uploadPdf($file, $key)
     {
-        return $this->upload($filepath, $key, 'application/pdf');
+        return $this->upload($file, $key, 'application/pdf');
     }
 
     /**
@@ -109,14 +109,27 @@ class AWSSimpleStorageService
      * @param $key
      * @return string
      */
-    public function upload($filepath, $key, $contentType)
+    public function uploadPdfFromFilePath($filepath, $key)
+    {
+        return $this->uploadFromFilePath($filepath, $key, 'application/pdf');
+    }
+
+    /**
+     * Upload a file directly to the location in the S3 Bucket specified by the key.
+     * And return the download url.
+     *
+     * @param $file
+     * @param $key
+     * @return string
+     */
+    public function upload($file, $key, $contentType)
     {
         $key = $this->pathApppendage.$key;
 
         $result = $this->s3Service->putObject(array(
             'Bucket' => $this->bucket,
             'Key'    => $key,
-            'Body'   => file_get_contents($filepath),
+            'Body'   => $file,
             'ACL'    => 'private', //protect access to the uploaded file
             'ContentType' => $contentType
         ));
@@ -130,5 +143,18 @@ class AWSSimpleStorageService
         $url = (string) $request->getUri(); //The S3 download link including the accesstoken
 
         return $url;
+    }
+
+    /**
+     * Upload a file with the given filepath to the location in the S3 Bucket specified by the key.
+     * And return the download url.
+     *
+     * @param $filepath
+     * @param $key
+     * @return string
+     */
+    public function uploadFromFilePath($filepath, $key, $contentType)
+    {
+        return $this->upload(file_get_contents($filepath), $key, $contentType);
     }
 }
