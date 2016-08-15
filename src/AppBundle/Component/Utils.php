@@ -551,6 +551,15 @@ class Utils
         return $result;
     }
 
-
+    /**
+     * For example this string 'XL24AN55' will become the following array ['XL',24,'AN',55]
+     * 
+     * @param $string
+     * @return array
+     */
+    public static function separateLettersAndNumbersOfString($string)
+    {
+        return preg_split("/(,?\s+)|((?<=[a-z])(?=\d))|((?<=\d)(?=[a-z]))/i", $string);
+    }
 
 }
