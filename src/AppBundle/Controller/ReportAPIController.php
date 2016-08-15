@@ -68,7 +68,7 @@ class ReportAPIController extends APIController {
     
     $html = $this->renderView('Report/pedigree_certificates.html.twig', ['variables' => $variables]);
     $this->get('knp_snappy.pdf')->generateFromHtml($html, $generatedPdfPath, array('orientation'=>'Landscape',
-        'default-header'=>true));
+        'default-header'=>true,'disable-smart-shrinking'=>true));
 
     $s3Service = $this->getStorageService();
     $url = $s3Service->uploadPdf($generatedPdfPath, $pedigreeCertificateData->getS3Key());
