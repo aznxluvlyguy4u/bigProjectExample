@@ -17,7 +17,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class NsfoDumpMixblupCommand extends ContainerAwareCommand
 {
     const TITLE = 'Generate NSFO MiXBLUP files';
-    const DATA_FILENAME = 'data.txt';
+    const DATA_FILENAME = 'databestand.txt';
     const PEDIGREE_FILENAME = 'afstamming.txt';
     const INSTRUCTIONS_FILENAME = 'mixblup_instructions.inp';
     const START_YEAR_MEASUREMENT = 2014;
