@@ -14,6 +14,7 @@ use Doctrine\ORM\EntityManager;
 class BreedCodeReformatter
 {
     const BREED_CODE_VALUE_PARTS = 8; //If this is not 8, refactor reformatBreedCodeValues function
+    const PERSIST_BATCH_SIZE = 1000;
 
     /** @var EntityManager $em */
     private $em;
@@ -65,7 +66,6 @@ class BreedCodeReformatter
         $animals = $this->getAllAnimalsIfNull();
 
         $count = 0;
-        $persistBatchSize = 100;
 
         /** @var Animal $animal */
         foreach ($this->animals as $animal) {
@@ -108,7 +108,7 @@ class BreedCodeReformatter
             $this->em->persist($mixBlupBreedCode);
 
             $count++;
-            if($count%$persistBatchSize == 0) {
+            if($count%self::PERSIST_BATCH_SIZE == 0) {
                 $this->em->flush();
             }
         }

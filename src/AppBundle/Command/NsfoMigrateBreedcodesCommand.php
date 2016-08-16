@@ -17,6 +17,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class NsfoMigrateBreedcodesCommand extends ContainerAwareCommand
 {
     const TITLE = 'Migrate breedcodes to values in separate variables for MiXBLUP';
+    const BATCH_SIZE = 1000;
 
     /** @var EntityManager $em */
     private $em;
@@ -46,7 +47,6 @@ class NsfoMigrateBreedcodesCommand extends ContainerAwareCommand
         $this->em = $em;
 
 
-        $batchSize = 50;
         $reformatter = new BreedCodeReformatter($em, false, new ArrayCollection());
 
         /** @var AnimalRepository $animalRepository */
@@ -54,10 +54,10 @@ class NsfoMigrateBreedcodesCommand extends ContainerAwareCommand
         $maxId = $animalRepository->getMaxId();
         $minId = $animalRepository->getMinIdOfAnimalsWithoutMixBlupBreedCode();
 
-        for($i = $minId; $i <= $maxId; $i += $batchSize) {
-            $lastId = $i+$batchSize-1;
+        for($i = $minId; $i <= $maxId; $i += self::BATCH_SIZE) {
+
             /** @var ArrayCollection $animals */
-            $animals = $animalRepository->getAnimalsByIdWithoutMixBlupBreedCode($i, $lastId);
+            $animals = $animalRepository->getAnimalsByIdWithoutMixBlupBreedCode($i, $i+self::BATCH_SIZE-1);
             if($animals->count() > 0) {
                 $reformatter->setAnimals($animals);
                 $reformatter->migrate();
