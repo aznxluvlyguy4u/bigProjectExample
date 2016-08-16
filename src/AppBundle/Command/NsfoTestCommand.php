@@ -29,20 +29,27 @@ class NsfoTestCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        /** @var EntityManager $em */
+        $em = $this->getContainer()->get('doctrine.orm.entity_manager');
+        $this->em = $em;
         $helper = $this->getHelper('question');
         $cmdUtil = new CommandUtil($input, $output, $helper);
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
-        $em = $this->getContainer()->get('doctrine.orm.entity_manager');
-        $this->em = $em;
 
-        $fileContents = file_get_contents(self::INPUT_PATH);
+        $cmdUtil->setStartTimeAndPrintIt();
+
+//        $fileContents = file_get_contents(self::INPUT_PATH);
 
         $output->writeln([
-            '=== PROCESS FINISHED ===',
+            '=== Print Something ===',
+            'Result 1: ',
+            'Result 2: ',
             '',
             '']);
+
+        $cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 
 }
