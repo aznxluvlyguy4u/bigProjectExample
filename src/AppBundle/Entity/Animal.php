@@ -76,6 +76,16 @@ abstract class Animal
     protected $name;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 12)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    protected $ubnOfBirth;
+
+    /**
      * @var DateTime
      *
      * @ORM\Column(type="datetime", nullable=true)
@@ -1853,6 +1863,22 @@ abstract class Animal
     public function setBreedCodes($breedCodes)
     {
         $this->breedCodes = $breedCodes;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUbnOfBirth()
+    {
+        return $this->ubnOfBirth;
+    }
+
+    /**
+     * @param string $ubnOfBirth
+     */
+    public function setUbnOfBirth($ubnOfBirth)
+    {
+        $this->ubnOfBirth = $ubnOfBirth;
     }
 
     
