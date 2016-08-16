@@ -3,6 +3,7 @@
 namespace AppBundle\Command;
 
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Migration\BreedCodeReformatter;
 use AppBundle\Util\CommandUtil;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -35,14 +36,42 @@ class NsfoMigrateBreedcodesCommand extends ContainerAwareCommand
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
+
+        //Timestamp
+        $startTime = new \DateTime();
+        $output->writeln(['Start time: '.date_format($startTime, 'Y-m-d h:m:s'),'']);
+
         /** @var EntityManager $em */
         $em = $this->getContainer()->get('doctrine.orm.entity_manager');
         $this->em = $em;
 
-        $reformatter = new BreedCodeReformatter($em);
+
+        $batchSize = 50;
+        $reformatter = new BreedCodeReformatter($em, false, new ArrayCollection());
+
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $em->getRepository(Animal::class);
+        $maxId = $animalRepository->getMaxId();
+        $minId = $animalRepository->getMinIdOfAnimalsWithoutMixBlupBreedCode();
+
+        for($i = $minId; $i <= $maxId; $i += $batchSize) {
+            $lastId = $i+$batchSize-1;
+            /** @var ArrayCollection $animals */
+            $animals = $animalRepository->getAnimalsByIdWithoutMixBlupBreedCode($i, $lastId);
+            if($animals->count() > 0) {
+                $reformatter->setAnimals($animals);
+                $reformatter->migrate();
+            }
+        }
+
+        //Final Results
+        $endTime = new \DateTime();
+        $elapsedTime = gmdate("H:i:s", $endTime->getTimestamp() - $startTime->getTimestamp());
 
         $output->writeln([
             '=== PROCESS FINISHED ===',
+            'End Time: '.date_format($endTime, 'Y-m-d h:m:s'),
+            'Elapsed Time (h:m:s): '.$elapsedTime,
             '',
             '']);
     }

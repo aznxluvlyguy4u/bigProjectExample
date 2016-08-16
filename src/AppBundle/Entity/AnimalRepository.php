@@ -399,4 +399,42 @@ class AnimalRepository extends BaseRepository
     return $this->getEntityManager()->getRepository(Animal::class)
         ->matching($criteria);
   }
+
+  /**
+   * @return int|null
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function getMaxId()
+  {
+    $sql = "SELECT MAX(id) FROM animal";
+
+    $query = $this->getEntityManager()->getConnection()->prepare($sql);
+    $query->execute();
+    $result = $query->fetchColumn();
+
+    if(!$result) {
+      return null;
+    } else {
+      return $result;
+    }
+  }
+
+  /**
+   * @return int|null
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function getMinIdOfAnimalsWithoutMixBlupBreedCode()
+  {
+    $sql = "SELECT MIN(id) FROM animal WHERE mix_blup_breed_code_id IS NULL";
+
+    $query = $this->getEntityManager()->getConnection()->prepare($sql);
+    $query->execute();
+    $result = $query->fetchColumn();
+
+    if(!$result) {
+      return null;
+    } else {
+      return $result;
+    }
+  }
 }
