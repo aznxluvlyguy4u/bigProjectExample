@@ -9,5 +9,8 @@ class BreedCodeType
   const DK = "DK";
   const CF = "CF";
   const NH = "NH";
+  const SW = "SW";
+  const BM = "BM";
+  const GP = "GP";
   const OV = "OV";
 }

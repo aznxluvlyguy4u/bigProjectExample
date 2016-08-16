@@ -52,12 +52,12 @@ class NsfoMigrateBreedcodesCommand extends ContainerAwareCommand
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $em->getRepository(Animal::class);
         $maxId = $animalRepository->getMaxId();
-        $minId = $animalRepository->getMinIdOfAnimalsWithoutMixBlupBreedCode();
+        $minId = $animalRepository->getMinIdOfAnimalsWithoutBreedCodesSet();
 
         for($i = $minId; $i <= $maxId; $i += self::BATCH_SIZE) {
 
             /** @var ArrayCollection $animals */
-            $animals = $animalRepository->getAnimalsByIdWithoutMixBlupBreedCode($i, $i+self::BATCH_SIZE-1);
+            $animals = $animalRepository->getAnimalsByIdWithoutBreedCodesSet($i, $i+self::BATCH_SIZE-1);
             if($animals->count() > 0) {
                 $reformatter->setAnimals($animals);
                 $reformatter->migrate();

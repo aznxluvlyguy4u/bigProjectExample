@@ -387,12 +387,12 @@ class AnimalRepository extends BaseRepository
    * @param $endId
    * @return Collection
    */
-  public function getAnimalsByIdWithoutMixBlupBreedCode($startId, $endId)
+  public function getAnimalsByIdWithoutBreedCodesSet($startId, $endId)
   {
     $criteria = Criteria::create()
         ->where(Criteria::expr()->gte('id', $startId))
         ->andWhere(Criteria::expr()->lte('id', $endId))
-        ->andWhere(Criteria::expr()->eq('mixBlupBreedCode', null))
+        ->andWhere(Criteria::expr()->eq('breedCodes', null))
         ->orderBy(['id' => Criteria::ASC])
     ;
 
@@ -423,9 +423,9 @@ class AnimalRepository extends BaseRepository
    * @return int|null
    * @throws \Doctrine\DBAL\DBALException
    */
-  public function getMinIdOfAnimalsWithoutMixBlupBreedCode()
+  public function getMinIdOfAnimalsWithoutBreedCodesSet()
   {
-    $sql = "SELECT MIN(id) FROM animal WHERE mix_blup_breed_code_id IS NULL";
+    $sql = "SELECT MIN(id) FROM animal WHERE breed_codes_id IS NULL";
 
     $query = $this->getEntityManager()->getConnection()->prepare($sql);
     $query->execute();

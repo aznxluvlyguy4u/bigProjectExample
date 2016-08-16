@@ -6,7 +6,8 @@ namespace AppBundle\Migration;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\MixBlupBreedCode;
+use AppBundle\Entity\BreedCode;
+use AppBundle\Entity\BreedCodes;
 use AppBundle\Enumerator\BreedCodeType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
@@ -51,7 +52,7 @@ class BreedCodeReformatter
         return $this->animals;
     }
 
-    
+
     private function getAllAnimalsIfNull()
     {
         if($this->animals == null) {
@@ -60,8 +61,8 @@ class BreedCodeReformatter
         return $this->animals;
     }
 
-    
-    public function migrate()
+
+    public function migrate($isRegenerateAlsoExistingBreedCodes = false)
     {
         $animals = $this->getAllAnimalsIfNull();
 
@@ -71,41 +72,45 @@ class BreedCodeReformatter
         foreach ($this->animals as $animal) {
 
             $breedCode = $animal->getBreedCode();
-            
-            if(strlen($breedCode) >= 5) { //Verify if there actually is a breedCode
-                $reformattedBreedCode = self::reformatBreedCode($breedCode);
-                $te = $reformattedBreedCode->get(BreedCodeType::TE);
-                $cf = $reformattedBreedCode->get(BreedCodeType::CF);
-                $nh = $reformattedBreedCode->get(BreedCodeType::NH);
-                $ov = $reformattedBreedCode->get(BreedCodeType::OV);
 
-                $mixBlupBreedCode = $animal->getMixBlupBreedCode();
-                if($mixBlupBreedCode == null) {
-                    $mixBlupBreedCode = new MixBlupBreedCode($te, $cf, $nh, $ov);
-                    $mixBlupBreedCode->setAnimal($animal);
-                    $animal->setMixBlupBreedCode($mixBlupBreedCode);
+            if(strlen($breedCode) >= 5) { //Verify if there actually is a breedCode
+                $breedCodesSet = $animal->getBreedCodes();
+                if($breedCodesSet == null) {
+                    $breedCodesSet = new BreedCodes();
+                    $breedCodesSet->setAnimal($animal);
+                    $animal->setBreedCodes($breedCodesSet);
+                    $this->em->persist($breedCodesSet);
+                    $this->em->persist($animal);
+                }
+                
+                $reformattedBreedCode = self::reformatBreedCode($breedCode);
+                $breedCodeNames = $reformattedBreedCode->getKeys();
+
+                $oldCodes = $breedCodesSet->getCodes();
+                $isGenerateNewCodes = false;
+
+                if($isRegenerateAlsoExistingBreedCodes) {
+
+                    if($oldCodes->count() > 0) { $breedCodesSet->removeAllCodes(); }
+                    $isGenerateNewCodes = true;
+                    
                 } else {
-                    $mixBlupBreedCode->setTE($te);
-                    $mixBlupBreedCode->setCF($cf);
-                    $mixBlupBreedCode->setNH($nh);
-                    $mixBlupBreedCode->setOV($ov);
+                    if($oldCodes->count() == 0) {
+                        $isGenerateNewCodes = true;
+                    }
                 }
 
-            } else { //If there is no BreedCode create a default one with zeroes
-                $mixBlupBreedCode = $animal->getMixBlupBreedCode();
-                if($mixBlupBreedCode == null) {
-                    $mixBlupBreedCode = new MixBlupBreedCode();
-                    $mixBlupBreedCode->setAnimal($animal);
-                    $animal->setMixBlupBreedCode($mixBlupBreedCode);
-                } else {
-                    $mixBlupBreedCode->setTE(0);
-                    $mixBlupBreedCode->setCF(0);
-                    $mixBlupBreedCode->setNH(0);
-                    $mixBlupBreedCode->setOV(0);
+                if($isGenerateNewCodes) {
+                    foreach ($breedCodeNames as $breedCodeName) {
+                        $newBreedCode = new BreedCode($breedCodesSet, $breedCodeName, $reformattedBreedCode->get($breedCodeName));
+                        $breedCodesSet->addCode($newBreedCode);
+                        $newBreedCode->setCodeSet($breedCodesSet);
+                        $this->em->persist($newBreedCode);
+                    }
+                    $this->em->persist($breedCodesSet);
+                    $this->em->persist($animal);
                 }
             }
-
-            $this->em->persist($mixBlupBreedCode);
 
             $count++;
             if($count%self::PERSIST_BATCH_SIZE == 0) {
@@ -125,38 +130,23 @@ class BreedCodeReformatter
 
         //Initialize default values
         $results = new ArrayCollection();
-        $results->set(BreedCodeType::TE,0);
-        $results->set(BreedCodeType::CF,0);
-        $results->set(BreedCodeType::NH,0);
-        $results->set(BreedCodeType::OV,0);
 
         for($i = 0; $i < sizeof($breedCode); $i+=2) {
-            $breedCodeType = $breedCode[$i];
-            $reformattedBreedCodeTypeValue = self::reformatBreedCodeValues($breedCode[$i+1]);
-
-            $mixBlupBreedCodeType = self::getMixBlupBreedCodeType($breedCodeType);
-            $newBreedCodeTypeValue = $results->get($mixBlupBreedCodeType) + $reformattedBreedCodeTypeValue;
-
-            $results->set($mixBlupBreedCodeType, $newBreedCodeTypeValue);
-        }
-
-        //verification check
-        $sumOfBreedCodeValues = $results->get(BreedCodeType::TE) + $results->get(BreedCodeType::CF) +
-                                $results->get(BreedCodeType::NH) + $results->get(BreedCodeType::OV);
-        if($sumOfBreedCodeValues != self::BREED_CODE_VALUE_PARTS) {
-            $results->set(Constant::IS_VALID_NAMESPACE, false);
-        } else {
-            $results->set(Constant::IS_VALID_NAMESPACE, true);
+            $results->set($breedCode[$i], //breedCodeType like TE, CF, NH etc.
+                      self::reformatBreedCodeValues($breedCode[$i+1])
+            );
         }
 
         return $results;
     }
 
     /**
+     * BreedCode grouping for TestAttributes ('toetskenmerken'): TE, CF, NH, OV(other)
+     *
      * @param string $breedCodeType
      * @return string
      */
-    private static function getMixBlupBreedCodeType($breedCodeType)
+    private static function getMixBlupTestAttributesBreedCodeType($breedCodeType)
     {
         switch ($breedCodeType) {
             case BreedCodeType::TE:
@@ -167,6 +157,48 @@ class BreedCodeReformatter
                 return BreedCodeType::TE;
             case BreedCodeType::CF:
                 return BreedCodeType::CF;
+            case BreedCodeType::NH:
+                return BreedCodeType::NH;
+            default: //Everything not of one of the above types
+                return BreedCodeType::OV;
+        }
+    }
+
+    /**
+     * BreedCode grouping for ExteriorAttributes: TE, SW, BM, OV(other)
+     *
+     * @param string $breedCodeType
+     * @return string
+     */
+    private static function getMixBlupExteriorAttributesBreedCodeType($breedCodeType)
+    {
+        switch ($breedCodeType) {
+            case BreedCodeType::TE:
+                return BreedCodeType::TE;
+            case BreedCodeType::SW:
+                return BreedCodeType::SW;
+            case BreedCodeType::BM:
+                return BreedCodeType::BM;
+            default: //Everything not of one of the above types
+                return BreedCodeType::OV;
+        }
+    }
+
+    /**
+     * BreedCode grouping for Fertility: TE, CF, SW, NH, OV(other)
+     *
+     * @param string $breedCodeType
+     * @return string
+     */
+    private static function getMixBlupFertilityBreedCodeType($breedCodeType)
+    {
+        switch ($breedCodeType) {
+            case BreedCodeType::TE:
+                return BreedCodeType::TE;
+            case BreedCodeType::CF:
+                return BreedCodeType::CF;
+            case BreedCodeType::SW:
+                return BreedCodeType::SW;
             case BreedCodeType::NH:
                 return BreedCodeType::NH;
             default: //Everything not of one of the above types

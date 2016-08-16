@@ -418,11 +418,11 @@ abstract class Animal
     protected $breeder;
 
     /**
-     * @ORM\OneToOne(targetEntity="MixBlupBreedCode", inversedBy="animal", cascade={"persist"})
-     * @ORM\JoinColumn(name="mix_blup_breed_code_id", referencedColumnName="id", nullable=true)
-     * @JMS\Type("AppBundle\Entity\MixBlupBreedCode")
+     * @ORM\OneToOne(targetEntity="BreedCodes", inversedBy="animal", cascade={"persist"})
+     * @ORM\JoinColumn(name="breed_codes_id", referencedColumnName="id", nullable=true)
+     * @JMS\Type("AppBundle\Entity\BreedCodes")
      */
-    protected $mixBlupBreedCode;
+    protected $breedCodes;
     
     /**
      * @var ArrayCollection
@@ -1840,19 +1840,19 @@ abstract class Animal
     }
 
     /**
-     * @return MixBlupBreedCode
+     * @return BreedCodes
      */
-    public function getMixBlupBreedCode()
+    public function getBreedCodes()
     {
-        return $this->mixBlupBreedCode;
+        return $this->breedCodes;
     }
 
     /**
-     * @param MixBlupBreedCode $mixBlupBreedCode
+     * @param BreedCodes $breedCodes
      */
-    public function setMixBlupBreedCode($mixBlupBreedCode)
+    public function setBreedCodes($breedCodes)
     {
-        $this->mixBlupBreedCode = $mixBlupBreedCode;
+        $this->breedCodes = $breedCodes;
     }
 
     
