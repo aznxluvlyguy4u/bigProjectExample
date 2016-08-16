@@ -51,23 +51,25 @@ class NsfoMigrateBreedcodesCommand extends ContainerAwareCommand
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $em->getRepository(Animal::class);
         $maxId = $animalRepository->getMaxId();
-        $minId = $animalRepository->getMinIdOfAnimalsWithoutBreedCodesSet();
+        $minId = $animalRepository->getMinIdOfAnimalsWithoutBreedCodesSetForExistingBreedCode();
+
+//        dump($animalRepository->getAnimalsByIdWithoutBreedCodesSetForExistingBreedCode(1, 6000000)->count());die;
 
         for($i = $minId; $i <= $maxId; $i += self::BATCH_SIZE) {
 
             /** @var ArrayCollection $animals */
-            $animals = $animalRepository->getAnimalsByIdWithoutBreedCodesSet($i, $i+self::BATCH_SIZE-1);
+            $animals = $animalRepository->getAnimalsByIdWithoutBreedCodesSetForExistingBreedCode($i, $i+self::BATCH_SIZE-1);
             if($animals->count() > 0) {
                 $reformatter->setAnimals($animals);
                 $reformatter->migrate();
+                $output->writeln('Processed: '.$i.' - '.($i+self::BATCH_SIZE-1).' of '.$maxId);
             }
-
-            $output->writeln('Processed: '.$i.' - '.($i+self::BATCH_SIZE-1).' of '.$maxId);
 
 //            if ($i >= self::MAX_ROWS_TO_PROCESS) {
 //                break;
 //            }
         }
+        $output->writeln('Processed: '.$i.' - '.$maxId.' of '.$maxId);
 
         $cmdUtil->setEndTimeAndPrintFinalOverview();
     }

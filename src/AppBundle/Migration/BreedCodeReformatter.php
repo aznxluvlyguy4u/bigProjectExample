@@ -75,7 +75,7 @@ class BreedCodeReformatter
 
             $breedCode = $animal->getBreedCode();
 
-            if(strlen($breedCode) >= 5) { //Verify if there actually is a breedCode
+            if(strlen($breedCode) >= 4) { //Verify if there actually is a breedCode
                 $breedCodesSet = $animal->getBreedCodes();
                 if($breedCodesSet == null) {
                     $breedCodesSet = new BreedCodes();

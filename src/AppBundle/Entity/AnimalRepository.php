@@ -387,12 +387,13 @@ class AnimalRepository extends BaseRepository
    * @param $endId
    * @return Collection
    */
-  public function getAnimalsByIdWithoutBreedCodesSet($startId, $endId)
+  public function getAnimalsByIdWithoutBreedCodesSetForExistingBreedCode($startId, $endId)
   {
     $criteria = Criteria::create()
         ->where(Criteria::expr()->gte('id', $startId))
         ->andWhere(Criteria::expr()->lte('id', $endId))
-        ->andWhere(Criteria::expr()->eq('breedCodes', null))
+        ->andWhere(Criteria::expr()->isNull('breedCodes'))
+        ->andWhere(Criteria::expr()->neq('breedCode', null))
         ->orderBy(['id' => Criteria::ASC])
     ;
 
@@ -423,9 +424,9 @@ class AnimalRepository extends BaseRepository
    * @return int|null
    * @throws \Doctrine\DBAL\DBALException
    */
-  public function getMinIdOfAnimalsWithoutBreedCodesSet()
+  public function getMinIdOfAnimalsWithoutBreedCodesSetForExistingBreedCode()
   {
-    $sql = "SELECT MIN(id) FROM animal WHERE breed_codes_id IS NULL";
+    $sql = "SELECT MIN(id) FROM animal WHERE (breed_codes_id IS NULL AND breed_code IS NOT NULL)";
 
     $query = $this->getEntityManager()->getConnection()->prepare($sql);
     $query->execute();
