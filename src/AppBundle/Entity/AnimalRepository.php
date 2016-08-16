@@ -8,6 +8,8 @@ use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\LiveStockType;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 
 /**
  * Class AnimalRepository
@@ -361,4 +363,40 @@ class AnimalRepository extends BaseRepository
       return array(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE => $pedigreeCountryCode,
           Constant::PEDIGREE_NUMBER_NAMESPACE => $pedigreeNumber);
     }
+
+   /**
+    * @param $startId
+    * @param $endId
+    * @return Collection
+    */
+    public function getAnimalsById($startId, $endId)
+    {
+      $criteria = Criteria::create()
+          ->where(Criteria::expr()->gte('id', $startId))
+          ->andWhere(Criteria::expr()->lte('id', $endId))
+          ->orderBy(['id' => Criteria::ASC])
+      ;
+
+      return $this->getEntityManager()->getRepository(Animal::class)
+                  ->matching($criteria);
+    }
+
+
+  /**
+   * @param $startId
+   * @param $endId
+   * @return Collection
+   */
+  public function getAnimalsByIdWithoutMixBlupBreedCode($startId, $endId)
+  {
+    $criteria = Criteria::create()
+        ->where(Criteria::expr()->gte('id', $startId))
+        ->andWhere(Criteria::expr()->lte('id', $endId))
+        ->andWhere(Criteria::expr()->eq('mixBlupBreedCode', null))
+        ->orderBy(['id' => Criteria::ASC])
+    ;
+
+    return $this->getEntityManager()->getRepository(Animal::class)
+        ->matching($criteria);
+  }
 }
