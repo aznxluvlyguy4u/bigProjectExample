@@ -9,7 +9,6 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Report\Mixblup;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Metadata\Tests\Driver\Fixture\C\SubDir\C;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -26,6 +25,12 @@ class CommandUtil
 
     /** @var QuestionHelper */
     private $helper;
+
+    /** @var \DateTime */
+    private $startTime;
+
+    /** @var \DateTime */
+    private $endTime;
 
     /**
      * CommandUtil constructor.
@@ -78,6 +83,28 @@ class CommandUtil
             return true;
         }
     }
+
+    
+    public function setStartTimeAndPrintIt()
+    {
+        $this->startTime = new \DateTime();
+        $this->outputInterface->writeln(['Start time: '.date_format($this->startTime, 'Y-m-d h:m:s'),'']);
+    }
+
+
+    public function setEndTimeAndPrintFinalOverview()
+    {
+        $this->endTime = new \DateTime();
+        $elapsedTime = gmdate("H:i:s", $this->endTime->getTimestamp() - $this->startTime->getTimestamp());
+
+        $this->outputInterface->writeln([
+            '=== PROCESS FINISHED ===',
+            'End Time: '.date_format($this->endTime, 'Y-m-d h:m:s'),
+            'Elapsed Time (h:m:s): '.$elapsedTime,
+            '',
+            '']);
+    }
+    
 
     /**
      * @param string $heading
