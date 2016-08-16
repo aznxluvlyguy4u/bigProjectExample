@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TagStateType;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -129,6 +130,19 @@ abstract class Animal
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     protected $parentNeuter;
+
+    /**
+     *
+     * @var ArrayCollection
+     *
+     * @ORM\ManyToMany(targetEntity="Animal")
+     * @ORM\JoinTable(name="animal_parents",
+     *      joinColumns={@ORM\JoinColumn(name="animal_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="parents_id", referencedColumnName="id", unique=false)}
+     * )
+     * @JMS\Type("AppBundle\Entity\Animal")
+     */
+    protected $parents;
 
     /**
      * @var Animal
@@ -456,7 +470,7 @@ abstract class Animal
         $this->ulnHistory = new ArrayCollection();
         $this->tagReplacements = new ArrayCollection();
         $this->matings = new ArrayCollection();
-        
+        $this->parents = new ArrayCollection();
         $this->isAlive = true;
         $this->ulnCountryCode = '';
         $this->ulnNumber = '';
@@ -757,30 +771,8 @@ abstract class Animal
     {
         return $this->departures;
     }
-
-    /**
-     * Set parentNeuter
-     *
-     * @param Animal $parentNeuter
-     *
-     * @return Animal
-     */
-    public function setParentNeuter(Animal $parentNeuter = null)
-    {
-        $this->parentNeuter = $parentNeuter;
-
-        return $this;
-    }
-
-    /**
-     * Get parentNeuter
-     *
-     * @return Animal
-     */
-    public function getParentNeuter()
-    {
-        return $this->parentNeuter;
-    }
+  
+    
 
     /**
      * Add import
@@ -854,7 +846,19 @@ abstract class Animal
      */
     public function getParentFather()
     {
-        return $this->parentFather;
+        if($this->parentFather != null) {
+            return $this->parentFather;
+        } else {
+            /** @var Animal $parent */
+            foreach ($this->parents as $parent) {
+                $gender = $parent->getGender();
+                if($gender == GenderType::MALE || $gender == GenderType::M) {
+                    return $parent;
+                }
+            }
+        }
+        //if no father has been found
+        return null;
     }
 
     /**
@@ -879,7 +883,19 @@ abstract class Animal
      */
     public function getParentMother()
     {
-        return $this->parentMother;
+        if($this->parentMother != null) {
+            return $this->parentMother;
+        } else {
+            /** @var Animal $parent */
+            foreach ($this->parents as $parent) {
+                $gender = $parent->getGender();
+                if($gender == GenderType::FEMALE || $gender == GenderType::V) {
+                    return $parent;
+                }
+            }
+        }
+        //if no mother has been found
+        return null;
     }
     
     /**
@@ -1758,6 +1774,61 @@ abstract class Animal
         $this->note = $note;
     }
 
-    
-    
+    /**
+     * Add parent
+     *
+     * @param \AppBundle\Entity\Animal $parent
+     *
+     * @return Animal
+     */
+    public function addParent(\AppBundle\Entity\Animal $parent)
+    {
+        $this->parents[] = $parent;
+
+        return $this;
+    }
+
+    /**
+     * Remove parent
+     *
+     * @param \AppBundle\Entity\Animal $parent
+     */
+    public function removeParent(\AppBundle\Entity\Animal $parent)
+    {
+        $this->parents->removeElement($parent);
+    }
+
+    /**
+     * Get parents
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getParents()
+    {
+        return $this->parents;
+    }
+
+    /**
+     * Set parentNeuter
+     *
+     * @param \AppBundle\Entity\Neuter $parentNeuter
+     *
+     * @return Animal
+     */
+    public function setParentNeuter(\AppBundle\Entity\Neuter $parentNeuter = null)
+    {
+        $this->parentNeuter = $parentNeuter;
+
+        return $this;
+    }
+
+    /**
+     * Get parentNeuter
+     *
+     * @return \AppBundle\Entity\Neuter
+     */
+    public function getParentNeuter()
+    {
+        return $this->parentNeuter;
+    }
 }

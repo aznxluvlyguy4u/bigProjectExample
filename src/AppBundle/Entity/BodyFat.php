@@ -14,19 +14,31 @@ use JMS\Serializer\Annotation as JMS;
 class BodyFat extends Measurement {
 
     /**
-     * @var float
-     *
-     * @ORM\Column(type="float")
-     * @JMS\Type("float")
-     * @Assert\NotBlank
-     */
-    private $fat;
-
-    /**
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="bodyFatMeasurements")
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     private $animal;
+
+    /**
+     * @ORM\OneToOne(targetEntity="Fat1", inversedBy="bodyFat")
+     * @ORM\JoinColumn(name="fat1_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\Fat1")
+     */
+    private $fat1;
+
+  /**
+   * @ORM\OneToOne(targetEntity="Fat2", inversedBy="bodyFat")
+   * @ORM\JoinColumn(name="fat2_id", referencedColumnName="id")
+   * @JMS\Type("AppBundle\Entity\Fat2")
+   */
+    private $fat2;
+
+    /**
+     * @ORM\OneToOne(targetEntity="Fat3", inversedBy="bodyFat")
+     * @ORM\JoinColumn(name="fat3_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\Fat3")
+     */
+    private $fat3;
 
     /**
     * BodyFat constructor.
@@ -36,30 +48,6 @@ class BodyFat extends Measurement {
       parent::__construct();
       
       $this->fat = 0.00;
-    }
-
-    /**
-     * Set bodyFat
-     *
-     * @param float $fat
-     *
-     * @return BodyFat
-     */
-    public function setFat($fat)
-    {
-        $this->fat = $fat;
-
-        return $this;
-    }
-
-    /**
-     * Get bodyFat
-     *
-     * @return float
-     */
-    public function getFat()
-    {
-        return $this->fat;
     }
 
     /**
@@ -108,5 +96,77 @@ class BodyFat extends Measurement {
     public function getInspector()
     {
         return $this->inspector;
+    }
+
+    /**
+     * Set fat1
+     *
+     * @param \AppBundle\Entity\Cart $fat1
+     *
+     * @return BodyFat
+     */
+    public function setFat1(\AppBundle\Entity\Cart $fat1 = null)
+    {
+        $this->fat1 = $fat1;
+
+        return $this;
+    }
+
+    /**
+     * Get fat1
+     *
+     * @return \AppBundle\Entity\Cart
+     */
+    public function getFat1()
+    {
+        return $this->fat1;
+    }
+
+    /**
+     * Set fat2
+     *
+     * @param \AppBundle\Entity\Cart $fat2
+     *
+     * @return BodyFat
+     */
+    public function setFat2(\AppBundle\Entity\Cart $fat2 = null)
+    {
+        $this->fat2 = $fat2;
+
+        return $this;
+    }
+
+    /**
+     * Get fat2
+     *
+     * @return \AppBundle\Entity\Cart
+     */
+    public function getFat2()
+    {
+        return $this->fat2;
+    }
+
+    /**
+     * Set fat3
+     *
+     * @param \AppBundle\Entity\Cart $fat3
+     *
+     * @return BodyFat
+     */
+    public function setFat3(\AppBundle\Entity\Cart $fat3 = null)
+    {
+        $this->fat3 = $fat3;
+
+        return $this;
+    }
+
+    /**
+     * Get fat3
+     *
+     * @return \AppBundle\Entity\Cart
+     */
+    public function getFat3()
+    {
+        return $this->fat3;
     }
 }
