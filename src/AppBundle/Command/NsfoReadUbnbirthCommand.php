@@ -5,6 +5,8 @@ namespace AppBundle\Command;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Person;
 use AppBundle\Util\CommandUtil;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Query;
@@ -50,13 +52,21 @@ class NsfoReadUbnbirthCommand extends ContainerAwareCommand
         $this->em = $em;
 
         //input
+        $isProcessUbnsOfBirth = $cmdUtil->generateConfirmationQuestion('Process UBN of Birth? (y/n): ');
+        $isProcessDateOfBirths = $cmdUtil->generateConfirmationQuestion('Process Date of Births? (y/n): ');
         $inputFile = $cmdUtil->generateQuestion('Please enter input file path', self::DEFAULT_INPUT_FOLDER_PATH);
-        $startRow = $cmdUtil->generateQuestion('Choose start row (0 = default)', self::DEFAULT_START_ROW);
 
         $fileContents = file_get_contents($inputFile);
         $dataInRows = explode("\r\n", $fileContents);
 
-        $this->readFileFindAnimalInDbAndPersistUbnOfBirth($startRow, $dataInRows, $output);
+        if($isProcessUbnsOfBirth) {
+            $startRow = $cmdUtil->generateQuestion('UBN Processing: Choose start row (0 = default)', self::DEFAULT_START_ROW);
+            $this->readFileFindAnimalInDbAndPersistUbnOfBirth($startRow, $dataInRows, $output);
+        }
+
+        if($isProcessDateOfBirths) {
+            $this->readFileAndAddDateOfBirthForAnimalsWithoutOne($dataInRows, $output);
+        }
 
         //Final Results
         $endTime = new \DateTime();
@@ -105,9 +115,7 @@ class NsfoReadUbnbirthCommand extends ContainerAwareCommand
                 }
 
                 if ($i%self::PERSIST_BATCH_SIZE == 0) {
-                    $em->flush();
-                    $em->clear();
-                    gc_collect_cycles();
+                    $this->flushPlus();
                     $output->writeln('Now at row: '.$i.' of '.$maxRowCount);
                 }
 
@@ -116,8 +124,125 @@ class NsfoReadUbnbirthCommand extends ContainerAwareCommand
                 }
             }
         }
-        $em->flush();
-        $em->clear();
+        $this->flushPlus();
+    }
+
+    /**
+     * @param $dataInRows
+     * @param OutputInterface $output
+     */
+    private function readFileAndAddDateOfBirthForAnimalsWithoutOne($dataInRows, OutputInterface $output)
+    {
+        $em = $this->em;
+        $em->getConnection()->getConfiguration()->setSQLLogger(null);
+
+        $vsmAnimalPrimaryKeyAndDateOfBirth = new ArrayCollection();
+        $vsmAnimalPrimaryKeyAndPlaceholderDateOfBirth = new ArrayCollection();
+
+        /* Parse the data from the text file into quickly searchable ArrayCollections */
+        foreach ($dataInRows as $row) {
+            $rowData = explode(" ", $row);
+
+            //This is not a real date in the source file, just a placeholder for missing dates
+            $placeHolderForMissingDateOfBirths = '19700101';
+
+            if(sizeof($rowData) >= 3) {
+                $vsmAnimalPrimaryKey = $rowData[0];
+                $dateOfBirthString = $rowData[1];
+
+                if($dateOfBirthString != $placeHolderForMissingDateOfBirths) {
+                    $vsmAnimalPrimaryKeyAndDateOfBirth->set($vsmAnimalPrimaryKey,$dateOfBirthString);
+                } else {
+                    $vsmAnimalPrimaryKeyAndPlaceholderDateOfBirth->set($vsmAnimalPrimaryKey,$dateOfBirthString);
+                }
+            }
+        }
+
+
+        /* Remove fake DateOfBirths */
+        $animalsWithFakeDateOfBirth = $this->getAnimalsWithFakeDateOfBirth();
+        $animalsCount = $animalsWithFakeDateOfBirth->count();
+        $count = 0;
+        $fakeCount = 0;
+        $missingCount = 0;
+        /** @var Animal $animal */
+        foreach ($animalsWithFakeDateOfBirth as $animal) {
+            //Verify if dateOfBirth of animal is fake. And if fake delete it.
+            $isDateOfBirthFake = $vsmAnimalPrimaryKeyAndPlaceholderDateOfBirth->get($animal->getName()) != null;
+            if($isDateOfBirthFake) {
+                $animal->setDateOfBirth(null);
+                $fakeCount++;
+            } else {
+                //doNothing
+                $missingCount++;
+            }
+            if(++$count%self::PERSIST_BATCH_SIZE == 0) {
+                $this->flushPlus();
+                $output->writeln('Animals processed: '.$count.' of '.$animalsCount.'. Fake DateOfBirths removed: '.$fakeCount.' Not Proven Fake: '.$missingCount);
+            }
+        }
+        $this->flushPlus();
+        $output->writeln('Animals processed: '.$count.' of '.$animalsCount.'. Fake DateOfBirths removed: '.$fakeCount.' Not Proven Fake: '.$missingCount);
+
+
+        /* Persist new DateOfBirths */
+        $animals = $this->getAnimalsWithoutDateOfBirth();
+        $totalAnimals = $animals->count();
+        $updateAnimalsCount = 0;
+        $noDateOfBirthFoundCount = 0;
+        $count = 0;
+
+        /** @var Animal $animal */
+        foreach ($animals as $animal) {
+            $vsmAnimalPrimaryKey = $animal->getName();
+            $dateOfBirthString = $vsmAnimalPrimaryKeyAndDateOfBirth->get($vsmAnimalPrimaryKey);
+            if($dateOfBirthString != null) {
+                $animal->setDateOfBirth(new \DateTime($dateOfBirthString));
+                $em->persist($animal);
+                $updateAnimalsCount++;
+            } else {
+                $noDateOfBirthFoundCount++;
+            }
+
+            if(++$count%self::PERSIST_BATCH_SIZE == 0) {
+                $this->flushPlus();
+                $output->writeln('Animals processed: '.$count.' of '.$totalAnimals.'. New DateOfBirth: '.$updateAnimalsCount.' DateOfBirth missing: '.$noDateOfBirthFoundCount);
+            }
+        }
+        $this->flushPlus();
+        $output->writeln('Animals processed: '.$count.' of '.$totalAnimals.'. New DateOfBirth: '.$updateAnimalsCount.' DateOfBirth missing: '.$noDateOfBirthFoundCount);
+    }
+    
+    private function flushPlus()
+    {
+        $this->em->flush();
+        $this->em->clear();
         gc_collect_cycles();
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getAnimalsWithoutDateOfBirth()
+    {
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('dateOfBirth', null))
+            ;
+
+        $animals = $this->em->getRepository(Animal::class)->matching($criteria);
+        return $animals;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getAnimalsWithFakeDateOfBirth()
+    {
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('dateOfBirth', new \DateTime('19700101')))
+        ;
+
+        $animals = $this->em->getRepository(Animal::class)->matching($criteria);
+        return $animals;
     }
 }
