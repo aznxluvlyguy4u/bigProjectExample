@@ -18,6 +18,7 @@ class NsfoMigrateBreedcodesCommand extends ContainerAwareCommand
 {
     const TITLE = 'Migrate breedcodes to values in separate variables for MiXBLUP';
     const BATCH_SIZE = 1000;
+    const MAX_ROWS_TO_PROCESS = 100000000000000;
 
     /** @var EntityManager $em */
     private $em;
@@ -38,9 +39,7 @@ class NsfoMigrateBreedcodesCommand extends ContainerAwareCommand
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
-        //Timestamp
-        $startTime = new \DateTime();
-        $output->writeln(['Start time: '.date_format($startTime, 'Y-m-d h:m:s'),'']);
+        $cmdUtil->setStartTimeAndPrintIt();
 
         /** @var EntityManager $em */
         $em = $this->getContainer()->get('doctrine.orm.entity_manager');
@@ -62,18 +61,15 @@ class NsfoMigrateBreedcodesCommand extends ContainerAwareCommand
                 $reformatter->setAnimals($animals);
                 $reformatter->migrate();
             }
+
+            $output->writeln('Processed: '.$i.' - '.($i+self::BATCH_SIZE-1).' of '.$maxId);
+
+//            if ($i >= self::MAX_ROWS_TO_PROCESS) {
+//                break;
+//            }
         }
 
-        //Final Results
-        $endTime = new \DateTime();
-        $elapsedTime = gmdate("H:i:s", $endTime->getTimestamp() - $startTime->getTimestamp());
-
-        $output->writeln([
-            '=== PROCESS FINISHED ===',
-            'End Time: '.date_format($endTime, 'Y-m-d h:m:s'),
-            'Elapsed Time (h:m:s): '.$elapsedTime,
-            '',
-            '']);
+        $cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 
 }

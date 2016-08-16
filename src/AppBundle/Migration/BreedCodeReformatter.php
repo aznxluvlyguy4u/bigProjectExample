@@ -66,6 +66,8 @@ class BreedCodeReformatter
     {
         $animals = $this->getAllAnimalsIfNull();
 
+        $this->em->getConnection()->getConfiguration()->setSQLLogger(null);
+
         $count = 0;
 
         /** @var Animal $animal */
@@ -114,10 +116,10 @@ class BreedCodeReformatter
 
             $count++;
             if($count%self::PERSIST_BATCH_SIZE == 0) {
-                $this->em->flush();
+                $this->flushPlus();
             }
         }
-        $this->em->flush();
+        $this->flushPlus();
     }
 
     /**
@@ -235,5 +237,12 @@ class BreedCodeReformatter
                 return null;
         }
 
+    }
+
+    private function flushPlus()
+    {
+        $this->em->flush();
+        $this->em->clear();
+        gc_collect_cycles();
     }
 }
