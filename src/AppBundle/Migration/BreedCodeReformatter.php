@@ -42,6 +42,14 @@ class BreedCodeReformatter
         $this->animals = $animals;
     }
 
+    /**
+     * @return  ArrayCollection $animals
+     */
+    public function getAnimals()
+    {
+        return $this->animals;
+    }
+
     
     private function getAllAnimalsIfNull()
     {
@@ -60,29 +68,47 @@ class BreedCodeReformatter
         $persistBatchSize = 100;
 
         /** @var Animal $animal */
-        foreach ($animals as $animal) {
+        foreach ($this->animals as $animal) {
 
-            $reformattedBreedCode = self::reformatBreedCode($animal->getBreedCode());
-            $te = $reformattedBreedCode->get(BreedCodeType::TE);
-            $cf = $reformattedBreedCode->get(BreedCodeType::CF);
-            $nh = $reformattedBreedCode->get(BreedCodeType::NH);
-            $ov = $reformattedBreedCode->get(BreedCodeType::OV);
+            $breedCode = $animal->getBreedCode();
+            
+            if(strlen($breedCode) >= 5) { //Verify if there actually is a breedCode
+                $reformattedBreedCode = self::reformatBreedCode($breedCode);
+                $te = $reformattedBreedCode->get(BreedCodeType::TE);
+                $cf = $reformattedBreedCode->get(BreedCodeType::CF);
+                $nh = $reformattedBreedCode->get(BreedCodeType::NH);
+                $ov = $reformattedBreedCode->get(BreedCodeType::OV);
 
-            $mixBlupBreedCode = $animal->getMixBlupBreedCode();
-            if($mixBlupBreedCode == null) {
-                $mixBlupBreedCode = new MixBlupBreedCode($te, $cf, $nh, $ov);
-                $mixBlupBreedCode->setAnimal($animal);
-                $animal->setMixBlupBreedCode($mixBlupBreedCode);
-            } else {
-                $mixBlupBreedCode->setTE($te);
-                $mixBlupBreedCode->setCF($cf);
-                $mixBlupBreedCode->setNH($nh);
-                $mixBlupBreedCode->setOV($ov);
+                $mixBlupBreedCode = $animal->getMixBlupBreedCode();
+                if($mixBlupBreedCode == null) {
+                    $mixBlupBreedCode = new MixBlupBreedCode($te, $cf, $nh, $ov);
+                    $mixBlupBreedCode->setAnimal($animal);
+                    $animal->setMixBlupBreedCode($mixBlupBreedCode);
+                } else {
+                    $mixBlupBreedCode->setTE($te);
+                    $mixBlupBreedCode->setCF($cf);
+                    $mixBlupBreedCode->setNH($nh);
+                    $mixBlupBreedCode->setOV($ov);
+                }
+
+            } else { //If there is no BreedCode create a default one with zeroes
+                $mixBlupBreedCode = $animal->getMixBlupBreedCode();
+                if($mixBlupBreedCode == null) {
+                    $mixBlupBreedCode = new MixBlupBreedCode();
+                    $mixBlupBreedCode->setAnimal($animal);
+                    $animal->setMixBlupBreedCode($mixBlupBreedCode);
+                } else {
+                    $mixBlupBreedCode->setTE(0);
+                    $mixBlupBreedCode->setCF(0);
+                    $mixBlupBreedCode->setNH(0);
+                    $mixBlupBreedCode->setOV(0);
+                }
             }
+
             $this->em->persist($mixBlupBreedCode);
 
             $count++;
-            if($count%$persistBatchSize) {
+            if($count%$persistBatchSize == 0) {
                 $this->em->flush();
             }
         }
