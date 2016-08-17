@@ -78,7 +78,6 @@ class CommandUtil
         }
     }
 
-
     public function setStartTimeAndPrintIt()
     {
         $this->startTime = new \DateTime();
@@ -98,7 +97,6 @@ class CommandUtil
                 '',
                 '']);
     }
-
 
     /**
      * @param string $heading
