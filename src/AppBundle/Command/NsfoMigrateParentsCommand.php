@@ -50,48 +50,48 @@ class NsfoMigrateParentsCommand extends ContainerAwareCommand
 
             $counter++;
 
-            if($counter % 1000 == 0){
+            if($counter % 10000 == 0){
                 $output->writeln($counter);
             }
 
-                if($line[4] == 'MALE' AND $line[4] != '') {
-                    /**
-                     * @var Animal $animal
-                     */
-                    $sql = "SELECT animal.id, animal.gender, ram.object_type FROM animal LEFT JOIN ram ON animal.id = ram.id WHERE uln_country_code = '".$line[2]."' AND uln_number = '".$line[3]."'";
-                    $result = $em->getConnection()->query($sql)->fetch();
+            if($line[4] == 'MALE' AND $line[4] != '') {
+                /**
+                 * @var Animal $animal
+                 */
+                $sql = "SELECT animal.id, animal.gender, ram.object_type FROM animal LEFT JOIN ram ON animal.id = ram.id WHERE uln_country_code = '".$line[2]."' AND uln_number = '".$line[3]."' ORDER BY animal.id DESC LIMIT 1";
+                $result = $em->getConnection()->query($sql)->fetch();
 
-                    if ($result['object_type'] == "" || $result['object_type'] == null) {
-                        $sql = "INSERT INTO ram VALUES (".$result['id'].", 'Ram')";
-                        $em->getConnection()->exec($sql);
-
-                        $sql = "DELETE FROM neuter WHERE id = ".$result['id'];
-                        $em->getConnection()->exec($sql);
-                    }
-
-                    $sql = "UPDATE animal SET parent_father_id = (SELECT id FROM animal WHERE uln_country_code = '".$line[2]."' AND uln_number = '".$line[3]."' AND date_of_death is not NULL) WHERE uln_country_code = '".$line[0]."' AND uln_number = '".$line[1]."'";
+                if ($result['object_type'] == "" || $result['object_type'] == null) {
+                    $sql = "INSERT INTO ram VALUES (".$result['id'].", 'Ram')";
                     $em->getConnection()->exec($sql);
 
-                }
-
-                if($line[4] == 'FEMALE' AND $line[4] != '') {
-                    /**
-                     * @var Animal $animal
-                     */
-                    $sql = "SELECT animal.id, animal.gender, ewe.object_type FROM animal LEFT JOIN ewe ON animal.id = ewe.id WHERE uln_country_code = '".$line[2]."' AND uln_number = '".$line[3]."'";
-                    $result = $em->getConnection()->query($sql)->fetch();
-
-                    if ($result['object_type'] == "" || $result['object_type'] == null) {
-                        $sql = "INSERT INTO ewe VALUES (".$result['id'].", 'Ewe')";
-                        $em->getConnection()->exec($sql);
-
-                        $sql = "DELETE FROM neuter WHERE id = ".$result['id'];
-                        $em->getConnection()->exec($sql);
-                    }
-
-                    $sql = "UPDATE animal SET parent_mother_id = (SELECT id FROM animal WHERE uln_country_code = '".$line[2]."' AND uln_number = '".$line[3]."' AND date_of_death is not NULL) WHERE uln_country_code = '".$line[0]."' AND uln_number = '".$line[1]."'";
+                    $sql = "DELETE FROM neuter WHERE id = ".$result['id'];
                     $em->getConnection()->exec($sql);
                 }
+
+                $sql = "UPDATE animal SET parent_father_id = (SELECT MAX(id) FROM animal WHERE uln_country_code = '".$line[2]."' AND uln_number = '".$line[3]."') WHERE uln_country_code = '".$line[0]."' AND uln_number = '".$line[1]."'";
+                $em->getConnection()->exec($sql);
+
+            }
+
+            if($line[4] == 'FEMALE' AND $line[4] != '') {
+                /**
+                 * @var Animal $animal
+                 */
+                $sql = "SELECT animal.id, animal.gender, ewe.object_type FROM animal LEFT JOIN ewe ON animal.id = ewe.id WHERE uln_country_code = '".$line[2]."' AND uln_number = '".$line[3]."' ORDER BY animal.id DESC LIMIT 1";
+                $result = $em->getConnection()->query($sql)->fetch();
+
+                if ($result['object_type'] == "" || $result['object_type'] == null) {
+                    $sql = "INSERT INTO ewe VALUES (".$result['id'].", 'Ewe')";
+                    $em->getConnection()->exec($sql);
+
+                    $sql = "DELETE FROM neuter WHERE id = ".$result['id'];
+                    $em->getConnection()->exec($sql);
+                }
+
+                $sql = "UPDATE animal SET parent_mother_id = (SELECT MAX(id) FROM animal WHERE uln_country_code = '".$line[2]."' AND uln_number = '".$line[3]."') WHERE uln_country_code = '".$line[0]."' AND uln_number = '".$line[1]."'";
+                $em->getConnection()->exec($sql);
+            }
         }
 
         $cmdUtil->setEndTimeAndPrintFinalOverview();
