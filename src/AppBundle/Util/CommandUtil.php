@@ -88,7 +88,7 @@ class CommandUtil
     public function setStartTimeAndPrintIt()
     {
         $this->startTime = new \DateTime();
-        $this->outputInterface->writeln(['Start time: '.date_format($this->startTime, 'Y-m-d h:m:s'),'']);
+        $this->outputInterface->writeln(['Start time: '.date_format($this->startTime, 'Y-m-d h:i:s'),'']);
     }
 
 
@@ -99,8 +99,8 @@ class CommandUtil
 
         $this->outputInterface->writeln([
             '=== PROCESS FINISHED ===',
-            'End Time: '.date_format($this->endTime, 'Y-m-d h:m:s'),
-            'Elapsed Time (h:m:s): '.$elapsedTime,
+            'End Time: '.date_format($this->endTime, 'Y-m-d h:i:s'),
+            'Elapsed Time (h:i:s): '.$elapsedTime,
             '',
             '']);
     }
