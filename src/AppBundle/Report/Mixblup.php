@@ -7,6 +7,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\BodyFat;
+use AppBundle\Entity\BreedCode;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\Fat1;
 use AppBundle\Entity\Fat2;
@@ -16,7 +17,9 @@ use AppBundle\Entity\MeasurementRepository;
 use AppBundle\Entity\MuscleThickness;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
+use AppBundle\Enumerator\BreedCodeType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Migration\BreedCodeReformatter;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\Translation;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -40,10 +43,20 @@ class Mixblup
     const WEIGHT_NULL_FILLER = 0;
     const PERFORMANCE_NULL_FILLER = 0;
     const EXTERIOR_NULL_FILLER = 0;
+    const UBN_NULL_FILLER = 0;
+    const AGE_NULL_FILLER = 0;
+    const GROWTH_NULL_FILLER = 0;
+    const YEAR_UBN_NULL_FILLER = 0;
     const RAM = 'ram';
     const EWE = 'ooi';
-    const NEUTER = 0;
+    const NEUTER = '0';
     const COLUMN_PADDING_SIZE = 1;
+
+    //Filename strings
+    const TEST_ATTRIBUTES = 'toets_kenmerken';
+    const EXTERIOR_ATTRIBUTES = 'exterieur_kenmerken';
+    const FERTILITY = 'vruchtbaarheid';
+    const ERRORS = 'errors';
 
     /** @var EntityManager */
     private $em;
@@ -55,7 +68,19 @@ class Mixblup
     private $measurements;
 
     /** @var string */
+    private $errorsFilePath;
+
+    /** @var string */
     private $instructionsFilePath;
+
+    /** @var string */
+    private $instructionsFilePathTestAttributes;
+
+    /** @var string */
+    private $instructionsFilePathExteriorAttributes;
+
+    /** @var string */
+    private $instructionsFilePathFertilityAttributes;
 
     /** @var string */
     private $dataFilePath;
@@ -70,6 +95,15 @@ class Mixblup
     private $dataFileName;
 
     /** @var string */
+    private $dataFilePathTestAttributes;
+
+    /** @var string */
+    private $dataFilePathExteriorAttributes;
+
+    /** @var string */
+    private $dataFilePathFertilityAttributes;
+
+    /** @var string */
     private $pedigreeFileName;
 
     /** @var int */
@@ -77,6 +111,9 @@ class Mixblup
 
     /** @var int */
     private $lastMeasurementYear;
+
+    /** @var ArrayCollection */
+    private $animalRowBases;
 
     /**
      * Mixblup constructor.
@@ -92,6 +129,7 @@ class Mixblup
     public function __construct(EntityManager $em, $outputFolderPath, $instructionsFileName, $dataFileName, $pedigreeFileName, $firstMeasurementYear, $lastMeasurementYear, $animals = null)
     {
         $this->em = $em;
+        $this->animalRowBases = new ArrayCollection();
         $this->firstMeasurementYear = $firstMeasurementYear;
         $this->lastMeasurementYear = $lastMeasurementYear;
 
@@ -104,13 +142,27 @@ class Mixblup
         $this->instructionsFileName = $instructionsFileName;
 
         if(substr($outputFolderPath, -1) != '/') {
-            $this->dataFilePath = $outputFolderPath.'/'.$dataFileName;
-            $this->pedigreeFilePath = $outputFolderPath.'/'.$pedigreeFileName;
-            $this->instructionsFilePath = $outputFolderPath.'/'.$instructionsFileName;
+            $this->dataFilePath = $outputFolderPath.'/'.$dataFileName.'.txt';
+            $this->dataFilePathTestAttributes = $outputFolderPath.'/'.$dataFileName.'_'.self::TEST_ATTRIBUTES.'.txt';
+            $this->dataFilePathExteriorAttributes = $outputFolderPath.'/'.$dataFileName.'_'.self::EXTERIOR_ATTRIBUTES.'.txt';
+            $this->dataFilePathFertilityAttributes = $outputFolderPath.'/'.$dataFileName.'_'.self::FERTILITY.'.txt';
+            $this->pedigreeFilePath = $outputFolderPath.'/'.$pedigreeFileName.'.txt';
+            $this->errorsFilePath = $outputFolderPath.'/'.self::ERRORS.'.txt';
+            $this->instructionsFilePath = $outputFolderPath.'/'.$instructionsFileName.'.inp';
+            $this->instructionsFilePathTestAttributes = $outputFolderPath.'/'.$instructionsFileName.'_'.self::TEST_ATTRIBUTES.'.inp';
+            $this->instructionsFilePathExteriorAttributes = $outputFolderPath.'/'.$instructionsFileName.'_'.self::EXTERIOR_ATTRIBUTES.'.inp';
+            $this->instructionsFilePathFertilityAttributes = $outputFolderPath.'/'.$instructionsFileName.'_'.self::FERTILITY.'.inp';
         } else {
-            $this->dataFilePath = $outputFolderPath.$dataFileName;
-            $this->pedigreeFilePath = $outputFolderPath.$pedigreeFileName;
-            $this->instructionsFilePath = $outputFolderPath.$instructionsFileName;
+            $this->dataFilePath = $outputFolderPath.$dataFileName.'.txt';
+            $this->dataFilePathTestAttributes = $outputFolderPath.$dataFileName.'_'.self::TEST_ATTRIBUTES.'.txt';
+            $this->dataFilePathExteriorAttributes = $outputFolderPath.$dataFileName.'_'.self::EXTERIOR_ATTRIBUTES.'.txt';
+            $this->dataFilePathFertilityAttributes = $outputFolderPath.$dataFileName.'_'.self::FERTILITY.'.txt';
+            $this->pedigreeFilePath = $outputFolderPath.$pedigreeFileName.'.txt';
+            $this->errorsFilePath = $outputFolderPath.self::ERRORS.'.txt';
+            $this->instructionsFilePath = $outputFolderPath.$instructionsFileName.'.inp';
+            $this->instructionsFilePathTestAttributes = $outputFolderPath.$instructionsFileName.'_'.self::TEST_ATTRIBUTES.'.inp';
+            $this->instructionsFilePathExteriorAttributes = $outputFolderPath.$instructionsFileName.'_'.self::EXTERIOR_ATTRIBUTES.'.inp';
+            $this->instructionsFilePathFertilityAttributes = $outputFolderPath.$instructionsFileName.'_'.self::FERTILITY.'.inp';
         }
 
     }
@@ -145,15 +197,87 @@ class Mixblup
     /**
      * @return array
      */
-    public function generateInstructionArray()
+    public function generateInstructionArrayTestAttributes()
     {
         return [
             'TITEL   schapen fokwaarde berekening groei, spierdikte en vetbedekking',
             ' DATAFILE  '.$this->dataFileName,
             ' animal     A #uln',  //uln
             ' gender     A',  //ram/ooi/0
+            ' jaar_ubn   A #jaar en ubn van geboorte', //year and ubn of birth
             ' rascode    A',  //breedCode
             ' rasstatus  A',  //breedType
+            ' TE         I',  //TE, BT, DK are genetically all the same
+            ' CF         I',
+            ' NH         I',
+            ' SW         I',
+            ' OV         I',  //other  (NN means unknown)
+            ' scrgen     A #scrapiegenotype',
+            ' n-ling     I #worp grootte',  //Litter->size()
+            ' worpnr     A #worpnummer',  //worpnummer/litterGroup
+            ' moeder     A #uln van moeder',  //uln of mother
+            ' father     A #uln van vader',  //uln of father
+            ' meetdatum  A', //measurementDate
+            ' leeftijd   I #op moment van meting', //age of animal on measurementDate in days
+            ' groei      T #gewicht(kg)/leeftijd(dagen) op moment van meting', //growth weight(kg)/age(days) on measurementDate
+            ' vet1       T',
+            ' vet2       T',
+            ' vet3       T',
+            ' spierdik   T #spierdikte',
+            ' staartlg   T #staartlengte', //tailLength
+            ' gebgewicht T #geboortegewicht',   //weight at birth
+            ' toetsgewicht T #normale gewichtmeting', //weight during normal measurement
+            ' KOP T #kop', //skull
+            ' BES T #bespiering', //muscularity
+            ' EVE T #evenredigheid', //proportion
+            ' TYP T #type', //(exterior)type
+            ' BEE T #beenwerk', //legWork
+            ' VAC T #vacht', //fur
+            ' ALG T #algemene voorkoming', //general appearance
+            ' SHT T #schofthoogte', //height
+            ' LGT T #lengte', //length
+            ' BDP T #borstdiepte', //breast depth
+            ' KEN T #kenmerken', //markings
+            ' ubn I !BLOCK', //NOTE it is an integer here
+            ' ',
+            'PEDFILE   '.$this->pedigreeFileName,
+            ' animal    A #uln',
+            ' sire      A #uln van vader',
+            ' dam       A #uln van moeder',
+            ' gender    A',
+            ' gebjaar   A #geboortedatum',
+            ' rascode   A',
+            ' ubn       I !BLOCK', //NOTE it is an integer here
+            ' ',
+            'PARFILE  *insert par file reference here*',
+            ' ',
+            'MODEL    *insert model settings here*',
+            ' ',
+            'SOLVING  *insert solve settings here*'
+
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function generateInstructionArrayExteriorAttributes()
+    {
+        return [
+            'TITEL   schapen fokwaarde berekening groei, spierdikte en vetbedekking',
+            ' DATAFILE  '.$this->dataFileName,
+            ' animal     A #uln',  //uln
+            ' gender     A',  //ram/ooi/0
+            ' jaar_ubn   A #jaar en ubn van geboorte', //year and ubn of birth
+            ' rascode    A',  //breedCode
+            ' rasstatus  A',  //breedType
+            ' TE         I',  //TE, BT, DK are genetically all the same
+            ' CF         I',
+            ' SW         I',
+            ' NH         I',
+            ' GP         I',
+            ' BM         I',
+            ' OV         I',  //other  (NN means unknown)
             ' scrgen     A #scrapiegenotype',
             ' n-ling     I #worp grootte',  //Litter->size()
             ' worpnr     A #worpnummer',  //worpnummer/litterGroup
@@ -178,6 +302,7 @@ class Mixblup
             ' LGT T #lengte', //length
             ' BDP T #borstdiepte', //breast depth
             ' KEN T #kenmerken', //markings
+            ' ubn I !BLOCK', //NOTE it is an integer here
             ' ',
             'PEDFILE   '.$this->pedigreeFileName,
             ' animal    A #uln',
@@ -186,6 +311,7 @@ class Mixblup
             ' gender    A',
             ' gebjaar   A #geboortedatum',
             ' rascode   A',
+            ' ubn       I !BLOCK', //NOTE it is an integer here
             ' ',
             'PARFILE  *insert par file reference here*',
             ' ',
@@ -196,13 +322,12 @@ class Mixblup
         ];
     }
 
-
     /**
      * @return string
      */
-    public function generateInstructionFile()
+    public function generateInstructionFiles()
     {
-        foreach($this->generateInstructionArray() as $row) {
+        foreach($this->generateInstructionArrayTestAttributes() as $row) {
             file_put_contents($this->instructionsFilePath, $row."\n", FILE_APPEND);
         }
         return $this->instructionsFilePath;
@@ -294,6 +419,7 @@ class Mixblup
         $breedCode = Utils::fillNullOrEmptyString($animal->getBreedCode(), self::BREED_TYPE_NULL_FILLER);
         $gender = self::formatGender($animal->getGender());
         $dateOfBirthString = self::formatDateOfBirth($animal->getDateOfBirth());
+        $ubn = self::getUbnFromAnimal($animal);
 
         $record =
         Utils::addPaddingToStringForColumnFormatSides($animalUln, 15)
@@ -302,6 +428,7 @@ class Mixblup
         .Utils::addPaddingToStringForColumnFormatCenter($gender, 7, self::COLUMN_PADDING_SIZE)
         .Utils::addPaddingToStringForColumnFormatCenter($dateOfBirthString, 10, self::COLUMN_PADDING_SIZE)
         .Utils::addPaddingToStringForColumnFormatSides($breedCode, 12)
+        .Utils::addPaddingToStringForColumnFormatSides($ubn, 10)
         ;
 
         return $record;
@@ -404,30 +531,52 @@ class Mixblup
             return null; //do nothing
         }
 
+        //Null check animal in measurement.
+        //This error might occur when a measurement is deleted in the database without removing the Measurement parent row
+        if($animal == null) {
+            file_put_contents($this->errorsFilePath, 'Measurement with id: '.$measurement->getId()
+                .' has no animal.'."\n", FILE_APPEND);
+            return null;
+        }
+
+        $ubn = self::getUbnFromAnimal($animal);
+
         $rowBase = $this->formatFirstPartDataRecordRow($animal);
         $measurementDate = self::formatMeasurementDate($measurement->getMeasurementDate());
+        $ageAtMeasurement = self::getAgeInDays($animal, $measurement->getMeasurementDate());
+
+        if($weight != self::WEIGHT_NULL_FILLER) {
+            $growth = self::getGrowthValue($weight, $ageAtMeasurement);
+        } else if($birthWeight != self::WEIGHT_NULL_FILLER) {
+            $growth = self::getGrowthValue($birthWeight, $ageAtMeasurement);
+        } else {
+            $growth = self::WEIGHT_NULL_FILLER;
+        }
 
         $record =
             $rowBase
-            .Utils::addPaddingToStringForColumnFormatCenter($measurementDate, 12, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($fat1, 10, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($fat2, 10, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($fat3, 10, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($measurementDate, 10, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($ageAtMeasurement, 7, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($growth, 9, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($fat1, 7, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($fat2, 7, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($fat3, 7, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($muscleThickness, 6, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($tailLength, 8, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($birthWeight, 8, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($weight, 8, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($skull, 6, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($muscularity, 6, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($proportion, 6, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($exteriorType, 6, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($legWork, 6, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($fur, 6, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($generalAppearance, 6, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($height, 6, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($torsoLength, 6, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($breastDepth, 6, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($markings, 6, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($skull, 4, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($muscularity, 4, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($proportion, 4, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($exteriorType, 4, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($legWork, 4, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($fur, 4, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($generalAppearance, 4, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($height, 4, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($torsoLength, 4, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breastDepth, 4, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($markings, 4, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($ubn, 10, self::COLUMN_PADDING_SIZE)
         ;
 
 
@@ -440,6 +589,13 @@ class Mixblup
      */
     private function formatFirstPartDataRecordRow(Animal $animal)
     {
+        //If rowBase already exists, retrieve it
+        $record = $this->animalRowBases->get($animal->getId());
+        if($record != null) {
+            return $record;
+        }
+        //else create a new one
+
         $animalUln = self::formatUln($animal);
         $parents = CommandUtil::getParentUlnsFromParentsArray($animal->getParents(), self::PARENT_NULL_FILLER);
         $motherUln = $parents->get(Constant::MOTHER_NAMESPACE);
@@ -454,17 +610,28 @@ class Mixblup
         $nLing = $litterData->get(Constant::LITTER_SIZE_NAMESPACE);
         $litterGroup = $litterData->get(Constant::LITTER_GROUP_NAMESPACE);
 
+        $breedCodeValues = $this->getMixBlupTestAttributesBreedCodeTypes($animal);
+        $yearAndUbnOfBirth = self::getYearAndUbnOfBirthString($animal);
+
         $record =
             Utils::addPaddingToStringForColumnFormatSides($animalUln, 15)
             .Utils::addPaddingToStringForColumnFormatCenter($gender, 5, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($yearAndUbnOfBirth, 16, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($breedCode, 10, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($breedType, 16, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::TE), 3, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::CF), 3, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::NH), 3, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::SW), 3, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::OV), 3, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($scrapieGenotype, 9, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($nLing, 5, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($litterGroup, 9, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($motherUln, 19, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($fatherUln, 19, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($motherUln, 16, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($fatherUln, 16, self::COLUMN_PADDING_SIZE)
             ;
+
+        $this->animalRowBases->set($animal->getId(), $record);
 
         return $record;
     }
@@ -557,6 +724,232 @@ class Mixblup
 
         return $litterData;
     }
-    
-    
+
+
+    /**
+     * @param Animal $animal
+     * @return string
+     */
+    public static function getUbnFromAnimal(Animal $animal)
+    {
+        $location = $animal->getLocation();
+        if($location == null) {
+            $ubn = self::UBN_NULL_FILLER;
+        } else {
+            $ubn = Utils::fillNullOrEmptyString($location->getUbn(), self::UBN_NULL_FILLER);
+        }
+
+        return $ubn;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return int|string
+     */
+    public static function getYearAndUbnOfBirthString(Animal $animal)
+    {
+        $dateOfBirth = $animal->getDateOfBirth();
+        $ubnOfBirth = $animal->getUbnOfBirth();
+
+        //Null check
+        if($dateOfBirth == null || $ubnOfBirth == null || $ubnOfBirth == '') {
+            return self::YEAR_UBN_NULL_FILLER;
+        }
+
+        return date_format($dateOfBirth, 'Y').'_'.$ubnOfBirth;
+    }
+
+
+    /**
+     * Age of Animal on day of measurement
+     *
+     * @param Animal $animal
+     * @param \DateTime $measurementDate
+     * @return int|string
+     */
+    public static function getAgeInDays(Animal $animal, \DateTime $measurementDate)
+    {
+        $dateOfBirth = $animal->getDateOfBirth();
+
+        //Null check
+        if($dateOfBirth == null) {
+            return self::AGE_NULL_FILLER;
+        }
+
+        $interval = $measurementDate->diff($dateOfBirth);
+        return $interval->days;
+    }
+
+
+    /**
+     * @param float $weightOnThatMoment
+     * @param int $ageInDays
+     * @return float
+     */
+    public static function getGrowthValue($weightOnThatMoment, $ageInDays)
+    {
+        if($weightOnThatMoment == null || $weightOnThatMoment == 0 || $weightOnThatMoment == self::WEIGHT_NULL_FILLER
+            || $ageInDays == null || $ageInDays == 0 || $ageInDays == self::AGE_NULL_FILLER) {
+            return self::GROWTH_NULL_FILLER;
+        } else {
+            return number_format($weightOnThatMoment / $ageInDays, 5, ',', '');
+        }
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return ArrayCollection
+     */
+    private function getMixBlupTestAttributesBreedCodeTypes(Animal $animal)
+    {
+        //set default values
+        $te = 0;
+        $cf = 0;
+        $nh = 0;
+        $sw = 0;
+        $ov = 0;
+
+        $breedCodeSet = $animal->getBreedCodes();
+        if($breedCodeSet != null) {
+            
+            /** @var BreedCode $breedCode */
+            foreach ($breedCodeSet->getCodes() as $breedCode) {
+                $name = BreedCodeReformatter::getMixBlupTestAttributesBreedCodeType($breedCode->getName());
+
+                switch ($name) {
+                    case BreedCodeType::TE:
+                        $te += $breedCode->getValue();
+                        break;
+                    case BreedCodeType::CF:
+                        $cf += $breedCode->getValue();
+                        break;
+                    case BreedCodeType::NH:
+                        $nh += $breedCode->getValue();
+                        break;
+                    case BreedCodeType::SW:
+                        $sw += $breedCode->getValue();
+                        break;
+                    default:
+                        $ov += $breedCode->getValue();
+                        break;
+                }
+            }
+        }
+
+        $result = new ArrayCollection();
+        $result->set(BreedCodeType::TE, $te);
+        $result->set(BreedCodeType::CF, $cf);
+        $result->set(BreedCodeType::NH, $nh);
+        $result->set(BreedCodeType::SW, $sw);
+        $result->set(BreedCodeType::OV, $ov);
+
+        return $result;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return ArrayCollection
+     */
+    private function getMixBlupExteriorAttributesBreedCodeTypes(Animal $animal)
+    {
+        //set default values
+        $te = 0;
+        $sw = 0;
+        $bm = 0;
+        $ov = 0;
+
+        $breedCodeSet = $animal->getBreedCodes();
+        if($breedCodeSet != null) {
+            /** @var BreedCode $breedCode */
+            foreach ($breedCodeSet->getCodes() as $breedCode) {
+                $name = BreedCodeReformatter::getMixBlupExteriorAttributesBreedCodeType($breedCode->getName());
+
+                switch ($name) {
+                    case BreedCodeType::TE:
+                        $te += $breedCode->getValue();
+                        break;
+                    case BreedCodeType::SW:
+                        $sw += $breedCode->getValue();
+                        break;
+                    case BreedCodeType::BM:
+                        $bm += $breedCode->getValue();
+                        break;
+                    default:
+                        $ov += $breedCode->getValue();
+                        break;
+                }
+            }
+        }
+
+        $result = new ArrayCollection();
+        $result->set(BreedCodeType::TE, $te);
+        $result->set(BreedCodeType::SW, $sw);
+        $result->set(BreedCodeType::BM, $bm);
+        $result->set(BreedCodeType::OV, $ov);
+
+        return $result;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return ArrayCollection
+     */
+    private function getMixBlupFertilityBreedCodeTypes(Animal $animal)
+    {
+        //set default values
+        $te = 0;
+        $cf = 0;
+        $sw = 0;
+        $nh = 0;
+        $gp = 0;
+        $bm = 0;
+        $ov = 0;
+
+        $breedCodeSet = $animal->getBreedCodes();
+        if($breedCodeSet != null) {
+            /** @var BreedCode $breedCode */
+            foreach ($breedCodeSet->getCodes() as $breedCode) {
+                $name = BreedCodeReformatter::getMixBlupFertilityBreedCodeType($breedCode->getName());
+
+                switch ($name) {
+                    case BreedCodeType::TE:
+                        $te += $breedCode->getValue();
+                        break;
+                    case BreedCodeType::CF:
+                        $cf += $breedCode->getValue();
+                        break;
+                    case BreedCodeType::SW:
+                        $sw += $breedCode->getValue();
+                        break;
+                    case BreedCodeType::NH:
+                        $nh += $breedCode->getValue();
+                        break;
+                    case BreedCodeType::GP:
+                        $gp += $breedCode->getValue();
+                        break;
+                    case BreedCodeType::BM:
+                        $bm += $breedCode->getValue();
+                        break;
+                    default:
+                        $ov += $breedCode->getValue();
+                        break;
+                }
+            }
+        }
+
+        $result = new ArrayCollection();
+        $result->set(BreedCodeType::TE, $te);
+        $result->set(BreedCodeType::CF, $cf);
+        $result->set(BreedCodeType::SW, $sw);
+        $result->set(BreedCodeType::NH, $nh);
+        $result->set(BreedCodeType::GP, $gp);
+        $result->set(BreedCodeType::BM, $bm);
+        $result->set(BreedCodeType::OV, $ov);
+
+        return $result;
+    }
 }
