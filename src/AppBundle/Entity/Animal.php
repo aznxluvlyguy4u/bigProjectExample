@@ -455,7 +455,7 @@ abstract class Animal
      */
     public function __construct() {
         $this->arrivals = new ArrayCollection();
-        $this->children = new ArrayCollection();
+//        $this->children = new ArrayCollection();
         $this->departures = new ArrayCollection();
         $this->imports = new ArrayCollection();
         $this->exports = new ArrayCollection();
