@@ -21,13 +21,19 @@ class BodyFatRepository extends BaseRepository {
             ->orderBy(['measurementDate' => Criteria::DESC])
             ->setMaxResults(1);
 
-        //BodyFat
+        /**
+         * @var BodyFat $latestBodyFat
+         */
         $latestBodyFat = $this->getEntityManager()->getRepository(BodyFat::class)
             ->matching($criteria);
 
         if(sizeof($latestBodyFat) > 0) {
             $latestBodyFat = $latestBodyFat->get(0);
-            $latestBodyFat = $latestBodyFat->getFat();
+            $fatOne = $latestBodyFat->getFat1()->getFat();
+            $fatTwo = $latestBodyFat->getFat2()->getFat();
+            $fatThree = $latestBodyFat->getFat3()->getFat();
+
+            $latestBodyFat = $fatOne ." / ". $fatTwo ." / ". $fatThree ;
         } else {
             $latestBodyFat = 0.00;
         }
