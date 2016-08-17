@@ -148,20 +148,27 @@ class BreedCodeReformatter
      * @param string $breedCodeType
      * @return string
      */
-    private static function getMixBlupTestAttributesBreedCodeType($breedCodeType)
+    public static function getMixBlupTestAttributesBreedCodeType($breedCodeType)
     {
         switch ($breedCodeType) {
+            //TE
             case BreedCodeType::TE:
                 return BreedCodeType::TE;
             case BreedCodeType::BT:
                 return BreedCodeType::TE;
             case BreedCodeType::DK:
                 return BreedCodeType::TE;
+
+            //non-TE breedCodeTypes
             case BreedCodeType::CF:
                 return BreedCodeType::CF;
             case BreedCodeType::NH:
                 return BreedCodeType::NH;
-            default: //Everything not of one of the above types
+            case BreedCodeType::SW:
+                return BreedCodeType::SW;
+
+            //Everything not of one of the above types
+            default:
                 return BreedCodeType::OV;
         }
     }
@@ -172,16 +179,25 @@ class BreedCodeReformatter
      * @param string $breedCodeType
      * @return string
      */
-    private static function getMixBlupExteriorAttributesBreedCodeType($breedCodeType)
+    public static function getMixBlupExteriorAttributesBreedCodeType($breedCodeType)
     {
         switch ($breedCodeType) {
+            //TE
             case BreedCodeType::TE:
                 return BreedCodeType::TE;
+            case BreedCodeType::BT:
+                return BreedCodeType::TE;
+            case BreedCodeType::DK:
+                return BreedCodeType::TE;
+
+            //non-TE breedCodeTypes
             case BreedCodeType::SW:
                 return BreedCodeType::SW;
             case BreedCodeType::BM:
                 return BreedCodeType::BM;
-            default: //Everything not of one of the above types
+
+            //Everything not of one of the above types
+            default:
                 return BreedCodeType::OV;
         }
     }
@@ -192,18 +208,31 @@ class BreedCodeReformatter
      * @param string $breedCodeType
      * @return string
      */
-    private static function getMixBlupFertilityBreedCodeType($breedCodeType)
+    public static function getMixBlupFertilityBreedCodeType($breedCodeType)
     {
         switch ($breedCodeType) {
+            //TE
             case BreedCodeType::TE:
                 return BreedCodeType::TE;
+            case BreedCodeType::BT:
+                return BreedCodeType::TE;
+            case BreedCodeType::DK:
+                return BreedCodeType::TE;
+
+            //non-TE breedCodeTypes
             case BreedCodeType::CF:
                 return BreedCodeType::CF;
             case BreedCodeType::SW:
                 return BreedCodeType::SW;
             case BreedCodeType::NH:
                 return BreedCodeType::NH;
-            default: //Everything not of one of the above types
+            case BreedCodeType::GP:
+                return BreedCodeType::GP;
+            case BreedCodeType::BM:
+                return BreedCodeType::BM;
+
+            //Everything not of one of the above types
+            default:
                 return BreedCodeType::OV;
         }
     }

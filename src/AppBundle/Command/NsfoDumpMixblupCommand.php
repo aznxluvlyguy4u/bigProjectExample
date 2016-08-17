@@ -17,9 +17,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 class NsfoDumpMixblupCommand extends ContainerAwareCommand
 {
     const TITLE = 'Generate NSFO MiXBLUP files';
-    const DATA_FILENAME = 'databestand.txt';
-    const PEDIGREE_FILENAME = 'afstamming.txt';
-    const INSTRUCTIONS_FILENAME = 'mixblup_instructions.inp';
+    const DATA_FILENAME = 'databestand';
+    const PEDIGREE_FILENAME = 'afstamming';
+    const INSTRUCTIONS_FILENAME = 'mixblup_instructions';
     const START_YEAR_MEASUREMENT = 2014;
     const END_YEAR_MEASUREMENTS = 2016;
     const DEFAULT_OUTPUT_FOLDER_PATH = '/home/data/JVT/projects/NSFO/MixBlup/dump';
@@ -50,23 +50,31 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         $isGeneratePedigreeFile = $cmdUtil->generateConfirmationQuestion('Generate pedigreefile? (y/n): ');
         $isGenerateDataFile = $cmdUtil->generateConfirmationQuestion('Generate datafile? (y/n): ');
 
-        $output->writeln([' ', 'Preparing data... ', ' ']);
+        $cmdUtil->setStartTimeAndPrintIt();
+        
+        $output->writeln([' ', 'Preparing data... ']);
         $mixBlup = new Mixblup($em, $outputFolderPath, self::INSTRUCTIONS_FILENAME, self::DATA_FILENAME, self::PEDIGREE_FILENAME, self::START_YEAR_MEASUREMENT, self::END_YEAR_MEASUREMENTS);
+        $cmdUtil->printElapsedTime('Time to prepare data');
 
-        $output->writeln([' ', 'Generating InstructionFile... ', ' ']);
-        $instructionFilePath = $mixBlup->generateInstructionFile();
+        if($isGenerateDataFile) {
+            $output->writeln([' ', 'Generating InstructionFiles... ']);
+            $mixBlup->generateInstructionFiles();
+            $cmdUtil->printElapsedTime('Time to generate instruction files');
+        }
 
         if($isGeneratePedigreeFile) {
-            $output->writeln([' ', 'Generating PedigreeFile... ', ' ']);
-            $pedigreeFilePath = $mixBlup->generatePedigreeFile();
+            $output->writeln([' ', 'Generating PedigreeFile... ']);
+            $mixBlup->generatePedigreeFile();
+            $cmdUtil->printElapsedTime('Time to generate pedigreefile');
         }
 
         if($isGenerateDataFile) {
-            $output->writeln([' ', 'Generating DataFile... ', ' ']);
-            $dataFilePath = $mixBlup->generateDataFile();
+            $output->writeln([' ', 'Generating DataFiles... ']);
+            $mixBlup->generateDataFiles();
+            $cmdUtil->printElapsedTime('Time to generate datafiles');
         }
 
-        $output->writeln('=== FINISHED ===');
+        $cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 
 }

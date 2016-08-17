@@ -322,6 +322,17 @@ class AnimalRepository extends BaseRepository
     return null;
   }
 
+
+  /**
+   * @param string $ulnString
+   * @return Animal|Ewe|Neuter|Ram|null
+   */
+  public function findAnimalByUlnString($ulnString)
+  {
+    $uln = Utils::getUlnFromString($ulnString);
+    return $this->findByUlnCountryCodeAndNumber($uln[Constant::ULN_COUNTRY_CODE_NAMESPACE], $uln[Constant::ULN_NUMBER_NAMESPACE] );
+  }
+
   /**
    * @param string $pedigreeCountryCode
    * @param string $pedigreeNumber
