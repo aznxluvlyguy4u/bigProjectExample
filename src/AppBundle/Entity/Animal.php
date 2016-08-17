@@ -18,7 +18,7 @@ use JMS\Serializer\Annotation\Expose;
 /**
  * Class Animal
  *
- * @ORM\Table(name="animal")
+ * @ORM\Table(name="animal", indexes={@ORM\Index(name="uln_idx", columns={"uln_country_code","uln_number"})})
  * @ORM\Entity(repositoryClass="AppBundle\Entity\AnimalRepository")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")

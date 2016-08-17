@@ -46,18 +46,17 @@ class BodyFat extends Measurement {
     public function __construct()
     {
       parent::__construct();
-      
-      $this->fat = 0.00;
+
     }
 
     /**
      * Set animal
      *
-     * @param \AppBundle\Entity\BodyFat $animal
+     * @param Animal $animal
      *
      * @return BodyFat
      */
-    public function setAnimal(\AppBundle\Entity\Animal $animal = null)
+    public function setAnimal(Animal $animal = null)
     {
         $this->animal = $animal;
 
@@ -67,7 +66,7 @@ class BodyFat extends Measurement {
     /**
      * Get animal
      *
-     * @return \AppBundle\Entity\BodyFat
+     * @return Animal
      */
     public function getAnimal()
     {
@@ -77,11 +76,11 @@ class BodyFat extends Measurement {
     /**
      * Set inspector
      *
-     * @param \AppBundle\Entity\Inspector $inspector
+     * @param Inspector $inspector
      *
      * @return BodyFat
      */
-    public function setInspector(\AppBundle\Entity\Inspector $inspector = null)
+    public function setInspector(Inspector $inspector = null)
     {
         $this->inspector = $inspector;
 
@@ -91,7 +90,7 @@ class BodyFat extends Measurement {
     /**
      * Get inspector
      *
-     * @return \AppBundle\Entity\Inspector
+     * @return Inspector
      */
     public function getInspector()
     {
@@ -101,11 +100,11 @@ class BodyFat extends Measurement {
     /**
      * Set fat1
      *
-     * @param \AppBundle\Entity\Cart $fat1
+     * @param Fat1 $fat1
      *
      * @return BodyFat
      */
-    public function setFat1(\AppBundle\Entity\Cart $fat1 = null)
+    public function setFat1(Fat1 $fat1 = null)
     {
         $this->fat1 = $fat1;
 
@@ -115,7 +114,7 @@ class BodyFat extends Measurement {
     /**
      * Get fat1
      *
-     * @return \AppBundle\Entity\Cart
+     * @return Fat1
      */
     public function getFat1()
     {
@@ -125,11 +124,11 @@ class BodyFat extends Measurement {
     /**
      * Set fat2
      *
-     * @param \AppBundle\Entity\Cart $fat2
+     * @param Fat2 $fat2
      *
      * @return BodyFat
      */
-    public function setFat2(\AppBundle\Entity\Cart $fat2 = null)
+    public function setFat2(Fat2 $fat2 = null)
     {
         $this->fat2 = $fat2;
 
@@ -139,7 +138,7 @@ class BodyFat extends Measurement {
     /**
      * Get fat2
      *
-     * @return \AppBundle\Entity\Cart
+     * @return Fat2
      */
     public function getFat2()
     {
@@ -149,11 +148,11 @@ class BodyFat extends Measurement {
     /**
      * Set fat3
      *
-     * @param \AppBundle\Entity\Cart $fat3
+     * @param Fat3 $fat3
      *
      * @return BodyFat
      */
-    public function setFat3(\AppBundle\Entity\Cart $fat3 = null)
+    public function setFat3(Fat3 $fat3 = null)
     {
         $this->fat3 = $fat3;
 
@@ -163,7 +162,7 @@ class BodyFat extends Measurement {
     /**
      * Get fat3
      *
-     * @return \AppBundle\Entity\Cart
+     * @return Fat3
      */
     public function getFat3()
     {

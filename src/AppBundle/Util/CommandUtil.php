@@ -20,6 +20,12 @@ class CommandUtil
     /** @var QuestionHelper */
     private $helper;
 
+    /** @var \DateTime */
+    private $startTime;
+
+    /** @var \DateTime */
+    private $endTime;
+
     /**
      * CommandUtil constructor.
      * @param InputInterface $input
@@ -71,6 +77,28 @@ class CommandUtil
             return true;
         }
     }
+
+
+    public function setStartTimeAndPrintIt()
+    {
+        $this->startTime = new \DateTime();
+        $this->outputInterface->writeln(['Start time: '.date_format($this->startTime, 'Y-m-d H:i:s'),'']);
+    }
+
+
+    public function setEndTimeAndPrintFinalOverview()
+    {
+        $this->endTime = new \DateTime();
+        $elapsedTime = gmdate("H:i:s", $this->endTime->getTimestamp() - $this->startTime->getTimestamp());
+
+        $this->outputInterface->writeln([
+                '=== PROCESS FINISHED ===',
+                'End Time: '.date_format($this->endTime, 'Y-m-d H:i:s'),
+                'Elapsed Time (H:m:s): '.$elapsedTime,
+                '',
+                '']);
+    }
+
 
     /**
      * @param string $heading
