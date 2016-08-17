@@ -32,6 +32,9 @@ class CommandUtil
     /** @var \DateTime */
     private $endTime;
 
+    /** @var \DateTime */
+    private $elapsedTimeStart;
+    
     /**
      * CommandUtil constructor.
      * @param InputInterface $input
@@ -88,7 +91,17 @@ class CommandUtil
     public function setStartTimeAndPrintIt()
     {
         $this->startTime = new \DateTime();
-        $this->outputInterface->writeln(['Start time: '.date_format($this->startTime, 'Y-m-d h:i:s'),'']);
+        $this->elapsedTimeStart = $this->startTime;
+        $this->outputInterface->writeln(['Start time: '.date_format($this->startTime, 'Y-m-d H:i:s'),'']);
+    }
+
+
+    public function printElapsedTime($label = 'Elapsed time from start or previous elapsed time')
+    {
+        $now = new \DateTime();
+        $elapsedTime = gmdate("H:i:s", $now->getTimestamp() - $this->elapsedTimeStart->getTimestamp());
+        $this->outputInterface->writeln(['',$label.': '.$elapsedTime,'']);
+        $this->elapsedTimeStart = $now;
     }
 
 
@@ -99,8 +112,8 @@ class CommandUtil
 
         $this->outputInterface->writeln([
             '=== PROCESS FINISHED ===',
-            'End Time: '.date_format($this->endTime, 'Y-m-d h:i:s'),
-            'Elapsed Time (h:i:s): '.$elapsedTime,
+            'End Time: '.date_format($this->endTime, 'Y-m-d H:i:s'),
+            'Elapsed Time (H:i:s): '.$elapsedTime,
             '',
             '']);
     }
