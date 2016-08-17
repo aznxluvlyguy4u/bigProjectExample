@@ -22,7 +22,7 @@ class Ewe extends Animal
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="parentMother")
      * @JMS\Type("AppBundle\Entity\Ewe")
      */
-     protected $children;
+    private $children;
 
     /**
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="surrogate")
@@ -45,7 +45,7 @@ class Ewe extends Animal
        * @ORM\OneToMany(targetEntity="Litter", mappedBy="animalMother")
        * @JMS\Type("AppBundle\Entity\Ewe")
        */
-      protected $litters;
+    private $litters;
 
     /**
      * Ewe constructor.

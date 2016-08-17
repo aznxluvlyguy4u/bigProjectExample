@@ -24,7 +24,7 @@ class Ram extends Animal
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="parentFather")
      * @JMS\Type("AppBundle\Entity\Ram")
      */
-     protected $children;
+    private $children;
 
     /**
      * @var string
@@ -41,7 +41,7 @@ class Ram extends Animal
      * @ORM\OneToMany(targetEntity="Litter", mappedBy="animalFather")
      * @JMS\Type("AppBundle\Entity\Ram")
      */
-    protected $litters;
+    private $litters;
 
     /**
      * Ram constructor.
