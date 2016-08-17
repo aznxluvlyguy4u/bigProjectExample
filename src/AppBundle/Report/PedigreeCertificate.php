@@ -284,7 +284,11 @@ class PedigreeCertificate
     private function getOffspringCount($parent)
     {
         if($parent instanceof Ram || $parent instanceof Ewe) {
-            return $parent->getChildren()->count();
+            if($parent->getChildren() != null) {
+                return $parent->getChildren()->count();
+            } else {
+                return 0;
+            }
         } else {
             return 0;
         }
