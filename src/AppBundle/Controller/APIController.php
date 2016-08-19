@@ -319,19 +319,55 @@ class APIController extends Controller implements APIControllerInterface
    */
   public function getAuthenticatedUser(Request $request= null, $tokenCode = null)
   {
-    $em = $this->getDoctrine()->getEntityManager();
+    $loggedInUser = $this->getLoggedInUser($request, $tokenCode);
 
-    if($request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE) && $tokenCode == null) {
-      $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
-      $ghostToken = $em->getRepository(Token::class)->findOneBy(array("code" => $ghostTokenCode));
+    /* Clients */
+    if($loggedInUser instanceof Client) {
+      $isUserTheOwner = $loggedInUser->getEmployer() == null;
 
-      if($ghostToken != null) {
-        if($ghostToken->getIsVerified()) {
-          return $ghostToken->getOwner(); //client
-        }
+      if($isUserTheOwner) {
+        return $loggedInUser;
+      } else {
+        //User is an employee at their company
+        return $loggedInUser->getEmployer()->getOwner();
       }
-      return null;
+
+      /* Admins with a GhostToken */
+    } else if ($loggedInUser instanceof Employee) {
+
+      if($request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE) && $tokenCode == null) {
+        $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
+        $ghostToken = $this->getDoctrine()->getEntityManager()->getRepository(Token::class)
+            ->findOneBy(array("code" => $ghostTokenCode));
+
+        if($ghostToken != null) {
+          if($ghostToken->getIsVerified()) {
+            return $ghostToken->getOwner(); //client
+          }
+        }
+        //Admins without a GhostToken
+        return null;
+      }
+      
+    } else {
+        return null;
+        /* Note that returning null will break a lot of code in the controllers. That is why it is essential that both the AccessToken and _verified_ GhostToken
+         are validated in the TokenAuthenticator Prehook.
+         At this point only Clients and Employees can login to the system. Not Inspectors.
+        */
     }
+
+  }
+
+
+  /**
+   * @param Request $request
+   * @param string $tokenCode
+   * @return Client|Employee
+   */
+  public function getLoggedInUser(Request $request= null, $tokenCode = null)
+  {
+    $em = $this->getDoctrine()->getEntityManager();
 
     if($tokenCode == null) {
       $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
@@ -348,6 +384,7 @@ class APIController extends Controller implements APIControllerInterface
     }
 
   }
+
 
   /**
    * @param Request $request
