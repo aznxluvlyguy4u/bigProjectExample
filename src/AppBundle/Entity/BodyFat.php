@@ -2,6 +2,10 @@
 
 namespace AppBundle\Entity;
 
+use \AppBundle\Entity\Fat1;
+use \AppBundle\Entity\Fat2;
+use \AppBundle\Entity\Fat3;
+
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -20,6 +24,8 @@ class BodyFat extends Measurement {
     private $animal;
 
     /**
+     * @var Fat1
+     *
      * @ORM\OneToOne(targetEntity="Fat1", inversedBy="bodyFat")
      * @ORM\JoinColumn(name="fat1_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Fat1")
@@ -27,6 +33,8 @@ class BodyFat extends Measurement {
     private $fat1;
 
   /**
+   * @var Fat2
+   *
    * @ORM\OneToOne(targetEntity="Fat2", inversedBy="bodyFat")
    * @ORM\JoinColumn(name="fat2_id", referencedColumnName="id")
    * @JMS\Type("AppBundle\Entity\Fat2")
@@ -34,6 +42,8 @@ class BodyFat extends Measurement {
     private $fat2;
 
     /**
+     * @var Fat3
+     *
      * @ORM\OneToOne(targetEntity="Fat3", inversedBy="bodyFat")
      * @ORM\JoinColumn(name="fat3_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Fat3")
@@ -167,5 +177,30 @@ class BodyFat extends Measurement {
     public function getFat3()
     {
         return $this->fat3;
+    }
+
+
+    /**
+     * @param mixed $bodyFat
+     * @return bool
+     */
+    public function isEqualInValues($bodyFat)
+    {
+        if($bodyFat == null) {
+            $isEqual = false;
+
+        } else if($bodyFat instanceof BodyFat) {
+            $isEqual = $this->fat1->getFat() == $bodyFat->fat1->getFat()
+                && $this->fat2->getFat() == $bodyFat->fat2->getFat()
+                && $this->fat3->getFat() == $bodyFat->fat3->getFat()
+                && $this->getMeasurementDate() == $bodyFat->getMeasurementDate()
+                && $this->getAnimal() == $bodyFat->getAnimal()
+                && $this->getInspector() == $bodyFat->getInspector();
+
+        } else {
+            $isEqual = false;
+        }
+
+        return $isEqual;
     }
 }

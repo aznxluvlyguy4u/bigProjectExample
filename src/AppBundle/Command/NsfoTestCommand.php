@@ -14,7 +14,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class NsfoTestCommand extends ContainerAwareCommand
 {
     const TITLE = 'TESTING';
-    const INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/fixed_machtigingenRVO.csv';
+    const INPUT_PATH = '/path/to/file.txt';
 
     /** @var EntityManager $em */
     private $em;

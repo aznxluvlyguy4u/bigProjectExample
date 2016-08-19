@@ -109,4 +109,27 @@ class MuscleThickness extends Measurement {
     {
         return $this->inspector;
     }
+
+
+    /**
+     * @param mixed $muscleThickness
+     * @return bool
+     */
+    public function isEqualInValues($muscleThickness)
+    {
+        if($muscleThickness == null) {
+            $isEqual = false;
+
+        } else if($muscleThickness instanceof MuscleThickness) {
+            $isEqual = $this->getMuscleThickness() == $muscleThickness->getMuscleThickness()
+                && $this->getMeasurementDate() == $muscleThickness->getMeasurementDate()
+                && $this->getAnimal() == $muscleThickness->getAnimal()
+                && $this->getInspector() == $muscleThickness->getInspector();
+
+        } else {
+            $isEqual = false;
+        }
+
+        return $isEqual;
+    }
 }

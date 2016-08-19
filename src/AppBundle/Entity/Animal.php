@@ -18,7 +18,7 @@ use JMS\Serializer\Annotation\Expose;
 /**
  * Class Animal
  *
- * @ORM\Table(name="animal", indexes={@ORM\Index(name="uln_idx", columns={"uln_country_code","uln_number"})})
+ * @ORM\Table(name="animal",indexes={@ORM\Index(name="uln_idx", columns={"name", "uln_country_code", "uln_number"})})
  * @ORM\Entity(repositoryClass="AppBundle\Entity\AnimalRepository")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
@@ -74,6 +74,16 @@ abstract class Animal
      * @Expose
      */
     protected $name;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 12)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    protected $ubnOfBirth;
 
     /**
      * @var DateTime
@@ -416,6 +426,13 @@ abstract class Animal
      * @ORM\JoinColumn(name="breeder_id", referencedColumnName="id")
      */
     protected $breeder;
+
+    /**
+     * @ORM\OneToOne(targetEntity="BreedCodes", inversedBy="animal", cascade={"persist"})
+     * @ORM\JoinColumn(name="breed_codes_id", referencedColumnName="id", nullable=true)
+     * @JMS\Type("AppBundle\Entity\BreedCodes")
+     */
+    protected $breedCodes;
     
     /**
      * @var ArrayCollection
@@ -1831,4 +1848,39 @@ abstract class Animal
     {
         return $this->parentNeuter;
     }
+
+    /**
+     * @return BreedCodes
+     */
+    public function getBreedCodes()
+    {
+        return $this->breedCodes;
+    }
+
+    /**
+     * @param BreedCodes $breedCodes
+     */
+    public function setBreedCodes($breedCodes)
+    {
+        $this->breedCodes = $breedCodes;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUbnOfBirth()
+    {
+        return $this->ubnOfBirth;
+    }
+
+    /**
+     * @param string $ubnOfBirth
+     */
+    public function setUbnOfBirth($ubnOfBirth)
+    {
+        $this->ubnOfBirth = $ubnOfBirth;
+    }
+
+    
+
 }
