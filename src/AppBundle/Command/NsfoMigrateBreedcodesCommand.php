@@ -69,7 +69,12 @@ class NsfoMigrateBreedcodesCommand extends ContainerAwareCommand
 //                break;
 //            }
         }
-        $output->writeln('Processed: '.$i.' - '.$maxId.' of '.$maxId);
+
+        if($minId == null) {
+            $output->writeln('All animals with a breedcode already have been processed');
+        } else {
+            $output->writeln('Processed Total: '.$minId.' - '.$maxId.' of '.$maxId);
+        }
 
         $cmdUtil->setEndTimeAndPrintFinalOverview();
     }
