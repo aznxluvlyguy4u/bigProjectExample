@@ -11,36 +11,48 @@ use AppBundle\Entity\Location;
 class NullChecker
 {
 
-
     /**
-     * @param array $animalArray
+     * @param $array
+     * @return int
+     */
+    public static function getArrayCount($array)
+    {
+        if($array != null) {
+            return sizeof($array);
+        } else {
+            return 0;
+        }
+    }
+    
+    /**
+     * @param array $array
      * @param string $replacementText
      * @return string
      */
-    public static function getUlnOrPedigreeStringFromAnimalArray($animalArray, $replacementText = "-")
+    public static function getUlnOrPedigreeStringFromArray($array, $replacementText = "-")
     {
-        if($animalArray == null) {return $replacementText; }
+        if($array == null) {return $replacementText; }
         
-        $uln = self::getUlnStringFromAnimalArray($animalArray, $replacementText);
+        $uln = self::getUlnStringFromArray($array, $replacementText);
         if($uln != $replacementText) {
             return $uln;
         } else {
-            return self::getPedigreeStringFromAnimalArray($animalArray, $replacementText);
+            return self::getPedigreeStringFromArray($array, $replacementText);
         }
     }
 
 
     /**
-     * @param array $animalArray
+     * @param array $array
      * @param string $replacementText
      * @return string
      */
-    public static function getUlnStringFromAnimalArray($animalArray, $replacementText = "-")
+    public static function getUlnStringFromArray($array, $replacementText = "-")
     {
-        if($animalArray == null) {return $replacementText; }
+        if($array == null) {return $replacementText; }
         
-        $ulnCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray);
-        $ulnNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_NUMBER, $animalArray);
+        $ulnCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_COUNTRY_CODE, $array);
+        $ulnNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_NUMBER, $array);
 
         if($ulnCountryCode != null && $ulnCountryCode != null) {
             return $ulnCountryCode.$ulnNumber;
@@ -51,16 +63,16 @@ class NullChecker
 
 
     /**
-     * @param array $animalArray
+     * @param array $array
      * @param string $replacementText
      * @return string
      */
-    public static function getPedigreeStringFromAnimalArray($animalArray, $replacementText = "-")
+    public static function getPedigreeStringFromArray($array, $replacementText = "-")
     {
-        if($animalArray == null) {return $replacementText; }
+        if($array == null) {return $replacementText; }
         
-        $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
-        $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
+        $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $array);
+        $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $array);
 
         if($pedigreeCountryCode != null && $pedigreeCountryCode != null) {
             return $pedigreeCountryCode.$pedigreeNumber;

@@ -29,6 +29,11 @@ class JsonInputConstant
     const IS_EXPORT_ANIMAL = 'is_export_animal';
     const UBN_NEW_OWNER = 'ubn_new_owner';
 
+    //Tags
+    const RELATION_NUMBER_ACCEPTANT = "relation_number_acceptant";
+    const TAGS = "tags";
+    const TAG = "tag";
+
     //Authentication
     const NEW_PASSWORD = 'new_password';
 

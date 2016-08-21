@@ -10,6 +10,7 @@ use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
+use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\UserActionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -38,7 +39,7 @@ class ActionLogWriter
             $origin = 'ubn previous owner: '.$ubnPreviousOwner;
         }
         $ubn = NullChecker::getUbnFromLocation($location);
-        $uln = NullChecker::getUlnOrPedigreeStringFromAnimalArray(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ANIMAL, $content));
+        $uln = NullChecker::getUlnOrPedigreeStringFromArray(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ANIMAL, $content));
 
         $description = 'ubn destination: '.$ubn.'. '.$origin.'. uln: '.$uln;
 
@@ -70,7 +71,7 @@ class ActionLogWriter
             $destination = 'ubn new owner: '.$ubnNewOwner;
         }
         $ubn = NullChecker::getUbnFromLocation($location);
-        $uln = NullChecker::getUlnOrPedigreeStringFromAnimalArray(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ANIMAL, $content));
+        $uln = NullChecker::getUlnOrPedigreeStringFromArray(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ANIMAL, $content));
 
         $description = 'ubn: '.$ubn.'. '.$destination.'. uln: '.$uln;
 
@@ -95,10 +96,84 @@ class ActionLogWriter
         $userActionType = UserActionType::DECLARE_LOSS;
 
         $ubn = NullChecker::getUbnFromLocation($location);
-        $uln = NullChecker::getUlnOrPedigreeStringFromAnimalArray(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ANIMAL, $content));
+        $uln = NullChecker::getUlnOrPedigreeStringFromArray(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ANIMAL, $content));
         $ubnDestructor = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::UBN_DESTRUCTOR, $content);
 
         $description = 'ubn: '.$ubn.'. ubn destructor: '.$ubnDestructor.'. uln: '.$uln;
+
+        $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        $om->persist($log);
+        $om->flush();
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Client $client
+     * @param Person $loggedInUser
+     * @param ArrayCollection $content
+     * @return ActionLog
+     */
+    public static function declareTagTransferPost(ObjectManager $om, $client, $loggedInUser, $content)
+    {
+        $userActionType = UserActionType::DECLARE_TAGS_TRANSFER;
+
+        $relationNumberAcceptant = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::RELATION_NUMBER_ACCEPTANT, $content);
+        $ubnNewOwner = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::UBN_NEW_OWNER, $content);
+        $tags = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::TAGS, $content);
+        $tagsCount = NullChecker::getArrayCount($tags);
+
+        $description = 'rel.nr.acceptant: '.$relationNumberAcceptant.'. ubn new owner: '.$ubnNewOwner.'. tagsCount: '.$tagsCount;
+
+        $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        $om->persist($log);
+        $om->flush();
+
+        return $log;
+    }
+
+    /**
+     * @param ObjectManager $om
+     * @param Client $client
+     * @param Person $loggedInUser
+     * @param ArrayCollection $content
+     * @return ActionLog
+     */
+    public static function declareTagReplacePost(ObjectManager $om, $client, $loggedInUser, $content)
+    {
+        $userActionType = UserActionType::DECLARE_TAG_REPLACE;
+
+        $animalArray = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ANIMAL, $content);
+        $tagArray = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::TAG, $content);
+        $ulnAnimal = NullChecker::getUlnStringFromArray($animalArray);
+        $ulnTag = NullChecker::getUlnStringFromArray($tagArray);
+
+        $description = 'uln of animal: '.$ulnAnimal.'. uln of tag: '.$ulnTag.'.';
+
+        $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        $om->persist($log);
+        $om->flush();
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Client $client
+     * @param Person $loggedInUser
+     * @param RevokeDeclaration $revokeDeclaration
+     * @return ActionLog
+     */
+    public static function revokePost(ObjectManager $om, $client, $loggedInUser, $revokeDeclaration)
+    {
+        $userActionType = UserActionType::REVOKE_DECLARATION;
+        $messageNumber = $revokeDeclaration->getMessageNumber();
+        $requestTypeToRevoke = $revokeDeclaration->getRequestTypeToRevoke();
+
+        $description = 'revoking: '.$requestTypeToRevoke.' with messageNumber: '.$messageNumber.'.';
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
         $om->persist($log);
