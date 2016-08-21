@@ -4,7 +4,6 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Component\Utils;
-use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Client;
@@ -15,7 +14,6 @@ use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\UserActionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
-use Monolog\Handler\Curl\Util;
 
 class ActionLogWriter
 {
@@ -201,7 +199,7 @@ class ActionLogWriter
      * @param ObjectManager $om
      * @param Person $loggedInUser
      * @param Client $client
-     * @param Company $company
+     * @param string $description
      * @return ActionLog
      */
     public static function contactEmail(ObjectManager $om, $client, $loggedInUser, $description)
