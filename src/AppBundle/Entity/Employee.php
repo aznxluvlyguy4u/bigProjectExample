@@ -7,11 +7,14 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class Employee
  * @ORM\Entity(repositoryClass="AppBundle\Entity\EmployeeRepository")
  * @package AppBundle\Entity
+ * @ExclusionPolicy("all")
  */
 class Employee extends Person
 {
@@ -31,6 +34,7 @@ class Employee extends Person
      * @Assert\NotBlank
      * @ORM\Column(type="string")
      * @JMS\Type("string")
+     * @Expose
      */
     private $accessLevel;
 
