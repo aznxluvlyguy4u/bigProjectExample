@@ -7,6 +7,8 @@ use AppBundle\Entity\Client;
 use AppBundle\FormInput\CompanyProfile;
 use AppBundle\Output\CompanyProfileOutput;
 use AppBundle\Output\LoginOutput;
+use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\DoctrineUtil;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -66,7 +68,10 @@ class ProfileAPIController extends APIController implements ProfileAPIController
    * @return jsonResponse
    */
   public function editCompanyProfile(Request $request) {
+    $om = $this->getDoctrine()->getManager();
+    
     $client = $this->getAuthenticatedUser($request);
+    $loggedInUser = $this->getLoggedInUser($request);
     $content = $this->getContentAsArray($request);
     $location = $this->getSelectedLocation($request);
 
@@ -75,9 +80,10 @@ class ProfileAPIController extends APIController implements ProfileAPIController
 
     //Persist updated changes and return the updated values
     $client = CompanyProfile::update($client, $content, $company);
-    $this->getDoctrine()->getManager()->persist($client);
-    $this->getDoctrine()->getManager()->flush();
-
+    $om->persist($client);
+    $log = ActionLogWriter::updateProfile($om, $client, $loggedInUser, $company);
+    DoctrineUtil::flushClearAndGarbageCollect($om); //Only flush after persisting both the client and ActionLogWriter
+    
     $outputArray = CompanyProfileOutput::create($client, $company, $location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);

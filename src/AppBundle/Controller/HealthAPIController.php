@@ -10,6 +10,8 @@ use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\FormInput\LocationHealthEditor;
 use AppBundle\Output\HealthOutput;
+use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\HealthEditValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -80,6 +82,8 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
    */
   public function updateHealthStatus(Request $request, $ubn) {
 
+    $om = $this->getDoctrine()->getManager();
+
     //Admin validation
     $admin = $this->getAuthenticatedEmployee($request);
     $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
@@ -107,6 +111,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
     $location = LocationHealthEditor::edit($em, $location, $content); //includes persisting changes
     
     $outputArray = HealthOutput::create($em, $location);
+    $log = AdminActionLogWriter::updateHealthStatus($om, $admin, $location, $content);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
     

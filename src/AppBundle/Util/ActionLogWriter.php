@@ -8,6 +8,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Company;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\RevokeDeclaration;
@@ -44,7 +45,7 @@ class ActionLogWriter
         $description = 'ubn destination: '.$ubn.'. '.$origin.'. uln: '.$uln;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
-        DoctrineUtil::persistPlus($om, $log);
+        DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
     }
@@ -75,7 +76,7 @@ class ActionLogWriter
         $description = 'ubn: '.$ubn.'. '.$destination.'. uln: '.$uln;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
-        DoctrineUtil::persistPlus($om, $log);
+        DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
     }
@@ -100,7 +101,7 @@ class ActionLogWriter
         $description = 'ubn: '.$ubn.'. ubn destructor: '.$ubnDestructor.'. uln: '.$uln;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
-        DoctrineUtil::persistPlus($om, $log);
+        DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
     }
@@ -125,7 +126,7 @@ class ActionLogWriter
         $description = 'rel.nr.acceptant: '.$relationNumberAcceptant.'. ubn new owner: '.$ubnNewOwner.'. tagsCount: '.$tagsCount;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
-        DoctrineUtil::persistPlus($om, $log);
+        DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
     }
@@ -149,7 +150,7 @@ class ActionLogWriter
         $description = 'uln of animal: '.$ulnAnimal.'. uln of tag: '.$ulnTag.'.';
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
-        DoctrineUtil::persistPlus($om, $log);
+        DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
     }
@@ -171,7 +172,43 @@ class ActionLogWriter
         $description = 'revoking: '.$requestTypeToRevoke.' with messageNumber: '.$messageNumber.'.';
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
-        DoctrineUtil::persistPlus($om, $log);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Person $loggedInUser
+     * @param Client $client
+     * @param Company $company
+     * @return ActionLog
+     */
+    public static function updateProfile(ObjectManager $om, $client, $loggedInUser, $company)
+    {
+        $userActionType = UserActionType::PROFILE_UPDATE;
+        $description = 'companyId: '.$company->getId().', companyName: '.$company->getCompanyName().'.';
+        $log = new ActionLog($company->getOwner(), $loggedInUser, $userActionType, true, $description);
+        $om->persist($client);
+        $om->persist($loggedInUser);
+        $om->persist($log);
+
+        return $log;
+    }
+
+    /**
+     * @param ObjectManager $om
+     * @param Person $loggedInUser
+     * @param Client $client
+     * @param Company $company
+     * @return ActionLog
+     */
+    public static function contactEmail(ObjectManager $om, $client, $loggedInUser, $description)
+    {
+        $userActionType = UserActionType::CONTACT_EMAIL;
+        $log = new ActionLog($client, $loggedInUser, $userActionType, true, $description);
+        DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
     }
@@ -188,7 +225,7 @@ class ActionLogWriter
         $userActionType = UserActionType::USER_PASSWORD_CHANGE;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType);
-        DoctrineUtil::persistPlus($om, $log);
+        DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
     }
@@ -204,7 +241,7 @@ class ActionLogWriter
         $userActionType = UserActionType::USER_PASSWORD_RESET;
 
         $log = new ActionLog($client, $client, $userActionType, false, $emailAddress);
-        DoctrineUtil::persistPlus($om, $log);
+        DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
     }
@@ -218,7 +255,7 @@ class ActionLogWriter
     public static function completeActionLog(ObjectManager $om, ActionLog $log)
     {
         $log->setIsCompleted(true);
-        DoctrineUtil::persistPlus($om, $log);
+        DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
     }
