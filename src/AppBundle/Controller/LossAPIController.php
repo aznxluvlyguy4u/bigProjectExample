@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Util\ActionLogWriter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -144,10 +145,14 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    */
   public function createLoss(Request $request)
   {
+    $om = $this->getDoctrine()->getManager();
+
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
     $loggedInUser = $this->getLoggedInUser($request);
     $location = $this->getSelectedLocation($request);
+
+    $log = ActionLogWriter::declareLossPost($om, $client, $loggedInUser, $location, $content);
 
     //Client can only report a loss of own animals //TODO verify if animal belongs to UBN
     $animal = $content->get(Constant::ANIMAL_NAMESPACE);
@@ -165,6 +170,9 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
 
     //Send it to the queue and persist/update any changed state to the database
     $messageArray = $this->sendMessageObjectToQueue($messageObject);
+
+    $log = ActionLogWriter::completeActionLog($om, $log);
+
     return new JsonResponse($messageArray, 200);
   }
 

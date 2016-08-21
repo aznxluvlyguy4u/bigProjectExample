@@ -6,6 +6,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Util\ActionLogWriter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -145,10 +146,14 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    */
   public function createDepart(Request $request)
   {
+    $om = $this->getDoctrine()->getManager();
+
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
     $loggedInUser = $this->getLoggedInUser($request);
     $location = $this->getSelectedLocation($request);
+
+    $log = ActionLogWriter::declareDepartOrExportPost($om, $client, $loggedInUser, $location, $content);
 
     //Client can only depart/export own animals
     $animal = $content->get(Constant::ANIMAL_NAMESPACE);
@@ -178,6 +183,8 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     //Persist object to Database
     $this->persist($messageObject);
     $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
+
+    $log = ActionLogWriter::completeActionLog($om, $log);
 
     return new JsonResponse($messageArray, 200);
   }
