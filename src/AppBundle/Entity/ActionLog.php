@@ -43,7 +43,7 @@ class ActionLog
      * @var Person
      *
      * @ORM\ManyToOne(targetEntity="Person")
-     * @ORM\JoinColumn(name="client_account_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="user_account_id", referencedColumnName="id")
      */
     private $userAccount;
 
