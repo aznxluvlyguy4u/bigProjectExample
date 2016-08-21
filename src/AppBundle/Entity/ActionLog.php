@@ -79,9 +79,18 @@ class ActionLog
      */
     private $isCompleted;
 
-    public function __construct($userAccount, $actionBy, $userActionType, $isCompleted = false, $description = null)
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     */
+    private $isUserEnvironment;
+
+    public function __construct($userAccount, $actionBy, $userActionType, $isCompleted = false, $description = null, $isUserEnvironment = true)
     {
         $this->logDate = new \DateTime();
+        $this->isUserEnvironment = $isUserEnvironment;
         $this->userAccount = $userAccount;
         $this->actionBy = $actionBy;
         $this->userActionType = $userActionType;
@@ -192,6 +201,24 @@ class ActionLog
     {
         $this->description = $description;
     }
+
+    /**
+     * @return boolean
+     */
+    public function isIsUserEnvironment()
+    {
+        return $this->isUserEnvironment;
+    }
+
+    /**
+     * @param boolean $isUserEnvironment
+     */
+    public function setIsUserEnvironment($isUserEnvironment)
+    {
+        $this->isUserEnvironment = $isUserEnvironment;
+    }
+
+
 
 
 }
