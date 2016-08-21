@@ -122,7 +122,7 @@ abstract class DeclareBase
     /**
      * @var Person
      *
-     * @ORM\OneToOne(targetEntity="Person")
+     * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
      */
     protected $actionBy;

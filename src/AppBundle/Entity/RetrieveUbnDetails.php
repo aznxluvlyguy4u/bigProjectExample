@@ -78,7 +78,7 @@ class RetrieveUbnDetails
     /**
      * @var Person
      *
-     * @ORM\OneToOne(targetEntity="Person")
+     * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
      */
     private $actionBy;
