@@ -180,10 +180,11 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       //Get content to array
       $content = $this->getContentAsArray($request);
       $client = $this->getAuthenticatedUser($request);
+      $loggedInUser = $this->getLoggedInUser($request);
       $location = $this->getSelectedLocation($request);
 
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $location);
+      $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $loggedInUser, $location);
 
       //First Persist object to Database, before sending it to the queue
       $this->persist($messageObject);
@@ -219,8 +220,10 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function createRetrieveAnimalsForAllLocations(Request $request) {
     {
+      $loggedInUser = $this->getLoggedInUser($request);
+      
       //Any logged in user can sync all animals
-      $message = $this->syncAnimalsForAllLocations()[Constant::MESSAGE_NAMESPACE];
+      $message = $this->syncAnimalsForAllLocations($loggedInUser)[Constant::MESSAGE_NAMESPACE];
 
       return new JsonResponse(array(Constant::RESULT_NAMESPACE => $message), 200);
     }
@@ -252,10 +255,11 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     //Get content to array
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
+    $loggedInUser = $this->getLoggedInUser($request);
     $location = $this->getSelectedLocation($request);
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY, $content, $client, $location);
+    $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY, $content, $client, $loggedInUser, $location);
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($messageObject);
@@ -337,7 +341,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
 
     $content = $this->getContentAsArray($request);
 
-    //TODO for this phase only the bare essential data can be edited: pedigree, animalOrderNumber
+    //TODO for this phase editing AnimalDetails is deactivated
     //TODO keep history of changes
 
     //Persist updated changes and return the updated values

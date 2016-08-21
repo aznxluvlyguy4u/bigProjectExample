@@ -147,6 +147,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
   {
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
+    $loggedInUser = $this->getLoggedInUser($request);
     $location = $this->getSelectedLocation($request);
 
     //Client can only depart/export own animals
@@ -161,11 +162,11 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
     if($isExportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $location);
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $loggedInUser, $location);
 
     } else {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $client, $location);
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $client, $loggedInUser, $location);
     }
 
     //Send it to the queue and persist/update any changed state to the database
@@ -212,6 +213,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
     //Client can only depart/export own animals
     $client = $this->getAuthenticatedUser($request);
+    $loggedInUser = $this->getLoggedInUser($request);
     $location = $this->getSelectedLocation($request);
 
     //NOTE!!! Don't try to verify any animals directly. Because they will have the isDeparted=true state.
@@ -225,7 +227,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
     if($isExportAnimal) {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $declareExportUpdate = $this->buildEditMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $location);
+      $declareExportUpdate = $this->buildEditMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $loggedInUser, $location);
 
 //      $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY);
 //      $messageObject = $entityManager->updateDeclareExportMessage($declareExportUpdate, $location, $Id);
@@ -236,7 +238,7 @@ dump($declareExportUpdate);die;
 
     } else {
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $declareDepartUpdate = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $client, $location);
+      $declareDepartUpdate = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $client, $loggedInUser, $location);
 
       $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_DEPART_REPOSITORY);
       $messageObject = $entityManager->updateDeclareDepartMessage($declareDepartUpdate, $location, $Id);

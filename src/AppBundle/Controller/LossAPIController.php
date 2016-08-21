@@ -146,6 +146,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
   {
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
+    $loggedInUser = $this->getLoggedInUser($request);
     $location = $this->getSelectedLocation($request);
 
     //Client can only report a loss of own animals //TODO verify if animal belongs to UBN
@@ -156,7 +157,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
       return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
     }
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $messageObject = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $client, $location);
+    $messageObject = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $client, $loggedInUser, $location);
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($messageObject);
@@ -196,6 +197,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
   {
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
+    $loggedInUser = $this->getLoggedInUser($request);
     $location = $this->getSelectedLocation($request);
 
     //Client can only report a loss of own animals
@@ -207,7 +209,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
     }
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareLossUpdate = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $client, $location);
+    $declareLossUpdate = $this->buildMessageObject(RequestType::DECLARE_LOSS_ENTITY, $content, $client, $loggedInUser, $location);
 
     $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_LOSS_REPOSITORY);
     $messageObject = $entityManager->updateDeclareLossMessage($declareLossUpdate, $location, $Id);

@@ -46,6 +46,7 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
   {
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
+    $loggedInUser = $this->getLoggedInUser($request);
     $location = $this->getSelectedLocation($request);
 
     //Validate if ubn is in database and retrieve the relationNumberKeeper owning that ubn
@@ -66,7 +67,7 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
     }
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareTagsTransfer = $this->buildMessageObject(RequestType::DECLARE_TAGS_TRANSFER_ENTITY, $content, $this->getAuthenticatedUser($request), $location);
+    $declareTagsTransfer = $this->buildMessageObject(RequestType::DECLARE_TAGS_TRANSFER_ENTITY, $content, $client, $loggedInUser, $location);
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($declareTagsTransfer);

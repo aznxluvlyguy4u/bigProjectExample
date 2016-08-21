@@ -47,6 +47,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
     {
         $content = $this->getContentAsArray($request);
         $client = $this->getAuthenticatedUser($request);
+        $loggedInUser = $this->getLoggedInUser($request);
         $location = $this->getSelectedLocation($request);
 
         //Validate if there is a message_number. It is mandatory for IenR
@@ -56,7 +57,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
         }
 
         //Convert the array into an object and add the mandatory values retrieved from the database
-        $revokeDeclarationObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $content, $client, $location);
+        $revokeDeclarationObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $content, $client, $loggedInUser, $location);
 
         //First Persist object to Database, before sending it to the queue
         $this->persist($revokeDeclarationObject);

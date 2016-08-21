@@ -84,9 +84,10 @@ class MessageBuilderBase
      *
      * @param object $messageObject the message received from the front-end as an entity from a class that is extended from DeclareBase.
      * @param Person $person
+     * @param Person $loggedInUser
      * @return DeclareBase|DeclareArrival|DeclareAnimalFlag|DeclareBirth|DeclareDepart|DeclareExport|DeclareImport|DeclareLoss|DeclareTagsTransfer|DeclareMate|DeclarationDetail|RevokeDeclaration|DeclareTagReplace the base message
      */
-    protected function buildBaseMessageObject($messageObject, Person $person)
+    protected function buildBaseMessageObject($messageObject, Person $person, Person $loggedInUser)
     {
         //Generate new requestId
 
@@ -117,6 +118,10 @@ class MessageBuilderBase
 
         $messageObject->setRelationNumberKeeper($relationNumberKeeper);
 
+        if($loggedInUser instanceof Person) {
+            $messageObject->setActionBy($loggedInUser);
+        }
+
         return $messageObject;
     }
 
@@ -124,9 +129,10 @@ class MessageBuilderBase
      *
      * @param object $messageObject the message received
      * @param Person $person
+     * @param Person $loggedInUser
      * @return RetrieveUbnDetails|RetrieveAnimals|RetrieveAnimalDetails|RetrieveTags|RetrieveCountries the retrieve message
      */
-    protected function buildBaseRetrieveMessageObject($messageObject, $person)
+    protected function buildBaseRetrieveMessageObject($messageObject, $person, $loggedInUser)
     {
         //Generate new requestId
 
@@ -148,6 +154,10 @@ class MessageBuilderBase
         }
 
         $messageObject->setRelationNumberKeeper($relationNumberKeeper);
+
+        if($loggedInUser instanceof Person) {
+            $messageObject->setActionBy($loggedInUser);
+        }
 
         return $messageObject;
     }
