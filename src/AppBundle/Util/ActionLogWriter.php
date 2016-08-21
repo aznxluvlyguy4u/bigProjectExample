@@ -44,8 +44,7 @@ class ActionLogWriter
         $description = 'ubn destination: '.$ubn.'. '.$origin.'. uln: '.$uln;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
-        $om->persist($log);
-        $om->flush();
+        DoctrineUtil::persistPlus($om, $log);
 
         return $log;
     }
@@ -76,8 +75,7 @@ class ActionLogWriter
         $description = 'ubn: '.$ubn.'. '.$destination.'. uln: '.$uln;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
-        $om->persist($log);
-        $om->flush();
+        DoctrineUtil::persistPlus($om, $log);
 
         return $log;
     }
@@ -102,8 +100,7 @@ class ActionLogWriter
         $description = 'ubn: '.$ubn.'. ubn destructor: '.$ubnDestructor.'. uln: '.$uln;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
-        $om->persist($log);
-        $om->flush();
+        DoctrineUtil::persistPlus($om, $log);
 
         return $log;
     }
@@ -128,8 +125,7 @@ class ActionLogWriter
         $description = 'rel.nr.acceptant: '.$relationNumberAcceptant.'. ubn new owner: '.$ubnNewOwner.'. tagsCount: '.$tagsCount;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
-        $om->persist($log);
-        $om->flush();
+        DoctrineUtil::persistPlus($om, $log);
 
         return $log;
     }
@@ -153,8 +149,7 @@ class ActionLogWriter
         $description = 'uln of animal: '.$ulnAnimal.'. uln of tag: '.$ulnTag.'.';
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
-        $om->persist($log);
-        $om->flush();
+        DoctrineUtil::persistPlus($om, $log);
 
         return $log;
     }
@@ -176,8 +171,7 @@ class ActionLogWriter
         $description = 'revoking: '.$requestTypeToRevoke.' with messageNumber: '.$messageNumber.'.';
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
-        $om->persist($log);
-        $om->flush();
+        DoctrineUtil::persistPlus($om, $log);
 
         return $log;
     }
@@ -194,8 +188,7 @@ class ActionLogWriter
         $userActionType = UserActionType::USER_PASSWORD_CHANGE;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType);
-        $om->persist($log);
-        $om->flush();
+        DoctrineUtil::persistPlus($om, $log);
 
         return $log;
     }
@@ -211,8 +204,7 @@ class ActionLogWriter
         $userActionType = UserActionType::USER_PASSWORD_RESET;
 
         $log = new ActionLog($client, $client, $userActionType, false, $emailAddress);
-        $om->persist($log);
-        $om->flush();
+        DoctrineUtil::persistPlus($om, $log);
 
         return $log;
     }
@@ -226,8 +218,7 @@ class ActionLogWriter
     public static function completeActionLog(ObjectManager $om, ActionLog $log)
     {
         $log->setIsCompleted(true);
-        $om->persist($log);
-        $om->flush();
+        DoctrineUtil::persistPlus($om, $log);
 
         return $log;
     }
