@@ -111,6 +111,14 @@ abstract class DeclareBaseResponse
     private $isRemovedByUser;
 
     /**
+     * @var Person
+     *
+     * @ORM\OneToOne(targetEntity="Person")
+     * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
+     */
+    protected $actionBy;
+
+    /**
      * Get id
      *
      * @return integer
@@ -332,4 +340,22 @@ abstract class DeclareBaseResponse
     {
         return $this->isRemovedByUser;
     }
+
+
+    /**
+     * @return Client|Employee
+     */
+    public function getActionBy()
+    {
+        return $this->actionBy;
+    }
+
+    /**
+     * @param Person $actionBy
+     */
+    public function setActionBy($actionBy)
+    {
+        $this->actionBy = $actionBy;
+    }
+
 }

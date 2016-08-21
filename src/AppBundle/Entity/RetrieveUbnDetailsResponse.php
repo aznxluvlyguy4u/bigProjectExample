@@ -81,6 +81,14 @@ class RetrieveUbnDetailsResponse
      */
     private $locations;
 
+    /**
+     * @var Person
+     *
+     * @ORM\OneToOne(targetEntity="Person")
+     * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
+     */
+    private $actionBy;
+
 
     /**
      * RetrieveTagsResponse constructor.
@@ -266,5 +274,21 @@ class RetrieveUbnDetailsResponse
     public function getSuccessIndicator()
     {
       return $this->successIndicator;
+    }
+
+    /**
+     * @return Client|Employee
+     */
+    public function getActionBy()
+    {
+        return $this->actionBy;
+    }
+
+    /**
+     * @param Person $actionBy
+     */
+    public function setActionBy($actionBy)
+    {
+        $this->actionBy = $actionBy;
     }
 }

@@ -87,6 +87,14 @@ class RetrieveAnimals
     private $animalType;
 
     /**
+     * @var Person
+     *
+     * @ORM\OneToOne(targetEntity="Person")
+     * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
+     */
+    private $actionBy;
+
+    /**
      * RetrieveAnimals constructor
      */
     public function __construct() {
@@ -297,4 +305,22 @@ class RetrieveAnimals
     {
         return $this->animalType;
     }
+
+    /**
+     * @return Client|Employee
+     */
+    public function getActionBy()
+    {
+        return $this->actionBy;
+    }
+
+    /**
+     * @param Person $actionBy
+     */
+    public function setActionBy($actionBy)
+    {
+        $this->actionBy = $actionBy;
+    }
+
+
 }
