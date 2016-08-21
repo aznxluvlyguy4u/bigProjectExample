@@ -11,19 +11,20 @@ class DoctrineUtil
     /**
      * @param ObjectManager $om
      * @param $object
+     * @return mixed
      */
-    public static function persistPlus(ObjectManager $om, $object)
+    public static function persistAndFlush(ObjectManager $om, $object)
     {
         $om->persist($object);
         $om->flush();
-        $om->clear();
-        gc_collect_cycles();
+
+        return $object;
     }
 
     /**
      * @param ObjectManager $om
      */
-    public static function flushPlus(ObjectManager $om)
+    public static function flushClearAndGarbageCollect(ObjectManager $om)
     {
         $om->flush();
         $om->clear();
