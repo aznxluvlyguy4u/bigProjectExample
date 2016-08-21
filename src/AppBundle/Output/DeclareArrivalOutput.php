@@ -60,7 +60,8 @@ class DeclareArrivalOutput extends Output
                       "scrapie_status" => self::$scrapieStatus,
                       "scrapie_end_date" => self::$scrapieEndDate,
                       "check_date" => self::$checkDate
-                  ))
+                  )),
+            "action_by" => $arrival->getActionBy()
         );
 
         return $result;

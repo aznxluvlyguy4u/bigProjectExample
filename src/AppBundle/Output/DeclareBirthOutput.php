@@ -79,7 +79,8 @@ class DeclareBirthOutput
             ),
             "location"=>
             array("id" => $birth->getLocation()->getId(),
-                  "ubn" => $birth->getLocation()->getUbn())  //Mandatory for IenR or use the own above
+                  "ubn" => $birth->getLocation()->getUbn()),  //Mandatory for IenR or use the own above
+            "action_by" => $birth->getActionBy()
         );
 
         return $result;

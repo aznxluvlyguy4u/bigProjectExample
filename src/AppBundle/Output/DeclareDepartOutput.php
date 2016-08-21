@@ -49,7 +49,8 @@ class DeclareDepartOutput
             ),
             "location"=>
             array("id" => $depart->getLocation()->getId(),
-                  "ubn" => $depart->getLocation()->getUbn())
+                  "ubn" => $depart->getLocation()->getUbn()),
+            "action_by" => $depart->getActionBy()
         );
 
         return $result;

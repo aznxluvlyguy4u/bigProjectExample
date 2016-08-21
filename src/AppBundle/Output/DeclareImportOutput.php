@@ -61,7 +61,8 @@ class DeclareImportOutput extends Output
                         "scrapie_status" => self::$scrapieStatus,
                         "scrapie_end_date" => self::$scrapieEndDate,
                         "check_date" => self::$checkDate
-                    ))
+                    )),
+            "action_by" => $import->getActionBy()
         );
 
         return $result;
@@ -71,7 +72,7 @@ class DeclareImportOutput extends Output
     public static function createUpdateRequestArray(EntityManager $em, DeclareImport $import)
     {
         //At this moment the update array is identical to post array
-        return self::createPostRequestArray($import);
+        return self::createPostRequestArray($em, $import);
     }
 
 
