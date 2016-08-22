@@ -9,6 +9,7 @@ use AppBundle\Entity\LocationHealthQueue;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Validation\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -64,31 +65,12 @@ class Utils
 
         return $repositoryNameSpace;
     }
-
-    /**
-     * validate if Id is of format: AZ123456789
-     *
-     * @param $ulnString
-     * @return bool
-     */
-    public static function verifyUlnFormat($ulnString)
-    {
-        $countryCodeLength = 2;
-        $numberLength = 12;
-        $ulnLength = $countryCodeLength + $numberLength;
-
-        if(preg_match("/([A-Z]{2})+([0-9]{12})/",$ulnString)
-            && strlen($ulnString) == $ulnLength) {
-            return true;
-        } else {
-            return false;
-        }
-    }
+    
 
     public static function getUlnFromString($ulnString)
     {
         //Verify format first
-        if(!Utils::verifyUlnFormat($ulnString)) {
+        if(!Validator::verifyUlnFormat($ulnString)) {
             return null;
         }
 
