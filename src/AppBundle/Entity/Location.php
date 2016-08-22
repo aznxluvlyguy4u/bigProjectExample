@@ -132,6 +132,15 @@ class Location
   protected $flags;
 
   /**
+   * @var ArrayCollection
+   *
+   * @JMS\Type("AppBundle\Entity\Mate")
+   * @ORM\OneToMany(targetEntity="Mate", mappedBy="location", cascade={"persist"})
+   * @ORM\OrderBy({"startDate" = "ASC"})
+   */
+  protected $matings;
+
+  /**
    * @Assert\NotBlank
    * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"}, fetch="EAGER")
    * @JMS\Type("AppBundle\Entity\Company")
@@ -210,6 +219,7 @@ class Location
     $this->tagTransfers = new ArrayCollection();
     $this->flags = new ArrayCollection();
     $this->revokes = new ArrayCollection();
+    $this->matings = new ArrayCollection();
     $this->healthMessages = new ArrayCollection();
     $this->animalResidenceHistory = new ArrayCollection();
     $this->setLocationId(Utils::generateTokenCode());
@@ -655,6 +665,42 @@ class Location
     {
         return $this->revokes;
     }
+
+
+    /**
+     * Add mate
+     *
+     * @param Mate $mate
+     *
+     * @return Location
+     */
+    public function addMate(Mate $mate)
+    {
+      $this->matings[] = $mate;
+
+      return $this;
+    }
+
+    /**
+     * Remove mate
+     *
+     * @param Mate $mate
+     */
+    public function removeMate(Mate $mate)
+    {
+      $this->revokes->removeElement($mate);
+    }
+
+    /**
+     * Get matings
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getMatings()
+    {
+      return $this->matings;
+    }
+
 
     /**
      * Set locationHolder

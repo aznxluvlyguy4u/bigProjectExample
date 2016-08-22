@@ -41,15 +41,30 @@ class Mate extends DeclareNsfoBase {
 
     /**
      * @var Ram
-     * @ORM\ManyToOne(targetEntity="Ram", inversedBy = "matings")
+     * @ORM\ManyToOne(targetEntity="Ram", inversedBy = "matings", cascade={"persist"})
      * @ORM\JoinColumn(name="animal_father_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Ram")
      */
     private $studRam;
 
     /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=false)
+     */
+    private $ramUlnCountryCode;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=false)
+     */
+    private $ramUlnNumber;
+    
+    
+    /**
      * @var Ewe
-     * @ORM\ManyToOne(targetEntity="Ewe", inversedBy = "matings")
+     * @ORM\ManyToOne(targetEntity="Ewe", inversedBy = "matings", cascade={"persist"})
      * @ORM\JoinColumn(name="animal_mother_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Ewe")
      */
@@ -88,8 +103,16 @@ class Mate extends DeclareNsfoBase {
      * @ORM\JoinColumn(name="previous_versions_id", referencedColumnName="id")
      */
     private $previousVersions;
+    
+    /**
+     * @var Location
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="Location", inversedBy="matings", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Location")
+     */
+    private $location;
 
-
+    
     public function __construct() {
       parent::__construct();
       $this->previousVersions = new ArrayCollection();
@@ -203,6 +226,38 @@ class Mate extends DeclareNsfoBase {
     }
 
     /**
+     * @return string
+     */
+    public function getRamUlnCountryCode()
+    {
+        return $this->ramUlnCountryCode;
+    }
+
+    /**
+     * @param string $ramUlnCountryCode
+     */
+    public function setRamUlnCountryCode($ramUlnCountryCode)
+    {
+        $this->ramUlnCountryCode = $ramUlnCountryCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRamUlnNumber()
+    {
+        return $this->ramUlnNumber;
+    }
+
+    /**
+     * @param string $ramUlnNumber
+     */
+    public function setRamUlnNumber($ramUlnNumber)
+    {
+        $this->ramUlnNumber = $ramUlnNumber;
+    }
+    
+    /**
      * @return Ewe
      */
     public function getStudEwe()
@@ -237,7 +292,7 @@ class Mate extends DeclareNsfoBase {
     /**
      * @return boolean
      */
-    public function isKi()
+    public function getKi()
     {
         return $this->ki;
     }
@@ -253,7 +308,7 @@ class Mate extends DeclareNsfoBase {
     /**
      * @return boolean
      */
-    public function isIsAcceptedByThirdParty()
+    public function getIsAcceptedByThirdParty()
     {
         return $this->isAcceptedByThirdParty;
     }
@@ -319,6 +374,22 @@ class Mate extends DeclareNsfoBase {
     public function removePreviousVersion(Mate $previousVersion)
     {
         $this->previousVersions->removeElement($previousVersion);
+    }
+
+    /**
+     * @return Location
+     */
+    public function getLocation()
+    {
+        return $this->location;
+    }
+
+    /**
+     * @param Location $location
+     */
+    public function setLocation($location)
+    {
+        $this->location = $location;
     }
 
 

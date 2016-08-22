@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Component\MessageBuilderBase;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -100,7 +101,7 @@ abstract class DeclareNsfoBase
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
      */
-    protected $isOverWrittenVersion;
+    protected $isOverwrittenVersion;
 
 
     /**
@@ -108,8 +109,9 @@ abstract class DeclareNsfoBase
      */
     public function __construct() {
         $this->logDate = new \DateTime();
+        $this->setMessageId(MessageBuilderBase::getNewRequestId());
         $this->isHidden = false;
-        $this->isOverWrittenVersion = false;
+        $this->isOverwrittenVersion = false;
     }
 
     /**
@@ -262,7 +264,7 @@ abstract class DeclareNsfoBase
     /**
      * @return boolean
      */
-    public function isIsHidden()
+    public function getIsHidden()
     {
         return $this->isHidden;
     }
@@ -278,17 +280,17 @@ abstract class DeclareNsfoBase
     /**
      * @return boolean
      */
-    public function isIsOverWrittenVersion()
+    public function getIsOverwrittenVersion()
     {
-        return $this->isOverWrittenVersion;
+        return $this->isOverwrittenVersion;
     }
 
     /**
-     * @param boolean $isOverWrittenVersion
+     * @param boolean $isOverwrittenVersion
      */
-    public function setIsOverWrittenVersion($isOverWrittenVersion)
+    public function setIsOverwrittenVersion($isOverwrittenVersion)
     {
-        $this->isOverWrittenVersion = $isOverWrittenVersion;
+        $this->isOverwrittenVersion = $isOverwrittenVersion;
     }
 
 
