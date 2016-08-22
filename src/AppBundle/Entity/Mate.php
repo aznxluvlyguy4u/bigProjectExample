@@ -42,7 +42,7 @@ class Mate extends DeclareNsfoBase {
     /**
      * @var Ram
      * @ORM\ManyToOne(targetEntity="Ram", inversedBy = "matings", cascade={"persist"})
-     * @ORM\JoinColumn(name="animal_father_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="stud_ram_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Ram")
      */
     private $studRam;
@@ -65,7 +65,7 @@ class Mate extends DeclareNsfoBase {
     /**
      * @var Ewe
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy = "matings", cascade={"persist"})
-     * @ORM\JoinColumn(name="animal_mother_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="stud_ewe_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Ewe")
      */
     private $studEwe;
