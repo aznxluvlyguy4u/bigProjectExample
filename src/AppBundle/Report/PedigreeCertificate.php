@@ -18,10 +18,7 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\TailLength;
 use AppBundle\Util\Translation;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\EntityManager;
-use Symfony\Component\CssSelector\XPath\Translator;
-use Symfony\Component\Translation\Loader\ArrayLoader;
+use Doctrine\Common\Persistence\ObjectManager;
 
 class PedigreeCertificate
 {
@@ -35,18 +32,18 @@ class PedigreeCertificate
     /** @var int */
     private $generationOfAscendants;
 
-    /** @var  EntityManager */
+    /** @var  ObjectManager */
     private $em;
 
     /**
      * PedigreeCertificate constructor.
-     * @param EntityManager $em
+     * @param ObjectManager $em
      * @param Client $client
      * @param Location $location
      * @param Animal $animal
      * @param int $generationOfAscendants
      */
-    public function __construct(EntityManager $em, Client $client, Location $location, Animal $animal, $generationOfAscendants = 3)
+    public function __construct(ObjectManager $em, Client $client, Location $location, Animal $animal, $generationOfAscendants = 3)
     {
         $this->em = $em;
 

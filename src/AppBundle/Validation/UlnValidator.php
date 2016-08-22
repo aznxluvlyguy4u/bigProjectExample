@@ -11,8 +11,7 @@ use AppBundle\Entity\Location;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\EntityManager;
-use Monolog\Handler\Curl\Util;
+use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 class UlnValidator
@@ -47,17 +46,17 @@ class UlnValidator
     /** @var ArrayCollection */
     private $locations;
 
-    /** @var EntityManager */
+    /** @var ObjectManager */
     private $manager;
 
     /**
      * UbnValidator constructor.
-     * @param EntityManager $manager
+     * @param ObjectManager $manager
      * @param Client $client
      * @param Collection $content
      * @param boolean $multipleAnimals
      */
-    public function __construct(EntityManager $manager, Collection $content, $multipleAnimals = false, Client $client = null)
+    public function __construct(ObjectManager $manager, Collection $content, $multipleAnimals = false, Client $client = null)
     {
         $this->manager = $manager;
 
