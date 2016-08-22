@@ -20,7 +20,7 @@ class Validator
     /**
      * validate if Id is of format: AZ123456789
      *
-     * @param $ulnString
+     * @param string $ulnString
      * @return bool
      */
     public static function verifyUlnFormat($ulnString)
@@ -39,7 +39,7 @@ class Validator
 
 
     /**
-     * @param $animalArray
+     * @param array $animalArray
      * @return bool
      */
     public static function verifyUlnFormatOfAnimalInArray($animalArray)
@@ -56,8 +56,8 @@ class Validator
 
 
     /**
-     * @param $animal
-     * @param $client
+     * @param Animal $animal
+     * @param Client $client
      * @param bool $nullInputResult
      * @return bool
      */
