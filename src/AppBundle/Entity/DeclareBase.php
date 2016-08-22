@@ -26,7 +26,6 @@ use Doctrine\Common\Collections\ArrayCollection;
  *      "DeclareExport" = "DeclareExport",
  *      "DeclareImport" = "DeclareImport",
  *      "DeclareLoss" = "DeclareLoss",
- *      "DeclareMate" = "DeclareMate",
  *      "DeclareTagsTransfer" = "DeclareTagsTransfer",
  *      "DeclareTagReplace" = "DeclareTagReplace",
  *      "RevokeDeclaration" = "RevokeDeclaration"
