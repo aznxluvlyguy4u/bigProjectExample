@@ -3,6 +3,7 @@
 namespace AppBundle\Output;
 use AppBundle\Entity\Client;
 use AppBundle\Component\Count;
+use AppBundle\Entity\Content;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Enumerator\RequestType;
@@ -29,8 +30,11 @@ class DashboardOutput extends Output
 
         self:: setUbnAndLocationHealthValues($em, $location);
 
+        $repository = $em->getRepository(Content::class);
+        $cms = $repository->getCMS();
+
         $result = array(
-                  "introduction" => "Welkom! Geniet van ons nieuw systeem.",
+                  "introduction" =>  $cms->getDashBoardIntroductionText(),
                   "ubn" => self::$ubn,
                   "health_status" =>
                   array(
