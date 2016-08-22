@@ -1,6 +1,6 @@
 <?php
 
-namespace AppBundle\Validation;
+namespace AppBundle\Util;
 
 
 use AppBundle\Component\Utils;
