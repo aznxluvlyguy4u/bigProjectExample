@@ -13,25 +13,7 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\MateRepository")
  * @package AppBundle\Entity
  */
-class Mate {
-
-    /**
-     * @var integer
-     *
-     * @ORM\Column(type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private $id;
-
-    /**
-     * @var \DateTime
-     *
-     * @ORM\Column(type="datetime")
-     * @Assert\Date
-     * @JMS\Type("DateTime")
-     */
-    private $logDate;
+class Mate extends DeclareNsfoBase {
 
     /**
      * 2016-04-01T22:00:48.131Z
@@ -58,25 +40,60 @@ class Mate {
     private $endDate;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Animal")
+     * @var Ram
+     * @ORM\ManyToOne(targetEntity="Ram", inversedBy = "matings")
      * @ORM\JoinColumn(name="animal_father_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\Animal")
+     * @JMS\Type("AppBundle\Entity\Ram")
      */
     private $studRam;
 
     /**
-     * @var ArrayCollection
-     *
-     * @ORM\ManyToMany(targetEntity="Animal")
-     * @ORM\JoinTable(name="mate_stud_ewes",
-     *      joinColumns={@ORM\JoinColumn(name="mate_id", referencedColumnName="id")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="animal_id", referencedColumnName="id")}
-     *      )
+     * @var Ewe
+     * @ORM\ManyToOne(targetEntity="Ewe", inversedBy = "matings")
+     * @ORM\JoinColumn(name="animal_mother_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\Ewe")
      */
-    private $studEwes;
+    private $studEwe;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $pmsg;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $ki;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true, options={"default":null})
+     * @JMS\Type("boolean")
+     */
+    private $isAcceptedByThirdParty;
+
+    /**
+     * @var Mate
+     * @ORM\OneToMany(targetEntity="Mate", mappedBy="previousVersions")
+     */
+    private $currentVersion;
+
+    /**
+     * @var ArrayCollection
+     * @ORM\ManyToOne(targetEntity="Mate", inversedBy="currentVersion")
+     * @ORM\JoinColumn(name="previous_versions_id", referencedColumnName="id")
+     */
+    private $previousVersions;
+
 
     public function __construct() {
-      $this->logDate = new \DateTime();
+      parent::__construct();
+      $this->previousVersions = new ArrayCollection();
+      $this->isAcceptedByThirdParty = null;
     }
 
     /**
@@ -186,36 +203,126 @@ class Mate {
     }
 
     /**
-     * Add studEwe
+     * @return Ewe
+     */
+    public function getStudEwe()
+    {
+        return $this->studEwe;
+    }
+
+    /**
+     * @param Ewe $studEwe
+     */
+    public function setStudEwe($studEwe)
+    {
+        $this->studEwe = $studEwe;
+    }
+
+    /**
+     * @return boolean|null
+     */
+    public function getPmsg()
+    {
+        return $this->pmsg;
+    }
+
+    /**
+     * @param boolean|null $pmsg
+     */
+    public function setPmsg($pmsg)
+    {
+        $this->pmsg = $pmsg;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isKi()
+    {
+        return $this->ki;
+    }
+
+    /**
+     * @param boolean $ki
+     */
+    public function setKi($ki)
+    {
+        $this->ki = $ki;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isIsAcceptedByThirdParty()
+    {
+        return $this->isAcceptedByThirdParty;
+    }
+
+    /**
+     * @param boolean $isAcceptedByThirdParty
+     */
+    public function setIsAcceptedByThirdParty($isAcceptedByThirdParty)
+    {
+        $this->isAcceptedByThirdParty = $isAcceptedByThirdParty;
+    }
+
+    /**
+     * @return Mate
+     */
+    public function getCurrentVersion()
+    {
+        return $this->currentVersion;
+    }
+
+    /**
+     * @param Mate $currentVersion
+     */
+    public function setCurrentVersion($currentVersion)
+    {
+        $this->currentVersion = $currentVersion;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getPreviousVersions()
+    {
+        return $this->previousVersions;
+    }
+
+    /**
+     * @param ArrayCollection $previousVersions
+     */
+    public function setPreviousVersions($previousVersions)
+    {
+        $this->previousVersions = $previousVersions;
+    }
+
+
+    /**
+     * Add a previousVersion Mate
      *
-     * @param \AppBundle\Entity\Animal $studEwe
+     * @param Mate $previousVersion
      *
      * @return Mate
      */
-    public function addStudEwe(\AppBundle\Entity\Animal $studEwe)
+    public function addPreviousVersion(Mate $previousVersion)
     {
-        $this->studEwes[] = $studEwe;
-
-        return $this;
+        $this->previousVersions[] = $previousVersion;
     }
 
     /**
-     * Remove studEwe
+     * Remove a previousVersion Mate
      *
-     * @param \AppBundle\Entity\Animal $studEwe
+     * @param Mate $previousVersion
      */
-    public function removeStudEwe(\AppBundle\Entity\Animal $studEwe)
+    public function removePreviousVersion(Mate $previousVersion)
     {
-        $this->studEwes->removeElement($studEwe);
+        $this->previousVersions->removeElement($previousVersion);
     }
 
-    /**
-     * Get studEwes
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getStudEwes()
-    {
-        return $this->studEwes;
-    }
+
+
+
+
 }

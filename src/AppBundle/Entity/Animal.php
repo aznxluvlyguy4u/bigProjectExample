@@ -435,17 +435,6 @@ abstract class Animal
     protected $breedCodes;
     
     /**
-     * @var ArrayCollection
-     *
-     * @ORM\ManyToMany(targetEntity="Mate")
-     * @ORM\JoinTable(name="animal_matings",
-     *      joinColumns={@ORM\JoinColumn(name="animal_id", referencedColumnName="id")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="mate_id", referencedColumnName="id")}
-     *      )
-     */
-    protected $matings;
-
-    /**
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
@@ -486,7 +475,6 @@ abstract class Animal
         $this->flags = new ArrayCollection();
         $this->ulnHistory = new ArrayCollection();
         $this->tagReplacements = new ArrayCollection();
-        $this->matings = new ArrayCollection();
         $this->parents = new ArrayCollection();
         $this->isAlive = true;
         $this->ulnCountryCode = '';
@@ -1649,40 +1637,6 @@ abstract class Animal
     public function getBreedCode()
     {
         return $this->breedCode;
-    }
-
-    /**
-     * Add mating
-     *
-     * @param \AppBundle\Entity\Mate $mating
-     *
-     * @return Animal
-     */
-    public function addMating(\AppBundle\Entity\Mate $mating)
-    {
-        $this->matings[] = $mating;
-
-        return $this;
-    }
-
-    /**
-     * Remove mating
-     *
-     * @param \AppBundle\Entity\Mate $mating
-     */
-    public function removeMating(\AppBundle\Entity\Mate $mating)
-    {
-        $this->matings->removeElement($mating);
-    }
-
-    /**
-     * Get matings
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getMatings()
-    {
-        return $this->matings;
     }
 
     /**
