@@ -3,10 +3,12 @@
 namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\LiveStockType;
+use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -448,5 +450,27 @@ class AnimalRepository extends BaseRepository
     } else {
       return $result;
     }
+  }
+
+  /**
+   * @param array $animalArray
+   * @return Animal|Ewe|Neuter|Ram|null
+   */
+  public function findAnimalByAnimalArray($animalArray)
+  {
+    $ulnCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray);
+    $ulnNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_NUMBER, $animalArray);
+    if ($ulnCountryCode != null && $ulnNumber != null) {
+      return $this->findByUlnCountryCodeAndNumber($ulnCountryCode, $ulnNumber);
+    }
+
+    $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
+    $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
+    if ($pedigreeCountryCode != null && $pedigreeNumber != null) {
+      return $this->findByPedigreeCountryCodeAndNumber($pedigreeCountryCode, $pedigreeNumber);
+    }
+
+    //else
+    return null;
   }
 }
