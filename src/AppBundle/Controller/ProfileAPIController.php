@@ -82,7 +82,7 @@ class ProfileAPIController extends APIController implements ProfileAPIController
     $client = CompanyProfile::update($client, $content, $company);
     $om->persist($client);
     $log = ActionLogWriter::updateProfile($om, $client, $loggedInUser, $company);
-    DoctrineUtil::flushClearAndGarbageCollect($om); //Only flush after persisting both the client and ActionLogWriter
+    $this->flushClearAndGarbageCollect(); //Only flush after persisting both the client and ActionLogWriter
     
     $outputArray = CompanyProfileOutput::create($client, $company, $location);
 

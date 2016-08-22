@@ -40,6 +40,7 @@ use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Util\Finder;
 use AppBundle\Validation\HeaderValidation;
+use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Query;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
@@ -248,6 +249,29 @@ class APIController extends Controller implements APIControllerInterface
 
     return $messageObject;
   }
+
+
+  /**
+   * @param $object
+   * @return mixed
+   */
+  protected function persistAndFlush($object)
+  {
+    $this->getDoctrine()->getManager()->persist($object);
+    $this->getDoctrine()->getManager()->flush();
+    return $object;
+  }
+
+  
+  /**
+   */
+  protected function flushClearAndGarbageCollect()
+  {
+    $this->getDoctrine()->getManager()->flush();
+    $this->getDoctrine()->getManager()->clear();
+    gc_collect_cycles();
+  }
+
 
   /**
    * @param $messageObject
