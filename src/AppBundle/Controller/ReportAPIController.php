@@ -51,7 +51,7 @@ class ReportAPIController extends APIController {
     $client = $this->getAuthenticatedUser($request);
     $location = $this->getSelectedLocation($request);
     $content = $this->getContentAsArray($request);
-    $em = $this->getDoctrine()->getEntityManager();
+    $em = $this->getDoctrine()->getManager();
 
     //Validate if given ULNs are correct AND there should at least be one ULN given
     $ulnValidator = new UlnValidator($em, $content, true, $client);
