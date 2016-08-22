@@ -177,18 +177,20 @@ class CompanyAPIController extends APIController
             $user->setObjectType('Client');
             $user->setIsActive(true);
             $user->setEmployer($company);
-
-            // TODO GENERATE TOKEN
-            // TODO GENERATE PASSWORD
-            // TODO EMAIL PASSWORD
         }
 
-        // TODO OWNER -> GENERATE TOKEN
-        // TODO OWNER -> GENERATE PASSWORD
-        // TODO OWNER -> EMAIL PASSWORD
-
+        // Save to Database
         $this->getDoctrine()->getEntityManager()->persist($company);
         $this->getDoctrine()->getEntityManager()->flush();
+
+        // Send Email with passwords to Owner & Users
+        $password = $this->persistNewPassword($company->getOwner());
+        $this->emailNewPasswordToPerson($company->getOwner(), $password, false, true);
+
+        foreach ($company->getCompanyUsers() as $user) {
+            $password = $this->persistNewPassword($user);
+            $this->emailNewPasswordToPerson($user, $password, false, true);
+        }
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
     }
@@ -277,10 +279,6 @@ class CompanyAPIController extends APIController
             $owner->setObjectType('Client');
             $owner->setIsActive(true);
             $company->setOwner($owner);
-
-            // TODO OWNER -> GENERATE TOKEN
-            // TODO OWNER -> GENERATE PASSWORD
-            // TODO OWNER -> EMAIL PASSWORD
         }
 
         // Update Address
@@ -420,6 +418,7 @@ class CompanyAPIController extends APIController
 
         // Updated Users
         $contentUsers = $content->get('users');
+        $newUsers = array();
         foreach($contentUsers as $contentUser) {
             if(isset($contentUser['person_id'])) {
                 $contentPersonId = $contentUser['person_id'];
@@ -441,17 +440,17 @@ class CompanyAPIController extends APIController
                 $user->setIsActive(true);
                 $user->setEmployer($company);
                 $company->addCompanyUser($user);
-
-                // TODO GENERATE TOKEN
-                // TODO GENERATE PASSWORD
-                // TODO EMAIL PASSWORD
+                array_push($newUsers, $user);
             }
-
         }
 
         $this->getDoctrine()->getEntityManager()->persist($company);
         $this->getDoctrine()->getEntityManager()->flush();
 
+        foreach ($newUsers as $user) {
+            $password = $this->persistNewPassword($user);
+            $this->emailNewPasswordToPerson($user, $password, false, true);
+        }
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
     }
 
