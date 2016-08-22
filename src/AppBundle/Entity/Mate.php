@@ -93,16 +93,16 @@ class Mate extends DeclareNsfoBase {
 
     /**
      * @var Mate
-     * @ORM\OneToMany(targetEntity="Mate", mappedBy="previousVersions")
+     * @ORM\OneToMany(targetEntity="Mate", mappedBy="currentVersion")
      */
-    private $currentVersion;
+    private $previousVersions;
 
     /**
      * @var ArrayCollection
-     * @ORM\ManyToOne(targetEntity="Mate", inversedBy="currentVersion")
+     * @ORM\ManyToOne(targetEntity="Mate", inversedBy="previousVersions")
      * @ORM\JoinColumn(name="previous_versions_id", referencedColumnName="id")
      */
-    private $previousVersions;
+    private $currentVersion;
     
     /**
      * @var Location
