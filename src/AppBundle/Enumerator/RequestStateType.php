@@ -21,6 +21,7 @@ class RequestStateType
     const FINISHED_WITH_WARNING = "FINISHED_WITH_WARNING";
     const FAILED = "FAILED";
     const CANCELLED = "CANCELLED";
+    const REJECTED = "REJECTED";
     const REVOKED = "REVOKED";
     const REVOKING = "REVOKING";
 }
