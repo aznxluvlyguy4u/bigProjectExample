@@ -3,46 +3,18 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Entity\Client;
+use AppBundle\Validation\MateValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 
 /**
- * @Route("/api/v1/mates")
+ * @Route("/api/v1/matings")
  */
 class MateAPIController extends APIController {
-
-  /**
-   * @var Client
-   */
-  private $user;
-  /**
-   *
-   * Get a list of DeclareMates with a given state:{OPEN, CLOSED, DECLINED}.
-   *
-   *
-   * @Route("/status")
-   * @Method("GET")
-   */
-  public function getMateByState(Request $request)
-  {
-    return new JsonResponse("ok", 200);
-  }
-
-  /**
-   *
-   * Get a DeclareMate, found by it's ID.
-   *
-   * @Route("/{Id}")
-   * @ParamConverter("Id", class="AppBundle\Entity\DeclareMateRepository")
-   * @Method("GET")
-   */
-  public function getMateById(Request $request,$Id)
-  {
-    return new JsonResponse("ok", 200);
-  }
 
   /**
    *
@@ -53,18 +25,20 @@ class MateAPIController extends APIController {
    */
   public function postNewMate(Request $request)
   {
-    return new JsonResponse("ok", 200);
-  }
+    $om = $this->getDoctrine()->getManager();
 
-  /**
-   *
-   * Debug endpoint
-   *
-   * @Route("/debug")
-   * @Method("GET")
-   */
-  public function debugAPI(Request $request)
-  {
+    $content = $this->getContentAsArray($request);
+    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
+    $loggedInUser = $this->getLoggedInUser($request);
+
+    $validateEweGender = true;
+    $mateValidator = new MateValidator($om, $content, $client, $validateEweGender);
+    if(!$mateValidator->getIsInputValid()) { return $mateValidator->createJsonResponse(); }
+
+    dump('success!');die;
+    
     return new JsonResponse("ok", 200);
   }
+  
 }
