@@ -8,71 +8,29 @@ use AppBundle\Entity\LocationHealthInspection;
 use Doctrine\ORM\EntityManager;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Company;
+use Doctrine\ORM\Query;
 
 class AdminDashboardOutput
 {
     public static function createAdminDashboard(EntityManager $em)
     {
-        $repository = $em->getRepository(Constant::COMPANY_REPOSITORY);
-        $companies = $repository->findAll();
-
-        $usersAmount = 0;
-        foreach ($companies as $company) {
-            /**
-             * @var Company $company
-             */
-            if($company->getOwner()) {
-                $usersAmount += 1;
-            }
-
-            $usersAmount += $company->getCompanyUsers()->count();
-        }
-
-        $invoicesAmount = 0;
-        foreach ($companies as $company) {
-            /**
-             * @var Company $company
-             */
-            $invoices = $company->getInvoices();
-
-            foreach($invoices as $invoice) {
-                /**
-                 * @var Invoice $invoice
-                 */
-                if($invoice->getStatus() == "UNPAID") {
-                    $invoicesAmount += 1;
-                }
-            }
-        }
-
-        $inspectionsAmount = 0;
-        foreach ($companies as $company) {
-            $locations = $company->getLocations();
-
-            foreach ($locations as $location) {
-                /**
-                 * @var Location $location
-                 */
-                $inspections = $location->getInspections();
-
-                foreach ($inspections as $inspection) {
-                    /**
-                     * @var LocationHealthInspection $inspection
-                     */
-                    if($inspection->getStatus() == "ANNOUNCED") {
-                        $inspectionsAmount += 1;
-                    }
-                }
-            }
-        }
-
-
         $results = array();
-        $results['users'] = array("amount" => $usersAmount);
-        $results['invoices'] = array("unpaid" => $invoicesAmount);
-        $results['health'] = array("announced" => $inspectionsAmount);
+
+        // Companies
+        $sql = 'SELECT COUNT(\'id\') AS amount FROM company WHERE is_active = true';
+        $result = $em->getConnection()->query($sql)->fetch();
+        $results['clients'] = $result['amount'];
+
+        // Invoices
+        $sql = 'SELECT COUNT(\'id\') AS amount FROM invoice WHERE status = \'UNPAID\'';
+        $result = $em->getConnection()->query($sql)->fetch();
+        $results['invoices'] = $result['amount'];
+
+        // Inspections
+        $sql = 'SELECT COUNT(\'id\') AS amount FROM location_health_inspection WHERE status = \'ANNOUNCED\'';
+        $result = $em->getConnection()->query($sql)->fetch();
+        $results['requested_inspections'] = $result['amount'];
 
         return $results;
     }
-
 }
