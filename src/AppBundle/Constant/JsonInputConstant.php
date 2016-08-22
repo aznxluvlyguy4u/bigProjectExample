@@ -90,6 +90,11 @@ class JsonInputConstant
 
     //Messages
     const REQUEST_ID = 'request_id';
+    const REQUEST_STATE = 'request_state';
+    const LOG_DATE = 'log_date';
+    const RESULT = 'result';
+    const IS_HIDDEN = 'is_hidden';
+    const IS_OVERWRITTEN = 'is_overwritten';
 
     //Persons
     const PERSON_ID = 'person_id';

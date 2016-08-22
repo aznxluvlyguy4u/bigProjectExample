@@ -2,7 +2,12 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\MateBuilder;
+use AppBundle\Component\Utils;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Mate;
+use AppBundle\Output\MateOutput;
 use AppBundle\Validation\MateValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -23,9 +28,9 @@ class MateAPIController extends APIController {
    * @Route("")
    * @Method("POST")
    */
-  public function postNewMate(Request $request)
+  public function createMate(Request $request)
   {
-    $om = $this->getDoctrine()->getManager();
+    $manager = $this->getDoctrine()->getManager();
 
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
@@ -33,12 +38,15 @@ class MateAPIController extends APIController {
     $loggedInUser = $this->getLoggedInUser($request);
 
     $validateEweGender = true;
-    $mateValidator = new MateValidator($om, $content, $client, $validateEweGender);
+    $mateValidator = new MateValidator($manager, $content, $client, $validateEweGender);
     if(!$mateValidator->getIsInputValid()) { return $mateValidator->createJsonResponse(); }
 
-    dump('success!');die;
+    $mate = MateBuilder::post($manager, $content, $client, $loggedInUser, $location);
+    $this->persistAndFlush($mate);
+
+    $output = MateOutput::createMateOverview($mate);
     
-    return new JsonResponse("ok", 200);
+    return new JsonResponse([JsonInputConstant::RESULT => $output], 200);
   }
   
 }
