@@ -454,6 +454,8 @@ class Utils
      */
     public static function getNullCheckedArrayValue($key, $array)
     {
+        if($array == null || $key == null) { return null; }
+
         if(array_key_exists($key, $array)) {
             $value = $array[$key];
             if($value != null && $value != "") {
@@ -472,6 +474,8 @@ class Utils
      */
     public static function getNullCheckedArrayCollectionValue($key, ArrayCollection $array)
     {
+        if($array == null || $key == null) { return null; }
+
         if($array->containsKey($key)) {
             $value = $array->get($key);
             if($value != null && $value != "") {
@@ -490,6 +494,8 @@ class Utils
      */
     public static function getNullCheckedArrayDateValue($key, $array)
     {
+        if($array == null || $key == null) { return null; }
+
         $dateString = self::getNullCheckedArrayValue($key, $array);
         if($dateString != null) {
             return new \DateTime($dateString);
@@ -506,6 +512,8 @@ class Utils
      */
     public static function getNullCheckedArrayCollectionDateValue($key, ArrayCollection $array)
     {
+        if($array == null || $key == null) { return null; }
+
         $dateString = self::getNullCheckedArrayCollectionValue($key, $array);
         if($dateString != null) {
             return new \DateTime($dateString);

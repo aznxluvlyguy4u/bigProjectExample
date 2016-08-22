@@ -25,11 +25,13 @@ class NullChecker
     }
 
     /**
-     * @param $animalArray
+     * @param array $animalArray
      * @return bool
      */
     public static function arrayContainsUlnOrPedigree($animalArray)
     {
+        if($animalArray == null) { return false; }
+
         $ulnCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray);
         $ulnNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_NUMBER, $animalArray);
         if ($ulnCountryCode != null && $ulnNumber != null) {
