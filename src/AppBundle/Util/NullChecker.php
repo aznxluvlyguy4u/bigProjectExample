@@ -23,6 +23,28 @@ class NullChecker
             return 0;
         }
     }
+
+    /**
+     * @param $animalArray
+     * @return bool
+     */
+    public static function arrayContainsUlnOrPedigree($animalArray)
+    {
+        $ulnCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray);
+        $ulnNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_NUMBER, $animalArray);
+        if ($ulnCountryCode != null && $ulnNumber != null) {
+            return true;
+        }
+
+        $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
+        $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
+        if ($pedigreeCountryCode != null && $pedigreeNumber != null) {
+            return true;
+        }
+
+        //else
+        return false;
+    }
     
     /**
      * @param array $array
