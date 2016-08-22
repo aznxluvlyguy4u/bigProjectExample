@@ -92,15 +92,15 @@ class Mate extends DeclareNsfoBase {
     private $isAcceptedByThirdParty;
 
     /**
-     * @var Mate
-     * @ORM\OneToMany(targetEntity="Mate", mappedBy="currentVersion")
+     * @var ArrayCollection
+     * @ORM\OneToMany(targetEntity="Mate", mappedBy="currentVersion", cascade={"persist"})
      */
     private $previousVersions;
 
     /**
-     * @var ArrayCollection
-     * @ORM\ManyToOne(targetEntity="Mate", inversedBy="previousVersions")
-     * @ORM\JoinColumn(name="previous_versions_id", referencedColumnName="id")
+     * @var Mate
+     * @ORM\ManyToOne(targetEntity="Mate", inversedBy="previousVersions", cascade={"persist"})
+     * @ORM\JoinColumn(name="current_version_id", referencedColumnName="id")
      */
     private $currentVersion;
     
