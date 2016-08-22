@@ -519,7 +519,7 @@ class APIController extends Controller implements APIControllerInterface
 
     $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
     $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
-    $isValid = \AppBundle\Validation\Validator::verifyPedigreeCode($this->getDoctrine()->getManager(), $pedigreeCountryCode, $pedigreeNumber);
+    $isValid = \AppBundle\Validation\Validator::verifyPedigreeCode($this->getDoctrine()->getManager(), $pedigreeCountryCode, $pedigreeNumber, true);
 
     if($pedigreeCountryCode != null && $pedigreeNumber != null) {
       $pedigree = $pedigreeCountryCode.$pedigreeNumber;
