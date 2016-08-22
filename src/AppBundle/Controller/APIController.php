@@ -6,6 +6,7 @@ use AppBundle\Component\Modifier\MessageModifier;
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Employee;
@@ -516,34 +517,20 @@ class APIController extends Controller implements APIControllerInterface
   {
     $array = new ArrayCollection();
 
-    if (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalArray) && array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalArray)) {
-      $pedigreeNumber = $animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE];
-      $pedigreeCountryCode = $animalArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
+    $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
+    $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
+    $isValid = \AppBundle\Validation\Validator::verifyPedigreeCode($this->getDoctrine()->getManager(), $pedigreeCountryCode, $pedigreeNumber);
 
-      $array->set('pedigreeNumber', $pedigreeNumber);
-      $array->set('pedigreeCountryCode', $pedigreeCountryCode);
-      $array->set(Constant::PEDIGREE_NAMESPACE, $pedigreeCountryCode . $pedigreeNumber);
-
-
-      if($pedigreeNumber != null && $pedigreeNumber != "") {
-        $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-        $animal = $animalRepository->findByPedigreeCountryCodeAndNumber($pedigreeCountryCode, $pedigreeNumber);
-
-        if($animal != null) {
-          $array->set('isValid', true);
-
-        } else { //Animal is not found
-          $array->set('isValid', false);
-        }
-      } else { //PedigreeCountryCode and/or PedigreeNumber is null, so not validating on Pedigree
-        $array->set('isValid', true);
-      }
-    } else { //PedigreeCountryCode and/or PedigreeNumber keys do not exist, so not validating on Pedigree
-      $array->set('isValid', true);
-      $array->set('pedigreeNumber', null);
-      $array->set('pedigreeCountryCode', null);
-      $array->set(Constant::PEDIGREE_NAMESPACE, null);
+    if($pedigreeCountryCode != null && $pedigreeNumber != null) {
+      $pedigree = $pedigreeCountryCode.$pedigreeNumber;
+    } else {
+      $pedigree = null;
     }
+    
+    $array->set('isValid', $isValid);
+    $array->set('pedigreeNumber', null);
+    $array->set('pedigreeCountryCode', null);
+    $array->set(Constant::PEDIGREE_NAMESPACE, $pedigree);
 
     return $array;
   }

@@ -3,10 +3,16 @@
 namespace AppBundle\Validation;
 
 
+use AppBundle\Component\Utils;
+use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Location;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Persistence\ObjectManager;
 
 class Validator
 {
@@ -29,5 +35,92 @@ class Validator
             return false;
         }
     }
-    
+
+
+    /**
+     * @param $animalArray
+     * @return bool
+     */
+    public static function verifyUlnFormatOfAnimalInArray($animalArray)
+    {
+        $ulnCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray);
+        $ulnNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_NUMBER, $animalArray);
+
+        if($ulnCountryCode == null || $ulnNumber == null) {
+            return false;
+        } else {
+            return self::verifyUlnFormat($ulnCountryCode.$ulnNumber);
+        }
+    }
+
+
+    /**
+     * @param $animal
+     * @param $client
+     * @param bool $nullInputResult
+     * @return bool
+     */
+    public static function isAnimalOfClient($animal, $client, $nullInputResult = false)
+    {
+        //Null check
+        if(!($animal instanceof Animal) || !($client instanceof Client)) { return $nullInputResult; }
+
+        $location = $animal->getLocation();
+        if($location == null) { return $nullInputResult; }
+
+        $company = $location->getCompany();
+        if($company == null) { return $nullInputResult; }
+
+        $ownerOfAnimal = $company->getOwner();
+        if($ownerOfAnimal == null) { return $nullInputResult; }
+
+        if($ownerOfAnimal->getId() == $client->getId()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Note! This will only validate for pedigreeCodes is they exist in the array.
+     * If they don't exist in the array or are null, then 'true' is returned.
+     * 
+     * @param array $animalArray
+     * @return boolean
+     */
+    public static function verifyPedigreeCodeInAnimalArray(ObjectManager $manager, $animalArray)
+    {
+        $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
+        $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
+
+        return self::verifyPedigreeCode($manager, $pedigreeCountryCode, $pedigreeNumber);
+    }
+
+
+    /**
+     * Note! This will only validate for pedigreeCodes is they exist in the array.
+     * If they don't exist in the array or are null, then 'true' is returned.
+     * 
+     * @param ObjectManager $manager
+     * @param string $pedigreeCountryCode
+     * @param string $pedigreeNumber
+     * @return bool
+     */
+    public static function verifyPedigreeCode(ObjectManager $manager, $pedigreeCountryCode, $pedigreeNumber)
+    {
+        if($pedigreeCountryCode != null && $pedigreeNumber != null) {
+            /** @var AnimalRepository $animalRepository */
+            $animalRepository = $manager->getRepository(Constant::ANIMAL_REPOSITORY);
+            $animal = $animalRepository->findByPedigreeCountryCodeAndNumber($pedigreeCountryCode, $pedigreeNumber);
+
+            if($animal != null) {
+                return true;
+            } else {
+                return false;
+            }
+
+        } else {
+            return true;
+        }
+    }
 }
