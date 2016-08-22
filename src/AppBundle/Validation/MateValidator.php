@@ -59,8 +59,9 @@ class MateValidator
         
         $isRamInputValid = $this->validateRamArray($ramArray);
         $isEweInputValid = $this->validateEweArray($eweArray);
+        $isNonAnimalInputNotEmpty = $this->validateIfNonAnimalValuesAreNotEmpty($content);
 
-        if($isRamInputValid && $isEweInputValid) {
+        if($isRamInputValid && $isEweInputValid && $isNonAnimalInputNotEmpty) {
             $this->isInputValid = true;
         } else {
             $this->isInputValid = false;
@@ -116,6 +117,26 @@ class MateValidator
         
         return Validator::isAnimalOfClient($foundAnimal, $this->client);
     }
+
+
+    /**
+     * @param ArrayCollection $content
+     * @return bool
+     */
+    private function validateIfNonAnimalValuesAreNotEmpty($content)
+    {
+        $startDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::START_DATE, $content);
+        $endDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::END_DATE, $content);
+        $ki = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::KI, $content);
+        $pmsg = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::PMSG, $content);
+
+        if($startDate === null || $endDate === null || $ki === null || $pmsg === null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
 
     /**
      * @return JsonResponse
