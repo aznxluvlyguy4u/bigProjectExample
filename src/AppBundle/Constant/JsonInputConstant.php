@@ -13,6 +13,8 @@ class JsonInputConstant
     const WORK_NUMBER = 'work_number';
     const IS_ALIVE = 'is_alive';
     const ANIMAL = 'animal';
+    const RAM = 'ram';
+    const EWE = 'ewe';
     const ULN_COUNTRY_CODE = 'uln_country_code';
     const ULN_NUMBER = 'uln_number';
     const PEDIGREE_COUNTRY_CODE = 'pedigree_country_code';
@@ -33,6 +35,12 @@ class JsonInputConstant
     const RELATION_NUMBER_ACCEPTANT = "relation_number_acceptant";
     const TAGS = "tags";
     const TAG = "tag";
+
+    //Mate
+    const PMSG = 'pmsg';
+    const KI = 'ki';
+    const START_DATE = 'start_date';
+    const END_DATE = 'end_date';
 
     //Authentication
     const NEW_PASSWORD = 'new_password';
