@@ -66,24 +66,22 @@ class CreateAdminValidator
     public function getIsValid() { return $this->isValid; }
 
     /**
-     * @param array $adminsContent
+     * @param ArrayCollection $adminContent
      */
-    private function validate($adminsContent)
+    private function validate($adminContent)
     {
-        foreach ($adminsContent as $adminContent) {
 
-            $firstName = Utils::getNullCheckedArrayValue(JsonInputConstant::FIRST_NAME, $adminContent);
-            $this->validateFirstName($firstName);
+        $firstName = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::FIRST_NAME, $adminContent);
+        $this->validateFirstName($firstName);
 
-            $lastName = Utils::getNullCheckedArrayValue(JsonInputConstant::LAST_NAME, $adminContent);
-            $this->validateLastName($lastName);
+        $lastName = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::LAST_NAME, $adminContent);
+        $this->validateLastName($lastName);
 
-            $emailAddress = Utils::getNullCheckedArrayValue(JsonInputConstant::EMAIL_ADDRESS, $adminContent);
-            $this->validateEmailAddress($emailAddress);
-            
-            $accessLevel = Utils::getNullCheckedArrayValue(JsonInputConstant::ACCESS_LEVEL, $adminContent);
-            $this->validateAccessLevelType($accessLevel);
-        }
+        $emailAddress = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::EMAIL_ADDRESS, $adminContent);
+        $this->validateEmailAddress($emailAddress);
+
+        $accessLevel = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ACCESS_LEVEL, $adminContent);
+        $this->validateAccessLevelType($accessLevel);
     }
     
     /**
@@ -133,7 +131,7 @@ class CreateAdminValidator
             $repository = $this->em->getRepository(Employee::class);
 
             /** @var Person $person */
-            $person = $repository->findOneBy(['emailAddress' => $emailAddress]);
+            $person = $repository->findOneBy(['emailAddress' => $emailAddress, 'isActive' => true]);
             
             if($person != null) {
 
