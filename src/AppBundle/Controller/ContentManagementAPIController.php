@@ -36,12 +36,6 @@ class ContentManagementAPIController extends APIController implements ContentMan
      */
     public function getContentManagement(Request $request)
     {
-        /** @var Employee $admin */
-        $admin = $this->getAuthenticatedEmployee($request);
-        $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
-            return $adminValidator->createJsonErrorResponse();
-        }
         /** @var ContentRepository $repository */
         $repository = $this->getDoctrine()->getManager()->getRepository(Content::class);
         $cms = $repository->getCMS();
