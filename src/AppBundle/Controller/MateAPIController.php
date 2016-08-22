@@ -42,6 +42,10 @@ class MateAPIController extends APIController {
     if(!$mateValidator->getIsInputValid()) { return $mateValidator->createJsonResponse(); }
 
     $mate = MateBuilder::post($manager, $content, $client, $loggedInUser, $location);
+
+    //TODO when messaging system is complete, have the studRam owner confirm the mate
+    $mate->setIsAcceptedByThirdParty(true);
+
     $this->persistAndFlush($mate);
 
     $output = MateOutput::createMateOverview($mate);
