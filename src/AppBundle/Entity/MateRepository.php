@@ -26,6 +26,7 @@ class MateRepository extends BaseRepository {
             ->orWhere(Criteria::expr()->eq('requestState', RequestStateType::OPEN))
             ->orWhere(Criteria::expr()->eq('requestState', RequestStateType::REVOKED))
             ->orWhere(Criteria::expr()->eq('requestState', RequestStateType::REVOKING))
+            ->andWhere(Criteria::expr()->eq('isOverwrittenVersion', false))
             ->andWhere(Criteria::expr()->isNull('isApprovedByThirdParty'))
             ->orWhere(Criteria::expr()->eq('isApprovedByThirdParty', true))
             ->orderBy(['startDate' => Criteria::DESC])
@@ -55,6 +56,7 @@ class MateRepository extends BaseRepository {
     {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('location', $location))
+            ->andWhere(Criteria::expr()->eq('isOverwrittenVersion', false))
             ->andWhere(Criteria::expr()->eq('requestState', RequestStateType::CANCELLED))
             ->orWhere(Criteria::expr()->eq('requestState', RequestStateType::REJECTED))
             ->orWhere(Criteria::expr()->eq('isApprovedByThirdParty', false))
@@ -85,6 +87,7 @@ class MateRepository extends BaseRepository {
         //First find Matings without a confirmation
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('requestState', RequestStateType::OPEN))
+            ->andWhere(Criteria::expr()->eq('isOverwrittenVersion', false))
             ->andWhere(Criteria::expr()->isNull('isApprovedByThirdParty'))
             ->orderBy(['startDate' => Criteria::DESC])
         ;
