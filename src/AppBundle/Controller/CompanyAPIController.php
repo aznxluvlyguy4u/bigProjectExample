@@ -161,6 +161,7 @@ class CompanyAPIController extends APIController
             $location->setUbn($contentLocation['ubn']);
             $location->setAddress($locationAddress);
             $location->setCompany($company);
+            $location->setIsActive(true);
             $locations->add($location);
         }
 
@@ -393,6 +394,7 @@ class CompanyAPIController extends APIController
                 $location->setUbn($contentLocation['ubn']);
                 $location->setAddress($locationAddress);
                 $location->setCompany($company);
+                $location->setIsActive(true);
                 $company->addLocation($location);
             }
         }
