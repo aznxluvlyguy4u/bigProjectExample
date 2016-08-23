@@ -4,6 +4,7 @@ namespace AppBundle\Command;
 
 use AppBundle\Util\CommandUtil;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
@@ -16,7 +17,7 @@ class NsfoTestCommand extends ContainerAwareCommand
     const TITLE = 'TESTING';
     const INPUT_PATH = '/path/to/file.txt';
 
-    /** @var EntityManager $em */
+    /** @var ObjectManager $em */
     private $em;
 
     protected function configure()
@@ -29,8 +30,8 @@ class NsfoTestCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var EntityManager $em */
-        $em = $this->getContainer()->get('doctrine.orm.entity_manager');
+        /** @var ObjectManager $em */
+        $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
         $helper = $this->getHelper('question');
         $cmdUtil = new CommandUtil($input, $output, $helper);
