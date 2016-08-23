@@ -8,6 +8,8 @@ use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\LiveStockType;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 
 /**
  * Class AnimalRepository
@@ -320,6 +322,17 @@ class AnimalRepository extends BaseRepository
     return null;
   }
 
+
+  /**
+   * @param string $ulnString
+   * @return Animal|Ewe|Neuter|Ram|null
+   */
+  public function findAnimalByUlnString($ulnString)
+  {
+    $uln = Utils::getUlnFromString($ulnString);
+    return $this->findByUlnCountryCodeAndNumber($uln[Constant::ULN_COUNTRY_CODE_NAMESPACE], $uln[Constant::ULN_NUMBER_NAMESPACE] );
+  }
+
   /**
    * @param string $pedigreeCountryCode
    * @param string $pedigreeNumber
@@ -361,4 +374,79 @@ class AnimalRepository extends BaseRepository
       return array(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE => $pedigreeCountryCode,
           Constant::PEDIGREE_NUMBER_NAMESPACE => $pedigreeNumber);
     }
+
+   /**
+    * @param $startId
+    * @param $endId
+    * @return Collection
+    */
+    public function getAnimalsById($startId, $endId)
+    {
+      $criteria = Criteria::create()
+          ->where(Criteria::expr()->gte('id', $startId))
+          ->andWhere(Criteria::expr()->lte('id', $endId))
+          ->orderBy(['id' => Criteria::ASC])
+      ;
+
+      return $this->getEntityManager()->getRepository(Animal::class)
+                  ->matching($criteria);
+    }
+
+
+  /**
+   * @param $startId
+   * @param $endId
+   * @return Collection
+   */
+  public function getAnimalsByIdWithoutBreedCodesSetForExistingBreedCode($startId, $endId)
+  {
+    $criteria = Criteria::create()
+        ->where(Criteria::expr()->gte('id', $startId))
+        ->andWhere(Criteria::expr()->lte('id', $endId))
+        ->andWhere(Criteria::expr()->isNull('breedCodes'))
+        ->andWhere(Criteria::expr()->neq('breedCode', null))
+        ->orderBy(['id' => Criteria::ASC])
+    ;
+
+    return $this->getEntityManager()->getRepository(Animal::class)
+        ->matching($criteria);
+  }
+
+  /**
+   * @return int|null
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function getMaxId()
+  {
+    $sql = "SELECT MAX(id) FROM animal";
+
+    $query = $this->getEntityManager()->getConnection()->prepare($sql);
+    $query->execute();
+    $result = $query->fetchColumn();
+
+    if(!$result) {
+      return null;
+    } else {
+      return $result;
+    }
+  }
+
+  /**
+   * @return int|null
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function getMinIdOfAnimalsWithoutBreedCodesSetForExistingBreedCode()
+  {
+    $sql = "SELECT MIN(id) FROM animal WHERE (breed_codes_id IS NULL AND breed_code IS NOT NULL)";
+
+    $query = $this->getEntityManager()->getConnection()->prepare($sql);
+    $query->execute();
+    $result = $query->fetchColumn();
+
+    if(!$result) {
+      return null;
+    } else {
+      return $result;
+    }
+  }
 }

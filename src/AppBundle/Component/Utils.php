@@ -1,7 +1,6 @@
 <?php
 
 namespace AppBundle\Component;
-use AppBundle\AppBundle;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Location;
@@ -9,7 +8,6 @@ use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthQueue;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\Weight;
-use AppBundle\Entity\WeightMeasurement;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -590,6 +588,16 @@ class Utils
     }
 
 
+    /**
+     * For example this string 'XL24AN55' will become the following array ['XL',24,'AN',55]
+     * 
+     * @param $string
+     * @return array
+     */
+    public static function separateLettersAndNumbersOfString($string)
+    {
+        return preg_split("/(,?\s+)|((?<=[a-z])(?=\d))|((?<=\d)(?=[a-z]))/i", $string);
+    }
 
 
 }

@@ -142,4 +142,28 @@ class Weight extends Measurement {
     {
         return $this->inspector;
     }
+
+    
+    /**
+     * @param mixed $weight
+     * @return bool
+     */
+    public function isEqualInValues($weight)
+    {
+        if($weight == null) {
+            $isEqual = false;
+
+        } else if($weight instanceof Weight) {
+            $isEqual = $this->getWeight() == $weight->getWeight()
+                && $this->getIsBirthWeight() == $weight->getIsBirthWeight()
+                && $this->getMeasurementDate() == $weight->getMeasurementDate()
+                && $this->getAnimal() == $weight->getAnimal()
+                && $this->getInspector() == $weight->getInspector();
+
+        } else {
+            $isEqual = false;
+        }
+
+        return $isEqual;
+    }
 }

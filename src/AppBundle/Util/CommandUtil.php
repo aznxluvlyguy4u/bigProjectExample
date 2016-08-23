@@ -3,6 +3,12 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Constant\Constant;
+use AppBundle\Entity\Animal;
+use AppBundle\Enumerator\GenderType;
+use AppBundle\Report\Mixblup;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -25,6 +31,10 @@ class CommandUtil
 
     /** @var \DateTime */
     private $endTime;
+
+    /** @var \DateTime */
+    private $elapsedTimeStart;
+    
 
     /**
      * CommandUtil constructor.
@@ -78,10 +88,21 @@ class CommandUtil
         }
     }
 
+    
     public function setStartTimeAndPrintIt()
     {
         $this->startTime = new \DateTime();
+        $this->elapsedTimeStart = $this->startTime;
         $this->outputInterface->writeln(['Start time: '.date_format($this->startTime, 'Y-m-d H:i:s'),'']);
+    }
+
+
+    public function printElapsedTime($label = 'Elapsed time from start or previous elapsed time')
+    {
+        $now = new \DateTime();
+        $elapsedTime = gmdate("H:i:s", $now->getTimestamp() - $this->elapsedTimeStart->getTimestamp());
+        $this->outputInterface->writeln(['',$label.': '.$elapsedTime,'']);
+        $this->elapsedTimeStart = $now;
     }
 
 
@@ -91,12 +112,13 @@ class CommandUtil
         $elapsedTime = gmdate("H:i:s", $this->endTime->getTimestamp() - $this->startTime->getTimestamp());
 
         $this->outputInterface->writeln([
-                '=== PROCESS FINISHED ===',
-                'End Time: '.date_format($this->endTime, 'Y-m-d H:i:s'),
-                'Elapsed Time (H:m:s): '.$elapsedTime,
-                '',
-                '']);
+            '=== PROCESS FINISHED ===',
+            'End Time: '.date_format($this->endTime, 'Y-m-d H:i:s'),
+            'Elapsed Time (H:i:s): '.$elapsedTime,
+            '',
+            '']);
     }
+
 
     /**
      * @param string $heading
@@ -110,4 +132,57 @@ class CommandUtil
             '',
         ];
     }
+
+    
+    /**
+     * @param Collection $parents
+     * @return ArrayCollection
+     */
+    public static function getParentsFromParentsArray($parents, $nullFiller = null)
+    {
+        $result  = new ArrayCollection();
+        $result->set(Constant::FATHER_NAMESPACE, $nullFiller);
+        $result->set(Constant::MOTHER_NAMESPACE, $nullFiller);
+
+        foreach($parents as $parent) {
+            /** @var Animal $parent */
+            $gender = $parent->getGender();
+            if($gender == GenderType::M || $gender == GenderType::MALE) {
+                $result->set(Constant::FATHER_NAMESPACE, $parent);
+            } else if($gender == GenderType::V || $gender == GenderType::FEMALE) {
+                $result->set(Constant::MOTHER_NAMESPACE, $parent);
+            }
+        }
+
+        return $result;
+    }
+    
+
+    /**
+     * @param Collection $parents
+     * @return ArrayCollection
+     */
+    public static function getParentUlnsFromParentsArray($parents, $nullFiller = null)
+    {
+        $parents = self::getParentsFromParentsArray($parents, $nullFiller);
+
+        $parentLabels = array();
+        $parentLabels[] = Constant::FATHER_NAMESPACE;
+        $parentLabels[] = Constant::MOTHER_NAMESPACE;
+
+        foreach($parentLabels as $parentLabel) {
+
+            /** @var Animal $parent */
+            $parent = $parents->get($parentLabel);
+
+            if($parent instanceof Animal) {
+                $uln = Mixblup::formatUln($parent, $nullFiller);
+                $parents->set($parentLabel, $uln);
+            }
+        }
+
+        return $parents;
+    }
+    
+    
 }

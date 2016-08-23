@@ -399,36 +399,6 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
     return new JsonResponse([Constant::RESULT_NAMESPACE => $result], $code);
   }
 
-  /**
-   * Migrate accessTokens from string field to array field.
-   *
-   * @Route("/migrate")
-   * @Method("POST")
-   */
-  public function migrateTokensToArray(Request $request) {
-
-    //User must be an Employee and not a Client
-    $employee = $this->getAuthenticatedEmployee($request);
-    $employeeValidation = new EmployeeValidator($employee);
-    if(!$employeeValidation->getIsValid()) {
-      return $employeeValidation->createJsonErrorResponse();
-    }
-
-    $persons = $this->getDoctrine()->getRepository(Person::class)->findAll();
-
-    foreach ($persons as $person) {
-      if(sizeof($person->getTokens()) == 0) {
-        $token = new Token(TokenType::ACCESS, $person->getAccessToken());
-        $person->addToken($token);
-        $token->setOwner($person);
-        $this->getDoctrine()->getEntityManager()->persist($person);
-        $this->getDoctrine()->getEntityManager()->flush();
-      }
-    }
-    
-    return new JsonResponse("ok", 200);
-  }
-
 
   /**
    * Retrieve a list of all Admin access level types
