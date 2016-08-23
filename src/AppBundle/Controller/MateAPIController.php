@@ -63,8 +63,7 @@ class MateAPIController extends APIController {
     $mate = MateBuilder::post($manager, $content, $client, $loggedInUser, $location);
 
     //TODO when messaging system is complete, have the studRam owner confirm the mate
-    $mate->setIsAcceptedByThirdParty(true);
-    //TODO Then also set the RequestState to open. And close it at the end.
+    MateBuilder::approveMateDeclaration($mate, $loggedInUser);
 
     $this->persistAndFlush($mate);
 

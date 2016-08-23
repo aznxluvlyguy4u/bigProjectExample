@@ -28,10 +28,13 @@ class NsfoBaseBuilder
     protected static function postBase(Client $client, Person $loggedInUser,
                                        Location $location, DeclareNsfoBase $nsfoDeclaration)
     {
-        $nsfoDeclaration->setRequestState(RequestStateType::FINISHED);
         $nsfoDeclaration->setRelationNumberKeeper($client->getRelationNumberKeeper());
         $nsfoDeclaration->setUbn($location->getUbn());
         $nsfoDeclaration->setActionBy($loggedInUser);
+        
+        if($nsfoDeclaration->getRequestState() == null) {
+            $nsfoDeclaration->setRequestState(RequestStateType::FINISHED);
+        }
 
         if($nsfoDeclaration->getMessageId() == null) {
             $nsfoDeclaration->setMessageId(MessageBuilderBase::getNewRequestId());

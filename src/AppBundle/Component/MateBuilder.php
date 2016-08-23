@@ -11,6 +11,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Mate;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\Ram;
+use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 
@@ -47,6 +48,9 @@ class MateBuilder extends NsfoBaseBuilder
      */
     private static function setMateValues(ObjectManager $manager, ArrayCollection $content, Location $location, Mate $mate)
     {
+        /* Set the RequestState to OPEN since it needs to be approved by the third party */
+        $mate->setRequestState(RequestStateType::OPEN);
+
         /* Set non-Animal values */
         
         $startDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::START_DATE, $content);
@@ -93,6 +97,42 @@ class MateBuilder extends NsfoBaseBuilder
             $mate->setStudRam($ram);
         }
         
+        return $mate;
+    }
+
+
+    /**
+     * @param Mate $mate
+     * @param Person $loggedInUser
+     * @return Mate
+     */
+    public static function approveMateDeclaration(Mate $mate, Person $loggedInUser)
+    {
+        $mate->setIsAcceptedByThirdParty(true);
+        $mate->setRequestState(RequestStateType::FINISHED);
+        $mate = self::respondToMateDeclaration($mate, $loggedInUser);
+        return $mate;
+    }
+
+
+    /**
+     * @param Mate $mate
+     * @param Person $loggedInUser
+     * @return Mate
+     */
+    public static function rejectMateDeclaration(Mate $mate, Person $loggedInUser)
+    {
+        $mate->setIsAcceptedByThirdParty(false);
+        $mate->setRequestState(RequestStateType::REJECTED);
+        $mate = self::respondToMateDeclaration($mate, $loggedInUser);
+        return $mate;
+    }
+
+
+    private static function respondToMateDeclaration(Mate $mate, Person $loggedInUser)
+    {
+        $mate->setResponseActionBy($loggedInUser);
+        $mate->setResponseDate(new \DateTime('now'));
         return $mate;
     }
 }
