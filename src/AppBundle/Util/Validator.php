@@ -11,6 +11,9 @@ use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Neuter;
+use AppBundle\Entity\Ram;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -149,6 +152,25 @@ class Validator
         } else {
             return $nullResult;
         }
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return bool
+     */
+    public static function isAnimalMale(Animal $animal)
+    {
+        if($animal instanceof Ram) {
+            return true;
+        } elseif ($animal instanceof Neuter) {
+            $genderValue = $animal->getGender();
+            if ($genderValue === GenderType::MALE || $genderValue === GenderType::M) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 

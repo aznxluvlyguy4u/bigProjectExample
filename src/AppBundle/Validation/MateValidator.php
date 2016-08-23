@@ -18,10 +18,25 @@ use Doctrine\Common\Persistence\ObjectManager;
 
 class MateValidator
 {
-    const ERROR_CODE = 401;
+    const ERROR_CODE = 428;
     const ERROR_MESSAGE = 'INVALID INPUT';
     const VALID_CODE = 200;
     const VALID_MESSAGE = 'OK';
+
+    const RAM_MISSING_INPUT               = 'NO ULN OR PEDIGREE GIVEN FOR STUD RAM';
+    const RAM_ULN_FORMAT_INCORRECT        = 'STUD RAM: ULN FORMAT INCORRECT';
+    const RAM_ULN_FOUND_BUT_NOT_MALE      = 'STUD RAM: ANIMAL FOUND IN DATABASE WITH GIVEN ULN IS NOT MALE';
+    const RAM_PEDIGREE_FOUND_BUT_NOT_MALE = 'STUD RAM: ANIMAL FOUND IN DATABASE WITH GIVEN PEDIGREE IS NOT MALE';
+    const RAM_PEDIGREE_NOT_FOUND          = 'STUD RAM: NO ANIMAL FOUND FOR GIVEN PEDIGREE';
+
+    const EWE_MISSING_INPUT     = 'STUD EWE: NO ANIMAL FOUND FOR GIVEN ULN';
+    const EWE_FOUND_BUT_NOT_EWE = 'STUD EWE: ANIMAL WAS FOUND FOR GIVEN ULN, BUT WAS NOT AN EWE ENTITY';
+    const EWE_NOT_OF_CLIENT     = 'STUD EWE: FOUND EWE DOES NOT BELONG TO CLIENT';
+
+    const START_DATE_MISSING = 'START DATE MISSING';
+    const END_DATE_MISSING   = 'END DATE MISSING';
+    const KI_MISSING         = 'KI MISSING';
+    const PMSG_MISSING       = 'PMSG MISSING';
 
     /** @var boolean */
     private $validateEweGender;
@@ -38,6 +53,9 @@ class MateValidator
     /** @var Client */
     private $client;
 
+    /** @var array */
+    private $errors;
+
     public function __construct(ObjectManager $manager, ArrayCollection $content, Client $client, $validateEweGender = true)
     {
         $this->manager = $manager;
@@ -45,6 +63,7 @@ class MateValidator
         $this->client = $client;
         $this->isInputValid = false;
         $this->validateEweGender = $validateEweGender;
+        $this->errors = array();
 
         $this->validate($content);
     }
@@ -85,18 +104,68 @@ class MateValidator
         //First validate if uln or pedigree exists
         $containsUlnOrPedigree = NullChecker::arrayContainsUlnOrPedigree($ramArray);
         if(!$containsUlnOrPedigree) {
+            $this->errors[] = self::RAM_MISSING_INPUT;
             return false;
         }
 
         //Then validate the uln if it exists
         $ulnString = NullChecker::getUlnStringFromArray($ramArray, null);
         if ($ulnString != null) {
-            return Validator::verifyUlnFormat($ulnString);
+            //ULN check
+            
+            $isUlnFormatValid = Validator::verifyUlnFormat($ulnString);
+            if(!$isUlnFormatValid) {
+                $this->errors[] = self::RAM_ULN_FORMAT_INCORRECT;
+                return false;
+            }
+            
+            //If animal is in database, verify the gender
+            $animal = $this->animalRepository->findAnimalByUlnString($ulnString);
+            $isMaleCheck = $this->validateIfRamUlnBelongsToMaleIfFoundInDatabase($animal);
+            if(!$isMaleCheck) {
+                $this->errors[] = self::RAM_ULN_FOUND_BUT_NOT_MALE;
+            }
+            return $isMaleCheck;
+            
+        } else {
+            //Validate pedigree if it exists (by checking if animal is in the database or not)
+            $pedigreeCodeExists = Validator::verifyPedigreeCodeInAnimalArray($this->manager, $ramArray, false);
+            if($pedigreeCodeExists) {
+                //If animal is in database, verify the gender
+                $animal = $this->animalRepository->findAnimalByAnimalArray($ramArray);
+                $isMaleCheck = $this->validateIfRamUlnBelongsToMaleIfFoundInDatabase($animal);
+                if(!$isMaleCheck) {
+                    $this->errors[] = self::RAM_PEDIGREE_FOUND_BUT_NOT_MALE;
+                }
+                return $isMaleCheck;
+            } else {
+                $this->errors[] = self::RAM_PEDIGREE_NOT_FOUND;
+                return false;
+            }
         }
-
-        //Validate pedigree if it exists
-        return Validator::verifyPedigreeCodeInAnimalArray($this->manager, $ramArray, false);
     }
+
+
+    /**
+     * @param Animal $animal
+     * @return bool
+     */
+    private function validateIfRamUlnBelongsToMaleIfFoundInDatabase($animal)
+    {
+        if($animal != null) {
+            //If animal is in database, verify the gender
+            $isAnimalMale = Validator::isAnimalMale($animal);
+            if($isAnimalMale) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            //If animal is not in database, it cannot be verified. So just let it pass.
+            return true;
+        }
+    }
+
 
     /**
      * @param array $eweArray
@@ -106,16 +175,24 @@ class MateValidator
         
         $foundAnimal = $this->animalRepository->findAnimalByAnimalArray($eweArray);
         if($foundAnimal == null) {
+            $this->errors[] = self::EWE_MISSING_INPUT;
             return false;
         }
 
         if($this->validateEweGender) {
             if(!($foundAnimal instanceof Ewe)) {
+                $this->errors[] = self::EWE_FOUND_BUT_NOT_EWE;
                 return false;
             }
         }
         
-        return Validator::isAnimalOfClient($foundAnimal, $this->client);
+        $isOwnedByClient = Validator::isAnimalOfClient($foundAnimal, $this->client);
+        if($isOwnedByClient) {
+            return true;
+        } else {
+            $this->errors[] = self::EWE_NOT_OF_CLIENT;
+            return false;
+        }
     }
 
 
@@ -125,16 +202,34 @@ class MateValidator
      */
     private function validateIfNonAnimalValuesAreNotEmpty($content)
     {
+        $allNonAnimalValuesAreFilled = true;
+
         $startDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::START_DATE, $content);
         $endDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::END_DATE, $content);
         $ki = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::KI, $content);
         $pmsg = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::PMSG, $content);
 
-        if($startDate === null || $endDate === null || $ki === null || $pmsg === null) {
-            return false;
-        } else {
-            return true;
+        if($startDate === null) {
+            $this->errors[] = self::START_DATE_MISSING;
+            $allNonAnimalValuesAreFilled =  false;
         }
+
+        if($endDate === null) {
+            $this->errors[] = self::END_DATE_MISSING;
+            $allNonAnimalValuesAreFilled =  false;
+        }
+
+        if($ki === null) {
+            $this->errors[] = self::KI_MISSING;
+            $allNonAnimalValuesAreFilled =  false;
+        }
+
+        if($pmsg === null) {
+            $this->errors[] = self::PMSG_MISSING;
+            $allNonAnimalValuesAreFilled =  false;
+        }
+
+        return $allNonAnimalValuesAreFilled;
     }
 
 
@@ -153,7 +248,8 @@ class MateValidator
 
         $result = array(
             Constant::MESSAGE_NAMESPACE => $message,
-            Constant::CODE_NAMESPACE => $code);
+            Constant::CODE_NAMESPACE => $code,
+            Constant::ERRORS_NAMESPACE => $this->errors);
 
         return new JsonResponse($result, $code);
     }
