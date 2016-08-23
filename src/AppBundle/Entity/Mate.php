@@ -444,7 +444,37 @@ class Mate extends DeclareNsfoBase {
     }
 
 
+    /**
+     * @param Mate $mate
+     */
+    public function duplicateValues(Mate $mate)
+    {
+        //Note 'currentVersion' and 'previousVersions' are not duplicated. They set the history relationship.
 
+        //Mate specific values
+        $this->setStartDate($mate->getStartDate());
+        $this->setEndDate($mate->getEndDate());
+        $this->setStudRam($mate->getStudRam());
+        $this->setStudEwe($mate->getStudEwe());
+        $this->setRamUlnCountryCode($mate->getRamUlnCountryCode());
+        $this->setRamUlnNumber($mate->getRamUlnNumber());
+        $this->setPmsg($mate->getPmsg());
+        $this->setKi($mate->getKi());
+        $this->setIsApprovedByThirdParty($mate->getIsApprovedByThirdParty());
+        $this->setApprovalDate($mate->getApprovalDate());
+        $this->setApprovedBy($mate->getApprovedBy());
+        $this->setLocation($mate->getLocation());
 
-
+        //DeclareNsfoBase values
+        $this->setLogDate($mate->getLogDate());
+        $this->setMessageId($mate->getMessageId());
+        $this->setRequestState($mate->getRequestState());
+        $this->setRelationNumberKeeper($mate->getRelationNumberKeeper());
+        $this->setUbn($mate->getUbn());
+        $this->setActionBy($mate->getActionBy());
+        $this->setRevokedBy($mate->getRevokedBy());
+        $this->setRevokeDate($mate->getRevokeDate());
+        $this->setIsHidden($mate->getIsHidden());
+        $this->setIsOverwrittenVersion($mate->getIsOverwrittenVersion());
+    }
 }
