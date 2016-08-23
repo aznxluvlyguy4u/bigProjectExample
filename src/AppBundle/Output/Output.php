@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Output;
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
@@ -108,5 +109,21 @@ abstract class Output
             self::$checkDate = "";
         }
     }
-    
+
+
+    /**
+     * @return JsonResponse
+     */
+    public static function createStandardJsonErrorResponse()
+    {
+        $message = 'INVALID INPUT';
+        $code = 428;
+
+        $result = [
+            Constant::MESSAGE_NAMESPACE => $message,
+            Constant::CODE_NAMESPACE => $code
+        ];
+
+        return new JsonResponse($result, $code);
+    }
 }
