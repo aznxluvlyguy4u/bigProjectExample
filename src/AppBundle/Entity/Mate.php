@@ -92,6 +92,25 @@ class Mate extends DeclareNsfoBase {
     private $isAcceptedByThirdParty;
 
     /**
+     * @var DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    private $responseDate;
+
+    /**
+     * The thirdParty approving or rejecting the Mate.
+     *
+     * @var Person
+     *
+     * @ORM\ManyToOne(targetEntity="Person")
+     * @ORM\JoinColumn(name="response_action_by_id", referencedColumnName="id")
+     */
+    protected $responseActionBy;
+
+    /**
      * @var ArrayCollection
      * @ORM\OneToMany(targetEntity="Mate", mappedBy="currentVersion", cascade={"persist"})
      */
@@ -390,6 +409,38 @@ class Mate extends DeclareNsfoBase {
     public function setLocation($location)
     {
         $this->location = $location;
+    }
+
+    /**
+     * @return null|\DateTime
+     */
+    public function getResponseDate()
+    {
+        return $this->responseDate;
+    }
+
+    /**
+     * @param \DateTime $responseDate
+     */
+    public function setResponseDate($responseDate)
+    {
+        $this->responseDate = $responseDate;
+    }
+
+    /**
+     * @return Person
+     */
+    public function getResponseActionBy()
+    {
+        return $this->responseActionBy;
+    }
+
+    /**
+     * @param Person $responseActionBy
+     */
+    public function setResponseActionBy($responseActionBy)
+    {
+        $this->responseActionBy = $responseActionBy;
     }
 
 
