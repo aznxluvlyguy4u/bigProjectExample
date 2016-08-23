@@ -400,6 +400,15 @@ class Utils
         $residenceList =  $animal->getAnimalResidenceHistory();
         $residenceToUpdate = $residenceList->last();
 
+        if(!($residenceToUpdate instanceof AnimalResidence)) {
+            //create a new animalResidence, if no animalResidences found
+            //the startDate will likely not be available
+            $residenceToUpdate = new animalResidence();
+            $residenceToUpdate->setLocation($location);
+            $residenceToUpdate->setAnimal($animal);
+            $animal->addAnimalResidenceHistory($residenceToUpdate);
+        }
+
         if($residenceToUpdate->getLocation()->getUbn() == $location->getUbn()
           && $residenceToUpdate->getEndDate() == null) {
             //Set current residentState to pending

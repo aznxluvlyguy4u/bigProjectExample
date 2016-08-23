@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Entity\TagTransferItemResponse;
+use AppBundle\Util\ActionLogWriter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -44,10 +45,15 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
    */
   public function createTagsTransfer(Request $request)
   {
+    $om = $this->getDoctrine()->getManager();
+    
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
+    $loggedInUser = $this->getLoggedInUser($request);
     $location = $this->getSelectedLocation($request);
 
+    $log = ActionLogWriter::declareTagTransferPost($om, $client, $loggedInUser, $content);
+    
     //Validate if ubn is in database and retrieve the relationNumberKeeper owning that ubn
     $ubnVerification = $this->isUbnValid($content->get(Constant::UBN_NEW_OWNER_NAMESPACE));
     if(!$ubnVerification['isValid']) {
@@ -66,7 +72,7 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
     }
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareTagsTransfer = $this->buildMessageObject(RequestType::DECLARE_TAGS_TRANSFER_ENTITY, $content, $this->getAuthenticatedUser($request), $location);
+    $declareTagsTransfer = $this->buildMessageObject(RequestType::DECLARE_TAGS_TRANSFER_ENTITY, $content, $client, $loggedInUser, $location);
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($declareTagsTransfer);
@@ -74,6 +80,8 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
     //Send it to the queue and persist/update any changed state to the database
     $messageArray = $this->sendMessageObjectToQueue($declareTagsTransfer);
 
+    $log = ActionLogWriter::completeActionLog($om, $log);
+    
     return new JsonResponse($messageArray, 200);
   }
 

@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Util\ActionLogWriter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -45,8 +46,11 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
      */
     public function createRevoke(Request $request)
     {
+        $om = $this->getDoctrine()->getManager();
+
         $content = $this->getContentAsArray($request);
         $client = $this->getAuthenticatedUser($request);
+        $loggedInUser = $this->getLoggedInUser($request);
         $location = $this->getSelectedLocation($request);
 
         //Validate if there is a message_number. It is mandatory for IenR
@@ -56,7 +60,9 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
         }
 
         //Convert the array into an object and add the mandatory values retrieved from the database
-        $revokeDeclarationObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $content, $client, $location);
+        $revokeDeclarationObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $content, $client, $loggedInUser, $location);
+
+        $log = ActionLogWriter::revokePost($om, $client, $loggedInUser, $revokeDeclarationObject);
 
         //First Persist object to Database, before sending it to the queue
         $this->persist($revokeDeclarationObject);
@@ -66,6 +72,8 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
 
         //Send it to the queue and persist/update any changed state to the database
         $messageArray = $this->sendMessageObjectToQueue($revokeDeclarationObject);
+
+        $log = ActionLogWriter::completeActionLog($om, $log);
 
         return new JsonResponse($messageArray, 200);
     }

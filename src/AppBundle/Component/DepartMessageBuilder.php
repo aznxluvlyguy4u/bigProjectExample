@@ -33,13 +33,14 @@ class DepartMessageBuilder extends MessageBuilderBase
      *
      * @param DeclareDepart $messageObject the message received from the front-end
      * @param Client|Person $person
+     * @param Person $loggedInUser
      * @param Location $location
      * @return DeclareDepart
      */
-    public function buildMessage(DeclareDepart $messageObject, $person, $location)
+    public function buildMessage(DeclareDepart $messageObject, $person, $loggedInUser, $location)
     {
         $this->person = $person;
-        $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
+        $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser);
         $completeMessageObject = $this->addDeclareDepartData($baseMessageObject, $location);
 
         return $completeMessageObject;

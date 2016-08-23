@@ -33,13 +33,14 @@ class ImportMessageBuilder extends MessageBuilderBase
    *
    * @param DeclareImport $messageObject the message received from the front-end
    * @param Client|Person $person
+   * @param Person $loggedInUser
    * @param Location $location
    * @return DeclareImport
    */
-  public function buildMessage(DeclareImport $messageObject, $person, $location)
+  public function buildMessage(DeclareImport $messageObject, $person, $loggedInUser, $location)
   {
     $this->person = $person;
-    $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
+    $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser);
     $completeMessageObject = $this->addDeclareImportData($baseMessageObject, $location);
 
     return $completeMessageObject;

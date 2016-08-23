@@ -13,6 +13,7 @@ use AppBundle\Output\DeclareArrivalOutput;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\HealthChecker;
 use AppBundle\Util\LocationHealthUpdater;
 use AppBundle\Validation\TagValidator;
@@ -158,9 +159,14 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   public function createArrival(Request $request)
   {
+    $om = $this->getDoctrine()->getManager();
+    
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
     $location = $this->getSelectedLocation($request);
+    $loggedInUser = $this->getLoggedInUser($request);
+    
+    $log = ActionLogWriter::declareArrivalOrImportPost($om, $client, $loggedInUser, $location, $content);
 
     //Only verify if pedigree exists in our database. Unknown ULNs are allowed
     $ulnVerification = $this->verifyOnlyPedigreeCodeInAnimal($content->get(Constant::ANIMAL_NAMESPACE));
@@ -169,8 +175,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
                                "pedigree" => $ulnVerification->get(Constant::PEDIGREE_NAMESPACE),
                                 "message" => "PEDIGREE VALUE IS NOT REGISTERED WITH NSFO"), 428);
     }
-
-
+    
     //LocationHealth null value fixes
     $this->getHealthService()->fixLocationHealthMessagesWithNullValues($location);
     $this->getHealthService()->fixArrivalsAndImportsWithoutLocationHealthMessage($location);
@@ -187,7 +192,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       }
 
       //TODO Phase 2: Filter between non-EU countries and EU countries. At the moment we only process sheep from EU countries
-      $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client, $location);
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client, $loggedInUser, $location);
 
     } else { //DeclareArrival
 
@@ -198,7 +203,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 //      }
       $content->set(JsonInputConstant::IS_ARRIVED_FROM_OTHER_NSFO_CLIENT, true);
 
-      $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $location);
+      $messageObject = $this->buildMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $loggedInUser, $location);
     }
 
     //Send it to the queue and persist/update any changed state to the database
@@ -212,6 +217,8 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     //Immediately update the locationHealth regardless or requestState type and persist a locationHealthMessage
     $this->getHealthService()->updateLocationHealth($messageObject);
+
+    $log = ActionLogWriter::completeActionLog($om, $log);
 
 //    return new JsonResponse(array("status"=>"sent"), 200);
     return new JsonResponse($messageArray, 200);
@@ -248,6 +255,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     $client = $this->getAuthenticatedUser($request);
     $location = $this->getSelectedLocation($request);
+    $loggedInUser = $this->getLoggedInUser($request);
     $content->set(Constant::LOCATION_NAMESPACE, $location);
 
     //verify requestId for arrivals
@@ -267,7 +275,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     if($isImportAnimal) { //For DeclareImport
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client, $location);
+      $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_IMPORT_ENTITY, $content, $client, $loggedInUser, $location);
 
     } else { //For DeclareArrival
       //TODO Validate if ubnPreviousOwner matches the ubn of the animal with the given ULN, if the animal is in our database
@@ -277,7 +285,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 //      }
 
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $location);
+      $messageObject = $this->buildEditMessageObject(RequestType::DECLARE_ARRIVAL_ENTITY, $content, $client, $loggedInUser, $location);
     }
 
     //Send it to the queue and persist/update any changed requestState to the database

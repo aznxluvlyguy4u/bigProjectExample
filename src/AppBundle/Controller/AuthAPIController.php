@@ -18,6 +18,7 @@ use AppBundle\Entity\Company;
 use AppBundle\Enumerator\MigrationStatus;
 use AppBundle\Output\MenuBarOutput;
 use AppBundle\Setting\MigrationSetting;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Validation\PasswordValidator;
@@ -217,8 +218,12 @@ class AuthAPIController extends APIController {
     */
     $encoder = $this->get('security.password_encoder');
 
+    $om = $this->getDoctrine()->getManager();
     $client = $this->getAuthenticatedUser($request);
+    $loggedInUser = $this->getLoggedInUser($request);
     $content = $this->getContentAsArray($request);
+    $log = ActionLogWriter::passwordChange($om, $client, $loggedInUser);
+
     $enteredOldPassword = base64_decode($content->get('current_password'));
 
     if(!$encoder->isPasswordValid($client, $enteredOldPassword)) {
@@ -266,6 +271,8 @@ class AuthAPIController extends APIController {
 
       $this->get('mailer')->send($message);
 
+      $log = ActionLogWriter::completeActionLog($om, $log);
+
       return new JsonResponse(array("code" => 200, "message"=>"Password has been changed"), 200);
 
     } else if($encodedPasswordInDatabase == $encodedOldPassword) {
@@ -306,10 +313,11 @@ class AuthAPIController extends APIController {
         "email_address":"example@example.com"
     }
     */
+    $om = $this->getDoctrine()->getManager();
     $content = $this->getContentAsArray($request);
     $emailAddress = strtolower($content->get('email_address'));
-
     $client = $this->getClientByEmail($emailAddress);
+    $log = ActionLogWriter::passwordReset($om, $client, $emailAddress);
 
     //Verify if email is correct
     if($client == null) {
@@ -320,6 +328,8 @@ class AuthAPIController extends APIController {
     $passwordLength = 9;
     $newPassword = $this->persistNewPassword($client);
     $this->emailNewPasswordToPerson($client, $newPassword);
+
+    $log = ActionLogWriter::completeActionLog($om, $log);
 
     return new JsonResponse(array("code" => 200,
         "message"=>"Your new password has been emailed to: " . $emailAddress), 200);

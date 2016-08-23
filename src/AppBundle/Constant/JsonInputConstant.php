@@ -12,6 +12,11 @@ class JsonInputConstant
     //Animal
     const WORK_NUMBER = 'work_number';
     const IS_ALIVE = 'is_alive';
+    const ANIMAL = 'animal';
+    const ULN_COUNTRY_CODE = 'uln_country_code';
+    const ULN_NUMBER = 'uln_number';
+    const PEDIGREE_COUNTRY_CODE = 'pedigree_country_code';
+    const PEDIGREE_NUMBER = 'pedigree_number';
 
     //Arrival & Import
     const IS_IMPORT_ANIMAL = 'is_import_animal';
@@ -19,6 +24,15 @@ class JsonInputConstant
     const ARRIVAL_DATE = 'arrival_date';
     const IS_ARRIVED_FROM_OTHER_NSFO_CLIENT = 'is_arrived_from_other_nsfo_client';
     const COUNTRY_ORIGIN = 'country_origin';
+
+    //Depart & Export
+    const IS_EXPORT_ANIMAL = 'is_export_animal';
+    const UBN_NEW_OWNER = 'ubn_new_owner';
+
+    //Tags
+    const RELATION_NUMBER_ACCEPTANT = "relation_number_acceptant";
+    const TAGS = "tags";
+    const TAG = "tag";
 
     //Authentication
     const NEW_PASSWORD = 'new_password';

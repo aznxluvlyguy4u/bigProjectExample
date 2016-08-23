@@ -33,13 +33,14 @@ class ArrivalMessageBuilder extends MessageBuilderBase
      *
      * @param DeclareArrival $messageObject the message received from the front-end
      * @param Client|Person $person
+     * @param Person $loggedInUser
      * @param Location $location
      * @return DeclareArrival
      */
-    public function buildMessage(DeclareArrival $messageObject, $person, $location)
+    public function buildMessage(DeclareArrival $messageObject, $person, $loggedInUser, $location)
     {
         $this->person = $person;
-        $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
+        $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser);
         $completeMessageObject = $this->addDeclareArrivalData($baseMessageObject, $location);
 
         return $completeMessageObject;

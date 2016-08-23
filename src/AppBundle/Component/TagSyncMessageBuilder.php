@@ -35,13 +35,14 @@ class TagSyncMessageBuilder extends MessageBuilderBase {
    *
    * @param RetrieveTags $messageObject the message received
    * @param Client|Person $person
+   * @param Person $loggedInUser
    * @param Location $location
    * @return ArrayCollection
    */
-  public function buildMessage(RetrieveTags $messageObject, $person, $location)
+  public function buildMessage(RetrieveTags $messageObject, $person, $loggedInUser, $location)
   {
     $this->person = $person;
-    $baseMessageObject = $this->buildBaseRetrieveMessageObject($messageObject, $person);
+    $baseMessageObject = $this->buildBaseRetrieveMessageObject($messageObject, $person, $loggedInUser);
     $completeMessageObject = $this->addRetrieveEartagsData($baseMessageObject, $location);
 
     return $completeMessageObject;

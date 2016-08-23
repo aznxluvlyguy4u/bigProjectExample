@@ -10,6 +10,8 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Security\Core\User\UserInterface;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class Person
@@ -18,6 +20,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * @ORM\DiscriminatorMap({"Client" = "Client", "Employee" = "Employee", "Inspector" = "Inspector"})
  * @package AppBundle\Entity
+ * @ExclusionPolicy("all")
  */
 abstract class Person implements UserInterface
 {
@@ -25,6 +28,7 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="integer")
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="AUTO")
+   * @Expose
    */
   protected $id;
 
@@ -33,6 +37,7 @@ abstract class Person implements UserInterface
    *
    * @ORM\Column(type="string", unique=true, nullable=true)
    * @JMS\Type("string")
+   * @Expose
    */
   protected $personId;
 
@@ -42,6 +47,7 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
+   * @Expose
    */
   protected $firstName;
 
@@ -51,6 +57,7 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
+   * @Expose
    */
   protected $lastName;
 
@@ -60,6 +67,7 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
+   * @Expose
    */
   protected $emailAddress;
 
@@ -76,6 +84,7 @@ abstract class Person implements UserInterface
      *
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
+     * @Expose
      */
   private $isActive;
 

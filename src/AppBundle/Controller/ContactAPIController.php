@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
+use AppBundle\Util\ActionLogWriter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -24,9 +25,12 @@ class ContactAPIController extends APIController implements ContactAPIController
    */
   public function postContactEmail(Request $request) {
 
+    $om = $this->getDoctrine()->getManager();
+
     $content = $this->getContentAsArray($request);
     $user = $this->getAuthenticatedUser($request);
     $ubn = $this->getSelectedUbn($request);
+    $loggedInUser = $this->getLoggedInUser($request);
 
     if($ubn == null) {
         $ubn = 'geen';
@@ -43,7 +47,7 @@ class ContactAPIController extends APIController implements ContactAPIController
     $messageBody = $content->get('message');
 
     $contactMailSubjectHeader = 'NSFO Contactformulier '.$category.' | UBN '.$ubn.' ('.$lastName.') | '.$mood;
-
+      
     //Message to NSFO
     $emailSourceAddress = $this->getParameter('mailer_source_address');
       
@@ -95,6 +99,8 @@ class ContactAPIController extends APIController implements ContactAPIController
     ;
 
     $this->get('mailer')->send($messageConfirmation);
+
+    $log = ActionLogWriter::contactEmail($om, $user, $loggedInUser, $contactMailSubjectHeader);
 
     return new JsonResponse(array("Message sent!" => $messageBody), 200); //$this->redirectToRoute('/');
 

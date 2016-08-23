@@ -40,6 +40,7 @@ use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Util\Finder;
 use AppBundle\Validation\HeaderValidation;
+use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Query;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
@@ -208,11 +209,11 @@ class APIController extends Controller implements APIControllerInterface
    * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
    * @throws \Exception
    */
-  protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $location)
+  protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $loggedInUser, $location)
   {
     $isEditMessage = true;
     $messageObject = $this->getRequestMessageBuilder()
-      ->build($messageClassNameSpace, $contentArray, $user, $location, $isEditMessage);
+      ->build($messageClassNameSpace, $contentArray, $user, $loggedInUser, $location, $isEditMessage);
 
     return $messageObject;
   }
@@ -225,11 +226,11 @@ class APIController extends Controller implements APIControllerInterface
    * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
    * @throws \Exception
    */
-  protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $location)
+  protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $loggedInUser, $location)
   {
     $isEditMessage = false;
     $messageObject = $this->getRequestMessageBuilder()
-        ->build($messageClassNameSpace, $contentArray, $user, $location, $isEditMessage);
+        ->build($messageClassNameSpace, $contentArray, $user, $loggedInUser, $location, $isEditMessage);
 
     return $messageObject;
   }
@@ -248,6 +249,29 @@ class APIController extends Controller implements APIControllerInterface
 
     return $messageObject;
   }
+
+
+  /**
+   * @param $object
+   * @return mixed
+   */
+  protected function persistAndFlush($object)
+  {
+    $this->getDoctrine()->getManager()->persist($object);
+    $this->getDoctrine()->getManager()->flush();
+    return $object;
+  }
+
+  
+  /**
+   */
+  protected function flushClearAndGarbageCollect()
+  {
+    $this->getDoctrine()->getManager()->flush();
+    $this->getDoctrine()->getManager()->clear();
+    gc_collect_cycles();
+  }
+
 
   /**
    * @param $messageObject
@@ -851,17 +875,18 @@ class APIController extends Controller implements APIControllerInterface
     }
   }
 
-  public function syncAnimalsForAllLocations()
+  public function syncAnimalsForAllLocations($loggedInUser)
   {
     $allLocations = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY)->findAll();
     $content = new ArrayCollection();
     $count = 0;
 
+    /** @var Location $location */
     foreach($allLocations as $location) {
       $client = $location->getCompany()->getOwner();
 
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $location);
+      $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $loggedInUser, $location);
 
       //First Persist object to Database, before sending it to the queue
       $this->persist($messageObject);

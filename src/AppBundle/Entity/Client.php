@@ -6,11 +6,14 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use \Doctrine\Common\Collections\ArrayCollection;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class Client
  * @ORM\Entity(repositoryClass="AppBundle\Entity\ClientRepository")
  * @package AppBundle\Entity
+ * @ExclusionPolicy("all")
  */
 class Client extends Person
 {
@@ -19,6 +22,7 @@ class Client extends Person
     * @ORM\Column(type="string", nullable=true)
     * @Assert\Length(max = 20)
     * @JMS\Type("string")
+    * @Expose
     */
     private $relationNumberKeeper;
 

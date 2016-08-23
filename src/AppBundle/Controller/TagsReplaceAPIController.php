@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Component\Utils;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Util\ActionLogWriter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -44,10 +45,15 @@ class TagsReplaceAPIController extends APIController {
    */
   public function createTagReplaceRequest(Request $request)
   {
+    $om = $this->getDoctrine()->getManager();
+    
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
+    $loggedInUser = $this->getLoggedInUser($request);
     $location = $this->getSelectedLocation($request);
 
+    $log = ActionLogWriter::declareTagReplacePost($om, $client, $loggedInUser, $content);
+    
     $animal = $content->get(Constant::ANIMAL_NAMESPACE);
     $isAnimalOfClient = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->verifyIfClientOwnsAnimal($client, $animal);
 
@@ -80,7 +86,7 @@ class TagsReplaceAPIController extends APIController {
     }
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $declareTagReplace = $this->buildMessageObject(RequestType::DECLARE_TAG_REPLACE, $content, $client, $location);
+    $declareTagReplace = $this->buildMessageObject(RequestType::DECLARE_TAG_REPLACE, $content, $client, $loggedInUser, $location);
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($declareTagReplace);
@@ -88,6 +94,8 @@ class TagsReplaceAPIController extends APIController {
     //Send it to the queue and persist/update any changed state to the database
     $messageArray = $this->sendMessageObjectToQueue($declareTagReplace);
 
+    $log = ActionLogWriter::completeActionLog($om, $log);
+    
     return new JsonResponse($messageArray, 200);
   }
 }
