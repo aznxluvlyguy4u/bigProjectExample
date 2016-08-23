@@ -7,6 +7,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Mate;
+use AppBundle\Entity\MateRepository;
 use AppBundle\Output\MateOutput;
 use AppBundle\Validation\MateValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -25,6 +26,23 @@ class MateAPIController extends APIController {
    *
    * Create a DeclareMate Request.
    *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Create a DeclareMate Request",
+   *   input = "AppBundle\Entity\Mate",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
+   * @param Request $request the request object
+   * @return JsonResponse
    * @Route("")
    * @Method("POST")
    */
@@ -51,6 +69,78 @@ class MateAPIController extends APIController {
     $output = MateOutput::createMateOverview($mate);
     
     return new JsonResponse([JsonInputConstant::RESULT => $output], 200);
+  }
+
+
+  /**
+   *
+   * For the history view, get Mates which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Get Matings which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED",
+   *   input = "AppBundle\Entity\Mate",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-history")
+   * @Method("GET")
+   */
+  public function getMateHistory(Request $request)
+  {
+    $location = $this->getSelectedLocation($request);
+
+    /** @var MateRepository $repository */
+    $repository = $this->getDoctrine()->getRepository(Mate::class);
+    $matings = $repository->getMatingsHistoryOutput($location);
+
+    return new JsonResponse([JsonInputConstant::RESULT => $matings],200);
+  }
+
+
+  /**
+   *
+   * Get Mates that were rejected by the third party.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Get Mates that were rejected by the third party",
+   *   input = "AppBundle\Entity\Mate",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-errors")
+   * @Method("GET")
+   */
+  public function getMateErrors(Request $request)
+  {
+    $location = $this->getSelectedLocation($request);
+
+    /** @var MateRepository $repository */
+    $repository = $this->getDoctrine()->getRepository(Mate::class);
+    $matings = $repository->getMatingsErrorOutput($location);
+
+    return new JsonResponse([JsonInputConstant::RESULT => $matings],200);
   }
   
 }

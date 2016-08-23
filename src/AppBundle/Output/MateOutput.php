@@ -5,6 +5,7 @@ namespace AppBundle\Output;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Company;
+use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Invoice;
 use AppBundle\Entity\Client;
@@ -15,12 +16,20 @@ use AppBundle\Component\Count;
 
 class MateOutput
 {
+
     /**
+     * @param Collection $matings
      * @return array
      */
-    public static function createMatesOverview()
+    public static function createMatesOverview($matings)
     {
-        
+        $matingsOutput = array();
+
+        foreach($matings as $mate) {
+            $matingsOutput[] = self::createMateOverview($mate);
+        }
+
+        return $matingsOutput;
     }
 
     /**
@@ -30,6 +39,16 @@ class MateOutput
      */
     public static function createMateOverview($mate)
     {
+        $nullReplacementText = '-';
+
+        if($mate->getStudEwe() instanceof Ewe) {
+            $eweUlnCountryCode = $mate->getStudEwe()->getUlnCountryCode();
+            $eweUlnNumber = $mate->getStudEwe()->getUlnNumber();
+        } else {
+            $eweUlnCountryCode = $nullReplacementText;
+            $eweUlnNumber = $nullReplacementText;
+        }
+
         $res = [
             JsonInputConstant::START_DATE => $mate->getStartDate(),
             JsonInputConstant::END_DATE => $mate->getEndDate(),
@@ -41,8 +60,8 @@ class MateOutput
                 JsonInputConstant::ULN_NUMBER => $mate->getRamUlnNumber()
             ],
             JsonInputConstant::EWE => [
-                JsonInputConstant::ULN_COUNTRY_CODE => $mate->getStudEwe()->getUlnCountryCode(),
-                JsonInputConstant::ULN_NUMBER => $mate->getStudEwe()->getUlnNumber()
+                JsonInputConstant::ULN_COUNTRY_CODE => $eweUlnCountryCode,
+                JsonInputConstant::ULN_NUMBER => $eweUlnNumber
             ],
             JsonInputConstant::RELATION_NUMBER_KEEPER => $mate->getRelationNumberKeeper(),
             JsonInputConstant::UBN => $mate->getUbn(),
