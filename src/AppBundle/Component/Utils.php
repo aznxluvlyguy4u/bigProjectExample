@@ -9,7 +9,7 @@ use AppBundle\Entity\LocationHealthQueue;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Validation\Validator;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
