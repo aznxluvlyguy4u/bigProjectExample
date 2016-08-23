@@ -39,27 +39,24 @@ class EditAdminValidator extends CreateAdminValidator
     }
 
     /**
-     * @param array $adminsContent
+     * @param ArrayCollection $adminContent
      */
-    private function validate($adminsContent)
+    private function validate($adminContent)
     {
-        foreach ($adminsContent as $adminContent) {
+        $personId = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::PERSON_ID, $adminContent);
+        $this->validatePersonId($personId);
 
-            $personId = Utils::getNullCheckedArrayValue(JsonInputConstant::PERSON_ID, $adminContent);
-            $this->validatePersonId($personId);
+        $firstName = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::FIRST_NAME, $adminContent);
+        $this->validateFirstName($firstName);
 
-            $firstName = Utils::getNullCheckedArrayValue(JsonInputConstant::FIRST_NAME, $adminContent);
-            $this->validateFirstName($firstName);
+        $lastName = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::LAST_NAME, $adminContent);
+        $this->validateLastName($lastName);
 
-            $lastName = Utils::getNullCheckedArrayValue(JsonInputConstant::LAST_NAME, $adminContent);
-            $this->validateLastName($lastName);
+        $emailAddress = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::EMAIL_ADDRESS, $adminContent);
+        $this->validateEmailAddress($emailAddress, $personId);
 
-            $emailAddress = Utils::getNullCheckedArrayValue(JsonInputConstant::EMAIL_ADDRESS, $adminContent);
-            $this->validateEmailAddress($emailAddress, $personId);
-
-            $accessLevel = Utils::getNullCheckedArrayValue(JsonInputConstant::ACCESS_LEVEL, $adminContent);
-            $this->validateAccessLevelType($accessLevel);
-        }
+        $accessLevel = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ACCESS_LEVEL, $adminContent);
+        $this->validateAccessLevelType($accessLevel);
     }
 
     /**

@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Output\MenuBarOutput;
+use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -38,11 +39,29 @@ class ComponentAPIController extends APIController {
    * @Route("/menu-bar")
    * @Method("GET")
    */
-  public function getMenuBar(Request $request) {
-    $client = $this->getAuthenticatedUser($request);
-    $outputArray = MenuBarOutput::create($client);
+    public function getMenuBar(Request $request) {
+        $client = $this->getAuthenticatedUser($request);
+        $outputArray = MenuBarOutput::create($client);
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
-  }
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+    }
 
+    /**
+    * @param Request $request
+    * @return JsonResponse
+    * @Route("/admin-menu-bar")
+    * @Method("GET")
+    */
+    public function getAdminMenuBar(Request $request) {
+        $admin = $this->getAuthenticatedEmployee($request);
+        $adminValidator = new AdminValidator($admin);
+
+        if (!$adminValidator->getIsAccessGranted()) {
+            return $adminValidator->createJsonErrorResponse();
+        }
+
+        $outputArray = MenuBarOutput::createAdmin($admin);
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+    }
 }

@@ -914,7 +914,7 @@ class APIController extends Controller implements APIControllerInterface
   /**
    * @param Person $person
    */
-  protected function emailNewPasswordToPerson($person, $newPassword, $isAdmin = false)
+  protected function emailNewPasswordToPerson($person, $newPassword, $isAdmin = false, $isNewUser = false)
   {
     $mailerSourceAddress = $this->getParameter('mailer_source_address');
 
@@ -922,6 +922,12 @@ class APIController extends Controller implements APIControllerInterface
       $subjectHeader = Constant::NEW_ADMIN_PASSWORD_MAIL_SUBJECT_HEADER;
     } else {
       $subjectHeader = Constant::NEW_PASSWORD_MAIL_SUBJECT_HEADER;
+    }
+
+    if($isNewUser) {
+        $twig = 'User/new_user_email.html.twig';
+    } else {
+        $twig = 'User/reset_password_email.html.twig';
     }
     
     //Confirmation message back to the sender
@@ -932,7 +938,7 @@ class APIController extends Controller implements APIControllerInterface
         ->setBody(
             $this->renderView(
             // app/Resources/views/...
-                'User/reset_password_email.html.twig',
+                $twig,
                 array('firstName' => $person->getFirstName(),
                     'lastName' => $person->getLastName(),
                     'userName' => $person->getUsername(),
