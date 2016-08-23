@@ -148,4 +148,36 @@ class MateBuilder extends NsfoBaseBuilder
         $mate->setRevokedBy($loggedInUser);
         return $mate;
     }
+
+
+    /**
+     * @param ObjectManager $manager
+     * @param Mate $mate
+     * @param ArrayCollection $content
+     * @param Client $client
+     * @param Person $loggedInUser
+     * @param Location $location
+     * @return Mate
+     */
+    public static function edit(ObjectManager $manager, Mate $mate, ArrayCollection $content, Client $client, Person $loggedInUser, Location $location)
+    {
+        //Save old values
+        $historicalMate = new Mate();
+        $historicalMate->duplicateValues($mate);
+        $historicalMate->setIsOverwrittenVersion(true);
+
+        //Edit current values
+        $mate = self::postBase($client, $loggedInUser, $location, $mate);
+        $mate = self::setMateValues($manager, $content, $location, $mate);
+
+        //Set historical Mate
+        $historicalMate->setCurrentVersion($mate);
+        $mate->addPreviousVersion($historicalMate);
+
+        return $mate;
+    }
+    
+    
+    
+
 }

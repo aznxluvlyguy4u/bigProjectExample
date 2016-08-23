@@ -3,12 +3,10 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Component\MateBuilder;
-use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Mate;
 use AppBundle\Entity\MateRepository;
-use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\MateOutput;
 use AppBundle\Output\Output;
 use AppBundle\Validation\MateValidator;
@@ -72,9 +70,58 @@ class MateAPIController extends APIController {
     
     return new JsonResponse([JsonInputConstant::RESULT => $output], 200);
   }
+  
+  
+  /**
+   *
+   * Edit Mate
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Edit Mate",
+   *   input = "AppBundle\Entity\Mate",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/{messageId}")
+   * @Method("PUT")
+   */
+  public function editMate(Request $request, $messageId)
+  {
+    $manager = $this->getDoctrine()->getManager();
+    $client = $this->getAuthenticatedUser($request);
+    $loggedInUser = $this->getLoggedInUser($request);
+    $content = $this->getContentAsArray($request);
+    $content->set(JsonInputConstant::MESSAGE_ID, $messageId);
+    $location = $this->getSelectedLocation($request);
 
+    $validateEweGender = true;
+    $isPost = false;
+    $mateValidator = new MateValidator($manager, $content, $client, $validateEweGender, $isPost);
+    if(!$mateValidator->getIsInputValid()) { return $mateValidator->createJsonResponse(); }
 
+    $mate = $mateValidator->getMateFromMessageId();
+    $mate = MateBuilder::edit($manager, $mate, $content, $client, $loggedInUser, $location);
 
+    //TODO when messaging system is complete, have the studRam owner confirm the mate
+    MateBuilder::approveMateDeclaration($mate, $loggedInUser);
+
+    $this->persistAndFlush($mate);
+
+    $output = MateOutput::createMateOverview($mate);
+
+    return new JsonResponse([JsonInputConstant::RESULT => $output], 200);
+  }
   
   
   /**

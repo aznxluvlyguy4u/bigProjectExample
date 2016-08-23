@@ -26,18 +26,26 @@ class MateValidator
     const VALID_CODE = 200;
     const VALID_MESSAGE = 'OK';
 
-    const RAM_MISSING_INPUT               = 'NO ULN OR PEDIGREE GIVEN FOR STUD RAM';
+    const RAM_MISSING_INPUT               = 'STUD RAM: NO ULN OR PEDIGREE GIVEN';
     const RAM_ULN_FORMAT_INCORRECT        = 'STUD RAM: ULN FORMAT INCORRECT';
     const RAM_ULN_FOUND_BUT_NOT_MALE      = 'STUD RAM: ANIMAL FOUND IN DATABASE WITH GIVEN ULN IS NOT MALE';
     const RAM_PEDIGREE_FOUND_BUT_NOT_MALE = 'STUD RAM: ANIMAL FOUND IN DATABASE WITH GIVEN PEDIGREE IS NOT MALE';
     const RAM_PEDIGREE_NOT_FOUND          = 'STUD RAM: NO ANIMAL FOUND FOR GIVEN PEDIGREE';
 
-    const EWE_MISSING_INPUT     = 'STUD EWE: NO ANIMAL FOUND FOR GIVEN ULN';
+    const EWE_MISSING_INPUT     = 'STUD EWE: NO ULN GIVEN';
+    const EWE_NO_ANIMAL_FOUND   = 'STUD EWE: NO ANIMAL FOUND FOR GIVEN ULN';
     const EWE_FOUND_BUT_NOT_EWE = 'STUD EWE: ANIMAL WAS FOUND FOR GIVEN ULN, BUT WAS NOT AN EWE ENTITY';
     const EWE_NOT_OF_CLIENT     = 'STUD EWE: FOUND EWE DOES NOT BELONG TO CLIENT';
 
-    const START_DATE_MISSING = 'START DATE MISSING';
-    const END_DATE_MISSING   = 'END DATE MISSING';
+    const MESSAGE_ID_ERROR     = 'MESSAGE ID: NO MATE FOUND FOR GIVEN MESSAGE ID AND CLIENT';
+    const MATE_OVERWRITTEN     = 'MESSAGE ID: MATE IS ALREADY OVERWRITTEN';
+
+    const START_DATE_MISSING   = 'START DATE MISSING';
+    const END_DATE_MISSING     = 'END DATE MISSING';
+    const START_DATE_IN_FUTURE = 'START DATE CANNOT BE IN THE FUTURE';
+    const END_DATE_IN_FUTURE   = 'END DATE CANNOT BE IN THE FUTURE';
+    const START_AFTER_END_DATE = 'START DATE CANNOT BE AFTER END DATE';
+
     const KI_MISSING         = 'KI MISSING';
     const PMSG_MISSING       = 'PMSG MISSING';
 
@@ -56,10 +64,13 @@ class MateValidator
     /** @var Client */
     private $client;
 
+    /** @var Mate */
+    private $mate;
+
     /** @var array */
     private $errors;
 
-    public function __construct(ObjectManager $manager, ArrayCollection $content, Client $client, $validateEweGender = true)
+    public function __construct(ObjectManager $manager, ArrayCollection $content, Client $client, $validateEweGender = true, $isPost = true)
     {
         $this->manager = $manager;
         $this->animalRepository = $this->manager->getRepository(Animal::class);
@@ -68,27 +79,81 @@ class MateValidator
         $this->validateEweGender = $validateEweGender;
         $this->errors = array();
 
-        $this->validate($content);
+        if($isPost) {
+            $this->validatePost($content);   
+        } else {
+            $this->validateEdit($content);
+        }
     }
 
     /**
      * @param ArrayCollection $content
      */
-    private function validate($content) {
+    private function validatePost($content) {
         
         $eweArray = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::EWE, $content);
         $ramArray = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::RAM, $content);
         
         $isRamInputValid = $this->validateRamArray($ramArray);
         $isEweInputValid = $this->validateEweArray($eweArray);
-        $isNonAnimalInputNotEmpty = $this->validateIfNonAnimalValuesAreNotEmpty($content);
+        $isNonAnimalInputValid = $this->validateNonAnimalValues($content);
 
-        if($isRamInputValid && $isEweInputValid && $isNonAnimalInputNotEmpty) {
+        if($isRamInputValid && $isEweInputValid && $isNonAnimalInputValid) {
             $this->isInputValid = true;
         } else {
             $this->isInputValid = false;
         }
     }
+
+
+    /**
+     * @return Mate
+     */
+    public function getMateFromMessageId()
+    {
+        return $this->mate;
+    }
+
+    /**
+     * @param ArrayCollection $content
+     */
+    private function validateEdit($content)
+    {
+        //Default
+        $this->isInputValid = true;
+
+        //Validate MessageId First
+
+        $messageId = $content->get(JsonInputConstant::MESSAGE_ID);
+
+        $foundMate = self::isNonRevokedMateOfClient($this->manager, $this->client, $messageId);
+        if(!($foundMate instanceof Mate)) {
+            $this->errors[] = self::MESSAGE_ID_ERROR;
+            $isMessageIdValid = false;
+        } else {
+            $this->mate = $foundMate;
+            $isMessageIdValid = true;
+
+            $isNotOverwritten = $this->validateMateIsNotAlreadyOverwritten($foundMate);
+            if(!$isNotOverwritten) {
+                $this->isInputValid = false;
+            }
+        }
+
+        //Validate content second
+
+        $eweArray = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::EWE, $content);
+        $ramArray = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::RAM, $content);
+
+        $isRamInputValid = $this->validateRamArray($ramArray);
+        $isEweInputValid = $this->validateEweArray($eweArray);
+        $isNonAnimalInputValid = $this->validateNonAnimalValues($content);
+
+        if(!$isRamInputValid || !$isEweInputValid || !$isNonAnimalInputValid || !$isMessageIdValid) {
+            $this->isInputValid = false;
+        }
+    }
+
 
     /**
      * @return bool
@@ -175,10 +240,16 @@ class MateValidator
      * @return bool
      */
     private function validateEweArray($eweArray) {
-        
+
+        $ulnString = NullChecker::getUlnStringFromArray($eweArray, null);
+        if($ulnString == null) {
+            $this->errors[] = self::EWE_MISSING_INPUT;
+            return false;
+        }
+
         $foundAnimal = $this->animalRepository->findAnimalByAnimalArray($eweArray);
         if($foundAnimal == null) {
-            $this->errors[] = self::EWE_MISSING_INPUT;
+            $this->errors[] = self::EWE_NO_ANIMAL_FOUND;
             return false;
         }
 
@@ -203,9 +274,9 @@ class MateValidator
      * @param ArrayCollection $content
      * @return bool
      */
-    private function validateIfNonAnimalValuesAreNotEmpty($content)
+    private function validateNonAnimalValues($content)
     {
-        $allNonAnimalValuesAreFilled = true;
+        $allNonAnimalValuesAreValid = true;
 
         $startDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::START_DATE, $content);
         $endDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::END_DATE, $content);
@@ -214,25 +285,57 @@ class MateValidator
 
         if($startDate === null) {
             $this->errors[] = self::START_DATE_MISSING;
-            $allNonAnimalValuesAreFilled =  false;
+            $allNonAnimalValuesAreValid =  false;
+        } else {
+            if($startDate > new \DateTime('now')) {
+                $this->errors[] = self::START_DATE_IN_FUTURE;
+                $allNonAnimalValuesAreValid =  false;
+            }
         }
 
         if($endDate === null) {
             $this->errors[] = self::END_DATE_MISSING;
-            $allNonAnimalValuesAreFilled =  false;
+            $allNonAnimalValuesAreValid =  false;
+        } else {
+            if($endDate > new \DateTime('now')) {
+                $this->errors[] = self::END_DATE_IN_FUTURE;
+                $allNonAnimalValuesAreValid =  false;
+            }
+        }
+
+        if($startDate != null && $endDate != null) {
+            if($startDate > $endDate) {
+                $this->errors[] = self::START_AFTER_END_DATE;
+                $allNonAnimalValuesAreValid =  false;
+            }
         }
 
         if($ki === null) {
             $this->errors[] = self::KI_MISSING;
-            $allNonAnimalValuesAreFilled =  false;
+            $allNonAnimalValuesAreValid =  false;
         }
 
         if($pmsg === null) {
             $this->errors[] = self::PMSG_MISSING;
-            $allNonAnimalValuesAreFilled =  false;
+            $allNonAnimalValuesAreValid =  false;
         }
 
-        return $allNonAnimalValuesAreFilled;
+        return $allNonAnimalValuesAreValid;
+    }
+
+
+    /**
+     * @param Mate $mate
+     * @return bool
+     */
+    private function validateMateIsNotAlreadyOverwritten(Mate $mate)
+    {
+        if($mate->getIsOverwrittenVersion()) {
+            $this->errors[] = self::MATE_OVERWRITTEN;
+            return false;
+        } else {
+            return true;
+        }
     }
 
 
@@ -272,7 +375,7 @@ class MateValidator
         $mate = $manager->getRepository(Mate::class)->findOneByMessageId($messageId);
 
         //null check
-        if(!($mate instanceof Mate)) { return false; }
+        if(!($mate instanceof Mate) || $messageId == null) { return false; }
 
         //Revoke check, to prevent data loss by incorrect data
         if($mate->getRequestState() == RequestStateType::REVOKED) { return false; }
