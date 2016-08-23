@@ -108,7 +108,7 @@ class MateBuilder extends NsfoBaseBuilder
      */
     public static function approveMateDeclaration(Mate $mate, Person $loggedInUser)
     {
-        $mate->setIsAcceptedByThirdParty(true);
+        $mate->setIsApprovedByThirdParty(true);
         $mate->setRequestState(RequestStateType::FINISHED);
         $mate = self::respondToMateDeclaration($mate, $loggedInUser);
         return $mate;
@@ -122,7 +122,7 @@ class MateBuilder extends NsfoBaseBuilder
      */
     public static function rejectMateDeclaration(Mate $mate, Person $loggedInUser)
     {
-        $mate->setIsAcceptedByThirdParty(false);
+        $mate->setIsApprovedByThirdParty(false);
         $mate->setRequestState(RequestStateType::REJECTED);
         $mate = self::respondToMateDeclaration($mate, $loggedInUser);
         return $mate;
@@ -131,8 +131,8 @@ class MateBuilder extends NsfoBaseBuilder
 
     private static function respondToMateDeclaration(Mate $mate, Person $loggedInUser)
     {
-        $mate->setResponseActionBy($loggedInUser);
-        $mate->setResponseDate(new \DateTime('now'));
+        $mate->setApprovedBy($loggedInUser);
+        $mate->setApprovalDate(new \DateTime('now'));
         return $mate;
     }
 }

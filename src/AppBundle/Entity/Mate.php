@@ -89,7 +89,7 @@ class Mate extends DeclareNsfoBase {
      * @ORM\Column(type="boolean", nullable=true, options={"default":null})
      * @JMS\Type("boolean")
      */
-    private $isAcceptedByThirdParty;
+    private $isApprovedByThirdParty;
 
     /**
      * @var DateTime
@@ -98,7 +98,7 @@ class Mate extends DeclareNsfoBase {
      * @Assert\Date
      * @JMS\Type("DateTime")
      */
-    private $responseDate;
+    private $approvalDate;
 
     /**
      * The thirdParty approving or rejecting the Mate.
@@ -106,9 +106,9 @@ class Mate extends DeclareNsfoBase {
      * @var Person
      *
      * @ORM\ManyToOne(targetEntity="Person")
-     * @ORM\JoinColumn(name="response_action_by_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="approved_by_id", referencedColumnName="id")
      */
-    protected $responseActionBy;
+    protected $approvedBy;
 
     /**
      * @var ArrayCollection
@@ -135,7 +135,7 @@ class Mate extends DeclareNsfoBase {
     public function __construct() {
       parent::__construct();
       $this->previousVersions = new ArrayCollection();
-      $this->isAcceptedByThirdParty = null;
+      $this->isApprovedByThirdParty = null;
     }
 
     /**
@@ -327,17 +327,17 @@ class Mate extends DeclareNsfoBase {
     /**
      * @return boolean
      */
-    public function getIsAcceptedByThirdParty()
+    public function getIsApprovedByThirdParty()
     {
-        return $this->isAcceptedByThirdParty;
+        return $this->isApprovedByThirdParty;
     }
 
     /**
-     * @param boolean $isAcceptedByThirdParty
+     * @param boolean $isApprovedByThirdParty
      */
-    public function setIsAcceptedByThirdParty($isAcceptedByThirdParty)
+    public function setIsApprovedByThirdParty($isApprovedByThirdParty)
     {
-        $this->isAcceptedByThirdParty = $isAcceptedByThirdParty;
+        $this->isApprovedByThirdParty = $isApprovedByThirdParty;
     }
 
     /**
@@ -414,33 +414,33 @@ class Mate extends DeclareNsfoBase {
     /**
      * @return null|\DateTime
      */
-    public function getResponseDate()
+    public function getApprovalDate()
     {
-        return $this->responseDate;
+        return $this->approvalDate;
     }
 
     /**
-     * @param \DateTime $responseDate
+     * @param \DateTime $approvalDate
      */
-    public function setResponseDate($responseDate)
+    public function setApprovalDate($approvalDate)
     {
-        $this->responseDate = $responseDate;
+        $this->approvalDate = $approvalDate;
     }
 
     /**
      * @return Person
      */
-    public function getResponseActionBy()
+    public function getApprovedBy()
     {
-        return $this->responseActionBy;
+        return $this->approvedBy;
     }
 
     /**
-     * @param Person $responseActionBy
+     * @param Person $approvedBy
      */
-    public function setResponseActionBy($responseActionBy)
+    public function setApprovedBy($approvedBy)
     {
-        $this->responseActionBy = $responseActionBy;
+        $this->approvedBy = $approvedBy;
     }
 
 
