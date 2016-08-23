@@ -75,6 +75,30 @@ class AnimalOutput
      * @param Ram|Ewe|Neuter $animal
      * @return array
      */
+    public static function createAnimalArrayWithoutWeight($animal)
+    {
+        if(!($animal instanceof Animal)){ return null; }
+
+        $result = array("id" => $animal->getId(),
+            "uln_country_code" => $animal->getUlnCountryCode(),
+            "uln_number" => $animal->getUlnNumber(),
+            "pedigree_country_code" => $animal->getPedigreeCountryCode(),
+            "pedigree_number" => $animal->getPedigreeNumber(),
+            "work_number" => $animal->getAnimalOrderNumber(),
+            "gender" => $animal->getGender(),
+            "date_of_birth" => $animal->getDateOfBirth(),
+            "is_alive" => $animal->getIsAlive(),
+            "is_departed_animal" => $animal->getIsDepartedAnimal()
+        );
+
+        return $result;
+    }
+
+
+    /**
+     * @param Ram|Ewe|Neuter $animal
+     * @return array
+     */
     public static function createChildrenArray($animal)
     {
         $children = array();

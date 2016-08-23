@@ -3,6 +3,8 @@
 namespace AppBundle\Entity;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Output\MateOutput;
+use AppBundle\Util\Validator;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 
@@ -71,5 +73,61 @@ class MateRepository extends BaseRepository {
     {
         $matings = $this->getMatingsErrors($location);
         return MateOutput::createMatesOverview($matings);
+    }
+
+
+    /**
+     * @param Location $locationStudRamOwner
+     * @return Collection
+     */
+    public function getMatingsStudRam($locationStudRamOwner)
+    {
+        //First find Matings without a confirmation
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('requestState', RequestStateType::OPEN))
+            ->andWhere(Criteria::expr()->isNull('isAcceptedByThirdParty'))
+            ->orderBy(['startDate' => Criteria::DESC])
+        ;
+
+        $allMatingsToBeVerified = $this->getEntityManager()->getRepository(Mate::class)
+            ->matching($criteria);
+        
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->getEntityManager()->getRepository(Ram::class);
+
+        $matingsOfOwner = new ArrayCollection();
+
+        /** @var Mate $mate */
+        foreach ($allMatingsToBeVerified as $mate) {
+            $ulnCountryCode = $mate->getRamUlnCountryCode();
+            $ulnNumber = $mate->getRamUlnNumber();
+
+            $ram = $animalRepository->findByUlnCountryCodeAndNumber($ulnCountryCode, $ulnNumber);
+
+            //Set Ram if missing
+            if($mate->getStudRam() == null) {
+                $mate->setStudRam($ram);
+                $ram->getMatings()->add($mate);
+                $this->getEntityManager()->persist($ram);
+                $this->getEntityManager()->persist($mate);
+                $this->flush();
+            }
+
+            if(Validator::isAnimalOfLocation($ram, $locationStudRamOwner)) {
+                $matingsOfOwner->add($mate);
+            }
+        }
+
+        return $matingsOfOwner;
+    }
+
+    /**
+     * @param Location $locationStudRamOwner
+     * @return array
+     */
+    public function getMatingsStudRamOutput($locationStudRamOwner)
+    {
+        $matings = $this->getMatingsErrors($locationStudRamOwner);
+        return MateOutput::createMatesStudRamsOverview($matings);
     }
 }

@@ -82,6 +82,29 @@ class Validator
         }
     }
 
+
+    /**
+     * @param Animal $animal
+     * @param Location $location
+     * @param bool $nullInputResult
+     * @return bool
+     */
+    public static function isAnimalOfLocation($animal, $location, $nullInputResult = false)
+    {
+        //Null check
+        if(!($animal instanceof Animal) || !($location instanceof Location)) { return $nullInputResult; }
+
+        $locationOfAnimal = $animal->getLocation();
+        if(!($locationOfAnimal instanceof Location)) { return $nullInputResult; }
+
+        if($locationOfAnimal->getId() == $location->getId()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
     /**
      * Note! This will only validate for pedigreeCodes is they exist in the array.
      * If they don't exist in the array or are null, then by default 'true' is returned.

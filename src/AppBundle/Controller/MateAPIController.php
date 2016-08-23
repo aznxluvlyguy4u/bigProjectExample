@@ -8,6 +8,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Mate;
 use AppBundle\Entity\MateRepository;
+use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\MateOutput;
 use AppBundle\Validation\MateValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -63,6 +64,7 @@ class MateAPIController extends APIController {
 
     //TODO when messaging system is complete, have the studRam owner confirm the mate
     $mate->setIsAcceptedByThirdParty(true);
+    //TODO Then also set the RequestState to open. And close it at the end.
 
     $this->persistAndFlush($mate);
 
@@ -72,6 +74,9 @@ class MateAPIController extends APIController {
   }
 
 
+
+  
+  
   /**
    *
    * For the history view, get Mates which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED
@@ -142,5 +147,40 @@ class MateAPIController extends APIController {
 
     return new JsonResponse([JsonInputConstant::RESULT => $matings],200);
   }
-  
+
+
+  /**
+   *
+   * Get Mates that still need to be verified by the third party.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Get Mates that still need to be verified by the third party",
+   *   input = "AppBundle\Entity\Mate",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-pending")
+   * @Method("GET")
+   */
+  public function getMatingsToBeVerified(Request $request)
+  {
+    $location = $this->getSelectedLocation($request);
+
+    /** @var MateRepository $repository */
+    $repository = $this->getDoctrine()->getRepository(Mate::class);
+    $matings = $repository->getMatingsStudRamOutput($location);
+
+    return new JsonResponse([JsonInputConstant::RESULT => $matings],200);
+  }
 }
