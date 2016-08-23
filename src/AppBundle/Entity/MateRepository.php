@@ -91,9 +91,9 @@ class MateRepository extends BaseRepository {
 
         $allMatingsToBeVerified = $this->getEntityManager()->getRepository(Mate::class)
             ->matching($criteria);
-        
+
         /** @var AnimalRepository $animalRepository */
-        $animalRepository = $this->getEntityManager()->getRepository(Ram::class);
+        $animalRepository = $this->getEntityManager()->getRepository(Animal::class);
 
         $matingsOfOwner = new ArrayCollection();
 
@@ -127,7 +127,7 @@ class MateRepository extends BaseRepository {
      */
     public function getMatingsStudRamOutput($locationStudRamOwner)
     {
-        $matings = $this->getMatingsErrors($locationStudRamOwner);
+        $matings = $this->getMatingsStudRam($locationStudRamOwner);
         return MateOutput::createMatesStudRamsOverview($matings);
     }
 }
