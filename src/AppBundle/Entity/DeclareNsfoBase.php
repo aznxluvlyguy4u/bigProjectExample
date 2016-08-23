@@ -29,6 +29,7 @@ abstract class DeclareNsfoBase
 {
 
     /**
+     * @var integer
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
@@ -36,6 +37,7 @@ abstract class DeclareNsfoBase
     protected $id;
 
     /**
+     * @var \DateTime
      * @ORM\Column(type="datetime")
      * @Assert\Date
      * @Assert\NotBlank
@@ -44,6 +46,7 @@ abstract class DeclareNsfoBase
     protected $logDate;
 
     /**
+     * @var string
      * @ORM\Column(type="string")
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
@@ -52,6 +55,7 @@ abstract class DeclareNsfoBase
     protected $messageId;
 
     /**
+     * @var string
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
@@ -59,6 +63,7 @@ abstract class DeclareNsfoBase
     protected $requestState;
 
     /**
+     * @var string
      * @ORM\Column(type="string")
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
@@ -83,6 +88,24 @@ abstract class DeclareNsfoBase
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
      */
     protected $actionBy;
+
+
+    /**
+     * @var Person
+     *
+     * @ORM\ManyToOne(targetEntity="Person")
+     * @ORM\JoinColumn(name="revoked_by_id", referencedColumnName="id")
+     */
+    protected $revokedBy;
+
+
+    /**
+     * @var \DateTime
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    protected $revokeDate;
 
 
     /**
@@ -259,6 +282,38 @@ abstract class DeclareNsfoBase
     public function setActionBy($actionBy)
     {
         $this->actionBy = $actionBy;
+    }
+
+    /**
+     * @return Person
+     */
+    public function getRevokedBy()
+    {
+        return $this->revokedBy;
+    }
+
+    /**
+     * @param Person $revokedBy
+     */
+    public function setRevokedBy($revokedBy)
+    {
+        $this->revokedBy = $revokedBy;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getRevokeDate()
+    {
+        return $this->revokeDate;
+    }
+
+    /**
+     * @param \DateTime $revokeDate
+     */
+    public function setRevokeDate($revokeDate)
+    {
+        $this->revokeDate = $revokeDate;
     }
 
     /**
