@@ -47,7 +47,7 @@ abstract class DeclareNsfoBase
 
     /**
      * @var string
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", unique=true)
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
      * @JMS\Type("string")
