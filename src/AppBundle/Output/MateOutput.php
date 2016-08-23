@@ -11,6 +11,7 @@ use AppBundle\Entity\Invoice;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Mate;
 use AppBundle\Entity\Pedigree;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\Ram;
 use Doctrine\Common\Collections\Collection;
 use AppBundle\Component\Count;
@@ -50,6 +51,13 @@ class MateOutput
             $eweUlnNumber = $nullReplacementText;
         }
 
+        $revoker = $mate->getRevokedBy();
+        if($revoker instanceof Person) {
+            $personId = $revoker->getPersonId();
+        } else {
+            $personId = $nullReplacementText;
+        }
+
         $res = [
             JsonInputConstant::MESSAGE_ID => $mate->getMessageId(),
             JsonInputConstant::START_DATE => $mate->getStartDate(),
@@ -69,7 +77,9 @@ class MateOutput
             JsonInputConstant::UBN => $mate->getUbn(),
             JsonInputConstant::REQUEST_STATE => $mate->getRequestState(),
             JsonInputConstant::IS_HIDDEN => $mate->getIsHidden(),
-            JsonInputConstant::IS_OVERWRITTEN => $mate->getIsOverwrittenVersion()
+            JsonInputConstant::IS_OVERWRITTEN => $mate->getIsOverwrittenVersion(),
+            JsonInputConstant::REVOKED_BY => $personId,
+            JsonInputConstant::REVOKE_DATE => $mate->getRevokeDate()
         ];
 
         return $res;

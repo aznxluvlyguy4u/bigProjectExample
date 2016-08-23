@@ -10,6 +10,7 @@ use AppBundle\Entity\Mate;
 use AppBundle\Entity\MateRepository;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\MateOutput;
+use AppBundle\Output\Output;
 use AppBundle\Validation\MateValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -181,5 +182,49 @@ class MateAPIController extends APIController {
     $matings = $repository->getMatingsStudRamOutput($location);
 
     return new JsonResponse([JsonInputConstant::RESULT => $matings],200);
+  }
+
+
+  /**
+   *
+   * Revoke Mate
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Revoke Mate",
+   *   input = "AppBundle\Entity\Mate",
+   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   * )
+   *
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/{messageId}/revoke")
+   * @Method("PUT")
+   */
+  public function revokeMate(Request $request, $messageId)
+  {
+    $manager = $this->getDoctrine()->getManager();
+    $client = $this->getAuthenticatedUser($request);
+    $loggedInUser = $this->getLoggedInUser($request);
+
+    $mateFromMessageId = MateValidator::isNonRevokedMateOfClient($manager, $client, $messageId);
+    if(!($mateFromMessageId instanceof Mate)) {
+      return Output::createStandardJsonErrorResponse();
+    }
+    
+    $mate = MateBuilder::revoke($mateFromMessageId, $loggedInUser);
+    $this->persistAndFlush($mate);
+
+    $output = MateOutput::createMateOverview($mate);
+
+    return new JsonResponse([JsonInputConstant::RESULT => $output], 200);
   }
 }

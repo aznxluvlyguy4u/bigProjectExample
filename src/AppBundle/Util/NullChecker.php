@@ -6,6 +6,8 @@ namespace AppBundle\Util;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Client;
+use AppBundle\Entity\Company;
 use AppBundle\Entity\Location;
 
 class NullChecker
@@ -117,6 +119,28 @@ class NullChecker
             return $location->getUbn();
         } else {
             return $replacementText;
+        }
+    }
+    
+    
+    /**
+     * @param Location $location
+     * @param mixed $nullResultReplacement
+     * @return Client|mixed
+     */
+    public static function getOwnerOfLocation($location, $nullResultReplacement = null)
+    {
+        if(!($location instanceof Location)) { return $nullResultReplacement; }
+
+        /** @var Location $location */
+        $company = $location->getCompany();
+        if(!($company instanceof Company)) { return $nullResultReplacement; }
+
+        $owner = $company->getOwner();
+        if(!($owner instanceof Client)) {
+            return $nullResultReplacement;
+        } else {
+            return $owner;
         }
     }
 }

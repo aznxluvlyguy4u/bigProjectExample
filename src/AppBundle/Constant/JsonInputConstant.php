@@ -96,6 +96,8 @@ class JsonInputConstant
     const RESULT = 'result';
     const IS_HIDDEN = 'is_hidden';
     const IS_OVERWRITTEN = 'is_overwritten';
+    const REVOKED_BY = 'revoked_by';
+    const REVOKE_DATE = 'revoke_date';
 
     //Persons
     const PERSON_ID = 'person_id';

@@ -11,6 +11,9 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Location;
+use AppBundle\Entity\Mate;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -252,5 +255,40 @@ class MateValidator
             Constant::ERRORS_NAMESPACE => $this->errors);
 
         return new JsonResponse($result, $code);
+    }
+
+
+    /**
+     * Returns Mate if true.
+     *
+     * @param ObjectManager $manager
+     * @param Client $client
+     * @param string $messageId
+     * @return Mate|boolean
+     */
+    public static function isNonRevokedMateOfClient(ObjectManager $manager, $client, $messageId)
+    {
+        /** @var Mate $mate */
+        $mate = $manager->getRepository(Mate::class)->findOneByMessageId($messageId);
+
+        //null check
+        if(!($mate instanceof Mate)) { return false; }
+
+        //Revoke check, to prevent data loss by incorrect data
+        if($mate->getRequestState() == RequestStateType::REVOKED) { return false; }
+
+        /** @var Location $locationOfMate */
+        $locationOfMate = $manager->getRepository(Location::class)->findOneByUbn($mate->getUbn());
+
+        $locationOwnerOfMate = NullChecker::getOwnerOfLocation($locationOfMate);
+
+        if($locationOwnerOfMate instanceof Client && $client instanceof Client) {
+            /** @var Client $locationOwnerOfMate */
+            if($locationOwnerOfMate->getId() == $client->getId()) {
+                return $mate;
+            }
+        }
+
+        return false;
     }
 }
