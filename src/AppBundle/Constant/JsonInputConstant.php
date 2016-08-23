@@ -89,6 +89,7 @@ class JsonInputConstant
     const UBN = 'ubn';
 
     //Messages
+    const MESSAGE_ID = 'message_id';
     const REQUEST_ID = 'request_id';
     const REQUEST_STATE = 'request_state';
     const LOG_DATE = 'log_date';

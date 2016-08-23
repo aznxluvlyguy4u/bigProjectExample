@@ -51,6 +51,7 @@ class MateOutput
         }
 
         $res = [
+            JsonInputConstant::MESSAGE_ID => $mate->getMessageId(),
             JsonInputConstant::START_DATE => $mate->getStartDate(),
             JsonInputConstant::END_DATE => $mate->getEndDate(),
             JsonInputConstant::LOG_DATE => $mate->getLogDate(),
@@ -116,6 +117,7 @@ class MateOutput
         }
 
         $res = [
+            JsonInputConstant::MESSAGE_ID => $mate->getMessageId(),
             JsonInputConstant::START_DATE => $mate->getStartDate(),
             JsonInputConstant::END_DATE => $mate->getEndDate(),
             JsonInputConstant::LOG_DATE => $mate->getLogDate(),
