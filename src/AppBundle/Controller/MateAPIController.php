@@ -9,6 +9,7 @@ use AppBundle\Entity\Mate;
 use AppBundle\Entity\MateRepository;
 use AppBundle\Output\MateOutput;
 use AppBundle\Output\Output;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Validation\MateValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -55,6 +56,8 @@ class MateAPIController extends APIController {
     $location = $this->getSelectedLocation($request);
     $loggedInUser = $this->getLoggedInUser($request);
 
+    $log = ActionLogWriter::createMate($manager, $client, $loggedInUser, $location, $content);
+
     $validateEweGender = true;
     $mateValidator = new MateValidator($manager, $content, $client, $validateEweGender);
     if(!$mateValidator->getIsInputValid()) { return $mateValidator->createJsonResponse(); }
@@ -67,6 +70,8 @@ class MateAPIController extends APIController {
     $this->persistAndFlush($mate);
 
     $output = MateOutput::createMateOverview($mate);
+
+    $log = ActionLogWriter::completeActionLog($manager, $log);
     
     return new JsonResponse([JsonInputConstant::RESULT => $output], 200);
   }
@@ -105,6 +110,8 @@ class MateAPIController extends APIController {
     $content->set(JsonInputConstant::MESSAGE_ID, $messageId);
     $location = $this->getSelectedLocation($request);
 
+    $log = ActionLogWriter::editMate($manager, $client, $loggedInUser, $location, $content);
+    
     $validateEweGender = true;
     $isPost = false;
     $mateValidator = new MateValidator($manager, $content, $client, $validateEweGender, $isPost);
@@ -120,6 +127,8 @@ class MateAPIController extends APIController {
 
     $output = MateOutput::createMateOverview($mate);
 
+    $log = ActionLogWriter::completeActionLog($manager, $log);
+    
     return new JsonResponse([JsonInputConstant::RESULT => $output], 200);
   }
   
@@ -231,47 +240,5 @@ class MateAPIController extends APIController {
     return new JsonResponse([JsonInputConstant::RESULT => $matings],200);
   }
 
-
-  /**
-   *
-   * Revoke Mate
-   *
-   * @ApiDoc(
-   *   requirements={
-   *     {
-   *       "name"="AccessToken",
-   *       "dataType"="string",
-   *       "requirement"="",
-   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-   *     }
-   *   },
-   *   resource = true,
-   *   description = "Revoke Mate",
-   *   input = "AppBundle\Entity\Mate",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
-   * )
-   *
-   * @param Request $request the request object
-   * @return JsonResponse
-   * @Route("/{messageId}/revoke")
-   * @Method("PUT")
-   */
-  public function revokeMate(Request $request, $messageId)
-  {
-    $manager = $this->getDoctrine()->getManager();
-    $client = $this->getAuthenticatedUser($request);
-    $loggedInUser = $this->getLoggedInUser($request);
-
-    $mateFromMessageId = MateValidator::isNonRevokedMateOfClient($manager, $client, $messageId);
-    if(!($mateFromMessageId instanceof Mate)) {
-      return Output::createStandardJsonErrorResponse();
-    }
-    
-    $mate = MateBuilder::revoke($mateFromMessageId, $loggedInUser);
-    $this->persistAndFlush($mate);
-
-    $output = MateOutput::createMateOverview($mate);
-
-    return new JsonResponse([JsonInputConstant::RESULT => $output], 200);
-  }
+  
 }

@@ -14,4 +14,9 @@ class UserActionType extends RequestType
     const CONTACT_EMAIL = 'CONTACT_EMAIL';
     
     const HEALTH_STATUS_UPDATE = 'HEALTH_STATUS_UPDATE';
+    
+    const MATE_CREATE = 'MATE_CREATE';
+    const MATE_EDIT = 'MATE_EDIT';
+
+    const NON_IR_REVOKE = 'NON_IR_REVOKE';
 }

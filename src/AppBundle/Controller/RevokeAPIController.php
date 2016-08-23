@@ -3,8 +3,13 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\DeclareNsfoBase;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Output\Output;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Validation\DeclareNsfoBaseValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -76,5 +81,67 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
         $log = ActionLogWriter::completeActionLog($om, $log);
 
         return new JsonResponse($messageArray, 200);
+    }
+
+
+    /**
+     *
+     * Revoke non-IR declarations
+     *
+     * @ApiDoc(
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Revoke Mate",
+     *   input = "AppBundle\Entity\Mate",
+     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     * )
+     *
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("-nsfo/{messageId}")
+     * @Method("PUT")
+     */
+    public function revokeNsfoDeclaration(Request $request, $messageId)
+    {
+        $manager = $this->getDoctrine()->getManager();
+        $client = $this->getAuthenticatedUser($request);
+        $loggedInUser = $this->getLoggedInUser($request);
+
+        $log = ActionLogWriter::revokeNsfoDeclaration($manager, $client, $loggedInUser, $messageId);
+
+        $declarationFromMessageId = DeclareNsfoBaseValidator::isNonRevokedNsfoDeclarationOfClient($manager, $client, $messageId);
+
+        if(!($declarationFromMessageId instanceof DeclareNsfoBase)) {
+            return Output::createStandardJsonErrorResponse();
+        }
+
+        $mate = self::revoke($declarationFromMessageId, $loggedInUser);
+        $this->persistAndFlush($mate);
+
+        $output = 'Revoke complete';
+
+        $log = ActionLogWriter::completeActionLog($manager, $log);
+
+        return new JsonResponse([JsonInputConstant::RESULT => $output], 200);
+    }
+
+
+    /**
+     * @param DeclareNsfoBase $declareNsfoBase
+     * @return DeclareNsfoBase
+     */
+    public static function revoke(DeclareNsfoBase $declareNsfoBase, $loggedInUser)
+    {
+        $declareNsfoBase->setRequestState(RequestStateType::REVOKED);
+        $declareNsfoBase->setRevokeDate(new \DateTime('now'));
+        $declareNsfoBase->setRevokedBy($loggedInUser);
+        return $declareNsfoBase;
     }
 }

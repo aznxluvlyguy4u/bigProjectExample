@@ -135,19 +135,7 @@ class MateBuilder extends NsfoBaseBuilder
         $mate->setApprovalDate(new \DateTime('now'));
         return $mate;
     }
-
-
-    /**
-     * @param Mate $mate
-     * @return Mate
-     */
-    public static function revoke(Mate $mate, $loggedInUser)
-    {
-        $mate->setRequestState(RequestStateType::REVOKED);
-        $mate->setRevokeDate(new \DateTime('now'));
-        $mate->setRevokedBy($loggedInUser);
-        return $mate;
-    }
+    
 
 
     /**

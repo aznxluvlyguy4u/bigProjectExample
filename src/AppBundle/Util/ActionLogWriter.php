@@ -243,7 +243,76 @@ class ActionLogWriter
 
         return $log;
     }
-    
+
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Client $client
+     * @param Person $loggedInUser
+     * @param Location $location
+     * @param ArrayCollection $content
+     * @return ActionLog
+     */
+    public static function createMate(ObjectManager $om, $client, $loggedInUser, $location, $content)
+    {
+        $userActionType = UserActionType::MATE_CREATE;
+
+        $ubn = NullChecker::getUbnFromLocation($location);
+        $ulnRam = NullChecker::getUlnOrPedigreeStringFromArray(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::RAM, $content));
+        $ulnEwe = NullChecker::getUlnOrPedigreeStringFromArray(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::EWE, $content));
+
+        $description = 'ubn: '.$ubn.'. Ram uln: '.$ulnRam.'. Ewe uln: '.$ulnEwe;
+
+        $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Client $client
+     * @param Person $loggedInUser
+     * @param Location $location
+     * @param ArrayCollection $content
+     * @return ActionLog
+     */
+    public static function editMate(ObjectManager $om, $client, $loggedInUser, $location, $content)
+    {
+        $userActionType = UserActionType::MATE_EDIT;
+
+        $ubn = NullChecker::getUbnFromLocation($location);
+        $ulnRam = NullChecker::getUlnOrPedigreeStringFromArray(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::RAM, $content));
+        $ulnEwe = NullChecker::getUlnOrPedigreeStringFromArray(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::EWE, $content));
+        $messageId = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MESSAGE_ID, $content);
+
+        $description = 'ubn: '.$ubn.'. Ram uln: '.$ulnRam.'. Ewe uln: '.$ulnEwe.'. messageId: '.$messageId;
+
+        $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Client $client
+     * @param Person $loggedInUser
+     * @return ActionLog
+     */
+    public static function revokeNsfoDeclaration(ObjectManager $om, $client, $loggedInUser, $messageId)
+    {
+        $userActionType = UserActionType::NON_IR_REVOKE;
+        $log = new ActionLog($client, $loggedInUser, $userActionType, false, 'messageId: '.$messageId);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
 
     /**
      * @param ObjectManager $om
