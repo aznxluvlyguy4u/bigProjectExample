@@ -12,6 +12,7 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareWeight;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
+use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -51,10 +52,10 @@ class DeclareWeightBuilder extends NsfoBaseBuilder
         /* Set non-Animal values */
 
         $measurementDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::MEASUREMENT_DATE, $content);
-        $weight = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::WEIGHT, $content);
+        $weightValue = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::WEIGHT, $content);
 
         $declareWeight->setMeasurementDate($measurementDate);
-        $declareWeight->setWeight($weight);
+        $declareWeight->setWeight($weightValue);
 
         $declareWeight->setLocation($location);
 
@@ -67,7 +68,28 @@ class DeclareWeightBuilder extends NsfoBaseBuilder
 
         $animal = $animalRepository->findAnimalByAnimalArray($animalArray);
         $declareWeight->setAnimal($animal);
+        
+        $weightMeasurement = self::createNewWeight($animal, $weightValue, $measurementDate);
+        $declareWeight->setWeightMeasurement($weightMeasurement);
 
         return $declareWeight;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param float $weightValue
+     * @param \DateTime $measurementDate
+     * @return Weight
+     */
+    private static function createNewWeight(Animal $animal, $weightValue, $measurementDate)
+    {
+        $weightMeasurement = new Weight();
+        $weightMeasurement->setAnimal($animal);
+        $weightMeasurement->setWeight($weightValue);
+        $weightMeasurement->setIsBirthWeight(false);
+        $weightMeasurement->setMeasurementDate($measurementDate);
+
+        return $weightMeasurement;
     }
 }

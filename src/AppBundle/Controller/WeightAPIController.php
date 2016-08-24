@@ -57,14 +57,17 @@ class WeightAPIController extends APIController
         $location = $this->getSelectedLocation($request);
         $loggedInUser = $this->getLoggedInUser($request);
 
+        
+        //TODO VALIDATE IF MEASUREMENT ON THAT DATE ALREADY EXISTS
         $weightValidator = new DeclareWeightValidator($manager, $content, $client);
         if(!$weightValidator->getIsInputValid()) {
             return $weightValidator->createJsonResponse();
         }
 
         $declareWeight = DeclareWeightBuilder::post($manager, $content, $client, $loggedInUser, $location);
+        $manager->persist($declareWeight->getWeightMeasurement());
         $this->persistAndFlush($declareWeight);
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'OK'), 200);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareWeight->getWeightMeasurement()), 200);
     }
 }
