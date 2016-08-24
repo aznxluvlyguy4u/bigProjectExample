@@ -6,7 +6,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\Employee;
 use AppBundle\FormInput\WeightMeasurements;
 use AppBundle\Output\WeightMeasurementsOutput;
-use AppBundle\Validation\WeightValidator;
+use AppBundle\Validation\DeclareWeightValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -20,7 +20,7 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 /**
  * @Route("/api/v1/animals-weights")
  */
-class WeightAPIController
+class WeightAPIController extends APIController
 {
     /**
      * Get the last weight measurements of all the animals in a clients livestock.
@@ -79,17 +79,21 @@ class WeightAPIController
      * @Route("")
      * @Method("POST")
      */
-    public function createWeightMeasurements(Request $request) {
-
+    public function createWeightMeasurements(Request $request)
+    {
+        $manager = $this->getDoctrine()->getManager();
         $content = $this->getContentAsArray($request);
-
-        //The ULN's are not validated because in the frontend the user is only able the select the animals given by the API
+        $client = $this->getAuthenticatedUser($request);
+        $location = $this->getSelectedLocation($request);
+        $loggedInUser = $this->getLoggedInUser($request);
 
         //Validate password format
-        $weightValidator = new WeightValidator($content);
-        if(!$weightValidator->getAreWeightsValid()) {
-            return $weightValidator->createJsonErrorResponse();
+        $weightValidator = new DeclareWeightValidator($manager, $content, $client);
+        if(!$weightValidator->getIsInputValid()) {
+            return $weightValidator->createJsonResponse();
         }
+
+        dump('Success');die;
 
         $location = $this->getSelectedLocation($request);
         $livestockAnimals = $this->getDoctrine()

@@ -19,15 +19,10 @@ use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 
-class MateValidator
+class MateValidator extends DeclareNsfoBaseValidator
 {
     const IS_VALIDATE_IF_START_DATE_IS_IN_THE_FUTURE = false;
     const IS_VALIDATE_IF_END_DATE_IS_IN_THE_FUTURE = false;
-
-    const ERROR_CODE = 428;
-    const ERROR_MESSAGE = 'INVALID INPUT';
-    const VALID_CODE = 200;
-    const VALID_MESSAGE = 'OK';
 
     const RAM_MISSING_INPUT               = 'STUD RAM: NO ULN OR PEDIGREE GIVEN';
     const RAM_ULN_FORMAT_INCORRECT        = 'STUD RAM: ULN FORMAT INCORRECT';
@@ -55,32 +50,13 @@ class MateValidator
     /** @var boolean */
     private $validateEweGender;
 
-    /** @var boolean */
-    private $isInputValid;
-
-    /** @var AnimalRepository */
-    private $animalRepository;
-
-    /** @var ObjectManager */
-    private $manager;
-
-    /** @var Client */
-    private $client;
-
     /** @var Mate */
     private $mate;
 
-    /** @var array */
-    private $errors;
-
     public function __construct(ObjectManager $manager, ArrayCollection $content, Client $client, $validateEweGender = true, $isPost = true)
     {
-        $this->manager = $manager;
-        $this->animalRepository = $this->manager->getRepository(Animal::class);
-        $this->client = $client;
-        $this->isInputValid = false;
+        parent::__construct($manager, $content, $client);
         $this->validateEweGender = $validateEweGender;
-        $this->errors = array();
 
         if($isPost) {
             $this->validatePost($content);   
@@ -155,15 +131,6 @@ class MateValidator
         if(!$isRamInputValid || !$isEweInputValid || !$isNonAnimalInputValid || !$isMessageIdValid) {
             $this->isInputValid = false;
         }
-    }
-
-
-    /**
-     * @return bool
-     */
-    public function getIsInputValid()
-    {
-        return $this->isInputValid;
     }
 
     /**
@@ -344,19 +311,6 @@ class MateValidator
             return false;
         } else {
             return true;
-        }
-    }
-
-
-    /**
-     * @return JsonResponse
-     */
-    public function createJsonResponse()
-    {
-        if($this->isInputValid){
-            return Validator::createJsonResponse(self::VALID_MESSAGE, self::VALID_CODE);
-        } else {
-            return Validator::createJsonResponse(self::ERROR_MESSAGE, self::ERROR_CODE, $this->errors);
         }
     }
 
