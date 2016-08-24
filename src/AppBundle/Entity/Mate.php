@@ -450,8 +450,9 @@ class Mate extends DeclareNsfoBase {
     public function duplicateValues(Mate $mate)
     {
         //Note 'currentVersion' and 'previousVersions' are not duplicated. They set the history relationship.
-        //The messageId is also not duplicated to keep each Mate unique. The OneToMany reference is used to group them.
-
+        //The OneToMany reference is used to group them.
+        parent::duplicateValues($mate);
+        
         //Mate specific values
         $this->setStartDate($mate->getStartDate());
         $this->setEndDate($mate->getEndDate());
@@ -465,16 +466,5 @@ class Mate extends DeclareNsfoBase {
         $this->setApprovalDate($mate->getApprovalDate());
         $this->setApprovedBy($mate->getApprovedBy());
         $this->setLocation($mate->getLocation());
-
-        //DeclareNsfoBase values
-        $this->setLogDate($mate->getLogDate());
-        $this->setRequestState($mate->getRequestState());
-        $this->setRelationNumberKeeper($mate->getRelationNumberKeeper());
-        $this->setUbn($mate->getUbn());
-        $this->setActionBy($mate->getActionBy());
-        $this->setRevokedBy($mate->getRevokedBy());
-        $this->setRevokeDate($mate->getRevokeDate());
-        $this->setIsHidden($mate->getIsHidden());
-        $this->setIsOverwrittenVersion($mate->getIsOverwrittenVersion());
     }
 }

@@ -349,7 +349,24 @@ abstract class DeclareNsfoBase
     }
 
 
+    /**
+     * @param Mate $mate
+     */
+    protected function duplicateValues(Mate $mate)
+    {
+        //Note the messageId is not duplicated to keep each Declaration unique.
 
+        //DeclareNsfoBase values
+        $this->setLogDate($mate->getLogDate());
+        $this->setRequestState($mate->getRequestState());
+        $this->setRelationNumberKeeper($mate->getRelationNumberKeeper());
+        $this->setUbn($mate->getUbn());
+        $this->setActionBy($mate->getActionBy());
+        $this->setRevokedBy($mate->getRevokedBy());
+        $this->setRevokeDate($mate->getRevokeDate());
+        $this->setIsHidden($mate->getIsHidden());
+        $this->setIsOverwrittenVersion($mate->getIsOverwrittenVersion());
+    }
 
 
 }
