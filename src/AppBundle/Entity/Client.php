@@ -249,4 +249,16 @@ class Client extends Person
     {
         $this->employer = $employer;
     }
+
+    /**
+     * @return boolean
+     */
+    public function hasEmployer()
+    {
+        if($this->employer instanceof Company) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
