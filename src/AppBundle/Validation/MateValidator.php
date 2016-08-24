@@ -21,6 +21,9 @@ use Doctrine\Common\Persistence\ObjectManager;
 
 class MateValidator
 {
+    const IS_VALIDATE_IF_START_DATE_IS_IN_THE_FUTURE = false;
+    const IS_VALIDATE_IF_END_DATE_IS_IN_THE_FUTURE = false;
+
     const ERROR_CODE = 428;
     const ERROR_MESSAGE = 'INVALID INPUT';
     const VALID_CODE = 200;
@@ -287,23 +290,27 @@ class MateValidator
             $this->errors[] = self::START_DATE_MISSING;
             $allNonAnimalValuesAreValid =  false;
         }
-//        else {
-//            if($startDate > new \DateTime('now')) {
-//                $this->errors[] = self::START_DATE_IN_FUTURE;
-//                $allNonAnimalValuesAreValid =  false;
-//            }
-//        }
+        else {
+            if(self::IS_VALIDATE_IF_START_DATE_IS_IN_THE_FUTURE) {
+                if($startDate > new \DateTime('now')) {
+                    $this->errors[] = self::START_DATE_IN_FUTURE;
+                    $allNonAnimalValuesAreValid =  false;
+                }
+            }
+        }
 
         if($endDate === null) {
             $this->errors[] = self::END_DATE_MISSING;
             $allNonAnimalValuesAreValid =  false;
         }
-//        else {
-//            if($endDate > new \DateTime('now')) {
-//                $this->errors[] = self::END_DATE_IN_FUTURE;
-//                $allNonAnimalValuesAreValid =  false;
-//            }
-//        }
+        else {
+            if(self::IS_VALIDATE_IF_END_DATE_IS_IN_THE_FUTURE) {
+                if ($endDate > new \DateTime('now')) {
+                    $this->errors[] = self::END_DATE_IN_FUTURE;
+                    $allNonAnimalValuesAreValid = false;
+                }
+            }
+        }
 
         if($startDate != null && $endDate != null) {
             if($startDate > $endDate) {
