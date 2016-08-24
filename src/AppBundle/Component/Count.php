@@ -28,6 +28,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Validator\Constraints\DateTime;
 
 
 /**
@@ -570,41 +571,40 @@ class Count
                 // TODO Change Gender when switching to CLASS based distinction
                 $gender = $animal->getGender();
 
-                $ageLimitYoungerSix = Utils::getDateLimitForAge(1, false);
-                $ageLimitOlderTwelve = Utils::getDateLimitForAge(1, false);
-
+                $now = new \DateTime();
+                $diff = $now->diff($dateOfBirth);
 
                 if($isOwnedAnimal) {
                     if($gender == 'MALE') {
-                       if($dateOfBirth > $ageLimitYoungerSix) {
+                        if($diff->y == 0 && $diff->m < 6) {
                            $ramUnderSix++;
-                       }
-                       if($dateOfBirth >= $ageLimitYoungerSix && $dateOfBirth <= $ageLimitOlderTwelve) {
+                        }
+                        if($diff->y == 0 && ($diff->m > 6 && $diff->m < 12)) {
                            $ramBetweenSixAndTwelve++;
-                       }
-                       if($dateOfBirth < $ageLimitOlderTwelve) {
+                        }
+                        if($diff->y > 0) {
                            $ramOverTwelve++;
-                       }
+                        }
                     }
                     if($gender == 'FEMALE') {
-                        if($dateOfBirth > $ageLimitYoungerSix) {
+                        if($diff->y == 0 && $diff->m < 6) {
                             $eweUnderSix++;
                         }
-                        if($dateOfBirth >= $ageLimitYoungerSix && $dateOfBirth <= $ageLimitOlderTwelve) {
+                        if($diff->y == 0 && ($diff->m > 6 && $diff->m < 12)) {
                             $eweBetweenSixAndTwelve++;
                         }
-                        if($dateOfBirth < $ageLimitOlderTwelve) {
+                        if($diff->y > 0) {
                             $eweOverTwelve++;
                         }
                     }
                     if($gender == 'NEUTER') {
-                        if($dateOfBirth > $ageLimitYoungerSix) {
+                        if($diff->y == 0 && $diff->m < 6) {
                             $neuterUnderSix++;
                         }
-                        if($dateOfBirth >= $ageLimitYoungerSix && $dateOfBirth <= $ageLimitOlderTwelve) {
+                        if($diff->y == 0 && ($diff->m > 6 && $diff->m < 12)) {
                             $neuterBetweenSixAndTwelve++;
                         }
-                        if($dateOfBirth < $ageLimitOlderTwelve) {
+                        if($diff->y > 0) {
                             $neuterOverTwelve++;
                         }
                     }
@@ -621,17 +621,17 @@ class Count
         $count->set("RAM_TOTAL", $ramTotal);
         $count->set("RAM_UNDER_SIX", $ramUnderSix);
         $count->set("RAM_BETWEEN_SIX_AND_TWELVE", $ramBetweenSixAndTwelve);
-        $count->set("RAM_OVER_TWELVE", $ramBetweenSixAndTwelve);
+        $count->set("RAM_OVER_TWELVE", $ramOverTwelve);
 
         $count->set("EWE_TOTAL", $eweTotal);
         $count->set("EWE_UNDER_SIX", $eweUnderSix);
         $count->set("EWE_BETWEEN_SIX_AND_TWELVE", $eweBetweenSixAndTwelve);
-        $count->set("EWE_OVER_TWELVE", $eweBetweenSixAndTwelve);
+        $count->set("EWE_OVER_TWELVE", $eweOverTwelve);
 
         $count->set("NEUTER_TOTAL", $neuterTotal);
         $count->set("NEUTER_UNDER_SIX", $neuterUnderSix);
         $count->set("NEUTER_BETWEEN_SIX_AND_TWELVE", $neuterBetweenSixAndTwelve);
-        $count->set("NEUTER_OVER_TWELVE", $neuterBetweenSixAndTwelve);
+        $count->set("NEUTER_OVER_TWELVE", $neuterOverTwelve);
 
         return $count;
     }
