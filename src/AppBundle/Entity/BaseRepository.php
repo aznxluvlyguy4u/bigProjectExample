@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Enumerator\RequestTypeNonIR;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityRepository;
 
@@ -120,6 +121,7 @@ class BaseRepository extends EntityRepository
      */
     public function getLatestLogDatesForDashboardDeclarations(Client $client)
     {
+        /** @var DeclareBaseRepository $repository */
         $repository = $this->getEntityManager()->getRepository(Constant::DECLARE_BASE_REPOSITORY);
 
         $latestArrivalLogdate = $repository->getLatestLogDate($client,RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_IMPORT_ENTITY);
@@ -167,12 +169,34 @@ class BaseRepository extends EntityRepository
     }
 
     /**
+     * @param string $ubn
+     * @param string $nonIrNsfoDeclarationType
+     * @return \DateTime
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getLatestNsfoDeclarationLogDatePerUbn($ubn, $nonIrNsfoDeclarationType)
+    {
+        $sql = "SELECT MAX(log_date) FROM declare_nsfo_base WHERE type = '" . $nonIrNsfoDeclarationType."' AND ubn ='" . $ubn . "'";
+
+        $query = $this->getEntityManager()->getConnection()->prepare($sql);
+        $query->execute();
+        $result = $query->fetchColumn();
+
+        if(!$result) {
+            return null;
+        } else {
+            return new \DateTime($result);
+        }
+    }
+
+    /**
      * @param Location $location
      * @param string $errorMessageForDateIsNull
      * @return ArrayCollection
      */
     public function getLatestLogDatesForDashboardDeclarationsPerLocation(Location $location, $errorMessageForDateIsNull = null)
     {
+        /** @var DeclareBaseRepository $repository */
         $repository = $this->getEntityManager()->getRepository(Constant::DECLARE_BASE_REPOSITORY);
         $ubn = $location->getUbn();
 
@@ -200,13 +224,19 @@ class BaseRepository extends EntityRepository
         if($latestBirthLogdate == null) {
             $latestBirthLogdate = $errorMessageForDateIsNull;
         }
-
+        
+        $latestMateLogDate = $repository->getLatestNsfoDeclarationLogDatePerUbn($ubn,RequestTypeNonIR::MATE);
+        if($latestMateLogDate == null) {
+            $latestMateLogDate = $errorMessageForDateIsNull;
+        }
+        
         $declarationLogDate = new ArrayCollection();
         $declarationLogDate->set(RequestType::DECLARE_ARRIVAL_ENTITY, $latestArrivalLogdate);
         $declarationLogDate->set(RequestType::DECLARE_DEPART_ENTITY, $latestDepartLogdate);
         $declarationLogDate->set(RequestType::DECLARE_LOSS_ENTITY, $latestLossLogdate);
         $declarationLogDate->set(RequestType::DECLARE_TAGS_TRANSFER_ENTITY, $latestTagTransferLogdate);
         $declarationLogDate->set(RequestType::DECLARE_BIRTH_ENTITY, $latestBirthLogdate);
+        $declarationLogDate->set(RequestTypeNonIR::MATE, $latestMateLogDate);
 
         return $declarationLogDate;
     }

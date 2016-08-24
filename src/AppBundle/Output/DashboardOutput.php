@@ -7,6 +7,7 @@ use AppBundle\Entity\Content;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Enumerator\RequestTypeNonIR;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 
@@ -84,8 +85,8 @@ class DashboardOutput extends Output
                   ),
                   "mate" =>
                   array(
-                      "date_last_declaration" => "",
-                      "error_count" => ""
+                      "date_last_declaration" => $declarationLogDate->get(RequestTypeNonIR::MATE),
+                      "error_count" => $errorCounts->get(RequestTypeNonIR::MATE)
                   ),
                   "loss" =>
                   array(

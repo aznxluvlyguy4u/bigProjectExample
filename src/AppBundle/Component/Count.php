@@ -14,8 +14,11 @@ use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
+use AppBundle\Entity\DeclareMateRepository;
+use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Mate;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
@@ -26,6 +29,7 @@ use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Enumerator\RequestTypeNonIR;
 use AppBundle\Enumerator\TagStateType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Validator\Constraints\DateTime;
@@ -63,6 +67,7 @@ class Count
         $errorCounts->set(RequestType::DECLARE_DEPART, Count::getErrorCountDepartsAndExportsPerLocation($location));
         $errorCounts->set(RequestType::DECLARE_LOSS, Count::getErrorCountLossesLocation($location));
         $errorCounts->set(RequestType::DECLARE_BIRTH, Count::getErrorCountBirthsLocation($location));
+        $errorCounts->set(RequestTypeNonIR::MATE, Count::getErrorCountMatingsLocation($location));
 
         return $errorCounts;
     }
@@ -308,6 +313,42 @@ class Count
         return $count;
     }
 
+
+    /**
+     * @param Client $client
+     * @return int
+     */
+    public static function getErrorCountMatings(Client $client)
+    {
+        $count = 0;
+
+        foreach($client->getCompanies() as $company){
+            foreach($company->getLocations() as $location){
+                self::getErrorCountMatingsLocation($location);
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * @param Location $location
+     * @return int
+     */
+    public static function getErrorCountMatingsLocation(Location $location)
+    {
+        $count = 0;
+
+        foreach($location->getMatings() as $mate){
+            if(self::countNsfoAsErrorResponse($mate)) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+    
+
     /**
      * @param Client $client
      * @return int
@@ -347,6 +388,21 @@ class Count
 
         return false;
     }
+
+
+    /**
+     * @param Mate|DeclareNsfoBase $declaration
+     * @return bool
+     */
+    private static function countNsfoAsErrorResponse($declaration)
+    {
+        if($declaration->getRequestState() == RequestStateType::FAILED && !$declaration->getIsHidden()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
 
     /**
      * Return an ArrayCollection with keys:
