@@ -3,6 +3,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
@@ -275,5 +276,35 @@ class Validator
             return false;
         }
 
+    }
+
+
+    /**
+     * @param string $message
+     * @param int $code The HTTP code
+     * @param array $errors
+     * @return JsonResponse
+     */
+    public static function createJsonResponse($message, $code, $errors = array())
+    {
+        //Success message
+        if($errors == null || sizeof($errors) == 0){
+            $result = array(
+                Constant::MESSAGE_NAMESPACE => $message,
+                Constant::CODE_NAMESPACE => $code);
+
+        //Error message
+        } else {
+            $result = array();
+            foreach ($errors as $errorMessage) {
+                $errorArray = [
+                    Constant::CODE_NAMESPACE => $code,
+                    Constant::MESSAGE_NAMESPACE => $errorMessage
+                ];
+                $result[] = $errorArray;
+            }
+        }
+
+        return new JsonResponse([JsonInputConstant::RESULT => $result], $code);
     }
 }

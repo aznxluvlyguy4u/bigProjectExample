@@ -345,19 +345,10 @@ class MateValidator
     public function createJsonResponse()
     {
         if($this->isInputValid){
-            $message = self::VALID_MESSAGE;
-            $code = self::VALID_CODE;
+            return Validator::createJsonResponse(self::VALID_MESSAGE, self::VALID_CODE);
         } else {
-            $message = self::ERROR_MESSAGE;
-            $code = self::ERROR_CODE;
+            return Validator::createJsonResponse(self::ERROR_MESSAGE, self::ERROR_CODE, $this->errors);
         }
-
-        $result = array(
-            Constant::MESSAGE_NAMESPACE => $message,
-            Constant::CODE_NAMESPACE => $code,
-            Constant::ERRORS_NAMESPACE => $this->errors);
-
-        return new JsonResponse($result, $code);
     }
 
 
