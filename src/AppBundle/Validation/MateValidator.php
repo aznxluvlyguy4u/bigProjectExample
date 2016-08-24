@@ -286,22 +286,24 @@ class MateValidator
         if($startDate === null) {
             $this->errors[] = self::START_DATE_MISSING;
             $allNonAnimalValuesAreValid =  false;
-        } else {
-            if($startDate > new \DateTime('now')) {
-                $this->errors[] = self::START_DATE_IN_FUTURE;
-                $allNonAnimalValuesAreValid =  false;
-            }
         }
+//        else {
+//            if($startDate > new \DateTime('now')) {
+//                $this->errors[] = self::START_DATE_IN_FUTURE;
+//                $allNonAnimalValuesAreValid =  false;
+//            }
+//        }
 
         if($endDate === null) {
             $this->errors[] = self::END_DATE_MISSING;
             $allNonAnimalValuesAreValid =  false;
-        } else {
-            if($endDate > new \DateTime('now')) {
-                $this->errors[] = self::END_DATE_IN_FUTURE;
-                $allNonAnimalValuesAreValid =  false;
-            }
         }
+//        else {
+//            if($endDate > new \DateTime('now')) {
+//                $this->errors[] = self::END_DATE_IN_FUTURE;
+//                $allNonAnimalValuesAreValid =  false;
+//            }
+//        }
 
         if($startDate != null && $endDate != null) {
             if($startDate > $endDate) {
