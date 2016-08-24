@@ -22,13 +22,17 @@ class MateRepository extends BaseRepository {
     {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('location', $location))
-            ->andWhere(Criteria::expr()->eq('requestState', RequestStateType::FINISHED))
-            ->orWhere(Criteria::expr()->eq('requestState', RequestStateType::OPEN))
-            ->orWhere(Criteria::expr()->eq('requestState', RequestStateType::REVOKED))
-            ->orWhere(Criteria::expr()->eq('requestState', RequestStateType::REVOKING))
             ->andWhere(Criteria::expr()->eq('isOverwrittenVersion', false))
-            ->andWhere(Criteria::expr()->isNull('isApprovedByThirdParty'))
-            ->orWhere(Criteria::expr()->eq('isApprovedByThirdParty', true))
+            ->andWhere(Criteria::expr()->orX(
+                Criteria::expr()->eq('requestState', RequestStateType::FINISHED),
+                Criteria::expr()->eq('requestState', RequestStateType::OPEN),
+                Criteria::expr()->eq('requestState', RequestStateType::REVOKED),
+                Criteria::expr()->eq('requestState', RequestStateType::REVOKING)
+            ))
+            ->andWhere(Criteria::expr()->orX(
+                Criteria::expr()->isNull('isApprovedByThirdParty'),
+                Criteria::expr()->eq('isApprovedByThirdParty', true)
+            ))
             ->orderBy(['startDate' => Criteria::DESC])
         ;
 
@@ -57,9 +61,12 @@ class MateRepository extends BaseRepository {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('location', $location))
             ->andWhere(Criteria::expr()->eq('isOverwrittenVersion', false))
-            ->andWhere(Criteria::expr()->eq('requestState', RequestStateType::CANCELLED))
-            ->orWhere(Criteria::expr()->eq('requestState', RequestStateType::REJECTED))
-            ->orWhere(Criteria::expr()->eq('isApprovedByThirdParty', false))
+            ->andWhere(Criteria::expr()->orX(
+                Criteria::expr()->eq('requestState', RequestStateType::FAILED),
+                Criteria::expr()->eq('requestState', RequestStateType::CANCELLED),
+                Criteria::expr()->eq('requestState', RequestStateType::REJECTED),
+                Criteria::expr()->eq('isApprovedByThirdParty', false)
+            ))
             ->orderBy(['startDate' => Criteria::DESC])
         ;
 
