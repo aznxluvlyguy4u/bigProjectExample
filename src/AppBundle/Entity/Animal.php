@@ -1835,6 +1835,75 @@ abstract class Animal
         $this->ubnOfBirth = $ubnOfBirth;
     }
 
-    
 
+    /**
+     * @param Neuter| $animal
+     */
+    public function duplicateValues($animal)
+    {
+        if($animal instanceof Animal) {
+            /* Values */
+            $this->setPedigreeCountryCode($animal->getPedigreeCountryCode());
+            $this->setPedigreeNumber($animal->getPedigreeNumber());
+            $this->setUlnCountryCode($animal->getUlnCountryCode());
+            $this->setUlnNumber($animal->getUlnNumber());
+            $this->setGender($animal->getGender());
+            $this->setName($animal->getName());
+            $this->setUbnOfBirth($animal->getUbnOfBirth());
+            $this->setDateOfBirth($animal->getDateOfBirth());
+            $this->setDateOfDeath($animal->getDateOfDeath());
+            $this->setAnimalType($animal->getAnimalType());
+            $this->setTransferState($animal->getTransferState());
+            $this->setAnimalCategory($animal->getAnimalCategory());
+            $this->setAnimalHairColour($animal->getAnimalHairColour());
+            $this->setIsAlive($animal->getIsAlive());
+            $this->setAnimalOrderNumber($animal->getAnimalOrderNumber());
+            $this->setIsImportAnimal($animal->getIsImportAnimal());
+            $this->setIsExportAnimal($animal->getIsExportAnimal());
+            $this->setIsDepartedAnimal($animal->getIsDepartedAnimal());
+            $this->setAnimalCountryOrigin($animal->getAnimalCountryOrigin());
+            $this->setBreed($animal->getBreed());
+            $this->setBreedType($animal->getBreedType());
+            $this->setBreedCode($animal->getBreedCode());
+            $this->setScrapieGenotype($animal->getScrapieGenotype());
+            $this->setNote($animal->getNote());
+            
+            /* XtoOne relationships */
+            //TODO Don't forget the other part of the relationships
+            //TODO remove the old references
+            $father = $animal->getParentFather();
+            $this->setParentFather($father);
+
+            $mother = $animal->getParentMother();
+            $this->setParentMother($mother);
+
+            $this->setParentNeuter($animal->getParentNeuter());
+            $this->setSurrogate($animal->getSurrogate());
+            $this->setAssignedTag($animal->getAssignedTag());
+            $this->setLocation($animal->getLocation());
+            $this->setBreeder($animal->getBreeder());
+            $this->setLitter($animal->getLitter());
+
+            /* XtoMany relationships */
+            //TODO
+//            $this->parents = $animal->getParents();
+//            $this->arrivals = $animal->getArrivals();
+//            $this->departures = set($animal->get());
+//            $this->imports = set($animal->get());
+//            $this->exports = set($animal->get());
+//            $this->births = set($animal->get());
+//            $this->deaths = set($animal->get());
+//            $this->flags = set($animal->get());
+//            $this->tagReplacements = set($animal->get());
+//            $this->ulnHistory = set($animal->get());
+//            $this->animalResidenceHistory = set($animal->get());
+//            $this->bodyFatMeasurements;
+//            $this->muscleThicknessMeasurements;
+//            $this->tailLengthMeasurements;
+//            $this->weightMeasurements;
+//            $this->exteriorMeasurements;
+
+            //TODO also don't forget unidirectional relationship to animal in other entities
+        }
+    }
 }
