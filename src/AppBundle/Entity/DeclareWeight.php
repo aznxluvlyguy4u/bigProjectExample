@@ -71,6 +71,13 @@ class DeclareWeight extends DeclareNsfoBase
     private $location;
 
     /**
+     * @var Weight
+     * @ORM\ManyToOne(targetEntity="Weight", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Weight")
+     */
+    private $weightMeasurement;
+
+    /**
      * DeclareWeight constructor.
      * @param bool $isBirthWeight
      */
@@ -215,6 +222,24 @@ class DeclareWeight extends DeclareNsfoBase
     {
         $this->location = $location;
     }
+
+    /**
+     * @return Weight
+     */
+    public function getWeightMeasurement()
+    {
+        return $this->weightMeasurement;
+    }
+
+    /**
+     * @param Weight $weightMeasurement
+     */
+    public function setWeightMeasurement($weightMeasurement)
+    {
+        $this->weightMeasurement = $weightMeasurement;
+    }
+
+
 
 
 }
