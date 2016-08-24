@@ -140,6 +140,17 @@ class Location
    */
   protected $matings;
 
+
+  /**
+   * @var ArrayCollection
+   *
+   * @JMS\Type("AppBundle\Entity\DeclareWeight")
+   * @ORM\OneToMany(targetEntity="DeclareWeight", mappedBy="location", cascade={"persist"})
+   * @ORM\OrderBy({"measurementDate" = "ASC"})
+   */
+  protected $declareWeight;
+  
+
   /**
    * @Assert\NotBlank
    * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"}, fetch="EAGER")
@@ -701,6 +712,21 @@ class Location
       return $this->matings;
     }
 
+    /**
+     * @return DeclareWeight
+     */
+    public function getDeclareWeight()
+    {
+      return $this->declareWeight;
+    }
+
+    /**
+     * @param DeclareWeight $declareWeight
+     */
+    public function setDeclareWeight($declareWeight)
+    {
+      $this->declareWeight = $declareWeight;
+    }
 
     /**
      * Set locationHolder

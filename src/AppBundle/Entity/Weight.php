@@ -36,6 +36,13 @@ class Weight extends Measurement {
      */
     private $isBirthWeight;
 
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isRevoked;
+
    /**
     * Weight constructor.
     */
@@ -43,6 +50,7 @@ class Weight extends Measurement {
     {
       parent::__construct();
         
+      $this->isRevoked = false;  
       $this->weight = 0.00;
     }
 
@@ -143,6 +151,22 @@ class Weight extends Measurement {
         return $this->inspector;
     }
 
+    /**
+     * @return boolean
+     */
+    public function isIsRevoked()
+    {
+        return $this->isRevoked;
+    }
+
+    /**
+     * @param boolean $isRevoked
+     */
+    public function setIsRevoked($isRevoked)
+    {
+        $this->isRevoked = $isRevoked;
+    }
+    
     
     /**
      * @param mixed $weight

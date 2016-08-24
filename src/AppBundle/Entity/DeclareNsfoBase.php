@@ -20,7 +20,8 @@ use JMS\Serializer\Annotation\Expose;
  * //TODO add new child classes to the DiscriminatorMap
  * @ORM\DiscriminatorMap(
  *   {
- *      "Mate" = "Mate"
+ *      "Mate" = "Mate",
+ *      "DeclareWeight" = "DeclareWeight"
  *   }
  * )
  * @package AppBundle\Entity\DeclareNsfoBase
