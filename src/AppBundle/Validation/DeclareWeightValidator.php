@@ -8,6 +8,8 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareWeight;
+use AppBundle\Entity\Weight;
+use AppBundle\Entity\WeightRepository;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -24,6 +26,8 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
 {
     const DEFAULT_MAX_WEIGHT = 200.00; //NOTE CHANGING THIS WILL AFFECT THE FRONT-END!
     const DEFAULT_MIN_WEIGHT = 0.00;   //NOTE CHANGING THIS WILL AFFECT THE FRONT-END!
+
+    const MEASUREMENT_ALREADY_EXISTS = "ANIMAL ALREADY HAS A WEIGHT MEASUREMENT ON THIS DATE. EDIT, OR CHOOSE ANOTHER DATE";
 
     const MEASUREMENT_DATE_MISSING = "MEASUREMENT DATE IS MISSING";
     const WEIGHT_IS_MISSING  = "WEIGHT IS MISSING";
@@ -46,6 +50,12 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
 
     /** @var DeclareWeight */
     private $declareWeight;
+
+    /** @var Animal */
+    private $animal;
+
+    /** @var \DateTime */
+    private $measurementDate;
 
     /**
      * DeclareWeightValidator constructor.
@@ -90,8 +100,9 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
 
         $isAnimalInputValid = $this->validateAnimalArray($animalArray);
         $isNonAnimalInputValid = $this->validateNonAnimalValues($content);
+        $isMeasurementAlreadyExists = $this->validateIfMeasurementDoesNotExistsYet();
 
-        if($isAnimalInputValid && $isNonAnimalInputValid) {
+        if($isAnimalInputValid && $isNonAnimalInputValid && $isMeasurementAlreadyExists) {
             $this->isInputValid = true;
         } else {
             $this->isInputValid = false;
@@ -125,6 +136,7 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
 
         $isOwnedByClient = Validator::isAnimalOfClient($foundAnimal, $this->client);
         if($isOwnedByClient) {
+            $this->animal = $foundAnimal;
             return true;
         } else {
             $this->errors[] = self::ANIMAL_NOT_OF_CLIENT;
@@ -166,9 +178,30 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
         } elseif($measurementDate > new \DateTime('now')) {
             $this->errors[] = self::MEASUREMENT_DATE_IN_FUTURE;
             $isValid = false;
+
+        } else {
+            $this->measurementDate = $measurementDate;
         }
 
         return $isValid;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function validateIfMeasurementDoesNotExistsYet()
+    {
+        /** @var WeightRepository $weightRepository */
+        $weightRepository = $this->manager->getRepository(Weight::class);
+
+        $isMeasurementAlreadyExists = $weightRepository->isExistForAnimalOnDate($this->animal, $this->measurementDate);
+        if($isMeasurementAlreadyExists) {
+            $this->errors[] = self::MEASUREMENT_ALREADY_EXISTS;
+            return false;
+        } else {
+            return true;
+        }
     }
 
 
