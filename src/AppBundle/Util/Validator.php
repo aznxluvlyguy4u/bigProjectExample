@@ -28,6 +28,23 @@ use Doctrine\Common\Persistence\ObjectManager;
 
 class Validator
 {
+
+    /**
+     * @param float $number
+     * @param int $maxNumberOfDecimals
+     * @return bool
+     */
+    public static function isNumberOfDecimalsWithinLimit($number, $maxNumberOfDecimals)
+    {
+        $roundedNumber = round($number,$maxNumberOfDecimals);
+        if($roundedNumber == $number) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+
     /**
      * validate if Id is of format: AZ123456789
      *
