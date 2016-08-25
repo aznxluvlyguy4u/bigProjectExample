@@ -41,7 +41,7 @@ class MateOutput
      */
     public static function createMateOverview($mate)
     {
-        $nullReplacementText = '-';
+        $nullReplacementText = '';
 
         if($mate->getStudEwe() instanceof Ewe) {
             $eweUlnCountryCode = $mate->getStudEwe()->getUlnCountryCode();
@@ -79,7 +79,7 @@ class MateOutput
             JsonInputConstant::IS_HIDDEN => $mate->getIsHidden(),
             JsonInputConstant::IS_OVERWRITTEN => $mate->getIsOverwrittenVersion(),
             JsonInputConstant::REVOKED_BY => $personId,
-            JsonInputConstant::REVOKE_DATE => $mate->getRevokeDate()
+            JsonInputConstant::REVOKE_DATE => Utils::fillNullOrEmptyString($mate->getRevokeDate(),$nullReplacementText)
         ];
 
         return $res;
