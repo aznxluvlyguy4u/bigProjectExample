@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\ORM\Mapping as ORM;
@@ -341,6 +342,8 @@ class DeclareArrival extends DeclareBase {
                 $this->pedigreeCountryCode = $animal->getPedigreeCountryCode();
                 $this->pedigreeNumber = $animal->getPedigreeNumber();
             }
+
+            $this->setAnimalObjectType(Utils::getClassName($animal));
         }
 
         return $this;
