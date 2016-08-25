@@ -65,7 +65,7 @@ class DeclareWeight extends DeclareNsfoBase
     /**
      * @var Location
      * @Assert\NotBlank
-     * @ORM\ManyToOne(targetEntity="Location", inversedBy="declareWeight", cascade={"persist"})
+     * @ORM\ManyToOne(targetEntity="Location", inversedBy="declareWeights", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
      */
     private $location;

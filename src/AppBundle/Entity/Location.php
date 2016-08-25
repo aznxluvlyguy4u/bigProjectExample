@@ -148,7 +148,7 @@ class Location
    * @ORM\OneToMany(targetEntity="DeclareWeight", mappedBy="location", cascade={"persist"})
    * @ORM\OrderBy({"measurementDate" = "ASC"})
    */
-  protected $declareWeight;
+  protected $declareWeights;
   
 
   /**
@@ -231,6 +231,7 @@ class Location
     $this->flags = new ArrayCollection();
     $this->revokes = new ArrayCollection();
     $this->matings = new ArrayCollection();
+    $this->declareWeights = new ArrayCollection();
     $this->healthMessages = new ArrayCollection();
     $this->animalResidenceHistory = new ArrayCollection();
     $this->setLocationId(Utils::generateTokenCode());
@@ -699,7 +700,7 @@ class Location
      */
     public function removeMate(Mate $mate)
     {
-      $this->revokes->removeElement($mate);
+      $this->matings->removeElement($mate);
     }
 
     /**
@@ -715,18 +716,34 @@ class Location
     /**
      * @return DeclareWeight
      */
-    public function getDeclareWeight()
+    public function getDeclareWeights()
     {
-      return $this->declareWeight;
+      return $this->declareWeights;
     }
 
-    /**
-     * @param DeclareWeight $declareWeight
-     */
-    public function setDeclareWeight($declareWeight)
-    {
-      $this->declareWeight = $declareWeight;
-    }
+  /**
+   * Add DeclareWeight
+   *
+   * @param DeclareWeight $declareWeight
+   *
+   * @return Location
+   */
+  public function addDeclareWeight(DeclareWeight $declareWeight)
+  {
+    $this->declareWeights[] = $declareWeight;
+
+    return $this;
+  }
+
+  /**
+   * Remove DeclareWeight
+   *
+   * @param DeclareWeight $declareWeight
+   */
+  public function removeDeclareWeight(DeclareWeight $declareWeight)
+  {
+    $this->declareWeights->removeElement($declareWeight);
+  }
 
     /**
      * Set locationHolder
