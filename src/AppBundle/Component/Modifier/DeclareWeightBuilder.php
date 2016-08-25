@@ -114,6 +114,7 @@ class DeclareWeightBuilder extends NsfoBaseBuilder
         //Edit current values
         $declareWeight = self::postBase($client, $loggedInUser, $location, $declareWeight);
         $declareWeight = self::setDeclareWeightValues($manager, $content, $location, $declareWeight);
+        $declareWeight->setLogDate(new \DateTime('now'));
 
         //Set historical Mate
         $historicalMate->setCurrentVersion($declareWeight);

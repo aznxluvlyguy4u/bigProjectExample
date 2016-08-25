@@ -157,6 +157,7 @@ class MateBuilder extends NsfoBaseBuilder
         //Edit current values
         $mate = self::postBase($client, $loggedInUser, $location, $mate);
         $mate = self::setMateValues($manager, $content, $location, $mate);
+        $mate->setLogDate(new \DateTime('now'));
 
         //Set historical Mate
         $historicalMate->setCurrentVersion($mate);
