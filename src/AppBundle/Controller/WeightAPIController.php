@@ -10,6 +10,7 @@ use AppBundle\Entity\DeclareWeightRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\FormInput\WeightMeasurements;
 use AppBundle\Output\WeightMeasurementsOutput;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Validation\DeclareWeightValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -59,6 +60,8 @@ class WeightAPIController extends APIController
         $location = $this->getSelectedLocation($request);
         $loggedInUser = $this->getLoggedInUser($request);
 
+        $log = ActionLogWriter::createDeclareWeight($manager, $client, $loggedInUser, $content);
+
         $weightValidator = new DeclareWeightValidator($manager, $content, $client);
         if(!$weightValidator->getIsInputValid()) {
             return $weightValidator->createJsonResponse();
@@ -67,6 +70,8 @@ class WeightAPIController extends APIController
         $declareWeight = DeclareWeightBuilder::post($manager, $content, $client, $loggedInUser, $location);
         $manager->persist($declareWeight->getWeightMeasurement());
         $this->persistAndFlush($declareWeight);
+
+        $log = ActionLogWriter::completeActionLog($manager, $log); 
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'OK'), 200);
     }
@@ -105,6 +110,8 @@ class WeightAPIController extends APIController
         $content->set(JsonInputConstant::MESSAGE_ID, $messageId);
         $location = $this->getSelectedLocation($request);
 
+        $log = ActionLogWriter::editDeclareWeight($manager, $client, $loggedInUser, $content);
+
         $isPost = false;
         $weightValidator = new DeclareWeightValidator($manager, $content, $client, $isPost);
         if(!$weightValidator->getIsInputValid()) {
@@ -115,6 +122,8 @@ class WeightAPIController extends APIController
         $declareWeight = DeclareWeightBuilder::edit($manager, $declareWeight, $content, $client, $loggedInUser, $location);
 
         $this->persistAndFlush($declareWeight);
+
+        $log = ActionLogWriter::completeActionLog($manager, $log);
 
         return new JsonResponse([JsonInputConstant::RESULT => 'OK'], 200);
     }

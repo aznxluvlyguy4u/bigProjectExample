@@ -301,6 +301,55 @@ class ActionLogWriter
      * @param ObjectManager $om
      * @param Client $client
      * @param Person $loggedInUser
+     * @param ArrayCollection $content
+     * @return ActionLog
+     */
+    public static function createDeclareWeight(ObjectManager $om, $client, $loggedInUser, $content)
+    {
+        $userActionType = UserActionType::DECLARE_WEIGHT_CREATE;
+
+        $uln = NullChecker::getUlnOrPedigreeStringFromArray(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ANIMAL, $content));
+        $weight = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::WEIGHT, $content);
+        $measurementDate = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MEASUREMENT_DATE, $content);
+
+        $description = 'Animal uln: '.$uln.'. weight: '.$weight.'. measurementDate: '.$measurementDate;
+
+        $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Client $client
+     * @param Person $loggedInUser
+     * @param ArrayCollection $content
+     * @return ActionLog
+     */
+    public static function editDeclareWeight(ObjectManager $om, $client, $loggedInUser, $content)
+    {
+        $userActionType = UserActionType::DECLARE_WEIGHT_EDIT;
+
+        $uln = NullChecker::getUlnOrPedigreeStringFromArray(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ANIMAL, $content));
+        $weight = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::WEIGHT, $content);
+        $measurementDate = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MEASUREMENT_DATE, $content);
+        $messageId = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MESSAGE_ID, $content);
+
+        $description = 'Animal uln: '.$uln.'. weight: '.$weight.'. measurementDate: '.$measurementDate.'. messageId: '.$messageId;
+
+        $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Client $client
+     * @param Person $loggedInUser
      * @return ActionLog
      */
     public static function revokeNsfoDeclaration(ObjectManager $om, $client, $loggedInUser, $messageId)
