@@ -2,7 +2,7 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Component\Modifier\DeclareWeightBuilder;
+use AppBundle\Component\DeclareWeightBuilder;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\DeclareWeight;
@@ -57,9 +57,7 @@ class WeightAPIController extends APIController
         $client = $this->getAuthenticatedUser($request);
         $location = $this->getSelectedLocation($request);
         $loggedInUser = $this->getLoggedInUser($request);
-
         
-        //TODO VALIDATE IF MEASUREMENT ON THAT DATE ALREADY EXISTS
         $weightValidator = new DeclareWeightValidator($manager, $content, $client);
         if(!$weightValidator->getIsInputValid()) {
             return $weightValidator->createJsonResponse();

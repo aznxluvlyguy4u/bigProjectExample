@@ -1,6 +1,6 @@
 <?php
 
-namespace AppBundle\Component\Modifier;
+namespace AppBundle\Component;
 
 
 use AppBundle\Component\NsfoBaseBuilder;
