@@ -225,15 +225,17 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
      */
     private function validateIfMeasurementDoesNotExistsYet()
     {
-        /** @var WeightRepository $weightRepository */
-        $weightRepository = $this->manager->getRepository(Weight::class);
+        if($this->measurementDate != null) {
+            /** @var WeightRepository $weightRepository */
+            $weightRepository = $this->manager->getRepository(Weight::class);
 
-        $isMeasurementAlreadyExists = $weightRepository->isExistForAnimalOnDate($this->animal, $this->measurementDate);
-        if($isMeasurementAlreadyExists) {
-            $this->errors[] = self::MEASUREMENT_ALREADY_EXISTS;
-            return false;
-        } else {
-            return true;
+            $isMeasurementAlreadyExists = $weightRepository->isExistForAnimalOnDate($this->animal, $this->measurementDate);
+            if($isMeasurementAlreadyExists) {
+                $this->errors[] = self::MEASUREMENT_ALREADY_EXISTS;
+                return false;
+            } else {
+                return true;
+            }
         }
     }
 
