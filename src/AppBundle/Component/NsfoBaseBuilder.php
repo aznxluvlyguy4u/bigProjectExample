@@ -3,6 +3,7 @@
 namespace AppBundle\Component;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareNsfoBase;
+use AppBundle\Entity\DeclareWeight;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Mate;
 use AppBundle\Entity\Person;
@@ -23,7 +24,7 @@ class NsfoBaseBuilder
      * @param Person $loggedInUser
      * @param Location $location
      * @param DeclareNsfoBase $nsfoDeclaration
-     * @return DeclareNsfoBase|Mate
+     * @return DeclareNsfoBase|Mate|DeclareWeight
      */
     protected static function postBase(Client $client, Person $loggedInUser,
                                        Location $location, DeclareNsfoBase $nsfoDeclaration)

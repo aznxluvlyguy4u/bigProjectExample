@@ -19,12 +19,10 @@ use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 
-class MateValidator
+class MateValidator extends DeclareNsfoBaseValidator
 {
-    const ERROR_CODE = 428;
-    const ERROR_MESSAGE = 'INVALID INPUT';
-    const VALID_CODE = 200;
-    const VALID_MESSAGE = 'OK';
+    const IS_VALIDATE_IF_START_DATE_IS_IN_THE_FUTURE = false;
+    const IS_VALIDATE_IF_END_DATE_IS_IN_THE_FUTURE = false;
 
     const RAM_MISSING_INPUT               = 'STUD RAM: NO ULN OR PEDIGREE GIVEN';
     const RAM_ULN_FORMAT_INCORRECT        = 'STUD RAM: ULN FORMAT INCORRECT';
@@ -36,9 +34,6 @@ class MateValidator
     const EWE_NO_ANIMAL_FOUND   = 'STUD EWE: NO ANIMAL FOUND FOR GIVEN ULN';
     const EWE_FOUND_BUT_NOT_EWE = 'STUD EWE: ANIMAL WAS FOUND FOR GIVEN ULN, BUT WAS NOT AN EWE ENTITY';
     const EWE_NOT_OF_CLIENT     = 'STUD EWE: FOUND EWE DOES NOT BELONG TO CLIENT';
-
-    const MESSAGE_ID_ERROR     = 'MESSAGE ID: NO MATE FOUND FOR GIVEN MESSAGE ID AND CLIENT';
-    const MATE_OVERWRITTEN     = 'MESSAGE ID: MATE IS ALREADY OVERWRITTEN';
 
     const START_DATE_MISSING   = 'START DATE MISSING';
     const END_DATE_MISSING     = 'END DATE MISSING';
@@ -52,32 +47,13 @@ class MateValidator
     /** @var boolean */
     private $validateEweGender;
 
-    /** @var boolean */
-    private $isInputValid;
-
-    /** @var AnimalRepository */
-    private $animalRepository;
-
-    /** @var ObjectManager */
-    private $manager;
-
-    /** @var Client */
-    private $client;
-
     /** @var Mate */
     private $mate;
 
-    /** @var array */
-    private $errors;
-
     public function __construct(ObjectManager $manager, ArrayCollection $content, Client $client, $validateEweGender = true, $isPost = true)
     {
-        $this->manager = $manager;
-        $this->animalRepository = $this->manager->getRepository(Animal::class);
-        $this->client = $client;
-        $this->isInputValid = false;
+        parent::__construct($manager, $content, $client);
         $this->validateEweGender = $validateEweGender;
-        $this->errors = array();
 
         if($isPost) {
             $this->validatePost($content);   
@@ -126,7 +102,7 @@ class MateValidator
 
         $messageId = $content->get(JsonInputConstant::MESSAGE_ID);
 
-        $foundMate = self::isNonRevokedMateOfClient($this->manager, $this->client, $messageId);
+        $foundMate = $this->isNonRevokedNsfoDeclarationOfClient($messageId);
         if(!($foundMate instanceof Mate)) {
             $this->errors[] = self::MESSAGE_ID_ERROR;
             $isMessageIdValid = false;
@@ -134,7 +110,7 @@ class MateValidator
             $this->mate = $foundMate;
             $isMessageIdValid = true;
 
-            $isNotOverwritten = $this->validateMateIsNotAlreadyOverwritten($foundMate);
+            $isNotOverwritten = $this->validateNsfoDeclarationIsNotAlreadyOverwritten($foundMate);
             if(!$isNotOverwritten) {
                 $this->isInputValid = false;
             }
@@ -152,15 +128,6 @@ class MateValidator
         if(!$isRamInputValid || !$isEweInputValid || !$isNonAnimalInputValid || !$isMessageIdValid) {
             $this->isInputValid = false;
         }
-    }
-
-
-    /**
-     * @return bool
-     */
-    public function getIsInputValid()
-    {
-        return $this->isInputValid;
     }
 
     /**
@@ -286,20 +253,26 @@ class MateValidator
         if($startDate === null) {
             $this->errors[] = self::START_DATE_MISSING;
             $allNonAnimalValuesAreValid =  false;
-        } else {
-            if($startDate > new \DateTime('now')) {
-                $this->errors[] = self::START_DATE_IN_FUTURE;
-                $allNonAnimalValuesAreValid =  false;
+        }
+        else {
+            if(self::IS_VALIDATE_IF_START_DATE_IS_IN_THE_FUTURE) {
+                if($startDate > new \DateTime('now')) {
+                    $this->errors[] = self::START_DATE_IN_FUTURE;
+                    $allNonAnimalValuesAreValid =  false;
+                }
             }
         }
 
         if($endDate === null) {
             $this->errors[] = self::END_DATE_MISSING;
             $allNonAnimalValuesAreValid =  false;
-        } else {
-            if($endDate > new \DateTime('now')) {
-                $this->errors[] = self::END_DATE_IN_FUTURE;
-                $allNonAnimalValuesAreValid =  false;
+        }
+        else {
+            if(self::IS_VALIDATE_IF_END_DATE_IS_IN_THE_FUTURE) {
+                if ($endDate > new \DateTime('now')) {
+                    $this->errors[] = self::END_DATE_IN_FUTURE;
+                    $allNonAnimalValuesAreValid = false;
+                }
             }
         }
 
@@ -324,74 +297,5 @@ class MateValidator
     }
 
 
-    /**
-     * @param Mate $mate
-     * @return bool
-     */
-    private function validateMateIsNotAlreadyOverwritten(Mate $mate)
-    {
-        if($mate->getIsOverwrittenVersion()) {
-            $this->errors[] = self::MATE_OVERWRITTEN;
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-
-    /**
-     * @return JsonResponse
-     */
-    public function createJsonResponse()
-    {
-        if($this->isInputValid){
-            $message = self::VALID_MESSAGE;
-            $code = self::VALID_CODE;
-        } else {
-            $message = self::ERROR_MESSAGE;
-            $code = self::ERROR_CODE;
-        }
-
-        $result = array(
-            Constant::MESSAGE_NAMESPACE => $message,
-            Constant::CODE_NAMESPACE => $code,
-            Constant::ERRORS_NAMESPACE => $this->errors);
-
-        return new JsonResponse($result, $code);
-    }
-
-
-    /**
-     * Returns Mate if true.
-     *
-     * @param ObjectManager $manager
-     * @param Client $client
-     * @param string $messageId
-     * @return Mate|boolean
-     */
-    public static function isNonRevokedMateOfClient(ObjectManager $manager, $client, $messageId)
-    {
-        /** @var Mate $mate */
-        $mate = $manager->getRepository(Mate::class)->findOneByMessageId($messageId);
-
-        //null check
-        if(!($mate instanceof Mate) || $messageId == null) { return false; }
-
-        //Revoke check, to prevent data loss by incorrect data
-        if($mate->getRequestState() == RequestStateType::REVOKED) { return false; }
-
-        /** @var Location $locationOfMate */
-        $locationOfMate = $manager->getRepository(Location::class)->findOneByUbn($mate->getUbn());
-
-        $locationOwnerOfMate = NullChecker::getOwnerOfLocation($locationOfMate);
-
-        if($locationOwnerOfMate instanceof Client && $client instanceof Client) {
-            /** @var Client $locationOwnerOfMate */
-            if($locationOwnerOfMate->getId() == $client->getId()) {
-                return $mate;
-            }
-        }
-
-        return false;
-    }
+   
 }

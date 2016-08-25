@@ -9,6 +9,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\Output;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\Validator;
 use AppBundle\Validation\DeclareNsfoBaseValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -116,7 +117,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
 
         $log = ActionLogWriter::revokeNsfoDeclaration($manager, $client, $loggedInUser, $messageId);
 
-        $declarationFromMessageId = DeclareNsfoBaseValidator::isNonRevokedNsfoDeclarationOfClient($manager, $client, $messageId);
+        $declarationFromMessageId = Validator::isNonRevokedNsfoDeclarationOfClient($manager, $client, $messageId);
 
         if(!($declarationFromMessageId instanceof DeclareNsfoBase)) {
             return Output::createStandardJsonErrorResponse();

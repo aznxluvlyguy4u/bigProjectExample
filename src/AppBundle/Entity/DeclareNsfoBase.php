@@ -20,7 +20,8 @@ use JMS\Serializer\Annotation\Expose;
  * //TODO add new child classes to the DiscriminatorMap
  * @ORM\DiscriminatorMap(
  *   {
- *      "Mate" = "Mate"
+ *      "Mate" = "Mate",
+ *      "DeclareWeight" = "DeclareWeight"
  *   }
  * )
  * @package AppBundle\Entity\DeclareNsfoBase
@@ -349,7 +350,24 @@ abstract class DeclareNsfoBase
     }
 
 
+    /**
+     * @param Mate|DeclareWeight $nsfoMessage
+     */
+    protected function duplicateBaseValues($nsfoMessage)
+    {
+        //Note the messageId is not duplicated to keep each Declaration unique.
 
+        //DeclareNsfoBase values
+        $this->setLogDate($nsfoMessage->getLogDate());
+        $this->setRequestState($nsfoMessage->getRequestState());
+        $this->setRelationNumberKeeper($nsfoMessage->getRelationNumberKeeper());
+        $this->setUbn($nsfoMessage->getUbn());
+        $this->setActionBy($nsfoMessage->getActionBy());
+        $this->setRevokedBy($nsfoMessage->getRevokedBy());
+        $this->setRevokeDate($nsfoMessage->getRevokeDate());
+        $this->setIsHidden($nsfoMessage->getIsHidden());
+        $this->setIsOverwrittenVersion($nsfoMessage->getIsOverwrittenVersion());
+    }
 
 
 }

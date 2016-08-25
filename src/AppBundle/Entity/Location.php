@@ -140,6 +140,17 @@ class Location
    */
   protected $matings;
 
+
+  /**
+   * @var ArrayCollection
+   *
+   * @JMS\Type("AppBundle\Entity\DeclareWeight")
+   * @ORM\OneToMany(targetEntity="DeclareWeight", mappedBy="location", cascade={"persist"})
+   * @ORM\OrderBy({"measurementDate" = "ASC"})
+   */
+  protected $declareWeights;
+  
+
   /**
    * @Assert\NotBlank
    * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"}, fetch="EAGER")
@@ -220,6 +231,7 @@ class Location
     $this->flags = new ArrayCollection();
     $this->revokes = new ArrayCollection();
     $this->matings = new ArrayCollection();
+    $this->declareWeights = new ArrayCollection();
     $this->healthMessages = new ArrayCollection();
     $this->animalResidenceHistory = new ArrayCollection();
     $this->setLocationId(Utils::generateTokenCode());
@@ -688,7 +700,7 @@ class Location
      */
     public function removeMate(Mate $mate)
     {
-      $this->revokes->removeElement($mate);
+      $this->matings->removeElement($mate);
     }
 
     /**
@@ -701,6 +713,37 @@ class Location
       return $this->matings;
     }
 
+    /**
+     * @return DeclareWeight
+     */
+    public function getDeclareWeights()
+    {
+      return $this->declareWeights;
+    }
+
+  /**
+   * Add DeclareWeight
+   *
+   * @param DeclareWeight $declareWeight
+   *
+   * @return Location
+   */
+  public function addDeclareWeight(DeclareWeight $declareWeight)
+  {
+    $this->declareWeights[] = $declareWeight;
+
+    return $this;
+  }
+
+  /**
+   * Remove DeclareWeight
+   *
+   * @param DeclareWeight $declareWeight
+   */
+  public function removeDeclareWeight(DeclareWeight $declareWeight)
+  {
+    $this->declareWeights->removeElement($declareWeight);
+  }
 
     /**
      * Set locationHolder

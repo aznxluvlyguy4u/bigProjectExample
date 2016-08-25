@@ -257,6 +257,14 @@ abstract class Animal
     protected $tagReplacements;
 
     /**
+     * @var ArrayCollection
+     *
+     * @JMS\Type("AppBundle\Entity\DeclareWeight")
+     * @ORM\OneToMany(targetEntity="DeclareWeight", mappedBy="animal")
+     */
+    protected $declareWeights;
+
+    /**
      * @var Tag
      *
      * @ORM\OneToOne(targetEntity="Tag", inversedBy="animal", cascade={"persist"})
@@ -472,6 +480,7 @@ abstract class Animal
         $this->muscleThicknessMeasurements = new ArrayCollection();
         $this->tailLengthMeasurements = new ArrayCollection();
         $this->weightMeasurements = new ArrayCollection();
+        $this->declareWeights = new ArrayCollection();
         $this->flags = new ArrayCollection();
         $this->ulnHistory = new ArrayCollection();
         $this->tagReplacements = new ArrayCollection();
@@ -1131,6 +1140,38 @@ abstract class Animal
     public function getFlags()
     {
         return $this->flags;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getDeclareWeights()
+    {
+        return $this->declareWeights;
+    }
+
+    /**
+     * Add declareWeight
+     *
+     * @param \AppBundle\Entity\DeclareWeight $declareWeight
+     *
+     * @return Animal
+     */
+    public function addDeclareWeight(\AppBundle\Entity\DeclareWeight $declareWeight)
+    {
+        $this->births[] = $declareWeight;
+
+        return $this;
+    }
+
+    /**
+     * Remove declareWeight
+     *
+     * @param \AppBundle\Entity\DeclareWeight $declareWeight
+     */
+    public function removeDeclareWeight(\AppBundle\Entity\DeclareWeight $declareWeight)
+    {
+        $this->births->removeElement($declareWeight);
     }
 
     /**

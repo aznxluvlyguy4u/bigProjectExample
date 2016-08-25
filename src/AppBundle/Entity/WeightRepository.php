@@ -1,6 +1,8 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Util\TimeUtil;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 
 /**
@@ -55,5 +57,46 @@ class WeightRepository extends BaseRepository {
             $latestBirthWeight = 0.00;
         }
         return $latestBirthWeight;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param \DateTime $dateTime
+     * @return Collection
+     */
+    public function findByAnimalAndDate(Animal $animal, \DateTime $dateTime)
+    {
+        $dayOfDateTime = TimeUtil::getDayOfDateTime($dateTime);
+        $dayAfterDateTime = TimeUtil::getDayAfterDateTime($dateTime);
+
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('animal', $animal))
+            ->andWhere(Criteria::expr()->gte('measurementDate', $dayOfDateTime))
+            ->andWhere(Criteria::expr()->lt('measurementDate', $dayAfterDateTime))
+            ->orderBy(['measurementDate' => Criteria::DESC])
+            ;
+
+        /** @var Collection $weightMeasurements */
+        $weightMeasurements = $this->getEntityManager()->getRepository(Weight::class)
+            ->matching($criteria);
+
+        return $weightMeasurements;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param \DateTime $dateTime
+     * @return bool
+     */
+    public function isExistForAnimalOnDate(Animal $animal, \DateTime $dateTime)
+    {
+        $weightMeasurements = $this->findByAnimalAndDate($animal, $dateTime);
+        if($weightMeasurements->count() > 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

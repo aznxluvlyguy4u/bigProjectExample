@@ -445,36 +445,26 @@ class Mate extends DeclareNsfoBase {
 
 
     /**
-     * @param Mate $mate
+     * @param Mate $declareWeight
      */
-    public function duplicateValues(Mate $mate)
+    public function duplicateValues(Mate $declareWeight)
     {
         //Note 'currentVersion' and 'previousVersions' are not duplicated. They set the history relationship.
-        //The messageId is also not duplicated to keep each Mate unique. The OneToMany reference is used to group them.
-
+        //The OneToMany reference is used to group them.
+        parent::duplicateBaseValues($declareWeight);
+        
         //Mate specific values
-        $this->setStartDate($mate->getStartDate());
-        $this->setEndDate($mate->getEndDate());
-        $this->setStudRam($mate->getStudRam());
-        $this->setStudEwe($mate->getStudEwe());
-        $this->setRamUlnCountryCode($mate->getRamUlnCountryCode());
-        $this->setRamUlnNumber($mate->getRamUlnNumber());
-        $this->setPmsg($mate->getPmsg());
-        $this->setKi($mate->getKi());
-        $this->setIsApprovedByThirdParty($mate->getIsApprovedByThirdParty());
-        $this->setApprovalDate($mate->getApprovalDate());
-        $this->setApprovedBy($mate->getApprovedBy());
-        $this->setLocation($mate->getLocation());
-
-        //DeclareNsfoBase values
-        $this->setLogDate($mate->getLogDate());
-        $this->setRequestState($mate->getRequestState());
-        $this->setRelationNumberKeeper($mate->getRelationNumberKeeper());
-        $this->setUbn($mate->getUbn());
-        $this->setActionBy($mate->getActionBy());
-        $this->setRevokedBy($mate->getRevokedBy());
-        $this->setRevokeDate($mate->getRevokeDate());
-        $this->setIsHidden($mate->getIsHidden());
-        $this->setIsOverwrittenVersion($mate->getIsOverwrittenVersion());
+        $this->setStartDate($declareWeight->getStartDate());
+        $this->setEndDate($declareWeight->getEndDate());
+        $this->setStudRam($declareWeight->getStudRam());
+        $this->setStudEwe($declareWeight->getStudEwe());
+        $this->setRamUlnCountryCode($declareWeight->getRamUlnCountryCode());
+        $this->setRamUlnNumber($declareWeight->getRamUlnNumber());
+        $this->setPmsg($declareWeight->getPmsg());
+        $this->setKi($declareWeight->getKi());
+        $this->setIsApprovedByThirdParty($declareWeight->getIsApprovedByThirdParty());
+        $this->setApprovalDate($declareWeight->getApprovalDate());
+        $this->setApprovedBy($declareWeight->getApprovedBy());
+        $this->setLocation($declareWeight->getLocation());
     }
 }

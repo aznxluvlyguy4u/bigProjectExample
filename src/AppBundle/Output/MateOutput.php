@@ -13,6 +13,7 @@ use AppBundle\Entity\Mate;
 use AppBundle\Entity\Pedigree;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\Ram;
+use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\Collection;
 use AppBundle\Component\Count;
 
@@ -41,7 +42,7 @@ class MateOutput
      */
     public static function createMateOverview($mate)
     {
-        $nullReplacementText = '-';
+        $nullReplacementText = '';
 
         if($mate->getStudEwe() instanceof Ewe) {
             $eweUlnCountryCode = $mate->getStudEwe()->getUlnCountryCode();
@@ -49,13 +50,6 @@ class MateOutput
         } else {
             $eweUlnCountryCode = $nullReplacementText;
             $eweUlnNumber = $nullReplacementText;
-        }
-
-        $revoker = $mate->getRevokedBy();
-        if($revoker instanceof Person) {
-            $personId = $revoker->getPersonId();
-        } else {
-            $personId = $nullReplacementText;
         }
 
         $res = [
@@ -78,8 +72,8 @@ class MateOutput
             JsonInputConstant::REQUEST_STATE => $mate->getRequestState(),
             JsonInputConstant::IS_HIDDEN => $mate->getIsHidden(),
             JsonInputConstant::IS_OVERWRITTEN => $mate->getIsOverwrittenVersion(),
-            JsonInputConstant::REVOKED_BY => $personId,
-            JsonInputConstant::REVOKE_DATE => $mate->getRevokeDate()
+            JsonInputConstant::REVOKED_BY => NullChecker::getRevokerPersonId($mate, $nullReplacementText),
+            JsonInputConstant::REVOKE_DATE => Utils::fillNullOrEmptyString($mate->getRevokeDate(),$nullReplacementText)
         ];
 
         return $res;

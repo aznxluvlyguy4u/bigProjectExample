@@ -106,6 +106,8 @@ class JsonInputConstant
     const DATE_OF_MEASUREMENT = 'date_of_measurement';
     const WEIGHT_MEASUREMENTS = 'weight_measurements';
     const WEIGHT = 'weight';
+    const IS_BIRTH_WEIGHT = 'is_birth_weight';
+    const MEASUREMENT_DATE = 'measurement_date';
 
 
 

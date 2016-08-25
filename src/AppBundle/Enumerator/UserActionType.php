@@ -17,6 +17,8 @@ class UserActionType extends RequestType
     
     const MATE_CREATE = 'MATE_CREATE';
     const MATE_EDIT = 'MATE_EDIT';
+    const DECLARE_WEIGHT_CREATE = 'DECLARE_WEIGHT_CREATE';
+    const DECLARE_WEIGHT_EDIT = 'DECLARE_WEIGHT_EDIT';
 
     const NON_IR_REVOKE = 'NON_IR_REVOKE';
 }
