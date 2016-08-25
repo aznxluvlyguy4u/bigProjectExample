@@ -10,7 +10,7 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class DeclareWeight
- * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareWeight")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareWeightRepository")
  * @package AppBundle\Entity
  */
 class DeclareWeight extends DeclareNsfoBase

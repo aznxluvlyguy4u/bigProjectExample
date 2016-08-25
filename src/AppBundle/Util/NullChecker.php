@@ -8,7 +8,9 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
+use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Person;
 
 class NullChecker
 {
@@ -141,6 +143,23 @@ class NullChecker
             return $nullResultReplacement;
         } else {
             return $owner;
+        }
+    }
+
+
+    /**
+     * @param DeclareNsfoBase $declareNsfo
+     * @return string
+     */
+    public static function getRevokerPersonId($declareNsfo, $nullReplacementText = null)
+    {
+        if(!($declareNsfo instanceof DeclareNsfoBase)) { return $nullReplacementText; }
+
+        $revoker = $declareNsfo->getRevokedBy();
+        if($revoker instanceof Person) {
+            return Utils::fillNullOrEmptyString($revoker->getPersonId(), $nullReplacementText);
+        } else {
+            return $nullReplacementText;
         }
     }
 }

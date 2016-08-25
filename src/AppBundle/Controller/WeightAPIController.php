@@ -6,6 +6,7 @@ use AppBundle\Component\DeclareWeightBuilder;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\DeclareWeight;
+use AppBundle\Entity\DeclareWeightRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\FormInput\WeightMeasurements;
 use AppBundle\Output\WeightMeasurementsOutput;
@@ -57,7 +58,7 @@ class WeightAPIController extends APIController
         $client = $this->getAuthenticatedUser($request);
         $location = $this->getSelectedLocation($request);
         $loggedInUser = $this->getLoggedInUser($request);
-        
+
         $weightValidator = new DeclareWeightValidator($manager, $content, $client);
         if(!$weightValidator->getIsInputValid()) {
             return $weightValidator->createJsonResponse();
@@ -116,5 +117,41 @@ class WeightAPIController extends APIController
         $this->persistAndFlush($declareWeight);
 
         return new JsonResponse([JsonInputConstant::RESULT => 'OK'], 200);
+    }
+
+
+    /**
+     *
+     * For the history view, get DeclareWeights which have the following requestState: FINISHED or REVOKED
+     *
+     * @ApiDoc(
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Get DeclareWeights which have the following requestState: FINISHED or REVOKED",
+     *   input = "AppBundle\Entity\DeclareWeight",
+     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     * )
+     *
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("-history")
+     * @Method("GET")
+     */
+    public function getDeclareWeightHistory(Request $request)
+    {
+        $location = $this->getSelectedLocation($request);
+
+        /** @var DeclareWeightRepository $repository */
+        $repository = $this->getDoctrine()->getRepository(DeclareWeight::class);
+        $declareWeights = $repository->getDeclareWeightsHistoryOutput($location);
+
+        return new JsonResponse([JsonInputConstant::RESULT => $declareWeights],200);
     }
 }
