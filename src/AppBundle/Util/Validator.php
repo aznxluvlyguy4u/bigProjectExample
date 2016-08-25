@@ -7,6 +7,8 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Neuter;
+use AppBundle\Entity\Ram;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
@@ -15,8 +17,6 @@ use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\DeclareWeight;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Mate;
-use AppBundle\Entity\Neuter;
-use AppBundle\Entity\Ram;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Token;
@@ -238,6 +238,7 @@ class Validator
             return false;
         }
     }
+
 
     /**
      * TODO At the moment any Client(user) can only own one Company OR be an employee a one company. When this changes, this validation check has to be updated.
