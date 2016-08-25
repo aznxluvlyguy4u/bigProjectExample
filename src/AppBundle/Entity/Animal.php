@@ -6,6 +6,7 @@ use AppBundle\Enumerator\AnimalType;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\FormInput\AnimalDetails;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -436,6 +437,7 @@ abstract class Animal
     protected $breeder;
 
     /**
+     * @var BreedCodes
      * @ORM\OneToOne(targetEntity="BreedCodes", inversedBy="animal", cascade={"persist"})
      * @ORM\JoinColumn(name="breed_codes_id", referencedColumnName="id", nullable=true)
      * @JMS\Type("AppBundle\Entity\BreedCodes")
@@ -1878,17 +1880,20 @@ abstract class Animal
 
 
     /**
-     * @param Neuter| $animal
+     * All values except relationships to other Entities are duplicated.
+     * 
+     * @param Animal $animal
      */
-    public function duplicateValues($animal)
+    public function duplicateValuesAndTransferRelationships($animal)
     {
+        //NOTE 'Gender' is not copied!
+
         if($animal instanceof Animal) {
             /* Values */
             $this->setPedigreeCountryCode($animal->getPedigreeCountryCode());
             $this->setPedigreeNumber($animal->getPedigreeNumber());
             $this->setUlnCountryCode($animal->getUlnCountryCode());
             $this->setUlnNumber($animal->getUlnNumber());
-            $this->setGender($animal->getGender());
             $this->setName($animal->getName());
             $this->setUbnOfBirth($animal->getUbnOfBirth());
             $this->setDateOfBirth($animal->getDateOfBirth());
@@ -1909,42 +1914,180 @@ abstract class Animal
             $this->setScrapieGenotype($animal->getScrapieGenotype());
             $this->setNote($animal->getNote());
             
-            /* XtoOne relationships */
-            //TODO Don't forget the other part of the relationships
-            //TODO remove the old references
+            /* ManyToOne relationships */
             $father = $animal->getParentFather();
-            $this->setParentFather($father);
-
+            if ($father instanceof Ram) { $this->setParentFather($father); }
             $mother = $animal->getParentMother();
-            $this->setParentMother($mother);
+            if ($mother instanceof Ewe) { $this->setParentMother($mother); }
+            $surrogate = $animal->getSurrogate();
+            if ($surrogate instanceof Ewe) { $this->setSurrogate($surrogate); }
 
-            $this->setParentNeuter($animal->getParentNeuter());
-            $this->setSurrogate($animal->getSurrogate());
-            $this->setAssignedTag($animal->getAssignedTag());
             $this->setLocation($animal->getLocation());
             $this->setBreeder($animal->getBreeder());
-            $this->setLitter($animal->getLitter());
+            $this->setLitter($animal->getLitter()); //NOTE that the litter now contains a duplicate!
 
-            /* XtoMany relationships */
-            //TODO
-//            $this->parents = $animal->getParents();
-//            $this->arrivals = $animal->getArrivals();
-//            $this->departures = set($animal->get());
-//            $this->imports = set($animal->get());
-//            $this->exports = set($animal->get());
-//            $this->births = set($animal->get());
-//            $this->deaths = set($animal->get());
-//            $this->flags = set($animal->get());
-//            $this->tagReplacements = set($animal->get());
-//            $this->ulnHistory = set($animal->get());
-//            $this->animalResidenceHistory = set($animal->get());
-//            $this->bodyFatMeasurements;
-//            $this->muscleThicknessMeasurements;
-//            $this->tailLengthMeasurements;
-//            $this->weightMeasurements;
-//            $this->exteriorMeasurements;
+            /* OneToOne relationships: replace the original Animal */
+            $this->replaceAnimalInOneToOneRelationships($animal);
 
-            //TODO also don't forget unidirectional relationship to animal in other entities
+            /* ManyToMany relationships */
+            /* replace the original animal in all the collections
+             * and set the entity on this animal
+             */
+            $this->replaceAnimalInManyToManyRelationships($animal->getArrivals());
+            $this->replaceAnimalInManyToManyRelationships($animal->getDepartures());
+            $this->replaceAnimalInManyToManyRelationships($animal->getImports());
+            $this->replaceAnimalInManyToManyRelationships($animal->getExports());
+            $this->replaceAnimalInManyToManyRelationships($animal->getBirths());
+            $this->replaceAnimalInManyToManyRelationships($animal->getDeaths());
+            $this->replaceAnimalInManyToManyRelationships($animal->getAnimalResidenceHistory());
+            $this->replaceAnimalInManyToManyRelationships($animal->getBodyFatMeasurements());
+            $this->replaceAnimalInManyToManyRelationships($animal->getMuscleThicknessMeasurements());
+            $this->replaceAnimalInManyToManyRelationships($animal->getTailLengthMeasurements());
+            $this->replaceAnimalInManyToManyRelationships($animal->getWeightMeasurements());
+            $this->replaceAnimalInManyToManyRelationships($animal->getExteriorMeasurements());
+            $this->replaceAnimalInManyToManyRelationships($animal->getDeclareWeights());
+            $this->replaceAnimalInManyToManyRelationships($animal->getFlags());
+            $this->replaceAnimalInManyToManyRelationships($animal->getUlnHistory());
+            $this->replaceAnimalInManyToManyRelationships($animal->getTagReplacements());
+
+            $this->replaceAnimalInManyToManyRelationships($animal->getParents());
+        }
+    }
+
+
+    /**
+     * @param Animal $animal
+     */
+    private function replaceAnimalInOneToOneRelationships($animal)
+    {
+        if($animal instanceof Animal) {
+            //NOTE that assigned tags are not used to store anything at the moment
+            //Replaced ulns are stored as tags in ulnHistory
+
+            $breedCodes = $animal->getBreedCodes();
+            if($breedCodes != null) {
+                $breedCodes->setAnimal($this);
+                $this->setBreedCodes($breedCodes);
+                $animal->breedCodes = null;
+            }
+        }
+    }
+
+
+    /**
+     * This is the facade, containing all the null checks
+     *
+     * @param Collection $collection
+     * @param Animal $originalAnimal
+     * @return boolean true for successful process and false for incorrect input
+     */
+    private function replaceAnimalInManyToManyRelationships($collection, $originalAnimal = null)
+    {
+        //Null check first
+        if($collection == null) { return false; }
+        elseif($collection->count() == 0) { return false; }
+
+        //Then check the type of collection and null check
+        if($collection->first() instanceof Animal) {
+            //collection is a parents collection with Animals containing a children ArrayCollection
+            if($originalAnimal == null) { return false; }
+            $this->replaceAnimalInParentsArray($collection, $originalAnimal);
+        } else {
+            $this->replaceAnimalInNonParentManyToManyRelationships($collection);
+        }
+
+        return true;
+    }
+
+    /**
+     * @param Collection $parents
+     * @param Animal $originalAnimal
+     */
+    private function replaceAnimalInParentsArray($parents, $originalAnimal)
+    {
+        /** @var Ram|Neuter|Ewe $parent */
+        foreach ($parents as $parent) {
+            $parent->removeChild($originalAnimal);
+            $parent->addChild($this);
+
+            if($parent instanceof Ram) { $this->setParentFather($parent); }
+            if($parent instanceof Ewe) { $this->setParentMother($parent); }
+            if($parent instanceof Neuter) { $this->addParent($parent); }
+        }
+    }
+
+    /**
+     * @param Collection $collection
+     */
+    private function replaceAnimalInNonParentManyToManyRelationships($collection)
+    {
+        /** @var DeclareArrival|DeclareDepart|DeclareImport|DeclareExport|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclareTagReplace|DeclareWeight|AnimalResidence|BodyFat|MuscleThickness|TailLength|Weight|Exterior|Tag $item */
+        foreach ($collection as $item) {
+            $item->setAnimal(null);
+            $item->setAnimal($this);
+            if($item instanceof DeclareArrival) { 
+                $this->addArrival($item); 
+            }
+            
+            if($item instanceof DeclareDepart) { 
+                $this->addDeparture($item); 
+            }
+            
+            if($item instanceof DeclareImport) { 
+                $this->addImport($item); 
+            }
+            
+            if($item instanceof DeclareExport) { 
+                $this->addExport($item); 
+            }
+            
+            if($item instanceof DeclareBirth) { 
+                $this->addBirth($item); 
+            }
+            
+            if($item instanceof DeclareLoss) { 
+                $this->addDeath($item); 
+            }
+            
+            if($item instanceof DeclareAnimalFlag) { 
+                $this->addFlag($item); 
+            }
+            
+            if($item instanceof DeclareTagReplace) { 
+                $this->addTagReplacement($item); 
+            }
+            
+            if($item instanceof DeclareWeight) { 
+                $this->addDeclareWeight($item); 
+            }
+            
+            if($item instanceof AnimalResidence) { 
+                $this->addAnimalResidenceHistory($item); 
+            }
+            
+            if($item instanceof BodyFat) { 
+                $this->addBodyFatMeasurement($item); 
+            }
+            
+            if($item instanceof MuscleThickness) { 
+                $this->addMuscleThicknessMeasurement($item); 
+            }
+            
+            if($item instanceof TailLength) { 
+                $this->addTailLengthMeasurement($item); 
+            }
+            
+            if($item instanceof Weight) { 
+                $this->addWeightMeasurement($item); 
+            }
+            
+            if($item instanceof Exterior) { 
+                $this->addExteriorMeasurement($item); 
+            }
+            
+            if($item instanceof Tag){ 
+                $this->addUlnHistory($item); 
+            }
         }
     }
 }
