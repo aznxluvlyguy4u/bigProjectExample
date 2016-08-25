@@ -35,9 +35,6 @@ class MateValidator extends DeclareNsfoBaseValidator
     const EWE_FOUND_BUT_NOT_EWE = 'STUD EWE: ANIMAL WAS FOUND FOR GIVEN ULN, BUT WAS NOT AN EWE ENTITY';
     const EWE_NOT_OF_CLIENT     = 'STUD EWE: FOUND EWE DOES NOT BELONG TO CLIENT';
 
-    const MESSAGE_ID_ERROR     = 'MESSAGE ID: NO MATE FOUND FOR GIVEN MESSAGE ID AND CLIENT';
-    const MATE_OVERWRITTEN     = 'MESSAGE ID: MATE IS ALREADY OVERWRITTEN';
-
     const START_DATE_MISSING   = 'START DATE MISSING';
     const END_DATE_MISSING     = 'END DATE MISSING';
     const START_DATE_IN_FUTURE = 'START DATE CANNOT BE IN THE FUTURE';
@@ -105,7 +102,7 @@ class MateValidator extends DeclareNsfoBaseValidator
 
         $messageId = $content->get(JsonInputConstant::MESSAGE_ID);
 
-        $foundMate = self::isNonRevokedMateOfClient($this->manager, $this->client, $messageId);
+        $foundMate = $this->isNonRevokedNsfoDeclarationOfClient($messageId);
         if(!($foundMate instanceof Mate)) {
             $this->errors[] = self::MESSAGE_ID_ERROR;
             $isMessageIdValid = false;
@@ -113,7 +110,7 @@ class MateValidator extends DeclareNsfoBaseValidator
             $this->mate = $foundMate;
             $isMessageIdValid = true;
 
-            $isNotOverwritten = $this->validateMateIsNotAlreadyOverwritten($foundMate);
+            $isNotOverwritten = $this->validateNsfoDeclarationIsNotAlreadyOverwritten($foundMate);
             if(!$isNotOverwritten) {
                 $this->isInputValid = false;
             }
@@ -300,52 +297,5 @@ class MateValidator extends DeclareNsfoBaseValidator
     }
 
 
-    /**
-     * @param Mate $mate
-     * @return bool
-     */
-    private function validateMateIsNotAlreadyOverwritten(Mate $mate)
-    {
-        if($mate->getIsOverwrittenVersion()) {
-            $this->errors[] = self::MATE_OVERWRITTEN;
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-
-    /**
-     * Returns Mate if true.
-     *
-     * @param ObjectManager $manager
-     * @param Client $client
-     * @param string $messageId
-     * @return Mate|boolean
-     */
-    public static function isNonRevokedMateOfClient(ObjectManager $manager, $client, $messageId)
-    {
-        /** @var Mate $mate */
-        $mate = $manager->getRepository(Mate::class)->findOneByMessageId($messageId);
-
-        //null check
-        if(!($mate instanceof Mate) || $messageId == null) { return false; }
-
-        //Revoke check, to prevent data loss by incorrect data
-        if($mate->getRequestState() == RequestStateType::REVOKED) { return false; }
-
-        /** @var Location $locationOfMate */
-        $locationOfMate = $manager->getRepository(Location::class)->findOneByUbn($mate->getUbn());
-
-        $locationOwnerOfMate = NullChecker::getOwnerOfLocation($locationOfMate);
-
-        if($locationOwnerOfMate instanceof Client && $client instanceof Client) {
-            /** @var Client $locationOwnerOfMate */
-            if($locationOwnerOfMate->getId() == $client->getId()) {
-                return $mate;
-            }
-        }
-
-        return false;
-    }
+   
 }

@@ -351,22 +351,22 @@ abstract class DeclareNsfoBase
 
 
     /**
-     * @param Mate $mate
+     * @param Mate|DeclareWeight $nsfoMessage
      */
-    protected function duplicateValues(Mate $mate)
+    protected function duplicateBaseValues($nsfoMessage)
     {
         //Note the messageId is not duplicated to keep each Declaration unique.
 
         //DeclareNsfoBase values
-        $this->setLogDate($mate->getLogDate());
-        $this->setRequestState($mate->getRequestState());
-        $this->setRelationNumberKeeper($mate->getRelationNumberKeeper());
-        $this->setUbn($mate->getUbn());
-        $this->setActionBy($mate->getActionBy());
-        $this->setRevokedBy($mate->getRevokedBy());
-        $this->setRevokeDate($mate->getRevokeDate());
-        $this->setIsHidden($mate->getIsHidden());
-        $this->setIsOverwrittenVersion($mate->getIsOverwrittenVersion());
+        $this->setLogDate($nsfoMessage->getLogDate());
+        $this->setRequestState($nsfoMessage->getRequestState());
+        $this->setRelationNumberKeeper($nsfoMessage->getRelationNumberKeeper());
+        $this->setUbn($nsfoMessage->getUbn());
+        $this->setActionBy($nsfoMessage->getActionBy());
+        $this->setRevokedBy($nsfoMessage->getRevokedBy());
+        $this->setRevokeDate($nsfoMessage->getRevokeDate());
+        $this->setIsHidden($nsfoMessage->getIsHidden());
+        $this->setIsOverwrittenVersion($nsfoMessage->getIsOverwrittenVersion());
     }
 
 

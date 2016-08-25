@@ -8,7 +8,9 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareNsfoBase;
+use AppBundle\Entity\DeclareWeight;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Mate;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\Validator;
@@ -21,6 +23,9 @@ abstract class DeclareNsfoBaseValidator
     const ERROR_MESSAGE = 'INVALID INPUT';
     const VALID_CODE = 200;
     const VALID_MESSAGE = 'OK';
+
+    const MESSAGE_ID_ERROR     = 'MESSAGE ID: NO MESSAGE FOUND FOR GIVEN MESSAGE ID AND CLIENT';
+    const MESSAGE_OVERWRITTEN  = 'MESSAGE ID: MESSAGE IS ALREADY OVERWRITTEN';
 
     /** @var boolean */
     protected $isInputValid;
@@ -74,15 +79,13 @@ abstract class DeclareNsfoBaseValidator
     /**
      * Returns Mate if true.
      *
-     * @param ObjectManager $manager
-     * @param Client $client
      * @param string $messageId
-     * @return DeclareNsfoBase|boolean
+     * @return DeclareNsfoBase|Mate|DeclareWeight|boolean
      */
-    public static function isNonRevokedNsfoDeclarationOfClient(ObjectManager $manager, $client, $messageId)
+    protected function isNonRevokedNsfoDeclarationOfClient($messageId)
     {
         /** @var DeclareNsfoBase $declaration */
-        $declaration = $manager->getRepository(DeclareNsfoBase::class)->findOneByMessageId($messageId);
+        $declaration = $this->manager->getRepository(DeclareNsfoBase::class)->findOneByMessageId($messageId);
 
         //null check
         if(!($declaration instanceof DeclareNsfoBase) || $messageId == null) { return false; }
@@ -91,17 +94,32 @@ abstract class DeclareNsfoBaseValidator
         if($declaration->getRequestState() == RequestStateType::REVOKED) { return false; }
 
         /** @var Location $location */
-        $location = $manager->getRepository(Location::class)->findOneByUbn($declaration->getUbn());
+        $location = $this->manager->getRepository(Location::class)->findOneByUbn($declaration->getUbn());
 
         $owner = NullChecker::getOwnerOfLocation($location);
 
-        if($owner instanceof Client && $client instanceof Client) {
+        if($owner instanceof Client && $this->client instanceof Client) {
             /** @var Client $owner */
-            if($owner->getId() == $client->getId()) {
+            if($owner->getId() == $this->client->getId()) {
                 return $declaration;
             }
         }
 
         return false;
+    }
+
+
+    /**
+     * @param DeclareWeight|Mate $nsfoDeclaration
+     * @return bool
+     */
+    protected function validateNsfoDeclarationIsNotAlreadyOverwritten($nsfoDeclaration)
+    {
+        if($nsfoDeclaration->getIsOverwrittenVersion()) {
+            $this->errors[] = self::MESSAGE_OVERWRITTEN;
+            return false;
+        } else {
+            return true;
+        }
     }
 }

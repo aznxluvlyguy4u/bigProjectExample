@@ -140,7 +140,7 @@ class DeclareWeight extends DeclareNsfoBase
     /**
      * @return boolean
      */
-    public function isIsBirthWeight()
+    public function getIsBirthWeight()
     {
         return $this->isBirthWeight;
     }
@@ -240,6 +240,24 @@ class DeclareWeight extends DeclareNsfoBase
     }
 
 
+    /**
+     * @param DeclareWeight $declareWeight
+     */
+    public function duplicateValues(DeclareWeight $declareWeight)
+    {
+        //Note 'currentVersion' and 'previousVersions' are not duplicated. They set the history relationship.
+        //The OneToMany reference is used to group them.
+        parent::duplicateBaseValues($declareWeight);
 
+        //Mate specific values
+        $this->setMeasurementDate($declareWeight->getMeasurementDate());
+        $this->setAnimal($declareWeight->getAnimal());
+        $this->setWeight($declareWeight->getWeight());
+        $this->setIsBirthWeight($declareWeight->getIsBirthWeight());
+        $this->setLocation($declareWeight->getLocation());
+
+        //NOTE the Weight entity is not duplicated! Only the reference to the Weight entity is.
+        $this->setWeightMeasurement($declareWeight->getWeightMeasurement());
+    }
 
 }

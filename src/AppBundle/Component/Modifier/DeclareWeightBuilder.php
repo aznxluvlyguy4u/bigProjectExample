@@ -92,4 +92,33 @@ class DeclareWeightBuilder extends NsfoBaseBuilder
 
         return $weightMeasurement;
     }
+
+
+    /**
+     * @param ObjectManager $manager
+     * @param DeclareWeight $declareWeight
+     * @param ArrayCollection $content
+     * @param Client $client
+     * @param Person $loggedInUser
+     * @param Location $location
+     * @return DeclareWeight
+     */
+    public static function edit(ObjectManager $manager, DeclareWeight $declareWeight, ArrayCollection $content, Client $client, Person $loggedInUser, Location $location)
+    {
+        //Save old values
+        $historicalMate = new DeclareWeight();
+        $historicalMate->duplicateValues($declareWeight);
+        $historicalMate->setIsOverwrittenVersion(true);
+        $declareWeight->getWeightMeasurement()->setIsRevoked(true);
+
+        //Edit current values
+        $declareWeight = self::postBase($client, $loggedInUser, $location, $declareWeight);
+        $declareWeight = self::setDeclareWeightValues($manager, $content, $location, $declareWeight);
+
+        //Set historical Mate
+        $historicalMate->setCurrentVersion($declareWeight);
+        $declareWeight->addPreviousVersion($historicalMate);
+
+        return $declareWeight;
+    }
 }

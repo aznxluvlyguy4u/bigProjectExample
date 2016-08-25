@@ -39,8 +39,9 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
     const ANIMAL_MISSING_INPUT = 'ANIMAL: NO ULN GIVEN';
     const ANIMAL_NOT_FOUND = "ANIMAL: NOT FOUND";
     const ANIMAL_NOT_OF_CLIENT = 'FOUND ANIMAL DOES NOT BELONG TO CLIENT';
-    
-    const ERROR_CODE = 428;
+
+    const MESSAGE_ID_ERROR     = 'MESSAGE ID: NO DECLARE WEIGHT FOUND FOR GIVEN MESSAGE ID AND CLIENT';
+    const MESSAGE_OVERWRITTEN     = 'MESSAGE ID: DECLARE WEIGHT IS ALREADY OVERWRITTEN';
 
     /** @var float */
     private $minWeight;
@@ -114,6 +115,38 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
      */
     private function validateEdit($content) {
 
+        //Default
+        $this->isInputValid = true;
+
+        //Validate MessageId First
+
+        $messageId = $content->get(JsonInputConstant::MESSAGE_ID);
+
+        $foundDeclareWeight = $this->isNonRevokedNsfoDeclarationOfClient($messageId);
+        if(!($foundDeclareWeight instanceof DeclareWeight)) {
+            $this->errors[] = self::MESSAGE_ID_ERROR;
+            $isMessageIdValid = false;
+        } else {
+            $this->declareWeight = $foundDeclareWeight;
+            $isMessageIdValid = true;
+
+            $isNotOverwritten = $this->validateNsfoDeclarationIsNotAlreadyOverwritten($foundDeclareWeight);
+            if(!$isNotOverwritten) {
+                $this->isInputValid = false;
+            }
+        }
+
+        //Validate content second
+
+        $animalArray = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ANIMAL, $content);
+
+        $isAnimalInputValid = $this->validateAnimalArray($animalArray);
+        $isNonAnimalInputValid = $this->validateNonAnimalValues($content);
+
+        if(!$isAnimalInputValid || !$isNonAnimalInputValid || !$isMessageIdValid) {
+            $this->isInputValid = false;
+        }
+        
     }
 
     /**
@@ -205,16 +238,5 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
     }
 
 
-    /**
-     * @return JsonResponse
-     */
-    public function createJsonResponse()
-    {
-        if($this->isInputValid){
-            return Validator::createJsonResponse(self::VALID_MESSAGE, self::VALID_CODE);
-        } else {
-            return Validator::createJsonResponse(self::ERROR_MESSAGE, self::ERROR_CODE, $this->errors);
-        }
-    }
 
 }

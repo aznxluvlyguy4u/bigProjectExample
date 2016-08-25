@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Component\Modifier\DeclareWeightBuilder;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\DeclareWeight;
 use AppBundle\Entity\Employee;
 use AppBundle\FormInput\WeightMeasurements;
@@ -68,6 +69,54 @@ class WeightAPIController extends APIController
         $manager->persist($declareWeight->getWeightMeasurement());
         $this->persistAndFlush($declareWeight);
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareWeight->getWeightMeasurement()), 200);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'OK'), 200);
+    }
+
+
+    /**
+     *
+     * Edit DeclareWeight and WeightMeasurements
+     *
+     * @ApiDoc(
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Edit Mate",
+     *   input = "AppBundle\Entity\Mate",
+     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     * )
+     *
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/{messageId}")
+     * @Method("PUT")
+     */
+    public function editWeightMeasurements(Request $request, $messageId)
+    {
+        $manager = $this->getDoctrine()->getManager();
+        $client = $this->getAuthenticatedUser($request);
+        $loggedInUser = $this->getLoggedInUser($request);
+        $content = $this->getContentAsArray($request);
+        $content->set(JsonInputConstant::MESSAGE_ID, $messageId);
+        $location = $this->getSelectedLocation($request);
+
+        $isPost = false;
+        $weightValidator = new DeclareWeightValidator($manager, $content, $client, $isPost);
+        if(!$weightValidator->getIsInputValid()) {
+            return $weightValidator->createJsonResponse();
+        }
+
+        $declareWeight = $weightValidator->getDeclareWeightFromMessageId();
+        $declareWeight = DeclareWeightBuilder::edit($manager, $declareWeight, $content, $client, $loggedInUser, $location);
+
+        $this->persistAndFlush($declareWeight);
+
+        return new JsonResponse([JsonInputConstant::RESULT => 'OK'], 200);
     }
 }
