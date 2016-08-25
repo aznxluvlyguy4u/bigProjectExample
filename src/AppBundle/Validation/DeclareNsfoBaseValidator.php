@@ -84,28 +84,7 @@ abstract class DeclareNsfoBaseValidator
      */
     protected function isNonRevokedNsfoDeclarationOfClient($messageId)
     {
-        /** @var DeclareNsfoBase $declaration */
-        $declaration = $this->manager->getRepository(DeclareNsfoBase::class)->findOneByMessageId($messageId);
-
-        //null check
-        if(!($declaration instanceof DeclareNsfoBase) || $messageId == null) { return false; }
-
-        //Revoke check, to prevent data loss by incorrect data
-        if($declaration->getRequestState() == RequestStateType::REVOKED) { return false; }
-
-        /** @var Location $location */
-        $location = $this->manager->getRepository(Location::class)->findOneByUbn($declaration->getUbn());
-
-        $owner = NullChecker::getOwnerOfLocation($location);
-
-        if($owner instanceof Client && $this->client instanceof Client) {
-            /** @var Client $owner */
-            if($owner->getId() == $this->client->getId()) {
-                return $declaration;
-            }
-        }
-
-        return false;
+        return Validator::isNonRevokedNsfoDeclarationOfClient($this->manager, $this->client, $messageId);
     }
 
 

@@ -11,13 +11,17 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
+use AppBundle\Entity\DeclareNsfoBase;
+use AppBundle\Entity\DeclareWeight;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Mate;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Token;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -306,5 +310,38 @@ class Validator
         }
 
         return new JsonResponse([JsonInputConstant::RESULT => $result], $code);
+    }
+
+
+    /**
+     * @param ObjectManager $manager
+     * @param Client $client
+     * @param $messageId
+     * @return DeclareNsfoBase|Mate|DeclareWeight|boolean
+     */
+    public static function isNonRevokedNsfoDeclarationOfClient(ObjectManager $manager, Client $client, $messageId)
+    {
+        /** @var DeclareNsfoBase $declaration */
+        $declaration = $manager->getRepository(DeclareNsfoBase::class)->findOneByMessageId($messageId);
+
+        //null check
+        if(!($declaration instanceof DeclareNsfoBase) || $messageId == null) { return false; }
+
+        //Revoke check, to prevent data loss by incorrect data
+        if($declaration->getRequestState() == RequestStateType::REVOKED) { return false; }
+
+        /** @var Location $location */
+        $location = $manager->getRepository(Location::class)->findOneByUbn($declaration->getUbn());
+
+        $owner = NullChecker::getOwnerOfLocation($location);
+
+        if($owner instanceof Client && $client instanceof Client) {
+            /** @var Client $owner */
+            if($owner->getId() == $client->getId()) {
+                return $declaration;
+            }
+        }
+
+        return false;
     }
 }
