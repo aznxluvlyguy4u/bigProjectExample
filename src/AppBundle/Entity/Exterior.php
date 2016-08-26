@@ -16,7 +16,7 @@ class Exterior extends Measurement {
     /**
      * @var float
      *
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
@@ -25,7 +25,7 @@ class Exterior extends Measurement {
     /**
      * @var float
      *
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
@@ -34,7 +34,7 @@ class Exterior extends Measurement {
     /**
      * @var float
      *
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
@@ -51,7 +51,7 @@ class Exterior extends Measurement {
     /**
      * @var float
      *
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
@@ -60,7 +60,7 @@ class Exterior extends Measurement {
     /**
      * @var float
      *
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
@@ -69,7 +69,7 @@ class Exterior extends Measurement {
     /**
      * @var float
      *
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
@@ -78,7 +78,7 @@ class Exterior extends Measurement {
     /**
      * @var float
      *
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
@@ -87,7 +87,7 @@ class Exterior extends Measurement {
     /**
      * @var float
      *
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
@@ -96,7 +96,7 @@ class Exterior extends Measurement {
     /**
      * @var float
      *
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
@@ -105,7 +105,7 @@ class Exterior extends Measurement {
     /**
      * @var float
      *
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
@@ -114,7 +114,7 @@ class Exterior extends Measurement {
     /**
      * @var float
      *
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
@@ -139,6 +139,7 @@ class Exterior extends Measurement {
       $this->breastDepth = 0.00;
       $this->torsoLength = 0.00;
       $this->markings = 0.00;
+      $this->progress = 0.00;
     }
 
     /**

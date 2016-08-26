@@ -16,7 +16,7 @@ class MuscleThickness extends Measurement {
     /**
      * @var float
      *
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
      */

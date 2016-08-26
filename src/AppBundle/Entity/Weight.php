@@ -16,7 +16,7 @@ class Weight extends Measurement {
     /**
      * @var float
      *
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
@@ -31,7 +31,7 @@ class Weight extends Measurement {
     /**
      * @var boolean
      * @Assert\NotBlank
-     * @ORM\Column(type="boolean")
+     * @ORM\Column(type="boolean", options={"default":false})
      * @JMS\Type("boolean")
      */
     private $isBirthWeight;
