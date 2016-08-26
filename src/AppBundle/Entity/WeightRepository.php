@@ -19,6 +19,7 @@ class WeightRepository extends BaseRepository {
     {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('animal', $animal))
+            ->andWhere(Criteria::expr()->eq('isRevoked', false))
             ->orderBy(['measurementDate' => Criteria::DESC])
             ->setMaxResults(1);
 
@@ -44,6 +45,7 @@ class WeightRepository extends BaseRepository {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('animal', $animal))
             ->andWhere(Criteria::expr()->eq('isBirthWeight', true))
+            ->andWhere(Criteria::expr()->eq('isRevoked', false))
             ->orderBy(['measurementDate' => Criteria::DESC])
             ->setMaxResults(1);
 
@@ -74,6 +76,7 @@ class WeightRepository extends BaseRepository {
             ->where(Criteria::expr()->eq('animal', $animal))
             ->andWhere(Criteria::expr()->gte('measurementDate', $dayOfDateTime))
             ->andWhere(Criteria::expr()->lt('measurementDate', $dayAfterDateTime))
+            ->andWhere(Criteria::expr()->eq('isRevoked', false))
             ->orderBy(['measurementDate' => Criteria::DESC])
             ;
 
