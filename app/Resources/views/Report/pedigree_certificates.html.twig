@@ -26,828 +26,848 @@
         {% set breederCity = x.addressBreeder.city %}
         {% set breederNumber = x.breederNumber %}
 
+    {# BreedIndex #}
+    {#breedIndexStars#}
+{#mBreedIndexStars#}
+{#fBreedIndexStars#}
+{#extIndexStars#}
+
+{#5 black stars#}
+{#{% autoescape %} &#9733; &#9733; &#9733; &#9733; &#9733; {% endautoescape %}#}
+{#1 black stars + 4 white stars (put the white/empty starts on the left)#}
+{#{% autoescape %} &#9733; &#9734; &#9734; &#9734; &#9734; {% endautoescape %}#}
+
+{#number/accuracy like 128/78#}
+{#breedIndexNoAcc#}
+{#mBreedIndexNoAcc#}
+{#fBreedIndexNorAcc#}
+{#extIndexNoAcc#}
+
+
     {# Animals, 'animals' #}
 
       {# child, 'c' #}
 
-        {% set c_gender = x.animals['c'].gender %}
-        {% set c_uln = x.animals['c'].uln %}
-        {% set c_pedigree = x.animals['c'].pedigree %}
-        {% set c_name = x.animals['c'].name %}
-        {% set c_scrapie = x.animals['c'].scrapie %}
-        {% set c_breed = x.animals['c'].breed %}
-        {% set c_breedType = x.animals['c'].breedType %}
-        {% set c_breedCode = x.animals['c'].breedCode %}
-        {% set c_litterSize = x.animals['c'].litterSize %}
-        {% set c_litterGroup = x.animals['c'].litterGroup %}
-        {% set c_nLing = x.animals['c'].nLing %}
-        {% set c_blf = x.animals['c'].blindnessFactor %}
-        {% set c_predicate = x.animals['c'].predicate %}
-        {% set c_production = x.animals['c'].production %}
-        {% set c_litterCount = x.animals['c'].litterCount %}
-        {% set c_offspringCount = x.animals['c'].offspringCount %}
-        {% set c_breederName = x.animals['c'].breederName %}
-        {% set c_breederNumber = x.animals['c'].breederNumber %}
+        {% set cGender = x.animals['c'].gender %}
+        {% set cUln = x.animals['c'].uln %}
+        {% set cPedigree = x.animals['c'].pedigree %}
+        {% set cName = x.animals['c'].name %}
+        {% set cScrapie = x.animals['c'].scrapie %}
+        {% set cBreed = x.animals['c'].breed %}
+        {% set cBreedType = x.animals['c'].breedType %}
+        {% set cBreedCode = x.animals['c'].breedCode %}
+        {% set cLitterSize = x.animals['c'].litterSize %}
+        {% set cLitterGroup = x.animals['c'].litterGroup %}
+        {% set cNLing = x.animals['c'].nLing %}
+        {% set cBlf = x.animals['c'].blindnessFactor %}
+        {% set cPredicate = x.animals['c'].predicate %}
+        {% set cProduction = x.animals['c'].production %}
+        {% set cLitterCount = x.animals['c'].litterCount %}
+        {% set cOffspringCount = x.animals['c'].offspringCount %}
+        {% set cBreederName = x.animals['c'].breederName %}
+        {% set cBreederNumber = x.animals['c'].breederNumber %}
 
         {# Measurements #}
-        {% set c_skull = x.animals['c'].skull %}
-        {% set c_development = x.animals['c'].development %}
-        {% set c_muscularity = x.animals['c'].muscularity %}
-        {% set c_proportion = x.animals['c'].proportion %}
-        {% set c_type = x.animals['c'].type %}
-        {% set c_legWork = x.animals['c'].legWork %}
-        {% set c_fur = x.animals['c'].fur %}
-        {% set c_generalAppearance = x.animals['c'].generalAppearance %}
-        {% set c_height = x.animals['c'].height %}
-        {% set c_torsoLength = x.animals['c'].torsoLength %}
-        {% set c_breastDepth = x.animals['c'].breastDepth %}
-        {% set c_tailLength = x.animals['c'].tailLength %}
-        {% set c_litterGroup = x.animals['c'].litterGroup %}
-        {% set c_growth = x.animals['c'].growth %}
-        {% set c_muscleThickness = x.animals['c'].muscleThickness %}
-        {% set c_bodyFat = x.animals['c'].bodyFat %}
-        {% set c_vl = x.animals['c'].vl %}
-        {% set c_sl = x.animals['c'].sl %}
+        {% set cSkull = x.animals['c'].skull %}
+        {% set cDevelopment = x.animals['c'].development %}
+        {% set cMuscularity = x.animals['c'].muscularity %}
+        {% set cProportion = x.animals['c'].proportion %}
+        {% set cType = x.animals['c'].type %}
+        {% set cLegWork = x.animals['c'].legWork %}
+        {% set cFur = x.animals['c'].fur %}
+        {% set cGeneralAppearance = x.animals['c'].generalAppearance %}
+        {% set cHeight = x.animals['c'].height %}
+        {% set cTorsoLength = x.animals['c'].torsoLength %}
+        {% set cBreastDepth = x.animals['c'].breastDepth %}
+        {% set cTailLength = x.animals['c'].tailLength %}
+
+        {# BreedValues #}
+        {% set cLitterGroup = x.animals['c'].litterGroup %}
+        {% set cGrowth = x.animals['c'].growth %}
+        {% set cMuscleThickness = x.animals['c'].muscleThickness %}
+        {% set cBodyFat = x.animals['c'].bodyFat %}
+        {% set cVl = x.animals['c'].vl %}
+        {% set cSl = x.animals['c'].sl %}
 
         {# dates #}
         {% if x.animals['c'].dateOfBirth == null %}
-            {% set c_dateOfBirth = '-' %}
+            {% set cDateOfBirth = '-' %}
         {% else %}
-            {% set c_dateOfBirth = x.animals['c'].dateOfBirth|date('d-m-Y') %}
+            {% set cDateOfBirth = x.animals['c'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
         {% if x.animals['c'].inspectionDate == null %}
-            {% set c_inspectionDate = '-' %}
+            {% set cInspectionDate = '-' %}
         {% else %}
-            {% set c_inspectionDate= x.animals['c'].inspectionDate|date('d-m-Y') %}
+            {% set cInspectionDate= x.animals['c'].inspectionDate|date('d-m-Y') %}
         {% endif %}
 
       {# father, 'f' #}
 
-        {% set f_gender = x.animals['f'].gender %}
-        {% set f_uln = x.animals['f'].uln %}
-        {% set f_pedigree = x.animals['f'].pedigree %}
-        {% set f_name = x.animals['f'].name %}
-        {% set f_scrapie = x.animals['f'].scrapie %}
-        {% set f_breed = x.animals['f'].breed %}
-        {% set f_breedType = x.animals['f'].breedType %}
-        {% set f_breedCode = x.animals['f'].breedCode %}
-        {% set f_litterSize = x.animals['f'].litterSize %}
-        {% set f_litterGroup = x.animals['f'].litterGroup %}
-        {% set f_nLing = x.animals['f'].nLing %}
-        {% set f_blf = x.animals['f'].blindnessFactor %}
-        {% set f_predicate = x.animals['f'].predicate %}
-        {% set f_production = x.animals['f'].production %}
-        {% set f_litterCount = x.animals['f'].litterCount %}
-        {% set f_offspringCount = x.animals['f'].offspringCount %}
-        {% set f_breederName = x.animals['f'].breederName %}
-        {% set f_breederNumber = x.animals['f'].breederNumber %}
+        {% set fGender = x.animals['f'].gender %}
+        {% set fUln = x.animals['f'].uln %}
+        {% set fPedigree = x.animals['f'].pedigree %}
+        {% set fName = x.animals['f'].name %}
+        {% set fScrapie = x.animals['f'].scrapie %}
+        {% set fBreed = x.animals['f'].breed %}
+        {% set fBreedType = x.animals['f'].breedType %}
+        {% set fBreedCode = x.animals['f'].breedCode %}
+        {% set fLitterSize = x.animals['f'].litterSize %}
+        {% set fLitterGroup = x.animals['f'].litterGroup %}
+        {% set fNLing = x.animals['f'].nLing %}
+        {% set fBlf = x.animals['f'].blindnessFactor %}
+        {% set fPredicate = x.animals['f'].predicate %}
+        {% set fProduction = x.animals['f'].production %}
+        {% set fLitterCount = x.animals['f'].litterCount %}
+        {% set fOffspringCount = x.animals['f'].offspringCount %}
+        {% set fBreederName = x.animals['f'].breederName %}
+        {% set fBreederNumber = x.animals['f'].breederNumber %}
 
         {# Measurements #}
-        {% set f_skull = x.animals['f'].skull %}
-        {% set f_development = x.animals['f'].development %}
-        {% set f_muscularity = x.animals['f'].muscularity %}
-        {% set f_proportion = x.animals['f'].proportion %}
-        {% set f_type = x.animals['f'].type %}
-        {% set f_legWork = x.animals['f'].legWork %}
-        {% set f_fur = x.animals['f'].fur %}
-        {% set f_generalAppearance = x.animals['f'].generalAppearance %}
-        {% set f_height = x.animals['f'].height %}
-        {% set f_torsoLength = x.animals['f'].torsoLength %}
-        {% set f_breastDepth = x.animals['f'].breastDepth %}
-        {% set f_tailLength = x.animals['f'].tailLength %}
-        {% set f_litterGroup = x.animals['f'].litterGroup %}
-        {% set f_growth = x.animals['f'].growth %}
-        {% set f_muscleThickness = x.animals['f'].muscleThickness %}
-        {% set f_bodyFat = x.animals['f'].bodyFat %}
-        {% set f_vl = x.animals['f'].vl %}
-        {% set f_sl = x.animals['f'].sl %}
+        {% set fSkull = x.animals['f'].skull %}
+        {% set fDevelopment = x.animals['f'].development %}
+        {% set fMuscularity = x.animals['f'].muscularity %}
+        {% set fProportion = x.animals['f'].proportion %}
+        {% set fType = x.animals['f'].type %}
+        {% set fLegWork = x.animals['f'].legWork %}
+        {% set fFur = x.animals['f'].fur %}
+        {% set fGeneralAppearance = x.animals['f'].generalAppearance %}
+        {% set fHeight = x.animals['f'].height %}
+        {% set fTorsoLength = x.animals['f'].torsoLength %}
+        {% set fBreastDepth = x.animals['f'].breastDepth %}
+        {% set fTailLength = x.animals['f'].tailLength %}
+        {% set fLitterGroup = x.animals['f'].litterGroup %}
+        {% set fGrowth = x.animals['f'].growth %}
+        {% set fMuscleThickness = x.animals['f'].muscleThickness %}
+        {% set fBodyFat = x.animals['f'].bodyFat %}
+        {% set fVl = x.animals['f'].vl %}
+        {% set fSl = x.animals['f'].sl %}
 
         {# dates #}
         {% if x.animals['f'].dateOfBirth == null %}
-            {% set f_dateOfBirth = '-' %}
+            {% set fDateOfBirth = '-' %}
         {% else %}
-            {% set f_dateOfBirth = x.animals['f'].dateOfBirth|date('d-m-Y') %}
+            {% set fDateOfBirth = x.animals['f'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
         {% if x.animals['f'].inspectionDate == null %}
-            {% set f_inspectionDate = '-' %}
+            {% set fInspectionDate = '-' %}
         {% else %}
-            {% set f_inspectionDate= x.animals['f'].inspectionDate|date('d-m-Y') %}
+            {% set fInspectionDate= x.animals['f'].inspectionDate|date('d-m-Y') %}
         {% endif %}
 
       {# mother, 'm' #}
 
-        {% set m_gender = x.animals['m'].gender %}
-        {% set m_uln = x.animals['m'].uln %}
-        {% set m_pedigree = x.animals['m'].pedigree %}
-        {% set m_name = x.animals['m'].name %}
-        {% set m_scrapie = x.animals['m'].scrapie %}
-        {% set m_breed = x.animals['m'].breed %}
-        {% set m_breedType = x.animals['m'].breedType %}
-        {% set m_breedCode = x.animals['m'].breedCode %}
-        {% set m_litterSize = x.animals['m'].litterSize %}
-        {% set m_litterGroup = x.animals['m'].litterGroup %}
-        {% set m_nLing = x.animals['m'].nLing %}
-        {% set m_blf = x.animals['m'].blindnessFactor %}
-        {% set m_predicate = x.animals['m'].predicate %}
-        {% set m_production = x.animals['m'].production %}
-        {% set m_litterCount = x.animals['m'].litterCount %}
-        {% set m_offspringCount = x.animals['m'].offspringCount %}
-        {% set m_breederName = x.animals['m'].breederName %}
-        {% set m_breederNumber = x.animals['m'].breederNumber %}
+        {% set mGender = x.animals['m'].gender %}
+        {% set mUln = x.animals['m'].uln %}
+        {% set mPedigree = x.animals['m'].pedigree %}
+        {% set mName = x.animals['m'].name %}
+        {% set mScrapie = x.animals['m'].scrapie %}
+        {% set mBreed = x.animals['m'].breed %}
+        {% set mBreedType = x.animals['m'].breedType %}
+        {% set mBreedCode = x.animals['m'].breedCode %}
+        {% set mLitterSize = x.animals['m'].litterSize %}
+        {% set mLitterGroup = x.animals['m'].litterGroup %}
+        {% set mNLing = x.animals['m'].nLing %}
+        {% set mBlf = x.animals['m'].blindnessFactor %}
+        {% set mPredicate = x.animals['m'].predicate %}
+        {% set mProduction = x.animals['m'].production %}
+        {% set mLitterCount = x.animals['m'].litterCount %}
+        {% set mOffspringCount = x.animals['m'].offspringCount %}
+        {% set mBreederName = x.animals['m'].breederName %}
+        {% set mBreederNumber = x.animals['m'].breederNumber %}
 
         {# Measurements #}
-        {% set m_skull = x.animals['m'].skull %}
-        {% set m_development = x.animals['m'].development %}
-        {% set m_muscularity = x.animals['m'].muscularity %}
-        {% set m_proportion = x.animals['m'].proportion %}
-        {% set m_type = x.animals['m'].type %}
-        {% set m_legWork = x.animals['m'].legWork %}
-        {% set m_fur = x.animals['m'].fur %}
-        {% set m_generalAppearance = x.animals['m'].generalAppearance %}
-        {% set m_height = x.animals['m'].height %}
-        {% set m_torsoLength = x.animals['m'].torsoLength %}
-        {% set m_breastDepth = x.animals['m'].breastDepth %}
-        {% set m_tailLength = x.animals['m'].tailLength %}
-        {% set m_litterGroup = x.animals['m'].litterGroup %}
-        {% set m_growth = x.animals['m'].growth %}
-        {% set m_muscleThickness = x.animals['m'].muscleThickness %}
-        {% set m_bodyFat = x.animals['m'].bodyFat %}
-        {% set m_vl = x.animals['m'].vl %}
-        {% set m_sl = x.animals['m'].sl %}
+        {% set mSkull = x.animals['m'].skull %}
+        {% set mDevelopment = x.animals['m'].development %}
+        {% set mMuscularity = x.animals['m'].muscularity %}
+        {% set mProportion = x.animals['m'].proportion %}
+        {% set mType = x.animals['m'].type %}
+        {% set mLegWork = x.animals['m'].legWork %}
+        {% set mFur = x.animals['m'].fur %}
+        {% set mGeneralAppearance = x.animals['m'].generalAppearance %}
+        {% set mHeight = x.animals['m'].height %}
+        {% set mTorsoLength = x.animals['m'].torsoLength %}
+        {% set mBreastDepth = x.animals['m'].breastDepth %}
+        {% set mTailLength = x.animals['m'].tailLength %}
+        {% set mLitterGroup = x.animals['m'].litterGroup %}
+        {% set mGrowth = x.animals['m'].growth %}
+        {% set mMuscleThickness = x.animals['m'].muscleThickness %}
+        {% set mBodyFat = x.animals['m'].bodyFat %}
+        {% set mVl = x.animals['m'].vl %}
+        {% set mSl = x.animals['m'].sl %}
 
         {# dates #}
         {% if x.animals['m'].dateOfBirth == null %}
-            {% set m_dateOfBirth = '-' %}
+            {% set mDateOfBirth = '-' %}
         {% else %}
-            {% set m_dateOfBirth = x.animals['m'].dateOfBirth|date('d-m-Y') %}
+            {% set mDateOfBirth = x.animals['m'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
         {% if x.animals['m'].inspectionDate == null %}
-            {% set m_inspectionDate = '-' %}
+            {% set mInspectionDate = '-' %}
         {% else %}
-            {% set m_inspectionDate= x.animals['m'].inspectionDate|date('d-m-Y') %}
+            {% set mInspectionDate= x.animals['m'].inspectionDate|date('d-m-Y') %}
         {% endif %}
 
 
       {# father's father, 'ff' #}
 
-        {% set ff_gender = x.animals['ff'].gender %}
-        {% set ff_uln = x.animals['ff'].uln %}
-        {% set ff_pedigree = x.animals['ff'].pedigree %}
-        {% set ff_name = x.animals['ff'].name %}
-        {% set ff_scrapie = x.animals['ff'].scrapie %}
-        {% set ff_breed = x.animals['ff'].breed %}
-        {% set ff_breedType = x.animals['ff'].breedType %}
-        {% set ff_breedCode = x.animals['ff'].breedCode %}
-        {% set ff_litterSize = x.animals['ff'].litterSize %}
-        {% set ff_litterGroup = x.animals['ff'].litterGroup %}
-        {% set ff_nLing = x.animals['ff'].nLing %}
-        {% set ff_blf = x.animals['ff'].blindnessFactor %}
-        {% set ff_predicate = x.animals['ff'].predicate %}
-        {% set ff_production = x.animals['ff'].production %}
-        {% set ff_litterCount = x.animals['ff'].litterCount %}
-        {% set ff_offspringCount = x.animals['ff'].offspringCount %}
-        {% set ff_breederName = x.animals['ff'].breederName %}
-        {% set ff_breederNumber = x.animals['ff'].breederNumber %}
+        {% set ffGender = x.animals['ff'].gender %}
+        {% set ffUln = x.animals['ff'].uln %}
+        {% set ffPedigree = x.animals['ff'].pedigree %}
+        {% set ffName = x.animals['ff'].name %}
+        {% set ffScrapie = x.animals['ff'].scrapie %}
+        {% set ffBreed = x.animals['ff'].breed %}
+        {% set ffBreedType = x.animals['ff'].breedType %}
+        {% set ffBreedCode = x.animals['ff'].breedCode %}
+        {% set ffLitterSize = x.animals['ff'].litterSize %}
+        {% set ffLitterGroup = x.animals['ff'].litterGroup %}
+        {% set ffNLing = x.animals['ff'].nLing %}
+        {% set ffBlf = x.animals['ff'].blindnessFactor %}
+        {% set ffPredicate = x.animals['ff'].predicate %}
+        {% set ffProduction = x.animals['ff'].production %}
+        {% set ffLitterCount = x.animals['ff'].litterCount %}
+        {% set ffOffspringCount = x.animals['ff'].offspringCount %}
+        {% set ffBreederName = x.animals['ff'].breederName %}
+        {% set ffBreederNumber = x.animals['ff'].breederNumber %}
 
         {# Measurements #}
-        {% set ff_skull = x.animals['ff'].skull %}
-        {% set ff_development = x.animals['ff'].development %}
-        {% set ff_muscularity = x.animals['ff'].muscularity %}
-        {% set ff_proportion = x.animals['ff'].proportion %}
-        {% set ff_type = x.animals['ff'].type %}
-        {% set ff_legWork = x.animals['ff'].legWork %}
-        {% set ff_fur = x.animals['ff'].fur %}
-        {% set ff_generalAppearance = x.animals['ff'].generalAppearance %}
-        {% set ff_height = x.animals['ff'].height %}
-        {% set ff_torsoLength = x.animals['ff'].torsoLength %}
-        {% set ff_breastDepth = x.animals['ff'].breastDepth %}
-        {% set ff_tailLength = x.animals['ff'].tailLength %}
-        {% set ff_litterGroup = x.animals['ff'].litterGroup %}
-        {% set ff_growth = x.animals['ff'].growth %}
-        {% set ff_muscleThickness = x.animals['ff'].muscleThickness %}
-        {% set ff_bodyFat = x.animals['ff'].bodyFat %}
-        {% set ff_vl = x.animals['ff'].vl %}
-        {% set ff_sl = x.animals['ff'].sl %}
+        {% set ffSkull = x.animals['ff'].skull %}
+        {% set ffDevelopment = x.animals['ff'].development %}
+        {% set ffMuscularity = x.animals['ff'].muscularity %}
+        {% set ffProportion = x.animals['ff'].proportion %}
+        {% set ffType = x.animals['ff'].type %}
+        {% set ffLegWork = x.animals['ff'].legWork %}
+        {% set ffFur = x.animals['ff'].fur %}
+        {% set ffGeneralAppearance = x.animals['ff'].generalAppearance %}
+        {% set ffHeight = x.animals['ff'].height %}
+        {% set ffTorsoLength = x.animals['ff'].torsoLength %}
+        {% set ffBreastDepth = x.animals['ff'].breastDepth %}
+        {% set ffTailLength = x.animals['ff'].tailLength %}
+        {% set ffLitterGroup = x.animals['ff'].litterGroup %}
+        {% set ffGrowth = x.animals['ff'].growth %}
+        {% set ffMuscleThickness = x.animals['ff'].muscleThickness %}
+        {% set ffBodyFat = x.animals['ff'].bodyFat %}
+        {% set ffVl = x.animals['ff'].vl %}
+        {% set ffSl = x.animals['ff'].sl %}
 
         {# dates #}
         {% if x.animals['ff'].dateOfBirth == null %}
-            {% set ff_dateOfBirth = '-' %}
+            {% set ffDateOfBirth = '-' %}
         {% else %}
-            {% set ff_dateOfBirth = x.animals['ff'].dateOfBirth|date('d-m-Y') %}
+            {% set ffDateOfBirth = x.animals['ff'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
         {% if x.animals['ff'].inspectionDate == null %}
-            {% set ff_inspectionDate = '-' %}
+            {% set ffInspectionDate = '-' %}
         {% else %}
-            {% set ff_inspectionDate= x.animals['ff'].inspectionDate|date('d-m-Y') %}
+            {% set ffInspectionDate= x.animals['ff'].inspectionDate|date('d-m-Y') %}
         {% endif %}
 
 
        {# father's mother, 'fm' #}
 
-        {% set fm_gender = x.animals['fm'].gender %}
-        {% set fm_uln = x.animals['fm'].uln %}
-        {% set fm_pedigree = x.animals['fm'].pedigree %}
-        {% set fm_name = x.animals['fm'].name %}
-        {% set fm_scrapie = x.animals['fm'].scrapie %}
-        {% set fm_breed = x.animals['fm'].breed %}
-        {% set fm_breedType = x.animals['fm'].breedType %}
-        {% set fm_breedCode = x.animals['fm'].breedCode %}
-        {% set fm_litterSize = x.animals['fm'].litterSize %}
-        {% set fm_litterGroup = x.animals['fm'].litterGroup %}
-        {% set fm_nLing = x.animals['fm'].nLing %}
-        {% set fm_blf = x.animals['fm'].blindnessFactor %}
-        {% set fm_predicate = x.animals['fm'].predicate %}
-        {% set fm_production = x.animals['fm'].production %}
-        {% set fm_litterCount = x.animals['fm'].litterCount %}
-        {% set fm_offspringCount = x.animals['fm'].offspringCount %}
-        {% set fm_breederName = x.animals['fm'].breederName %}
-        {% set fm_breederNumber = x.animals['fm'].breederNumber %}
+        {% set fmGender = x.animals['fm'].gender %}
+        {% set fmUln = x.animals['fm'].uln %}
+        {% set fmPedigree = x.animals['fm'].pedigree %}
+        {% set fmName = x.animals['fm'].name %}
+        {% set fmScrapie = x.animals['fm'].scrapie %}
+        {% set fmBreed = x.animals['fm'].breed %}
+        {% set fmBreedType = x.animals['fm'].breedType %}
+        {% set fmBreedCode = x.animals['fm'].breedCode %}
+        {% set fmLitterSize = x.animals['fm'].litterSize %}
+        {% set fmLitterGroup = x.animals['fm'].litterGroup %}
+        {% set fmNLing = x.animals['fm'].nLing %}
+        {% set fmBlf = x.animals['fm'].blindnessFactor %}
+        {% set fmPredicate = x.animals['fm'].predicate %}
+        {% set fmProduction = x.animals['fm'].production %}
+        {% set fmLitterCount = x.animals['fm'].litterCount %}
+        {% set fmOffspringCount = x.animals['fm'].offspringCount %}
+        {% set fmBreederName = x.animals['fm'].breederName %}
+        {% set fmBreederNumber = x.animals['fm'].breederNumber %}
 
         {# Measurements #}
-        {% set fm_skull = x.animals['fm'].skull %}
-        {% set fm_development = x.animals['fm'].development %}
-        {% set fm_muscularity = x.animals['fm'].muscularity %}
-        {% set fm_proportion = x.animals['fm'].proportion %}
-        {% set fm_type = x.animals['fm'].type %}
-        {% set fm_legWork = x.animals['fm'].legWork %}
-        {% set fm_fur = x.animals['fm'].fur %}
-        {% set fm_generalAppearance = x.animals['fm'].generalAppearance %}
-        {% set fm_height = x.animals['fm'].height %}
-        {% set fm_torsoLength = x.animals['fm'].torsoLength %}
-        {% set fm_breastDepth = x.animals['fm'].breastDepth %}
-        {% set fm_tailLength = x.animals['fm'].tailLength %}
-        {% set fm_litterGroup = x.animals['fm'].litterGroup %}
-        {% set fm_growth = x.animals['fm'].growth %}
-        {% set fm_muscleThickness = x.animals['fm'].muscleThickness %}
-        {% set fm_bodyFat = x.animals['fm'].bodyFat %}
-        {% set fm_vl = x.animals['fm'].vl %}
-        {% set fm_sl = x.animals['fm'].sl %}
+        {% set fmSkull = x.animals['fm'].skull %}
+        {% set fmDevelopment = x.animals['fm'].development %}
+        {% set fmMuscularity = x.animals['fm'].muscularity %}
+        {% set fmProportion = x.animals['fm'].proportion %}
+        {% set fmType = x.animals['fm'].type %}
+        {% set fmLegWork = x.animals['fm'].legWork %}
+        {% set fmFur = x.animals['fm'].fur %}
+        {% set fmGeneralAppearance = x.animals['fm'].generalAppearance %}
+        {% set fmHeight = x.animals['fm'].height %}
+        {% set fmTorsoLength = x.animals['fm'].torsoLength %}
+        {% set fmBreastDepth = x.animals['fm'].breastDepth %}
+        {% set fmTailLength = x.animals['fm'].tailLength %}
+        {% set fmLitterGroup = x.animals['fm'].litterGroup %}
+        {% set fmGrowth = x.animals['fm'].growth %}
+        {% set fmMuscleThickness = x.animals['fm'].muscleThickness %}
+        {% set fmBodyFat = x.animals['fm'].bodyFat %}
+        {% set fmVl = x.animals['fm'].vl %}
+        {% set fmSl = x.animals['fm'].sl %}
 
         {# dates #}
         {% if x.animals['fm'].dateOfBirth == null %}
-            {% set fm_dateOfBirth = '-' %}
+            {% set fmDateOfBirth = '-' %}
         {% else %}
-            {% set fm_dateOfBirth = x.animals['fm'].dateOfBirth|date('d-m-Y') %}
+            {% set fmDateOfBirth = x.animals['fm'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
         {% if x.animals['fm'].inspectionDate == null %}
-            {% set fm_inspectionDate = '-' %}
+            {% set fmInspectionDate = '-' %}
         {% else %}
-            {% set fm_inspectionDate= x.animals['fm'].inspectionDate|date('d-m-Y') %}
+            {% set fmInspectionDate= x.animals['fm'].inspectionDate|date('d-m-Y') %}
         {% endif %}
 
 
       {# mother's father, 'mf' #}
 
-        {% set mf_gender = x.animals['mf'].gender %}
-        {% set mf_uln = x.animals['mf'].uln %}
-        {% set mf_pedigree = x.animals['mf'].pedigree %}
-        {% set mf_name = x.animals['mf'].name %}
-        {% set mf_scrapie = x.animals['mf'].scrapie %}
-        {% set mf_breed = x.animals['mf'].breed %}
-        {% set mf_breedType = x.animals['mf'].breedType %}
-        {% set mf_breedCode = x.animals['mf'].breedCode %}
-        {% set mf_litterSize = x.animals['mf'].litterSize %}
-        {% set mf_litterGroup = x.animals['mf'].litterGroup %}
-        {% set mf_nLing = x.animals['mf'].nLing %}
-        {% set mf_blf = x.animals['mf'].blindnessFactor %}
-        {% set mf_predicate = x.animals['mf'].predicate %}
-        {% set mf_production = x.animals['mf'].production %}
-        {% set mf_litterCount = x.animals['mf'].litterCount %}
-        {% set mf_offspringCount = x.animals['mf'].offspringCount %}
-        {% set mf_breederName = x.animals['mf'].breederName %}
-        {% set mf_breederNumber = x.animals['mf'].breederNumber %}
+        {% set mfGender = x.animals['mf'].gender %}
+        {% set mfUln = x.animals['mf'].uln %}
+        {% set mfPedigree = x.animals['mf'].pedigree %}
+        {% set mfName = x.animals['mf'].name %}
+        {% set mfScrapie = x.animals['mf'].scrapie %}
+        {% set mfBreed = x.animals['mf'].breed %}
+        {% set mfBreedType = x.animals['mf'].breedType %}
+        {% set mfBreedCode = x.animals['mf'].breedCode %}
+        {% set mfLitterSize = x.animals['mf'].litterSize %}
+        {% set mfLitterGroup = x.animals['mf'].litterGroup %}
+        {% set mfNLing = x.animals['mf'].nLing %}
+        {% set mfBlf = x.animals['mf'].blindnessFactor %}
+        {% set mfPredicate = x.animals['mf'].predicate %}
+        {% set mfProduction = x.animals['mf'].production %}
+        {% set mfLitterCount = x.animals['mf'].litterCount %}
+        {% set mfOffspringCount = x.animals['mf'].offspringCount %}
+        {% set mfBreederName = x.animals['mf'].breederName %}
+        {% set mfBreederNumber = x.animals['mf'].breederNumber %}
 
         {# Measurements #}
-        {% set mf_skull = x.animals['mf'].skull %}
-        {% set mf_development = x.animals['mf'].development %}
-        {% set mf_muscularity = x.animals['mf'].muscularity %}
-        {% set mf_proportion = x.animals['mf'].proportion %}
-        {% set mf_type = x.animals['mf'].type %}
-        {% set mf_legWork = x.animals['mf'].legWork %}
-        {% set mf_fur = x.animals['mf'].fur %}
-        {% set mf_generalAppearance = x.animals['mf'].generalAppearance %}
-        {% set mf_height = x.animals['mf'].height %}
-        {% set mf_torsoLength = x.animals['mf'].torsoLength %}
-        {% set mf_breastDepth = x.animals['mf'].breastDepth %}
-        {% set mf_tailLength = x.animals['mf'].tailLength %}
-        {% set mf_litterGroup = x.animals['mf'].litterGroup %}
-        {% set mf_growth = x.animals['mf'].growth %}
-        {% set mf_muscleThickness = x.animals['mf'].muscleThickness %}
-        {% set mf_bodyFat = x.animals['mf'].bodyFat %}
-        {% set mf_vl = x.animals['mf'].vl %}
-        {% set mf_sl = x.animals['mf'].sl %}
+        {% set mfSkull = x.animals['mf'].skull %}
+        {% set mfDevelopment = x.animals['mf'].development %}
+        {% set mfMuscularity = x.animals['mf'].muscularity %}
+        {% set mfProportion = x.animals['mf'].proportion %}
+        {% set mfType = x.animals['mf'].type %}
+        {% set mfLegWork = x.animals['mf'].legWork %}
+        {% set mfFur = x.animals['mf'].fur %}
+        {% set mfGeneralAppearance = x.animals['mf'].generalAppearance %}
+        {% set mfHeight = x.animals['mf'].height %}
+        {% set mfTorsoLength = x.animals['mf'].torsoLength %}
+        {% set mfBreastDepth = x.animals['mf'].breastDepth %}
+        {% set mfTailLength = x.animals['mf'].tailLength %}
+        {% set mfLitterGroup = x.animals['mf'].litterGroup %}
+        {% set mfGrowth = x.animals['mf'].growth %}
+        {% set mfMuscleThickness = x.animals['mf'].muscleThickness %}
+        {% set mfBodyFat = x.animals['mf'].bodyFat %}
+        {% set mfVl = x.animals['mf'].vl %}
+        {% set mfSl = x.animals['mf'].sl %}
 
         {# dates #}
         {% if x.animals['mf'].dateOfBirth == null %}
-            {% set mf_dateOfBirth = '-' %}
+            {% set mfDateOfBirth = '-' %}
         {% else %}
-            {% set mf_dateOfBirth = x.animals['mf'].dateOfBirth|date('d-m-Y') %}
+            {% set mfDateOfBirth = x.animals['mf'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
         {% if x.animals['mf'].inspectionDate == null %}
-            {% set mf_inspectionDate = '-' %}
+            {% set mfInspectionDate = '-' %}
         {% else %}
-            {% set mf_inspectionDate= x.animals['mf'].inspectionDate|date('d-m-Y') %}
+            {% set mfInspectionDate= x.animals['mf'].inspectionDate|date('d-m-Y') %}
         {% endif %}
 
 
       {# mother's mother, 'mm' #}
 
-        {% set mm_gender = x.animals['mm'].gender %}
-        {% set mm_uln = x.animals['mm'].uln %}
-        {% set mm_pedigree = x.animals['mm'].pedigree %}
-        {% set mm_name = x.animals['mm'].name %}
-        {% set mm_scrapie = x.animals['mm'].scrapie %}
-        {% set mm_breed = x.animals['mm'].breed %}
-        {% set mm_breedType = x.animals['mm'].breedType %}
-        {% set mm_breedCode = x.animals['mm'].breedCode %}
-        {% set mm_litterSize = x.animals['mm'].litterSize %}
-        {% set mm_litterGroup = x.animals['mm'].litterGroup %}
-        {% set mm_nLing = x.animals['mm'].nLing %}
-        {% set mm_blf = x.animals['mm'].blindnessFactor %}
-        {% set mm_predicate = x.animals['mm'].predicate %}
-        {% set mm_production = x.animals['mm'].production %}
-        {% set mm_litterCount = x.animals['mm'].litterCount %}
-        {% set mm_offspringCount = x.animals['mm'].offspringCount %}
-        {% set mm_breederName = x.animals['mm'].breederName %}
-        {% set mm_breederNumber = x.animals['mm'].breederNumber %}
+        {% set mmGender = x.animals['mm'].gender %}
+        {% set mmUln = x.animals['mm'].uln %}
+        {% set mmPedigree = x.animals['mm'].pedigree %}
+        {% set mmName = x.animals['mm'].name %}
+        {% set mmScrapie = x.animals['mm'].scrapie %}
+        {% set mmBreed = x.animals['mm'].breed %}
+        {% set mmBreedType = x.animals['mm'].breedType %}
+        {% set mmBreedCode = x.animals['mm'].breedCode %}
+        {% set mmLitterSize = x.animals['mm'].litterSize %}
+        {% set mmLitterGroup = x.animals['mm'].litterGroup %}
+        {% set mmNLing = x.animals['mm'].nLing %}
+        {% set mmBlf = x.animals['mm'].blindnessFactor %}
+        {% set mmPredicate = x.animals['mm'].predicate %}
+        {% set mmProduction = x.animals['mm'].production %}
+        {% set mmLitterCount = x.animals['mm'].litterCount %}
+        {% set mmOffspringCount = x.animals['mm'].offspringCount %}
+        {% set mmBreederName = x.animals['mm'].breederName %}
+        {% set mmBreederNumber = x.animals['mm'].breederNumber %}
 
         {# Measurements #}
-        {% set mm_skull = x.animals['mm'].skull %}
-        {% set mm_development = x.animals['mm'].development %}
-        {% set mm_muscularity = x.animals['mm'].muscularity %}
-        {% set mm_proportion = x.animals['mm'].proportion %}
-        {% set mm_type = x.animals['mm'].type %}
-        {% set mm_legWork = x.animals['mm'].legWork %}
-        {% set mm_fur = x.animals['mm'].fur %}
-        {% set mm_generalAppearance = x.animals['mm'].generalAppearance %}
-        {% set mm_height = x.animals['mm'].height %}
-        {% set mm_torsoLength = x.animals['mm'].torsoLength %}
-        {% set mm_breastDepth = x.animals['mm'].breastDepth %}
-        {% set mm_tailLength = x.animals['mm'].tailLength %}
-        {% set mm_litterGroup = x.animals['mm'].litterGroup %}
-        {% set mm_growth = x.animals['mm'].growth %}
-        {% set mm_muscleThickness = x.animals['mm'].muscleThickness %}
-        {% set mm_bodyFat = x.animals['mm'].bodyFat %}
-        {% set mm_vl = x.animals['mm'].vl %}
-        {% set mm_sl = x.animals['mm'].sl %}
+        {% set mmSkull = x.animals['mm'].skull %}
+        {% set mmDevelopment = x.animals['mm'].development %}
+        {% set mmMuscularity = x.animals['mm'].muscularity %}
+        {% set mmProportion = x.animals['mm'].proportion %}
+        {% set mmType = x.animals['mm'].type %}
+        {% set mmLegWork = x.animals['mm'].legWork %}
+        {% set mmFur = x.animals['mm'].fur %}
+        {% set mmGeneralAppearance = x.animals['mm'].generalAppearance %}
+        {% set mmHeight = x.animals['mm'].height %}
+        {% set mmTorsoLength = x.animals['mm'].torsoLength %}
+        {% set mmBreastDepth = x.animals['mm'].breastDepth %}
+        {% set mmTailLength = x.animals['mm'].tailLength %}
+        {% set mmLitterGroup = x.animals['mm'].litterGroup %}
+        {% set mmGrowth = x.animals['mm'].growth %}
+        {% set mmMuscleThickness = x.animals['mm'].muscleThickness %}
+        {% set mmBodyFat = x.animals['mm'].bodyFat %}
+        {% set mmVl = x.animals['mm'].vl %}
+        {% set mmSl = x.animals['mm'].sl %}
 
         {# dates #}
         {% if x.animals['mm'].dateOfBirth == null %}
-            {% set mm_dateOfBirth = '-' %}
+            {% set mmDateOfBirth = '-' %}
         {% else %}
-            {% set mm_dateOfBirth = x.animals['mm'].dateOfBirth|date('d-m-Y') %}
+            {% set mmDateOfBirth = x.animals['mm'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
         {% if x.animals['mm'].inspectionDate == null %}
-            {% set mm_inspectionDate = '-' %}
+            {% set mmInspectionDate = '-' %}
         {% else %}
-            {% set mm_inspectionDate= x.animals['mm'].inspectionDate|date('d-m-Y') %}
+            {% set mmInspectionDate= x.animals['mm'].inspectionDate|date('d-m-Y') %}
         {% endif %}
 
 
       {# father's father's father, 'fff' #}
 
-        {% set fff_gender = x.animals['fff'].gender %}
-        {% set fff_uln = x.animals['fff'].uln %}
-        {% set fff_pedigree = x.animals['fff'].pedigree %}
-        {% set fff_name = x.animals['fff'].name %}
-        {% set fff_scrapie = x.animals['fff'].scrapie %}
-        {% set fff_breed = x.animals['fff'].breed %}
-        {% set fff_breedType = x.animals['fff'].breedType %}
-        {% set fff_breedCode = x.animals['fff'].breedCode %}
-        {% set fff_litterSize = x.animals['fff'].litterSize %}
-        {% set fff_litterGroup = x.animals['fff'].litterGroup %}
-        {% set fff_nLing = x.animals['fff'].nLing %}
-        {% set fff_blf = x.animals['fff'].blindnessFactor %}
-        {% set fff_predicate = x.animals['fff'].predicate %}
-        {% set fff_production = x.animals['fff'].production %}
-        {% set fff_litterCount = x.animals['fff'].litterCount %}
-        {% set fff_offspringCount = x.animals['fff'].offspringCount %}
-        {% set fff_breederName = x.animals['fff'].breederName %}
-        {% set fff_breederNumber = x.animals['fff'].breederNumber %}
+        {% set fffGender = x.animals['fff'].gender %}
+        {% set fffUln = x.animals['fff'].uln %}
+        {% set fffPedigree = x.animals['fff'].pedigree %}
+        {% set fffName = x.animals['fff'].name %}
+        {% set fffScrapie = x.animals['fff'].scrapie %}
+        {% set fffBreed = x.animals['fff'].breed %}
+        {% set fffBreedType = x.animals['fff'].breedType %}
+        {% set fffBreedCode = x.animals['fff'].breedCode %}
+        {% set fffLitterSize = x.animals['fff'].litterSize %}
+        {% set fffLitterGroup = x.animals['fff'].litterGroup %}
+        {% set fffNLing = x.animals['fff'].nLing %}
+        {% set fffBlf = x.animals['fff'].blindnessFactor %}
+        {% set fffPredicate = x.animals['fff'].predicate %}
+        {% set fffProduction = x.animals['fff'].production %}
+        {% set fffLitterCount = x.animals['fff'].litterCount %}
+        {% set fffOffspringCount = x.animals['fff'].offspringCount %}
+        {% set fffBreederName = x.animals['fff'].breederName %}
+        {% set fffBreederNumber = x.animals['fff'].breederNumber %}
 
         {# Measurements #}
-        {% set fff_skull = x.animals['fff'].skull %}
-        {% set fff_development = x.animals['fff'].development %}
-        {% set fff_muscularity = x.animals['fff'].muscularity %}
-        {% set fff_proportion = x.animals['fff'].proportion %}
-        {% set fff_type = x.animals['fff'].type %}
-        {% set fff_legWork = x.animals['fff'].legWork %}
-        {% set fff_fur = x.animals['fff'].fur %}
-        {% set fff_generalAppearance = x.animals['fff'].generalAppearance %}
-        {% set fff_height = x.animals['fff'].height %}
-        {% set fff_torsoLength = x.animals['fff'].torsoLength %}
-        {% set fff_breastDepth = x.animals['fff'].breastDepth %}
-        {% set fff_tailLength = x.animals['fff'].tailLength %}
-        {% set fff_litterGroup = x.animals['fff'].litterGroup %}
-        {% set fff_growth = x.animals['fff'].growth %}
-        {% set fff_muscleThickness = x.animals['fff'].muscleThickness %}
-        {% set fff_bodyFat = x.animals['fff'].bodyFat %}
-        {% set fff_vl = x.animals['fff'].vl %}
-        {% set fff_sl = x.animals['fff'].sl %}
+        {% set fffSkull = x.animals['fff'].skull %}
+        {% set fffDevelopment = x.animals['fff'].development %}
+        {% set fffMuscularity = x.animals['fff'].muscularity %}
+        {% set fffProportion = x.animals['fff'].proportion %}
+        {% set fffType = x.animals['fff'].type %}
+        {% set fffLegWork = x.animals['fff'].legWork %}
+        {% set fffFur = x.animals['fff'].fur %}
+        {% set fffGeneralAppearance = x.animals['fff'].generalAppearance %}
+        {% set fffHeight = x.animals['fff'].height %}
+        {% set fffTorsoLength = x.animals['fff'].torsoLength %}
+        {% set fffBreastDepth = x.animals['fff'].breastDepth %}
+        {% set fffTailLength = x.animals['fff'].tailLength %}
+        {% set fffLitterGroup = x.animals['fff'].litterGroup %}
+        {% set fffGrowth = x.animals['fff'].growth %}
+        {% set fffMuscleThickness = x.animals['fff'].muscleThickness %}
+        {% set fffBodyFat = x.animals['fff'].bodyFat %}
+        {% set fffVl = x.animals['fff'].vl %}
+        {% set fffSl = x.animals['fff'].sl %}
 
         {# dates #}
         {% if x.animals['fff'].dateOfBirth == null %}
-            {% set fff_dateOfBirth = '-' %}
+            {% set fffDateOfBirth = '-' %}
         {% else %}
-            {% set fff_dateOfBirth = x.animals['fff'].dateOfBirth|date('d-m-Y') %}
+            {% set fffDateOfBirth = x.animals['fff'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
         {% if x.animals['fff'].inspectionDate == null %}
-            {% set fff_inspectionDate = '-' %}
+            {% set fffInspectionDate = '-' %}
         {% else %}
-            {% set fff_inspectionDate= x.animals['fff'].inspectionDate|date('d-m-Y') %}
+            {% set fffInspectionDate= x.animals['fff'].inspectionDate|date('d-m-Y') %}
         {% endif %}
 
 
       {# father's father's mother, 'ffm' #}
 
-        {% set ffm_gender = x.animals['ffm'].gender %}
-        {% set ffm_uln = x.animals['ffm'].uln %}
-        {% set ffm_pedigree = x.animals['ffm'].pedigree %}
-        {% set ffm_name = x.animals['ffm'].name %}
-        {% set ffm_scrapie = x.animals['ffm'].scrapie %}
-        {% set ffm_breed = x.animals['ffm'].breed %}
-        {% set ffm_breedType = x.animals['ffm'].breedType %}
-        {% set ffm_breedCode = x.animals['ffm'].breedCode %}
-        {% set ffm_litterSize = x.animals['ffm'].litterSize %}
-        {% set ffm_litterGroup = x.animals['ffm'].litterGroup %}
-        {% set ffm_nLing = x.animals['ffm'].nLing %}
-        {% set ffm_blf = x.animals['ffm'].blindnessFactor %}
-        {% set ffm_predicate = x.animals['ffm'].predicate %}
-        {% set ffm_production = x.animals['ffm'].production %}
-        {% set ffm_litterCount = x.animals['ffm'].litterCount %}
-        {% set ffm_offspringCount = x.animals['ffm'].offspringCount %}
-        {% set ffm_breederName = x.animals['ffm'].breederName %}
-        {% set ffm_breederNumber = x.animals['ffm'].breederNumber %}
+        {% set ffmGender = x.animals['ffm'].gender %}
+        {% set ffmUln = x.animals['ffm'].uln %}
+        {% set ffmPedigree = x.animals['ffm'].pedigree %}
+        {% set ffmName = x.animals['ffm'].name %}
+        {% set ffmScrapie = x.animals['ffm'].scrapie %}
+        {% set ffmBreed = x.animals['ffm'].breed %}
+        {% set ffmBreedType = x.animals['ffm'].breedType %}
+        {% set ffmBreedCode = x.animals['ffm'].breedCode %}
+        {% set ffmLitterSize = x.animals['ffm'].litterSize %}
+        {% set ffmLitterGroup = x.animals['ffm'].litterGroup %}
+        {% set ffmNLing = x.animals['ffm'].nLing %}
+        {% set ffmBlf = x.animals['ffm'].blindnessFactor %}
+        {% set ffmPredicate = x.animals['ffm'].predicate %}
+        {% set ffmProduction = x.animals['ffm'].production %}
+        {% set ffmLitterCount = x.animals['ffm'].litterCount %}
+        {% set ffmOffspringCount = x.animals['ffm'].offspringCount %}
+        {% set ffmBreederName = x.animals['ffm'].breederName %}
+        {% set ffmBreederNumber = x.animals['ffm'].breederNumber %}
 
         {# Measurements #}
-        {% set ffm_skull = x.animals['ffm'].skull %}
-        {% set ffm_development = x.animals['ffm'].development %}
-        {% set ffm_muscularity = x.animals['ffm'].muscularity %}
-        {% set ffm_proportion = x.animals['ffm'].proportion %}
-        {% set ffm_type = x.animals['ffm'].type %}
-        {% set ffm_legWork = x.animals['ffm'].legWork %}
-        {% set ffm_fur = x.animals['ffm'].fur %}
-        {% set ffm_generalAppearance = x.animals['ffm'].generalAppearance %}
-        {% set ffm_height = x.animals['ffm'].height %}
-        {% set ffm_torsoLength = x.animals['ffm'].torsoLength %}
-        {% set ffm_breastDepth = x.animals['ffm'].breastDepth %}
-        {% set ffm_tailLength = x.animals['ffm'].tailLength %}
-        {% set ffm_litterGroup = x.animals['ffm'].litterGroup %}
-        {% set ffm_growth = x.animals['ffm'].growth %}
-        {% set ffm_muscleThickness = x.animals['ffm'].muscleThickness %}
-        {% set ffm_bodyFat = x.animals['ffm'].bodyFat %}
-        {% set ffm_vl = x.animals['ffm'].vl %}
-        {% set ffm_sl = x.animals['ffm'].sl %}
+        {% set ffmSkull = x.animals['ffm'].skull %}
+        {% set ffmDevelopment = x.animals['ffm'].development %}
+        {% set ffmMuscularity = x.animals['ffm'].muscularity %}
+        {% set ffmProportion = x.animals['ffm'].proportion %}
+        {% set ffmType = x.animals['ffm'].type %}
+        {% set ffmLegWork = x.animals['ffm'].legWork %}
+        {% set ffmFur = x.animals['ffm'].fur %}
+        {% set ffmGeneralAppearance = x.animals['ffm'].generalAppearance %}
+        {% set ffmHeight = x.animals['ffm'].height %}
+        {% set ffmTorsoLength = x.animals['ffm'].torsoLength %}
+        {% set ffmBreastDepth = x.animals['ffm'].breastDepth %}
+        {% set ffmTailLength = x.animals['ffm'].tailLength %}
+        {% set ffmLitterGroup = x.animals['ffm'].litterGroup %}
+        {% set ffmGrowth = x.animals['ffm'].growth %}
+        {% set ffmMuscleThickness = x.animals['ffm'].muscleThickness %}
+        {% set ffmBodyFat = x.animals['ffm'].bodyFat %}
+        {% set ffmVl = x.animals['ffm'].vl %}
+        {% set ffmSl = x.animals['ffm'].sl %}
 
         {# dates #}
         {% if x.animals['ffm'].dateOfBirth == null %}
-            {% set ffm_dateOfBirth = '-' %}
+            {% set ffmDateOfBirth = '-' %}
         {% else %}
-            {% set ffm_dateOfBirth = x.animals['ffm'].dateOfBirth|date('d-m-Y') %}
+            {% set ffmDateOfBirth = x.animals['ffm'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
         {% if x.animals['ffm'].inspectionDate == null %}
-            {% set ffm_inspectionDate = '-' %}
+            {% set ffmInspectionDate = '-' %}
         {% else %}
-            {% set ffm_inspectionDate= x.animals['ffm'].inspectionDate|date('d-m-Y') %}
+            {% set ffmInspectionDate= x.animals['ffm'].inspectionDate|date('d-m-Y') %}
         {% endif %}
 
 
       {# father's mother's father, 'fmf' #}
 
-        {% set fmf_gender = x.animals['fmf'].gender %}
-        {% set fmf_uln = x.animals['fmf'].uln %}
-        {% set fmf_pedigree = x.animals['fmf'].pedigree %}
-        {% set fmf_name = x.animals['fmf'].name %}
-        {% set fmf_scrapie = x.animals['fmf'].scrapie %}
-        {% set fmf_breed = x.animals['fmf'].breed %}
-        {% set fmf_breedType = x.animals['fmf'].breedType %}
-        {% set fmf_breedCode = x.animals['fmf'].breedCode %}
-        {% set fmf_litterSize = x.animals['fmf'].litterSize %}
-        {% set fmf_litterGroup = x.animals['fmf'].litterGroup %}
-        {% set fmf_nLing = x.animals['fmf'].nLing %}
-        {% set fmf_blf = x.animals['fmf'].blindnessFactor %}
-        {% set fmf_predicate = x.animals['fmf'].predicate %}
-        {% set fmf_production = x.animals['fmf'].production %}
-        {% set fmf_litterCount = x.animals['fmf'].litterCount %}
-        {% set fmf_offspringCount = x.animals['fmf'].offspringCount %}
-        {% set fmf_breederName = x.animals['fmf'].breederName %}
-        {% set fmf_breederNumber = x.animals['fmf'].breederNumber %}
+        {% set fmfGender = x.animals['fmf'].gender %}
+        {% set fmfUln = x.animals['fmf'].uln %}
+        {% set fmfPedigree = x.animals['fmf'].pedigree %}
+        {% set fmfName = x.animals['fmf'].name %}
+        {% set fmfScrapie = x.animals['fmf'].scrapie %}
+        {% set fmfBreed = x.animals['fmf'].breed %}
+        {% set fmfBreedType = x.animals['fmf'].breedType %}
+        {% set fmfBreedCode = x.animals['fmf'].breedCode %}
+        {% set fmfLitterSize = x.animals['fmf'].litterSize %}
+        {% set fmfLitterGroup = x.animals['fmf'].litterGroup %}
+        {% set fmfNLing = x.animals['fmf'].nLing %}
+        {% set fmfBlf = x.animals['fmf'].blindnessFactor %}
+        {% set fmfPredicate = x.animals['fmf'].predicate %}
+        {% set fmfProduction = x.animals['fmf'].production %}
+        {% set fmfLitterCount = x.animals['fmf'].litterCount %}
+        {% set fmfOffspringCount = x.animals['fmf'].offspringCount %}
+        {% set fmfBreederName = x.animals['fmf'].breederName %}
+        {% set fmfBreederNumber = x.animals['fmf'].breederNumber %}
 
         {# Measurements #}
-        {% set fmf_skull = x.animals['fmf'].skull %}
-        {% set fmf_development = x.animals['fmf'].development %}
-        {% set fmf_muscularity = x.animals['fmf'].muscularity %}
-        {% set fmf_proportion = x.animals['fmf'].proportion %}
-        {% set fmf_type = x.animals['fmf'].type %}
-        {% set fmf_legWork = x.animals['fmf'].legWork %}
-        {% set fmf_fur = x.animals['fmf'].fur %}
-        {% set fmf_generalAppearance = x.animals['fmf'].generalAppearance %}
-        {% set fmf_height = x.animals['fmf'].height %}
-        {% set fmf_torsoLength = x.animals['fmf'].torsoLength %}
-        {% set fmf_breastDepth = x.animals['fmf'].breastDepth %}
-        {% set fmf_tailLength = x.animals['fmf'].tailLength %}
-        {% set fmf_litterGroup = x.animals['fmf'].litterGroup %}
-        {% set fmf_growth = x.animals['fmf'].growth %}
-        {% set fmf_muscleThickness = x.animals['fmf'].muscleThickness %}
-        {% set fmf_bodyFat = x.animals['fmf'].bodyFat %}
-        {% set fmf_vl = x.animals['fmf'].vl %}
-        {% set fmf_sl = x.animals['fmf'].sl %}
+        {% set fmfSkull = x.animals['fmf'].skull %}
+        {% set fmfDevelopment = x.animals['fmf'].development %}
+        {% set fmfMuscularity = x.animals['fmf'].muscularity %}
+        {% set fmfProportion = x.animals['fmf'].proportion %}
+        {% set fmfType = x.animals['fmf'].type %}
+        {% set fmfLegWork = x.animals['fmf'].legWork %}
+        {% set fmfFur = x.animals['fmf'].fur %}
+        {% set fmfGeneralAppearance = x.animals['fmf'].generalAppearance %}
+        {% set fmfHeight = x.animals['fmf'].height %}
+        {% set fmfTorsoLength = x.animals['fmf'].torsoLength %}
+        {% set fmfBreastDepth = x.animals['fmf'].breastDepth %}
+        {% set fmfTailLength = x.animals['fmf'].tailLength %}
+        {% set fmfLitterGroup = x.animals['fmf'].litterGroup %}
+        {% set fmfGrowth = x.animals['fmf'].growth %}
+        {% set fmfMuscleThickness = x.animals['fmf'].muscleThickness %}
+        {% set fmfBodyFat = x.animals['fmf'].bodyFat %}
+        {% set fmfVl = x.animals['fmf'].vl %}
+        {% set fmfSl = x.animals['fmf'].sl %}
 
         {# dates #}
         {% if x.animals['fmf'].dateOfBirth == null %}
-            {% set fmf_dateOfBirth = '-' %}
+            {% set fmfDateOfBirth = '-' %}
         {% else %}
-            {% set fmf_dateOfBirth = x.animals['fmf'].dateOfBirth|date('d-m-Y') %}
+            {% set fmfDateOfBirth = x.animals['fmf'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
         {% if x.animals['fmf'].inspectionDate == null %}
-            {% set fmf_inspectionDate = '-' %}
+            {% set fmfInspectionDate = '-' %}
         {% else %}
-            {% set fmf_inspectionDate= x.animals['fmf'].inspectionDate|date('d-m-Y') %}
+            {% set fmfInspectionDate= x.animals['fmf'].inspectionDate|date('d-m-Y') %}
         {% endif %}
 
 
       {# father's mother's mother, 'fmm' #}
 
-        {% set fmm_gender = x.animals['fmm'].gender %}
-        {% set fmm_uln = x.animals['fmm'].uln %}
-        {% set fmm_pedigree = x.animals['fmm'].pedigree %}
-        {% set fmm_name = x.animals['fmm'].name %}
-        {% set fmm_scrapie = x.animals['fmm'].scrapie %}
-        {% set fmm_breed = x.animals['fmm'].breed %}
-        {% set fmm_breedType = x.animals['fmm'].breedType %}
-        {% set fmm_breedCode = x.animals['fmm'].breedCode %}
-        {% set fmm_litterSize = x.animals['fmm'].litterSize %}
-        {% set fmm_litterGroup = x.animals['fmm'].litterGroup %}
-        {% set fmm_nLing = x.animals['fmm'].nLing %}
-        {% set fmm_blf = x.animals['fmm'].blindnessFactor %}
-        {% set fmm_predicate = x.animals['fmm'].predicate %}
-        {% set fmm_production = x.animals['fmm'].production %}
-        {% set fmm_litterCount = x.animals['fmm'].litterCount %}
-        {% set fmm_offspringCount = x.animals['fmm'].offspringCount %}
-        {% set fmm_breederName = x.animals['fmm'].breederName %}
-        {% set fmm_breederNumber = x.animals['fmm'].breederNumber %}
+        {% set fmmGender = x.animals['fmm'].gender %}
+        {% set fmmUln = x.animals['fmm'].uln %}
+        {% set fmmPedigree = x.animals['fmm'].pedigree %}
+        {% set fmmName = x.animals['fmm'].name %}
+        {% set fmmScrapie = x.animals['fmm'].scrapie %}
+        {% set fmmBreed = x.animals['fmm'].breed %}
+        {% set fmmBreedType = x.animals['fmm'].breedType %}
+        {% set fmmBreedCode = x.animals['fmm'].breedCode %}
+        {% set fmmLitterSize = x.animals['fmm'].litterSize %}
+        {% set fmmLitterGroup = x.animals['fmm'].litterGroup %}
+        {% set fmmNLing = x.animals['fmm'].nLing %}
+        {% set fmmBlf = x.animals['fmm'].blindnessFactor %}
+        {% set fmmPredicate = x.animals['fmm'].predicate %}
+        {% set fmmProduction = x.animals['fmm'].production %}
+        {% set fmmLitterCount = x.animals['fmm'].litterCount %}
+        {% set fmmOffspringCount = x.animals['fmm'].offspringCount %}
+        {% set fmmBreederName = x.animals['fmm'].breederName %}
+        {% set fmmBreederNumber = x.animals['fmm'].breederNumber %}
 
         {# Measurements #}
-        {% set fmm_skull = x.animals['fmm'].skull %}
-        {% set fmm_development = x.animals['fmm'].development %}
-        {% set fmm_muscularity = x.animals['fmm'].muscularity %}
-        {% set fmm_proportion = x.animals['fmm'].proportion %}
-        {% set fmm_type = x.animals['fmm'].type %}
-        {% set fmm_legWork = x.animals['fmm'].legWork %}
-        {% set fmm_fur = x.animals['fmm'].fur %}
-        {% set fmm_generalAppearance = x.animals['fmm'].generalAppearance %}
-        {% set fmm_height = x.animals['fmm'].height %}
-        {% set fmm_torsoLength = x.animals['fmm'].torsoLength %}
-        {% set fmm_breastDepth = x.animals['fmm'].breastDepth %}
-        {% set fmm_tailLength = x.animals['fmm'].tailLength %}
-        {% set fmm_litterGroup = x.animals['fmm'].litterGroup %}
-        {% set fmm_growth = x.animals['fmm'].growth %}
-        {% set fmm_muscleThickness = x.animals['fmm'].muscleThickness %}
-        {% set fmm_bodyFat = x.animals['fmm'].bodyFat %}
-        {% set fmm_vl = x.animals['fmm'].vl %}
-        {% set fmm_sl = x.animals['fmm'].sl %}
+        {% set fmmSkull = x.animals['fmm'].skull %}
+        {% set fmmDevelopment = x.animals['fmm'].development %}
+        {% set fmmMuscularity = x.animals['fmm'].muscularity %}
+        {% set fmmProportion = x.animals['fmm'].proportion %}
+        {% set fmmType = x.animals['fmm'].type %}
+        {% set fmmLegWork = x.animals['fmm'].legWork %}
+        {% set fmmFur = x.animals['fmm'].fur %}
+        {% set fmmGeneralAppearance = x.animals['fmm'].generalAppearance %}
+        {% set fmmHeight = x.animals['fmm'].height %}
+        {% set fmmTorsoLength = x.animals['fmm'].torsoLength %}
+        {% set fmmBreastDepth = x.animals['fmm'].breastDepth %}
+        {% set fmmTailLength = x.animals['fmm'].tailLength %}
+        {% set fmmLitterGroup = x.animals['fmm'].litterGroup %}
+        {% set fmmGrowth = x.animals['fmm'].growth %}
+        {% set fmmMuscleThickness = x.animals['fmm'].muscleThickness %}
+        {% set fmmBodyFat = x.animals['fmm'].bodyFat %}
+        {% set fmmVl = x.animals['fmm'].vl %}
+        {% set fmmSl = x.animals['fmm'].sl %}
 
         {# dates #}
         {% if x.animals['fmm'].dateOfBirth == null %}
-            {% set fmm_dateOfBirth = '-' %}
+            {% set fmmDateOfBirth = '-' %}
         {% else %}
-            {% set fmm_dateOfBirth = x.animals['fmm'].dateOfBirth|date('d-m-Y') %}
+            {% set fmmDateOfBirth = x.animals['fmm'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
         {% if x.animals['fmm'].inspectionDate == null %}
-            {% set fmm_inspectionDate = '-' %}
+            {% set fmmInspectionDate = '-' %}
         {% else %}
-            {% set fmm_inspectionDate= x.animals['fmm'].inspectionDate|date('d-m-Y') %}
+            {% set fmmInspectionDate= x.animals['fmm'].inspectionDate|date('d-m-Y') %}
         {% endif %}
 
 
       {# mother's father's father, 'mff' #}
 
-        {% set mff_gender = x.animals['mff'].gender %}
-        {% set mff_uln = x.animals['mff'].uln %}
-        {% set mff_pedigree = x.animals['mff'].pedigree %}
-        {% set mff_name = x.animals['mff'].name %}
-        {% set mff_scrapie = x.animals['mff'].scrapie %}
-        {% set mff_breed = x.animals['mff'].breed %}
-        {% set mff_breedType = x.animals['mff'].breedType %}
-        {% set mff_breedCode = x.animals['mff'].breedCode %}
-        {% set mff_litterSize = x.animals['mff'].litterSize %}
-        {% set mff_litterGroup = x.animals['mff'].litterGroup %}
-        {% set mff_nLing = x.animals['mff'].nLing %}
-        {% set mff_blf = x.animals['mff'].blindnessFactor %}
-        {% set mff_predicate = x.animals['mff'].predicate %}
-        {% set mff_production = x.animals['mff'].production %}
-        {% set mff_litterCount = x.animals['mff'].litterCount %}
-        {% set mff_offspringCount = x.animals['mff'].offspringCount %}
-        {% set mff_breederName = x.animals['mff'].breederName %}
-        {% set mff_breederNumber = x.animals['mff'].breederNumber %}
+        {% set mffGender = x.animals['mff'].gender %}
+        {% set mffUln = x.animals['mff'].uln %}
+        {% set mffPedigree = x.animals['mff'].pedigree %}
+        {% set mffName = x.animals['mff'].name %}
+        {% set mffScrapie = x.animals['mff'].scrapie %}
+        {% set mffBreed = x.animals['mff'].breed %}
+        {% set mffBreedType = x.animals['mff'].breedType %}
+        {% set mffBreedCode = x.animals['mff'].breedCode %}
+        {% set mffLitterSize = x.animals['mff'].litterSize %}
+        {% set mffLitterGroup = x.animals['mff'].litterGroup %}
+        {% set mffNLing = x.animals['mff'].nLing %}
+        {% set mffBlf = x.animals['mff'].blindnessFactor %}
+        {% set mffPredicate = x.animals['mff'].predicate %}
+        {% set mffProduction = x.animals['mff'].production %}
+        {% set mffLitterCount = x.animals['mff'].litterCount %}
+        {% set mffOffspringCount = x.animals['mff'].offspringCount %}
+        {% set mffBreederName = x.animals['mff'].breederName %}
+        {% set mffBreederNumber = x.animals['mff'].breederNumber %}
 
         {# Measurements #}
-        {% set mff_skull = x.animals['mff'].skull %}
-        {% set mff_development = x.animals['mff'].development %}
-        {% set mff_muscularity = x.animals['mff'].muscularity %}
-        {% set mff_proportion = x.animals['mff'].proportion %}
-        {% set mff_type = x.animals['mff'].type %}
-        {% set mff_legWork = x.animals['mff'].legWork %}
-        {% set mff_fur = x.animals['mff'].fur %}
-        {% set mff_generalAppearance = x.animals['mff'].generalAppearance %}
-        {% set mff_height = x.animals['mff'].height %}
-        {% set mff_torsoLength = x.animals['mff'].torsoLength %}
-        {% set mff_breastDepth = x.animals['mff'].breastDepth %}
-        {% set mff_tailLength = x.animals['mff'].tailLength %}
-        {% set mff_litterGroup = x.animals['mff'].litterGroup %}
-        {% set mff_growth = x.animals['mff'].growth %}
-        {% set mff_muscleThickness = x.animals['mff'].muscleThickness %}
-        {% set mff_bodyFat = x.animals['mff'].bodyFat %}
-        {% set mff_vl = x.animals['mff'].vl %}
-        {% set mff_sl = x.animals['mff'].sl %}
+        {% set mffSkull = x.animals['mff'].skull %}
+        {% set mffDevelopment = x.animals['mff'].development %}
+        {% set mffMuscularity = x.animals['mff'].muscularity %}
+        {% set mffProportion = x.animals['mff'].proportion %}
+        {% set mffType = x.animals['mff'].type %}
+        {% set mffLegWork = x.animals['mff'].legWork %}
+        {% set mffFur = x.animals['mff'].fur %}
+        {% set mffGeneralAppearance = x.animals['mff'].generalAppearance %}
+        {% set mffHeight = x.animals['mff'].height %}
+        {% set mffTorsoLength = x.animals['mff'].torsoLength %}
+        {% set mffBreastDepth = x.animals['mff'].breastDepth %}
+        {% set mffTailLength = x.animals['mff'].tailLength %}
+        {% set mffLitterGroup = x.animals['mff'].litterGroup %}
+        {% set mffGrowth = x.animals['mff'].growth %}
+        {% set mffMuscleThickness = x.animals['mff'].muscleThickness %}
+        {% set mffBodyFat = x.animals['mff'].bodyFat %}
+        {% set mffVl = x.animals['mff'].vl %}
+        {% set mffSl = x.animals['mff'].sl %}
 
         {# dates #}
         {% if x.animals['mff'].dateOfBirth == null %}
-            {% set mff_dateOfBirth = '-' %}
+            {% set mffDateOfBirth = '-' %}
         {% else %}
-            {% set mff_dateOfBirth = x.animals['mff'].dateOfBirth|date('d-m-Y') %}
+            {% set mffDateOfBirth = x.animals['mff'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
         {% if x.animals['mff'].inspectionDate == null %}
-            {% set mff_inspectionDate = '-' %}
+            {% set mffInspectionDate = '-' %}
         {% else %}
-            {% set mff_inspectionDate= x.animals['mff'].inspectionDate|date('d-m-Y') %}
+            {% set mffInspectionDate= x.animals['mff'].inspectionDate|date('d-m-Y') %}
         {% endif %}
 
 
       {# mother's father's mother, 'mfm' #}
 
-        {% set mfm_gender = x.animals['mfm'].gender %}
-        {% set mfm_uln = x.animals['mfm'].uln %}
-        {% set mfm_pedigree = x.animals['mfm'].pedigree %}
-        {% set mfm_name = x.animals['mfm'].name %}
-        {% set mfm_scrapie = x.animals['mfm'].scrapie %}
-        {% set mfm_breed = x.animals['mfm'].breed %}
-        {% set mfm_breedType = x.animals['mfm'].breedType %}
-        {% set mfm_breedCode = x.animals['mfm'].breedCode %}
-        {% set mfm_litterSize = x.animals['mfm'].litterSize %}
-        {% set mfm_litterGroup = x.animals['mfm'].litterGroup %}
-        {% set mfm_nLing = x.animals['mfm'].nLing %}
-        {% set mfm_blf = x.animals['mfm'].blindnessFactor %}
-        {% set mfm_predicate = x.animals['mfm'].predicate %}
-        {% set mfm_production = x.animals['mfm'].production %}
-        {% set mfm_litterCount = x.animals['mfm'].litterCount %}
-        {% set mfm_offspringCount = x.animals['mfm'].offspringCount %}
-        {% set mfm_breederName = x.animals['mfm'].breederName %}
-        {% set mfm_breederNumber = x.animals['mfm'].breederNumber %}
+        {% set mfmGender = x.animals['mfm'].gender %}
+        {% set mfmUln = x.animals['mfm'].uln %}
+        {% set mfmPedigree = x.animals['mfm'].pedigree %}
+        {% set mfmName = x.animals['mfm'].name %}
+        {% set mfmScrapie = x.animals['mfm'].scrapie %}
+        {% set mfmBreed = x.animals['mfm'].breed %}
+        {% set mfmBreedType = x.animals['mfm'].breedType %}
+        {% set mfmBreedCode = x.animals['mfm'].breedCode %}
+        {% set mfmLitterSize = x.animals['mfm'].litterSize %}
+        {% set mfmLitterGroup = x.animals['mfm'].litterGroup %}
+        {% set mfmNLing = x.animals['mfm'].nLing %}
+        {% set mfmBlf = x.animals['mfm'].blindnessFactor %}
+        {% set mfmPredicate = x.animals['mfm'].predicate %}
+        {% set mfmProduction = x.animals['mfm'].production %}
+        {% set mfmLitterCount = x.animals['mfm'].litterCount %}
+        {% set mfmOffspringCount = x.animals['mfm'].offspringCount %}
+        {% set mfmBreederName = x.animals['mfm'].breederName %}
+        {% set mfmBreederNumber = x.animals['mfm'].breederNumber %}
 
         {# Measurements #}
-        {% set mfm_skull = x.animals['mfm'].skull %}
-        {% set mfm_development = x.animals['mfm'].development %}
-        {% set mfm_muscularity = x.animals['mfm'].muscularity %}
-        {% set mfm_proportion = x.animals['mfm'].proportion %}
-        {% set mfm_type = x.animals['mfm'].type %}
-        {% set mfm_legWork = x.animals['mfm'].legWork %}
-        {% set mfm_fur = x.animals['mfm'].fur %}
-        {% set mfm_generalAppearance = x.animals['mfm'].generalAppearance %}
-        {% set mfm_height = x.animals['mfm'].height %}
-        {% set mfm_torsoLength = x.animals['mfm'].torsoLength %}
-        {% set mfm_breastDepth = x.animals['mfm'].breastDepth %}
-        {% set mfm_tailLength = x.animals['mfm'].tailLength %}
-        {% set mfm_litterGroup = x.animals['mfm'].litterGroup %}
-        {% set mfm_growth = x.animals['mfm'].growth %}
-        {% set mfm_muscleThickness = x.animals['mfm'].muscleThickness %}
-        {% set mfm_bodyFat = x.animals['mfm'].bodyFat %}
-        {% set mfm_vl = x.animals['mfm'].vl %}
-        {% set mfm_sl = x.animals['mfm'].sl %}
+        {% set mfmSkull = x.animals['mfm'].skull %}
+        {% set mfmDevelopment = x.animals['mfm'].development %}
+        {% set mfmMuscularity = x.animals['mfm'].muscularity %}
+        {% set mfmProportion = x.animals['mfm'].proportion %}
+        {% set mfmType = x.animals['mfm'].type %}
+        {% set mfmLegWork = x.animals['mfm'].legWork %}
+        {% set mfmFur = x.animals['mfm'].fur %}
+        {% set mfmGeneralAppearance = x.animals['mfm'].generalAppearance %}
+        {% set mfmHeight = x.animals['mfm'].height %}
+        {% set mfmTorsoLength = x.animals['mfm'].torsoLength %}
+        {% set mfmBreastDepth = x.animals['mfm'].breastDepth %}
+        {% set mfmTailLength = x.animals['mfm'].tailLength %}
+        {% set mfmLitterGroup = x.animals['mfm'].litterGroup %}
+        {% set mfmGrowth = x.animals['mfm'].growth %}
+        {% set mfmMuscleThickness = x.animals['mfm'].muscleThickness %}
+        {% set mfmBodyFat = x.animals['mfm'].bodyFat %}
+        {% set mfmVl = x.animals['mfm'].vl %}
+        {% set mfmSl = x.animals['mfm'].sl %}
 
         {# dates #}
         {% if x.animals['mfm'].dateOfBirth == null %}
-            {% set mfm_dateOfBirth = '-' %}
+            {% set mfmDateOfBirth = '-' %}
         {% else %}
-            {% set mfm_dateOfBirth = x.animals['mfm'].dateOfBirth|date('d-m-Y') %}
+            {% set mfmDateOfBirth = x.animals['mfm'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
         {% if x.animals['mfm'].inspectionDate == null %}
-            {% set mfm_inspectionDate = '-' %}
+            {% set mfmInspectionDate = '-' %}
         {% else %}
-            {% set mfm_inspectionDate= x.animals['mfm'].inspectionDate|date('d-m-Y') %}
+            {% set mfmInspectionDate= x.animals['mfm'].inspectionDate|date('d-m-Y') %}
         {% endif %}
 
 
       {# mother's mother's father, 'mmf' #}
 
-        {% set mmf_gender = x.animals['mmf'].gender %}
-        {% set mmf_uln = x.animals['mmf'].uln %}
-        {% set mmf_pedigree = x.animals['mmf'].pedigree %}
-        {% set mmf_name = x.animals['mmf'].name %}
-        {% set mmf_scrapie = x.animals['mmf'].scrapie %}
-        {% set mmf_breed = x.animals['mmf'].breed %}
-        {% set mmf_breedType = x.animals['mmf'].breedType %}
-        {% set mmf_breedCode = x.animals['mmf'].breedCode %}
-        {% set mmf_litterSize = x.animals['mmf'].litterSize %}
-        {% set mmf_litterGroup = x.animals['mmf'].litterGroup %}
-        {% set mmf_nLing = x.animals['mmf'].nLing %}
-        {% set mmf_blf = x.animals['mmf'].blindnessFactor %}
-        {% set mmf_predicate = x.animals['mmf'].predicate %}
-        {% set mmf_production = x.animals['mmf'].production %}
-        {% set mmf_litterCount = x.animals['mmf'].litterCount %}
-        {% set mmf_offspringCount = x.animals['mmf'].offspringCount %}
-        {% set mmf_breederName = x.animals['mmf'].breederName %}
-        {% set mmf_breederNumber = x.animals['mmf'].breederNumber %}
+        {% set mmfGender = x.animals['mmf'].gender %}
+        {% set mmfUln = x.animals['mmf'].uln %}
+        {% set mmfPedigree = x.animals['mmf'].pedigree %}
+        {% set mmfName = x.animals['mmf'].name %}
+        {% set mmfScrapie = x.animals['mmf'].scrapie %}
+        {% set mmfBreed = x.animals['mmf'].breed %}
+        {% set mmfBreedType = x.animals['mmf'].breedType %}
+        {% set mmfBreedCode = x.animals['mmf'].breedCode %}
+        {% set mmfLitterSize = x.animals['mmf'].litterSize %}
+        {% set mmfLitterGroup = x.animals['mmf'].litterGroup %}
+        {% set mmfNLing = x.animals['mmf'].nLing %}
+        {% set mmfBlf = x.animals['mmf'].blindnessFactor %}
+        {% set mmfPredicate = x.animals['mmf'].predicate %}
+        {% set mmfProduction = x.animals['mmf'].production %}
+        {% set mmfLitterCount = x.animals['mmf'].litterCount %}
+        {% set mmfOffspringCount = x.animals['mmf'].offspringCount %}
+        {% set mmfBreederName = x.animals['mmf'].breederName %}
+        {% set mmfBreederNumber = x.animals['mmf'].breederNumber %}
 
         {# Measurements #}
-        {% set mmf_skull = x.animals['mmf'].skull %}
-        {% set mmf_development = x.animals['mmf'].development %}
-        {% set mmf_muscularity = x.animals['mmf'].muscularity %}
-        {% set mmf_proportion = x.animals['mmf'].proportion %}
-        {% set mmf_type = x.animals['mmf'].type %}
-        {% set mmf_legWork = x.animals['mmf'].legWork %}
-        {% set mmf_fur = x.animals['mmf'].fur %}
-        {% set mmf_generalAppearance = x.animals['mmf'].generalAppearance %}
-        {% set mmf_height = x.animals['mmf'].height %}
-        {% set mmf_torsoLength = x.animals['mmf'].torsoLength %}
-        {% set mmf_breastDepth = x.animals['mmf'].breastDepth %}
-        {% set mmf_tailLength = x.animals['mmf'].tailLength %}
-        {% set mmf_litterGroup = x.animals['mmf'].litterGroup %}
-        {% set mmf_growth = x.animals['mmf'].growth %}
-        {% set mmf_muscleThickness = x.animals['mmf'].muscleThickness %}
-        {% set mmf_bodyFat = x.animals['mmf'].bodyFat %}
-        {% set mmf_vl = x.animals['mmf'].vl %}
-        {% set mmf_sl = x.animals['mmf'].sl %}
+        {% set mmfSkull = x.animals['mmf'].skull %}
+        {% set mmfDevelopment = x.animals['mmf'].development %}
+        {% set mmfMuscularity = x.animals['mmf'].muscularity %}
+        {% set mmfProportion = x.animals['mmf'].proportion %}
+        {% set mmfType = x.animals['mmf'].type %}
+        {% set mmfLegWork = x.animals['mmf'].legWork %}
+        {% set mmfFur = x.animals['mmf'].fur %}
+        {% set mmfGeneralAppearance = x.animals['mmf'].generalAppearance %}
+        {% set mmfHeight = x.animals['mmf'].height %}
+        {% set mmfTorsoLength = x.animals['mmf'].torsoLength %}
+        {% set mmfBreastDepth = x.animals['mmf'].breastDepth %}
+        {% set mmfTailLength = x.animals['mmf'].tailLength %}
+        {% set mmfLitterGroup = x.animals['mmf'].litterGroup %}
+        {% set mmfGrowth = x.animals['mmf'].growth %}
+        {% set mmfMuscleThickness = x.animals['mmf'].muscleThickness %}
+        {% set mmfBodyFat = x.animals['mmf'].bodyFat %}
+        {% set mmfVl = x.animals['mmf'].vl %}
+        {% set mmfSl = x.animals['mmf'].sl %}
 
         {# dates #}
         {% if x.animals['mmf'].dateOfBirth == null %}
-            {% set mmf_dateOfBirth = '-' %}
+            {% set mmfDateOfBirth = '-' %}
         {% else %}
-            {% set mmf_dateOfBirth = x.animals['mmf'].dateOfBirth|date('d-m-Y') %}
+            {% set mmfDateOfBirth = x.animals['mmf'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
         {% if x.animals['mmf'].inspectionDate == null %}
-            {% set mmf_inspectionDate = '-' %}
+            {% set mmfInspectionDate = '-' %}
         {% else %}
-            {% set mmf_inspectionDate= x.animals['mmf'].inspectionDate|date('d-m-Y') %}
+            {% set mmfInspectionDate= x.animals['mmf'].inspectionDate|date('d-m-Y') %}
         {% endif %}
 
 
       {# mother's mother's mother, 'mmm' #}
 
-        {% set mmm_gender = x.animals['mmm'].gender %}
-        {% set mmm_uln = x.animals['mmm'].uln %}
-        {% set mmm_pedigree = x.animals['mmm'].pedigree %}
-        {% set mmm_name = x.animals['mmm'].name %}
-        {% set mmm_scrapie = x.animals['mmm'].scrapie %}
-        {% set mmm_breed = x.animals['mmm'].breed %}
-        {% set mmm_breedType = x.animals['mmm'].breedType %}
-        {% set mmm_breedCode = x.animals['mmm'].breedCode %}
-        {% set mmm_litterSize = x.animals['mmm'].litterSize %}
-        {% set mmm_litterGroup = x.animals['mmm'].litterGroup %}
-        {% set mmm_nLing = x.animals['mmm'].nLing %}
-        {% set mmm_blf = x.animals['mmm'].blindnessFactor %}
-        {% set mmm_predicate = x.animals['mmm'].predicate %}
-        {% set mmm_production = x.animals['mmm'].production %}
-        {% set mmm_litterCount = x.animals['mmm'].litterCount %}
-        {% set mmm_offspringCount = x.animals['mmm'].offspringCount %}
-        {% set mmm_breederName = x.animals['mmm'].breederName %}
-        {% set mmm_breederNumber = x.animals['mmm'].breederNumber %}
+        {% set mmmGender = x.animals['mmm'].gender %}
+        {% set mmmUln = x.animals['mmm'].uln %}
+        {% set mmmPedigree = x.animals['mmm'].pedigree %}
+        {% set mmmName = x.animals['mmm'].name %}
+        {% set mmmScrapie = x.animals['mmm'].scrapie %}
+        {% set mmmBreed = x.animals['mmm'].breed %}
+        {% set mmmBreedType = x.animals['mmm'].breedType %}
+        {% set mmmBreedCode = x.animals['mmm'].breedCode %}
+        {% set mmmLitterSize = x.animals['mmm'].litterSize %}
+        {% set mmmLitterGroup = x.animals['mmm'].litterGroup %}
+        {% set mmmNLing = x.animals['mmm'].nLing %}
+        {% set mmmBlf = x.animals['mmm'].blindnessFactor %}
+        {% set mmmPredicate = x.animals['mmm'].predicate %}
+        {% set mmmProduction = x.animals['mmm'].production %}
+        {% set mmmLitterCount = x.animals['mmm'].litterCount %}
+        {% set mmmOffspringCount = x.animals['mmm'].offspringCount %}
+        {% set mmmBreederName = x.animals['mmm'].breederName %}
+        {% set mmmBreederNumber = x.animals['mmm'].breederNumber %}
 
         {# Measurements #}
-        {% set mmm_skull = x.animals['mmm'].skull %}
-        {% set mmm_development = x.animals['mmm'].development %}
-        {% set mmm_muscularity = x.animals['mmm'].muscularity %}
-        {% set mmm_proportion = x.animals['mmm'].proportion %}
-        {% set mmm_type = x.animals['mmm'].type %}
-        {% set mmm_legWork = x.animals['mmm'].legWork %}
-        {% set mmm_fur = x.animals['mmm'].fur %}
-        {% set mmm_generalAppearance = x.animals['mmm'].generalAppearance %}
-        {% set mmm_height = x.animals['mmm'].height %}
-        {% set mmm_torsoLength = x.animals['mmm'].torsoLength %}
-        {% set mmm_breastDepth = x.animals['mmm'].breastDepth %}
-        {% set mmm_tailLength = x.animals['mmm'].tailLength %}
-        {% set mmm_litterGroup = x.animals['mmm'].litterGroup %}
-        {% set mmm_growth = x.animals['mmm'].growth %}
-        {% set mmm_muscleThickness = x.animals['mmm'].muscleThickness %}
-        {% set mmm_bodyFat = x.animals['mmm'].bodyFat %}
-        {% set mmm_vl = x.animals['mmm'].vl %}
-        {% set mmm_sl = x.animals['mmm'].sl %}
+        {% set mmmSkull = x.animals['mmm'].skull %}
+        {% set mmmDevelopment = x.animals['mmm'].development %}
+        {% set mmmMuscularity = x.animals['mmm'].muscularity %}
+        {% set mmmProportion = x.animals['mmm'].proportion %}
+        {% set mmmType = x.animals['mmm'].type %}
+        {% set mmmLegWork = x.animals['mmm'].legWork %}
+        {% set mmmFur = x.animals['mmm'].fur %}
+        {% set mmmGeneralAppearance = x.animals['mmm'].generalAppearance %}
+        {% set mmmHeight = x.animals['mmm'].height %}
+        {% set mmmTorsoLength = x.animals['mmm'].torsoLength %}
+        {% set mmmBreastDepth = x.animals['mmm'].breastDepth %}
+        {% set mmmTailLength = x.animals['mmm'].tailLength %}
+        {% set mmmLitterGroup = x.animals['mmm'].litterGroup %}
+        {% set mmmGrowth = x.animals['mmm'].growth %}
+        {% set mmmMuscleThickness = x.animals['mmm'].muscleThickness %}
+        {% set mmmBodyFat = x.animals['mmm'].bodyFat %}
+        {% set mmmVl = x.animals['mmm'].vl %}
+        {% set mmmSl = x.animals['mmm'].sl %}
 
         {# dates #}
         {% if x.animals['mmm'].dateOfBirth == null %}
-            {% set mmm_dateOfBirth = '-' %}
+            {% set mmmDateOfBirth = '-' %}
         {% else %}
-            {% set mmm_dateOfBirth = x.animals['mmm'].dateOfBirth|date('d-m-Y') %}
+            {% set mmmDateOfBirth = x.animals['mmm'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
         {% if x.animals['mmm'].inspectionDate == null %}
-            {% set mmm_inspectionDate = '-' %}
+            {% set mmmInspectionDate = '-' %}
         {% else %}
-            {% set mmm_inspectionDate= x.animals['mmm'].inspectionDate|date('d-m-Y') %}
+            {% set mmmInspectionDate= x.animals['mmm'].inspectionDate|date('d-m-Y') %}
         {% endif %}
 
 
@@ -1043,40 +1063,40 @@
                                     </tr>
                                     <tr>
                                         <td align="center">
-                                            <font face="Lato">{{f_skull}}</font>
+                                            <font face="Lato">{{fSkull}}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">{{ f_development }}</font>
+                                            <font face="Lato">{{ fDevelopment }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 9px" face="Lato">{{ f_muscularity }}</font>
+                                            <font style="font-size: 9px" face="Lato">{{ fMuscularity }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 9px" face="Lato">{{ f_proportion }}</font>
+                                            <font style="font-size: 9px" face="Lato">{{ fProportion }}</font>
                                         </td>
                                         <td align="center">
-                                            <font face="Lato">{{ f_type }}</font>
+                                            <font face="Lato">{{ fType }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 9px" face="Lato">{{ f_legWork }}</font>
+                                            <font style="font-size: 9px" face="Lato">{{ fLegWork }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 9px" face="Lato">{{ f_fur }}</font>
+                                            <font style="font-size: 9px" face="Lato">{{ fFur }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 9px" face="Lato">{{ f_generalAppearance }}</font>
+                                            <font style="font-size: 9px" face="Lato">{{ fGeneralAppearance }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">{{ f_height }}</font>
+                                            <font face="Lato">{{ fHeight }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">{{ f_torsoLength }}</font>
+                                            <font face="Lato">{{ fTorsoLength }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">{{ f_breastDepth }}</font>
+                                            <font face="Lato">{{ fBreastDepth }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">{{ f_tailLength }}</font>
+                                            <font face="Lato">{{ fTailLength }}</font>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -1304,7 +1324,7 @@
                                     <tr>
                                         <td style="text-align: center">
                                             <font face="Lato" style="font-size: 14px">
-                                                <b>{{c_uln}}</b>
+                                                <b>{{cUln}}</b>
                                                 <br/>
                                             </font>
                                         </td>
@@ -1319,7 +1339,7 @@
                                     <tr>
                                         <td style="text-align: center">
                                             <font face="Lato" style="font-size: 14px">
-                                                <b>{{c_pedigree}}</b>
+                                                <b>{{cPedigree}}</b>
                                                 <br/>
                                             </font>
                                         </td>
@@ -1417,7 +1437,7 @@
                                             <font face="Lato" style="font-size: 9px">&#xA0;</font>
                                         </td>
                                         <td align="center" style="text-align: left">
-                                            <font face="Lato" style="font-size: 9px">{{c_litterGroup}}</font>
+                                            <font face="Lato" style="font-size: 9px">{{cLitterGroup}}</font>
                                         </td>
                                     </tr>
                                     <tr>
@@ -1430,7 +1450,7 @@
                                             </font>
                                         </td>
                                         <td align="center" style="text-align: left">
-                                            <font face="Lato" style="font-size: 9px">{{c_growth}}</font>
+                                            <font face="Lato" style="font-size: 9px">{{cGrowth}}</font>
                                         </td>
                                     </tr>
                                     <tr>
@@ -1444,7 +1464,7 @@
                                         </td>
                                         <td align="center" style="text-align: left">
                                             <font face="Lato" style="font-size: 9px">
-                                                <span>{{c_muscleThickness}}</span>
+                                                <span>{{cMuscleThickness}}</span>
                                                 <br/>
                                             </font>
                                         </td>
@@ -1459,7 +1479,7 @@
                                             </font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">{{c_bodyFat}}</span>
+                                            <font face="Lato" style="font-size: 9px">{{cBodyFat}}</span>
                                             </font>
                                         </td>
                                     </tr>
@@ -1473,7 +1493,7 @@
                                             </font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">{{c_vl}}</font>
+                                            <font face="Lato" style="font-size: 9px">{{cVl}}</font>
                                         </td>
                                     </tr>
                                     <tr>
@@ -1486,7 +1506,7 @@
                                             </font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">{{c_sl}}</font>
+                                            <font face="Lato" style="font-size: 9px">{{cSl}}</font>
                                         </td>
                                     </tr>
                                     <tr>
@@ -1706,24 +1726,24 @@
                                     <tbody>
                                     <tr>
                                         <td align="center">
-                                            <font face="Lato">1: {{ f_litterGroup }}</font>
+                                            <font face="Lato">1: {{ fLitterGroup }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">2: {{ f_growth }}</font>
+                                            <font face="Lato">2: {{ fGrowth }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">3: {{ f_muscleThickness }}</font>
+                                            <font face="Lato">3: {{ fMuscleThickness }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">4: {{ f_bodyFat }}</font>
+                                            <font face="Lato">4: {{ fBodyFat }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">5: {{ f_vl }}</font>
+                                            <font face="Lato">5: {{ fVl }}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <span>6: {{ f_sl }}</span>
+                                            <span>6: {{ fSl }}</span>
                                             <br/>
                                         </td>
                                         <td>7: -</td>
@@ -1761,19 +1781,19 @@
                                     <tr>
                                         <td>
                                             <font face="Lato" style="font-size: 9px">
-                                                <span>Naam: {{f_name}}</span>
+                                                <span>Naam: {{fName}}</span>
                                                 <br/>
                                             </font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">Geboorte: {{ f_dateOfBirth }} als {{ f_nLing }} &#xA0; {{f_breedCode}}</font>
+                                            <font face="Lato" style="font-size: 9px">Geboorte: {{ fDateOfBirth }} als {{ fNLing }} &#xA0; {{fBreedCode}}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">Fokker: {{f_breederNumber}} - {{f_breederName}}</font>
+                                            <font face="Lato" style="font-size: 9px">Fokker: {{fBreederNumber}} - {{fBreederName}}</font>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -1792,36 +1812,36 @@
                                     <tr>
                                         <td>
                         <span>
-                            <font face="Lato" style="font-size: 9px">Scrapie: {{f_scrapie}}</font>
+                            <font face="Lato" style="font-size: 9px">Scrapie: {{fScrapie}}</font>
                         </span>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">Blindfactor: {{f_blf}}<br/>
+                                            <font face="Lato" style="font-size: 9px">Blindfactor: {{fBlf}}<br/>
                                             </font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">Rasstatus: {{f_breedType}}<br/>
+                                            <font face="Lato" style="font-size: 9px">Rasstatus: {{fBreedType}}<br/>
                                             </font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">Predikaat: {{f_predicate}}<br/>
-                                            </font>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <font face="Lato" style="font-size: 9px">Keurdatum: {{f_inspectionDate}}</font>
-                                        </td>
-                                        <td>
-                                            <font face="Lato" style="font-size: 9px">Produktie: {{f_production}}<br/>
+                                            <font face="Lato" style="font-size: 9px">Predikaat: {{fPredicate}}<br/>
                                             </font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">Ras: {{f_breed}}</font>
+                                            <font face="Lato" style="font-size: 9px">Keurdatum: {{fInspectionDate}}</font>
+                                        </td>
+                                        <td>
+                                            <font face="Lato" style="font-size: 9px">Produktie: {{fProduction}}<br/>
+                                            </font>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <font face="Lato" style="font-size: 9px">Ras: {{fBreed}}</font>
                                         </td>
                                         <td>
                                             <br/>
@@ -1843,13 +1863,13 @@
                                     <tr>
                                         <td style="text-align: left">
                                             <font face="Lato">
-                                                <b>ULN : {{ ff_uln }}</b>
+                                                <b>ULN : {{ ffUln }}</b>
                                                 <br/>
                                             </font>
                                         </td>
                                         <td>
                                             <font face="Lato">
-                                                <b>STN : {{ ff_pedigree }}</b>
+                                                <b>STN : {{ ffPedigree }}</b>
                                                 <br/>
                                             </font>
                                         </td>
@@ -1869,12 +1889,12 @@
                                     <tbody>
                                     <tr>
                                         <td>
-                                            <font face="Lato">Geboorte: {{ ff_dateOfBirth }} als {{ ff_nLing }} &#xA0; {{ ff_breedCode }}</font>
+                                            <font face="Lato">Geboorte: {{ ffDateOfBirth }} als {{ ffNLing }} &#xA0; {{ ffBreedCode }}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato">Fokker: {{ ff_breederNumber }} - {{ ff_breederName }}</font>
+                                            <font face="Lato">Fokker: {{ ffBreederNumber }} - {{ ffBreederName }}</font>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -1891,25 +1911,25 @@
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
                                     <tbody>
                                     <tr>
-                                        <td>Ras: {{ff_breed}}</td>
+                                        <td>Ras: {{ffBreed}}</td>
                                         <td>
                                             <br/>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td style="text-align: left">
-                                            <font face="Lato">Rasstatus: {{ ff_breedType }}</font>
+                                            <font face="Lato">Rasstatus: {{ ffBreedType }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">Produktie: {{ ff_production }}</font>
+                                            <font face="Lato">Produktie: {{ ffProduction }}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato">Predikaat: {{ ff_predicate }}</font>
+                                            <font face="Lato">Predikaat: {{ ffPredicate }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">Keurdat: {{ ff_inspectionDate }}</font>
+                                            <font face="Lato">Keurdat: {{ ffInspectionDate }}</font>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -1926,9 +1946,9 @@
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
                                     <tbody>
                                     <tr>
-                                        <td style="text-align: left">ULN : {{ fff_uln }}<br/>
+                                        <td style="text-align: left">ULN : {{ fffUln }}<br/>
                                         </td>
-                                        <td>STN : {{fff_pedigree}}
+                                        <td>STN : {{fffPedigree}}
                                             <br/>
                                         </td>
                                     </tr>
@@ -1946,15 +1966,15 @@
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
                                     <tbody>
                                     <tr>
-                                        <td>Geboorte: {{fff_dateOfBirth }} als {{ fff_nLing }} {{fff_breedCode }}
+                                        <td>Geboorte: {{fffDateOfBirth }} als {{ fffNLing }} {{fffBreedCode }}
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>Fokker: {{fff_breederNumber }} - {{fff_breederName }}
+                                        <td>Fokker: {{fffBreederNumber }} - {{fffBreederName }}
                 <span>
                     <br/>
-                </span>Rasstatus: {{fff_breedType }} Predikaat: {{fff_predicate }}
-                                            <br/>Produktie: {{fff_production}}
+                </span>Rasstatus: {{fffBreedType }} Predikaat: {{fffPredicate }}
+                                            <br/>Produktie: {{fffProduction}}
                                             <br/>
                                         </td>
                                     </tr>
@@ -2020,37 +2040,37 @@
                                     </tr>
                                     <tr>
                                         <td align="center">
-                                            <font face="Lato" style="font-size: 8px">{{ff_skull}}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ffSkull}}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">{{ ff_development }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ ffDevelopment }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ ff_muscularity }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ ffMuscularity }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ ff_proportion }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ ffProportion }}</font>
                                         </td>
                                         <td align="center">
-                                            <font face="Lato" style="font-size: 8px">{{ ff_type }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ ffType }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ ff_legWork }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ ffLegWork }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ ff_fur }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ ffFur }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ ff_generalAppearance }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ ffGeneralAppearance }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">{{ ff_height }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ ffHeight }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">{{ ff_torsoLength }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ ffTorsoLength }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">{{ ff_breastDepth }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ ffBreastDepth }}</font>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -2096,27 +2116,27 @@
                                         <td>BDP</td>
                                     </tr>
                                     <tr>
-                                        <td align="center">{{fff_skull}}</td>
-                                        <td>{{ fff_development }}</td>
+                                        <td align="center">{{fffSkull}}</td>
+                                        <td>{{ fffDevelopment }}</td>
                                         <td>
-                                            <font style="font-size: 8px">{{ fff_muscularity }}</font>
+                                            <font style="font-size: 8px">{{ fffMuscularity }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px">{{ fff_proportion }}</font>
+                                            <font style="font-size: 8px">{{ fffProportion }}</font>
                                         </td>
-                                        <td align="center">{{ fff_type }}</td>
+                                        <td align="center">{{ fffType }}</td>
                                         <td>
-                                            <font style="font-size: 8px">{{ fff_legWork }}</font>
-                                        </td>
-                                        <td>
-                                            <font style="font-size: 8px">{{ fff_fur }}</font>
+                                            <font style="font-size: 8px">{{ fffLegWork }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px">{{ fff_generalAppearance }}</font>
+                                            <font style="font-size: 8px">{{ fffFur }}</font>
                                         </td>
-                                        <td>{{ fff_height }}</td>
-                                        <td>{{ fff_torsoLength }}</td>
-                                        <td>{{ fff_breastDepth }}</td>
+                                        <td>
+                                            <font style="font-size: 8px">{{ fffGeneralAppearance }}</font>
+                                        </td>
+                                        <td>{{ fffHeight }}</td>
+                                        <td>{{ fffTorsoLength }}</td>
+                                        <td>{{ fffBreastDepth }}</td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -2134,19 +2154,19 @@
                                     <tr>
                                         <td>
                                             <font face="Lato" style="font-size: 9px">
-                                                <span>Naam: {{m_name}}</span>
+                                                <span>Naam: {{mName}}</span>
                                                 <br/>
                                             </font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">Geboorte: {{ m_dateOfBirth }} als {{ m_nLing }} &#xA0; {{m_breedCode}}</font>
+                                            <font face="Lato" style="font-size: 9px">Geboorte: {{ mDateOfBirth }} als {{ mNLing }} &#xA0; {{mBreedCode}}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">Fokker: {{m_breederNumber}} - {{m_breederName}}</font>
+                                            <font face="Lato" style="font-size: 9px">Fokker: {{mBreederNumber}} - {{mBreederName}}</font>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -2165,36 +2185,36 @@
                                     <tr>
                                         <td>
                         <span>
-                            <font face="Lato" style="font-size: 9px">Scrapie: {{m_scrapie}}</font>
+                            <font face="Lato" style="font-size: 9px">Scrapie: {{mScrapie}}</font>
                         </span>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">Blindheidsfactor: {{m_blf}}<br/>
+                                            <font face="Lato" style="font-size: 9px">Blindheidsfactor: {{mBlf}}<br/>
                                             </font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">Rasstatus: {{m_breedType}}<br/>
+                                            <font face="Lato" style="font-size: 9px">Rasstatus: {{mBreedType}}<br/>
                                             </font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">Predikaat: {{m_predicate}}<br/>
-                                            </font>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <font face="Lato" style="font-size: 9px">Keurdatum: {{m_inspectionDate}}</font>
-                                        </td>
-                                        <td>
-                                            <font face="Lato" style="font-size: 9px">Produktie: {{m_production}}<br/>
+                                            <font face="Lato" style="font-size: 9px">Predikaat: {{mPredicate}}<br/>
                                             </font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">Ras: {{m_breed}}</font>
+                                            <font face="Lato" style="font-size: 9px">Keurdatum: {{mInspectionDate}}</font>
+                                        </td>
+                                        <td>
+                                            <font face="Lato" style="font-size: 9px">Produktie: {{mProduction}}<br/>
+                                            </font>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <font face="Lato" style="font-size: 9px">Ras: {{mBreed}}</font>
                                         </td>
                                         <td>
                                             <br/>
@@ -2253,40 +2273,40 @@
                                     </tr>
                                     <tr>
                                         <td align="center">
-                                            <font face="Lato">{{m_skull}}</font>
+                                            <font face="Lato">{{mSkull}}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">{{ m_development }}</font>
+                                            <font face="Lato">{{ mDevelopment }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 9px" face="Lato">{{ m_muscularity }}</font>
+                                            <font style="font-size: 9px" face="Lato">{{ mMuscularity }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 9px" face="Lato">{{ m_proportion }}</font>
+                                            <font style="font-size: 9px" face="Lato">{{ mProportion }}</font>
                                         </td>
                                         <td align="center">
-                                            <font face="Lato">{{ m_type }}</font>
+                                            <font face="Lato">{{ mType }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 9px" face="Lato">{{ m_legWork }}</font>
+                                            <font style="font-size: 9px" face="Lato">{{ mLegWork }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 9px" face="Lato">{{ m_fur }}</font>
+                                            <font style="font-size: 9px" face="Lato">{{ mFur }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 9px" face="Lato">{{ f_generalAppearance }}</font>
+                                            <font style="font-size: 9px" face="Lato">{{ fGeneralAppearance }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">{{ m_height }}</font>
+                                            <font face="Lato">{{ mHeight }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">{{ m_torsoLength }}</font>
+                                            <font face="Lato">{{ mTorsoLength }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">{{ m_breastDepth }}</font>
+                                            <font face="Lato">{{ mBreastDepth }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">{{ m_tailLength }}</font>
+                                            <font face="Lato">{{ mTailLength }}</font>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -2305,13 +2325,13 @@
                                     <tr>
                                         <td style="text-align: left">
                                             <font face="Lato">
-                                                <b>ULN : {{ fm_uln }}</b>
+                                                <b>ULN : {{ fmUln }}</b>
                                                 <br/>
                                             </font>
                                         </td>
                                         <td>
                                             <font face="Lato">
-                                                <b>STN : {{ fm_pedigree }}</b>
+                                                <b>STN : {{ fmPedigree }}</b>
                                                 <br/>
                                             </font>
                                         </td>
@@ -2331,12 +2351,12 @@
                                     <tbody>
                                     <tr>
                                         <td>
-                                            <font face="Lato">Geboorte: {{ fm_dateOfBirth }} als {{ fm_nLing }} &#xA0; {{ fm_breedCode }}</font>
+                                            <font face="Lato">Geboorte: {{ fmDateOfBirth }} als {{ fmNLing }} &#xA0; {{ fmBreedCode }}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato">Fokker: {{ fm_breederNumber }} - {{ fm_breederName }}</font>
+                                            <font face="Lato">Fokker: {{ fmBreederNumber }} - {{ fmBreederName }}</font>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -2354,7 +2374,7 @@
                                     <tbody>
                                     <tr>
                                         <td>
-                                            <span>Ras: {{fm_breed}}</span>
+                                            <span>Ras: {{fmBreed}}</span>
                                             <br/>
                                         </td>
                                         <td>
@@ -2363,18 +2383,18 @@
                                     </tr>
                                     <tr>
                                         <td style="text-align: left">
-                                            <font face="Lato">Rasstatus: {{ fm_breedType }}</font>
+                                            <font face="Lato">Rasstatus: {{ fmBreedType }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">Produktie: {{ fm_production }}</font>
+                                            <font face="Lato">Produktie: {{ fmProduction }}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato">Predikaat: {{ fm_predicate }}</font>
+                                            <font face="Lato">Predikaat: {{ fmPredicate }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">Keurdat: {{ fm_inspectionDate }}</font>
+                                            <font face="Lato">Keurdat: {{ fmInspectionDate }}</font>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -2427,37 +2447,37 @@
                                     </tr>
                                     <tr>
                                         <td align="center">
-                                            <font face="Lato" style="font-size: 8px">{{fm_skull}}</font>
+                                            <font face="Lato" style="font-size: 8px">{{fmSkull}}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">{{ fm_development }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ fmDevelopment }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ fm_muscularity }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ fmMuscularity }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ fm_proportion }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ fmProportion }}</font>
                                         </td>
                                         <td align="center">
-                                            <font face="Lato" style="font-size: 8px">{{ fm_type }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ fmType }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ fm_legWork }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ fmLegWork }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ fm_fur }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ fmFur }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ fm_generalAppearance }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ fmGeneralAppearance }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">{{ fm_height }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ fmHeight }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">{{ fm_torsoLength }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ fmTorsoLength }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">{{ fm_breastDepth }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ fmBreastDepth }}</font>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -2475,11 +2495,11 @@
                                     <tbody>
                                     <tr>
                                         <td style="text-align: left">
-                                            <b>ULN : {{ mf_uln }}</b>
+                                            <b>ULN : {{ mfUln }}</b>
                                             <br/>
                                         </td>
                                         <td>
-                                            <b>STN : {{ mf_pedigree }}</b>
+                                            <b>STN : {{ mfPedigree }}</b>
                                             <br/>
                                         </td>
                                     </tr>
@@ -2498,12 +2518,12 @@
                                     <tbody>
                                     <tr>
                                         <td>
-                                            <font face="Lato">Geboorte: {{ mf_dateOfBirth }} als {{ mf_nLing }} &#xA0; {{ mf_breedCode }}</font>
+                                            <font face="Lato">Geboorte: {{ mfDateOfBirth }} als {{ mfNLing }} &#xA0; {{ mfBreedCode }}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato">Fokker: {{ mf_breederNumber }} - {{ mf_breederName }}</font>
+                                            <font face="Lato">Fokker: {{ mfBreederNumber }} - {{ mfBreederName }}</font>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -2521,7 +2541,7 @@
                                     <tbody>
                                     <tr>
                                         <td>
-                                            <span>Ras: {{mf_breed}}</span>
+                                            <span>Ras: {{mfBreed}}</span>
                                             <br/>
                                         </td>
                                         <td>
@@ -2530,18 +2550,18 @@
                                     </tr>
                                     <tr>
                                         <td style="text-align: left">
-                                            <font face="Lato">Rasstatus: {{ mf_breedType }}</font>
+                                            <font face="Lato">Rasstatus: {{ mfBreedType }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">Produktie: {{ mf_production }}</font>
+                                            <font face="Lato">Produktie: {{ mfProduction }}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato">Predikaat: {{ mf_predicate }}</font>
+                                            <font face="Lato">Predikaat: {{ mfPredicate }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">Keurdat: {{ mf_inspectionDate }}</font>
+                                            <font face="Lato">Keurdat: {{ mfInspectionDate }}</font>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -2594,37 +2614,37 @@
                                     </tr>
                                     <tr>
                                         <td align="center">
-                                            <font face="Lato" style="font-size: 8px">{{mf_skull}}</font>
+                                            <font face="Lato" style="font-size: 8px">{{mfSkull}}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">{{ mf_development }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ mfDevelopment }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ mf_muscularity }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ mfMuscularity }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ mf_proportion }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ mfProportion }}</font>
                                         </td>
                                         <td align="center">
-                                            <font face="Lato" style="font-size: 8px">{{ mf_type }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ mfType }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ mf_legWork }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ mfLegWork }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ mf_fur }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ mfFur }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ mf_generalAppearance }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ mfGeneralAppearance }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">{{ mf_height }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ mfHeight }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">{{ mf_torsoLength }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ mfTorsoLength }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">{{ mf_breastDepth }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ mfBreastDepth }}</font>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -2642,11 +2662,11 @@
                                     <tbody>
                                     <tr>
                                         <td style="text-align: left">
-                                            <b>ULN : {{ mm_uln }}</b>
+                                            <b>ULN : {{ mmUln }}</b>
                                             <br/>
                                         </td>
                                         <td>
-                                            <b>STN : {{ mm_pedigree }}</b>
+                                            <b>STN : {{ mmPedigree }}</b>
                                             <br/>
                                         </td>
                                     </tr>
@@ -2665,12 +2685,12 @@
                                     <tbody>
                                     <tr>
                                         <td>
-                                            <font face="Lato">Geboorte: {{ mm_dateOfBirth }} als {{ mm_nLing }} &#xA0; {{ mm_breedCode }}</font>
+                                            <font face="Lato">Geboorte: {{ mmDateOfBirth }} als {{ mmNLing }} &#xA0; {{ mmBreedCode }}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato">Fokker: {{ mm_breederNumber }} - {{ mm_breederName }}</font>
+                                            <font face="Lato">Fokker: {{ mmBreederNumber }} - {{ mmBreederName }}</font>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -2688,7 +2708,7 @@
                                     <tbody>
                                     <tr>
                                         <td>
-                                            <span>Ras: {{mm_breed}}</span>
+                                            <span>Ras: {{mmBreed}}</span>
                                             <br/>
                                         </td>
                                         <td>
@@ -2697,18 +2717,18 @@
                                     </tr>
                                     <tr>
                                         <td style="text-align: left">
-                                            <font face="Lato">Rasstatus: {{ mm_breedType }}</font>
+                                            <font face="Lato">Rasstatus: {{ mmBreedType }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">Produktie: {{ mm_production }}</font>
+                                            <font face="Lato">Produktie: {{ mmProduction }}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato">Predikaat: {{ mm_predicate }}</font>
+                                            <font face="Lato">Predikaat: {{ mmPredicate }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">Keurdat: {{ mm_inspectionDate }}</font>
+                                            <font face="Lato">Keurdat: {{ mmInspectionDate }}</font>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -2761,37 +2781,37 @@
                                     </tr>
                                     <tr>
                                         <td align="center">
-                                            <font face="Lato" style="font-size: 8px">{{mm_skull}}</font>
+                                            <font face="Lato" style="font-size: 8px">{{mmSkull}}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">{{ mm_development }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ mmDevelopment }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ mm_muscularity }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ mmMuscularity }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ mm_proportion }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ mmProportion }}</font>
                                         </td>
                                         <td align="center">
-                                            <font face="Lato" style="font-size: 8px">{{ mm_type }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ mmType }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ mm_legWork }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ mmLegWork }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ mm_fur }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ mmFur }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px" face="Lato">{{ mm_generalAppearance }}</font>
+                                            <font style="font-size: 8px" face="Lato">{{ mmGeneralAppearance }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">{{ mm_height }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ mmHeight }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">{{ mm_torsoLength }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ mmTorsoLength }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">{{ mm_breastDepth }}</font>
+                                            <font face="Lato" style="font-size: 8px">{{ mmBreastDepth }}</font>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -2808,9 +2828,9 @@
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
                                     <tbody>
                                     <tr>
-                                        <td style="text-align: left">ULN : {{ ffm_uln }}<br/>
+                                        <td style="text-align: left">ULN : {{ ffmUln }}<br/>
                                         </td>
-                                        <td>STN : {{ffm_pedigree }}</span>
+                                        <td>STN : {{ffmPedigree }}</span>
                                             <br/>
                                         </td>
                                     </tr>
@@ -2828,18 +2848,18 @@
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
                                     <tbody>
                                     <tr>
-                                        <td>Geboorte: {{ffm_dateOfBirth }} als {{ffm_nLing }} &#xA0; {{ffm_breedCode }}
+                                        <td>Geboorte: {{ffmDateOfBirth }} als {{ffmNLing }} &#xA0; {{ffmBreedCode }}
                     <span>
                         <br/>
                     </span>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>Fokker: {{ffm_breederNumber }} - {{ffm_breederName }}
+                                        <td>Fokker: {{ffmBreederNumber }} - {{ffmBreederName }}
                 <span>
                     <br/>
-                </span>Rasstatus: {{ffm_breedType }} &#xA0; &#xA0; Predikaat: {{ffm_predicate }}
-                                            <br/>Produktie: {{ffm_production}}
+                </span>Rasstatus: {{ffmBreedType }} &#xA0; &#xA0; Predikaat: {{ffmPredicate }}
+                                            <br/>Produktie: {{ffmProduction}}
                                             <br/>
                                         </td>
                                     </tr>
@@ -2886,27 +2906,27 @@
                                         <td>BDP</td>
                                     </tr>
                                     <tr>
-                                        <td align="center">{{ffm_skull}}</td>
-                                        <td>{{ ffm_development }}</td>
+                                        <td align="center">{{ffmSkull}}</td>
+                                        <td>{{ ffmDevelopment }}</td>
                                         <td>
-                                            <font style="font-size: 8px">{{ ffm_muscularity }}</font>
+                                            <font style="font-size: 8px">{{ ffmMuscularity }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px">{{ ffm_proportion }}</font>
+                                            <font style="font-size: 8px">{{ ffmProportion }}</font>
                                         </td>
-                                        <td align="center">{{ ffm_type }}</td>
+                                        <td align="center">{{ ffmType }}</td>
                                         <td>
-                                            <font style="font-size: 8px">{{ ffm_legWork }}</font>
-                                        </td>
-                                        <td>
-                                            <font style="font-size: 8px">{{ ffm_fur }}</font>
+                                            <font style="font-size: 8px">{{ ffmLegWork }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px">{{ ffm_generalAppearance }}</font>
+                                            <font style="font-size: 8px">{{ ffmFur }}</font>
                                         </td>
-                                        <td>{{ ffm_height }}</td>
-                                        <td>{{ ffm_torsoLength }}</td>
-                                        <td>{{ ffm_breastDepth }}</td>
+                                        <td>
+                                            <font style="font-size: 8px">{{ ffmGeneralAppearance }}</font>
+                                        </td>
+                                        <td>{{ ffmHeight }}</td>
+                                        <td>{{ ffmTorsoLength }}</td>
+                                        <td>{{ ffmBreastDepth }}</td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -2922,9 +2942,9 @@
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
                                     <tbody>
                                     <tr>
-                                        <td style="text-align: left">ULN : {{ fmf_uln }}<br/>
+                                        <td style="text-align: left">ULN : {{ fmfUln }}<br/>
                                         </td>
-                                        <td>STN : {{fmf_pedigree }}
+                                        <td>STN : {{fmfPedigree }}
                                             <br/>
                                         </td>
                                     </tr>
@@ -2942,18 +2962,18 @@
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
                                     <tbody>
                                     <tr>
-                                        <td>Geboorte: {{fmf_dateOfBirth }} als {{fmf_nLing }} &#xA0; {{fmf_breedCode }}
+                                        <td>Geboorte: {{fmfDateOfBirth }} als {{fmfNLing }} &#xA0; {{fmfBreedCode }}
                     <span>
                         <br/>
                     </span>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>Fokker: {{fmf_breederNumber }} - {{fmf_breederName }}
+                                        <td>Fokker: {{fmfBreederNumber }} - {{fmfBreederName }}
                 <span>
                     <br/>
-                </span>Rasstatus: {{fmf_breedType }} &#xA0; &#xA0; Predikaat: {{fmf_predicate }}
-                                            <br/>Produktie: {{fmf_production}}
+                </span>Rasstatus: {{fmfBreedType }} &#xA0; &#xA0; Predikaat: {{fmfPredicate }}
+                                            <br/>Produktie: {{fmfProduction}}
                                             <br/>
                                         </td>
                                     </tr>
@@ -3000,27 +3020,27 @@
                                         <td>BDP</td>
                                     </tr>
                                     <tr>
-                                        <td align="center">{{fmf_skull}}</td>
-                                        <td>{{ fmf_development }}</td>
+                                        <td align="center">{{fmfSkull}}</td>
+                                        <td>{{ fmfDevelopment }}</td>
                                         <td>
-                                            <font style="font-size: 8px">{{ fmf_muscularity }}</font>
+                                            <font style="font-size: 8px">{{ fmfMuscularity }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px">{{ fmf_proportion }}</font>
+                                            <font style="font-size: 8px">{{ fmfProportion }}</font>
                                         </td>
-                                        <td align="center">{{ fmf_type }}</td>
+                                        <td align="center">{{ fmfType }}</td>
                                         <td>
-                                            <font style="font-size: 8px">{{ fmf_legWork }}</font>
-                                        </td>
-                                        <td>
-                                            <font style="font-size: 8px">{{ fmf_fur }}</font>
+                                            <font style="font-size: 8px">{{ fmfLegWork }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px">{{ fmf_generalAppearance }}</font>
+                                            <font style="font-size: 8px">{{ fmfFur }}</font>
                                         </td>
-                                        <td>{{ fmf_height }}</td>
-                                        <td>{{ fmf_torsoLength }}</td>
-                                        <td>{{ fmf_breastDepth }}</td>
+                                        <td>
+                                            <font style="font-size: 8px">{{ fmfGeneralAppearance }}</font>
+                                        </td>
+                                        <td>{{ fmfHeight }}</td>
+                                        <td>{{ fmfTorsoLength }}</td>
+                                        <td>{{ fmfBreastDepth }}</td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -3036,9 +3056,9 @@
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
                                     <tbody>
                                     <tr>
-                                        <td style="text-align: left">ULN : {{ fmm_uln }}<br/>
+                                        <td style="text-align: left">ULN : {{ fmmUln }}<br/>
                                         </td>
-                                        <td>STN : {{fmm_pedigree }}</span>
+                                        <td>STN : {{fmmPedigree }}</span>
                                             <br/>
                                         </td>
                                     </tr>
@@ -3056,18 +3076,18 @@
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
                                     <tbody>
                                     <tr>
-                                        <td>Geboorte: {{fmm_dateOfBirth }} als {{fmm_nLing }} &#xA0; {{fmm_breedCode }}</span>
+                                        <td>Geboorte: {{fmmDateOfBirth }} als {{fmmNLing }} &#xA0; {{fmmBreedCode }}</span>
                     <span>
                         <br/>
                     </span>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>Fokker: {{fmm_breederNumber }} - {{fmm_breederName }}
+                                        <td>Fokker: {{fmmBreederNumber }} - {{fmmBreederName }}
                 <span>
                     <br/>
-                </span>Rasstatus: {{fmm_breedType }} &#xA0; &#xA0; Predikaat: {{fmm_predicate }}
-                                            <br/>Produktie: {{fmm_production}}
+                </span>Rasstatus: {{fmmBreedType }} &#xA0; &#xA0; Predikaat: {{fmmPredicate }}
+                                            <br/>Produktie: {{fmmProduction}}
                                             <br/>
                                         </td>
                                     </tr>
@@ -3114,27 +3134,27 @@
                                         <td>BDP</td>
                                     </tr>
                                     <tr>
-                                        <td align="center">{{fmm_skull}}</td>
-                                        <td>{{ fmm_development }}</td>
+                                        <td align="center">{{fmmSkull}}</td>
+                                        <td>{{ fmmDevelopment }}</td>
                                         <td>
-                                            <font style="font-size: 8px">{{ fmm_muscularity }}</font>
+                                            <font style="font-size: 8px">{{ fmmMuscularity }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px">{{ fmm_proportion }}</font>
+                                            <font style="font-size: 8px">{{ fmmProportion }}</font>
                                         </td>
-                                        <td align="center">{{ fmm_type }}</td>
+                                        <td align="center">{{ fmmType }}</td>
                                         <td>
-                                            <font style="font-size: 8px">{{ fmm_legWork }}</font>
-                                        </td>
-                                        <td>
-                                            <font style="font-size: 8px">{{ fmm_fur }}</font>
+                                            <font style="font-size: 8px">{{ fmmLegWork }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px">{{ fmm_generalAppearance }}</font>
+                                            <font style="font-size: 8px">{{ fmmFur }}</font>
                                         </td>
-                                        <td>{{ fmm_height }}</td>
-                                        <td>{{ fmm_torsoLength }}</td>
-                                        <td>{{ fmm_breastDepth }}</td>
+                                        <td>
+                                            <font style="font-size: 8px">{{ fmmGeneralAppearance }}</font>
+                                        </td>
+                                        <td>{{ fmmHeight }}</td>
+                                        <td>{{ fmmTorsoLength }}</td>
+                                        <td>{{ fmmBreastDepth }}</td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -3150,9 +3170,9 @@
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
                                     <tbody>
                                     <tr>
-                                        <td style="text-align: left">ULN : {{ mff_uln }}<br/>
+                                        <td style="text-align: left">ULN : {{ mffUln }}<br/>
                                         </td>
-                                        <td>STN : {{mff_pedigree }}
+                                        <td>STN : {{mffPedigree }}
                                             <br/>
                                         </td>
                                     </tr>
@@ -3170,18 +3190,18 @@
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
                                     <tbody>
                                     <tr>
-                                        <td>Geboorte: {{mff_dateOfBirth }} als {{mff_nLing }} &#xA0; {{mff_breedCode }}
+                                        <td>Geboorte: {{mffDateOfBirth }} als {{mffNLing }} &#xA0; {{mffBreedCode }}
                     <span>
                         <br/>
                     </span>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>Fokker: {{mff_breederNumber }} - {{mff_breederName }}
+                                        <td>Fokker: {{mffBreederNumber }} - {{mffBreederName }}
                 <span>
                     <br/>
-                </span>Rasstatus: {{mff_breedType }} &#xA0; &#xA0; Predikaat: {{ mff_predicate }}
-                                            <br/>Produktie: {{mff_production}}
+                </span>Rasstatus: {{mffBreedType }} &#xA0; &#xA0; Predikaat: {{ mffPredicate }}
+                                            <br/>Produktie: {{mffProduction}}
                                             <br/>
                                         </td>
                                     </tr>
@@ -3228,27 +3248,27 @@
                                         <td>BDP</td>
                                     </tr>
                                     <tr>
-                                        <td align="center">{{mff_skull}}</td>
-                                        <td>{{ mff_development }}</td>
+                                        <td align="center">{{mffSkull}}</td>
+                                        <td>{{ mffDevelopment }}</td>
                                         <td>
-                                            <font style="font-size: 8px">{{ mff_muscularity }}</font>
+                                            <font style="font-size: 8px">{{ mffMuscularity }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px">{{ mff_proportion }}</font>
+                                            <font style="font-size: 8px">{{ mffProportion }}</font>
                                         </td>
-                                        <td align="center">{{ mff_type }}</td>
+                                        <td align="center">{{ mffType }}</td>
                                         <td>
-                                            <font style="font-size: 8px">{{ mff_legWork }}</font>
-                                        </td>
-                                        <td>
-                                            <font style="font-size: 8px">{{ mff_fur }}</font>
+                                            <font style="font-size: 8px">{{ mffLegWork }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px">{{ mff_generalAppearance }}</font>
+                                            <font style="font-size: 8px">{{ mffFur }}</font>
                                         </td>
-                                        <td>{{ mff_height }}</td>
-                                        <td>{{ mff_torsoLength }}</td>
-                                        <td>{{ mff_breastDepth }}</td>
+                                        <td>
+                                            <font style="font-size: 8px">{{ mffGeneralAppearance }}</font>
+                                        </td>
+                                        <td>{{ mffHeight }}</td>
+                                        <td>{{ mffTorsoLength }}</td>
+                                        <td>{{ mffBreastDepth }}</td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -3264,9 +3284,9 @@
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
                                     <tbody>
                                     <tr>
-                                        <td style="text-align: left">ULN : {{ mfm_uln }}<br/>
+                                        <td style="text-align: left">ULN : {{ mfmUln }}<br/>
                                         </td>
-                                        <td>STN : {{mfm_pedigree }}</span>
+                                        <td>STN : {{mfmPedigree }}</span>
                                             <br/>
                                         </td>
                                     </tr>
@@ -3284,16 +3304,16 @@
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
                                     <tbody>
                                     <tr>
-                                        <td>Geboorte: {{mfm_dateOfBirth }} als {{mfm_nLing }}  {{mfm_breedCode }}
+                                        <td>Geboorte: {{mfmDateOfBirth }} als {{mfmNLing }}  {{mfmBreedCode }}
 
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>Fokker: {{mfm_breederNumber }} - {{mfm_breederName}}
+                                        <td>Fokker: {{mfmBreederNumber }} - {{mfmBreederName}}
                 <span>
                     <br/>
-                </span>Rasstatus: {{mfm_breedType }} &#xA0; &#xA0; Predikaat: {{mfm_predicate }}
-                                            <br/>Produktie: {{mfm_production}}
+                </span>Rasstatus: {{mfmBreedType }} &#xA0; &#xA0; Predikaat: {{mfmPredicate }}
+                                            <br/>Produktie: {{mfmProduction}}
                 <span>
                     <br/>
                 </span>
@@ -3342,27 +3362,27 @@
                                         <td>BDP</td>
                                     </tr>
                                     <tr>
-                                        <td align="center">{{mfm_skull}}</td>
-                                        <td>{{mfm_development }}</td>
+                                        <td align="center">{{mfmSkull}}</td>
+                                        <td>{{mfmDevelopment }}</td>
                                         <td>
-                                            <font style="font-size: 8px">{{mfm_muscularity }}</font>
+                                            <font style="font-size: 8px">{{mfmMuscularity }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px">{{mfm_proportion }}</font>
+                                            <font style="font-size: 8px">{{mfmProportion }}</font>
                                         </td>
-                                        <td align="center">{{mfm_type }}</td>
+                                        <td align="center">{{mfmType }}</td>
                                         <td>
-                                            <font style="font-size: 8px">{{mfm_legWork }}</font>
-                                        </td>
-                                        <td>
-                                            <font style="font-size: 8px">{{mfm_fur }}</font>
+                                            <font style="font-size: 8px">{{mfmLegWork }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px">{{mfm_generalAppearance }}</font>
+                                            <font style="font-size: 8px">{{mfmFur }}</font>
                                         </td>
-                                        <td>{{mfm_height }}</td>
-                                        <td>{{mfm_torsoLength }}</td>
-                                        <td>{{mfm_breastDepth }}</td>
+                                        <td>
+                                            <font style="font-size: 8px">{{mfmGeneralAppearance }}</font>
+                                        </td>
+                                        <td>{{mfmHeight }}</td>
+                                        <td>{{mfmTorsoLength }}</td>
+                                        <td>{{mfmBreastDepth }}</td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -3378,9 +3398,9 @@
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
                                     <tbody>
                                     <tr>
-                                        <td style="text-align: left">ULN : {{ mmf_uln }}<br/>
+                                        <td style="text-align: left">ULN : {{ mmfUln }}<br/>
                                         </td>
-                                        <td>STN : {{mmf_pedigree }}
+                                        <td>STN : {{mmfPedigree }}
                                             <br/>
                                         </td>
                                     </tr>
@@ -3398,18 +3418,18 @@
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
                                     <tbody>
                                     <tr>
-                                        <td>Geboorte: {{mmf_dateOfBirth }} als {{mmf_nLing }} &#xA0; {{mmf_breedCode }}
+                                        <td>Geboorte: {{mmfDateOfBirth }} als {{mmfNLing }} &#xA0; {{mmfBreedCode }}
                     <span>
                         <br/>
                     </span>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>Fokker: {{mmf_breederNumber }} - {{mmf_breederName}}
+                                        <td>Fokker: {{mmfBreederNumber }} - {{mmfBreederName}}
                 <span>
                     <br/>
-                </span>Rasstatus: {{mmf_breedType }} &#xA0; &#xA0; Predikaat: {{mmf_predicate }}
-                                            <br/>Produktie: {{mmf_production}}
+                </span>Rasstatus: {{mmfBreedType }} &#xA0; &#xA0; Predikaat: {{mmfPredicate }}
+                                            <br/>Produktie: {{mmfProduction}}
                                             <br/>
                                         </td>
                                     </tr>
@@ -3456,27 +3476,27 @@
                                         <td>BDP</td>
                                     </tr>
                                     <tr>
-                                        <td align="center">{{mmf_skull}}</td>
-                                        <td>{{ mmf_development }}</td>
+                                        <td align="center">{{mmfSkull}}</td>
+                                        <td>{{ mmfDevelopment }}</td>
                                         <td>
-                                            <font style="font-size: 8px">{{ mmf_muscularity }}</font>
+                                            <font style="font-size: 8px">{{ mmfMuscularity }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px">{{ mmf_proportion }}</font>
+                                            <font style="font-size: 8px">{{ mmfProportion }}</font>
                                         </td>
-                                        <td align="center">{{ mmf_type }}</td>
+                                        <td align="center">{{ mmfType }}</td>
                                         <td>
-                                            <font style="font-size: 8px">{{ mmf_legWork }}</font>
-                                        </td>
-                                        <td>
-                                            <font style="font-size: 8px">{{ mmf_fur }}</font>
+                                            <font style="font-size: 8px">{{ mmfLegWork }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px">{{ mmf_generalAppearance }}</font>
+                                            <font style="font-size: 8px">{{ mmfFur }}</font>
                                         </td>
-                                        <td>{{ mmf_height }}</td>
-                                        <td>{{ mmf_torsoLength }}</td>
-                                        <td>{{ mmf_breastDepth }}</td>
+                                        <td>
+                                            <font style="font-size: 8px">{{ mmfGeneralAppearance }}</font>
+                                        </td>
+                                        <td>{{ mmfHeight }}</td>
+                                        <td>{{ mmfTorsoLength }}</td>
+                                        <td>{{ mmfBreastDepth }}</td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -3492,9 +3512,9 @@
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
                                     <tbody>
                                     <tr>
-                                        <td style="text-align: left">ULN : {{ mmm_uln }}<br/>
+                                        <td style="text-align: left">ULN : {{ mmmUln }}<br/>
                                         </td>
-                                        <td>STN : {{mmm_pedigree }}                                            <br/>
+                                        <td>STN : {{mmmPedigree }}                                            <br/>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -3511,18 +3531,18 @@
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
                                     <tbody>
                                     <tr>
-                                        <td>Geboorte: {{mmm_dateOfBirth }} als {{mmm_nLing }} &#xA0; {{mmm_breedCode }}
+                                        <td>Geboorte: {{mmmDateOfBirth }} als {{mmmNLing }} &#xA0; {{mmmBreedCode }}
                     <span>
                         <br/>
                     </span>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>Fokker: {{mmm_breederNumber }} - {{mmm_breederName }}
+                                        <td>Fokker: {{mmmBreederNumber }} - {{mmmBreederName }}
                 <span>
                     <br/>
-                </span>Rasstatus: {{mmm_breedType }} &#xA0; &#xA0; Predikaat: {{mmm_predicate }}
-                                            <br/>Produktie: {{mmm_production}}
+                </span>Rasstatus: {{mmmBreedType }} &#xA0; &#xA0; Predikaat: {{mmmPredicate }}
+                                            <br/>Produktie: {{mmmProduction}}
                                             <br/>
                                         </td>
                                     </tr>
@@ -3569,27 +3589,27 @@
                                         <td>BDP</td>
                                     </tr>
                                     <tr>
-                                        <td align="center">{{mmm_skull}}</td>
-                                        <td>{{ mmm_development }}</td>
+                                        <td align="center">{{mmmSkull}}</td>
+                                        <td>{{ mmmDevelopment }}</td>
                                         <td>
-                                            <font style="font-size: 8px">{{ mmm_muscularity }}</font>
+                                            <font style="font-size: 8px">{{ mmmMuscularity }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px">{{ mmm_proportion }}</font>
+                                            <font style="font-size: 8px">{{ mmmProportion }}</font>
                                         </td>
-                                        <td align="center">{{ mmm_type }}</td>
+                                        <td align="center">{{ mmmType }}</td>
                                         <td>
-                                            <font style="font-size: 8px">{{ mmm_legWork }}</font>
-                                        </td>
-                                        <td>
-                                            <font style="font-size: 8px">{{ mmm_fur }}</font>
+                                            <font style="font-size: 8px">{{ mmmLegWork }}</font>
                                         </td>
                                         <td>
-                                            <font style="font-size: 8px">{{ mmm_generalAppearance }}</font>
+                                            <font style="font-size: 8px">{{ mmmFur }}</font>
                                         </td>
-                                        <td>{{ mmm_height }}</td>
-                                        <td>{{ mmm_torsoLength }}</td>
-                                        <td>{{ mmm_breastDepth }}</td>
+                                        <td>
+                                            <font style="font-size: 8px">{{ mmmGeneralAppearance }}</font>
+                                        </td>
+                                        <td>{{ mmmHeight }}</td>
+                                        <td>{{ mmmTorsoLength }}</td>
+                                        <td>{{ mmmBreastDepth }}</td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -3608,7 +3628,7 @@
                                     <tr>
                                         <td>
                                             <b>
-                                                <font face="Lato">{{c_name}}</font>
+                                                <font face="Lato">{{cName}}</font>
                                             </b>
                                         </td>
                                     </tr>
@@ -3616,7 +3636,7 @@
                                         <td>
                                             <font face="Lato">
                             <span>
-                                <b>{{c_gender}}</b>
+                                <b>{{cGender}}</b>
                             </span>
                                                 <br/>
                                             </font>
@@ -3625,54 +3645,54 @@
                                     <tr>
                                         <td>
                                             <font face="Lato">
-                                                <b>{{c_breed}}</b>
+                                                <b>{{cBreed}}</b>
                                             </font>
                                             <br/>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td align="center" style="text-align: left">
-                                            <font face="Lato">{{c_breedType}}</font>
+                                            <font face="Lato">{{cBreedType}}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td style="text-align: left">
-                                            <font face="Lato">{{c_dateOfBirth}}</font>
+                                            <font face="Lato">{{cDateOfBirth}}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato">{{c_breedCode}}</font>
+                                            <font face="Lato">{{cBreedCode}}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato">{{c_nLing}}</font>
+                                            <font face="Lato">{{cNLing}}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato">{{c_production}}</font>
+                                            <font face="Lato">{{cProduction}}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato">{{c_blf}}</font>
+                                            <font face="Lato">{{cBlf}}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato">{{c_predicate}}</font>
+                                            <font face="Lato">{{cPredicate}}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato">{{c_inspectionDate}}</font>
+                                            <font face="Lato">{{cInspectionDate}}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato">{{c_scrapie}}</font>
+                                            <font face="Lato">{{cScrapie}}</font>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -3716,52 +3736,52 @@
                                     <tbody>
                                     <tr>
                                         <td align="center" style="text-align: left">
-                                            <font face="Lato" style="font-size: 9px">{{c_skull}}</font>
+                                            <font face="Lato" style="font-size: 9px">{{cSkull}}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td align="center" style="text-align: left">
-                                            <font face="Lato" style="font-size: 9px">{{c_development}}</font>
+                                            <font face="Lato" style="font-size: 9px">{{cDevelopment}}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td align="center" style="text-align: left">
                                             <font face="Lato" style="font-size: 9px">
-                                                <span>{{c_muscularity}}</span>
+                                                <span>{{cMuscularity}}</span>
                                                 <br/>
                                             </font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">{{c_proportion}}</span>
+                                            <font face="Lato" style="font-size: 9px">{{cProportion}}</span>
                                             </font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">{{c_type}}</font>
+                                            <font face="Lato" style="font-size: 9px">{{cType}}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato" style="font-size: 9px">{{c_legWork}}</font>
+                                            <font face="Lato" style="font-size: 9px">{{cLegWork}}</font>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>{{c_fur}}</td>
+                                        <td>{{cFur}}</td>
                                     </tr>
                                     <tr>
-                                        <td>{{c_generalAppearance}}</td>
+                                        <td>{{cGeneralAppearance}}</td>
                                     </tr>
                                     <tr>
-                                        <td>{{c_height}}</td>
+                                        <td>{{cHeight}}</td>
                                     </tr>
                                     <tr>
-                                        <td>{{c_torsoLength}}</td>
+                                        <td>{{cTorsoLength}}</td>
                                     </tr>
                                     <tr>
-                                        <td>{{c_breastDepth}}</td>
+                                        <td>{{cBreastDepth}}</td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -3801,13 +3821,13 @@
                                     <tr>
                                         <td style="text-align: left">
                                             <font face="Lato">
-                                                <b>ULN : {{ ff_uln }}</b>
+                                                <b>ULN : {{ ffUln }}</b>
                                                 <br/>
                                             </font>
                                         </td>
                                         <td>
                                             <font face="Lato">
-                                                <b>STN : {{ ff_pedigree }}</b>
+                                                <b>STN : {{ ffPedigree }}</b>
                                                 <br/>
                                             </font>
                                         </td>
@@ -3828,13 +3848,13 @@
                                     <tr>
                                         <td style="text-align: left">
                                             <font face="Lato">
-                                                <b>ULN : {{ ff_uln }}</b>
+                                                <b>ULN : {{ ffUln }}</b>
                                                 <br/>
                                             </font>
                                         </td>
                                         <td>
                                             <font face="Lato">
-                                                <b>STN : {{ ff_pedigree }}</b>
+                                                <b>STN : {{ ffPedigree }}</b>
                                                 <br/>
                                             </font>
                                         </td>
@@ -3854,24 +3874,24 @@
                                     <tbody>
                                     <tr>
                                         <td align="center">
-                                            <font face="Lato">1: {{ m_litterGroup }}</font>
+                                            <font face="Lato">1: {{ mLitterGroup }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">2: {{ m_growth }}</font>
+                                            <font face="Lato">2: {{ mGrowth }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">3: {{ m_muscleThickness }}</font>
+                                            <font face="Lato">3: {{ mMuscleThickness }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">4: {{ m_bodyFat }}</font>
+                                            <font face="Lato">4: {{ mBodyFat }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato">5: {{ m_vl }}</font>
+                                            <font face="Lato">5: {{ mVl }}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <span>6: {{ m_sl }}</span>
+                                            <span>6: {{ mSl }}</span>
                                             <br/>
                                         </td>
                                         <td>7: -</td>
@@ -3908,25 +3928,25 @@
                                     <tbody>
                                     <tr>
                                         <td align="center">
-                                            <font face="Lato" style="font-size: 8px">1: {{ ff_litterGroup }}</font>
+                                            <font face="Lato" style="font-size: 8px">1: {{ ffLitterGroup }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">2: {{ ff_growth }}</font>
+                                            <font face="Lato" style="font-size: 8px">2: {{ ffGrowth }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">3: {{ ff_muscleThickness }}</font>
+                                            <font face="Lato" style="font-size: 8px">3: {{ ffMuscleThickness }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">4: {{ ff_bodyFat }}</font>
+                                            <font face="Lato" style="font-size: 8px">4: {{ ffBodyFat }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">5: {{ ff_vl }}</font>
+                                            <font face="Lato" style="font-size: 8px">5: {{ ffVl }}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
                                             <font face="Lato">
-                                                <span>6: {{ ff_sl }}</span>
+                                                <span>6: {{ ffSl }}</span>
                                                 <br/>
                                             </font>
                                         </td>
@@ -3992,24 +4012,24 @@
                                     <tbody>
                                     <tr>
                                         <td align="center">
-                                            <font face="Lato" style="font-size: 8px">1: {{ fm_litterGroup }}</font>
+                                            <font face="Lato" style="font-size: 8px">1: {{ fmLitterGroup }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">2: {{ fm_growth }}</font>
+                                            <font face="Lato" style="font-size: 8px">2: {{ fmGrowth }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">3: {{ fm_muscleThickness }}</font>
+                                            <font face="Lato" style="font-size: 8px">3: {{ fmMuscleThickness }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">4: {{ fm_bodyFat }}</font>
+                                            <font face="Lato" style="font-size: 8px">4: {{ fmBodyFat }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">5: {{ fm_vl }}</font>
+                                            <font face="Lato" style="font-size: 8px">5: {{ fmVl }}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <span>6: {{ fm_sl }}</span>
+                                            <span>6: {{ fmSl }}</span>
                                             <br/>
                                         </td>
                                         <td>7: -</td>
@@ -4046,24 +4066,24 @@
                                     <tbody>
                                     <tr>
                                         <td align="center">
-                                            <font face="Lato" style="font-size: 8px">1: {{ mf_litterGroup }}</font>
+                                            <font face="Lato" style="font-size: 8px">1: {{ mfLitterGroup }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">2: {{ mf_growth }}</font>
+                                            <font face="Lato" style="font-size: 8px">2: {{ mfGrowth }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">3: {{ mf_muscleThickness }}</font>
+                                            <font face="Lato" style="font-size: 8px">3: {{ mfMuscleThickness }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">4: {{ mf_bodyFat }}</font>
+                                            <font face="Lato" style="font-size: 8px">4: {{ mfBodyFat }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">5: {{ mf_vl }}</font>
+                                            <font face="Lato" style="font-size: 8px">5: {{ mfVl }}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">6: {{ mf_sl }}<br/>
+                                            <font face="Lato" style="font-size: 8px">6: {{ mfSl }}<br/>
                                             </font>
                                         </td>
                                         <td>
@@ -4128,24 +4148,24 @@
                                     <tbody>
                                     <tr>
                                         <td align="center">
-                                            <font face="Lato" style="font-size: 8px">1: {{ mm_litterGroup }}</font>
+                                            <font face="Lato" style="font-size: 8px">1: {{ mmLitterGroup }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">2: {{ mm_growth }}</font>
+                                            <font face="Lato" style="font-size: 8px">2: {{ mmGrowth }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">3: {{ mm_muscleThickness }}</font>
+                                            <font face="Lato" style="font-size: 8px">3: {{ mmMuscleThickness }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">4: {{ mm_bodyFat }}</font>
+                                            <font face="Lato" style="font-size: 8px">4: {{ mmBodyFat }}</font>
                                         </td>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">5: {{ mm_vl }}</font>
+                                            <font face="Lato" style="font-size: 8px">5: {{ mmVl }}</font>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <font face="Lato" style="font-size: 8px">6: {{ mm_sl }}<br/>
+                                            <font face="Lato" style="font-size: 8px">6: {{ mmSl }}<br/>
                                             </font>
                                         </td>
                                         <td>
