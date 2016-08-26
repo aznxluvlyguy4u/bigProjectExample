@@ -43,6 +43,14 @@ class Exterior extends Measurement {
     /**
      * @var float
      *
+     * @ORM\Column(type="float", options={"default":0})
+     * @JMS\Type("float")
+     */
+    private $progress;
+
+    /**
+     * @var float
+     *
      * @ORM\Column(type="float")
      * @JMS\Type("float")
      * @Assert\NotBlank
@@ -213,6 +221,22 @@ class Exterior extends Measurement {
     public function getProportion()
     {
         return $this->proportion;
+    }
+
+    /**
+     * @param float $progress
+     */
+    public function setProgress($progress)
+    {
+        $this->progress = $progress;
+    }
+
+    /**
+     * @return float
+     */
+    public function getProgress()
+    {
+        return $this->progress;
     }
 
     /**
