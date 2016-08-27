@@ -11,7 +11,7 @@ class BodyFatRepository extends BaseRepository {
 
     /**
      * @param Animal $animal
-     * @return float
+     * @return string
      */
     public function getLatestBodyFat(Animal $animal)
     {
@@ -35,7 +35,7 @@ class BodyFatRepository extends BaseRepository {
 
             $latestBodyFat = $fatOne ." / ". $fatTwo ." / ". $fatThree ;
         } else {
-            $latestBodyFat = 0.00;
+            $latestBodyFat = '-/-/-';
         }
         return $latestBodyFat;
     }

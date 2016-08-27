@@ -27,22 +27,19 @@
         {% set breederNumber = x.breederNumber %}
 
     {# BreedIndex #}
-    {#breedIndexStars#}
-{#mBreedIndexStars#}
-{#fBreedIndexStars#}
-{#extIndexStars#}
 
-{#5 black stars#}
-{#{% autoescape %} &#9733; &#9733; &#9733; &#9733; &#9733; {% endautoescape %}#}
-{#1 black stars + 4 white stars (put the white/empty starts on the left)#}
-{#{% autoescape %} &#9733; &#9734; &#9734; &#9734; &#9734; {% endautoescape %}#}
+        {% set breedIndexStars = x.breederIndexStars %}
+        {% set mBreedIndexStars = x.mBreederIndexStars %}
+        {% set fBreedIndexStars = x.fBreederIndexStars %}
+        {% set extIndexStars = x.extIndexStars %}
+        {% set vlIndexStars = x.vlIndexStars %}
 
-{#number/accuracy like 128/78#}
-{#breedIndexNoAcc#}
-{#mBreedIndexNoAcc#}
-{#fBreedIndexNorAcc#}
-{#extIndexNoAcc#}
-
+        {#number/accuracy like 128/78#}
+        {% set breedIndexNoAcc = x.breederIndexNoAcc %}
+        {% set mBreedIndexNoAcc = x.mBreederIndexNoAcc %}
+        {% set fBreedIndexNorAcc = x.fBreederIndexNoAcc %}
+        {% set extIndexNoAcc = x.extIndexNoAcc %}
+        {% set vlIndexNoAcc = x.vlIndexNoAcc %}
 
     {# Animals, 'animals' #}
 
@@ -86,7 +83,7 @@
         {% set cGrowth = x.animals['c'].growth %}
         {% set cMuscleThickness = x.animals['c'].muscleThickness %}
         {% set cBodyFat = x.animals['c'].bodyFat %}
-        {% set cVl = x.animals['c'].vl %}
+        {% set cVl = x.animals['c'].vl %} {# Vleeslamindex #}
         {% set cSl = x.animals['c'].sl %}
 
         {# dates #}

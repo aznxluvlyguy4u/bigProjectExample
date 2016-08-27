@@ -7,16 +7,22 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\BodyFat;
+use AppBundle\Entity\BodyFatRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Exterior;
+use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\Litter;
+use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\MuscleThickness;
+use AppBundle\Entity\MuscleThicknessRepository;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\TailLength;
+use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Util\Translation;
+use AppBundle\Util\TwigOutputUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 
@@ -35,6 +41,21 @@ class PedigreeCertificate
     /** @var  ObjectManager */
     private $em;
 
+    /** @var LitterRepository */
+    private $litterRepository;
+
+    /** @var MuscleThicknessRepository */
+    private $muscleThicknessRepository;
+
+    /** @var BodyFatRepository */
+    private $bodyFatRepository;
+
+    /** @var TailLengthRepository */
+    private $tailLengthRepository;
+
+    /** @var ExteriorRepository */
+    private $exteriorRepository;
+
     /**
      * PedigreeCertificate constructor.
      * @param ObjectManager $em
@@ -46,6 +67,12 @@ class PedigreeCertificate
     public function __construct(ObjectManager $em, Client $client, Location $location, Animal $animal, $generationOfAscendants = 3)
     {
         $this->em = $em;
+
+        $this->litterRepository = $em->getRepository(Litter::class);
+        $this->muscleThicknessRepository = $em->getRepository(MuscleThickness::class);
+        $this->bodyFatRepository = $em->getRepository(BodyFat::class);
+        $this->tailLengthRepository = $em->getRepository(TailLength::class);
+        $this->exteriorRepository = $em->getRepository(Exterior::class);
 
         $this->data = array();
         $this->generationOfAscendants = $generationOfAscendants;
@@ -61,6 +88,9 @@ class PedigreeCertificate
         }
         $this->data[ReportLabel::POSTAL_CODE] = $postalCode;
         $this->data[ReportLabel::UBN] = $location->getUbn();
+
+        //TODO Phase 2: BreedIndices (now mock values are used)
+        $this->addBreedIndex($animal);
 
         //TODO Phase 2: Add breeder information
         $this->data[ReportLabel::BREEDER] = null; //TODO pass Breeder entity
@@ -175,10 +205,10 @@ class PedigreeCertificate
     private function addAnimalValuesToArray($key, $animal)
     {
         //Body Measurement Values
-        $latestMuscleThickness = $this->em->getRepository(MuscleThickness::class)->getLatestMuscleThickness($animal);
-        $latestBodyFat = $this->em->getRepository(BodyFat::class)->getLatestBodyFat($animal);
-        $latestTailLength = $this->em->getRepository(TailLength::class)->getLatestTailLength($animal);
-        $latestExterior = $this->em->getRepository(Exterior::class)->getLatestExterior($animal);
+        $latestMuscleThickness = $this->muscleThicknessRepository->getLatestMuscleThickness($animal);
+        $latestBodyFat = $this->bodyFatRepository->getLatestBodyFat($animal);
+        $latestTailLength = $this->tailLengthRepository->getLatestTailLength($animal);
+        $latestExterior = $this->exteriorRepository->getLatestExterior($animal);
         
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] =Utils::fillZero( $latestMuscleThickness);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = Utils::fillZero($latestBodyFat);
@@ -206,7 +236,7 @@ class PedigreeCertificate
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::N_LING] = $this->getLitterValues($animal)->get(self::N_LING);
         
         //Offspring
-        $litterCount = $this->em->getRepository(Litter::class)->getLitters($animal)->count();
+        $litterCount = $this->litterRepository->getLitters($animal)->count();
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_COUNT] = Utils::fillZero($litterCount);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::OFFSPRING_COUNT] =  Utils::fillZero($this->getOffspringCount($animal));
 
@@ -233,6 +263,32 @@ class PedigreeCertificate
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NAME] = '-';
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NUMBER] = '-';
 
+    }
+
+
+    /**
+     * @param Animal $animal
+     */
+    private function addBreedIndex(Animal $animal)
+    {
+        //TODO Phase 2: BreedIndices
+        $breederStarCount = 5;
+        $motherBreederStarCount = 4;
+        $fatherBreederStarCount = 3;
+        $exteriorStarCount = 2;
+        $meatLambStarCount = 1;
+
+        $this->data[ReportLabel::BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($breederStarCount);
+        $this->data[ReportLabel::M_BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($motherBreederStarCount);
+        $this->data[ReportLabel::F_BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($fatherBreederStarCount);
+        $this->data[ReportLabel::EXT_INDEX_STARS] = TwigOutputUtil::createStarsIndex($exteriorStarCount);
+        $this->data[ReportLabel::VL_INDEX_STARS] = TwigOutputUtil::createStarsIndex($meatLambStarCount);
+
+        $this->data[ReportLabel::BREEDER_INDEX_NO_ACC] = 'ab/acc';
+        $this->data[ReportLabel::M_BREEDER_INDEX_NO_ACC] = 'mb/acc';
+        $this->data[ReportLabel::F_BREEDER_INDEX_NO_ACC] = 'fb/acc';
+        $this->data[ReportLabel::EXT_INDEX_NO_ACC] = 'ex/acc';
+        $this->data[ReportLabel::VL_INDEX_NO_ACC] = 'vl/acc';
     }
 
 
