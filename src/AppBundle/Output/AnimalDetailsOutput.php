@@ -51,6 +51,7 @@ class AnimalDetailsOutput
 
         $exteriors = $animal->getExteriorMeasurements();
         if(sizeof($exteriors) == 0) {
+            $exteriorDate = '';
             $skull = 0.00;
             $progress = 0.00;
             $muscularity = 0.00;
@@ -65,8 +66,9 @@ class AnimalDetailsOutput
             $markings = 0.00;
         } else {
             $exterior = $em->getRepository(Exterior::class)->getLatestExterior($animal);
+            $exteriorDate = $exterior->getMeasurementDate();
             $skull = $exterior->getSkull();
-            $progress = $replacementString; //TODO
+            $progress = $exterior->getProgress();
             $muscularity = $exterior->getMuscularity();
             $proportion = $exterior->getProportion();
             $type = $exterior->getExteriorType();
@@ -146,6 +148,7 @@ class AnimalDetailsOutput
                   JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($animal->getIsAlive(), $replacementString),
                 "exterior" =>
                     array(
+                        "measurement_date" =>      Utils::fillNullOrEmptyString($exteriorDate, $replacementString),
                         "head" =>               Utils::fillZero($skull, $replacementString),
                         "progress" =>           Utils::fillZero($progress, $replacementString),
                         "muscularity" =>        Utils::fillZero($muscularity, $replacementString),
@@ -161,15 +164,15 @@ class AnimalDetailsOutput
                     ),
                 "measurement" =>
                     array(
-                        "fat_cover" =>          Utils::fillZero($bodyFat, $replacementString),
+                        "measurement_date" =>   Utils::fillNullOrEmptyString($bodyFat['date'], $replacementString),
+                        "fat_cover_one" =>      Utils::fillZero($bodyFat['one'], $replacementString),
+                        "fat_cover_two" =>      Utils::fillZero($bodyFat['two'], $replacementString),
+                        "fat_cover_three" =>    Utils::fillZero($bodyFat['three'], $replacementString),
                         "muscular_thickness" => Utils::fillZero($muscleThickness, $replacementString),
                         "scan_weight" =>        Utils::fillZero($weight, $replacementString),
                         "tail_length" =>        Utils::fillZero($tailLength, $replacementString),
                         "birth_weight" =>       Utils::fillZero($birthWeight, $replacementString),
-                        "birth_progress" =>     Utils::fillZero("", $replacementString),
-                        "withers" =>            Utils::fillZero("", $replacementString),
-                        "breast_depth" =>       Utils::fillZero("", $replacementString),
-                        "torso_length" =>       Utils::fillZero("", $replacementString)
+                        "birth_progress" =>     Utils::fillZero("", $replacementString)
                     ),
                 "breeder" =>
                     array(

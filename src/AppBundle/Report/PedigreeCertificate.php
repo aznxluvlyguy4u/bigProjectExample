@@ -206,16 +206,16 @@ class PedigreeCertificate
     {
         //Body Measurement Values
         $latestMuscleThickness = $this->muscleThicknessRepository->getLatestMuscleThickness($animal);
-        $latestBodyFat = $this->bodyFatRepository->getLatestBodyFat($animal);
+        $latestBodyFatAsString = $this->bodyFatRepository->getLatestBodyFatAsString($animal);
         $latestTailLength = $this->tailLengthRepository->getLatestTailLength($animal);
         $latestExterior = $this->exteriorRepository->getLatestExterior($animal);
         
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] =Utils::fillZero( $latestMuscleThickness);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = Utils::fillZero($latestBodyFat);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = Utils::fillZero($latestBodyFatAsString);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TAIL_LENGTH] = Utils::fillZero($latestTailLength);
         
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SKULL] = Utils::fillZero($latestExterior->getSkull());
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DEVELOPMENT] = Utils::fillZero(0.00); //TODO Add development variable to Exterior Entity
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DEVELOPMENT] = Utils::fillZero(0.00);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCULARITY] = Utils::fillZero($latestExterior->getMuscularity());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PROPORTION] = Utils::fillZero($latestExterior->getProportion());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TYPE] = Utils::fillZero($latestExterior->getExteriorType());

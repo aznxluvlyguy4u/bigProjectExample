@@ -29,17 +29,19 @@ class TwigOutputUtil
 
         //All stars are empty
         if($starScore == 0) {
-            return self::createIconString($whiteStarsCount, TwigCode::WHITE_STAR, $spacer);
+            $stars = self::createIconString($whiteStarsCount, TwigCode::WHITE_STAR, $spacer);
             
         //All stars are black    
         } elseif ($starScore == $totalStars) {
-            return self::createIconString($starScore, TwigCode::BLACK_STAR, $spacer);
+            $stars = self::createIconString($starScore, TwigCode::BLACK_STAR, $spacer);
 
         // number of empty white stars + number of black stars    
         } else {
-            return self::createIconString($whiteStarsCount, TwigCode::WHITE_STAR).$spacer.
+            $stars = self::createIconString($whiteStarsCount, TwigCode::WHITE_STAR).$spacer.
                    self::createIconString($starScore, TwigCode::BLACK_STAR);
         }
+
+        return TwigCode::AUTO_ESCAPE_START.' '.$stars.' '.TwigCode::AUTO_ESCAPE_END;
     }
 
 
@@ -61,8 +63,8 @@ class TwigOutputUtil
         
         } else { //starCount > 1
             $result = '';
-            for($i = 0; $iconCount - 1; $i++) {
-                $result = $iconCode.$spacer;
+            for($i = 0; $i < $iconCount - 1; $i++) {
+                $result = $result.$iconCode.$spacer;
             }
             return $result.$iconCode;
         }

@@ -65,7 +65,6 @@ class ReportAPIController extends APIController {
     $folderPath = $this->getParameter('kernel.cache_dir');
     $generatedPdfPath = $pedigreeCertificateData->getFilePath($folderPath);
     $variables = $pedigreeCertificateData->getReports();
-    
     $html = $this->renderView('Report/pedigree_certificates.html.twig', ['variables' => $variables]);
     $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html, array('orientation'=>'Landscape',
         'default-header'=>true,'disable-smart-shrinking'=>true));
