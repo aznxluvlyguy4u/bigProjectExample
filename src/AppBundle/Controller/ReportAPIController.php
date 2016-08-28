@@ -59,15 +59,17 @@ class ReportAPIController extends APIController {
       return $ulnValidator->createArrivalJsonErrorResponse();
     }
 
-    //TODO Prettify pdf document from twig view
-
     $pedigreeCertificateData = new PedigreeCertificates($em, $content, $client, $location);
     $folderPath = $this->getParameter('kernel.cache_dir');
     $generatedPdfPath = $pedigreeCertificateData->getFilePath($folderPath);
     $variables = $pedigreeCertificateData->getReports();
     $html = $this->renderView('Report/pedigree_certificates.html.twig', ['variables' => $variables]);
-    $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html, array('orientation'=>'Landscape',
-        'default-header'=>true,'disable-smart-shrinking'=>true));
+    $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,
+        array(
+            'orientation'=>'Landscape',
+            'default-header'=>true,
+            'disable-smart-shrinking'=>true
+    ));
 
     $s3Service = $this->getStorageService();
     $url = $s3Service->uploadPdf($pdfOutput, $pedigreeCertificateData->getS3Key());
