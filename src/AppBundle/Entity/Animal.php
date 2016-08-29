@@ -460,6 +460,14 @@ abstract class Animal
     protected $litter;
 
     /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="GenderHistoryItem", mappedBy="animal", cascade={"persist"})
+     * @ORM\JoinColumn(name="gender_history_id", referencedColumnName="id")
+     */
+    protected $genderHistory;
+
+    /**
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
@@ -485,6 +493,7 @@ abstract class Animal
         $this->declareWeights = new ArrayCollection();
         $this->flags = new ArrayCollection();
         $this->ulnHistory = new ArrayCollection();
+        $this->genderHistory = new ArrayCollection();
         $this->tagReplacements = new ArrayCollection();
         $this->parents = new ArrayCollection();
         $this->isAlive = true;
@@ -1385,26 +1394,6 @@ abstract class Animal
     }
 
     /**
-     * @param $ulnCountryCode
-     * @param $ulnNumber
-     */
-    public function replaceUln($ulnCountryCode , $ulnNumber) {
-
-        //Get current set ulnCountryCode and ulnNumber, add it to the history.
-
-        $tag = new Tag();
-        $tag->setUlnCountryCode($this->getUlnCountryCode());
-        $tag->setUlnNumber($this->getUlnNumber());
-        $tag->setTagStatus("REPLACED");
-
-        $this->ulnHistory->add($tag);
-
-        //Set new ulnCountryCode and ulnNumber as the current.
-        $this->setUlnCountryCode($ulnCountryCode);
-        $this->setUlnNumber($ulnNumber);
-    }
-
-    /**
      * Add ulnHistory
      *
      * @param Tag $ulnHistory
@@ -1435,8 +1424,30 @@ abstract class Animal
      */
     public function getUlnHistory()
     {
-        return $this->ulnHistory;
+            return $this->ulnHistory;
     }
+
+    /**
+     * @param $ulnCountryCode
+     * @param $ulnNumber
+     */
+    public function replaceUln($ulnCountryCode , $ulnNumber) {
+
+        //Get current set ulnCountryCode and ulnNumber, add it to the history.
+
+        $tag = new Tag();
+        $tag->setUlnCountryCode($this->getUlnCountryCode());
+        $tag->setUlnNumber($this->getUlnNumber());
+        $tag->setTagStatus("REPLACED");
+
+        $this->ulnHistory->add($tag);
+
+        //Set new ulnCountryCode and ulnNumber as the current.
+        $this->setUlnCountryCode($ulnCountryCode);
+        $this->setUlnNumber($ulnNumber);
+    }
+
+
 
     /**
      * Add tagReplacement
@@ -1480,6 +1491,40 @@ abstract class Animal
     public function getTagReplacements()
     {
         return $this->tagReplacements;
+    }
+
+    /**
+     * Add genderHistoryItem
+     *
+     * @param GenderHistoryItem $genderHistoryItem
+     *
+     * @return Animal
+     */
+    public function addGenderHistoryItem(GenderHistoryItem $genderHistoryItem)
+    {
+        $this->genderHistory[] = $genderHistoryItem;
+
+        return $this;
+    }
+
+    /**
+     * Remove genderHistoryItem
+     *
+     * @param GenderHistoryItem $genderHistoryItem
+     */
+    public function removeGenderHistoryItem(GenderHistoryItem $genderHistoryItem)
+    {
+        $this->genderHistory->removeElement($genderHistoryItem);
+    }
+
+    /**
+     * Get genderHistory
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getGenderHistory()
+    {
+        return $this->genderHistory;
     }
 
     /**
