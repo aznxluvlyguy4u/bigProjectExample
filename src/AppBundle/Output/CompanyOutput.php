@@ -106,7 +106,7 @@ class CompanyOutput
         $res['company_id'] = Utils::fillNull($company->getCompanyId());
         $res['company_name'] = Utils::fillNull($company->getCompanyName());
         $res['telephone_number'] = Utils::fillNull($company->getTelephoneNumber());
-        $res['company_relation_number'] = Utils::fillNull($company->getCompanyRelationNumber());
+        $res['company_relation_number'] = Utils::fillNull($company->getOwner()->getRelationNumberKeeper());
         $res['debtor_number'] = Utils::fillNull($company->getDebtorNumber());
         $res['vat_number'] = Utils::fillNull($company->getVatNumber());
         $res['chamber_of_commerce_number'] = Utils::fillNull($company->getChamberOfCommerceNumber());

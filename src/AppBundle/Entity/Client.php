@@ -115,7 +115,11 @@ class Client extends Person
     */
     public function getRelationNumberKeeper()
     {
-    return $this->relationNumberKeeper;
+        if($this->getEmployer() != null) {
+            return $this->getEmployer()->getOwner()->getRelationNumberKeeper();
+        }
+
+        return $this->relationNumberKeeper;
     }
 
     /**
@@ -159,7 +163,10 @@ class Client extends Person
     */
     public function getCompanies()
     {
-    return $this->companies;
+        if($this->getEmployer() != null) {
+            return $this->getEmployer()->getOwner()->getCompanies();
+        }
+        return $this->companies;
     }
 
     /**

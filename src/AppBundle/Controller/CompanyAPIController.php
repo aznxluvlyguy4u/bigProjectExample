@@ -91,6 +91,7 @@ class CompanyAPIController extends APIController
         $owner->setFirstName($contentOwner['first_name']);
         $owner->setLastName($contentOwner['last_name']);
         $owner->setEmailAddress($contentOwner['email_address']);
+        $owner->setRelationNumberKeeper($content->get('company_relation_number'));
         $owner->setObjectType('Client');
         $owner->setIsActive(true);
 
@@ -326,6 +327,8 @@ class CompanyAPIController extends APIController
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
         $company->setAnimalHealthSubscription($content->get('animal_health_subscription'));
+
+        $company->getOwner()->setRelationNumberKeeper($contentOwner['company_relation_number']);
 
         // Update Location
 
