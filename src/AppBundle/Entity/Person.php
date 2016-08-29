@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
 use AppBundle\Enumerator\TokenType;
+use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
@@ -298,7 +299,7 @@ abstract class Person implements UserInterface
    */
   public function getFullName()
   {
-    return $this->firstName . ' ' . $this->lastName;
+    return StringUtil::getFullName($this->firstName, $this->lastName);
   }
 
   /**
