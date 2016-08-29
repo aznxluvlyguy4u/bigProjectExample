@@ -59,8 +59,8 @@ class ReportAPIController extends APIController {
       return $ulnValidator->createArrivalJsonErrorResponse();
     }
     
-    $isProductionReady = true;
-    if($isProductionReady) {
+    $useProductionReady = $this->getCurrentEnvironment() == 'prod';
+    if($useProductionReady) {
       $twigFile = 'Report/pedigree_certificates.html.twig';
     } else {
       //containing extra unfinished features
