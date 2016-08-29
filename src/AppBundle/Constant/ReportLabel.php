@@ -18,6 +18,20 @@ class ReportLabel
     const BREEDER_NAME_CROPPED = "breederNameCropped";
     const BREEDER_NUMBER = 'breederNumber';
 
+    //BreedIndexStars
+    const BREEDER_INDEX_STARS = 'breederIndexStars';
+    const M_BREEDER_INDEX_STARS = 'mBreederIndexStars'; //Mother
+    const F_BREEDER_INDEX_STARS = 'fBreederIndexStars'; //Father
+    const EXT_INDEX_STARS = 'extIndexStars'; //exteriorIndex
+    const VL_INDEX_STARS = 'vlIndexStars'; //vleesLamIndex
+
+    //BreedIndex number/accuracy like 128/78
+    const BREEDER_INDEX_NO_ACC = 'breederIndexNoAcc';
+    const M_BREEDER_INDEX_NO_ACC = 'mBreederIndexNoAcc';
+    const F_BREEDER_INDEX_NO_ACC = 'fBreederIndexNoAcc';
+    const EXT_INDEX_NO_ACC = 'extIndexNoAcc';
+    const VL_INDEX_NO_ACC = 'vlIndexNoAcc';
+
     //Address
     const ADDRESS = 'address';
     const POSTAL_CODE = 'postalCode';

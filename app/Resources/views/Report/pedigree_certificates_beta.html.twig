@@ -4154,6 +4154,31 @@
                         <foreignObject style="overflow:visible;" pointer-events="all" width="99" height="90" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
                             <div xmlns="http://www.w3.org/1999/xhtml" style="display: inline-block; font-size: 12px; font-family: Lato; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 100px; height: 91px; overflow: hidden; white-space: nowrap;">
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
+                                    <tbody>
+                                    <tr>
+                                        <td style="text-align: right">
+                                            <b>
+                                                <font style="font-size: 14px">Rasindex</font>
+                                            </b>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align: right">Moederindex</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align: right">
+                                            <font face="Lato">Vaderindex</font>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align: right">
+                                            <font face="Lato">Exterieurindex</font>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align: right">Vleeslamindex</td>
+                                    </tr>
+                                    </tbody>
                                 </table>
                             </div>
                         </foreignObject>
@@ -4168,6 +4193,49 @@
                             <div xmlns="http://www.w3.org/1999/xhtml" style="display: inline-block; font-size: 12px; font-family: Lato; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 145px; height: 91px; overflow: hidden; white-space: nowrap;">
                                 <table border="0" width="100%" style="width: 100% ; height: 100% ; border-collapse: collapse">
                                     <tbody>
+                                    <tr>
+                                        <td style="text-align: center">
+                                            <font style="font-size: 12px">{{include(template_from_string(breedIndexStars))}}</font>
+                                        </td>
+                                        <td>
+                        <span>{{breedIndexNoAcc}}</span>
+                                            <br/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align: center">
+                                            <span>{{include(template_from_string(mBreedIndexStars))}}</span>
+                                            <br/>
+                                        </td>
+                                        <td>{{mBreedIndexNoAcc}}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align: center">
+                                            <span>{{include(template_from_string(fBreedIndexStars))}}</span>
+                                            <br/>
+                                        </td>
+                                        <td>{{fBreedIndexNoAcc}}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align: center">
+                                            <span>{{include(template_from_string(extIndexStars))}}</span>
+                                            <br/>
+                                        </td>
+                                        <td>{{extIndexNoAcc}}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align: center">
+                                            <span>{{include(template_from_string(vlIndexStars))}}</span>
+                                            <br/>
+                                        </td>
+                                        <td>
+            <span>{{cVl}} {{x.vlIndexNoAcc}}</span>
+                                            <br/>
+                                        </td>
+                                    </tr>
                                     </tbody>
                                 </table>
                             </div>
