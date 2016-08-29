@@ -26,20 +26,24 @@ class CompanyOutput
             $users = array();
             if(sizeof($company['companyUsers']) > 0) {
                 foreach($company['companyUsers'] as $user) {
-                    $users[] = array(
-                        'person_id' => Utils::fillNull($user['personId']),
-                        'prefix' => Utils::fillNull($user['prefix']),
-                        'email_address' => Utils::fillNull($user['emailAddress']),
-                        'first_name' => Utils::fillNull($user['firstName']),
-                        'last_name' => Utils::fillNull($user['lastName'])
-                    );
+                    if($user['isActive']) {
+                        $users[] = array(
+                            'person_id' => Utils::fillNull($user['personId']),
+                            'prefix' => Utils::fillNull($user['prefix']),
+                            'email_address' => Utils::fillNull($user['emailAddress']),
+                            'first_name' => Utils::fillNull($user['firstName']),
+                            'last_name' => Utils::fillNull($user['lastName'])
+                        );
+                    }
                 }
             }
 
             $locations = array();
             if(sizeof($company['locations']) > 0) {
                 foreach($company['locations'] as $location) {
-                    $locations[] = Utils::fillNull($location['ubn']);
+                    if($location['isActive']) {
+                        $locations[] = Utils::fillNull($location['ubn']);
+                    }
                 }
             }
 
