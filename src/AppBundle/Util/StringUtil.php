@@ -3,6 +3,8 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Enumerator\GenderType;
+
 class StringUtil
 {
 
@@ -55,6 +57,24 @@ class StringUtil
             return substr($string, 0, $maxLength).'...';
         } else {
             return $string;
+        }
+    }
+
+
+    /**
+     * @param string $gender
+     * @return string
+     */
+    public static function getGenderFullyWritten($gender)
+    {
+        if($gender == GenderType::M || $gender == GenderType::MALE) {
+            return GenderType::MALE;
+        } elseif($gender == GenderType::V || $gender == GenderType::FEMALE) {
+            return GenderType::FEMALE;
+        } elseif($gender == GenderType::O || $gender == GenderType::NEUTER) {
+            return GenderType::NEUTER;
+        } else {
+            return $gender;
         }
     }
 }
