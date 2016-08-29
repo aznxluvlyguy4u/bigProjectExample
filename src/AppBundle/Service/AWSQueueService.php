@@ -2,6 +2,7 @@
 
 namespace AppBundle\Service;
 
+use AppBundle\Constant\Environment;
 use Aws\Sqs\SqsClient;
 use  Aws\Credentials\Credentials;
 
@@ -78,19 +79,19 @@ class AWSQueueService
      * 4 = local
      */
     switch($currentEnvironment) {
-      case 'prod':
+      case Environment::PROD:
         $queueId = $queueIds[0]; // set 0 for deployment to production, set 1 for deployement to staging!
         break;
-      case 'stage':
+      case Environment::STAGE:
         $queueId = $queueIds[1];
         break;
-      case 'dev':
+      case Environment::DEV:
         $queueId = $queueIds[2];
         break;
-      case 'test':
+      case Environment::TEST:
         $queueId = $queueIds[3];
         break;
-      case 'local':
+      case Environment::LOCAL:
         $queueId = $queueIds[4];
         break;
       default; //dev

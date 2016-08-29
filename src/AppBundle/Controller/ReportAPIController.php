@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\AppBundle;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\Environment;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Country;
 use AppBundle\Report\PedigreeCertificates;
@@ -59,7 +60,7 @@ class ReportAPIController extends APIController {
       return $ulnValidator->createArrivalJsonErrorResponse();
     }
     
-    $useProductionReady = $this->getCurrentEnvironment() == 'prod';
+    $useProductionReady = $this->getCurrentEnvironment() == Environment::PROD;
     if($useProductionReady) {
       $twigFile = 'Report/pedigree_certificates.html.twig';
     } else {

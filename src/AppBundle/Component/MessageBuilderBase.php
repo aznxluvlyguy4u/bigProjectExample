@@ -2,6 +2,7 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Constant\Environment;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -59,16 +60,16 @@ class MessageBuilderBase
         
         /* Set actionType based on environment */
         switch($currentEnvironment) {
-            case 'prod':
+            case Environment::PROD:
                 $this->actionType = ActionType::V_MUTATE;
                 break;
-            case 'dev':
+            case Environment::DEV:
                 $this->actionType = ActionType::V_MUTATE;
                 break;
-            case 'test':
+            case Environment::TEST:
                 $this->actionType = ActionType::C_READ_ONLY;
                 break;
-            case 'local':
+            case Environment::LOCAL:
                 $this->actionType = ActionType::V_MUTATE;
                 break;
             default; //dev

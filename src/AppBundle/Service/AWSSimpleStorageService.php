@@ -3,6 +3,7 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Constant\Environment;
 use Aws\S3\S3Client;
 use  Aws\Credentials\Credentials;
 
@@ -58,19 +59,19 @@ class AWSSimpleStorageService
          * Get current environment, set separate files based on environment
          */
         switch($currentEnvironment) {
-            case 'prod':
+            case Environment::PROD:
                 $this->pathApppendage = "";
                 break;
-            case 'stage':
+            case Environment::STAGE:
                 $this->pathApppendage = 'stage/';
                 break;
-            case 'dev':
+            case Environment::DEV:
                 $this->pathApppendage = 'dev/';
                 break;
-            case 'test':
+            case Environment::TEST:
                 $this->pathApppendage = 'dev/';
                 break;
-            case 'local':
+            case Environment::LOCAL:
                 $this->pathApppendage = 'dev/';
                 break;
             default;
