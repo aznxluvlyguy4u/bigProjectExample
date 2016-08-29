@@ -4,6 +4,7 @@ namespace AppBundle\Util;
 use AppBundle\Entity\Animal;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\BreedTypeDutch;
+use AppBundle\Enumerator\GenderType;
 
 /**
  * This class translates the English used in the API to Dutch values displayed in the output.
@@ -42,14 +43,15 @@ class Translation
     public static function getGenderInDutch(Animal $animal)
     {
         /* variables translated to Dutch */
-        if($animal->getGender() == 'Ram') {
-            $gender = 'Ram';
-        } elseif ($animal->getGender() == 'Ewe') {
-            $gender = 'Ooi';
+        $genderEnglish = $animal->getGender();
+        if($genderEnglish == 'Ram' || $genderEnglish == GenderType::MALE || $genderEnglish == GenderType::M) {
+            $genderDutch = 'Ram';
+        } elseif ($genderEnglish == 'Ewe' || $genderEnglish == GenderType::FEMALE || $genderEnglish == GenderType::V) {
+            $genderDutch = 'Ooi';
         } else {
-            $gender = 'Onbekend';
+            $genderDutch = 'Onbekend';
         }
-        return $gender;
+        return $genderDutch;
     }
 
 }

@@ -58,12 +58,20 @@ class ReportAPIController extends APIController {
     if(!$ulnValidator->getIsUlnSetValid()) {
       return $ulnValidator->createArrivalJsonErrorResponse();
     }
+    
+    $isProductionReady = true;
+    if($isProductionReady) {
+      $twigFile = 'Report/pedigree_certificates.html.twig';
+    } else {
+      //containing extra unfinished features
+      $twigFile = 'Report/pedigree_certificates_beta.html.twig';
+    }
 
     $pedigreeCertificateData = new PedigreeCertificates($em, $content, $client, $location);
     $folderPath = $this->getParameter('kernel.cache_dir');
     $generatedPdfPath = $pedigreeCertificateData->getFilePath($folderPath);
     $variables = $pedigreeCertificateData->getReports();
-    $html = $this->renderView('Report/pedigree_certificates.html.twig', ['variables' => $variables]);
+    $html = $this->renderView($twigFile, ['variables' => $variables]);
     $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,
         array(
             'orientation'=>'Landscape',

@@ -242,7 +242,7 @@ class PedigreeCertificate
 
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::ULN] = Utils::fillNullOrEmptyString($animal->getUlnCountryCode().$animal->getUlnNumber());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PEDIGREE] = Utils::fillNullOrEmptyString($animal->getPedigreeCountryCode().$animal->getPedigreeNumber());
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::NAME] = Utils::fillNullOrEmptyString($animal->getName());
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::NAME] = '-';// TODO NOTE the name column contains VSM primaryKey at the moment Utils::fillNullOrEmptyString($animal->getName());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SCRAPIE] = Utils::fillNullOrEmptyString($animal->getScrapieGenotype(), '-/-');
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED] = Utils::fillNullOrEmptyString($animal->getBreed());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_TYPE] = Utils::fillNullOrEmptyString(Translation::translateBreedType($animal->getBreedType()));
@@ -250,8 +250,9 @@ class PedigreeCertificate
 
         /* Dates. The null checks for dates are in the twig file, because it has to be combined with the formatting */
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DATE_OF_BIRTH] = $animal->getDateOfBirth();
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::INSPECTION_DATE] = null; //TODO
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MEASUREMENT_DATE] = $latestExterior; //TODO
+        //NOTE measurementDate and inspectionDate are identical!
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::INSPECTION_DATE] = $latestExterior->getMeasurementDate();
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MEASUREMENT_DATE] = $latestExterior->getMeasurementDate();
 
         /* variables translated to Dutch */
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENDER] = Translation::getGenderInDutch($animal);
