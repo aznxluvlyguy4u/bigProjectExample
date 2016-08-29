@@ -21,6 +21,7 @@ use AppBundle\Entity\MuscleThicknessRepository;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\TailLengthRepository;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\Translation;
 use AppBundle\Util\TwigOutputUtil;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -28,6 +29,8 @@ use Doctrine\Common\Persistence\ObjectManager;
 
 class PedigreeCertificate
 {
+    const MAX_LENGTH_FULL_NAME = 30;
+
     const LITTER_SIZE = 'litterSize';
     const LITTER_GROUP = 'litterGroup';
     const N_LING = 'nLing';
@@ -78,7 +81,9 @@ class PedigreeCertificate
         $this->generationOfAscendants = $generationOfAscendants;
 
         $this->data[ReportLabel::OWNER] = $client;
-        $this->data[ReportLabel::OWNER_NAME] = $client->getFirstName() . " " . $client->getLastName();
+
+        $trimmedClientName = StringUtil::getTrimmedFullNameWithAddedEllipsis($client->getFirstName(), $client->getLastName(), self::MAX_LENGTH_FULL_NAME);
+        $this->data[ReportLabel::OWNER_NAME] = $trimmedClientName;
         $this->data[ReportLabel::ADDRESS] = $location->getCompany()->getAddress();
         $postalCode = $location->getCompany()->getAddress()->getPostalCode();
         if($postalCode != null && $postalCode != '' && $postalCode != ' ') {
@@ -94,8 +99,13 @@ class PedigreeCertificate
 
         //TODO Phase 2: Add breeder information
         $this->data[ReportLabel::BREEDER] = null; //TODO pass Breeder entity
-        $this->data[ReportLabel::BREEDER_NAME] = '-'; //TODO
-        $this->data[ReportLabel::BREEDER_NAME_CROPPED] = '-'; //TODO incase the format has no space, use this cropped name
+
+        //TODO: BreederName
+        $breederFirstName = '';
+        $breederLastName = '-';
+        $trimmedBreederName = StringUtil::getTrimmedFullNameWithAddedEllipsis($breederFirstName, $breederLastName, self::MAX_LENGTH_FULL_NAME);
+        $this->data[ReportLabel::BREEDER_NAME] = $trimmedBreederName;
+
         $emptyAddress = new LocationAddress(); //For now an empty Address entity is passed
         $emptyAddress->setStreetName('-');
         $emptyAddress->setAddressNumber('-');
