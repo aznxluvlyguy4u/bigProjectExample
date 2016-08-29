@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Client;
 use AppBundle\Output\MenuBarOutput;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -57,7 +58,7 @@ class ComponentAPIController extends APIController {
         $adminValidator = new AdminValidator($admin);
 
         if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
+
         }
 
         $outputArray = MenuBarOutput::createAdmin($admin);

@@ -26,20 +26,24 @@ class CompanyOutput
             $users = array();
             if(sizeof($company['companyUsers']) > 0) {
                 foreach($company['companyUsers'] as $user) {
-                    $users[] = array(
-                        'person_id' => Utils::fillNull($user['personId']),
-                        'prefix' => Utils::fillNull($user['prefix']),
-                        'email_address' => Utils::fillNull($user['emailAddress']),
-                        'first_name' => Utils::fillNull($user['firstName']),
-                        'last_name' => Utils::fillNull($user['lastName'])
-                    );
+                    if($user['isActive']) {
+                        $users[] = array(
+                            'person_id' => Utils::fillNull($user['personId']),
+                            'prefix' => Utils::fillNull($user['prefix']),
+                            'email_address' => Utils::fillNull($user['emailAddress']),
+                            'first_name' => Utils::fillNull($user['firstName']),
+                            'last_name' => Utils::fillNull($user['lastName'])
+                        );
+                    }
                 }
             }
 
             $locations = array();
             if(sizeof($company['locations']) > 0) {
                 foreach($company['locations'] as $location) {
-                    $locations[] = Utils::fillNull($location['ubn']);
+                    if($location['isActive']) {
+                        $locations[] = Utils::fillNull($location['ubn']);
+                    }
                 }
             }
 
@@ -102,7 +106,7 @@ class CompanyOutput
         $res['company_id'] = Utils::fillNull($company->getCompanyId());
         $res['company_name'] = Utils::fillNull($company->getCompanyName());
         $res['telephone_number'] = Utils::fillNull($company->getTelephoneNumber());
-        $res['company_relation_number'] = Utils::fillNull($company->getCompanyRelationNumber());
+        $res['company_relation_number'] = Utils::fillNull($company->getOwner()->getRelationNumberKeeper());
         $res['debtor_number'] = Utils::fillNull($company->getDebtorNumber());
         $res['vat_number'] = Utils::fillNull($company->getVatNumber());
         $res['chamber_of_commerce_number'] = Utils::fillNull($company->getChamberOfCommerceNumber());

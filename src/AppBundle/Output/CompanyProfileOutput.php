@@ -24,6 +24,7 @@ class CompanyProfileOutput extends Output
     {
         $billingAddress = $company->getBillingAddress();
         $address = $company->getAddress();
+        $owner = $company->getOwner();
 
         $result = array(
                     "company_name" => Utils::fillNull($company->getCompanyName()),
@@ -31,7 +32,7 @@ class CompanyProfileOutput extends Output
                     "ubn" => Utils::fillNull($location->getUbn()),
                     "vat_number" => Utils::fillNull($company->getVatNumber()),
                     "chamber_of_commerce_number" => Utils::fillNull($company->getChamberOfCommerceNumber()),
-                    "company_relation_number" => Utils::fillNull($client->getRelationNumberKeeper()),
+                    "company_relation_number" => Utils::fillNull($owner->getRelationNumberKeeper()),
                     "billing_address" =>
                         array(
                             "street_name" => Utils::fillNull($billingAddress->getStreetName()),
@@ -52,9 +53,9 @@ class CompanyProfileOutput extends Output
                         )),
                     "contact_person" =>
                         array(
-                            "first_name" => Utils::fillNull($client->getFirstName()),
-                            "last_name" => Utils::fillNull($client->getLastName()),
-                            "cellphone_number" => Utils::fillNull($client->getCellphoneNumber())
+                            "first_name" => Utils::fillNull($owner->getFirstName()),
+                            "last_name" => Utils::fillNull($owner->getLastName()),
+                            "cellphone_number" => Utils::fillNull($owner->getCellphoneNumber())
                         ),
                     "veterinarian" =>
                         array(

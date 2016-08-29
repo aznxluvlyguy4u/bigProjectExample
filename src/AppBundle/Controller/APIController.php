@@ -348,14 +348,7 @@ class APIController extends Controller implements APIControllerInterface
 
     /* Clients */
     if($loggedInUser instanceof Client) {
-      $isUserTheOwner = $loggedInUser->getEmployer() == null;
-
-      if($isUserTheOwner) {
         return $loggedInUser;
-      } else {
-        //User is an employee at their company
-        return $loggedInUser->getEmployer()->getOwner();
-      }
 
       /* Admins with a GhostToken */
     } else if ($loggedInUser instanceof Employee) {
@@ -381,9 +374,7 @@ class APIController extends Controller implements APIControllerInterface
          At this point only Clients and Employees can login to the system. Not Inspectors.
         */
     }
-
   }
-
 
   /**
    * @param Request $request
