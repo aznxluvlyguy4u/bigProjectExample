@@ -72,10 +72,10 @@ class PedigreeCertificate
         $this->em = $em;
 
         $this->litterRepository = $em->getRepository(Litter::class);
-        $this->muscleThicknessRepository = $em->getRepository(MuscleThickness::class);
-        $this->bodyFatRepository = $em->getRepository(BodyFat::class);
-        $this->tailLengthRepository = $em->getRepository(TailLength::class);
         $this->exteriorRepository = $em->getRepository(Exterior::class);
+//        $this->muscleThicknessRepository = $em->getRepository(MuscleThickness::class);
+//        $this->bodyFatRepository = $em->getRepository(BodyFat::class);
+//        $this->tailLengthRepository = $em->getRepository(TailLength::class);
 
         $this->data = array();
         $this->generationOfAscendants = $generationOfAscendants;
@@ -215,15 +215,20 @@ class PedigreeCertificate
     private function addAnimalValuesToArray($key, $animal)
     {
         //Body Measurement Values
-        $latestMuscleThickness = $this->muscleThicknessRepository->getLatestMuscleThickness($animal);
-        $latestBodyFatAsString = $this->bodyFatRepository->getLatestBodyFatAsString($animal);
-        $latestTailLength = $this->tailLengthRepository->getLatestTailLength($animal);
+//        $latestMuscleThickness = $this->muscleThicknessRepository->getLatestMuscleThickness($animal);
+//        $latestBodyFatAsString = $this->bodyFatRepository->getLatestBodyFatAsString($animal);
+//        $latestTailLength = $this->tailLengthRepository->getLatestTailLength($animal);
         $latestExterior = $this->exteriorRepository->getLatestExterior($animal);
-        
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] =Utils::fillZero( $latestMuscleThickness);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = Utils::fillZero($latestBodyFatAsString);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TAIL_LENGTH] = Utils::fillZero($latestTailLength);
-        
+
+        //Breedvalues: The actual breed value not the measurements!
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] = Utils::fillNullOrEmptyString(null);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = Utils::fillNullOrEmptyString(null);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TAIL_LENGTH] = Utils::fillNullOrEmptyString(null);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GROWTH] = Utils::fillZero(0.00);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::VL] = Utils::fillZero(0.00); //TODO Add Vl variable to Exterior Entity ???
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SL] = Utils::fillZero(0.00); //TODO Add sl variable to Exterior Entity ??? Or is this just Tail Length?
+
+        //Exterior
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SKULL] = Utils::fillZero($latestExterior->getSkull());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DEVELOPMENT] = Utils::fillZero(0.00);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCULARITY] = Utils::fillZero($latestExterior->getMuscularity());
@@ -236,9 +241,6 @@ class PedigreeCertificate
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TORSO_LENGTH] = Utils::fillZero($latestExterior->getTorsoLength());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREAST_DEPTH] = Utils::fillZero($latestExterior->getBreastDepth());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MARKINGS] = Utils::fillZero($latestExterior->getMarkings());
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GROWTH] = Utils::fillZero(0.00); //TODO Add growth variable to Exterior Entity ???
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::VL] = Utils::fillZero(0.00); //TODO Add Vl variable to Exterior Entity ???
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SL] = Utils::fillZero(0.00); //TODO Add sl variable to Exterior Entity ??? Or is this just Tail Length?
 
         //Litter
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_SIZE] = $this->getLitterValues($animal)->get(self::LITTER_SIZE);
