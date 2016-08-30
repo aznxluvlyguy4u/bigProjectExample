@@ -111,6 +111,7 @@ class CompanyOutput
         $res['vat_number'] = Utils::fillNull($company->getVatNumber());
         $res['chamber_of_commerce_number'] = Utils::fillNull($company->getChamberOfCommerceNumber());
         $res['animal_health_subscription'] = Utils::fillNull($company->getAnimalHealthSubscription());
+        $res['subscription_date'] = Utils::fillNull($company->getSubscriptionDate());
 
         $res['owner'] = array(
             'person_id' => $company->getOwner()->getPersonId(),
