@@ -2,9 +2,16 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Neuter;
+use AppBundle\Entity\Ram;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
@@ -27,6 +34,15 @@ class NsfoMigrateMeasurements2016Command extends ContainerAwareCommand
     /** @var ArrayCollection */
     private $missingAnimals;
 
+    /** @var AnimalRepository */
+    private $animalRepository;
+    
+    /** @var int */
+    private $foundByPedigreeCode;
+    
+    /** @var int */
+    private $foundByUbnAndAnimalOrderNumber;
+
     protected function configure()
     {
         $this
@@ -43,6 +59,8 @@ class NsfoMigrateMeasurements2016Command extends ContainerAwareCommand
         $helper = $this->getHelper('question');
         $cmdUtil = new CommandUtil($input, $output, $helper);
 
+        $this->animalRepository = $em->getRepository(Animal::class);
+
         $this->missingUbns = new ArrayCollection();
         $this->missingAnimals = new ArrayCollection();
 
@@ -58,9 +76,7 @@ class NsfoMigrateMeasurements2016Command extends ContainerAwareCommand
         $rowCount = 0;
         $animalNotFound = 0;
         $animalFound = 0;
-        $animalMoreThanOne = 0;
         foreach ($data as $row) {
-//            $output->writeln($row);
 
             //Skip the header row
             if($rowCount > 0) {
@@ -69,21 +85,31 @@ class NsfoMigrateMeasurements2016Command extends ContainerAwareCommand
 
                 if($animalCount == 0) {
                     $animalNotFound++;
-                } elseif ($animalCount == 1) {
-                    $animalFound++;
                 } else {
-                    $animalMoreThanOne++;
+                    $animalFound++;
                 }
             }
 
             $rowCount++;
+            $output->write('|');
         }
+
+        $output->writeln(['===============','Missing ubns: ']);
+        foreach ($this->missingUbns as $ubn) {
+            $output->writeln($ubn);
+        }
+        $output->writeln('===============');
+
+        $output->writeln('Missing pedigreeCodes: ');
+        foreach ($this->missingAnimals as $pedigreeCode) {
+            $output->writeln($pedigreeCode);
+        }
+        $output->writeln('===============');
 
         $output->writeln([
             '=== Results ===',
             'AnimalNotFound: '.$animalNotFound,
             'AnimalFound: '.$animalFound,
-            'AnimalMoreThanOne: '.$animalMoreThanOne,
             'Rows processed (incl header and empty rows): '.$rowCount,
             '']);
 
@@ -92,7 +118,7 @@ class NsfoMigrateMeasurements2016Command extends ContainerAwareCommand
     
 
     /**
-     * @param $rowParts
+     * @param array $rowParts
      */
     private function processRow($rowParts)
     {
@@ -102,8 +128,8 @@ class NsfoMigrateMeasurements2016Command extends ContainerAwareCommand
         }
 
         $ubn = $rowParts[0];
-        $measurementDate = $rowParts[1];
-        $animalOrderNumber = $rowParts[2];
+        $measurementDate = new \DateTime($rowParts[1]);
+        $animalOrderNumber = strval(sprintf('%05d', $rowParts[2]));
         $pedigreeCode = $rowParts[3];
         $weight = $rowParts[4];
         $muscleThickness = $rowParts[5];
@@ -113,26 +139,51 @@ class NsfoMigrateMeasurements2016Command extends ContainerAwareCommand
         $tailLength = $rowParts[9];
         $inspectorFullName = $rowParts[10];
 
+        $foundAnimal = $this->findAnimalByPedigreeCode($pedigreeCode);
+        
+        if($foundAnimal != null) {
+            $this->foundByPedigreeCode++;
+        } else {
+            $foundAnimal = $this->findAnimalByUbnAndAnimalOrder($ubn, $animalOrderNumber);
+            if($foundAnimal != null) {
+                $this->foundByUbnAndAnimalOrderNumber++;
+            }
+        }
+        $this->missingAnimals->set($pedigreeCode, $ubn. ';' . $pedigreeCode. ';' .$animalOrderNumber);
 
-        return $this->findAnimal($ubn, $animalOrderNumber);
+        
     }
 
 
-    private function findAnimal($ubn, $animalOrderNumber)
+    /**
+     * @param $pedigreeCode
+     * @return Animal|Ewe|Neuter|Ram|null
+     */
+    private function findAnimalByPedigreeCode($pedigreeCode)
+    {
+        $pedigreeCodeParts = StringUtil::getStnFromCsvFileString($pedigreeCode);
+
+        return $this->animalRepository->findByPedigreeCountryCodeAndNumber(
+            $pedigreeCodeParts[JsonInputConstant::PEDIGREE_COUNTRY_CODE],
+            $pedigreeCodeParts[JsonInputConstant::PEDIGREE_NUMBER]
+        );
+    }
+
+
+    /**
+     * @param $ubn
+     * @param $animalOrderNumber
+     * @return Animal|Ewe|Neuter|Ram|null
+     */
+    private function findAnimalByUbnAndAnimalOrder($ubn, $animalOrderNumber)
     {
         $location = $this->em->getRepository(Location::class)->findByUbn($ubn);
 
         if($location != null) {
-            return 1;
+            return $this->em->getRepository(Animal::class)->findOneBy(['animalOrderNumber' => $animalOrderNumber, 'location' => $location]);
         } else {
-            return 0;
+            $this->missingUbns->set($ubn, $ubn);
         }
-
-        return sizeof($location);
-
-        $foundAnimal = $this->em->getRepository(Animal::class)->findBy(['animalOrderNumber' => $animalOrderNumber, 'location' => $location]);
-
-        return sizeof($foundAnimal);
-//        if(sizeof($foundAnimal) )
+        return null;
     }
 }
