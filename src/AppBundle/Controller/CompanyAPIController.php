@@ -87,6 +87,20 @@ class CompanyAPIController extends APIController
         // Create Owner
         $contentOwner = $content->get('owner');
 
+        $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
+        $owner = $repository->findOneBy(array('emailAddress' => $contentOwner['email_address'], 'isActive' => true));
+
+        if($owner) {
+            return new JsonResponse(
+                array(
+                    Constant::CODE_NAMESPACE => 400,
+                    Constant::MESSAGE_NAMESPACE => 'THIS EMAIL IS ALREADY REGISTERED FOR ANOTHER USER. EMAIL HAS TO BE UNIQUE.',
+                    'data' => $contentOwner['email_address']
+                ),
+                400
+            );
+        }
+
         $owner = new Client();
         $owner->setFirstName($contentOwner['first_name']);
         $owner->setLastName($contentOwner['last_name']);
@@ -134,6 +148,9 @@ class CompanyAPIController extends APIController
         $company->setVatNumber($content->get('vat_number'));
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
         $company->setAnimalHealthSubscription($content->get('animal_health_subscription'));
+        if($content->get('subscription_date')) {
+            $company->setSubscriptionDate(new \DateTime($content->get('subscription_date')));
+        }
         $company->setIsActive(true);
         $company->setOwner($owner);
         $company->setAddress($address);
@@ -142,7 +159,22 @@ class CompanyAPIController extends APIController
         // Create Location
         $locations = new ArrayCollection();
         $contentLocations = $content->get('locations');
+        $repository = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY);
+
         foreach ($contentLocations as $contentLocation) {
+            $location = $repository->findOneBy(array('ubn' => $contentLocation['ubn'], 'isActive' => true));
+
+            if($location) {
+                return new JsonResponse(
+                    array(
+                        Constant::CODE_NAMESPACE => 400,
+                        Constant::MESSAGE_NAMESPACE => 'THIS UBN IS ALREADY REGISTERED IN ANOTHER COMPANY. UBN HAS TO BE UNIQUE.',
+                        'data' => $contentLocation['ubn']
+                        ),
+                    400
+                );
+            }
+
             // Create Location Address
             $contentLocationAddress = $contentLocation['address'];
             $locationAddress = new LocationAddress();
@@ -170,8 +202,22 @@ class CompanyAPIController extends APIController
 
         // Create Users
         $contentUsers = $content->get('users');
+        $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
 
         foreach ($contentUsers as $contentUser) {
+            $user = $repository->findOneBy(array('emailAddress' => $contentUser['email_address'], 'isActive' => true));
+
+            if($user) {
+                return new JsonResponse(
+                    array(
+                        Constant::CODE_NAMESPACE => 400,
+                        Constant::MESSAGE_NAMESPACE => 'THIS EMAIL IS ALREADY REGISTERED FOR ANOTHER USER. EMAIL HAS TO BE UNIQUE.',
+                        'data' => $contentUser['email_address']
+                    ),
+                    400
+                );
+            }
+
             $user = new Client();
             $user->setFirstName($contentUser['first_name']);
             $user->setLastName($contentUser['last_name']);
@@ -257,8 +303,24 @@ class CompanyAPIController extends APIController
 
         // Update Owner
         $contentOwner = $content->get('owner');
+
+        $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
+        $owner = $repository->findOneBy(array('emailAddress' => $contentOwner['email_address'], 'isActive' => true));
+
         if(isset($contentOwner['person_id'])) {
             $contentPersonId = $contentOwner['person_id'];
+
+            if($owner && $owner->getPersonId() != $contentPersonId) {
+                return new JsonResponse(
+                    array(
+                        Constant::CODE_NAMESPACE => 400,
+                        Constant::MESSAGE_NAMESPACE => 'THIS EMAIL IS ALREADY REGISTERED FOR ANOTHER USER. EMAIL HAS TO BE UNIQUE.',
+                        'data' => $contentOwner['email_address']
+                    ),
+                    400
+                );
+            }
+
             $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
             $owner = $repository->findOneByPersonId($contentPersonId);
 
@@ -269,6 +331,17 @@ class CompanyAPIController extends APIController
             $this->getDoctrine()->getEntityManager()->persist($owner);
             $this->getDoctrine()->getEntityManager()->flush();
         } else {
+            if($owner) {
+                return new JsonResponse(
+                    array(
+                        Constant::CODE_NAMESPACE => 400,
+                        Constant::MESSAGE_NAMESPACE => 'THIS EMAIL IS ALREADY REGISTERED FOR ANOTHER USER. EMAIL HAS TO BE UNIQUE.',
+                        'data' => $contentOwner['email_address']
+                    ),
+                    400
+                );
+            }
+
             $owner = $company->getOwner();
             $owner->setIsActive(false);
             $this->getDoctrine()->getEntityManager()->persist($owner);
@@ -328,7 +401,11 @@ class CompanyAPIController extends APIController
         $company->setChamberOfCommerceNumber($content->get('chamber_of_commerce_number'));
         $company->setAnimalHealthSubscription($content->get('animal_health_subscription'));
 
-        $company->getOwner()->setRelationNumberKeeper($contentOwner['company_relation_number']);
+        if($content->get('subscription_date')) {
+            $company->setSubscriptionDate(new \DateTime($content->get('subscription_date')));
+        }
+
+        $company->getOwner()->setRelationNumberKeeper($content->get('company_relation_number'));
 
         // Update Location
 
@@ -349,16 +426,28 @@ class CompanyAPIController extends APIController
 
         // Updated Locations
         $contentLocations = $content->get('locations');
-
+        $repository = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY);
         foreach($contentLocations as $contentLocation) {
+            $location = $repository->findOneBy(array('ubn' => $contentLocation['ubn'], 'isActive' => true));
+
             /**
              * @var Location $location
              */
             if(isset($contentLocation['location_id'])) {
                 $contentLocationId = $contentLocation['location_id'];
-                $repository = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY);
-                $location = $repository->findOneByLocationId($contentLocationId);
 
+                if($location && $location->getLocationId() != $contentLocationId) {
+                    return new JsonResponse(
+                        array(
+                            Constant::CODE_NAMESPACE => 400,
+                            Constant::MESSAGE_NAMESPACE => 'THIS UBN IS ALREADY REGISTERED IN ANOTHER COMPANY. UBN HAS TO BE UNIQUE.',
+                            'data' => $contentLocation['ubn']
+                        ),
+                        400
+                    );
+                }
+
+                $location = $repository->findOneByLocationId($contentLocationId);
                 $location->setUbn($contentLocation['ubn']);
                 $locationAddress = $location->getAddress();
                 $contentLocationAddress = $contentLocation['address'];
@@ -379,6 +468,17 @@ class CompanyAPIController extends APIController
                 $this->getDoctrine()->getEntityManager()->persist($location);
                 $this->getDoctrine()->getEntityManager()->flush();
             } else {
+                if($location) {
+                    return new JsonResponse(
+                        array(
+                            Constant::CODE_NAMESPACE => 400,
+                            Constant::MESSAGE_NAMESPACE => 'THIS UBN IS ALREADY REGISTERED IN ANOTHER COMPANY. UBN HAS TO BE UNIQUE.',
+                            'data' => $contentLocation['ubn']
+                        ),
+                        400
+                    );
+                }
+
                 $contentLocationAddress = $contentLocation['address'];
                 $locationAddress = new LocationAddress();
                 $locationAddress->setStreetName($contentLocationAddress['street_name']);
@@ -407,26 +507,44 @@ class CompanyAPIController extends APIController
         // Deleted Users -> Set 'isActive' to false
         $contentDeletedUsers = $content->get('deleted_users');
         foreach ($contentDeletedUsers as $contentDeletedUser) {
-            $contentPersonId = $contentDeletedUser['person_id'];
-            $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
-            $user = $repository->findOneByPersonId($contentPersonId);
+            if(isset($contentDeletedUser['person_id'])) {
+                $contentPersonId = $contentDeletedUser['person_id'];
+                $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
+                $user = $repository->findOneByPersonId($contentPersonId);
 
-            if ($user) {
-                /**
-                 * @var Client $user
-                 */
-                $user->setIsActive(false);
-                $this->getDoctrine()->getEntityManager()->persist($user);
-                $this->getDoctrine()->getEntityManager()->flush();
+                if ($user) {
+                    /**
+                     * @var Client $user
+                     */
+                    $user->setIsActive(false);
+                    $this->getDoctrine()->getEntityManager()->persist($user);
+                    $this->getDoctrine()->getEntityManager()->flush();
+                }
             }
         }
 
         // Updated Users
         $contentUsers = $content->get('users');
         $newUsers = array();
+        $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
+
         foreach($contentUsers as $contentUser) {
+            $user = $repository->findOneBy(array('emailAddress' => $contentUser['email_address'], 'isActive' => true));
+
             if(isset($contentUser['person_id'])) {
                 $contentPersonId = $contentUser['person_id'];
+
+                if($user && $user->getPersonId() != $contentPersonId) {
+                    return new JsonResponse(
+                        array(
+                            Constant::CODE_NAMESPACE => 400,
+                            Constant::MESSAGE_NAMESPACE => 'THIS EMAIL IS ALREADY REGISTERED FOR ANOTHER USER. EMAIL HAS TO BE UNIQUE.',
+                            'data' => $contentUser['email_address']
+                        ),
+                        400
+                    );
+                }
+
                 $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
                 $user = $repository->findOneByPersonId($contentPersonId);
 
@@ -437,6 +555,17 @@ class CompanyAPIController extends APIController
                 $this->getDoctrine()->getEntityManager()->persist($user);
                 $this->getDoctrine()->getEntityManager()->flush();
             } else {
+                if($user) {
+                    return new JsonResponse(
+                        array(
+                            Constant::CODE_NAMESPACE => 400,
+                            Constant::MESSAGE_NAMESPACE => 'THIS EMAIL IS ALREADY REGISTERED FOR ANOTHER USER. EMAIL HAS TO BE UNIQUE.',
+                            'data' => $contentUser['email_address']
+                        ),
+                        400
+                    );
+                }
+
                 $user = new Client();
                 $user->setFirstName($contentUser['first_name']);
                 $user->setLastName($contentUser['last_name']);
