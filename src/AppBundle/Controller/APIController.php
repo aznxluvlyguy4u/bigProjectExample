@@ -41,6 +41,7 @@ use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Util\Finder;
 use AppBundle\Validation\HeaderValidation;
+use ClassesWithParents\E;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Query;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -654,41 +655,66 @@ class APIController extends Controller implements APIControllerInterface
    * @param Request $request
    * @return JsonResponse
    */
-  public function isAccessTokenValid(Request $request)
-  {
-    $token = null;
-    $response = null;
+    public function isAccessTokenValid(Request $request)
+    {
+        $token = null;
+        $response = null;
+        $content = $this->getContentAsArray($request);
 
-    //Get token header to read token value
-    if($request->headers->has(Constant::ACCESS_TOKEN_HEADER_NAMESPACE)) {
-      $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
+        //Get token header to read token value
+        if($request->headers->has(Constant::ACCESS_TOKEN_HEADER_NAMESPACE)) {
 
-      $token = $this->getDoctrine()->getRepository(Token::class)
-          ->findOneBy(array("code" => $tokenCode, "type" => TokenType::ACCESS));
-      
-      if($token != null) {
-        $response = array(
-            'token_status' => 'valid',
-            'token' => $tokenCode
-        );
-        return new JsonResponse($response, 200);
-        
-      } else {
-        $response = array(
-            'error'=> 401,
-            'errorMessage'=> 'No AccessToken provided'
-        );
-      }
+            $environment = $content->get('env');
+            $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
+            $token = $this->getDoctrine()->getRepository(Token::class)
+                ->findOneBy(array("code" => $tokenCode, "type" => TokenType::ACCESS));
+
+            if ($token != null) {
+                if ($environment == 'USER') {
+                    if ($token->getOwner() instanceof Client) {
+                        $response = array(
+                            'token_status' => 'valid',
+                            'token' => $tokenCode
+                        );
+                        return new JsonResponse($response, 200);
+                    } else {
+                        $response = array(
+                            'error' => 401,
+                            'errorMessage' => 'No AccessToken provided'
+                        );
+                    }
+                }
+            }
+
+            if ($environment == 'ADMIN') {
+                if ($token->getOwner() instanceof Employee) {
+                    $response = array(
+                        'token_status' => 'valid',
+                        'token' => $tokenCode
+                    );
+                    return new JsonResponse($response, 200);
+                } else {
+                    $response = array(
+                        'error' => 401,
+                        'errorMessage' => 'No AccessToken provided'
+                    );
+                }
+            }
+
+            $response = array(
+                'error'=> 401,
+                'errorMessage'=> 'No AccessToken provided'
+            );
     } else {
       //Mandatory AccessToken was not provided
       $response = array(
           'error'=> 401,
           'errorMessage'=> 'Mandatory AccessToken header was not provided'
-      ); 
+      );
     }
 
     return new JsonResponse($response, 401);
-  }
+    }
 
   /**
    * Retrieve the messageObject related to the RevokeDeclaration

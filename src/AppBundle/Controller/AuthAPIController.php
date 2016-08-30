@@ -126,7 +126,7 @@ class AuthAPIController extends APIController {
    * @param Request $request the request object
    * @return JsonResponse
    * @Route("/validate-token")
-   * @Method("GET")
+   * @Method("POST")
    */
   public function validateToken(Request $request)
   {
