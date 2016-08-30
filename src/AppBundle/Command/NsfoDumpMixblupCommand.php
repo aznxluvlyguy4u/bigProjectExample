@@ -22,7 +22,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
     const INSTRUCTIONS_FILENAME = 'mixblup_instructions';
     const START_YEAR_MEASUREMENT = 2014;
     const END_YEAR_MEASUREMENTS = 2016;
-    const DEFAULT_OUTPUT_FOLDER_PATH = '/home/data/JVT/projects/NSFO/MixBlup/dump';
+    const DEFAULT_OUTPUT_FOLDER_PATH = '/home/data/JVT/projects/NSFO/FEATURES/MixBlup/dump';
 
     protected function configure()
     {
