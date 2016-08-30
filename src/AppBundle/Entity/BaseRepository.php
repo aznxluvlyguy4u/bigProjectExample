@@ -271,4 +271,23 @@ class BaseRepository extends EntityRepository
 
         return $results;
     }
+
+
+    /**
+     * @param string $sqlQuery
+     * @return bool|null|mixed
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    protected function executeSqlQuery($sqlQuery)
+    {
+        $query = $this->getEntityManager()->getConnection()->prepare($sqlQuery);
+        $query->execute();
+        $result = $query->fetchColumn();
+
+        if(!$result) {
+            return null;
+        } else {
+            return $result;
+        }
+    }
 }

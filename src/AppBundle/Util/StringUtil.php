@@ -3,6 +3,8 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\GenderType;
 
 class StringUtil
@@ -76,5 +78,32 @@ class StringUtil
         } else {
             return $gender;
         }
+    }
+
+
+    /**
+     * The PedigreeCode/STN format in csv files is: "XX 12AB3-67890" or "XX 123456789012".
+     * There is always a space between the country code (XX) and the rest of the code (numbers and possible some letters).
+     *
+     * @param string $csvPedigreeCode
+     * @return array|null
+     */
+    public static function getStnFromCsvFileString($csvPedigreeCode)
+    {
+        if($csvPedigreeCode == '' || $csvPedigreeCode == null) { return null; }
+        elseif(strlen($csvPedigreeCode) < 4) { return null; }
+        
+        if(strpos($csvPedigreeCode, ' ') !== false) {
+            $stnParts = explode(' ', $csvPedigreeCode);
+            $countryCode = $stnParts[0];
+            $number = str_replace('-', '', $stnParts[1]);
+
+        } else {
+            //if the countryCode and number are not separated by a space
+            $countryCode = mb_substr($csvPedigreeCode, 0, 2, 'utf-8');
+            $number = str_replace('-', '', mb_substr($csvPedigreeCode, 2, strlen($csvPedigreeCode)));
+        }
+
+        return array(JsonInputConstant::PEDIGREE_COUNTRY_CODE => $countryCode, JsonInputConstant::PEDIGREE_NUMBER => $number);
     }
 }

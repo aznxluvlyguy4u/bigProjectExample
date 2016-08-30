@@ -183,6 +183,18 @@ class CommandUtil
 
         return $parents;
     }
-    
-    
+
+
+    /**
+     * @param $inputFolderPath
+     * @return array
+     */
+    public static function getRowsFromCsvFileWithoutHeader($inputFolderPath)
+    {
+        $fileContents = file_get_contents($inputFolderPath);
+        $data = explode(PHP_EOL, $fileContents);
+        array_shift($data); //remove first row
+
+        return $data;
+    }
 }
