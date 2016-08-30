@@ -797,9 +797,8 @@ class Mixblup
         }
 
         if($weight != self::WEIGHT_NULL_FILLER) {
+            //Don't calculate growth from birthWeight
             $growth = self::getGrowthValue($weight, $ageAtMeasurement);
-        } else if($birthWeight != self::WEIGHT_NULL_FILLER) {
-            $growth = self::getGrowthValue($birthWeight, $ageAtMeasurement);
         } else {
             $growth = self::GROWTH_NULL_FILLER;
         }
