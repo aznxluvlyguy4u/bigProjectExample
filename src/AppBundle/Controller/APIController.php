@@ -659,10 +659,12 @@ class APIController extends Controller implements APIControllerInterface
     {
         $token = null;
         $response = null;
+        $content = $this->getContentAsArray($request);
 
         //Get token header to read token value
         if($request->headers->has(Constant::ACCESS_TOKEN_HEADER_NAMESPACE)) {
-            $environment = $request->get('env');
+
+            $environment = $content->get('env');
             $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
             $token = $this->getDoctrine()->getRepository(Token::class)
                 ->findOneBy(array("code" => $tokenCode, "type" => TokenType::ACCESS));
