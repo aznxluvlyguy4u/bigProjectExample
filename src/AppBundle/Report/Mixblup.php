@@ -783,6 +783,11 @@ class Mixblup
 
         if($measurement != null && $measurement instanceof Weight) {
             if($measurement->getIsBirthWeight()){
+                //First check and fix birthWeight measurementDates
+                $measurement = self::setDateOfBirthForMeasurementDateOfBirthWeight($measurement);
+                $this->em->persist($measurement);
+                $this->em->flush();
+
                 $birthWeight = Utils::fillZero($measurement->getWeight(), self::WEIGHT_NULL_FILLER);
             } else {
                 $weight = Utils::fillZero($measurement->getWeight(), self::WEIGHT_NULL_FILLER);
@@ -797,9 +802,8 @@ class Mixblup
         }
 
         if($weight != self::WEIGHT_NULL_FILLER) {
+            //Don't calculate growth from birthWeight
             $growth = self::getGrowthValue($weight, $ageAtMeasurement);
-        } else if($birthWeight != self::WEIGHT_NULL_FILLER) {
-            $growth = self::getGrowthValue($birthWeight, $ageAtMeasurement);
         } else {
             $growth = self::GROWTH_NULL_FILLER;
         }
@@ -1304,5 +1308,23 @@ class Mixblup
         } else {
             return true;
         }
+    }
+
+
+    /**
+     * @param Weight $weight
+     * @return Weight
+     */
+    public static function setDateOfBirthForMeasurementDateOfBirthWeight(Weight $weight)
+    {
+        $animal = $weight->getAnimal();
+        if($weight->getIsBirthWeight() && $animal != null) {
+            $dateOfBirth = $animal->getDateOfBirth();
+            if($dateOfBirth != null && $weight->getMeasurementDate() != $dateOfBirth) {
+                $weight->setMeasurementDate($dateOfBirth);
+            }
+        }
+
+        return $weight;
     }
 }

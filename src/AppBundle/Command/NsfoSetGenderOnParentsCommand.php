@@ -47,6 +47,8 @@ class NsfoSetGenderOnParentsCommand extends ContainerAwareCommand
         $sql = "SELECT DISTINCT father.id FROM animal INNER JOIN animal AS father ON animal.parent_father_id = father.id WHERE father.type <> 'Ram'";
         $results = $em->getConnection()->query($sql)->fetchAll();
 
+
+        $counterMale = 0;
         foreach ($results as $result) {
             $sql = "UPDATE animal SET type='Ram' WHERE id = ". $result['id'];
             $em->getConnection()->exec($sql);
@@ -66,12 +68,14 @@ class NsfoSetGenderOnParentsCommand extends ContainerAwareCommand
                 $sql = "DELETE FROM neuter WHERE id = " . $result['id'];
                 $em->getConnection()->exec($sql);
             }
+            $counterMale++;
         }
 
 
         $sql = "SELECT DISTINCT mother.id FROM animal INNER JOIN animal AS mother ON animal.parent_mother_id = mother.id WHERE mother.type <> 'Ewe'";
         $results = $em->getConnection()->query($sql)->fetchAll();
 
+        $counterFemale = 0;
         foreach ($results as $result) {
             $sql = "UPDATE animal SET type='Ewe' WHERE id = ". $result['id'];
             $em->getConnection()->exec($sql);
@@ -91,9 +95,13 @@ class NsfoSetGenderOnParentsCommand extends ContainerAwareCommand
                 $sql = "DELETE FROM neuter WHERE id = " . $result['id'];
                 $em->getConnection()->exec($sql);
             }
+            $counterFemale++;
         }
 
         $cmdUtil->setEndTimeAndPrintFinalOverview();
-        $output->writeln("ANIMALS CHANGED: " . $counter);
+        $output->writeln(["ANIMALS CHANGED: " . ($counterMale + $counterFemale),
+            "RAMS CHANGED: ".$counterMale,
+            "EWES CHANGED: ".$counterFemale
+        ]);
     }
 }
