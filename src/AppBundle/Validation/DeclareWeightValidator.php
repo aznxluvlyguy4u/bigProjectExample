@@ -27,7 +27,7 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
     //NOTE CHANGING THESE VALUES WILL AFFECT THE FRONT-END!
     const DEFAULT_MAX_WEIGHT = 200.00;
     const DEFAULT_MIN_WEIGHT = 0.00;
-    const MAX_NUMBER_OF_DECIMALS = 1; //integer
+    const MAX_NUMBER_OF_DECIMALS = 2; //integer
 
     const MEASUREMENT_ALREADY_EXISTS = "ANIMAL ALREADY HAS A WEIGHT MEASUREMENT ON THIS DATE. EDIT, OR CHOOSE ANOTHER DATE";
 
@@ -36,7 +36,7 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
 
     const WEIGHT_IS_TOO_LOW  = "WEIGHT IS TOO LOW. IT SHOULD BE AT LEAST 0 KG"; //Update if default weight has changed!
     const WEIGHT_IS_TOO_HIGH = "WEIGHT IS TOO HIGH. IT CANNOT EXCEED 200 KG"; //Update if default weight has changed!
-    const WEIGHT_DIGITS_AFTER_COMMA = "WEIGHT: NUMBER OF DIGITS AFTER THE COMMA CANNOT EXCEED ".self::MAX_NUMBER_OF_DECIMALS;
+    const WEIGHT_DIGITS_AFTER_COMMA = "WEIGHT: NUMBER OF DIGITS AFTER THE COMMA CANNOT EXCEED 2"; //Update if default has changed!
     const MEASUREMENT_DATE_IN_FUTURE = "MEASUREMENT DATE CANNOT BE IN THE FUTURE";
 
     const ANIMAL_MISSING_INPUT = 'ANIMAL: NO ULN GIVEN';
