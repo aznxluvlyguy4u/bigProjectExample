@@ -12,7 +12,17 @@ use JMS\Serializer\Annotation as JMS;
  * @package AppBundle\Entity
  */
 class Exterior extends Measurement {
-  
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 2)
+     * @JMS\Type("string")
+     */
+    private $kind;
+
+
     /**
      * @var float
      *
@@ -150,6 +160,22 @@ class Exterior extends Measurement {
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getKind()
+    {
+        return $this->kind;
+    }
+
+    /**
+     * @param string $kind
+     */
+    public function setKind($kind)
+    {
+        $this->kind = $kind;
     }
 
     /**
