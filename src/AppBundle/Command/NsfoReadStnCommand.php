@@ -2,6 +2,7 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
@@ -22,7 +23,7 @@ class NsfoReadStnCommand extends ContainerAwareCommand
 {
     const TITLE = 'Read PedigreeNumbers (STN)';
     const DEFAULT_INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/diergegevens/DiertabelNieuw.csv';
-    const DEFAULT_VSM_START_ID = 1;
+    const DEFAULT_VSM_START_ID = 360000;//1;
     const ANIMAL_BATCH_SIZE = 1000;
 
     /** @var ArrayCollection $pedigreeCodesByVsmId */
@@ -94,12 +95,14 @@ class NsfoReadStnCommand extends ContainerAwareCommand
                 /** @var Animal $animal */
                 foreach($animals as $animal) {
                     $vsmId = $animal->getName();
-                    $stnParts = $this->pedigreeCodesByVsmId->get($vsmId);
-                    $animal->setPedigreeCountryCode($stnParts[JsonInputConstant::PEDIGREE_COUNTRY_CODE]);
-                    $animal->setPedigreeNumber($stnParts[JsonInputConstant::PEDIGREE_NUMBER]);
+                    $stnParts = Utils::getNullCheckedArrayCollectionValue($vsmId, $this->pedigreeCodesByVsmId);
+                    if($stnParts != null) {
+                        $animal->setPedigreeCountryCode($stnParts[JsonInputConstant::PEDIGREE_COUNTRY_CODE]);
+                        $animal->setPedigreeNumber($stnParts[JsonInputConstant::PEDIGREE_NUMBER]);
 
-                    $em->persist($animal);
-                    $animalCount++;
+                        $em->persist($animal);
+                        $animalCount++;
+                    }
                 }
                 DoctrineUtil::flushClearAndGarbageCollect($em);
                 $output->writeln('Processed primaryKeys: '.$i.' - '.($maxIdInBatch).' of '.$maxId);
