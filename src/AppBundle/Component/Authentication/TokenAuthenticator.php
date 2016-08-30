@@ -187,11 +187,18 @@ class TokenAuthenticator extends AbstractGuardAuthenticator  {
         }        
       }
     }
-    
+
     //Verify is user is logging in with an active company
-    $isCompanyActive = Validator::isUserLoginWithActiveCompany($user, $ghostToken);
-    if(!$isCompanyActive) {
-      $user = null; //deny access
+    if($user instanceof Client) {
+        $companies = $user->getCompanies();
+
+        if ($companies) {
+            foreach ($companies as $company) {
+                if (!$company->isActive()) {
+                    $user = null;
+                }
+            }
+        }
     }
 
     return $user;
