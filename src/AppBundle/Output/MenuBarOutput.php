@@ -46,7 +46,9 @@ class MenuBarOutput extends Output
 
         foreach($client->getCompanies() as $company) {
             foreach($company->getLocations() as $location) {
-                $ubns[] = $location->getUbn();
+                if($location->getIsActive()) {
+                    $ubns[] = $location->getUbn();
+                }
             }
         }
 
