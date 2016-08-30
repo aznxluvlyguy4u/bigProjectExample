@@ -23,7 +23,7 @@ class NsfoReadStnCommand extends ContainerAwareCommand
 {
     const TITLE = 'Read PedigreeNumbers (STN)';
     const DEFAULT_INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/diergegevens/DiertabelNieuw.csv';
-    const DEFAULT_VSM_START_ID = 1;
+    const DEFAULT_VSM_START_ID = 360000;//1;
     const ANIMAL_BATCH_SIZE = 1000;
 
     /** @var ArrayCollection $pedigreeCodesByVsmId */
