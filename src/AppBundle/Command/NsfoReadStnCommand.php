@@ -23,7 +23,7 @@ class NsfoReadStnCommand extends ContainerAwareCommand
 {
     const TITLE = 'Read PedigreeNumbers (STN)';
     const DEFAULT_INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/diergegevens/DiertabelNieuw.csv';
-    const DEFAULT_VSM_START_ID = 360000;//1;
+    const DEFAULT_START_ID = 1;
     const ANIMAL_BATCH_SIZE = 1000;
 
     /** @var ArrayCollection $pedigreeCodesByVsmId */
@@ -53,7 +53,7 @@ class NsfoReadStnCommand extends ContainerAwareCommand
 
         //Input folder input
         $inputFolderPath = $cmdUtil->generateQuestion('Please enter input folder path: ', self::DEFAULT_INPUT_PATH);
-        $minId = $cmdUtil->generateQuestion('Please enter min primaryKeyId for retrieving animals: ', self::DEFAULT_VSM_START_ID);
+        $minId = $cmdUtil->generateQuestion('Please enter min primaryKeyId for retrieving animals: ', self::DEFAULT_START_ID);
 
         $cmdUtil->setStartTimeAndPrintIt();
 
