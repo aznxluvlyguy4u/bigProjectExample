@@ -677,6 +677,18 @@ class APIController extends Controller implements APIControllerInterface
                             'token' => $tokenCode
                         );
                         return new JsonResponse($response, 200);
+                    } elseif ($token->getOwner() instanceof Employee ) {
+                        $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
+                        $ghostToken = $this->getDoctrine()->getRepository(Token::class)
+                            ->findOneBy(array("code" => $ghostTokenCode, "type" => TokenType::GHOST));
+
+                        if($ghostToken != null) {
+                            $response = array(
+                                'token_status' => 'valid',
+                                'token' => $tokenCode
+                            );
+                            return new JsonResponse($response, 200);
+                        }
                     } else {
                         $response = array(
                             'error' => 401,
