@@ -421,16 +421,17 @@ class AnimalRepository extends BaseRepository
   public function getMaxId()
   {
     $sql = "SELECT MAX(id) FROM animal";
-
-    $query = $this->getEntityManager()->getConnection()->prepare($sql);
-    $query->execute();
-    $result = $query->fetchColumn();
-
-    if(!$result) {
-      return null;
-    } else {
-      return $result;
-    }
+    return $this->executeSqlQuery($sql);
+  }
+  
+  /**
+   * @return int|null
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function getMaxVsmId()
+  {
+    $sql = "SELECT MAX(name) FROM animal";
+    return $this->executeSqlQuery($sql);
   }
 
   /**
@@ -440,16 +441,7 @@ class AnimalRepository extends BaseRepository
   public function getMinIdOfAnimalsWithoutBreedCodesSetForExistingBreedCode()
   {
     $sql = "SELECT MIN(id) FROM animal WHERE (breed_codes_id IS NULL AND breed_code IS NOT NULL)";
-
-    $query = $this->getEntityManager()->getConnection()->prepare($sql);
-    $query->execute();
-    $result = $query->fetchColumn();
-
-    if(!$result) {
-      return null;
-    } else {
-      return $result;
-    }
+    return $this->executeSqlQuery($sql);
   }
 
   /**
@@ -472,5 +464,15 @@ class AnimalRepository extends BaseRepository
 
     //else
     return null;
+  }
+
+  /**
+   * @return int|null
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function getMinIdOfAnimalsWithoutPedigreeNumberOrPedigreeCountryCode()
+  {
+    $sql = "SELECT MIN(id) FROM animal WHERE (animal.pedigree_country_code IS NULL OR animal.pedigree_number IS NULL)";
+    return $this->executeSqlQuery($sql);
   }
 }
