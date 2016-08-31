@@ -41,22 +41,24 @@ class HealthOutput extends Output
         $healthStatusses = array();
 
         foreach ($locations as $location) {
+
             /**
              * @var Location $location
              * @return array
              */
+            if($location->getIsActive()) {
+                self:: setUbnAndLocationHealthValues($em, $location);
 
-            self:: setUbnAndLocationHealthValues($em, $location);
-
-            $healthStatusses[] = array(
-                "ubn" => $location->getUbn(),
-                "maedi_visna_status" => self::$maediVisnaStatus,
-                "maedi_visna_check_date" => self::$maediVisnaCheckDate,
-                "maedi_visna_end_date" => self::$maediVisnaEndDate,
-                "scrapie_status" => self::$scrapieStatus,
-                "scrapie_check_date" => self::$scrapieCheckDate,
-                "scrapie_end_date" => self::$scrapieEndDate
-            );
+                $healthStatusses[] = array(
+                    "ubn" => $location->getUbn(),
+                    "maedi_visna_status" => self::$maediVisnaStatus,
+                    "maedi_visna_check_date" => self::$maediVisnaCheckDate,
+                    "maedi_visna_end_date" => self::$maediVisnaEndDate,
+                    "scrapie_status" => self::$scrapieStatus,
+                    "scrapie_check_date" => self::$scrapieCheckDate,
+                    "scrapie_end_date" => self::$scrapieEndDate
+                );
+            }
         }
 
         return $healthStatusses;

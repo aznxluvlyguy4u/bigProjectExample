@@ -109,7 +109,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
         $emailAddress = $content->get('email_address');
         $accessLevel = $content->get('access_level');
 
-        if(!empty($firstName + $lastName + $emailAddress + $accessLevel)) {
+        if(empty($firstName) || empty($lastName) || empty($emailAddress) || empty($accessLevel)) {
             return new JsonResponse(array(
                 'code'=> 400,
                 "message" => "REQUIRED VALUES MISSING"), 400);
@@ -126,13 +126,9 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
         // Create new admin
         $newAdmin = new Employee($accessLevel, $firstName, $lastName, $emailAddress);
 
-        // Create a new password
-        $passwordLength = 9;
-        $newPassword = Utils::randomString($passwordLength);
-
-        $encoder = $this->get('security.password_encoder');
-        $encodedNewPassword = $encoder->encodePassword($newAdmin, $newPassword);
-        $newAdmin->setPassword($encodedNewPassword);
+        // Send Email with passwords to Owner & Users
+        $password = $this->persistNewPassword($newAdmin);
+        $this->emailNewPasswordToPerson($newAdmin, $password, false, true);
 
         $em->persist($newAdmin);
         $em->flush();

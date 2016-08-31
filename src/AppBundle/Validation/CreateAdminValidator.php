@@ -92,10 +92,6 @@ class CreateAdminValidator
         if($firstName == null || $firstName == "" || $firstName == " ") {
             $this->isValid = false;
             $this->errors[self::EMPTY_FIRST_NAME] = self::RESPONSE_INVALID_INPUT_FIRST_NAME;
-
-        } elseif(!ctype_alnum($firstName)) {
-            $this->isValid = false;
-            $this->errors[$firstName] = self::RESPONSE_INVALID_INPUT_FIRST_NAME;
         }
     }
 
@@ -107,10 +103,6 @@ class CreateAdminValidator
         if($lastName == null || $lastName == "" || $lastName == " ") {
             $this->isValid = false;
             $this->errors[self::EMPTY_LAST_NAME] = self::RESPONSE_INVALID_INPUT_LAST_NAME;
-
-        } elseif(!ctype_alnum($lastName)) {
-            $this->isValid = false;
-            $this->errors[$lastName] = self::RESPONSE_INVALID_INPUT_LAST_NAME;
         }
     }
 
