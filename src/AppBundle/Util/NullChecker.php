@@ -16,6 +16,35 @@ class NullChecker
 {
 
     /**
+     * @param $input
+     * @return bool
+     */
+    public static function isNotNull($input)
+    {
+        if($input != null && $input != '' && $input != ' ') {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+    /**
+     * @param $input
+     * @return bool
+     */
+    public static function numberIsNotNull($input)
+    {
+        if($input != null && $input != 0 && $input !== '' && $input !== ' ') {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+
+    /**
      * @param $array
      * @return int
      */

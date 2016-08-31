@@ -203,4 +203,33 @@ class BodyFat extends Measurement {
 
         return $isEqual;
     }
+
+
+    /**
+     * @param \DateTime $measurementDate
+     * @param Animal $animal
+     * @param Inspector $inspector
+     * @param float $fat1Value
+     * @param float $fat2Value
+     * @param float $fat3Value
+     * @return boolean
+     */
+    public function hasValues($measurementDate, $animal, $inspector, $fat1Value, $fat2Value, $fat3Value)
+    {
+        if($this->fat1 != null) { $thisFat1Value = $this->fat1->getFat(); } else { $thisFat1Value = null; }
+        if($this->fat2 != null) { $thisFat2Value = $this->fat2->getFat(); } else { $thisFat2Value = null; }
+        if($this->fat3 != null) { $thisFat3Value = $this->fat3->getFat(); } else { $thisFat3Value = null; }
+
+        if($this->measurementDate == $measurementDate &&
+            $this->animal == $animal &&
+            $this->inspector == $inspector &&
+            $thisFat1Value == $fat1Value &&
+            $thisFat2Value == $fat2Value &&
+            $thisFat3Value == $fat3Value
+        ){
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
