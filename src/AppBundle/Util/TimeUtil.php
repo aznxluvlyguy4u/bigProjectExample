@@ -3,6 +3,9 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalResidence;
+
 class TimeUtil
 {
 
@@ -40,5 +43,81 @@ class TimeUtil
     {
         $dayOfDateTime = self::getDayOfDateTime($dateTime);
         return $dayOfDateTime->add(new \DateInterval('P1D')); //add one day
+    }
+
+
+    /**
+     * @param \DateTime $dateOfBirth
+     * @param \DateTime $dateOfDeath
+     * @return int
+     */
+    public static function getAgeYear($dateOfBirth, $dateOfDeath = null)
+    {
+        
+        
+        if($dateOfDeath != null) {
+            $endDate = $dateOfDeath;
+        } else {
+            $endDate = new \DateTime('now');
+        }
+
+        $interval = $endDate->diff($dateOfBirth);
+
+        return $interval->y;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @return int
+     */
+    public static function ageInSystem($animal)
+    {
+        if($animal == null) { return null; }
+        $dateOfBirth = $animal->getDateOfBirth();
+        if($dateOfBirth == null) { return null; }
+
+        $isAnimalInNsfoSystem = $animal->getLocation() != null;
+
+
+        if($isAnimalInNsfoSystem) {
+            return TimeUtil::getAgeYear($dateOfBirth, $animal->getDateOfDeath());
+
+        } else {
+            $lastResidence = $animal->getAnimalResidenceHistory()->last();
+            /** @var AnimalResidence $lastResidence */
+            if($lastResidence != null) {
+                $lastDate = $lastResidence->getEndDate();
+                if($lastDate != null) {
+                    $lastDate = $lastResidence->getStartDate();
+                }
+
+                if($lastDate != null) {
+                    return TimeUtil::getAgeYear($dateOfBirth, $lastDate);
+                }
+            }
+            return null;
+        }
+    }
+
+    
+    /**
+     * @param \DateTime $dateOfBirth
+     * @param \DateTime $earliestLitterDate
+     * @return boolean
+     */
+    public static function isGaveBirthAsOneYearOld($dateOfBirth, $earliestLitterDate)
+    {
+        if($dateOfBirth == null || $earliestLitterDate == null) { return false; }
+
+        $months = 18;
+        $oneYearOldLimit = $dateOfBirth;
+        $oneYearOldLimit->add(new \DateInterval('P' . $months . "M"));
+
+        if($oneYearOldLimit < $earliestLitterDate) {
+            return false;
+        } else {
+            return true;
+        }
     }
 }
