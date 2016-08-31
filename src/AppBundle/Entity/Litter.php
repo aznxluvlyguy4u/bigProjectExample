@@ -68,13 +68,33 @@ class Litter {
      */
     private $litterGroup;
 
+
     /**
      * @var integer
      *
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="integer", options={"default":0})
      * @JMS\Type("integer")
      */
-    private $size;
+    private $stillbornCount;
+
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     */
+    private $bornAliveCount;
+
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $birthProcess;
+
 
     /**
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="litter")
@@ -88,6 +108,8 @@ class Litter {
     public function __construct() {
         $this->children = new ArrayCollection();
         $this->logDate = new \DateTime();
+        $this->stillbornCount = 0;
+        $this->bornAliveCount = 0;
     }
 
     /**
@@ -149,27 +171,45 @@ class Litter {
     }
 
     /**
-     * Set size
-     *
-     * @param integer $size
-     *
-     * @return Litter
-     */
-    public function setSize($size)
-    {
-        $this->size = $size;
-
-        return $this;
-    }
-
-    /**
      * Get size
      *
      * @return integer
      */
     public function getSize()
     {
-        return $this->size;
+        return $this->stillbornCount + $this->bornAliveCount;
+    }
+
+    /**
+     * @return int
+     */
+    public function getStillbornCount()
+    {
+        return $this->stillbornCount;
+    }
+
+    /**
+     * @param int $stillbornCount
+     */
+    public function setStillbornCount($stillbornCount)
+    {
+        $this->stillbornCount = $stillbornCount;
+    }
+
+    /**
+     * @return int
+     */
+    public function getBornAliveCount()
+    {
+        return $this->bornAliveCount;
+    }
+
+    /**
+     * @param int $bornAliveCount
+     */
+    public function setBornAliveCount($bornAliveCount)
+    {
+        $this->bornAliveCount = $bornAliveCount;
     }
 
     /**
@@ -270,5 +310,24 @@ class Litter {
         $this->litterGroup = $litterGroup;
     }
 
-    
+    /**
+     * @return string
+     */
+    public function getBirthProcess()
+    {
+        return $this->birthProcess;
+    }
+
+    /**
+     * @param string $birthProcess
+     */
+    public function setBirthProcess($birthProcess)
+    {
+        $this->birthProcess = $birthProcess;
+    }
+
+
+
+
+
 }
