@@ -34,7 +34,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class NsfoMigrateMeasurements2016Command extends ContainerAwareCommand
 {
     const TITLE = 'Migrate MeasurementsData for 2016: meetwaardenoverzicht2016(fixed-formatting).csv';
-    const INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/meetwaardenoverzicht2016(fixed-formatting).csv';
+    const INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/animal_measurements_2016.csv';
     const BATCH_COUNT = 100;
 
     /** @var ObjectManager $em */
