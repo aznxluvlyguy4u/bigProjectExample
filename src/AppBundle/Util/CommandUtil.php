@@ -9,6 +9,7 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Report\Mixblup;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -17,6 +18,12 @@ use Symfony\Component\Console\Question\Question;
 
 class CommandUtil
 {
+    //ProgressBar settings
+    const DEFAULT_PROGRESS_BAR_START_MESSAGE = '*systems online*';
+    const DEFAULT_PROGRESS_BAR_RUNNING_MESSAGE = '*processing*';
+    const DEFAULT_TOTAL_UNITS = 100;
+    const DEFAULT_START_UNIT = 0;
+
     /** @var InputInterface */
     private $inputInterface;
 
@@ -34,6 +41,9 @@ class CommandUtil
 
     /** @var \DateTime */
     private $elapsedTimeStart;
+
+    /** @var ProgressBar */
+    private $progressBar;
     
 
     /**
@@ -48,6 +58,13 @@ class CommandUtil
         $this->outputInterface = $output;
         $this->helper = $helper;
     }
+
+
+    /**
+     * @return ProgressBar
+     */
+    public function getProgressBar() { return $this->progressBar; }
+
 
     /**
      * @param string $question
@@ -88,12 +105,44 @@ class CommandUtil
         }
     }
 
-    
-    public function setStartTimeAndPrintIt()
+
+    /**
+     * @param int $totalNumberOfUnits
+     * @param int $startUnit
+     * @param string $startMessage
+     */
+    public function setStartTimeAndPrintIt($totalNumberOfUnits = self::DEFAULT_TOTAL_UNITS, $startUnit = self::DEFAULT_START_UNIT, $startMessage = self::DEFAULT_PROGRESS_BAR_START_MESSAGE)
     {
         $this->startTime = new \DateTime();
         $this->elapsedTimeStart = $this->startTime;
         $this->outputInterface->writeln(['Start time: '.date_format($this->startTime, 'Y-m-d H:i:s'),'']);
+
+        if($totalNumberOfUnits == null || $totalNumberOfUnits < 1) { $totalNumberOfUnits = self::DEFAULT_TOTAL_UNITS; }
+        if($startUnit == null || $startUnit < 1) { $startUnit = self::DEFAULT_START_UNIT; }
+        if($startMessage == null) { $startMessage = self::DEFAULT_PROGRESS_BAR_START_MESSAGE; }
+
+        $this->progressBar = new ProgressBar($this->outputInterface, $totalNumberOfUnits);
+        $this->progressBar->setFormat('%current%/%max% [%bar%] %percent:3s%% %elapsed:6s%/%estimated:-6s% %memory:6s%  -  %message%');
+
+        $this->progressBar->setMessage($startMessage);
+        $this->progressBar->start();
+        $this->progressBar->setProgress($startUnit);
+    }
+
+    /**
+     * @param int $unitsToAdvance
+     * @param string $message
+     */
+    public function advanceProgressBar($unitsToAdvance = 1, $message = self::DEFAULT_PROGRESS_BAR_RUNNING_MESSAGE)
+    {
+        if($unitsToAdvance != null && $unitsToAdvance > 0) {
+            $this->progressBar->advance($unitsToAdvance);
+            if($message != null) {
+                $this->progressBar->setMessage($message);
+            } else {
+                $this->progressBar->setMessage(self::DEFAULT_PROGRESS_BAR_RUNNING_MESSAGE);
+            }
+        }
     }
 
 
@@ -112,7 +161,16 @@ class CommandUtil
         $elapsedTime = gmdate("H:i:s", $this->endTime->getTimestamp() - $this->startTime->getTimestamp());
 
         $this->outputInterface->writeln([
+            ' ',
             '=== PROCESS FINISHED ===',
+            ' ',
+            '']);
+
+        $this->progressBar->finish();
+
+        $this->outputInterface->writeln([
+            ' ',
+            ' ',
             'End Time: '.date_format($this->endTime, 'Y-m-d H:i:s'),
             'Elapsed Time (H:i:s): '.$elapsedTime,
             '',

@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -39,11 +40,22 @@ class NsfoTestCommand extends ContainerAwareCommand
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
-        $cmdUtil->setStartTimeAndPrintIt();
+        $totalNumberOfUnits = 20;
+        $startUnit = 10;
+        $startMessage = 'ARE YOU READY!';
+
+        $cmdUtil->setStartTimeAndPrintIt($totalNumberOfUnits, $startUnit, $startMessage);
+
+        for($i = 0; $i < 10; $i++) {
+            sleep(1);
+            $message = $i;
+            $cmdUtil->advanceProgressBar(1, $message);
+        }
+
 
 //        $fileContents = file_get_contents(self::INPUT_PATH);
 
-        $output->writeln([
+        $output->writeln(['',
             '=== Print Something ===',
             'Result 1: ',
             'Result 2: ',
