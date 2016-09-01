@@ -21,6 +21,7 @@ class CommandUtil
     //ProgressBar settings
     const DEFAULT_PROGRESS_BAR_START_MESSAGE = '*systems online*';
     const DEFAULT_PROGRESS_BAR_RUNNING_MESSAGE = '*processing*';
+    const DEFAULT_PROGRESS_BAR_END_MESSAGE = '*completed*';
     const DEFAULT_TOTAL_UNITS = 100;
     const DEFAULT_START_UNIT = 0;
 
@@ -44,6 +45,9 @@ class CommandUtil
 
     /** @var ProgressBar */
     private $progressBar;
+
+    /** @var Boolean */
+    private $isProgressBarActive;
     
 
     /**
@@ -57,6 +61,7 @@ class CommandUtil
         $this->inputInterface = $input;
         $this->outputInterface = $output;
         $this->helper = $helper;
+        $this->isProgressBarActive = false;
     }
 
 
@@ -117,16 +122,28 @@ class CommandUtil
         $this->elapsedTimeStart = $this->startTime;
         $this->outputInterface->writeln(['Start time: '.date_format($this->startTime, 'Y-m-d H:i:s'),'']);
 
-        if($totalNumberOfUnits == null || $totalNumberOfUnits < 1) { $totalNumberOfUnits = self::DEFAULT_TOTAL_UNITS; }
-        if($startUnit == null || $startUnit < 1) { $startUnit = self::DEFAULT_START_UNIT; }
-        if($startMessage == null) { $startMessage = self::DEFAULT_PROGRESS_BAR_START_MESSAGE; }
+        if($totalNumberOfUnits != null && $startUnit != null) {
+            $this->isProgressBarActive = true;
 
-        $this->progressBar = new ProgressBar($this->outputInterface, $totalNumberOfUnits);
-        $this->progressBar->setFormat('%current%/%max% [%bar%] %percent:3s%% %elapsed:6s%/%estimated:-6s% %memory:6s%  -  %message%');
+            if($totalNumberOfUnits < 1) { $totalNumberOfUnits = self::DEFAULT_TOTAL_UNITS; }
+            if($startUnit < 1) { $startUnit = self::DEFAULT_START_UNIT; }
+            if($startMessage == null) { $startMessage = self::DEFAULT_PROGRESS_BAR_START_MESSAGE; }
 
-        $this->progressBar->setMessage($startMessage);
-        $this->progressBar->start();
-        $this->progressBar->setProgress($startUnit);
+            $this->progressBar = new ProgressBar($this->outputInterface, $totalNumberOfUnits);
+            $this->progressBar->setFormat('%current%/%max% [%bar%] %percent:3s%% %elapsed:6s%/%estimated:-6s% %memory:6s%  -  %message%');
+
+            $this->progressBar->setMessage($startMessage);
+            $this->progressBar->start();
+            $this->progressBar->setProgress($startUnit);
+        }
+    }
+
+    /**
+     * @param string $message
+     */
+    public function setProgressBarMessage($message)
+    {
+        $this->progressBar->setMessage($message);
     }
 
     /**
@@ -166,11 +183,15 @@ class CommandUtil
             ' ',
             '']);
 
-        $this->progressBar->finish();
+        if($this->isProgressBarActive) {
+            if($this->progressBar->getMessage() == self::DEFAULT_PROGRESS_BAR_RUNNING_MESSAGE) {
+                $this->progressBar->setMessage(self::DEFAULT_PROGRESS_BAR_END_MESSAGE);
+            }
+            $this->progressBar->finish();
+            $this->outputInterface->writeln([' ',' ']);
+        }
 
         $this->outputInterface->writeln([
-            ' ',
-            ' ',
             'End Time: '.date_format($this->endTime, 'Y-m-d H:i:s'),
             'Elapsed Time (H:i:s): '.$elapsedTime,
             '',
