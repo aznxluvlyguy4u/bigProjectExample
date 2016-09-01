@@ -3,6 +3,7 @@
 namespace AppBundle\Command;
 
 use AppBundle\Component\Utils;
+use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
@@ -12,25 +13,23 @@ use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\Tests\Compiler\A;
+use Symfony\Component\Finder\Finder;
 
 class NsfoReadStnCommand extends ContainerAwareCommand
 {
-    const TITLE = 'Read PedigreeNumbers (STN)';
-    const DEFAULT_INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/diergegevens/DiertabelNieuw.csv';
-    const DEFAULT_START_ID = 1;
-    const ANIMAL_BATCH_SIZE = 1000;
-
-    /** @var ArrayCollection $pedigreeCodesByVsmId */
-    private $pedigreeCodesByVsmId;
-
-    /** @var ObjectManager $em */
-    private $em;
+    const TITLE = 'Migrate PedigreeNumbers (STN)';
+    private $csvParsingOptions = array(
+        'finder_in' => 'app/Resources/imports/',
+        'finder_name' => 'animal_table_migration.csv',
+        'ignoreFirstLine' => true
+    );
 
     protected function configure()
     {
@@ -42,157 +41,68 @@ class NsfoReadStnCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var ObjectManager $em */
-        $em = $this->getContainer()->get('doctrine')->getManager();
-        $this->em = $em;
+        $csv = $this->parseCSV();
+        /**
+         * @var EntityManager $em
+         */
+        $em = $this->getContainer()->get('doctrine.orm.entity_manager');
+        $em->getConnection()->getConfiguration()->setSQLLogger(null);
         $helper = $this->getHelper('question');
         $cmdUtil = new CommandUtil($input, $output, $helper);
-
-        //Print intro
-        $output->writeln(CommandUtil::generateTitle(self::TITLE));
-
-        //Input folder input
-        $inputFolderPath = $cmdUtil->generateQuestion('Please enter input folder path: ', self::DEFAULT_INPUT_PATH);
-        $minId = $cmdUtil->generateQuestion('Please enter min primaryKeyId for retrieving animals: ', self::DEFAULT_START_ID);
+        $counter = 0;
 
         $cmdUtil->setStartTimeAndPrintIt();
 
-        $dataWithoutHeader = $cmdUtil::getRowsFromCsvFileWithoutHeader($inputFolderPath);
+        foreach ($csv as $line) {
 
-        $rowCount = 0;
-        $this->pedigreeCodesByVsmId = new ArrayCollection();
-        //First save pedigree date per vsmId in an ArrayCollection
-        foreach ($dataWithoutHeader as $row) {
+            $counter++;
 
-            $this->savePedigeeCodes($row);
-            $rowCount++;
-            if($rowCount%10000 == 0) {
-                $output->writeln('PedigreeCodes processed into array: '.$rowCount);
-            }
-        }
-        $output->writeln('PedigreeCodes processed into array: '.$rowCount);
-
-
-
-
-
-        /** @var AnimalRepository $animalRepository */
-        $animalRepository = $em->getRepository(Animal::class);
-        $maxId = $animalRepository->getMaxId();
-        $output->writeln('maxId: '.$maxId);
-
-        $animalCount = 0;
-        for($i = $minId; $i <= $maxId; $i += self::ANIMAL_BATCH_SIZE) {
-
-            $maxIdInBatch = $i + self::ANIMAL_BATCH_SIZE-1;
-
-            /** @var ArrayCollection $animals */
-            $output->write('Find animals with primaryKeys between: '.$i.' - '.($maxIdInBatch).' of '.$maxId.'   ');
-            $animals = $this->findAnimalsWithAVsmIdBetweenPrimaryKeys($i, $maxIdInBatch);
-            $output->writeln('Animals found, processing animals...');
-            if($animals->count() > 0) {
-
-                /** @var Animal $animal */
-                foreach($animals as $animal) {
-                    $vsmId = $animal->getName();
-                    $stnParts = Utils::getNullCheckedArrayCollectionValue($vsmId, $this->pedigreeCodesByVsmId);
-                    if($stnParts != null) {
-                        $animal->setPedigreeCountryCode($stnParts[JsonInputConstant::PEDIGREE_COUNTRY_CODE]);
-                        $animal->setPedigreeNumber($stnParts[JsonInputConstant::PEDIGREE_NUMBER]);
-
-                        $em->persist($animal);
-                        $animalCount++;
-                    }
-                }
-                DoctrineUtil::flushClearAndGarbageCollect($em);
-                $output->writeln('Processed primaryKeys: '.$i.' - '.($maxIdInBatch).' of '.$maxId);
+            if ($counter % 10000 == 0) {
+                $output->writeln($counter);
             }
 
-//            if ($i >= self::MAX_ROWS_TO_PROCESS) {
-//                break;
-//            }
-        }
+            $animalName = $line[0];
+            $pieces = explode(" ", $line[1]);
 
-        if($minId == null) {
-            $output->writeln('All animals already have been processed');
-        } else {
-            $output->writeln('Processed Total: '.$minId.' - '.$maxId.' of '.$maxId);
+            if(sizeof($pieces) > 1) {
+                $pedigreeCountryCode = $pieces[0];
+                $pedigreeNumber = str_replace("-", "", $pieces[1]);
+            } else {
+                $pedigreeCountryCode = substr($pieces[0], 0, 2);
+                $pedigreeNumber = substr($pieces[0], 2);
+            }
+
+            $sql = "UPDATE animal SET pedigree_country_code = '". $pedigreeCountryCode ."', pedigree_number = '". $pedigreeNumber ."' WHERE name = '". $animalName ."'";
+            $em->getConnection()->exec($sql);
         }
-        $output->writeln('Animals processed: '.$animalCount);
 
         $cmdUtil->setEndTimeAndPrintFinalOverview();
+        $output->writeln("LINES IMPORTED: " . $counter);
+        $output->writeln("TOTAL LINES: " . sizeof($csv));
     }
 
+    private function parseCSV() {
+        $ignoreFirstLine = $this->csvParsingOptions['ignoreFirstLine'];
 
-    /**
-     * @param int $minVsmId
-     * @param int $maxVsmId
-     * @return mixed
-     */
-    private function findAnimalsWithAVsmIdBetweenPrimaryKeys($minVsmId, $maxVsmId)
-    {
-        $criteria = Criteria::create()
-            ->where(Criteria::expr()->neq('name', null))
-            ->andWhere(Criteria::expr()->gte('id', $minVsmId))
-            ->andWhere(Criteria::expr()->lte('id', $maxVsmId))
+        $finder = new Finder();
+        $finder->files()
+            ->in($this->csvParsingOptions['finder_in'])
+            ->name($this->csvParsingOptions['finder_name'])
         ;
+        foreach ($finder as $file) { $csv = $file; }
 
-        return $this->em->getRepository(Animal::class)
-            ->matching($criteria);
-    }
+        $rows = array();
+        if (($handle = fopen($csv->getRealPath(), "r")) !== FALSE) {
+            $i = 0;
+            while (($data = fgetcsv($handle, 30, ";")) !== FALSE) {
+                $i++;
+                if ($ignoreFirstLine && $i == 1) { continue; }
+                $rows[] = $data;
+                gc_collect_cycles();
+            }
+            fclose($handle);
+        }
 
-
-    private function savePedigeeCodes($row)
-    {
-        //null checks
-        if($row == null || $row == '') { return; }
-        $rowParts = explode(';',$row);
-
-        if(sizeof($rowParts) < 12) { return; }
-
-        $vsmId = $rowParts[0];
-        $pedigreeCode = $rowParts[1];
-
-        $stnParts = StringUtil::getStnFromCsvFileString($pedigreeCode);
-
-        $this->pedigreeCodesByVsmId->set($vsmId, $stnParts);
-    }
-
-
-
-    /**
-     * @param $rowParts
-     */
-    private function processRow($row)
-    {
-        //null checks
-        if($row == null || $row == '') { return; }
-        $rowParts = explode(';',$row);
-
-        if(sizeof($rowParts) < 12) { return; }
-
-
-
-        $vsmId = $rowParts[0];
-        $pedigreeCode = $rowParts[1];
-//        $animalOrderNumber = $rowParts[2];
-//        $uln = $rowParts[3];
-//        $vsmIdFather = $rowParts[4];
-//        $vsmIdMother = $rowParts[5];
-//        $gender = $rowParts[6];
-//        $dateOfBirth = $rowParts[7];
-//        $breedCode = $rowParts[8];
-//        $ubnBreeder = $rowParts[9];
-//        $pedigreeOfRegistration = $rowParts[10];
-//        $breedType = $rowParts[11];
-//        $scrapieGenotype = $rowParts[12];
-
-//        $stnParts = StringUtil::getStnFromCsvFileString($pedigreeCode);
-//        $pedigreeCountryCode = $stnParts[JsonInputConstant::PEDIGREE_COUNTRY_CODE];
-//        $pedigreeNumber = $stnParts[JsonInputConstant::PEDIGREE_NUMBER];
-//
-//        dump($pedigreeCountryCode, $pedigreeNumber);die;
-
-        return $this->findAnimal($vsmId);
+        return $rows;
     }
 }
