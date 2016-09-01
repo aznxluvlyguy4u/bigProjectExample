@@ -41,11 +41,14 @@ class NsfoGenerateApikeysCommand extends ContainerAwareCommand
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
-        $cmdUtil->setStartTimeAndPrintIt();
-
         $companies = $em->getRepository(Company::class)->findAll();
+        $locations = $em->getRepository(Location::class)->findAll();
+        $persons = $em->getRepository(Person::class)->findAll();
 
-        $output->writeln('Generating Company ids');
+        $totalCount = count($companies) + count($locations) + count($persons);
+        
+        $cmdUtil->setStartTimeAndPrintIt($totalCount, 0);
+        $cmdUtil->setProgressBarMessage('Generating Company ids');
 
         /** @var Company $company */
         foreach ($companies as $company) {
@@ -57,11 +60,12 @@ class NsfoGenerateApikeysCommand extends ContainerAwareCommand
                 $em->persist($company);
                 $em->flush();
             }
+            $cmdUtil->advanceProgressBar(1);
         }
 
-        $output->writeln('Generating Location ids');
+        $cmdUtil->setProgressBarMessage('Generating Location ids');
 
-        $locations = $em->getRepository(Location::class)->findAll();
+        
 
         foreach ($locations as $location) {
             /**
@@ -72,12 +76,13 @@ class NsfoGenerateApikeysCommand extends ContainerAwareCommand
                 $em->persist($location);
                 $em->flush();
             }
+            $cmdUtil->advanceProgressBar(1);
         }
 
 
-        $output->writeln('Generating Person ids');
+        $cmdUtil->setProgressBarMessage('Generating Person ids');
 
-        $persons = $em->getRepository(Person::class)->findAll();
+        
 
         foreach ($persons as $person) {
             /** @var Person $person */
@@ -86,13 +91,10 @@ class NsfoGenerateApikeysCommand extends ContainerAwareCommand
                 $em->persist($person);
                 $em->flush();
             }
+            $cmdUtil->advanceProgressBar(1);
         }
 
-
-        $output->writeln([
-            '=== DONE ===',
-            '',
-            '']);
+        $cmdUtil->setProgressBarMessage('*finished*');
 
         $cmdUtil->setEndTimeAndPrintFinalOverview();
     }

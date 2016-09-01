@@ -97,27 +97,23 @@ class NsfoMigrateMeasurements2016Command extends ContainerAwareCommand
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
         $output->writeln(['it is assumed there are no duplicate measurements in the csv']);
 
-        $cmdUtil->setStartTimeAndPrintIt();
-
         $data = $cmdUtil->getRowsFromCsvFileWithoutHeader(self::INPUT_PATH);
+
+        $cmdUtil->setStartTimeAndPrintIt(count($data));
 
         $rowCount = 0;
         foreach ($data as $row) {
 
             $this->processRow($row);
-
-            $rowCount++;
-            $output->write('|');
-
             //Flush after each row to prevent duplicates
             DoctrineUtil::flushClearAndGarbageCollect($em);
+            $rowCount++;
 
-            if($rowCount%self::BATCH_COUNT == 0) {
-                $output->write($rowCount);
-            }
+            $cmdUtil->advanceProgressBar(1, 'Rows processed: '.$rowCount);
+
         }
         DoctrineUtil::flushClearAndGarbageCollect($em);
-        $output->write($rowCount);
+        $output->writeln(['','Rows processed: '.$rowCount]);
         
 
         $output->writeln(['===============','Missing ubns: ']);
