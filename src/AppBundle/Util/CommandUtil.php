@@ -122,7 +122,7 @@ class CommandUtil
         $this->elapsedTimeStart = $this->startTime;
         $this->outputInterface->writeln(['Start time: '.date_format($this->startTime, 'Y-m-d H:i:s'),'']);
 
-        if($totalNumberOfUnits != null && $startUnit != null) {
+        if($totalNumberOfUnits !== null && $startUnit !== null) {
             $this->isProgressBarActive = true;
 
             if($totalNumberOfUnits < 1) { $totalNumberOfUnits = self::DEFAULT_TOTAL_UNITS; }
@@ -179,8 +179,8 @@ class CommandUtil
 
         $this->outputInterface->writeln([
             ' ',
-            '=== PROCESS FINISHED ===',
             ' ',
+            '=== PROCESS FINISHED ===',
             '']);
 
         if($this->isProgressBarActive) {
