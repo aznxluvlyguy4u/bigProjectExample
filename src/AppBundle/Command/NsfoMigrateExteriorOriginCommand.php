@@ -36,6 +36,8 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $csv = $this->parseCSV();
+        $totalNumberOfRows = sizeof($csv);
+
         /**
          * @var EntityManager $em
          */
@@ -47,9 +49,9 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
 
         $startCounter = $cmdUtil->generateQuestion('Please enter start row: ', self::DEFAULT_START_ROW);
 
-        $cmdUtil->setStartTimeAndPrintIt();
+        $cmdUtil->setStartTimeAndPrintIt($totalNumberOfRows, $startCounter);
 
-        for($i = $startCounter; $i < sizeof($csv); $i++) {
+        for($i = $startCounter; $i < $totalNumberOfRows; $i++) {
 
             $line = $csv[$i];
 
@@ -60,27 +62,26 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
                 $measurementDateStamp = $measurementDate->format('Y-m-d H:i:s');
                 $measurementDate->add(new \DateInterval('P1D'));
                 $nextDayStamp = $measurementDate->format('Y-m-d H:i:s');
-                
+
                 $kind = $line[2];
                 $progress = (float) $line[3];
                 $height = (float) $line[4];
 
-                $output->write($i);
-
+                $message = $i; //defaultMessage
                 if(NullChecker::isNotNull($measurementDate)){
                     $sql = "SELECT exterior.id as id FROM exterior  INNER JOIN measurement ON exterior.id = measurement.id INNER JOIN animal ON exterior.animal_id = animal.id WHERE animal.name = '".$name."' AND measurement.measurement_date BETWEEN '".$measurementDateStamp."' AND '".$nextDayStamp."'";
                     $result = $em->getConnection()->query($sql)->fetch();
 
                     if ($result) {
                         if($result['id'] != '') {
-                            $output->writeln('+');
                             $sql = "UPDATE exterior SET height = '".$height."', progress = '".$progress."', kind = '".$kind."' WHERE exterior.id = '".$result['id']."'";
                             $em->getConnection()->exec($sql);
+                            $message = $i . ' +';
                         }
-                    } else {
-                        $output->writeln('');
                     }
                 }
+
+                $cmdUtil->advanceProgressBar(1, $message);
             }
 
         }
