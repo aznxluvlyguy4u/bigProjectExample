@@ -18,7 +18,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class NsfoMigrateLittersCommand extends ContainerAwareCommand
 {
     const TITLE = 'Migrate litters';
-    const DEFAULT_INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/20160307_1349_Reproductietabel_alleenWorpen.csv';
+    const DEFAULT_INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/animal_litters_20160307_1349.csv';
     const BATCH_SIZE = 1000;
     const DEFAULT_MIN_VSM_ID = 1;
 
