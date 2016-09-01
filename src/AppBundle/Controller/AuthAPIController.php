@@ -170,7 +170,26 @@ class AuthAPIController extends APIController {
         return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
       }
 
-      if($encoder->isPasswordValid($client, $password)) {
+      if(!$client->getIsActive()) {
+        return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
+      }
+
+      if($client->getEmployer() != null) {
+          if(!$client->getEmployer()->isActive()) {
+            return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
+          }
+      }
+
+      if($client->getCompanies()->count() > 0) {
+          $companies = $client->getCompanies();
+          foreach ($companies as $company) {
+              if(!$company->isActive()){
+                  return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
+              }
+          }
+      }
+
+        if($encoder->isPasswordValid($client, $password)) {
         /** @var Client $client */
         $result = [
             "access_token"=>$client->getAccessToken(),
