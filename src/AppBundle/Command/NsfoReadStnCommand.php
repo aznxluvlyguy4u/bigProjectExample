@@ -25,6 +25,8 @@ use Symfony\Component\Finder\Finder;
 class NsfoReadStnCommand extends ContainerAwareCommand
 {
     const TITLE = 'Migrate PedigreeNumbers (STN)';
+    const DEFAULT_START_ROW = 0;
+
     private $csvParsingOptions = array(
         'finder_in' => 'app/Resources/imports/',
         'finder_name' => 'animal_table_migration.csv',
@@ -42,6 +44,7 @@ class NsfoReadStnCommand extends ContainerAwareCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $csv = $this->parseCSV();
+        $totalNumberOfRows = sizeof($csv);
         /**
          * @var EntityManager $em
          */
@@ -51,15 +54,13 @@ class NsfoReadStnCommand extends ContainerAwareCommand
         $cmdUtil = new CommandUtil($input, $output, $helper);
         $counter = 0;
 
-        $cmdUtil->setStartTimeAndPrintIt();
+        $startCounter = $cmdUtil->generateQuestion('Please enter start row: ', self::DEFAULT_START_ROW);
 
-        foreach ($csv as $line) {
+        $cmdUtil->setStartTimeAndPrintIt($totalNumberOfRows, $startCounter);
 
-            $counter++;
+        for($i = $startCounter; $i < $totalNumberOfRows; $i++) {
 
-            if ($counter % 10000 == 0) {
-                $output->writeln($counter);
-            }
+            $line = $csv[$i];
 
             $animalName = $line[0];
             $pieces = explode(" ", $line[1]);
@@ -74,11 +75,13 @@ class NsfoReadStnCommand extends ContainerAwareCommand
 
             $sql = "UPDATE animal SET pedigree_country_code = '". $pedigreeCountryCode ."', pedigree_number = '". $pedigreeNumber ."' WHERE name = '". $animalName ."'";
             $em->getConnection()->exec($sql);
+
+            $counter++;
+//            $cmdUtil->advanceProgressBar(1, "LINES IMPORTED: " . $counter.'  |  '."TOTAL LINES: " .$totalNumberOfRows);
+            $cmdUtil->advanceProgressBar(1);
         }
 
         $cmdUtil->setEndTimeAndPrintFinalOverview();
-        $output->writeln("LINES IMPORTED: " . $counter);
-        $output->writeln("TOTAL LINES: " . sizeof($csv));
     }
 
     private function parseCSV() {

@@ -136,7 +136,7 @@ class CommandUtil
     public function advanceProgressBar($unitsToAdvance = 1, $message = self::DEFAULT_PROGRESS_BAR_RUNNING_MESSAGE)
     {
         if($unitsToAdvance != null && $unitsToAdvance > 0) {
-            $this->progressBar->advance($unitsToAdvance);
+            $this->progressBar->advance(1);
             if($message != null) {
                 $this->progressBar->setMessage($message);
             } else {
