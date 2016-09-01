@@ -6,6 +6,7 @@ namespace AppBundle\Report;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BodyFatRepository;
 use AppBundle\Entity\Client;
@@ -22,6 +23,7 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
 use AppBundle\Util\TwigOutputUtil;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -30,6 +32,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 class PedigreeCertificate
 {
     const MAX_LENGTH_FULL_NAME = 30;
+    const EMPTY_PRODUCTION = '-/-/-/-';
 
     const LITTER_SIZE = 'litterSize';
     const LITTER_GROUP = 'litterGroup';
@@ -272,7 +275,7 @@ class PedigreeCertificate
         //TODO Add these variables to the entities INCLUDING NULL CHECKS!!!
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BLINDNESS_FACTOR] = '-';
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PREDICATE] = '-';
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PRODUCTION] = '-/-/-/-';
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PRODUCTION] = $this->parseProductionString($animal);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NAME] = '-';
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NUMBER] = '-';
 
@@ -359,4 +362,69 @@ class PedigreeCertificate
             return 0;
         }
     }
+
+
+    /**
+     *
+     * nLing = stillBornCount + bornAliveCount
+     * production = (ewe) litters (litter * nLing)
+
+    production: a/b/c/d e
+    a: age in years from birth until slaughter or until animal is not in nsfo leeftijd in jaren van geboorte tot slacht of totdat het niet in het nsfo systeem zit
+    b: litterCount
+    c: total number of offspring (stillborn + bornAlive)
+    d: total number of bornAliveCount
+    e: (*) als een ooi ooit heeft gelammerd tussen een leeftijd van 6 en 18 maanden
+     *
+     * @param Animal $animal
+     * @return string
+     */
+    public static function parseProductionString($animal)
+    {
+        if($animal instanceof Ewe) {
+            /** @var Ewe $animal */
+            $litters = $animal->getLitters();
+            $litterCount = $litters->count();
+
+            if($litterCount > 0) {
+                $stillbornCount = 0;
+                $bornAliveCount = 0;
+                $earliestLitterDate = $litters->first()->getLitterDate();
+
+                foreach ($litters as $litter) {
+                    /** @var Litter $litter */
+                    $stillbornCount += $litter->getStillbornCount();
+                    $bornAliveCount += $litter->getBornAliveCount();
+                    $litterDate = $litter->getLitterDate();
+                    if($litterDate < $earliestLitterDate) {
+                        $earliestLitterDate = $litterDate;
+                    }
+                }
+                $totalBornCount = $stillbornCount + $bornAliveCount;
+
+                if(TimeUtil::isGaveBirthAsOneYearOld($animal->getDateOfBirth(), $earliestLitterDate)){
+                    $oneYearMark = '*';
+                } else {
+                    $oneYearMark = '';
+                }
+
+                $ageInTheNsfoSystem = TimeUtil::ageInSystem($animal);
+                if($ageInTheNsfoSystem == null) {
+                    $ageInTheNsfoSystem = '-';
+                }
+
+                return $ageInTheNsfoSystem.'/'.$litterCount.'/'.$totalBornCount.'/'.$bornAliveCount.$oneYearMark;
+
+
+            } else {
+                return self::EMPTY_PRODUCTION;
+            }
+        } else {
+            return self::EMPTY_PRODUCTION;
+        }
+    }
+
+
+
+    
 }
