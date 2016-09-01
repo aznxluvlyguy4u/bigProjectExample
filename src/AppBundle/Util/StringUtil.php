@@ -106,4 +106,17 @@ class StringUtil
 
         return array(JsonInputConstant::PEDIGREE_COUNTRY_CODE => $countryCode, JsonInputConstant::PEDIGREE_NUMBER => $number);
     }
+
+
+    /**
+     * Change string with dateFormat of MM/DD/YYYY to YYYY-MM-DD
+     *
+     * @param string $americanDate
+     * @return string
+     */
+    public static function changeDateFormatStringFromAmericanToISO($americanDate)
+    {
+        $dateParts = explode('/', $americanDate);
+        return $dateParts[2].'-'.$dateParts[0].'-'.$dateParts[1];
+    }
 }

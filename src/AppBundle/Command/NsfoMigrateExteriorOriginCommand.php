@@ -2,6 +2,8 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Util\NullChecker;
+use AppBundle\Util\StringUtil;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -16,9 +18,11 @@ use AppBundle\Util\CommandUtil;
 class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
 {
     const TITLE = 'Migrating Exterior from original data source';
+    const DEFAULT_START_ROW = 0;
+
     private $csvParsingOptions = array(
         'finder_in' => 'app/Resources/imports/',
-        'finder_name' => 'animal_exterior_measurements_migration_update.csv', //TODO
+        'finder_name' => 'animal_exterior_measurements_migration_update.csv',
         'ignoreFirstLine' => true
     );
 
@@ -41,29 +45,44 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
         $cmdUtil = new CommandUtil($input, $output, $helper);
         $counter = 0;
 
+        $startCounter = $cmdUtil->generateQuestion('Please enter start row: ', self::DEFAULT_START_ROW);
+
         $cmdUtil->setStartTimeAndPrintIt();
-        foreach ($csv as $line) {
 
+        for($i = $startCounter; $i < sizeof($csv); $i++) {
 
+            $line = $csv[$i];
 
-            
-//            $name = $line[0];
-//            $measurementDate = $line[1]; //TODO format dates
-//            $kind = (float) $line[2]; //Nullcheck -> empty string
-//            $progress = (float) $line[3]; //Nullcheck ->  zero
-//            $height = (float) $line[4]; //Nullcheck -> zero
-//
-//            $counter++;
-//            $output->writeln($counter);
-//
-//            $sql = "SELECT exterior.id FROM exterior INNER JOIN measurement ON exterior.id = measurement.id INNER JOIN animal ON exterior.animal_id = animal.id WHERE animal.name = '' AND measurement_date = ''";
-//            $result = $em->getConnection()->query($sql)->fetch();
-//
-//            if ($result['id'] != "" || $result['id'] != null) {
-//
-//                $sql = "UPDATE exterior SET height = '".$height."', progress = '".$progress."', kind = '".$kind."' WHERE exterior.id = ".$result['id'];
-//                $em->getConnection()->exec($sql);
-//            }
+            if($line[1] != '' && $line[1] != null) {
+
+                $name = $line[0];
+                $measurementDate = new \DateTime(StringUtil::changeDateFormatStringFromAmericanToISO($line[1]));
+                $measurementDateStamp = $measurementDate->format('Y-m-d H:i:s');
+                $measurementDate->add(new \DateInterval('P1D'));
+                $nextDayStamp = $measurementDate->format('Y-m-d H:i:s');
+                
+                $kind = $line[2];
+                $progress = (float) $line[3];
+                $height = (float) $line[4];
+
+                $output->write($i);
+
+                if(NullChecker::isNotNull($measurementDate)){
+                    $sql = "SELECT exterior.id as id FROM exterior  INNER JOIN measurement ON exterior.id = measurement.id INNER JOIN animal ON exterior.animal_id = animal.id WHERE animal.name = '".$name."' AND measurement.measurement_date BETWEEN '".$measurementDateStamp."' AND '".$nextDayStamp."'";
+                    $result = $em->getConnection()->query($sql)->fetch();
+
+                    if ($result) {
+                        if($result['id'] != '') {
+                            $output->writeln('+');
+                            $sql = "UPDATE exterior SET height = '".$height."', progress = '".$progress."', kind = '".$kind."' WHERE exterior.id = '".$result['id']."'";
+                            $em->getConnection()->exec($sql);
+                        }
+                    } else {
+                        $output->writeln('');
+                    }
+                }
+            }
+
         }
 
         $cmdUtil->setEndTimeAndPrintFinalOverview();
