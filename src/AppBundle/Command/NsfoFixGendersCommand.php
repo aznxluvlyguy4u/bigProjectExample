@@ -41,21 +41,69 @@ class NsfoFixGendersCommand extends ContainerAwareCommand
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
-        $cmdUtil->setStartTimeAndPrintIt();
+        /* Diagnosis */
 
         $sql = "SELECT animal.id, ram.object_type, animal.type FROM animal INNER JOIN ram ON animal.id = ram.id WHERE ram.object_type <> animal.type";
-        $results = $this->em->getConnection()->query($sql)->fetchAll();
-        $this->printDiagnosisResults($results, 'Ram');
+        $resultsRam = $this->em->getConnection()->query($sql)->fetchAll();
+        $this->printDiagnosisResults($resultsRam, 'Ram');
 
         $sql = "SELECT animal.id, ewe.object_type, animal.type FROM animal INNER JOIN ewe ON animal.id = ewe.id WHERE ewe.object_type <> animal.type";
-        $results = $this->em->getConnection()->query($sql)->fetchAll();
-        $this->printDiagnosisResults($results, 'Ewe');
+        $resultsEwe = $this->em->getConnection()->query($sql)->fetchAll();
+        $this->printDiagnosisResults($resultsEwe, 'Ewe');
 
         $sql = "SELECT animal.id, neuter.object_type, animal.type FROM animal INNER JOIN neuter ON animal.id = neuter.id WHERE neuter.object_type <> animal.type";
-        $results = $this->em->getConnection()->query($sql)->fetchAll();
-        $this->printDiagnosisResults($results, 'Neuter');
-        
+        $resultsNeuter = $this->em->getConnection()->query($sql)->fetchAll();
+        $this->printDiagnosisResults($resultsNeuter, 'Neuter');
 
+        $output->writeln([' ', 'NOTE! RERUN THIS COMMAND AFTER EVERY DUPLICATE KEY VIOLATION ERROR' ,' ']);
+
+        $cmdUtil->setStartTimeAndPrintIt(count($resultsRam) + count($resultsEwe), 0);
+
+        if(count($resultsRam) > 0) {
+            /* Fix animals incorrectly being a Ram */
+            foreach($resultsRam as $ramResult) {
+                $id = $ramResult['id'];
+                if($ramResult['type'] == 'Neuter'){
+                    $sql = "DELETE FROM ram WHERE id = '".$id."'";
+                    $this->em->getConnection()->exec($sql);
+                    $sql = "INSERT INTO neuter (id, object_type) VALUES ('".$id."', 'Neuter')";
+                    $this->em->getConnection()->exec($sql);
+
+                } elseif($ramResult['type'] == 'Ewe'){
+                    $sql = "DELETE FROM ram WHERE id = '".$id."'";
+                    $this->em->getConnection()->exec($sql);
+                    $sql = "INSERT INTO ewe (id, object_type) VALUES ('".$id."', 'Ewe')";
+                    $this->em->getConnection()->exec($sql);
+                }
+                $cmdUtil->advanceProgressBar(1, 'Incorrect Ram with id: '.$id.'');
+            }
+        }
+
+        if(count($resultsEwe) > 0) {
+            /* Fix animals incorrectly being a Ewe */
+            foreach($resultsEwe as $eweResult) {
+                $id = $eweResult['id'];
+                if($eweResult['type'] == 'Neuter'){
+                    $sql = "DELETE FROM ewe WHERE id = '".$id."'";
+                    $this->em->getConnection()->exec($sql);
+                    $sql = "INSERT INTO neuter (id, object_type) VALUES ('".$id."', 'Neuter')";
+                    $this->em->getConnection()->exec($sql);
+
+                } elseif($eweResult['type'] == 'Ram'){
+                    $sql = "DELETE FROM ewe WHERE id = '".$id."'";
+                    $this->em->getConnection()->exec($sql);
+                    $sql = "INSERT INTO ram (id, object_type) VALUES ('".$id."', 'Ram')";
+                    $this->em->getConnection()->exec($sql);
+                }
+                $cmdUtil->advanceProgressBar(1, 'Incorrect Ewe with id: '.$id.'');
+            }
+        }
+
+
+        if(count($resultsNeuter) > 0) {
+            /* No animals are incorrectly being a Neuter at the moment */
+            $output->writeln('Write fix for neuters');
+        }
 
 
         $cmdUtil->setEndTimeAndPrintFinalOverview();
