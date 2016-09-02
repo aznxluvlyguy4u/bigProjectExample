@@ -116,7 +116,7 @@ class CommandUtil
      * @param int $startUnit
      * @param string $startMessage
      */
-    public function setStartTimeAndPrintIt($totalNumberOfUnits = self::DEFAULT_TOTAL_UNITS, $startUnit = self::DEFAULT_START_UNIT, $startMessage = self::DEFAULT_PROGRESS_BAR_START_MESSAGE)
+    public function setStartTimeAndPrintIt($totalNumberOfUnits = null, $startUnit = null, $startMessage = self::DEFAULT_PROGRESS_BAR_START_MESSAGE)
     {
         $this->startTime = new \DateTime();
         $this->elapsedTimeStart = $this->startTime;
