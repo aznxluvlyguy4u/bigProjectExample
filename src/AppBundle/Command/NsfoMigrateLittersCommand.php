@@ -51,11 +51,11 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $inputFolderPath = $cmdUtil->generateQuestion('Please enter input folder path: ', self::DEFAULT_INPUT_PATH);
         $minVsmId = $cmdUtil->generateQuestion('Please enter minimum vsmId (default = 1): ', self::DEFAULT_MIN_VSM_ID);
 
-        $cmdUtil->setStartTimeAndPrintIt();
-
         $this->litterSets = new ArrayCollection();
 
         $dataWithoutHeader = $cmdUtil::getRowsFromCsvFileWithoutHeader($inputFolderPath);
+
+        $cmdUtil->setStartTimeAndPrintIt(count($dataWithoutHeader), $minVsmId);
 
         $rowCount = 0;
         $this->litterSets = new ArrayCollection();
@@ -118,14 +118,13 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
 
                         $em->persist($litter);
                         $litterCount++;
-                        $output->write('|');
                     }
+
+                    $cmdUtil->advanceProgressBar(1,'Checked LitterCount: '.$litterCount.' |  EweCount: '.$eweCount.' |  last vsmId: '.$eweVsmId);
                 }
                 $eweCount++;
-//                $output->write('#');
 
                 if($eweCount%self::BATCH_SIZE == 0) {
-                    $output->writeln('count: '.$eweCount.' last vsmId: '.$eweVsmId);
                     DoctrineUtil::flushClearAndGarbageCollect($em);
                 }
             }
