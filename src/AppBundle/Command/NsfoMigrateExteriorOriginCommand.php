@@ -77,6 +77,7 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
                             $sql = "UPDATE exterior SET height = '".$height."', progress = '".$progress."', kind = '".$kind."' WHERE exterior.id = '".$result['id']."'";
                             $em->getConnection()->exec($sql);
                             $message = $i . ' +';
+                            $counter++;
                         }
                     }
                 }
