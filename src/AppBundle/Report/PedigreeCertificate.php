@@ -22,6 +22,7 @@ use AppBundle\Entity\MuscleThicknessRepository;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\TailLengthRepository;
+use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
@@ -266,8 +267,7 @@ class PedigreeCertificate
         /* Dates. The null checks for dates are in the twig file, because it has to be combined with the formatting */
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DATE_OF_BIRTH] = $animal->getDateOfBirth();
         //NOTE measurementDate and inspectionDate are identical!
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::INSPECTION_DATE] = $latestExterior->getMeasurementDate();
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MEASUREMENT_DATE] = $latestExterior->getMeasurementDate();
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::INSPECTION_DATE] = $this->getTypeAndInspectionDate($latestExterior);
 
         /* variables translated to Dutch */
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENDER] = Translation::getGenderInDutch($animal);
@@ -305,6 +305,31 @@ class PedigreeCertificate
         $this->data[ReportLabel::F_BREEDER_INDEX_NO_ACC] = 'fb/acc';
         $this->data[ReportLabel::EXT_INDEX_NO_ACC] = 'ex/acc';
         $this->data[ReportLabel::VL_INDEX_NO_ACC] = 'vl/acc';
+    }
+
+
+    /**
+     * @param Exterior $exterior
+     * @return string
+     */
+    private function getTypeAndInspectionDate($exterior)
+    {
+        $measurementDate = $exterior->getMeasurementDate();
+        $kind = $exterior->getKind();
+
+        $kindExists = NullChecker::isNotNull($kind);
+        $measurementDateExists = NullChecker::isNotNull($measurementDate);
+
+        if($kindExists && $measurementDateExists) {
+            return $kind.' '.$measurementDate->format('d-m-Y');
+
+        } elseif (!$kindExists && $measurementDateExists) {
+            return $measurementDate->format('d-m-Y');
+
+        } else {
+            return '-';
+        }
+
     }
 
 

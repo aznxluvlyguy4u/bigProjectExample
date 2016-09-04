@@ -93,11 +93,7 @@
             {% set cDateOfBirth = x.animals['c'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['c'].inspectionDate == null %}
-            {% set cInspectionDate = '-' %}
-        {% else %}
-            {% set cInspectionDate= x.animals['c'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set cInspectionDate= x.animals['c'].inspectionDate %}
 
         {# father, 'f' #}
 
@@ -147,11 +143,8 @@
             {% set fDateOfBirth = x.animals['f'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['f'].inspectionDate == null %}
-            {% set fInspectionDate = '-' %}
-        {% else %}
-            {% set fInspectionDate= x.animals['f'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set fInspectionDate= x.animals['f'].inspectionDate %}
+
 
         {# mother, 'm' #}
 
@@ -201,11 +194,7 @@
             {% set mDateOfBirth = x.animals['m'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['m'].inspectionDate == null %}
-            {% set mInspectionDate = '-' %}
-        {% else %}
-            {% set mInspectionDate= x.animals['m'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set mInspectionDate= x.animals['m'].inspectionDate %}
 
 
         {# father's father, 'ff' #}
@@ -256,11 +245,7 @@
             {% set ffDateOfBirth = x.animals['ff'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['ff'].inspectionDate == null %}
-            {% set ffInspectionDate = '-' %}
-        {% else %}
-            {% set ffInspectionDate= x.animals['ff'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set ffInspectionDate= x.animals['ff'].inspectionDate %}
 
 
         {# father's mother, 'fm' #}
@@ -311,11 +296,7 @@
             {% set fmDateOfBirth = x.animals['fm'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['fm'].inspectionDate == null %}
-            {% set fmInspectionDate = '-' %}
-        {% else %}
-            {% set fmInspectionDate= x.animals['fm'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set fmInspectionDate= x.animals['fm'].inspectionDate %}
 
 
         {# mother's father, 'mf' #}
@@ -366,11 +347,7 @@
             {% set mfDateOfBirth = x.animals['mf'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['mf'].inspectionDate == null %}
-            {% set mfInspectionDate = '-' %}
-        {% else %}
-            {% set mfInspectionDate= x.animals['mf'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set mfInspectionDate= x.animals['mf'].inspectionDate %}
 
 
         {# mother's mother, 'mm' #}
@@ -421,11 +398,7 @@
             {% set mmDateOfBirth = x.animals['mm'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['mm'].inspectionDate == null %}
-            {% set mmInspectionDate = '-' %}
-        {% else %}
-            {% set mmInspectionDate= x.animals['mm'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set mmInspectionDate= x.animals['mm'].inspectionDate %}
 
 
         {# father's father's father, 'fff' #}
@@ -476,11 +449,7 @@
             {% set fffDateOfBirth = x.animals['fff'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['fff'].inspectionDate == null %}
-            {% set fffInspectionDate = '-' %}
-        {% else %}
-            {% set fffInspectionDate= x.animals['fff'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set fffInspectionDate= x.animals['fff'].inspectionDate %}
 
 
         {# father's father's mother, 'ffm' #}
@@ -531,11 +500,7 @@
             {% set ffmDateOfBirth = x.animals['ffm'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['ffm'].inspectionDate == null %}
-            {% set ffmInspectionDate = '-' %}
-        {% else %}
-            {% set ffmInspectionDate= x.animals['ffm'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set ffmInspectionDate= x.animals['ffm'].inspectionDate %}
 
 
         {# father's mother's father, 'fmf' #}
@@ -586,11 +551,7 @@
             {% set fmfDateOfBirth = x.animals['fmf'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['fmf'].inspectionDate == null %}
-            {% set fmfInspectionDate = '-' %}
-        {% else %}
-            {% set fmfInspectionDate= x.animals['fmf'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set fmfInspectionDate= x.animals['fmf'].inspectionDate %}
 
 
         {# father's mother's mother, 'fmm' #}
@@ -641,11 +602,7 @@
             {% set fmmDateOfBirth = x.animals['fmm'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['fmm'].inspectionDate == null %}
-            {% set fmmInspectionDate = '-' %}
-        {% else %}
-            {% set fmmInspectionDate= x.animals['fmm'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set fmmInspectionDate= x.animals['fmm'].inspectionDate %}
 
 
         {# mother's father's father, 'mff' #}
@@ -696,11 +653,7 @@
             {% set mffDateOfBirth = x.animals['mff'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['mff'].inspectionDate == null %}
-            {% set mffInspectionDate = '-' %}
-        {% else %}
-            {% set mffInspectionDate= x.animals['mff'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set mffInspectionDate= x.animals['mff'].inspectionDate %}
 
 
         {# mother's father's mother, 'mfm' #}
@@ -751,11 +704,7 @@
             {% set mfmDateOfBirth = x.animals['mfm'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['mfm'].inspectionDate == null %}
-            {% set mfmInspectionDate = '-' %}
-        {% else %}
-            {% set mfmInspectionDate= x.animals['mfm'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set mfmInspectionDate= x.animals['mfm'].inspectionDate %}
 
 
         {# mother's mother's father, 'mmf' #}
@@ -806,11 +755,7 @@
             {% set mmfDateOfBirth = x.animals['mmf'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['mmf'].inspectionDate == null %}
-            {% set mmfInspectionDate = '-' %}
-        {% else %}
-            {% set mmfInspectionDate= x.animals['mmf'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set mmfInspectionDate= x.animals['mmf'].inspectionDate %}
 
 
         {# mother's mother's mother, 'mmm' #}
@@ -861,11 +806,7 @@
             {% set mmmDateOfBirth = x.animals['mmm'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['mmm'].inspectionDate == null %}
-            {% set mmmInspectionDate = '-' %}
-        {% else %}
-            {% set mmmInspectionDate= x.animals['mmm'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set mmmInspectionDate= x.animals['mmm'].inspectionDate %}
 
 
         {# PART 2: THE HTML/PDF OUTPUT #}
