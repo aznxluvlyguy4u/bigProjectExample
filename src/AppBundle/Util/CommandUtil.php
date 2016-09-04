@@ -23,7 +23,7 @@ class CommandUtil
     const DEFAULT_PROGRESS_BAR_RUNNING_MESSAGE = '*processing*';
     const DEFAULT_PROGRESS_BAR_END_MESSAGE = '*completed*';
     const DEFAULT_TOTAL_UNITS = 100;
-    const DEFAULT_START_UNIT = 0;
+    const DEFAULT_START_UNIT = 1;
 
     /** @var InputInterface */
     private $inputInterface;
