@@ -2,10 +2,7 @@
 
 namespace AppBundle\Command;
 
-use AppBundle\Entity\Weight;
-use AppBundle\Entity\WeightRepository;
 use AppBundle\Util\CommandUtil;
-use AppBundle\Util\DoctrineUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
