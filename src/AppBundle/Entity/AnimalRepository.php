@@ -475,4 +475,20 @@ class AnimalRepository extends BaseRepository
     $sql = "SELECT MIN(id) FROM animal WHERE (animal.pedigree_country_code IS NULL OR animal.pedigree_number IS NULL)";
     return $this->executeSqlQuery($sql);
   }
+
+  /**
+   * @return ArrayCollection
+   */
+  public function getAnimalPrimaryKeysByVsmId()
+  {
+    $sql = "SELECT id, name FROM animal";
+    $results = $this->getEntityManager()->getConnection()->query($sql)->fetchAll();
+
+    $array = new ArrayCollection();
+    foreach ($results as $result) {
+      $array->set($result['name'], $result['id']);
+    }
+
+    return $array;
+  }
 }

@@ -2,10 +2,14 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use JMS\Serializer\Tests\Fixtures\ObjectWithIntListAndIntMap;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -13,18 +17,28 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 
-class NsfoMigratePedigeeregistersCommand extends ContainerAwareCommand
+class NsfoMigratePedigreeregistersCommand extends ContainerAwareCommand
 {
-    const TITLE = 'TESTING';
+    const TITLE = 'Migrate PedigreeRegisters';
+    const DEFAULT_OPTION = 0;
     const DEFAULT_START_ROW = 0;
+    const ESTIMATED_REGISTER_COUNT = 10;
 
     /** @var ObjectManager $em */
     private $em;
 
+    /** @var CommandUtil $em */
+    private $cmdUtil;
+
+    private $csv;
+
+    /** @var int */
+    private $startRow;
+
     private $csvParsingOptions = array(
         'finder_in' => 'app/Resources/imports/',
         'finder_out' => 'app/Resources/outputs/',
-        'finder_name' => 'filename.csv',
+        'finder_name' => 'animal_stamboeken_van_inschrijving.csv',
         'ignoreFirstLine' => true
     );
 
@@ -42,37 +56,130 @@ class NsfoMigratePedigeeregistersCommand extends ContainerAwareCommand
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
         $helper = $this->getHelper('question');
-        $cmdUtil = new CommandUtil($input, $output, $helper);
-
-//        $outputFolder = $this->getContainer()->get('kernel')->getRootDir().'/Resources/outputs';
-//        NullChecker::createFolderPathIfNull($outputFolder);
+        $this->cmdUtil = new CommandUtil($input, $output, $helper);
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
-        $startMessage = 'SETUP';
+        $option = $this->cmdUtil->generateMultiLineQuestion([
+            'Choose option: ',"\n",
+            'Generate PedigreeRegisters from source file (1)',"\n",
+//            'Generate PedigreeRegisters from source file (2)',"\n",
+            'Set PedigreeRegisters for all Animals (2)',"\n",
+            'abort (other)',"\n"
+        ], self::DEFAULT_OPTION);
 
-        $isOnlyCreatePedigreeRegisters = $cmdUtil->generateConfirmationQuestion('Only generate pedigreeRegisters from source file? (y/n)');
-        $startRow = $cmdUtil->generateQuestion('Please enter start row (default = '.self::DEFAULT_START_ROW.'): ', self::DEFAULT_START_ROW);
+        $this->startRow = $this->cmdUtil->generateQuestion('Please enter start row (default = '.self::DEFAULT_START_ROW.')', self::DEFAULT_START_ROW);
+        $this->csv = $this->parseCSV();
 
-        $csv = $this->parseCSV();
-        $totalNumberOfRows = sizeof($csv);
+        switch ($option) {
+            case 1:
+                $this->generatePedigreeRegisters();
+                break;
+            
+            case 2:
+                $this->setPedigreeRegistersForAllAnimals();
+                break;
 
-        $cmdUtil->setStartTimeAndPrintIt($totalNumberOfRows, $startRow, $startMessage);
+            default:
+                $output->writeln('ABORTED');
+                break;
+        }
+
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
+
+    private function generatePedigreeRegisters()
+    {
+        $totalNumberOfRows = sizeof($this->csv);
+        $this->cmdUtil->setStartTimeAndPrintIt($totalNumberOfRows + self::ESTIMATED_REGISTER_COUNT, $this->startRow);
 
         $pedigreeRegisters = new ArrayCollection();
 
+        //Collect all pedigreeRegisters
         $count = 0;
-        for($i = $startRow; $i < 10; $i++) {
-            $row = $csv[$i];
+        for($i = $this->startRow; $i < $totalNumberOfRows; $i++) {
+            $row = $this->csv[$i];
 
-            dump($row);die;
-            $pedigreeRegisters->set('d', 'd');
+            $rowData = explode(' : ',$row[1]);
 
-            $cmdUtil->advanceProgressBar(1, 'Reading line: ' . $i . ' of ' . $totalNumberOfRows . '  | Lines processed: ' . $count);
+            if(count($rowData) > 1) {
+                $abbreviation = $rowData[0];
+                $fullName = $rowData[1];
+                $pedigreeRegisters->set($abbreviation, $fullName);
+            }
+
+            $this->cmdUtil->advanceProgressBar(1, 'Reading line: ' . $i . ' of ' . $totalNumberOfRows . '  | Lines processed: ' . $count);
         }
 
-        $cmdUtil->setEndTimeAndPrintFinalOverview();
+        $registerCount = 0;
+        $abbreviations = $pedigreeRegisters->getKeys();
+        $totalRegisters = $pedigreeRegisters->count();
+        foreach ($abbreviations as $abbreviation) {
+            $fullName = $pedigreeRegisters->get($abbreviation);
+
+            $pedigreeRegister = new PedigreeRegister($abbreviation, $fullName);
+            $this->em->persist($pedigreeRegister);
+
+            $registerCount++;
+            $this->cmdUtil->advanceProgressBar(1, 'Persisting new register: '.$abbreviation.' - '.$fullName.' | '.$registerCount.' of '.$totalRegisters);
+        }
+        $this->em->flush();
+        $this->em->clear();
+    }
+
+
+    public function setPedigreeRegistersForAllAnimals()
+    {
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->em->getRepository(Animal::class);
+        $animalPrimaryKeysByVsmId = $animalRepository->getAnimalPrimaryKeysByVsmId();
+
+        $totalNumberOfRows = sizeof($this->csv);
+        $this->cmdUtil->setStartTimeAndPrintIt($totalNumberOfRows, $this->startRow);
+
+        $pedigreeRegisterPrimaryKeys = $this->getPedigreeRegisterPrimaryKeysByAbbreviation();
+
+        $count = 0;
+        for($i = $this->startRow; $i < $totalNumberOfRows; $i++) {
+            $row = $this->csv[$i];
+
+            $vsmId = $row[0];
+            $rowData = explode(' : ',$row[1]);
+
+            if(count($rowData) > 1) {
+                $abbreviation = $rowData[0];
+                $pedigreeRegisterId = $pedigreeRegisterPrimaryKeys->get($abbreviation);
+                $animalId = $animalPrimaryKeysByVsmId->get($vsmId);
+
+                if($animalId != null) {
+                    $sql = "UPDATE animal SET pedigree_register_id = '". $pedigreeRegisterId ."' WHERE id = '". $animalId ."'";
+                    $this->em->getConnection()->exec($sql);
+
+                    $count++;
+                }
+            }
+
+            $this->cmdUtil->advanceProgressBar(1, 'Reading line: ' . $i . ' of ' . $totalNumberOfRows . '  | Animals processed: ' . $count);
+        }
+    }
+
+
+    /**
+     * @return ArrayCollection
+     */
+    private function getPedigreeRegisterPrimaryKeysByAbbreviation()
+    {
+        $sql = "SELECT id, abbreviation FROM pedigree_register";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+
+        $array = new ArrayCollection();
+        foreach ($results as $result) {
+            $array->set($result['abbreviation'], $result['id']);
+        }
+
+        return $array;
     }
 
 
@@ -89,7 +196,7 @@ class NsfoMigratePedigeeregistersCommand extends ContainerAwareCommand
         $rows = array();
         if (($handle = fopen($csv->getRealPath(), "r")) !== FALSE) {
             $i = 0;
-            while (($data = fgetcsv($handle, 30, ";")) !== FALSE) {
+            while (($data = fgetcsv($handle, null, ",")) !== FALSE) {
                 $i++;
                 if ($ignoreFirstLine && $i == 1) { continue; }
                 $rows[] = $data;

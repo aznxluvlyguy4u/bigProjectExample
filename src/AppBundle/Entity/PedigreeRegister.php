@@ -40,6 +40,19 @@ class PedigreeRegister
      */
     private $fullName;
 
+
+    /**
+     * PedigreeRegister constructor.
+     * @param string $abbreviation
+     * @param string $fullName
+     */
+    public function __construct($abbreviation = null, $fullName = null)
+    {
+        $this->abbreviation = $abbreviation;
+        $this->fullName = $fullName;
+    }
+
+
     /**
      * @return int
      */
