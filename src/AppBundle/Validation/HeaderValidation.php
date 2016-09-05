@@ -121,7 +121,7 @@ class HeaderValidation
 
     public function getLocation()
     {
-        return $this->manager->getRepository(Constant::LOCATION_REPOSITORY)->findByUbn($this->ubn);
+        return $this->manager->getRepository(Constant::LOCATION_REPOSITORY)->findBy(['ubn' =>$this->ubn, 'isActive' => true]);
     }
 
     public function getUbn()
