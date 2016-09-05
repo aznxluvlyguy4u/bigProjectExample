@@ -86,7 +86,8 @@ class PedigreeCertificate
 
         $this->data[ReportLabel::OWNER] = $client;
 
-        $trimmedClientName = StringUtil::getTrimmedFullNameWithAddedEllipsis($client->getFirstName(), $client->getLastName(), self::MAX_LENGTH_FULL_NAME);
+        $companyName = $this->getCompanyName($location, $client);
+        $trimmedClientName = StringUtil::trimStringWithAddedEllipsis($companyName, self::MAX_LENGTH_FULL_NAME);
         $this->data[ReportLabel::OWNER_NAME] = $trimmedClientName;
         $this->data[ReportLabel::ADDRESS] = $location->getCompany()->getAddress();
         $postalCode = $location->getCompany()->getAddress()->getPostalCode();
@@ -450,6 +451,24 @@ class PedigreeCertificate
     }
 
 
-
+    /**
+     * @param Location $location
+     * @param Client $client
+     * @return string
+     */
+    private function getCompanyName($location, $client)
+    {
+        $company = $location->getCompany();
+        if($company != null) {
+            return $company->getCompanyName();
+        } else {
+            $company = $client->getCompanies()->first();
+            if($company != null) {
+                return $company->getCompanyName();
+            } else {
+                return '-';
+            }
+        }
+    }
     
 }
