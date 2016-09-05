@@ -6,6 +6,8 @@ namespace AppBundle\Validation;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationRepository;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\HttpFoundation\HeaderBag;
@@ -121,7 +123,9 @@ class HeaderValidation
 
     public function getLocation()
     {
-        return $this->manager->getRepository(Constant::LOCATION_REPOSITORY)->findBy(['ubn' =>$this->ubn, 'isActive' => true]);
+        /** @var LocationRepository $repository */
+        $repository = $this->manager->getRepository(Location::class);
+        return $repository->findOneByActiveUbn($this->ubn);
     }
 
     public function getUbn()

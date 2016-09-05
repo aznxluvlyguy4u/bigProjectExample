@@ -56,9 +56,9 @@ class LocationRepository extends BaseRepository
    * @param $ubn
    * @return null|Location
    */
-  public function findByUbn($ubn)
+  public function findOneByActiveUbn($ubn)
   {
-    return $this->findOneBy(array(Constant::UBN_NAMESPACE => $ubn));
+    return $this->findOneBy(['ubn' => $ubn, 'isActive' => true]);
   }
 
   /**
@@ -67,7 +67,7 @@ class LocationRepository extends BaseRepository
    */
   public function findByLocationArray(array $location)
   {
-    return $this->findByUbn($location[Constant::UBN_NAMESPACE]);
+    return $this->findOneByActiveUbn($location[Constant::UBN_NAMESPACE]);
   }
 
   /**

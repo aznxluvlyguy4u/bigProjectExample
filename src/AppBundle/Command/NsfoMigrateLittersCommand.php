@@ -14,6 +14,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Finder\Finder;
 
 class NsfoMigrateLittersCommand extends ContainerAwareCommand
 {
@@ -21,6 +22,15 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     const DEFAULT_INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/animal_litters_20160307_1349.csv';
     const BATCH_SIZE = 1000;
     const DEFAULT_MIN_VSM_ID = 1;
+
+    const DEFAULT_START_ROW = 0;
+
+
+    private $csvParsingOptions = array(
+        'finder_in' => 'app/Resources/imports/',
+        'finder_name' => 'animal_litters_20160307_1349.csv',
+        'ignoreFirstLine' => true
+    );
 
     /** @var ArrayCollection $litterSets */
     private $litterSets;
@@ -55,7 +65,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
 
         $dataWithoutHeader = $cmdUtil::getRowsFromCsvFileWithoutHeader($inputFolderPath);
 
-        $cmdUtil->setStartTimeAndPrintIt(count($dataWithoutHeader), $minVsmId);
+        $cmdUtil->setStartTimeAndPrintIt(count($dataWithoutHeader)*2, $minVsmId);
 
         $rowCount = 0;
         $this->litterSets = new ArrayCollection();
@@ -64,11 +74,8 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
 
             $this->groupLittersByEweVsmId($row);
             $rowCount++;
-            if($rowCount%100000 == 0) {
-                $output->writeln('Litters processed into array: '.$rowCount);
-            }
+            $cmdUtil->setProgressBarMessage('Litters grouped into array: '.$rowCount);
         }
-        $output->writeln('Litters processed into array: '.$rowCount);
 
         $output->writeln('Removing litters of Ewes with vsmId below given minimum');
         $eweVsmIds = $this->litterSets->getKeys();
@@ -160,6 +167,32 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
 
         $this->litterSets->get($vsmId)
             ->set($litterDate, [$bornAliveCount, $stillbornCount]);
+    }
+
+
+    private function parseCSV() {
+        $ignoreFirstLine = $this->csvParsingOptions['ignoreFirstLine'];
+
+        $finder = new Finder();
+        $finder->files()
+            ->in($this->csvParsingOptions['finder_in'])
+            ->name($this->csvParsingOptions['finder_name'])
+        ;
+        foreach ($finder as $file) { $csv = $file; }
+
+        $rows = array();
+        if (($handle = fopen($csv->getRealPath(), "r")) !== FALSE) {
+            $i = 0;
+            while (($data = fgetcsv($handle, 30, ";")) !== FALSE) {
+                $i++;
+                if ($ignoreFirstLine && $i == 1) { continue; }
+                $rows[] = $data;
+                gc_collect_cycles();
+            }
+            fclose($handle);
+        }
+
+        return $rows;
     }
 
 }
