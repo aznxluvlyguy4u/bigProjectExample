@@ -79,10 +79,21 @@ class CommandUtil
      */
     public function generateQuestion($question, $defaultAnswer, $isCleanupString = true)
     {
-        $question = new Question([  ' ',
-                                    $question,
-                ':   ']
-            , $defaultAnswer);
+        return $this->generateMultiLineQuestion([  ' ',
+            $question,
+            ':   '], $defaultAnswer);
+    }
+
+
+    /**
+     * @param array $questionArray
+     * @param string $defaultAnswer
+     * @param bool $isCleanupString
+     * @return string
+     */
+    public function generateMultiLineQuestion($questionArray, $defaultAnswer, $isCleanupString = true)
+    {
+        $question = new Question($questionArray, $defaultAnswer);
         $answer = $this->helper->ask($this->inputInterface, $this->outputInterface, $question);
 
         if($isCleanupString) {
@@ -91,6 +102,8 @@ class CommandUtil
 
         return $answer;
     }
+
+
 
     /**
      * @return bool
