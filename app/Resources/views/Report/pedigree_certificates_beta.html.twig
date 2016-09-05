@@ -4,11 +4,11 @@
 
     {% for x in variables %}
 
-{# PART 1: CONVERT VARIABLES IN ARRAYS TO SHORT VARIABLES FOR EASY USE IN THE HTML/PDF REPORT OUTPUT #}
+        {# PART 1: CONVERT VARIABLES IN ARRAYS TO SHORT VARIABLES FOR EASY USE IN THE HTML/PDF REPORT OUTPUT #}
 
         {% set doubleSpace = '&nbsp; &nbsp;' %}
 
-    {# Owner #}
+        {# Owner #}
 
         {% set ubn = x.ubn %}
         {% set ownerName = x.ownerName %}
@@ -17,7 +17,7 @@
         {% set ownerPostalCode = x.postalCode %}
         {% set ownerCity = x.address.city %}
 
-    {# Breeder #}
+        {# Breeder #}
 
         {% set breederName = x. breederName %}
         {% set breederAddress = x.addressBreeder.streetName ~ ' ' ~ x.addressBreeder.addressNumber~x.addressBreeder.addressNumberSuffix %}
@@ -26,7 +26,7 @@
         {% set breederCity = x.addressBreeder.city %}
         {% set breederNumber = x.breederNumber %}
 
-    {# BreedIndex #}
+        {# BreedIndex #}
 
         {% set breedIndexStars = x.breederIndexStars %}
         {% set mBreedIndexStars = x.mBreederIndexStars %}
@@ -41,9 +41,9 @@
         {% set extIndexNoAcc = x.extIndexNoAcc %}
         {% set vlIndexNoAcc = x.vlIndexNoAcc %}
 
-    {# Animals, 'animals' #}
+        {# Animals, 'animals' #}
 
-      {# child, 'c' #}
+        {# child, 'c' #}
 
         {% set cGender = x.animals['c'].gender %}
         {% set cUln = x.animals['c'].uln %}
@@ -63,6 +63,7 @@
         {% set cOffspringCount = x.animals['c'].offspringCount %}
         {% set cBreederName = x.animals['c'].breederName %}
         {% set cBreederNumber = x.animals['c'].breederNumber %}
+        {% set cPedigreeRegisterName = x.pedigreeRegisterName %}
 
         {# Measurements #}
         {% set cSkull = x.animals['c'].skull %}
@@ -93,13 +94,9 @@
             {% set cDateOfBirth = x.animals['c'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['c'].inspectionDate == null %}
-            {% set cInspectionDate = '-' %}
-        {% else %}
-            {% set cInspectionDate= x.animals['c'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set cInspectionDate= x.animals['c'].inspectionDate %}
 
-      {# father, 'f' #}
+        {# father, 'f' #}
 
         {% set fGender = x.animals['f'].gender %}
         {% set fUln = x.animals['f'].uln %}
@@ -147,13 +144,10 @@
             {% set fDateOfBirth = x.animals['f'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['f'].inspectionDate == null %}
-            {% set fInspectionDate = '-' %}
-        {% else %}
-            {% set fInspectionDate= x.animals['f'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set fInspectionDate= x.animals['f'].inspectionDate %}
 
-      {# mother, 'm' #}
+
+        {# mother, 'm' #}
 
         {% set mGender = x.animals['m'].gender %}
         {% set mUln = x.animals['m'].uln %}
@@ -201,14 +195,10 @@
             {% set mDateOfBirth = x.animals['m'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['m'].inspectionDate == null %}
-            {% set mInspectionDate = '-' %}
-        {% else %}
-            {% set mInspectionDate= x.animals['m'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set mInspectionDate= x.animals['m'].inspectionDate %}
 
 
-      {# father's father, 'ff' #}
+        {# father's father, 'ff' #}
 
         {% set ffGender = x.animals['ff'].gender %}
         {% set ffUln = x.animals['ff'].uln %}
@@ -256,14 +246,10 @@
             {% set ffDateOfBirth = x.animals['ff'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['ff'].inspectionDate == null %}
-            {% set ffInspectionDate = '-' %}
-        {% else %}
-            {% set ffInspectionDate= x.animals['ff'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set ffInspectionDate= x.animals['ff'].inspectionDate %}
 
 
-       {# father's mother, 'fm' #}
+        {# father's mother, 'fm' #}
 
         {% set fmGender = x.animals['fm'].gender %}
         {% set fmUln = x.animals['fm'].uln %}
@@ -311,14 +297,10 @@
             {% set fmDateOfBirth = x.animals['fm'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['fm'].inspectionDate == null %}
-            {% set fmInspectionDate = '-' %}
-        {% else %}
-            {% set fmInspectionDate= x.animals['fm'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set fmInspectionDate= x.animals['fm'].inspectionDate %}
 
 
-      {# mother's father, 'mf' #}
+        {# mother's father, 'mf' #}
 
         {% set mfGender = x.animals['mf'].gender %}
         {% set mfUln = x.animals['mf'].uln %}
@@ -366,14 +348,10 @@
             {% set mfDateOfBirth = x.animals['mf'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['mf'].inspectionDate == null %}
-            {% set mfInspectionDate = '-' %}
-        {% else %}
-            {% set mfInspectionDate= x.animals['mf'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set mfInspectionDate= x.animals['mf'].inspectionDate %}
 
 
-      {# mother's mother, 'mm' #}
+        {# mother's mother, 'mm' #}
 
         {% set mmGender = x.animals['mm'].gender %}
         {% set mmUln = x.animals['mm'].uln %}
@@ -421,14 +399,10 @@
             {% set mmDateOfBirth = x.animals['mm'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['mm'].inspectionDate == null %}
-            {% set mmInspectionDate = '-' %}
-        {% else %}
-            {% set mmInspectionDate= x.animals['mm'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set mmInspectionDate= x.animals['mm'].inspectionDate %}
 
 
-      {# father's father's father, 'fff' #}
+        {# father's father's father, 'fff' #}
 
         {% set fffGender = x.animals['fff'].gender %}
         {% set fffUln = x.animals['fff'].uln %}
@@ -476,14 +450,10 @@
             {% set fffDateOfBirth = x.animals['fff'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['fff'].inspectionDate == null %}
-            {% set fffInspectionDate = '-' %}
-        {% else %}
-            {% set fffInspectionDate= x.animals['fff'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set fffInspectionDate= x.animals['fff'].inspectionDate %}
 
 
-      {# father's father's mother, 'ffm' #}
+        {# father's father's mother, 'ffm' #}
 
         {% set ffmGender = x.animals['ffm'].gender %}
         {% set ffmUln = x.animals['ffm'].uln %}
@@ -531,14 +501,10 @@
             {% set ffmDateOfBirth = x.animals['ffm'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['ffm'].inspectionDate == null %}
-            {% set ffmInspectionDate = '-' %}
-        {% else %}
-            {% set ffmInspectionDate= x.animals['ffm'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set ffmInspectionDate= x.animals['ffm'].inspectionDate %}
 
 
-      {# father's mother's father, 'fmf' #}
+        {# father's mother's father, 'fmf' #}
 
         {% set fmfGender = x.animals['fmf'].gender %}
         {% set fmfUln = x.animals['fmf'].uln %}
@@ -586,14 +552,10 @@
             {% set fmfDateOfBirth = x.animals['fmf'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['fmf'].inspectionDate == null %}
-            {% set fmfInspectionDate = '-' %}
-        {% else %}
-            {% set fmfInspectionDate= x.animals['fmf'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set fmfInspectionDate= x.animals['fmf'].inspectionDate %}
 
 
-      {# father's mother's mother, 'fmm' #}
+        {# father's mother's mother, 'fmm' #}
 
         {% set fmmGender = x.animals['fmm'].gender %}
         {% set fmmUln = x.animals['fmm'].uln %}
@@ -641,14 +603,10 @@
             {% set fmmDateOfBirth = x.animals['fmm'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['fmm'].inspectionDate == null %}
-            {% set fmmInspectionDate = '-' %}
-        {% else %}
-            {% set fmmInspectionDate= x.animals['fmm'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set fmmInspectionDate= x.animals['fmm'].inspectionDate %}
 
 
-      {# mother's father's father, 'mff' #}
+        {# mother's father's father, 'mff' #}
 
         {% set mffGender = x.animals['mff'].gender %}
         {% set mffUln = x.animals['mff'].uln %}
@@ -696,14 +654,10 @@
             {% set mffDateOfBirth = x.animals['mff'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['mff'].inspectionDate == null %}
-            {% set mffInspectionDate = '-' %}
-        {% else %}
-            {% set mffInspectionDate= x.animals['mff'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set mffInspectionDate= x.animals['mff'].inspectionDate %}
 
 
-      {# mother's father's mother, 'mfm' #}
+        {# mother's father's mother, 'mfm' #}
 
         {% set mfmGender = x.animals['mfm'].gender %}
         {% set mfmUln = x.animals['mfm'].uln %}
@@ -751,14 +705,10 @@
             {% set mfmDateOfBirth = x.animals['mfm'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['mfm'].inspectionDate == null %}
-            {% set mfmInspectionDate = '-' %}
-        {% else %}
-            {% set mfmInspectionDate= x.animals['mfm'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set mfmInspectionDate= x.animals['mfm'].inspectionDate %}
 
 
-      {# mother's mother's father, 'mmf' #}
+        {# mother's mother's father, 'mmf' #}
 
         {% set mmfGender = x.animals['mmf'].gender %}
         {% set mmfUln = x.animals['mmf'].uln %}
@@ -806,14 +756,10 @@
             {% set mmfDateOfBirth = x.animals['mmf'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['mmf'].inspectionDate == null %}
-            {% set mmfInspectionDate = '-' %}
-        {% else %}
-            {% set mmfInspectionDate= x.animals['mmf'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set mmfInspectionDate= x.animals['mmf'].inspectionDate %}
 
 
-      {# mother's mother's mother, 'mmm' #}
+        {# mother's mother's mother, 'mmm' #}
 
         {% set mmmGender = x.animals['mmm'].gender %}
         {% set mmmUln = x.animals['mmm'].uln %}
@@ -861,14 +807,10 @@
             {% set mmmDateOfBirth = x.animals['mmm'].dateOfBirth|date('d-m-Y') %}
         {% endif %}
 
-        {% if x.animals['mmm'].inspectionDate == null %}
-            {% set mmmInspectionDate = '-' %}
-        {% else %}
-            {% set mmmInspectionDate= x.animals['mmm'].inspectionDate|date('d-m-Y') %}
-        {% endif %}
+        {% set mmmInspectionDate= x.animals['mmm'].inspectionDate %}
 
 
-{# PART 2: THE HTML/PDF OUTPUT #}
+        {# PART 2: THE HTML/PDF OUTPUT #}
 
         <?xml version="1.0"?>
         <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
@@ -4155,11 +4097,11 @@
                         <foreignObject style="overflow:visible;" pointer-events="all" width="269" height="11" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
                             <div xmlns="http://www.w3.org/1999/xhtml" style="display: inline-block; font-size: 9px; font-family: Lato; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 270px; height: 12px; overflow: hidden; white-space: nowrap; text-align: center;">
                                 <div style="text-align: left">
-                                    <font face="Lato">Namens: Nederlands Texels Schapenstamboek</font>
+                                    <font face="Lato">{{ cPedigreeRegisterName }}</font>
                                 </div>
                             </div>
                         </foreignObject>
-                        <text x="135" y="10" fill="#000000" text-anchor="middle" font-size="9px" font-family="Lato">&lt;div style="text-align: left"&gt;&lt;font face="Lato"&gt;Namens: Nederlands Texels Schapenstamboek&lt;/font&gt;&lt;/div&gt;</text>
+                        <text x="135" y="10" fill="#000000" text-anchor="middle" font-size="9px" font-family="Lato">&lt;div style="text-align: left"&gt;&lt;font face="Lato"&gt;{{ cPedigreeRegisterName }}&lt;/font&gt;&lt;/div&gt;</text>
                     </switch>
                 </g>
                 <g transform="translate(345.5,25.5)scale(1.15)">

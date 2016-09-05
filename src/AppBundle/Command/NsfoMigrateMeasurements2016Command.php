@@ -34,8 +34,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 class NsfoMigrateMeasurements2016Command extends ContainerAwareCommand
 {
     const TITLE = 'Migrate MeasurementsData for 2016: meetwaardenoverzicht2016(fixed-formatting).csv';
-    const INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/meetwaardenoverzicht2016(fixed-formatting).csv';
+    const INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/animal_measurements_2016.csv';
     const BATCH_COUNT = 100;
+    const DEFAULT_START_ROW = 0;
 
     /** @var ObjectManager $em */
     private $em;
@@ -97,27 +98,27 @@ class NsfoMigrateMeasurements2016Command extends ContainerAwareCommand
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
         $output->writeln(['it is assumed there are no duplicate measurements in the csv']);
 
-        $cmdUtil->setStartTimeAndPrintIt();
-
         $data = $cmdUtil->getRowsFromCsvFileWithoutHeader(self::INPUT_PATH);
+        $totalNumberOfRows = count($data);
+
+        $startCounter = $cmdUtil->generateQuestion('Please enter start row: ', self::DEFAULT_START_ROW);
+        $cmdUtil->setStartTimeAndPrintIt(count($data), $startCounter);
 
         $rowCount = 0;
-        foreach ($data as $row) {
+        for($i = $startCounter; $i < $totalNumberOfRows; $i++) {
+
+            $row = $data[$i];
 
             $this->processRow($row);
-
-            $rowCount++;
-            $output->write('|');
-
             //Flush after each row to prevent duplicates
             DoctrineUtil::flushClearAndGarbageCollect($em);
+            $rowCount++;
 
-            if($rowCount%self::BATCH_COUNT == 0) {
-                $output->write($rowCount);
-            }
+            $cmdUtil->advanceProgressBar(1, 'Rows processed: '.$rowCount.' |  Now at row: '.$i);
+
         }
         DoctrineUtil::flushClearAndGarbageCollect($em);
-        $output->write($rowCount);
+        $output->writeln(['','All rows processed: '.$rowCount]);
         
 
         $output->writeln(['===============','Missing ubns: ']);

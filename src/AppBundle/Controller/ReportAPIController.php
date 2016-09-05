@@ -76,8 +76,13 @@ class ReportAPIController extends APIController {
     $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,
         array(
             'orientation'=>'Landscape',
-            'default-header'=>true,
-            'disable-smart-shrinking'=>true
+            'default-header'=>false,
+            'disable-smart-shrinking'=>true,
+            'print-media-type' => true,
+            'margin-top'    => 6,
+            'margin-right'  => 8,
+            'margin-bottom' => 4,
+            'margin-left'   => 8,
     ));
 
     $s3Service = $this->getStorageService();

@@ -3,14 +3,17 @@
 namespace AppBundle\Command;
 
 use AppBundle\Util\CommandUtil;
+
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Finder\Finder;
 
 class NsfoTestCommand extends ContainerAwareCommand
 {
@@ -19,6 +22,13 @@ class NsfoTestCommand extends ContainerAwareCommand
 
     /** @var ObjectManager $em */
     private $em;
+
+    private $csvParsingOptions = array(
+        'finder_in' => 'app/Resources/imports/',
+        'finder_out' => 'app/Resources/outputs/',
+        'finder_name' => 'filename.csv',
+        'ignoreFirstLine' => true
+    );
 
     protected function configure()
     {
@@ -39,11 +49,26 @@ class NsfoTestCommand extends ContainerAwareCommand
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
-        $cmdUtil->setStartTimeAndPrintIt();
+        $totalNumberOfUnits = 20;
+        $startUnit = 10;
+        $startMessage = 'ARE YOU READY!';
 
+        $cmdUtil->setStartTimeAndPrintIt($totalNumberOfUnits, $startUnit, $startMessage);
+
+//        $csv = $this->parseCSV();
+//        $totalNumberOfRows = sizeof($csv);
+
+//        or use
 //        $fileContents = file_get_contents(self::INPUT_PATH);
 
-        $output->writeln([
+        for($i = 0; $i < 10; $i++) {
+//            $row = $csv[$i];
+            sleep(1);
+            $message = $i;
+            $cmdUtil->advanceProgressBar(1, $message);
+        }
+
+        $output->writeln(['',
             '=== Print Something ===',
             'Result 1: ',
             'Result 2: ',
@@ -51,6 +76,33 @@ class NsfoTestCommand extends ContainerAwareCommand
             '']);
 
         $cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
+
+
+    private function parseCSV() {
+        $ignoreFirstLine = $this->csvParsingOptions['ignoreFirstLine'];
+
+        $finder = new Finder();
+        $finder->files()
+            ->in($this->csvParsingOptions['finder_in'])
+            ->name($this->csvParsingOptions['finder_name'])
+        ;
+        foreach ($finder as $file) { $csv = $file; }
+
+        $rows = array();
+        if (($handle = fopen($csv->getRealPath(), "r")) !== FALSE) {
+            $i = 0;
+            while (($data = fgetcsv($handle, null, ";")) !== FALSE) {
+                $i++;
+                if ($ignoreFirstLine && $i == 1) { continue; }
+                $rows[] = $data;
+                gc_collect_cycles();
+            }
+            fclose($handle);
+        }
+
+        return $rows;
     }
 
 }

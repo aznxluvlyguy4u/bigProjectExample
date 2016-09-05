@@ -112,3 +112,4 @@ nsfo_dev
 
 # NSFO import files:
 /app/Resources/imports/
+/app/Resources/outputs/

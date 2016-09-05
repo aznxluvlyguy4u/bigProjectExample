@@ -15,13 +15,17 @@ class WeightRepository extends BaseRepository {
      * @param Animal $animal
      * @return float
      */
-    public function getLatestWeight(Animal $animal)
+    public function getLatestWeight(Animal $animal, $isIncludingBirthWeight = true)
     {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('animal', $animal))
             ->andWhere(Criteria::expr()->eq('isRevoked', false))
             ->orderBy(['measurementDate' => Criteria::DESC])
             ->setMaxResults(1);
+
+        if(!$isIncludingBirthWeight) {
+            $criteria = $criteria->andWhere(Criteria::expr()->eq('isBirthWeight', false));
+        }
 
         $latestWeightResult = $this->getEntityManager()->getRepository(Weight::class)
             ->matching($criteria);
@@ -32,6 +36,7 @@ class WeightRepository extends BaseRepository {
         } else {
             $latestWeight = 0.00;
         }
+
         return $latestWeight;
     }
 

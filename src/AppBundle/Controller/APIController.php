@@ -40,6 +40,7 @@ use AppBundle\Enumerator\TokenType;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Util\Finder;
+use AppBundle\Util\Validator;
 use AppBundle\Validation\HeaderValidation;
 use ClassesWithParents\E;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -49,7 +50,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
-use Symfony\Component\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -511,7 +511,7 @@ class APIController extends Controller implements APIControllerInterface
 
     $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
     $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
-    $isValid = \AppBundle\Validation\Validator::verifyPedigreeCode($this->getDoctrine()->getManager(), $pedigreeCountryCode, $pedigreeNumber, true);
+    $isValid = Validator::verifyPedigreeCode($this->getDoctrine()->getManager(), $pedigreeCountryCode, $pedigreeNumber, true);
 
     if($pedigreeCountryCode != null && $pedigreeNumber != null) {
       $pedigree = $pedigreeCountryCode.$pedigreeNumber;

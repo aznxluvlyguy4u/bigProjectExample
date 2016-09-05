@@ -22,6 +22,7 @@ use AppBundle\Entity\MuscleThicknessRepository;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\TailLengthRepository;
+use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
@@ -33,6 +34,7 @@ class PedigreeCertificate
 {
     const MAX_LENGTH_FULL_NAME = 30;
     const EMPTY_PRODUCTION = '-/-/-/-';
+    const MISSING_PEDIGREE_REGISTER = '';
 
     const LITTER_SIZE = 'litterSize';
     const LITTER_GROUP = 'litterGroup';
@@ -85,7 +87,8 @@ class PedigreeCertificate
 
         $this->data[ReportLabel::OWNER] = $client;
 
-        $trimmedClientName = StringUtil::getTrimmedFullNameWithAddedEllipsis($client->getFirstName(), $client->getLastName(), self::MAX_LENGTH_FULL_NAME);
+        $companyName = $this->getCompanyName($location, $client);
+        $trimmedClientName = StringUtil::trimStringWithAddedEllipsis($companyName, self::MAX_LENGTH_FULL_NAME);
         $this->data[ReportLabel::OWNER_NAME] = $trimmedClientName;
         $this->data[ReportLabel::ADDRESS] = $location->getCompany()->getAddress();
         $postalCode = $location->getCompany()->getAddress()->getPostalCode();
@@ -108,6 +111,7 @@ class PedigreeCertificate
         $breederLastName = '-';
         $trimmedBreederName = StringUtil::getTrimmedFullNameWithAddedEllipsis($breederFirstName, $breederLastName, self::MAX_LENGTH_FULL_NAME);
         $this->data[ReportLabel::BREEDER_NAME] = $trimmedBreederName;
+        $this->data[ReportLabel::PEDIGREE_REGISTER_NAME] = $this->getPedigreeRegisterText($animal);
 
         $emptyAddress = new LocationAddress(); //For now an empty Address entity is passed
         $emptyAddress->setStreetName('-');
@@ -233,7 +237,7 @@ class PedigreeCertificate
 
         //Exterior
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SKULL] = Utils::fillZero($latestExterior->getSkull());
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DEVELOPMENT] = Utils::fillZero(0.00);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DEVELOPMENT] = Utils::fillZero($latestExterior->getProgress());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCULARITY] = Utils::fillZero($latestExterior->getMuscularity());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PROPORTION] = Utils::fillZero($latestExterior->getProportion());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TYPE] = Utils::fillZero($latestExterior->getExteriorType());
@@ -266,8 +270,7 @@ class PedigreeCertificate
         /* Dates. The null checks for dates are in the twig file, because it has to be combined with the formatting */
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DATE_OF_BIRTH] = $animal->getDateOfBirth();
         //NOTE measurementDate and inspectionDate are identical!
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::INSPECTION_DATE] = $latestExterior->getMeasurementDate();
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MEASUREMENT_DATE] = $latestExterior->getMeasurementDate();
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::INSPECTION_DATE] = $this->getTypeAndInspectionDate($latestExterior);
 
         /* variables translated to Dutch */
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENDER] = Translation::getGenderInDutch($animal);
@@ -305,6 +308,31 @@ class PedigreeCertificate
         $this->data[ReportLabel::F_BREEDER_INDEX_NO_ACC] = 'fb/acc';
         $this->data[ReportLabel::EXT_INDEX_NO_ACC] = 'ex/acc';
         $this->data[ReportLabel::VL_INDEX_NO_ACC] = 'vl/acc';
+    }
+
+
+    /**
+     * @param Exterior $exterior
+     * @return string
+     */
+    private function getTypeAndInspectionDate($exterior)
+    {
+        $measurementDate = $exterior->getMeasurementDate();
+        $kind = $exterior->getKind();
+
+        $kindExists = NullChecker::isNotNull($kind);
+        $measurementDateExists = NullChecker::isNotNull($measurementDate);
+
+        if($kindExists && $measurementDateExists) {
+            return $kind.' '.$measurementDate->format('d-m-Y');
+
+        } elseif (!$kindExists && $measurementDateExists) {
+            return $measurementDate->format('d-m-Y');
+
+        } else {
+            return '-';
+        }
+
     }
 
 
@@ -425,6 +453,39 @@ class PedigreeCertificate
     }
 
 
+    /**
+     * @param Location $location
+     * @param Client $client
+     * @return string
+     */
+    private function getCompanyName($location, $client)
+    {
+        $company = $location->getCompany();
+        if($company != null) {
+            return $company->getCompanyName();
+        } else {
+            $company = $client->getCompanies()->first();
+            if($company != null) {
+                return $company->getCompanyName();
+            } else {
+                return '-';
+            }
+        }
+    }
 
-    
+
+    /**
+     * @param Animal $animal
+     * @return string
+     */
+    private function getPedigreeRegisterText($animal)
+    {
+        $registerName = $animal->getPedigreeRegisterFullName();
+
+        if($registerName != null && $registerName != '') {
+            return 'Namens: '.$registerName;
+        } else {
+            return self::MISSING_PEDIGREE_REGISTER;
+        }
+    }
 }

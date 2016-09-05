@@ -475,6 +475,13 @@ abstract class Animal
     protected $note;
 
     /**
+     * @var PedigreeRegister
+     * @ORM\ManyToOne(targetEntity="PedigreeRegister", cascade={"persist"})
+     * @ORM\JoinColumn(name="pedigree_register_id", referencedColumnName="id")
+     */
+    protected $pedigreeRegister;
+
+    /**
      * Animal constructor.
      */
     public function __construct() {
@@ -1921,6 +1928,37 @@ abstract class Animal
     public function setUbnOfBirth($ubnOfBirth)
     {
         $this->ubnOfBirth = $ubnOfBirth;
+    }
+
+    /**
+     * @return PedigreeRegister
+     */
+    public function getPedigreeRegister()
+    {
+        return $this->pedigreeRegister;
+    }
+
+    /**
+     * @param string $nullFiller
+     * @return string
+     */
+    public function getPedigreeRegisterFullName($nullFiller = '')
+    {
+        if($this->pedigreeRegister != null) {
+            $registerName = $this->pedigreeRegister->getFullName();
+            if($registerName != null && $registerName != '') {
+                return $registerName;
+            }
+        }
+        return $nullFiller;
+    }
+
+    /**
+     * @param PedigreeRegister $pedigreeRegister
+     */
+    public function setPedigreeRegister($pedigreeRegister)
+    {
+        $this->pedigreeRegister = $pedigreeRegister;
     }
 
 

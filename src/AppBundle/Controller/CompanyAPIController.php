@@ -725,36 +725,4 @@ class CompanyAPIController extends APIController
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
 
-    /**
-     * @param Request $request the request object
-     *
-     * @return JsonResponse
-     * @Route("/generate-ids")
-     * @Method("POST")
-     */
-    public function generateNewCompanyIds(Request $request)
-    {
-        // Validation if user is an admin
-        $admin = $this->getAuthenticatedEmployee($request);
-        $adminValidator = new AdminValidator($admin);
-
-        if (!$adminValidator->getIsAccessGranted()) {
-            return $adminValidator->createJsonErrorResponse();
-        }
-
-        $companies = $this->getDoctrine()->getRepository(Constant::COMPANY_REPOSITORY)->findAll();
-
-        foreach ($companies as $company) {
-            /*
-             * @var Company
-             */
-            if ($company->getCompanyId() == null || $company->getCompanyId() == '') {
-                $company->setCompanyId(Utils::generateTokenCode());
-                $this->getDoctrine()->getEntityManager()->persist($company);
-                $this->getDoctrine()->getEntityManager()->flush();
-            }
-        }
-
-        return new JsonResponse('ok', 200);
-    }
 }

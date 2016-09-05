@@ -64,7 +64,9 @@ class AnimalDetailsOutput
             $breastDepth = 0.00;
             $torsoLength = 0.00;
             $markings = 0.00;
+            $kind = '';
         } else {
+            /** @var Exterior $exterior */
             $exterior = $em->getRepository(Exterior::class)->getLatestExterior($animal);
             $exteriorDate = $exterior->getMeasurementDate();
             $skull = $exterior->getSkull();
@@ -79,6 +81,7 @@ class AnimalDetailsOutput
             $breastDepth = $exterior->getBreastDepth();
             $torsoLength = $exterior->getTorsoLength();
             $markings = $exterior->getMarkings();
+            $kind = $exterior->getKind();
         }
 
         $bodyFats = $animal->getBodyFatMeasurements();
@@ -93,7 +96,7 @@ class AnimalDetailsOutput
             $weight = 0.00;
             $birthWeight = 0.00;
         } else {
-            $weight = $em->getRepository(Weight::class)->getLatestWeight($animal);
+            $weight = $em->getRepository(Weight::class)->getLatestWeight($animal, false);
             $birthWeight = $em->getRepository(Weight::class)->getLatestBirthWeight($animal);
         }
 
@@ -160,7 +163,8 @@ class AnimalDetailsOutput
                         "height" =>             Utils::fillZero($height, $replacementString),
                         "breast_depth" =>       Utils::fillZero($breastDepth, $replacementString),
                         "torso_length" =>       Utils::fillZero($torsoLength, $replacementString),
-                        "markings" =>           Utils::fillZero($markings, $replacementString)
+                        "markings" =>           Utils::fillZero($markings, $replacementString),
+                        "kind" =>               Utils::fillZero($kind, $replacementString)
                     ),
                 "measurement" =>
                     array(
