@@ -11,6 +11,7 @@ use AppBundle\Entity\Company;
 use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
+use Symfony\Component\Filesystem\Filesystem;
 
 class NullChecker
 {
@@ -189,6 +190,18 @@ class NullChecker
             return Utils::fillNullOrEmptyString($revoker->getPersonId(), $nullReplacementText);
         } else {
             return $nullReplacementText;
+        }
+    }
+
+
+    /**
+     * @param string $folderPath
+     */
+    public static function createFolderPathIfNull($folderPath)
+    {
+        $fs = new Filesystem();
+        if(!$fs->exists($folderPath)) {
+            $fs->mkdir($folderPath);
         }
     }
 }

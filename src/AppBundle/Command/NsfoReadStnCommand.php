@@ -9,6 +9,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
@@ -57,7 +58,7 @@ class NsfoReadStnCommand extends ContainerAwareCommand
         $this->em = $em;
 
         $outputFolder = $this->getContainer()->get('kernel')->getRootDir().'/Resources/outputs';
-        $this->nullCheckFolderPath($outputFolder);
+        NullChecker::createFolderPathIfNull($outputFolder);
 
         $errorOutputFileWrongLength = $outputFolder.'/possible_incorrect_pedigree_codes_wrong_length.csv';
         $errorOutputFileNoDashes = $outputFolder.'/possible_incorrect_pedigree_codes_no_dashes.csv';
@@ -130,18 +131,6 @@ class NsfoReadStnCommand extends ContainerAwareCommand
         $this->em->getConnection()->exec($sql);
         $sql = "UPDATE animal SET pedigree_number = NULL;";
         $this->em->getConnection()->exec($sql);
-    }
-
-
-    /**
-     * @param string $folderPath
-     */
-    private function nullCheckFolderPath($folderPath)
-    {
-        $fs = new Filesystem();
-        if(!$fs->exists($folderPath)) {
-            $fs->mkdir($folderPath);
-        }
     }
 
 
