@@ -34,7 +34,7 @@ class PedigreeCertificate
 {
     const MAX_LENGTH_FULL_NAME = 30;
     const EMPTY_PRODUCTION = '-/-/-/-';
-    const MISSING_PEDIGREE_REGISTER = '* onbekend stamboek schaap *';
+    const MISSING_PEDIGREE_REGISTER = '';
 
     const LITTER_SIZE = 'litterSize';
     const LITTER_GROUP = 'litterGroup';
@@ -111,7 +111,7 @@ class PedigreeCertificate
         $breederLastName = '-';
         $trimmedBreederName = StringUtil::getTrimmedFullNameWithAddedEllipsis($breederFirstName, $breederLastName, self::MAX_LENGTH_FULL_NAME);
         $this->data[ReportLabel::BREEDER_NAME] = $trimmedBreederName;
-        $this->data[ReportLabel::PEDIGREE_REGISTER_NAME] = $animal->getPedigreeRegisterFullName(self::MISSING_PEDIGREE_REGISTER);
+        $this->data[ReportLabel::PEDIGREE_REGISTER_NAME] = $this->getPedigreeRegisterText($animal);
 
         $emptyAddress = new LocationAddress(); //For now an empty Address entity is passed
         $emptyAddress->setStreetName('-');
@@ -472,5 +472,20 @@ class PedigreeCertificate
             }
         }
     }
-    
+
+
+    /**
+     * @param Animal $animal
+     * @return string
+     */
+    private function getPedigreeRegisterText($animal)
+    {
+        $registerName = $animal->getPedigreeRegisterFullName();
+
+        if($registerName != null && $registerName != '') {
+            return 'Namens: '.$registerName;
+        } else {
+            return self::MISSING_PEDIGREE_REGISTER;
+        }
+    }
 }
