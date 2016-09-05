@@ -93,7 +93,7 @@ class NsfoTestCommand extends ContainerAwareCommand
         $rows = array();
         if (($handle = fopen($csv->getRealPath(), "r")) !== FALSE) {
             $i = 0;
-            while (($data = fgetcsv($handle, 30, ";")) !== FALSE) {
+            while (($data = fgetcsv($handle, null, ";")) !== FALSE) {
                 $i++;
                 if ($ignoreFirstLine && $i == 1) { continue; }
                 $rows[] = $data;
