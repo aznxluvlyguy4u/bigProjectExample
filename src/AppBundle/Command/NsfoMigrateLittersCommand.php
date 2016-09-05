@@ -89,6 +89,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
             $cmdUtil->setProgressBarMessage('Litters grouped into array: '.$rowCount);
         }
 
+
         $cmdUtil->setProgressBarMessage('Removing litters of Ewes with primaryKey Id below given minimum');
         $eweIds = $this->litterSets->getKeys();
         $cmdUtil->setProgressBarMessage('Ewes before filtering on min Id: '.sizeof($eweIds));
