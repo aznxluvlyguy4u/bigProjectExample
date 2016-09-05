@@ -64,6 +64,7 @@ class AnimalDetailsOutput
             $breastDepth = 0.00;
             $torsoLength = 0.00;
             $markings = 0.00;
+            $kind = '';
         } else {
             /** @var Exterior $exterior */
             $exterior = $em->getRepository(Exterior::class)->getLatestExterior($animal);
