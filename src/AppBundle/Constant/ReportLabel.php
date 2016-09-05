@@ -63,6 +63,7 @@ class ReportLabel
     const INSPECTION_DATE = 'inspectionDate';
     const PREDICATE = 'predicate';
     const BLINDNESS_FACTOR = 'blindnessFactor';
+    const PEDIGREE_REGISTER_NAME = 'pedigreeRegisterName';
 
     //Measurements
     const EXTERIOR = 'exterior';

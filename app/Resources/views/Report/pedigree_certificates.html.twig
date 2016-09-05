@@ -63,6 +63,7 @@
         {% set cOffspringCount = x.animals['c'].offspringCount %}
         {% set cBreederName = x.animals['c'].breederName %}
         {% set cBreederNumber = x.animals['c'].breederNumber %}
+        {% set cPedigreeRegisterName = x.pedigreeRegisterName %}
 
         {# Measurements #}
         {% set cSkull = x.animals['c'].skull %}
@@ -4096,11 +4097,11 @@
                         <foreignObject style="overflow:visible;" pointer-events="all" width="269" height="11" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
                             <div xmlns="http://www.w3.org/1999/xhtml" style="display: inline-block; font-size: 9px; font-family: Lato; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 270px; height: 12px; overflow: hidden; white-space: nowrap; text-align: center;">
                                 <div style="text-align: left">
-                                    <font face="Lato">Namens: Nederlands Texels Schapenstamboek</font>
+                                    <font face="Lato">Namens: {{ cPedigreeRegisterName }}</font>
                                 </div>
                             </div>
                         </foreignObject>
-                        <text x="135" y="10" fill="#000000" text-anchor="middle" font-size="9px" font-family="Lato">&lt;div style="text-align: left"&gt;&lt;font face="Lato"&gt;Namens: Nederlands Texels Schapenstamboek&lt;/font&gt;&lt;/div&gt;</text>
+                        <text x="135" y="10" fill="#000000" text-anchor="middle" font-size="9px" font-family="Lato">&lt;div style="text-align: left"&gt;&lt;font face="Lato"&gt;Namens: {{ cPedigreeRegisterName }}&lt;/font&gt;&lt;/div&gt;</text>
                     </switch>
                 </g>
                 <g transform="translate(345.5,25.5)scale(1.15)">

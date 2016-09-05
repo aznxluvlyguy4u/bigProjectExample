@@ -1939,6 +1939,21 @@ abstract class Animal
     }
 
     /**
+     * @param string $nullFiller
+     * @return string
+     */
+    public function getPedigreeRegisterFullName($nullFiller = '')
+    {
+        if($this->pedigreeRegister != null) {
+            $registerName = $this->pedigreeRegister->getFullName();
+            if($registerName != null && $registerName != '') {
+                return $registerName;
+            }
+        }
+        return $nullFiller;
+    }
+
+    /**
      * @param PedigreeRegister $pedigreeRegister
      */
     public function setPedigreeRegister($pedigreeRegister)
