@@ -96,7 +96,7 @@ class AnimalDetailsOutput
             $weight = 0.00;
             $birthWeight = 0.00;
         } else {
-            $weight = $em->getRepository(Weight::class)->getLatestWeight($animal);
+            $weight = $em->getRepository(Weight::class)->getLatestWeight($animal, false);
             $birthWeight = $em->getRepository(Weight::class)->getLatestBirthWeight($animal);
         }
 
