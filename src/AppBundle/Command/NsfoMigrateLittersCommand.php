@@ -84,7 +84,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ',"\n",
             'Generate Litters from source file (incl mother, excl children) (1)',"\n",
-            'Match children with existing litters (2)',"\n",
+            'Match children with existing litters and set father in litter (2)',"\n",
             'abort (other)',"\n"
         ], self::DEFAULT_OPTION);
 
@@ -94,7 +94,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                 break;
 
             case 2:
-                $this->matchChildrenWithExistingLitters();
+                $this->matchChildrenWithExistingLittersAndSetFatherInLitter();
                 break;
 
             default:
@@ -105,15 +105,15 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     }
 
 
-    private function matchChildrenWithExistingLitters()
+    private function matchChildrenWithExistingLittersAndSetFatherInLitter()
     {
         $isSkipChildrenWithALitter = $this->cmdUtil->generateConfirmationQuestion('Skip children with a litter? (y/n)');
 
         //Retrieve data from db
         if($isSkipChildrenWithALitter) {
-            $sql = "SELECT date_of_birth, id as animal_id, animal.litter_id as animal_litter_id, parent_mother_id FROM animal WHERE animal.litter_id IS NOT NULL";
+            $sql = "SELECT date_of_birth, id as animal_id, animal.litter_id as animal_litter_id, parent_mother_id, parent_father_id FROM animal WHERE animal.litter_id IS NOT NULL";
         } else {
-            $sql = "SELECT date_of_birth, id as animal_id, animal.litter_id as animal_litter_id, parent_mother_id FROM animal";
+            $sql = "SELECT date_of_birth, id as animal_id, animal.litter_id as animal_litter_id, parent_mother_id, parent_father_id FROM animal";
         }
         $childrenResults = $this->em->getConnection()->query($sql)->fetchAll();
 
@@ -129,7 +129,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         foreach ($childrenResults as $childResult)
         {
             $motherDateString = $this->createAnimalSearchString($childResult);
-            $animalSearchArray->set($motherDateString, $childResult['animal_id']);
+            $animalSearchArray->set($motherDateString, $childResult);
         }
 
         foreach ($litterResults as $litterResult)
@@ -141,24 +141,34 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         //Match arrays: For each child find a matching litter
         $foundLittersCount = 0;
         $noLitterFoundCount = 0;
+        $missingFatherCount = 0;
         $animalMotherDateStrings = $animalSearchArray->getKeys();
         foreach ($animalMotherDateStrings as $animalMotherDateString) {
             $litterId = $litterSearchArray->get($animalMotherDateString);
-            $animalId = $animalSearchArray->get($animalMotherDateString);
+            $childResult = $animalSearchArray->get($animalMotherDateString);
+            $animalId = $childResult['animal_id'];
+            $fatherId = $childResult['parent_father_id'];
             if($litterId != null) {
 
                 $sql = "UPDATE animal SET litter_id = '". $litterId ."' WHERE id = '". $animalId ."'";
                 $this->em->getConnection()->exec($sql);
 
+                if($fatherId != null) {
+                    $sql = "UPDATE litter SET animal_father_id = '". $fatherId ."' WHERE id = '". $litterId ."'";
+                    $this->em->getConnection()->exec($sql);
+                    $missingFatherCount++;
+                }
+
                 $foundLittersCount++;
-                $animalProgressBarMessage = 'Litter found for animal '.$animalId;
+                $animalProgressBarMessage = 'LITTER FOUND FOR ANIMAL: '.$animalId;
             } else {
                 $noLitterFoundCount++;
-                $animalProgressBarMessage = 'No litter found for animal '.$animalId;
+                $animalProgressBarMessage = 'MISSING LITTER FOR ANIMAL: '.$animalId;
             }
             $this->cmdUtil->advanceProgressBar(1, $animalProgressBarMessage.
-                                                '  | Litters found for animal: '.$foundLittersCount.
-                                                '  | No litters found for animal: '.$noLitterFoundCount);
+                                                '  | LITTERS FOUND: '.$foundLittersCount.
+                                                '  | LITTERS MISSING: '.$noLitterFoundCount.
+                                                '  | FATHERS MISSING: '.$missingFatherCount);
         }
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
