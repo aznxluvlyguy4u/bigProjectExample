@@ -964,6 +964,7 @@ class APIController extends Controller implements APIControllerInterface
         ->setSubject($subjectHeader)
         ->setFrom($mailerSourceAddress)
         ->setTo($person->getEmailAddress())
+        ->setBcc($mailerSourceAddress)
         ->setBody(
             $this->renderView(
             // app/Resources/views/...
