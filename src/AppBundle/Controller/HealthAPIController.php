@@ -59,7 +59,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
     }
 
     $em = $this->getDoctrine()->getEntityManager();
-    $location = $em->getRepository(Location::class)->findByUbn($ubn);
+    $location = $em->getRepository(Location::class)->findOneByActiveUbn($ubn);
 
     if($location == null) {
       $errorMessage = "No Location found with ubn: " . $ubn;
@@ -92,7 +92,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
     }
 
     $em = $this->getDoctrine()->getEntityManager();
-    $location = $em->getRepository(Location::class)->findByUbn($ubn);
+    $location = $em->getRepository(Location::class)->findOneByActiveUbn($ubn);
 
     //UBN Validation
     if($location == null) {

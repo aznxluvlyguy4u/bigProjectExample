@@ -64,7 +64,6 @@ class NsfoMigratePedigreeregistersCommand extends ContainerAwareCommand
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ',"\n",
             'Generate PedigreeRegisters from source file (1)',"\n",
-//            'Generate PedigreeRegisters from source file (2)',"\n",
             'Set PedigreeRegisters for all Animals (2)',"\n",
             'abort (other)',"\n"
         ], self::DEFAULT_OPTION);

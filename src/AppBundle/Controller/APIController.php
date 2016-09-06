@@ -799,7 +799,7 @@ class APIController extends Controller implements APIControllerInterface
     $code = 428;
     $message = 'THE UBN IS NOT REGISTERED AT NSFO';
 
-    $location = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY)->findByUbn($ubn);
+    $location = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY)->findOneByActiveUbn($ubn);
 
     if($location != null) {
       $isValid = true;
@@ -964,6 +964,7 @@ class APIController extends Controller implements APIControllerInterface
         ->setSubject($subjectHeader)
         ->setFrom($mailerSourceAddress)
         ->setTo($person->getEmailAddress())
+        ->setBcc($mailerSourceAddress)
         ->setBody(
             $this->renderView(
             // app/Resources/views/...
