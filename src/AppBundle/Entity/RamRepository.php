@@ -6,6 +6,6 @@ namespace AppBundle\Entity;
  * Class RamRepository
  * @package AppBundle\Entity
  */
-class RamRepository extends BaseRepository {
+class RamRepository extends AnimalRepository {
 
 }
