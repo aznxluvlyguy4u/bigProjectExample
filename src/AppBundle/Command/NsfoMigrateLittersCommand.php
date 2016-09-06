@@ -85,6 +85,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
             'Choose option: ',"\n",
             'Generate Litters from source file (incl mother, excl children) (1)',"\n",
             'Match children with existing litters and set father in litter (2)',"\n",
+            'Find missing father in animal by searching in litter (3)',"\n",
             'abort (other)',"\n"
         ], self::DEFAULT_OPTION);
 
@@ -97,11 +98,61 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                 $this->matchChildrenWithExistingLittersAndSetFatherInLitter();
                 break;
 
+            case 3:
+                $this->findMissingFathersForAnimalFromLitter();
+                break;
+
             default:
                 $output->writeln('ABORTED');
                 break;
         }
 
+    }
+
+
+    private function findMissingFathersForAnimalFromLitter()
+    {
+        //Retrieve data from db
+        $totalMissingFathersStart = $this->getMissingFathersCount();
+
+        $sql = "SELECT id as animal_id, animal.litter_id as animal_litter_id FROM animal WHERE animal.litter_id IS NOT NULL AND animal.parent_father_id IS NULL";
+        $childrenResults = $this->em->getConnection()->query($sql)->fetchAll();
+
+        $sql = "SELECT animal_father_id, id as litter_id FROM litter WHERE animal_father_id IS NOT NULL";
+        $litterResults = $this->em->getConnection()->query($sql)->fetchAll();
+
+        $this->cmdUtil->setStartTimeAndPrintIt(count($childrenResults), 1, 'Data retrieved from database. Now finding fathers for children...');
+
+        //Create search arrays
+        $animalSearchArray = new ArrayCollection();
+        $fatherSearchArray = new ArrayCollection();
+
+        foreach ($childrenResults as $childResult) { $animalSearchArray->set($childResult['animal_litter_id'], $childResult['animal_id']); }
+        foreach ($litterResults as $litterResult) { $fatherSearchArray->set($litterResult['litter_id'], $litterResult['animal_father_id']); }
+
+        $missingFathersCount = 0;
+        $foundFathersCount = 0;
+        $animalLitterIds = $animalSearchArray->getKeys();
+        foreach ($animalLitterIds as $litterId) {
+            $animalId = $animalSearchArray->get($litterId);
+            $fatherId = $fatherSearchArray->get($litterId);
+            if($litterId != null && $fatherId != null) {
+                $sql = "UPDATE animal SET parent_father_id = '". $fatherId ."' WHERE id = '". $animalId ."'";
+                $this->em->getConnection()->exec($sql);
+
+                $animalProgressBarMessage = 'FATHER FOUND FOR ANIMAL: '.$animalId;
+            } else {
+                $animalProgressBarMessage = 'NO FATHER FOUND FOR ANIMAL: '.$animalId;
+            }
+
+
+            $this->cmdUtil->advanceProgressBar(1, $animalProgressBarMessage.
+                '  | FATHERS FOUND: '.$foundFathersCount.
+                '  | FATHERS MISSING: '.$missingFathersCount);
+        }
+        $totalMissingFathersEnd = $this->getMissingFathersCount();
+        $this->cmdUtil->setProgressBarMessage('Total fathers missing, before: '.$totalMissingFathersStart.' | after: '.$totalMissingFathersEnd);
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 
 
@@ -347,4 +398,13 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         }
     }
 
+
+    /**
+     * @return int
+     */
+    private function getMissingFathersCount()
+    {
+        $sql = "SELECT COUNT(id) FROM animal WHERE animal.parent_father_id IS NULL";
+        return $this->em->getConnection()->query($sql)->fetch()['count'];
+    }
 }
