@@ -448,7 +448,7 @@ class NsfoMigrateMeasurements2016Command extends ContainerAwareCommand
      */
     private function findAnimalByUbnAndAnimalOrder($ubn, $animalOrderNumber)
     {
-        $location = $this->em->getRepository(Location::class)->findByUbn($ubn);
+        $location = $this->em->getRepository(Location::class)->findOneByActiveUbn($ubn);
 
         if($location != null) {
             return $this->em->getRepository(Animal::class)->findOneBy(['animalOrderNumber' => $animalOrderNumber, 'location' => $location]);
