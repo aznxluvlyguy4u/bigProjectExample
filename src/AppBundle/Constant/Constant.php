@@ -51,6 +51,7 @@ class Constant
     const UNKNOWN_NAMESPACE = 'unknown';
     const VALIDITY_NAMESPACE = 'validity';
     const IS_VALID_NAMESPACE = 'isValid';
+    const RESPONSE = 'response';
     const CODE_NAMESPACE = 'code';
     const ERRORS_NAMESPACE = 'errors';
     const TYPE_NAMESPACE = 'type';

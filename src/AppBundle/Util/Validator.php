@@ -67,6 +67,23 @@ class Validator
 
 
     /**
+     * @param string $pedigreeNumber
+     * @return bool
+     */
+    public static function verifyPedigreeNumberFormat($pedigreeNumber)
+    {
+        $numberLengthIncludingDash = 11;
+
+        if(preg_match("/([A-Z0-9]{5}[-][0-9]{5})/",$pedigreeNumber)
+            && strlen($pedigreeNumber) == $numberLengthIncludingDash) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+    /**
      * @param array $animalArray
      * @return bool
      */

@@ -16,6 +16,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\HealthChecker;
 use AppBundle\Util\LocationHealthUpdater;
+use AppBundle\Util\Validator;
 use AppBundle\Validation\TagValidator;
 use AppBundle\Validation\UbnValidator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -23,7 +24,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
-use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Component\HttpFoundation\JsonResponse as JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use JMS\Serializer\SerializationContext;
 
@@ -165,17 +166,15 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $client = $this->getAuthenticatedUser($request);
     $location = $this->getSelectedLocation($request);
     $loggedInUser = $this->getLoggedInUser($request);
-    
+
     $log = ActionLogWriter::declareArrivalOrImportPost($om, $client, $loggedInUser, $location, $content);
 
-    //Only verify if pedigree exists in our database. Unknown ULNs are allowed
-    $ulnVerification = $this->verifyOnlyPedigreeCodeInAnimal($content->get(Constant::ANIMAL_NAMESPACE));
-    if(!$ulnVerification->get('isValid')){
-      return new JsonResponse(array('code'=>428,
-                               "pedigree" => $ulnVerification->get(Constant::PEDIGREE_NAMESPACE),
-                                "message" => "PEDIGREE VALUE IS NOT REGISTERED WITH NSFO"), 428);
+    //Only verify if pedigree exists in our database and if the format is correct. Unknown ULNs are allowed
+    $pedigreeValidation = $this->validateArrivalPost($content);
+    if(!$pedigreeValidation->get(Constant::IS_VALID_NAMESPACE)) {
+      return $pedigreeValidation->get(Constant::RESPONSE);
     }
-    
+
     //LocationHealth null value fixes
     $this->getHealthService()->fixLocationHealthMessagesWithNullValues($location);
     $this->getHealthService()->fixArrivalsAndImportsWithoutLocationHealthMessage($location);
@@ -389,4 +388,35 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('arrivals' => $declareArrivals, 'imports' => $declareImports)), 200);
   }
 
+
+  /**
+   * @param ArrayCollection $content
+   * @param int $errorCode
+   * @return ArrayCollection
+   */
+  private function validateArrivalPost(ArrayCollection $content, $errorCode = 428)
+  {
+    $jsonErrorResponse = null;
+    $pedigreeInDatabaseVerification = $this->verifyOnlyPedigreeCodeInAnimal($content->get(Constant::ANIMAL_NAMESPACE));
+    $pedigreeNumber = $pedigreeInDatabaseVerification->get(JsonInputConstant::PEDIGREE_NUMBER);
+
+    $isFormatCorrect = Validator::verifyPedigreeNumberFormat($pedigreeNumber);
+    $isExistsInDatabase = $pedigreeInDatabaseVerification->get('isValid');
+
+    if(!$isFormatCorrect) {
+      $jsonErrorResponse = new JsonResponse(array('code'=>$errorCode,
+          "pedigree" => $pedigreeInDatabaseVerification->get(Constant::PEDIGREE_NAMESPACE),
+          "message" => "Stamboeknummer heeft een onjuist format. Juist format XXXXX-12345. De eerste 5 tekens mogen hoofdletters en cijfers zijn."), $errorCode);
+    } elseif(!$isExistsInDatabase){
+      $jsonErrorResponse = new JsonResponse(array('code'=>$errorCode,
+          "pedigree" => $pedigreeInDatabaseVerification->get(Constant::PEDIGREE_NAMESPACE),
+          "message" => "PEDIGREE VALUE IS NOT REGISTERED WITH NSFO"), $errorCode);
+    }
+
+    $result = new ArrayCollection();
+    $result->set(Constant::IS_VALID_NAMESPACE, $isFormatCorrect && $isExistsInDatabase);
+    $result->set(Constant::RESPONSE, $jsonErrorResponse);
+
+    return $result;
+  }
 }
