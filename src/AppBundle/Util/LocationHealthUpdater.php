@@ -41,7 +41,7 @@ class LocationHealthUpdater
         $ubnPreviousOwner = $declareArrival->getUbnPreviousOwner();
         $checkDate = $declareArrival->getArrivalDate();
 
-        $locationOfOrigin = $em->getRepository(Constant::LOCATION_REPOSITORY)->findByUbn($ubnPreviousOwner);
+        $locationOfOrigin = $em->getRepository(Constant::LOCATION_REPOSITORY)->findOneByActiveUbn($ubnPreviousOwner);
         return self::updateByGivenLocationOfOrigin($em, $declareArrival ,$locationOfDestination, $checkDate, $isDeclareInBase, $locationOfOrigin);
     }
 
