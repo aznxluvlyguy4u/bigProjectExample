@@ -592,6 +592,16 @@ abstract class Animal
     }
 
     /**
+     * Get full uln, country code + number
+     *
+     * @return string
+     */
+    public function getUln()
+    {
+        return $this->ulnCountryCode . $this->ulnNumber;
+    }
+
+    /**
      * @return string
      */
     public function getAnimalOrderNumber()

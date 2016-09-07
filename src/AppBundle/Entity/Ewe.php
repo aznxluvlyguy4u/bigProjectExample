@@ -44,6 +44,7 @@ class Ewe extends Animal
        * 
        * @ORM\OneToMany(targetEntity="Litter", mappedBy="animalMother")
        * @JMS\Type("AppBundle\Entity\Ewe")
+       * @ORM\OrderBy({"litterDate" = "ASC"})
        */
     private $litters;
 
