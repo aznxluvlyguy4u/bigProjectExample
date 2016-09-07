@@ -18,7 +18,6 @@ class NsfoMigrateBreedcodesCommand extends ContainerAwareCommand
 {
     const TITLE = 'Migrate breedcodes to values in separate variables for MiXBLUP';
     const BATCH_SIZE = 1000;
-    const MAX_ROWS_TO_PROCESS = 100000000000000;
 
     /** @var EntityManager $em */
     private $em;
@@ -39,8 +38,6 @@ class NsfoMigrateBreedcodesCommand extends ContainerAwareCommand
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
-        $cmdUtil->setStartTimeAndPrintIt();
-
         /** @var EntityManager $em */
         $em = $this->getContainer()->get('doctrine.orm.entity_manager');
         $this->em = $em;
@@ -53,7 +50,7 @@ class NsfoMigrateBreedcodesCommand extends ContainerAwareCommand
         $maxId = $animalRepository->getMaxId();
         $minId = $animalRepository->getMinIdOfAnimalsWithoutBreedCodesSetForExistingBreedCode();
 
-//        dump($animalRepository->getAnimalsByIdWithoutBreedCodesSetForExistingBreedCode(1, 6000000)->count());die;
+        $cmdUtil->setStartTimeAndPrintIt($maxId, $minId, 'Data retrieved from database. Now generating breedcodes...');
 
         for($i = $minId; $i <= $maxId; $i += self::BATCH_SIZE) {
 
@@ -62,18 +59,18 @@ class NsfoMigrateBreedcodesCommand extends ContainerAwareCommand
             if($animals->count() > 0) {
                 $reformatter->setAnimals($animals);
                 $reformatter->migrate();
-                $output->writeln('Processed: '.$i.' - '.($i+self::BATCH_SIZE-1).' of '.$maxId);
-            }
 
-//            if ($i >= self::MAX_ROWS_TO_PROCESS) {
-//                break;
-//            }
+                $message = 'Processed: '.$i.' - '.($i+self::BATCH_SIZE-1).' of '.$maxId;
+                for($j = 0; $j < self::BATCH_SIZE; $j++) {
+                    $cmdUtil->advanceProgressBar(1, $message);
+                }
+            }
         }
 
         if($minId == null) {
             $output->writeln('All animals with a breedcode already have been processed');
         } else {
-            $output->writeln('Processed Total: '.$minId.' - '.$maxId.' of '.$maxId);
+            $cmdUtil->setProgressBarMessage('Processed Total: '.$minId.' - '.$maxId.' of '.$maxId);
         }
 
         $cmdUtil->setEndTimeAndPrintFinalOverview();
