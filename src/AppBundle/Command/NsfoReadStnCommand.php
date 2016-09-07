@@ -66,14 +66,15 @@ class NsfoReadStnCommand extends ContainerAwareCommand
         $em->getConnection()->getConfiguration()->setSQLLogger(null);
         $helper = $this->getHelper('question');
         $cmdUtil = new CommandUtil($input, $output, $helper);
-        $counter = 0;
+        $goodFormatCounter = 0;
+        $allRowsCounter = 0;
 
         $isClearPedigreeCodes = $cmdUtil->generateConfirmationQuestion('Delete all old pedigree numbers and country codes? (y/n)');
 
         $isIncludeCorrectStns = $cmdUtil->generateConfirmationQuestion('Include pedigree numbers with correct formatting? (y/n)');
 
         //TODO Include incorrect stns with fixed formatting?
-//        $isIncludeIncorrectStns = $cmdUtil->generateConfirmationQuestion('Include pedigree numbers with incorrect formatting (which will be fixed)? (y/n)');
+        $isIncludeIncorrectStns = $cmdUtil->generateConfirmationQuestion('Erase pedigree numbers with incorrect formatting (update with fix later)? (y/n)');
 
         $startCounter = $cmdUtil->generateQuestion('Please enter start row for importing Pedigree data: ', self::DEFAULT_START_ROW);
 
@@ -99,6 +100,7 @@ class NsfoReadStnCommand extends ContainerAwareCommand
             if(count($pieces) > 2) {
                 file_put_contents($errorOutputFileNoDashes, $line[0].';'.$line[1]."\n", FILE_APPEND);
                 //TODO include with correct formatting?
+                if($isIncludeIncorrectStns) { $this->clearPedigreeNumber($animalName); }
             
             } else {
                 if(sizeof($pieces) > 1) {
@@ -117,18 +119,23 @@ class NsfoReadStnCommand extends ContainerAwareCommand
                     $sql = "UPDATE animal SET pedigree_country_code = '". $pedigreeCountryCode ."', pedigree_number = '". $pedigreeNumber ."' WHERE name = '". $animalName ."'";
                     $em->getConnection()->exec($sql);
 
-                    $counter++;
-//                    $cmdUtil->advanceProgressBar(1);
-                    $cmdUtil->advanceProgressBar(1, 'LINES IMPORTED: ' . $counter.'  |  TOTAL LINES: ' .$totalNumberOfRows);
+                    $goodFormatCounter++;
 
                 } elseif (strpos($pedigreeNumber, '-') != false) {
                         file_put_contents($errorOutputFileWrongLength, $line[0] . ';' . $line[1] . "\n", FILE_APPEND);
                     //TODO Include with corrrect formatting?
+                    if($isIncludeIncorrectStns) { $this->clearPedigreeNumber($animalName); }
+
+                } else {
+                    if($isIncludeIncorrectStns) { $this->clearPedigreeNumber($animalName); }
+
                 }
             }
-
+            $allRowsCounter++;
+            //                    $cmdUtil->advanceProgressBar(1);
+            $cmdUtil->advanceProgressBar(1, 'GOOD FORMATS! : ' . $goodFormatCounter.'| TOTAL LINES PROCESSED: '.$allRowsCounter.'/'.$totalNumberOfRows);
         }
-        $cmdUtil->setProgressBarMessage('Pedigree data imported!'.$counter);
+        $cmdUtil->setProgressBarMessage('Pedigree data imported! Lines processed: '.$goodFormatCounter);
         $cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 
@@ -138,6 +145,16 @@ class NsfoReadStnCommand extends ContainerAwareCommand
         $sql = "UPDATE animal SET pedigree_country_code = NULL;";
         $this->em->getConnection()->exec($sql);
         $sql = "UPDATE animal SET pedigree_number = NULL;";
+        $this->em->getConnection()->exec($sql);
+    }
+
+
+    /**
+     * @param string $vsmId
+     */
+    private function clearPedigreeNumber($vsmId)
+    {
+        $sql = "UPDATE animal SET pedigree_country_code = NULL, pedigree_number = NULL WHERE name = '". $vsmId ."'";
         $this->em->getConnection()->exec($sql);
     }
 
