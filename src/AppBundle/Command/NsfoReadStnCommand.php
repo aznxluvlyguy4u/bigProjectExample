@@ -73,7 +73,7 @@ class NsfoReadStnCommand extends ContainerAwareCommand
         $isIncludeCorrectStns = $cmdUtil->generateConfirmationQuestion('Include pedigree numbers with correct formatting? (y/n)');
 
         //TODO Include incorrect stns with fixed formatting?
-//        $isIncludeIncorrectStns = $cmdUtil->generateConfirmationQuestion('Include pedigree numbers with incorrect formatting (which will be fixed)? (y/n)');
+        $isIncludeIncorrectStns = $cmdUtil->generateConfirmationQuestion('Erase pedigree numbers with incorrect formatting (update with fix later)? (y/n)');
 
         $startCounter = $cmdUtil->generateQuestion('Please enter start row for importing Pedigree data: ', self::DEFAULT_START_ROW);
 
@@ -99,6 +99,7 @@ class NsfoReadStnCommand extends ContainerAwareCommand
             if(count($pieces) > 2) {
                 file_put_contents($errorOutputFileNoDashes, $line[0].';'.$line[1]."\n", FILE_APPEND);
                 //TODO include with correct formatting?
+                if($isIncludeIncorrectStns) { $this->clearPedigreeNumber($animalName); }
             
             } else {
                 if(sizeof($pieces) > 1) {
@@ -124,11 +125,16 @@ class NsfoReadStnCommand extends ContainerAwareCommand
                 } elseif (strpos($pedigreeNumber, '-') != false) {
                         file_put_contents($errorOutputFileWrongLength, $line[0] . ';' . $line[1] . "\n", FILE_APPEND);
                     //TODO Include with corrrect formatting?
+                    if($isIncludeIncorrectStns) { $this->clearPedigreeNumber($animalName); }
+
+                } else {
+                    if($isIncludeIncorrectStns) { $this->clearPedigreeNumber($animalName); }
+
                 }
             }
 
         }
-        $cmdUtil->setProgressBarMessage('Pedigree data imported!'.$counter);
+        $cmdUtil->setProgressBarMessage('Pedigree data imported! Lines processed: '.$counter);
         $cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 
@@ -138,6 +144,16 @@ class NsfoReadStnCommand extends ContainerAwareCommand
         $sql = "UPDATE animal SET pedigree_country_code = NULL;";
         $this->em->getConnection()->exec($sql);
         $sql = "UPDATE animal SET pedigree_number = NULL;";
+        $this->em->getConnection()->exec($sql);
+    }
+
+
+    /**
+     * @param string $vsmId
+     */
+    private function clearPedigreeNumber($vsmId)
+    {
+        $sql = "UPDATE animal SET pedigree_country_code = NULL, pedigree_number = NULL WHERE name = '". $vsmId ."'";
         $this->em->getConnection()->exec($sql);
     }
 
