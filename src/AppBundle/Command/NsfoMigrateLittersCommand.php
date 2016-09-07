@@ -212,16 +212,15 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                 }
 
                 $foundLittersCount++;
-                $animalProgressBarMessage = 'LITTER FOUND FOR ANIMAL: ' . $animalId;
+                $animalProgressBarMessage = 'LITTER FOUND FOR ANIMAL (id): '.$animalId;
             } else {
                 $noLitterFoundCount++;
-                $animalProgressBarMessage = 'MISSING LITTER FOR ANIMAL: ' . $animalId;
+                $animalProgressBarMessage = 'MISSING LITTER FOR ANIMAL (id): '.$animalId;
             }
-            $this->cmdUtil->advanceProgressBar(1, $animalProgressBarMessage .
-                '  | LITTERS FOUND: ' . $foundLittersCount .
-                '  | LITTERS MISSING: ' . $noLitterFoundCount .
-                '  | FATHERS MISSING: ' . $missingFatherCount);
+            $this->cmdUtil->advanceProgressBar(1, $animalProgressBarMessage);
         }
+        $animalProgressBarMessage = $foundLittersCount.'  | LITTERS MISSING: '.$noLitterFoundCount.'  | FATHERS MISSING: '.$missingFatherCount;
+        $this->cmdUtil->setProgressBarMessage($animalProgressBarMessage);
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 

@@ -70,15 +70,20 @@ class NsfoReadStnCommand extends ContainerAwareCommand
 
         $isClearPedigreeCodes = $cmdUtil->generateConfirmationQuestion('Delete all old pedigree numbers and country codes? (y/n)');
 
+        $isIncludeCorrectStns = $cmdUtil->generateConfirmationQuestion('Include pedigree numbers with correct formatting? (y/n)');
+
+        //TODO Include incorrect stns with fixed formatting?
+//        $isIncludeIncorrectStns = $cmdUtil->generateConfirmationQuestion('Include pedigree numbers with incorrect formatting (which will be fixed)? (y/n)');
+
         $startCounter = $cmdUtil->generateQuestion('Please enter start row for importing Pedigree data: ', self::DEFAULT_START_ROW);
 
 
-        $cmdUtil->setStartTimeAndPrintIt(602498, 1, 'Deleting old pedigree country codes and numbers...');
         if($isClearPedigreeCodes) {
+            $cmdUtil->setStartTimeAndPrintIt(602498, 1, 'Deleting old pedigree country codes and numbers...');
             $this->clearAllPedigreeNumbers();
             $cmdUtil->setProgressBarMessage('Old pedigree data cleared!');
+            $cmdUtil->setEndTimeAndPrintFinalOverview();
         }
-        $cmdUtil->setEndTimeAndPrintFinalOverview();
 
 
         $output->writeln('=== IMPORTING PEDIGREE DATA ===');
@@ -93,6 +98,7 @@ class NsfoReadStnCommand extends ContainerAwareCommand
             //First check if there are more than 2 pieces to prevent loss of data
             if(count($pieces) > 2) {
                 file_put_contents($errorOutputFileNoDashes, $line[0].';'.$line[1]."\n", FILE_APPEND);
+                //TODO include with correct formatting?
             
             } else {
                 if(sizeof($pieces) > 1) {
@@ -106,16 +112,18 @@ class NsfoReadStnCommand extends ContainerAwareCommand
 
                 $isValidPedigreeNumber = strpos($pedigreeNumber, '-') == 5 && strlen($pedigreeNumber) == 11;
 
-                if($isValidPedigreeNumber) {
+                if($isValidPedigreeNumber && $isIncludeCorrectStns) {
 
                     $sql = "UPDATE animal SET pedigree_country_code = '". $pedigreeCountryCode ."', pedigree_number = '". $pedigreeNumber ."' WHERE name = '". $animalName ."'";
                     $em->getConnection()->exec($sql);
 
                     $counter++;
-                    $cmdUtil->advanceProgressBar(1, "LINES IMPORTED: " . $counter.'  |  '."TOTAL LINES: " .$totalNumberOfRows);
+//                    $cmdUtil->advanceProgressBar(1);
+                    $cmdUtil->advanceProgressBar(1, 'LINES IMPORTED: ' . $counter.'  |  TOTAL LINES: ' .$totalNumberOfRows);
 
                 } elseif (strpos($pedigreeNumber, '-') != false) {
                         file_put_contents($errorOutputFileWrongLength, $line[0] . ';' . $line[1] . "\n", FILE_APPEND);
+                    //TODO Include with corrrect formatting?
                 }
             }
 
