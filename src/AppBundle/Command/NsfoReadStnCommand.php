@@ -66,7 +66,8 @@ class NsfoReadStnCommand extends ContainerAwareCommand
         $em->getConnection()->getConfiguration()->setSQLLogger(null);
         $helper = $this->getHelper('question');
         $cmdUtil = new CommandUtil($input, $output, $helper);
-        $counter = 0;
+        $goodFormatCounter = 0;
+        $allRowsCounter = 0;
 
         $isClearPedigreeCodes = $cmdUtil->generateConfirmationQuestion('Delete all old pedigree numbers and country codes? (y/n)');
 
@@ -118,9 +119,7 @@ class NsfoReadStnCommand extends ContainerAwareCommand
                     $sql = "UPDATE animal SET pedigree_country_code = '". $pedigreeCountryCode ."', pedigree_number = '". $pedigreeNumber ."' WHERE name = '". $animalName ."'";
                     $em->getConnection()->exec($sql);
 
-                    $counter++;
-//                    $cmdUtil->advanceProgressBar(1);
-                    $cmdUtil->advanceProgressBar(1, 'LINES IMPORTED: ' . $counter.'  |  TOTAL LINES: ' .$totalNumberOfRows);
+                    $goodFormatCounter++;
 
                 } elseif (strpos($pedigreeNumber, '-') != false) {
                         file_put_contents($errorOutputFileWrongLength, $line[0] . ';' . $line[1] . "\n", FILE_APPEND);
@@ -132,9 +131,11 @@ class NsfoReadStnCommand extends ContainerAwareCommand
 
                 }
             }
-
+            $allRowsCounter++;
+            //                    $cmdUtil->advanceProgressBar(1);
+            $cmdUtil->advanceProgressBar(1, 'GOOD FORMATS! : ' . $goodFormatCounter.'| TOTAL LINES PROCESSED: '.$allRowsCounter.'/'.$totalNumberOfRows);
         }
-        $cmdUtil->setProgressBarMessage('Pedigree data imported! Lines processed: '.$counter);
+        $cmdUtil->setProgressBarMessage('Pedigree data imported! Lines processed: '.$goodFormatCounter);
         $cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 
