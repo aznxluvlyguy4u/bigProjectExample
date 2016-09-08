@@ -114,12 +114,16 @@ class NsfoReadStnCommand extends ContainerAwareCommand
 
                 $isValidPedigreeNumber = strpos($pedigreeNumber, '-') == 5 && strlen($pedigreeNumber) == 11;
 
-                if($isValidPedigreeNumber && $isIncludeCorrectStns) {
+                if($isValidPedigreeNumber) {
 
-                    $sql = "UPDATE animal SET pedigree_country_code = '". $pedigreeCountryCode ."', pedigree_number = '". $pedigreeNumber ."' WHERE name = '". $animalName ."'";
-                    $em->getConnection()->exec($sql);
+                    if($isIncludeCorrectStns) {
 
-                    $goodFormatCounter++;
+                        $sql = "UPDATE animal SET pedigree_country_code = '". $pedigreeCountryCode ."', pedigree_number = '". $pedigreeNumber ."' WHERE name = '". $animalName ."'";
+                        $em->getConnection()->exec($sql);
+
+                        $goodFormatCounter++;
+                    }
+                    //ELSE DO NOTHING
 
                 } elseif (strpos($pedigreeNumber, '-') != false) {
                         file_put_contents($errorOutputFileWrongLength, $line[0] . ';' . $line[1] . "\n", FILE_APPEND);
