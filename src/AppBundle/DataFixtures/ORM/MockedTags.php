@@ -59,7 +59,7 @@ class MockedTags implements FixtureInterface, ContainerAwareInterface, OrderedFi
 
     self::$mockedTags = new ArrayCollection();
 
-    $client = $manager->getRepository(Constant::CLIENT_REPOSITORY)->getByToken(MockedClient::getMockedClient()->getAccessToken());
+    $client = $manager->getRepository(Constant::CLIENT_REPOSITORY)->find(MockedClient::getMockedClient()->getId());
 
     for($i = 0; $i < 100; $i++) {
 
