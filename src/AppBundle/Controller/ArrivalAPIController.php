@@ -396,25 +396,37 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    */
   private function validateArrivalPost(ArrayCollection $content, $errorCode = 428)
   {
+    //Default values
     $jsonErrorResponse = null;
-    $pedigreeInDatabaseVerification = $this->verifyOnlyPedigreeCodeInAnimal($content->get(Constant::ANIMAL_NAMESPACE));
-    $pedigreeNumber = $pedigreeInDatabaseVerification->get(JsonInputConstant::PEDIGREE_NUMBER);
+    $isValid = true;
+
+    $animalArray = $content->get(Constant::ANIMAL_NAMESPACE);
+    $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
+    $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
 
     $isFormatCorrect = Validator::verifyPedigreeNumberFormat($pedigreeNumber);
-    $isExistsInDatabase = $pedigreeInDatabaseVerification->get('isValid');
 
     if(!$isFormatCorrect) {
+      $isValid = false;
+      //TODO Translate message in English and match it with the translator in the Frontend
       $jsonErrorResponse = new JsonResponse(array('code'=>$errorCode,
-          "pedigree" => $pedigreeInDatabaseVerification->get(Constant::PEDIGREE_NAMESPACE),
+          "pedigree" => $pedigreeCountryCode.$pedigreeNumber,
           "message" => "Stamboeknummer heeft een onjuist format. Juist format XXXXX-12345. De eerste 5 tekens mogen hoofdletters en cijfers zijn."), $errorCode);
-    } elseif(!$isExistsInDatabase){
-      $jsonErrorResponse = new JsonResponse(array('code'=>$errorCode,
-          "pedigree" => $pedigreeInDatabaseVerification->get(Constant::PEDIGREE_NAMESPACE),
-          "message" => "PEDIGREE VALUE IS NOT REGISTERED WITH NSFO"), $errorCode);
+
+    } else {
+      $pedigreeInDatabaseVerification = $this->verifyOnlyPedigreeCodeInAnimal($animalArray);
+      $isExistsInDatabase = $pedigreeInDatabaseVerification->get('isValid');
+
+      if(!$isExistsInDatabase){
+        $isValid = false;
+        $jsonErrorResponse = new JsonResponse(array('code'=>$errorCode,
+            "pedigree" => $pedigreeCountryCode.$pedigreeNumber,
+            "message" => "PEDIGREE VALUE IS NOT REGISTERED WITH NSFO"), $errorCode);
+      }
     }
 
     $result = new ArrayCollection();
-    $result->set(Constant::IS_VALID_NAMESPACE, $isFormatCorrect && $isExistsInDatabase);
+    $result->set(Constant::IS_VALID_NAMESPACE, $isValid);
     $result->set(Constant::RESPONSE, $jsonErrorResponse);
 
     return $result;
