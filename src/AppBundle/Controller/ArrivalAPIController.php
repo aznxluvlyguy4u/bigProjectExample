@@ -397,12 +397,23 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
   private function validateArrivalPost(ArrayCollection $content, $errorCode = 428)
   {
     //Default values
+    $result = new ArrayCollection();
     $jsonErrorResponse = null;
     $isValid = true;
+    $result->set(Constant::IS_VALID_NAMESPACE, $isValid);
+    $result->set(Constant::RESPONSE, $jsonErrorResponse);
+
 
     $animalArray = $content->get(Constant::ANIMAL_NAMESPACE);
     $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
     $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
+
+    //Don't check if uln was chosen instead of pedigree
+    $pedigreeCodeExists = $pedigreeCountryCode != null && $pedigreeNumber != null;
+    if(!$pedigreeCodeExists) {
+      return $result;
+    }
+
 
     $isFormatCorrect = Validator::verifyPedigreeNumberFormat($pedigreeNumber);
 
@@ -425,7 +436,6 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       }
     }
 
-    $result = new ArrayCollection();
     $result->set(Constant::IS_VALID_NAMESPACE, $isValid);
     $result->set(Constant::RESPONSE, $jsonErrorResponse);
 
