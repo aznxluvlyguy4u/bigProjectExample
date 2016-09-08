@@ -11,6 +11,7 @@ use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -49,13 +50,24 @@ class NsfoReadStnCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $csv = $this->parseCSV();
-        $totalNumberOfRows = sizeof($csv);
         /**
          * @var EntityManager $em
          */
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
+
+        $em->getConnection()->getConfiguration()->setSQLLogger(null);
+        $helper = $this->getHelper('question');
+        $cmdUtil = new CommandUtil($input, $output, $helper);
+
+        $isOnlyCheckPedigreeFormattingInDb = $cmdUtil->generateConfirmationQuestion('Only check pedigreeNumber formats in database? (y/n)');
+        if($isOnlyCheckPedigreeFormattingInDb) {
+            $this->checkPedigreeNumbers();
+        }
+
+
+        $csv = $this->parseCSV();
+        $totalNumberOfRows = sizeof($csv);
 
         $outputFolder = $this->getContainer()->get('kernel')->getRootDir().'/Resources/outputs';
         NullChecker::createFolderPathIfNull($outputFolder);
@@ -63,9 +75,7 @@ class NsfoReadStnCommand extends ContainerAwareCommand
         $errorOutputFileWrongLength = $outputFolder.'/possible_incorrect_pedigree_codes_wrong_length.csv';
         $errorOutputFileNoDashes = $outputFolder.'/possible_incorrect_pedigree_codes_no_dashes.csv';
 
-        $em->getConnection()->getConfiguration()->setSQLLogger(null);
-        $helper = $this->getHelper('question');
-        $cmdUtil = new CommandUtil($input, $output, $helper);
+
         $goodFormatCounter = 0;
         $allRowsCounter = 0;
 
