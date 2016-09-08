@@ -169,6 +169,8 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     $log = ActionLogWriter::declareArrivalOrImportPost($om, $client, $loggedInUser, $location, $content);
 
+    $content = $this->capitalizePedigreeNumberInPostArray($content);
+
     //Only verify if pedigree exists in our database and if the format is correct. Unknown ULNs are allowed
     $pedigreeValidation = $this->validateArrivalPost($content);
     if(!$pedigreeValidation->get(Constant::IS_VALID_NAMESPACE)) {
@@ -422,7 +424,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
       //TODO Translate message in English and match it with the translator in the Frontend
       $jsonErrorResponse = new JsonResponse(array('code'=>$errorCode,
           "pedigree" => $pedigreeCountryCode.$pedigreeNumber,
-          "message" => "Stamboeknummer heeft een onjuist format. Juist format XXXXX-12345. De eerste 5 tekens mogen hoofdletters en cijfers zijn."), $errorCode);
+          "message" => "Het stamboeknummer moet deze structuur XXXXX-XXXXX hebben."), $errorCode);
 
     } else {
       $pedigreeInDatabaseVerification = $this->verifyOnlyPedigreeCodeInAnimal($animalArray);
@@ -440,5 +442,24 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $result->set(Constant::RESPONSE, $jsonErrorResponse);
 
     return $result;
+  }
+
+
+  /**
+   * @param ArrayCollection $content
+   * @return ArrayCollection
+   */
+  private function capitalizePedigreeNumberInPostArray($content)
+  {
+    $animalArray = $content->get(Constant::ANIMAL_NAMESPACE);
+    $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
+
+    if($pedigreeNumber != null) {
+      $pedigreeNumber = strtoupper($pedigreeNumber);
+      $animalArray[JsonInputConstant::PEDIGREE_NUMBER] = $pedigreeNumber;
+      $content->set(Constant::ANIMAL_NAMESPACE, $animalArray);
+    }
+
+    return $content;
   }
 }
