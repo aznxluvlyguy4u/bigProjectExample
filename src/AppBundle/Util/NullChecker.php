@@ -6,6 +6,7 @@ namespace AppBundle\Util;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\DeclareNsfoBase;
@@ -203,5 +204,22 @@ class NullChecker
         if(!$fs->exists($folderPath)) {
             $fs->mkdir($folderPath);
         }
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param string $nullReplacementText
+     * @return string|null
+     */
+    public static function getNullCheckedDateOfBirth($animal, $nullReplacementText = null)
+    {
+        if($animal instanceof Animal) {
+            $dateOfBirth = $animal->getDateOfBirth();
+            if($dateOfBirth != null) {
+                return Utils::fillNullOrEmptyString($animal->getDateOfBirth()->format('d-m-Y'), $nullReplacementText);
+            }
+        }
+        return $nullReplacementText;
     }
 }
