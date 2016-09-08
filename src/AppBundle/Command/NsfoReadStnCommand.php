@@ -118,6 +118,7 @@ class NsfoReadStnCommand extends ContainerAwareCommand
 
                     if($isIncludeCorrectStns) {
 
+                        $pedigreeNumber = strtoupper($pedigreeNumber);
                         $sql = "UPDATE animal SET pedigree_country_code = '". $pedigreeCountryCode ."', pedigree_number = '". $pedigreeNumber ."' WHERE name = '". $animalName ."'";
                         $em->getConnection()->exec($sql);
 
@@ -163,6 +164,28 @@ class NsfoReadStnCommand extends ContainerAwareCommand
     }
 
 
+    /**
+     *
+     */
+    private function checkPedigreeNumbers()
+    {
+        $sql = "SELECT pedigree_number FROM animal WHERE pedigree_number IS NOT NULL";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+
+        $count = 0;
+        foreach ($results as $result) {
+            $pedigreeNumber = Utils::getNullCheckedArrayValue('pedigree_number', $result);
+            $isValid = Validator::verifyPedigreeNumberFormat($pedigreeNumber);
+            if(!$isValid) {
+                dump($pedigreeNumber);
+                $count++;
+            }
+        }
+
+        dump($count);die;
+    }
+    
+    
     private function parseCSV() {
         $ignoreFirstLine = $this->csvParsingOptions['ignoreFirstLine'];
 

@@ -322,9 +322,11 @@ class LocationHealthUpdater
         //TODO remove the (overall) locationHealthStatus from LocationHealth in conjuction with the Java entities.
         //For now the value is just set to null.
 
-        $location->getLocationHealth()->setLocationHealthStatus(null);
-        $em->persist($location);
-        $em->flush();
+        if($location->getLocationHealth() != null) {
+            $location->getLocationHealth()->setLocationHealthStatus(null);
+            $em->persist($location);
+            $em->flush();
+        }
 
         return $location;
     }
