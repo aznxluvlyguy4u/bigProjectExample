@@ -74,7 +74,7 @@ class Validator
     {
         $numberLengthIncludingDash = 11;
 
-        if(preg_match("/([A-Z0-9]{5}[-][0-9]{5})/",$pedigreeNumber)
+        if(preg_match("/([A-Z0-9]{5}[-][A-Z0-9]{5})/",$pedigreeNumber)
             && strlen($pedigreeNumber) == $numberLengthIncludingDash) {
             return true;
         } else {
