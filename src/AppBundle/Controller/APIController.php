@@ -518,10 +518,10 @@ class APIController extends Controller implements APIControllerInterface
     } else {
       $pedigree = null;
     }
-    
+
     $array->set('isValid', $isValid);
-    $array->set('pedigreeNumber', null);
-    $array->set('pedigreeCountryCode', null);
+    $array->set(JsonInputConstant::PEDIGREE_NUMBER, $pedigreeNumber);
+    $array->set(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $pedigreeCountryCode);
     $array->set(Constant::PEDIGREE_NAMESPACE, $pedigree);
 
     return $array;
