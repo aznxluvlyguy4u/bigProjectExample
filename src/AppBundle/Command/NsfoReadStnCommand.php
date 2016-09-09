@@ -60,11 +60,18 @@ class NsfoReadStnCommand extends ContainerAwareCommand
         $helper = $this->getHelper('question');
         $cmdUtil = new CommandUtil($input, $output, $helper);
 
-        $isOnlyCheckPedigreeFormattingInDb = $cmdUtil->generateConfirmationQuestion('Only check pedigreeNumber formats in database? (y/n)');
+        $isOnlyCheckPedigreeFormattingInDb = $cmdUtil->generateConfirmationQuestion('Check pedigreeNumber formats in database? (y/n)');
         if($isOnlyCheckPedigreeFormattingInDb) {
             $this->checkPedigreeNumbers();
+
+            $isDeleteIncorrectPedigreeCodes = $cmdUtil->generateConfirmationQuestion('Delete these numbers? (y/n)');
+            if($isDeleteIncorrectPedigreeCodes) {
+                $this->clearIncorrectPedigreeNumbers();
+            }
+            die;
         }
 
+        $output->writeln('Reading csv file...');
 
         $csv = $this->parseCSV();
         $totalNumberOfRows = sizeof($csv);
@@ -76,15 +83,18 @@ class NsfoReadStnCommand extends ContainerAwareCommand
         $errorOutputFileNoDashes = $outputFolder.'/possible_incorrect_pedigree_codes_no_dashes.csv';
 
 
+        $output->writeln('Find animals with correct pedigree codes in the database...');
+        $vsmIdsThatHaveCorrectPedigreeNumbers = $this->findVsmIdsWithCorrectPedigreeNumbersInTheDatabase();
+        $output->writeln('Find animals with empty pedigree codes in the database...');
+        $vsmIdsThatDontHavePedigreeNumbers = $this->findVsmIdsWithEmptyPedigreeNumbersInTheDatabase();
+
         $goodFormatCounter = 0;
         $allRowsCounter = 0;
 
         $isClearPedigreeCodes = $cmdUtil->generateConfirmationQuestion('Delete all old pedigree numbers and country codes? (y/n)');
 
-        $isIncludeCorrectStns = $cmdUtil->generateConfirmationQuestion('Include pedigree numbers with correct formatting? (y/n)');
-
-        //TODO Include incorrect stns with fixed formatting?
-        $isIncludeIncorrectStns = $cmdUtil->generateConfirmationQuestion('Erase pedigree numbers with incorrect formatting (update with fix later)? (y/n)');
+//        //TODO Include incorrect stns with fixed formatting?
+//        $isIncludeIncorrectStns = $cmdUtil->generateConfirmationQuestion('Erase pedigree numbers with incorrect formatting (update with fix later)? (y/n)');
 
         $startCounter = $cmdUtil->generateQuestion('Please enter start row for importing Pedigree data: ', self::DEFAULT_START_ROW);
 
@@ -97,6 +107,8 @@ class NsfoReadStnCommand extends ContainerAwareCommand
         }
 
 
+        $oldIncorrectPedigreesCleared = 0;
+        $newGoodPedigreesInserted = 0;
         $output->writeln('=== IMPORTING PEDIGREE DATA ===');
         $cmdUtil->setStartTimeAndPrintIt($totalNumberOfRows, $startCounter);
         for($i = $startCounter; $i < $totalNumberOfRows; $i++) {
@@ -106,49 +118,67 @@ class NsfoReadStnCommand extends ContainerAwareCommand
             $animalName = $line[0];
             $pieces = explode(" ", $line[1]);
 
-            //First check if there are more than 2 pieces to prevent loss of data
-            if(count($pieces) > 2) {
-                file_put_contents($errorOutputFileNoDashes, $line[0].';'.$line[1]."\n", FILE_APPEND);
-                //TODO include with correct formatting?
-                if($isIncludeIncorrectStns) { $this->clearPedigreeNumber($animalName); }
-            
+            if($vsmIdsThatHaveCorrectPedigreeNumbers->contains($animalName)) {
+                $goodFormatCounter++;
             } else {
-                if(sizeof($pieces) > 1) {
-                    $pedigreeCountryCode = $pieces[0];
-                    $pedigreeNumber = $pieces[1];
 
-                } else {
-                    $pedigreeCountryCode = substr($pieces[0], 0, 2);
-                    $pedigreeNumber = substr($pieces[0], 2);
-                }
 
-                $isValidPedigreeNumber = strpos($pedigreeNumber, '-') == 5 && strlen($pedigreeNumber) == 11;
-
-                if($isValidPedigreeNumber) {
-
-                    if($isIncludeCorrectStns) {
-
-                        $pedigreeNumber = strtoupper($pedigreeNumber);
-                        $sql = "UPDATE animal SET pedigree_country_code = '". $pedigreeCountryCode ."', pedigree_number = '". $pedigreeNumber ."' WHERE name = '". $animalName ."'";
-                        $em->getConnection()->exec($sql);
-
-                        $goodFormatCounter++;
+                //First check if there are more than 2 pieces to prevent loss of data
+                if(count($pieces) > 2) {
+                    file_put_contents($errorOutputFileNoDashes, $line[0].';'.$line[1]."\n", FILE_APPEND);
+                    //TODO include with correct formatting?
+                    if(!$vsmIdsThatDontHavePedigreeNumbers->contains($animalName)) {
+                        $this->clearPedigreeNumber($animalName);
+                        $oldIncorrectPedigreesCleared++;
                     }
-                    //ELSE DO NOTHING
-
-                } elseif (strpos($pedigreeNumber, '-') != false) {
-                        file_put_contents($errorOutputFileWrongLength, $line[0] . ';' . $line[1] . "\n", FILE_APPEND);
-                    //TODO Include with corrrect formatting?
-                    if($isIncludeIncorrectStns) { $this->clearPedigreeNumber($animalName); }
 
                 } else {
-                    if($isIncludeIncorrectStns) { $this->clearPedigreeNumber($animalName); }
+                    if(sizeof($pieces) > 1) {
+                        $pedigreeCountryCode = $pieces[0];
+                        $pedigreeNumber = $pieces[1];
 
+                    } else {
+                        $pedigreeCountryCode = substr($pieces[0], 0, 2);
+                        $pedigreeNumber = substr($pieces[0], 2);
+                    }
+
+                    $isValidPedigreeNumber = strpos($pedigreeNumber, '-') == 5 && strlen($pedigreeNumber) == 11;
+
+                    if($isValidPedigreeNumber) {
+
+                        if(!$vsmIdsThatHaveCorrectPedigreeNumbers->contains($animalName)) {
+
+                            $pedigreeNumber = strtoupper($pedigreeNumber);
+                            $sql = "UPDATE animal SET pedigree_country_code = '". $pedigreeCountryCode ."', pedigree_number = '". $pedigreeNumber ."' WHERE name = '". $animalName ."'";
+                            $em->getConnection()->exec($sql);
+
+                            $newGoodPedigreesInserted++;
+                            $goodFormatCounter++;
+                        }
+                        //ELSE DO NOTHING
+
+                    } elseif (strpos($pedigreeNumber, '-') != false) {
+                        file_put_contents($errorOutputFileWrongLength, $line[0] . ';' . $line[1] . "\n", FILE_APPEND);
+                        //TODO Include with corrrect formatting?
+                        if(!$vsmIdsThatDontHavePedigreeNumbers->contains($animalName)) {
+                            $this->clearPedigreeNumber($animalName);
+                            $oldIncorrectPedigreesCleared++;
+                        }
+
+                    } else {
+                        if(!$vsmIdsThatDontHavePedigreeNumbers->contains($animalName)) {
+                            $this->clearPedigreeNumber($animalName);
+                            $oldIncorrectPedigreesCleared++;
+                        }
+                    }
                 }
             }
+
+
+
             $allRowsCounter++;
             //                    $cmdUtil->advanceProgressBar(1);
-            $cmdUtil->advanceProgressBar(1, 'GOOD FORMATS! : ' . $goodFormatCounter.'| TOTAL LINES PROCESSED: '.$allRowsCounter.'/'.$totalNumberOfRows);
+            $cmdUtil->advanceProgressBar(1, 'GOOD FORMATS! : ' . $goodFormatCounter.'| TOTAL LINES PROCESSED: '.$allRowsCounter.'/'.$totalNumberOfRows.' | new pedigrees inserted: '.$newGoodPedigreesInserted .' | incorrect pedigrees deleted: '.$oldIncorrectPedigreesCleared);
         }
         $cmdUtil->setProgressBarMessage('Pedigree data imported! Lines processed: '.$goodFormatCounter);
         $cmdUtil->setEndTimeAndPrintFinalOverview();
@@ -192,7 +222,69 @@ class NsfoReadStnCommand extends ContainerAwareCommand
             }
         }
 
-        dump($count);die;
+        dump($count);
+    }
+
+
+    /**
+     *
+     */
+    private function clearIncorrectPedigreeNumbers()
+    {
+        $sql = "SELECT pedigree_number, name FROM animal WHERE pedigree_number IS NOT NULL";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+
+        $count = 0;
+        foreach ($results as $result) {
+            $pedigreeNumber = Utils::getNullCheckedArrayValue('pedigree_number', $result);
+            $isValid = Validator::verifyPedigreeNumberFormat($pedigreeNumber);
+            if(!$isValid) {
+                dump('Pedigree of following vsmId deleted: '.$result['name']);
+                $this->clearPedigreeNumber($result['name']);
+                $count++;
+            }
+        }
+
+        dump($count);
+    }
+
+
+    /**
+     * @return ArrayCollection
+     */
+    private function findVsmIdsWithCorrectPedigreeNumbersInTheDatabase()
+    {
+
+        $sql = "SELECT name, pedigree_number FROM animal WHERE pedigree_number IS NOT NULL";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+
+        $vsmIds = new ArrayCollection();
+        foreach ($results as $result) {
+            $pedigreeNumber = $result['pedigree_number'];
+            $isValid = Validator::verifyPedigreeNumberFormat($pedigreeNumber);
+            if($isValid) {
+                $vsmIds->add($result['name']);
+            }
+        }
+
+        return $vsmIds;
+    }
+
+
+    /**
+     * @return ArrayCollection
+     */
+    private function findVsmIdsWithEmptyPedigreeNumbersInTheDatabase()
+    {
+
+        $sql = "SELECT name FROM animal WHERE pedigree_number IS NULL";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+
+        $vsmIds = new ArrayCollection();
+        foreach ($results as $result) {
+            $vsmIds->add($result['name']);
+        }
+        return $vsmIds;
     }
     
     
