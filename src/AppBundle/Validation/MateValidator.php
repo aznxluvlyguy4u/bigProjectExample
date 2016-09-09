@@ -74,8 +74,8 @@ class MateValidator extends DeclareNsfoBaseValidator
         $ramArray = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::RAM, $content);
 
         $isNonAnimalInputValid = $this->validateNonAnimalValues($content);
-        $isRamInputValid = $this->validateRamArray($ramArray, $content);
-        $isEweInputValid = $this->validateEweArray($eweArray);
+        $isRamInputValid = $this->validateRamArray($ramArray);
+        $isEweInputValid = $this->validateEweArray($eweArray, $content);
 
 
         if($isRamInputValid && $isEweInputValid && $isNonAnimalInputValid) {
@@ -138,7 +138,7 @@ class MateValidator extends DeclareNsfoBaseValidator
      * @param array $ramArray
      * @return bool
      */
-    private function validateRamArray($ramArray, $content) {
+    private function validateRamArray($ramArray) {
 
         //First validate if uln or pedigree exists
         $containsUlnOrPedigree = NullChecker::arrayContainsUlnOrPedigree($ramArray);
@@ -169,31 +169,6 @@ class MateValidator extends DeclareNsfoBaseValidator
 
             if(!$isMaleCheck) {
                 $this->errors[] = self::RAM_ULN_FOUND_BUT_NOT_MALE;
-            }
-
-            /** @var Mate $mate */
-            foreach($animal->getMatings() as $mate) {
-                $startDate = new \DateTime($content['start_date']);
-                $startDate = $startDate->setTime(0,0,0);
-
-                $endDate = new \DateTime($content['end_date']);
-                $endDate = $endDate->setTime(0,0,0);
-
-                $mateStartDate = $mate->getStartDate();
-                $mateStartDate = $mateStartDate->setTime(0,0,0);
-
-                $mateEndDate = $mate->getEndDate();
-                $mateEndDate = $mateEndDate->setTime(0,0,0);
-
-                if($startDate >= $mateStartDate && $startDate <= $mateEndDate) {
-                    $this->errors[] = self::START_DATE_IS_IN_A_MATING_PERIOD;
-                    return false;
-                }
-
-                if($endDate >= $mateStartDate && $endDate <= $mateEndDate) {
-                    $this->errors[] = self::END_DATE_IS_IN_A_MATING_PERIOD;
-                    return false;
-                }
             }
 
             return $isMaleCheck;
@@ -241,7 +216,7 @@ class MateValidator extends DeclareNsfoBaseValidator
      * @param array $eweArray
      * @return bool
      */
-    private function validateEweArray($eweArray) {
+    private function validateEweArray($eweArray, $content) {
 
         $ulnString = NullChecker::getUlnStringFromArray($eweArray, null);
         if($ulnString == null) {
@@ -264,6 +239,32 @@ class MateValidator extends DeclareNsfoBaseValidator
 
         $isOwnedByClient = Validator::isAnimalOfClient($foundAnimal, $this->client);
         if($isOwnedByClient) {
+
+            /** @var Mate $mate */
+            foreach($foundAnimal->getMatings() as $mate) {
+                $startDate = new \DateTime($content['start_date']);
+                $startDate = $startDate->setTime(0,0,0);
+
+                $endDate = new \DateTime($content['end_date']);
+                $endDate = $endDate->setTime(0,0,0);
+
+                $mateStartDate = $mate->getStartDate();
+                $mateStartDate = $mateStartDate->setTime(0,0,0);
+
+                $mateEndDate = $mate->getEndDate();
+                $mateEndDate = $mateEndDate->setTime(0,0,0);
+
+                if($startDate >= $mateStartDate && $startDate <= $mateEndDate) {
+                    $this->errors[] = self::START_DATE_IS_IN_A_MATING_PERIOD;
+                    return false;
+                }
+
+                if($endDate >= $mateStartDate && $endDate <= $mateEndDate) {
+                    $this->errors[] = self::END_DATE_IS_IN_A_MATING_PERIOD;
+                    return false;
+                }
+            }
+
             return true;
         } else {
             $this->errors[] = self::EWE_NOT_OF_CLIENT;
