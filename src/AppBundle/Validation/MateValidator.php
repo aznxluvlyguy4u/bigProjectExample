@@ -29,6 +29,7 @@ class MateValidator extends DeclareNsfoBaseValidator
     const RAM_ULN_FOUND_BUT_NOT_MALE      = 'STUD RAM: ANIMAL FOUND IN DATABASE WITH GIVEN ULN IS NOT MALE';
     const RAM_PEDIGREE_FOUND_BUT_NOT_MALE = 'STUD RAM: ANIMAL FOUND IN DATABASE WITH GIVEN PEDIGREE IS NOT MALE';
     const RAM_PEDIGREE_NOT_FOUND          = 'STUD RAM: NO ANIMAL FOUND FOR GIVEN PEDIGREE';
+    const RAM_ULN_NOT_FOUND               = 'STUD RAM: NO ANIMAL FOUND FOR GIVEN ULN';
 
     const EWE_MISSING_INPUT     = 'STUD EWE: NO ULN GIVEN';
     const EWE_NO_ANIMAL_FOUND   = 'STUD EWE: NO ANIMAL FOUND FOR GIVEN ULN';
@@ -156,7 +157,13 @@ class MateValidator extends DeclareNsfoBaseValidator
             
             //If animal is in database, verify the gender
             $animal = $this->animalRepository->findAnimalByUlnString($ulnString);
+            if(!$animal) {
+                $this->errors[] = self::RAM_ULN_NOT_FOUND;
+                return false;
+            }
+
             $isMaleCheck = $this->validateIfRamUlnBelongsToMaleIfFoundInDatabase($animal);
+
             if(!$isMaleCheck) {
                 $this->errors[] = self::RAM_ULN_FOUND_BUT_NOT_MALE;
             }
