@@ -11,6 +11,7 @@ use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -49,13 +50,24 @@ class NsfoReadStnCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $csv = $this->parseCSV();
-        $totalNumberOfRows = sizeof($csv);
         /**
          * @var EntityManager $em
          */
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
+
+        $em->getConnection()->getConfiguration()->setSQLLogger(null);
+        $helper = $this->getHelper('question');
+        $cmdUtil = new CommandUtil($input, $output, $helper);
+
+        $isOnlyCheckPedigreeFormattingInDb = $cmdUtil->generateConfirmationQuestion('Only check pedigreeNumber formats in database? (y/n)');
+        if($isOnlyCheckPedigreeFormattingInDb) {
+            $this->checkPedigreeNumbers();
+        }
+
+
+        $csv = $this->parseCSV();
+        $totalNumberOfRows = sizeof($csv);
 
         $outputFolder = $this->getContainer()->get('kernel')->getRootDir().'/Resources/outputs';
         NullChecker::createFolderPathIfNull($outputFolder);
@@ -63,17 +75,16 @@ class NsfoReadStnCommand extends ContainerAwareCommand
         $errorOutputFileWrongLength = $outputFolder.'/possible_incorrect_pedigree_codes_wrong_length.csv';
         $errorOutputFileNoDashes = $outputFolder.'/possible_incorrect_pedigree_codes_no_dashes.csv';
 
-        $em->getConnection()->getConfiguration()->setSQLLogger(null);
-        $helper = $this->getHelper('question');
-        $cmdUtil = new CommandUtil($input, $output, $helper);
-        $counter = 0;
+
+        $goodFormatCounter = 0;
+        $allRowsCounter = 0;
 
         $isClearPedigreeCodes = $cmdUtil->generateConfirmationQuestion('Delete all old pedigree numbers and country codes? (y/n)');
 
         $isIncludeCorrectStns = $cmdUtil->generateConfirmationQuestion('Include pedigree numbers with correct formatting? (y/n)');
 
         //TODO Include incorrect stns with fixed formatting?
-//        $isIncludeIncorrectStns = $cmdUtil->generateConfirmationQuestion('Include pedigree numbers with incorrect formatting (which will be fixed)? (y/n)');
+        $isIncludeIncorrectStns = $cmdUtil->generateConfirmationQuestion('Erase pedigree numbers with incorrect formatting (update with fix later)? (y/n)');
 
         $startCounter = $cmdUtil->generateQuestion('Please enter start row for importing Pedigree data: ', self::DEFAULT_START_ROW);
 
@@ -99,6 +110,7 @@ class NsfoReadStnCommand extends ContainerAwareCommand
             if(count($pieces) > 2) {
                 file_put_contents($errorOutputFileNoDashes, $line[0].';'.$line[1]."\n", FILE_APPEND);
                 //TODO include with correct formatting?
+                if($isIncludeIncorrectStns) { $this->clearPedigreeNumber($animalName); }
             
             } else {
                 if(sizeof($pieces) > 1) {
@@ -112,23 +124,33 @@ class NsfoReadStnCommand extends ContainerAwareCommand
 
                 $isValidPedigreeNumber = strpos($pedigreeNumber, '-') == 5 && strlen($pedigreeNumber) == 11;
 
-                if($isValidPedigreeNumber && $isIncludeCorrectStns) {
+                if($isValidPedigreeNumber) {
 
-                    $sql = "UPDATE animal SET pedigree_country_code = '". $pedigreeCountryCode ."', pedigree_number = '". $pedigreeNumber ."' WHERE name = '". $animalName ."'";
-                    $em->getConnection()->exec($sql);
+                    if($isIncludeCorrectStns) {
 
-                    $counter++;
-//                    $cmdUtil->advanceProgressBar(1);
-                    $cmdUtil->advanceProgressBar(1, 'LINES IMPORTED: ' . $counter.'  |  TOTAL LINES: ' .$totalNumberOfRows);
+                        $pedigreeNumber = strtoupper($pedigreeNumber);
+                        $sql = "UPDATE animal SET pedigree_country_code = '". $pedigreeCountryCode ."', pedigree_number = '". $pedigreeNumber ."' WHERE name = '". $animalName ."'";
+                        $em->getConnection()->exec($sql);
+
+                        $goodFormatCounter++;
+                    }
+                    //ELSE DO NOTHING
 
                 } elseif (strpos($pedigreeNumber, '-') != false) {
                         file_put_contents($errorOutputFileWrongLength, $line[0] . ';' . $line[1] . "\n", FILE_APPEND);
                     //TODO Include with corrrect formatting?
+                    if($isIncludeIncorrectStns) { $this->clearPedigreeNumber($animalName); }
+
+                } else {
+                    if($isIncludeIncorrectStns) { $this->clearPedigreeNumber($animalName); }
+
                 }
             }
-
+            $allRowsCounter++;
+            //                    $cmdUtil->advanceProgressBar(1);
+            $cmdUtil->advanceProgressBar(1, 'GOOD FORMATS! : ' . $goodFormatCounter.'| TOTAL LINES PROCESSED: '.$allRowsCounter.'/'.$totalNumberOfRows);
         }
-        $cmdUtil->setProgressBarMessage('Pedigree data imported!'.$counter);
+        $cmdUtil->setProgressBarMessage('Pedigree data imported! Lines processed: '.$goodFormatCounter);
         $cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 
@@ -142,6 +164,38 @@ class NsfoReadStnCommand extends ContainerAwareCommand
     }
 
 
+    /**
+     * @param string $vsmId
+     */
+    private function clearPedigreeNumber($vsmId)
+    {
+        $sql = "UPDATE animal SET pedigree_country_code = NULL, pedigree_number = NULL WHERE name = '". $vsmId ."'";
+        $this->em->getConnection()->exec($sql);
+    }
+
+
+    /**
+     *
+     */
+    private function checkPedigreeNumbers()
+    {
+        $sql = "SELECT pedigree_number FROM animal WHERE pedigree_number IS NOT NULL";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+
+        $count = 0;
+        foreach ($results as $result) {
+            $pedigreeNumber = Utils::getNullCheckedArrayValue('pedigree_number', $result);
+            $isValid = Validator::verifyPedigreeNumberFormat($pedigreeNumber);
+            if(!$isValid) {
+                dump($pedigreeNumber);
+                $count++;
+            }
+        }
+
+        dump($count);die;
+    }
+    
+    
     private function parseCSV() {
         $ignoreFirstLine = $this->csvParsingOptions['ignoreFirstLine'];
 

@@ -41,7 +41,7 @@ class LocationHealthUpdater
         $ubnPreviousOwner = $declareArrival->getUbnPreviousOwner();
         $checkDate = $declareArrival->getArrivalDate();
 
-        $locationOfOrigin = $em->getRepository(Constant::LOCATION_REPOSITORY)->findByUbn($ubnPreviousOwner);
+        $locationOfOrigin = $em->getRepository(Constant::LOCATION_REPOSITORY)->findOneByActiveUbn($ubnPreviousOwner);
         return self::updateByGivenLocationOfOrigin($em, $declareArrival ,$locationOfDestination, $checkDate, $isDeclareInBase, $locationOfOrigin);
     }
 
@@ -322,9 +322,11 @@ class LocationHealthUpdater
         //TODO remove the (overall) locationHealthStatus from LocationHealth in conjuction with the Java entities.
         //For now the value is just set to null.
 
-        $location->getLocationHealth()->setLocationHealthStatus(null);
-        $em->persist($location);
-        $em->flush();
+        if($location->getLocationHealth() != null) {
+            $location->getLocationHealth()->setLocationHealthStatus(null);
+            $em->persist($location);
+            $em->flush();
+        }
 
         return $location;
     }

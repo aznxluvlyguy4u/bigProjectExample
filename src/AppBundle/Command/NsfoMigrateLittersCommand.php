@@ -50,6 +50,9 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     /** @var CommandUtil */
     private $cmdUtil;
 
+    /** @var OutputInterface */
+    private $output;
+
     /** @var ObjectManager $em */
     private $em;
 
@@ -66,6 +69,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
         $this->eweRepository = $this->em->getRepository(Ewe::class);
+        $this->output = $output;
 
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
@@ -73,18 +77,13 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
-        $this->animalPrimaryKeysByVsmId = $this->eweRepository->getAnimalPrimaryKeysByVsmId();
-
-        //Input folder input
-        $inputFolderPath = $this->cmdUtil->generateQuestion('Please enter input folder path (empty for default path)', self::DEFAULT_INPUT_PATH);
-        $this->dataWithoutHeader = CommandUtil::getRowsFromCsvFileWithoutHeader($inputFolderPath);
-
-
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
-            'Generate Litters from source file (incl mother, excl children) (1)', "\n",
-            'Match children with existing litters and set father in litter (2)', "\n",
-            'Find missing father in animal by searching in litter (3)', "\n",
+            '1: Generate Litters from source file (incl mother, excl children)', "\n",
+            '2: Match children with existing litters and set father in litter', "\n",
+            '3: Find missing father in animal by searching in litter', "\n",
+            '4: Generate all litter group ids (uln_orderedCount)', "\n",
+            '5: Check if children in litter matches bornAliveCount value', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -101,11 +100,124 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                 $this->findMissingFathersForAnimalFromLitter();
                 break;
 
+            case 4:
+                $this->setLitterGroupIds();
+                break;
+
+            case 5:
+                $this->checkBornAliveCount();
+                break;
+
             default:
                 $output->writeln('ABORTED');
                 break;
         }
 
+    }
+    
+    
+    private function checkBornAliveCount()
+    {
+        $outputFolder = $this->getContainer()->get('kernel')->getRootDir().'/Resources/outputs';
+        NullChecker::createFolderPathIfNull($outputFolder);
+
+        $notEnoughChildren = $outputFolder.'/litter_count_check__children_missing.csv';
+        $noChildren = $outputFolder.'/litter_count_check__no_children.csv';
+        $tooMuchChildren = $outputFolder.'/litter_count_check__too_much_children.csv';
+
+        $errorMessageHeaders = 'litterId;ulnMoeder;worpDatum;kinderenInDbVanWorp;worpGrootteWaardeImport';
+
+        file_put_contents($noChildren, $errorMessageHeaders. "\n", FILE_APPEND);
+        file_put_contents($tooMuchChildren, $errorMessageHeaders . "\n", FILE_APPEND);
+        file_put_contents($notEnoughChildren, $errorMessageHeaders . "\n", FILE_APPEND);
+
+
+
+        $minId = $this->cmdUtil->generateQuestion('Get litters starting from given primary key/id, default is '.self::DEFAULT_MIN_EWE_ID,self::DEFAULT_MIN_EWE_ID);
+        /** @var LitterRepository $litterRepository */
+        $litterRepository = $this->em->getRepository(Litter::class);
+        $maxId = $litterRepository->getMaxLitterId();
+
+        $sql = "SELECT COUNT(id) FROM litter WHERE id >= '".$minId."'";
+        $totalLitterSize = $this->em->getConnection()->query($sql)->fetch()['count'];
+
+        $this->cmdUtil->setStartTimeAndPrintIt($totalLitterSize, 1, 'Data retrieved from database. Now checking born alive count...');
+
+        $litterCount = 0;
+        $missMatchedLitterCounts = 0;
+
+        for($i = $minId; $i <= $maxId; $i += self::BATCH_SIZE) {
+
+            $litters = $litterRepository->getLittersById($i, $i+self::BATCH_SIZE-1);
+            foreach ($litters as $litter) {
+                /** @var Litter $litter */
+                $childrenBornAliveCount = $litterRepository->getChildrenByAliveState($litter->getId(), true);
+                $childrenCountValue = $litter->getBornAliveCount();
+
+                if($childrenBornAliveCount != $childrenCountValue) {
+                    $missMatchedLitterCounts++;
+
+                    $uln = $litter->getAnimalMother()->getUln();
+                    $litterDate = $litter->getLitterDate()->format('Y-m-d');
+
+                    $errorMessage = ''.$litter->getId().';'.$uln.';'.$litterDate.';'.$childrenBornAliveCount.';'.$childrenCountValue;
+
+                    if($childrenBornAliveCount == 0) {
+                        file_put_contents($noChildren, $errorMessage. "\n", FILE_APPEND);
+                    } elseif ($childrenBornAliveCount > $childrenCountValue) {
+                        file_put_contents($tooMuchChildren, $errorMessage . "\n", FILE_APPEND);
+                    } elseif ($childrenBornAliveCount < $childrenCountValue) {
+                        file_put_contents($notEnoughChildren, $errorMessage . "\n", FILE_APPEND);
+                    }
+
+                }
+
+                $litterCount++;
+
+                $message = 'Checked litters: '.$litterCount.'/'.$totalLitterSize.' |Litters: '.$litterCount.' |Errors: '.$missMatchedLitterCounts;
+                $this->cmdUtil->advanceProgressBar(1, $message);
+            }
+        }
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+
+    }
+
+
+    private function setLitterGroupIds()
+    {
+        $minId = $this->cmdUtil->generateQuestion('Get ewes starting from given primary key/id, default is '.self::DEFAULT_MIN_EWE_ID,self::DEFAULT_MIN_EWE_ID);
+        $maxId = $this->eweRepository->getMaxEweId();
+        $batchSize = self::BATCH_SIZE;
+
+        $sql = "SELECT COUNT(id) FROM ewe WHERE id >= '".$minId."'";
+        $totalEweCount = $this->em->getConnection()->query($sql)->fetch()['count'];
+
+        $this->cmdUtil->setStartTimeAndPrintIt($totalEweCount, 1, 'Data retrieved from database. Now finding fathers for children...');
+        
+        $eweCount = 0;
+        $litterCount = 0;
+
+        $eweId = 0;
+        $lastFlushedEweId = 0;
+        for($i = $minId; $i <= $maxId; $i += self::BATCH_SIZE) {
+
+
+            $ewes = $this->eweRepository->getEwesById($i, $i+self::BATCH_SIZE-1);
+            foreach ($ewes as $ewe) {
+                /** @var Ewe $ewe */
+                $this->eweRepository->generateLitterIds($ewe, true, false);
+
+                $litterCount += $ewe->getLitters()->count();
+                $eweCount++;
+                $eweId = $ewe->getId();
+
+                $message = 'Ewes: '.$eweCount.'/'.$totalEweCount.' | Litters: '.$litterCount.' Last flushed EweId: '.$lastFlushedEweId;
+                $this->cmdUtil->advanceProgressBar(1, $message);
+            }
+            $lastFlushedEweId = $eweId;
+            DoctrineUtil::flushClearAndGarbageCollect($this->em);
+        }
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 
 
@@ -253,9 +365,15 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
 
     private function migrateLitters()
     {
+        //Input folder input
+        $inputFolderPath = $this->cmdUtil->generateQuestion('Please enter input folder path (empty for default path)', self::DEFAULT_INPUT_PATH);
+        $this->dataWithoutHeader = CommandUtil::getRowsFromCsvFileWithoutHeader($inputFolderPath);
+
         $minEweId = $this->cmdUtil->generateQuestion('Please enter minimum ewe primaryKey (default = 1)', self::DEFAULT_MIN_EWE_ID);
 
         $this->cmdUtil->setStartTimeAndPrintIt(count($this->dataWithoutHeader) * 2, $minEweId);
+
+        $this->animalPrimaryKeysByVsmId = $this->eweRepository->getAnimalPrimaryKeysByVsmId(); //Migrate litters
 
         $rowCount = 0;
         $this->litterSets = new ArrayCollection();

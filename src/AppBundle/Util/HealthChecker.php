@@ -129,7 +129,7 @@ class HealthChecker
 
         switch($className) {
             case RequestType::DECLARE_ARRIVAL_ENTITY:
-                $locationOrigin = $manager->getRepository(Constant::LOCATION_REPOSITORY)->findByUbn($declareIn->getUbnPreviousOwner());
+                $locationOrigin = $manager->getRepository(Constant::LOCATION_REPOSITORY)->findOneByActiveUbn($declareIn->getUbnPreviousOwner());
                 if($locationOrigin == null) {
                     return false;
                 } else {

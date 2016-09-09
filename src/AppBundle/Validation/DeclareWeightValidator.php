@@ -38,6 +38,7 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
     const WEIGHT_IS_TOO_HIGH = "WEIGHT IS TOO HIGH. IT CANNOT EXCEED 200 KG"; //Update if default weight has changed!
     const WEIGHT_DIGITS_AFTER_COMMA = "WEIGHT: NUMBER OF DIGITS AFTER THE COMMA CANNOT EXCEED 2"; //Update if default has changed!
     const MEASUREMENT_DATE_IN_FUTURE = "MEASUREMENT DATE CANNOT BE IN THE FUTURE";
+    const MEASUREMENT_DATE_BEFORE_BIRTH = "MEASUREMENT DATE CANNOT BE BEFORE DATE OF BIRTH";
 
     const ANIMAL_MISSING_INPUT = 'ANIMAL: NO ULN GIVEN';
     const ANIMAL_NOT_FOUND = "ANIMAL: NOT FOUND";
@@ -220,6 +221,10 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
             $this->errors[] = self::MEASUREMENT_DATE_IN_FUTURE;
             $isValid = false;
 
+        } elseif($this->isMeasurementDateBeforeDateOfBirth($measurementDate, $this->animal)) {
+            $this->errors[] = self::MEASUREMENT_DATE_BEFORE_BIRTH;
+            $isValid = false;
+
         } else {
             $this->measurementDate = $measurementDate;
         }
@@ -248,5 +253,24 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
     }
 
 
+    /**
+     * @param \DateTime $measurementDate
+     * @param Animal $animal
+     * @return bool
+     */
+    private function isMeasurementDateBeforeDateOfBirth($measurementDate, $animal)
+    {
+        $dateOfBirth = NullChecker::getNullCheckedDateOfBirth($this->animal);
+        if($dateOfBirth != null) {
+            if($measurementDate < $dateOfBirth) {
+                $isMeasurementNotOnDayOfBirth = $measurementDate->format('d-m-Y') != $dateOfBirth->format('d-m-Y');
+                if($isMeasurementNotOnDayOfBirth) {
+                    //this check is to ignore the time of day
+                    return true;   
+                }
+            }
+        }
+        return false;
+    }
 
 }

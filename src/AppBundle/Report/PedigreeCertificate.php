@@ -35,6 +35,7 @@ class PedigreeCertificate
     const MAX_LENGTH_FULL_NAME = 30;
     const EMPTY_PRODUCTION = '-/-/-/-';
     const MISSING_PEDIGREE_REGISTER = '';
+    const EMPTY_DATE_OF_BIRTH = '-';
 
     const LITTER_SIZE = 'litterSize';
     const LITTER_GROUP = 'litterGroup';
@@ -85,7 +86,7 @@ class PedigreeCertificate
         $this->data = array();
         $this->generationOfAscendants = $generationOfAscendants;
 
-        $this->data[ReportLabel::OWNER] = $client;
+//        $this->data[ReportLabel::OWNER] = $client;
 
         $companyName = $this->getCompanyName($location, $client);
         $trimmedClientName = StringUtil::trimStringWithAddedEllipsis($companyName, self::MAX_LENGTH_FULL_NAME);
@@ -130,7 +131,7 @@ class PedigreeCertificate
         $this->data[ReportLabel::BREEDER_NUMBER] = '-'; //TODO pass real breeder number
 
         $keyAnimal = ReportLabel::CHILD_KEY;
-        $this->data[ReportLabel::ANIMALS][$keyAnimal][ReportLabel::ENTITY] = $animal;
+//        $this->data[ReportLabel::ANIMALS][$keyAnimal][ReportLabel::ENTITY] = $animal;
 
         $generation = 0;
         $this->addParents($animal, $keyAnimal, $generation);
@@ -162,8 +163,8 @@ class PedigreeCertificate
             $keyFather = self::getFatherKey($keyAnimal);
             $keyMother = self::getMotherKey($keyAnimal);
 
-            $this->data[ReportLabel::ANIMALS][$keyFather][ReportLabel::ENTITY] = $father;
-            $this->data[ReportLabel::ANIMALS][$keyMother][ReportLabel::ENTITY] = $mother;
+//            $this->data[ReportLabel::ANIMALS][$keyFather][ReportLabel::ENTITY] = $father;
+//            $this->data[ReportLabel::ANIMALS][$keyMother][ReportLabel::ENTITY] = $mother;
             
             $this->addAnimalValuesToArray($keyFather, $father);
             $this->addAnimalValuesToArray($keyMother, $mother);
@@ -266,9 +267,8 @@ class PedigreeCertificate
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED] = Utils::fillNullOrEmptyString($animal->getBreed());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_TYPE] = Utils::fillNullOrEmptyString(Translation::translateBreedType($animal->getBreedType()));
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_CODE] = Utils::fillNullOrEmptyString($animal->getBreedCode());
-
         /* Dates. The null checks for dates are in the twig file, because it has to be combined with the formatting */
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DATE_OF_BIRTH] = $animal->getDateOfBirth();
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DATE_OF_BIRTH] = NullChecker::getNullCheckedDateOfBirthAsString($animal, self::EMPTY_DATE_OF_BIRTH);
         //NOTE measurementDate and inspectionDate are identical!
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::INSPECTION_DATE] = $this->getTypeAndInspectionDate($latestExterior);
 
