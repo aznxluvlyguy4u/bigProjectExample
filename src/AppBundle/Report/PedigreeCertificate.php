@@ -268,7 +268,7 @@ class PedigreeCertificate
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_TYPE] = Utils::fillNullOrEmptyString(Translation::translateBreedType($animal->getBreedType()));
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_CODE] = Utils::fillNullOrEmptyString($animal->getBreedCode());
         /* Dates. The null checks for dates are in the twig file, because it has to be combined with the formatting */
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DATE_OF_BIRTH] = NullChecker::getNullCheckedDateOfBirth($animal, self::EMPTY_DATE_OF_BIRTH);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DATE_OF_BIRTH] = NullChecker::getNullCheckedDateOfBirthAsString($animal, self::EMPTY_DATE_OF_BIRTH);
         //NOTE measurementDate and inspectionDate are identical!
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::INSPECTION_DATE] = $this->getTypeAndInspectionDate($latestExterior);
 

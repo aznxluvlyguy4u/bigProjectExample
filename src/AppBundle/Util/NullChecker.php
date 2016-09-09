@@ -212,7 +212,7 @@ class NullChecker
      * @param string $nullReplacementText
      * @return string|null
      */
-    public static function getNullCheckedDateOfBirth($animal, $nullReplacementText = null)
+    public static function getNullCheckedDateOfBirthAsString($animal, $nullReplacementText = null)
     {
         if($animal instanceof Animal) {
             $dateOfBirth = $animal->getDateOfBirth();
