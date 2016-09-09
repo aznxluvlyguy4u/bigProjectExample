@@ -214,10 +214,26 @@ class NullChecker
      */
     public static function getNullCheckedDateOfBirthAsString($animal, $nullReplacementText = null)
     {
+        $dateOfBirth = self::getNullCheckedDateOfBirth($animal, $nullReplacementText);
+        if($dateOfBirth != $nullReplacementText && $dateOfBirth != null) {
+            return $dateOfBirth->format('d-m-Y');
+        } else {
+            return $nullReplacementText;
+        }
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param string $nullReplacementText
+     * @return \DateTime|null
+     */
+    public static function getNullCheckedDateOfBirth($animal, $nullReplacementText = null)
+    {
         if($animal instanceof Animal) {
             $dateOfBirth = $animal->getDateOfBirth();
             if($dateOfBirth != null) {
-                return Utils::fillNullOrEmptyString($animal->getDateOfBirth()->format('d-m-Y'), $nullReplacementText);
+                return Utils::fillNullOrEmptyString($animal->getDateOfBirth(), $nullReplacementText);
             }
         }
         return $nullReplacementText;
