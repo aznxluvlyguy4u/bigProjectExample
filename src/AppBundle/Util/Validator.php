@@ -25,6 +25,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 
 class Validator
 {
@@ -80,6 +81,62 @@ class Validator
         } else {
             return false;
         }
+    }
+
+
+    /**
+     * String must contain at least one of the strings in the array
+     *
+     * @param string $string
+     * @param array $checklist
+     * @param $isIgnoreCase boolean
+     * @return bool
+     */
+    public static function isStringContainsAtleastOne($string, $checklist, $isIgnoreCase = false)
+    {
+        if(count($checklist) == 0) { return false; }
+
+        if($isIgnoreCase) { $string = strtolower($string); }
+
+        $result = false;
+        foreach($checklist as $checkString){
+            if($isIgnoreCase) { $checkString = strtolower($checkString); }
+
+            $isContainsCheckString = strpos($string, $checkString) !== false;
+            if($isContainsCheckString) {
+                $result = true;
+                break;
+            }
+        }
+        return $result;
+    }
+
+
+    /**
+     * String must contain all of the strings given in the array
+     *
+     * @param string $string
+     * @param array $checklist
+     * @param $isIgnoreCase boolean
+     * @return bool
+     */
+    public static function isStringContainsAll($string, $checklist, $isIgnoreCase = false)
+    {
+        if(count($checklist) == 0) { return false; }
+
+        if($isIgnoreCase) { $string = strtolower($string); }
+
+        $result = true;
+        foreach($checklist as $checkString){
+            if($isIgnoreCase) { $checkString = strtolower($checkString); }
+
+            $isContainsCheckString = strpos($string, $checkString) !== false;
+            if(!$isContainsCheckString) {
+                $result = false;
+                break;
+            }
+        }
+        return $result;
     }
 
 
@@ -378,5 +435,27 @@ class Validator
         }
 
         return false;
+    }
+
+
+    /**
+     * Test if database used is the test database.
+     * 
+     * @param ObjectManager $em
+     * @return bool
+     */
+    public static function isLocalTestDatabase(ObjectManager $em)
+    {
+        /** @var Connection $connection */
+        $connection = $em->getConnection();
+        $databaseName = $connection->getDatabase();
+        $host = $connection->getHost();
+        
+        $isIgnoreCase = true;
+        $isLocalHost = self::isStringContainsAtleastOne($host, ['localhost', '127.0.0.1'], $isIgnoreCase);
+        $isTestDatabaseName = self::isStringContainsAtleastOne($databaseName, ['test'], $isIgnoreCase);
+        $isNotProductionDatabaseName = !self::isStringContainsAtleastOne($databaseName, ['prod'], $isIgnoreCase);
+
+        return $isLocalHost && $isTestDatabaseName && $isNotProductionDatabaseName;
     }
 }
