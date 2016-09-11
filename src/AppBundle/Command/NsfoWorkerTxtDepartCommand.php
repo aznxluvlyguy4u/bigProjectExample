@@ -99,7 +99,7 @@ class NsfoWorkerTxtDepartCommand extends ContainerAwareCommand
         $departResponses = $content->first();
 
         $message = 'Processing DeclareDepart responses with internal worker logic';
-        $cmdUtil->setStartTimeAndPrintIt(count($departResponses), 1, $message);
+        $cmdUtil->setStartTimeAndPrintIt(count($departResponses)+1, 1, $message);
 
         $successResponseCount = 0;
         $failedResponseCount = 0;
