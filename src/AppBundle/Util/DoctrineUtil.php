@@ -4,6 +4,7 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Entity\Employee;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\Token;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -68,5 +69,25 @@ class DoctrineUtil
         return $tokenCodes[$choice]['code'];
     }
 
-    
+
+    /**
+     * @param ObjectManager $em
+     * @param int $minAliveAnimalsCount
+     * @return Location
+     */
+    public static function getRandomActiveLocation(ObjectManager $em, $minAliveAnimalsCount = 30)
+    {
+
+        $sql = "SELECT location.id as id FROM (location INNER JOIN (SELECT location_id, COUNT(*) FROM animal WHERE animal.transfer_state IS NULL AND animal.is_alive = true GROUP BY location_id HAVING COUNT(*) > ".$minAliveAnimalsCount." ) lc ON location.id = lc.location_id) WHERE location.is_active = TRUE";
+
+        $results = $em->getConnection()->query($sql)->fetchAll();
+
+        //null check
+        if(count($results) == 0) {
+            return null;
+        }
+
+        $choice = rand(1, count($results)-1);
+        return $em->getRepository(Location::class)->find($results[$choice]['id']);
+    }
 }

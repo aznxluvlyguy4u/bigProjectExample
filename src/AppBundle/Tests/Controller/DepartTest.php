@@ -3,7 +3,9 @@
 namespace AppBundle\Tests\Controller;
 
 use AppBundle\Constant\TestConstant;
+use AppBundle\Entity\Location;
 use AppBundle\Service\IRSerializer;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
@@ -22,7 +24,10 @@ class DepartTest extends WebTestCase {
   private $client;
 
   /** @var string */
-  private $accessTokenCode;
+  static private $accessTokenCode;
+
+  /** @var Location */
+  static private $location;
 
   /** @var IRSerializer */
   static private $serializer;
@@ -58,6 +63,9 @@ class DepartTest extends WebTestCase {
     if(!$isLocalTestDatabase) {
       dump(TestConstant::TEST_DB_ERROR_MESSAGE);die;
     }
+
+    self::$location = DoctrineUtil::getRandomActiveLocation(self::$em);
+    self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
   }
 
 
@@ -68,10 +76,9 @@ class DepartTest extends WebTestCase {
   {
     $this->client = parent::createClient();
 
-    $this->accessTokenCode = $this->getContainer()->getParameter('unit_test_access_token');
     $this->defaultHeaders = array(
         'CONTENT_TYPE' => 'application/json',
-        'HTTP_ACCESSTOKEN' => $this->accessTokenCode,
+        'HTTP_ACCESSTOKEN' => self::$accessTokenCode,
     );
   }
 

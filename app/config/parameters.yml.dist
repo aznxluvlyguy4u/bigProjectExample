@@ -33,5 +33,3 @@ parameters:
     aws_s3_region: ~
     aws_s3_version: ~
     aws_s3_bucket: ~
-
-    unit_test_access_token: ~
