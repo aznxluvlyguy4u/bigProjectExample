@@ -98,11 +98,12 @@ class DeclareDepartAction
                 $internalWorkerResponse = InternalWorkerResponse::SUCCESS_RESPONSE;
                 $depart->setRequestState($requestState);
 
-                $animal->setIsExportAnimal(false);
+                $currentLocation->removeAnimal($animal);
                 $animal->setLocation(null);
                 $animal->setTransferState(AnimalTransferStatus::TRANSFERRED);
-                $currentLocation->removeAnimal($animal);
+                $animal->setIsExportAnimal(false);
                 $this->em->persist($currentLocation);
+                $this->em->persist($animal);
 
                 if($currentResidence != null) {
                     $currentResidence->setIsPending(false);
