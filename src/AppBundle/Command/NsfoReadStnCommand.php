@@ -135,11 +135,11 @@ class NsfoReadStnCommand extends ContainerAwareCommand
                 } else {
                     if(sizeof($pieces) > 1) {
                         $pedigreeCountryCode = $pieces[0];
-                        $pedigreeNumber = $pieces[1];
+                        $pedigreeNumber = strtoupper($pieces[1]);
 
                     } else {
                         $pedigreeCountryCode = substr($pieces[0], 0, 2);
-                        $pedigreeNumber = substr($pieces[0], 2);
+                        $pedigreeNumber = strtoupper(substr($pieces[0], 2));
                     }
 
                     $isValidPedigreeNumber = strpos($pedigreeNumber, '-') == 5 && strlen($pedigreeNumber) == 11;
@@ -148,7 +148,6 @@ class NsfoReadStnCommand extends ContainerAwareCommand
 
                         if(!$vsmIdsThatHaveCorrectPedigreeNumbers->contains($animalName)) {
 
-                            $pedigreeNumber = strtoupper($pedigreeNumber);
                             $sql = "UPDATE animal SET pedigree_country_code = '". $pedigreeCountryCode ."', pedigree_number = '". $pedigreeNumber ."' WHERE name = '". $animalName ."'";
                             $em->getConnection()->exec($sql);
 
