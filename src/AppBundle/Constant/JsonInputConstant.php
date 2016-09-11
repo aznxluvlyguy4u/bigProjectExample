@@ -20,6 +20,16 @@ class JsonInputConstant
     const PEDIGREE_COUNTRY_CODE = 'pedigree_country_code';
     const PEDIGREE_NUMBER = 'pedigree_number';
 
+    //Request & Response
+    const ERROR_CODE = 'error_code';
+    const ERROR_MESSAGE = 'error_message';
+    const ERROR_KIND_INDICATOR = 'error_kind_indicator';
+    const SUCCESS_INDICATOR = 'success_indicator';
+    const ACTION = 'action';
+    const RECOVERY_INDICATOR = 'recovery_indicator';
+    const ACTION_BY = 'action_by';
+    const IS_REMOVED_BY_USER = 'is_removed_by_user';
+
     //Arrival & Import
     const IS_IMPORT_ANIMAL = 'is_import_animal';
     const UBN_PREVIOUS_OWNER = 'ubn_previous_owner';
@@ -30,6 +40,8 @@ class JsonInputConstant
     //Depart & Export
     const IS_EXPORT_ANIMAL = 'is_export_animal';
     const UBN_NEW_OWNER = 'ubn_new_owner';
+    const DEPART_DATE = 'depart_date';
+    const REASON_OF_DEPARTURE = 'reason_of_departure';
 
     //Tags
     const RELATION_NUMBER_ACCEPTANT = "relation_number_acceptant";
@@ -92,6 +104,7 @@ class JsonInputConstant
     const MESSAGE_ID = 'message_id';
     const REQUEST_ID = 'request_id';
     const REQUEST_STATE = 'request_state';
+    const MESSAGE_NUMBER = 'message_number';
     const LOG_DATE = 'log_date';
     const RESULT = 'result';
     const IS_HIDDEN = 'is_hidden';

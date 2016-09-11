@@ -120,4 +120,21 @@ class TimeUtil
             return true;
         }
     }
+
+
+    /**
+     * FIXME the last 3 digits likely represent the timezone. So the time might be of a few hours.
+     *
+     * @param string $awsSqsTimestamp
+     * @return \DateTime
+     */
+    public static function getDateTimeFromAwsSqsTimestamp($awsSqsTimestamp)
+    {
+        if($awsSqsTimestamp != null) {
+            if(strlen($awsSqsTimestamp) == 13) {
+                return (new \DateTime())->setTimestamp(substr($awsSqsTimestamp, 0, 10));
+            }
+        }
+        return null;
+    }
 }
