@@ -3,6 +3,8 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Entity\Employee;
+use AppBundle\Entity\Token;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 
@@ -46,4 +48,25 @@ class DoctrineUtil
 
         return 'Database: '.$databaseName.' on host '.$host;
     }
+
+
+    /**
+     * @param ObjectManager $em
+     * @return string
+     */
+    public static function getRandomAdminAccessTokenCode(ObjectManager $em)
+    {
+        $sql = "SELECT token.code as code FROM employee INNER JOIN token ON employee.id = token.owner_id WHERE token.type = 'ACCESS'";
+        $tokenCodes = $em->getConnection()->query($sql)->fetchAll();
+
+        //null check
+        if(count($tokenCodes) == 0) {
+            return null;
+        }
+
+        $choice = rand(1, count($tokenCodes)-1);
+        return $tokenCodes[$choice]['code'];
+    }
+
+    
 }
