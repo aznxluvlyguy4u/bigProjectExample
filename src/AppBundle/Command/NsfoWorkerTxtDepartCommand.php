@@ -138,9 +138,11 @@ class NsfoWorkerTxtDepartCommand extends ContainerAwareCommand
         DoctrineUtil::flushClearAndGarbageCollect($this->em);
 
         $cmdUtil->setEndTimeAndPrintFinalOverview();
-        $output->writeln('Missing Declares: ');
-        foreach ($missingDeclares as $declareRequestId) {
-            $output->write($declareRequestId.' ; ');
+        if(count($missingDeclares)>0) {
+            $output->writeln('Missing Declares: ');
+            foreach ($missingDeclares as $declareRequestId) {
+                $output->write($declareRequestId.' ; ');
+            }
         }
     }
 
