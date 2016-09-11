@@ -91,6 +91,8 @@ class NsfoWorkerTxtDepartCommand extends ContainerAwareCommand
             return;
         }
 
+        $isFlushAfterEachDepartAction = $cmdUtil->generateConfirmationQuestion('Flush after each individual message? (y/n)');
+
         $isSkipProcessedDeclares = true;
         $declareDepartAction = new DeclareDepartAction($em, $isSkipProcessedDeclares);
 
@@ -107,7 +109,6 @@ class NsfoWorkerTxtDepartCommand extends ContainerAwareCommand
         $alreadyFinishedDeclares = 0;
         $missingDeclares = array();
 
-        $isFlushAfterEachDepartAction = false;
         foreach ($departResponses as $departResponseArray) {
 
             $responseSuccessType = $declareDepartAction->save($departResponseArray, $isFlushAfterEachDepartAction);
