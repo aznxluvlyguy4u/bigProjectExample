@@ -4,6 +4,7 @@ namespace AppBundle\Util;
 
 
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 
 class DoctrineUtil
 {
@@ -29,5 +30,20 @@ class DoctrineUtil
         $om->flush();
         $om->clear();
         gc_collect_cycles();
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @return string
+     */
+    public static function getDatabaseHostAndNameString(ObjectManager $em)
+    {
+        /** @var Connection $connection */
+        $connection = $em->getConnection();
+        $databaseName = $connection->getDatabase();
+        $host = $connection->getHost();
+
+        return 'Database: '.$databaseName.' on host '.$host;
     }
 }

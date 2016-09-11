@@ -6,6 +6,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -141,6 +142,7 @@ class NsfoFixDuplicateStnCommand extends ContainerAwareCommand
     {
         $results = $this->getDuplicatePedigreeCodesInDatabase();
         $this->output->writeln('Total duplicate of pedigreeCountryCode AND pedigreeNumber in database: '.count($results));
+        $this->output->writeln(DoctrineUtil::getDatabaseHostAndNameString($this->em));
 
         $isEraseDuplicatePedigreeCodes = $this->cmdUtil->generateConfirmationQuestion('CLEAR ALL Duplicate pedigreeCountryCodes and pedigreeNumbers combinations? (y/n)');
 
