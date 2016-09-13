@@ -227,6 +227,7 @@ class IRSerializer implements IRSerializerInterface
 
         } else {
             $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray);
+            $retrievedAnimal->setIsImportAnimal(false);
 
             $declareArrivalRequest = new DeclareArrival();
             $declareArrivalRequest->setAnimal($retrievedAnimal);
