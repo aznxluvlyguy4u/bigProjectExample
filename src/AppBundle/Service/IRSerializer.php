@@ -402,7 +402,7 @@ class IRSerializer implements IRSerializerInterface
         $declareDepartContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
 
         //denormalize the content to an object
-        $json = $this->serializeToJSON($declareDepartContentArray, 'DECLARE');
+        $json = $this->serializeToJSON($declareDepartContentArray);
         $declareDepartRequest = $this->deserializeToObject($json, RequestType::DECLARE_DEPART_ENTITY);
 
         //Add retrieved animal to DeclareArrival
@@ -545,7 +545,7 @@ class IRSerializer implements IRSerializerInterface
         $declareLossContentArray['animal'] = $retrievedAnimal;
 
         //denormalize the content to an object
-        $json = $this->serializeToJSON($declareLossContentArray, 'DECLARE');
+        $json = $this->serializeToJSON($declareLossContentArray);
         $declareLossRequest = $this->deserializeToObject($json, RequestType::DECLARE_LOSS_ENTITY);
 
         //Add retrieved animal to DeclareLoss
