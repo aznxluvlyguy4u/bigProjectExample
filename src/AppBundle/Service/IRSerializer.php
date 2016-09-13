@@ -88,7 +88,6 @@ class IRSerializer implements IRSerializerInterface
      */
     public function serializeToJSON($object, $type = 'DEFAULT')
     {
-
         if($type == 'DECLARE') {
             return $this->serializer->serialize($object, Constant::jsonNamespace, SerializationContext::create()->setGroups(array('declare')));
         }
@@ -105,7 +104,7 @@ class IRSerializer implements IRSerializerInterface
      */
     public function deserializeToObject($json, $messageClassNameSpace)
     {
-        $messageClassPathNameSpace = "AppBundle\Entity\\$messageClassNameSpace";
+        $messageClassPathNameSpace = "AppBundle\\Entity\\" . $messageClassNameSpace;
 
         $messageObject = $this->serializer->deserialize($json, $messageClassPathNameSpace, Constant::jsonNamespace);
 
@@ -594,13 +593,7 @@ class IRSerializer implements IRSerializerInterface
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareExportContentArray);
         $retrievedAnimal->setIsExportAnimal($isExportAnimal);
 
-        //Add retrieved animal properties including type to initial animalContentArray
-        $declareExportContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
-
-        //denormalize the content to an object
-        $json = $this->serializeToJSON($declareExportContentArray, 'DECLARE');
-        $declareExportRequest = $this->deserializeToObject($json, RequestType::DECLARE_EXPORT_ENTITY);
-
+        $declareExportRequest = new DeclareExport();
         $declareExportRequest->setAnimal($retrievedAnimal);
         $declareExportRequest->setExportDate(new \DateTime($exportDate));
         $declareExportRequest->setIsExportAnimal($isExportAnimal);
