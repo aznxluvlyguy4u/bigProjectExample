@@ -235,6 +235,7 @@ class IRSerializer implements IRSerializerInterface
             $declareArrivalRequest->setUbnPreviousOwner($declareArrivalContentArray['ubn_previous_owner']);
             $declareArrivalRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
             $declareArrivalRequest->setIsArrivedFromOtherNsfoClient($declareArrivalContentArray->get(JsonInputConstant::IS_ARRIVED_FROM_OTHER_NSFO_CLIENT));
+            $declareArrivalRequest->setIsImportAnimal(false);
 
             $contentAnimal = $declareArrivalContentArray['animal'];
 
@@ -679,6 +680,7 @@ class IRSerializer implements IRSerializerInterface
             $declareImportRequest->setAnimalCountryOrigin($animalCountryOrigin);
             $declareImportRequest->setImportDate(new \DateTime($importDate));
             $declareImportRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
+            $declareImportRequest->setIsImportAnimal(true);
 
             $contentAnimal = $declareImportContentArray['animal'];
 
