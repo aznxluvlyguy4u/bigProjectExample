@@ -228,15 +228,10 @@ class IRSerializer implements IRSerializerInterface
         } else {
             $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray);
 
-            //Add retrieved animal properties including type to initial animalContentArray
-            $declareArrivalContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
-            
-            //denormalize the content to an object
-            $json = $this->serializeToJSON($declareArrivalContentArray);
-            $declareArrivalRequest = $this->deserializeToObject($json, RequestType::DECLARE_ARRIVAL_ENTITY);
-
-            //Add retrieved animal to DeclareArrival
+            $declareArrivalRequest = new DeclareArrival();
             $declareArrivalRequest->setAnimal($retrievedAnimal);
+            $declareArrivalRequest->setArrivalDate(new \DateTime($declareArrivalContentArray['arrival_date']));
+            $declareArrivalRequest->setUbnPreviousOwner($declareArrivalContentArray['ubn_previous_owner']);
             $declareArrivalRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
             $declareArrivalRequest->setIsArrivedFromOtherNsfoClient($declareArrivalContentArray->get(JsonInputConstant::IS_ARRIVED_FROM_OTHER_NSFO_CLIENT));
 
@@ -677,14 +672,8 @@ class IRSerializer implements IRSerializerInterface
             $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareImportContentArray);
             $retrievedAnimal->setIsImportAnimal(true);
 
-            //Add retrieved animal properties including type to initial animalContentArray
-            $declareImportContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
-
-            //denormalize the content to an object
-            $json = $this->serializeToJSON($declareImportContentArray);
-            $declareImportRequest = $this->deserializeToObject($json, RequestType::DECLARE_IMPORT_ENTITY);
-
             //Add retrieved animal and import date to DeclareImport
+            $declareImportRequest = new DeclareImport();
             $declareImportRequest->setAnimal($retrievedAnimal);
             $declareImportRequest->setAnimalCountryOrigin($animalCountryOrigin);
             $declareImportRequest->setImportDate(new \DateTime($importDate));
