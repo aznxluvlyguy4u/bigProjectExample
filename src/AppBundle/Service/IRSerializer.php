@@ -36,6 +36,7 @@ use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
+use JMS\Serializer\SerializationContext;
 
 /**
  * Class IRSerializer.
@@ -85,9 +86,16 @@ class IRSerializer implements IRSerializerInterface
      * @param $object
      * @return mixed|string
      */
-    public function serializeToJSON($object)
+    public function serializeToJSON($object, $type = 'DEFAULT')
     {
-        return $this->serializer->serialize($object, Constant::jsonNamespace);
+        if($type = 'DECLARE') {
+            return $this->serializer->serialize($object, Constant::jsonNamespace, SerializationContext::create()->setGroups(array('declare')));
+        }
+
+        if ($type == 'DEFAULT') {
+            return $this->serializer->serialize($object, Constant::jsonNamespace);
+        }
+        return null;
     }
 
     /**
@@ -394,7 +402,7 @@ class IRSerializer implements IRSerializerInterface
         $declareDepartContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
 
         //denormalize the content to an object
-        $json = $this->serializeToJSON($declareDepartContentArray);
+        $json = $this->serializeToJSON($declareDepartContentArray, 'DECLARE');
         $declareDepartRequest = $this->deserializeToObject($json, RequestType::DECLARE_DEPART_ENTITY);
 
         //Add retrieved animal to DeclareArrival
@@ -534,10 +542,10 @@ class IRSerializer implements IRSerializerInterface
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareLossContentArray);
 
         //Add retrieved animal properties including type to initial animalContentArray
-        $declareLossContentArray['animal'] =  $this->returnAnimalArray($retrievedAnimal);
+        $declareLossContentArray['animal'] = $retrievedAnimal;
 
         //denormalize the content to an object
-        $json = $this->serializeToJSON($declareLossContentArray);
+        $json = $this->serializeToJSON($declareLossContentArray, 'DECLARE');
         $declareLossRequest = $this->deserializeToObject($json, RequestType::DECLARE_LOSS_ENTITY);
 
         //Add retrieved animal to DeclareLoss
