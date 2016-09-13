@@ -452,7 +452,7 @@ abstract class Animal
     protected $breedCode;
 
     /**
-     * @ORM\ManyToOne((targetEntity="Breeder")
+     * @ORM\ManyToOne(targetEntity="Breeder")
      * @ORM\JoinColumn(name="breeder_id", referencedColumnName="id")
      */
     protected $breeder;
