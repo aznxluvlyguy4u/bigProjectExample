@@ -21,6 +21,7 @@ use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\BreedCodeType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Migration\BreedCodeReformatter;
+use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\Translation;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -29,28 +30,37 @@ use Doctrine\ORM\EntityManager;
 
 class Mixblup
 {
-    const PARENT_NULL_FILLER = 0;
-    const BREED_CODE_NULL_FILLER = 0;
-    const BREED_TYPE_NULL_FILLER = 0;
-    const GENDER_NULL_FILLER = 0;
-    const SCRAPIE_GENOTYPE_NULL_FILLER = 0;
-    const NLING_NULL_FILLER = 0;
-    const LITTER_GROUP_NULL_FILLER = 0;
-    const DATE_OF_BIRTH_NULL_FILLER = 0;
-    const MEASUREMENT_DATE_NULL_FILLER = 0;
-    const FAT_NULL_FILLER = 0;
-    const MUSCLE_THICKNESS_NULL_FILLER = 0;
-    const TAIL_LENGTH_NULL_FILLER = 0;
-    const WEIGHT_NULL_FILLER = 0;
-    const PERFORMANCE_NULL_FILLER = 0;
-    const EXTERIOR_NULL_FILLER = 0;
-    const UBN_NULL_FILLER = 0;
+    const ULN_NULL_FILLER = 'N_B';
+    const BREED_CODE_NULL_FILLER = 'N_B';
+    const BREED_CODE_PARTS_NULL_FILLER = -99;
+    const BREED_TYPE_NULL_FILLER = 'N_B';
+    const SCRAPIE_GENOTYPE_NULL_FILLER = 'N_B';
+    const NLING_NULL_FILLER = -99;
+    const LITTER_GROUP_NULL_FILLER = 'N_B';
+    const DATE_OF_BIRTH_NULL_FILLER = 'N_B';
+    const MEASUREMENT_DATE_NULL_FILLER = 'N_B';
+    const FAT_NULL_FILLER = -99;
+    const MUSCLE_THICKNESS_NULL_FILLER = -99;
+    const TAIL_LENGTH_NULL_FILLER = -99;
+    const WEIGHT_NULL_FILLER = -99;
+    const EXTERIOR_NULL_FILLER = -99;
+    const UBN_NULL_FILLER = 0; //Value is used as default value for !BLOCK
+    const HETEROSIS_NULL_FILLER = -99;
+    const RECOMBINATION_NULL_FILLER = -99;
     const AGE_NULL_FILLER = -99;
     const GROWTH_NULL_FILLER = -99;
-    const YEAR_UBN_NULL_FILLER = 0;
+    const TOTAL_BORN_COUNT_NULL_FILLER = -99;
+    const STILLBORN_COUNT_NULL_FILLER = -99;
+    const YEAR_UBN_NULL_FILLER = 'N_B';
+    const RUT_INDUCTION_NULL_FILLER = 'N_B';
+    const PERMANENT_ENVIRONMENT_NULL_FILLER = 'N_B';
+    const INSPECTOR_CODE_NULL_FILLER = 'N_B';
+    const PRECOCIOUS_NULL_FILLER = 'N_B'; //vroegrijp
+    const BIRTH_PROCESS_NULL_FILLER = 'N_B';
     const RAM = 'ram';
     const EWE = 'ooi';
-    const NEUTER = '0';
+    const GENDER_NULL_FILLER = 'N_B';
+    const NEUTER = 'N_B';
     const COLUMN_PADDING_SIZE = 1;
 
     const ANIMAL = 'ANIMAL';
@@ -234,40 +244,40 @@ class Mixblup
         return [
             'TITEL   schapen fokwaarde berekening groei, spierdikte en vetbedekking',
             ' DATAFILE  '.$this->dataFileName.'_'.self::TEST_ATTRIBUTES.'.txt',
-            ' animal     A #uln',  //uln
-            ' gender     A',  //ram/ooi/0
-            ' jaarUbn   A #jaar en ubn van geboorte', //year and ubn of birth
-            ' rascode    A',  //breedCode
-            ' rasstatus  A',  //breedType
-            ' CovTE      I',  //TE, BT, DK are genetically all the same
-            ' CovCF      I',
-            ' CovNH      I',
-            ' CovSW      I',
-            ' CovOV      I',  //other  (NN means unknown)
-            ' scrgen     A #scrapiegenotype',
-            ' n-ling     I #worp grootte',  //Litter->size()
-            ' worpnr     A #worpnummer',  //worpnummer/litterGroup
-            ' moeder     A #uln van moeder',  //uln of mother
-            ' father     A #uln van vader',  //uln of father
-            ' meetdatum  A', //measurementDate
-            ' leeftijd   I !missing -99 #op moment van meting in dagen', //age of animal on measurementDate in days
-            ' groei      T !missing -99 #gewicht(kg)/leeftijd(dagen) op moment van meting', //growth weight(kg)/age(days) on measurementDate
-            ' gebgewicht T #geboortegewicht',   //weight at birth
-            ' toetsgewicht T #normale gewichtmeting', //weight during normal measurement
-            ' vet1       T',
-            ' vet2       T',
-            ' vet3       T',
-            ' spierdik   T #spierdikte',
-            ' staartlg   T #staartlengte', //tailLength
+            ' animal     A !missing '.self::ULN_NULL_FILLER.' #uln',  //uln
+            ' gender     A !missing '.self::GENDER_NULL_FILLER,  //ram/ooi/N_B
+            ' jaarUbn    A !missing '.self::YEAR_UBN_NULL_FILLER.' #jaar en ubn van geboorte', //year and ubn of birth
+            ' rascode    A !missing '.self::BREED_CODE_NULL_FILLER,  //breedCode
+            ' rasstatus  A !missing '.self::BREED_TYPE_NULL_FILLER,  //breedType
+            ' CovTE      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,  //TE, BT, DK are genetically all the same
+            ' CovCF      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,
+            ' CovNH      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,
+            ' CovSW      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,
+            ' CovOV      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,  //other  (NN means unknown)
+            ' scrgen     A !missing '.self::SCRAPIE_GENOTYPE_NULL_FILLER.' #scrapiegenotype',
+            ' n-ling     I !missing '.self::NLING_NULL_FILLER.' #worp grootte',  //Litter->size()
+            ' worpnr     A !missing '.self::LITTER_GROUP_NULL_FILLER.' #worpnummer',  //worpnummer/litterGroup
+            ' moeder     A !missing '.self::ULN_NULL_FILLER.' #uln van moeder',  //uln of mother
+            ' father     A !missing '.self::ULN_NULL_FILLER.' #uln van vader',  //uln of father
+            ' meetdatum  A !missing '.self::MEASUREMENT_DATE_NULL_FILLER, //measurementDate
+            ' leeftijd   I !missing '.self::DATE_OF_BIRTH_NULL_FILLER.' #op moment van meting in dagen', //age of animal on measurementDate in days
+            ' groei      T !missing '.self::GROWTH_NULL_FILLER.' #gewicht(kg)/leeftijd(dagen) op moment van meting', //growth weight(kg)/age(days) on measurementDate
+            ' gebgewicht T !missing '.self::WEIGHT_NULL_FILLER.' #geboortegewicht',   //weight at birth
+            ' toetsgewicht T !missing '.self::WEIGHT_NULL_FILLER.' #normale gewichtmeting', //weight during normal measurement
+            ' vet1       T !missing '.self::FAT_NULL_FILLER,
+            ' vet2       T !missing '.self::FAT_NULL_FILLER,
+            ' vet3       T !missing '.self::FAT_NULL_FILLER,
+            ' spierdik   T !missing '.self::MUSCLE_THICKNESS_NULL_FILLER.' #spierdikte',
+            ' staartlg   T !missing '.self::TAIL_LENGTH_NULL_FILLER.' #staartlengte', //tailLength
             ' ubn I !BLOCK', //NOTE it is an integer here
             ' ',
             'PEDFILE   '.$this->pedigreeFileName,
-            ' animal    A #uln',
-            ' sire      A #uln van vader',
-            ' dam       A #uln van moeder',
-            ' gender    A',
-            ' gebjaar   A #geboortedatum',
-            ' rascode   A',
+            ' animal    A !missing '.self::ULN_NULL_FILLER.' #uln',
+            ' sire      A !missing '.self::ULN_NULL_FILLER.' #uln van vader',
+            ' dam       A !missing '.self::ULN_NULL_FILLER.' #uln van moeder',
+            ' gender    A !missing '.self::GENDER_NULL_FILLER,
+            ' gebjaar   A !missing '.self::DATE_OF_BIRTH_NULL_FILLER.' #geboortedatum',
+            ' rascode   A !missing '.self::BREED_CODE_NULL_FILLER,
             ' ubn       I !BLOCK', //NOTE it is an integer here
             ' ',
             'PARFILE  *insert par file reference here*',
@@ -287,37 +297,37 @@ class Mixblup
         return [
             'TITEL   schapen fokwaarde berekening exterieur',
             ' DATAFILE  '.$this->dataFileName.'_'.self::EXTERIOR_ATTRIBUTES.'.txt',
-            ' animal     A #uln',  //uln
-            ' gender     A #sekse van dier',  //ram/ooi/0
-            ' jaarUbn    A #jaar en ubn van geboorte', //year and ubn of birth
-//            ' Inspectr   A #code van NSFO inspecteur',  //breedCode TODO ALSO MATCH WITH DATA OUTPUT
-            ' CovTE      I',  //TE, BT, DK are genetically all the same
-            ' CovSW      I',
-            ' CovBM      I',
-            ' CovOV      I',  //other  (NN means unknown)
-//            ' CovHet     T #Heterosis van het dier',  //other  (NN means unknown) TODO
-//            ' CovRec     T #Recombinatie van het dier',  //other  (NN means unknown) TODO
-            ' meetdatum  A', //measurementDate
-            ' KOP T #kop', //skull
-            ' BES T #bespiering', //muscularity
-            ' EVE T #evenredigheid', //proportion
-            ' TYP T #type', //(exterior)type
-            ' BEE T #beenwerk', //legWork
-            ' VAC T #vacht', //fur
-            ' ALG T #algemene voorkoming', //general appearance
-            ' SHT T #schofthoogte', //height
-            ' LGT T #romplengte', //length
-            ' BDP T #borstdiepte', //breast depth
-            ' KEN T #kenmerken', //markings
+            ' animal     A !missing '.self::ULN_NULL_FILLER.' #uln',  //uln
+            ' gender     A !missing '.self::GENDER_NULL_FILLER.' #sekse van dier',  //ram/ooi/0
+            ' jaarUbn    A !missing '.self::YEAR_UBN_NULL_FILLER.' #jaar en ubn van geboorte', //year and ubn of birth
+//            ' Inspectr   A !missing '.self::INSPECTOR_CODE_NULL_FILLER.' #code van NSFO inspecteur',  //breedCode TODO ALSO MATCH WITH DATA OUTPUT
+            ' CovTE      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,  //TE, BT, DK are genetically all the same
+            ' CovSW      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,
+            ' CovBM      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,
+            ' CovOV      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,  //other  (NN means unknown)
+//            ' CovHet     T !missing '.self::HETEROSIS_NULL_FILLER.' #Heterosis van het dier',  //other  (NN means unknown) TODO
+//            ' CovRec     T !missing '.self::RECOMBINATION_NULL_FILLER.' #Recombinatie van het dier',  //other  (NN means unknown) TODO
+            ' meetdatum  A !missing '.self::MEASUREMENT_DATE_NULL_FILLER, //measurementDate
+            ' KOP T !missing '.self::EXTERIOR_NULL_FILLER.' #kop', //skull
+            ' BES T !missing '.self::EXTERIOR_NULL_FILLER.' #bespiering', //muscularity
+            ' EVE T !missing '.self::EXTERIOR_NULL_FILLER.' #evenredigheid', //proportion
+            ' TYP T !missing '.self::EXTERIOR_NULL_FILLER.' #type', //(exterior)type
+            ' BEE T !missing '.self::EXTERIOR_NULL_FILLER.' #beenwerk', //legWork
+            ' VAC T !missing '.self::EXTERIOR_NULL_FILLER.' #vacht', //fur
+            ' ALG T !missing '.self::EXTERIOR_NULL_FILLER.' #algemene voorkoming', //general appearance
+            ' SHT T !missing '.self::EXTERIOR_NULL_FILLER.' #schofthoogte', //height
+            ' LGT T !missing '.self::EXTERIOR_NULL_FILLER.' #romplengte', //length
+            ' BDP T !missing '.self::EXTERIOR_NULL_FILLER.' #borstdiepte', //breast depth
+            ' KEN T !missing '.self::EXTERIOR_NULL_FILLER.' #kenmerken', //markings
             ' ubn I !BLOCK', //NOTE it is an integer here
             ' ',
             'PEDFILE   '.$this->pedigreeFileName,
-            ' animal    A #uln',
-            ' sire      A #uln van vader',
-            ' dam       A #uln van moeder',
-            ' gender    A',
-            ' gebjaar   A #geboortedatum',
-            ' rascode   A',
+            ' animal    A !missing '.self::ULN_NULL_FILLER.' #uln',
+            ' sire      A !missing '.self::ULN_NULL_FILLER.' #uln van vader',
+            ' dam       A !missing '.self::ULN_NULL_FILLER.' #uln van moeder',
+            ' gender    A !missing '.self::GENDER_NULL_FILLER,
+            ' gebjaar   A !missing '.self::DATE_OF_BIRTH_NULL_FILLER.' #geboortedatum',
+            ' rascode   A !missing '.self::BREED_CODE_NULL_FILLER,
             ' ubn       I !BLOCK', //NOTE it is an integer here
             ' ',
             'PARFILE  *insert par file reference here*',
@@ -338,38 +348,38 @@ class Mixblup
         return [
             'TITEL   schapen fokwaarde berekening vruchtbaarheid',
             ' DATAFILE  '.$this->dataFileName.'_'.self::FERTILITY.'.txt',
-            ' animal     A #uln',  //uln
-            ' pariteit   A #Leeftijd ooi bij werpen in hele jaren',  //ram/ooi/0
-            ' jaarUbn    A #jaar en ubn van geboorte', //year and ubn of birth
-            ' CovTE      I',  //TE, BT, DK are genetically all the same
-            ' CovCF      I',
-            ' CovSW      I',
-            ' CovNH      I',
-            ' CovGP      I',
-            ' CovBM      I',
-            ' CovOV      I',
-            ' CovHet     T #Heterosis van dier of lam',
-            ' CovRec     T #Recombinatie van dier of lam',
-            ' M_CovHet   T #Heterosis van moeder',
-            ' M_CovRec   T #Recombinatie van moeder',
-            ' M_TE       I #Rasdeel TE moeder',
-            ' Bronst     A #Bronst inductie',
-            ' Milieu     A #Permanent milieu',
-            ' Moeder     A #uln van moeder',  //uln of mother
-            ' Geb_tot    I #totaal geboren',
-            ' Geb_dood   I #dood geboren',
-            ' Vroegrijp  I #1 als ooi worp heeft op eenjarige leeftijd, anders 0',
-            ' Gebgew     T #geboortegewicht',
-            ' Gebvrlp    I #zonder=0, licht=1, normaal=2, zwaar=3, keizersnee=4',
+            ' animal     A !missing '.self::ULN_NULL_FILLER.' #uln',  //uln
+            ' pariteit   A !missing '.self::DATE_OF_BIRTH_NULL_FILLER.' #Leeftijd ooi bij werpen in hele jaren',  //ram/ooi/0
+            ' jaarUbn    A !missing '.self::YEAR_UBN_NULL_FILLER.' #jaar en ubn van geboorte', //year and ubn of birth
+            ' CovTE      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,  //TE, BT, DK are genetically all the same
+            ' CovCF      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,
+            ' CovSW      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,
+            ' CovNH      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,
+            ' CovGP      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,
+            ' CovBM      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,
+            ' CovOV      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,
+            ' CovHet     T !missing '.self::HETEROSIS_NULL_FILLER.' #Heterosis van dier of lam',
+            ' CovRec     T !missing '.self::RECOMBINATION_NULL_FILLER.' #Recombinatie van dier of lam',
+            ' M_CovHet   T !missing '.self::HETEROSIS_NULL_FILLER.' #Heterosis van moeder',
+            ' M_CovRec   T !missing '.self::RECOMBINATION_NULL_FILLER.' #Recombinatie van moeder',
+            ' M_TE       I !missing '.self::BREED_CODE_PARTS_NULL_FILLER.' #Rasdeel TE moeder',
+            ' Bronst     A !missing '.self::RUT_INDUCTION_NULL_FILLER.' #Bronst inductie',
+            ' Milieu     A !missing '.self::PERMANENT_ENVIRONMENT_NULL_FILLER.' #Permanent milieu',
+            ' Moeder     A !missing '.self::ULN_NULL_FILLER.' #uln van moeder',  //uln of mother
+            ' Geb_tot    I !missing '.self::TOTAL_BORN_COUNT_NULL_FILLER.' #totaal geboren',
+            ' Geb_dood   I !missing '.self::STILLBORN_COUNT_NULL_FILLER.' #dood geboren',
+            ' Vroegrijp  I !missing '.self::PRECOCIOUS_NULL_FILLER.' #1 als ooi worp heeft op eenjarige leeftijd, anders 0',
+            ' Gebgew     T !missing '.self::WEIGHT_NULL_FILLER.' #geboortegewicht',
+            ' Gebvrlp    I !missing '.self::BIRTH_PROCESS_NULL_FILLER.' #zonder=0, licht=1, normaal=2, zwaar=3, keizersnee=4',
             ' ubn I !BLOCK', //NOTE it is an integer here
             ' ',
             'PEDFILE   '.$this->pedigreeFileName,
-            ' animal    A #uln',
-            ' sire      A #uln van vader',
-            ' dam       A #uln van moeder',
-            ' gender    A',
-            ' gebjaar   A #geboortedatum',
-            ' rascode   A',
+            ' animal    A !missing '.self::ULN_NULL_FILLER.' #uln',
+            ' sire      A !missing '.self::ULN_NULL_FILLER.' #uln van vader',
+            ' dam       A !missing '.self::ULN_NULL_FILLER.' #uln van moeder',
+            ' gender    A !missing '.self::GENDER_NULL_FILLER,
+            ' gebjaar   A !missing '.self::DATE_OF_BIRTH_NULL_FILLER.' #geboortedatum',
+            ' rascode   A !missing '.self::BREED_CODE_NULL_FILLER,
             ' ubn       I !BLOCK', //NOTE it is an integer here
             ' ',
             'PARFILE  *insert par file reference here*',
@@ -446,12 +456,12 @@ class Mixblup
      */
     private function writePedigreeRecord(Animal $animal)
     {
-        $animalUln = self::formatUln($animal);
-        $parents = CommandUtil::getParentUlnsFromParentsArray($animal->getParents(), self::PARENT_NULL_FILLER);
+        $animalUln = self::formatUln($animal, self::ULN_NULL_FILLER);
+        $parents = CommandUtil::getParentUlnsFromParentsArray($animal->getParents(), self::ULN_NULL_FILLER);
         $motherUln = $parents->get(Constant::MOTHER_NAMESPACE);
         $fatherUln = $parents->get(Constant::FATHER_NAMESPACE);
 
-        $breedCode = Utils::fillNullOrEmptyString($animal->getBreedCode(), self::BREED_TYPE_NULL_FILLER);
+        $breedCode = Utils::fillNullOrEmptyString($animal->getBreedCode(), self::BREED_CODE_NULL_FILLER);
         $gender = self::formatGender($animal->getGender());
         $dateOfBirthString = self::formatDateOfBirth($animal->getDateOfBirth());
         $ubn = self::getUbnFromAnimal($animal);
@@ -803,7 +813,8 @@ class Mixblup
 
         if($weight != self::WEIGHT_NULL_FILLER) {
             //Don't calculate growth from birthWeight
-            $growth = self::getGrowthValue($weight, $ageAtMeasurement);
+            $growth = BreedValueUtil::getGrowthValue($weight, $ageAtMeasurement,
+                self::AGE_NULL_FILLER, self::GROWTH_NULL_FILLER, self::WEIGHT_NULL_FILLER);
         } else {
             $growth = self::GROWTH_NULL_FILLER;
         }
@@ -881,8 +892,8 @@ class Mixblup
         }
         //else create a new one
 
-        $animalUln = self::formatUln($animal);
-        $parents = CommandUtil::getParentUlnsFromParentsArray($animal->getParents(), self::PARENT_NULL_FILLER);
+        $animalUln = self::formatUln($animal, self::ULN_NULL_FILLER);
+        $parents = CommandUtil::getParentUlnsFromParentsArray($animal->getParents(), self::ULN_NULL_FILLER);
         $motherUln = $parents->get(Constant::MOTHER_NAMESPACE);
         $fatherUln = $parents->get(Constant::FATHER_NAMESPACE);
         $gender = self::formatGender($animal->getGender());
@@ -945,7 +956,7 @@ class Mixblup
 
     private function formatFirstPartDataRecordRowExteriorAttributes(Animal $animal)
     {
-        $animalUln = self::formatUln($animal);
+        $animalUln = self::formatUln($animal, self::ULN_NULL_FILLER);
         $gender = self::formatGender($animal->getGender());
 
         $breedCodeValues = $this->getMixBlupExteriorAttributesBreedCodeTypes($animal);
@@ -1025,7 +1036,7 @@ class Mixblup
      * @param mixed $nullFiller
      * @return string
      */
-    public static function formatUln($animal, $nullFiller = 0)
+    public static function formatUln($animal, $nullFiller = '-')
     {
         if($animal->getUlnCountryCode() != null && $animal->getUlnNumber() != null)
         {
@@ -1175,6 +1186,13 @@ class Mixblup
                         break;
                 }
             }
+        } else {
+            //breedCodeSet is missing
+            $te = self::BREED_CODE_PARTS_NULL_FILLER;
+            $cf = self::BREED_CODE_PARTS_NULL_FILLER;
+            $nh = self::BREED_CODE_PARTS_NULL_FILLER;
+            $sw = self::BREED_CODE_PARTS_NULL_FILLER;
+            $ov = self::BREED_CODE_PARTS_NULL_FILLER;
         }
 
         $result = new ArrayCollection();
