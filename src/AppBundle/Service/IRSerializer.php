@@ -410,15 +410,12 @@ class IRSerializer implements IRSerializerInterface
         $retrievedAnimal->setIsExportAnimal($isExportAnimal);
 
         //Add retrieved animal properties including type to initial animalContentArray
-        $declareDepartContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
-
-        //denormalize the content to an object
-        $json = $this->serializeToJSON($declareDepartContentArray, 'DECLARE');
-        $declareDepartRequest = $this->deserializeToObject($json, RequestType::DECLARE_DEPART_ENTITY);
-
-        //Add retrieved animal to DeclareArrival
+        $declareDepartRequest = new DeclareDepart();
         $declareDepartRequest->setAnimal($retrievedAnimal);
+        $declareDepartRequest->setDepartDate(new \DateTime($declareDepartContentArray['depart_date']));
+        $declareDepartRequest->setReasonOfDepart($declareDepartContentArray['reason_of_depart']);
         $declareDepartRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
+        $declareDepartRequest->setUbnNewOwner($declareDepartContentArray['ubn_new_owner']);
 
         if($isEditMessage) {
             $requestState = $declareDepartContentArray['request_state'];
