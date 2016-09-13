@@ -179,7 +179,7 @@ abstract class Animal
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
      * @JMS\Type("integer")
-     * @JMS\Groups({"loss"})
+     * @JMS\Groups({"declare"})
      * @Expose
      */
     protected $animalType;
@@ -189,7 +189,7 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"loss"})
+     * @JMS\Groups({"declare"})
      * @Expose
      */
     protected $transferState;
@@ -199,7 +199,7 @@ abstract class Animal
      *
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Type("integer")
-     * @JMS\Groups({"loss"})
+     * @JMS\Groups({"declare"})
      * @Expose
      */
     protected $animalCategory;
@@ -209,7 +209,7 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"loss"})
+     * @JMS\Groups({"declare"})
      * @Expose
      */
     protected $animalHairColour;
