@@ -26,7 +26,6 @@ use JMS\Serializer\Annotation\Groups;
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * @ORM\DiscriminatorMap({"Animal" = "Animal", "Ram" = "Ram", "Ewe" = "Ewe", "Neuter" = "Neuter"})
  * @package AppBundle\Entity\Animal
- * @ExclusionPolicy("all")
  */
 abstract class Animal
 {
@@ -36,7 +35,7 @@ abstract class Animal
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $id;
 
@@ -52,7 +51,7 @@ abstract class Animal
      * @Assert\Regex("/([A-Z]{2})\b/")
      * @Assert\Length(max = 2)
      * @JMS\Type("string")
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $pedigreeCountryCode;
 
@@ -64,8 +63,7 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 11)
      * @JMS\Type("string")
-     * 
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $pedigreeNumber;
 
@@ -74,8 +72,7 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * 
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $name;
 
@@ -85,8 +82,7 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
-     * 
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $ubnOfBirth;
 
@@ -96,8 +92,7 @@ abstract class Animal
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * 
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $dateOfBirth;
 
@@ -107,8 +102,7 @@ abstract class Animal
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * 
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $dateOfDeath;
 
@@ -117,8 +111,7 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * 
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $gender;
 
@@ -177,8 +170,7 @@ abstract class Animal
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
      * @JMS\Type("integer")
-     * 
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $animalType;
 
@@ -187,8 +179,7 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * 
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $transferState;
 
@@ -197,8 +188,7 @@ abstract class Animal
      *
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Type("integer")
-     * 
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $animalCategory;
 
@@ -207,8 +197,7 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * 
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $animalHairColour;
 
@@ -296,8 +285,7 @@ abstract class Animal
      * @Assert\NotBlank
      * @ORM\Column(type="boolean")
      * @JMS\Type("boolean")
-     * 
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $isAlive;
 
@@ -305,8 +293,7 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * 
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $ulnNumber;
 
@@ -314,8 +301,7 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * 
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $ulnCountryCode;
 
@@ -323,40 +309,35 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * 
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $animalOrderNumber;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * 
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $isImportAnimal;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * 
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $isExportAnimal;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * 
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $isDepartedAnimal;
 
     /**
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * 
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $animalCountryOrigin;
 
@@ -368,6 +349,7 @@ abstract class Animal
      *      joinColumns={@ORM\JoinColumn(name="animal_id", referencedColumnName="id")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="tag_id", referencedColumnName="id", unique=true)}
      * )
+     *
      */
     protected $ulnHistory;
 
@@ -429,7 +411,7 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $breed;
 
@@ -437,7 +419,7 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $breedType;
 
@@ -445,7 +427,7 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $breedCode;
 
@@ -467,6 +449,7 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"declare"})
      */
     protected $scrapieGenotype;
 

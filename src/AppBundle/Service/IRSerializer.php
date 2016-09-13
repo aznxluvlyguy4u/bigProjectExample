@@ -88,7 +88,14 @@ class IRSerializer implements IRSerializerInterface
      */
     public function serializeToJSON($object, $type = 'DEFAULT')
     {
-        return $this->serializer->serialize($object, Constant::jsonNamespace);
+
+        if($type == 'DECLARE') {
+            return $this->serializer->serialize($object, Constant::jsonNamespace, SerializationContext::create()->setGroups(array('declare')));
+        }
+
+        if($type == 'DEFAULT') {
+            return $this->serializer->serialize($object, Constant::jsonNamespace, SerializationContext::create()->setGroups(array('Default')));
+        }
     }
 
     /**
@@ -395,7 +402,7 @@ class IRSerializer implements IRSerializerInterface
         $declareDepartContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
 
         //denormalize the content to an object
-        $json = $this->serializeToJSON($declareDepartContentArray);
+        $json = $this->serializeToJSON($declareDepartContentArray, 'DECLARE');
         $declareDepartRequest = $this->deserializeToObject($json, RequestType::DECLARE_DEPART_ENTITY);
 
         //Add retrieved animal to DeclareArrival
@@ -538,7 +545,8 @@ class IRSerializer implements IRSerializerInterface
         $declareLossContentArray['animal'] = $retrievedAnimal;
 
         //denormalize the content to an object
-        $json = $this->serializeToJSON($declareLossContentArray);
+        $json = $this->serializeToJSON($declareLossContentArray, 'DECLARE');
+
         $declareLossRequest = $this->deserializeToObject($json, RequestType::DECLARE_LOSS_ENTITY);
 
         //Add retrieved animal to DeclareLoss
