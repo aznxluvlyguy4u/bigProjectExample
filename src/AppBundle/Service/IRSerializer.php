@@ -135,6 +135,18 @@ class IRSerializer implements IRSerializerInterface
         //Parse json to content array to add additional 'animal type' property
         $retrievedAnimalContentArray = json_decode($retrievedAnimalJson, true);
 
+        if($retrievedAnimal instanceof Ram) {
+            $retrievedAnimalContentArray['type'] = 'Ram';
+        }
+
+        if($retrievedAnimal instanceof Ewe) {
+            $retrievedAnimalContentArray['type'] = 'Ewe';
+        }
+
+        if($retrievedAnimal instanceof Neuter) {
+            $retrievedAnimalContentArray['type'] = 'Neuter';
+        }
+
         if($unsetChildren ==  true) {
             unset($retrievedAnimalContentArray[Constant::CHILDREN_NAMESPACE]);
             unset($retrievedAnimalContentArray[Constant::SURROGATE_CHILDREN_NAMESPACE]);
@@ -586,7 +598,7 @@ class IRSerializer implements IRSerializerInterface
         $declareExportContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
 
         //denormalize the content to an object
-        $json = $this->serializeToJSON($declareExportContentArray);
+        $json = $this->serializeToJSON($declareExportContentArray, 'DECLARE');
         $declareExportRequest = $this->deserializeToObject($json, RequestType::DECLARE_EXPORT_ENTITY);
 
         $declareExportRequest->setAnimal($retrievedAnimal);
