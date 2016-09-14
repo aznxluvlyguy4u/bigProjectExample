@@ -4,6 +4,7 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Component\Utils;
+use AppBundle\Enumerator\BreedCodeType;
 use Doctrine\Common\Persistence\ObjectManager;
 
 class BreedValueUtil
@@ -17,6 +18,7 @@ class BreedValueUtil
     const RECOMBINATION = 'recombination';
     const EIGHT_PART_DENOMINATOR = 64;
     const HUNDRED_PART_DENOMINATOR = 10000;
+    const IS_IGNORE_INCOMPLETE_CODES = true;
 
 
     /**
@@ -53,7 +55,8 @@ class BreedValueUtil
     public static function getHeterosisAndRecombinationBy8Parts(ObjectManager $em, $animalId, $roundingAccuracy = null)
     {
         $parentBreedCodes = self::getBreedCodesValuesOfParents($em, $animalId);
-        
+
+        //Null checks, null checks everywhere
         if($parentBreedCodes == null) { return null; }
 
         $valuesFather = Utils::getNullCheckedArrayValue(self::FATHER, $parentBreedCodes);
@@ -65,6 +68,17 @@ class BreedValueUtil
         $codesFather = array_keys($valuesFather);
         $codesMother = array_keys($valuesMother);
 
+
+        if(self::IS_IGNORE_INCOMPLETE_CODES) {
+            $hasIncompleteCodes = self::hasUnknownBreedCodes($valuesMother)
+                               || self::hasUnknownBreedCodes($valuesFather);
+            if($hasIncompleteCodes) {
+                return null;
+            }
+        }
+
+
+        /* Calculate values */
         $heterosisSum = 0.0;
         $recombinationSum = 0.0;
 
@@ -143,5 +157,30 @@ class BreedValueUtil
 
         return $codes;
     }
+
+
+    /**
+     * @param array $breedCodeArray
+     * @return bool
+     */
+    public static function hasUnknownBreedCodes($breedCodeArray)
+    {
+        $unknownCodeExists = array_key_exists(BreedCodeType::NN, $breedCodeArray) || array_key_exists(BreedCodeType::OV, $breedCodeArray);
+        if($unknownCodeExists) {
+            return true;
+        } else {
+            $sum = 0;
+            foreach ($breedCodeArray as $item) {
+                $sum += $item;
+            }
+            $isValuesIncomplete = $sum < 8;
+            if($isValuesIncomplete) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 
 }

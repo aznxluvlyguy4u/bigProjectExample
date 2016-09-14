@@ -64,6 +64,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
             '2: Generate Mixblup Datafile', "\n",
             '3: Clear all Mixblup !BLOCK values', "\n",
             '4: Generate Heterosis and Recombination values', "\n",
+            '5: Clear all Heterosis and Recombination values', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -82,6 +83,10 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
             case 4:
                 $this->generateHeterosisAndRecombinationValues();
+                break;
+
+            case 5:
+                $this->clearAllHeterosisAndRecombinationValues();
                 break;
 
             default:
@@ -251,6 +256,16 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
             $recombination = $values[BreedValueUtil::RECOMBINATION];
 
             $sql = "UPDATE animal SET heterosis = '".$heterosis."', recombination = '".$recombination."' WHERE id = '".$animalId."'";
+            $this->em->getConnection()->exec($sql);
+        }
+    }
+
+
+    private function clearAllHeterosisAndRecombinationValues()
+    {
+        $isClearValues = $this->cmdUtil->generateConfirmationQuestion('Clear ALL heterosis and recombination values? (y/n): ');
+        if($isClearValues) {
+            $sql = "UPDATE animal SET heterosis = NULL, recombination = NULL WHERE heterosis IS NOT NULL OR recombination IS NOT NULL";
             $this->em->getConnection()->exec($sql);
         }
     }
