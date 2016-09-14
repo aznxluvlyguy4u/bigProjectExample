@@ -61,7 +61,7 @@ class Mixblup
     const EWE = 'ooi';
     const GENDER_NULL_FILLER = 'N_B';
     const NEUTER = 'N_B';
-    const COLUMN_PADDING_SIZE = 1;
+    const COLUMN_PADDING_SIZE = 2;
 
     const ANIMAL = 'ANIMAL';
     const MEASUREMENT_DATE = 'MEASUREMENT_DATE';
@@ -473,7 +473,7 @@ class Mixblup
         .Utils::addPaddingToStringForColumnFormatCenter($gender, 7, self::COLUMN_PADDING_SIZE)
         .Utils::addPaddingToStringForColumnFormatCenter($dateOfBirthString, 10, self::COLUMN_PADDING_SIZE)
         .Utils::addPaddingToStringForColumnFormatCenter($breedCode, 12, self::COLUMN_PADDING_SIZE)
-        .Utils::addPaddingToStringForColumnFormatSides($ubn, 10)
+        .Utils::addPaddingToStringForColumnFormatSides($ubn, 10, false)
         ;
 
         return $record;
