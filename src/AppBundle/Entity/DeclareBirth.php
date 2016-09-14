@@ -179,6 +179,13 @@ class DeclareBirth extends DeclareBase
     private $birthTailLength;
 
     /**
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="Litter")
+     * @JMS\Type("AppBundle\Entity\Litter")
+     */
+    private $litter;
+
+    /**
      * @ORM\OneToMany(targetEntity="DeclareBirthResponse", mappedBy="declareBirthRequestMessage", cascade={"persist"})
      * @ORM\JoinColumn(name="declare_birth_request_message_id", referencedColumnName="id")
      * @JMS\Type("array")
@@ -719,6 +726,22 @@ class DeclareBirth extends DeclareBase
     public function getGender()
     {
         return $this->gender;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getLitter()
+    {
+        return $this->litter;
+    }
+
+    /**
+     * @param mixed $litter
+     */
+    public function setLitter($litter)
+    {
+        $this->litter = $litter;
     }
 
 }

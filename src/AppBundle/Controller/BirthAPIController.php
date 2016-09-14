@@ -6,9 +6,16 @@ use AppBundle\Component\Modifier\AnimalRemover;
 use AppBundle\Component\Modifier\MessageModifier;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Litter;
+use AppBundle\Entity\Neuter;
+use AppBundle\Entity\Ram;
+use AppBundle\Entity\TailLength;
+use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Tools\Export\ExportException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -126,101 +133,384 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
       return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareBirths), 200);
   }
 
-  /**
-   * Create a new DeclareBirth request
-   *
-   * @ApiDoc(
-   *   requirements={
-   *     {
-   *       "name"="AccessToken",
-   *       "dataType"="string",
-   *       "requirement"="",
-   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-   *     }
-   *   },
-   *   resource = true,
-   *   description = "Post a DeclareBirth request",
-   *   input = "AppBundle\Entity\DeclareBirth",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
-   * )
-   * @param Request $request the request object
-   * @return JsonResponse
-   * @Route("")
-   * @Method("POST")
-   */
-  public function createBirth(Request $request)
-  {
-    $validityCheckUlnOrPedigree = $this->isUlnOrPedigreeCodeValid($request);
-    $isValid = $validityCheckUlnOrPedigree['isValid'];
+    /**
+     * Create a new DeclareBirth request
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/false-birth")
+     * @Method("POST")
+     */
+    public function createFalseBirth(Request $request) {
+        $location = $this->getSelectedLocation($request);
+        $content = $this->getContentAsArray($request);
+        $company = $location->getCompany();
 
-    if(!$isValid) {
-      $keyType = $validityCheckUlnOrPedigree['keyType']; // uln  of pedigree
-      $animalKind = $validityCheckUlnOrPedigree['animalKind'];
-      $message = $keyType . ' of ' . $animalKind . ' not found.';
-      return new JsonResponse(array('code'=>428, "message" => $message), 428);
-    }
+        // Litter
+        $litter = new Litter();
+        $litter->setLitterDate(new \DateTime($content['date_of_birth']));
+        $litter->setIsAbortion($content['is_aborted']);
+        $litter->setIsPseudoPregnancy($content['is_pseudo_pregnancy']);
+        $litter->setStillbornCount(0);
+        $litter->setBornAliveCount(0);
+        $litter->setStatus('COMPLETE');
 
-    //Get content to array
-    $content = $this->getContentAsArray($request);
+        // Mother
+        /** @var Ewe $mother */
+        $repository = $this->getDoctrine()->getRepository(Constant::EWE_REPOSITORY);
+        $contentMother = $content['mother'];
 
-    //Split up the children in the array into separate messages
-    $children = $content->get("children");
-    $contentWithoutChildren = $content;
-    $contentWithoutChildren->remove("children");
+        if(key_exists('uln_country_code', $contentMother) && key_exists('uln_number', $contentMother)) {
+            if ($contentMother['uln_country_code'] != '' && $contentMother['uln_number'] != '') {
+                $mother = $repository->findOneBy([
+                    'ulnCountryCode' => $contentMother['uln_country_code'],
+                    'ulnNumber' => $contentMother['uln_number'],
+                    'isAlive' => true
+                ]);
 
-    $returnMessages = new ArrayCollection();
-
-    //Validate ALL children's ULN's BEFORE persisting any animal at all
-    $ulns = array();
-    foreach($children as $child) {
-        $ulnCountryCode = $child[Constant::ULN_COUNTRY_CODE_NAMESPACE];
-        $ulnNumber = $child[Constant::ULN_NUMBER_NAMESPACE];
-        $verification = $this->isTagUnassigned($ulnCountryCode,
-                                               $ulnNumber);
-        if(!$verification['isValid']) {
-            return $verification['jsonResponse'];
+                if ($mother == null) {
+                    return new JsonResponse([
+                        Constant::CODE_NAMESPACE => 428,
+                        Constant::MESSAGE_NAMESPACE => 'THE ULN OF THE MOTHER IS NOT FOUND'
+                    ], 428);
+                }
+            }
         }
-        $ulns[] = $ulnCountryCode . $ulnNumber;
-    }
 
-    //Validate all ulns are unique
-    if(!Utils::arrayValuesAreUnique($ulns)) {
-        return new JsonResponse(array('code' => 428,
-            'message' => 'The uln values are valid, but each child should have a unique uln'), 428);
-    }
-
-    $client = $this->getAuthenticatedUser($request);
-    $location = $this->getSelectedLocation($request);
-    $loggedInUser = $this->getLoggedInUser($request);
-
-    foreach($children as $child) {
-
-        $contentPerChild = $contentWithoutChildren;
-        $contentPerChild->set('animal', $child);
-
-        if($child['is_alive'] == true) { //DeclareBirth with sending a request to IenR
-            //Convert the array into an object and add the mandatory values retrieved from the database
-            $declareBirthObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $contentPerChild, $client, $loggedInUser, $location);
-
-            //Send it to the queue and persist/update any changed state to the database
-            $messageArray = $this->sendMessageObjectToQueue($declareBirthObject);
-
-            //Set tags of child to ASSIGNING
-            $this->persistNewTagsToAssigning($client, $declareBirthObject->getAnimal());
-
-            //Persist message without animal. That is done after a successful response
-            $declareBirthObject->setAnimal(null);
-            $this->persist($declareBirthObject);
-
-            $returnMessages->add($messageArray); //TODO when stillborn is complete, move out side if() but still inside foreach
-
-        } else { //DeclareStill born, only persist to database and don't send request to IenR
-            //TODO
+        $motherCompany = $mother->getLocation()->getCompany();
+        if($company != $motherCompany) {
+            return new JsonResponse([
+                Constant::CODE_NAMESPACE => 428,
+                Constant::MESSAGE_NAMESPACE => 'THE MOTHER IS NOT IN YOUR LIVESTOCK'
+            ], 428);
         }
-      }
 
-    return new JsonResponse($returnMessages, 200);
-  }
+        /** @var Litter $litter */
+        foreach($mother->getLitters() as $motherLitter) {
+            $litterDate = $motherLitter->getLitterDate()->format('Y-m-d');
+            $contentDate = (new \DateTime($content['date_of_birth']))->format('Y-m-d');
+
+            if($litterDate == $contentDate) {
+                return new JsonResponse([
+                    Constant::CODE_NAMESPACE => 428,
+                    Constant::MESSAGE_NAMESPACE => 'THE MOTHER ALREADY HAS A LITTER REGISTERED ON THIS DATE'
+                ], 428);
+            }
+        }
+
+        $litter->setAnimalMother($mother);
+
+        // Father
+        $repository = $this->getDoctrine()->getRepository(Constant::RAM_REPOSITORY);
+        $contentFather = $content['father'];
+
+        $father = null;
+
+        if(key_exists('pedigree_country_code', $contentFather) && key_exists('pedigree_number', $contentFather)) {
+            if($contentFather['pedigree_country_code'] != '' && $contentFather['pedigree_number'] != '') {
+                $father = $repository->findOneBy([
+                    'pedigreeCountryCode' => $contentFather['pedigree_country_code'],
+                    'pedigreeNumber' => $contentFather['pedigree_number'],
+                    'isAlive' => true
+                ]);
+
+                if($father == null) {
+                    return new JsonResponse([
+                        Constant::CODE_NAMESPACE => 428,
+                        Constant::MESSAGE_NAMESPACE => 'THE PEDIGREE OF THE FATHER IS NOT FOUND'
+                    ], 428);
+                }
+
+                $litter->setAnimalFather($father);
+            }
+        }
+
+        if(key_exists('uln_country_code', $contentFather) && key_exists('uln_number', $contentFather)) {
+            if ($contentFather['uln_country_code'] != '' && $contentFather['uln_number'] != '') {
+                $father = $repository->findOneBy([
+                    'ulnCountryCode' => $contentFather['uln_country_code'],
+                    'ulnNumber' => $contentFather['uln_number'],
+                    'isAlive' => true
+                ]);
+
+                if ($father == null) {
+                    return new JsonResponse([
+                        Constant::CODE_NAMESPACE => 428,
+                        Constant::MESSAGE_NAMESPACE => 'THE ULN OF THE FATHER IS NOT FOUND'
+                    ], 428);
+                }
+
+                $litter->setAnimalFather($father);
+            }
+        }
+
+        // Persist Litter
+        $this->getDoctrine()->getManager()->persist($litter);
+        $this->getDoctrine()->getManager()->flush();
+
+        return new JsonResponse([Constant::RESULT_NAMESPACE => 'ok'], 200);
+    }
+
+    /**
+    * Create a new DeclareBirth request
+    * @param Request $request the request object
+    * @return JsonResponse
+    * @Route("")
+    * @Method("POST")
+    */
+    public function createBirth(Request $request) {
+        $location = $this->getSelectedLocation($request);
+        $content = $this->getContentAsArray($request);
+        $client = $this->getAuthenticatedUser($request);
+        $loggedInUser = $this->getLoggedInUser($request);
+        // TODO VALIDATE CONTENT
+
+        // Company
+        $company = $location->getCompany();
+
+        // Litter
+        $litter = new Litter();
+        $litter->setLitterDate(new \DateTime($content['date_of_birth']));
+        $litter->setIsAbortion($content['is_aborted']);
+        $litter->setIsPseudoPregnancy($content['is_pseudo_pregnancy']);
+        $litter->setStatus('INCOMPLETE');
+
+        // Mother
+        /** @var Ewe $mother */
+        $repository = $this->getDoctrine()->getRepository(Constant::EWE_REPOSITORY);
+        $contentMother = $content['mother'];
+
+        if(key_exists('uln_country_code', $contentMother) && key_exists('uln_number', $contentMother)) {
+            if ($contentMother['uln_country_code'] != '' && $contentMother['uln_number'] != '') {
+                $mother = $repository->findOneBy([
+                    'ulnCountryCode' => $contentMother['uln_country_code'],
+                    'ulnNumber' => $contentMother['uln_number'],
+                    'isAlive' => true
+                ]);
+
+                if ($mother == null) {
+                    return new JsonResponse([
+                        Constant::CODE_NAMESPACE => 428,
+                        Constant::MESSAGE_NAMESPACE => 'THE ULN OF THE MOTHER IS NOT FOUND'
+                    ], 428);
+                }
+            }
+        }
+
+        $motherCompany = $mother->getLocation()->getCompany();
+        if($company != $motherCompany) {
+            return new JsonResponse([
+                Constant::CODE_NAMESPACE => 428,
+                Constant::MESSAGE_NAMESPACE => 'THE MOTHER IS NOT IN YOUR LIVESTOCK'
+            ], 428);
+        }
+
+        /** @var Litter $litter */
+        foreach($mother->getLitters() as $motherLitter) {
+            $litterDate = $motherLitter->getLitterDate()->format('Y-m-d');
+            $contentDate = (new \DateTime($content['date_of_birth']))->format('Y-m-d');
+
+            if($litterDate == $contentDate) {
+                return new JsonResponse([
+                    Constant::CODE_NAMESPACE => 428,
+                    Constant::MESSAGE_NAMESPACE => 'THE MOTHER ALREADY HAS A LITTER REGISTERED ON THIS DATE'
+                ], 428);
+            }
+        }
+
+        $litter->setAnimalMother($mother);
+
+        // Father
+        $repository = $this->getDoctrine()->getRepository(Constant::RAM_REPOSITORY);
+        $contentFather = $content['father'];
+
+        $father = null;
+
+        if(key_exists('pedigree_country_code', $contentFather) && key_exists('pedigree_number', $contentFather)) {
+            if($contentFather['pedigree_country_code'] != '' && $contentFather['pedigree_number'] != '') {
+                $father = $repository->findOneBy([
+                    'pedigreeCountryCode' => $contentFather['pedigree_country_code'],
+                    'pedigreeNumber' => $contentFather['pedigree_number'],
+                    'isAlive' => true
+                ]);
+
+                if($father == null) {
+                    return new JsonResponse([
+                        Constant::CODE_NAMESPACE => 428,
+                        Constant::MESSAGE_NAMESPACE => 'THE PEDIGREE OF THE FATHER IS NOT FOUND'
+                    ], 428);
+                }
+
+                $litter->setAnimalFather($father);
+            }
+        }
+
+        if(key_exists('uln_country_code', $contentFather) && key_exists('uln_number', $contentFather)) {
+            if ($contentFather['uln_country_code'] != '' && $contentFather['uln_number'] != '') {
+                $father = $repository->findOneBy([
+                    'ulnCountryCode' => $contentFather['uln_country_code'],
+                    'ulnNumber' => $contentFather['uln_number'],
+                    'isAlive' => true
+                ]);
+
+                if ($father == null) {
+                    return new JsonResponse([
+                        Constant::CODE_NAMESPACE => 428,
+                        Constant::MESSAGE_NAMESPACE => 'THE ULN OF THE FATHER IS NOT FOUND'
+                    ], 428);
+                }
+
+                $litter->setAnimalFather($father);
+            }
+        }
+
+        // Persist Litter
+        $this->getDoctrine()->getManager()->persist($litter);
+
+        // Children
+        $repository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY);
+        $contentChildren = $content['children'];
+
+        $isAliveCounter = 0;
+        foreach($contentChildren as $contentChild) {
+
+            // Child
+            $contentGender = $contentChild['gender'];
+
+            $child = new Neuter();
+            if($contentGender == 'MALE') {
+                $child = new Ram();
+
+            }
+
+            if($contentGender == 'FEMALE') {
+                $child = new Ewe();
+            }
+
+            if($father != null) {
+                $child->setParentFather($father);
+            }
+
+            $child->setLitter($litter);
+            $child->setLocation($location);
+            $child->setParentMother($mother);
+            $child->setDateOfBirth(new \DateTime($content['date_of_birth']));
+            $child->setBirthProgress($contentChild['birth_progress']);
+            $child->setIsAlive(false);
+
+            if($contentChild['birth_weight'] < 0 || $contentChild['birth_weight'] > 10) {
+                return new JsonResponse([
+                    Constant::CODE_NAMESPACE => 428,
+                    Constant::MESSAGE_NAMESPACE => 'THE WEIGHT HAS TO BE BETWEEN 0 AND 10',
+                    "data" => $contentChild['uln_country_code'] ." ". $contentChild['uln_number']
+                ], 428);
+            }
+
+            if($contentChild['tail_length'] < 0 || $contentChild['tail_length'] > 10) {
+                return new JsonResponse([
+                    Constant::CODE_NAMESPACE => 428,
+                    Constant::MESSAGE_NAMESPACE => 'THE TAIL LENGTH HAS TO BE BETWEEN 0 AND 30',
+                    "data" => $contentChild['uln_country_code'] ." ". $contentChild['uln_number']
+                ], 428);
+            }
+
+
+            if($contentChild['is_alive']) {
+                $child->setIsAlive(true);
+
+                // Tag
+                $tag = $repository->findOneBy([
+                    'ulnCountryCode' => $contentChild['uln_country_code'],
+                    'ulnNumber' => $contentChild['uln_number'],
+                    'tagStatus' => 'UNASSIGNED',
+                    'owner' => $company->getOwner()
+                ]);
+
+                if($tag == null) {
+                    return new JsonResponse([
+                        Constant::CODE_NAMESPACE => 428,
+                        Constant::MESSAGE_NAMESPACE => 'YOU DO NOT OWN THIS UNASSIGNED TAG',
+                        "data" => $contentChild['uln_country_code'] ." ". $contentChild['uln_number']
+                    ], 428);
+                }
+
+                $tag->setTagStatus(TagStateType::ASSIGNING);
+                $child->setUlnNumber($tag->getUlnNumber());
+                $child->setUlnCountryCode($tag->getUlnCountryCode());
+                $child->setAnimalOrderNumber($tag->getAnimalOrderNumber());
+                $this->persist($tag);
+
+                // Surrogate
+                if($contentChild['nurture_type'] == 'SURROGATE') {
+                    $repository = $this->getDoctrine()->getRepository(Constant::EWE_REPOSITORY);
+                    $contentSurrogate = $contentChild['surrogate'];
+                    $surrogate = $repository->findOneBy([
+                        'ulnCountryCode' => $contentSurrogate['uln_country_code'],
+                        'ulnNumber' => $contentSurrogate['uln_number'],
+                        'isAlive' => true
+                    ]);
+
+                    if($surrogate == null) {
+                        return new JsonResponse([
+                            Constant::CODE_NAMESPACE => 428,
+                            Constant::MESSAGE_NAMESPACE => 'THE SURROGATE IS NOT IN YOUR LIVESTOCK'
+                        ], 428);
+                    }
+                    $child->setSurrogate($surrogate);
+                }
+
+                // Lambar
+                $child->setLambar(($contentChild['nurture_type'] == 'LAMBAR'));
+
+                $animalDetails = new ArrayCollection();
+                $animalDetails['animal'] = $child;
+                $animalDetails['location'] = $location;
+                $animalDetails['nurture_type'] = $contentChild['nurture_type'];
+                $animalDetails['birth_type'] = $contentChild['birth_progress'];
+                $animalDetails['birth_weight'] = $contentChild['birth_weight'];
+                $animalDetails['tail_length'] = $contentChild['tail_length'];
+                $animalDetails['litter_size'] = sizeof($contentChildren);
+
+                // Persist Message
+                $messageObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $animalDetails, $client, $loggedInUser, $location);
+                $this->sendMessageObjectToQueue($messageObject);
+                $this->persist($messageObject);
+
+                // Counter
+                $isAliveCounter += 1;
+            }
+
+            if(!($child->getIsAlive())) {
+
+                // Weight
+                $weight = new Weight();
+                $weight->setMeasurementDate(new \DateTime($content['date_of_birth']));
+                $weight->setAnimal($child);
+                $weight->setIsBirthWeight(true);
+                $weight->setWeight($contentChild['birth_weight']);
+                $this->getDoctrine()->getManager()->persist($weight);
+
+                // Tail Length
+                $tailLength = new TailLength();
+                $tailLength->setMeasurementDate(new \DateTime($content['date_of_birth']));
+                $tailLength->setAnimal($child);
+                $tailLength->setLength($contentChild['tail_length']);
+                $this->getDoctrine()->getManager()->persist($tailLength);
+
+                // Persist Child & Add to litter
+                $litter->addChild($child);
+                $this->getDoctrine()->getManager()->persist($child);
+            }
+        }
+
+        // Update & Persist Litter
+        $litter->setBornAliveCount($isAliveCounter);
+        $litter->setStillbornCount(sizeof($contentChildren)-$isAliveCounter);
+
+        $this->getDoctrine()->getManager()->persist($litter);
+        $this->getDoctrine()->getManager()->flush();
+
+        return new JsonResponse([Constant::RESULT_NAMESPACE => 'ok'], 200);
+    }
 
   /**
    * Update existing DeclareBirth request

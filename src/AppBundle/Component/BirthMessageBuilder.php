@@ -39,24 +39,8 @@ class BirthMessageBuilder extends MessageBuilderBase
     public function buildMessage(DeclareBirth $messageObject, $person, $loggedInUser, $location)
     {
         $this->person = $person;
-        $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser);
-        $completeMessageObject = $this->addDeclareBirthData($baseMessageObject, $location);
-
-        return $completeMessageObject;
-    }
-
-    /**
-     * @param DeclareBirth $declareBirth the message received from the front-end
-     * @param Location $location
-     * @return DeclareBirth
-     */
-    private function addDeclareBirthData(DeclareBirth $declareBirth, $location)
-    {
-        $animal = $declareBirth->getAnimal();
-        $animal->setDateOfBirth($declareBirth->getDateOfBirth());
-        $declareBirth->setLocation($location);
-
-        return $declareBirth;
+        $messageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser);
+        return $messageObject;
     }
 
 }
