@@ -269,16 +269,16 @@ class Mixblup
             ' vet3       T !missing '.self::FAT_NULL_FILLER,
             ' spierdik   T !missing '.self::MUSCLE_THICKNESS_NULL_FILLER.' #spierdikte',
             ' staartlg   T !missing '.self::TAIL_LENGTH_NULL_FILLER.' #staartlengte', //tailLength
-            ' ubn I !BLOCK', //NOTE it is an integer here
+            ' block I !BLOCK', //NOTE it is an integer here
             ' ',
             'PEDFILE   '.$this->pedigreeFileName,
             ' animal    A !missing '.self::ULN_NULL_FILLER.' #uln',
             ' sire      A !missing '.self::ULN_NULL_FILLER.' #uln van vader',
             ' dam       A !missing '.self::ULN_NULL_FILLER.' #uln van moeder',
+            ' block     I !BLOCK', //NOTE it is an integer here
             ' gender    A !missing '.self::GENDER_NULL_FILLER,
             ' gebjaar   A !missing '.self::DATE_OF_BIRTH_NULL_FILLER.' #geboortedatum',
             ' rascode   A !missing '.self::BREED_CODE_NULL_FILLER,
-            ' ubn       I !BLOCK', //NOTE it is an integer here
             ' ',
             'PARFILE  *insert par file reference here*',
             ' ',
@@ -319,16 +319,16 @@ class Mixblup
             ' LGT T !missing '.self::EXTERIOR_NULL_FILLER.' #romplengte', //length
             ' BDP T !missing '.self::EXTERIOR_NULL_FILLER.' #borstdiepte', //breast depth
             ' KEN T !missing '.self::EXTERIOR_NULL_FILLER.' #kenmerken', //markings
-            ' ubn I !BLOCK', //NOTE it is an integer here
+            ' block I !BLOCK', //NOTE it is an integer here
             ' ',
             'PEDFILE   '.$this->pedigreeFileName,
             ' animal    A !missing '.self::ULN_NULL_FILLER.' #uln',
             ' sire      A !missing '.self::ULN_NULL_FILLER.' #uln van vader',
             ' dam       A !missing '.self::ULN_NULL_FILLER.' #uln van moeder',
+            ' block     I !BLOCK', //NOTE it is an integer here
             ' gender    A !missing '.self::GENDER_NULL_FILLER,
             ' gebjaar   A !missing '.self::DATE_OF_BIRTH_NULL_FILLER.' #geboortedatum',
             ' rascode   A !missing '.self::BREED_CODE_NULL_FILLER,
-            ' ubn       I !BLOCK', //NOTE it is an integer here
             ' ',
             'PARFILE  *insert par file reference here*',
             ' ',
@@ -371,16 +371,16 @@ class Mixblup
             ' Vroegrijp  I !missing '.self::PRECOCIOUS_NULL_FILLER.' #1 als ooi worp heeft op eenjarige leeftijd, anders 0',
             ' Gebgew     T !missing '.self::WEIGHT_NULL_FILLER.' #geboortegewicht',
             ' Gebvrlp    I !missing '.self::BIRTH_PROCESS_NULL_FILLER.' #zonder=0, licht=1, normaal=2, zwaar=3, keizersnee=4',
-            ' ubn I !BLOCK', //NOTE it is an integer here
+            ' block I !BLOCK', //NOTE it is an integer here
             ' ',
             'PEDFILE   '.$this->pedigreeFileName,
             ' animal    A !missing '.self::ULN_NULL_FILLER.' #uln',
             ' sire      A !missing '.self::ULN_NULL_FILLER.' #uln van vader',
             ' dam       A !missing '.self::ULN_NULL_FILLER.' #uln van moeder',
+            ' block     I !BLOCK', //NOTE it is an integer here
             ' gender    A !missing '.self::GENDER_NULL_FILLER,
             ' gebjaar   A !missing '.self::DATE_OF_BIRTH_NULL_FILLER.' #geboortedatum',
             ' rascode   A !missing '.self::BREED_CODE_NULL_FILLER,
-            ' ubn       I !BLOCK', //NOTE it is an integer here
             ' ',
             'PARFILE  *insert par file reference here*',
             ' ',
@@ -470,10 +470,10 @@ class Mixblup
         Utils::addPaddingToStringForColumnFormatSides($animalUln, 15)
         .Utils::addPaddingToStringForColumnFormatCenter($fatherUln, 19, self::COLUMN_PADDING_SIZE)
         .Utils::addPaddingToStringForColumnFormatCenter($motherUln, 19, self::COLUMN_PADDING_SIZE)
+        .Utils::addPaddingToStringForColumnFormatCenter($ubn, 10, self::COLUMN_PADDING_SIZE)
         .Utils::addPaddingToStringForColumnFormatCenter($gender, 7, self::COLUMN_PADDING_SIZE)
         .Utils::addPaddingToStringForColumnFormatCenter($dateOfBirthString, 10, self::COLUMN_PADDING_SIZE)
-        .Utils::addPaddingToStringForColumnFormatCenter($breedCode, 12, self::COLUMN_PADDING_SIZE)
-        .Utils::addPaddingToStringForColumnFormatSides($ubn, 10, false)
+        .Utils::addPaddingToStringForColumnFormatSides($breedCode, 12, false)
         ;
 
         return $record;
