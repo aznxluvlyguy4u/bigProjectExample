@@ -61,6 +61,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
             '1: Generate Mixblup !BLOCKs', "\n",
             '2: Generate Mixblup Datafile', "\n",
             '3: Clear all Mixblup !BLOCK values', "\n",
+            '4: Generate Heterosis and Recombination values', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -75,6 +76,10 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
             case 3:
                 $this->clearAllMixblupBlockValues();
+                break;
+
+            case 4:
+                $this->generateHeterosisAndRecombinationValues();
                 break;
 
             default:
@@ -112,11 +117,17 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         /* Update these values in this exact order */
 
         //Export Animals
-        $sql = "UPDATE animal SET mixblup_block = uln_country_code WHERE mixblup_block IS NULL AND uln_country_code IS NOT NULL AND uln_country_code <> 'NL' AND ".$typeSelection;
-        $this->em->getConnection()->exec($sql);
+        $sql = "SELECT animal.id, country.id as country_id FROM animal INNER JOIN country ON uln_country_code = country.code WHERE mixblup_block IS NULL AND uln_country_code IS NOT NULL AND uln_country_code <> 'NL' AND ".$typeSelection;
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+
+        foreach ($results as $result) {
+            $blockValue = $result['country_id']*10;
+            $sql = "UPDATE animal SET mixblup_block = '".$blockValue."' WHERE id = ".$result['id'];
+            $this->em->getConnection()->exec($sql);
+        }
 
         //Non-Export Animals with ubn of birth
-        $sql = "UPDATE animal SET mixblup_block = ubn_of_birth WHERE mixblup_block IS NULL AND animal.ubn_of_birth IS NOT NULL AND ".$typeSelection;
+        $sql = "UPDATE animal SET mixblup_block = CAST(ubn_of_birth AS INT) WHERE mixblup_block IS NULL AND animal.ubn_of_birth IS NOT NULL AND ".$typeSelection;
         $this->em->getConnection()->exec($sql);
 
         //If no ubn of birth is available, then take the ubn of the current location
@@ -124,12 +135,12 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         $results = $this->em->getConnection()->query($sql)->fetchAll();
 
         foreach ($results as $result) {
-            $blockValue = str_replace(' ','', $result['ubn']).'_C'; //remove spaces and append with _C
+            $blockValue = str_replace(' ','', $result['ubn']); //remove spaces
             $sql = "UPDATE animal SET mixblup_block = '".$blockValue."' WHERE id = ".$result['id'];
             $this->em->getConnection()->exec($sql);
         }
 
-        $sql = "UPDATE animal SET mixblup_block = 'UNKNOWN' WHERE mixblup_block IS NULL AND ".$typeSelection;
+        $sql = "UPDATE animal SET mixblup_block = '2' WHERE mixblup_block IS NULL AND ".$typeSelection;
         $this->em->getConnection()->exec($sql);
     }
 
@@ -149,7 +160,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
      */
     private function setMixblupBlockValuesForRamsWithoutMixblupBlocks()
     {
-        $studRamLabel = 'STUD_RAM';
+        $studRamLabel = '1';
         $studRamUbnMinimum = 6;
 
         //First mark the (stud) rams with children on more than 5 ubns
@@ -202,5 +213,11 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         }
 
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
+
+    private function generateHeterosisAndRecombinationValues()
+    {
+
     }
 }
