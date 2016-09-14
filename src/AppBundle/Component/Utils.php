@@ -150,6 +150,32 @@ class Utils
         return true;
     }
 
+
+    /**
+     * Verify whether all values in an array are unique.
+     *
+     * @param array $array
+     * @return bool
+     */
+    public static function getPermutationProduct($array)
+    {
+        $arrayByIntKeys = array();
+        foreach ($array as $item) {
+            $arrayByIntKeys[] = $item;
+        }
+
+        $value = 0;
+        $maxLength = sizeof($array);
+        for($i = 0; $i < $maxLength; $i++) {
+
+            for($j = $i+1; $j < $maxLength; $j++) {
+                $value += $arrayByIntKeys[$i] * $arrayByIntKeys[$j];
+            }
+        }
+        return $value;
+    }
+    
+
     /**
      * @param Collection $responses
      * @return mixed|null
