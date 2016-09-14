@@ -61,7 +61,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
             '1: Generate Mixblup Datafile', "\n",
-            '   --------------------------------------------',
+            '   --------------------------------------------', "\n",
             '2: Generate Mixblup !BLOCKs', "\n",
             '3: Clear all Mixblup !BLOCK values', "\n",
             '4: Generate Heterosis and Recombination values', "\n",

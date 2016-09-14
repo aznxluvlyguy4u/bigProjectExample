@@ -305,8 +305,8 @@ class Mixblup
             ' CovSW      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,
             ' CovBM      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,
             ' CovOV      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,  //other  (NN means unknown)
-//            ' CovHet     T !missing '.self::HETEROSIS_NULL_FILLER.' #Heterosis van het dier',  //other  (NN means unknown) TODO
-//            ' CovRec     T !missing '.self::RECOMBINATION_NULL_FILLER.' #Recombinatie van het dier',  //other  (NN means unknown) TODO
+            ' CovHet     T !missing '.self::HETEROSIS_NULL_FILLER.' #Heterosis van het dier',  //other  (NN means unknown)
+            ' CovRec     T !missing '.self::RECOMBINATION_NULL_FILLER.' #Recombinatie van het dier',  //other  (NN means unknown)
             ' meetdatum  A !missing '.self::MEASUREMENT_DATE_NULL_FILLER, //measurementDate
             ' KOP T !missing '.self::EXTERIOR_NULL_FILLER.' #kop', //skull
             ' BES T !missing '.self::EXTERIOR_NULL_FILLER.' #bespiering', //muscularity
@@ -962,6 +962,8 @@ class Mixblup
     {
         $animalUln = self::formatUln($animal, self::ULN_NULL_FILLER);
         $gender = self::formatGender($animal->getGender());
+        $heterosis = Utils::fillNullOrEmptyString($animal->getHeterosis(), self::HETEROSIS_NULL_FILLER);
+        $recombination = Utils::fillNullOrEmptyString($animal->getRecombination(), self::RECOMBINATION_NULL_FILLER);
 
         $breedCodeValues = $this->getMixBlupExteriorAttributesBreedCodeTypes($animal);
         $yearAndUbnOfBirth = self::getYearAndUbnOfBirthString($animal);
@@ -974,6 +976,8 @@ class Mixblup
             .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::SW), 3, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::BM), 3, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::OV), 3, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($heterosis, 6, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($recombination, 6, self::COLUMN_PADDING_SIZE)
         ;
 
         return $record;
