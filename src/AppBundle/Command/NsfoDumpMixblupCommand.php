@@ -119,7 +119,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         $this->em->getConnection()->exec($sql);
 
         //If no ubn of birth is available, then take the ubn of the current location
-        $sql = "SELECT a.id as id, l.ubn as ubn_c FROM animal a INNER JOIN location l ON (l.id = a.location_id) WHERE a.mixblup_block IS NULL AND a.location_id IS NOT NULL AND ".$typeSelection;
+        $sql = "SELECT a.id as id, l.ubn as ubn FROM animal a INNER JOIN location l ON (l.id = a.location_id) WHERE a.mixblup_block IS NULL AND a.location_id IS NOT NULL AND ".$typeSelection;
         $results = $this->em->getConnection()->query($sql)->fetchAll();
 
         foreach ($results as $result) {
