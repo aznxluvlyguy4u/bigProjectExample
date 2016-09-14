@@ -556,6 +556,7 @@ class IRSerializer implements IRSerializerInterface
 
         //Add retrieved animal to DeclareLoss
         $declareLossRequest->setAnimal($retrievedAnimal);
+        $declareLossRequest->setUbnDestructor($declareLossRequest['ubn_processor']);
         $declareLossRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
 
         if($isEditMessage) {
