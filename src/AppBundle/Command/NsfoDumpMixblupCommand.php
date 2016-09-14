@@ -50,6 +50,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         $this->em = $this->getContainer()->get('doctrine.orm.entity_manager');
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
+        $this->output = $output;
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
