@@ -47,9 +47,10 @@ class BreedValueUtil
      *
      * @param ObjectManager $em
      * @param int $animalId
+     * @param int $roundingAccuracy
      * @return float
      */
-    public static function getHeterosisAndRecombinationBy8Parts(ObjectManager $em, $animalId)
+    public static function getHeterosisAndRecombinationBy8Parts(ObjectManager $em, $animalId, $roundingAccuracy = null)
     {
         $parentBreedCodes = self::getBreedCodesValuesOfParents($em, $animalId);
         
@@ -64,25 +65,33 @@ class BreedValueUtil
         $codesFather = array_keys($valuesFather);
         $codesMother = array_keys($valuesMother);
 
-        $heterosisValue = 0.0;
-        $recombinationValue = 0.0;
+        $heterosisSum = 0.0;
+        $recombinationSum = 0.0;
 
         //Calculate heterosis
         foreach ($codesMother as $codeMother) {
             foreach ($codesFather as $codeFather) {
                 if($codeFather != $codeMother) {
-                    $heterosisValue += $valuesMother[$codeMother] * $valuesFather[$codeFather];
+                    $heterosisSum += $valuesMother[$codeMother] * $valuesFather[$codeFather];
                 }
             }
         }
 
         //Calculate recombination
-        $recombinationValue += Utils::getPermutationProduct($valuesFather);
-        $recombinationValue += Utils::getPermutationProduct($valuesMother);
+        $recombinationSum += Utils::getPermutationProduct($valuesFather);
+        $recombinationSum += Utils::getPermutationProduct($valuesMother);
+
+        $heterosisValue = (float)$heterosisSum/self::EIGHT_PART_DENOMINATOR;
+        $recombinationValue = (float)$recombinationSum/self::EIGHT_PART_DENOMINATOR;
+        
+        if($roundingAccuracy != null) {
+            $heterosisValue = round($heterosisValue, $roundingAccuracy);
+            $recombinationValue = round($recombinationValue, $roundingAccuracy);
+        }
 
         return [
-            self::HETEROSIS => (float)$heterosisValue/self::EIGHT_PART_DENOMINATOR,
-            self::RECOMBINATION => (float)$recombinationValue/self::EIGHT_PART_DENOMINATOR
+            self::HETEROSIS => $heterosisValue,
+            self::RECOMBINATION => $recombinationValue
         ];
     }
 

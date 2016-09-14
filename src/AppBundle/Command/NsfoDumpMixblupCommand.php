@@ -5,6 +5,7 @@ namespace AppBundle\Command;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Ewe;
 use AppBundle\Report\Mixblup;
+use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
@@ -26,6 +27,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
     const END_YEAR_MEASUREMENTS = 2016;
     const DEFAULT_OUTPUT_FOLDER_PATH = '/home/data/JVT/projects/NSFO/FEATURES/MixBlup/dump';
     const DEFAULT_OPTION = 0;
+    const HETEROSIS_AND_RECOMBINATION_ROUNDING_ACCURACY = 2;
 
     /** @var CommandUtil */
     private $cmdUtil;
@@ -218,6 +220,38 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
     private function generateHeterosisAndRecombinationValues()
     {
+        $isSkipAlreadyCalculatedValues = $this->cmdUtil->generateConfirmationQuestion('Skip already generated values? (y/n): ');
 
+        if($isSkipAlreadyCalculatedValues) {
+            $sql = "SELECT id FROM animal WHERE parent_father_id IS NOT NULL AND parent_mother_id IS NOT NULL AND (heterosis IS NULL OR recombination IS NULL)";
+        } else {
+            $sql = "SELECT id FROM animal WHERE parent_father_id IS NOT NULL AND parent_mother_id IS NOT NULL";
+        }
+
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+
+        $this->cmdUtil->setStartTimeAndPrintIt(count($results)+1,1, 'Generating heterosis and recombination values...');
+
+        foreach($results as $result) {
+            $id = $result['id'];
+            $this->setHeterosisAndRecombinationOfAnimal($id);
+            $this->cmdUtil->advanceProgressBar(1, 'Generating heterosis and recombination values...');
+        }
+        $this->cmdUtil->setProgressBarMessage('Finished!');
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
+
+    private function setHeterosisAndRecombinationOfAnimal($animalId)
+    {
+        $values = BreedValueUtil::getHeterosisAndRecombinationBy8Parts($this->em, $animalId, self::HETEROSIS_AND_RECOMBINATION_ROUNDING_ACCURACY);
+
+        if($values != null) {
+            $heterosis = $values[BreedValueUtil::HETEROSIS];
+            $recombination = $values[BreedValueUtil::RECOMBINATION];
+
+            $sql = "UPDATE animal SET heterosis = '".$heterosis."', recombination = '".$recombination."' WHERE id = '".$animalId."'";
+            $this->em->getConnection()->exec($sql);
+        }
     }
 }
