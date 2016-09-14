@@ -478,9 +478,9 @@ abstract class Animal
     protected $pedigreeRegister;
 
     /**
-     * @var string
-     * @JMS\Type("string")
-     * @ORM\Column(type="string", nullable=true)
+     * @var integer
+     * @JMS\Type("integer")
+     * @ORM\Column(type="integer", nullable=true)
      */
     protected $mixblupBlock;
 
@@ -1976,7 +1976,7 @@ abstract class Animal
 
     
     /**
-     * @return string
+     * @return integer
      */
     public function getMixblupBlock()
     {
@@ -1984,7 +1984,7 @@ abstract class Animal
     }
 
     /**
-     * @param string $mixblupBlock
+     * @param integer $mixblupBlock
      */
     public function setMixblupBlock($mixblupBlock)
     {
