@@ -32,6 +32,7 @@ class Ram extends Animal
      * @Assert\NotBlank
      * @ORM\Column(type="string")
      * @JMS\Type("string")
+     * 
      */
      private $objectType;
 

@@ -36,6 +36,7 @@ class Ewe extends Animal
      * @Assert\NotBlank
      * @ORM\Column(type="string")
      * @JMS\Type("string")
+     * 
      */
      protected $objectType;
 
