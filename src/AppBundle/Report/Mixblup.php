@@ -665,6 +665,10 @@ class Mixblup
 
         } else if ($measurement instanceof Weight) {
             /** @var Weight $measurement */
+            //skip revoked weight measurements
+            if($measurement->getIsRevoked()) {
+                return null;
+            }
             $animal = $measurement->getAnimal();
             $ageGrowthWeightRowPart = $this->formatAgeGrowthWeightMeasurementsRowPart($measurement);
 
