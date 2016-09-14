@@ -160,6 +160,14 @@ class Weight extends Measurement {
     }
 
     /**
+     * @return boolean
+     */
+    public function getIsRevoked()
+    {
+        return $this->isRevoked;
+    }
+
+    /**
      * @param boolean $isRevoked
      */
     public function setIsRevoked($isRevoked)
