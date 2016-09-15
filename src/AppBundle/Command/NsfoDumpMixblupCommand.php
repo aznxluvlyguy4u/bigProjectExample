@@ -17,6 +17,7 @@ use AppBundle\Entity\WeightRepository;
 use AppBundle\Report\Mixblup;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\MeasurementsUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -47,7 +48,23 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
     /** @var EntityManager */
     private $em;
+    
+    /** @var ExteriorRepository $exteriorRepository */
+    private $exteriorRepository;
 
+    /** @var WeightRepository $weightRepository */
+    private $weightRepository;
+
+    /** @var TailLengthRepository $tailLengthRepository */
+    private $tailLengthRepository;
+    
+    /** @var MuscleThicknessRepository */
+    private $muscleThicknessRepository;
+    
+    /** @var BodyFatRepository */
+    private $bodyFatRepository;
+    
+    
     protected function configure()
     {
         $this
@@ -63,6 +80,13 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
         $this->output = $output;
+        
+        $this->exteriorRepository = $this->em->getRepository(Exterior::class);
+        $this->weightRepository = $this->em->getRepository(Weight::class);
+        $this->tailLengthRepository  = $this->em->getRepository(TailLength::class);
+        $this->muscleThicknessRepository = $this->em->getRepository(MuscleThickness::class);
+        $this->bodyFatRepository = $this->em->getRepository(BodyFat::class);
+
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
@@ -77,6 +101,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
             '4: Generate Heterosis and Recombination values', "\n",
             '5: Clear all Heterosis and Recombination values', "\n",
             '6: Delete duplicate measurements', "\n",
+            '7: Generate animalId-and-Date values for all measurements', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -103,6 +128,10 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
             case 6:
                 $this->deleteDuplicateMeasurements();
+                break;
+
+            case 7:
+                $this->generateAnimalIdAndDateStringsInAllMeasurements();
                 break;
 
             default:
@@ -290,41 +319,42 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
     private function deleteDuplicateMeasurements()
     {
         $isClearDuplicates = $this->cmdUtil->generateConfirmationQuestion('Clear ALL duplicate measurements? (y/n): ');
-        if($isClearDuplicates) {
-            /** @var ExteriorRepository $exteriorRepository */
-            $exteriorRepository = $this->em->getRepository(Exterior::class);
-            /** @var WeightRepository $weightRepository */
-            $weightRepository = $this->em->getRepository(Weight::class);
-            /** @var TailLengthRepository $tailLengthRepository */
-            $tailLengthRepository = $this->em->getRepository(TailLength::class);
-            /** @var MuscleThicknessRepository $muscleThicknessRepository */
-            $muscleThicknessRepository = $this->em->getRepository(MuscleThickness::class);
-            /** @var BodyFatRepository $bodyFatRepository */
-            $bodyFatRepository = $this->em->getRepository(BodyFat::class);
-
+        if ($isClearDuplicates) {
             $this->cmdUtil->setStartTimeAndPrintIt(6, 1, 'Deleting duplicate measurements...');
 
-            $exteriorsDeleted = $exteriorRepository->deleteDuplicates();
-            $message = 'Duplicates deleted, exteriors: '.$exteriorsDeleted;
+            $exteriorsDeleted = $this->exteriorRepository->deleteDuplicates();
+            $message = 'Duplicates deleted, exteriors: ' . $exteriorsDeleted;
             $this->cmdUtil->advanceProgressBar(1, $message);
 
-            $weightsDeleted = $weightRepository->deleteDuplicates();
-            $message = $message.'| weights: '.$weightsDeleted;
+            $weightsDeleted = $this->weightRepository->deleteDuplicates();
+            $message = $message . '| weights: ' . $weightsDeleted;
             $this->cmdUtil->advanceProgressBar(1, $message);
 
-            $tailLengthsDeleted = $tailLengthRepository->deleteDuplicates();
-            $message = $message.'| tailLength: '.$tailLengthsDeleted;
+            $tailLengthsDeleted = $this->tailLengthRepository->deleteDuplicates();
+            $message = $message . '| tailLength: ' . $tailLengthsDeleted;
             $this->cmdUtil->advanceProgressBar(1, $message);
 
-            $muscleThicknessesDeleted = $muscleThicknessRepository->deleteDuplicates();
-            $message = $message.'| muscle: '.$muscleThicknessesDeleted;
+            $muscleThicknessesDeleted = $this->muscleThicknessRepository->deleteDuplicates();
+            $message = $message . '| muscle: ' . $muscleThicknessesDeleted;
             $this->cmdUtil->advanceProgressBar(1, $message);
 
-            $bodyFatsDeleted = $bodyFatRepository->deleteDuplicates();
-            $message = $message.'| BodyFat: '.$bodyFatsDeleted;
+            $bodyFatsDeleted = $this->bodyFatRepository->deleteDuplicates();
+            $message = $message . '| BodyFat: ' . $bodyFatsDeleted;
             $this->cmdUtil->advanceProgressBar(1, $message);
 
             $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+
         }
     }
+
+
+    private function generateAnimalIdAndDateStringsInAllMeasurements()
+    {
+        $isRegenerateOldValues = $this->cmdUtil->generateConfirmationQuestion('Also regenerate filled values? (y/n): ');
+        $this->cmdUtil->setStartTimeAndPrintIt();
+        $count = MeasurementsUtil::generateAnimalIdAndDateValues($this->em, $isRegenerateOldValues);
+        $this->output->writeln('Values generated: '.$count);
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
 }
