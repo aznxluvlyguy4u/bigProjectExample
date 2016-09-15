@@ -436,22 +436,10 @@ class Mixblup
 
     public function generateDataFiles()
     {
-        $this->getMeasurementsIfNull();
-
-        if(self::IS_GROUP_BY_ANIMAL_AND_MEASUREMENT_DATE) {
-            $this->writeGroupedDataRecordTestAttributes();
-        } else {
-            /** @var Measurement $measurement */
-            foreach ($this->measurements as $measurement) {
-                $row = $this->writeDataRecordTestAttributes($measurement);
-                if($row != null) {
-                    file_put_contents($this->dataFilePathTestAttributes, $row."\n", FILE_APPEND);
-                }
-            }
-        }
-
-
         $this->getExteriorMeasurementsIfNull();
+
+        $message = 'Generate exterior measurements...';
+        $this->cmdUtil->setStartTimeAndPrintIt($this->exteriorMeasurements->count()+1, 1, $message);
 
         /** @var Exterior $exteriorMeasurement */
         foreach ($this->exteriorMeasurements as $exteriorMeasurement) {
@@ -459,7 +447,29 @@ class Mixblup
             if($row != null) {
                 file_put_contents($this->dataFilePathExteriorAttributes, $row."\n", FILE_APPEND);
             }
+            $this->cmdUtil->advanceProgressBar(1, $message);
         }
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+
+
+        $this->getMeasurementsIfNull();
+        $message = 'Generate test measurements...';
+
+        if(self::IS_GROUP_BY_ANIMAL_AND_MEASUREMENT_DATE) {
+            $this->writeGroupedDataRecordTestAttributes();
+        } else {
+            $this->cmdUtil->setStartTimeAndPrintIt($this->measurements->count()+1, 1, $message);
+            /** @var Measurement $measurement */
+            foreach ($this->measurements as $measurement) {
+                $row = $this->writeDataRecordTestAttributes($measurement);
+                if($row != null) {
+                    file_put_contents($this->dataFilePathTestAttributes, $row."\n", FILE_APPEND);
+                    $this->cmdUtil->advanceProgressBar(1, $message);
+                }
+            }
+            $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+        }
+
 
         //TODO add fertility measurements
     }
