@@ -30,6 +30,7 @@ use Doctrine\ORM\EntityManager;
 
 class Mixblup
 {
+    const BLOCK_NULL_FILLER = 3;
     const ULN_NULL_FILLER = 'N_B';
     const BREED_CODE_NULL_FILLER = 'N_B';
     const BREED_CODE_PARTS_NULL_FILLER = -99;
@@ -212,7 +213,7 @@ class Mixblup
     {
         if($this->animals == null) {
 
-            $sql = "SELECT CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(f.uln_country_code, f.uln_number) as uln_father, CONCAT(m.uln_country_code, m.uln_number) as uln_mother, a.breed_code, a.gender, a.date_of_birth, l.ubn FROM animal a LEFT JOIN animal f ON a.parent_father_id = f.id LEFT JOIN animal m ON a.parent_mother_id = m.id LEFT JOIN location l ON a.location_id = l.id";
+            $sql = "SELECT CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(f.uln_country_code, f.uln_number) as uln_father, CONCAT(m.uln_country_code, m.uln_number) as uln_mother, a.breed_code, a.gender, a.date_of_birth, a.block as block FROM animal a LEFT JOIN animal f ON a.parent_father_id = f.id LEFT JOIN animal m ON a.parent_mother_id = m.id";
             $this->animals = $this->em->getConnection()->query($sql)->fetchAll();
         }
         return $this->animals;
@@ -478,13 +479,13 @@ class Mixblup
         $gender = Utils::fillNullOrEmptyString(self::formatGender($animalArray['gender']));
         $dateOfBirthString = Utils::fillNullOrEmptyString(self::formatDateOfBirthString($animalArray['date_of_birth']));
 
-        $ubn = Utils::fillNullOrEmptyString($animalArray['ubn'], self::UBN_NULL_FILLER);
+        $block = Utils::fillNullOrEmptyString($animalArray['block'], self::BLOCK_NULL_FILLER);
 
         $record =
         Utils::addPaddingToStringForColumnFormatSides($animalUln, 15)
         .Utils::addPaddingToStringForColumnFormatCenter($fatherUln, 19, self::COLUMN_PADDING_SIZE)
         .Utils::addPaddingToStringForColumnFormatCenter($motherUln, 19, self::COLUMN_PADDING_SIZE)
-        .Utils::addPaddingToStringForColumnFormatCenter($ubn, 10, self::COLUMN_PADDING_SIZE)
+        .Utils::addPaddingToStringForColumnFormatCenter($block, 10, self::COLUMN_PADDING_SIZE)
         .Utils::addPaddingToStringForColumnFormatCenter($gender, 7, self::COLUMN_PADDING_SIZE)
         .Utils::addPaddingToStringForColumnFormatCenter($dateOfBirthString, 10, self::COLUMN_PADDING_SIZE)
         .Utils::addPaddingToStringForColumnFormatSides($breedCode, 12, false)
@@ -630,7 +631,7 @@ class Mixblup
             $isAllTestValuesEmpty = $animal == null || $measurementDate == null;
 
             if(!$isAllTestValuesEmpty) {
-                $ubn = self::getUbnFromAnimal($animal);
+                $block = $animal->getMixblupBlock();
                 $rowBase = $this->formatFirstPartDataRecordRowTestAttributes($animal);
                 $measurementDate = self::formatMeasurementDate($measurementDate);
 
@@ -641,7 +642,7 @@ class Mixblup
                     .$bodyFatRowPart
                     .$muscleThicknessRowPart
                     .$tailLengthRowPart
-                    .Utils::addPaddingToStringForColumnFormatCenter($ubn, 10, self::COLUMN_PADDING_SIZE)
+                    .Utils::addPaddingToStringForColumnFormatCenter($block, 10, self::COLUMN_PADDING_SIZE)
                 ;
 
                 file_put_contents($this->dataFilePathTestAttributes, $record."\n", FILE_APPEND);
@@ -875,7 +876,7 @@ class Mixblup
             $markings = Utils::fillZero($measurement->getMarkings(), self::EXTERIOR_NULL_FILLER);
 
         } else {
-            $kind = self::EXTERIOR_KIND_NULL_FILLER
+            $kind = self::EXTERIOR_KIND_NULL_FILLER;
             $skull = self::EXTERIOR_NULL_FILLER;
             $muscularity = self::EXTERIOR_NULL_FILLER;
             $proportion = self::EXTERIOR_NULL_FILLER;
@@ -971,13 +972,13 @@ class Mixblup
         $rowBase = $this->formatFirstPartDataRecordRowExteriorAttributes($animal);
         $measurementDate = self::formatMeasurementDate($measurement->getMeasurementDate());
         $exteriorRowPart = $this->formatExteriorMeasurementsRowPart($measurement);
-        $ubn = self::getUbnFromAnimal($animal);
+        $block = $animal->getMixblupBlock();
 
         $record =
             $rowBase
             .Utils::addPaddingToStringForColumnFormatCenter($measurementDate, 10, self::COLUMN_PADDING_SIZE)
             .$exteriorRowPart
-            .Utils::addPaddingToStringForColumnFormatCenter($ubn, 10, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($block, 10, self::COLUMN_PADDING_SIZE)
         ;
 
         return $record;
