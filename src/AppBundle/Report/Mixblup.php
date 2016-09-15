@@ -207,13 +207,14 @@ class Mixblup
 
     /**
      * Only retrieve the animals when they are really needed.
+     * And for duplicate animals, choose the one with a higher number primary key. Those are the imported animals with more data.
      * @return array
      */
     private function getAnimalsArrayIfNull()
     {
         if($this->animals == null) {
 
-            $sql = "SELECT CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(f.uln_country_code, f.uln_number) as uln_father, CONCAT(m.uln_country_code, m.uln_number) as uln_mother, a.breed_code, a.gender, a.date_of_birth, a.block as block FROM animal a LEFT JOIN animal f ON a.parent_father_id = f.id LEFT JOIN animal m ON a.parent_mother_id = m.id";
+            $sql = "SELECT CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(f.uln_country_code, f.uln_number) as uln_father, CONCAT(m.uln_country_code, m.uln_number) as uln_mother, a.breed_code, a.gender, a.date_of_birth, a.mixblup_block as block FROM animal a LEFT JOIN animal f ON a.parent_father_id = f.id LEFT JOIN animal m ON a.parent_mother_id = m.id INNER JOIN (SELECT MAX(id) as id FROM animal GROUP BY uln_country_code, uln_number) b ON a.id = b.id;";
             $this->animals = $this->em->getConnection()->query($sql)->fetchAll();
         }
         return $this->animals;
