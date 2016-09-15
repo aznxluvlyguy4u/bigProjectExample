@@ -289,40 +289,42 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
     private function deleteDuplicateMeasurements()
     {
-        /** @var ExteriorRepository $exteriorRepository */
-        $exteriorRepository = $this->em->getRepository(Exterior::class);
-        /** @var WeightRepository $weightRepository */
-        $weightRepository = $this->em->getRepository(Weight::class);
-        /** @var TailLengthRepository $tailLengthRepository */
-        $tailLengthRepository = $this->em->getRepository(TailLength::class);
-        /** @var MuscleThicknessRepository $muscleThicknessRepository */
-        $muscleThicknessRepository = $this->em->getRepository(MuscleThickness::class);
-        /** @var BodyFatRepository $bodyFatRepository */
-        $bodyFatRepository = $this->em->getRepository(BodyFat::class);
+        $isClearDuplicates = $this->cmdUtil->generateConfirmationQuestion('Clear ALL duplicate measurements? (y/n): ');
+        if($isClearDuplicates) {
+            /** @var ExteriorRepository $exteriorRepository */
+            $exteriorRepository = $this->em->getRepository(Exterior::class);
+            /** @var WeightRepository $weightRepository */
+            $weightRepository = $this->em->getRepository(Weight::class);
+            /** @var TailLengthRepository $tailLengthRepository */
+            $tailLengthRepository = $this->em->getRepository(TailLength::class);
+            /** @var MuscleThicknessRepository $muscleThicknessRepository */
+            $muscleThicknessRepository = $this->em->getRepository(MuscleThickness::class);
+            /** @var BodyFatRepository $bodyFatRepository */
+            $bodyFatRepository = $this->em->getRepository(BodyFat::class);
 
-        $this->cmdUtil->setStartTimeAndPrintIt(6, 1, 'Deleting duplicate measurements...');
+            $this->cmdUtil->setStartTimeAndPrintIt(6, 1, 'Deleting duplicate measurements...');
 
-        $exteriorsDeleted = $exteriorRepository->deleteDuplicates();
-        $message = 'Duplicates deleted, exteriors: '.$exteriorsDeleted;
-        $this->cmdUtil->advanceProgressBar(1, $message);
+            $exteriorsDeleted = $exteriorRepository->deleteDuplicates();
+            $message = 'Duplicates deleted, exteriors: '.$exteriorsDeleted;
+            $this->cmdUtil->advanceProgressBar(1, $message);
 
-        $weightsDeleted = $weightRepository->deleteDuplicates();
-        $message = $message.'| weights: '.$weightsDeleted;
-        $this->cmdUtil->advanceProgressBar(1, $message);
+            $weightsDeleted = $weightRepository->deleteDuplicates();
+            $message = $message.'| weights: '.$weightsDeleted;
+            $this->cmdUtil->advanceProgressBar(1, $message);
 
-        $tailLengthsDeleted = $tailLengthRepository->deleteDuplicates();
-        $message = $message.'| tailLength: '.$tailLengthsDeleted;
-        $this->cmdUtil->advanceProgressBar(1, $message);
+            $tailLengthsDeleted = $tailLengthRepository->deleteDuplicates();
+            $message = $message.'| tailLength: '.$tailLengthsDeleted;
+            $this->cmdUtil->advanceProgressBar(1, $message);
 
-        $muscleThicknessesDeleted = $muscleThicknessRepository->deleteDuplicates();
-        $message = $message.'| muscle: '.$muscleThicknessesDeleted;
-        $this->cmdUtil->advanceProgressBar(1, $message);
+            $muscleThicknessesDeleted = $muscleThicknessRepository->deleteDuplicates();
+            $message = $message.'| muscle: '.$muscleThicknessesDeleted;
+            $this->cmdUtil->advanceProgressBar(1, $message);
 
-        $bodyFatsDeleted = $bodyFatRepository->deleteDuplicates();
-        $message = $message.'| BodyFat: '.$bodyFatsDeleted;
-        $this->cmdUtil->advanceProgressBar(1, $message);
+            $bodyFatsDeleted = $bodyFatRepository->deleteDuplicates();
+            $message = $message.'| BodyFat: '.$bodyFatsDeleted;
+            $this->cmdUtil->advanceProgressBar(1, $message);
 
-        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
-        
+            $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+        }
     }
 }
