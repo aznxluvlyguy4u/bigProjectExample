@@ -56,6 +56,14 @@ abstract class Measurement {
 
 
     /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    protected $animalIdAndDate;
+
+
+    /**
      * @ORM\ManyToOne(targetEntity="Inspector")
      * @ORM\JoinColumn(name="inspector_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Inspector")
@@ -150,4 +158,23 @@ abstract class Measurement {
     {
         return $this->inspector;
     }
+
+    /**
+     * @return string
+     */
+    public function getAnimalIdAndDate()
+    {
+        return $this->animalIdAndDate;
+    }
+
+    /**
+     * @param string $animalIdAndDate
+     */
+    public function setAnimalIdAndDate($animalIdAndDate)
+    {
+        $this->animalIdAndDate = $animalIdAndDate;
+    }
+
+
+
 }
