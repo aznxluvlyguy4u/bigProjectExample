@@ -107,4 +107,37 @@ class WeightRepository extends BaseRepository {
             return false;
         }
     }
+
+
+    /**
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function deleteDuplicates()
+    {
+        $em = $this->getEntityManager();
+
+        $count = 0;
+        
+        $hasDuplicates = true;
+        while($hasDuplicates) {
+            $sql = "
+              SELECT MIN(measurement.id) as min_id, COUNT(*), measurement_date, animal_id, weight, is_birth_weight, is_revoked
+              FROM measurement INNER JOIN weight x ON measurement.id = x.id
+              GROUP BY measurement_date, type, x.animal_id, x.weight, x.is_birth_weight, x.is_revoked
+              HAVING COUNT(*) > 1";
+            $results = $this->getEntityManager()->getConnection()->query($sql)->fetchAll();
+
+            foreach ($results as $result) {
+                $minId = $result['min_id'];
+                $sql = "DELETE FROM weight WHERE id = '".$minId."'";
+                $em->getConnection()->exec($sql);
+                $sql = "DELETE FROM measurement WHERE id = '".$minId."'";
+                $em->getConnection()->exec($sql);
+                $count++;
+            }
+            if(count($results) == 0) { $hasDuplicates = false; }
+        }
+        return $count;
+    }
 }

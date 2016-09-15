@@ -69,4 +69,53 @@ class BodyFatRepository extends BaseRepository {
             return $fat1.'/'.$fat2.'/'.$fat3;
         }
     }
+
+
+    /**
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function deleteDuplicates()
+    {
+        $em = $this->getEntityManager();
+
+        $count = 0;
+        $hasDuplicates = true;
+        while($hasDuplicates) {
+            $sql = "
+              SELECT MIN(m.id) as min_id, COUNT(*), measurement_date, animal_id, m.inspector_id, fat1.fat as fat1, fat2.fat as fat2, fat3.fat as fat3
+              FROM body_fat b INNER JOIN measurement m ON m.id = b.id
+              LEFT JOIN fat1 ON b.fat1_id = fat1.id
+              LEFT JOIN fat2 ON b.fat2_id = fat2.id
+              LEFT JOIN fat3 ON b.fat3_id = fat3.id
+              GROUP BY measurement_date, type, b.animal_id, m.inspector_id, fat1.fat, fat2.fat, fat3.fat
+              HAVING COUNT(*) > 1";
+            $results = $this->getEntityManager()->getConnection()->query($sql)->fetchAll();
+            
+            foreach ($results as $result) {
+                $bodyFatMinId = $result['min_id'];
+
+                $sql = "SELECT fat1_id, fat2_id, fat3_id FROM body_fat WHERE id = '".$bodyFatMinId."'";
+                $fatIds = $this->getEntityManager()->getConnection()->query($sql)->fetch();
+                $fat1Id = $fatIds['fat1_id'];
+                $fat2Id = $fatIds['fat2_id'];
+                $fat3Id = $fatIds['fat3_id'];
+
+                $sql = "DELETE FROM body_fat WHERE id = '".$bodyFatMinId."'";
+                $em->getConnection()->exec($sql);
+                $sql = "DELETE FROM measurement WHERE id = '".$bodyFatMinId."'";
+                $em->getConnection()->exec($sql);
+                $sql = "DELETE FROM fat1 WHERE id = '".$fat1Id."'";
+                $em->getConnection()->exec($sql);
+                $sql = "DELETE FROM fat2 WHERE id = '".$fat2Id."'";
+                $em->getConnection()->exec($sql);
+                $sql = "DELETE FROM fat3 WHERE id = '".$fat3Id."'";
+                $em->getConnection()->exec($sql);
+                $count++;
+            }
+
+            if(count($results) == 0) { $hasDuplicates = false; }
+        }
+        return $count;
+    }
 }

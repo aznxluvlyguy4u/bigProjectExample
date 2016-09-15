@@ -3,7 +3,17 @@
 namespace AppBundle\Command;
 
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\BodyFat;
+use AppBundle\Entity\BodyFatRepository;
 use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Exterior;
+use AppBundle\Entity\ExteriorRepository;
+use AppBundle\Entity\MuscleThickness;
+use AppBundle\Entity\MuscleThicknessRepository;
+use AppBundle\Entity\TailLength;
+use AppBundle\Entity\TailLengthRepository;
+use AppBundle\Entity\Weight;
+use AppBundle\Entity\WeightRepository;
 use AppBundle\Report\Mixblup;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
@@ -66,6 +76,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
             '3: Clear all Mixblup !BLOCK values', "\n",
             '4: Generate Heterosis and Recombination values', "\n",
             '5: Clear all Heterosis and Recombination values', "\n",
+            '6: Delete duplicate measurements', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -88,6 +99,10 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
             case 5:
                 $this->clearAllHeterosisAndRecombinationValues();
+                break;
+
+            case 6:
+                $this->deleteDuplicateMeasurements();
                 break;
 
             default:
@@ -269,5 +284,45 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
             $sql = "UPDATE animal SET heterosis = NULL, recombination = NULL WHERE heterosis IS NOT NULL OR recombination IS NOT NULL";
             $this->em->getConnection()->exec($sql);
         }
+    }
+
+
+    private function deleteDuplicateMeasurements()
+    {
+        /** @var ExteriorRepository $exteriorRepository */
+        $exteriorRepository = $this->em->getRepository(Exterior::class);
+        /** @var WeightRepository $weightRepository */
+        $weightRepository = $this->em->getRepository(Weight::class);
+        /** @var TailLengthRepository $tailLengthRepository */
+        $tailLengthRepository = $this->em->getRepository(TailLength::class);
+        /** @var MuscleThicknessRepository $muscleThicknessRepository */
+        $muscleThicknessRepository = $this->em->getRepository(MuscleThickness::class);
+        /** @var BodyFatRepository $bodyFatRepository */
+        $bodyFatRepository = $this->em->getRepository(BodyFat::class);
+
+        $this->cmdUtil->setStartTimeAndPrintIt(6, 1, 'Deleting duplicate measurements...');
+
+        $exteriorsDeleted = $exteriorRepository->deleteDuplicates();
+        $message = 'Duplicates deleted, exteriors: '.$exteriorsDeleted;
+        $this->cmdUtil->advanceProgressBar(1, $message);
+
+        $weightsDeleted = $weightRepository->deleteDuplicates();
+        $message = $message.'| weights: '.$weightsDeleted;
+        $this->cmdUtil->advanceProgressBar(1, $message);
+
+        $tailLengthsDeleted = $tailLengthRepository->deleteDuplicates();
+        $message = $message.'| tailLength: '.$tailLengthsDeleted;
+        $this->cmdUtil->advanceProgressBar(1, $message);
+
+        $muscleThicknessesDeleted = $muscleThicknessRepository->deleteDuplicates();
+        $message = $message.'| muscle: '.$muscleThicknessesDeleted;
+        $this->cmdUtil->advanceProgressBar(1, $message);
+
+        $bodyFatsDeleted = $bodyFatRepository->deleteDuplicates();
+        $message = $message.'| BodyFat: '.$bodyFatsDeleted;
+        $this->cmdUtil->advanceProgressBar(1, $message);
+
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+        
     }
 }
