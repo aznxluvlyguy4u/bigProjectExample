@@ -199,7 +199,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         $this->cmdUtil->setStartTimeAndPrintIt();
 
         $this->output->writeln([' ', 'Preparing data... ']);
-        $mixBlup = new Mixblup($this->em, $outputFolderPath, self::INSTRUCTIONS_FILENAME, self::DATA_FILENAME, self::PEDIGREE_FILENAME, self::START_YEAR_MEASUREMENT, self::END_YEAR_MEASUREMENTS);
+        $mixBlup = new Mixblup($this->em, $outputFolderPath, self::INSTRUCTIONS_FILENAME, self::DATA_FILENAME, self::PEDIGREE_FILENAME, self::START_YEAR_MEASUREMENT, self::END_YEAR_MEASUREMENTS, $this->cmdUtil);
         $this->cmdUtil->printElapsedTime('Time to prepare data');
 
         if($isGenerateDataFile) {

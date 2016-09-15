@@ -44,6 +44,7 @@ class Mixblup
     const TAIL_LENGTH_NULL_FILLER = -99;
     const WEIGHT_NULL_FILLER = -99;
     const EXTERIOR_NULL_FILLER = -99;
+    const EXTERIOR_KIND_NULL_FILLER = 'N_B';
     const UBN_NULL_FILLER = 0; //Value is used as default value for !BLOCK
     const HETEROSIS_NULL_FILLER = -99;
     const RECOMBINATION_NULL_FILLER = -99;
@@ -142,6 +143,9 @@ class Mixblup
 
     /** @var ArrayCollection $testAttributes */
     private $testAttributes;
+    
+    /** @var CommandUtil */
+    private $cmdUtil;
 
 
     /**
@@ -153,15 +157,17 @@ class Mixblup
      * @param string $pedigreeFileName
      * @param int $firstMeasurementYear
      * @param int $lastMeasurementYear
+     * @param CommandUtil $cmdUtil
      * @param array $animals
      */
-    public function __construct(EntityManager $em, $outputFolderPath, $instructionsFileName, $dataFileName, $pedigreeFileName, $firstMeasurementYear, $lastMeasurementYear, $animals = null)
+    public function __construct(EntityManager $em, $outputFolderPath, $instructionsFileName, $dataFileName, $pedigreeFileName, $firstMeasurementYear, $lastMeasurementYear, $cmdUtil, $animals = null)
     {
         $this->em = $em;
         $this->animalRowBases = new ArrayCollection();
         $this->testAttributes = new ArrayCollection();
         $this->firstMeasurementYear = $firstMeasurementYear;
         $this->lastMeasurementYear = $lastMeasurementYear;
+        $this->cmdUtil = $cmdUtil;
 
         if($animals != null) {
             $this->animals = $animals;
@@ -202,10 +208,12 @@ class Mixblup
      * Only retrieve the animals when they are really needed.
      * @return array
      */
-    private function getAnimalsIfNull()
+    private function getAnimalsArrayIfNull()
     {
         if($this->animals == null) {
-            $this->animals = $this->em->getRepository(Animal::class)->findAll();
+
+            $sql = "SELECT CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(f.uln_country_code, f.uln_number) as uln_father, CONCAT(m.uln_country_code, m.uln_number) as uln_mother, a.breed_code, a.gender, a.date_of_birth, l.ubn FROM animal a LEFT JOIN animal f ON a.parent_father_id = f.id LEFT JOIN animal m ON a.parent_mother_id = m.id LEFT JOIN location l ON a.location_id = l.id";
+            $this->animals = $this->em->getConnection()->query($sql)->fetchAll();
         }
         return $this->animals;
     }
@@ -308,9 +316,11 @@ class Mixblup
             ' CovHet     T !missing '.self::HETEROSIS_NULL_FILLER.' #Heterosis van het dier',  //other  (NN means unknown)
             ' CovRec     T !missing '.self::RECOMBINATION_NULL_FILLER.' #Recombinatie van het dier',  //other  (NN means unknown)
             ' meetdatum  A !missing '.self::MEASUREMENT_DATE_NULL_FILLER, //measurementDate
+            ' SOORT A !missing '.self::EXTERIOR_KIND_NULL_FILLER.' #soort meting', //kind of external measurement
             ' KOP T !missing '.self::EXTERIOR_NULL_FILLER.' #kop', //skull
             ' BES T !missing '.self::EXTERIOR_NULL_FILLER.' #bespiering', //muscularity
             ' EVE T !missing '.self::EXTERIOR_NULL_FILLER.' #evenredigheid', //proportion
+            ' ONT T !missing '.self::EXTERIOR_NULL_FILLER.' #ontwikkeling', //progress
             ' TYP T !missing '.self::EXTERIOR_NULL_FILLER.' #type', //(exterior)type
             ' BEE T !missing '.self::EXTERIOR_NULL_FILLER.' #beenwerk', //legWork
             ' VAC T !missing '.self::EXTERIOR_NULL_FILLER.' #vacht', //fur
@@ -410,12 +420,16 @@ class Mixblup
 
     public function generatePedigreeFile()
     {
-        $this->getAnimalsIfNull();
+        $this->getAnimalsArrayIfNull();
 
-        foreach ($this->animals as $animal) {
-            $row = $this->writePedigreeRecord($animal);
+        $this->cmdUtil->setStartTimeAndPrintIt(count($this->animals) + 1, 1, 'Generating pedigree file...');
+
+        foreach ($this->animals as $animalArray) {
+            $row = $this->writePedigreeRecord($animalArray);
             file_put_contents($this->pedigreeFilePath, $row."\n", FILE_APPEND);
+            $this->cmdUtil->advanceProgressBar(1, 'Generating pedigree file...');
         }
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
     
 
@@ -451,20 +465,20 @@ class Mixblup
 
 
     /**
-     * @param Animal $animal
+     * @param array $animalArray
      * @return string
      */
-    private function writePedigreeRecord(Animal $animal)
+    private function writePedigreeRecord(array $animalArray)
     {
-        $animalUln = self::formatUln($animal, self::ULN_NULL_FILLER);
-        $parents = CommandUtil::getParentUlnsFromParentsArray($animal->getParents(), self::ULN_NULL_FILLER);
-        $motherUln = $parents->get(Constant::MOTHER_NAMESPACE);
-        $fatherUln = $parents->get(Constant::FATHER_NAMESPACE);
+        $animalUln = Utils::fillNullOrEmptyString($animalArray['uln'], self::ULN_NULL_FILLER);
+        $motherUln = Utils::fillNullOrEmptyString($animalArray['uln_mother'], self::ULN_NULL_FILLER);
+        $fatherUln = Utils::fillNullOrEmptyString($animalArray['uln_father'], self::ULN_NULL_FILLER);
 
-        $breedCode = Utils::fillNullOrEmptyString($animal->getBreedCode(), self::BREED_CODE_NULL_FILLER);
-        $gender = self::formatGender($animal->getGender());
-        $dateOfBirthString = self::formatDateOfBirth($animal->getDateOfBirth());
-        $ubn = self::getUbnFromAnimal($animal);
+        $breedCode = Utils::fillNullOrEmptyString($animalArray['breed_code'], self::BREED_CODE_NULL_FILLER);
+        $gender = Utils::fillNullOrEmptyString(self::formatGender($animalArray['gender']));
+        $dateOfBirthString = Utils::fillNullOrEmptyString(self::formatDateOfBirthString($animalArray['date_of_birth']));
+
+        $ubn = Utils::fillNullOrEmptyString($animalArray['ubn'], self::UBN_NULL_FILLER);
 
         $record =
         Utils::addPaddingToStringForColumnFormatSides($animalUln, 15)
@@ -566,6 +580,9 @@ class Mixblup
         //Create the array grouping measurements by Animal and Date first
         $this->groupTestMeasurementsByAnimalAndDate();
 
+        $message = 'Process measurement group...';
+        $this->cmdUtil->setStartTimeAndPrintIt($this->testAttributes->count()+1, 1, $message);
+
         foreach ($this->testAttributes as $measurementGroup) {
 
             //Set default values
@@ -575,7 +592,6 @@ class Mixblup
             $ageGrowthWeightRowPart = $this->formatAgeGrowthWeightMeasurementsRowPart(null);
             $bodyFatRowPart = $this->formatBodyFatMeasurementsRowPart(null);
             $muscleThicknessRowPart = $this->formatMuscleThicknessMeasurementsRowPart(null);
-            $exteriorRowPart = $this->formatExteriorMeasurementsRowPart(null);
 
             foreach ($measurementGroup as $measurement) {
 
@@ -631,7 +647,10 @@ class Mixblup
                 file_put_contents($this->dataFilePathTestAttributes, $record."\n", FILE_APPEND);
             }
             //else if no valid test data is available, don't write anything to the file
+
+            $this->cmdUtil->advanceProgressBar(1, $message);
         }
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 
     /**
@@ -841,9 +860,11 @@ class Mixblup
     private function formatExteriorMeasurementsRowPart($measurement)
     {
         if($measurement != null && $measurement instanceof Exterior) {
+            $kind = Utils::fillZero($measurement->getKind(), self::EXTERIOR_KIND_NULL_FILLER);
             $skull = Utils::fillZero($measurement->getSkull(), self::EXTERIOR_NULL_FILLER);
             $muscularity = Utils::fillZero($measurement->getMuscularity(), self::EXTERIOR_NULL_FILLER);
             $proportion = Utils::fillZero($measurement->getProportion(), self::EXTERIOR_NULL_FILLER);
+            $progress = Utils::fillZero($measurement->getProgress(), self::EXTERIOR_NULL_FILLER);
             $exteriorType = Utils::fillZero($measurement->getExteriorType(), self::EXTERIOR_NULL_FILLER);
             $legWork = Utils::fillZero($measurement->getLegWork(), self::EXTERIOR_NULL_FILLER);
             $fur = Utils::fillZero($measurement->getFur(), self::EXTERIOR_NULL_FILLER);
@@ -854,9 +875,11 @@ class Mixblup
             $markings = Utils::fillZero($measurement->getMarkings(), self::EXTERIOR_NULL_FILLER);
 
         } else {
+            $kind = self::EXTERIOR_KIND_NULL_FILLER
             $skull = self::EXTERIOR_NULL_FILLER;
             $muscularity = self::EXTERIOR_NULL_FILLER;
             $proportion = self::EXTERIOR_NULL_FILLER;
+            $progress = self::EXTERIOR_NULL_FILLER;
             $exteriorType = self::EXTERIOR_NULL_FILLER;
             $legWork = self::EXTERIOR_NULL_FILLER;
             $fur = self::EXTERIOR_NULL_FILLER;
@@ -868,9 +891,11 @@ class Mixblup
         }
 
         $exteriorRowPart =
-             Utils::addPaddingToStringForColumnFormatCenter($skull, 4, self::COLUMN_PADDING_SIZE)
+             Utils::addPaddingToStringForColumnFormatCenter($kind, 4, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($skull, 4, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($muscularity, 4, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($proportion, 4, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($progress, 4, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($exteriorType, 4, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($legWork, 4, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($fur, 4, self::COLUMN_PADDING_SIZE)
@@ -1006,6 +1031,21 @@ class Mixblup
             return date_format($dateTime, "Ymd");
         }
     }
+
+
+    /**
+     * @param string $dateTimeString
+     * @return string|boolean   string when formatting was successful, false if it failed
+     */
+    public static function formatDateOfBirthString($dateTimeString)
+    {
+        if($dateTimeString == null) {
+            return self::DATE_OF_BIRTH_NULL_FILLER;
+        } else {
+            return str_replace('-','', explode(' ', $dateTimeString)[0]);
+        }
+    }
+
 
     /**
      * @param \DateTime|null $dateTime
@@ -1324,7 +1364,7 @@ class Mixblup
      * @param string $measurementId
      * @return boolean
      */
-    private function isAnimalNotNullAndPrintErrors(Animal $animal, $measurementId)
+    private function isAnimalNotNullAndPrintErrors($animal, $measurementId)
     {
         //This error might occur when a measurement is deleted in the database without removing the Measurement parent row
         if($animal == null) {
