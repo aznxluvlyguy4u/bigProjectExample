@@ -902,20 +902,22 @@ class Mixblup
             $markings = self::EXTERIOR_NULL_FILLER;
         }
 
+        $exteriorValuesSpacing = 6;
+        
         $exteriorRowPart =
-             Utils::addPaddingToStringForColumnFormatCenter($kind, 4, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($skull, 4, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($muscularity, 4, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($proportion, 4, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($progress, 4, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($exteriorType, 4, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($legWork, 4, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($fur, 4, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($generalAppearance, 4, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($height, 4, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($torsoLength, 4, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($breastDepth, 4, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($markings, 4, self::COLUMN_PADDING_SIZE);
+             Utils::addPaddingToStringForColumnFormatCenter($kind, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($skull, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($muscularity, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($proportion, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($progress, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($exteriorType, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($legWork, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($fur, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($generalAppearance, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($height, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($torsoLength, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breastDepth, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($markings, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE);
 
         return $exteriorRowPart;
     }
