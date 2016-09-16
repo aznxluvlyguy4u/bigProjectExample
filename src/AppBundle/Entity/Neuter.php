@@ -30,6 +30,7 @@ class Neuter extends Animal
      * @Assert\NotBlank
      * @ORM\Column(type="string")
      * @JMS\Type("string")
+     * @JMS\Groups({"declare"})
      */
     private $objectType;
 
@@ -402,4 +403,63 @@ class Neuter extends Animal
     {
         return $this->exteriorMeasurements;
     }
+
+    /**
+     * Add parent
+     *
+     * @param \AppBundle\Entity\Animal $parent
+     *
+     * @return Neuter
+     */
+    public function addParent(\AppBundle\Entity\Animal $parent)
+    {
+        $this->parents[] = $parent;
+
+        return $this;
+    }
+
+    /**
+     * Remove parent
+     *
+     * @param \AppBundle\Entity\Animal $parent
+     */
+    public function removeParent(\AppBundle\Entity\Animal $parent)
+    {
+        $this->parents->removeElement($parent);
+    }
+
+    /**
+     * Get parents
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getParents()
+    {
+        return $this->parents;
+    }
+
+    /**
+     * Set parentNeuter
+     *
+     * @param \AppBundle\Entity\Neuter $parentNeuter
+     *
+     * @return Neuter
+     */
+    public function setParentNeuter(\AppBundle\Entity\Neuter $parentNeuter = null)
+    {
+        $this->parentNeuter = $parentNeuter;
+
+        return $this;
+    }
+
+    /**
+     * Get parentNeuter
+     *
+     * @return \AppBundle\Entity\Neuter
+     */
+    public function getParentNeuter()
+    {
+        return $this->parentNeuter;
+    }
+
 }

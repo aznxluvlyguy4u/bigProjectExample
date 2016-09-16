@@ -22,7 +22,7 @@ class Ewe extends Animal
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="parentMother")
      * @JMS\Type("AppBundle\Entity\Ewe")
      */
-     protected $children;
+    private $children;
 
     /**
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="surrogate")
@@ -36,6 +36,7 @@ class Ewe extends Animal
      * @Assert\NotBlank
      * @ORM\Column(type="string")
      * @JMS\Type("string")
+     * 
      */
      protected $objectType;
 
@@ -44,8 +45,17 @@ class Ewe extends Animal
        * 
        * @ORM\OneToMany(targetEntity="Litter", mappedBy="animalMother")
        * @JMS\Type("AppBundle\Entity\Ewe")
+       * @ORM\OrderBy({"litterDate" = "ASC"})
        */
-      protected $litters;
+    private $litters;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @JMS\Type("AppBundle\Entity\Mate")
+     * @ORM\OneToMany(targetEntity="Mate", mappedBy="studEwe")
+     */
+    private $matings;
 
     /**
      * Ewe constructor.
@@ -120,6 +130,24 @@ class Ewe extends Animal
     {
         return $this->children;
     }
+
+    
+    /**
+     * @return ArrayCollection
+     */
+    public function getMatings()
+    {
+        return $this->matings;
+    }
+
+    /**
+     * @param ArrayCollection $matings
+     */
+    public function setMatings($matings)
+    {
+        $this->matings = $matings;
+    }
+    
 
     /**
      * Set isAlive
@@ -496,4 +524,64 @@ class Ewe extends Animal
     {
         return $this->exteriorMeasurements;
     }
+
+    /**
+     * Add parent
+     *
+     * @param \AppBundle\Entity\Animal $parent
+     *
+     * @return Ewe
+     */
+    public function addParent(\AppBundle\Entity\Animal $parent)
+    {
+        $this->parents[] = $parent;
+
+        return $this;
+    }
+
+    /**
+     * Remove parent
+     *
+     * @param \AppBundle\Entity\Animal $parent
+     */
+    public function removeParent(\AppBundle\Entity\Animal $parent)
+    {
+        $this->parents->removeElement($parent);
+    }
+
+    /**
+     * Get parents
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getParents()
+    {
+        return $this->parents;
+    }
+
+    /**
+     * Set parentNeuter
+     *
+     * @param \AppBundle\Entity\Neuter $parentNeuter
+     *
+     * @return Ewe
+     */
+    public function setParentNeuter(\AppBundle\Entity\Neuter $parentNeuter = null)
+    {
+        $this->parentNeuter = $parentNeuter;
+
+        return $this;
+    }
+
+    /**
+     * Get parentNeuter
+     *
+     * @return \AppBundle\Entity\Neuter
+     */
+    public function getParentNeuter()
+    {
+        return $this->parentNeuter;
+    }
+
+    
 }

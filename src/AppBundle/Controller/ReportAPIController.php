@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\AppBundle;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\Environment;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Country;
 use AppBundle\Report\PedigreeCertificates;
@@ -51,30 +52,41 @@ class ReportAPIController extends APIController {
     $client = $this->getAuthenticatedUser($request);
     $location = $this->getSelectedLocation($request);
     $content = $this->getContentAsArray($request);
-    $em = $this->getDoctrine()->getEntityManager();
+    $em = $this->getDoctrine()->getManager();
 
     //Validate if given ULNs are correct AND there should at least be one ULN given
     $ulnValidator = new UlnValidator($em, $content, true, $client);
     if(!$ulnValidator->getIsUlnSetValid()) {
       return $ulnValidator->createArrivalJsonErrorResponse();
     }
-
-    //TODO Prettify pdf document from twig view
+    
+    $useProductionReady = true;// $this->getCurrentEnvironment() == Environment::PROD;
+    if($useProductionReady) {
+      $twigFile = 'Report/pedigree_certificates.html.twig';
+    } else {
+      //containing extra unfinished features
+      $twigFile = 'Report/pedigree_certificates_beta.html.twig';
+    }
 
     $pedigreeCertificateData = new PedigreeCertificates($em, $content, $client, $location);
     $folderPath = $this->getParameter('kernel.cache_dir');
     $generatedPdfPath = $pedigreeCertificateData->getFilePath($folderPath);
     $variables = $pedigreeCertificateData->getReports();
-    
-    $html = $this->renderView('Report/pedigree_certificates.html.twig', ['variables' => $variables]);
-    $this->get('knp_snappy.pdf')->generateFromHtml($html, $generatedPdfPath, array('orientation'=>'Landscape',
-        'default-header'=>true));
+    $html = $this->renderView($twigFile, ['variables' => $variables]);
+    $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,
+        array(
+            'orientation'=>'Landscape',
+            'default-header'=>false,
+            'disable-smart-shrinking'=>true,
+            'print-media-type' => true,
+            'margin-top'    => 6,
+            'margin-right'  => 8,
+            'margin-bottom' => 4,
+            'margin-left'   => 8,
+    ));
 
     $s3Service = $this->getStorageService();
-    $url = $s3Service->uploadPdf($generatedPdfPath, $pedigreeCertificateData->getS3Key());
-
-    //Delete file from local cache
-    unlink($generatedPdfPath);
+    $url = $s3Service->uploadPdf($pdfOutput, $pedigreeCertificateData->getS3Key());
 
     return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
   }

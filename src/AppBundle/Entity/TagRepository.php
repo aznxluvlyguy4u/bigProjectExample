@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Validation\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Form\ClickableInterface;
 
@@ -18,7 +19,7 @@ class TagRepository extends BaseRepository {
   public function findOneByString(Client $client, $ulnString)
   {
     //Verify format first
-    if(!Utils::verifyUlnFormat($ulnString)) {
+    if(!Validator::verifyUlnFormat($ulnString)) {
       return null;
     }
     $uln = Utils::getUlnFromString($ulnString);

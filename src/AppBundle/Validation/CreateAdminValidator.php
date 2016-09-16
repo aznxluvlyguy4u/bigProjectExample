@@ -4,6 +4,7 @@ namespace AppBundle\Validation;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Employee;
 use AppBundle\Entity\Person;
 use AppBundle\Output\AccessLevelOverviewOutput;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -20,7 +21,7 @@ class CreateAdminValidator
     const RESPONSE_INVALID_INPUT_FIRST_NAME = "FIRST NAME CANNOT BE EMPTY AND SHOULD ONLY CONTAIN ALPHANUMERIC CHARACTERS";
     const RESPONSE_INVALID_INPUT_LAST_NAME = "LAST NAME CANNOT BE EMPTY AND SHOULD ONLY CONTAIN ALPHANUMERIC CHARACTERS";
     const RESPONSE_INVALID_INPUT_EMAIL = "EMAIL ADDRESS FORMAT IS INCORRECT";
-    const RESPONSE_INPUT_EMAIL_IN_USE = "EMAIL ADDRESS IS ALREADY IN USE";
+    const RESPONSE_INPUT_EMAIL_IN_USE = "EMAIL ADDRESS IS ALREADY IN USE BY ANOTHER ADMIN";
     const RESPONSE_INVALID_ACCESS_LEVEL = "ACCESS LEVEL IS NOT VALID";
 
     const EMPTY_FIRST_NAME = 'EMPTY FIRST NAME';
@@ -34,19 +35,20 @@ class CreateAdminValidator
     const VALID_MESSAGE = 'INPUT IS VALID';
 
     /** @var  boolean */
-    private $isValid;
+    protected $isValid;
 
     /** @var array */
-    private $errors;
+    protected $errors;
 
     /** @var EntityManager */
-    private $em;
+    protected $em;
 
     /**
      * PasswordValidator constructor.
-     * @param array $admins
+     * @param array $profileEditContent
+     * @param EntityManager $em
      */
-    public function __construct(EntityManager $em, $admins)
+    public function __construct(EntityManager $em, $profileEditContent, $runValidator = true)
     {
         //Initialize variables
         $this->errors = array();
@@ -55,68 +57,59 @@ class CreateAdminValidator
         //Set given values
         $this->em = $em;
 
-        //Validate
-        $this->validate($admins);
+        if($runValidator) {
+            $this->validate($profileEditContent);
+        }
 
     }
 
     public function getIsValid() { return $this->isValid; }
 
     /**
-     * @param array $admins
+     * @param ArrayCollection $adminContent
      */
-    private function validate($admins)
+    private function validate($adminContent)
     {
-        foreach ($admins as $admin) {
 
-            $firstName = Utils::getNullCheckedArrayValue(JsonInputConstant::FIRST_NAME, $admin);
-            $this->validateFirstName($firstName);
+        $firstName = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::FIRST_NAME, $adminContent);
+        $this->validateFirstName($firstName);
 
-            $lastName = Utils::getNullCheckedArrayValue(JsonInputConstant::LAST_NAME, $admin);
-            $this->validateLastName($lastName);
+        $lastName = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::LAST_NAME, $adminContent);
+        $this->validateLastName($lastName);
 
-            $emailAddress = Utils::getNullCheckedArrayValue(JsonInputConstant::EMAIL_ADDRESS, $admin);
-            $this->validateEmailAddress($emailAddress);
-            
-            $accessLevel = Utils::getNullCheckedArrayValue(JsonInputConstant::ACCESS_LEVEL, $admin);
-            $this->validateAccessLevelType($accessLevel);
-        }
+        $emailAddress = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::EMAIL_ADDRESS, $adminContent);
+        $this->validateEmailAddress($emailAddress);
+
+        $accessLevel = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ACCESS_LEVEL, $adminContent);
+        $this->validateAccessLevelType($accessLevel);
     }
     
     /**
      * @param string $firstName
      */
-    private function validateFirstName($firstName)
+    protected function validateFirstName($firstName)
     {
         if($firstName == null || $firstName == "" || $firstName == " ") {
             $this->isValid = false;
             $this->errors[self::EMPTY_FIRST_NAME] = self::RESPONSE_INVALID_INPUT_FIRST_NAME;
-
-        } elseif(!ctype_alnum($firstName)) {
-            $this->isValid = false;
-            $this->errors[$firstName] = self::RESPONSE_INVALID_INPUT_FIRST_NAME;
         }
     }
 
     /**
      * @param string $lastName
      */
-    private function validateLastName($lastName)
+    protected function validateLastName($lastName)
     {
         if($lastName == null || $lastName == "" || $lastName == " ") {
             $this->isValid = false;
             $this->errors[self::EMPTY_LAST_NAME] = self::RESPONSE_INVALID_INPUT_LAST_NAME;
-
-        } elseif(!ctype_alnum($lastName)) {
-            $this->isValid = false;
-            $this->errors[$lastName] = self::RESPONSE_INVALID_INPUT_LAST_NAME;
         }
     }
 
     /**
      * @param string $emailAddress
      */
-    private function validateEmailAddress($emailAddress)
+    protected function validateEmailAddress($emailAddress, $personId = null)
     {
         if($emailAddress == null || $emailAddress == "" || $emailAddress == " ") {
             $this->isValid = false;
@@ -127,10 +120,33 @@ class CreateAdminValidator
             $this->errors[$emailAddress] = self::RESPONSE_INVALID_INPUT_EMAIL;
 
         } else {
-            $persons = $this->em->getRepository(Person::class)->findBy(['emailAddress' => $emailAddress]);
-            if(sizeof($persons) > 0) {
-                $this->isValid = false;
-                $this->errors[$emailAddress] = self::RESPONSE_INPUT_EMAIL_IN_USE;
+            $repository = $this->em->getRepository(Employee::class);
+
+            /** @var Person $person */
+            $person = $repository->findOneBy(['emailAddress' => $emailAddress, 'isActive' => true]);
+            
+            if($person != null) {
+
+                if($personId != null) { $hasOldEmailAddress = true; }
+                                 else { $hasOldEmailAddress = false; }
+
+                if($hasOldEmailAddress) {
+                    /** @var Person $foundPerson */
+                    $foundPerson = $repository->findOneBy(['personId' => $personId]);
+
+                    if($foundPerson != null) { $oldEmailAddress = $foundPerson->getEmailAddress(); }
+                                        else { $oldEmailAddress = null; }
+
+                    if($emailAddress != $oldEmailAddress) {
+                        $this->isValid = false;
+                        $this->errors[$emailAddress] = self::RESPONSE_INPUT_EMAIL_IN_USE;
+                    }
+
+                } else {
+                    $this->isValid = false;
+                    $this->errors[$emailAddress] = self::RESPONSE_INPUT_EMAIL_IN_USE;    
+                }
+                
             }
         }
     }
@@ -138,7 +154,7 @@ class CreateAdminValidator
     /**
      * @param string $accessLevel
      */
-    private function validateAccessLevelType($accessLevel)
+    protected function validateAccessLevelType($accessLevel)
     {
         $accessLevelTypes = AccessLevelOverviewOutput::getTypes();
 
@@ -178,7 +194,7 @@ class CreateAdminValidator
     /**
      * @return ArrayCollection
      */
-    public static function getInputFields()
+    protected static function getInputFields()
     {
         $inputFields = new ArrayCollection();
 

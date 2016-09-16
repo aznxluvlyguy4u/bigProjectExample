@@ -2,15 +2,19 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Entity\LocationHealthInspection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class Employee
  * @ORM\Entity(repositoryClass="AppBundle\Entity\EmployeeRepository")
  * @package AppBundle\Entity
+ * @ExclusionPolicy("all")
  */
 class Employee extends Person
 {
@@ -30,6 +34,7 @@ class Employee extends Person
      * @Assert\NotBlank
      * @ORM\Column(type="string")
      * @JMS\Type("string")
+     * @Expose
      */
     private $accessLevel;
 
@@ -40,6 +45,22 @@ class Employee extends Person
      * @JMS\Type("array")
      */
     private $ghostTokens;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="LocationHealthInspection", mappedBy="authorizedBy")
+     * @JMS\Type("AppBundle\Entity\LocationHealthInspection")
+     */
+    private $healthInspections;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="CompanyNote", mappedBy="creator")
+     * @JMS\Type("array")
+     */
+    private $notes;
 
     /**
      * Employee constructor.
@@ -76,16 +97,6 @@ class Employee extends Person
     }
 
     /**
-     * Get accessToken
-     *
-     * @return string
-     */
-    public function getAccessToken()
-    {
-        return $this->accessToken;
-    }
-
-    /**
      * Set objectType
      *
      * @param string $objectType
@@ -107,20 +118,6 @@ class Employee extends Person
     public function getObjectType()
     {
         return $this->objectType;
-    }
-
-    /**
-     * Set accessToken
-     *
-     * @param string $accessToken
-     *
-     * @return Employee
-     */
-    public function setAccessToken($accessToken)
-    {
-        $this->accessToken = $accessToken;
-
-        return $this;
     }
 
     /**
@@ -155,9 +152,6 @@ class Employee extends Person
         $this->ghostTokens = $ghostTokens;
     }
 
-    
-
-
     /**
      * Add ghostToken
      *
@@ -180,5 +174,37 @@ class Employee extends Person
     public function removeGhostToken(\AppBundle\Entity\Token $ghostToken)
     {
         $this->ghostTokens->removeElement($ghostToken);
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getHealthInspections()
+    {
+        return $this->healthInspections;
+    }
+
+    /**
+     * @param ArrayCollection $healthInspections
+     */
+    public function setHealthInspections($healthInspections)
+    {
+        $this->healthInspections = $healthInspections;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getNotes()
+    {
+        return $this->notes;
+    }
+
+    /**
+     * @param ArrayCollection $notes
+     */
+    public function setNotes($notes)
+    {
+        $this->notes = $notes;
     }
 }

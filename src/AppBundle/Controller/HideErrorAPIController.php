@@ -3,6 +3,8 @@
 namespace AppBundle\Controller;
 
 
+use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\DeclareNsfoBase;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -22,7 +24,7 @@ class HideErrorAPIController extends APIController implements HideErrorAPIContro
 
     /**
      * Hide an error a user does not want to see anymore,
-     * by updating the existing DeclareArrivalResponse's isRemovedByUser to true.
+     * by updating the existing DeclareBase's isRemovedByUser to true.
      *
      * @ApiDoc(
      *   requirements={
@@ -34,7 +36,7 @@ class HideErrorAPIController extends APIController implements HideErrorAPIContro
      *     }
      *   },
      *   resource = true,
-     *   description = "hide an error response for any declaration",
+     *   description = "hide an error response for any IR-declaration",
      *   input = "AppBundle\Component\HttpFoundation\JsonResponse",
      *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
      * )
@@ -62,5 +64,47 @@ class HideErrorAPIController extends APIController implements HideErrorAPIContro
         }
 
         return new JsonResponse(array('code' => 428, "message" => "fill in message number"), 428);
+    }
+
+
+    /**
+     * Hide an error a user does not want to see anymore,
+     * by updating the existing DeclareNsfoBase's isRemovedByUser to true.
+     *
+     * @ApiDoc(
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "hide an error response for any non-IR-declaration",
+     *   input = "AppBundle\Component\HttpFoundation\JsonResponse",
+     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("-nsfo/{messageId}")
+     * @Method("PUT")
+     */
+    public function updateNsfoDeclarationError(Request $request, $messageId) {
+        $content = $this->getContentAsArray($request);
+        $isHidden = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::IS_HIDDEN, $content);
+
+        if($messageId !== null && $isHidden !== null) {
+
+            /** @var DeclareNsfoBase $nsfoMessage */
+            $nsfoMessage = $this->getDoctrine()->getRepository(DeclareNsfoBase::class)->findOneByMessageId($messageId);
+
+            $nsfoMessage->setIsHidden($isHidden);
+            $this->persistAndFlush($nsfoMessage);
+
+            return new JsonResponse(["code"=>200, "message"=>"saved"], 200);
+        }
+
+        return new JsonResponse(['code' => 428, "message" => "fill in messageId and hidden boolean"], 428);
     }
 }

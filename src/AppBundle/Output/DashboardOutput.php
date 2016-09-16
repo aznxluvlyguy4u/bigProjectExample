@@ -3,9 +3,11 @@
 namespace AppBundle\Output;
 use AppBundle\Entity\Client;
 use AppBundle\Component\Count;
+use AppBundle\Entity\Content;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Enumerator\RequestTypeNonIR;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 
@@ -29,8 +31,11 @@ class DashboardOutput extends Output
 
         self:: setUbnAndLocationHealthValues($em, $location);
 
+        $repository = $em->getRepository(Content::class);
+        $cms = $repository->getCMS();
+
         $result = array(
-                  "introduction" => "Welkom! Geniet van ons nieuw systeem.",
+                  "introduction" =>  $cms->getDashBoardIntroductionText(),
                   "ubn" => self::$ubn,
                   "health_status" =>
                   array(
@@ -80,8 +85,8 @@ class DashboardOutput extends Output
                   ),
                   "mate" =>
                   array(
-                      "date_last_declaration" => "",
-                      "error_count" => ""
+                      "date_last_declaration" => $declarationLogDate->get(RequestTypeNonIR::MATE),
+                      "error_count" => $errorCounts->get(RequestTypeNonIR::MATE)
                   ),
                   "loss" =>
                   array(

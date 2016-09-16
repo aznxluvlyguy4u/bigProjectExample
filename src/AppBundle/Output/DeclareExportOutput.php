@@ -47,7 +47,8 @@ class DeclareExportOutput
             ),
             "location"=>
             array("id" => $export->getLocation()->getId(),
-                  "ubn" => $export->getLocation()->getUbn())
+                  "ubn" => $export->getLocation()->getUbn()),
+            "action_by" => $export->getActionBy()
         );
 
         return $result;

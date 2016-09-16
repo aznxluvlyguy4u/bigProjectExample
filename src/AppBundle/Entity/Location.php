@@ -2,11 +2,13 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Component\Utils;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
+use AppBundle\Entity\LocationHealthInspection;
 use AppBundle\Entity\DeclareArrival;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
@@ -28,6 +30,15 @@ class Location
    * @Expose
    */
   protected $id;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $locationId;
 
   /**
    * @var string
@@ -121,8 +132,28 @@ class Location
   protected $flags;
 
   /**
+   * @var ArrayCollection
+   *
+   * @JMS\Type("AppBundle\Entity\Mate")
+   * @ORM\OneToMany(targetEntity="Mate", mappedBy="location", cascade={"persist"})
+   * @ORM\OrderBy({"startDate" = "ASC"})
+   */
+  protected $matings;
+
+
+  /**
+   * @var ArrayCollection
+   *
+   * @JMS\Type("AppBundle\Entity\DeclareWeight")
+   * @ORM\OneToMany(targetEntity="DeclareWeight", mappedBy="location", cascade={"persist"})
+   * @ORM\OrderBy({"measurementDate" = "ASC"})
+   */
+  protected $declareWeights;
+  
+
+  /**
    * @Assert\NotBlank
-   * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"})
+   * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"}, fetch="EAGER")
    * @JMS\Type("AppBundle\Entity\Company")
    */
   protected $company;
@@ -167,9 +198,26 @@ class Location
    */
   private $animalResidenceHistory;
 
-  /*
-  * Constructor
-  */
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="LocationHealthInspection", mappedBy="location")
+     * @JMS\Type("AppBundle\Entity\LocationHealthInspection")
+     */
+    private $inspections;
+
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", options={"default":true})
+     * @JMS\Type("boolean")
+     * @Expose
+     */
+    private $isActive;
+
+    /**
+    * Constructor
+    */
   public function __construct()
   {
     $this->arrivals = new ArrayCollection();
@@ -182,9 +230,28 @@ class Location
     $this->tagTransfers = new ArrayCollection();
     $this->flags = new ArrayCollection();
     $this->revokes = new ArrayCollection();
+    $this->matings = new ArrayCollection();
+    $this->declareWeights = new ArrayCollection();
     $this->healthMessages = new ArrayCollection();
     $this->animalResidenceHistory = new ArrayCollection();
+    $this->setLocationId(Utils::generateTokenCode());
   }
+
+    /**
+     * @return string
+     */
+    public function getLocationId()
+    {
+        return $this->locationId;
+    }
+
+    /**
+     * @param string $locationId
+     */
+    public function setLocationId($locationId)
+    {
+        $this->locationId = $locationId;
+    }
 
   /**
    * Add arrival
@@ -611,6 +678,73 @@ class Location
         return $this->revokes;
     }
 
+
+    /**
+     * Add mate
+     *
+     * @param Mate $mate
+     *
+     * @return Location
+     */
+    public function addMate(Mate $mate)
+    {
+      $this->matings[] = $mate;
+
+      return $this;
+    }
+
+    /**
+     * Remove mate
+     *
+     * @param Mate $mate
+     */
+    public function removeMate(Mate $mate)
+    {
+      $this->matings->removeElement($mate);
+    }
+
+    /**
+     * Get matings
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getMatings()
+    {
+      return $this->matings;
+    }
+
+    /**
+     * @return DeclareWeight
+     */
+    public function getDeclareWeights()
+    {
+      return $this->declareWeights;
+    }
+
+  /**
+   * Add DeclareWeight
+   *
+   * @param DeclareWeight $declareWeight
+   *
+   * @return Location
+   */
+  public function addDeclareWeight(DeclareWeight $declareWeight)
+  {
+    $this->declareWeights[] = $declareWeight;
+
+    return $this;
+  }
+
+  /**
+   * Remove DeclareWeight
+   *
+   * @param DeclareWeight $declareWeight
+   */
+  public function removeDeclareWeight(DeclareWeight $declareWeight)
+  {
+    $this->declareWeights->removeElement($declareWeight);
+  }
+
     /**
      * Set locationHolder
      *
@@ -725,4 +859,38 @@ class Location
     {
         return $this->animalResidenceHistory;
     }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getInspections()
+    {
+        return $this->inspections;
+    }
+
+    /**
+     * @param ArrayCollection $inspections
+     */
+    public function setInspections($inspections)
+    {
+        $this->inspections = $inspections;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getIsActive()
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param mixed $isActive
+     */
+    public function setIsActive($isActive)
+    {
+        $this->isActive = $isActive;
+    }
+
+
 }

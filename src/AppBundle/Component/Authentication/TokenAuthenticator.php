@@ -2,9 +2,14 @@
 
 namespace AppBundle\Component\Authentication;
 
+use AppBundle\Entity\Client;
+use AppBundle\Entity\Employee;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\Token;
 use AppBundle\Enumerator\TokenType;
+use AppBundle\Util\Validator;
 use Doctrine\ORM\EntityManager;
+use Symfony\Component\BrowserKit\Tests\ClientTest;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -148,16 +153,29 @@ class TokenAuthenticator extends AbstractGuardAuthenticator  {
 
     // if null, authentication will fail
     // if a User object, checkCredentials() is called
+    /** @var Token $accessToken */
     $accessToken = $this->entityManager->getRepository(Token::class)
         ->findOneBy(array('code' => $accessTokenCode));
 
     $user = null;
     if ($accessToken != null) {
       $user = $accessToken->getOwner();
+
+      //Block inactive users
+      /** @var Person $user */
+      if($user != null) {
+        if(!$user->getIsActive()){
+          $user = null;
+        }
+      }
+      
     }
     //Also verify the ghostToken and return null, if ghostToken is not valid
+    //default
+    $ghostToken = null;
     if (array_key_exists('ghostToken', $credentials) && $accessToken != null) {
       $ghostTokenCode = $credentials['ghostToken'];
+      /** @var Token $ghostToken */
       $ghostToken = $this->entityManager->getRepository(Token::class)
           ->findOneBy(array('code' => $ghostTokenCode));
 
@@ -166,8 +184,21 @@ class TokenAuthenticator extends AbstractGuardAuthenticator  {
       } else {
         if ($ghostToken->getType() != TokenType::GHOST || !$ghostToken->getIsVerified()) {
           $user = null; //deny access
-        }
+        }        
       }
+    }
+
+    //Verify is user is logging in with an active company
+    if($user instanceof Client) {
+        $companies = $user->getCompanies();
+
+        if ($companies) {
+            foreach ($companies as $company) {
+                if (!$company->isActive()) {
+                    $user = null;
+                }
+            }
+        }
     }
 
     return $user;

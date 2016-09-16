@@ -3,6 +3,8 @@
 namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
 
 /**
  * Class AnimalResidenceRepository
@@ -26,4 +28,66 @@ class AnimalResidenceRepository extends BaseRepository {
         }
     }
 
+
+    /**
+     * @param Location $location
+     * @param Animal $animal
+     * @return AnimalResidence|null
+     */
+    public function getLastResidenceOnLocation($location, $animal)
+    {
+        if(! ($location instanceof Location && $animal instanceof Animal) ) {
+            return null;
+        }
+
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('location', $location))
+            ->andWhere(Criteria::expr()->eq('animal', $animal))
+            ->orderBy(['startDate' => Criteria::DESC, 'logDate' => Criteria::DESC])
+            ->setMaxResults(1);
+
+        /** @var ArrayCollection $results */
+        $results = $this->getEntityManager()->getRepository(AnimalResidence::class)
+            ->matching($criteria);
+
+        if($results->count() > 0) {
+            $lastResidence = $results->get(0);
+        } else {
+            $lastResidence = null;
+        }
+
+        return $lastResidence;
+    }
+
+
+    /**
+     * @param Location $location
+     * @param Animal $animal
+     * @return AnimalResidence|null
+     */
+    public function getLastOpenResidenceOnLocation($location, $animal)
+    {
+        if(! ($location instanceof Location && $animal instanceof Animal) ) {
+            return null;
+        }
+
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('location', $location))
+            ->andWhere(Criteria::expr()->eq('animal', $animal))
+            ->andWhere(Criteria::expr()->isNull('endDate'))
+            ->orderBy(['startDate' => Criteria::DESC, 'logDate' => Criteria::DESC])
+            ->setMaxResults(1);
+
+        /** @var ArrayCollection $results */
+        $results = $this->getEntityManager()->getRepository(AnimalResidence::class)
+            ->matching($criteria);
+
+        if($results->count() > 0) {
+            $lastResidence = $results->get(0);
+        } else {
+            $lastResidence = null;
+        }
+
+        return $lastResidence;
+    }
 }

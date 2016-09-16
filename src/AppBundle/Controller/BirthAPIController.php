@@ -191,6 +191,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
     $client = $this->getAuthenticatedUser($request);
     $location = $this->getSelectedLocation($request);
+    $loggedInUser = $this->getLoggedInUser($request);
 
     foreach($children as $child) {
 
@@ -199,7 +200,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         if($child['is_alive'] == true) { //DeclareBirth with sending a request to IenR
             //Convert the array into an object and add the mandatory values retrieved from the database
-            $declareBirthObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $contentPerChild, $client, $location);
+            $declareBirthObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $contentPerChild, $client, $loggedInUser, $location);
 
             //Send it to the queue and persist/update any changed state to the database
             $messageArray = $this->sendMessageObjectToQueue($declareBirthObject);
@@ -248,6 +249,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
       $content = $this->getContentAsArray($request);
       $client = $this->getAuthenticatedUser($request);
+      $loggedInUser = $this->getLoggedInUser($request);
       $location = $this->getSelectedLocation($request);
 
       $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
@@ -282,7 +284,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
       //Convert the array into an object and add the mandatory values retrieved from the database
       $declareBirthUpdate = $this->buildEditMessageObject(RequestType::DECLARE_BIRTH_ENTITY,
-          $content, $client, $location);
+          $content, $client, $loggedInUser, $location);
 
       //First Persist object to Database, before sending it to the queue
       $this->persist($declareBirthUpdate);

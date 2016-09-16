@@ -99,6 +99,14 @@ class RetrieveTagsResponse
     private $tagsRetrieved;
 
     /**
+     * @var Person
+     *
+     * @ORM\ManyToOne(targetEntity="Person")
+     * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
+     */
+    private $actionBy;
+
+    /**
      * RetrieveTagsResponse constructor.
      */
     public function __construct() {
@@ -339,5 +347,21 @@ class RetrieveTagsResponse
     public function getSuccessIndicator()
     {
         return $this->successIndicator;
+    }
+
+    /**
+     * @return Client|Employee
+     */
+    public function getActionBy()
+    {
+        return $this->actionBy;
+    }
+
+    /**
+     * @param Person $actionBy
+     */
+    public function setActionBy($actionBy)
+    {
+        $this->actionBy = $actionBy;
     }
 }

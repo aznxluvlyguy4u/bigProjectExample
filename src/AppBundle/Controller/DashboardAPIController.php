@@ -6,6 +6,7 @@ use AppBundle\Component\Count;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\DeclareBaseRepository;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\CompanyProfileOutput;
 use AppBundle\Output\DashboardOutput;
@@ -34,8 +35,10 @@ class DashboardAPIController extends APIController {
     $location = $this->getSelectedLocation($request);
 
     $errorMessageForDateIsNull = "";
-    $declarationLogDate = $this->getDoctrine()->getRepository(Constant::DECLARE_BASE_REPOSITORY)
-        ->getLatestLogDatesForDashboardDeclarationsPerLocation($location, $errorMessageForDateIsNull);
+    
+    /** @var DeclareBaseRepository $declareBaseRepository */
+    $declareBaseRepository = $this->getDoctrine()->getRepository(Constant::DECLARE_BASE_REPOSITORY);
+    $declarationLogDate = $declareBaseRepository->getLatestLogDatesForDashboardDeclarationsPerLocation($location, $errorMessageForDateIsNull);
 
     $em = $this->getDoctrine()->getEntityManager();
     

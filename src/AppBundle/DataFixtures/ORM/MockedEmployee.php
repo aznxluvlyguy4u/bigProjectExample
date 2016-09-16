@@ -3,6 +3,7 @@
 namespace AppBundle\DataFixtures\ORM;
 
 use AppBundle\Entity\Employee;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Setting\DataFixtureSetting;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
@@ -47,7 +48,7 @@ class MockedEmployee implements FixtureInterface, ContainerAwareInterface, Order
     $encoder = $this->container->get('security.password_encoder');
 
     //Create mocked data
-    self::$mockedEmployee = new Employee();
+    self::$mockedEmployee = new Employee(AccessLevelType::SUPER_ADMIN);
     self::$mockedEmployee->setFirstName("em");
     self::$mockedEmployee->setLastName("ployee");
     self::$mockedEmployee->setEmailAddress("boer@jongensvantechniek.nl");

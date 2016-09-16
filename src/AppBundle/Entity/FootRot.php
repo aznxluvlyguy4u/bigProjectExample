@@ -91,6 +91,15 @@ class FootRot
      */
     private $isHidden;
 
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     * @Expose
+     */
+    private $isManualEdit;
+
     /**
      * FootRot constructor.
      */
@@ -98,6 +107,7 @@ class FootRot
     {
         $this->logDate = new DateTime();
         $this->isHidden = false;
+        $this->isManualEdit = false;
 
         $this->status = $status;
         $this->endDate = $endDate;
@@ -306,4 +316,24 @@ class FootRot
     {
         return $this->locationHealth;
     }
+
+    /**
+     * @return boolean
+     */
+    public function isIsManualEdit()
+    {
+        return $this->isManualEdit;
+    }
+
+    /**
+     * @param boolean $isManualEdit
+     */
+    public function setIsManualEdit($isManualEdit)
+    {
+        $this->isManualEdit = $isManualEdit;
+    }
+
+
+
+
 }

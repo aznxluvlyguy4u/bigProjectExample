@@ -49,9 +49,9 @@ class CompanyProfile
         $address->setCity(strtoupper($addressArray['city']));
         $address->setState($addressArray['state']);
 
-        $client->setFirstName($contactPersonArray['first_name']);
-        $client->setLastName($contactPersonArray['last_name']);
-        $client->setCellphoneNumber($contactPersonArray['cellphone_number']);
+        $company->getOwner()->setFirstName($contactPersonArray['first_name']);
+        $company->getOwner()->setLastName($contactPersonArray['last_name']);
+        $company->getOwner()->setCellphoneNumber($contactPersonArray['cellphone_number']);
 
         $veterinarianArray = $content->get('veterinarian');
         $company->setVeterinarianDapNumber($veterinarianArray['dap_number']);

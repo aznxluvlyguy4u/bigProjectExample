@@ -33,14 +33,12 @@ class AdminOverviewOutput
             return null;
         }
 
-        $res = array("id" => $admin->getId(),
+        $res = array(
+            "person_id" => $admin->getPersonId(),
             "prefix" => $admin->getPrefix(),
             "first_name" => $admin->getFirstName(),
             "last_name" => $admin->getLastName(),
             "email_address" => $admin->getEmailAddress(),
-            "is_active" => $admin->getIsActive(),
-            "username" => $admin->getUsername(),
-            "cellphone_number" => $admin->getCellphoneNumber(),
             "access_level" => $admin->getAccessLevel()
         );
 

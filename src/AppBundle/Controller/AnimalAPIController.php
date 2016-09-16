@@ -5,11 +5,8 @@ namespace AppBundle\Controller;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Employee;
 use AppBundle\FormInput\AnimalDetails;
-use AppBundle\FormInput\WeightMeasurements;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
-use AppBundle\Output\WeightMeasurementsOutput;
-use AppBundle\Validation\WeightValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -180,10 +177,11 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       //Get content to array
       $content = $this->getContentAsArray($request);
       $client = $this->getAuthenticatedUser($request);
+      $loggedInUser = $this->getLoggedInUser($request);
       $location = $this->getSelectedLocation($request);
 
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $location);
+      $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $loggedInUser, $location);
 
       //First Persist object to Database, before sending it to the queue
       $this->persist($messageObject);
@@ -219,8 +217,10 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function createRetrieveAnimalsForAllLocations(Request $request) {
     {
+      $loggedInUser = $this->getLoggedInUser($request);
+      
       //Any logged in user can sync all animals
-      $message = $this->syncAnimalsForAllLocations()[Constant::MESSAGE_NAMESPACE];
+      $message = $this->syncAnimalsForAllLocations($loggedInUser)[Constant::MESSAGE_NAMESPACE];
 
       return new JsonResponse(array(Constant::RESULT_NAMESPACE => $message), 200);
     }
@@ -252,10 +252,11 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     //Get content to array
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
+    $loggedInUser = $this->getLoggedInUser($request);
     $location = $this->getSelectedLocation($request);
 
     //Convert the array into an object and add the mandatory values retrieved from the database
-    $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY, $content, $client, $location);
+    $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY, $content, $client, $loggedInUser, $location);
 
     //First Persist object to Database, before sending it to the queue
     $this->persist($messageObject);
@@ -337,7 +338,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
 
     $content = $this->getContentAsArray($request);
 
-    //TODO for this phase only the bare essential data can be edited: pedigree, animalOrderNumber
+    //TODO for this phase editing AnimalDetails is deactivated
     //TODO keep history of changes
 
     //Persist updated changes and return the updated values
@@ -349,96 +350,5 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
   }
-
-  /**
-   * Get the last weight measurements of all the animals in a clients livestock.
-   *
-   * @ApiDoc(
-   *   requirements={
-   *     {
-   *       "name"="AccessToken",
-   *       "dataType"="string",
-   *       "requirement"="",
-   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-   *     }
-   *   },
-   *   resource = true,
-   *   description = "Get the last weight measurements of all the animals in a clients livestock",
-   *   output = "AppBundle\Entity\Animal"
-   * )
-   * @param Request $request the request object
-   * @return JsonResponse
-   * @Route("-weights")
-   * @Method("GET")
-   */
-  public function getLastWeightMeasurements(Request $request)
-  {
-    $client = $client = $this->getAuthenticatedUser($request);
-    $location = $this->getSelectedLocation($request);
-    $animals = $this->getDoctrine()
-        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($location);
-
-    $minimizedOutput = WeightMeasurementsOutput::createForAnimals($animals);
-
-    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
-  }
-
-  /**
-   *
-   * Create new weight measurements for the given animals.
-   *
-   * @ApiDoc(
-   *   requirements={
-   *     {
-   *       "name"="AccessToken",
-   *       "dataType"="string",
-   *       "requirement"="",
-   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-   *     }
-   *   },
-   *   resource = true,
-   *   description = "Create new weight measurements for the given animals",
-   *   input = "AppBundle\Entity\Animals",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
-   * )
-   *
-   * @param Request $request the request object
-   * @return jsonResponse
-   * @Route("-weights")
-   * @Method("POST")
-   */
-  public function createWeightMeasurements(Request $request) {
-
-    $content = $this->getContentAsArray($request);
-
-    //The ULN's are not validated because in the frontend the user is only able the select the animals given by the API
-
-    //Validate password format
-    $weightValidator = new WeightValidator($content);
-    if(!$weightValidator->getAreWeightsValid()) {
-      return $weightValidator->createJsonErrorResponse();
-    }
-
-    $location = $this->getSelectedLocation($request);
-    $livestockAnimals = $this->getDoctrine()
-        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($location);
-
-    //Persist updated changes and return the updated values
-    $manager = $this->getDoctrine()->getManager();
-    $objects = WeightMeasurements::createAndPersist($content, $livestockAnimals, $manager);
-    $updatedAnimals = $objects[Constant::ANIMALS_NAMESPACE];
-
-    //TODO verify with frontend: Return output for all animals, or only animals with new weight measurements.
-    //TODO Perhaps the boolean below could also be set in het jsonInput. Or maybe just return an "OK" string.
-    $outputOnlyUpdatedAnimals = true;
-
-    if($outputOnlyUpdatedAnimals) {
-      $minimizedOutput = WeightMeasurementsOutput::createForAnimals($updatedAnimals);
-
-    } else {  //Output for all animals
-      $minimizedOutput = WeightMeasurementsOutput::createForAnimals($livestockAnimals);
-    }
-
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
-  }
+  
 }

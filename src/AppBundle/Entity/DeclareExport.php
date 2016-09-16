@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Component\Utils;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -172,6 +173,8 @@ class DeclareExport extends DeclareBase
                 $this->pedigreeCountryCode = $animal->getPedigreeCountryCode();
                 $this->pedigreeNumber = $animal->getPedigreeNumber();
             }
+
+            $this->setAnimalObjectType(Utils::getClassName($animal));
         }
 
         return $this;

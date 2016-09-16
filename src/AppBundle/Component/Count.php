@@ -4,6 +4,8 @@ namespace AppBundle\Component;
 
 
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Company;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -12,8 +14,11 @@ use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
+use AppBundle\Entity\DeclareMateRepository;
+use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Mate;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
@@ -24,8 +29,10 @@ use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Enumerator\RequestTypeNonIR;
 use AppBundle\Enumerator\TagStateType;
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Validator\Constraints\DateTime;
 
 
 /**
@@ -60,6 +67,7 @@ class Count
         $errorCounts->set(RequestType::DECLARE_DEPART, Count::getErrorCountDepartsAndExportsPerLocation($location));
         $errorCounts->set(RequestType::DECLARE_LOSS, Count::getErrorCountLossesLocation($location));
         $errorCounts->set(RequestType::DECLARE_BIRTH, Count::getErrorCountBirthsLocation($location));
+        $errorCounts->set(RequestTypeNonIR::MATE, Count::getErrorCountMatingsLocation($location));
 
         return $errorCounts;
     }
@@ -305,6 +313,42 @@ class Count
         return $count;
     }
 
+
+    /**
+     * @param Client $client
+     * @return int
+     */
+    public static function getErrorCountMatings(Client $client)
+    {
+        $count = 0;
+
+        foreach($client->getCompanies() as $company){
+            foreach($company->getLocations() as $location){
+                self::getErrorCountMatingsLocation($location);
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * @param Location $location
+     * @return int
+     */
+    public static function getErrorCountMatingsLocation(Location $location)
+    {
+        $count = 0;
+
+        foreach($location->getMatings() as $mate){
+            if(self::countNsfoAsErrorResponse($mate)) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+    
+
     /**
      * @param Client $client
      * @return int
@@ -344,6 +388,21 @@ class Count
 
         return false;
     }
+
+
+    /**
+     * @param Mate|DeclareNsfoBase $declaration
+     * @return bool
+     */
+    private static function countNsfoAsErrorResponse($declaration)
+    {
+        if($declaration->getRequestState() == RequestStateType::FAILED && !$declaration->getIsHidden()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
 
     /**
      * Return an ArrayCollection with keys:
@@ -507,6 +566,128 @@ class Count
         $count->set(LiveStockType::ADULT, $nonPedigreeAdults + $pedigreeAdults);
         $count->set(LiveStockType::LAMB, $nonPedigreeLambs + $pedigreeLambs);
         $count->set(LiveStockType::TOTAL, $nonPedigreeTotal + $pedigreeTotal);
+
+        return $count;
+    }
+
+    /**
+     * Return an ArrayCollection with keys:
+     * - ram
+     * - ewe
+     * - total
+     * having an integer value for the amount of animals in that category.
+     *
+     * @param Company $company
+     * @return ArrayCollection
+     */
+    public static function getCompanyLiveStockCount(Company $company)
+    {
+
+        //Settings
+        $isAlive = true;
+        $isDepartedOption = false;
+        $isExportedOption = false;
+        $countTransferring = false;
+
+        if($countTransferring) {
+            $transferState = AnimalTransferStatus::TRANSFERRING;
+        } else {
+            $transferState = AnimalTransferStatus::NULL;
+        }
+
+        //Initialize counters
+        $ramUnderSix = 0;
+        $ramBetweenSixAndTwelve = 0;
+        $ramOverTwelve = 0;
+
+        $eweUnderSix = 0;
+        $eweBetweenSixAndTwelve = 0;
+        $eweOverTwelve = 0;
+
+        $neuterUnderSix = 0;
+        $neuterBetweenSixAndTwelve = 0;
+        $neuterOverTwelve = 0;
+
+
+        foreach($company->getLocations() as $location) {
+            foreach($location->getAnimals() as $animal) {
+
+                /**
+                 * @var Animal $animal
+                 */
+
+                $isOwnedAnimal = $animal->getIsAlive() == $isAlive
+                    && $animal->getIsExportAnimal() == $isExportedOption
+                    && $animal->getIsDepartedAnimal() == $isDepartedOption
+                    && ($animal->getTransferState() == AnimalTransferStatus::NULL
+                        || $animal->getTransferState() == $transferState);
+
+                $dateOfBirth = $animal->getDateOfBirth();
+
+                // TODO Change Gender when switching to CLASS based distinction
+                $gender = $animal->getGender();
+
+                $now = new \DateTime();
+                $diff = $now->diff($dateOfBirth);
+
+                if($isOwnedAnimal) {
+                    if($gender == 'MALE') {
+                        if($diff->y == 0 && $diff->m < 6) {
+                           $ramUnderSix++;
+                        }
+                        if($diff->y == 0 && ($diff->m > 6 && $diff->m < 12)) {
+                           $ramBetweenSixAndTwelve++;
+                        }
+                        if($diff->y > 0) {
+                           $ramOverTwelve++;
+                        }
+                    }
+                    if($gender == 'FEMALE') {
+                        if($diff->y == 0 && $diff->m < 6) {
+                            $eweUnderSix++;
+                        }
+                        if($diff->y == 0 && ($diff->m > 6 && $diff->m < 12)) {
+                            $eweBetweenSixAndTwelve++;
+                        }
+                        if($diff->y > 0) {
+                            $eweOverTwelve++;
+                        }
+                    }
+                    if($gender == 'NEUTER') {
+                        if($diff->y == 0 && $diff->m < 6) {
+                            $neuterUnderSix++;
+                        }
+                        if($diff->y == 0 && ($diff->m > 6 && $diff->m < 12)) {
+                            $neuterBetweenSixAndTwelve++;
+                        }
+                        if($diff->y > 0) {
+                            $neuterOverTwelve++;
+                        }
+                    }
+                }
+
+            }
+        }
+
+        $ramTotal = $ramUnderSix + $ramBetweenSixAndTwelve + $ramOverTwelve;
+        $eweTotal = $eweUnderSix + $eweBetweenSixAndTwelve + $eweOverTwelve;
+        $neuterTotal = $neuterUnderSix + $neuterBetweenSixAndTwelve + $neuterOverTwelve;
+
+        $count = new ArrayCollection();
+        $count->set("RAM_TOTAL", $ramTotal);
+        $count->set("RAM_UNDER_SIX", $ramUnderSix);
+        $count->set("RAM_BETWEEN_SIX_AND_TWELVE", $ramBetweenSixAndTwelve);
+        $count->set("RAM_OVER_TWELVE", $ramOverTwelve);
+
+        $count->set("EWE_TOTAL", $eweTotal);
+        $count->set("EWE_UNDER_SIX", $eweUnderSix);
+        $count->set("EWE_BETWEEN_SIX_AND_TWELVE", $eweBetweenSixAndTwelve);
+        $count->set("EWE_OVER_TWELVE", $eweOverTwelve);
+
+        $count->set("NEUTER_TOTAL", $neuterTotal);
+        $count->set("NEUTER_UNDER_SIX", $neuterUnderSix);
+        $count->set("NEUTER_BETWEEN_SIX_AND_TWELVE", $neuterBetweenSixAndTwelve);
+        $count->set("NEUTER_OVER_TWELVE", $neuterOverTwelve);
 
         return $count;
     }

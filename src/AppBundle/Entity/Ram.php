@@ -24,7 +24,7 @@ class Ram extends Animal
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="parentFather")
      * @JMS\Type("AppBundle\Entity\Ram")
      */
-     protected $children;
+    private $children;
 
     /**
      * @var string
@@ -32,6 +32,7 @@ class Ram extends Animal
      * @Assert\NotBlank
      * @ORM\Column(type="string")
      * @JMS\Type("string")
+     * 
      */
      private $objectType;
 
@@ -41,7 +42,15 @@ class Ram extends Animal
      * @ORM\OneToMany(targetEntity="Litter", mappedBy="animalFather")
      * @JMS\Type("AppBundle\Entity\Ram")
      */
-    protected $litters;
+    private $litters;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @JMS\Type("AppBundle\Entity\Mate")
+     * @ORM\OneToMany(targetEntity="Mate", mappedBy="studRam")
+     */
+    private $matings;
 
     /**
      * Ram constructor.
@@ -116,6 +125,24 @@ class Ram extends Animal
     {
         return $this->children;
     }
+
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getMatings()
+    {
+        return $this->matings;
+    }
+
+    /**
+     * @param ArrayCollection $matings
+     */
+    public function setMatings($matings)
+    {
+        $this->matings = $matings;
+    }
+
 
     /**
      * Set isAlive
@@ -447,4 +474,64 @@ class Ram extends Animal
     {
         return $this->litters;
     }
+
+    /**
+     * Add parent
+     *
+     * @param \AppBundle\Entity\Animal $parent
+     *
+     * @return Ram
+     */
+    public function addParent(\AppBundle\Entity\Animal $parent)
+    {
+        $this->parents[] = $parent;
+
+        return $this;
+    }
+
+    /**
+     * Remove parent
+     *
+     * @param \AppBundle\Entity\Animal $parent
+     */
+    public function removeParent(\AppBundle\Entity\Animal $parent)
+    {
+        $this->parents->removeElement($parent);
+    }
+
+    /**
+     * Get parents
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getParents()
+    {
+        return $this->parents;
+    }
+
+    /**
+     * Set parentNeuter
+     *
+     * @param \AppBundle\Entity\Neuter $parentNeuter
+     *
+     * @return Ram
+     */
+    public function setParentNeuter(\AppBundle\Entity\Neuter $parentNeuter = null)
+    {
+        $this->parentNeuter = $parentNeuter;
+
+        return $this;
+    }
+
+    /**
+     * Get parentNeuter
+     *
+     * @return \AppBundle\Entity\Neuter
+     */
+    public function getParentNeuter()
+    {
+        return $this->parentNeuter;
+    }
+
+
 }

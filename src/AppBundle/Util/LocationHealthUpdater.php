@@ -41,7 +41,7 @@ class LocationHealthUpdater
         $ubnPreviousOwner = $declareArrival->getUbnPreviousOwner();
         $checkDate = $declareArrival->getArrivalDate();
 
-        $locationOfOrigin = $em->getRepository(Constant::LOCATION_REPOSITORY)->findByUbn($ubnPreviousOwner);
+        $locationOfOrigin = $em->getRepository(Constant::LOCATION_REPOSITORY)->findOneByActiveUbn($ubnPreviousOwner);
         return self::updateByGivenLocationOfOrigin($em, $declareArrival ,$locationOfDestination, $checkDate, $isDeclareInBase, $locationOfOrigin);
     }
 
@@ -322,47 +322,79 @@ class LocationHealthUpdater
         //TODO remove the (overall) locationHealthStatus from LocationHealth in conjuction with the Java entities.
         //For now the value is just set to null.
 
-        $location->getLocationHealth()->setLocationHealthStatus(null);
-        $em->persist($location);
-        $em->flush();
+        if($location->getLocationHealth() != null) {
+            $location->getLocationHealth()->setLocationHealthStatus(null);
+            $em->persist($location);
+            $em->flush();
+        }
 
         return $location;
+    }
+
+
+    /**
+     * @param Location $location
+     * @param \DateTime $checkDate
+     * @return Criteria
+     */
+    private static function getHideCriteria(Location $location, \DateTime $checkDate)
+    {
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
+            ->andWhere(Criteria::expr()->gt('checkDate', $checkDate))
+            ->orderBy(['checkDate' => Criteria::ASC]);
+
+        return $criteria;
     }
 
     /**
      * @param ObjectManager $em
      * @param Location $location
-     * @param ArrayCollection $latestActiveIllnesses
+     * @param \DateTime $checkDate
      */
-    private static function hideAllFollowingIllnesses(ObjectManager $em, Location $location, \DateTime $checkDate)
+    public static function hideAllFollowingIllnesses(ObjectManager $em, Location $location, \DateTime $checkDate)
     {
+        self::hideAllFollowingMaediVisnas($em, $location, $checkDate);
+        self::hideAllFollowingScrapies($em, $location, $checkDate);
+    }
 
-        $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
-            ->andWhere(Criteria::expr()->gt('checkDate', $checkDate))
-            ->orderBy(['checkDate' => Criteria::ASC]);
 
-        $maediVisnas = $em->getRepository('AppBundle:MaediVisna')
-            ->matching($criteria);
+    /**
+     * @param ObjectManager $em
+     * @param Location $location
+     * @param \DateTime $checkDate
+     */
+    public static function hideAllFollowingMaediVisnas(ObjectManager $em, Location $location, \DateTime $checkDate)
+    {
+        $maediVisnas = $em->getRepository(MaediVisna::class)
+            ->matching(self::getHideCriteria($location, $checkDate));
 
+        /** @var MaediVisna $maediVisna */
         foreach($maediVisnas as $maediVisna) {
             $maediVisna->setIsHidden(true);
             $em->persist($maediVisna);
         }
         $em->flush();
+    }
 
-        $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
-            ->andWhere(Criteria::expr()->gt('checkDate', $checkDate))
-            ->orderBy(['checkDate' => Criteria::ASC]);
 
-        $scrapies = $em->getRepository('AppBundle:Scrapie')
-            ->matching($criteria);
+    /**
+     * @param ObjectManager $em
+     * @param Location $location
+     * @param \DateTime $checkDate
+     */
+    public static function hideAllFollowingScrapies(ObjectManager $em, Location $location, \DateTime $checkDate)
+    {
+        $scrapies = $em->getRepository(Scrapie::class)
+            ->matching(self::getHideCriteria($location, $checkDate));
 
+        /** @var Scrapie $scrapie */
         foreach($scrapies as $scrapie) {
             $scrapie->setIsHidden(true);
             $em->persist($scrapie);
         }
         $em->flush();
     }
+
+
 }

@@ -102,7 +102,7 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     self::$janVanRijnsbergen->setUsername('J.G. van Rijnsbergen');
     self::$janVanRijnsbergen->setPassword($encoder->encodePassword(self::$janVanRijnsbergen, $passwordJanVanRijnsbergen));
     self::$janVanRijnsbergen->setCellphoneNumber("");
-    
+
     $janVanRijnsbergenLocationAddress = new LocationAddress();
     $janVanRijnsbergenLocationAddress->setAddressNumber("1");
     $janVanRijnsbergenLocationAddress->setCity("Stad A");
@@ -136,6 +136,8 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $janVanRijnsbergenCompany->setChamberOfCommerceNumber("222222");
     $janVanRijnsbergenCompany->setVatNumber("333333");
     $janVanRijnsbergenCompany->setTelephoneNumber("0313131313");
+    $janVanRijnsbergenCompany->setAnimalHealthSubscription(true);
+    $janVanRijnsbergenCompany->setIsActive(true);
 
     $janVanRijnsbergenLocationHealth = new LocationHealth();
     $janVanRijnsbergenScrapie = new Scrapie(ScrapieStatus::FREE, new \DateTime('2017-08-04'));
@@ -152,6 +154,7 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $janVanRijnsbergenLocationHealth->addMaediVisna($janVanRijnsbergenMaediVisna);
 
     $janVanRijnsbergenLocation = new Location();
+    $janVanRijnsbergenLocation->setIsActive(true);
     $janVanRijnsbergenLocation->setAddress($janVanRijnsbergenLocationAddress);
     $janVanRijnsbergenLocation->setCompany($janVanRijnsbergenCompany);
     $janVanRijnsbergenLocation->setLocationHealth($janVanRijnsbergenLocationHealth);
@@ -205,6 +208,8 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $reinardEvertsCompany->setChamberOfCommerceNumber("222222");
     $reinardEvertsCompany->setVatNumber("333333");
     $reinardEvertsCompany->setTelephoneNumber("0313131315");
+    $reinardEvertsCompany->setAnimalHealthSubscription(true);
+    $reinardEvertsCompany->setIsActive(true);
 
     $reinardEvertsLocationHealth = new LocationHealth();
     $reinardEvertsScrapie = new Scrapie(ScrapieStatus::RESISTANT, new \DateTime('2016-10-04'));
@@ -221,6 +226,7 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $reinardEvertsLocationHealth->addMaediVisna($reinardEvertsMaediVisna);
 
     $reinardEvertsLocation = new Location();
+    $reinardEvertsLocation->setIsActive(true);
     $reinardEvertsLocation->setAddress($reinardEvertsLocationAddress);
     $reinardEvertsLocation->setCompany($reinardEvertsCompany);
     $reinardEvertsLocation->setLocationHealth($reinardEvertsLocationHealth);
@@ -274,6 +280,8 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $nsfoTestAccountCompany->setChamberOfCommerceNumber("222222");
     $nsfoTestAccountCompany->setVatNumber("333333");
     $nsfoTestAccountCompany->setTelephoneNumber("0313131313");
+    $nsfoTestAccountCompany->setAnimalHealthSubscription(true);
+    $nsfoTestAccountCompany->setIsActive(true);
 
     $nsfoTestAccountLocationHealth = new LocationHealth();
     $nsfoTestAccountScrapie = new Scrapie(ScrapieStatus::RESISTANT, new \DateTime('2016-10-04'));
@@ -290,6 +298,7 @@ class DataFixturesRealClients implements FixtureInterface, ContainerAwareInterfa
     $nsfoTestAccountLocationHealth->addMaediVisna($nsfoTestAccountMaediVisna);
 
     $nsfoTestAccountLocation = new Location();
+    $nsfoTestAccountLocation->setIsActive(true);
     $nsfoTestAccountLocation->setAddress($nsfoTestAccountLocationAddress);
     $nsfoTestAccountLocation->setCompany($nsfoTestAccountCompany);
     $nsfoTestAccountLocation->setLocationHealth($nsfoTestAccountLocationHealth);

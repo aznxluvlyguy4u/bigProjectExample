@@ -16,6 +16,7 @@ use AppBundle\Output\AccessLevelOverviewOutput;
 use AppBundle\Output\AdminOverviewOutput;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\CreateAdminValidator;
+use AppBundle\Validation\EditAdminValidator;
 use AppBundle\Validation\EmployeeValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -27,7 +28,7 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 /**
  * @Route("/api/v1/admins")
  */
-class AdminAPIController extends APIController {
+class AdminAPIController extends APIController implements AdminAPIControllerInterface {
 
   const timeLimitInMinutes = 3;
 
@@ -58,12 +59,12 @@ class AdminAPIController extends APIController {
     $admin = $this->getAuthenticatedEmployee($request);
     $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
     if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
-      return $adminValidator->createJsonErrorResponse();
+        return $adminValidator->createJsonErrorResponse();
     }
     
     $repository = $this->getDoctrine()->getRepository(Employee::class);
 
-    $admins = $repository->findAll();
+    $admins = $repository->findBy(array('isActive' => true));
     $result = AdminOverviewOutput::createAdminsOverview($admins);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
@@ -72,7 +73,7 @@ class AdminAPIController extends APIController {
 
   /**
    *
-   * Create new Admins
+   * Create new Admin
    *
    * @ApiDoc(
    *   requirements={
@@ -85,7 +86,7 @@ class AdminAPIController extends APIController {
    *   },
    *
    *   resource = true,
-   *   description = "Create new Admins",
+   *   description = "Create new Admin",
    *   output = "AppBundle\Entity\Employee"
    * )
    * @param Request $request the request object
@@ -93,49 +94,119 @@ class AdminAPIController extends APIController {
    * @Route("")
    * @Method("POST")
    */
-  public function createClient(Request $request)
-  {
-    $admin = $this->getAuthenticatedEmployee($request);
-    $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
-    if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
-      return $adminValidator->createJsonErrorResponse();
-    }
+    public function createAdmin(Request $request) {
+        $admin = $this->getAuthenticatedEmployee($request);
+        $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
+        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
+            return $adminValidator->createJsonErrorResponse();
+        }
 
-    $em = $this->getDoctrine()->getEntityManager();
-    $content = $this->getContentAsArray($request);
-    $admins = $clients = $content->get(JsonInputConstant::ADMINS);
+        $content = $this->getContentAsArray($request);
 
-    //Validate input
-    $inputValidator = new CreateAdminValidator($em, $admins);
-    if (!$inputValidator->getIsValid()) {
-      return $inputValidator->createJsonResponse();
-    }
+        // Validate content
+        $firstName = $content->get('first_name');
+        $lastName = $content->get('last_name');
+        $emailAddress = $content->get('email_address');
+        $accessLevel = $content->get('access_level');
 
-    foreach ($admins as $admin) {
+        if(empty($firstName) || empty($lastName) || empty($emailAddress) || empty($accessLevel)) {
+            return new JsonResponse(array(
+                'code'=> 400,
+                "message" => "REQUIRED VALUES MISSING"), 400);
+        }
 
-      $firstName = Utils::getNullCheckedArrayValue(JsonInputConstant::FIRST_NAME, $admin);
-      $lastName = Utils::getNullCheckedArrayValue(JsonInputConstant::LAST_NAME, $admin);
-      $emailAddress = Utils::getNullCheckedArrayValue(JsonInputConstant::EMAIL_ADDRESS, $admin);
-      $accessLevel = Utils::getNullCheckedArrayValue(JsonInputConstant::ACCESS_LEVEL, $admin);
-      
-      $newAdmin = new Employee($accessLevel, $firstName, $lastName, $emailAddress);
 
-      //Create a new password
-      $passwordLength = 9;
-      $newPassword = Utils::randomString($passwordLength);
+        $em = $this->getDoctrine()->getEntityManager();
 
-      $encoder = $this->get('security.password_encoder');
-      $encodedNewPassword = $encoder->encodePassword($newAdmin, $newPassword);
-      $newAdmin->setPassword($encodedNewPassword);
-      
-      $em->persist($newAdmin);
-    }
-    $em->flush();
-    
-    $repository = $this->getDoctrine()->getRepository(Employee::class);
+        $inputValidator = new CreateAdminValidator($em, $content);
+        if (!$inputValidator->getIsValid()) {
+          return $inputValidator->createJsonResponse();
+        }
 
-    $admins = $repository->findAll();
-    $result = AdminOverviewOutput::createAdminsOverview($admins);
+        // Create new admin
+        $newAdmin = new Employee($accessLevel, $firstName, $lastName, $emailAddress);
+
+        // Send Email with passwords to Owner & Users
+        $password = $this->persistNewPassword($newAdmin);
+        $this->emailNewPasswordToPerson($newAdmin, $password, false, true);
+
+        $em->persist($newAdmin);
+        $em->flush();
+
+        $repository = $this->getDoctrine()->getRepository(Employee::class);
+        $admin = $repository->findOneBy(array(
+            'emailAddress' => $newAdmin->getEmailAddress(),
+            'isActive' => $newAdmin->getIsActive()
+            ));
+
+        $result = AdminOverviewOutput::createAdminOverview($admin);
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+  }
+
+
+  /**
+   *
+   * Edit Admins.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the admin that is registered with the API"
+   *     }
+   *   },
+   *
+   *   resource = true,
+   *   description = "Edit Admins",
+   *   output = "AppBundle\Entity\Employee"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("")
+   * @Method("PUT")
+   */
+    public function editAdmin(Request $request) {
+        $admin = $this->getAuthenticatedEmployee($request);
+        $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
+        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
+            return $adminValidator->createJsonErrorResponse();
+        }
+
+        $content = $this->getContentAsArray($request);
+
+        // Validate content
+        $personId = $content->get('person_id');
+        $firstName = $content->get('first_name');
+        $lastName = $content->get('last_name');
+        $emailAddress = $content->get('email_address');
+        $accessLevel = $content->get('access_level');
+
+        $em = $this->getDoctrine()->getEntityManager();
+
+        $inputValidator = new EditAdminValidator($em, $content);
+        if (!$inputValidator->getIsValid()) {
+          return $inputValidator->createJsonResponse();
+        }
+
+        $repository = $this->getDoctrine()->getRepository(Employee::class);
+        $admin = $repository->findOneByPersonId($personId);
+
+        $admin->setFirstName($firstName);
+        $admin->setLastName($lastName);
+        $admin->setEmailAddress($emailAddress);
+        $admin->setAccessLevel($accessLevel);
+
+        $em->persist($admin);
+        $em->flush();
+
+        $newAdmin = $repository->findOneBy(array(
+            'emailAddress' => $admin->getEmailAddress(),
+            'isActive' => $admin->getIsActive()
+        ));
+        $result = AdminOverviewOutput::createAdminOverview($newAdmin);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
   }
@@ -163,7 +234,7 @@ class AdminAPIController extends APIController {
    * @Route("-deactivate")
    * @Method("PUT")
    */
-  public function deactivateAdmins(Request $request)
+  public function deactivateAdmin(Request $request)
   {
     $admin = $this->getAuthenticatedEmployee($request);
     $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
@@ -175,26 +246,21 @@ class AdminAPIController extends APIController {
     $repository = $this->getDoctrine()->getRepository(Employee::class);
     
     $content = $this->getContentAsArray($request);
-    $adminIds = $clients = $content->get(JsonInputConstant::ADMINS);
 
-    foreach ($adminIds as $id) {
-      $admin = $repository->find($id);
-      //Validate input
-      if($admin == null) {
+    $personId = $content->get('person_id');
+    $admin = $repository->findOneBy(['personId' => $personId]);
+
+    //Validate input
+    if($admin == null) {
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ADMIN NOT FOUND'), 428);
-      } else {
-        //deactivate
-        $admin->setIsActive(false);
-        $em->persist($admin);
-      }
     }
+
+    //deactivate
+    $admin->setIsActive(false);
+    $em->persist($admin);
     $em->flush();
 
-    $repository = $this->getDoctrine()->getRepository(Employee::class);
-    $admins = $repository->findAll();
-    $result = AdminOverviewOutput::createAdminsOverview($admins);
-
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
   }
 
 
@@ -215,10 +281,10 @@ class AdminAPIController extends APIController {
     }
 
     $content = $this->getContentAsArray($request);
-    $companyId = $content->get(JsonInputConstant::COMPANY_ID);
+    $personId = $content->get(JsonInputConstant::PERSON_ID);
 
-    $company = $this->getDoctrine()->getRepository(Company::class)->find($companyId);
-    $client = $company->getOwner();
+    /** @var Client $client */
+    $client = $this->getDoctrine()->getRepository(Client::class)->findOneBy(['personId' => $personId]);
 
     $existingGhostToken = $this->getDoctrine()->getRepository(Token::class)->findOneBy(array('owner' => $client, 'admin' => $employee));
     if($existingGhostToken != null) {
@@ -231,7 +297,7 @@ class AdminAPIController extends APIController {
     $employee->addToken($ghostToken);
     $client->addToken($ghostToken);
 
-    $this->getDoctrine()->getEntityManager()->persist($client);
+    $this->getDoctrine()->getEntityManager()->persist($ghostToken);
     $this->getDoctrine()->getEntityManager()->flush();
 
     $result = array(Constant::GHOST_TOKEN_NAMESPACE => $ghostToken->getCode());
@@ -327,36 +393,6 @@ class AdminAPIController extends APIController {
         Constant::GHOST_TOKEN_NAMESPACE => $ghostTokenCode);
 
     return new JsonResponse([Constant::RESULT_NAMESPACE => $result], $code);
-  }
-
-  /**
-   * Migrate accessTokens from string field to array field.
-   *
-   * @Route("/migrate")
-   * @Method("POST")
-   */
-  public function migrateTokensToArray(Request $request) {
-
-    //User must be an Employee and not a Client
-    $employee = $this->getAuthenticatedEmployee($request);
-    $employeeValidation = new EmployeeValidator($employee);
-    if(!$employeeValidation->getIsValid()) {
-      return $employeeValidation->createJsonErrorResponse();
-    }
-
-    $persons = $this->getDoctrine()->getRepository(Person::class)->findAll();
-
-    foreach ($persons as $person) {
-      if(sizeof($person->getTokens()) == 0) {
-        $token = new Token(TokenType::ACCESS, $person->getAccessToken());
-        $person->addToken($token);
-        $token->setOwner($person);
-        $this->getDoctrine()->getEntityManager()->persist($person);
-        $this->getDoctrine()->getEntityManager()->flush();
-      }
-    }
-    
-    return new JsonResponse("ok", 200);
   }
 
 

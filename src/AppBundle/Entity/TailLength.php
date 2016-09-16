@@ -16,7 +16,7 @@ class TailLength extends Measurement {
     /**
      * @var float
      *
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
@@ -108,5 +108,28 @@ class TailLength extends Measurement {
     public function getInspector()
     {
         return $this->inspector;
+    }
+
+
+    /**
+     * @param mixed $tailLength
+     * @return bool
+     */
+    public function isEqualInValues($tailLength)
+    {
+        if($tailLength == null) {
+            $isEqual = false;
+
+        } else if($tailLength instanceof TailLength) {
+            $isEqual = $this->getLength() == $tailLength->getLength()
+                && $this->getMeasurementDate() == $tailLength->getMeasurementDate()
+                && $this->getAnimal() == $tailLength->getAnimal()
+                && $this->getInspector() == $tailLength->getInspector();
+
+        } else {
+            $isEqual = false;
+        }
+
+        return $isEqual;
     }
 }

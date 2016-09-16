@@ -2,8 +2,7 @@
 
 namespace AppBundle\Entity;
 
-use AppBundle\Enumerator\AnimalType;
-use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TagStateType;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -11,19 +10,16 @@ use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use Doctrine\Common\Collections\ArrayCollection;
 use \DateTime;
-use JMS\Serializer\Annotation\ExclusionPolicy;
-use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class Animal
  *
- * @ORM\Table(name="animal")
+ * @ORM\Table(name="animal",indexes={@ORM\Index(name="uln_idx", columns={"name", "uln_country_code", "uln_number"})})
  * @ORM\Entity(repositoryClass="AppBundle\Entity\AnimalRepository")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * @ORM\DiscriminatorMap({"Animal" = "Animal", "Ram" = "Ram", "Ewe" = "Ewe", "Neuter" = "Neuter"})
  * @package AppBundle\Entity\Animal
- * @ExclusionPolicy("all")
  */
 abstract class Animal
 {
@@ -33,7 +29,7 @@ abstract class Animal
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $id;
 
@@ -49,7 +45,7 @@ abstract class Animal
      * @Assert\Regex("/([A-Z]{2})\b/")
      * @Assert\Length(max = 2)
      * @JMS\Type("string")
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $pedigreeCountryCode;
 
@@ -61,7 +57,7 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 11)
      * @JMS\Type("string")
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $pedigreeNumber;
 
@@ -70,9 +66,19 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $name;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @Assert\Length(max = 12)
+     * @JMS\Type("string")
+     * @JMS\Groups({"declare"})
+     */
+    protected $ubnOfBirth;
 
     /**
      * @var DateTime
@@ -80,7 +86,7 @@ abstract class Animal
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $dateOfBirth;
 
@@ -90,7 +96,7 @@ abstract class Animal
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $dateOfDeath;
 
@@ -99,7 +105,7 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $gender;
 
@@ -131,6 +137,19 @@ abstract class Animal
     protected $parentNeuter;
 
     /**
+     *
+     * @var ArrayCollection
+     *
+     * @ORM\ManyToMany(targetEntity="Animal")
+     * @ORM\JoinTable(name="animal_parents",
+     *      joinColumns={@ORM\JoinColumn(name="animal_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="parents_id", referencedColumnName="id", unique=false)}
+     * )
+     * @JMS\Type("AppBundle\Entity\Animal")
+     */
+    protected $parents;
+
+    /**
      * @var Animal
      *
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="surrogateChildren", cascade={"persist"})
@@ -145,7 +164,7 @@ abstract class Animal
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
      * @JMS\Type("integer")
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $animalType;
 
@@ -154,7 +173,7 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $transferState;
 
@@ -163,7 +182,7 @@ abstract class Animal
      *
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Type("integer")
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $animalCategory;
 
@@ -172,7 +191,7 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $animalHairColour;
 
@@ -233,6 +252,14 @@ abstract class Animal
     protected $tagReplacements;
 
     /**
+     * @var ArrayCollection
+     *
+     * @JMS\Type("AppBundle\Entity\DeclareWeight")
+     * @ORM\OneToMany(targetEntity="DeclareWeight", mappedBy="animal")
+     */
+    protected $declareWeights;
+
+    /**
      * @var Tag
      *
      * @ORM\OneToOne(targetEntity="Tag", inversedBy="animal", cascade={"persist"})
@@ -252,7 +279,7 @@ abstract class Animal
      * @Assert\NotBlank
      * @ORM\Column(type="boolean")
      * @JMS\Type("boolean")
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $isAlive;
 
@@ -260,7 +287,7 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $ulnNumber;
 
@@ -268,7 +295,7 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $ulnCountryCode;
 
@@ -276,35 +303,35 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $animalOrderNumber;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $isImportAnimal;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $isExportAnimal;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $isDepartedAnimal;
 
     /**
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $animalCountryOrigin;
 
@@ -316,6 +343,7 @@ abstract class Animal
      *      joinColumns={@ORM\JoinColumn(name="animal_id", referencedColumnName="id")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="tag_id", referencedColumnName="id", unique=true)}
      * )
+     *
      */
     protected $ulnHistory;
 
@@ -377,7 +405,7 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $breed;
 
@@ -385,7 +413,7 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $breedType;
 
@@ -393,31 +421,29 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @Expose
+     * @JMS\Groups({"declare"})
      */
     protected $breedCode;
 
-    /*
-     * @ORM\ManyToOne((targetEntity="Breeder")
+    /**
+     * @ORM\ManyToOne(targetEntity="Breeder")
      * @ORM\JoinColumn(name="breeder_id", referencedColumnName="id")
      */
     protected $breeder;
-    
-    /**
-     * @var ArrayCollection
-     *
-     * @ORM\ManyToMany(targetEntity="Mate")
-     * @ORM\JoinTable(name="animal_matings",
-     *      joinColumns={@ORM\JoinColumn(name="animal_id", referencedColumnName="id")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="mate_id", referencedColumnName="id")}
-     *      )
-     */
-    protected $matings;
 
+    /**
+     * @var BreedCodes
+     * @ORM\OneToOne(targetEntity="BreedCodes", inversedBy="animal", cascade={"persist"})
+     * @ORM\JoinColumn(name="breed_codes_id", referencedColumnName="id", nullable=true)
+     * @JMS\Type("AppBundle\Entity\BreedCodes")
+     */
+    protected $breedCodes;
+    
     /**
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
+     * @JMS\Groups({"declare"})
      */
     protected $scrapieGenotype;
 
@@ -430,6 +456,14 @@ abstract class Animal
     protected $litter;
 
     /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="GenderHistoryItem", mappedBy="animal", cascade={"persist"})
+     * @ORM\JoinColumn(name="gender_history_id", referencedColumnName="id")
+     */
+    protected $genderHistory;
+
+    /**
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
@@ -437,11 +471,18 @@ abstract class Animal
     protected $note;
 
     /**
+     * @var PedigreeRegister
+     * @ORM\ManyToOne(targetEntity="PedigreeRegister", cascade={"persist"})
+     * @ORM\JoinColumn(name="pedigree_register_id", referencedColumnName="id")
+     */
+    protected $pedigreeRegister;
+
+    /**
      * Animal constructor.
      */
     public function __construct() {
         $this->arrivals = new ArrayCollection();
-        $this->children = new ArrayCollection();
+//        $this->children = new ArrayCollection();
         $this->departures = new ArrayCollection();
         $this->imports = new ArrayCollection();
         $this->exports = new ArrayCollection();
@@ -452,11 +493,12 @@ abstract class Animal
         $this->muscleThicknessMeasurements = new ArrayCollection();
         $this->tailLengthMeasurements = new ArrayCollection();
         $this->weightMeasurements = new ArrayCollection();
+        $this->declareWeights = new ArrayCollection();
         $this->flags = new ArrayCollection();
         $this->ulnHistory = new ArrayCollection();
+        $this->genderHistory = new ArrayCollection();
         $this->tagReplacements = new ArrayCollection();
-        $this->matings = new ArrayCollection();
-        
+        $this->parents = new ArrayCollection();
         $this->isAlive = true;
         $this->ulnCountryCode = '';
         $this->ulnNumber = '';
@@ -543,6 +585,16 @@ abstract class Animal
     public function getUlnNumber()
     {
         return $this->ulnNumber;
+    }
+
+    /**
+     * Get full uln, country code + number
+     *
+     * @return string
+     */
+    public function getUln()
+    {
+        return $this->ulnCountryCode . $this->ulnNumber;
     }
 
     /**
@@ -757,30 +809,8 @@ abstract class Animal
     {
         return $this->departures;
     }
-
-    /**
-     * Set parentNeuter
-     *
-     * @param Animal $parentNeuter
-     *
-     * @return Animal
-     */
-    public function setParentNeuter(Animal $parentNeuter = null)
-    {
-        $this->parentNeuter = $parentNeuter;
-
-        return $this;
-    }
-
-    /**
-     * Get parentNeuter
-     *
-     * @return Animal
-     */
-    public function getParentNeuter()
-    {
-        return $this->parentNeuter;
-    }
+  
+    
 
     /**
      * Add import
@@ -854,7 +884,19 @@ abstract class Animal
      */
     public function getParentFather()
     {
-        return $this->parentFather;
+        if($this->parentFather != null) {
+            return $this->parentFather;
+        } else {
+            /** @var Animal $parent */
+            foreach ($this->parents as $parent) {
+                $gender = $parent->getGender();
+                if($gender == GenderType::MALE || $gender == GenderType::M) {
+                    return $parent;
+                }
+            }
+        }
+        //if no father has been found
+        return null;
     }
 
     /**
@@ -879,7 +921,19 @@ abstract class Animal
      */
     public function getParentMother()
     {
-        return $this->parentMother;
+        if($this->parentMother != null) {
+            return $this->parentMother;
+        } else {
+            /** @var Animal $parent */
+            foreach ($this->parents as $parent) {
+                $gender = $parent->getGender();
+                if($gender == GenderType::FEMALE || $gender == GenderType::V) {
+                    return $parent;
+                }
+            }
+        }
+        //if no mother has been found
+        return null;
     }
     
     /**
@@ -1113,6 +1167,38 @@ abstract class Animal
     }
 
     /**
+     * @return ArrayCollection
+     */
+    public function getDeclareWeights()
+    {
+        return $this->declareWeights;
+    }
+
+    /**
+     * Add declareWeight
+     *
+     * @param \AppBundle\Entity\DeclareWeight $declareWeight
+     *
+     * @return Animal
+     */
+    public function addDeclareWeight(\AppBundle\Entity\DeclareWeight $declareWeight)
+    {
+        $this->births[] = $declareWeight;
+
+        return $this;
+    }
+
+    /**
+     * Remove declareWeight
+     *
+     * @param \AppBundle\Entity\DeclareWeight $declareWeight
+     */
+    public function removeDeclareWeight(\AppBundle\Entity\DeclareWeight $declareWeight)
+    {
+        $this->births->removeElement($declareWeight);
+    }
+
+    /**
      * Add birth
      *
      * @param \AppBundle\Entity\DeclareBirth $birth
@@ -1321,26 +1407,6 @@ abstract class Animal
     }
 
     /**
-     * @param $ulnCountryCode
-     * @param $ulnNumber
-     */
-    public function replaceUln($ulnCountryCode , $ulnNumber) {
-
-        //Get current set ulnCountryCode and ulnNumber, add it to the history.
-
-        $tag = new Tag();
-        $tag->setUlnCountryCode($this->getUlnCountryCode());
-        $tag->setUlnNumber($this->getUlnNumber());
-        $tag->setTagStatus("REPLACED");
-
-        $this->ulnHistory->add($tag);
-
-        //Set new ulnCountryCode and ulnNumber as the current.
-        $this->setUlnCountryCode($ulnCountryCode);
-        $this->setUlnNumber($ulnNumber);
-    }
-
-    /**
      * Add ulnHistory
      *
      * @param Tag $ulnHistory
@@ -1371,8 +1437,30 @@ abstract class Animal
      */
     public function getUlnHistory()
     {
-        return $this->ulnHistory;
+            return $this->ulnHistory;
     }
+
+    /**
+     * @param $ulnCountryCode
+     * @param $ulnNumber
+     */
+    public function replaceUln($ulnCountryCode , $ulnNumber) {
+
+        //Get current set ulnCountryCode and ulnNumber, add it to the history.
+
+        $tag = new Tag();
+        $tag->setUlnCountryCode($this->getUlnCountryCode());
+        $tag->setUlnNumber($this->getUlnNumber());
+        $tag->setTagStatus("REPLACED");
+
+        $this->ulnHistory->add($tag);
+
+        //Set new ulnCountryCode and ulnNumber as the current.
+        $this->setUlnCountryCode($ulnCountryCode);
+        $this->setUlnNumber($ulnNumber);
+    }
+
+
 
     /**
      * Add tagReplacement
@@ -1416,6 +1504,40 @@ abstract class Animal
     public function getTagReplacements()
     {
         return $this->tagReplacements;
+    }
+
+    /**
+     * Add genderHistoryItem
+     *
+     * @param GenderHistoryItem $genderHistoryItem
+     *
+     * @return Animal
+     */
+    public function addGenderHistoryItem(GenderHistoryItem $genderHistoryItem)
+    {
+        $this->genderHistory[] = $genderHistoryItem;
+
+        return $this;
+    }
+
+    /**
+     * Remove genderHistoryItem
+     *
+     * @param GenderHistoryItem $genderHistoryItem
+     */
+    public function removeGenderHistoryItem(GenderHistoryItem $genderHistoryItem)
+    {
+        $this->genderHistory->removeElement($genderHistoryItem);
+    }
+
+    /**
+     * Get genderHistory
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getGenderHistory()
+    {
+        return $this->genderHistory;
     }
 
     /**
@@ -1619,40 +1741,6 @@ abstract class Animal
     }
 
     /**
-     * Add mating
-     *
-     * @param \AppBundle\Entity\Mate $mating
-     *
-     * @return Animal
-     */
-    public function addMating(\AppBundle\Entity\Mate $mating)
-    {
-        $this->matings[] = $mating;
-
-        return $this;
-    }
-
-    /**
-     * Remove mating
-     *
-     * @param \AppBundle\Entity\Mate $mating
-     */
-    public function removeMating(\AppBundle\Entity\Mate $mating)
-    {
-        $this->matings->removeElement($mating);
-    }
-
-    /**
-     * Get matings
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getMatings()
-    {
-        return $this->matings;
-    }
-
-    /**
      * Set scrapieGenotype
      *
      * @param string $scrapieGenotype
@@ -1758,6 +1846,337 @@ abstract class Animal
         $this->note = $note;
     }
 
-    
-    
+    /**
+     * Add parent
+     *
+     * @param \AppBundle\Entity\Animal $parent
+     *
+     * @return Animal
+     */
+    public function addParent(\AppBundle\Entity\Animal $parent)
+    {
+        $this->parents[] = $parent;
+
+        return $this;
+    }
+
+    /**
+     * Remove parent
+     *
+     * @param \AppBundle\Entity\Animal $parent
+     */
+    public function removeParent(\AppBundle\Entity\Animal $parent)
+    {
+        $this->parents->removeElement($parent);
+    }
+
+    /**
+     * Get parents
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getParents()
+    {
+        return $this->parents;
+    }
+
+    /**
+     * Set parentNeuter
+     *
+     * @param \AppBundle\Entity\Neuter $parentNeuter
+     *
+     * @return Animal
+     */
+    public function setParentNeuter(\AppBundle\Entity\Neuter $parentNeuter = null)
+    {
+        $this->parentNeuter = $parentNeuter;
+
+        return $this;
+    }
+
+    /**
+     * Get parentNeuter
+     *
+     * @return \AppBundle\Entity\Neuter
+     */
+    public function getParentNeuter()
+    {
+        return $this->parentNeuter;
+    }
+
+    /**
+     * @return BreedCodes
+     */
+    public function getBreedCodes()
+    {
+        return $this->breedCodes;
+    }
+
+    /**
+     * @param BreedCodes $breedCodes
+     */
+    public function setBreedCodes($breedCodes)
+    {
+        $this->breedCodes = $breedCodes;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUbnOfBirth()
+    {
+        return $this->ubnOfBirth;
+    }
+
+    /**
+     * @param string $ubnOfBirth
+     */
+    public function setUbnOfBirth($ubnOfBirth)
+    {
+        $this->ubnOfBirth = $ubnOfBirth;
+    }
+
+    /**
+     * @return PedigreeRegister
+     */
+    public function getPedigreeRegister()
+    {
+        return $this->pedigreeRegister;
+    }
+
+    /**
+     * @param string $nullFiller
+     * @return string
+     */
+    public function getPedigreeRegisterFullName($nullFiller = '')
+    {
+        if($this->pedigreeRegister != null) {
+            $registerName = $this->pedigreeRegister->getFullName();
+            if($registerName != null && $registerName != '') {
+                return $registerName;
+            }
+        }
+        return $nullFiller;
+    }
+
+    /**
+     * @param PedigreeRegister $pedigreeRegister
+     */
+    public function setPedigreeRegister($pedigreeRegister)
+    {
+        $this->pedigreeRegister = $pedigreeRegister;
+    }
+
+
+    /**
+     * All values except relationships to other Entities are duplicated.
+     * 
+     * @param Animal $animal
+     */
+    public function duplicateValuesAndTransferRelationships($animal)
+    {
+        //NOTE 'Gender' is not copied!
+
+        if($animal instanceof Animal) {
+            /* Values */
+            $this->setPedigreeCountryCode($animal->getPedigreeCountryCode());
+            $this->setPedigreeNumber($animal->getPedigreeNumber());
+            $this->setUlnCountryCode($animal->getUlnCountryCode());
+            $this->setUlnNumber($animal->getUlnNumber());
+            $this->setName($animal->getName());
+            $this->setUbnOfBirth($animal->getUbnOfBirth());
+            $this->setDateOfBirth($animal->getDateOfBirth());
+            $this->setDateOfDeath($animal->getDateOfDeath());
+            $this->setAnimalType($animal->getAnimalType());
+            $this->setTransferState($animal->getTransferState());
+            $this->setAnimalCategory($animal->getAnimalCategory());
+            $this->setAnimalHairColour($animal->getAnimalHairColour());
+            $this->setIsAlive($animal->getIsAlive());
+            $this->setAnimalOrderNumber($animal->getAnimalOrderNumber());
+            $this->setIsImportAnimal($animal->getIsImportAnimal());
+            $this->setIsExportAnimal($animal->getIsExportAnimal());
+            $this->setIsDepartedAnimal($animal->getIsDepartedAnimal());
+            $this->setAnimalCountryOrigin($animal->getAnimalCountryOrigin());
+            $this->setBreed($animal->getBreed());
+            $this->setBreedType($animal->getBreedType());
+            $this->setBreedCode($animal->getBreedCode());
+            $this->setScrapieGenotype($animal->getScrapieGenotype());
+            $this->setNote($animal->getNote());
+            
+            /* ManyToOne relationships */
+            $father = $animal->getParentFather();
+            if ($father instanceof Ram) { $this->setParentFather($father); }
+            $mother = $animal->getParentMother();
+            if ($mother instanceof Ewe) { $this->setParentMother($mother); }
+            $surrogate = $animal->getSurrogate();
+            if ($surrogate instanceof Ewe) { $this->setSurrogate($surrogate); }
+
+            $this->setLocation($animal->getLocation());
+            $this->setBreeder($animal->getBreeder());
+            $this->setLitter($animal->getLitter()); //NOTE that the litter now contains a duplicate!
+
+            /* OneToOne relationships: replace the original Animal */
+            $this->replaceAnimalInOneToOneRelationships($animal);
+
+            /* ManyToMany relationships */
+            /* replace the original animal in all the collections
+             * and set the entity on this animal
+             */
+            $this->replaceAnimalInManyToManyRelationships($animal->getArrivals());
+            $this->replaceAnimalInManyToManyRelationships($animal->getDepartures());
+            $this->replaceAnimalInManyToManyRelationships($animal->getImports());
+            $this->replaceAnimalInManyToManyRelationships($animal->getExports());
+            $this->replaceAnimalInManyToManyRelationships($animal->getBirths());
+            $this->replaceAnimalInManyToManyRelationships($animal->getDeaths());
+            $this->replaceAnimalInManyToManyRelationships($animal->getAnimalResidenceHistory());
+            $this->replaceAnimalInManyToManyRelationships($animal->getBodyFatMeasurements());
+            $this->replaceAnimalInManyToManyRelationships($animal->getMuscleThicknessMeasurements());
+            $this->replaceAnimalInManyToManyRelationships($animal->getTailLengthMeasurements());
+            $this->replaceAnimalInManyToManyRelationships($animal->getWeightMeasurements());
+            $this->replaceAnimalInManyToManyRelationships($animal->getExteriorMeasurements());
+            $this->replaceAnimalInManyToManyRelationships($animal->getDeclareWeights());
+            $this->replaceAnimalInManyToManyRelationships($animal->getFlags());
+            $this->replaceAnimalInManyToManyRelationships($animal->getUlnHistory());
+            $this->replaceAnimalInManyToManyRelationships($animal->getTagReplacements());
+
+            $this->replaceAnimalInManyToManyRelationships($animal->getParents());
+        }
+    }
+
+
+    /**
+     * @param Animal $animal
+     */
+    private function replaceAnimalInOneToOneRelationships($animal)
+    {
+        if($animal instanceof Animal) {
+            //NOTE that assigned tags are not used to store anything at the moment
+            //Replaced ulns are stored as tags in ulnHistory
+
+            $breedCodes = $animal->getBreedCodes();
+            if($breedCodes != null) {
+                $breedCodes->setAnimal($this);
+                $this->setBreedCodes($breedCodes);
+                $animal->breedCodes = null;
+            }
+        }
+    }
+
+
+    /**
+     * This is the facade, containing all the null checks
+     *
+     * @param Collection $collection
+     * @param Animal $originalAnimal
+     * @return boolean true for successful process and false for incorrect input
+     */
+    private function replaceAnimalInManyToManyRelationships($collection, $originalAnimal = null)
+    {
+        //Null check first
+        if($collection == null) { return false; }
+        elseif($collection->count() == 0) { return false; }
+
+        //Then check the type of collection and null check
+        if($collection->first() instanceof Animal) {
+            //collection is a parents collection with Animals containing a children ArrayCollection
+            if($originalAnimal == null) { return false; }
+            $this->replaceAnimalInParentsArray($collection, $originalAnimal);
+        } else {
+            $this->replaceAnimalInNonParentManyToManyRelationships($collection);
+        }
+
+        return true;
+    }
+
+    /**
+     * @param Collection $parents
+     * @param Animal $originalAnimal
+     */
+    private function replaceAnimalInParentsArray($parents, $originalAnimal)
+    {
+        /** @var Ram|Neuter|Ewe $parent */
+        foreach ($parents as $parent) {
+            $parent->removeChild($originalAnimal);
+            $parent->addChild($this);
+
+            if($parent instanceof Ram) { $this->setParentFather($parent); }
+            if($parent instanceof Ewe) { $this->setParentMother($parent); }
+            if($parent instanceof Neuter) { $this->addParent($parent); }
+        }
+    }
+
+    /**
+     * @param Collection $collection
+     */
+    private function replaceAnimalInNonParentManyToManyRelationships($collection)
+    {
+        /** @var DeclareArrival|DeclareDepart|DeclareImport|DeclareExport|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclareTagReplace|DeclareWeight|AnimalResidence|BodyFat|MuscleThickness|TailLength|Weight|Exterior|Tag $item */
+        foreach ($collection as $item) {
+            $item->setAnimal(null);
+            $item->setAnimal($this);
+            if($item instanceof DeclareArrival) { 
+                $this->addArrival($item); 
+            }
+            
+            if($item instanceof DeclareDepart) { 
+                $this->addDeparture($item); 
+            }
+            
+            if($item instanceof DeclareImport) { 
+                $this->addImport($item); 
+            }
+            
+            if($item instanceof DeclareExport) { 
+                $this->addExport($item); 
+            }
+            
+            if($item instanceof DeclareBirth) { 
+                $this->addBirth($item); 
+            }
+            
+            if($item instanceof DeclareLoss) { 
+                $this->addDeath($item); 
+            }
+            
+            if($item instanceof DeclareAnimalFlag) { 
+                $this->addFlag($item); 
+            }
+            
+            if($item instanceof DeclareTagReplace) { 
+                $this->addTagReplacement($item); 
+            }
+            
+            if($item instanceof DeclareWeight) { 
+                $this->addDeclareWeight($item); 
+            }
+            
+            if($item instanceof AnimalResidence) { 
+                $this->addAnimalResidenceHistory($item); 
+            }
+            
+            if($item instanceof BodyFat) { 
+                $this->addBodyFatMeasurement($item); 
+            }
+            
+            if($item instanceof MuscleThickness) { 
+                $this->addMuscleThicknessMeasurement($item); 
+            }
+            
+            if($item instanceof TailLength) { 
+                $this->addTailLengthMeasurement($item); 
+            }
+            
+            if($item instanceof Weight) { 
+                $this->addWeightMeasurement($item); 
+            }
+            
+            if($item instanceof Exterior) { 
+                $this->addExteriorMeasurement($item); 
+            }
+            
+            if($item instanceof Tag){ 
+                $this->addUlnHistory($item); 
+            }
+        }
+    }
 }

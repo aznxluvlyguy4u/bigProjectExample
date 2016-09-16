@@ -75,6 +75,14 @@ class RetrieveUbnDetails
      */
     private $animalType;
 
+    /**
+     * @var Person
+     *
+     * @ORM\ManyToOne(targetEntity="Person")
+     * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
+     */
+    private $actionBy;
+
     public function __construct() {
       $this->setLogDate(new \DateTime());
     }
@@ -257,4 +265,21 @@ class RetrieveUbnDetails
     {
         return $this->animalType;
     }
+
+    /**
+     * @return Client|Employee
+     */
+    public function getActionBy()
+    {
+        return $this->actionBy;
+    }
+
+    /**
+     * @param Person $actionBy
+     */
+    public function setActionBy($actionBy)
+    {
+        $this->actionBy = $actionBy;
+    }
+
 }

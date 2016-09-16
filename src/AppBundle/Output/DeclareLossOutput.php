@@ -36,6 +36,7 @@ class DeclareLossOutput
                 "animal_type" => $loss->getAnimalType(),
                 "type" => $loss->getAnimalObjectType()
             ),
+            "action_by" => $loss->getActionBy()
         );
 
         return $result;

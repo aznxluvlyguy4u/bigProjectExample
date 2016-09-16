@@ -32,13 +32,14 @@ class BirthMessageBuilder extends MessageBuilderBase
      *
      * @param DeclareBirth $messageObject the message received from the front-end
      * @param Client|Person $person
+     * @param Person $loggedInUser
      * @param Location $location
      * @return DeclareBirth
      */
-    public function buildMessage(DeclareBirth $messageObject, $person, $location)
+    public function buildMessage(DeclareBirth $messageObject, $person, $loggedInUser, $location)
     {
         $this->person = $person;
-        $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
+        $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser);
         $completeMessageObject = $this->addDeclareBirthData($baseMessageObject, $location);
 
         return $completeMessageObject;

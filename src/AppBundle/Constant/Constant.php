@@ -51,6 +51,7 @@ class Constant
     const UNKNOWN_NAMESPACE = 'unknown';
     const VALIDITY_NAMESPACE = 'validity';
     const IS_VALID_NAMESPACE = 'isValid';
+    const RESPONSE = 'response';
     const CODE_NAMESPACE = 'code';
     const ERRORS_NAMESPACE = 'errors';
     const TYPE_NAMESPACE = 'type';
@@ -64,6 +65,8 @@ class Constant
     const PEDIGREE_NUMBER_NAMESPACE = "pedigree_number";
     const PEDIGREE_SNAKE_CASE_NAMESPACE = "pedigree_number";
     const PEDIGREE_COUNTRY_CODE_NAMESPACE = "pedigree_country_code";
+    const LITTER_GROUP_NAMESPACE = "litter_group";
+    const LITTER_SIZE_NAMESPACE = "litter_size";
 
     //Other animal variables
     const HISTORY_NAMESPACE = 'history';
@@ -151,6 +154,7 @@ class Constant
     const ANIMAL_RESIDENCE_REPOSITORY = 'AppBundle:AnimalResidence';
 
     const NEW_PASSWORD_MAIL_SUBJECT_HEADER = "Uw nieuwe NSFO Online wachtwoord";
+    const NEW_ADMIN_PASSWORD_MAIL_SUBJECT_HEADER = "Uw nieuwe NSFO Online ADMIN wachtwoord";
     const CONTACT_CONFIRMATION_MAIL_SUBJECT_HEADER = 'NSFO Online Contactformulier Confirmatie';
 
 }
