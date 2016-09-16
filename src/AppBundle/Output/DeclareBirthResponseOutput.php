@@ -8,75 +8,65 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareBirthResponse;
+use Doctrine\Common\Collections\Collection;
 
 class DeclareBirthResponseOutput extends Output
 {
     /**
-     * @param DeclareBirth $birth
-     * @param AnimalRepository $animalRepository
+     * @param Collection $declarations
      * @return array
      */
-    public static function createHistoryResponse($birth, $animalRepository)
+    public static function createHistoryResponse($declarations)
     {
-        $lastResponse = Utils::returnLastResponse($birth->getResponses());
-        if($lastResponse) {
-            $messageNumber = $lastResponse->getMessageNumber();
-        } else {
-            $messageNumber = null;
+        $res = array();
+
+        foreach ($declarations as $declaration) {
+            $res[] = array(
+                "log_date" => Utils::fillNull($declaration['log_date']),
+                "date_of_birth" => Utils::fillNull($declaration['date_of_birth']),
+                "mother_uln_country_code" => Utils::fillNull($declaration['mother_uln_country_code']),
+                "mother_uln_number" => Utils::fillNull($declaration['mother_uln_number']),
+                "father_uln_country_code" => Utils::fillNull($declaration['father_uln_country_code']),
+                "father_uln_number" => Utils::fillNull($declaration['father_uln_number']),
+                "stillborn_count" => Utils::fillNull($declaration['stillborn_count']),
+                "born_alive_count" => Utils::fillNull($declaration['born_alive_count']),
+                "is_abortion" => Utils::fillNull($declaration['is_abortion']),
+                "is_pseudo_pregnancy" => Utils::fillNull($declaration['is_pseudo_pregnancy']),
+                "status" => Utils::fillNull($declaration['status']),
+                "request_state" => Utils::fillNull($declaration['request_state']),
+                "message_number" => Utils::fillNull($declaration['message_id'])
+            );
         }
 
-        $pedigree = $animalRepository->getPedigreeByUln($birth->getUlnCountryCode(), $birth->getUlnNumber());
-
-        return array(
-            "request_id" => $birth->getRequestId(),
-            "log_date" => $birth->getLogDate(),
-            "uln_country_code" => $birth->getUlnCountryCode(),
-            "uln_number" => $birth->getUlnNumber(),
-            "pedigree_country_code" => $pedigree[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE],
-            "pedigree_number" => $pedigree[Constant::PEDIGREE_NUMBER_NAMESPACE],
-            "gender" => $birth->getGender(),
-            "date_of_birth" => $birth->getDateOfBirth(),
-            "request_state" => $birth->getRequestState(),
-            "message_number" => $messageNumber
-        );
+        return $res;
     }
 
     /**
-     * @param DeclareBirth $birth
-     * @param AnimalRepository $animalRepository
-     * @return array|null
+     * @param Collection $declarations
+     * @return array
      */
-    public static function createErrorResponse($birth, $animalRepository)
+    public static function createErrorResponse($declarations)
     {
-        $lastResponse = Utils::returnLastResponse($birth->getResponses());
-        if($lastResponse != false) {
-            $errorCode = $lastResponse->getErrorCode();
-            $errorMessage = $lastResponse->getErrorMessage();
-            $messageNumber = $lastResponse->getMessageNumber();
-            $isRemovedByUser = $lastResponse->getIsRemovedByUser();
-        } else {
-            $errorCode = null;
-            $errorMessage = null;
-            $messageNumber = null;
-            $isRemovedByUser = true;
+        $res = array();
+
+        foreach ($declarations as $declaration) {
+            $res[] = array(
+                "log_date" => Utils::fillNull($declaration['log_date']),
+                "date_of_birth" => Utils::fillNull($declaration['date_of_birth']),
+                "mother_uln_country_code" => Utils::fillNull($declaration['mother_uln_country_code']),
+                "mother_uln_number" => Utils::fillNull($declaration['mother_uln_number']),
+                "father_uln_country_code" => Utils::fillNull($declaration['father_uln_country_code']),
+                "father_uln_number" => Utils::fillNull($declaration['father_uln_number']),
+                "stillborn_count" => Utils::fillNull($declaration['stillborn_count']),
+                "born_alive_count" => Utils::fillNull($declaration['born_alive_count']),
+                "is_abortion" => Utils::fillNull($declaration['is_abortion']),
+                "is_pseudo_pregnancy" => Utils::fillNull($declaration['is_pseudo_pregnancy']),
+                "status" => Utils::fillNull($declaration['status']),
+                "request_state" => Utils::fillNull($declaration['request_state']),
+                "is_removed_by_user" => Utils::fillNull($declaration['is_removed_by_user']),
+                "message_number" => Utils::fillNull($declaration['message_id'])
+            );
         }
-
-        $pedigree = $animalRepository->getPedigreeByUln($birth->getUlnCountryCode(), $birth->getUlnNumber());
-
-        $res = array("request_id" => $birth->getRequestId(),
-            "log_date" => $birth->getLogDate(),
-            "uln_country_code" => $birth->getUlnCountryCode(),
-            "uln_number" => $birth->getUlnNumber(),
-            "pedigree_country_code" => $pedigree[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE],
-            "pedigree_number" => $pedigree[Constant::PEDIGREE_NUMBER_NAMESPACE],
-            "gender" => $birth->getGender(),
-            "date_of_birth" => $birth->getDateOfBirth(),
-            "request_state" => $birth->getRequestState(),
-            "error_code" => $errorCode,
-            "error_message" => $errorMessage,
-            "is_removed_by_user" => $isRemovedByUser,
-            "message_number" => $messageNumber
-        );
 
         return $res;
     }

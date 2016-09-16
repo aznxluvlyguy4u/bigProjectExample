@@ -14,27 +14,8 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\LitterRepository")
  * @package AppBundle\Entity
  */
-class Litter
+class Litter extends DeclareNsfoBase
 {
-
-    /**
-     * @var integer
-     *
-     * @ORM\Column(type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private $id;
-
-    /**
-     * @var \DateTime
-     *
-     * @ORM\Column(type="datetime")
-     * @Assert\Date
-     * @JMS\Type("DateTime")
-     */
-    private $logDate;
-
     /**
      * 2016-04-01T22:00:48.131Z
      *
