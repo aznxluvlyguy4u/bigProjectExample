@@ -109,3 +109,7 @@ web/app_dev.php
 nsfo_dev
 *.backup
 *.sql
+
+# NSFO import files:
+/app/Resources/imports/
+/app/Resources/outputs/

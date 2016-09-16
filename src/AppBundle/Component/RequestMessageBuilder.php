@@ -103,12 +103,13 @@ class RequestMessageBuilder
      * @param string $messageClassNameSpace
      * @param ArrayCollection $contentArray
      * @param Person|Client $person
+     * @param Person|Client $loggedInUser
      * @param Location $location
      * @param boolean $isEditMessage
      * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|DeclareTagReplace
      * @throws \Exception
      */
-    public function build($messageClassNameSpace, ArrayCollection $contentArray, $person, $location, $isEditMessage)
+    public function build($messageClassNameSpace, ArrayCollection $contentArray, $person, $loggedInUser, $location, $isEditMessage)
     {
         switch($messageClassNameSpace) {
             case RequestType::DECLARATION_DETAIL_ENTITY:
@@ -122,47 +123,47 @@ class RequestMessageBuilder
             case RequestType::DECLARE_ARRIVAL_ENTITY:
                 $declareArrivalRequest = $this->irSerializer->parseDeclareArrival($contentArray, $person, $isEditMessage);
                 if($isEditMessage) { return $declareArrivalRequest; }
-                return $this->arrivalMessageBuilder->buildMessage($declareArrivalRequest, $person, $location);
+                return $this->arrivalMessageBuilder->buildMessage($declareArrivalRequest, $person, $loggedInUser, $location);
             case RequestType::DECLARE_BIRTH_ENTITY:
                 $declareBirthRequest = $this->irSerializer->parseDeclareBirth($contentArray, $person, $isEditMessage);
-                return $this->birthMessageBuilder->buildMessage($declareBirthRequest, $person, $location);
+                return $this->birthMessageBuilder->buildMessage($declareBirthRequest, $person, $loggedInUser, $location);
             case RequestType::DECLARE_DEPART_ENTITY:
                 $declareDepartRequest = $this->irSerializer->parseDeclareDepart($contentArray, $person, $isEditMessage);
-                return $this->departMessageBuilder->buildMessage($declareDepartRequest, $person, $location);
+                return $this->departMessageBuilder->buildMessage($declareDepartRequest, $person, $loggedInUser, $location);
             case RequestType::DECLARE_TAGS_TRANSFER_ENTITY:
                 $declareTagsTransferRequest = $this->irSerializer->parseDeclareTagsTransfer($contentArray, $person, $isEditMessage);
-                return $this->tagTransferMessageBuilder->buildMessage($declareTagsTransferRequest, $person, $location);
+                return $this->tagTransferMessageBuilder->buildMessage($declareTagsTransferRequest, $person, $loggedInUser, $location);
             case RequestType::DECLARE_TAG_REPLACE:
                 $declareTagReplaceRequest = $this->irSerializer->parseDeclareTagReplace($contentArray, $person, $isEditMessage);
-                return $this->tagReplaceMessageBuilder->buildMessage($declareTagReplaceRequest, $person, $location);
+                return $this->tagReplaceMessageBuilder->buildMessage($declareTagReplaceRequest, $person, $loggedInUser, $location);
             case RequestType::DECLARE_LOSS_ENTITY:
                 $declareLossRequest = $this->irSerializer->parseDeclareLoss($contentArray, $person, $isEditMessage);
-                return $this->lossMessageBuilder->buildMessage($declareLossRequest, $person, $location);
+                return $this->lossMessageBuilder->buildMessage($declareLossRequest, $person, $loggedInUser, $location);
             case RequestType::DECLARE_EXPORT_ENTITY:
                 $declareExportRequest = $this->irSerializer->parseDeclareExport($contentArray, $person, $isEditMessage);
-                return $this->exportMessageBuilder->buildMessage($declareExportRequest, $person, $location);
+                return $this->exportMessageBuilder->buildMessage($declareExportRequest, $person, $loggedInUser, $location);
             case RequestType::DECLARE_IMPORT_ENTITY:
                 $declareImportRequest = $this->irSerializer->parseDeclareImport($contentArray, $person, $location, $isEditMessage);
-                return $this->importMessageBuilder->buildMessage($declareImportRequest, $person, $location);
+                return $this->importMessageBuilder->buildMessage($declareImportRequest, $person, $loggedInUser, $location);
             case RequestType::RETRIEVE_TAGS_ENTITY:
                 $retrieveTagsRequest = $this->irSerializer->parseRetrieveTags($contentArray, $person, $isEditMessage);
-                return $this->tagSyncMessageBuilder->buildMessage($retrieveTagsRequest, $person, $location);
+                return $this->tagSyncMessageBuilder->buildMessage($retrieveTagsRequest, $person, $loggedInUser, $location);
             case RequestType::REVOKE_DECLARATION_ENTITY:
                 $revokeDeclaration = new RevokeDeclaration();
                 $revokeDeclaration->setMessageNumber($contentArray[Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE]);
-                return $this->revokeMessageBuilder->buildMessage($revokeDeclaration, $person, $location);
+                return $this->revokeMessageBuilder->buildMessage($revokeDeclaration, $person, $loggedInUser, $location);
             case RequestType::RETRIEVE_ANIMAL_DETAILS_ENTITY:
                 $retrieveAnimalDetailsRequest = $this->irSerializer->parseRetrieveAnimalDetails($contentArray, $person, $isEditMessage);
-                return $this->retrieveAnimalDetailsBuilder->buildMessage($retrieveAnimalDetailsRequest, $person, $location);
+                return $this->retrieveAnimalDetailsBuilder->buildMessage($retrieveAnimalDetailsRequest, $person, $loggedInUser, $location);
             case RequestType::RETRIEVE_ANIMALS_ENTITY:
                 $retrieveAnimalsRequest = $this->irSerializer->parseRetrieveAnimals($contentArray, $person, $isEditMessage);
-                return $this->retrieveAnimalsMessageBuilder->buildMessage($retrieveAnimalsRequest, $person, $location);
+                return $this->retrieveAnimalsMessageBuilder->buildMessage($retrieveAnimalsRequest, $person, $loggedInUser, $location);
             case RequestType::RETRIEVE_COUNTRIES_ENTITY:
                 $retrieveCountries = new RetrieveCountries();
                 return $retrieveCountries;
             case RequestType::RETRIEVE_UBN_DETAILS_ENTITY:
                 $retrieveUbnDetailsRequest = $this->irSerializer->parseRetrieveUbnDetails($contentArray, $person, $isEditMessage);
-                return $this->retrieveUbnDetailsBuilder->buildMessage($retrieveUbnDetailsRequest, $person);
+                return $this->retrieveUbnDetailsBuilder->buildMessage($retrieveUbnDetailsRequest, $person,  $loggedInUser);
             default:
                 if ($messageClassNameSpace == null){
                     throw new \Exception('Cannot pass null into the RequestMessageBuilder');

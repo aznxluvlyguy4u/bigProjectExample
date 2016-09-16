@@ -1,7 +1,6 @@
 <?php
 
 namespace AppBundle\Component;
-use AppBundle\AppBundle;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Location;
@@ -9,8 +8,8 @@ use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\LocationHealthQueue;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\Weight;
-use AppBundle\Entity\WeightMeasurement;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -66,25 +65,12 @@ class Utils
 
         return $repositoryNameSpace;
     }
-
-    /**
-     * validate if Id is of format: AZ123456789
-     *
-     * @param $ulnString
-     * @return bool
-     */
-    public static function verifyUlnFormat($ulnString)
-    {
-        if(preg_match("([A-Z]{2}\d+)",$ulnString)) {
-            return true;
-        }
-        return false;
-    }
+    
 
     public static function getUlnFromString($ulnString)
     {
         //Verify format first
-        if(!Utils::verifyUlnFormat($ulnString)) {
+        if(!Validator::verifyUlnFormat($ulnString)) {
             return null;
         }
 
@@ -396,6 +382,15 @@ class Utils
         $residenceList =  $animal->getAnimalResidenceHistory();
         $residenceToUpdate = $residenceList->last();
 
+        if(!($residenceToUpdate instanceof AnimalResidence)) {
+            //create a new animalResidence, if no animalResidences found
+            //the startDate will likely not be available
+            $residenceToUpdate = new animalResidence();
+            $residenceToUpdate->setLocation($location);
+            $residenceToUpdate->setAnimal($animal);
+            $animal->addAnimalResidenceHistory($residenceToUpdate);
+        }
+
         if($residenceToUpdate->getLocation()->getUbn() == $location->getUbn()
           && $residenceToUpdate->getEndDate() == null) {
             //Set current residentState to pending
@@ -414,7 +409,7 @@ class Utils
      */
     public static function fillNull($value)
     {
-        if($value == null) {
+        if($value === null) {
             return "";
         } else {
             return $value;
@@ -430,7 +425,7 @@ class Utils
      */
     public static function fillNullOrEmptyString($value, $replacementText = "-")
     {
-        if($value == null || $value == "") {
+        if($value === null || $value === "") {
             return $replacementText;
         } else {
             return $value;
@@ -445,7 +440,7 @@ class Utils
      */
     public static function fillZero($value, $replacementText = "-")
     {
-        if($value == 0 || $value == 0.0 || $value == null) {
+        if($value === 0 || $value === 0.0 || $value === null) {
             return $replacementText;
         } else {
             return $value;
@@ -459,9 +454,11 @@ class Utils
      */
     public static function getNullCheckedArrayValue($key, $array)
     {
+        if($array === null || $key === null) { return null; }
+
         if(array_key_exists($key, $array)) {
             $value = $array[$key];
-            if($value != null && $value != "") {
+            if($value !== null && $value !== "") {
                 return $value;
             }
         }
@@ -477,13 +474,129 @@ class Utils
      */
     public static function getNullCheckedArrayCollectionValue($key, ArrayCollection $array)
     {
+        if($array === null || $key === null) { return null; }
+
         if($array->containsKey($key)) {
             $value = $array->get($key);
-            if($value != null && $value != "") {
+            if($value !== null && $value !== "") {
                 return $value;
             }
         }
 
         return null;
     }
+
+
+    /**
+     * @param string $key
+     * @param array $array
+     * @return mixed|null
+     */
+    public static function getNullCheckedArrayDateValue($key, $array)
+    {
+        if($array === null || $key === null) { return null; }
+
+        $dateString = self::getNullCheckedArrayValue($key, $array);
+        if($dateString !== null) {
+            return new \DateTime($dateString);
+        } else {
+            return null;
+        }
+    }
+
+
+    /**
+     * @param string $key
+     * @param ArrayCollection $array
+     * @return mixed|null
+     */
+    public static function getNullCheckedArrayCollectionDateValue($key, ArrayCollection $array)
+    {
+        if($array === null || $key === null) { return null; }
+
+        $dateString = self::getNullCheckedArrayCollectionValue($key, $array);
+        if($dateString !== null) {
+            return new \DateTime($dateString);
+        } else {
+            return null;
+        }
+    }
+
+
+    /**
+     * @param $string
+     * @param int $totalLength
+     * @param int $marginSize
+     * @param string $filler
+     * @return string
+     */
+    public static function addPaddingToStringForColumnFormatCenter($string, $totalLength, $marginSize = 2, $filler = " ")
+    {
+        if($marginSize < 0) {$marginSize = 0;}
+        if($totalLength < strlen($string)) {$totalLength = strlen($string);}
+
+        $innerPaddingSize = $totalLength - 2*$marginSize - strlen($string);
+
+        if($totalLength-strlen($string) <= 0) { //string sticks out, or just fits. No padding
+            $result = $string;
+        } else if($innerPaddingSize <= 0) {
+            $leftPaddingSize = $marginSize + $innerPaddingSize/2;
+            $rightPaddingSize = $totalLength - strlen($string) - $leftPaddingSize;
+
+            if($rightPaddingSize < 0) {$rightPaddingSize = 0;}
+            if($leftPaddingSize < 0) {$leftPaddingSize = 0;}
+
+            $result = str_repeat($filler, $leftPaddingSize).$string.str_repeat($filler, $rightPaddingSize);
+        } else if ($innerPaddingSize > 0) {
+            $marginPadding = str_repeat($filler, $marginSize);
+            $innerPadding = str_repeat($filler, $innerPaddingSize);
+            $result = $marginPadding.$string.$innerPadding.$marginPadding;
+        } else {
+            $result = $string;
+        }
+
+        return $result;
+    }
+
+
+    /**
+     * @param string $string
+     * @param int $totalLength
+     * @param bool $isLeftAligned
+     * @param string $filler
+     * @return string
+     */
+    public static function addPaddingToStringForColumnFormatSides($string, $totalLength, $isLeftAligned = true, $filler = " ")
+    {
+        if($totalLength-strlen($string) <= 0) { //string sticks out, or just fits. No padding
+            $result = $string;
+
+        } else {
+            $paddingSize = $totalLength - strlen($string);
+            if($paddingSize < 0) {$paddingSize = 0;}
+
+            if($isLeftAligned) {
+                $result = $string.str_repeat($filler, $paddingSize);
+            } else { //isRightAligned
+                $result = str_repeat($filler, $paddingSize).$string;
+            }
+
+        }
+
+        return $result;
+    }
+
+
+    /**
+     * For example this string 'XL24AN55' will become the following array ['XL',24,'AN',55]
+     * 
+     * @param $string
+     * @return array
+     */
+    public static function separateLettersAndNumbersOfString($string)
+    {
+        return preg_split("/(,?\s+)|((?<=[a-z])(?=\d))|((?<=\d)(?=[a-z]))/i", $string);
+    }
+
+
 }

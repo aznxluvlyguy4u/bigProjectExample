@@ -3,7 +3,9 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 
 class AnimalArrayReader
 {
@@ -13,30 +15,26 @@ class AnimalArrayReader
      */
     public static function readUlnOrPedigree($animalArray)
     {
-        if(array_key_exists(Constant::ULN_COUNTRY_CODE_NAMESPACE, $animalArray) && array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalArray)) {
-            if( ($animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE] != null && $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE] != "" )
-                && ($animalArray[Constant::ULN_NUMBER_NAMESPACE] != null && $animalArray[Constant::ULN_NUMBER_NAMESPACE] != "" ) ) {
-
-                return array(            Constant::TYPE_NAMESPACE => Constant::ULN_NAMESPACE,
-                             Constant::ULN_COUNTRY_CODE_NAMESPACE => $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE],
-                                   Constant::ULN_NUMBER_NAMESPACE => $animalArray[Constant::ULN_NUMBER_NAMESPACE]);
-            }
-
+        $ulnCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray);
+        $ulnNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_NUMBER, $animalArray);
+        if ($ulnCountryCode != null && $ulnNumber != null) {
+            return array(   Constant::TYPE_NAMESPACE => Constant::ULN_NAMESPACE,
+                 JsonInputConstant::ULN_COUNTRY_CODE => $animalArray[JsonInputConstant::ULN_COUNTRY_CODE],
+                       JsonInputConstant::ULN_NUMBER => $animalArray[JsonInputConstant::ULN_NUMBER]);
         }
 
-        //Don't use a single 'else if' here, because this is preceded by a double/nested if block
-        if (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalArray) && array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalArray)) {
-            if (($animalArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE] != null && $animalArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE] != "")
-                && ($animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE] != null && $animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE] != "") ) {
 
-                return array(        Constant::TYPE_NAMESPACE => Constant::PEDIGREE_NAMESPACE,
-                    Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE => $animalArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE],
-                          Constant::PEDIGREE_NUMBER_NAMESPACE => $animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE]);
-            }
+        $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
+        $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
+        if ($pedigreeCountryCode != null && $pedigreeNumber != null) {
+
+            return array(   Constant::TYPE_NAMESPACE => Constant::PEDIGREE_NAMESPACE,
+            JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animalArray[JsonInputConstant::PEDIGREE_COUNTRY_CODE],
+                  JsonInputConstant::PEDIGREE_NUMBER => $animalArray[JsonInputConstant::PEDIGREE_NUMBER]);
         }
 
         return array(   Constant::TYPE_NAMESPACE => null,
-            Constant::ULN_COUNTRY_CODE_NAMESPACE => null,
-                  Constant::ULN_NUMBER_NAMESPACE => null);
+             JsonInputConstant::ULN_COUNTRY_CODE => null,
+                   JsonInputConstant::ULN_NUMBER => null);
     }
 }

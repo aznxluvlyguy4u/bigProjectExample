@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Animal;
+use AppBundle\Enumerator\Country as CountryEnumerator;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -94,7 +95,7 @@ class AnimalResidence
     /**
      * AnimalResidence constructor.
      */
-    public function __construct($country = Country::NL, $isPending = true)
+    public function __construct($country = CountryEnumerator::NL, $isPending = true)
     {
         $this->isPending = $isPending;
         $this->country = $country;

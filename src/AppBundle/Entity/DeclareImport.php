@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Component\Utils;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -233,6 +234,8 @@ class DeclareImport extends DeclareBase
                 $this->pedigreeCountryCode = $animal->getPedigreeCountryCode();
                 $this->pedigreeNumber = $animal->getPedigreeNumber();
             }
+
+            $this->setAnimalObjectType(Utils::getClassName($animal));
         }
 
         return $this;

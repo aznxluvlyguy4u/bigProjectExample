@@ -3,12 +3,16 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
+use AppBundle\Enumerator\TokenType;
+use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Security\Core\User\UserInterface;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class Person
@@ -17,6 +21,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * @ORM\DiscriminatorMap({"Client" = "Client", "Employee" = "Employee", "Inspector" = "Inspector"})
  * @package AppBundle\Entity
+ * @ExclusionPolicy("all")
  */
 abstract class Person implements UserInterface
 {
@@ -24,14 +29,16 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="integer")
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="AUTO")
+   * @Expose
    */
   protected $id;
 
   /**
    * @var string
    *
-   * @ORM\Column(type="string", nullable=true)
+   * @ORM\Column(type="string", unique=true, nullable=true)
    * @JMS\Type("string")
+   * @Expose
    */
   protected $personId;
 
@@ -41,6 +48,7 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
+   * @Expose
    */
   protected $firstName;
 
@@ -50,6 +58,7 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
+   * @Expose
    */
   protected $lastName;
 
@@ -59,18 +68,10 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
+   * @Expose
    */
   protected $emailAddress;
 
-  /**
-   * @var string
-   *
-   * @ORM\Column(type="string",  unique=true)
-   * @Assert\NotBlank
-   * @JMS\Type("string")
-   */
-  protected $accessToken;
-  
   /**
    * @var ArrayCollection
    *
@@ -79,9 +80,13 @@ abstract class Person implements UserInterface
    */
   protected $tokens;
 
-  /**
-   * @ORM\Column(name="is_active", type="boolean")
-   */
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", options={"default":true})
+     * @JMS\Type("boolean")
+     * @Expose
+     */
   private $isActive;
 
   /**
@@ -128,6 +133,7 @@ abstract class Person implements UserInterface
     $this->setIsActive(true);
 
     $this->setPersonId(Utils::generatePersonId());
+
     $this->setAccessToken(Utils::generateTokenCode());
   }
 
@@ -220,7 +226,14 @@ abstract class Person implements UserInterface
    */
   public function getAccessToken()
   {
-    return $this->accessToken;
+    /** @var Token $token */
+    foreach($this->tokens as $token) {
+      if($token->getType() == TokenType::ACCESS) {
+        return $token->getCode();
+      }
+    }
+    //if no AccessToken was found
+    return null;
   }
 
   /**
@@ -286,7 +299,7 @@ abstract class Person implements UserInterface
    */
   public function getFullName()
   {
-    return $this->firstName . ' ' . $this->lastName;
+    return StringUtil::getFullName($this->firstName, $this->lastName);
   }
 
   /**
@@ -361,9 +374,15 @@ abstract class Person implements UserInterface
      */
     public function setAccessToken($accessToken)
     {
-        $this->accessToken = $accessToken;
-
-        return $this;
+      /** @var Token $token */
+      foreach($this->tokens as $token) {
+        if($token->getType() == TokenType::ACCESS) {
+          $token->setCode($accessToken);
+          return;
+        }
+      }
+      //if no AccessTokens were found
+      $this->addToken(new Token(TokenType::ACCESS, $accessToken));
     }
 
   /**
@@ -407,6 +426,7 @@ abstract class Person implements UserInterface
    */
   public function addToken(Token $token)
   {
+    $token->setOwner($this);
     $this->tokens[] = $token;
 
     return $this;

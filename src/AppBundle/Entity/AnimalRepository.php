@@ -3,11 +3,15 @@
 namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\LiveStockType;
+use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 
 /**
  * Class AnimalRepository
@@ -320,6 +324,17 @@ class AnimalRepository extends BaseRepository
     return null;
   }
 
+
+  /**
+   * @param string $ulnString
+   * @return Animal|Ewe|Neuter|Ram|null
+   */
+  public function findAnimalByUlnString($ulnString)
+  {
+    $uln = Utils::getUlnFromString($ulnString);
+    return $this->findByUlnCountryCodeAndNumber($uln[Constant::ULN_COUNTRY_CODE_NAMESPACE], $uln[Constant::ULN_NUMBER_NAMESPACE] );
+  }
+
   /**
    * @param string $pedigreeCountryCode
    * @param string $pedigreeNumber
@@ -361,4 +376,119 @@ class AnimalRepository extends BaseRepository
       return array(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE => $pedigreeCountryCode,
           Constant::PEDIGREE_NUMBER_NAMESPACE => $pedigreeNumber);
     }
+
+   /**
+    * @param $startId
+    * @param $endId
+    * @return Collection
+    */
+    public function getAnimalsById($startId, $endId)
+    {
+      $criteria = Criteria::create()
+          ->where(Criteria::expr()->gte('id', $startId))
+          ->andWhere(Criteria::expr()->lte('id', $endId))
+          ->orderBy(['id' => Criteria::ASC])
+      ;
+
+      return $this->getEntityManager()->getRepository(Animal::class)
+                  ->matching($criteria);
+    }
+
+
+  /**
+   * @param $startId
+   * @param $endId
+   * @return Collection
+   */
+  public function getAnimalsByIdWithoutBreedCodesSetForExistingBreedCode($startId, $endId)
+  {
+    $criteria = Criteria::create()
+        ->where(Criteria::expr()->gte('id', $startId))
+        ->andWhere(Criteria::expr()->lte('id', $endId))
+        ->andWhere(Criteria::expr()->isNull('breedCodes'))
+        ->andWhere(Criteria::expr()->neq('breedCode', null))
+        ->orderBy(['id' => Criteria::ASC])
+    ;
+
+    return $this->getEntityManager()->getRepository(Animal::class)
+        ->matching($criteria);
+  }
+
+  /**
+   * @return int|null
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function getMaxId()
+  {
+    $sql = "SELECT MAX(id) FROM animal";
+    return $this->executeSqlQuery($sql);
+  }
+  
+  /**
+   * @return int|null
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function getMaxVsmId()
+  {
+    $sql = "SELECT MAX(name) FROM animal";
+    return $this->executeSqlQuery($sql);
+  }
+
+  /**
+   * @return int|null
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function getMinIdOfAnimalsWithoutBreedCodesSetForExistingBreedCode()
+  {
+    $sql = "SELECT MIN(id) FROM animal WHERE (breed_codes_id IS NULL AND breed_code IS NOT NULL)";
+    return $this->executeSqlQuery($sql);
+  }
+
+  /**
+   * @param array $animalArray
+   * @return Animal|Ewe|Neuter|Ram|null
+   */
+  public function findAnimalByAnimalArray($animalArray)
+  {
+    $ulnCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray);
+    $ulnNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_NUMBER, $animalArray);
+    if ($ulnCountryCode != null && $ulnNumber != null) {
+      return $this->findByUlnCountryCodeAndNumber($ulnCountryCode, $ulnNumber);
+    }
+
+    $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
+    $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
+    if ($pedigreeCountryCode != null && $pedigreeNumber != null) {
+      return $this->findByPedigreeCountryCodeAndNumber($pedigreeCountryCode, $pedigreeNumber);
+    }
+
+    //else
+    return null;
+  }
+
+  /**
+   * @return int|null
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function getMinIdOfAnimalsWithoutPedigreeNumberOrPedigreeCountryCode()
+  {
+    $sql = "SELECT MIN(id) FROM animal WHERE (animal.pedigree_country_code IS NULL OR animal.pedigree_number IS NULL)";
+    return $this->executeSqlQuery($sql);
+  }
+
+  /**
+   * @return ArrayCollection
+   */
+  public function getAnimalPrimaryKeysByVsmId()
+  {
+    $sql = "SELECT id, name FROM animal";
+    $results = $this->getEntityManager()->getConnection()->query($sql)->fetchAll();
+
+    $array = new ArrayCollection();
+    foreach ($results as $result) {
+      $array->set($result['name'], $result['id']);
+    }
+
+    return $array;
+  }
 }

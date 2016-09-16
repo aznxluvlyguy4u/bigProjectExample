@@ -27,12 +27,13 @@ class RetrieveUbnDetailsMessageBuilder extends MessageBuilderBase
    *
    * @param RetrieveUbnDetails $messageObject the message received
    * @param Client|Person $person
+   * @param Person $loggedInUser
    * @return RetrieveUbnDetails
    */
-  public function buildMessage(RetrieveUbnDetails $messageObject, $person)
+  public function buildMessage(RetrieveUbnDetails $messageObject, $person, $loggedInUser)
   {
     $this->person = $person;
-    $baseMessageObject = $this->buildBaseRetrieveMessageObject($messageObject, $person);
+    $baseMessageObject = $this->buildBaseRetrieveMessageObject($messageObject, $person, $loggedInUser);
     $completeMessageObject = $this->addRetrieveUbnDetailsData($baseMessageObject);
 
     return $completeMessageObject;

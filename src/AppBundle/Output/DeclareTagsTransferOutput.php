@@ -28,7 +28,8 @@ class DeclareTagsTransferOutput
             "ubn_new_owner" => $tagTransfer->getUbnNewOwner(),
             "relation_number_acceptant" => $tagTransfer->getRelationNumberAcceptant(),
             "type" => "DeclareTagsTransfer",
-            "tags" => self::tagsArray($tagTransfer)
+            "tags" => self::tagsArray($tagTransfer),
+            "action_by" => $tagTransfer->getActionBy()
         );
 
         return $result;

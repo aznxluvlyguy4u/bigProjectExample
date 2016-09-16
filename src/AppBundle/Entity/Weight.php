@@ -16,7 +16,7 @@ class Weight extends Measurement {
     /**
      * @var float
      *
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
@@ -31,10 +31,17 @@ class Weight extends Measurement {
     /**
      * @var boolean
      * @Assert\NotBlank
-     * @ORM\Column(type="boolean")
+     * @ORM\Column(type="boolean", options={"default":false})
      * @JMS\Type("boolean")
      */
     private $isBirthWeight;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isRevoked;
 
    /**
     * Weight constructor.
@@ -43,6 +50,7 @@ class Weight extends Measurement {
     {
       parent::__construct();
         
+      $this->isRevoked = false;  
       $this->weight = 0.00;
     }
 
@@ -141,5 +149,45 @@ class Weight extends Measurement {
     public function getInspector()
     {
         return $this->inspector;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isIsRevoked()
+    {
+        return $this->isRevoked;
+    }
+
+    /**
+     * @param boolean $isRevoked
+     */
+    public function setIsRevoked($isRevoked)
+    {
+        $this->isRevoked = $isRevoked;
+    }
+    
+    
+    /**
+     * @param mixed $weight
+     * @return bool
+     */
+    public function isEqualInValues($weight)
+    {
+        if($weight == null) {
+            $isEqual = false;
+
+        } else if($weight instanceof Weight) {
+            $isEqual = $this->getWeight() == $weight->getWeight()
+                && $this->getIsBirthWeight() == $weight->getIsBirthWeight()
+                && $this->getMeasurementDate() == $weight->getMeasurementDate()
+                && $this->getAnimal() == $weight->getAnimal()
+                && $this->getInspector() == $weight->getInspector();
+
+        } else {
+            $isEqual = false;
+        }
+
+        return $isEqual;
     }
 }

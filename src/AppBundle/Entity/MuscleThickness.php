@@ -16,7 +16,7 @@ class MuscleThickness extends Measurement {
     /**
      * @var float
      *
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
@@ -108,5 +108,28 @@ class MuscleThickness extends Measurement {
     public function getInspector()
     {
         return $this->inspector;
+    }
+
+
+    /**
+     * @param mixed $muscleThickness
+     * @return bool
+     */
+    public function isEqualInValues($muscleThickness)
+    {
+        if($muscleThickness == null) {
+            $isEqual = false;
+
+        } else if($muscleThickness instanceof MuscleThickness) {
+            $isEqual = $this->getMuscleThickness() == $muscleThickness->getMuscleThickness()
+                && $this->getMeasurementDate() == $muscleThickness->getMeasurementDate()
+                && $this->getAnimal() == $muscleThickness->getAnimal()
+                && $this->getInspector() == $muscleThickness->getInspector();
+
+        } else {
+            $isEqual = false;
+        }
+
+        return $isEqual;
     }
 }

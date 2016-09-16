@@ -6,6 +6,7 @@ use AppBundle\Component\Modifier\MessageModifier;
 use AppBundle\Component\RequestMessageBuilder;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Employee;
@@ -18,6 +19,7 @@ use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
@@ -38,14 +40,16 @@ use AppBundle\Enumerator\TokenType;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Util\Finder;
+use AppBundle\Util\Validator;
 use AppBundle\Validation\HeaderValidation;
+use ClassesWithParents\E;
+use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Query;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
-use Symfony\Component\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -207,11 +211,11 @@ class APIController extends Controller implements APIControllerInterface
    * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
    * @throws \Exception
    */
-  protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $location)
+  protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $loggedInUser, $location)
   {
     $isEditMessage = true;
     $messageObject = $this->getRequestMessageBuilder()
-      ->build($messageClassNameSpace, $contentArray, $user, $location, $isEditMessage);
+      ->build($messageClassNameSpace, $contentArray, $user, $loggedInUser, $location, $isEditMessage);
 
     return $messageObject;
   }
@@ -224,11 +228,11 @@ class APIController extends Controller implements APIControllerInterface
    * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
    * @throws \Exception
    */
-  protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $location)
+  protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $loggedInUser, $location)
   {
     $isEditMessage = false;
     $messageObject = $this->getRequestMessageBuilder()
-        ->build($messageClassNameSpace, $contentArray, $user, $location, $isEditMessage);
+        ->build($messageClassNameSpace, $contentArray, $user, $loggedInUser, $location, $isEditMessage);
 
     return $messageObject;
   }
@@ -247,6 +251,29 @@ class APIController extends Controller implements APIControllerInterface
 
     return $messageObject;
   }
+
+
+  /**
+   * @param $object
+   * @return mixed
+   */
+  protected function persistAndFlush($object)
+  {
+    $this->getDoctrine()->getManager()->persist($object);
+    $this->getDoctrine()->getManager()->flush();
+    return $object;
+  }
+
+  
+  /**
+   */
+  protected function flushClearAndGarbageCollect()
+  {
+    $this->getDoctrine()->getManager()->flush();
+    $this->getDoctrine()->getManager()->clear();
+    gc_collect_cycles();
+  }
+
 
   /**
    * @param $messageObject
@@ -318,19 +345,46 @@ class APIController extends Controller implements APIControllerInterface
    */
   public function getAuthenticatedUser(Request $request= null, $tokenCode = null)
   {
-    $em = $this->getDoctrine()->getEntityManager();
+    $loggedInUser = $this->getLoggedInUser($request, $tokenCode);
 
-    if($request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE) && $tokenCode == null) {
-      $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
-      $ghostToken = $em->getRepository(Token::class)->findOneBy(array("code" => $ghostTokenCode));
+    /* Clients */
+    if($loggedInUser instanceof Client) {
+        return $loggedInUser;
 
-      if($ghostToken != null) {
-        if($ghostToken->getIsVerified()) {
-          return $ghostToken->getOwner(); //client
+      /* Admins with a GhostToken */
+    } else if ($loggedInUser instanceof Employee) {
+
+      if($request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE) && $tokenCode == null) {
+        $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
+        $ghostToken = $this->getDoctrine()->getEntityManager()->getRepository(Token::class)
+            ->findOneBy(array("code" => $ghostTokenCode));
+
+        if($ghostToken != null) {
+          if($ghostToken->getIsVerified()) {
+            return $ghostToken->getOwner(); //client
+          }
         }
+        //Admins without a GhostToken
+        return null;
       }
-      return null;
+      
+    } else {
+        return null;
+        /* Note that returning null will break a lot of code in the controllers. That is why it is essential that both the AccessToken and _verified_ GhostToken
+         are validated in the TokenAuthenticator Prehook.
+         At this point only Clients and Employees can login to the system. Not Inspectors.
+        */
     }
+  }
+
+  /**
+   * @param Request $request
+   * @param string $tokenCode
+   * @return Client|Employee
+   */
+  public function getLoggedInUser(Request $request= null, $tokenCode = null)
+  {
+    $em = $this->getDoctrine()->getEntityManager();
 
     if($tokenCode == null) {
       $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
@@ -347,6 +401,7 @@ class APIController extends Controller implements APIControllerInterface
     }
 
   }
+
 
   /**
    * @param Request $request
@@ -454,34 +509,20 @@ class APIController extends Controller implements APIControllerInterface
   {
     $array = new ArrayCollection();
 
-    if (array_key_exists(Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE, $animalArray) && array_key_exists(Constant::PEDIGREE_NUMBER_NAMESPACE, $animalArray)) {
-      $pedigreeNumber = $animalArray[Constant::PEDIGREE_NUMBER_NAMESPACE];
-      $pedigreeCountryCode = $animalArray[Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE];
+    $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
+    $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
+    $isValid = Validator::verifyPedigreeCode($this->getDoctrine()->getManager(), $pedigreeCountryCode, $pedigreeNumber, true);
 
-      $array->set('pedigreeNumber', $pedigreeNumber);
-      $array->set('pedigreeCountryCode', $pedigreeCountryCode);
-      $array->set(Constant::PEDIGREE_NAMESPACE, $pedigreeCountryCode . $pedigreeNumber);
-
-
-      if($pedigreeNumber != null && $pedigreeNumber != "") {
-        $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-        $animal = $animalRepository->findByPedigreeCountryCodeAndNumber($pedigreeCountryCode, $pedigreeNumber);
-
-        if($animal != null) {
-          $array->set('isValid', true);
-
-        } else { //Animal is not found
-          $array->set('isValid', false);
-        }
-      } else { //PedigreeCountryCode and/or PedigreeNumber is null, so not validating on Pedigree
-        $array->set('isValid', true);
-      }
-    } else { //PedigreeCountryCode and/or PedigreeNumber keys do not exist, so not validating on Pedigree
-      $array->set('isValid', true);
-      $array->set('pedigreeNumber', null);
-      $array->set('pedigreeCountryCode', null);
-      $array->set(Constant::PEDIGREE_NAMESPACE, null);
+    if($pedigreeCountryCode != null && $pedigreeNumber != null) {
+      $pedigree = $pedigreeCountryCode.$pedigreeNumber;
+    } else {
+      $pedigree = null;
     }
+
+    $array->set('isValid', $isValid);
+    $array->set(JsonInputConstant::PEDIGREE_NUMBER, $pedigreeNumber);
+    $array->set(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $pedigreeCountryCode);
+    $array->set(Constant::PEDIGREE_NAMESPACE, $pedigree);
 
     return $array;
   }
@@ -614,41 +655,78 @@ class APIController extends Controller implements APIControllerInterface
    * @param Request $request
    * @return JsonResponse
    */
-  public function isAccessTokenValid(Request $request)
-  {
-    $token = null;
-    $response = null;
+    public function isAccessTokenValid(Request $request)
+    {
+        $token = null;
+        $response = null;
+        $content = $this->getContentAsArray($request);
 
-    //Get token header to read token value
-    if($request->headers->has(Constant::ACCESS_TOKEN_HEADER_NAMESPACE)) {
-      $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
+        //Get token header to read token value
+        if($request->headers->has(Constant::ACCESS_TOKEN_HEADER_NAMESPACE)) {
 
-      $token = $this->getDoctrine()->getRepository(Token::class)
-          ->findOneBy(array("code" => $tokenCode, "type" => TokenType::ACCESS));
-      
-      if($token != null) {
-        $response = array(
-            'token_status' => 'valid',
-            'token' => $tokenCode
-        );
-        return new JsonResponse($response, 200);
-        
-      } else {
-        $response = array(
-            'error'=> 401,
-            'errorMessage'=> 'No AccessToken provided'
-        );
-      }
+            $environment = $content->get('env');
+            $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
+            $token = $this->getDoctrine()->getRepository(Token::class)
+                ->findOneBy(array("code" => $tokenCode, "type" => TokenType::ACCESS));
+
+            if ($token != null) {
+                if ($environment == 'USER') {
+                    if ($token->getOwner() instanceof Client) {
+                        $response = array(
+                            'token_status' => 'valid',
+                            'token' => $tokenCode
+                        );
+                        return new JsonResponse($response, 200);
+                    } elseif ($token->getOwner() instanceof Employee ) {
+                        $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
+                        $ghostToken = $this->getDoctrine()->getRepository(Token::class)
+                            ->findOneBy(array("code" => $ghostTokenCode, "type" => TokenType::GHOST));
+
+                        if($ghostToken != null) {
+                            $response = array(
+                                'token_status' => 'valid',
+                                'token' => $tokenCode
+                            );
+                            return new JsonResponse($response, 200);
+                        }
+                    } else {
+                        $response = array(
+                            'error' => 401,
+                            'errorMessage' => 'No AccessToken provided'
+                        );
+                    }
+                }
+            }
+
+            if ($environment == 'ADMIN') {
+                if ($token->getOwner() instanceof Employee) {
+                    $response = array(
+                        'token_status' => 'valid',
+                        'token' => $tokenCode
+                    );
+                    return new JsonResponse($response, 200);
+                } else {
+                    $response = array(
+                        'error' => 401,
+                        'errorMessage' => 'No AccessToken provided'
+                    );
+                }
+            }
+
+            $response = array(
+                'error'=> 401,
+                'errorMessage'=> 'No AccessToken provided'
+            );
     } else {
       //Mandatory AccessToken was not provided
       $response = array(
           'error'=> 401,
           'errorMessage'=> 'Mandatory AccessToken header was not provided'
-      ); 
+      );
     }
 
     return new JsonResponse($response, 401);
-  }
+    }
 
   /**
    * Retrieve the messageObject related to the RevokeDeclaration
@@ -721,7 +799,7 @@ class APIController extends Controller implements APIControllerInterface
     $code = 428;
     $message = 'THE UBN IS NOT REGISTERED AT NSFO';
 
-    $location = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY)->findByUbn($ubn);
+    $location = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY)->findOneByActiveUbn($ubn);
 
     if($location != null) {
       $isValid = true;
@@ -813,17 +891,18 @@ class APIController extends Controller implements APIControllerInterface
     }
   }
 
-  public function syncAnimalsForAllLocations()
+  public function syncAnimalsForAllLocations($loggedInUser)
   {
     $allLocations = $this->getDoctrine()->getRepository(Constant::LOCATION_REPOSITORY)->findAll();
     $content = new ArrayCollection();
     $count = 0;
 
+    /** @var Location $location */
     foreach($allLocations as $location) {
       $client = $location->getCompany()->getOwner();
 
       //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $location);
+      $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $loggedInUser, $location);
 
       //First Persist object to Database, before sending it to the queue
       $this->persist($messageObject);
@@ -839,5 +918,68 @@ class APIController extends Controller implements APIControllerInterface
 
     return array('message' => $message,
         'count' => $count);
+  }
+
+  
+  /**
+   * @param Person $person
+   * @param int $passwordLength
+   * @return string
+   */
+  protected function persistNewPassword($person, $passwordLength = 9)
+  {
+    $newPassword = Utils::randomString($passwordLength);
+
+    $encoder = $this->get('security.password_encoder');
+    $encodedNewPassword = $encoder->encodePassword($person, $newPassword);
+    $person->setPassword($encodedNewPassword);
+
+    $this->getDoctrine()->getManager()->persist($person);
+    $this->getDoctrine()->getManager()->flush();
+
+    return $newPassword;
+  }
+
+  /**
+   * @param Person $person
+   */
+  protected function emailNewPasswordToPerson($person, $newPassword, $isAdmin = false, $isNewUser = false)
+  {
+    $mailerSourceAddress = $this->getParameter('mailer_source_address');
+
+    if($isAdmin) {
+      $subjectHeader = Constant::NEW_ADMIN_PASSWORD_MAIL_SUBJECT_HEADER;
+    } else {
+      $subjectHeader = Constant::NEW_PASSWORD_MAIL_SUBJECT_HEADER;
+    }
+
+    if($isNewUser) {
+        $twig = 'User/new_user_email.html.twig';
+    } else {
+        $twig = 'User/reset_password_email.html.twig';
+    }
+    
+    //Confirmation message back to the sender
+    $message = \Swift_Message::newInstance()
+        ->setSubject($subjectHeader)
+        ->setFrom($mailerSourceAddress)
+        ->setTo($person->getEmailAddress())
+        ->setBcc($mailerSourceAddress)
+        ->setBody(
+            $this->renderView(
+            // app/Resources/views/...
+                $twig,
+                array('firstName' => $person->getFirstName(),
+                    'lastName' => $person->getLastName(),
+                    'userName' => $person->getUsername(),
+                    'email' => $person->getEmailAddress(),
+                    'password' => $newPassword)
+            ),
+            'text/html'
+        )
+        ->setSender($mailerSourceAddress)
+    ;
+
+    $this->get('mailer')->send($message);
   }
 }

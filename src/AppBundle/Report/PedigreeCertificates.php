@@ -11,7 +11,7 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 
 /**
  * Class PedigreeCertificates
@@ -34,13 +34,13 @@ class PedigreeCertificates
      * Create the data for the PedigreeCertificate.
      * Before this is run, it is assumed all the ulns have been verified.
      *
-     * @param EntityManager $em
+     * @param ObjectManager $em
      * @param Collection $content containing the ulns of multiple animals
      * @param Client $client
      * @param Location $location
      * @param int $generationOfAscendants
      */
-    public function __construct(EntityManager $em, Collection $content, Client $client,
+    public function __construct(ObjectManager $em, Collection $content, Client $client,
                                 Location $location, $generationOfAscendants = 3)
     {
         $this->reports = array();
@@ -60,11 +60,11 @@ class PedigreeCertificates
     }
 
     /**
-     * @param EntityManager $em
+     * @param ObjectManager $em
      * @param Collection $content
      * @return ArrayCollection
      */
-    private function getAnimalsInContentArray(EntityManager $em, Collection $content)
+    private function getAnimalsInContentArray(ObjectManager $em, Collection $content)
     {
         $animals = new ArrayCollection();
 

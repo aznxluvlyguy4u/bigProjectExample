@@ -3,6 +3,7 @@
 namespace AppBundle\DataFixtures\ORM;
 
 use AppBundle\Entity\Employee;
+use AppBundle\Enumerator\AccessLevelType;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -40,7 +41,7 @@ class DataFixturesEmployees implements FixtureInterface, ContainerAwareInterface
 
     $encoder = $this->container->get('security.password_encoder');
 
-    self::$employeeJVTRudolf = new Employee();
+    self::$employeeJVTRudolf = new Employee(AccessLevelType::SUPER_ADMIN);
 
     self::$employeeJVTRudolf->setFirstName('Rudolf');
     self::$employeeJVTRudolf->setLastName('Sneep');

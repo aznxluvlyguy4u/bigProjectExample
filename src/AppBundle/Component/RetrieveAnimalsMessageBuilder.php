@@ -26,13 +26,14 @@ class RetrieveAnimalsMessageBuilder extends MessageBuilderBase
    *
    * @param RetrieveAnimals $messageObject the message received
    * @param Client|Person $person
+   * @param Person $loggedInUser
    * @param Location $location
    * @return RetrieveAnimals
    */
-  public function buildMessage(RetrieveAnimals $messageObject, $person, $location)
+  public function buildMessage(RetrieveAnimals $messageObject, $person, $loggedInUser, $location)
   {
     $this->person = $person;
-    $baseMessageObject = $this->buildBaseRetrieveMessageObject($messageObject, $person);
+    $baseMessageObject = $this->buildBaseRetrieveMessageObject($messageObject, $person, $loggedInUser);
     $completeMessageObject = $this->addRetrieveAnimalsData($baseMessageObject, $location);
 
     return $completeMessageObject;

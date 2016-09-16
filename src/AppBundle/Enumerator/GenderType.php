@@ -8,6 +8,10 @@ namespace AppBundle\Enumerator;
  */
 class GenderType
 {
-    const MALE = "MALE";
-    const FEMALE = "FEMALE";
+    const M = 'M';
+    const V = 'V';
+    const O = 'O';
+    const MALE = 'MALE';
+    const FEMALE = 'FEMALE';
+    const NEUTER = 'NEUTER';
 }

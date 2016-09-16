@@ -16,7 +16,9 @@ use AppBundle\Entity\Person;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Company;
 use AppBundle\Enumerator\MigrationStatus;
+use AppBundle\Output\MenuBarOutput;
 use AppBundle\Setting\MigrationSetting;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Validation\PasswordValidator;
@@ -124,7 +126,7 @@ class AuthAPIController extends APIController {
    * @param Request $request the request object
    * @return JsonResponse
    * @Route("/validate-token")
-   * @Method("GET")
+   * @Method("POST")
    */
   public function validateToken(Request $request)
   {
@@ -168,8 +170,37 @@ class AuthAPIController extends APIController {
         return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
       }
 
-      if($encoder->isPasswordValid($client, $password)) {
-        return new JsonResponse(array("access_token"=>$client->getAccessToken()), 200);
+      if(!$client->getIsActive()) {
+        return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
+      }
+
+      if($client->getEmployer() != null) {
+          if(!$client->getEmployer()->isActive()) {
+            return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
+          }
+      }
+
+      if($client->getCompanies()->count() > 0) {
+          $companies = $client->getCompanies();
+          foreach ($companies as $company) {
+              if(!$company->isActive()){
+                  return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
+              }
+          }
+      }
+
+        if($encoder->isPasswordValid($client, $password)) {
+        /** @var Client $client */
+        $result = [
+            "access_token"=>$client->getAccessToken(),
+            "user" => MenuBarOutput::create($client)
+        ];
+
+        return new JsonResponse(array("access_token"=>$client->getAccessToken(),
+                         Constant::RESULT_NAMESPACE => $result), 200);
+
+        //TODO If Frontend is updated use the following JsonResponse
+        //return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
       }
     }
 
@@ -206,8 +237,12 @@ class AuthAPIController extends APIController {
     */
     $encoder = $this->get('security.password_encoder');
 
+    $om = $this->getDoctrine()->getManager();
     $client = $this->getAuthenticatedUser($request);
+    $loggedInUser = $this->getLoggedInUser($request);
     $content = $this->getContentAsArray($request);
+    $log = ActionLogWriter::passwordChange($om, $client, $loggedInUser);
+
     $enteredOldPassword = base64_decode($content->get('current_password'));
 
     if(!$encoder->isPasswordValid($client, $enteredOldPassword)) {
@@ -255,6 +290,8 @@ class AuthAPIController extends APIController {
 
       $this->get('mailer')->send($message);
 
+      $log = ActionLogWriter::completeActionLog($om, $log);
+
       return new JsonResponse(array("code" => 200, "message"=>"Password has been changed"), 200);
 
     } else if($encodedPasswordInDatabase == $encodedOldPassword) {
@@ -295,10 +332,11 @@ class AuthAPIController extends APIController {
         "email_address":"example@example.com"
     }
     */
+    $om = $this->getDoctrine()->getManager();
     $content = $this->getContentAsArray($request);
     $emailAddress = strtolower($content->get('email_address'));
-
     $client = $this->getClientByEmail($emailAddress);
+    $log = ActionLogWriter::passwordReset($om, $client, $emailAddress);
 
     //Verify if email is correct
     if($client == null) {
@@ -307,39 +345,10 @@ class AuthAPIController extends APIController {
 
     //Create a new password
     $passwordLength = 9;
-    $newPassword = Utils::randomString($passwordLength);
+    $newPassword = $this->persistNewPassword($client);
+    $this->emailNewPasswordToPerson($client, $newPassword);
 
-    $encoder = $this->get('security.password_encoder');
-    $encodedNewPassword = $encoder->encodePassword($client, $newPassword);
-    $client->setPassword($encodedNewPassword);
-
-    $this->getDoctrine()->getEntityManager()->persist($client);
-    $this->getDoctrine()->getEntityManager()->flush();
-
-    $mailerSourceAddress = $this->getParameter('mailer_source_address');
-
-    //Confirmation message back to the sender
-    $message = \Swift_Message::newInstance()
-        ->setSubject(Constant::NEW_PASSWORD_MAIL_SUBJECT_HEADER)
-        ->setFrom($mailerSourceAddress)
-        ->setTo($emailAddress)
-        ->setBody(
-            $this->renderView(
-            // app/Resources/views/...
-                'User/reset_password_email.html.twig',
-                array('firstName' => $client->getFirstName(),
-                    'lastName' => $client->getLastName(),
-                    'userName' => $client->getUsername(),
-                    'email' => $client->getEmailAddress(),
-                    'relationNumberKeeper' => $client->getRelationNumberKeeper(),
-                    'password' => $newPassword)
-            ),
-            'text/html'
-        )
-        ->setSender($mailerSourceAddress)
-    ;
-
-    $this->get('mailer')->send($message);
+    $log = ActionLogWriter::completeActionLog($om, $log);
 
     return new JsonResponse(array("code" => 200,
         "message"=>"Your new password has been emailed to: " . $emailAddress), 200);

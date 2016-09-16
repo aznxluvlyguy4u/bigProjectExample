@@ -106,6 +106,14 @@ class TagTransferItemRequest {
     private $responses;
 
     /**
+     * @var Person
+     *
+     * @ORM\ManyToOne(targetEntity="Person")
+     * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
+     */
+    private $actionBy;
+
+    /**
      * TagTransferItemRequest constructor.
      */
     public function __construct() {
@@ -397,5 +405,21 @@ class TagTransferItemRequest {
     public function getTag()
     {
         return $this->tag;
+    }
+
+    /**
+     * @return Client|Employee
+     */
+    public function getActionBy()
+    {
+        return $this->actionBy;
+    }
+
+    /**
+     * @param Person $actionBy
+     */
+    public function setActionBy($actionBy)
+    {
+        $this->actionBy = $actionBy;
     }
 }

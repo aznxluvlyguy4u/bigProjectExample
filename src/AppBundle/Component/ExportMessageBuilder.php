@@ -28,13 +28,14 @@ class ExportMessageBuilder extends MessageBuilderBase
    *
    * @param DeclareExport $messageObject the message received
    * @param Client|Person $person
+   * @param Person $loggedInUser
    * @param Location $location
    * @return DeclareExport
    */
-  public function buildMessage(DeclareExport $messageObject, $person, $location)
+  public function buildMessage(DeclareExport $messageObject, $person, $loggedInUser, $location)
   {
     $this->person = $person;
-    $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
+    $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser);
     $completeMessageObject = $this->addDeclareExportData($baseMessageObject, $location);
 
     return $completeMessageObject;

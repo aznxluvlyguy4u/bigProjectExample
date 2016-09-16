@@ -38,13 +38,14 @@ class RevokeMessageBuilder extends MessageBuilderBase
      *
      * @param RevokeDeclaration $messageObject the message received from the front-end
      * @param Client|Person $person
+     * @param Person $loggedInUser
      * @param Location $location
      * @return RevokeDeclaration
      */
-    public function buildMessage(RevokeDeclaration $messageObject, $person, $location)
+    public function buildMessage(RevokeDeclaration $messageObject, $person, $loggedInUser, $location)
     {
         $this->person = $person;
-        $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person);
+        $baseMessageObject = $this->buildBaseMessageObject($messageObject, $person, $loggedInUser);
         $completeMessageObject = $this->addRevokeDeclarationData($baseMessageObject, $person, $location);
 
         return $completeMessageObject;

@@ -17,5 +17,4 @@ class LiveStockType
     const LAMB = 'LAMB';
     const ADULT = 'ADULT';
     const TOTAL = 'TOTAL';
-
 }

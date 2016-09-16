@@ -3,6 +3,7 @@
 namespace AppBundle\Output;
 use AppBundle\Entity\Client;
 use AppBundle\Component\Count;
+use AppBundle\Entity\Employee;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Enumerator\RequestType;
@@ -27,6 +28,17 @@ class MenuBarOutput extends Output
         return $result;
     }
 
+    public static function createAdmin(Employee $employee)
+    {
+        $result = array(
+            "first_name" => $employee->getFirstName(),
+            "last_name" => $employee->getLastName(),
+            "email_address" => $employee->getEmailAddress()
+        );
+
+        return $result;
+    }
+
 
     public static function createUbnsArray(Client $client)
     {
@@ -34,7 +46,9 @@ class MenuBarOutput extends Output
 
         foreach($client->getCompanies() as $company) {
             foreach($company->getLocations() as $location) {
-                $ubns[] = $location->getUbn();
+                if($location->getIsActive()) {
+                    $ubns[] = $location->getUbn();
+                }
             }
         }
 

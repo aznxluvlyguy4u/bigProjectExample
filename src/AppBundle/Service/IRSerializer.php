@@ -36,6 +36,7 @@ use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
+use JMS\Serializer\SerializationContext;
 
 /**
  * Class IRSerializer.
@@ -85,9 +86,15 @@ class IRSerializer implements IRSerializerInterface
      * @param $object
      * @return mixed|string
      */
-    public function serializeToJSON($object)
+    public function serializeToJSON($object, $type = 'DEFAULT')
     {
-        return $this->serializer->serialize($object, Constant::jsonNamespace);
+        if($type == 'DECLARE') {
+            return $this->serializer->serialize($object, Constant::jsonNamespace, SerializationContext::create()->setGroups(array('declare')));
+        }
+
+        if($type == 'DEFAULT') {
+            return $this->serializer->serialize($object, Constant::jsonNamespace, SerializationContext::create()->setGroups(array('Default')));
+        }
     }
 
     /**
@@ -97,7 +104,7 @@ class IRSerializer implements IRSerializerInterface
      */
     public function deserializeToObject($json, $messageClassNameSpace)
     {
-        $messageClassPathNameSpace = "AppBundle\Entity\\$messageClassNameSpace";
+        $messageClassPathNameSpace = "AppBundle\\Entity\\" . $messageClassNameSpace;
 
         $messageObject = $this->serializer->deserialize($json, $messageClassPathNameSpace, Constant::jsonNamespace);
 
@@ -126,6 +133,18 @@ class IRSerializer implements IRSerializerInterface
         $retrievedAnimalJson = $this->serializeToJSON($retrievedAnimal);
         //Parse json to content array to add additional 'animal type' property
         $retrievedAnimalContentArray = json_decode($retrievedAnimalJson, true);
+
+        if($retrievedAnimal instanceof Ram) {
+            $retrievedAnimalContentArray['type'] = 'Ram';
+        }
+
+        if($retrievedAnimal instanceof Ewe) {
+            $retrievedAnimalContentArray['type'] = 'Ewe';
+        }
+
+        if($retrievedAnimal instanceof Neuter) {
+            $retrievedAnimalContentArray['type'] = 'Neuter';
+        }
 
         if($unsetChildren ==  true) {
             unset($retrievedAnimalContentArray[Constant::CHILDREN_NAMESPACE]);
@@ -208,18 +227,15 @@ class IRSerializer implements IRSerializerInterface
 
         } else {
             $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareArrivalContentArray);
+            $retrievedAnimal->setIsImportAnimal(false);
 
-            //Add retrieved animal properties including type to initial animalContentArray
-            $declareArrivalContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
-            
-            //denormalize the content to an object
-            $json = $this->serializeToJSON($declareArrivalContentArray);
-            $declareArrivalRequest = $this->deserializeToObject($json, RequestType::DECLARE_ARRIVAL_ENTITY);
-
-            //Add retrieved animal to DeclareArrival
+            $declareArrivalRequest = new DeclareArrival();
             $declareArrivalRequest->setAnimal($retrievedAnimal);
+            $declareArrivalRequest->setArrivalDate(new \DateTime($declareArrivalContentArray['arrival_date']));
+            $declareArrivalRequest->setUbnPreviousOwner($declareArrivalContentArray['ubn_previous_owner']);
             $declareArrivalRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
             $declareArrivalRequest->setIsArrivedFromOtherNsfoClient($declareArrivalContentArray->get(JsonInputConstant::IS_ARRIVED_FROM_OTHER_NSFO_CLIENT));
+            $declareArrivalRequest->setIsImportAnimal(false);
 
             $contentAnimal = $declareArrivalContentArray['animal'];
 
@@ -391,15 +407,12 @@ class IRSerializer implements IRSerializerInterface
         $retrievedAnimal->setIsExportAnimal($isExportAnimal);
 
         //Add retrieved animal properties including type to initial animalContentArray
-        $declareDepartContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
-
-        //denormalize the content to an object
-        $json = $this->serializeToJSON($declareDepartContentArray);
-        $declareDepartRequest = $this->deserializeToObject($json, RequestType::DECLARE_DEPART_ENTITY);
-
-        //Add retrieved animal to DeclareArrival
+        $declareDepartRequest = new DeclareDepart();
         $declareDepartRequest->setAnimal($retrievedAnimal);
+        $declareDepartRequest->setDepartDate(new \DateTime($declareDepartContentArray['depart_date']));
+        $declareDepartRequest->setReasonOfDepart($declareDepartContentArray['reason_of_depart']);
         $declareDepartRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
+        $declareDepartRequest->setUbnNewOwner($declareDepartContentArray['ubn_new_owner']);
 
         if($isEditMessage) {
             $requestState = $declareDepartContentArray['request_state'];
@@ -534,14 +547,16 @@ class IRSerializer implements IRSerializerInterface
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareLossContentArray);
 
         //Add retrieved animal properties including type to initial animalContentArray
-        $declareLossContentArray['animal'] =  $this->returnAnimalArray($retrievedAnimal);
+        $declareLossContentArray['animal'] = $retrievedAnimal;
 
         //denormalize the content to an object
-        $json = $this->serializeToJSON($declareLossContentArray);
+        $json = $this->serializeToJSON($declareLossContentArray, 'DECLARE');
+
         $declareLossRequest = $this->deserializeToObject($json, RequestType::DECLARE_LOSS_ENTITY);
 
         //Add retrieved animal to DeclareLoss
         $declareLossRequest->setAnimal($retrievedAnimal);
+        $declareLossRequest->setUbnDestructor($declareLossContentArray['ubn_processor']);
         $declareLossRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
 
         if($isEditMessage) {
@@ -573,13 +588,7 @@ class IRSerializer implements IRSerializerInterface
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareExportContentArray);
         $retrievedAnimal->setIsExportAnimal($isExportAnimal);
 
-        //Add retrieved animal properties including type to initial animalContentArray
-        $declareExportContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
-
-        //denormalize the content to an object
-        $json = $this->serializeToJSON($declareExportContentArray);
-        $declareExportRequest = $this->deserializeToObject($json, RequestType::DECLARE_EXPORT_ENTITY);
-
+        $declareExportRequest = new DeclareExport();
         $declareExportRequest->setAnimal($retrievedAnimal);
         $declareExportRequest->setExportDate(new \DateTime($exportDate));
         $declareExportRequest->setIsExportAnimal($isExportAnimal);
@@ -666,18 +675,13 @@ class IRSerializer implements IRSerializerInterface
             $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareImportContentArray);
             $retrievedAnimal->setIsImportAnimal(true);
 
-            //Add retrieved animal properties including type to initial animalContentArray
-            $declareImportContentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
-
-            //denormalize the content to an object
-            $json = $this->serializeToJSON($declareImportContentArray);
-            $declareImportRequest = $this->deserializeToObject($json, RequestType::DECLARE_IMPORT_ENTITY);
-
             //Add retrieved animal and import date to DeclareImport
+            $declareImportRequest = new DeclareImport();
             $declareImportRequest->setAnimal($retrievedAnimal);
             $declareImportRequest->setAnimalCountryOrigin($animalCountryOrigin);
             $declareImportRequest->setImportDate(new \DateTime($importDate));
             $declareImportRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
+            $declareImportRequest->setIsImportAnimal(true);
 
             $contentAnimal = $declareImportContentArray['animal'];
 
