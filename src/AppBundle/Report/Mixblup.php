@@ -18,6 +18,7 @@ use AppBundle\Entity\MeasurementRepository;
 use AppBundle\Entity\MuscleThickness;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
+use AppBundle\Entity\WeightRepository;
 use AppBundle\Enumerator\BreedCodeType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Migration\BreedCodeReformatter;
@@ -86,6 +87,9 @@ class Mixblup
     const COLUMN_WIDTH_LITTER_GROUP = 19;
     const COLUMN_WIDTH_HETEROSIS = 6;
     const COLUMN_WIDTH_RECOMBINATION = 6;
+    const COLUMN_WIDTH_AGE = 7;
+    const COLUMN_WIDTH_GROWTH = 9;
+    const COLUMN_WIDTH_WEIGHT = 8;
 
 
     const ANIMAL = 'ANIMAL';
@@ -95,6 +99,8 @@ class Mixblup
     const TAIL_LENGTH = 'TAIL_LENGTH';
     const WEIGHT = 'WEIGHT';
     const CONTRADICTING_DUPLICATES = 'CONTRADICTING_DUPLICATES';
+    const ROW_DATA = 'ROW_DATA';
+    const DATE_OF_BIRTH = 'DATE_OF_BIRTH';
 
     //Filename strings
     const TEST_ATTRIBUTES = 'toets_kenmerken';
@@ -168,6 +174,9 @@ class Mixblup
     /** @var CommandUtil */
     private $cmdUtil;
 
+    /** @var WeightRepository $weightRepository */
+    private $weightRepository;
+
 
     /**
      * Mixblup constructor.
@@ -190,6 +199,8 @@ class Mixblup
         $this->firstMeasurementYear = $firstMeasurementYear;
         $this->lastMeasurementYear = $lastMeasurementYear;
         $this->cmdUtil = $cmdUtil;
+
+        $this->weightRepository = $this->em->getRepository(Weight::class);
 
         if($animals != null) {
             $this->animals = $animals;
@@ -461,6 +472,8 @@ class Mixblup
 
     public function generateDataFiles()
     {
+        $this->validateMeasurementData();
+
         //ExteriorMeasurements
         $this->getExteriorMeasurementsIfNull();
 
@@ -479,14 +492,6 @@ class Mixblup
 
 
         //TestAttributeMeasurements
-        $emptyMixblupBlockCount = MeasurementsUtil::getEmptyAnimalIdAndDateCount($this->em);
-        if($emptyMixblupBlockCount > 0) {
-            $isGenerateValues = $this->cmdUtil->generateConfirmationQuestion($emptyMixblupBlockCount.' AnimalIdAndDate values are empty. Generate them now? (y/n)');
-            if($isGenerateValues) {
-                MeasurementsUtil::generateAnimalIdAndDateValues($this->em, false);
-            }
-        }
-
         $this->getTestMeasurementsBySql();
         $testMeasurementsCount = count($this->measurementCodes);
         $message = 'Generate test measurements...';
@@ -524,13 +529,13 @@ class Mixblup
         $block = Utils::fillNullOrEmptyString($animalArray['block'], self::BLOCK_NULL_FILLER);
 
         $record =
-        Utils::addPaddingToStringForColumnFormatSides($animalUln, 15)
-        .Utils::addPaddingToStringForColumnFormatCenter($fatherUln, 19, self::COLUMN_PADDING_SIZE)
-        .Utils::addPaddingToStringForColumnFormatCenter($motherUln, 19, self::COLUMN_PADDING_SIZE)
-        .Utils::addPaddingToStringForColumnFormatCenter($block, 10, self::COLUMN_PADDING_SIZE)
-        .Utils::addPaddingToStringForColumnFormatCenter($gender, 7, self::COLUMN_PADDING_SIZE)
-        .Utils::addPaddingToStringForColumnFormatCenter($dateOfBirthString, 10, self::COLUMN_PADDING_SIZE)
-        .Utils::addPaddingToStringForColumnFormatSides($breedCode, 12, false)
+        Utils::addPaddingToStringForColumnFormatSides($animalUln, self::COLUMN_WIDTH_ULN)
+        .Utils::addPaddingToStringForColumnFormatCenter($fatherUln, self::COLUMN_WIDTH_ULN, self::COLUMN_PADDING_SIZE)
+        .Utils::addPaddingToStringForColumnFormatCenter($motherUln, self::COLUMN_WIDTH_ULN, self::COLUMN_PADDING_SIZE)
+        .Utils::addPaddingToStringForColumnFormatCenter($block, self::COLUMN_WIDTH_BLOCK, self::COLUMN_PADDING_SIZE)
+        .Utils::addPaddingToStringForColumnFormatCenter($gender, self::COLUMN_WIDTH_GENDER, self::COLUMN_PADDING_SIZE)
+        .Utils::addPaddingToStringForColumnFormatCenter($dateOfBirthString, self::COLUMN_WIDTH_DATE, self::COLUMN_PADDING_SIZE)
+        .Utils::addPaddingToStringForColumnFormatSides($breedCode, self::COLUMN_WIDTH_BREED_CODE, false)
         ;
 
         return $record;
@@ -653,13 +658,11 @@ class Mixblup
         $measurementDate = $codeParts[1];
 
         //TODO null check animal -> write to errorLog
-
         //TODO write conflicting messurements to errorLog
 
         $rowBase = $this->formatFirstPartDataRecordRowTestAttributesByAnimalDatabaseId($animalId);
 
-        //TODO WARNING FOR WEIGHTS SKIP REVOKED WEIGHTS!!!
-        $ageGrowthWeightRowPart = $this->formatAgeGrowthWeightsRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);//TODO
+        $ageGrowthWeightRowPart = $this->formatAgeGrowthWeightsRowPart($animalIdAndDateOfMeasurement, $measurementDate, $isSkipConflictingMeasurements);
         $bodyFatRowPart = $this->writeBodyFatRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);
         $muscleThicknessRowPart = $this->writeMuscleThicknessRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);
         $tailLengthRowPart = $this->writeTailLengthRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);
@@ -676,12 +679,12 @@ class Mixblup
 
         $record =
             $rowBase
-            .Utils::addPaddingToStringForColumnFormatCenter($measurementDate, 10, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($measurementDate, self::COLUMN_WIDTH_DATE, self::COLUMN_PADDING_SIZE)
             .$ageGrowthWeightRowPart
             .$bodyFatRowPart
             .$muscleThicknessRowPart
             .$tailLengthRowPart
-            .Utils::addPaddingToStringForColumnFormatSides($block, 10, false)
+            .Utils::addPaddingToStringForColumnFormatSides($block, self::COLUMN_WIDTH_BLOCK, false)
         ;
 
         return $record;
@@ -689,62 +692,66 @@ class Mixblup
 
 
     /**
-     * @param $animalIdAndDateOfMeasurement
+     * @param string $animalIdAndDateOfMeasurement
+     * @param string $measurementDateString
      * @param bool $isSkipConflictingMeasurements
      * @return string
      */
-    private function formatAgeGrowthWeightsRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements = true)
+    private function formatAgeGrowthWeightsRowPart($animalIdAndDateOfMeasurement, $measurementDateString, $isSkipConflictingMeasurements = true)
     {
-        return '';
-    }
+        //Weights
+        $sql = "SELECT w.weight, w.is_birth_weight FROM measurement m
+                  INNER JOIN weight w ON m.id = w.id
+                WHERE m.animal_id_and_date = '".$animalIdAndDateOfMeasurement."' AND w.is_revoked <> TRUE";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
 
-
-    /**
-     * @param Weight $measurement
-     * @return string
-     */
-    private function formatAgeGrowthWeightMeasurementsRowPart($measurement)
-    {
-        $weight = self::WEIGHT_NULL_FILLER;
-        $birthWeight = self::WEIGHT_NULL_FILLER;
-        $ageAtMeasurement = self::AGE_NULL_FILLER;
-
-        if($measurement != null && $measurement instanceof Weight) {
-            if($measurement->getIsBirthWeight()){
-                //First check and fix birthWeight measurementDates
-                $measurement = self::setDateOfBirthForMeasurementDateOfBirthWeight($measurement);
-                $this->em->persist($measurement);
-                $this->em->flush();
-
-                $birthWeight = Utils::fillZero($measurement->getWeight(), self::WEIGHT_NULL_FILLER);
-            } else {
-                $weight = Utils::fillZero($measurement->getWeight(), self::WEIGHT_NULL_FILLER);
+        $isGetFirstValues = false;
+        if(count($results) > 1) {
+            if(!$isSkipConflictingMeasurements) {
+                $isGetFirstValues = true;
             }
-
-            $animal = $measurement->getAnimal();
-            if($this->isAnimalNotNullAndPrintErrors($animal, $measurement->getId())) {
-                $ageAtMeasurement = self::getAgeInDays($animal, $measurement->getMeasurementDate());
-            } else {
-                $ageAtMeasurement = self::AGE_NULL_FILLER;
-            }
+        } elseif(count($results) == 1) {
+            $isGetFirstValues = true;
         }
 
-        if($weight != self::WEIGHT_NULL_FILLER) {
-            //Don't calculate growth from birthWeight
-            $growth = BreedValueUtil::getGrowthValue($weight, $ageAtMeasurement,
-                self::AGE_NULL_FILLER, self::GROWTH_NULL_FILLER, self::WEIGHT_NULL_FILLER);
+
+        if($isGetFirstValues) {
+            $isBirthWeight = $results[0]['is_birth_weight'];
+            $ageAtMeasurement = $this->getAgeInDays($animalIdAndDateOfMeasurement, $measurementDateString);
+            if(!$isBirthWeight && $ageAtMeasurement > 0) {
+                $isBirthWeight = true;
+            }
+            $ageAtMeasurement = Utils::fillZero($ageAtMeasurement, self::AGE_NULL_FILLER);
+
+            if($isBirthWeight) {
+                $weight = self::WEIGHT_NULL_FILLER;
+                $birthWeight = Utils::fillZero($results[0]['weight'], self::WEIGHT_NULL_FILLER);
+            } else {
+                $weight = Utils::fillZero($results[0]['weight'], self::WEIGHT_NULL_FILLER);
+                $birthWeight = self::WEIGHT_NULL_FILLER;
+            }
+
+            if(!$isBirthWeight) {
+                //Don't calculate growth from birthWeight
+                $growth = BreedValueUtil::getGrowthValue($weight, $ageAtMeasurement,
+                    self::AGE_NULL_FILLER, self::GROWTH_NULL_FILLER, self::WEIGHT_NULL_FILLER);
+            } else {
+                $growth = self::GROWTH_NULL_FILLER;
+            }
+
         } else {
+            $ageAtMeasurement = self::AGE_NULL_FILLER;
             $growth = self::GROWTH_NULL_FILLER;
+            $birthWeight = self::WEIGHT_NULL_FILLER;
+            $weight = self::WEIGHT_NULL_FILLER;
         }
 
 
-        $growthAgeWeightRowPart =
-              Utils::addPaddingToStringForColumnFormatCenter($ageAtMeasurement, 7, self::COLUMN_PADDING_SIZE)
-             .Utils::addPaddingToStringForColumnFormatCenter($growth, 9, self::COLUMN_PADDING_SIZE)
-             .Utils::addPaddingToStringForColumnFormatCenter($birthWeight, 8, self::COLUMN_PADDING_SIZE)
-             .Utils::addPaddingToStringForColumnFormatCenter($weight, 8, self::COLUMN_PADDING_SIZE);
-
-        return $growthAgeWeightRowPart;
+        return
+             Utils::addPaddingToStringForColumnFormatCenter($ageAtMeasurement, self::COLUMN_WIDTH_AGE, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($growth, self::COLUMN_WIDTH_GROWTH, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($birthWeight, self::COLUMN_WIDTH_WEIGHT, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($weight, self::COLUMN_WIDTH_WEIGHT, self::COLUMN_PADDING_SIZE);
     }
 
 
@@ -847,6 +854,7 @@ class Mixblup
 
         $breedCodeValues = $this->getMixBlupTestAttributesBreedCodeTypesById($animalData['breed_codes_id']);
         $dateOfBirthYear = explode('-', $animalData['date_of_birth'])[0];
+        $dateOfBirthString = explode(' ', $animalData['date_of_birth'])[0];
         $yearAndUbnOfBirth = self::getYearAndUbnOfBirthStringByValue($dateOfBirthYear, $animalData['ubn_of_birth']);
 
         $rowBase =
@@ -886,9 +894,9 @@ class Mixblup
 
         $record =
             $rowBase
-            .Utils::addPaddingToStringForColumnFormatCenter($measurementDate, 10, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($measurementDate, self::COLUMN_WIDTH_DATE, self::COLUMN_PADDING_SIZE)
             .$exteriorRowPart
-            .Utils::addPaddingToStringForColumnFormatCenter($block, 10, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($block, self::COLUMN_WIDTH_BLOCK, self::COLUMN_PADDING_SIZE)
         ;
 
         return $record;
@@ -1101,7 +1109,7 @@ class Mixblup
      * @param \DateTime $measurementDate
      * @return int|string
      */
-    public static function getAgeInDays(Animal $animal, \DateTime $measurementDate)
+    public static function getAgeInDaysOfAnimal(Animal $animal, \DateTime $measurementDate)
     {
         $dateOfBirth = $animal->getDateOfBirth();
 
@@ -1112,6 +1120,22 @@ class Mixblup
 
         $interval = $measurementDate->diff($dateOfBirth);
         return $interval->days;
+    }
+
+
+    private function getAgeInDays($animalIdAndDate, $measurementDateString)
+    {
+        $dateOfBirthString = explode('_',$animalIdAndDate)[1];
+
+        if($dateOfBirthString == $measurementDateString) {
+            return 0;
+
+        } else {
+            $measurementDate = new \DateTime($measurementDateString);
+            $dateOfBirth = new \DateTime($dateOfBirthString);
+            $dateInterval = $measurementDate->diff($dateOfBirth);
+            return $dateInterval->days;
+        }
     }
 
 
@@ -1412,4 +1436,39 @@ class Mixblup
         return $em->getConnection()->query($sql)->fetch()['mixblup_block'];
     }
 
+
+    public function validateMeasurementData($isWithoutValidation = false)
+    {
+        $isGenerateMixblupBlockValues = false;
+        $isFixBirthWeightBoolean = false;
+
+        $emptyMixblupBlockCount = MeasurementsUtil::getEmptyAnimalIdAndDateCount($this->em);
+        if($emptyMixblupBlockCount > 0) {
+
+            if($isWithoutValidation) {
+                $isGenerateMixblupBlockValues = true;
+            } else {
+                $isGenerateMixblupBlockValues = $this->cmdUtil->generateConfirmationQuestion($emptyMixblupBlockCount.' AnimalIdAndDate values are empty. Generate them now? (y/n)');
+            }
+        }
+
+        $incorrectBirthWeightValueCount = $this->weightRepository->getIncorrectBirthWeightBooleansInWeightsCount();
+        if($incorrectBirthWeightValueCount > 0) {
+
+            if($isWithoutValidation) {
+                $isFixBirthWeightBoolean = true;
+            } else {
+                $isFixBirthWeightBoolean = $this->cmdUtil->generateConfirmationQuestion('Fix '.$incorrectBirthWeightValueCount.' incorrect birthWeight booleans in Weights? (y/n)');
+            }
+        }
+
+        if($isGenerateMixblupBlockValues) {
+            MeasurementsUtil::generateAnimalIdAndDateValues($this->em, false);
+        }
+
+        if($isFixBirthWeightBoolean) {
+            $this->weightRepository->fixBirthWeightsNotMarkedAsBirthWeight();
+            $this->weightRepository->fixWeightsIncorrectlyMarkedAsBirthWeight();
+        }
+    }
 }

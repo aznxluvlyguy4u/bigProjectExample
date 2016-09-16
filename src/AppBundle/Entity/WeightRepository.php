@@ -192,4 +192,30 @@ class WeightRepository extends BaseRepository {
 
         return count($results);
     }
+
+
+    /**
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getIncorrectBirthWeightBooleansInWeightsCount()
+    {
+        $em = $this->getEntityManager();
+        
+        $sql = "
+              SELECT w.id FROM measurement m
+                LEFT JOIN weight w ON m.id = w.id
+                LEFT JOIN animal a ON a.id = w.animal_id
+              WHERE DATE(m.measurement_date) = DATE(a.date_of_birth) AND w.is_birth_weight = false";
+        $results1 = $em->getConnection()->query($sql)->fetchAll();
+
+        $sql = "
+              SELECT w.id FROM measurement m
+                LEFT JOIN weight w ON m.id = w.id
+                LEFT JOIN animal a ON a.id = w.animal_id
+              WHERE DATE(m.measurement_date) <> DATE(a.date_of_birth) AND w.is_birth_weight = true";
+        $results2 = $em->getConnection()->query($sql)->fetchAll();
+        
+        return count($results1) + count($results2);
+    }
 }
