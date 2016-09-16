@@ -13,6 +13,24 @@ class MeasurementsUtil
     const EXTERIOR_TABLE_NAME = 'exterior';
     const BODY_FAT_TABLE_NAME = 'body_fat';
 
+
+    /**
+     * @param ObjectManager $em
+     * @return int
+     */
+    public static function getEmptyAnimalIdAndDateCount(ObjectManager $em)
+    {
+        $sql = "SELECT COUNT(*) FROM measurement WHERE (animal_id_and_date ISNULL OR animal_id_and_date = '') AND type <> 'Fat1' AND type <> 'Fat2' AND type <>'Fat3'";
+        $result = $em->getConnection()->query($sql)->fetch()['count'];
+        return $result;
+    }
+    
+    
+    /**
+     * @param ObjectManager $em
+     * @param bool $isRegenerateFilledValues
+     * @return int
+     */
     public static function generateAnimalIdAndDateValues(ObjectManager $em, $isRegenerateFilledValues = false) {
 
         $count  = self::generateAnimalIdAndDateValuesForType($em, self::BODY_FAT_TABLE_NAME, $isRegenerateFilledValues);
@@ -35,7 +53,7 @@ class MeasurementsUtil
         if($isRegenerateFilledValues) {
             $sqlFilter = '';
         } else {
-            $sqlFilter = 'WHERE m.animal_id_and_date ISNULL';
+            $sqlFilter = "WHERE m.animal_id_and_date ISNULL OR m.animal_id_and_date = ''";
         }
 
         $sql = "SELECT m.id, CONCAT(t.animal_id,'_',DATE(measurement_date)) as code FROM measurement m INNER JOIN ".$tableName." t ON m.id = t.id ".$sqlFilter."";

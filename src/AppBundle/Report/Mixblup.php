@@ -23,6 +23,7 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Migration\BreedCodeReformatter;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\Translation;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -460,6 +461,7 @@ class Mixblup
 
     public function generateDataFiles()
     {
+        //ExteriorMeasurements
         $this->getExteriorMeasurementsIfNull();
 
         $message = 'Generate exterior measurements...';
@@ -475,6 +477,15 @@ class Mixblup
         }
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
+
+        //TestAttributeMeasurements
+        $emptyMixblupBlockCount = MeasurementsUtil::getEmptyAnimalIdAndDateCount($this->em);
+        if($emptyMixblupBlockCount > 0) {
+            $isGenerateValues = $this->cmdUtil->generateConfirmationQuestion($emptyMixblupBlockCount.' AnimalIdAndDate values are empty. Generate them now? (y/n)');
+            if($isGenerateValues) {
+                MeasurementsUtil::generateAnimalIdAndDateValues($this->em, false);
+            }
+        }
 
         $this->getTestMeasurementsBySql();
         $testMeasurementsCount = count($this->measurementCodes);

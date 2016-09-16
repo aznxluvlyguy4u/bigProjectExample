@@ -7,7 +7,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 
 /**
+ *
  * Class Measurement
+ *
+ * @ORM\Table(indexes={@ORM\Index(name="animal_id_and_date_idx", columns={"animal_id_and_date"})})
  * @ORM\Entity(repositoryClass="AppBundle\Entity\MeasurementRepository")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
