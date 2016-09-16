@@ -23,9 +23,11 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Migration\BreedCodeReformatter;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\NullChecker;
 use AppBundle\Util\Translation;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManager;
 
 class Mixblup
@@ -63,7 +65,27 @@ class Mixblup
     const EWE = 'ooi';
     const GENDER_NULL_FILLER = 'N_B';
     const NEUTER = 'N_B';
+
+    //Column padding & widths
     const COLUMN_PADDING_SIZE = 2;
+    const COLUMN_WIDTH_GENDER = 8;
+    const COLUMN_WIDTH_FAT = 7;
+    const COLUMN_WIDTH_TAIL_LENGTH = 8;
+    const COLUMN_WIDTH_MUSCLE_THICKNESS = 6;
+    const COLUMN_WIDTH_DATE = 10;
+    const COLUMN_WIDTH_BLOCK = 10;
+    const COLUMN_WIDTH_EXTERIOR = 6;
+    const COLUMN_WIDTH_ULN = 16;
+    const COLUMN_WIDTH_YEAR_AND_UBN = 16;
+    const COLUMN_WIDTH_BREED_CODE_PART = 5;
+    const COLUMN_WIDTH_BREED_CODE = 16;
+    const COLUMN_WIDTH_BREED_TYPE = 16;
+    const COLUMN_WIDTH_GENOTYPE = 9;
+    const COLUMN_WIDTH_NLING = 5;
+    const COLUMN_WIDTH_LITTER_GROUP = 19;
+    const COLUMN_WIDTH_HETEROSIS = 6;
+    const COLUMN_WIDTH_RECOMBINATION = 6;
+
 
     const ANIMAL = 'ANIMAL';
     const MEASUREMENT_DATE = 'MEASUREMENT_DATE';
@@ -79,17 +101,14 @@ class Mixblup
     const FERTILITY = 'vruchtbaarheid';
     const ERRORS = 'errors';
 
-    //Versions
-    const IS_GROUP_BY_ANIMAL_AND_MEASUREMENT_DATE = true;
-
     /** @var EntityManager */
     private $em;
 
     /** @var array */
     private $animals;
 
-    /** @var Collection */
-    private $measurements;
+    /** @var array */
+    private $measurementCodes;
 
     /** @var Collection */
     private $exteriorMeasurements;
@@ -166,6 +185,7 @@ class Mixblup
         $this->em = $em;
         $this->animalRowBases = new ArrayCollection();
         $this->testAttributes = new ArrayCollection();
+        $this->measurementCodes = array();
         $this->firstMeasurementYear = $firstMeasurementYear;
         $this->lastMeasurementYear = $lastMeasurementYear;
         $this->cmdUtil = $cmdUtil;
@@ -221,17 +241,20 @@ class Mixblup
     }
 
 
-    /**
-     * Only retrieve the measurements when they are really needed.
-     * @return Collection
-     */
-    private function getMeasurementsIfNull()
+    private function getTestMeasurementsBySql()
     {
-        /** @var MeasurementRepository $measurementRepository */
-        $measurementRepository = $this->em->getRepository(Measurement::class);
-        $this->measurements = $measurementRepository->getMeasurementsBetweenYears($this->firstMeasurementYear, $this->lastMeasurementYear);
-        return $this->measurements;
+        $startDate = $this->firstMeasurementYear.'-01-01';
+        $endDate = ($this->lastMeasurementYear+1).'-01-01';
+
+        $sql = "SELECT DISTINCT(animal_id_and_date) as code FROM measurement m WHERE measurement_date BETWEEN '".$startDate."' AND '".$endDate."' AND (type = 'BodyFat' OR type = 'Weight' OR type = 'MuscleThickness' OR type = 'TailLength')";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+
+        foreach($results as $result) {
+            $code = $result['code'];
+            $this->measurementCodes[$code] = $code;
+        }
     }
+
 
     /**
      * Only retrieve the exterior measurements when they are really needed.
@@ -453,24 +476,21 @@ class Mixblup
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
 
-        $this->getMeasurementsIfNull();
+        $this->getTestMeasurementsBySql();
+        $testMeasurementsCount = count($this->measurementCodes);
         $message = 'Generate test measurements...';
+        $isSkipConflictingMeasurements = true; //TODO NOTE Duplicates and Controdicting measurements have to been fixed separatedly.
 
-        if(self::IS_GROUP_BY_ANIMAL_AND_MEASUREMENT_DATE) {
-            $this->writeGroupedDataRecordTestAttributes();
-        } else {
-            $this->cmdUtil->setStartTimeAndPrintIt($this->measurements->count()+1, 1, $message);
-            /** @var Measurement $measurement */
-            foreach ($this->measurements as $measurement) {
-                $row = $this->writeDataRecordTestAttributes($measurement);
-                if($row != null) {
-                    file_put_contents($this->dataFilePathTestAttributes, $row."\n", FILE_APPEND);
-                    $this->cmdUtil->advanceProgressBar(1, $message);
-                }
+        $this->cmdUtil->setStartTimeAndPrintIt($testMeasurementsCount+1, 1, $message);
+        /** @var string $code */
+        foreach ($this->measurementCodes as $code) {
+            $row = $this->writeDataRecordTestAttributes($code, $isSkipConflictingMeasurements);
+            if($row != null) {
+                file_put_contents($this->dataFilePathTestAttributes, $row."\n", FILE_APPEND);
+                $this->cmdUtil->advanceProgressBar(1, $message);
             }
-            $this->cmdUtil->setEndTimeAndPrintFinalOverview();
         }
-
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
         //TODO add fertility measurements
     }
@@ -506,217 +526,142 @@ class Mixblup
     }
 
 
-    private function groupTestMeasurementsByAnimalAndDate()
+    /**
+     * @param array $results
+     * @param boolean $isSkipConflictingMeasurements
+     * @param string $label
+     * @return float|int|null
+     */
+    private function getMeasurementFromSqlResults($results, $isSkipConflictingMeasurements, $label)
     {
-        $this->getMeasurementsIfNull();
-
-        foreach($this->measurements as $measurement) {
-            /** @var Measurement|BodyFat|MuscleThickness|Weight|TailLength|Exterior $measurement */
-
-            if( $measurement instanceof BodyFat || $measurement instanceof Weight ||
-                $measurement instanceof MuscleThickness || $measurement instanceof TailLength)
-            {
-                $animal = $measurement->getAnimal();
-                $isAnimalVerified = $this->isAnimalNotNullAndPrintErrors($animal, $measurement->getId());
-                if($isAnimalVerified) {
-
-                    $animalAndDateKey = $animal->getId().'_'.$measurement->getMeasurementDate()->getTimestamp();
-
-                    //Null check
-                    /** @var ArrayCollection $getAnimalAndDateKey */
-                    $getAnimalAndDateKey = $this->testAttributes->get($animalAndDateKey);
-                    if($getAnimalAndDateKey == null) {
-                        $this->testAttributes->set($animalAndDateKey,new ArrayCollection());
-                        $getAnimalAndDateKey = $this->testAttributes->get($animalAndDateKey);
-                    }
-
-                    if($measurement instanceof BodyFat) {
-                        /** @var BodyFat $measurement */
-                        $bodyFatInArray = $getAnimalAndDateKey->get(self::BODY_FAT);
-                        if($bodyFatInArray == null) {
-                            $getAnimalAndDateKey->set(self::BODY_FAT, $measurement);
-                        } else { //There already exists a BodyFat for that data
-                            if(!$measurement->isEqualInValues($bodyFatInArray)) {
-                                $getAnimalAndDateKey->set(self::BODY_FAT, self::CONTRADICTING_DUPLICATES);
-                            }
-                            //Else just keep the value or measurement already in that key
-                        }
-                    }
-
-                    if($measurement instanceof Weight) {
-                        /** @var Weight $measurement */
-                        $weightInArray = $getAnimalAndDateKey->get(self::WEIGHT);
-                        if($weightInArray == null) {
-                            $getAnimalAndDateKey->set(self::WEIGHT, $measurement);
-                        } else { //There already exists a Weight for that data
-                            if(!$measurement->isEqualInValues($weightInArray)) {
-                                $getAnimalAndDateKey->set(self::WEIGHT, self::CONTRADICTING_DUPLICATES);
-                            }
-                            //Else just keep the value or measurement already in that key
-                        }
-                    }
-
-                    if($measurement instanceof MuscleThickness) {
-                        /** @var MuscleThickness $measurement */
-                        $muscleThicknessInArray = $getAnimalAndDateKey->get(self::MUSCLE_THICKNESS);
-                        if($muscleThicknessInArray == null) {
-                            $getAnimalAndDateKey->set(self::MUSCLE_THICKNESS, $measurement);
-                        } else { //There already exists a MuscleThickness for that data
-                            if(!$measurement->isEqualInValues($muscleThicknessInArray)) {
-                                $getAnimalAndDateKey->set(self::MUSCLE_THICKNESS, self::CONTRADICTING_DUPLICATES);
-                            }
-                            //Else just keep the value or measurement already in that key
-                        }
-                    }
-
-                    if($measurement instanceof TailLength) {
-                        /** @var TailLength $measurement */
-                        $tailLengthInArray = $getAnimalAndDateKey->get(self::TAIL_LENGTH);
-                        if($tailLengthInArray == null) {
-                            $getAnimalAndDateKey->set(self::TAIL_LENGTH, $measurement);
-                        } else { //There already exists a TailLength for that data
-                            if(!$measurement->isEqualInValues($tailLengthInArray)) {
-                                $getAnimalAndDateKey->set(self::TAIL_LENGTH, self::CONTRADICTING_DUPLICATES);
-                            }
-                            //Else just keep the value or measurement already in that key
-                        }
-                    }
-                }
+        $isGetFirstValues = false;
+        if(count($results) > 1) {
+            if(!$isSkipConflictingMeasurements) {
+                $isGetFirstValues = true;
             }
+        } elseif(count($results) == 1) {
+            $isGetFirstValues = true;
         }
-    }
 
-
-    private function writeGroupedDataRecordTestAttributes()
-    {
-        //Create the array grouping measurements by Animal and Date first
-        $this->groupTestMeasurementsByAnimalAndDate();
-
-        $message = 'Process measurement group...';
-        $this->cmdUtil->setStartTimeAndPrintIt($this->testAttributes->count()+1, 1, $message);
-
-        foreach ($this->testAttributes as $measurementGroup) {
-
-            //Set default values
-            $animal = null;
-            $measurementDate = null;
-            $tailLengthRowPart = $this->formatTailLengthMeasurementsRowPart(null);
-            $ageGrowthWeightRowPart = $this->formatAgeGrowthWeightMeasurementsRowPart(null);
-            $bodyFatRowPart = $this->formatBodyFatMeasurementsRowPart(null);
-            $muscleThicknessRowPart = $this->formatMuscleThicknessMeasurementsRowPart(null);
-
-            foreach ($measurementGroup as $measurement) {
-
-                /* fill measurement data */
-                if($measurement instanceof BodyFat) { //Fat1, Fat2 & Fat3 are included here
-                    /** @var BodyFat $measurement */
-                    if($animal == null) { $animal = $measurement->getAnimal(); }
-                    if($measurementDate == null) { $measurementDate = $measurement->getMeasurementDate(); }
-                    $bodyFatRowPart = $this->formatBodyFatMeasurementsRowPart($measurement);
-
-                } else if ($measurement instanceof MuscleThickness) {
-                    /** @var MuscleThickness $measurement */
-                    if($animal == null) { $animal = $measurement->getAnimal(); }
-                    if($measurementDate == null) { $measurementDate = $measurement->getMeasurementDate(); }
-                    $muscleThicknessRowPart = $this->formatMuscleThicknessMeasurementsRowPart($measurement);
-
-                } else if ($measurement instanceof TailLength) {
-                    /** @var TailLength
-                     * $measurement */
-                    if($animal == null) { $animal = $measurement->getAnimal(); }
-                    if($measurementDate == null) { $measurementDate = $measurement->getMeasurementDate(); }
-                    $tailLengthRowPart = $this->formatTailLengthMeasurementsRowPart($measurement);
-
-                } else if ($measurement instanceof Weight) {
-                    /** @var Weight $measurement */
-                    if($animal == null) { $animal = $measurement->getAnimal(); }
-                    if($measurementDate == null) { $measurementDate = $measurement->getMeasurementDate(); }
-                    $ageGrowthWeightRowPart = $this->formatAgeGrowthWeightMeasurementsRowPart($measurement);
-
-                } else {
-                    //skip this measurement
-                }
-            }
-
-            //Test values might all be empty if all measurements were contradicting duplicates
-            $isAllTestValuesEmpty = $animal == null || $measurementDate == null;
-
-            if(!$isAllTestValuesEmpty) {
-                $block = $animal->getMixblupBlock();
-                $rowBase = $this->formatFirstPartDataRecordRowTestAttributes($animal);
-                $measurementDate = self::formatMeasurementDate($measurementDate);
-
-                $record =
-                    $rowBase
-                    .Utils::addPaddingToStringForColumnFormatCenter($measurementDate, 10, self::COLUMN_PADDING_SIZE)
-                    .$ageGrowthWeightRowPart
-                    .$bodyFatRowPart
-                    .$muscleThicknessRowPart
-                    .$tailLengthRowPart
-                    .Utils::addPaddingToStringForColumnFormatCenter($block, 10, self::COLUMN_PADDING_SIZE)
-                ;
-
-                file_put_contents($this->dataFilePathTestAttributes, $record."\n", FILE_APPEND);
-            }
-            //else if no valid test data is available, don't write anything to the file
-
-            $this->cmdUtil->advanceProgressBar(1, $message);
+        if($isGetFirstValues) {
+            return $results[0][$label];
+        } else {
+            return null;
         }
-        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 
     /**
-     * @param Measurement $measurement
+     * @param string $animalIdAndDate
      * @return string
+     * @throws \Doctrine\DBAL\DBALException
      */
-    private function writeDataRecordTestAttributes(Measurement $measurement)
+    private function writeMuscleThicknessRowPart($animalIdAndDate, $isSkipConflictingMeasurements = true)
     {
-        //Set default values
-        $tailLengthRowPart = $this->formatTailLengthMeasurementsRowPart(null);
-        $ageGrowthWeightRowPart = $this->formatAgeGrowthWeightMeasurementsRowPart(null);
-        $bodyFatRowPart = $this->formatBodyFatMeasurementsRowPart(null);
-        $muscleThicknessRowPart = $this->formatMuscleThicknessMeasurementsRowPart(null);
+        $sql = "SELECT t.muscle_thickness FROM measurement m
+                  INNER JOIN muscle_thickness t ON m.id = t.id
+                WHERE m.animal_id_and_date = '".$animalIdAndDate."'";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $muscleThicknessValue = $this->getMeasurementFromSqlResults($results, $isSkipConflictingMeasurements, 'muscle_thickness');
 
-        /* fill measurement data */
-        if($measurement instanceof BodyFat) { //Fat1, Fat2 & Fat3 are included here
-            /** @var BodyFat $measurement */
-            $animal = $measurement->getAnimal();
-            $bodyFatRowPart = $this->formatBodyFatMeasurementsRowPart($measurement);
+        $muscleThicknessValue = Utils::fillZero($muscleThicknessValue,self::MUSCLE_THICKNESS_NULL_FILLER);
+        return Utils::addPaddingToStringForColumnFormatCenter($muscleThicknessValue, self::COLUMN_WIDTH_MUSCLE_THICKNESS, self::COLUMN_PADDING_SIZE);
+    }
 
-        } else if ($measurement instanceof MuscleThickness) {
-            /** @var MuscleThickness $measurement */
-            $animal = $measurement->getAnimal();
-            $muscleThicknessRowPart = $this->formatMuscleThicknessMeasurementsRowPart($measurement);
 
-        } else if ($measurement instanceof TailLength) {
-            /** @var TailLength
-             * $measurement */
-            $animal = $measurement->getAnimal();
-            $tailLengthRowPart = $this->formatTailLengthMeasurementsRowPart($measurement);
+    /**
+     * @param string $animalIdAndDate
+     * @return string
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function writeTailLengthRowPart($animalIdAndDate, $isSkipConflictingMeasurements = true)
+    {
+        $sql = "SELECT t.length FROM measurement m
+                  INNER JOIN tail_length t ON m.id = t.id
+                WHERE m.animal_id_and_date = '".$animalIdAndDate."'";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $tailLengthValue = $this->getMeasurementFromSqlResults($results, $isSkipConflictingMeasurements, 'length');
 
-        } else if ($measurement instanceof Weight) {
-            /** @var Weight $measurement */
-            //skip revoked weight measurements
-            if($measurement->getIsRevoked()) {
-                return null;
+        $tailLengthValue = Utils::fillZero($tailLengthValue, self::TAIL_LENGTH_NULL_FILLER);
+        return Utils::addPaddingToStringForColumnFormatCenter($tailLengthValue, self::COLUMN_WIDTH_TAIL_LENGTH, self::COLUMN_PADDING_SIZE);
+    }
+
+
+    /**
+     * @param string $animalIdAndDate
+     * @return string
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function writeBodyFatRowPart($animalIdAndDate, $isSkipConflictingMeasurements = true)
+    {
+        $sql = "SELECT fat1, fat2, fat3 FROM measurement m
+                INNER JOIN (
+                  SELECT body_fat.id as body_fat_id, fat1.fat as fat1, fat2.fat as fat2, fat3.fat as fat3, animal_id 
+                  FROM body_fat
+                  LEFT JOIN fat1 ON body_fat.fat1_id = fat1.id
+                  LEFT JOIN fat2 ON body_fat.fat2_id = fat2.id
+                  LEFT JOIN fat3 ON body_fat.fat3_id = fat3.id
+                ) b ON m.id = b.body_fat_id
+                WHERE m.animal_id_and_date = '".$animalIdAndDate."'";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+
+        $isGetFirstValues = false;
+        if(count($results) > 1) {
+            if(!$isSkipConflictingMeasurements) {
+                $isGetFirstValues = true;
             }
-            $animal = $measurement->getAnimal();
-            $ageGrowthWeightRowPart = $this->formatAgeGrowthWeightMeasurementsRowPart($measurement);
-
-        } else if ($measurement instanceof Exterior) {
-            //Skip exteriorMeasurements for the TestAttributes datafile
-            return null; //do nothing
-
-        } else {
-            return null; //do nothing
+        } elseif(count($results) == 1) {
+            $isGetFirstValues = true;
         }
 
-        //Null check animal in measurement.
-        if(!$this->isAnimalNotNullAndPrintErrors($animal, $measurement->getId())) { return null; }
+        if($isGetFirstValues) {
+            $fat1 = Utils::fillZero($results[0]['fat1'], self::FAT_NULL_FILLER);
+            $fat2 = Utils::fillZero($results[0]['fat2'], self::FAT_NULL_FILLER);
+            $fat3 = Utils::fillZero($results[0]['fat3'], self::FAT_NULL_FILLER);
+        } else {
+            $fat1 = self::FAT_NULL_FILLER;
+            $fat2 = self::FAT_NULL_FILLER;
+            $fat3 = self::FAT_NULL_FILLER;
+        }
 
-        $ubn = self::getUbnFromAnimal($animal);
-        $rowBase = $this->formatFirstPartDataRecordRowTestAttributes($animal);
-        $measurementDate = self::formatMeasurementDate($measurement->getMeasurementDate());
+        return
+             Utils::addPaddingToStringForColumnFormatCenter($fat1, self::COLUMN_WIDTH_FAT, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($fat2, self::COLUMN_WIDTH_FAT, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($fat3, self::COLUMN_WIDTH_FAT, self::COLUMN_PADDING_SIZE);
+    }
+
+    
+    /**
+     * @param string $animalIdAndDateOfMeasurement
+     * @return string
+     */
+    private function writeDataRecordTestAttributes($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements = true)
+    {
+        /* get animal values */
+        $codeParts = explode('_', $animalIdAndDateOfMeasurement);
+        $animalId = $codeParts[0];
+        $measurementDate = $codeParts[1];
+
+        //TODO null check animal -> write to errorLog
+
+        //TODO write conflicting messurements to errorLog
+
+        $rowBase = $this->formatFirstPartDataRecordRowTestAttributesByAnimalDatabaseId($animalId);
+
+        //TODO WARNING FOR WEIGHTS SKIP REVOKED WEIGHTS!!!
+        $ageGrowthWeightRowPart = $this->formatAgeGrowthWeightsRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);//TODO
+        $bodyFatRowPart = $this->writeBodyFatRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);
+        $muscleThicknessRowPart = $this->writeMuscleThicknessRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);
+        $tailLengthRowPart = $this->writeTailLengthRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);
+
+        $block = self::getMixblupBlockByAnimalId($this->em, $animalId);
+
+        //Test values might all be empty if all measurements were contradicting duplicates
+//        TODO SKIP IF ALL MEASUREMENTS ARE NULL / WRITE TO ERROR LOG
+//        $isAllTestValuesEmpty = $animal == null || $measurementDate == null;
+//
+//        if(!$isAllTestValuesEmpty) {
+//
+//        }
 
         $record =
             $rowBase
@@ -725,94 +670,21 @@ class Mixblup
             .$bodyFatRowPart
             .$muscleThicknessRowPart
             .$tailLengthRowPart
-            .Utils::addPaddingToStringForColumnFormatCenter($ubn, 10, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatSides($block, 10, false)
         ;
-
 
         return $record;
     }
 
 
     /**
-     * @param BodyFat $measurement
+     * @param $animalIdAndDateOfMeasurement
+     * @param bool $isSkipConflictingMeasurements
      * @return string
      */
-    private function formatBodyFatMeasurementsRowPart($measurement)
+    private function formatAgeGrowthWeightsRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements = true)
     {
-        if($measurement != null && $measurement instanceof BodyFat) {
-            /** @var Fat1 $fat1 */
-            $fat1 = $measurement->getFat1();
-            /** @var Fat2 $fat2 */
-            $fat2 = $measurement->getFat2();
-            /** @var Fat3 $fat3 */
-            $fat3 = $measurement->getFat3();
-
-            if($fat1 != null) {
-                $fat1 = $fat1->getFat();
-                Utils::fillZero($fat1, self::FAT_NULL_FILLER);
-            } else {
-                $fat1 = self::FAT_NULL_FILLER;
-            }
-
-            if($fat2 != null) {
-                $fat2 = $fat2->getFat();
-                Utils::fillZero($fat2, self::FAT_NULL_FILLER);
-            } else {
-                $fat2 = self::FAT_NULL_FILLER;
-            }
-
-            if($fat3 != null) {
-                $fat3 = $fat3->getFat();
-                Utils::fillZero($fat3, self::FAT_NULL_FILLER);
-            } else {
-                $fat3 = self::FAT_NULL_FILLER;
-            }
-        } else {
-            $fat1 = self::FAT_NULL_FILLER; $fat2 = self::FAT_NULL_FILLER; $fat3 = self::FAT_NULL_FILLER;
-        }
-
-        $bodyFatRowPart =
-            Utils::addPaddingToStringForColumnFormatCenter($fat1, 7, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($fat2, 7, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($fat3, 7, self::COLUMN_PADDING_SIZE);
-
-        return $bodyFatRowPart;
-    }
-
-
-    /**
-     * @param MuscleThickness $measurement
-     * @return string
-     */
-    private function formatMuscleThicknessMeasurementsRowPart($measurement)
-    {
-        if($measurement != null && $measurement instanceof MuscleThickness) {
-            $muscleThickness = Utils::fillZero($measurement->getMuscleThickness(),self::MUSCLE_THICKNESS_NULL_FILLER);
-        } else {
-            $muscleThickness = self::MUSCLE_THICKNESS_NULL_FILLER;
-        }
-
-        $muscleThicknessRowPart = Utils::addPaddingToStringForColumnFormatCenter($muscleThickness, 6, self::COLUMN_PADDING_SIZE);
-
-        return $muscleThicknessRowPart;
-    }
-
-
-    /**
-     * @param TailLength $measurement
-     * @return string
-     */
-    private function formatTailLengthMeasurementsRowPart($measurement)
-    {
-        if($measurement != null && $measurement instanceof TailLength) {
-            $tailLength = Utils::fillZero($measurement->getLength(), self::TAIL_LENGTH_NULL_FILLER);
-        } else {
-            $tailLength = self::TAIL_LENGTH_NULL_FILLER;
-        }
-
-        $tailLengthRowPart = Utils::addPaddingToStringForColumnFormatCenter($tailLength, 8, self::COLUMN_PADDING_SIZE);
-
-        return $tailLengthRowPart;
+        return '';
     }
 
 
@@ -902,77 +774,91 @@ class Mixblup
             $markings = self::EXTERIOR_NULL_FILLER;
         }
 
-        $exteriorValuesSpacing = 6;
+        $exteriorValuesSpacing = self::COLUMN_WIDTH_EXTERIOR;
         
         $exteriorRowPart =
-             Utils::addPaddingToStringForColumnFormatCenter($kind, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($skull, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($muscularity, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($proportion, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($progress, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($exteriorType, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($legWork, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($fur, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($generalAppearance, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($height, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($torsoLength, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($breastDepth, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($markings, $exteriorValuesSpacing, self::COLUMN_PADDING_SIZE);
+             Utils::addPaddingToStringForColumnFormatCenter($kind, self::COLUMN_WIDTH_EXTERIOR, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($skull, self::COLUMN_WIDTH_EXTERIOR, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($muscularity, self::COLUMN_WIDTH_EXTERIOR, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($proportion, self::COLUMN_WIDTH_EXTERIOR, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($progress, self::COLUMN_WIDTH_EXTERIOR, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($exteriorType, self::COLUMN_WIDTH_EXTERIOR, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($legWork, self::COLUMN_WIDTH_EXTERIOR, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($fur, self::COLUMN_WIDTH_EXTERIOR, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($generalAppearance, self::COLUMN_WIDTH_EXTERIOR, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($height, self::COLUMN_WIDTH_EXTERIOR, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($torsoLength, self::COLUMN_WIDTH_EXTERIOR, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breastDepth, self::COLUMN_WIDTH_EXTERIOR, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($markings, self::COLUMN_WIDTH_EXTERIOR, self::COLUMN_PADDING_SIZE);
 
         return $exteriorRowPart;
     }
 
+
     /**
-     * @param Animal $animal
-     * @return string
+     * @param int $animalId
+     * @return null|string
+     * @throws \Doctrine\DBAL\DBALException
      */
-    private function formatFirstPartDataRecordRowTestAttributes(Animal $animal)
+    private function formatFirstPartDataRecordRowTestAttributesByAnimalDatabaseId($animalId)
     {
         //If rowBase already exists, retrieve it
-        $record = $this->animalRowBases->get($animal->getId());
-        if($record != null) {
-            return $record;
+        $rowBase = $this->animalRowBases->get($animalId);
+        if($rowBase != null) {
+            return $rowBase;
         }
         //else create a new one
 
-        $animalUln = self::formatUln($animal, self::ULN_NULL_FILLER);
-        $parents = CommandUtil::getParentUlnsFromParentsArray($animal->getParents(), self::ULN_NULL_FILLER);
-        $motherUln = $parents->get(Constant::MOTHER_NAMESPACE);
-        $fatherUln = $parents->get(Constant::FATHER_NAMESPACE);
-        $gender = self::formatGender($animal->getGender());
+        $sql = "SELECT
+                          a.id, a.gender, a.breed_codes_id, a.breed_code, a.breed_type, a.scrapie_genotype, 
+                          a.date_of_birth, a.ubn_of_birth,
+                          a.uln_country_code as uln_country_code_a, a.uln_number as uln_number_a,
+                          f.uln_country_code as uln_country_code_f, f.uln_number as uln_number_f,
+                          m.uln_country_code as uln_country_code_m, m.uln_number as uln_number_m,
+                          l.litter_group, l.born_alive_count, l.stillborn_count
+                    FROM animal a 
+                        LEFT JOIN animal f ON a.parent_father_id = f.id 
+                        LEFT JOIN animal m ON a.parent_mother_id = m.id
+                        LEFT JOIN litter l ON a.litter_id = l.id
+                    WHERE a.id = '".$animalId."'";
+        $animalData = $this->em->getConnection()->query($sql)->fetch();
 
-        $breedCode = Utils::fillNullOrEmptyString($animal->getBreedCode(), self::BREED_CODE_NULL_FILLER);
-        $breedType = Utils::fillNullOrEmptyString(Translation::translateBreedType($animal->getBreedType()), self::BREED_TYPE_NULL_FILLER);
-        $scrapieGenotype = Utils::fillNullOrEmptyString($animal->getScrapieGenotype(), self::SCRAPIE_GENOTYPE_NULL_FILLER);
+        $animalUln = self::formatUlnByValue($animalData['uln_country_code_a'], $animalData['uln_number_a'], self::ULN_NULL_FILLER);
+        $fatherUln = self::formatUlnByValue($animalData['uln_country_code_f'], $animalData['uln_number_f'], self::ULN_NULL_FILLER);
+        $motherUln = self::formatUlnByValue($animalData['uln_country_code_m'], $animalData['uln_number_m'], self::ULN_NULL_FILLER);
+        $gender = Utils::fillNullOrEmptyString($animalData['gender'], self::GENDER_NULL_FILLER);
 
-        $litterData = self::formatLitterData($animal);
-        $nLing = $litterData->get(Constant::LITTER_SIZE_NAMESPACE);
-        $litterGroup = $litterData->get(Constant::LITTER_GROUP_NAMESPACE);
+        $breedCode = Utils::fillNullOrEmptyString($animalData['breed_code'], self::BREED_CODE_NULL_FILLER);
+        $breedType = Utils::fillNullOrEmptyString(Translation::translateBreedType($animalData['breed_type']), self::BREED_TYPE_NULL_FILLER);
+        $scrapieGenotype = Utils::fillNullOrEmptyString($animalData['scrapie_genotype'], self::SCRAPIE_GENOTYPE_NULL_FILLER);
+        $nLing = Utils::fillNullOrEmptyString($animalData['born_alive_count'] + $animalData['stillborn_count'], self::NLING_NULL_FILLER);
+        $litterGroup = Utils::fillNullOrEmptyString($animalData['litter_group'], self::LITTER_GROUP_NULL_FILLER);
 
-        $breedCodeValues = $this->getMixBlupTestAttributesBreedCodeTypes($animal);
-        $yearAndUbnOfBirth = self::getYearAndUbnOfBirthString($animal);
+        $breedCodeValues = $this->getMixBlupTestAttributesBreedCodeTypesById($animalData['breed_codes_id']);
+        $dateOfBirthYear = explode('-', $animalData['date_of_birth'])[0];
+        $yearAndUbnOfBirth = self::getYearAndUbnOfBirthStringByValue($dateOfBirthYear, $animalData['ubn_of_birth']);
 
-        $record =
-            Utils::addPaddingToStringForColumnFormatSides($animalUln, 15)
-            .Utils::addPaddingToStringForColumnFormatCenter($gender, 5, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($yearAndUbnOfBirth, 16, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($breedCode, 10, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($breedType, 16, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::TE), 3, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::CF), 3, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::NH), 3, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::SW), 3, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::OV), 3, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($scrapieGenotype, 9, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($nLing, 5, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($litterGroup, 9, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($motherUln, 16, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($fatherUln, 16, self::COLUMN_PADDING_SIZE)
-            ;
+        $rowBase =
+            Utils::addPaddingToStringForColumnFormatSides($animalUln, self::COLUMN_WIDTH_ULN)
+            .Utils::addPaddingToStringForColumnFormatCenter($gender, self::COLUMN_WIDTH_GENDER, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($yearAndUbnOfBirth, self::COLUMN_WIDTH_YEAR_AND_UBN, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breedCode, self::COLUMN_WIDTH_BREED_CODE, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breedType, self::COLUMN_WIDTH_BREED_TYPE, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::TE), self::COLUMN_WIDTH_BREED_CODE_PART, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::CF), self::COLUMN_WIDTH_BREED_CODE_PART, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::NH), self::COLUMN_WIDTH_BREED_CODE_PART, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::SW), self::COLUMN_WIDTH_BREED_CODE_PART, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::OV), self::COLUMN_WIDTH_BREED_CODE_PART, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($scrapieGenotype, self::COLUMN_WIDTH_GENOTYPE, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($nLing, self::COLUMN_WIDTH_NLING, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($litterGroup, self::COLUMN_WIDTH_LITTER_GROUP, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($motherUln, self::COLUMN_WIDTH_ULN, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($fatherUln, self::COLUMN_WIDTH_ULN, self::COLUMN_PADDING_SIZE)
+        ;
 
-        $this->animalRowBases->set($animal->getId(), $record);
+        $this->animalRowBases->set($animalId, $rowBase);
 
-        return $record;
+        return $rowBase;
     }
 
 
@@ -1008,15 +894,15 @@ class Mixblup
         $yearAndUbnOfBirth = self::getYearAndUbnOfBirthString($animal);
 
         $record =
-            Utils::addPaddingToStringForColumnFormatSides($animalUln, 15)
-            .Utils::addPaddingToStringForColumnFormatCenter($gender, 5, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($yearAndUbnOfBirth, 16, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::TE), 3, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::SW), 3, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::BM), 3, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::OV), 3, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($heterosis, 6, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($recombination, 6, self::COLUMN_PADDING_SIZE)
+            Utils::addPaddingToStringForColumnFormatSides($animalUln, self::COLUMN_WIDTH_ULN)
+            .Utils::addPaddingToStringForColumnFormatCenter($gender, self::COLUMN_WIDTH_GENDER, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($yearAndUbnOfBirth, self::COLUMN_WIDTH_YEAR_AND_UBN, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::TE), self::COLUMN_WIDTH_BREED_CODE_PART, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::SW), self::COLUMN_WIDTH_BREED_CODE_PART, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::BM), self::COLUMN_WIDTH_BREED_CODE_PART, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::OV), self::COLUMN_WIDTH_BREED_CODE_PART, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($heterosis, self::COLUMN_WIDTH_HETEROSIS, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($recombination, self::COLUMN_WIDTH_RECOMBINATION, self::COLUMN_PADDING_SIZE)
         ;
 
         return $record;
@@ -1100,9 +986,21 @@ class Mixblup
      */
     public static function formatUln($animal, $nullFiller = '-')
     {
-        if($animal->getUlnCountryCode() != null && $animal->getUlnNumber() != null)
+        return self::formatUlnByValue($animal->getUlnCountryCode(), $animal->getUlnNumber(), $nullFiller);
+    }
+
+
+    /**
+     * @param string $ulnCountryCode
+     * @param string $ulnNumber
+     * @param mixed $nullFiller
+     * @return string
+     */
+    public static function formatUlnByValue($ulnCountryCode, $ulnNumber, $nullFiller = '-')
+    {
+        if(NullChecker::isNotNull($ulnCountryCode) && NullChecker::isNotNull($ulnNumber))
         {
-            $result = $animal->getUlnCountryCode().$animal->getUlnNumber();
+            $result = $ulnCountryCode.$ulnNumber;
         } else {
             $result = $nullFiller;
         }
@@ -1161,15 +1059,27 @@ class Mixblup
      */
     public static function getYearAndUbnOfBirthString(Animal $animal)
     {
-        $dateOfBirth = $animal->getDateOfBirth();
-        $ubnOfBirth = $animal->getUbnOfBirth();
+        if($animal->getDateOfBirth() != null) {
+            $dateOfBirthYear = date_format($animal->getDateOfBirth(), 'Y');
+            return self::getYearAndUbnOfBirthStringByValue($dateOfBirthYear, $animal->getUbnOfBirth());
+        }
+        return self::YEAR_UBN_NULL_FILLER;
+    }
 
+
+    /**
+     * @param string $dateOfBirthYear
+     * @param string $ubnOfBirth
+     * @return int|string
+     */
+    public static function getYearAndUbnOfBirthStringByValue($dateOfBirthYear, $ubnOfBirth)
+    {
         //Null check
-        if($dateOfBirth == null || $ubnOfBirth == null || $ubnOfBirth == '') {
+        if($dateOfBirthYear == null || $ubnOfBirth == null || $ubnOfBirth == '') {
             return self::YEAR_UBN_NULL_FILLER;
         }
 
-        return date_format($dateOfBirth, 'Y').'_'.$ubnOfBirth;
+        return $dateOfBirthYear.'_'.$ubnOfBirth;
     }
 
 
@@ -1208,6 +1118,77 @@ class Mixblup
             return number_format($weightOnThatMoment / $ageInDays, 5, ',', '');
         }
     }
+
+
+    /**
+     * @param Animal $animal
+     * @return ArrayCollection
+     */
+    private function getMixBlupTestAttributesBreedCodeTypesById($breed_codes_id)
+    {
+        if(NullChecker::isNotNull($breed_codes_id)) {
+            $sql = "SELECT * FROM breed_codes b
+                  INNER JOIN breed_code ON b.id = breed_code.breed_codes_id
+                WHERE b.id = ".$breed_codes_id;
+            $breedCodeSet = $this->em->getConnection()->query($sql)->fetchAll();
+        } else {
+            $breedCodeSet = null;
+        }
+
+        //set default values
+        $te = 0;
+        $cf = 0;
+        $nh = 0;
+        $sw = 0;
+        $ov = 0;
+
+        if($breedCodeSet != null) {
+
+            /** @var BreedCode $breedCode */
+            foreach ($breedCodeSet as $breedCode) {
+
+                $breedCodeName = $breedCode['name'];
+                $breedCodeValue = $breedCode['value'];
+
+                $name = BreedCodeReformatter::getMixBlupTestAttributesBreedCodeType($breedCodeName);
+
+                switch ($name) {
+                    case BreedCodeType::TE:
+                        $te += $breedCodeValue;
+                        break;
+                    case BreedCodeType::CF:
+                        $cf += $breedCodeValue;
+                        break;
+                    case BreedCodeType::NH:
+                        $nh += $breedCodeValue;
+                        break;
+                    case BreedCodeType::SW:
+                        $sw += $breedCodeValue;
+                        break;
+                    default:
+                        $ov += $breedCodeValue;
+                        break;
+                }
+            }
+        } else {
+            //breedCodeSet is missing
+            $te = self::BREED_CODE_PARTS_NULL_FILLER;
+            $cf = self::BREED_CODE_PARTS_NULL_FILLER;
+            $nh = self::BREED_CODE_PARTS_NULL_FILLER;
+            $sw = self::BREED_CODE_PARTS_NULL_FILLER;
+            $ov = self::BREED_CODE_PARTS_NULL_FILLER;
+        }
+
+        $result = new ArrayCollection();
+        $result->set(BreedCodeType::TE, $te);
+        $result->set(BreedCodeType::CF, $cf);
+        $result->set(BreedCodeType::NH, $nh);
+        $result->set(BreedCodeType::SW, $sw);
+        $result->set(BreedCodeType::OV, $ov);
+
+        return $result;
+    }
+
 
 
     /**
@@ -1407,4 +1388,17 @@ class Mixblup
 
         return $weight;
     }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param $animalId
+     * @return int
+     */
+    public static function getMixblupBlockByAnimalId(ObjectManager $em, $animalId)
+    {
+        $sql = "SELECT mixblup_block FROM animal WHERE id = ".$animalId;
+        return $em->getConnection()->query($sql)->fetch()['mixblup_block'];
+    }
+
 }
