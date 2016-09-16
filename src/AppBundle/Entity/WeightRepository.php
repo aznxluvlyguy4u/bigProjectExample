@@ -140,4 +140,56 @@ class WeightRepository extends BaseRepository {
         }
         return $count;
     }
+
+
+    /**
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function fixBirthWeightsNotMarkedAsBirthWeight()
+    {
+        $em = $this->getEntityManager();
+
+        //First find the measurements
+        $sql = "
+              SELECT w.id FROM measurement m
+                LEFT JOIN weight w ON m.id = w.id
+                LEFT JOIN animal a ON a.id = w.animal_id
+              WHERE DATE(m.measurement_date) = DATE(a.date_of_birth) AND w.is_birth_weight = false";
+        $results = $em->getConnection()->query($sql)->fetchAll();
+        
+        foreach($results as $result)
+        {
+            $sql = "UPDATE weight SET is_birth_weight = true WHERE id = ".$result['id'];
+            $em->getConnection()->exec($sql);
+        }
+        
+        return count($results);
+    }
+
+
+    /**
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function fixWeightsIncorrectlyMarkedAsBirthWeight()
+    {
+        $em = $this->getEntityManager();
+
+        //First find the measurements
+        $sql = "
+              SELECT w.id FROM measurement m
+                LEFT JOIN weight w ON m.id = w.id
+                LEFT JOIN animal a ON a.id = w.animal_id
+              WHERE DATE(m.measurement_date) <> DATE(a.date_of_birth) AND w.is_birth_weight = true";
+        $results = $em->getConnection()->query($sql)->fetchAll();
+
+        foreach($results as $result)
+        {
+            $sql = "UPDATE weight SET is_birth_weight = false WHERE id = ".$result['id'];
+            $em->getConnection()->exec($sql);
+        }
+
+        return count($results);
+    }
 }

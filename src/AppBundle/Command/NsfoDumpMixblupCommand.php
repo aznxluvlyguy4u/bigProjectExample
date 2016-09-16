@@ -320,10 +320,18 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
     {
         $isClearDuplicates = $this->cmdUtil->generateConfirmationQuestion('Clear ALL duplicate measurements? (y/n): ');
         if ($isClearDuplicates) {
-            $this->cmdUtil->setStartTimeAndPrintIt(6, 1, 'Deleting duplicate measurements...');
+            $this->cmdUtil->setStartTimeAndPrintIt(8, 1, 'Deleting duplicate measurements...');
+
+            $weightsFixedToBirthWeight = $this->weightRepository->fixBirthWeightsNotMarkedAsBirthWeight();
+            $message = 'Weights set to BirthWeight: ' . $weightsFixedToBirthWeight;
+            $this->cmdUtil->advanceProgressBar(1, $message);
+
+            $birthWeightsIncorrectlyMarkedAsBirthWeight = $this->weightRepository->fixWeightsIncorrectlyMarkedAsBirthWeight();
+            $message = $message.'| BirthWeight just Weight: ' . $birthWeightsIncorrectlyMarkedAsBirthWeight;
+            $this->cmdUtil->advanceProgressBar(1, $message);
 
             $exteriorsDeleted = $this->exteriorRepository->deleteDuplicates();
-            $message = 'Duplicates deleted, exteriors: ' . $exteriorsDeleted;
+            $message = $message.'| Duplicates deleted, exteriors: ' . $exteriorsDeleted;
             $this->cmdUtil->advanceProgressBar(1, $message);
 
             $weightsDeleted = $this->weightRepository->deleteDuplicates();
