@@ -123,7 +123,8 @@ class JsonInputConstant
     const WEIGHT = 'weight';
     const IS_BIRTH_WEIGHT = 'is_birth_weight';
     const MEASUREMENT_DATE = 'measurement_date';
-
-
-
+    const FAT1 = 'fat1';
+    const FAT2 = 'fat2';
+    const FAT3 = 'fat3';
+    
 }

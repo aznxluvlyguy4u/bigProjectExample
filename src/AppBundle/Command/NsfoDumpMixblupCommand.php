@@ -328,6 +328,10 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
             $message = $weightFixResult[Constant::MESSAGE_NAMESPACE];
             $this->cmdUtil->advanceProgressBar(1, $message);
 
+            $bodyFatFixResult = $this->bodyFatRepository->fixMeasurements();
+            $message = $message . $bodyFatFixResult[Constant::MESSAGE_NAMESPACE];
+            $this->cmdUtil->advanceProgressBar(1, $message);
+            
             $this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
 

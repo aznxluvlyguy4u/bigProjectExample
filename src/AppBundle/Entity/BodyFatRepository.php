@@ -1,7 +1,10 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\MeasurementConstant;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 
 /**
@@ -117,5 +120,131 @@ class BodyFatRepository extends BaseRepository {
             if(count($results) == 0) { $hasDuplicates = false; }
         }
         return $count;
+    }
+
+
+    /**
+     * @return array
+     */
+    public function fixMeasurements()
+    {
+        $fixedContradictingWeightsCount = $this->fixContradictingMeasurements();
+        $totalCount = $fixedContradictingWeightsCount;
+
+        $message = 'Fixed contradicting BodyFats: ' . $fixedContradictingWeightsCount;
+
+        return [Constant::COUNT => $totalCount, Constant::MESSAGE_NAMESPACE => $message];
+    }
+
+
+    /**
+     * @return int
+     */
+    private function fixContradictingMeasurements()
+    {
+        $em = $this->getEntityManager();
+        $isGetGroupedByAnimalAndDate = true;
+        $bodyFatsGroupedByAnimalAndDate = $this->getContradictingBodyFats($isGetGroupedByAnimalAndDate);
+
+        $floatComparisonAccuracy = 0.001;
+        $measurementsFixedCount = 0;
+
+        foreach ($bodyFatsGroupedByAnimalAndDate as $bodyFatGroup) {
+
+            $bodyFatMeasurements = array();
+            foreach($bodyFatGroup as $bodyFatMeasurement) {
+//TODO
+//                dump($bodyFatGroup);die;
+//                $fat1 = $bodyFatMeasurement[JsonInputConstant::FAT1];
+//                $fat2 = $bodyFatMeasurement[JsonInputConstant::FAT2];
+//                $fat3 = $bodyFatMeasurement[JsonInputConstant::FAT3];
+//                $weightId = $bodyFatMeasurement[JsonInputConstant::ID];
+//
+//                $bodyFatValues[] = [JsonInputConstant::FAT1 => $fat1,
+//                    JsonInputConstant::ID => $weightId];
+
+            }
+
+        }
+
+        return $measurementsFixedCount;
+    }
+
+
+    /**
+     * @param bool $isGetGroupedByAnimalAndDate
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getContradictingBodyFats($isGetGroupedByAnimalAndDate = false)
+    {
+        $sql = "SELECT n.id as id, a.id as animal_id, n.animal_id_and_date, n.measurement_date, 
+                        fat1.fat as fat1,  fat2.fat as fat2, fat3.fat as fat3 
+                  FROM measurement n
+                  INNER JOIN (
+                               SELECT m.animal_id_and_date
+                               FROM measurement m
+                                 INNER JOIN body_fat x ON m.id = x.id
+                               GROUP BY m.animal_id_and_date
+                               HAVING (COUNT(*) > 1)
+                             ) t on t.animal_id_and_date = n.animal_id_and_date
+                  INNER JOIN body_fat z ON z.id = n.id
+                  INNER JOIN fat1 ON z.fat1_id = fat1.id
+                  INNER JOIN fat2 ON z.fat2_id = fat2.id
+                  INNER JOIN fat3 ON z.fat3_id = fat3.id
+                  LEFT JOIN animal a ON a.id = z.animal_id";
+        $results = $this->getEntityManager()->getConnection()->query($sql)->fetchAll();
+
+        if($isGetGroupedByAnimalAndDate) {
+
+            $bodyFatsGroupedByAnimalAndDate = array();
+            foreach ($results as $result) {
+                $animalIdAndData = $result['animal_id_and_date'];
+                if(array_key_exists($animalIdAndData, $bodyFatsGroupedByAnimalAndDate)) {
+                    $items = $bodyFatsGroupedByAnimalAndDate[$animalIdAndData];
+                    $items->add($result);
+                    $bodyFatsGroupedByAnimalAndDate[$animalIdAndData] = $items;
+                } else {
+                    //First entry
+                    $items = new ArrayCollection();
+                    $items->add($result);
+                    $bodyFatsGroupedByAnimalAndDate[$animalIdAndData] = $items;
+                }
+            }
+            return $bodyFatsGroupedByAnimalAndDate;
+
+        } else {
+            return $results;
+        }
+
+    }
+
+
+    /**
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getContradictingBodyFatsForExportFile()
+    {
+        $em = $this->getEntityManager();
+
+        $sql = "
+              SELECT n.id as metingId, a.id as dier_id, DATE(n.measurement_date) as meetdatum, DATE(a.date_of_birth) as geboortedatum,
+                  z.weight as gewicht, is_birth_weight as is_geboortegewicht,
+                  CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, i.last_name as inspector
+                FROM measurement n
+                  INNER JOIN (
+                               SELECT m.animal_id_and_date
+                               FROM measurement m
+                                 INNER JOIN (
+                                              SELECT y.id FROM weight y  WHERE y.is_revoked = false
+                                            ) x ON m.id = x.id
+                               GROUP BY m.animal_id_and_date
+                               HAVING (COUNT(*) > 1)
+                             ) t on t.animal_id_and_date = n.animal_id_and_date
+                  INNER JOIN weight z ON z.id = n.id
+                  INNER JOIN animal a ON a.id = z.animal_id
+                  LEFT JOIN person i ON i.id = n.inspector_id";
+        return $em->getConnection()->query($sql)->fetchAll();
     }
 }
