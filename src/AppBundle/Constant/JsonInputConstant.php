@@ -5,6 +5,8 @@ namespace AppBundle\Constant;
 
 class JsonInputConstant
 {
+    const ID = 'id';
+    
     //Admins
     const ADMINS = 'admins';
     const ACCESS_LEVEL = 'access_level';

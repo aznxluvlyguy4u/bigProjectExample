@@ -2,6 +2,7 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BodyFatRepository;
@@ -318,20 +319,23 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
     private function deleteDuplicateMeasurements()
     {
-        $isClearDuplicates = $this->cmdUtil->generateConfirmationQuestion('Clear ALL duplicate measurements? (y/n): ');
+        $isClearDuplicates = $this->cmdUtil->generateConfirmationQuestion('Fix measurements and then Clear ALL duplicate measurements? (y/n): ');
         if ($isClearDuplicates) {
-            $this->cmdUtil->setStartTimeAndPrintIt(8, 1, 'Deleting duplicate measurements...');
 
-            $weightsFixedToBirthWeight = $this->weightRepository->fixBirthWeightsNotMarkedAsBirthWeight();
-            $message = 'Weights set to BirthWeight: ' . $weightsFixedToBirthWeight;
+            $this->cmdUtil->setStartTimeAndPrintIt(2, 1, 'Fixing measurements...');
+
+            $weightFixResult = $this->weightRepository->fixMeasurements();
+            $message = $weightFixResult[Constant::MESSAGE_NAMESPACE];
             $this->cmdUtil->advanceProgressBar(1, $message);
 
-            $birthWeightsIncorrectlyMarkedAsBirthWeight = $this->weightRepository->fixWeightsIncorrectlyMarkedAsBirthWeight();
-            $message = $message.'| BirthWeight just Weight: ' . $birthWeightsIncorrectlyMarkedAsBirthWeight;
-            $this->cmdUtil->advanceProgressBar(1, $message);
+            $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+
+
+
+            $this->cmdUtil->setStartTimeAndPrintIt(6, 1, 'Deleting duplicate measurements...');
 
             $exteriorsDeleted = $this->exteriorRepository->deleteDuplicates();
-            $message = $message.'| Duplicates deleted, exteriors: ' . $exteriorsDeleted;
+            $message = $message.'Duplicates deleted, exteriors: ' . $exteriorsDeleted;
             $this->cmdUtil->advanceProgressBar(1, $message);
 
             $weightsDeleted = $this->weightRepository->deleteDuplicates();
@@ -352,6 +356,9 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
             $this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
+
+            $contradictingWeightsLeft = count($this->weightRepository->getContradictingWeights());
+            $this->output->writeln('Contradicting measurements left, weights: '.$contradictingWeightsLeft);
         }
     }
 

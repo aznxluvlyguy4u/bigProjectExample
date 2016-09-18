@@ -69,27 +69,27 @@ class Mixblup
     const NEUTER = 'N_B';
 
     //Column padding & widths
-    const COLUMN_PADDING_SIZE = 2;
-    const COLUMN_WIDTH_GENDER = 8;
-    const COLUMN_WIDTH_FAT = 7;
-    const COLUMN_WIDTH_TAIL_LENGTH = 8;
-    const COLUMN_WIDTH_MUSCLE_THICKNESS = 6;
-    const COLUMN_WIDTH_DATE = 10;
+    const COLUMN_PADDING_SIZE = 1;
+    const COLUMN_WIDTH_GENDER = 6;
+    const COLUMN_WIDTH_FAT = 5;
+    const COLUMN_WIDTH_TAIL_LENGTH = 5;
+    const COLUMN_WIDTH_MUSCLE_THICKNESS = 5;
+    const COLUMN_WIDTH_DATE = 8;
     const COLUMN_WIDTH_BLOCK = 10;
-    const COLUMN_WIDTH_EXTERIOR = 6;
-    const COLUMN_WIDTH_ULN = 16;
-    const COLUMN_WIDTH_YEAR_AND_UBN = 16;
-    const COLUMN_WIDTH_BREED_CODE_PART = 5;
+    const COLUMN_WIDTH_EXTERIOR = 4;
+    const COLUMN_WIDTH_ULN = 14;
+    const COLUMN_WIDTH_YEAR_AND_UBN = 14;
+    const COLUMN_WIDTH_BREED_CODE_PART = 3;
     const COLUMN_WIDTH_BREED_CODE = 16;
     const COLUMN_WIDTH_BREED_TYPE = 16;
-    const COLUMN_WIDTH_GENOTYPE = 9;
-    const COLUMN_WIDTH_NLING = 5;
-    const COLUMN_WIDTH_LITTER_GROUP = 19;
-    const COLUMN_WIDTH_HETEROSIS = 6;
-    const COLUMN_WIDTH_RECOMBINATION = 6;
-    const COLUMN_WIDTH_AGE = 7;
-    const COLUMN_WIDTH_GROWTH = 9;
-    const COLUMN_WIDTH_WEIGHT = 8;
+    const COLUMN_WIDTH_GENOTYPE = 7;
+    const COLUMN_WIDTH_NLING = 3;
+    const COLUMN_WIDTH_LITTER_GROUP = 17;
+    const COLUMN_WIDTH_HETEROSIS = 4;
+    const COLUMN_WIDTH_RECOMBINATION = 4;
+    const COLUMN_WIDTH_AGE = 5;
+    const COLUMN_WIDTH_GROWTH = 7;
+    const COLUMN_WIDTH_WEIGHT = 6;
 
 
     const ANIMAL = 'ANIMAL';
@@ -477,7 +477,7 @@ class Mixblup
         //ExteriorMeasurements
         $this->getExteriorMeasurementsIfNull();
 
-        $message = 'Generate exterior measurements...';
+        $message = 'Generating exterior measurements...';
         $this->cmdUtil->setStartTimeAndPrintIt($this->exteriorMeasurements->count()+1, 1, $message);
 
         /** @var Exterior $exteriorMeasurement */
@@ -485,6 +485,13 @@ class Mixblup
             $row = $this->writeDataRecordExteriorAttributes($exteriorMeasurement);
             if($row != null) {
                 file_put_contents($this->dataFilePathExteriorAttributes, $row."\n", FILE_APPEND);
+            } else {
+                if($exteriorMeasurement instanceof Exterior) {
+                    $row = 'measuremendId: '.$exteriorMeasurement->getId();
+                } else {
+                    $row = 'non-Exterior measurement';
+                }
+                file_put_contents($this->dataFilePathExteriorAttributes.'errors', $row."\n", FILE_APPEND);
             }
             $this->cmdUtil->advanceProgressBar(1, $message);
         }
@@ -494,7 +501,7 @@ class Mixblup
         //TestAttributeMeasurements
         $this->getTestMeasurementsBySql();
         $testMeasurementsCount = count($this->measurementCodes);
-        $message = 'Generate test measurements...';
+        $message = 'Generating test measurements...';
         $isSkipConflictingMeasurements = true; //TODO NOTE Duplicates and Controdicting measurements have to been fixed separatedly.
 
         $this->cmdUtil->setStartTimeAndPrintIt($testMeasurementsCount+1, 1, $message);
@@ -648,6 +655,7 @@ class Mixblup
     
     /**
      * @param string $animalIdAndDateOfMeasurement
+     * @param boolean $isSkipConflictingMeasurements
      * @return string
      */
     private function writeDataRecordTestAttributes($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements = true)
@@ -660,9 +668,11 @@ class Mixblup
         //TODO null check animal -> write to errorLog
         //TODO write conflicting messurements to errorLog
 
-        $rowBase = $this->formatFirstPartDataRecordRowTestAttributesByAnimalDatabaseId($animalId);
+        $rowBaseAndDateOfBirthArray = $this->formatFirstPartDataRecordRowTestAttributesByAnimalDatabaseId($animalId);
+        $rowBase = $rowBaseAndDateOfBirthArray[self::ROW_DATA];
+        $dateOfBirthString = $rowBaseAndDateOfBirthArray[self::DATE_OF_BIRTH];
 
-        $ageGrowthWeightRowPart = $this->formatAgeGrowthWeightsRowPart($animalIdAndDateOfMeasurement, $measurementDate, $isSkipConflictingMeasurements);
+        $ageGrowthWeightRowPart = $this->formatAgeGrowthWeightsRowPart($animalIdAndDateOfMeasurement, $dateOfBirthString, $isSkipConflictingMeasurements);
         $bodyFatRowPart = $this->writeBodyFatRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);
         $muscleThicknessRowPart = $this->writeMuscleThicknessRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);
         $tailLengthRowPart = $this->writeTailLengthRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);
@@ -693,12 +703,14 @@ class Mixblup
 
     /**
      * @param string $animalIdAndDateOfMeasurement
-     * @param string $measurementDateString
+     * @param string $dateOfBirthString
      * @param bool $isSkipConflictingMeasurements
      * @return string
      */
-    private function formatAgeGrowthWeightsRowPart($animalIdAndDateOfMeasurement, $measurementDateString, $isSkipConflictingMeasurements = true)
+    private function formatAgeGrowthWeightsRowPart($animalIdAndDateOfMeasurement, $dateOfBirthString, $isSkipConflictingMeasurements = true)
     {
+        $ageAtMeasurement = $this->getAgeInDays($animalIdAndDateOfMeasurement, $dateOfBirthString);
+
         //Weights
         $sql = "SELECT w.weight, w.is_birth_weight FROM measurement m
                   INNER JOIN weight w ON m.id = w.id
@@ -714,33 +726,25 @@ class Mixblup
             $isGetFirstValues = true;
         }
 
-
         if($isGetFirstValues) {
             $isBirthWeight = $results[0]['is_birth_weight'];
-            $ageAtMeasurement = $this->getAgeInDays($animalIdAndDateOfMeasurement, $measurementDateString);
-            if(!$isBirthWeight && $ageAtMeasurement > 0) {
+            if($ageAtMeasurement == 0) {
                 $isBirthWeight = true;
             }
-            $ageAtMeasurement = Utils::fillZero($ageAtMeasurement, self::AGE_NULL_FILLER);
 
             if($isBirthWeight) {
                 $weight = self::WEIGHT_NULL_FILLER;
                 $birthWeight = Utils::fillZero($results[0]['weight'], self::WEIGHT_NULL_FILLER);
+                //Don't calculate growth from birthWeight
+                $growth = self::GROWTH_NULL_FILLER;
             } else {
                 $weight = Utils::fillZero($results[0]['weight'], self::WEIGHT_NULL_FILLER);
                 $birthWeight = self::WEIGHT_NULL_FILLER;
-            }
-
-            if(!$isBirthWeight) {
-                //Don't calculate growth from birthWeight
                 $growth = BreedValueUtil::getGrowthValue($weight, $ageAtMeasurement,
                     self::AGE_NULL_FILLER, self::GROWTH_NULL_FILLER, self::WEIGHT_NULL_FILLER);
-            } else {
-                $growth = self::GROWTH_NULL_FILLER;
             }
 
         } else {
-            $ageAtMeasurement = self::AGE_NULL_FILLER;
             $growth = self::GROWTH_NULL_FILLER;
             $birthWeight = self::WEIGHT_NULL_FILLER;
             $weight = self::WEIGHT_NULL_FILLER;
@@ -762,37 +766,44 @@ class Mixblup
     private function formatExteriorMeasurementsRowPart($measurement)
     {
         if($measurement != null && $measurement instanceof Exterior) {
-            $kind = Utils::fillZero($measurement->getKind(), self::EXTERIOR_KIND_NULL_FILLER);
-            $skull = Utils::fillZero($measurement->getSkull(), self::EXTERIOR_NULL_FILLER);
-            $muscularity = Utils::fillZero($measurement->getMuscularity(), self::EXTERIOR_NULL_FILLER);
-            $proportion = Utils::fillZero($measurement->getProportion(), self::EXTERIOR_NULL_FILLER);
-            $progress = Utils::fillZero($measurement->getProgress(), self::EXTERIOR_NULL_FILLER);
-            $exteriorType = Utils::fillZero($measurement->getExteriorType(), self::EXTERIOR_NULL_FILLER);
-            $legWork = Utils::fillZero($measurement->getLegWork(), self::EXTERIOR_NULL_FILLER);
-            $fur = Utils::fillZero($measurement->getFur(), self::EXTERIOR_NULL_FILLER);
-            $generalAppearance = Utils::fillZero($measurement->getGeneralAppearence(), self::EXTERIOR_NULL_FILLER);
-            $height = Utils::fillZero($measurement->getHeight(), self::EXTERIOR_NULL_FILLER);
-            $torsoLength = Utils::fillZero($measurement->getTorsoLength(), self::EXTERIOR_NULL_FILLER);
-            $breastDepth = Utils::fillZero($measurement->getBreastDepth(), self::EXTERIOR_NULL_FILLER);
-            $markings = Utils::fillZero($measurement->getMarkings(), self::EXTERIOR_NULL_FILLER);
+
+            $kind = $measurement->getKind();
+            $skull = $measurement->getSkull();
+            $muscularity = $measurement->getMuscularity();
+            $proportion = $measurement->getProportion();
+            $progress = $measurement->getProgress();
+            $exteriorType = $measurement->getExteriorType();
+            $legWork = $measurement->getLegWork();
+            $fur = $measurement->getFur();
+            $generalAppearance = $measurement->getGeneralAppearence();
+            $height = $measurement->getHeight();
+            $torsoLength = $measurement->getTorsoLength();
+            $breastDepth = $measurement->getBreastDepth();
+            $markings = $measurement->getMarkings();
+
+            if($skull > 99 || $muscularity > 99 || $proportion > 99 || $progress > 99 || $exteriorType > 99 || $legWork > 99
+                || $fur > 99 || $generalAppearance > 99 || $height > 99 || $torsoLength > 99 || $breastDepth > 99 || $markings > 99) {
+                return null;
+            }
+
+
+            $kind = Utils::fillZero($kind, self::EXTERIOR_KIND_NULL_FILLER);
+            $skull = Utils::fillZero($skull, self::EXTERIOR_NULL_FILLER);
+            $muscularity = Utils::fillZero($muscularity, self::EXTERIOR_NULL_FILLER);
+            $proportion = Utils::fillZero($proportion, self::EXTERIOR_NULL_FILLER);
+            $progress = Utils::fillZero($progress, self::EXTERIOR_NULL_FILLER);
+            $exteriorType = Utils::fillZero($exteriorType, self::EXTERIOR_NULL_FILLER);
+            $legWork = Utils::fillZero($legWork, self::EXTERIOR_NULL_FILLER);
+            $fur = Utils::fillZero($fur, self::EXTERIOR_NULL_FILLER);
+            $generalAppearance = Utils::fillZero($generalAppearance, self::EXTERIOR_NULL_FILLER);
+            $height = Utils::fillZero($height, self::EXTERIOR_NULL_FILLER);
+            $torsoLength = Utils::fillZero($torsoLength, self::EXTERIOR_NULL_FILLER);
+            $breastDepth = Utils::fillZero($breastDepth, self::EXTERIOR_NULL_FILLER);
+            $markings = Utils::fillZero($markings, self::EXTERIOR_NULL_FILLER);
 
         } else {
-            $kind = self::EXTERIOR_KIND_NULL_FILLER;
-            $skull = self::EXTERIOR_NULL_FILLER;
-            $muscularity = self::EXTERIOR_NULL_FILLER;
-            $proportion = self::EXTERIOR_NULL_FILLER;
-            $progress = self::EXTERIOR_NULL_FILLER;
-            $exteriorType = self::EXTERIOR_NULL_FILLER;
-            $legWork = self::EXTERIOR_NULL_FILLER;
-            $fur = self::EXTERIOR_NULL_FILLER;
-            $generalAppearance = self::EXTERIOR_NULL_FILLER;
-            $height = self::EXTERIOR_NULL_FILLER;
-            $torsoLength = self::EXTERIOR_NULL_FILLER;
-            $breastDepth = self::EXTERIOR_NULL_FILLER;
-            $markings = self::EXTERIOR_NULL_FILLER;
+            return null;
         }
-
-        $exteriorValuesSpacing = self::COLUMN_WIDTH_EXTERIOR;
         
         $exteriorRowPart =
              Utils::addPaddingToStringForColumnFormatCenter($kind, self::COLUMN_WIDTH_EXTERIOR, self::COLUMN_PADDING_SIZE)
@@ -821,9 +832,9 @@ class Mixblup
     private function formatFirstPartDataRecordRowTestAttributesByAnimalDatabaseId($animalId)
     {
         //If rowBase already exists, retrieve it
-        $rowBase = $this->animalRowBases->get($animalId);
-        if($rowBase != null) {
-            return $rowBase;
+        $rowBaseAndDateOfBirthArray = $this->animalRowBases->get($animalId);
+        if($rowBaseAndDateOfBirthArray != null) {
+            return $rowBaseAndDateOfBirthArray;
         }
         //else create a new one
 
@@ -875,9 +886,11 @@ class Mixblup
             .Utils::addPaddingToStringForColumnFormatCenter($fatherUln, self::COLUMN_WIDTH_ULN, self::COLUMN_PADDING_SIZE)
         ;
 
-        $this->animalRowBases->set($animalId, $rowBase);
+        $rowBaseAndDateOfBirthArray = [self::ROW_DATA => $rowBase, self::DATE_OF_BIRTH => $dateOfBirthString];
 
-        return $rowBase;
+        $this->animalRowBases->set($animalId, $rowBaseAndDateOfBirthArray);
+
+        return $rowBaseAndDateOfBirthArray;
     }
 
 
@@ -891,6 +904,8 @@ class Mixblup
         $measurementDate = self::formatMeasurementDate($measurement->getMeasurementDate());
         $exteriorRowPart = $this->formatExteriorMeasurementsRowPart($measurement);
         $block = $animal->getMixblupBlock();
+
+        if($exteriorRowPart == null) { return null; }
 
         $record =
             $rowBase
@@ -1123,9 +1138,9 @@ class Mixblup
     }
 
 
-    private function getAgeInDays($animalIdAndDate, $measurementDateString)
+    private function getAgeInDays($animalIdAndDate, $dateOfBirthString)
     {
-        $dateOfBirthString = explode('_',$animalIdAndDate)[1];
+        $measurementDateString = explode('_',$animalIdAndDate)[1];
 
         if($dateOfBirthString == $measurementDateString) {
             return 0;
@@ -1452,23 +1467,14 @@ class Mixblup
             }
         }
 
-        $incorrectBirthWeightValueCount = $this->weightRepository->getIncorrectBirthWeightBooleansInWeightsCount();
-        if($incorrectBirthWeightValueCount > 0) {
+        $fixMeasurements = $this->cmdUtil->generateConfirmationQuestion('Fix incorrect measurements if necessary? (y/n)');
 
-            if($isWithoutValidation) {
-                $isFixBirthWeightBoolean = true;
-            } else {
-                $isFixBirthWeightBoolean = $this->cmdUtil->generateConfirmationQuestion('Fix '.$incorrectBirthWeightValueCount.' incorrect birthWeight booleans in Weights? (y/n)');
-            }
+        if($fixMeasurements) {
+            $this->weightRepository->fixMeasurements();
         }
-
         if($isGenerateMixblupBlockValues) {
             MeasurementsUtil::generateAnimalIdAndDateValues($this->em, false);
         }
 
-        if($isFixBirthWeightBoolean) {
-            $this->weightRepository->fixBirthWeightsNotMarkedAsBirthWeight();
-            $this->weightRepository->fixWeightsIncorrectlyMarkedAsBirthWeight();
-        }
     }
 }
