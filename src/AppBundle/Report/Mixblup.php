@@ -5,6 +5,7 @@ namespace AppBundle\Report;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BreedCode;
@@ -491,7 +492,7 @@ class Mixblup
                 } else {
                     $row = 'non-Exterior measurement';
                 }
-                file_put_contents($this->dataFilePathExteriorAttributes.'errors', $row."\n", FILE_APPEND);
+                file_put_contents($this->dataFilePathExteriorAttributes.'errors.txt', $row."\n", FILE_APPEND);
             }
             $this->cmdUtil->advanceProgressBar(1, $message);
         }
@@ -510,8 +511,11 @@ class Mixblup
             $row = $this->writeDataRecordTestAttributes($code, $isSkipConflictingMeasurements);
             if($row != null) {
                 file_put_contents($this->dataFilePathTestAttributes, $row."\n", FILE_APPEND);
-                $this->cmdUtil->advanceProgressBar(1, $message);
+            } else {
+                $row = 'animalIdAndDate: '.$code;
+                file_put_contents($this->dataFilePathTestAttributes.'errors.txt', $row."\n", FILE_APPEND);
             }
+            $this->cmdUtil->advanceProgressBar(1, $message);
         }
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
@@ -587,7 +591,11 @@ class Mixblup
         $muscleThicknessValue = $this->getMeasurementFromSqlResults($results, $isSkipConflictingMeasurements, 'muscle_thickness');
 
         $muscleThicknessValue = Utils::fillZero($muscleThicknessValue,self::MUSCLE_THICKNESS_NULL_FILLER);
-        return Utils::addPaddingToStringForColumnFormatCenter($muscleThicknessValue, self::COLUMN_WIDTH_MUSCLE_THICKNESS, self::COLUMN_PADDING_SIZE);
+        $isEmptyMeasurement = $muscleThicknessValue == self::MUSCLE_THICKNESS_NULL_FILLER;
+        $result = Utils::addPaddingToStringForColumnFormatCenter($muscleThicknessValue, self::COLUMN_WIDTH_MUSCLE_THICKNESS, self::COLUMN_PADDING_SIZE);
+
+        return [JsonInputConstant::MEASUREMENT_ROW => $result,
+            JsonInputConstant::IS_EMPTY_MEASUREMENT => $isEmptyMeasurement];
     }
 
 
@@ -605,7 +613,11 @@ class Mixblup
         $tailLengthValue = $this->getMeasurementFromSqlResults($results, $isSkipConflictingMeasurements, 'length');
 
         $tailLengthValue = Utils::fillZero($tailLengthValue, self::TAIL_LENGTH_NULL_FILLER);
-        return Utils::addPaddingToStringForColumnFormatCenter($tailLengthValue, self::COLUMN_WIDTH_TAIL_LENGTH, self::COLUMN_PADDING_SIZE);
+        $isEmptyMeasurement = $tailLengthValue == self::TAIL_LENGTH_NULL_FILLER;
+        $result = Utils::addPaddingToStringForColumnFormatCenter($tailLengthValue, self::COLUMN_WIDTH_TAIL_LENGTH, self::COLUMN_PADDING_SIZE);
+
+        return [JsonInputConstant::MEASUREMENT_ROW => $result,
+            JsonInputConstant::IS_EMPTY_MEASUREMENT => $isEmptyMeasurement];
     }
 
 
@@ -646,10 +658,15 @@ class Mixblup
             $fat3 = self::FAT_NULL_FILLER;
         }
 
-        return
+        $isEmptyMeasurement = $fat1 == self::FAT_NULL_FILLER && $fat2 == self::FAT_NULL_FILLER && $fat3 == self::FAT_NULL_FILLER;
+
+        $result =
              Utils::addPaddingToStringForColumnFormatCenter($fat1, self::COLUMN_WIDTH_FAT, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($fat2, self::COLUMN_WIDTH_FAT, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($fat3, self::COLUMN_WIDTH_FAT, self::COLUMN_PADDING_SIZE);
+
+        return [JsonInputConstant::MEASUREMENT_ROW => $result,
+            JsonInputConstant::IS_EMPTY_MEASUREMENT => $isEmptyMeasurement];
     }
 
     
@@ -665,27 +682,35 @@ class Mixblup
         $animalId = $codeParts[0];
         $measurementDate = $codeParts[1];
 
-        //TODO null check animal -> write to errorLog
-        //TODO write conflicting messurements to errorLog
-
         $rowBaseAndDateOfBirthArray = $this->formatFirstPartDataRecordRowTestAttributesByAnimalDatabaseId($animalId);
         $rowBase = $rowBaseAndDateOfBirthArray[self::ROW_DATA];
         $dateOfBirthString = $rowBaseAndDateOfBirthArray[self::DATE_OF_BIRTH];
 
-        $ageGrowthWeightRowPart = $this->formatAgeGrowthWeightsRowPart($animalIdAndDateOfMeasurement, $dateOfBirthString, $isSkipConflictingMeasurements);
-        $bodyFatRowPart = $this->writeBodyFatRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);
-        $muscleThicknessRowPart = $this->writeMuscleThicknessRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);
-        $tailLengthRowPart = $this->writeTailLengthRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);
+        $ageGrowthWeightRowData = $this->formatAgeGrowthWeightsRowPart($animalIdAndDateOfMeasurement, $dateOfBirthString, $isSkipConflictingMeasurements);
+        $bodyFatRowData = $this->writeBodyFatRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);
+        $muscleThicknessRowData = $this->writeMuscleThicknessRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);
+        $tailLengthRowData = $this->writeTailLengthRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);
+        
+        $ageGrowthWeightRowPart = $ageGrowthWeightRowData[JsonInputConstant::MEASUREMENT_ROW];
+        $bodyFatRowPart = $bodyFatRowData[JsonInputConstant::MEASUREMENT_ROW];
+        $muscleThicknessRowPart = $muscleThicknessRowData[JsonInputConstant::MEASUREMENT_ROW];
+        $tailLengthRowPart = $tailLengthRowData[JsonInputConstant::MEASUREMENT_ROW];
+
+        $isAgeGrowthWeightEmpty = $ageGrowthWeightRowData[JsonInputConstant::IS_EMPTY_MEASUREMENT];
+        $isBodyFatEmpty = $bodyFatRowData[JsonInputConstant::IS_EMPTY_MEASUREMENT];
+        $isMuscleThicknessEmpty = $muscleThicknessRowData[JsonInputConstant::IS_EMPTY_MEASUREMENT];
+        $isTailLengthEmpty = $tailLengthRowData[JsonInputConstant::IS_EMPTY_MEASUREMENT];
 
         $block = self::getMixblupBlockByAnimalId($this->em, $animalId);
 
         //Test values might all be empty if all measurements were contradicting duplicates
-//        TODO SKIP IF ALL MEASUREMENTS ARE NULL / WRITE TO ERROR LOG
-//        $isAllTestValuesEmpty = $animal == null || $measurementDate == null;
-//
-//        if(!$isAllTestValuesEmpty) {
-//
-//        }
+        $isAnimalMissing = explode(' ', $rowBase)[0] == self::ULN_NULL_FILLER;
+        $isMeasurementDateMissing = $measurementDate == null || $measurementDate == '';
+        $isAllTestValuesEmpty = $isAgeGrowthWeightEmpty && $isBodyFatEmpty && $isMuscleThicknessEmpty && $isTailLengthEmpty;
+
+        if($isAllTestValuesEmpty || $isAnimalMissing || $isMeasurementDateMissing) {
+            return null;
+        }
 
         $record =
             $rowBase
@@ -750,12 +775,16 @@ class Mixblup
             $weight = self::WEIGHT_NULL_FILLER;
         }
 
+        $isEmptyMeasurement = $weight == self::WEIGHT_NULL_FILLER && $birthWeight == self::WEIGHT_NULL_FILLER;
 
-        return
+        $result =
              Utils::addPaddingToStringForColumnFormatCenter($ageAtMeasurement, self::COLUMN_WIDTH_AGE, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($growth, self::COLUMN_WIDTH_GROWTH, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($birthWeight, self::COLUMN_WIDTH_WEIGHT, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($weight, self::COLUMN_WIDTH_WEIGHT, self::COLUMN_PADDING_SIZE);
+
+        return [JsonInputConstant::MEASUREMENT_ROW => $result,
+                JsonInputConstant::IS_EMPTY_MEASUREMENT => $isEmptyMeasurement];
     }
 
 

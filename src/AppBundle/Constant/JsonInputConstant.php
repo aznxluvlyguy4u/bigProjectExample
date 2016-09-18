@@ -6,7 +6,7 @@ namespace AppBundle\Constant;
 class JsonInputConstant
 {
     const ID = 'id';
-    
+
     //Admins
     const ADMINS = 'admins';
     const ACCESS_LEVEL = 'access_level';
@@ -126,5 +126,7 @@ class JsonInputConstant
     const FAT1 = 'fat1';
     const FAT2 = 'fat2';
     const FAT3 = 'fat3';
-    
+    const IS_EMPTY_MEASUREMENT = 'is_empty_measurement';
+    const MEASUREMENT_ROW = 'measurement_row';
+
 }
