@@ -335,7 +335,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
             $this->cmdUtil->setStartTimeAndPrintIt(6, 1, 'Deleting duplicate measurements...');
 
             $exteriorsDeleted = $this->exteriorRepository->deleteDuplicates();
-            $message = $message.'Duplicates deleted, exteriors: ' . $exteriorsDeleted;
+            $message = 'Duplicates deleted, exteriors: ' . $exteriorsDeleted;
             $this->cmdUtil->advanceProgressBar(1, $message);
 
             $weightsDeleted = $this->weightRepository->deleteDuplicates();
@@ -354,11 +354,30 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
             $message = $message . '| BodyFat: ' . $bodyFatsDeleted;
             $this->cmdUtil->advanceProgressBar(1, $message);
 
+            $totalDuplicatesDeleted = $exteriorsDeleted + $weightsDeleted + $tailLengthsDeleted + $muscleThicknessesDeleted + $bodyFatsDeleted;
+            if($totalDuplicatesDeleted == 0) {
+                $message =  'No duplicates deleted';
+                $this->cmdUtil->setProgressBarMessage($message);
+            }
+
             $this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
 
-            $contradictingWeightsLeft = count($this->weightRepository->getContradictingWeights());
-            $this->output->writeln('Contradicting measurements left, weights: '.$contradictingWeightsLeft);
+            //Final overview
+            $contradictingWeightsLeft = count($this->weightRepository->getContradictingWeightsForExportFile());
+            $contradictingMuscleThicknessesLeft = count($this->muscleThicknessRepository->getContradictingMuscleThicknessesForExportFile());
+            $contradictingTailLengthsLeft = count($this->tailLengthRepository->getContradictingTailLengthsForExportFile());
+            $contradictingMeasurementsLeft = $contradictingWeightsLeft + $contradictingMuscleThicknessesLeft + $contradictingTailLengthsLeft;
+
+            if($contradictingMeasurementsLeft > 0) {
+                $this->output->writeln('=== Contradicting measurements left ===');
+                if($contradictingWeightsLeft > 0) { $this->output->writeln('weights: '.$contradictingWeightsLeft); }
+                if($contradictingMuscleThicknessesLeft > 0) { $this->output->writeln('muscleThickness: '.$contradictingMuscleThicknessesLeft); }
+                if($contradictingTailLengthsLeft > 0) { $this->output->writeln('tailLengths: '.$contradictingTailLengthsLeft); }
+
+            } else {
+                $this->output->writeln('No contradicting measurements left!');
+            }
         }
     }
 

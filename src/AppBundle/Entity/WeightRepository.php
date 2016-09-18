@@ -159,10 +159,14 @@ class WeightRepository extends BaseRepository {
         $totalCount = $weightsFixedToBirthWeight + $birthWeightsIncorrectlyMarkedAsBirthWeight +
                         $revokeBirthWeightsAbove10kg + $fixedContradictingWeightsCount;
 
-        $message = 'Fixed Weights, set to BirthWeight: ' . $weightsFixedToBirthWeight
-                    .'|birthWeight just Weight: ' . $birthWeightsIncorrectlyMarkedAsBirthWeight
-                    .'|revoke birthWeights > 10kg: ' . $revokeBirthWeightsAbove10kg
-                    .'|contradicting: ' . $fixedContradictingWeightsCount;
+        if($totalCount > 0) {
+            $message = 'Fixed Weights, set to BirthWeight: ' . $weightsFixedToBirthWeight
+                .'|Fixed birthWeight to just Weight: ' . $birthWeightsIncorrectlyMarkedAsBirthWeight
+                .'|Revoke birthWeights > 10kg: ' . $revokeBirthWeightsAbove10kg
+                .'|Fixed contradicting weights: ' . $fixedContradictingWeightsCount;
+        } else {
+            $message = 'No weight fixes implemented';
+        }
 
         return [Constant::COUNT => $totalCount, Constant::MESSAGE_NAMESPACE => $message];
     }
@@ -173,34 +177,8 @@ class WeightRepository extends BaseRepository {
     {
         $em = $this->getEntityManager();
 
-        $sql = "SELECT n.*, z.*, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, a.date_of_birth FROM measurement n
-                  INNER JOIN (
-                               SELECT m.animal_id_and_date
-                               FROM measurement m
-                                 INNER JOIN (
-                                    SELECT y.id FROM weight y  WHERE y.is_revoked = false
-                                 ) x ON m.id = x.id
-                               GROUP BY m.animal_id_and_date
-                               HAVING (COUNT(*) > 1)
-                             ) t on t.animal_id_and_date = n.animal_id_and_date
-                  INNER JOIN weight z ON z.id = n.id
-                  INNER JOIN animal a ON a.id = z.animal_id";
-        $results = $this->getEntityManager()->getConnection()->query($sql)->fetchAll();
-
-        $weightsGroupedByAnimalAndDate = array();
-        foreach ($results as $result) {
-            $animalIdAndData = $result['animal_id_and_date'];
-            if(array_key_exists($animalIdAndData, $weightsGroupedByAnimalAndDate)) {
-                $items = $weightsGroupedByAnimalAndDate[$animalIdAndData];
-                $items->add($result);
-                $weightsGroupedByAnimalAndDate[$animalIdAndData] = $items;
-            } else {
-                //First entry
-                $items = new ArrayCollection();
-                $items->add($result);
-                $weightsGroupedByAnimalAndDate[$animalIdAndData] = $items;
-            }
-        }
+        $isGetGroupedByAnimalAndDate = true;
+        $weightsGroupedByAnimalAndDate = $this->getContradictingWeights($isGetGroupedByAnimalAndDate);
 
         $floatComparisonAccuracy = 0.001;
         $measurementsFixedCount = 0;
@@ -209,9 +187,9 @@ class WeightRepository extends BaseRepository {
             $areAllBirthWeights = true;
             $weightValues = array();
             foreach($weightGroup as $weightMeasurement) {
-                $weightValue = $weightMeasurement['weight'];
-                $weightId = $weightMeasurement['id'];
-                if($weightMeasurement['is_birth_weight'] == false) { $areAllBirthWeights = false; }
+                $weightValue = $weightMeasurement[JsonInputConstant::WEIGHT];
+                $weightId = $weightMeasurement[JsonInputConstant::ID];
+                if($weightMeasurement[JsonInputConstant::IS_BIRTH_WEIGHT] == false) { $areAllBirthWeights = false; }
                 $weightValues[] = [JsonInputConstant::WEIGHT => $weightValue,
                                    JsonInputConstant::ID => $weightId];
 
@@ -362,10 +340,57 @@ class WeightRepository extends BaseRepository {
 
 
     /**
+     * @param bool $isGetGroupedByAnimalAndDate
      * @return array
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function getContradictingWeights()
+    public function getContradictingWeights($isGetGroupedByAnimalAndDate = false)
+    {
+        $sql = "SELECT n.*, z.*, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, a.date_of_birth FROM measurement n
+                  INNER JOIN (
+                               SELECT m.animal_id_and_date
+                               FROM measurement m
+                                 INNER JOIN (
+                                    SELECT y.id FROM weight y  WHERE y.is_revoked = false
+                                 ) x ON m.id = x.id
+                               GROUP BY m.animal_id_and_date
+                               HAVING (COUNT(*) > 1)
+                             ) t on t.animal_id_and_date = n.animal_id_and_date
+                  INNER JOIN weight z ON z.id = n.id
+                  INNER JOIN animal a ON a.id = z.animal_id";
+        $results = $this->getEntityManager()->getConnection()->query($sql)->fetchAll();
+
+        if($isGetGroupedByAnimalAndDate) {
+
+            $weightsGroupedByAnimalAndDate = array();
+            foreach ($results as $result) {
+                $animalIdAndData = $result['animal_id_and_date'];
+                if(array_key_exists($animalIdAndData, $weightsGroupedByAnimalAndDate)) {
+                    $items = $weightsGroupedByAnimalAndDate[$animalIdAndData];
+                    $items->add($result);
+                    $weightsGroupedByAnimalAndDate[$animalIdAndData] = $items;
+                } else {
+                    //First entry
+                    $items = new ArrayCollection();
+                    $items->add($result);
+                    $weightsGroupedByAnimalAndDate[$animalIdAndData] = $items;
+                }
+            }
+
+            return $weightsGroupedByAnimalAndDate;
+
+        } else {
+            return $results;
+        }
+
+    }
+
+
+    /**
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getContradictingWeightsForExportFile()
     {
         $em = $this->getEntityManager();
 

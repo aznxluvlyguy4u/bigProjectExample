@@ -67,4 +67,26 @@ class MuscleThicknessRepository extends BaseRepository {
         }
         return $count;
     }
+
+
+    /**
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getContradictingMuscleThicknessesForExportFile()
+    {
+        $sql = "
+             SELECT i.last_name as inspector, n.id as metingId, a.id as animal_id, DATE(n.measurement_date) as meetdatum, z.muscle_thickness as spierdikte, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, DATE(a.date_of_birth) as geboortedatum FROM measurement n
+              INNER JOIN (
+                           SELECT m.animal_id_and_date
+                           FROM measurement m
+                             INNER JOIN muscle_thickness x ON m.id = x.id
+                           GROUP BY m.animal_id_and_date
+                           HAVING (COUNT(*) > 1)
+                         ) t on t.animal_id_and_date = n.animal_id_and_date
+              INNER JOIN muscle_thickness z ON z.id = n.id
+              LEFT JOIN person i ON i.id = n.inspector_id
+              LEFT JOIN animal a ON a.id = z.animal_id";
+        return  $this->getEntityManager()->getConnection()->query($sql)->fetchAll();
+    }
 }
