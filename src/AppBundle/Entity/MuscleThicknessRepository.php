@@ -22,7 +22,7 @@ class MuscleThicknessRepository extends BaseRepository {
             ->setMaxResults(1);
 
         //MuscleThickness
-        $latestMuscleThickness = $this->getEntityManager()->getRepository(MuscleThickness::class)
+        $latestMuscleThickness = $this->getManager()->getRepository(MuscleThickness::class)
             ->matching($criteria);
 
         if(sizeof($latestMuscleThickness) > 0) {

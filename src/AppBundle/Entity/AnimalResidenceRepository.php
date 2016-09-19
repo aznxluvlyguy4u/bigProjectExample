@@ -14,7 +14,7 @@ class AnimalResidenceRepository extends BaseRepository {
 
     public function getLastByNullEndDate(Animal $animal)
     {
-        $repository = $this->getEntityManager()->getRepository(Constant::ANIMAL_RESIDENCE_REPOSITORY);
+        $repository = $this->getManager()->getRepository(Constant::ANIMAL_RESIDENCE_REPOSITORY);
         $results = $this->findBy(array('endDate' => null, 'animal_id' => $animal->getId()));
 
         if(sizeof($results) == 0) {
@@ -47,7 +47,7 @@ class AnimalResidenceRepository extends BaseRepository {
             ->setMaxResults(1);
 
         /** @var ArrayCollection $results */
-        $results = $this->getEntityManager()->getRepository(AnimalResidence::class)
+        $results = $this->getManager()->getRepository(AnimalResidence::class)
             ->matching($criteria);
 
         if($results->count() > 0) {
@@ -79,7 +79,7 @@ class AnimalResidenceRepository extends BaseRepository {
             ->setMaxResults(1);
 
         /** @var ArrayCollection $results */
-        $results = $this->getEntityManager()->getRepository(AnimalResidence::class)
+        $results = $this->getManager()->getRepository(AnimalResidence::class)
             ->matching($criteria);
 
         if($results->count() > 0) {

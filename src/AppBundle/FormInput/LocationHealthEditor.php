@@ -13,7 +13,7 @@ use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Util\Finder;
 use AppBundle\Util\LocationHealthUpdater;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
@@ -26,12 +26,12 @@ class LocationHealthEditor
     const defaultScrapieStatus = ScrapieStatus::UNDER_OBSERVATION;
 
     /**
-     * @param EntityManager $em
+     * @param ObjectManager $em
      * @param ArrayCollection $content
      * @param Location $location
      * @return Location
      */
-    public static function edit(EntityManager $em, Location $location, ArrayCollection $content)
+    public static function edit(ObjectManager $em, Location $location, ArrayCollection $content)
     {
         /* Initialize LocationHealth with blank values and no illnesses if null */
         if($location->getLocationHealth() == null) {

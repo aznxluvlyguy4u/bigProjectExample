@@ -34,7 +34,7 @@ class DataFixturesRealProvinces implements FixtureInterface, ContainerAwareInter
   }
 
   /**
-   * Load data fixtures with the passed EntityManager
+   * Load data fixtures with the passed ObjectManager
    *
    * @param ObjectManager $manager
    */
@@ -44,7 +44,7 @@ class DataFixturesRealProvinces implements FixtureInterface, ContainerAwareInter
       return null;
     }
 
-    $em = $this->container->get('doctrine.orm.entity_manager');
+    $em = $this->container->get('doctrine')->getManager();
 
     $nl = $em->getRepository(Constant::COUNTRY_REPOSITORY)->findOneBy(array('code' => 'NL'));
 

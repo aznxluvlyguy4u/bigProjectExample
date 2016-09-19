@@ -116,7 +116,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
         }
 
 
-        $em = $this->getDoctrine()->getEntityManager();
+        $em = $this->getDoctrine()->getManager();
 
         $inputValidator = new CreateAdminValidator($em, $content);
         if (!$inputValidator->getIsValid()) {
@@ -184,7 +184,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
         $emailAddress = $content->get('email_address');
         $accessLevel = $content->get('access_level');
 
-        $em = $this->getDoctrine()->getEntityManager();
+        $em = $this->getDoctrine()->getManager();
 
         $inputValidator = new EditAdminValidator($em, $content);
         if (!$inputValidator->getIsValid()) {
@@ -242,7 +242,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
       return $adminValidator->createJsonErrorResponse();
     }
 
-    $em = $this->getDoctrine()->getEntityManager();
+    $em = $this->getDoctrine()->getManager();
     $repository = $this->getDoctrine()->getRepository(Employee::class);
     
     $content = $this->getContentAsArray($request);
@@ -288,7 +288,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
 
     $existingGhostToken = $this->getDoctrine()->getRepository(Token::class)->findOneBy(array('owner' => $client, 'admin' => $employee));
     if($existingGhostToken != null) {
-      $this->getDoctrine()->getEntityManager()->remove($existingGhostToken);
+      $this->getDoctrine()->getManager()->remove($existingGhostToken);
     }
 
     $ghostToken = new Token(TokenType::GHOST);
@@ -297,8 +297,8 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
     $employee->addToken($ghostToken);
     $client->addToken($ghostToken);
 
-    $this->getDoctrine()->getEntityManager()->persist($ghostToken);
-    $this->getDoctrine()->getEntityManager()->flush();
+    $this->getDoctrine()->getManager()->persist($ghostToken);
+    $this->getDoctrine()->getManager()->flush();
 
     $result = array(Constant::GHOST_TOKEN_NAMESPACE => $ghostToken->getCode());
 
@@ -360,17 +360,17 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
               $isGhostTokenExpired = $timeExpiredInMinutes > self::timeLimitInMinutes;
 
               if ($isGhostTokenExpired){
-                $this->getDoctrine()->getEntityManager()->remove($ghostToken);
+                $this->getDoctrine()->getManager()->remove($ghostToken);
                 $message = 'GHOST TOKEN EXPIRED AND WAS DELETED. VERIFY GHOST TOKENS WITHIN 3 MINUTES';
                 $code = 428;
 
               } else { //not expired
                 $ghostToken->setIsVerified(true);
-                $this->getDoctrine()->getEntityManager()->persist($ghostToken);
+                $this->getDoctrine()->getManager()->persist($ghostToken);
                 $message = 'GHOST TOKEN IS VERIFIED';
                 $code = 200;
               }
-              $this->getDoctrine()->getEntityManager()->flush();
+              $this->getDoctrine()->getManager()->flush();
             } 
           }
 

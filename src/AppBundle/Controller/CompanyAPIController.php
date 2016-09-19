@@ -228,8 +228,8 @@ class CompanyAPIController extends APIController
         }
 
         // Save to Database
-        $this->getDoctrine()->getEntityManager()->persist($company);
-        $this->getDoctrine()->getEntityManager()->flush();
+        $this->getDoctrine()->getManager()->persist($company);
+        $this->getDoctrine()->getManager()->flush();
 
         // Send Email with passwords to Owner & Users
         $password = $this->persistNewPassword($company->getOwner());
@@ -328,8 +328,8 @@ class CompanyAPIController extends APIController
             $owner->setLastName($contentOwner['last_name']);
             $owner->setEmailAddress($contentOwner['email_address']);
 
-            $this->getDoctrine()->getEntityManager()->persist($owner);
-            $this->getDoctrine()->getEntityManager()->flush();
+            $this->getDoctrine()->getManager()->persist($owner);
+            $this->getDoctrine()->getManager()->flush();
         } else {
             if($owner) {
                 return new JsonResponse(
@@ -344,8 +344,8 @@ class CompanyAPIController extends APIController
 
             $owner = $company->getOwner();
             $owner->setIsActive(false);
-            $this->getDoctrine()->getEntityManager()->persist($owner);
-            $this->getDoctrine()->getEntityManager()->flush();
+            $this->getDoctrine()->getManager()->persist($owner);
+            $this->getDoctrine()->getManager()->flush();
 
             $owner = new Client();
             $owner->setFirstName($contentOwner['first_name']);
@@ -419,8 +419,8 @@ class CompanyAPIController extends APIController
 
             if ($location) {
                 $location->setIsActive(false);
-                $this->getDoctrine()->getEntityManager()->persist($location);
-                $this->getDoctrine()->getEntityManager()->flush();
+                $this->getDoctrine()->getManager()->persist($location);
+                $this->getDoctrine()->getManager()->flush();
             }
         }
 
@@ -465,8 +465,8 @@ class CompanyAPIController extends APIController
                 $locationAddress->setState($contentLocationAddress['state']);
                 $locationAddress->setCountry('');
 
-                $this->getDoctrine()->getEntityManager()->persist($location);
-                $this->getDoctrine()->getEntityManager()->flush();
+                $this->getDoctrine()->getManager()->persist($location);
+                $this->getDoctrine()->getManager()->flush();
             } else {
                 if($location) {
                     return new JsonResponse(
@@ -517,8 +517,8 @@ class CompanyAPIController extends APIController
                      * @var Client $user
                      */
                     $user->setIsActive(false);
-                    $this->getDoctrine()->getEntityManager()->persist($user);
-                    $this->getDoctrine()->getEntityManager()->flush();
+                    $this->getDoctrine()->getManager()->persist($user);
+                    $this->getDoctrine()->getManager()->flush();
                 }
             }
         }
@@ -552,8 +552,8 @@ class CompanyAPIController extends APIController
                 $user->setLastName($contentUser['last_name']);
                 $user->setEmailAddress($contentUser['email_address']);
 
-                $this->getDoctrine()->getEntityManager()->persist($user);
-                $this->getDoctrine()->getEntityManager()->flush();
+                $this->getDoctrine()->getManager()->persist($user);
+                $this->getDoctrine()->getManager()->flush();
             } else {
                 if($user) {
                     return new JsonResponse(
@@ -578,8 +578,8 @@ class CompanyAPIController extends APIController
             }
         }
 
-        $this->getDoctrine()->getEntityManager()->persist($company);
-        $this->getDoctrine()->getEntityManager()->flush();
+        $this->getDoctrine()->getManager()->persist($company);
+        $this->getDoctrine()->getManager()->flush();
 
         foreach ($newUsers as $user) {
             $password = $this->persistNewPassword($user);
@@ -619,8 +619,8 @@ class CompanyAPIController extends APIController
 
         // Set Company inactive
         $company->setIsActive($isActive);
-        $this->getDoctrine()->getEntityManager()->persist($company);
-        $this->getDoctrine()->getEntityManager()->flush();
+        $this->getDoctrine()->getManager()->persist($company);
+        $this->getDoctrine()->getManager()->flush();
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
     }
@@ -717,8 +717,8 @@ class CompanyAPIController extends APIController
         $note->setCompany($company);
         $note->setNote($content['note']);
 
-        $this->getDoctrine()->getEntityManager()->persist($note);
-        $this->getDoctrine()->getEntityManager()->flush();
+        $this->getDoctrine()->getManager()->persist($note);
+        $this->getDoctrine()->getManager()->flush();
 
         $result = CompanyNoteOutput::createNoteResponse($note);
 
