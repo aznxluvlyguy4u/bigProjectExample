@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\MeasurementConstant;
+use AppBundle\Util\NumberUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 
@@ -80,8 +81,6 @@ class BodyFatRepository extends BaseRepository {
      */
     public function deleteDuplicates()
     {
-        $em = $this->getEntityManager();
-
         $count = 0;
         $hasDuplicates = true;
         while($hasDuplicates) {
@@ -96,24 +95,7 @@ class BodyFatRepository extends BaseRepository {
             $results = $this->getEntityManager()->getConnection()->query($sql)->fetchAll();
             
             foreach ($results as $result) {
-                $bodyFatMinId = $result['min_id'];
-
-                $sql = "SELECT fat1_id, fat2_id, fat3_id FROM body_fat WHERE id = '".$bodyFatMinId."'";
-                $fatIds = $this->getEntityManager()->getConnection()->query($sql)->fetch();
-                $fat1Id = $fatIds['fat1_id'];
-                $fat2Id = $fatIds['fat2_id'];
-                $fat3Id = $fatIds['fat3_id'];
-
-                $sql = "DELETE FROM body_fat WHERE id = '".$bodyFatMinId."'";
-                $em->getConnection()->exec($sql);
-                $sql = "DELETE FROM measurement WHERE id = '".$bodyFatMinId."'";
-                $em->getConnection()->exec($sql);
-                $sql = "DELETE FROM fat1 WHERE id = '".$fat1Id."'";
-                $em->getConnection()->exec($sql);
-                $sql = "DELETE FROM fat2 WHERE id = '".$fat2Id."'";
-                $em->getConnection()->exec($sql);
-                $sql = "DELETE FROM fat3 WHERE id = '".$fat3Id."'";
-                $em->getConnection()->exec($sql);
+                $this->deleteBodyFatMeasurement($result['min_id']);
                 $count++;
             }
 
@@ -146,28 +128,90 @@ class BodyFatRepository extends BaseRepository {
         $isGetGroupedByAnimalAndDate = true;
         $bodyFatsGroupedByAnimalAndDate = $this->getContradictingBodyFats($isGetGroupedByAnimalAndDate);
 
-        $floatComparisonAccuracy = 0.001;
-        $measurementsFixedCount = 0;
 
+        $measurementsFixedCount = 0;
         foreach ($bodyFatsGroupedByAnimalAndDate as $bodyFatGroup) {
 
-            $bodyFatMeasurements = array();
-            foreach($bodyFatGroup as $bodyFatMeasurement) {
-//TODO
-//                dump($bodyFatGroup);die;
-//                $fat1 = $bodyFatMeasurement[JsonInputConstant::FAT1];
-//                $fat2 = $bodyFatMeasurement[JsonInputConstant::FAT2];
-//                $fat3 = $bodyFatMeasurement[JsonInputConstant::FAT3];
-//                $weightId = $bodyFatMeasurement[JsonInputConstant::ID];
-//
-//                $bodyFatValues[] = [JsonInputConstant::FAT1 => $fat1,
-//                    JsonInputConstant::ID => $weightId];
+            if(count($bodyFatGroup) == 2) {
 
+                $firstMeasurement = $bodyFatGroup[0];
+                $secondMeasurement = $bodyFatGroup[1];
+                $firstMeasurementId = $firstMeasurement[JsonInputConstant::ID];
+                $secondMeasurementId = $secondMeasurement[JsonInputConstant::ID];
+                $isFirstMeasurementAllOnes = $this->areAllFatValuesOne($firstMeasurement);
+                $isSecondMeasurementAllOnes = $this->areAllFatValuesOne($secondMeasurement);
+                $hasFirstMeasurementInspector = $firstMeasurement[JsonInputConstant::INSPECTOR_ID] != null;
+                $hasSecondMeasurementInspector = $secondMeasurement[JsonInputConstant::INSPECTOR_ID] != null;
+
+                if($isFirstMeasurementAllOnes && $isSecondMeasurementAllOnes) {
+                    if($hasFirstMeasurementInspector) {
+                        $this->deleteBodyFatMeasurement($secondMeasurementId);
+                        $measurementsFixedCount++;
+                    } else {
+                        //Either this measurement has an Inspector or both don't have one
+                        $this->deleteBodyFatMeasurement($firstMeasurementId);
+                        $measurementsFixedCount++;
+                    }
+                } elseif(!$isFirstMeasurementAllOnes && $isSecondMeasurementAllOnes) {
+                    if($hasFirstMeasurementInspector || !$hasSecondMeasurementInspector) {
+                        $this->deleteBodyFatMeasurement($secondMeasurementId);
+                        $measurementsFixedCount++;
+                    }
+
+                } elseif($isFirstMeasurementAllOnes && !$isSecondMeasurementAllOnes) {
+                    if(!$hasFirstMeasurementInspector || $hasSecondMeasurementInspector) {
+                        $this->deleteBodyFatMeasurement($secondMeasurementId);
+                        $measurementsFixedCount++;
+                    }
+                }
             }
-
         }
 
         return $measurementsFixedCount;
+    }
+
+
+    /**
+     * @param array $bodyFatMeasurement
+     * @return bool
+     */
+    private function areAllFatValuesOne($bodyFatMeasurement)
+    {
+        $fat1 = floatval($bodyFatMeasurement[JsonInputConstant::FAT1]);
+        $fat2 = floatval($bodyFatMeasurement[JsonInputConstant::FAT2]);
+        $fat3 = floatval($bodyFatMeasurement[JsonInputConstant::FAT3]);
+        $accuracy = 0.0001;
+
+        return  NumberUtil::areFloatsEqual($fat1, 1.0, $accuracy) &&
+                NumberUtil::areFloatsEqual($fat2, 1.0, $accuracy) &&
+                NumberUtil::areFloatsEqual($fat3, 1.0, $accuracy);
+    }
+
+
+    /**
+     * @param $bodyFatId
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function deleteBodyFatMeasurement($bodyFatId)
+    {
+        $em = $this->getEntityManager();
+
+        $sql = "SELECT fat1_id, fat2_id, fat3_id FROM body_fat WHERE id = '".$bodyFatId."'";
+        $fatIds = $this->getEntityManager()->getConnection()->query($sql)->fetch();
+        $fat1Id = $fatIds['fat1_id'];
+        $fat2Id = $fatIds['fat2_id'];
+        $fat3Id = $fatIds['fat3_id'];
+
+        $sql = "DELETE FROM body_fat WHERE id = '".$bodyFatId."'";
+        $em->getConnection()->exec($sql);
+        $sql = "DELETE FROM measurement WHERE id = '".$bodyFatId."'";
+        $em->getConnection()->exec($sql);
+        $sql = "DELETE FROM fat1 WHERE id = '".$fat1Id."'";
+        $em->getConnection()->exec($sql);
+        $sql = "DELETE FROM fat2 WHERE id = '".$fat2Id."'";
+        $em->getConnection()->exec($sql);
+        $sql = "DELETE FROM fat3 WHERE id = '".$fat3Id."'";
+        $em->getConnection()->exec($sql);
     }
 
 
@@ -179,7 +223,7 @@ class BodyFatRepository extends BaseRepository {
     public function getContradictingBodyFats($isGetGroupedByAnimalAndDate = false)
     {
         $sql = "SELECT n.id as id, a.id as animal_id, n.animal_id_and_date, n.measurement_date, 
-                        fat1.fat as fat1,  fat2.fat as fat2, fat3.fat as fat3 
+                        fat1.fat as fat1,  fat2.fat as fat2, fat3.fat as fat3, n.inspector_id
                   FROM measurement n
                   INNER JOIN (
                                SELECT m.animal_id_and_date

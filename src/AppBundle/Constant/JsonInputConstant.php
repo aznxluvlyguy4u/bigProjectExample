@@ -128,5 +128,6 @@ class JsonInputConstant
     const FAT3 = 'fat3';
     const IS_EMPTY_MEASUREMENT = 'is_empty_measurement';
     const MEASUREMENT_ROW = 'measurement_row';
+    const INSPECTOR_ID = 'inspector_id';
 
 }

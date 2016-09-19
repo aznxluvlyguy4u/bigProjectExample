@@ -329,9 +329,16 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
             $this->cmdUtil->advanceProgressBar(1, $message);
 
             $bodyFatFixResult = $this->bodyFatRepository->fixMeasurements();
-            $message = $message . $bodyFatFixResult[Constant::MESSAGE_NAMESPACE];
+            $message = $message .'| '. $bodyFatFixResult[Constant::MESSAGE_NAMESPACE];
             $this->cmdUtil->advanceProgressBar(1, $message);
-            
+
+            //TODO ExteriorMeasurementsFix
+
+            $totalDuplicatesDeleted = $weightFixResult[Constant::COUNT] + $bodyFatFixResult[Constant::COUNT];
+            if($totalDuplicatesDeleted == 0) {
+                $message =  'No measurements fixed';
+                $this->cmdUtil->setProgressBarMessage($message);
+            }
             $this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
 
@@ -371,6 +378,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
             $contradictingWeightsLeft = count($this->weightRepository->getContradictingWeightsForExportFile());
             $contradictingMuscleThicknessesLeft = count($this->muscleThicknessRepository->getContradictingMuscleThicknessesForExportFile());
             $contradictingTailLengthsLeft = count($this->tailLengthRepository->getContradictingTailLengthsForExportFile());
+            $contradictingBodyFatsLeft = count($this->bodyFatRepository->getContradictingBodyFatsForExportFile());
             $contradictingMeasurementsLeft = $contradictingWeightsLeft + $contradictingMuscleThicknessesLeft + $contradictingTailLengthsLeft;
 
             if($contradictingMeasurementsLeft > 0) {
@@ -378,6 +386,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
                 if($contradictingWeightsLeft > 0) { $this->output->writeln('weights: '.$contradictingWeightsLeft); }
                 if($contradictingMuscleThicknessesLeft > 0) { $this->output->writeln('muscleThickness: '.$contradictingMuscleThicknessesLeft); }
                 if($contradictingTailLengthsLeft > 0) { $this->output->writeln('tailLengths: '.$contradictingTailLengthsLeft); }
+                if($contradictingBodyFatsLeft > 0) { $this->output->writeln('bodyFats: '.$contradictingBodyFatsLeft); }
 
             } else {
                 $this->output->writeln('No contradicting measurements left!');

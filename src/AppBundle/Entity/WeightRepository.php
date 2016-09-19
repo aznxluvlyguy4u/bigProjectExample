@@ -172,7 +172,6 @@ class WeightRepository extends BaseRepository {
     }
 
 
-    //TODO
     private function fixContradictingMeasurements()
     {
         $em = $this->getEntityManager();
