@@ -41,7 +41,7 @@ class TimeUtil
      */
     public static function getDayAfterDateTime(\DateTime $dateTime)
     {
-        $dayOfDateTime = self::getDayOfDateTime($dateTime);
+        $dayOfDateTime = self::getDayOfDateTime($dateTime); //This is a new DateTime object
         return $dayOfDateTime->add(new \DateInterval('P1D')); //add one day
     }
 
@@ -68,60 +68,14 @@ class TimeUtil
 
 
     /**
-     * @param Animal $animal
+     * @param \DateTime $dateOfBirth
+     * @param \DateTime $latestLitterDate
      * @return int
      */
-    public static function ageInSystem($animal)
+    public static function ageInSystemForProductionValue($dateOfBirth, $latestLitterDate)
     {
-        if($animal == null) { return null; }
-        $dateOfBirth = $animal->getDateOfBirth();
-        if($dateOfBirth == null) { return null; }
-
-        $isAnimalInNsfoSystem = $animal->getLocation() != null;
-
-        if($isAnimalInNsfoSystem) {
-
-            if($animal->getIsAlive()) {
-                return TimeUtil::getAgeYear($dateOfBirth);
-
-                //animal is not alive
-            } elseif ($animal->getDateOfDeath() != null) {
-                return TimeUtil::getAgeYear($dateOfBirth, $animal->getDateOfDeath());
-
-                //is not alive, but has no known dateOfDeath
-            } else {
-                return null;
-            }
-
-
-        } else {
-            //Is not in the system, so real current state is unknown. In this case take the last known state in the system
-            if($animal->getIsAlive()) {
-                $lastResidence = $animal->getAnimalResidenceHistory()->last();
-                /** @var AnimalResidence $lastResidence */
-                if($lastResidence != null) {
-                    $lastDate = $lastResidence->getEndDate();
-                    if($lastDate == null) {
-                        $lastDate = $lastResidence->getStartDate();
-                    }
-
-                    if($lastDate != null) {
-                        return TimeUtil::getAgeYear($dateOfBirth, $lastDate);
-                    }
-                }
-                return null;
-
-                //animal is known to be dead
-            } elseif ($animal->getDateOfDeath() != null) {
-                return TimeUtil::getAgeYear($dateOfBirth, $animal->getDateOfDeath());
-
-                //is not alive, but has no known dateOfDeath
-            } else {
-                return null;
-            }
-
-
-        }
+        if($dateOfBirth == null || $latestLitterDate == null) { return null; }
+        return self::getAgeYear($dateOfBirth, $latestLitterDate);
     }
 
     
@@ -135,7 +89,7 @@ class TimeUtil
         if($dateOfBirth == null || $earliestLitterDate == null) { return false; }
 
         $months = 18;
-        $oneYearOldLimit = $dateOfBirth;
+        $oneYearOldLimit = clone $dateOfBirth;
         $oneYearOldLimit->add(new \DateInterval('P' . $months . "M"));
 
         if($oneYearOldLimit < $earliestLitterDate) {
