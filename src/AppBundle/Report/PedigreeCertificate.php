@@ -415,7 +415,7 @@ class PedigreeCertificate
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $em->getRepository(Animal::class);
 
-        if($animal instanceof Ewe) {
+        if($animal instanceof Ewe || $animal instanceof Ram) {
             /** @var Ewe $animal */
             $litters = $animal->getLitters();
             $litterCount = $litters->count();
@@ -438,10 +438,12 @@ class PedigreeCertificate
                 }
                 $totalBornCount = $stillbornCount + $bornAliveCount;
 
-                if(TimeUtil::isGaveBirthAsOneYearOld($dateOfBirth, $earliestLitterDate)){
-                    $oneYearMark = '*';
-                } else {
-                    $oneYearMark = '';
+                //By default there is no oneYearMark
+                $oneYearMark = '';
+                if($animal instanceof Ewe) {
+                    if(TimeUtil::isGaveBirthAsOneYearOld($dateOfBirth, $earliestLitterDate)){
+                        $oneYearMark = '*';
+                    }
                 }
 
                 $ageInTheNsfoSystem = TimeUtil::ageInSystemForProductionValue($dateOfBirth, $latestLitterDate);
@@ -453,10 +455,11 @@ class PedigreeCertificate
 
 
             } else {
+                //If Ewe or Ram has no litters in Database
                 return self::EMPTY_PRODUCTION;
             }
-            
         } else {
+            //Animal is a Neuter
             return self::EMPTY_PRODUCTION;
         }
     }
