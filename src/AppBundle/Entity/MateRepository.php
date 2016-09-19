@@ -36,7 +36,7 @@ class MateRepository extends BaseRepository {
             ->orderBy(['startDate' => Criteria::DESC])
         ;
 
-        return $this->getEntityManager()->getRepository(Mate::class)
+        return $this->getManager()->getRepository(Mate::class)
             ->matching($criteria);
     }
 
@@ -70,7 +70,7 @@ class MateRepository extends BaseRepository {
             ->orderBy(['startDate' => Criteria::DESC])
         ;
 
-        return $this->getEntityManager()->getRepository(Mate::class)
+        return $this->getManager()->getRepository(Mate::class)
             ->matching($criteria);
     }
 
@@ -99,11 +99,11 @@ class MateRepository extends BaseRepository {
             ->orderBy(['startDate' => Criteria::DESC])
         ;
 
-        $allMatingsToBeVerified = $this->getEntityManager()->getRepository(Mate::class)
+        $allMatingsToBeVerified = $this->getManager()->getRepository(Mate::class)
             ->matching($criteria);
 
         /** @var AnimalRepository $animalRepository */
-        $animalRepository = $this->getEntityManager()->getRepository(Animal::class);
+        $animalRepository = $this->getManager()->getRepository(Animal::class);
 
         $matingsOfOwner = new ArrayCollection();
 
@@ -118,8 +118,8 @@ class MateRepository extends BaseRepository {
             if($mate->getStudRam() == null) {
                 $mate->setStudRam($ram);
                 $ram->getMatings()->add($mate);
-                $this->getEntityManager()->persist($ram);
-                $this->getEntityManager()->persist($mate);
+                $this->getManager()->persist($ram);
+                $this->getManager()->persist($mate);
                 $this->flush();
             }
 

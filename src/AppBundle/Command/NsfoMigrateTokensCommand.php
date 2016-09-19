@@ -6,7 +6,7 @@ use AppBundle\Entity\Person;
 use AppBundle\Entity\Token;
 use AppBundle\Enumerator\TokenType;
 use AppBundle\Util\CommandUtil;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -26,8 +26,8 @@ class NsfoMigrateTokensCommand extends ContainerAwareCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $output->writeln(CommandUtil::generateTitle('Migrating Tokens'));
-        /** @var EntityManager $em */
-        $em = $this->getContainer()->get('doctrine.orm.entity_manager');
+        /** @var ObjectManager $em */
+        $em = $this->getContainer()->get('doctrine')->getManager();
 
         $persons = $em->getRepository(Person::class)->findAll();
 

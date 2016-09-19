@@ -114,7 +114,7 @@ class APIController extends Controller implements APIControllerInterface
   {
     if($this->requestMessageBuilder == null) {
       $serializer = $this->getSerializer();
-      $em = $this->getDoctrine()->getEntityManager();
+      $em = $this->getDoctrine()->getManager();
       $currentEnvironment = $this->getCurrentEnvironment();
       $this->requestMessageBuilder = new RequestMessageBuilder($em, $serializer, $currentEnvironment);
     }
@@ -287,7 +287,7 @@ class APIController extends Controller implements APIControllerInterface
     $repository = $this->getDoctrine()->getRepository(Utils::getRepositoryNameSpace($messageObject));
 
     //create array and jsonMessage
-    $messageArray = RequestMessageOutputBuilder::createOutputArray($doctrine->getEntityManager(), $messageObject, $isUpdate);
+    $messageArray = RequestMessageOutputBuilder::createOutputArray($doctrine->getManager(), $messageObject, $isUpdate);
 
     if($messageArray == null) {
       //These objects do not have a customized minimal json output for the queue yet
@@ -356,7 +356,7 @@ class APIController extends Controller implements APIControllerInterface
 
       if($request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE) && $tokenCode == null) {
         $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
-        $ghostToken = $this->getDoctrine()->getEntityManager()->getRepository(Token::class)
+        $ghostToken = $this->getDoctrine()->getManager()->getRepository(Token::class)
             ->findOneBy(array("code" => $ghostTokenCode));
 
         if($ghostToken != null) {
@@ -384,7 +384,7 @@ class APIController extends Controller implements APIControllerInterface
    */
   public function getLoggedInUser(Request $request= null, $tokenCode = null)
   {
-    $em = $this->getDoctrine()->getEntityManager();
+    $em = $this->getDoctrine()->getManager();
 
     if($tokenCode == null) {
       $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
@@ -410,7 +410,7 @@ class APIController extends Controller implements APIControllerInterface
    */
   public function getAuthenticatedEmployee(Request $request = null, $tokenCode = null)
   {
-    $em = $this->getDoctrine()->getEntityManager();
+    $em = $this->getDoctrine()->getManager();
 
     if($tokenCode == null) {
       $tokenCode = $request->headers->get(Constant::ACCESS_TOKEN_HEADER_NAMESPACE);
@@ -750,8 +750,8 @@ class APIController extends Controller implements APIControllerInterface
   public function persistAnimalTransferringStateAndFlush($animal)
   {
     $animal->setTransferState(AnimalTransferStatus::TRANSFERRING);
-    $this->getDoctrine()->getEntityManager()->persist($animal);
-    $this->getDoctrine()->getEntityManager()->flush();
+    $this->getDoctrine()->getManager()->persist($animal);
+    $this->getDoctrine()->getManager()->flush();
   }
 
   /**

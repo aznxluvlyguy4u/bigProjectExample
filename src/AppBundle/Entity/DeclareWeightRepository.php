@@ -32,7 +32,7 @@ class DeclareWeightRepository extends BaseRepository {
             ->orderBy(['logDate' => Criteria::DESC])
         ;
 
-        return $this->getEntityManager()->getRepository(DeclareWeight::class)
+        return $this->getManager()->getRepository(DeclareWeight::class)
             ->matching($criteria);
     }
 

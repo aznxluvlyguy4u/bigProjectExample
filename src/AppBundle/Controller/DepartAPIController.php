@@ -236,7 +236,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
       //Convert the array into an object and add the mandatory values retrieved from the database
       $declareExportUpdate = $this->buildEditMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $loggedInUser, $location);
 
-//      $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY);
+//      $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY);
 //      $messageObject = $entityManager->updateDeclareExportMessage($declareExportUpdate, $location, $Id);
 dump($declareExportUpdate);die;
       if($messageObject == null) {

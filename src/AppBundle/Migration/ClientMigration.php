@@ -9,7 +9,7 @@ use AppBundle\Enumerator\MigrationStatus;
 use AppBundle\Setting\MigrationSetting;
 use AppBundle\Util\Finder;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Monolog\Handler\Curl\Util;
 
 /**
@@ -20,7 +20,7 @@ class ClientMigration
 {
     /**
      * @param $newClients
-     * @param EntityManager $em
+     * @param ObjectManager $em
      * @param $encoder
      * @param ArrayCollection $content
      * @return array

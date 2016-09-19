@@ -2,7 +2,7 @@
 
 namespace AppBundle\Entity;
 
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -16,7 +16,7 @@ class PersonRepository extends BaseRepository
 
   public function findOneByAccessToken($accessToken)
   {
-    $queryBuilder = $this->getEntityManager()->createQueryBuilder();
+    $queryBuilder = $this->getManager()->createQueryBuilder();
 
     $queryBuilder
 

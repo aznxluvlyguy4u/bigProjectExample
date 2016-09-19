@@ -8,7 +8,7 @@ use AppBundle\Entity\Person;
 use AppBundle\Output\AccessLevelOverviewOutput;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Constant\Constant;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use \Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
@@ -39,14 +39,14 @@ class HealthEditValidator
     /** @var array */
     private $errors;
 
-    /** @var EntityManager */
+    /** @var ObjectManager */
     private $em;
 
     /**
      * PasswordValidator constructor.
      * @param ArrayCollection $content
      */
-    public function __construct(EntityManager $em, $content)
+    public function __construct(ObjectManager $em, $content)
     {
         //Initialize variables
         $this->errors = array();

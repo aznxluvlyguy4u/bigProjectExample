@@ -19,7 +19,7 @@ class EweRepository extends AnimalRepository {
     public function generateLitterIds($mother, $isPersist = true, $isFlush = true)
     {
         /** @var ObjectManager $em */
-        $em = $this->getEntityManager();
+        $em = $this->getManager();
 
         if($mother instanceof Ewe) {
             $uln = $mother->getUln();
@@ -54,7 +54,7 @@ class EweRepository extends AnimalRepository {
             ->orderBy(['id' => Criteria::ASC])
         ;
 
-        return $this->getEntityManager()->getRepository(Ewe::class)
+        return $this->getManager()->getRepository(Ewe::class)
             ->matching($criteria);
     }
 

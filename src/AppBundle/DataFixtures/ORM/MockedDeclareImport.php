@@ -12,7 +12,7 @@ use AppBundle\Setting\DataFixtureSetting;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -39,7 +39,7 @@ class MockedDeclareImport implements FixtureInterface, ContainerAwareInterface, 
     static private $serializer;
 
     /**
-     * @var EntityManager
+     * @var ObjectManager
      */
     static private $entityManager;
 
@@ -76,7 +76,7 @@ class MockedDeclareImport implements FixtureInterface, ContainerAwareInterface, 
 
         //Get service classes
         self::$serializer = $this->container->get('app.serializer.ir');
-        self::$entityManager = $this->container->get('doctrine.orm.entity_manager');
+        self::$entityManager = $this->container->get('doctrine')->getManager();
         $departRepository = self::$entityManager->getRepository(Constant::DECLARE_IMPORT_REPOSITORY);
 
         //Create client

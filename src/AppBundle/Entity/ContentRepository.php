@@ -10,13 +10,13 @@ class ContentRepository extends BaseRepository {
     
     public function getCMS()
     {
-        $repository = $this->getEntityManager()->getRepository(Content::class);
+        $repository = $this->getManager()->getRepository(Content::class);
         $content = $repository->find(1);
 
         if($content == null) {
             $content = new Content();
-            $this->getEntityManager()->persist($content);
-            $this->getEntityManager()->flush();
+            $this->getManager()->persist($content);
+            $this->getManager()->flush();
         }
         
         return $content;

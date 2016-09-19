@@ -4,7 +4,7 @@ namespace AppBundle\Output;
 
 
 use AppBundle\Entity\DeclareArrival;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 
 /**
  * Class DeclareArrivalOutput
@@ -15,7 +15,7 @@ class DeclareArrivalOutput extends Output
      * @param DeclareArrival $arrival
      * @return array
      */
-    public static function createPostRequestArray(EntityManager $em, DeclareArrival $arrival)
+    public static function createPostRequestArray(ObjectManager $em, DeclareArrival $arrival)
     {
         $animal = $arrival->getAnimal();
         if($animal != null) {
@@ -68,7 +68,7 @@ class DeclareArrivalOutput extends Output
     }
 
 
-    public static function createUpdateRequestArray(EntityManager $em, DeclareArrival $arrival)
+    public static function createUpdateRequestArray(ObjectManager $em, DeclareArrival $arrival)
     {
         //At this moment the update array is identical to post array
         return self::createPostRequestArray($em, $arrival);

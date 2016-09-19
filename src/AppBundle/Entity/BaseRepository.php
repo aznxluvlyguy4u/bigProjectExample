@@ -6,7 +6,10 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\RequestTypeNonIR;
+use AppBundle\Util\DoctrineUtil;
+use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityRepository;
 
 /**
@@ -15,9 +18,18 @@ use Doctrine\ORM\EntityRepository;
  */
 class BaseRepository extends EntityRepository
 {
+    /**
+     * @return ObjectManager
+     */
+    protected function getManager()
+    {
+        return $this->_em;
+    }
+    
+    
     public function persist($entity)
     {
-        $this->getEntityManager()->persist($entity);
+        $this->getManager()->persist($entity);
         $this->update($entity);
 
         return $entity;
@@ -25,14 +37,14 @@ class BaseRepository extends EntityRepository
 
     public function update($entity)
     {
-        $this->getEntityManager()->flush($entity);
+        $this->getManager()->flush($entity);
 
         return $entity;
     }
 
     public function remove($entity)
     {
-        $this->getEntityManager()->remove($entity);
+        $this->getManager()->remove($entity);
 
         return $entity;
     }
@@ -40,7 +52,7 @@ class BaseRepository extends EntityRepository
 
     public function flush()
     {
-        $this->getEntityManager()->flush();
+        $this->getManager()->flush();
     }
 
     protected function getRequests($requests, $state = null)
@@ -104,7 +116,7 @@ class BaseRepository extends EntityRepository
             $sql = "SELECT MAX(log_date) FROM declare_base WHERE (type = '" . $entityType."' OR type = '" . $entityType2. "') AND relation_number_keeper = '"  . $relationNumberKeeper . "'";
         }
 
-        $query = $this->getEntityManager()->getConnection()->prepare($sql);
+        $query = $this->getManager()->getConnection()->prepare($sql);
         $query->execute();
         $result = $query->fetchColumn();
 
@@ -122,7 +134,7 @@ class BaseRepository extends EntityRepository
     public function getLatestLogDatesForDashboardDeclarations(Client $client)
     {
         /** @var DeclareBaseRepository $repository */
-        $repository = $this->getEntityManager()->getRepository(Constant::DECLARE_BASE_REPOSITORY);
+        $repository = $this->getManager()->getRepository(Constant::DECLARE_BASE_REPOSITORY);
 
         $latestArrivalLogdate = $repository->getLatestLogDate($client,RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_IMPORT_ENTITY);
         $latestDepartLogdate = $repository->getLatestLogDate($client,RequestType::DECLARE_DEPART_ENTITY, RequestType::DECLARE_EXPORT_ENTITY);
@@ -157,7 +169,7 @@ class BaseRepository extends EntityRepository
             $sql = "SELECT MAX(log_date) FROM declare_base WHERE (type = '" . $entityType."' OR type = '" . $entityType2. "') AND ubn = '"  . $ubn . "'";
         }
 
-        $query = $this->getEntityManager()->getConnection()->prepare($sql);
+        $query = $this->getManager()->getConnection()->prepare($sql);
         $query->execute();
         $result = $query->fetchColumn();
 
@@ -178,7 +190,7 @@ class BaseRepository extends EntityRepository
     {
         $sql = "SELECT MAX(log_date) FROM declare_nsfo_base WHERE type = '" . $nonIrNsfoDeclarationType."' AND ubn ='" . $ubn . "'";
 
-        $query = $this->getEntityManager()->getConnection()->prepare($sql);
+        $query = $this->getManager()->getConnection()->prepare($sql);
         $query->execute();
         $result = $query->fetchColumn();
 
@@ -197,7 +209,7 @@ class BaseRepository extends EntityRepository
     public function getLatestLogDatesForDashboardDeclarationsPerLocation(Location $location, $errorMessageForDateIsNull = null)
     {
         /** @var DeclareBaseRepository $repository */
-        $repository = $this->getEntityManager()->getRepository(Constant::DECLARE_BASE_REPOSITORY);
+        $repository = $this->getManager()->getRepository(Constant::DECLARE_BASE_REPOSITORY);
         $ubn = $location->getUbn();
 
         $latestArrivalLogdate = $repository->getLatestLogDatePerUbn($ubn,RequestType::DECLARE_ARRIVAL_ENTITY, RequestType::DECLARE_IMPORT_ENTITY);
@@ -256,13 +268,13 @@ class BaseRepository extends EntityRepository
                 AND ubn = '"  . $ubn . "'
                 ORDER BY log_date ASC";
 
-        $query = $this->getEntityManager()->getConnection()->prepare($sql);
+        $query = $this->getManager()->getConnection()->prepare($sql);
         $query->execute();
 
         $results = array();
 
         foreach($query->fetchAll() as $item) {
-            $message = $this->getEntityManager()->getRepository('AppBundle:'.$item['type'])->find($item['id']);
+            $message = $this->getManager()->getRepository('AppBundle:'.$item['type'])->find($item['id']);
 
             if($message->getLogDate() > $logDate) {
                 $results[] = $message;
@@ -280,7 +292,7 @@ class BaseRepository extends EntityRepository
      */
     protected function executeSqlQuery($sqlQuery)
     {
-        $query = $this->getEntityManager()->getConnection()->prepare($sqlQuery);
+        $query = $this->getManager()->getConnection()->prepare($sqlQuery);
         $query->execute();
         $result = $query->fetchColumn();
 

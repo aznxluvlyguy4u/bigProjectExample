@@ -20,13 +20,13 @@ class LitterRepository extends BaseRepository {
         if($animal instanceof Ewe) {
             $criteria = Criteria::create()
                 ->where(Criteria::expr()->eq('animalMother', $animal));
-            return $this->getEntityManager()->getRepository(Litter::class)
+            return $this->getManager()->getRepository(Litter::class)
                 ->matching($criteria);
 
         } elseif ($animal instanceof Ram) {
             $criteria = Criteria::create()
                 ->where(Criteria::expr()->eq('animalFather', $animal));
-            return $this->getEntityManager()->getRepository(Litter::class)
+            return $this->getManager()->getRepository(Litter::class)
                 ->matching($criteria);
 
         } else {
@@ -48,7 +48,7 @@ class LitterRepository extends BaseRepository {
             ->orderBy(['id' => Criteria::ASC])
         ;
 
-        return $this->getEntityManager()->getRepository(Litter::class)
+        return $this->getManager()->getRepository(Litter::class)
             ->matching($criteria);
     }
     
@@ -72,6 +72,6 @@ class LitterRepository extends BaseRepository {
     public function getChildrenByAliveState($litterId, $isAlive = true)
     {
         $sql = "SELECT COUNT(animal.id) FROM animal INNER JOIN litter ON animal.litter_id = litter.id WHERE animal.is_alive = '".$isAlive."' AND animal.litter_id = '".$litterId."'";
-        return $this->getEntityManager()->getConnection()->query($sql)->fetch()['count'];
+        return $this->getManager()->getConnection()->query($sql)->fetch()['count'];
     }
 }
