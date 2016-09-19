@@ -79,24 +79,48 @@ class TimeUtil
 
         $isAnimalInNsfoSystem = $animal->getLocation() != null;
 
-
         if($isAnimalInNsfoSystem) {
-            return TimeUtil::getAgeYear($dateOfBirth, $animal->getDateOfDeath());
+
+            if($animal->getIsAlive()) {
+                return TimeUtil::getAgeYear($dateOfBirth);
+
+                //animal is not alive
+            } elseif ($animal->getDateOfDeath() != null) {
+                return TimeUtil::getAgeYear($dateOfBirth, $animal->getDateOfDeath());
+
+                //is not alive, but has no known dateOfDeath
+            } else {
+                return null;
+            }
+
 
         } else {
-            $lastResidence = $animal->getAnimalResidenceHistory()->last();
-            /** @var AnimalResidence $lastResidence */
-            if($lastResidence != null) {
-                $lastDate = $lastResidence->getEndDate();
-                if($lastDate != null) {
-                    $lastDate = $lastResidence->getStartDate();
-                }
+            //Is not in the system, so real current state is unknown. In this case take the last known state in the system
+            if($animal->getIsAlive()) {
+                $lastResidence = $animal->getAnimalResidenceHistory()->last();
+                /** @var AnimalResidence $lastResidence */
+                if($lastResidence != null) {
+                    $lastDate = $lastResidence->getEndDate();
+                    if($lastDate == null) {
+                        $lastDate = $lastResidence->getStartDate();
+                    }
 
-                if($lastDate != null) {
-                    return TimeUtil::getAgeYear($dateOfBirth, $lastDate);
+                    if($lastDate != null) {
+                        return TimeUtil::getAgeYear($dateOfBirth, $lastDate);
+                    }
                 }
+                return null;
+
+                //animal is known to be dead
+            } elseif ($animal->getDateOfDeath() != null) {
+                return TimeUtil::getAgeYear($dateOfBirth, $animal->getDateOfDeath());
+
+                //is not alive, but has no known dateOfDeath
+            } else {
+                return null;
             }
-            return null;
+
+
         }
     }
 
