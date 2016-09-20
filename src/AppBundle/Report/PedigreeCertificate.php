@@ -6,6 +6,7 @@ namespace AppBundle\Report;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BodyFatRepository;
@@ -278,7 +279,7 @@ class PedigreeCertificate
         //TODO Add these variables to the entities INCLUDING NULL CHECKS!!!
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BLINDNESS_FACTOR] = '-';
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PREDICATE] = '-';
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PRODUCTION] = $this->parseProductionString($animal);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PRODUCTION] = $this->parseProductionString($this->em, $animal);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NAME] = '-';
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NUMBER] = '-';
 
@@ -399,18 +400,22 @@ class PedigreeCertificate
      * production = (ewe) litters (litter * nLing)
 
     production: a/b/c/d e
-    a: age in years from birth until slaughter or until animal is not in nsfo leeftijd in jaren van geboorte tot slacht of totdat het niet in het nsfo systeem zit
+    a: age in years from birth until date of last Litter
     b: litterCount
     c: total number of offspring (stillborn + bornAlive)
     d: total number of bornAliveCount
     e: (*) als een ooi ooit heeft gelammerd tussen een leeftijd van 6 en 18 maanden
      *
+     * @param ObjectManager $em
      * @param Animal $animal
      * @return string
      */
-    public static function parseProductionString($animal)
+    public static function parseProductionString(ObjectManager $em, $animal)
     {
-        if($animal instanceof Ewe) {
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $em->getRepository(Animal::class);
+
+        if($animal instanceof Ewe || $animal instanceof Ram) {
             /** @var Ewe $animal */
             $litters = $animal->getLitters();
             $litterCount = $litters->count();
@@ -419,6 +424,8 @@ class PedigreeCertificate
                 $stillbornCount = 0;
                 $bornAliveCount = 0;
                 $earliestLitterDate = $litters->first()->getLitterDate();
+                $latestLitterDate = $litters->last()->getLitterDate();
+                $dateOfBirth = $animal->getDateOfBirth();
 
                 foreach ($litters as $litter) {
                     /** @var Litter $litter */
@@ -431,13 +438,15 @@ class PedigreeCertificate
                 }
                 $totalBornCount = $stillbornCount + $bornAliveCount;
 
-                if(TimeUtil::isGaveBirthAsOneYearOld($animal->getDateOfBirth(), $earliestLitterDate)){
-                    $oneYearMark = '*';
-                } else {
-                    $oneYearMark = '';
+                //By default there is no oneYearMark
+                $oneYearMark = '';
+                if($animal instanceof Ewe) {
+                    if(TimeUtil::isGaveBirthAsOneYearOld($dateOfBirth, $earliestLitterDate)){
+                        $oneYearMark = '*';
+                    }
                 }
 
-                $ageInTheNsfoSystem = TimeUtil::ageInSystem($animal);
+                $ageInTheNsfoSystem = TimeUtil::ageInSystemForProductionValue($dateOfBirth, $latestLitterDate);
                 if($ageInTheNsfoSystem == null) {
                     $ageInTheNsfoSystem = '-';
                 }
@@ -446,9 +455,11 @@ class PedigreeCertificate
 
 
             } else {
+                //If Ewe or Ram has no litters in Database
                 return self::EMPTY_PRODUCTION;
             }
         } else {
+            //Animal is a Neuter
             return self::EMPTY_PRODUCTION;
         }
     }
