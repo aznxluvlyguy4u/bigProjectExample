@@ -8,6 +8,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
+use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
@@ -240,6 +241,23 @@ class ActionLogWriter
         $userActionType = UserActionType::USER_PASSWORD_RESET;
 
         $log = new ActionLog($client, $client, $userActionType, false, $emailAddress);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $admin
+     * @param Person $emailAddress
+     * @return ActionLog
+     */
+    public static function adminPasswordReset(ObjectManager $om, $admin, $emailAddress)
+    {
+        $userActionType = UserActionType::ADMIN_PASSWORD_RESET;
+
+        $log = new ActionLog($admin, $admin, $userActionType, false, $emailAddress, false);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
