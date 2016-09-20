@@ -11,7 +11,7 @@ use AppBundle\Entity\LocationAddress;
 use AppBundle\Util\CommandUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -68,7 +68,7 @@ class NsfoFindRvoclientsCommand extends ContainerAwareCommand
     /** @var  ArrayCollection $missingOutputs */
     private $missingOutputs;
 
-    /** @var EntityManager $em */
+    /** @var ObjectManager $em */
     private $em;
 
     /** @var OutputInterface $output */
@@ -110,8 +110,8 @@ class NsfoFindRvoclientsCommand extends ContainerAwareCommand
         //Print intro
         $output->writeln(CommandUtil::generateTitle('TESTING'));
 
-        /** @var EntityManager $em */
-        $em = $this->getContainer()->get('doctrine.orm.entity_manager');
+        /** @var ObjectManager $em */
+        $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
 
         $fileContents = file_get_contents(self::INPUT_PATH);

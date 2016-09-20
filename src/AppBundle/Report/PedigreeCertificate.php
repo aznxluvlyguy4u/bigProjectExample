@@ -355,8 +355,9 @@ class PedigreeCertificate
                 $nLing = '-';
             }
 
-            if($litter->getLitterGroup() != null) {
-                $litterGroup = $litter->getLitterGroup();
+            //TODO/WARNING litterGroup in Litter refers to the MixBlup Identification != worpgroep!!!
+            if(true) { //FIXME WITH REAL DATA
+                $litterGroup = '-';
             } else {
                 $litterGroup = '-';
             }

@@ -7,7 +7,7 @@ use AppBundle\Report\Mixblup;
 use AppBundle\Util\CommandUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -34,8 +34,8 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var EntityManager $em */
-        $em = $this->getContainer()->get('doctrine.orm.entity_manager');
+        /** @var ObjectManager $em */
+        $em = $this->getContainer()->get('doctrine')->getManager();
         $helper = $this->getHelper('question');
         $cmdUtil = new CommandUtil($input, $output, $helper);
 

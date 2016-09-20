@@ -72,7 +72,7 @@ class AdminProfileAPIController extends APIController implements AdminProfileAPI
     $encoder = $this->get('security.password_encoder');
     $content = $this->getContentAsArray($request);
 
-    $em = $this->getDoctrine()->getEntityManager();
+    $em = $this->getDoctrine()->getManager();
     
     //Validate input
     $inputValidator = new EditAdminProfileValidator($em, $content, $admin);

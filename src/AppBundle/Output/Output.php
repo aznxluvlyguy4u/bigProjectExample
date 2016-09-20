@@ -6,7 +6,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Util\Finder;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 
 /**
  * Class Output
@@ -68,7 +68,7 @@ abstract class Output
     /**
      * @param Location $location
      */
-    protected static function setUbnAndLocationHealthValues(EntityManager $em, Location $location = null)
+    protected static function setUbnAndLocationHealthValues(ObjectManager $em, Location $location = null)
     {
         if($location != null) {
             self::$ubn = $location->getUbn();

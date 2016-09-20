@@ -26,7 +26,7 @@ class MeasurementRepository extends BaseRepository {
             ->orderBy(['measurementDate' => Criteria::ASC])
         ;
 
-        $measurements = $this->getEntityManager()->getRepository(Measurement::class)
+        $measurements = $this->getManager()->getRepository(Measurement::class)
         ->matching($criteria);
 
         return $measurements;

@@ -3,7 +3,7 @@
 namespace AppBundle\Output;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Location;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 
 /**
  * Class HealthOutput
@@ -14,7 +14,7 @@ class HealthOutput extends Output
      * @param Location $location
      * @return array
      */
-    public static function create(EntityManager $em, Location $location = null)
+    public static function create(ObjectManager $em, Location $location = null)
     {
         self:: setUbnAndLocationHealthValues($em, $location);
 
@@ -35,7 +35,7 @@ class HealthOutput extends Output
      * @param Company $company
      * @return array
      */
-    public static function createCompanyHealth(EntityManager $em, Company $company)
+    public static function createCompanyHealth(ObjectManager $em, Company $company)
     {
         $locations = $company->getLocations();
         $healthStatusses = array();

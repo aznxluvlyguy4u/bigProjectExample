@@ -21,7 +21,7 @@ class LocationHealthRepository extends BaseRepository {
         $sql = "SELECT id FROM location_health
                 WHERE (id > '"  . $locationHealthId . "' AND  location_id = '"  . $locationId . "')";
 
-        $query = $this->getEntityManager()->getConnection()->prepare($sql);
+        $query = $this->getManager()->getConnection()->prepare($sql);
         $query->execute();
 
         $results = array();

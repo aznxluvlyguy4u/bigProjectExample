@@ -8,7 +8,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 
 /**
  * Class AnimalOutput
@@ -17,10 +17,10 @@ class AnimalOutput
 {
     /**
      * @param Ram[]|Ewe[]|Neuter[] $animals
-     * @param EntityManager $em
+     * @param ObjectManager $em
      * @return array
      */
-    public static function createAnimalsArray($animals, EntityManager $em)
+    public static function createAnimalsArray($animals, ObjectManager $em)
     {
         $animalsArray = array();
 
@@ -34,10 +34,10 @@ class AnimalOutput
 
     /**
      * @param Ram|Ewe|Neuter $animal
-     * @param EntityManager $em
+     * @param ObjectManager $em
      * @return array
      */
-    public static function createAnimalArray($animal, EntityManager $em)
+    public static function createAnimalArray($animal, ObjectManager $em)
     {
 
         $lastWeightMeasurement = Utils::returnLastWeightMeasurement($animal, $em);

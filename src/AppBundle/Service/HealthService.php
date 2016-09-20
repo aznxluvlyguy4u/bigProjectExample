@@ -21,18 +21,18 @@ use AppBundle\Util\HealthChecker;
 use AppBundle\Util\LocationHealthUpdater;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 
 class HealthService
 {
-    /** @var EntityManager */
+    /** @var ObjectManager */
     private $entityManager;
 
     /**
      * HealthService constructor.
      * @param $entityManager
      */
-    public function __construct(EntityManager $entityManager)
+    public function __construct(ObjectManager $entityManager)
     {
         $this->entityManager = $entityManager;
     }

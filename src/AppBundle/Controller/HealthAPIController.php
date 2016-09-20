@@ -58,7 +58,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
       return $adminValidator->createJsonErrorResponse();
     }
 
-    $em = $this->getDoctrine()->getEntityManager();
+    $em = $this->getDoctrine()->getManager();
     $location = $em->getRepository(Location::class)->findOneByActiveUbn($ubn);
 
     if($location == null) {
@@ -91,7 +91,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
       return $adminValidator->createJsonErrorResponse();
     }
 
-    $em = $this->getDoctrine()->getEntityManager();
+    $em = $this->getDoctrine()->getManager();
     $location = $em->getRepository(Location::class)->findOneByActiveUbn($ubn);
 
     //UBN Validation
@@ -135,7 +135,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
         /**
          * @var Company $company
          */
-        $em = $this->getDoctrine()->getEntityManager();
+        $em = $this->getDoctrine()->getManager();
         $company = $em->getRepository(Company::class)->findOneByCompanyId($companyId);
         $outputArray = HealthOutput::createCompanyHealth($em, $company);
 

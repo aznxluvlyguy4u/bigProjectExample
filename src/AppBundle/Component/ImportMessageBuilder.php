@@ -6,7 +6,7 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\AnimalType;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
 
@@ -22,7 +22,7 @@ class ImportMessageBuilder extends MessageBuilderBase
    */
   private $person;
 
-  public function __construct(EntityManager $em, $currentEnvironment)
+  public function __construct(ObjectManager $em, $currentEnvironment)
   {
     parent::__construct($em, $currentEnvironment);
   }

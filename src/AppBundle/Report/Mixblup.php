@@ -25,7 +25,7 @@ use AppBundle\Util\CommandUtil;
 use AppBundle\Util\Translation;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 
 class Mixblup
 {
@@ -70,7 +70,7 @@ class Mixblup
     //Versions
     const IS_GROUP_BY_ANIMAL_AND_MEASUREMENT_DATE = true;
 
-    /** @var EntityManager */
+    /** @var ObjectManager */
     private $em;
 
     /** @var array */
@@ -136,7 +136,7 @@ class Mixblup
 
     /**
      * Mixblup constructor.
-     * @param EntityManager $em
+     * @param ObjectManager $em
      * @param string $outputFolderPath
      * @param string $instructionsFileName
      * @param string $dataFileName
@@ -145,7 +145,7 @@ class Mixblup
      * @param int $lastMeasurementYear
      * @param array $animals
      */
-    public function __construct(EntityManager $em, $outputFolderPath, $instructionsFileName, $dataFileName, $pedigreeFileName, $firstMeasurementYear, $lastMeasurementYear, $animals = null)
+    public function __construct(ObjectManager $em, $outputFolderPath, $instructionsFileName, $dataFileName, $pedigreeFileName, $firstMeasurementYear, $lastMeasurementYear, $animals = null)
     {
         $this->em = $em;
         $this->animalRowBases = new ArrayCollection();

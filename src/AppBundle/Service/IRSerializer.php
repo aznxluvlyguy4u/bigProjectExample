@@ -35,7 +35,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use JMS\Serializer\SerializationContext;
 
 /**
@@ -61,7 +61,7 @@ class IRSerializer implements IRSerializerInterface
     const DISCRIMINATOR_TYPE_NAMESPACE = "type";
 
     /**
-     * @var EntityManager
+     * @var ObjectManager
      */
     private $entityManager;
 

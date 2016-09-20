@@ -51,7 +51,7 @@ class NsfoPasswordsGeneratefromfileCommand extends ContainerAwareCommand
         $changedPasswordsPath = $outputFolderPath.'/nsfo_changed_passwords.txt';
         $missingClientsPath = $outputFolderPath.'/nsfo_changed_passwords_missing_clients.txt';
         
-        $em = $this->getContainer()->get('doctrine.orm.entity_manager');
+        $em = $this->getContainer()->get('doctrine')->getManager();
 
         $fileContents = file_get_contents($sourceFilePath);
         $data = explode(" ".self::DEFAULT_PASSWORD, $fileContents);

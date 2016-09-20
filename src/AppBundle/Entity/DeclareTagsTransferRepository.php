@@ -81,7 +81,7 @@ class DeclareTagsTransferRepository extends BaseRepository {
    */
   public function validateTag(Client $client, $ulnCountryCode, $ulnNumber)
   {
-    $tag = $this->getEntityManager()->getRepository(Constant::TAG_REPOSITORY)->findOneByUln($client, $ulnCountryCode, $ulnNumber);
+    $tag = $this->getManager()->getRepository(Constant::TAG_REPOSITORY)->findOneByUln($client, $ulnCountryCode, $ulnNumber);
 
     if($tag == null) {
       return array(Constant::VALIDITY_NAMESPACE => false, Constant::TAG_NAMESPACE => null);

@@ -28,7 +28,7 @@ class NsfoParseRvoCommand extends ContainerAwareCommand
     {
         $helper = $this->getHelper('question');
         $cmdUtil = new CommandUtil($input, $output, $helper);
-        $em = $this->getContainer()->get('doctrine.orm.entity_manager');
+        $em = $this->getContainer()->get('doctrine')->getManager();
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));

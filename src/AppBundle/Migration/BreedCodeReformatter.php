@@ -10,20 +10,20 @@ use AppBundle\Entity\BreedCode;
 use AppBundle\Entity\BreedCodes;
 use AppBundle\Enumerator\BreedCodeType;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 
 class BreedCodeReformatter
 {
     const BREED_CODE_VALUE_PARTS = 8; //If this is not 8, refactor reformatBreedCodeValues function
     const PERSIST_BATCH_SIZE = 1000;
 
-    /** @var EntityManager $em */
+    /** @var ObjectManager $em */
     private $em;
 
     /** @var ArrayCollection */
     private $animals;
 
-    public function __construct(EntityManager $em, $isMigrateBreedCodes = true, ArrayCollection $animals = null)
+    public function __construct(ObjectManager $em, $isMigrateBreedCodes = true, ArrayCollection $animals = null)
     {
         $this->em = $em;
 
