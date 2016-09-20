@@ -6,6 +6,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\GenderChanger;
+use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
@@ -51,10 +52,10 @@ class NsfoEditGenderCommand extends ContainerAwareCommand
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $em->getRepository(Animal::class);
 
-        if(is_int($id)) {
-            $animal = $animalRepository->find($id);
-        } else {
+        if(StringUtil::isStringContains($id, 'NL')) {
             $animal = $animalRepository->findAnimalByUlnString($id);
+        } else {
+            $animal = $animalRepository->find($id);
         }
         if(!($animal instanceof Animal)) { $this->printNoAnimalFoundMessage($id); return; }
 
