@@ -511,6 +511,19 @@ abstract class Animal
      */
     protected $inbreedingCoefficient;
 
+    /**
+     * @var
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    protected $birthProgress;
+
+    /**
+     * @var
+     * @JMS\Type("boolean")
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    protected $lambar;
 
     /**
      * Animal constructor.
@@ -2107,6 +2120,39 @@ abstract class Animal
     public function setInbreedingCoefficient($inbreedingCoefficient)
     {
         $this->inbreedingCoefficient = $inbreedingCoefficient;
+    }
+
+
+    /**
+     * @return mixed
+     */
+    public function getBirthProgress()
+    {
+        return $this->birthProgress;
+    }
+
+    /**
+     * @param mixed $birthProgress
+     */
+    public function setBirthProgress($birthProgress)
+    {
+        $this->birthProgress = $birthProgress;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getLambar()
+    {
+        return $this->lambar;
+    }
+
+    /**
+     * @param mixed $lambar
+     */
+    public function setLambar($lambar)
+    {
+        $this->lambar = $lambar;
     }
 
 
