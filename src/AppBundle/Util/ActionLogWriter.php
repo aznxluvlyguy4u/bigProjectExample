@@ -233,7 +233,7 @@ class ActionLogWriter
     /**
      * @param ObjectManager $om
      * @param Client $client
-     * @param Person $emailAddress
+     * @param string $emailAddress
      * @return ActionLog
      */
     public static function passwordReset(ObjectManager $om, $client, $emailAddress)
@@ -250,7 +250,7 @@ class ActionLogWriter
     /**
      * @param ObjectManager $om
      * @param Employee $admin
-     * @param Person $emailAddress
+     * @param string $emailAddress
      * @return ActionLog
      */
     public static function adminPasswordReset(ObjectManager $om, $admin, $emailAddress)
@@ -417,6 +417,74 @@ class ActionLogWriter
         return $log;
     }
 
+
+    /**
+     * @param ObjectManager $om
+     * @param $admin
+     * @param $content
+     * @return ActionLog
+     */
+    public static function createAdmin(ObjectManager $om, $admin, $content)
+    {
+        return self::modifyAdmin($om, $admin, $content, UserActionType::CREATE_ADMIN);
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param $admin
+     * @param $content
+     * @return ActionLog
+     */
+    public static function editAdmin(ObjectManager $om, $admin, $content)
+    {
+        return self::modifyAdmin($om, $admin, $content, UserActionType::EDIT_ADMIN);
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $admin
+     * @param ArrayCollection $content
+     * @param String $userActionType
+     * @return ActionLog
+     */
+    private static function modifyAdmin(ObjectManager $om, $admin, $content, $userActionType)
+    {
+        $firstName = Utils::getNullCheckedArrayCollectionValue('first_name', $content);
+        $lastName = Utils::getNullCheckedArrayCollectionValue('last_name', $content);
+        $emailAddress = Utils::getNullCheckedArrayCollectionValue('email_address', $content);
+        $accessLevel = Utils::getNullCheckedArrayCollectionValue('access_level', $content);
+
+        $message = $accessLevel.'| '.$emailAddress.' : '.$firstName.' '.$lastName;
+
+        $log = new ActionLog($admin, $admin, $userActionType, false, $message, false);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $admin
+     * @param Employee $adminToDeactivate
+     * @return ActionLog
+     */
+    public static function deactivateAdmin(ObjectManager $om, $admin, $adminToDeactivate)
+    {
+        $userActionType = UserActionType::DEACTIVATE_ADMIN;
+        if($adminToDeactivate instanceof Employee) {
+            $message = $adminToDeactivate->getEmailAddress().' | '.$adminToDeactivate->getFullName();
+        } else {
+            $message = 'No admin to deactivate found';   
+        }
+
+        $log = new ActionLog($admin, $admin, $userActionType, false, $message, false);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
 
 
     /**
