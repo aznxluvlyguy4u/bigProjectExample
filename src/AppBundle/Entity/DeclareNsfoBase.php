@@ -21,7 +21,8 @@ use JMS\Serializer\Annotation\Expose;
  * @ORM\DiscriminatorMap(
  *   {
  *      "Mate" = "Mate",
- *      "DeclareWeight" = "DeclareWeight"
+ *      "DeclareWeight" = "DeclareWeight",
+ *      "Litter" = "Litter"
  *   }
  * )
  * @package AppBundle\Entity\DeclareNsfoBase
@@ -41,16 +42,14 @@ abstract class DeclareNsfoBase
      * @var \DateTime
      * @ORM\Column(type="datetime")
      * @Assert\Date
-     * @Assert\NotBlank
      * @JMS\Type("DateTime")
      */
     protected $logDate;
 
     /**
      * @var string
-     * @ORM\Column(type="string", unique=true)
+     * @ORM\Column(type="string", unique=true, nullable=true)
      * @Assert\Length(max = 20)
-     * @Assert\NotBlank
      * @JMS\Type("string")
      */
     protected $messageId;
@@ -65,9 +64,8 @@ abstract class DeclareNsfoBase
 
     /**
      * @var string
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 20)
-     * @Assert\NotBlank
      * @JMS\Type("string")
      */
     protected $relationNumberKeeper;
@@ -75,8 +73,7 @@ abstract class DeclareNsfoBase
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
-     * @Assert\NotBlank
+     * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
      */
@@ -86,7 +83,7 @@ abstract class DeclareNsfoBase
      * @var Person
      *
      * @ORM\ManyToOne(targetEntity="Person")
-     * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id", nullable=true)
      */
     protected $actionBy;
 
@@ -95,7 +92,7 @@ abstract class DeclareNsfoBase
      * @var Person
      *
      * @ORM\ManyToOne(targetEntity="Person")
-     * @ORM\JoinColumn(name="revoked_by_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="revoked_by_id", referencedColumnName="id", nullable=true)
      */
     protected $revokedBy;
 
