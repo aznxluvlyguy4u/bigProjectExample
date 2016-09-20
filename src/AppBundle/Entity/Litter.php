@@ -14,26 +14,8 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\LitterRepository")
  * @package AppBundle\Entity
  */
-class Litter {
-
-    /**
-     * @var integer
-     *
-     * @ORM\Column(type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private $id;
-
-    /**
-     * @var \DateTime
-     *
-     * @ORM\Column(type="datetime")
-     * @Assert\Date
-     * @JMS\Type("DateTime")
-     */
-    private $logDate;
-
+class Litter extends DeclareNsfoBase
+{
     /**
      * 2016-04-01T22:00:48.131Z
      *
@@ -54,10 +36,10 @@ class Litter {
     private $animalFather;
 
     /**
-    * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="litters")
-    * @ORM\JoinColumn(name="animal_mother_id", referencedColumnName="id")
-    * @JMS\Type("AppBundle\Entity\Ewe")
-    */
+     * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="litters")
+     * @ORM\JoinColumn(name="animal_mother_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\Ewe")
+     */
     private $animalMother;
 
     /**
@@ -86,26 +68,35 @@ class Litter {
      */
     private $bornAliveCount;
 
+    /**
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     */
+    private $isAbortion;
 
     /**
-     * @var string
-     *
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
      */
-    private $birthProcess;
-
+    private $isPseudoPregnancy;
 
     /**
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="litter")
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     private $children;
-    
+
+    /**
+     * @ORM\Column(type="string", options={"default": "INCOMPLETE"})
+     * @JMS\Type("string")
+     */
+    private $status;
+
     /**
      * Litter constructor.
      */
-    public function __construct() {
+    public function __construct()
+    {
         $this->children = new ArrayCollection();
         $this->logDate = new \DateTime();
         $this->stillbornCount = 0;
@@ -311,23 +302,50 @@ class Litter {
     }
 
     /**
-     * @return string
+     * @return mixed
      */
-    public function getBirthProcess()
+    public function getAbortion()
     {
-        return $this->birthProcess;
+        return $this->isAbortion;
     }
 
     /**
-     * @param string $birthProcess
+     * @param mixed $isAbortion
      */
-    public function setBirthProcess($birthProcess)
+    public function setIsAbortion($isAbortion)
     {
-        $this->birthProcess = $birthProcess;
+        $this->isAbortion = $isAbortion;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getPseudoPregnancy()
+    {
+        return $this->isPseudoPregnancy;
+    }
 
+    /**
+     * @param mixed $isPseudoPregnancy
+     */
+    public function setIsPseudoPregnancy($isPseudoPregnancy)
+    {
+        $this->isPseudoPregnancy = $isPseudoPregnancy;
+    }
 
+    /**
+     * @return mixed
+     */
+    public function getStatus()
+    {
+        return $this->status;
+    }
 
-
+    /**
+     * @param mixed $status
+     */
+    public function setStatus($status)
+    {
+        $this->status = $status;
+    }
 }

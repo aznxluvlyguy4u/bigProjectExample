@@ -8,6 +8,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
+use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\RevokeDeclaration;
@@ -296,6 +297,43 @@ class ActionLogWriter
         return $log;
     }
 
+    /**
+     * @param ObjectManager $om
+     * @param Client $client
+     * @param Person $loggedInUser
+     * @param Ewe $mother
+     * @return ActionLog
+     */
+    public static function createFalseBirth(ObjectManager $om, $client, $loggedInUser, Ewe $mother)
+    {
+        $userActionType = UserActionType::FALSE_BIRTH_CREATE;
+
+        $description = 'False birth created for Ewe: '. $mother->getUlnCountryCode() . $mother->getUlnNumber();
+
+        $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+    /**
+     * @param ObjectManager $om
+     * @param Client $client
+     * @param Person $loggedInUser
+     * @param Ewe $mother
+     * @return ActionLog
+     */
+    public static function createBirth(ObjectManager $om, $client, $loggedInUser, Ewe $mother)
+    {
+        $userActionType = UserActionType::BIRTH_CREATE;
+
+        $description = 'Litter created for Ewe: '. $mother->getUlnCountryCode() . $mother->getUlnNumber();
+
+        $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
 
     /**
      * @param ObjectManager $om
