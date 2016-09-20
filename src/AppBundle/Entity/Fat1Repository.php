@@ -22,7 +22,7 @@ class Fat1Repository extends BaseRepository {
       ->setMaxResults(1);
 
     //Fat1
-    $latestFat1 = $this->getEntityManager()->getRepository(Fat1::class)
+    $latestFat1 = $this->getManager()->getRepository(Fat1::class)
       ->matching($criteria);
 
     if(sizeof($latestFat1) > 0) {

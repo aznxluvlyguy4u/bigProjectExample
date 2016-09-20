@@ -10,7 +10,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Util\CommandUtil;
@@ -39,9 +39,9 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
         $totalNumberOfRows = sizeof($csv);
 
         /**
-         * @var EntityManager $em
+         * @var ObjectManager $em
          */
-        $em = $this->getContainer()->get('doctrine.orm.entity_manager');
+        $em = $this->getContainer()->get('doctrine')->getManager();
         $em->getConnection()->getConfiguration()->setSQLLogger(null);
         $helper = $this->getHelper('question');
         $cmdUtil = new CommandUtil($input, $output, $helper);

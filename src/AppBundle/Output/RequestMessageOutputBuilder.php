@@ -5,11 +5,11 @@ namespace AppBundle\Output;
 
 use AppBundle\Component\Utils;
 use AppBundle\Enumerator\RequestType;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 
 class RequestMessageOutputBuilder
 {
-    public static function createOutputArray(EntityManager $em, $messageObject, $isUpdate = false)
+    public static function createOutputArray(ObjectManager $em, $messageObject, $isUpdate = false)
     {
         $entityNameSpace = Utils::getClassName($messageObject);
 
@@ -37,9 +37,9 @@ class RequestMessageOutputBuilder
 
             case RequestType::DECLARE_BIRTH_ENTITY:
                 if($isUpdate) {
-                    return DeclareBirthOutput::createUpdateRequestArray($messageObject); //TODO Input EntityManager here!
+                    return DeclareBirthOutput::createUpdateRequestArray($messageObject); //TODO Input ObjectManager here!
                 } else {
-                    return DeclareBirthOutput::createPostRequestArray($messageObject); //TODO Input EntityManager here!
+                    return DeclareBirthOutput::createPostRequestArray($messageObject); //TODO Input ObjectManager here!
                 }
 
             case RequestType::DECLARE_DEPART_ENTITY:

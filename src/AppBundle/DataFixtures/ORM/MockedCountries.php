@@ -40,7 +40,7 @@ class MockedCountries implements FixtureInterface, ContainerAwareInterface, Orde
   }
 
   /**
-   * Load data fixtures with the passed EntityManager
+   * Load data fixtures with the passed ObjectManager
    *
    * @param ObjectManager $manager
    */

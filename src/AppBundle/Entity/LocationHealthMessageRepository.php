@@ -34,7 +34,7 @@ class LocationHealthMessageRepository extends BaseRepository {
                 ->setMaxResults(1);
         }
 
-        $previousHealthMessageResults = $this->getEntityManager()->getRepository('AppBundle:LocationHealthMessage')
+        $previousHealthMessageResults = $this->getManager()->getRepository('AppBundle:LocationHealthMessage')
             ->matching($criteria);
 
         if($previousHealthMessageResults->count() > 0) {

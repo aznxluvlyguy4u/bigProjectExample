@@ -4,7 +4,7 @@ namespace AppBundle\Output;
 
 
 use AppBundle\Entity\DeclareImport;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 
 /**
  * Class DeclareImportOutput
@@ -15,7 +15,7 @@ class DeclareImportOutput extends Output
      * @param DeclareImport $import
      * @return array
      */
-    public static function createPostRequestArray(EntityManager $em, DeclareImport $import)
+    public static function createPostRequestArray(ObjectManager $em, DeclareImport $import)
     {
         $animal = $import->getAnimal();
         if($animal != null) {
@@ -69,7 +69,7 @@ class DeclareImportOutput extends Output
     }
 
 
-    public static function createUpdateRequestArray(EntityManager $em, DeclareImport $import)
+    public static function createUpdateRequestArray(ObjectManager $em, DeclareImport $import)
     {
         //At this moment the update array is identical to post array
         return self::createPostRequestArray($em, $import);

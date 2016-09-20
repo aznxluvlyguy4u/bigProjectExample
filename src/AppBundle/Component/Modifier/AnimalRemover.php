@@ -10,12 +10,12 @@ use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 
 class AnimalRemover extends MessageModifier
 {
 
-    public function __construct(EntityManager $em)
+    public function __construct(ObjectManager $em)
     {
         parent::__construct($em);
     }

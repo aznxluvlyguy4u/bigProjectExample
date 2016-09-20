@@ -8,7 +8,7 @@ use AppBundle\Entity\Person;
 use AppBundle\Entity\Token;
 use AppBundle\Enumerator\TokenType;
 use AppBundle\Util\Validator;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\BrowserKit\Tests\ClientTest;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -41,11 +41,11 @@ class TokenAuthenticator extends AbstractGuardAuthenticator  {
   private $unAuthedPaths;
 
   /**
-   * @var EntityManager
+   * @var ObjectManager
    */
   private $entityManager;
 
-  public function __construct(EntityManager $entityManager, HttpUtils $httpUtils, $unAuthedPaths = array())
+  public function __construct(ObjectManager $entityManager, HttpUtils $httpUtils, $unAuthedPaths = array())
   {
     $this->entityManager = $entityManager;
     $this->httpUtils = $httpUtils;

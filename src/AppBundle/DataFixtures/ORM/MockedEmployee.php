@@ -35,7 +35,7 @@ class MockedEmployee implements FixtureInterface, ContainerAwareInterface, Order
   }
 
   /**
-   * Load data fixtures with the passed EntityManager
+   * Load data fixtures with the passed ObjectManager
    *
    * @param ObjectManager $manager
    */
