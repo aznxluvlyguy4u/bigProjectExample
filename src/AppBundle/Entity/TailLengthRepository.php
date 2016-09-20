@@ -41,7 +41,7 @@ class TailLengthRepository extends BaseRepository {
      */
     public function deleteDuplicates()
     {
-        $em = $this->getEntityManager();
+        $em = $this->getManager();
 
         $count = 0;
 
@@ -52,7 +52,7 @@ class TailLengthRepository extends BaseRepository {
               FROM measurement INNER JOIN tail_length x ON measurement.id = x.id
               GROUP BY measurement_date, type, x.animal_id, x.length
               HAVING COUNT(*) > 1";
-            $results = $this->getEntityManager()->getConnection()->query($sql)->fetchAll();
+            $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
             foreach ($results as $result) {
                 $minId = $result['min_id'];
@@ -86,6 +86,6 @@ class TailLengthRepository extends BaseRepository {
               INNER JOIN tail_length z ON z.id = n.id
               LEFT JOIN person i ON i.id = n.inspector_id
               LEFT JOIN animal a ON a.id = z.animal_id";
-        return  $this->getEntityManager()->getConnection()->query($sql)->fetchAll();
+        return  $this->getManager()->getConnection()->query($sql)->fetchAll();
     }
 }

@@ -119,7 +119,7 @@ class WeightRepository extends BaseRepository {
      */
     public function deleteDuplicates()
     {
-        $em = $this->getEntityManager();
+        $em = $this->getManager();
 
         $count = 0;
         
@@ -130,7 +130,7 @@ class WeightRepository extends BaseRepository {
               FROM measurement INNER JOIN weight x ON measurement.id = x.id
               GROUP BY measurement_date, type, x.animal_id, x.weight, x.is_birth_weight, x.is_revoked
               HAVING COUNT(*) > 1";
-            $results = $this->getEntityManager()->getConnection()->query($sql)->fetchAll();
+            $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
             foreach ($results as $result) {
                 $minId = $result['min_id'];
@@ -174,7 +174,7 @@ class WeightRepository extends BaseRepository {
 
     private function fixContradictingMeasurements()
     {
-        $em = $this->getEntityManager();
+        $em = $this->getManager();
 
         $isGetGroupedByAnimalAndDate = true;
         $weightsGroupedByAnimalAndDate = $this->getContradictingWeights($isGetGroupedByAnimalAndDate);
@@ -248,7 +248,7 @@ class WeightRepository extends BaseRepository {
      */
     private function revokeBirthWeightsAbove10kg()
     {
-        $em = $this->getEntityManager();
+        $em = $this->getManager();
 
         $sql = "SELECT COUNT(id) FROM weight w WHERE w.is_birth_weight = TRUE AND w.is_revoked = FALSE AND w.weight > 10.0";
         $count = $em->getConnection()->query($sql)->fetch()['count'];
@@ -266,7 +266,7 @@ class WeightRepository extends BaseRepository {
      */
     private function fixBirthWeightsNotMarkedAsBirthWeight()
     {
-        $em = $this->getEntityManager();
+        $em = $this->getManager();
 
         //First find the measurements
         $sql = "
@@ -292,7 +292,7 @@ class WeightRepository extends BaseRepository {
      */
     private function fixWeightsIncorrectlyMarkedAsBirthWeight()
     {
-        $em = $this->getEntityManager();
+        $em = $this->getManager();
 
         //First find the measurements
         $sql = "
@@ -318,7 +318,7 @@ class WeightRepository extends BaseRepository {
      */
     public function getIncorrectBirthWeightBooleansInWeightsCount()
     {
-        $em = $this->getEntityManager();
+        $em = $this->getManager();
         
         $sql = "
               SELECT w.id FROM measurement m
@@ -357,7 +357,7 @@ class WeightRepository extends BaseRepository {
                              ) t on t.animal_id_and_date = n.animal_id_and_date
                   INNER JOIN weight z ON z.id = n.id
                   INNER JOIN animal a ON a.id = z.animal_id";
-        $results = $this->getEntityManager()->getConnection()->query($sql)->fetchAll();
+        $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
         if($isGetGroupedByAnimalAndDate) {
 
@@ -391,7 +391,7 @@ class WeightRepository extends BaseRepository {
      */
     public function getContradictingWeightsForExportFile()
     {
-        $em = $this->getEntityManager();
+        $em = $this->getManager();
 
         $sql = "
               SELECT n.id as metingId, a.id as dier_id, DATE(n.measurement_date) as meetdatum, DATE(a.date_of_birth) as geboortedatum,

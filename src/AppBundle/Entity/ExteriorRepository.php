@@ -68,7 +68,7 @@ class ExteriorRepository extends BaseRepository {
      */
     public function deleteDuplicates()
     {
-        $em = $this->getEntityManager();
+        $em = $this->getManager();
         
         $count = 0;
         $hasDuplicates = true;
@@ -78,7 +78,7 @@ class ExteriorRepository extends BaseRepository {
               FROM measurement INNER JOIN exterior x ON measurement.id = x.id 
               GROUP BY measurement_date, type, x.animal_id, x.kind, x.skull, x.muscularity, x.progress, x.proportion, x.exterior_type, x.leg_work, x.fur, x.general_appearence, x.height, x.breast_depth, x.torso_length, x.markings 
               HAVING COUNT(*) > 1";
-            $results = $this->getEntityManager()->getConnection()->query($sql)->fetchAll();
+            $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
             foreach ($results as $result) {
                 $minId = $result['min_id'];

@@ -92,7 +92,7 @@ class BodyFatRepository extends BaseRepository {
               LEFT JOIN fat3 ON b.fat3_id = fat3.id
               GROUP BY measurement_date, type, b.animal_id, m.inspector_id, fat1.fat, fat2.fat, fat3.fat
               HAVING COUNT(*) > 1";
-            $results = $this->getEntityManager()->getConnection()->query($sql)->fetchAll();
+            $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
             
             foreach ($results as $result) {
                 $this->deleteBodyFatMeasurement($result['min_id']);
@@ -124,7 +124,7 @@ class BodyFatRepository extends BaseRepository {
      */
     private function fixContradictingMeasurements()
     {
-        $em = $this->getEntityManager();
+        $em = $this->getManager();
         $isGetGroupedByAnimalAndDate = true;
         $bodyFatsGroupedByAnimalAndDate = $this->getContradictingBodyFats($isGetGroupedByAnimalAndDate);
 
@@ -194,10 +194,10 @@ class BodyFatRepository extends BaseRepository {
      */
     private function deleteBodyFatMeasurement($bodyFatId)
     {
-        $em = $this->getEntityManager();
+        $em = $this->getManager();
 
         $sql = "SELECT fat1_id, fat2_id, fat3_id FROM body_fat WHERE id = '".$bodyFatId."'";
-        $fatIds = $this->getEntityManager()->getConnection()->query($sql)->fetch();
+        $fatIds = $this->getManager()->getConnection()->query($sql)->fetch();
         $fat1Id = $fatIds['fat1_id'];
         $fat2Id = $fatIds['fat2_id'];
         $fat3Id = $fatIds['fat3_id'];
@@ -237,7 +237,7 @@ class BodyFatRepository extends BaseRepository {
                   INNER JOIN fat2 ON z.fat2_id = fat2.id
                   INNER JOIN fat3 ON z.fat3_id = fat3.id
                   LEFT JOIN animal a ON a.id = z.animal_id";
-        $results = $this->getEntityManager()->getConnection()->query($sql)->fetchAll();
+        $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
         if($isGetGroupedByAnimalAndDate) {
 
@@ -270,7 +270,7 @@ class BodyFatRepository extends BaseRepository {
      */
     public function getContradictingBodyFatsForExportFile()
     {
-        $em = $this->getEntityManager();
+        $em = $this->getManager();
 
         $sql = "
               SELECT n.id as metingId, a.id as dier_id, DATE(n.measurement_date) as meetdatum, DATE(a.date_of_birth) as geboortedatum,
