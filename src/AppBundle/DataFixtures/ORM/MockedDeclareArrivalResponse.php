@@ -83,7 +83,7 @@ class MockedDeclareArrivalResponse implements FixtureInterface, ContainerAwareIn
             $manager->flush();
 
         } else {
-            $entityManager = $this->container->get('doctrine.orm.entity_manager');
+            $entityManager = $this->container->get('doctrine')->getManager();
             $arrivalRepository = $entityManager->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY);
 
             $messageNumberFailedResponse = uniqid(mt_rand(0,99));

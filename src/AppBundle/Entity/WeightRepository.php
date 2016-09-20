@@ -31,7 +31,7 @@ class WeightRepository extends BaseRepository {
             $criteria = $criteria->andWhere(Criteria::expr()->eq('isBirthWeight', false));
         }
 
-        $latestWeightResult = $this->getEntityManager()->getRepository(Weight::class)
+        $latestWeightResult = $this->getManager()->getRepository(Weight::class)
             ->matching($criteria);
 
         if(sizeof($latestWeightResult) > 0) {
@@ -58,7 +58,7 @@ class WeightRepository extends BaseRepository {
             ->orderBy(['measurementDate' => Criteria::DESC])
             ->setMaxResults(1);
 
-        $latestBirthWeightResult = $this->getEntityManager()->getRepository(Weight::class)
+        $latestBirthWeightResult = $this->getManager()->getRepository(Weight::class)
             ->matching($criteria);
 
         if(sizeof($latestBirthWeightResult) > 0) {
@@ -90,7 +90,7 @@ class WeightRepository extends BaseRepository {
             ;
 
         /** @var Collection $weightMeasurements */
-        $weightMeasurements = $this->getEntityManager()->getRepository(Weight::class)
+        $weightMeasurements = $this->getManager()->getRepository(Weight::class)
             ->matching($criteria);
 
         return $weightMeasurements;

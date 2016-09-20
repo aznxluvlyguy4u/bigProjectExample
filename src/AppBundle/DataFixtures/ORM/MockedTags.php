@@ -47,7 +47,7 @@ class MockedTags implements FixtureInterface, ContainerAwareInterface, OrderedFi
   }
 
   /**
-   * Load data fixtures with the passed EntityManager
+   * Load data fixtures with the passed ObjectManager
    *
    * @param ObjectManager $manager
    */

@@ -13,7 +13,7 @@ use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 
 /**
  * Class Utils
@@ -294,10 +294,10 @@ class Utils
      * Weights are sorted first by measurementDate and then on logDate
      *
      * @param Animal $animal
-     * @param EntityManager $em
+     * @param ObjectManager $em
      * @return Weight|null
      */
-    public static function returnLastWeightMeasurement(Animal $animal, EntityManager $em)
+    public static function returnLastWeightMeasurement(Animal $animal, ObjectManager $em)
     {
 
         $criteria = Criteria::create()

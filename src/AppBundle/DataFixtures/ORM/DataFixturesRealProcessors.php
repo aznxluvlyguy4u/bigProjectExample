@@ -37,7 +37,7 @@ class DataFixturesRealProcessors implements FixtureInterface, ContainerAwareInte
   }
 
   /**
-   * Load data fixtures with the passed EntityManager
+   * Load data fixtures with the passed ObjectManager
    *
    * @param ObjectManager $manager
    */

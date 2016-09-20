@@ -24,7 +24,7 @@ class ExteriorRepository extends BaseRepository {
             ->orderBy(['measurementDate' => Criteria::DESC])
             ->setMaxResults(1);
         
-        $latestExterior = $this->getEntityManager()->getRepository(Exterior::class)
+        $latestExterior = $this->getManager()->getRepository(Exterior::class)
             ->matching($criteria);
 
         if(sizeof($latestExterior) > 0) {
@@ -55,7 +55,7 @@ class ExteriorRepository extends BaseRepository {
             ->orderBy(['measurementDate' => Criteria::ASC])
         ;
 
-        $measurements = $this->getEntityManager()->getRepository(Exterior::class)
+        $measurements = $this->getManager()->getRepository(Exterior::class)
             ->matching($criteria);
 
         return $measurements;

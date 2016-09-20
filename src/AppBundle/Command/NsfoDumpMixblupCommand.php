@@ -22,7 +22,6 @@ use AppBundle\Util\MeasurementsUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\ORM\EntityManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -47,7 +46,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
     /** @var OutputInterface */
     private $output;
 
-    /** @var EntityManager */
+    /** @var ObjectManager */
     private $em;
     
     /** @var ExteriorRepository $exteriorRepository */
@@ -76,8 +75,8 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var EntityManager $em */
-        $this->em = $this->getContainer()->get('doctrine.orm.entity_manager');
+        /** @var ObjectManager $em */
+        $this->em = $this->getContainer()->get('doctrine')->getManager();
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
         $this->output = $output;

@@ -31,7 +31,7 @@ class BodyFatRepository extends BaseRepository {
         /**
          * @var BodyFat $latestBodyFat
          */
-        $latestBodyFat = $this->getEntityManager()->getRepository(BodyFat::class)
+        $latestBodyFat = $this->getManager()->getRepository(BodyFat::class)
             ->matching($criteria);
 
         if(sizeof($latestBodyFat) > 0) {

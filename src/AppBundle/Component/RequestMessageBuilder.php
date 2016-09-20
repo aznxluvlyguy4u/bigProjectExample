@@ -24,7 +24,7 @@ use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Service\IRSerializer;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
 
@@ -73,7 +73,7 @@ class RequestMessageBuilder
     /** @var IRSerializer */
     private $irSerializer;
 
-    /** @var EntityManager */
+    /** @var ObjectManager */
     private $entityManager;
 
     /** @var string */

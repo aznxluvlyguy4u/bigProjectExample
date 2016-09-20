@@ -9,7 +9,7 @@ use AppBundle\Entity\Fat1;
 use AppBundle\Entity\Fat2;
 use AppBundle\Entity\Fat3;
 use AppBundle\Entity\Inspector;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -37,9 +37,9 @@ class NsfoMigrateBodyfatCommand extends ContainerAwareCommand
     {
         $csv = $this->parseCSV();
         /**
-         * @var EntityManager $em
+         * @var ObjectManager $em
          */
-        $em = $this->getContainer()->get('doctrine.orm.entity_manager');
+        $em = $this->getContainer()->get('doctrine')->getManager();
         $em->getConnection()->getConfiguration()->setSQLLogger(null);
         $doctrine = $this->getContainer()->get('doctrine');
         $repository = $doctrine->getRepository(Constant::ANIMAL_REPOSITORY);

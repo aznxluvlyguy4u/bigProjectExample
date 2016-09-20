@@ -5,7 +5,7 @@ namespace AppBundle\Component;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\RetrieveAnimals;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use AppBundle\Entity\Person;
 
 class RetrieveAnimalsMessageBuilder extends MessageBuilderBase
@@ -15,7 +15,7 @@ class RetrieveAnimalsMessageBuilder extends MessageBuilderBase
    */
   private $person;
 
-  public function __construct(EntityManager $em, $currentEnvironment)
+  public function __construct(ObjectManager $em, $currentEnvironment)
   {
     parent::__construct($em, $currentEnvironment);
   }

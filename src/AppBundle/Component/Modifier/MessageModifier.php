@@ -19,16 +19,16 @@ use AppBundle\Entity\RetrieveUBNDetails;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Component\Utils;
 use AppBundle\Enumerator\RequestType;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 
 class MessageModifier
 {
     /**
-     * @var EntityManager
+     * @var ObjectManager
      */
     private static $em;
 
-    public function __construct(EntityManager $em)
+    public function __construct(ObjectManager $em)
     {
         self::$em = $em;
     }

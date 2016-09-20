@@ -33,7 +33,7 @@ class DashboardAdminAPIController extends APIController
             return $adminValidator->createJsonErrorResponse();
         }
 
-        $em = $this->getDoctrine()->getEntityManager();
+        $em = $this->getDoctrine()->getManager();
 
         $outputArray = AdminDashboardOutput::createAdminDashboard($em);
 
