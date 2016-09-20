@@ -1143,6 +1143,20 @@ abstract class Animal
         return $this->dateOfDeath;
     }
 
+
+    /**
+     * @param string $format
+     * @return string
+     */
+    public function getDateOfDeathString($format = 'Y-m-d')
+    {
+        if ($this->dateOfDeath != null) {
+            return $this->dateOfDeath->format($format);
+        }
+        return null;
+    }
+
+
     /**
      * Set dateOfBirth
      *
@@ -1166,6 +1180,20 @@ abstract class Animal
     {
         return $this->dateOfBirth;
     }
+
+
+    /**
+     * @param string $format
+     * @return string
+     */
+    public function getDateOfBirthString($format = 'Y-m-d')
+    {
+        if($this->dateOfBirth != null) {
+            return $this->dateOfBirth->format($format);
+        }
+        return null;
+    }
+    
 
     /**
      * Add flag
@@ -1962,6 +1990,20 @@ abstract class Animal
     {
         return $this->ubnOfBirth;
     }
+
+
+    /**
+     * @return string
+     */
+    public function getUbn()
+    {
+        if($this->location instanceof Location) {
+          return $this->location->getUbn();
+        } else {
+            return null;
+        }
+    }
+
 
     /**
      * @param string $ubnOfBirth
