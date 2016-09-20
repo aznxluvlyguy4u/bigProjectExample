@@ -478,6 +478,20 @@ abstract class Animal
     protected $pedigreeRegister;
 
     /**
+     * @var
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    protected $birthProgress;
+
+    /**
+     * @var
+     * @JMS\Type("boolean")
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    protected $lambar;
+
+    /**
      * Animal constructor.
      */
     public function __construct() {
@@ -2009,6 +2023,37 @@ abstract class Animal
         $this->pedigreeRegister = $pedigreeRegister;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getBirthProgress()
+    {
+        return $this->birthProgress;
+    }
+
+    /**
+     * @param mixed $birthProgress
+     */
+    public function setBirthProgress($birthProgress)
+    {
+        $this->birthProgress = $birthProgress;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getLambar()
+    {
+        return $this->lambar;
+    }
+
+    /**
+     * @param mixed $lambar
+     */
+    public function setLambar($lambar)
+    {
+        $this->lambar = $lambar;
+    }
 
     /**
      * All values except relationships to other Entities are duplicated.
