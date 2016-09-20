@@ -12,7 +12,7 @@ use AppBundle\Entity\Exterior;
 use AppBundle\Entity\MuscleThickness;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 
 /**
  * Class DeclareAnimalDetailsOutput
@@ -20,11 +20,11 @@ use Doctrine\ORM\EntityManager;
 class AnimalDetailsOutput
 {
     /**
-     * @param EntityManager $em
+     * @param ObjectManager $em
      * @param Animal $animal
      * @return array
      */
-    public static function create(EntityManager $em, Animal $animal)
+    public static function create(ObjectManager $em, Animal $animal)
     {
         $replacementString = "";
 

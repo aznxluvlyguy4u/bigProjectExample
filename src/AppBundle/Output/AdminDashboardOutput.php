@@ -5,14 +5,14 @@ namespace AppBundle\Output;
 use AppBundle\Entity\Invoice;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealthInspection;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Company;
 use Doctrine\ORM\Query;
 
 class AdminDashboardOutput
 {
-    public static function createAdminDashboard(EntityManager $em)
+    public static function createAdminDashboard(ObjectManager $em)
     {
         $results = array();
 

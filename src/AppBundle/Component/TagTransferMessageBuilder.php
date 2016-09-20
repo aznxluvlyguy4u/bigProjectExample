@@ -6,7 +6,7 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\TagStateType;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
 
@@ -22,10 +22,10 @@ class TagTransferMessageBuilder extends MessageBuilderBase {
 
   /**
    * TagTransferMessageBuilder constructor.
-   * @param EntityManager $em
+   * @param ObjectManager $em
    * @param string $currentEnvironment
    */
-  public function __construct(EntityManager $em, $currentEnvironment)
+  public function __construct(ObjectManager $em, $currentEnvironment)
   {
     parent::__construct($em, $currentEnvironment);
   }

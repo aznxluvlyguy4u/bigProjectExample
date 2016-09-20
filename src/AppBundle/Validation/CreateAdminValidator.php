@@ -9,7 +9,7 @@ use AppBundle\Entity\Person;
 use AppBundle\Output\AccessLevelOverviewOutput;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Constant\Constant;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use \Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
@@ -40,15 +40,15 @@ class CreateAdminValidator
     /** @var array */
     protected $errors;
 
-    /** @var EntityManager */
+    /** @var ObjectManager */
     protected $em;
 
     /**
      * PasswordValidator constructor.
      * @param array $profileEditContent
-     * @param EntityManager $em
+     * @param ObjectManager $em
      */
-    public function __construct(EntityManager $em, $profileEditContent, $runValidator = true)
+    public function __construct(ObjectManager $em, $profileEditContent, $runValidator = true)
     {
         //Initialize variables
         $this->errors = array();

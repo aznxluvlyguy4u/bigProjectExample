@@ -145,7 +145,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $animals = $this->getDoctrine()
         ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($location);
 
-    $minimizedOutput = AnimalOutput::createAnimalsArray($animals, $this->getDoctrine()->getEntityManager());
+    $minimizedOutput = AnimalOutput::createAnimalsArray($animals, $this->getDoctrine()->getManager());
 
     return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
   }
@@ -298,7 +298,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       return new JsonResponse(array('code'=>404, "message" => "For this account, no animal was found with uln: " . $ulnString), 404);
     }
 
-    $output = AnimalDetailsOutput::create($this->getDoctrine()->getEntityManager(), $animal);
+    $output = AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $animal);
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $output), 200);
   }
 
@@ -346,7 +346,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $this->getDoctrine()->getManager()->persist($animal);
     $this->getDoctrine()->getManager()->flush();
 
-    $outputArray = AnimalDetailsOutput::create($this->getDoctrine()->getEntityManager(), $animal);
+    $outputArray = AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $animal);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
   }

@@ -9,7 +9,7 @@ class ClientRepository extends BaseRepository {
 
     public function getByRelationNumberKeeper($relationNumberKeeper)
     {
-        $repository = $this->getEntityManager()->getRepository(Constant::CLIENT_REPOSITORY);
+        $repository = $this->getManager()->getRepository(Constant::CLIENT_REPOSITORY);
         $client = $repository->findOneBy(array("relationNumberKeeper" => $relationNumberKeeper));
 
         return $client;
@@ -22,7 +22,7 @@ class ClientRepository extends BaseRepository {
 
     public function getByEmail($email)
     {
-        $repository = $this->getEntityManager()->getRepository(Constant::CLIENT_REPOSITORY);
+        $repository = $this->getManager()->getRepository(Constant::CLIENT_REPOSITORY);
         $client = $repository->findOneBy(array("emailAddress" => $email));
 
         return $client;
@@ -30,7 +30,7 @@ class ClientRepository extends BaseRepository {
 
     public function getByUbn($ubn)
     {
-        $repository = $this->getEntityManager()->getRepository(Constant::LOCATION_REPOSITORY);
+        $repository = $this->getManager()->getRepository(Constant::LOCATION_REPOSITORY);
         $location = $repository->findOneBy(array("ubn" => $ubn));
         if($location == null) {
             return null;

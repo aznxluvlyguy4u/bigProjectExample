@@ -70,7 +70,7 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
   }
 
   /**
-   * Load data fixtures with the passed EntityManager
+   * Load data fixtures with the passed ObjectManager
    *
    * @param ObjectManager $manager
    */
@@ -96,7 +96,7 @@ class MockedAnimal implements FixtureInterface, ContainerAwareInterface, Ordered
     //Get persons company location to add animals to.
     $location = $company->getLocations()->get(0);
 
-    $tagRepository = $this->container->get('doctrine.orm.entity_manager')->getRepository(Constant::TAG_REPOSITORY);
+    $tagRepository = $this->container->get('doctrine')->getManager()->getRepository(Constant::TAG_REPOSITORY);
 
     $tags = $tagRepository->findAll();
     $lowestTagId = $tags['0']->getId();

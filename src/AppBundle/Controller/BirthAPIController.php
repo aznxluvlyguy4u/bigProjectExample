@@ -252,7 +252,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
       $loggedInUser = $this->getLoggedInUser($request);
       $location = $this->getSelectedLocation($request);
 
-      $entityManager = $this->getDoctrine()->getEntityManager()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
+      $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
       $declareBirth = $entityManager->getBirthByRequestId($client, $content->get("request_id"));
 
       if($declareBirth == null) {

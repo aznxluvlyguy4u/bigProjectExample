@@ -22,7 +22,7 @@ class TailLengthRepository extends BaseRepository {
             ->setMaxResults(1);
 
         //TailLength
-        $latestTailLength = $this->getEntityManager()->getRepository(TailLength::class)
+        $latestTailLength = $this->getManager()->getRepository(TailLength::class)
             ->matching($criteria);
 
         if(sizeof($latestTailLength) > 0) {

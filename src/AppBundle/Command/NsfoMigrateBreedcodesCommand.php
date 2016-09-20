@@ -7,7 +7,7 @@ use AppBundle\Entity\AnimalRepository;
 use AppBundle\Migration\BreedCodeReformatter;
 use AppBundle\Util\CommandUtil;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -19,7 +19,7 @@ class NsfoMigrateBreedcodesCommand extends ContainerAwareCommand
     const TITLE = 'Migrate breedcodes to values in separate variables for MiXBLUP';
     const BATCH_SIZE = 1000;
 
-    /** @var EntityManager $em */
+    /** @var ObjectManager $em */
     private $em;
 
     protected function configure()
@@ -38,8 +38,8 @@ class NsfoMigrateBreedcodesCommand extends ContainerAwareCommand
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
-        /** @var EntityManager $em */
-        $em = $this->getContainer()->get('doctrine.orm.entity_manager');
+        /** @var ObjectManager $em */
+        $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
 
 

@@ -6,7 +6,7 @@ use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 
 /**
  * Class TagReplaceMessageBuilder
@@ -20,10 +20,10 @@ class TagReplaceMessageBuilder extends MessageBuilderBase {
 
   /**
    * TagReplaceMessageBuilder constructor.
-   * @param EntityManager $em
+   * @param ObjectManager $em
    * @param string $currentEnvironment
    */
-  public function __construct(EntityManager $em, $currentEnvironment) {
+  public function __construct(ObjectManager $em, $currentEnvironment) {
     parent::__construct($em, $currentEnvironment);
   }
 

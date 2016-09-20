@@ -261,8 +261,8 @@ class AuthAPIController extends APIController {
     $encodedNewPassword = $encoder->encodePassword($client, $newPassword);
     $client->setPassword($encodedNewPassword);
 
-    $this->getDoctrine()->getEntityManager()->persist($client);
-    $this->getDoctrine()->getEntityManager()->flush();
+    $this->getDoctrine()->getManager()->persist($client);
+    $this->getDoctrine()->getManager()->flush();
 
     //Validate password change
     $client = $this->getAuthenticatedUser($request);
@@ -369,7 +369,7 @@ class AuthAPIController extends APIController {
     return new JsonResponse(array("code" => 403, "message" => "Forbidden"), 403);
 
     $doctrine = $this->getDoctrine();
-    $em = $doctrine->getEntityManager();
+    $em = $doctrine->getManager();
     $encoder = $this->get('security.password_encoder');
     $content = $this->getContentAsArray($request);
 
@@ -431,14 +431,14 @@ class AuthAPIController extends APIController {
 
     foreach ($personsWithoutPersonId as $person) {
       $person->setPersonId(Utils::generatePersonId());
-      $this->getDoctrine()->getEntityManager()->persist($person);
+      $this->getDoctrine()->getManager()->persist($person);
 
       $i++;
       if($i%$flushBatchSize == 0) { //flush per batch
-        $this->getDoctrine()->getEntityManager()->flush();
+        $this->getDoctrine()->getManager()->flush();
       }
     }
-    $this->getDoctrine()->getEntityManager()->flush();
+    $this->getDoctrine()->getManager()->flush();
 
     return new JsonResponse(array("code" => 200,
         "message"=>"Person IDs have been generated for all persons that did not have one yet"), 200);

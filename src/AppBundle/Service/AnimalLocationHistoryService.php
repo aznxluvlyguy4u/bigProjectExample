@@ -10,7 +10,7 @@ use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Enumerator\RequestType;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 
 /**
  * Class AnimalLocationHistoryService
@@ -19,7 +19,7 @@ use Doctrine\ORM\EntityManager;
 class AnimalLocationHistoryService
 {
     /**
-     * @var EntityManager
+     * @var ObjectManager
      */
     private static $entityManager;
 

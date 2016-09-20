@@ -5,7 +5,7 @@ namespace AppBundle\Component;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\RevokeDeclaration;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
@@ -22,11 +22,11 @@ class RevokeMessageBuilder extends MessageBuilderBase
     private $person;
 
     /**
-     * @var EntityManager
+     * @var ObjectManager
      */
     protected $em;
 
-    public function __construct(EntityManager $em, $currentEnvironment)
+    public function __construct(ObjectManager $em, $currentEnvironment)
     {
         parent::__construct($em, $currentEnvironment);
         $this->em = $em;
