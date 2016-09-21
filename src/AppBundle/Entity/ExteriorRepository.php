@@ -167,6 +167,30 @@ class ExteriorRepository extends MeasurementRepository {
             }
         }
 
+
+        //After deleting the exteriors where one version is broken, merge the Exteriors where both are missing something the other has
+        $exteriorsByAnimalIdAndDate = $this->getDuplicateMeasurementsMissingHeightProgressAndKind($isGetGroupedByAnimalAndDate);
+
+        $measurementsFixedCount = 0;
+        foreach ($exteriorsByAnimalIdAndDate as $exteriorGroup) {
+
+            $exteriorGroupSize = count($exteriorGroup);
+
+            for($i = 0; $i < $exteriorGroupSize; $i++) {
+                for($j = $i+1; $j < $exteriorGroupSize; $j++) {
+
+                    if($i != $j) { //Just an extra check to be sure
+
+                        $hasMergedAnExterior = $this->mergeExteriorDuplicateMissingHeightProgressAndKindOrInspector($exteriorGroup[$i], $exteriorGroup[$j]);
+                        if($hasMergedAnExterior) {
+                            $measurementsFixedCount++;
+                        }
+                    }
+                }
+            }
+        }
+
+
         return $measurementsFixedCount;
     }
 
@@ -200,6 +224,52 @@ class ExteriorRepository extends MeasurementRepository {
         } elseif (!$hasExterior1EmptyHeightKindAndProgress && $hasExterior2EmptyHeightKindAndProgress) {
             if($this->isInspectorNotMissing($exterior1, $exterior2) &&
                 $this->areNonHeightKindProgressAndInspectorExteriorValuesIdentical($exterior1, $exterior2)) {
+                $sql = "DELETE FROM exterior WHERE id = ".$exterior2Id;
+                $em->getConnection()->exec($sql);
+                $sql = "DELETE FROM measurement WHERE id = ".$exterior2Id;
+                $em->getConnection()->exec($sql);
+                $hasDeletedAnExterior = true;
+                $this->printDeletedRows($exterior2); //FIXME
+            }
+        }
+        return $hasDeletedAnExterior;
+    }
+
+
+    /**
+     * @param array $exterior1
+     * @param array $exterior2
+     * @return bool
+     */
+    private function mergeExteriorDuplicateMissingHeightProgressAndKindOrInspector($exterior1, $exterior2)
+    {
+        $em = $this->getManager();
+        $hasDeletedAnExterior = false;
+
+        $exterior1Id = $exterior1['measurement_id'];
+        $exterior2Id = $exterior2['measurement_id'];
+        $hasExterior1EmptyHeightKindAndProgress = $this->hasEmptyHeightKindAndProgress($exterior1);
+        $hasExterior2EmptyHeightKindAndProgress = $this->hasEmptyHeightKindAndProgress($exterior2);
+        $inspectorId = $this->getNonContradictingInspectorIdFromAnyExterior($exterior1, $exterior2);
+
+        if($hasExterior1EmptyHeightKindAndProgress && !$hasExterior2EmptyHeightKindAndProgress){
+            if($inspectorId != null &&
+                $this->areNonHeightKindProgressAndInspectorExteriorValuesIdentical($exterior1, $exterior2)) {
+                $sql = "UPDATE measurement SET inspector_id = ".$inspectorId." WHERE id = ".$exterior2Id;
+                $em->getConnection()->exec($sql);
+                $sql = "DELETE FROM exterior WHERE id = ".$exterior1Id;
+                $em->getConnection()->exec($sql);
+                $sql = "DELETE FROM measurement WHERE id = ".$exterior1Id;
+                $em->getConnection()->exec($sql);
+                $hasDeletedAnExterior = true;
+                $this->printDeletedRows($exterior1); //FIXME
+            }
+
+        } elseif (!$hasExterior1EmptyHeightKindAndProgress && $hasExterior2EmptyHeightKindAndProgress) {
+            if($inspectorId != null &&
+                $this->areNonHeightKindProgressAndInspectorExteriorValuesIdentical($exterior1, $exterior2)) {
+                $sql = "UPDATE measurement SET inspector_id = ".$inspectorId." WHERE id = ".$exterior1Id;
+                $em->getConnection()->exec($sql);
                 $sql = "DELETE FROM exterior WHERE id = ".$exterior2Id;
                 $em->getConnection()->exec($sql);
                 $sql = "DELETE FROM measurement WHERE id = ".$exterior2Id;
@@ -335,6 +405,28 @@ class ExteriorRepository extends MeasurementRepository {
             } else {
                 return false;
             }
+        }
+    }
+
+
+    /**
+     * @param array $exterior1
+     * @param array $exterior2
+     * @return bool
+     */
+    private function getNonContradictingInspectorIdFromAnyExterior($exterior1, $exterior2)
+    {
+        $inspectorId1 = $exterior1['inspector_id'];
+        $inspectorId2 = $exterior2['inspector_id'];
+
+        if($inspectorId1 == $inspectorId2) {
+            return $inspectorId1;
+        } elseif ($inspectorId1 == null && NullChecker::isNotNull($inspectorId2)) {
+            return $inspectorId2;
+        } elseif (NullChecker::isNotNull($inspectorId1) && $inspectorId2 == null) {
+            return $inspectorId1;
+        } else {
+            return null;
         }
     }
 
