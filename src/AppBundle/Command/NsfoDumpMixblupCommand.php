@@ -272,9 +272,12 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
             $message = $message .'| '. $bodyFatFixResult[Constant::MESSAGE_NAMESPACE];
             $this->cmdUtil->advanceProgressBar(1, $message);
 
-            //TODO ExteriorMeasurementsFix
+            $exteriorFixResult = $this->exteriorRepository->fixMeasurements();
+            $message = $message .'| '. $exteriorFixResult[Constant::MESSAGE_NAMESPACE];
+            $this->cmdUtil->advanceProgressBar(1, $message);
 
-            $totalDuplicatesDeleted = $weightFixResult[Constant::COUNT] + $bodyFatFixResult[Constant::COUNT];
+            $totalDuplicatesDeleted = $weightFixResult[Constant::COUNT] + $bodyFatFixResult[Constant::COUNT]
+            + $exteriorFixResult[Constant::COUNT];
             if($totalDuplicatesDeleted == 0) {
                 $message =  'No measurements fixed';
                 $this->cmdUtil->setProgressBarMessage($message);
