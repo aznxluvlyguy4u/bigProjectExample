@@ -16,6 +16,7 @@ use Symfony\Component\Filesystem\Filesystem;
 
 class NullChecker
 {
+    const DEFAULT_FLOAT_ACCURACY = 0.0001;
 
     /**
      * @param $input
@@ -42,6 +43,17 @@ class NullChecker
         } else {
             return false;
         }
+    }
+
+
+    /**
+     * @param float $float
+     * @param float $accuracy
+     * @return bool
+     */
+    public static function floatIsNotZero($float, $accuracy = self::DEFAULT_FLOAT_ACCURACY)
+    {
+        return !NumberUtil::isFloatZero($float, $accuracy);
     }
 
 
