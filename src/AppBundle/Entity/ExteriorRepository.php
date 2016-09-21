@@ -14,6 +14,10 @@ use Doctrine\Common\Collections\Criteria;
  */
 class ExteriorRepository extends MeasurementRepository {
 
+    const IS_PRINT_DELETED_EXTERIORS = true;
+    const FILE_OUTPUT_PATH = '/home/data/JVT/projects/NSFO/FEATURES/MixBlup/dump/exterior_deleted_broken_duplicates.txt';
+
+
     /**
      * If no Exterior is found a blank Exterior entity is returned
      * 
@@ -112,7 +116,7 @@ class ExteriorRepository extends MeasurementRepository {
         if($totalCount > 0) {
             $message =
                 'CONTRADICTING EXTERIORS ARE NOT CHECKED!'
-//                'Fixed contradicting exteriors: ' . $fixedContradictingExteriorsCount TODO IF NECESSARY
+//                'Fixed contradicting exteriors: ' . $fixedContradictingExteriorsCount TODO
                 .'| Fixed duplicate exteriors with missing height, kind, progress: ' . $fixedMissingValuesExteriorsCount;
         } else {
             $message = 'No exterior fixes implemented';
@@ -243,8 +247,10 @@ class ExteriorRepository extends MeasurementRepository {
 
     private function printDeletedRows($input)
     {
-        $row = $input['animal_id_and_date'].$input['kind'].$input['progress'].$input['height'].$input['inspector_id'];
-        file_put_contents('/home/data/JVT/projects/NSFO/FEATURES/MixBlup/dump/'.'exterior_errors_MAAAN.txt', $row."\n", FILE_APPEND);
+        if(self::IS_PRINT_DELETED_EXTERIORS) {
+            $row = $input['animal_id_and_date'].$input['kind'].$input['progress'].$input['height'].$input['inspector_id'];
+            file_put_contents(self::FILE_OUTPUT_PATH, $row."\n", FILE_APPEND);   
+        }
     }
 
 
@@ -303,7 +309,7 @@ class ExteriorRepository extends MeasurementRepository {
             $exterior1['exterior_type'] == $exterior2['exterior_type'] &&
             $exterior1['leg_work'] == $exterior2['leg_work'] &&
             $exterior1['fur'] == $exterior2['fur'] &&
-            $exterior1['general_appearance'] == $exterior2['general_appearance'] &&
+            $exterior1['general_appearence'] == $exterior2['general_appearence'] &&
             $exterior1['breast_depth'] == $exterior2['breast_depth'] &&
             $exterior1['torso_length'] == $exterior2['torso_length'] &&
             $exterior1['markings'] == $exterior2['markings'];

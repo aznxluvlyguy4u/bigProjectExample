@@ -262,7 +262,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         $isClearDuplicates = $this->cmdUtil->generateConfirmationQuestion('Fix measurements and then Clear ALL duplicate measurements? (y/n): ');
         if ($isClearDuplicates) {
 
-            $this->cmdUtil->setStartTimeAndPrintIt(2, 1, 'Fixing measurements...');
+            $this->cmdUtil->setStartTimeAndPrintIt(4, 1, 'Fixing measurements...');
 
             $weightFixResult = $this->weightRepository->fixMeasurements();
             $message = $weightFixResult[Constant::MESSAGE_NAMESPACE];
