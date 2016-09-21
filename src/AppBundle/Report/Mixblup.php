@@ -68,6 +68,9 @@ class Mixblup
     const GENDER_NULL_FILLER = 'N_B';
     const NEUTER = 'N_B';
 
+    //Rounding Accuracies
+    const HETEROSIS_AND_RECOMBINATION_ROUNDING_ACCURACY = 2;
+
     //Column padding & widths
     const COLUMN_PADDING_SIZE = 1;
     const COLUMN_WIDTH_GENDER = 6;
@@ -952,8 +955,11 @@ class Mixblup
     {
         $animalUln = self::formatUln($animal, self::ULN_NULL_FILLER);
         $gender = self::formatGender($animal->getGender());
-        $heterosis = Utils::fillNullOrEmptyString($animal->getHeterosis(), self::HETEROSIS_NULL_FILLER);
-        $recombination = Utils::fillNullOrEmptyString($animal->getRecombination(), self::RECOMBINATION_NULL_FILLER);
+
+        $geneDiversity = BreedValueUtil::getHeterosisAndRecombinationBy8Parts($this->em, $animal->getId(), self::HETEROSIS_AND_RECOMBINATION_ROUNDING_ACCURACY);
+
+        $heterosis = Utils::fillNullOrEmptyString($geneDiversity[BreedValueUtil::HETEROSIS], self::HETEROSIS_NULL_FILLER);
+        $recombination = Utils::fillNullOrEmptyString($geneDiversity[BreedValueUtil::RECOMBINATION], self::RECOMBINATION_NULL_FILLER);
 
         $breedCodeValues = $this->getMixBlupExteriorAttributesBreedCodeTypes($animal);
         $yearAndUbnOfBirth = self::getYearAndUbnOfBirthString($animal);

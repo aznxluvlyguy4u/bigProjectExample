@@ -38,7 +38,6 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
     const END_YEAR_MEASUREMENTS = 2016;
     const DEFAULT_OUTPUT_FOLDER_PATH = '/home/data/JVT/projects/NSFO/FEATURES/MixBlup/dump';
     const DEFAULT_OPTION = 0;
-    const HETEROSIS_AND_RECOMBINATION_ROUNDING_ACCURACY = 2;
 
     /** @var CommandUtil */
     private $cmdUtil;
@@ -98,10 +97,8 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
             '   --------------------------------------------', "\n",
             '2: Generate Mixblup !BLOCKs', "\n",
             '3: Clear all Mixblup !BLOCK values', "\n",
-            '4: Generate Heterosis and Recombination values', "\n",
-            '5: Clear all Heterosis and Recombination values', "\n",
-            '6: Delete duplicate measurements', "\n",
-            '7: Generate animalId-and-Date values for all measurements', "\n",
+            '4: Delete duplicate measurements', "\n",
+            '5: Generate animalId-and-Date values for all measurements', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -119,18 +116,10 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
                 break;
 
             case 4:
-                $this->generateHeterosisAndRecombinationValues();
-                break;
-
-            case 5:
-                $this->clearAllHeterosisAndRecombinationValues();
-                break;
-
-            case 6:
                 $this->deleteDuplicateMeasurements();
                 break;
 
-            case 7:
+            case 5:
                 $this->generateAnimalIdAndDateStringsInAllMeasurements();
                 break;
 
@@ -265,54 +254,6 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         }
 
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
-    }
-
-
-    private function generateHeterosisAndRecombinationValues()
-    {
-        $isSkipAlreadyCalculatedValues = $this->cmdUtil->generateConfirmationQuestion('Skip already generated values? (y/n): ');
-
-        if($isSkipAlreadyCalculatedValues) {
-            $sql = "SELECT id FROM animal WHERE parent_father_id IS NOT NULL AND parent_mother_id IS NOT NULL AND (heterosis IS NULL OR recombination IS NULL)";
-        } else {
-            $sql = "SELECT id FROM animal WHERE parent_father_id IS NOT NULL AND parent_mother_id IS NOT NULL";
-        }
-
-        $results = $this->em->getConnection()->query($sql)->fetchAll();
-
-        $this->cmdUtil->setStartTimeAndPrintIt(count($results)+1,1, 'Generating heterosis and recombination values...');
-
-        foreach($results as $result) {
-            $id = $result['id'];
-            $this->setHeterosisAndRecombinationOfAnimal($id);
-            $this->cmdUtil->advanceProgressBar(1, 'Generating heterosis and recombination values...');
-        }
-        $this->cmdUtil->setProgressBarMessage('Finished!');
-        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
-    }
-
-
-    private function setHeterosisAndRecombinationOfAnimal($animalId)
-    {
-        $values = BreedValueUtil::getHeterosisAndRecombinationBy8Parts($this->em, $animalId, self::HETEROSIS_AND_RECOMBINATION_ROUNDING_ACCURACY);
-
-        if($values != null) {
-            $heterosis = $values[BreedValueUtil::HETEROSIS];
-            $recombination = $values[BreedValueUtil::RECOMBINATION];
-
-            $sql = "UPDATE animal SET heterosis = '".$heterosis."', recombination = '".$recombination."' WHERE id = '".$animalId."'";
-            $this->em->getConnection()->exec($sql);
-        }
-    }
-
-
-    private function clearAllHeterosisAndRecombinationValues()
-    {
-        $isClearValues = $this->cmdUtil->generateConfirmationQuestion('Clear ALL heterosis and recombination values? (y/n): ');
-        if($isClearValues) {
-            $sql = "UPDATE animal SET heterosis = NULL, recombination = NULL WHERE heterosis IS NOT NULL OR recombination IS NOT NULL";
-            $this->em->getConnection()->exec($sql);
-        }
     }
 
 
