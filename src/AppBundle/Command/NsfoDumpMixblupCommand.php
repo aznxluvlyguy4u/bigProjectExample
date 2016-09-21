@@ -97,8 +97,8 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
             '   --------------------------------------------', "\n",
             '2: Generate Mixblup !BLOCKs', "\n",
             '3: Clear all Mixblup !BLOCK values', "\n",
-            '4: Delete duplicate measurements', "\n",
-            '5: Generate animalId-and-Date values for all measurements', "\n",
+            '4: Generate animalId-and-Date values for all measurements', "\n",
+            '5: Delete duplicate measurements', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -116,11 +116,11 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
                 break;
 
             case 4:
-                $this->deleteDuplicateMeasurements();
+                $this->generateAnimalIdAndDateStringsInAllMeasurements();
                 break;
 
             case 5:
-                $this->generateAnimalIdAndDateStringsInAllMeasurements();
+                $this->deleteDuplicateMeasurements();
                 break;
 
             default:
