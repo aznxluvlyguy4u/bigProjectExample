@@ -360,24 +360,7 @@ class WeightRepository extends MeasurementRepository {
         $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
         if($isGetGroupedByAnimalAndDate) {
-
-            $weightsGroupedByAnimalAndDate = array();
-            foreach ($results as $result) {
-                $animalIdAndData = $result['animal_id_and_date'];
-                if(array_key_exists($animalIdAndData, $weightsGroupedByAnimalAndDate)) {
-                    $items = $weightsGroupedByAnimalAndDate[$animalIdAndData];
-                    $items->add($result);
-                    $weightsGroupedByAnimalAndDate[$animalIdAndData] = $items;
-                } else {
-                    //First entry
-                    $items = new ArrayCollection();
-                    $items->add($result);
-                    $weightsGroupedByAnimalAndDate[$animalIdAndData] = $items;
-                }
-            }
-
-            return $weightsGroupedByAnimalAndDate;
-
+            return $this->groupSqlMeasurementResultsByAnimalIdAndDate($results);
         } else {
             return $results;
         }

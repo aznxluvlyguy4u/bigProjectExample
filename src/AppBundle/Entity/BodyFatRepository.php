@@ -240,23 +240,7 @@ class BodyFatRepository extends MeasurementRepository {
         $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
         if($isGetGroupedByAnimalAndDate) {
-
-            $bodyFatsGroupedByAnimalAndDate = array();
-            foreach ($results as $result) {
-                $animalIdAndData = $result['animal_id_and_date'];
-                if(array_key_exists($animalIdAndData, $bodyFatsGroupedByAnimalAndDate)) {
-                    $items = $bodyFatsGroupedByAnimalAndDate[$animalIdAndData];
-                    $items->add($result);
-                    $bodyFatsGroupedByAnimalAndDate[$animalIdAndData] = $items;
-                } else {
-                    //First entry
-                    $items = new ArrayCollection();
-                    $items->add($result);
-                    $bodyFatsGroupedByAnimalAndDate[$animalIdAndData] = $items;
-                }
-            }
-            return $bodyFatsGroupedByAnimalAndDate;
-
+            return $this->groupSqlMeasurementResultsByAnimalIdAndDate($results);
         } else {
             return $results;
         }
