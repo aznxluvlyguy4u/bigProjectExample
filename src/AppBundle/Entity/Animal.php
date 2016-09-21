@@ -484,25 +484,6 @@ abstract class Animal
      */
     protected $mixblupBlock;
 
-
-    /**
-     * @var float
-     *
-     * @ORM\Column(type="float", nullable=true, options={"default":null})
-     * @JMS\Type("float")
-     */
-    protected $heterosis;
-
-
-    /**
-     * @var float
-     *
-     * @ORM\Column(type="float", nullable=true, options={"default":null})
-     * @JMS\Type("float")
-     */
-    protected $recombination;
-
-
     /**
      * @var float
      *
@@ -2074,37 +2055,6 @@ abstract class Animal
         $this->mixblupBlock = $mixblupBlock;
     }
 
-    /**
-     * @return float
-     */
-    public function getHeterosis()
-    {
-        return $this->heterosis;
-    }
-
-    /**
-     * @param float $heterosis
-     */
-    public function setHeterosis($heterosis)
-    {
-        $this->heterosis = $heterosis;
-    }
-
-    /**
-     * @return float
-     */
-    public function getRecombination()
-    {
-        return $this->recombination;
-    }
-
-    /**
-     * @param float $recombination
-     */
-    public function setRecombination($recombination)
-    {
-        $this->recombination = $recombination;
-    }
 
     /**
      * @return float
