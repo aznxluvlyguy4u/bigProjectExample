@@ -322,7 +322,8 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
             $contradictingMuscleThicknessesLeft = count($this->muscleThicknessRepository->getContradictingMuscleThicknessesForExportFile());
             $contradictingTailLengthsLeft = count($this->tailLengthRepository->getContradictingTailLengthsForExportFile());
             $contradictingBodyFatsLeft = count($this->bodyFatRepository->getContradictingBodyFatsForExportFile());
-            $contradictingMeasurementsLeft = $contradictingWeightsLeft + $contradictingMuscleThicknessesLeft + $contradictingTailLengthsLeft;
+            $contradictingExteriorsLeft = count($this->exteriorRepository->getContradictingExteriorsForExportFile());
+            $contradictingMeasurementsLeft = $contradictingWeightsLeft + $contradictingMuscleThicknessesLeft + $contradictingTailLengthsLeft + $contradictingExteriorsLeft;
 
             if($contradictingMeasurementsLeft > 0) {
                 $this->output->writeln('=== Contradicting measurements left ===');
@@ -330,6 +331,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
                 if($contradictingMuscleThicknessesLeft > 0) { $this->output->writeln('muscleThickness: '.$contradictingMuscleThicknessesLeft); }
                 if($contradictingTailLengthsLeft > 0) { $this->output->writeln('tailLengths: '.$contradictingTailLengthsLeft); }
                 if($contradictingBodyFatsLeft > 0) { $this->output->writeln('bodyFats: '.$contradictingBodyFatsLeft); }
+                if($contradictingExteriorsLeft > 0) { $this->output->writeln('exteriors: '.$contradictingExteriorsLeft); }
 
             } else {
                 $this->output->writeln('No contradicting measurements left!');

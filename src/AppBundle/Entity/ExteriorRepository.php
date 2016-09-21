@@ -133,6 +133,9 @@ class ExteriorRepository extends MeasurementRepository {
     {
         //TODO if necessary
         $em = $this->getManager();
+
+        $exteriors = $this->getContradictingExteriorsGroupedByAnimalIdAndDate();
+
         return 0;
     }
 
@@ -239,9 +242,53 @@ class ExteriorRepository extends MeasurementRepository {
     }
 
 
-    public function getContradictingExteriors()
+    /**
+     * @return array
+     */
+    public function getContradictingExteriorsForExportFile()
     {
+        return $this->getContradictingExteriors(true, false);
+    }
 
+    public function getContradictingExteriorsGroupedByAnimalIdAndDate()
+    {
+        return $this->getContradictingExteriors(false, true);
+    }
+
+    /**
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function getContradictingExteriors($isForExportFile = false, $isGetGroupedByAnimalAndDate = false)
+    {
+        if($isForExportFile) {
+            $selectOutput = "CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, a.name as AIIND, DATE(n.measurement_date) as meetdatum, DATE(a.date_of_birth) as geboortedatum,
+       z.kind as EXT_KIND, z.progress as ONT, z.skull as KOP, muscularity as SPIER, proportion as EVE, exterior_type as TYPE, leg_work as BEEN, fur as VACHT, general_appearence as ALG, height as HOOGTE, breast_depth as BORST_DIEPTE, torso_length as TORSO_LENGTE, markings as KENMERKEN, i.last_name as inspector";
+        } else {
+            $selectOutput = "n.id as measurement_id, a.id as animal_id, n.animal_id_and_date, inspector_id,
+                      DATE(n.measurement_date) as measurement_date, CONCAT(a.uln_country_code, a.uln_number) as uln, 
+                      CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, 
+                      DATE(a.date_of_birth) as date_of_birth, z.*";
+        }
+        
+        $sql = "SELECT ".$selectOutput." FROM measurement n
+                  INNER JOIN (
+                               SELECT m.animal_id_and_date
+                               FROM measurement m
+                                 INNER JOIN exterior x ON m.id = x.id
+                               GROUP BY m.animal_id_and_date
+                               HAVING (COUNT(*) > 1)
+                             ) t on t.animal_id_and_date = n.animal_id_and_date
+                  INNER JOIN exterior z ON z.id = n.id
+                  LEFT JOIN person i ON i.id = n.inspector_id
+                  LEFT JOIN animal a ON a.id = z.animal_id";
+        $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+        if($isGetGroupedByAnimalAndDate) {
+            return $this->groupSqlMeasurementResultsByAnimalIdAndDate($results);
+        } else {
+            return $results;
+        }
     }
 
 
