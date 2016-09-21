@@ -57,7 +57,11 @@ class DoctrineUtil
      */
     public static function getRandomAdminAccessTokenCode(ObjectManager $em)
     {
-        $sql = "SELECT token.code as code FROM employee INNER JOIN token ON employee.id = token.owner_id WHERE token.type = 'ACCESS'";
+        $sql = "SELECT token.code as code 
+                FROM employee 
+                    INNER JOIN token ON employee.id = token.owner_id
+                    INNER JOIN person ON employee.id = person.id
+                WHERE token.type = 'ACCESS' AND person.is_active = TRUE";
         $tokenCodes = $em->getConnection()->query($sql)->fetchAll();
 
         //null check
