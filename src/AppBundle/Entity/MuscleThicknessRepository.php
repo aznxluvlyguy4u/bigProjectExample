@@ -7,7 +7,7 @@ use Doctrine\Common\Collections\Criteria;
  * Class MuscleThicknessRepository
  * @package AppBundle\Entity
  */
-class MuscleThicknessRepository extends BaseRepository {
+class MuscleThicknessRepository extends MeasurementRepository {
 
     /**
      * @param Animal $animal

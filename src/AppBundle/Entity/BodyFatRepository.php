@@ -12,7 +12,7 @@ use Doctrine\Common\Collections\Criteria;
  * Class BodyFatRepository
  * @package AppBundle\Entity
  */
-class BodyFatRepository extends BaseRepository {
+class BodyFatRepository extends MeasurementRepository {
 
     /**
      * @param Animal $animal

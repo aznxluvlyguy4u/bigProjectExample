@@ -7,7 +7,7 @@ use Doctrine\Common\Collections\Criteria;
  * Class TailLengthRepository
  * @package AppBundle\Entity
  */
-class TailLengthRepository extends BaseRepository {
+class TailLengthRepository extends MeasurementRepository {
 
     /**
      * @param Animal $animal

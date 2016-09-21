@@ -8,7 +8,7 @@ use Doctrine\Common\Collections\Criteria;
  * Class ExteriorRepository
  * @package AppBundle\Entity
  */
-class ExteriorRepository extends BaseRepository {
+class ExteriorRepository extends MeasurementRepository {
 
     /**
      * If no Exterior is found a blank Exterior entity is returned
@@ -94,5 +94,4 @@ class ExteriorRepository extends BaseRepository {
         return $count;
     }
 
-    
 }

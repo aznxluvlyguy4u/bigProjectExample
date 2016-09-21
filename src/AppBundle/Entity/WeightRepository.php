@@ -13,7 +13,7 @@ use Doctrine\Common\Collections\Criteria;
  * Class WeightRepository
  * @package AppBundle\Entity
  */
-class WeightRepository extends BaseRepository {
+class WeightRepository extends MeasurementRepository {
 
     /**
      * @param Animal $animal
