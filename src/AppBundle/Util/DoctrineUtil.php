@@ -82,7 +82,17 @@ class DoctrineUtil
     public static function getRandomActiveLocation(ObjectManager $em, $minAliveAnimalsCount = 30)
     {
 
-        $sql = "SELECT location.id as id FROM (location INNER JOIN (SELECT location_id, COUNT(*) FROM animal WHERE animal.transfer_state IS NULL AND animal.is_alive = true GROUP BY location_id HAVING COUNT(*) > ".$minAliveAnimalsCount." ) lc ON location.id = lc.location_id) WHERE location.is_active = TRUE";
+        $sql = "SELECT location.id as id 
+                FROM (location 
+                      INNER JOIN (
+                                  SELECT location_id, COUNT(*) 
+                                  FROM animal 
+                                  WHERE animal.transfer_state IS NULL AND animal.is_alive = true 
+                                  GROUP BY location_id HAVING COUNT(*) > ".$minAliveAnimalsCount." 
+                                  ) 
+                                  lc ON location.id = lc.location_id
+                      ) 
+                      WHERE location.is_active = TRUE";
 
         $results = $em->getConnection()->query($sql)->fetchAll();
 
