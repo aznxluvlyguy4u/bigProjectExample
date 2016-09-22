@@ -2,6 +2,7 @@
 
 namespace AppBundle\Tests\Controller;
 
+use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
 use AppBundle\Service\IRSerializer;
@@ -17,8 +18,6 @@ use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
  * @group depart
  */
 class DepartTest extends WebTestCase {
-
-  const DECLARE_DEPART_ENDPOINT = "/api/v1/departs";
 
   /** @var RequestClient */
   private $client;
@@ -91,18 +90,56 @@ class DepartTest extends WebTestCase {
   public function testDepartsGetters()
   {
     $this->client->request('GET',
-      $this::DECLARE_DEPART_ENDPOINT.'-history',
+        Endpoint::DECLARE_DEPART_ENDPOINT.'-history',
       array(), array(), $this->defaultHeaders
     );
     $this->assertStatusCode(200, $this->client);
 
     $this->client->request('GET',
-        $this::DECLARE_DEPART_ENDPOINT.'-errors',
+        Endpoint::DECLARE_DEPART_ENDPOINT.'-errors',
         array(), array(), $this->defaultHeaders
     );
     $this->assertStatusCode(200, $this->client);
   }
 
+
+  /**
+   * @group post
+   * @group depart-post
+   * Test depart post endpoint
+   */
+  public function testDepartPost()
+  {
+    $animal = DoctrineUtil::getRandomAnimalFromLocation(self::$em, self::$location);
+    $ubnNewOwner = "1234567";
+    $reasonOfDepart = "a very good reason";
+
+    $declareMateJson =
+        json_encode(
+            [
+                "reason_of_depart" => $reasonOfDepart,
+                "ubn_new_owner" => $ubnNewOwner,
+                "is_export_animal" => false,
+                "animal" => [
+                      "uln_country_code" => $animal->getUlnCountryCode(),
+                      "uln_number" => $animal->getUlnNumber()
+                ],
+                "depart_date" => "2012-04-21T18:25:43-05:00"
+            ]);
+
+    $this->client->request('POST',
+        Endpoint::DECLARE_DEPART_ENDPOINT,
+        array(),
+        array(),
+        $this->defaultHeaders,
+        $declareMateJson
+    );
+
+    $response = $this->client->getResponse();
+    $data = json_decode($response->getContent(), true);
+    $this->assertStatusCode(200, $this->client);
+  }
+  
 
   /**
    * Runs after each testcase
