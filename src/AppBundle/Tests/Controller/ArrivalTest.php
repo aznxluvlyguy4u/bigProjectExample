@@ -85,6 +85,7 @@ class ArrivalTest extends WebTestCase {
   /**
    * @group get
    * @group arrival-get
+   * @group import
    * Test arrival getter endpoints
    */
   public function testArrivalsGetters()

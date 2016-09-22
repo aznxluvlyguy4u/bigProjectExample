@@ -85,6 +85,7 @@ class DepartTest extends WebTestCase {
   /**
    * @group get
    * @group depart-get
+   * @group export
    * Test depart getter endpoints
    */
   public function testDepartsGetters()
