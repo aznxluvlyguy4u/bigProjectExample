@@ -3,8 +3,13 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\Employee;
+use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Neuter;
+use AppBundle\Entity\Ram;
+use AppBundle\Entity\Tag;
 use AppBundle\Entity\Token;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -76,11 +81,19 @@ class DoctrineUtil
 
     /**
      * @param ObjectManager $em
+     * @param Location|int $locationToSkip
      * @param int $minAliveAnimalsCount
      * @return Location
      */
-    public static function getRandomActiveLocation(ObjectManager $em, $minAliveAnimalsCount = 30)
+    public static function getRandomActiveLocation(ObjectManager $em, $locationToSkip = null, $minAliveAnimalsCount = 30)
     {
+        if($locationToSkip instanceof Location) {
+            $locationFilter = " AND location.id <> ".$locationToSkip->getId();
+        } elseif (is_int($locationToSkip)) {
+            $locationFilter = " AND location.id <> ".$locationToSkip;
+        } else {
+            $locationFilter = "";
+        }
 
         $sql = "SELECT location.id as id 
                 FROM (location 
@@ -92,16 +105,102 @@ class DoctrineUtil
                                   ) 
                                   lc ON location.id = lc.location_id
                       ) 
-                      WHERE location.is_active = TRUE";
+                      WHERE location.is_active = TRUE".$locationFilter;
 
         $results = $em->getConnection()->query($sql)->fetchAll();
+        return self::getRandomItemFromResults($em, $results, Location::class);
+    }
 
+
+    /**
+     * @param ObjectManager $em
+     * @param Location $location
+     * @return null|Ram
+     */
+    public static function getRandomRamFromLocation(ObjectManager $em, Location $location)
+    {
+        return self::getRandomAnimalFromLocation($em, $location, 'Ram');
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Location $location
+     * @return null|Ewe
+     */
+    public static function getRandomEweFromLocation(ObjectManager $em, Location $location)
+    {
+        return self::getRandomAnimalFromLocation($em, $location, 'Ewe');
+    }
+    
+
+    /**
+     * @param ObjectManager $em
+     * @param Location $location
+     * @param null $gender
+     * @return null|Animal|Ram|Ewe|Neuter
+     */
+    public static function getRandomAnimalFromLocation(ObjectManager $em, Location $location, $gender = null)
+    {
+        if($gender == 'Ram') {
+            $typeFilter =  " AND a.type = 'Ram'";
+            $clazz = Ram::class;
+        } elseif ($gender == 'Ewe') {
+            $typeFilter =  " AND a.type = 'Ewe'";
+            $clazz = Ewe::class;
+        } elseif ($gender == 'Neuter') {
+            $typeFilter =  " AND a.type = 'Neuter'";
+            $clazz = Neuter::class;
+        } else {
+            $typeFilter = null;
+            $clazz = Animal::class;
+        }
+
+        $sql = "SELECT * FROM animal a WHERE a.location_id = ".$location->getId()." AND is_alive = TRUE AND a.transfer_state IS NULL ".$typeFilter;
+        $results = $em->getConnection()->query($sql)->fetchAll();
+        return self::getRandomItemFromResults($em, $results, $clazz);
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Location $location
+     * @return null|Tag
+     */
+    public static function getRandomUnassignedTag(ObjectManager $em, Location $location)
+    {
+        $ownerId = $location->getCompany()->getOwner()->getId();
+        $sql = "SELECT * FROM tag t WHERE t.owner_id = ".$ownerId." AND tag_status = 'UNASSIGNED'";
+        $results = $em->getConnection()->query($sql)->fetchAll();
+        return self::getRandomItemFromResults($em, $results, Tag::class);
+    }
+    
+    
+    /**
+     * @param ObjectManager $em
+     * @param $results
+     * @param $clazz
+     * @return null|object
+     */
+    private static function getRandomItemFromResults(ObjectManager $em, $results, $clazz)
+    {
+        $resultsSize = count($results);
         //null check
-        if(count($results) == 0) {
+        if($resultsSize == 0) {
             return null;
         }
 
-        $choice = rand(1, count($results)-1);
-        return $em->getRepository(Location::class)->find($results[$choice]['id']);
+        $result = null;
+        $maximumRetries = 10;
+
+        for($i = 0; $i < $maximumRetries; $i++) {
+            $choice = rand(0, $resultsSize-1);
+            $result = $em->getRepository($clazz)->find($results[$choice]['id']);
+
+            if ($result != null) {
+                return $result;
+            }
+        }
+        return null;
     }
 }

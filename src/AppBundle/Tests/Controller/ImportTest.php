@@ -2,7 +2,6 @@
 
 namespace AppBundle\Tests\Controller;
 
-use AppBundle\Component\Utils;
 use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
@@ -14,11 +13,11 @@ use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
 
 /**
- * Class ArrivalTest
+ * Class ImportTest
  * @package AppBundle\Tests\Controller
- * @group arrival
+ * @group import
  */
-class ArrivalTest extends WebTestCase {
+class ImportTest extends WebTestCase {
 
   /** @var RequestClient */
   private $client;
@@ -83,44 +82,25 @@ class ArrivalTest extends WebTestCase {
 
 
   /**
-   * @group get
-   * @group arrival-get
-   * @group import
-   * Test arrival getter endpoints
-   */
-  public function testArrivalsGetters()
-  {
-    $this->client->request('GET',
-      Endpoint::DECLARE_ARRIVAL_ENDPOINT.'-history',
-      array(), array(), $this->defaultHeaders
-    );
-    $this->assertStatusCode(200, $this->client);
-
-    $this->client->request('GET',
-        Endpoint::DECLARE_ARRIVAL_ENDPOINT.'-errors',
-        array(), array(), $this->defaultHeaders
-    );
-    $this->assertStatusCode(200, $this->client);
-  }
-
-
-  /**
    * @group post
-   * @group arrival-post
-   * Test arrival post endpoint
+   * @group import-post
+   * Test import post endpoint
    */
-  public function testArrivalPost()
+  public function testImportFromEUCountryPost()
   {
+    $countryOfOriginCode = 'FR';
+    $tagUlnNumber = DoctrineUtil::getRandomUnassignedTag(self::$em, self::$location)->getUlnNumber();
+
     $declareMateJson =
         json_encode(
             [
-                "is_import_animal" => false,
-                "ubn_previous_owner" => "123456",
+                "is_import_animal" => true,
+                "country_origin" => $countryOfOriginCode,
                 "arrival_date" => "2016-07-31T18:25:43-05:00",
                 "animal" => [
-                              "uln_country_code" => "NL",
-                              "uln_number" => "123456789012"
-                            ]
+                    "uln_country_code" => $countryOfOriginCode,
+                    "uln_number" => $tagUlnNumber
+                ]
             ]);
 
     $this->client->request('POST',
