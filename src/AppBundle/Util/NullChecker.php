@@ -22,6 +22,15 @@ class NullChecker
      * @param $input
      * @return bool
      */
+    public static function isNull($input)
+    {
+        return !self::isNotNull($input);
+    }
+    
+    /**
+     * @param $input
+     * @return bool
+     */
     public static function isNotNull($input)
     {
         if($input != null && $input != '' && $input != ' ') {
@@ -31,6 +40,15 @@ class NullChecker
         }
     }
 
+
+    /**
+     * @param $input
+     * @return bool
+     */
+    public static function numberIsNull($input)
+    {
+        return !self::numberIsNotNull($input);
+    }
 
     /**
      * @param $input

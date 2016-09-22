@@ -108,15 +108,14 @@ class ExteriorRepository extends MeasurementRepository {
      */
     public function fixMeasurements()
     {
-        $fixedContradictingExteriorsCount = $this->fixContradictingMeasurements();
         $fixedMissingValuesExteriorsCount = $this->fixDuplicateMeasurementsMissingHeightProgressAndKind();
+        $fixedContradictingExteriorsCount = $this->fixContradictingMeasurements();
 
-        $totalCount = $fixedContradictingExteriorsCount + $fixedMissingValuesExteriorsCount;
+        $totalCount = $fixedMissingValuesExteriorsCount + $fixedContradictingExteriorsCount;
 
         if($totalCount > 0) {
             $message =
-                'CONTRADICTING EXTERIORS ARE NOT CHECKED!'
-//                'Fixed contradicting exteriors: ' . $fixedContradictingExteriorsCount TODO
+                'Fixed contradicting exteriors: ' . $fixedContradictingExteriorsCount
                 .'| Fixed duplicate exteriors with missing height, kind, progress: ' . $fixedMissingValuesExteriorsCount;
         } else {
             $message = 'No exterior fixes implemented';
@@ -131,12 +130,28 @@ class ExteriorRepository extends MeasurementRepository {
      */
     private function fixContradictingMeasurements()
     {
-        //TODO if necessary
-        $em = $this->getManager();
+        $exteriorsByAnimalIdAndDate = $this->getContradictingExteriorsGroupedByAnimalIdAndDate();
 
-        $exteriors = $this->getContradictingExteriorsGroupedByAnimalIdAndDate();
+        $measurementsFixedCount = 0;
+        foreach ($exteriorsByAnimalIdAndDate as $exteriorGroup) {
 
-        return 0;
+            $exteriorGroupSize = count($exteriorGroup);
+
+            for($i = 0; $i < $exteriorGroupSize; $i++) {
+                for($j = $i+1; $j < $exteriorGroupSize; $j++) {
+
+                    if($i != $j) { //Just an extra check to be sure
+
+                        $hasDeletedAnExterior = $this->deleteExteriorDuplicateShiftedTorsoValue($exteriorGroup[$i], $exteriorGroup[$j]);
+                        if($hasDeletedAnExterior) {
+                            $measurementsFixedCount++;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $measurementsFixedCount;
     }
 
 
@@ -169,7 +184,7 @@ class ExteriorRepository extends MeasurementRepository {
 
 
         //After deleting the exteriors where one version is broken, merge the Exteriors where both are missing something the other has
-        $exteriorsByAnimalIdAndDate = $this->getDuplicateMeasurementsMissingHeightProgressAndKind($isGetGroupedByAnimalAndDate);
+        $exteriorsByAnimalIdAndDate = $this->getContradictingExteriorsGroupedByAnimalIdAndDate();
 
         $measurementsFixedCount = 0;
         foreach ($exteriorsByAnimalIdAndDate as $exteriorGroup) {
@@ -281,6 +296,46 @@ class ExteriorRepository extends MeasurementRepository {
         return $hasDeletedAnExterior;
     }
 
+
+    /**
+     * @param array $exterior1
+     * @param array $exterior2
+     * @return bool
+     */ 
+    private function deleteExteriorDuplicateShiftedTorsoValue($exterior1, $exterior2)
+    {
+        $em = $this->getManager();
+        $hasDeletedAnExterior = false;
+
+        $exterior1Id = $exterior1['measurement_id'];
+        $exterior2Id = $exterior2['measurement_id'];
+        $isExterior1ToBeDeleted = $this->areTorsoShiftedPair($exterior2, $exterior1);
+        $isExterior2ToBeDeleted = false;
+        if(!$isExterior1ToBeDeleted) {
+            $isExterior2ToBeDeleted = $this->areTorsoShiftedPair($exterior1, $exterior2);
+        }
+
+
+        if($isExterior1ToBeDeleted){
+            $sql = "DELETE FROM exterior WHERE id = ".$exterior1Id;
+            $em->getConnection()->exec($sql);
+            $sql = "DELETE FROM measurement WHERE id = ".$exterior1Id;
+            $em->getConnection()->exec($sql);
+            $hasDeletedAnExterior = true;
+            $this->printDeletedRows($exterior1);
+
+        } elseif ($isExterior2ToBeDeleted) {
+            $sql = "DELETE FROM exterior WHERE id = ".$exterior2Id;
+            $em->getConnection()->exec($sql);
+            $sql = "DELETE FROM measurement WHERE id = ".$exterior2Id;
+            $em->getConnection()->exec($sql);
+            $hasDeletedAnExterior = true;
+            $this->printDeletedRows($exterior2);
+        }
+
+        return $hasDeletedAnExterior;
+    }
+    
 
     /**
      * @return array
@@ -452,5 +507,46 @@ class ExteriorRepository extends MeasurementRepository {
             $exterior1['breast_depth'] == $exterior2['breast_depth'] &&
             $exterior1['torso_length'] == $exterior2['torso_length'] &&
             $exterior1['markings'] == $exterior2['markings'];
+    }
+
+
+    /**
+     * @param array $exteriorArrayToDelete
+     * @param array $exteriorToKeep
+     * @return bool
+     */
+    private function areTorsoShiftedPair($exteriorToKeep, $exteriorArrayToDelete) {
+
+        $isDifferencesVerified = 
+            NullChecker::numberIsNull($exteriorArrayToDelete['progress']) &&
+            NullChecker::numberIsNull($exteriorArrayToDelete['height']) &&
+            NullChecker::numberIsNull($exteriorArrayToDelete['torso_length'])
+            && $exteriorArrayToDelete['breast_depth'] == $exteriorToKeep['torso_length']
+            && $exteriorArrayToDelete['inspector_id'] == null && $exteriorToKeep['inspector_id'] != null;
+
+        $isSimilaritiesVerified =
+            $exteriorArrayToDelete['animal_id'] == $exteriorToKeep['animal_id'] &&
+            $exteriorArrayToDelete['animal_id_and_date'] == $exteriorToKeep['animal_id_and_date'] &&
+            $exteriorArrayToDelete['measurement_date'] == $exteriorToKeep['measurement_date'] &&
+            $exteriorArrayToDelete['skull'] == $exteriorToKeep['skull'] &&
+            $exteriorArrayToDelete['muscularity'] == $exteriorToKeep['muscularity'] &&
+            $exteriorArrayToDelete['proportion'] == $exteriorToKeep['proportion'] &&
+            $exteriorArrayToDelete['exterior_type'] == $exteriorToKeep['exterior_type'] &&
+            $exteriorArrayToDelete['leg_work'] == $exteriorToKeep['leg_work'] &&
+            $exteriorArrayToDelete['fur'] == $exteriorToKeep['fur'] &&
+            $exteriorArrayToDelete['general_appearence'] == $exteriorToKeep['general_appearence'];
+
+
+        if(NullChecker::isNotNull($exteriorToKeep['kind'])) {
+            $isNotMissingExtKind = true;
+        } else {
+            if(NullChecker::isNull($exteriorArrayToDelete['kind'])) {
+                $isNotMissingExtKind = true;
+            } else {
+                $isNotMissingExtKind = false;
+            }
+        }
+
+        return $isDifferencesVerified && $isSimilaritiesVerified && $isNotMissingExtKind;
     }
 }
