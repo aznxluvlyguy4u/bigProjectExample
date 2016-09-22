@@ -5,6 +5,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\NumberUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 
@@ -14,9 +15,14 @@ use Doctrine\Common\Collections\Criteria;
  */
 class ExteriorRepository extends MeasurementRepository {
 
-    const IS_PRINT_DELETED_EXTERIORS = true;
-    const FILE_OUTPUT_PATH = '/home/data/JVT/projects/NSFO/FEATURES/MixBlup/dump/exterior_deleted_broken_duplicates.txt';
+    const FILE_NAME = 'exterior_deleted_duplicates';
+    const FILE_EXTENSION = '.txt';
 
+    /** @var boolean */
+    private $isPrintDeletedExteriors;
+
+    /** @var string */
+    private $mutationsFolder;
 
     /**
      * If no Exterior is found a blank Exterior entity is returned
@@ -104,10 +110,19 @@ class ExteriorRepository extends MeasurementRepository {
 
 
     /**
+     * @param string $mutationsFolder
+     * @param boolean $isPrintDeletedExteriors
      * @return array
      */
-    public function fixMeasurements()
+    public function fixMeasurements($mutationsFolder = null)
     {
+        $this->mutationsFolder = $mutationsFolder;
+        if(NullChecker::isNotNull($this->mutationsFolder)) {
+            $this->isPrintDeletedExteriors = true;
+        } else {
+            $this->isPrintDeletedExteriors = false;
+        }
+
         $fixedMissingValuesExteriorsCount = $this->fixDuplicateMeasurementsMissingHeightProgressAndKind();
         $fixedContradictingExteriorsCount = $this->fixContradictingMeasurements();
 
@@ -419,9 +434,10 @@ class ExteriorRepository extends MeasurementRepository {
 
     private function printDeletedRows($input)
     {
-        if(self::IS_PRINT_DELETED_EXTERIORS) {
+        if($this->isPrintDeletedExteriors) {
             $row = $input['animal_id_and_date'].$input['kind'].$input['progress'].$input['height'].$input['inspector_id'];
-            file_put_contents(self::FILE_OUTPUT_PATH, $row."\n", FILE_APPEND);   
+            $filePath = $this->mutationsFolder.'/'.self::FILE_NAME.TimeUtil::getTimeStampNow().self::FILE_EXTENSION;
+            file_put_contents($filePath, $row."\n", FILE_APPEND);
         }
     }
 

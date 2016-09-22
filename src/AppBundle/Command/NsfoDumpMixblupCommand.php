@@ -19,6 +19,7 @@ use AppBundle\Report\Mixblup;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\MeasurementsUtil;
+use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -36,7 +37,8 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
     const INSTRUCTIONS_FILENAME = 'mixblup_instructions';
     const START_YEAR_MEASUREMENT = 2014;
     const END_YEAR_MEASUREMENTS = 2016;
-    const DEFAULT_OUTPUT_FOLDER_PATH = '/home/data/JVT/projects/NSFO/FEATURES/MixBlup/dump';
+    const DEFAULT_OUTPUT_FOLDER_PATH = '/Resources/outputs/mixblup';
+    const DEFAULT_MUTATIONS_FOLDER_PATH = '/Resources/mutations';
     const DEFAULT_OPTION = 0;
 
     /** @var CommandUtil */
@@ -62,7 +64,13 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
     
     /** @var BodyFatRepository */
     private $bodyFatRepository;
-    
+
+    /** @var string */
+    private $outputFolder;
+
+    /** @var string */
+    private $mutationsFolder;
+
     
     protected function configure()
     {
@@ -85,6 +93,12 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         $this->tailLengthRepository  = $this->em->getRepository(TailLength::class);
         $this->muscleThicknessRepository = $this->em->getRepository(MuscleThickness::class);
         $this->bodyFatRepository = $this->em->getRepository(BodyFat::class);
+
+        /* Setup folders */
+        $this->outputFolder = $this->getContainer()->get('kernel')->getRootDir().self::DEFAULT_OUTPUT_FOLDER_PATH;
+        NullChecker::createFolderPathIfNull($this->outputFolder);
+        $this->mutationsFolder = $this->getContainer()->get('kernel')->getRootDir().self::DEFAULT_MUTATIONS_FOLDER_PATH;
+        NullChecker::createFolderPathIfNull($this->mutationsFolder);
 
 
         //Print intro
@@ -222,7 +236,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
     private function generateMixblupFiles()
     {
         //Output folder input
-        $outputFolderPath = $this->cmdUtil->generateQuestion('Please enter output folder path', self::DEFAULT_OUTPUT_FOLDER_PATH);
+        $outputFolderPath = $this->cmdUtil->generateQuestion('Please enter output folder path', $this->outputFolder);
 
         $this->output->writeln([' ', 'output folder: '.$outputFolderPath, ' ']);
 
@@ -272,7 +286,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
             $message = $message .'| '. $bodyFatFixResult[Constant::MESSAGE_NAMESPACE];
             $this->cmdUtil->advanceProgressBar(1, $message);
 
-            $exteriorFixResult = $this->exteriorRepository->fixMeasurements();
+            $exteriorFixResult = $this->exteriorRepository->fixMeasurements($this->mutationsFolder);
             $message = $message .'| '. $exteriorFixResult[Constant::MESSAGE_NAMESPACE];
             $this->cmdUtil->advanceProgressBar(1, $message);
 

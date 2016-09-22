@@ -115,4 +115,24 @@ class TimeUtil
         }
         return null;
     }
+
+
+    /**
+     * @param string $format
+     * @return string
+     */
+    public static function getTimeStampToday($format = 'Y-m-d')
+    {
+        return self::getTimeStampNow($format);
+    }
+
+
+    /**
+     * @param string $format
+     * @return string
+     */
+    public static function getTimeStampNow($format = 'Y-m-d_H:i:s')
+    {
+        return (new \DateTime())->format($format);
+    }
 }
