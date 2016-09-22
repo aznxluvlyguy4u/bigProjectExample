@@ -77,13 +77,21 @@ class DoctrineUtil
 
     /**
      * @param ObjectManager $em
+     * @param Location|int $locationToSkip
      * @param int $minAliveAnimalsCount
      * @return Location
      */
-    public static function getRandomActiveLocation(ObjectManager $em, $minAliveAnimalsCount = 30)
+    public static function getRandomActiveLocation(ObjectManager $em, $locationToSkip = null, $minAliveAnimalsCount = 30)
     {
+        if($locationToSkip instanceof Location) {
+            $locationFilter = " AND location.id <> ".$locationToSkip->getId();
+        } elseif (is_int($locationToSkip)) {
+            $locationFilter = " AND location.id <> ".$locationToSkip;
+        } else {
+            $locationFilter = "";
+        }
 
-        $sql = "SELECT location.id as id FROM (location INNER JOIN (SELECT location_id, COUNT(*) FROM animal WHERE animal.transfer_state IS NULL AND animal.is_alive = true GROUP BY location_id HAVING COUNT(*) > ".$minAliveAnimalsCount." ) lc ON location.id = lc.location_id) WHERE location.is_active = TRUE";
+        $sql = "SELECT location.id as id FROM (location INNER JOIN (SELECT location_id, COUNT(*) FROM animal WHERE animal.transfer_state IS NULL AND animal.is_alive = true GROUP BY location_id HAVING COUNT(*) > ".$minAliveAnimalsCount." ) lc ON location.id = lc.location_id) WHERE location.is_active = TRUE ".$locationFilter;
 
         $results = $em->getConnection()->query($sql)->fetchAll();
         return self::getRandomItemFromResults($em, $results, Location::class);
