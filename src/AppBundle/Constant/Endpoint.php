@@ -10,6 +10,7 @@ class Endpoint
     const DECLARE_DEPART_ENDPOINT = "/api/v1/departs";
     const DECLARE_LOSSES_ENDPOINT = "/api/v1/losses";
     const DECLARE_TAGS_TRANSFERS_ENDPOINT = "/api/v1/tags-transfers";
+    const DECLARE_TAG_REPLACE_ENDPOINT = "/api/v1/tags-replace";
 
     const REVOKE_ENDPOINT = "/api/v1/revokes";
 }
