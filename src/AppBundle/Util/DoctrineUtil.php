@@ -9,6 +9,7 @@ use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
+use AppBundle\Entity\Tag;
 use AppBundle\Entity\Token;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -86,13 +87,6 @@ class DoctrineUtil
 
         $results = $em->getConnection()->query($sql)->fetchAll();
         return self::getRandomItemFromResults($em, $results, Location::class);
-//        //null check
-//        if(count($results) == 0) {
-//            return null;
-//        }
-//
-//        $choice = rand(1, count($results)-1);
-//        return $em->getRepository(Location::class)->find($results[$choice]['id']);
     }
 
 
@@ -148,6 +142,20 @@ class DoctrineUtil
 
     /**
      * @param ObjectManager $em
+     * @param Location $location
+     * @return null|Tag
+     */
+    public static function getRandomUnassignedTag(ObjectManager $em, Location $location)
+    {
+        $ownerId = $location->getCompany()->getOwner()->getId();
+        $sql = "SELECT * FROM tag t WHERE t.owner_id = ".$ownerId." AND tag_status = 'UNASSIGNED'";
+        $results = $em->getConnection()->query($sql)->fetchAll();
+        return self::getRandomItemFromResults($em, $results, Tag::class);
+    }
+    
+    
+    /**
+     * @param ObjectManager $em
      * @param $results
      * @param $clazz
      * @return null|object
@@ -173,5 +181,4 @@ class DoctrineUtil
         }
         return null;
     }
-
 }
