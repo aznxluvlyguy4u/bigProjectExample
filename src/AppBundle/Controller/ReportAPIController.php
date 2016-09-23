@@ -7,6 +7,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\Environment;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Country;
+use AppBundle\Report\InbreedingCoefficientReportData;
 use AppBundle\Report\PedigreeCertificates;
 use AppBundle\Validation\InbreedingCoefficientInputValidator;
 use AppBundle\Validation\UlnValidator;
@@ -125,7 +126,10 @@ class ReportAPIController extends APIController {
       return $inbreedingCoefficientInputValidator->createJsonResponse();
     }
 
-//    dump($content);die;
+    $reportResults = new InbreedingCoefficientReportData($em, $content, $client);
+    $reportData = $reportResults->getData();
+
+    dump($reportData);die;
 
 
     //TODO

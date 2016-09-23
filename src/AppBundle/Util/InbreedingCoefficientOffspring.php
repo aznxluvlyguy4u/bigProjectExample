@@ -27,6 +27,12 @@ class InbreedingCoefficientOffspring
     /** @var float */
     private $inbreedingCoefficient;
 
+    /** @var Ram */
+    private $father;
+
+    /** @var Ewe */
+    private $mother;
+
     /**
      * InbreedingCoefficientOffspring constructor.
      * @param ObjectManager $em
@@ -37,6 +43,8 @@ class InbreedingCoefficientOffspring
     {
         $this->em = $em;
         $this->animalRepository = $em->getRepository(Animal::class);
+        $this->father = $father;
+        $this->mother = $mother;
 
         $this->parentSearchArray = array();
         $this->childrenSearchArray = array();
@@ -52,6 +60,26 @@ class InbreedingCoefficientOffspring
     {
         return $this->inbreedingCoefficient;
     }
+
+    /**
+     * @param string $separator
+     * @return null|string
+     */
+    public function getUlnFather($separator = '')
+    {
+        return AnimalArrayReader::getIdString($this->father, $separator);
+    }
+
+
+    /**
+     * @param string $separator
+     * @return null|string
+     */
+    public function getUlnMother($separator = '')
+    {
+        return AnimalArrayReader::getIdString($this->mother, $separator);
+    }
+
 
     /**
      * @param Ram $father

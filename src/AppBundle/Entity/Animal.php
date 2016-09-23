@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -593,6 +594,20 @@ abstract class Animal
     public function getPedigreeNumber()
     {
         return $this->pedigreeNumber;
+    }
+
+
+    /**
+     * @param string $nullFiller
+     * @return null|string
+     */
+    public function getPedigreeString($nullFiller = null)
+    {
+        if(NullChecker::isNotNull($this->pedigreeCountryCode) && NullChecker::isNotNull($this->pedigreeNumber)) {
+            return $this->pedigreeCountryCode.$this->pedigreeNumber;
+        } else {
+            return $nullFiller;
+        }
     }
 
 

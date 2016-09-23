@@ -37,4 +37,27 @@ class AnimalArrayReader
              JsonInputConstant::ULN_COUNTRY_CODE => null,
                    JsonInputConstant::ULN_NUMBER => null);
     }
+
+
+    /**
+     * @param $animalArray
+     * @param string $separator
+     * @return null|string
+     */
+    public static function getIdString($animalArray, $separator = '')
+    {
+        $ulnCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray);
+        $ulnNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_NUMBER, $animalArray);
+        if ($ulnCountryCode != null && $ulnNumber != null) {
+            return $ulnCountryCode.$separator.$ulnNumber;
+        }
+        
+        $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
+        $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
+        if ($pedigreeCountryCode != null && $pedigreeNumber != null) {
+            return $pedigreeCountryCode.$separator.$pedigreeNumber;
+        }
+
+        return null;
+    }
 }
