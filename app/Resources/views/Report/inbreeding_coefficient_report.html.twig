@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+    {% set doubleSpace = '&nbsp; &nbsp;' %}
+
+    {% set ram = variables.ram %}
+    {% set isRamMissing = variables.isRamMissing %}
+
+    <h1>Inteeltcoëfficiënt van nageslacht na paring</h1>
+
+    <p>Ram: {{ ram }}</p>
+
+    {% for key,value in variables.ewes %}
+        {% set uln = key %}
+        {% set ewe = value %}
+
+        <p>Ooi {{ uln }}, stn: {{ ewe.pedigree }}: {{ ewe.inbreedingCoefficient }}</p>
+
+        {#{% if loop.last == false %}#}
+        {#<footer></footer> #}{# necessary to enforce a pagebreak using css #}
+        {#{% endif %}#}
+
+    {% endfor %}
+
+{% endblock %}
+
+{% block stylesheets %}
+    <style>
+
+        /* Always insert a page break after each <footer> element (when printing) */
+        /*@media print {*/
+        /*footer {page-break-after: always;}*/
+        /*}*/
+
+    </style>
+{% endblock %}
