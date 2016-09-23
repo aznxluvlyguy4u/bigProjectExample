@@ -913,19 +913,7 @@ abstract class Animal
      */
     public function getParentFather()
     {
-        if($this->parentFather != null) {
-            return $this->parentFather;
-        } else {
-            /** @var Animal $parent */
-            foreach ($this->parents as $parent) {
-                $gender = $parent->getGender();
-                if($gender == GenderType::MALE || $gender == GenderType::M) {
-                    return $parent;
-                }
-            }
-        }
-        //if no father has been found
-        return null;
+        return $this->parentFather;
     }
 
     /**
@@ -950,19 +938,7 @@ abstract class Animal
      */
     public function getParentMother()
     {
-        if($this->parentMother != null) {
-            return $this->parentMother;
-        } else {
-            /** @var Animal $parent */
-            foreach ($this->parents as $parent) {
-                $gender = $parent->getGender();
-                if($gender == GenderType::FEMALE || $gender == GenderType::V) {
-                    return $parent;
-                }
-            }
-        }
-        //if no mother has been found
-        return null;
+        return $this->parentMother;
     }
     
     /**
