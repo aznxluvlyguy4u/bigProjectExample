@@ -129,13 +129,24 @@ class ReportAPIController extends APIController {
     $reportResults = new InbreedingCoefficientReportData($em, $content, $client);
     $reportData = $reportResults->getData();
 
-    dump($reportData);die;
+    $twigFile = 'Report/inbreeding_coefficient_report.html.twig';
+    $html = $this->renderView($twigFile, ['variables' => $reportData]);
+    $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,
+        array(
+            'orientation'=>'Portrait',
+            'default-header'=>false,
+            'disable-smart-shrinking'=>true,
+            'print-media-type' => true,
+            'margin-top'    => 6,
+            'margin-right'  => 8,
+            'margin-bottom' => 4,
+            'margin-left'   => 8,
+        ));
 
-
-    //TODO
-//    $s3Service = $this->getStorageService();
-//    $url = $s3Service->uploadPdf($pdfOutput, 'insertS3KeyHere');
-    $url = 'http://jongensvantechniek.nl/';
+//    dump($reportData);die;
+    
+    $s3Service = $this->getStorageService();
+    $url = $s3Service->uploadPdf($pdfOutput, $reportResults->getS3Key());
 
     return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
   }
