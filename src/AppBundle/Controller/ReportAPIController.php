@@ -8,6 +8,7 @@ use AppBundle\Constant\Environment;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Country;
 use AppBundle\Report\PedigreeCertificates;
+use AppBundle\Validation\InbreedingCoefficientInputValidator;
 use AppBundle\Validation\UlnValidator;
 use Aws\S3\S3Client;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -90,6 +91,51 @@ class ReportAPIController extends APIController {
 
     return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
   }
+
+
+  /**
+   * Generate inbreeding coefficient pdf report of (hypothetical) offspring of a Ram and a list of Ewes.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Generate inbreeding coefficient pdf report of (hypothetical) offspring of a Ram and a list of Ewes",
+   *   output = "AppBundle\Entity\Animal"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/inbreeding-coefficients")
+   * @Method("POST")
+   */
+  public function getInbreedingCoefficientsReport(Request $request)
+  {
+    $client = $this->getAuthenticatedUser($request);
+    $content = $this->getContentAsArray($request);
+    $em = $this->getDoctrine()->getManager();
+
+    $inbreedingCoefficientInputValidator = new InbreedingCoefficientInputValidator($em, $content, $client);
+    if(!$inbreedingCoefficientInputValidator->getIsInputValid()) {
+      return $inbreedingCoefficientInputValidator->createJsonResponse();
+    }
+
+//    dump($content);die;
+
+
+    //TODO
+//    $s3Service = $this->getStorageService();
+//    $url = $s3Service->uploadPdf($pdfOutput, 'insertS3KeyHere');
+    $url = 'http://jongensvantechniek.nl/';
+
+    return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
+  }
+
 
   /**
    * @param Request $request the request object
