@@ -12,20 +12,14 @@ use AppBundle\Entity\EweRepository;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\RamRepository;
 use AppBundle\Util\AnimalArrayReader;
-use AppBundle\Util\InbreedingCoefficient;
 use AppBundle\Util\InbreedingCoefficientOffspring;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 
-class InbreedingCoefficientReportData
+class InbreedingCoefficientReportData extends ReportBase
 {
+    const FILE_NAME_REPORT_TYPE = 'inbreeding-coefficient';
     const PEDIGREE_NULL_FILLER = '-';
-
-    /** @var Client */
-    private $client;
-
-    /** @var  ObjectManager */
-    private $em;
 
     /** @var array */
     private $data;
@@ -47,8 +41,8 @@ class InbreedingCoefficientReportData
      */
     public function __construct(ObjectManager $em, ArrayCollection $content, Client $client)
     {
-        $this->em = $em;
-        $this->client = $client;
+        parent::__construct($em, $client, self::FILE_NAME_REPORT_TYPE);
+        
         $this->data = array();
 
         /** @var RamRepository $ramRepository */
