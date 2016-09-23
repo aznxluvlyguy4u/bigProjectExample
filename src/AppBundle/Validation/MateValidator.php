@@ -126,7 +126,7 @@ class MateValidator extends DeclareNsfoBaseValidator
         $ramArray = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::RAM, $content);
 
         $isRamInputValid = $this->validateRamArray($ramArray);
-        $isEweInputValid = $this->validateEweArray($eweArray);
+        $isEweInputValid = $this->validateEweArray($eweArray, $content);
         $isNonAnimalInputValid = $this->validateNonAnimalValues($content);
 
         if(!$isRamInputValid || !$isEweInputValid || !$isNonAnimalInputValid || !$isMessageIdValid) {
@@ -214,6 +214,7 @@ class MateValidator extends DeclareNsfoBaseValidator
 
     /**
      * @param array $eweArray
+     * @param ArrayCollection $content
      * @return bool
      */
     private function validateEweArray($eweArray, $content) {
