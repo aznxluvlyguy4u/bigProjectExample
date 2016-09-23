@@ -88,7 +88,8 @@ class InbreedingCoefficientOffspring
      */
     private function calculateInbreedingCoefficient(Ram $father, Ewe $mother)
     {
-        return 0.0;
+//        return 0.0;
+        return 777.55;
     }
 
 }
