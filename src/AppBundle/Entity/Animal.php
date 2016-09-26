@@ -641,6 +641,26 @@ abstract class Animal
         return $this->ulnCountryCode . $this->ulnNumber;
     }
 
+
+    /**
+     * @return bool
+     */
+    public function isUlnExists()
+    {
+        return NullChecker::isNotNull($this->ulnCountryCode) && NullChecker::isNotNull($this->ulnNumber);
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function isPedigreeExists()
+    {
+        return NullChecker::isNotNull($this->pedigreeCountryCode) && NullChecker::isNotNull($this->pedigreeNumber);
+    }
+
+
+
     /**
      * @return string
      */

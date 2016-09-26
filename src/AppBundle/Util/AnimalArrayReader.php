@@ -6,6 +6,7 @@ namespace AppBundle\Util;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\ReportLabel;
 
 class AnimalArrayReader
 {
@@ -59,5 +60,30 @@ class AnimalArrayReader
         }
 
         return null;
+    }
+
+
+    /**
+     * @param array $animalArray
+     * @param string $separator
+     * @return array
+     */
+    public static function getUlnAndPedigreeInArray($animalArray, $separator = '')
+    {
+        $animal = array();
+
+        $ulnCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray);
+        $ulnNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_NUMBER, $animalArray);
+        if ($ulnCountryCode != null && $ulnNumber != null) {
+            $animal[ReportLabel::ULN] = $ulnCountryCode.$separator.$ulnNumber;
+        }
+
+        $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
+        $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
+        if ($pedigreeCountryCode != null && $pedigreeNumber != null) {
+            $animal[ReportLabel::PEDIGREE] = $pedigreeCountryCode.$separator.$pedigreeNumber;
+        }
+
+        return $animal;
     }
 }

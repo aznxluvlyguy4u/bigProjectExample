@@ -20,6 +20,7 @@ class InbreedingCoefficientReportData extends ReportBase
 {
     const FILE_NAME_REPORT_TYPE = 'inbreeding-coefficient';
     const PEDIGREE_NULL_FILLER = '-';
+    const ULN_NULL_FILLER = '-';
 
     /** @var array */
     private $data;
@@ -55,8 +56,7 @@ class InbreedingCoefficientReportData extends ReportBase
 
         //Initialize default values
         $this->data[ReportLabel::EWES] = array();
-        $this->data[ReportLabel::RAM] = AnimalArrayReader::getIdString($ramArray);
-        $this->ram = $this->ramRepository->getRamByArray($ramArray);
+        $this->generateRamIdValues($ramArray);        
 
         if($this->ram == null) {
             $this->data[ReportLabel::IS_RAM_MISSING] = true;
@@ -78,6 +78,32 @@ class InbreedingCoefficientReportData extends ReportBase
 
 
     /**
+     * @param array $ramArray
+     */
+    private function generateRamIdValues($ramArray)
+    {
+        $this->data[ReportLabel::RAM] = AnimalArrayReader::getUlnAndPedigreeInArray($ramArray);
+        $this->ram = $this->ramRepository->getRamByArray($ramArray);
+
+        if(!array_key_exists(ReportLabel::PEDIGREE, $this->data[ReportLabel::RAM])) {
+            if($this->ram->isPedigreeExists()) {
+                $this->data[ReportLabel::RAM][ReportLabel::PEDIGREE] = $this->ram->getPedigreeCountryCode().$this->ram->getPedigreeNumber();
+            } else {
+                $this->data[ReportLabel::RAM][ReportLabel::PEDIGREE] = self::PEDIGREE_NULL_FILLER;
+            }
+        }
+
+        if(!array_key_exists(ReportLabel::ULN, $this->data[ReportLabel::RAM])) {
+            if($this->ram->isUlnExists()) {
+                $this->data[ReportLabel::RAM][ReportLabel::ULN] = $this->ram->getUln();
+            } else {
+                $this->data[ReportLabel::RAM][ReportLabel::ULN] = self::ULN_NULL_FILLER;
+            }
+        }
+    }
+    
+
+    /**
      * @param $eweArray
      */
     private function generateDataWithMissingRam($eweArray)
@@ -89,7 +115,7 @@ class InbreedingCoefficientReportData extends ReportBase
 
         $ewe = $this->eweRepository->getEweByArray($eweArray);
         if($ewe == null) {
-            $this->data[ReportLabel::EWES][$ulnString][ReportLabel::PEDIGREE] = '';
+            $this->data[ReportLabel::EWES][$ulnString][ReportLabel::PEDIGREE] = self::PEDIGREE_NULL_FILLER;
         } else {
             $this->data[ReportLabel::EWES][$ulnString][ReportLabel::PEDIGREE] = $ewe->getPedigreeString(self::PEDIGREE_NULL_FILLER);
         }
@@ -108,7 +134,7 @@ class InbreedingCoefficientReportData extends ReportBase
 
         if($ewe == null) {
             $this->data[ReportLabel::EWES][$ulnString][ReportLabel::INBREEDING_COEFFICIENT] = 0;
-            $this->data[ReportLabel::EWES][$ulnString][ReportLabel::PEDIGREE] = '';
+            $this->data[ReportLabel::EWES][$ulnString][ReportLabel::PEDIGREE] = self::PEDIGREE_NULL_FILLER;
         } else {
             $this->data[ReportLabel::EWES][$ulnString][ReportLabel::PEDIGREE] = $ewe->getPedigreeString(self::PEDIGREE_NULL_FILLER);
 

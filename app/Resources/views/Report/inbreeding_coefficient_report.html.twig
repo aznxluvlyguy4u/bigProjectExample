@@ -4,12 +4,13 @@
 
     {% set doubleSpace = '&nbsp; &nbsp;' %}
 
-    {% set ram = variables.ram %}
+    {% set ramUln = variables.ram.uln %}
+    {% set ramPedigree = variables.ram.pedigree %}
     {% set isRamMissing = variables.isRamMissing %}
 
     <h1>Inteeltcoëfficiënt van nageslacht na paring</h1>
 
-    <p>Ram: {{ ram }}</p>
+    <p>Ram {{ ramUln }}, stn: {{ ramPedigree }} </p>
 
     {% for key,value in variables.ewes %}
         {% set uln = key %}
