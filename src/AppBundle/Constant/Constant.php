@@ -34,6 +34,7 @@ class Constant
     const MESSAGE_NAMESPACE = 'message';
     const RESULT_NAMESPACE = "result";
     const jsonNamespace  = 'json';
+    const COUNT = 'count';
 
     //Tags
     const TAGS_NAMESPACE = "tags";

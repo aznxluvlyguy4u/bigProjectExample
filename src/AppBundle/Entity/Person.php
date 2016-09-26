@@ -156,7 +156,7 @@ abstract class Person implements UserInterface
    */
   public function setFirstName($firstName)
   {
-    $this->firstName = $firstName;
+    $this->firstName = trim($firstName);
 
     return $this;
   }
@@ -180,7 +180,7 @@ abstract class Person implements UserInterface
    */
   public function setLastName($lastName)
   {
-    $this->lastName = $lastName;
+    $this->lastName = trim($lastName);
 
     return $this;
   }
@@ -204,7 +204,7 @@ abstract class Person implements UserInterface
    */
   public function setEmailAddress($emailAddress)
   {
-    $this->emailAddress = strtolower($emailAddress);
+    $this->emailAddress = trim(strtolower($emailAddress));
 
     return $this;
   }
@@ -398,7 +398,7 @@ abstract class Person implements UserInterface
    */
   public function setCellphoneNumber($cellphoneNumber)
   {
-    $this->cellphoneNumber = $cellphoneNumber;
+    $this->cellphoneNumber = trim($cellphoneNumber);
   }
 
   /**
@@ -455,7 +455,7 @@ abstract class Person implements UserInterface
    */
   public function setPrefix($prefix)
   {
-    $this->prefix = $prefix;
+    $this->prefix = trim($prefix);
   }
 
   /**

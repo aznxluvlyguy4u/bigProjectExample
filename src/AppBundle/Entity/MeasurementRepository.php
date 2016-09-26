@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 
@@ -26,10 +27,34 @@ class MeasurementRepository extends BaseRepository {
             ->orderBy(['measurementDate' => Criteria::ASC])
         ;
 
-        $measurements = $this->getEntityManager()->getRepository(Measurement::class)
+        $measurements = $this->getManager()->getRepository(Measurement::class)
         ->matching($criteria);
 
         return $measurements;
+    }
+
+
+    /**
+     * @param array $results
+     * @return array
+     */
+    protected function groupSqlMeasurementResultsByAnimalIdAndDate($results)
+    {
+        $measurementsGroupedByAnimalAndDate = array();
+        foreach ($results as $result) {
+            $animalIdAndData = $result['animal_id_and_date'];
+            if(array_key_exists($animalIdAndData, $measurementsGroupedByAnimalAndDate)) {
+                $items = $measurementsGroupedByAnimalAndDate[$animalIdAndData];
+                $items->add($result);
+                $measurementsGroupedByAnimalAndDate[$animalIdAndData] = $items;
+            } else {
+                //First entry
+                $items = new ArrayCollection();
+                $items->add($result);
+                $measurementsGroupedByAnimalAndDate[$animalIdAndData] = $items;
+            }
+        }
+        return $measurementsGroupedByAnimalAndDate;
     }
     
 }

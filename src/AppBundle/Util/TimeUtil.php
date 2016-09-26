@@ -41,7 +41,7 @@ class TimeUtil
      */
     public static function getDayAfterDateTime(\DateTime $dateTime)
     {
-        $dayOfDateTime = self::getDayOfDateTime($dateTime);
+        $dayOfDateTime = self::getDayOfDateTime($dateTime); //This is a new DateTime object
         return $dayOfDateTime->add(new \DateInterval('P1D')); //add one day
     }
 
@@ -68,36 +68,14 @@ class TimeUtil
 
 
     /**
-     * @param Animal $animal
+     * @param \DateTime $dateOfBirth
+     * @param \DateTime $latestLitterDate
      * @return int
      */
-    public static function ageInSystem($animal)
+    public static function ageInSystemForProductionValue($dateOfBirth, $latestLitterDate)
     {
-        if($animal == null) { return null; }
-        $dateOfBirth = $animal->getDateOfBirth();
-        if($dateOfBirth == null) { return null; }
-
-        $isAnimalInNsfoSystem = $animal->getLocation() != null;
-
-
-        if($isAnimalInNsfoSystem) {
-            return TimeUtil::getAgeYear($dateOfBirth, $animal->getDateOfDeath());
-
-        } else {
-            $lastResidence = $animal->getAnimalResidenceHistory()->last();
-            /** @var AnimalResidence $lastResidence */
-            if($lastResidence != null) {
-                $lastDate = $lastResidence->getEndDate();
-                if($lastDate != null) {
-                    $lastDate = $lastResidence->getStartDate();
-                }
-
-                if($lastDate != null) {
-                    return TimeUtil::getAgeYear($dateOfBirth, $lastDate);
-                }
-            }
-            return null;
-        }
+        if($dateOfBirth == null || $latestLitterDate == null) { return null; }
+        return self::getAgeYear($dateOfBirth, $latestLitterDate);
     }
 
     
@@ -111,7 +89,7 @@ class TimeUtil
         if($dateOfBirth == null || $earliestLitterDate == null) { return false; }
 
         $months = 18;
-        $oneYearOldLimit = $dateOfBirth;
+        $oneYearOldLimit = clone $dateOfBirth;
         $oneYearOldLimit->add(new \DateInterval('P' . $months . "M"));
 
         if($oneYearOldLimit < $earliestLitterDate) {
@@ -136,5 +114,25 @@ class TimeUtil
             }
         }
         return null;
+    }
+
+
+    /**
+     * @param string $format
+     * @return string
+     */
+    public static function getTimeStampToday($format = 'Y-m-d')
+    {
+        return self::getTimeStampNow($format);
+    }
+
+
+    /**
+     * @param string $format
+     * @return string
+     */
+    public static function getTimeStampNow($format = 'Y-m-d_H:i:s')
+    {
+        return (new \DateTime())->format($format);
     }
 }

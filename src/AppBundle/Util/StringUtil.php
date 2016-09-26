@@ -119,4 +119,19 @@ class StringUtil
         $dateParts = explode('/', $americanDate);
         return $dateParts[2].'-'.$dateParts[0].'-'.$dateParts[1];
     }
+
+
+    /**
+     * @param $haystack
+     * @param $needle
+     * @return bool
+     */
+    public static function isStringContains($haystack, $needle)
+    {
+        if (strpos($haystack, $needle) !== FALSE) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

@@ -8,7 +8,7 @@ use AppBundle\Util\CommandUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Query;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
@@ -24,7 +24,7 @@ class NsfoReadUbnbirthCommand extends ContainerAwareCommand
     const MAX_ROWS_TO_PROCESS = 0; //set 0 for no limit
     const DEFAULT_START_ROW = 0;
 
-    /** @var EntityManager $em */
+    /** @var ObjectManager $em */
     private $em;
 
     protected function configure()
@@ -47,8 +47,8 @@ class NsfoReadUbnbirthCommand extends ContainerAwareCommand
         $startTime = new \DateTime();
         $output->writeln(['Start time: '.date_format($startTime, 'Y-m-d h:m:s'),'']);
 
-        /** @var EntityManager $em */
-        $em = $this->getContainer()->get('doctrine.orm.entity_manager');
+        /** @var ObjectManager $em */
+        $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
 
         //input
@@ -103,7 +103,7 @@ class NsfoReadUbnbirthCommand extends ContainerAwareCommand
                 $vsmAnimalPrimaryKey = $rowData[0];
                 $dateOfBirth = $rowData[1];
                 $ubnOfBirth = $rowData[2];
-                if ($ubnOfBirth == 'Onbekend') {
+                if ($ubnOfBirth == 'Onbekend' || $ubnOfBirth == 'Afgevoerd') {
                     $ubnOfBirth = null;
                 }
 

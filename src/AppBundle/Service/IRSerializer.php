@@ -35,7 +35,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use JMS\Serializer\SerializationContext;
 
 /**
@@ -61,7 +61,7 @@ class IRSerializer implements IRSerializerInterface
     const DISCRIMINATOR_TYPE_NAMESPACE = "type";
 
     /**
-     * @var EntityManager
+     * @var ObjectManager
      */
     private $entityManager;
 
@@ -259,136 +259,47 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareBirth(ArrayCollection $declareBirthContentArray, Client $client,$isEditMessage)
+    function parseDeclareBirth(ArrayCollection $declareBirthContentArray, Client $client, $isEditMessage)
     {
+        /** @var Animal $animal */
         $declareBirthRequest = null;
-
         $declareBirthContentArray["type"] = RequestType::DECLARE_BIRTH_ENTITY;
         $animal = $declareBirthContentArray['animal'];
-        $requestId = $declareBirthContentArray['request_id'];
 
-        if($isEditMessage) {
+        $declareBirthRequest = new DeclareBirth();
+        $declareBirthRequest->setUlnCountryCode($animal->getUlnCountryCode());
+        $declareBirthRequest->setUlnNumber($animal->getUlnNumber());
+        $declareBirthRequest->setUlnCountryCodeMother($animal->getParentMother()->getUlnCountryCode());
+        $declareBirthRequest->setUlnMother($animal->getParentMother()->getUlnNumber());
+        $declareBirthRequest->setDateOfBirth($animal->getDateOfBirth());
+        $declareBirthRequest->setHasLambar($animal->getLambar());
+        $declareBirthRequest->setLitter($animal->getLitter());
+        $declareBirthRequest->setBirthType($declareBirthContentArray['birth_type']);
+        $declareBirthRequest->setLocation($declareBirthContentArray['location']);
+        $declareBirthRequest->setLitterSize($declareBirthContentArray['litter_size']);
+        $declareBirthRequest->setBirthWeight($declareBirthContentArray['birth_weight']);
+        $declareBirthRequest->setBirthTailLength($declareBirthContentArray['tail_length']);
 
-            $declareBirth = $this->entityManager->getRepository(Constant::DECLARE_BASE_REPOSITORY)->findOneBy(array("requestId"=>$requestId));
-            $retrievedAnimal = $declareBirth->getAnimal();
-            $tag = $retrievedAnimal->getAssignedTag();
-
-            $ulnCountryCodeNew = $declareBirthContentArray['animal']['uln_country_code'];
-            $ulnNumberNew = $declareBirthContentArray['animal']['uln_number'];
-
-            if($tag->getUlnCountryCode()!=$ulnCountryCodeNew || $tag->getUlnNumber()!=$ulnNumberNew) {
-                $tag->setTagStatus(TagStateType::UNASSIGNED);
-                $tag->setAnimal(null);
-                $this->entityManager->persist($tag);
-                $this->entityManager->flush();
-                $tag = $this->entityManager->getRepository(Constant::TAG_REPOSITORY)->findOneBy(array("ulnCountryCode"=>$ulnCountryCodeNew, "ulnNumber"=>$ulnNumberNew));
-            }
-
-
-            $declareBirthNew = new DeclareBirth();
-            $declareBirthNew = $declareBirth;
-
-            //Create animal-type based on gender
-            if(array_key_exists(Constant::GENDER_NAMESPACE, $animal)) {
-                switch($animal[Constant::GENDER_NAMESPACE]){
-                    case GenderType::FEMALE:
-                        $animalObject = new Ewe();
-                        break;
-                    case GenderType::MALE:
-                        $animalObject = new Ram();
-                        break;
-                    default:
-                        $animalObject = new Neuter();
-                        break;
-                }
-
-            } else {
-                $animalObject = new Neuter();
-            }
-
-            $dateOfBirth = new \DateTime($declareBirthContentArray['date_of_birth']);
-            $animalObject->setDateOfBirth($dateOfBirth);
-            $declareBirthNew->setDateOfBirth($dateOfBirth);
-
-            $animalObject->setAnimalCategory($retrievedAnimal->getAnimalCategory());
-            $animalObject->setAnimalHairColour($retrievedAnimal->getAnimalHairColour());
-            $animalObject->setDateOfBirth($retrievedAnimal->getDateOfBirth());
-            //Skip date of death and setting declarations because this is a brand new animal
-            //Gender is automatically set when creating an animal
-            //
-            $animalObject->setLocation($retrievedAnimal->getLocation());
-            $animalObject->setName($retrievedAnimal->getName());
-            $animalObject->setParentFather($retrievedAnimal->getParentFather());
-            $animalObject->setParentMother($retrievedAnimal->getParentMother());
-            $animalObject->setParentNeuter($retrievedAnimal->getParentNeuter());
-            $animalObject->setPedigreeCountryCode($retrievedAnimal->getPedigreeCountryCode());
-            $animalObject->setPedigreeNumber($retrievedAnimal->getPedigreeNumber());
-            $animalObject->setSurrogate($retrievedAnimal->getSurrogate());
-//            $animalObject->setUlnCountryCode($ulnCountryCodeNew);
-//            $animalObject->setUlnNumber($ulnNumberNew);
-
-            $this->entityManager->remove($declareBirth);
-            $this->entityManager->flush();
-
-//            $animalObject->setAssignedTag($tag);
-            $tag->setAnimal($animalObject);
-            $tag->setTagStatus(TagStateType::ASSIGNING);
-            $this->entityManager->persist($tag);
-            $this->entityManager->persist($animalObject->setAssignedTag($tag));
-            $this->entityManager->flush();
-
-            $declareBirthNew->setAnimal($animalObject);
-            $this->entityManager->persist($declareBirthNew);
-            $this->entityManager->flush();
-
-            return $declareBirthNew;
-
+        if($animal->getParentFather() != null) {
+            $declareBirthRequest->setUlnCountryCodeFather($animal->getParentFather()->getUlnCountryCode());
+            $declareBirthRequest->setUlnFather($animal->getParentFather()->getUlnNumber());
         }
-        //Retrieve animal entity
-        
-        $retrievedAnimal = $this->entityGetter->retrieveAnimal($declareBirthContentArray);
-        $retrievedAnimalArray = $this->returnAnimalArrayIncludingParentsAndSurrogate($retrievedAnimal);
 
-        //Move nested fields to the proper level
-        $declareBirthContentArray['birth_weight'] = $declareBirthContentArray['animal']['birth_weight'];
-        $declareBirthContentArray['has_lambar'] = $declareBirthContentArray['animal']['has_lambar'];
-        $declareBirthContentArray['birth_tail_length'] = $declareBirthContentArray['animal']['birth_tail_length'];
-        $declareBirthContentArray['gender'] = $declareBirthContentArray['animal']['gender'];
-        
-        //Add retrieved animal properties including type to initial animalContentArray
-        $declareBirthContentArray->set(Constant::ANIMAL_NAMESPACE, $retrievedAnimalArray);
+        if($declareBirthContentArray['nurture_type'] == 'SURROGATE') {
+            $declareBirthRequest->setUlnCountryCodeSurrogate($animal->getSurrogate()->getUlnCountryCode());
+            $declareBirthRequest->setUlnSurrogate($animal->getSurrogate()->getUlnNumber());
+        }
 
-        //denormalize the content to an object
-        $json = $this->serializeToJSON($declareBirthContentArray);
-        $declareBirthRequest = $this->deserializeToObject($json, RequestType::DECLARE_BIRTH_ENTITY);
+        if($animal instanceof Ram) {
+            $declareBirthRequest->setGender('MALE');
+        }
 
-        //Add retrieved animal to DeclareBirth
-        $declareBirthRequest->setAnimal($retrievedAnimal);
-        //Note setting the Animal will overwrite the animal values
-        $animalArray = $declareBirthContentArray['animal'];
-        $fatherArray = $animalArray['parent_father'];
-        $declareBirthRequest->setUlnCountryCodeFather($fatherArray[Constant::ULN_COUNTRY_CODE_NAMESPACE]);
-        $declareBirthRequest->setUlnFather($fatherArray[Constant::ULN_NUMBER_NAMESPACE]);
+        if($animal instanceof Ewe) {
+            $declareBirthRequest->setGender('FEMALE');
+        }
 
-        $motherArray = $animalArray['parent_mother'];
-        $declareBirthRequest->setUlnCountryCodeMother($motherArray[Constant::ULN_COUNTRY_CODE_NAMESPACE]);
-        $declareBirthRequest->setUlnMother($motherArray[Constant::ULN_NUMBER_NAMESPACE]);
-
-        $surrogateArray = $animalArray['surrogate'];
-        $declareBirthRequest->setUlnCountryCodeSurrogate($surrogateArray[Constant::ULN_COUNTRY_CODE_NAMESPACE]);
-        $declareBirthRequest->setUlnSurrogate($surrogateArray[Constant::ULN_NUMBER_NAMESPACE]);
-
-        if($isEditMessage) {
-            $requestState = $declareBirthContentArray['request_state'];
-            if(Utils::hasSuccessfulLastResponse($requestState)) {
-                $declareBirthRequest->setRecoveryIndicator(RecoveryIndicatorType::J);
-                $lastResponse = Utils::returnLastResponse($declareBirthRequest->getResponses());
-                if($lastResponse != null) {
-                    $declareBirthRequest->setMessageNumberToRecover($lastResponse->getMessageNumber());
-                }
-            } else {
-                $declareBirthRequest->setRecoveryIndicator(RecoveryIndicatorType::N);
-            }
+        if($animal instanceof Neuter) {
+            $declareBirthRequest->setGender('NEUTER');
         }
 
         return $declareBirthRequest;
@@ -479,25 +390,14 @@ class IRSerializer implements IRSerializerInterface
     {
         $contentArray["type"] = RequestType::DECLARE_TAG_REPLACE_ENTITY;
 
-        $animal = $contentArray['animal'];
-        $tag = $contentArray['tag'];
-
-        $replaceDate = null;
-        if($contentArray->containsKey('replace_date')) {
-            if($contentArray->get('replace_date') != "" && $contentArray->get('replace_date') != null) {
-                $replaceDate = $contentArray['replace_date'];
-            }
-        }
+        $replaceDate = Utils::getNullCheckedArrayCollectionDateValue('replace_date', $contentArray);
         //Set replaceDate = logDate in MessageBuilder if 'replace_date' was not given.
-
-        $ulnCountryCodeToReplace = $animal['uln_country_code'];
-        $ulnNumberToReplace = $animal['uln_number'];
 
         //denormalize the content to an object
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($contentArray);
-        $contentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
-        $json = $this->serializeToJSON($contentArray);
-        $declareTagReplace = $this->deserializeToObject($json, RequestType::DECLARE_TAG_REPLACE_ENTITY);
+        $declareTagReplace = new DeclareTagReplace();
+
+        $declareTagReplace->setReplaceDate($replaceDate);
 
         $declareTagReplace->setUlnCountryCodeToReplace($retrievedAnimal->getUlnCountryCode());
         $declareTagReplace->setUlnNumberToReplace($retrievedAnimal->getUlnNumber());
@@ -509,13 +409,14 @@ class IRSerializer implements IRSerializerInterface
         $tagsRepository = $this->entityManager->getRepository(Constant::TAG_REPOSITORY);
 
         //create filter to search tag
+        $tag = $contentArray['tag'];
         $tagFilter = array("ulnCountryCode" =>  $ulnCountryCodeReplacement = $tag['uln_country_code'],
           "ulnNumber" => $ulnNumberReplacement= $tag['uln_number']);
 
         //Fetch tag from database
         $fetchedTag = $tagsRepository->findOneBy($tagFilter);
 
-        //If tag was found, add it to the declare tag replac request
+        //If tag was found, add it to the declare tag replace request
         if($fetchedTag != null) {
 
             //Check if Tag status is UNASSIGNED && No animal is assigned to it
@@ -549,14 +450,16 @@ class IRSerializer implements IRSerializerInterface
         //Add retrieved animal properties including type to initial animalContentArray
         $declareLossContentArray['animal'] = $retrievedAnimal;
 
-        //denormalize the content to an object
-        $json = $this->serializeToJSON($declareLossContentArray, 'DECLARE');
+        $dateOfDeath = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::DATE_OF_DEATH, $declareLossContentArray);
+        $reasonOfLoss = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::REASON_OF_LOSS, $declareLossContentArray);
+        $ubnProcessor = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::UBN_PROCESSOR, $declareLossContentArray);
 
-        $declareLossRequest = $this->deserializeToObject($json, RequestType::DECLARE_LOSS_ENTITY);
-
+        $declareLossRequest = new DeclareLoss();
         //Add retrieved animal to DeclareLoss
         $declareLossRequest->setAnimal($retrievedAnimal);
-        $declareLossRequest->setUbnDestructor($declareLossContentArray['ubn_processor']);
+        $declareLossRequest->setDateOfDeath($dateOfDeath);
+        $declareLossRequest->setUbnDestructor($ubnProcessor);
+        $declareLossRequest->setReasonOfLoss($reasonOfLoss);
         $declareLossRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
 
         if($isEditMessage) {

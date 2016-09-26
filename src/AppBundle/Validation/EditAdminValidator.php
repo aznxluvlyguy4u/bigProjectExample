@@ -9,7 +9,7 @@ use AppBundle\Entity\Person;
 use AppBundle\Output\AccessLevelOverviewOutput;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Constant\Constant;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use \Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
@@ -27,9 +27,9 @@ class EditAdminValidator extends CreateAdminValidator
     /**
      * PasswordValidator constructor.
      * @param array $profileEditContent
-     * @param EntityManager $em
+     * @param ObjectManager $em
      */
-    public function __construct(EntityManager $em, $profileEditContent)
+    public function __construct(ObjectManager $em, $profileEditContent)
     {
         parent::__construct($em, $profileEditContent, false);
 

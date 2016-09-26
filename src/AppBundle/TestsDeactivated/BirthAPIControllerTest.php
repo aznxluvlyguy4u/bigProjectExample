@@ -14,7 +14,7 @@ use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedAnimal;
 use AppBundle\DataFixtures\ORM\MockedClient;
 use AppBundle\Tests\TestSettings;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
 use AppBundle\Entity\Client;
@@ -43,7 +43,7 @@ class BirthAPIControllerTest extends WebTestCase {
   static private $serializer;
 
   /**
-   * @var EntityManager
+   * @var ObjectManager
    */
   static private $entityManager;
 
@@ -138,7 +138,7 @@ class BirthAPIControllerTest extends WebTestCase {
 //
 //    //Get service classes
 //    self::$serializer = $container->get('app.serializer.ir');
-//    self::$entityManager = $container->get('doctrine.orm.entity_manager');
+//    self::$entityManager = $container->get('doctrine')->getManager();
 //  }
 //
 //  /**

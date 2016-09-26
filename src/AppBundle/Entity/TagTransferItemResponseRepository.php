@@ -28,7 +28,7 @@ class TagTransferItemResponseRepository extends BaseRepository {
             ->andWhere(Criteria::expr()->eq('messageNumber', $messageNumber))
             ->orderBy(['logDate' => Criteria::ASC]);
 
-        $tagsTransferItemResponse = $this->getEntityManager()->getRepository(TagTransferItemResponse::class)
+        $tagsTransferItemResponse = $this->getManager()->getRepository(TagTransferItemResponse::class)
             ->matching($criteria);
 
         return $tagsTransferItemResponse;
@@ -45,7 +45,7 @@ class TagTransferItemResponseRepository extends BaseRepository {
             ->where(Criteria::expr()->eq('relationNumberKeeper', $client->getRelationNumberKeeper()))
             ->orderBy(['logDate' => Criteria::ASC]);
 
-        $declareTagsTransfers = $this->getEntityManager()->getRepository(DeclareTagsTransfer::class)
+        $declareTagsTransfers = $this->getManager()->getRepository(DeclareTagsTransfer::class)
             ->matching($criteria);
 
 
@@ -82,7 +82,7 @@ class TagTransferItemResponseRepository extends BaseRepository {
             ->where(Criteria::expr()->eq('relationNumberKeeper', $client->getRelationNumberKeeper()))
             ->orderBy(['logDate' => Criteria::ASC]);
 
-        $declareTagsTransfers = $this->getEntityManager()->getRepository(DeclareTagsTransfer::class)
+        $declareTagsTransfers = $this->getManager()->getRepository(DeclareTagsTransfer::class)
             ->matching($criteria);
 
         $results = array();
@@ -119,7 +119,7 @@ class TagTransferItemResponseRepository extends BaseRepository {
             ->orderBy(['logDate' => Criteria::DESC])
             ->setMaxResults(1);
 
-        $tagsTransferItemResponse = $this->getEntityManager()->getRepository(TagTransferItemResponse::class)
+        $tagsTransferItemResponse = $this->getManager()->getRepository(TagTransferItemResponse::class)
             ->matching($criteria);
 
         if($tagsTransferItemResponse->isEmpty()) {

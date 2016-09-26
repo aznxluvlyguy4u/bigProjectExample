@@ -7,7 +7,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 
 /**
+ *
  * Class Measurement
+ *
+ * @ORM\Table(indexes={@ORM\Index(name="animal_id_and_date_idx", columns={"animal_id_and_date"})})
  * @ORM\Entity(repositoryClass="AppBundle\Entity\MeasurementRepository")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
@@ -53,6 +56,14 @@ abstract class Measurement {
      * @JMS\Type("DateTime")
      */
     protected $measurementDate;
+
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    protected $animalIdAndDate;
 
 
     /**
@@ -150,4 +161,23 @@ abstract class Measurement {
     {
         return $this->inspector;
     }
+
+    /**
+     * @return string
+     */
+    public function getAnimalIdAndDate()
+    {
+        return $this->animalIdAndDate;
+    }
+
+    /**
+     * @param string $animalIdAndDate
+     */
+    public function setAnimalIdAndDate($animalIdAndDate)
+    {
+        $this->animalIdAndDate = $animalIdAndDate;
+    }
+
+
+
 }

@@ -74,21 +74,21 @@ class AnimalRepository extends BaseRepository
 
     //select all animals, belonging to user with no filters
     if ($animalType == null && !array_key_exists(Constant::IS_ALIVE_NAMESPACE, $filterArray)) {
-      $animals = $this->getEntityManager()->getRepository(Constant::ANIMAL_REPOSITORY)->findBy($filterArray);
+      $animals = $this->getManager()->getRepository(Constant::ANIMAL_REPOSITORY)->findBy($filterArray);
     } else if ($animalType == null && array_key_exists(Constant::IS_ALIVE_NAMESPACE, $filterArray)) {
       //filter animals by given isAlive state:{true, false}, belonging to user
-      $animals = $this->getEntityManager()->getRepository(Constant::ANIMAL_REPOSITORY)->findBy($filterArray);
+      $animals = $this->getManager()->getRepository(Constant::ANIMAL_REPOSITORY)->findBy($filterArray);
     } else if ($animalType != null) {
       //filter animals by given animal-type:{ram, ewe, neuter}, belonging to user
       switch ($animalType) {
         case AnimalObjectType::EWE:
-          $animals = $this->getEntityManager()->getRepository(Constant::EWE_REPOSITORY)->findBy($filterArray);
+          $animals = $this->getManager()->getRepository(Constant::EWE_REPOSITORY)->findBy($filterArray);
           break;
         case AnimalObjectType::RAM:
-          $animals = $this->getEntityManager()->getRepository(Constant::RAM_REPOSITORY)->findBy($filterArray);
+          $animals = $this->getManager()->getRepository(Constant::RAM_REPOSITORY)->findBy($filterArray);
           break;
         case AnimalObjectType::NEUTER:
-          $animals = $this->getEntityManager()->getRepository(Constant::NEUTER_REPOSITORY)->findBy($filterArray);
+          $animals = $this->getManager()->getRepository(Constant::NEUTER_REPOSITORY)->findBy($filterArray);
           break;
         default:
           break;
@@ -133,7 +133,7 @@ class AnimalRepository extends BaseRepository
   public function findOfClientByAnimalTypeAndIsAlive(Client $client, $animalType = null, $isAlive = null)
   {
     $animals = null;
-    $locationRepository = $this->getEntityManager()
+    $locationRepository = $this->getManager()
         ->getRepository(Constant::LOCATION_REPOSITORY);
 
     //Get locations of user
@@ -390,7 +390,7 @@ class AnimalRepository extends BaseRepository
           ->orderBy(['id' => Criteria::ASC])
       ;
 
-      return $this->getEntityManager()->getRepository(Animal::class)
+      return $this->getManager()->getRepository(Animal::class)
                   ->matching($criteria);
     }
 
@@ -410,7 +410,7 @@ class AnimalRepository extends BaseRepository
         ->orderBy(['id' => Criteria::ASC])
     ;
 
-    return $this->getEntityManager()->getRepository(Animal::class)
+    return $this->getManager()->getRepository(Animal::class)
         ->matching($criteria);
   }
 
@@ -482,7 +482,7 @@ class AnimalRepository extends BaseRepository
   public function getAnimalPrimaryKeysByVsmId()
   {
     $sql = "SELECT id, name FROM animal";
-    $results = $this->getEntityManager()->getConnection()->query($sql)->fetchAll();
+    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
     $array = new ArrayCollection();
     foreach ($results as $result) {

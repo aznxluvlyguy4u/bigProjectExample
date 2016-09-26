@@ -41,6 +41,7 @@ class Ram extends Animal
      *
      * @ORM\OneToMany(targetEntity="Litter", mappedBy="animalFather")
      * @JMS\Type("AppBundle\Entity\Ram")
+     * @ORM\OrderBy({"litterDate" = "ASC"})
      */
     private $litters;
 

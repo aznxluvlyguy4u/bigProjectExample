@@ -11,8 +11,8 @@ class ProvinceRepository extends BaseRepository {
 
     public function findDutchProvinces()
     {
-        $nl = $this->getEntityManager()->getRepository(Constant::COUNTRY_REPOSITORY)->findBy(array('code' => "NL"));
-        return $this->getEntityManager()->getRepository(Constant::PROVINCE_REPOSITORY)->findBy(array('country' => $nl));
+        $nl = $this->getManager()->getRepository(Constant::COUNTRY_REPOSITORY)->findBy(array('code' => "NL"));
+        return $this->getManager()->getRepository(Constant::PROVINCE_REPOSITORY)->findBy(array('country' => $nl));
     }
 
 }

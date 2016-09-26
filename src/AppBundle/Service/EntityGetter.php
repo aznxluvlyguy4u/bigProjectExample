@@ -11,11 +11,11 @@ use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
-use AppBundle\Entity\DeclareMate;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TagStateType;
+use Doctrine\Common\Persistence\ObjectManager;
 use Exception;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestType;
@@ -25,7 +25,6 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\AnimalType;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Validator\Constraints\DateTime;
@@ -34,15 +33,15 @@ class EntityGetter
 {
 
     /**
-     * @var EntityManager
+     * @var ObjectManager
      */
     protected $entityManager;
 
     /**
      * EntityGetter constructor.
-     * @param EntityManager $entityManager
+     * @param ObjectManager $entityManager
      */
-    public function __construct(EntityManager $entityManager)
+    public function __construct($entityManager)
     {
         $this->entityManager = $entityManager;
     }
@@ -438,7 +437,7 @@ class EntityGetter
 
     /**
      * @param string $messageNumber
-     * @return DeclareBase|DeclareArrival|DeclareAnimalFlag|DeclareBirth|DeclareDepart|DeclareExport|DeclareImport|DeclareLoss|DeclareTagsTransfer|DeclareMate|DeclarationDetail|RevokeDeclaration
+     * @return DeclareBase|DeclareArrival|DeclareAnimalFlag|DeclareBirth|DeclareDepart|DeclareExport|DeclareImport|DeclareLoss|DeclareTagsTransfer|DeclarationDetail|RevokeDeclaration
      */
     public function getRequestMessageByMessageNumber($messageNumber)
     {

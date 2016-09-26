@@ -2,6 +2,8 @@
 
 namespace AppBundle\Tests\Controller;
 
+use AppBundle\Component\Utils;
+use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
 use AppBundle\Service\IRSerializer;
@@ -17,8 +19,6 @@ use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
  * @group arrival
  */
 class ArrivalTest extends WebTestCase {
-
-  const DECLARE_ARRIVAL_ENDPOINT = "/api/v1/arrivals";
 
   /** @var RequestClient */
   private $client;
@@ -85,20 +85,54 @@ class ArrivalTest extends WebTestCase {
   /**
    * @group get
    * @group arrival-get
+   * @group import
    * Test arrival getter endpoints
    */
   public function testArrivalsGetters()
   {
     $this->client->request('GET',
-      $this::DECLARE_ARRIVAL_ENDPOINT.'-history',
+      Endpoint::DECLARE_ARRIVAL_ENDPOINT.'-history',
       array(), array(), $this->defaultHeaders
     );
     $this->assertStatusCode(200, $this->client);
 
     $this->client->request('GET',
-        $this::DECLARE_ARRIVAL_ENDPOINT.'-errors',
+        Endpoint::DECLARE_ARRIVAL_ENDPOINT.'-errors',
         array(), array(), $this->defaultHeaders
     );
+    $this->assertStatusCode(200, $this->client);
+  }
+
+
+  /**
+   * @group post
+   * @group arrival-post
+   * Test arrival post endpoint
+   */
+  public function testArrivalPost()
+  {
+    $declareMateJson =
+        json_encode(
+            [
+                "is_import_animal" => false,
+                "ubn_previous_owner" => "123456",
+                "arrival_date" => "2016-07-31T18:25:43-05:00",
+                "animal" => [
+                              "uln_country_code" => "NL",
+                              "uln_number" => "123456789012"
+                            ]
+            ]);
+
+    $this->client->request('POST',
+        Endpoint::DECLARE_ARRIVAL_ENDPOINT,
+        array(),
+        array(),
+        $this->defaultHeaders,
+        $declareMateJson
+    );
+
+    $response = $this->client->getResponse();
+    $data = json_decode($response->getContent(), true);
     $this->assertStatusCode(200, $this->client);
   }
 

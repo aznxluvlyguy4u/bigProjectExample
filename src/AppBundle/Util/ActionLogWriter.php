@@ -8,6 +8,8 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
+use AppBundle\Entity\Employee;
+use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\RevokeDeclaration;
@@ -94,9 +96,9 @@ class ActionLogWriter
 
         $ubn = NullChecker::getUbnFromLocation($location);
         $uln = NullChecker::getUlnOrPedigreeStringFromArray(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ANIMAL, $content));
-        $ubnDestructor = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::UBN_DESTRUCTOR, $content);
+        $ubnProcessor = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::UBN_PROCESSOR, $content);
 
-        $description = 'ubn: '.$ubn.'. ubn destructor: '.$ubnDestructor.'. uln: '.$uln;
+        $description = 'ubn: '.$ubn.'. ubn processor: '.$ubnProcessor.'. uln: '.$uln;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
         DoctrineUtil::persistAndFlush($om, $log);
@@ -231,7 +233,7 @@ class ActionLogWriter
     /**
      * @param ObjectManager $om
      * @param Client $client
-     * @param Person $emailAddress
+     * @param string $emailAddress
      * @return ActionLog
      */
     public static function passwordReset(ObjectManager $om, $client, $emailAddress)
@@ -239,6 +241,23 @@ class ActionLogWriter
         $userActionType = UserActionType::USER_PASSWORD_RESET;
 
         $log = new ActionLog($client, $client, $userActionType, false, $emailAddress);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $admin
+     * @param string $emailAddress
+     * @return ActionLog
+     */
+    public static function adminPasswordReset(ObjectManager $om, $admin, $emailAddress)
+    {
+        $userActionType = UserActionType::ADMIN_PASSWORD_RESET;
+
+        $log = new ActionLog($admin, $admin, $userActionType, false, $emailAddress, false);
         DoctrineUtil::persistAndFlush($om, $log);
 
         return $log;
@@ -296,6 +315,43 @@ class ActionLogWriter
         return $log;
     }
 
+    /**
+     * @param ObjectManager $om
+     * @param Client $client
+     * @param Person $loggedInUser
+     * @param Ewe $mother
+     * @return ActionLog
+     */
+    public static function createFalseBirth(ObjectManager $om, $client, $loggedInUser, Ewe $mother)
+    {
+        $userActionType = UserActionType::FALSE_BIRTH_CREATE;
+
+        $description = 'False birth created for Ewe: '. $mother->getUlnCountryCode() . $mother->getUlnNumber();
+
+        $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+    /**
+     * @param ObjectManager $om
+     * @param Client $client
+     * @param Person $loggedInUser
+     * @param Ewe $mother
+     * @return ActionLog
+     */
+    public static function createBirth(ObjectManager $om, $client, $loggedInUser, Ewe $mother)
+    {
+        $userActionType = UserActionType::BIRTH_CREATE;
+
+        $description = 'Litter created for Ewe: '. $mother->getUlnCountryCode() . $mother->getUlnNumber();
+
+        $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
 
     /**
      * @param ObjectManager $om
@@ -361,6 +417,74 @@ class ActionLogWriter
         return $log;
     }
 
+
+    /**
+     * @param ObjectManager $om
+     * @param $admin
+     * @param $content
+     * @return ActionLog
+     */
+    public static function createAdmin(ObjectManager $om, $admin, $content)
+    {
+        return self::modifyAdmin($om, $admin, $content, UserActionType::CREATE_ADMIN);
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param $admin
+     * @param $content
+     * @return ActionLog
+     */
+    public static function editAdmin(ObjectManager $om, $admin, $content)
+    {
+        return self::modifyAdmin($om, $admin, $content, UserActionType::EDIT_ADMIN);
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $admin
+     * @param ArrayCollection $content
+     * @param String $userActionType
+     * @return ActionLog
+     */
+    private static function modifyAdmin(ObjectManager $om, $admin, $content, $userActionType)
+    {
+        $firstName = Utils::getNullCheckedArrayCollectionValue('first_name', $content);
+        $lastName = Utils::getNullCheckedArrayCollectionValue('last_name', $content);
+        $emailAddress = Utils::getNullCheckedArrayCollectionValue('email_address', $content);
+        $accessLevel = Utils::getNullCheckedArrayCollectionValue('access_level', $content);
+
+        $message = $accessLevel.'| '.$emailAddress.' : '.$firstName.' '.$lastName;
+
+        $log = new ActionLog($admin, $admin, $userActionType, false, $message, false);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
+     * @param Employee $admin
+     * @param Employee $adminToDeactivate
+     * @return ActionLog
+     */
+    public static function deactivateAdmin(ObjectManager $om, $admin, $adminToDeactivate)
+    {
+        $userActionType = UserActionType::DEACTIVATE_ADMIN;
+        if($adminToDeactivate instanceof Employee) {
+            $message = $adminToDeactivate->getEmailAddress().' | '.$adminToDeactivate->getFullName();
+        } else {
+            $message = 'No admin to deactivate found';   
+        }
+
+        $log = new ActionLog($admin, $admin, $userActionType, false, $message, false);
+        DoctrineUtil::persistAndFlush($om, $log);
+
+        return $log;
+    }
 
 
     /**

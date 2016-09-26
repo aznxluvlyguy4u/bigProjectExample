@@ -341,7 +341,7 @@ class Location
    */
   public function setUbn($ubn)
   {
-    $this->ubn = $ubn;
+    $this->ubn = trim($ubn);
 
     return $this;
   }

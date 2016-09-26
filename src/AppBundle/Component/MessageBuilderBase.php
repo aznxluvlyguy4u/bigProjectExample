@@ -26,7 +26,7 @@ use AppBundle\Enumerator\ActionType;
 use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\EntityGetter;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Person;
@@ -38,7 +38,7 @@ use AppBundle\Entity\Person;
 class MessageBuilderBase
 {
 
-    /** @var EntityManager */
+    /** @var ObjectManager */
     protected $em;
 
     /** @var EntityGetter */
@@ -50,10 +50,10 @@ class MessageBuilderBase
 
     /**
      * MessageBuilderBase constructor.
-     * @param EntityManager $em
+     * @param ObjectManager $em
      * @param string $currentEnvironment
      */
-    public function __construct(EntityManager $em, $currentEnvironment = null)
+    public function __construct(ObjectManager $em, $currentEnvironment = null)
     {
         $this->em = $em;
         $this->entityGetter = new EntityGetter($em);

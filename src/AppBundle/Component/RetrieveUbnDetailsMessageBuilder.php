@@ -5,7 +5,7 @@ namespace AppBundle\Component;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Enumerator\AnimalType;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use AppBundle\Entity\Person;
 
 class RetrieveUbnDetailsMessageBuilder extends MessageBuilderBase
@@ -16,7 +16,7 @@ class RetrieveUbnDetailsMessageBuilder extends MessageBuilderBase
    */
   private $person;
 
-  public function __construct(EntityManager $em, $currentEnvironment)
+  public function __construct(ObjectManager $em, $currentEnvironment)
   {
     parent::__construct($em, $currentEnvironment);
   }

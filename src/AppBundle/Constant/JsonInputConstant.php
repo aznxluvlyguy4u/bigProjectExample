@@ -5,6 +5,8 @@ namespace AppBundle\Constant;
 
 class JsonInputConstant
 {
+    const ID = 'id';
+
     //Admins
     const ADMINS = 'admins';
     const ACCESS_LEVEL = 'access_level';
@@ -95,7 +97,9 @@ class JsonInputConstant
     const CODES = 'codes';
 
     //Loss
-    const UBN_DESTRUCTOR = "ubn_destructor";
+    const UBN_PROCESSOR = "ubn_processor";
+    const DATE_OF_DEATH = "date_of_death";
+    const REASON_OF_LOSS = "reason_of_loss";
 
     //Location / UBN
     const UBN = 'ubn';
@@ -115,13 +119,26 @@ class JsonInputConstant
     //Persons
     const PERSON_ID = 'person_id';
 
-    //Weight measurements
+    //Measurements
     const DATE_OF_MEASUREMENT = 'date_of_measurement';
+    const MEASUREMENT_DATE = 'measurement_date';
+    const IS_EMPTY_MEASUREMENT = 'is_empty_measurement';
+    const MEASUREMENT_ROW = 'measurement_row';
+    const INSPECTOR_ID = 'inspector_id';
+
+    //Weight measurements
     const WEIGHT_MEASUREMENTS = 'weight_measurements';
     const WEIGHT = 'weight';
     const IS_BIRTH_WEIGHT = 'is_birth_weight';
-    const MEASUREMENT_DATE = 'measurement_date';
 
+    //BodyFat measurements
+    const FAT1 = 'fat1';
+    const FAT2 = 'fat2';
+    const FAT3 = 'fat3';
 
+    //ExteriorMeasurements
+    const HEIGHT = 'height';
+    const KIND = 'kind';
+    const PROGRESS = 'progress';
 
 }

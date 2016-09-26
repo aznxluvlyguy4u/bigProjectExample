@@ -69,6 +69,8 @@ class GenderChanger
             $this->manager->persist($genderHistoryItem);
             $this->manager->remove($animal);
             $this->manager->flush();
+            
+            return $ewe;
 
         } else {
             return null;
@@ -100,6 +102,8 @@ class GenderChanger
             $this->manager->persist($genderHistoryItem);
             $this->manager->remove($animal);
             $this->manager->flush();
+            
+            return $ram;
 
         } else {
             return null;

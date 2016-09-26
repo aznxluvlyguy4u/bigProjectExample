@@ -8,7 +8,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedAnimal;
 use AppBundle\DataFixtures\ORM\MockedClient;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Proxies\__CG__\AppBundle\Entity\Location;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
@@ -32,7 +32,7 @@ class DeclareExportAPIControllerTest extends  WebTestCase {
   static private $serializer;
 
   /**
-   * @var EntityManager
+   * @var ObjectManager
    */
   static private $entityManager;
 
@@ -107,7 +107,7 @@ class DeclareExportAPIControllerTest extends  WebTestCase {
 //
 //    //Get service classes
 //    self::$serializer = $container->get('app.serializer.ir');
-//    self::$entityManager = $container->get('doctrine.orm.entity_manager');
+//    self::$entityManager = $container->get('doctrine')->getManager();
 //  }
 //
 //  /**

@@ -5,7 +5,7 @@ namespace AppBundle\Tests\Controller;
 use AppBundle\Service\IRSerializer;
 use AppBundle\DataFixtures\ORM\MockedCountries;
 use AppBundle\DataFixtures\ORM\MockedClient;
-use Doctrine\ORM\EntityManager;
+use Doctrine\Common\Persistence\ObjectManager;
 use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
 use AppBundle\Entity\Country;
@@ -27,7 +27,7 @@ class CountryAPIControllerTest extends WebTestCase {
   private $client;
 
   /**
-   * @var EntityManager
+   * @var ObjectManager
    */
   static private $entityManager;
 
@@ -87,7 +87,7 @@ class CountryAPIControllerTest extends WebTestCase {
 //    $container = $kernel->getContainer();
 //
 //    //Get service classes
-//    self::$entityManager = $container->get('doctrine.orm.entity_manager');
+//    self::$entityManager = $container->get('doctrine')->getManager();
 //  }
 //
 //  /**

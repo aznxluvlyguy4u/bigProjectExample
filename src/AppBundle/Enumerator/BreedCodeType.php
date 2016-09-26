@@ -13,4 +13,5 @@ class BreedCodeType
   const BM = "BM";
   const GP = "GP";
   const OV = "OV";
+  const NN = "NN";
 }

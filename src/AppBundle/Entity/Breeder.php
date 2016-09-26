@@ -64,7 +64,7 @@ class Breeder {
      */
     public function setBreederNumber($breederNumber)
     {
-        $this->breederNumber = $breederNumber;
+        $this->breederNumber = trim($breederNumber);
 
         return $this;
     }
