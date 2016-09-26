@@ -4,9 +4,13 @@ namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Employee;
+use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Neuter;
+use AppBundle\Entity\Ram;
 use AppBundle\FormInput\AnimalDetails;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
+use AppBundle\Util\GenderChanger;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -336,19 +340,44 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       return new JsonResponse(array('code'=>404, "message" => "For this account, no animal was found with uln: " . $ulnString), 404);
     }
 
+    $em = $this->getDoctrine()->getManager();
     $content = $this->getContentAsArray($request);
+    $gender = $content->get('gender');
 
-    //TODO for this phase editing AnimalDetails is deactivated
-    //TODO keep history of changes
+    if($gender) {
+        if(($animal instanceof Ram) && $gender == 'FEMALE'){
+            $genderChanger = new GenderChanger($em);
+            $genderChanger->makeFemale($animal);
+        }
 
+        if(($animal instanceof Neuter) && $gender == 'FEMALE'){
+            $genderChanger = new GenderChanger($em);
+            $genderChanger->makeFemale($animal);
+        }
+
+        if(($animal instanceof Ewe) && $gender == 'MALE'){
+            $genderChanger = new GenderChanger($em);
+            $genderChanger->makeMale($animal);
+        }
+
+        if(($animal instanceof Neuter) && $gender == 'MALE'){
+            $genderChanger = new GenderChanger($em);
+            $genderChanger->makeMale($animal);
+        }
+    }
+
+
+
+//TODO for this phase editing AnimalDetails is deactivated
+      //TODO keep history of changes
     //Persist updated changes and return the updated values
-    $animal = AnimalDetails::update($animal, $content);
-    $this->getDoctrine()->getManager()->persist($animal);
-    $this->getDoctrine()->getManager()->flush();
+//    $animal = AnimalDetails::update($animal, $content);
+      $this->getDoctrine()->getManager()->persist($animal);
+      $this->getDoctrine()->getManager()->flush();
 
-    $outputArray = AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $animal);
+//      $outputArray = AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $animal);
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
   }
   
 }
