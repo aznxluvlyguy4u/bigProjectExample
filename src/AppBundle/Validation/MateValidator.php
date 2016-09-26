@@ -10,6 +10,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Mate;
@@ -241,28 +242,45 @@ class MateValidator extends DeclareNsfoBaseValidator
         $isOwnedByClient = Validator::isAnimalOfClient($foundAnimal, $this->client);
         if($isOwnedByClient) {
 
-            /** @var Mate $mate */
-            foreach($foundAnimal->getMatings() as $mate) {
+            /** @var DeclareBirth $birth */
+            foreach($foundAnimal->getBirths() as $birth) {
                 $startDate = new \DateTime($content['start_date']);
                 $startDate = $startDate->setTime(0,0,0);
 
-                $endDate = new \DateTime($content['end_date']);
-                $endDate = $endDate->setTime(0,0,0);
+                $birthDate = $birth->getDateOfBirth();
+                $interval = $startDate->diff($birthDate);
 
-                $mateStartDate = $mate->getStartDate();
-                $mateStartDate = $mateStartDate->setTime(0,0,0);
-
-                $mateEndDate = $mate->getEndDate();
-                $mateEndDate = $mateEndDate->setTime(0,0,0);
-
-                if($startDate >= $mateStartDate && $startDate <= $mateEndDate) {
-                    $this->errors[] = self::START_DATE_IS_IN_A_MATING_PERIOD;
+                if($interval->days < 42) {
+                    $this->errors[] = "THE LAST BIRTH AND THE CURRENT MATE PERIOD ARE LESS THAN 6 WEEKS";
                     return false;
                 }
 
-                if($endDate >= $mateStartDate && $endDate <= $mateEndDate) {
-                    $this->errors[] = self::END_DATE_IS_IN_A_MATING_PERIOD;
-                    return false;
+            }
+
+            /** @var Mate $mate */
+            foreach($foundAnimal->getMatings() as $mate) {
+                if($mate->getRequestState() != "REVOKED") {
+                    $startDate = new \DateTime($content['start_date']);
+                    $startDate = $startDate->setTime(0,0,0);
+
+                    $endDate = new \DateTime($content['end_date']);
+                    $endDate = $endDate->setTime(0,0,0);
+
+                    $mateStartDate = $mate->getStartDate();
+                    $mateStartDate = $mateStartDate->setTime(0,0,0);
+
+                    $mateEndDate = $mate->getEndDate();
+                    $mateEndDate = $mateEndDate->setTime(0,0,0);
+
+                    if($startDate >= $mateStartDate && $startDate <= $mateEndDate) {
+                        $this->errors[] = self::START_DATE_IS_IN_A_MATING_PERIOD;
+                        return false;
+                    }
+
+                    if($endDate >= $mateStartDate && $endDate <= $mateEndDate) {
+                        $this->errors[] = self::END_DATE_IS_IN_A_MATING_PERIOD;
+                        return false;
+                    }
                 }
             }
 
