@@ -450,14 +450,16 @@ class IRSerializer implements IRSerializerInterface
         //Add retrieved animal properties including type to initial animalContentArray
         $declareLossContentArray['animal'] = $retrievedAnimal;
 
-        //denormalize the content to an object
-        $json = $this->serializeToJSON($declareLossContentArray, 'DECLARE');
+        $dateOfDeath = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::DATE_OF_DEATH, $declareLossContentArray);
+        $reasonOfLoss = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::REASON_OF_LOSS, $declareLossContentArray);
+        $ubnProcessor = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::UBN_PROCESSOR, $declareLossContentArray);
 
-        $declareLossRequest = $this->deserializeToObject($json, RequestType::DECLARE_LOSS_ENTITY);
-
+        $declareLossRequest = new DeclareLoss();
         //Add retrieved animal to DeclareLoss
         $declareLossRequest->setAnimal($retrievedAnimal);
-        $declareLossRequest->setUbnDestructor($declareLossContentArray['ubn_processor']);
+        $declareLossRequest->setDateOfDeath($dateOfDeath);
+        $declareLossRequest->setUbnDestructor($ubnProcessor);
+        $declareLossRequest->setReasonOfLoss($reasonOfLoss);
         $declareLossRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
 
         if($isEditMessage) {
