@@ -5,7 +5,6 @@ namespace AppBundle\Util;
 
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
-use AppBundle\Entity\PedigreeRegister;
 use Doctrine\Common\Persistence\ObjectManager;
 
 class InbreedingCoefficientOffspring
@@ -35,7 +34,7 @@ class InbreedingCoefficientOffspring
     private $closedLoopPaths;
 
     /** @var array */
-    private $commonAncestors;
+    private $commonAncestorsInbreedingCoefficient;
 
     /** @var float */
     private $inbreedingCoefficient;
@@ -65,12 +64,12 @@ class InbreedingCoefficientOffspring
         $this->motherId = $motherId;
 
         $this->closedLoopPaths = array();
-        $this->commonAncestors = array();
+        $this->commonAncestorsInbreedingCoefficient = array();
         $this->childrenSearchArray = array();
         $this->parentSearchArray = $parentSearchArray;
         $this->originalChildrenSearchArray = $originalChildrenSearchArray;
 
-        $this->inbreedingCoefficient = $this->run();
+        $this->run();
     }
 
 
@@ -110,15 +109,14 @@ class InbreedingCoefficientOffspring
 
     private function calculateInbreedingCoefficient()
     {
-        $inbreedingCoefficient = 0;
-        if(count($this->closedLoopPaths) == 0) {
-            $this->inbreedingCoefficient = $inbreedingCoefficient;
-
-        } else {
-            $inbreedingCoefficientCommonAncestor = 0; //TODO
-            foreach ($this->closedLoopPaths as $closedLoopPath) {
+        $this->inbreedingCoefficient = 0;
+        if(count($this->closedLoopPaths) > 0) {
+            $commonAncestorsAnimalId = array_keys($this->commonAncestorsInbreedingCoefficient);
+            foreach ($commonAncestorsAnimalId as $commonAncestorAnimalId) {
+                $closedLoopPath = $this->closedLoopPaths[$commonAncestorAnimalId];
+                $inbreedingCoefficientCommonAncestor = $this->commonAncestorsInbreedingCoefficient[$commonAncestorAnimalId];
                 $animalsInLoop = count($closedLoopPath);
-                $inbreedingCoefficient += pow(0.5,$animalsInLoop)*(1+$inbreedingCoefficientCommonAncestor);
+                $this->inbreedingCoefficient += pow(0.5,$animalsInLoop)*(1+$inbreedingCoefficientCommonAncestor);
             }
         }
     }
@@ -265,21 +263,21 @@ class InbreedingCoefficientOffspring
                 $this->getClosedLoopPathsOfAnimal($animalId);
                 //Calculate the inbreeding coefficients of all common ancestors
                 $commonAncestorInbreedingCoefficientResult = new InbreedingCoefficient($this->em, $animalId, $this->parentSearchArray, $this->childrenSearchArray);
-                $this->commonAncestors[$animalId] = $commonAncestorInbreedingCoefficientResult->getValue();
+                $this->commonAncestorsInbreedingCoefficient[$animalId] = $commonAncestorInbreedingCoefficientResult->getValue();
             }
         }
     }
 
 
     /**
-     * @param $animalId
+     * @param $possibleCommonAncestorAnimalId
      */
-    private function getClosedLoopPathsOfAnimal($animalId)
+    private function getClosedLoopPathsOfAnimal($possibleCommonAncestorAnimalId)
     {
         ///Reset paths variable used for the calculation
         $this->paths = array();
 
-        $this->traversChildrenOfCommonAncestor($animalId);
+        $this->traversChildrenOfCommonAncestor($possibleCommonAncestorAnimalId);
 
         $pathCenters = array();
         foreach ($this->paths as $path) {
@@ -299,11 +297,11 @@ class InbreedingCoefficientOffspring
 
                     if($isArraysUnique) {
                         $reveredHalf = array_reverse($pathCenters[$i]);
-                        $reveredHalf[] = $animalId;
+                        $reveredHalf[] = $possibleCommonAncestorAnimalId;
                         $closedPath = array_merge($reveredHalf,$pathCenters[$j]);
 
-                        $this->initializeClosedLoopPathsArrayKey($animalId);
-                        $this->closedLoopPaths[$animalId][] = $closedPath;
+                        $this->initializeClosedLoopPathsArrayKey($possibleCommonAncestorAnimalId);
+                        $this->closedLoopPaths[$possibleCommonAncestorAnimalId][] = $closedPath;
                     }
                 }
             }

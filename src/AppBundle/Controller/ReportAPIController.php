@@ -142,8 +142,6 @@ class ReportAPIController extends APIController {
             'margin-bottom' => 4,
             'margin-left'   => 8,
         ));
-
-    dump($reportData);die;
     
     $s3Service = $this->getStorageService();
     $url = $s3Service->uploadPdf($pdfOutput, $reportResults->getS3Key());
