@@ -70,7 +70,7 @@ class InbreedingCoefficientOffspring
         $this->parentSearchArray = $parentSearchArray;
         $this->originalChildrenSearchArray = $originalChildrenSearchArray;
 
-        $this->inbreedingCoefficient = $this->calculateInbreedingCoefficient();
+        $this->inbreedingCoefficient = $this->run();
     }
 
 
@@ -86,7 +86,7 @@ class InbreedingCoefficientOffspring
     /**
      * @return float
      */
-    private function calculateInbreedingCoefficient()
+    private function run()
     {
         if($this->fatherId == null || $this->motherId == null) {
             return self::NO_INBREEDING;
@@ -104,8 +104,23 @@ class InbreedingCoefficientOffspring
         $this->getClosedLoopPaths();
 
         // 5. Calculate inbreeding coefficient
+        $this->calculateInbreedingCoefficient();
+    }
 
-        return 777.55;
+
+    private function calculateInbreedingCoefficient()
+    {
+        $inbreedingCoefficient = 0;
+        if(count($this->closedLoopPaths) == 0) {
+            $this->inbreedingCoefficient = $inbreedingCoefficient;
+
+        } else {
+            $inbreedingCoefficientCommonAncestor = 0; //TODO
+            foreach ($this->closedLoopPaths as $closedLoopPath) {
+                $animalsInLoop = count($closedLoopPath);
+                $inbreedingCoefficient += pow(0.5,$animalsInLoop)*(1+$inbreedingCoefficientCommonAncestor);
+            }
+        }
     }
 
 

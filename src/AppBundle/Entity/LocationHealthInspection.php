@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Component\Utils;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Location;
@@ -22,8 +23,17 @@ class LocationHealthInspection
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
+     * @JMS\Exclude
      */
     protected $id;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $inspectionId;
 
     /**
      * @var Location
@@ -55,7 +65,7 @@ class LocationHealthInspection
     /**
      * @var integer
      *
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="integer", nullable=true)
      * @JMS\Type("integer")
      */
     private $totalLeadTime;
@@ -71,10 +81,26 @@ class LocationHealthInspection
     /**
      * @var Employee
      *
-     * @ORM\ManyToOne(targetEntity="Employee", inversedBy="healthInspections", cascade={"persist"})
+     * @ORM\ManyToOne(targetEntity="Employee", inversedBy="healthInspections")
      * @JMS\Type("AppBundle\Entity\Employee")
      */
     private $authorizedBy;
+
+    /**
+     * @var Employee
+     *
+     * @ORM\ManyToOne(targetEntity="Employee")
+     * @JMS\Type("AppBundle\Entity\Employee")
+     */
+    private $actionTakenBy;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $nextAction;
 
     /**
      * @var string
@@ -90,6 +116,7 @@ class LocationHealthInspection
      */
     public function __construct()
     {
+        $this->setInspectionId(Utils::generateTokenCode());
     }
 
     /**
@@ -98,6 +125,22 @@ class LocationHealthInspection
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getInspectionId()
+    {
+        return $this->inspectionId;
+    }
+
+    /**
+     * @param string $inspectionId
+     */
+    public function setInspectionId($inspectionId)
+    {
+        $this->inspectionId = $inspectionId;
     }
 
     /**
@@ -194,6 +237,38 @@ class LocationHealthInspection
     public function setAuthorizedBy($authorizedBy)
     {
         $this->authorizedBy = $authorizedBy;
+    }
+
+    /**
+     * @return Employee
+     */
+    public function getActionTakenBy()
+    {
+        return $this->actionTakenBy;
+    }
+
+    /**
+     * @param Employee $actionTakenBy
+     */
+    public function setActionTakenBy($actionTakenBy)
+    {
+        $this->actionTakenBy = $actionTakenBy;
+    }
+
+    /**
+     * @return string
+     */
+    public function getNextAction()
+    {
+        return $this->nextAction;
+    }
+
+    /**
+     * @param string $nextAction
+     */
+    public function setNextAction($nextAction)
+    {
+        $this->nextAction = $nextAction;
     }
 
     /**
