@@ -5,6 +5,7 @@ namespace AppBundle\Util;
 
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\PedigreeRegister;
 use Doctrine\Common\Persistence\ObjectManager;
 
 class InbreedingCoefficientOffspring
@@ -13,6 +14,7 @@ class InbreedingCoefficientOffspring
     const GENERATION_OF_ASCENDANTS = 3;
     const GENERATION_DIRECT_PARENTS = 1;
     const NO_INBREEDING = 0;
+    const SEPARATOR = ';';
 
     /** @var ObjectManager */
     private $em;
@@ -40,6 +42,13 @@ class InbreedingCoefficientOffspring
 
     /** @var int */
     private $motherId;
+
+    /** @var array */
+    private $path;
+
+    //FIXME delete if not used
+    /** @var array */
+    private $paths;
 
     /**
      * InbreedingCoefficientOffspring constructor.
@@ -89,7 +98,7 @@ class InbreedingCoefficientOffspring
         // 2. Traverse parents and create search arrays
         $this->addParents($this->fatherId, self::GENERATION_DIRECT_PARENTS);
         $this->addParents($this->motherId, self::GENERATION_DIRECT_PARENTS);
-dump($this->childrenSearchArray, $this->parentSearchArray);die;
+//dump($this->childrenSearchArray, $this->parentSearchArray);die;
         // 3. Find closed loop paths and
         // 4. Recursively calculate the inbreeding coefficients of the common ancestors
         $this->getClosedLoopPaths();
@@ -177,20 +186,32 @@ dump($this->childrenSearchArray, $this->parentSearchArray);die;
     }
 
 
+    /**
+     * @param int $animalId
+     */
+    private function initializeClosedLoopPathsArrayKey($animalId)
+    {
+        if(!array_key_exists($animalId, $this->closedLoopPaths)) {
+            $this->closedLoopPaths[$animalId] = array();
+        }
+    }
+
+
     private function getClosedLoopPaths()
     {
         $animalIds = array_keys($this->childrenSearchArray);
 
         foreach ($animalIds as $animalId)
         {
-            $childrenArray = $this->childrenSearchArray[$animalId];
-            if(count($childrenArray) > 1) {
+//            $childrenArray = $this->childrenSearchArray[$animalId];
+            if(count($this->childrenSearchArray[$animalId]) > 1) {
                 $this->getClosedLoopPathsOfAnimal($animalId);
-                //Calculate the inbreeding coefficients of all common ancestors
-                $commonAncestorInbreedingCoefficientResult = new InbreedingCoefficient($this->em, $animalId, $this->parentSearchArray, $this->childrenSearchArray);
-                $this->commonAncestors[$animalId] = $commonAncestorInbreedingCoefficientResult->getValue();
+//                //Calculate the inbreeding coefficients of all common ancestors
+//                $commonAncestorInbreedingCoefficientResult = new InbreedingCoefficient($this->em, $animalId, $this->parentSearchArray, $this->childrenSearchArray);
+//                $this->commonAncestors[$animalId] = $commonAncestorInbreedingCoefficientResult->getValue();
             }
         }
+        dump($this->closedLoopPaths);die;
     }
 
 
@@ -199,9 +220,74 @@ dump($this->childrenSearchArray, $this->parentSearchArray);die;
      */
     private function getClosedLoopPathsOfAnimal($animalId)
     {
-        //traverse all possible paths
-        //TODO
-        //If child is in both left and right branches -> add to closed loop path
+        ///Reset paths variable used for the calculation
+        $this->paths = array();
+
+        $this->traversChildrenOfCommonAncestor($animalId);
+
+        $pathCenters = array();
+        foreach ($this->paths as $path) {
+            $pathParts = explode(self::SEPARATOR, $path);
+            array_shift($pathParts);
+            array_pop($pathParts);
+            $pathCenters[] = $pathParts;
+        }
+
+        $pathsCount = count($pathCenters);
+
+        for($i = 0; $i < $pathsCount; $i++) {
+            for($j = $i+1; $j < $pathsCount; $j++) {
+
+                if($i != $j) { //Just an extra check to be sure
+                    $isArraysUnique = Validator::areArrayContentsUnique($pathCenters[$i], $pathCenters[$j]);
+
+                    if($isArraysUnique) {
+                        $reveredHalf = array_reverse($pathCenters[$i]);
+                        $reveredHalf[] = $animalId;
+                        $closedPath = array_merge($reveredHalf,$pathCenters[$j]);
+
+                        $this->initializeClosedLoopPathsArrayKey($animalId);
+                        $this->closedLoopPaths[$animalId][] = $closedPath;
+                    }
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Travers all child branches and save the complete branches or dead ends in the paths class variable.
+     *
+     * @param int $animalId
+     * @param string $path
+     */
+    private function traversChildrenOfCommonAncestor($animalId, $path = null)
+    {
+        if($animalId == self::CHILD_ID) {
+            //The end of the path has been reached, so register the path
+            $this->paths[] = $path;
+
+        } else {
+
+            $childrenArray = $this->childrenSearchArray[$animalId];
+            if(count($childrenArray) == 0) {
+                //The end of the path has been reached, but it did not end in the childId
+                //So ignore this path
+
+            } else {
+
+                foreach ($childrenArray as $childId)
+                {
+                    if($path == null) {
+                        $newPath = $animalId.self::SEPARATOR.$childId;
+                    } else {
+                        $newPath = $path.self::SEPARATOR.$childId;
+                    }
+                    $this->traversChildrenOfCommonAncestor($childId, $newPath);
+                }
+
+            }
+        }
     }
 }
 

@@ -458,4 +458,31 @@ class Validator
 
         return $isLocalHost && $isTestDatabaseName && $isNotProductionDatabaseName;
     }
+
+
+    /**
+     * @param array $array1
+     * @param array $array2
+     * @return bool
+     */
+    public static function areArrayContentsUnique($array1, $array2)
+    {
+        if(empty($array1) && empty($array2)) {
+            return false;
+
+        } elseif(empty($array1) || empty($array2)) {
+            return true;
+            
+        } else {
+            $isUnique = true;
+            foreach ($array1 as $item) {
+                if(in_array($item, $array2))
+                {
+                    $isUnique = false;
+                    break;
+                }
+            }
+            return $isUnique;
+        }
+    }
 }
