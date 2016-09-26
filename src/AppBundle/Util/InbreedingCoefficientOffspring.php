@@ -29,6 +29,9 @@ class InbreedingCoefficientOffspring
     private $childrenSearchArray;
 
     /** @var array */
+    private $originalChildrenSearchArray;
+
+    /** @var array */
     private $closedLoopPaths;
 
     /** @var array */
@@ -44,10 +47,6 @@ class InbreedingCoefficientOffspring
     private $motherId;
 
     /** @var array */
-    private $path;
-
-    //FIXME delete if not used
-    /** @var array */
     private $paths;
 
     /**
@@ -56,9 +55,9 @@ class InbreedingCoefficientOffspring
      * @param int $fatherId
      * @param int $motherId
      * @param array $parentSearchArray
-     * @param array $childrenSearchArray
+     * @param array $originalChildrenSearchArray
      */
-    public function __construct(ObjectManager $em, $fatherId, $motherId, $parentSearchArray = array(), $childrenSearchArray = array())
+    public function __construct(ObjectManager $em, $fatherId, $motherId, $parentSearchArray = array(), $originalChildrenSearchArray = array())
     {
         $this->em = $em;
         $this->animalRepository = $em->getRepository(Animal::class);
@@ -67,8 +66,9 @@ class InbreedingCoefficientOffspring
 
         $this->closedLoopPaths = array();
         $this->commonAncestors = array();
+        $this->childrenSearchArray = array();
         $this->parentSearchArray = $parentSearchArray;
-        $this->childrenSearchArray = $childrenSearchArray;
+        $this->originalChildrenSearchArray = $originalChildrenSearchArray;
 
         $this->inbreedingCoefficient = $this->calculateInbreedingCoefficient();
     }
@@ -98,7 +98,7 @@ class InbreedingCoefficientOffspring
         // 2. Traverse parents and create search arrays
         $this->addParents($this->fatherId, self::GENERATION_DIRECT_PARENTS);
         $this->addParents($this->motherId, self::GENERATION_DIRECT_PARENTS);
-//dump($this->childrenSearchArray, $this->parentSearchArray);die;
+
         // 3. Find closed loop paths and
         // 4. Recursively calculate the inbreeding coefficients of the common ancestors
         $this->getClosedLoopPaths();
@@ -130,19 +130,64 @@ class InbreedingCoefficientOffspring
      */
     private function addParents($animalId = null, $generation)
     {
-        if($generation < self::GENERATION_OF_ASCENDANTS && $animalId != null) {
+        // Check if inside recursive loop or not
+        if(empty($this->originalChildrenSearchArray)) {
 
-            $motherId = $this->animalRepository->getMotherId($animalId);
-            $fatherId = $this->animalRepository->getFatherId($animalId);
+            if($generation < self::GENERATION_OF_ASCENDANTS && $animalId != null) {
 
-            $this->addToSearchArrays($animalId, $motherId);
-            $this->addToSearchArrays($animalId, $fatherId);
+                $motherId = $this->animalRepository->getMotherId($animalId);
+                $fatherId = $this->animalRepository->getFatherId($animalId);
 
-            $generation++;
+                $this->addToChildrenSearchArrays($animalId, $motherId);
+                $this->addToChildrenSearchArrays($animalId, $fatherId);
+                $this->addToParentsSearchArrays($animalId, $motherId);
+                $this->addToParentsSearchArrays($animalId, $fatherId);
 
-            //Recursive loop for both parents AFTER increasing the generationCount
-            $this->addParents($motherId, $generation);
-            $this->addParents($fatherId, $generation);
+                $generation++;
+
+                //Recursive loop for both parents AFTER increasing the generationCount
+                $this->addParents($motherId, $generation);
+                $this->addParents($fatherId, $generation);
+            }
+
+        } else {
+
+            if($generation < self::GENERATION_OF_ASCENDANTS && $animalId != null) {
+
+                $motherId = $this->animalRepository->getMotherId($animalId);
+                $fatherId = $this->animalRepository->getFatherId($animalId);
+
+                if(array_key_exists($fatherId, $this->originalChildrenSearchArray)){
+                    $this->addToChildrenSearchArrays($animalId, $fatherId);
+                }
+
+                if(array_key_exists($motherId, $this->originalChildrenSearchArray)){
+                    $this->addToChildrenSearchArrays($animalId, $motherId);
+                }
+
+                $generation++;
+
+                //Recursive loop for both parents AFTER increasing the generationCount
+                $this->addParents($motherId, $generation);
+                $this->addParents($fatherId, $generation);
+            }
+
+        }
+
+
+    }
+
+
+    /**
+     * @param int $childId
+     * @param int $parentId
+     */
+    private function addToChildrenSearchArrays($childId, $parentId)
+    {
+        //Set parent and children
+        if($parentId != null) {
+            $this->initializeChildrenSearchArrayKey($parentId);
+            $this->childrenSearchArray[$parentId][$childId] = $childId;
         }
     }
 
@@ -151,14 +196,12 @@ class InbreedingCoefficientOffspring
      * @param int $childId
      * @param int $parentId
      */
-    private function addToSearchArrays($childId, $parentId)
+    private function addToParentsSearchArrays($childId, $parentId)
     {
         //Set parent and children
         if($parentId != null) {
             $this->initializeParentSearchArrayKey($childId);
             $this->parentSearchArray[$childId][$parentId] = $parentId;
-            $this->initializeChildrenSearchArrayKey($parentId);
-            $this->childrenSearchArray[$parentId][$childId] = $childId;
         }
     }
 
@@ -203,15 +246,13 @@ class InbreedingCoefficientOffspring
 
         foreach ($animalIds as $animalId)
         {
-//            $childrenArray = $this->childrenSearchArray[$animalId];
             if(count($this->childrenSearchArray[$animalId]) > 1) {
                 $this->getClosedLoopPathsOfAnimal($animalId);
-//                //Calculate the inbreeding coefficients of all common ancestors
-//                $commonAncestorInbreedingCoefficientResult = new InbreedingCoefficient($this->em, $animalId, $this->parentSearchArray, $this->childrenSearchArray);
-//                $this->commonAncestors[$animalId] = $commonAncestorInbreedingCoefficientResult->getValue();
+                //Calculate the inbreeding coefficients of all common ancestors
+                $commonAncestorInbreedingCoefficientResult = new InbreedingCoefficient($this->em, $animalId, $this->parentSearchArray, $this->childrenSearchArray);
+                $this->commonAncestors[$animalId] = $commonAncestorInbreedingCoefficientResult->getValue();
             }
         }
-        dump($this->closedLoopPaths);die;
     }
 
 
