@@ -25,4 +25,8 @@ class UserActionType extends RequestType
     const DECLARE_WEIGHT_EDIT = 'DECLARE_WEIGHT_EDIT';
 
     const NON_IR_REVOKE = 'NON_IR_REVOKE';
+    
+    const CREATE_ADMIN = 'CREATE_ADMIN';
+    const EDIT_ADMIN = 'EDIT_ADMIN';
+    const DEACTIVATE_ADMIN = 'DEACTIVATE_ADMIN';
 }

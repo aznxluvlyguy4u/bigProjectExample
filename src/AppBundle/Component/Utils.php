@@ -150,6 +150,32 @@ class Utils
         return true;
     }
 
+
+    /**
+     * Verify whether all values in an array are unique.
+     *
+     * @param array $array
+     * @return bool
+     */
+    public static function getPermutationProduct($array)
+    {
+        $arrayByIntKeys = array();
+        foreach ($array as $item) {
+            $arrayByIntKeys[] = $item;
+        }
+
+        $value = 0;
+        $maxLength = sizeof($array);
+        for($i = 0; $i < $maxLength; $i++) {
+
+            for($j = $i+1; $j < $maxLength; $j++) {
+                $value += $arrayByIntKeys[$i] * $arrayByIntKeys[$j];
+            }
+        }
+        return $value;
+    }
+    
+
     /**
      * @param Collection $responses
      * @return mixed|null
@@ -440,7 +466,7 @@ class Utils
      */
     public static function fillZero($value, $replacementText = "-")
     {
-        if($value === 0 || $value === 0.0 || $value === null) {
+        if($value === 0 || $value === 0.0 || $value === '' || $value === ' '|| $value === null) {
             return $replacementText;
         } else {
             return $value;
@@ -525,34 +551,25 @@ class Utils
 
     /**
      * @param $string
-     * @param int $totalLength
+     * @param int $totalInnerLength
      * @param int $marginSize
      * @param string $filler
      * @return string
      */
-    public static function addPaddingToStringForColumnFormatCenter($string, $totalLength, $marginSize = 2, $filler = " ")
+    public static function addPaddingToStringForColumnFormatCenter($string, $totalInnerLength, $marginSize = 2, $filler = " ")
     {
-        if($marginSize < 0) {$marginSize = 0;}
-        if($totalLength < strlen($string)) {$totalLength = strlen($string);}
+        $minimalPaddingOnBothSides = 1;
+        if($marginSize < $minimalPaddingOnBothSides) {$marginSize = $minimalPaddingOnBothSides;}
+        if($totalInnerLength < strlen($string)) {$totalInnerLength = strlen($string);}
 
-        $innerPaddingSize = $totalLength - 2*$marginSize - strlen($string);
+        $innerPaddingSize = $totalInnerLength - strlen($string);
+        $marginFiller = str_repeat($filler, $marginSize);
 
-        if($totalLength-strlen($string) <= 0) { //string sticks out, or just fits. No padding
-            $result = $string;
-        } else if($innerPaddingSize <= 0) {
-            $leftPaddingSize = $marginSize + $innerPaddingSize/2;
-            $rightPaddingSize = $totalLength - strlen($string) - $leftPaddingSize;
-
-            if($rightPaddingSize < 0) {$rightPaddingSize = 0;}
-            if($leftPaddingSize < 0) {$leftPaddingSize = 0;}
-
-            $result = str_repeat($filler, $leftPaddingSize).$string.str_repeat($filler, $rightPaddingSize);
-        } else if ($innerPaddingSize > 0) {
-            $marginPadding = str_repeat($filler, $marginSize);
-            $innerPadding = str_repeat($filler, $innerPaddingSize);
-            $result = $marginPadding.$string.$innerPadding.$marginPadding;
+        if($innerPaddingSize <= 0) {
+            $result = $marginFiller.$string.$marginFiller;
         } else {
-            $result = $string;
+            $innerFiller = str_repeat($filler, $innerPaddingSize);
+            $result = $marginFiller.$innerFiller.$string.$marginFiller;
         }
 
         return $result;
@@ -568,8 +585,12 @@ class Utils
      */
     public static function addPaddingToStringForColumnFormatSides($string, $totalLength, $isLeftAligned = true, $filler = " ")
     {
-        if($totalLength-strlen($string) <= 0) { //string sticks out, or just fits. No padding
-            $result = $string;
+        if($totalLength-strlen($string) <= 0) { //string sticks out, or just fits. Add 1 extra padding on side facing table.
+            if($isLeftAligned) {
+                $result = $string.$filler;
+            } else {
+                $result = $filler.$string;
+            }
 
         } else {
             $paddingSize = $totalLength - strlen($string);
@@ -580,7 +601,6 @@ class Utils
             } else { //isRightAligned
                 $result = str_repeat($filler, $paddingSize).$string;
             }
-
         }
 
         return $result;

@@ -103,7 +103,7 @@ class Client extends Person
     */
     public function setRelationNumberKeeper($relationNumberKeeper)
     {
-    $this->relationNumberKeeper = $relationNumberKeeper;
+    $this->relationNumberKeeper = trim($relationNumberKeeper);
 
     return $this;
     }
@@ -188,7 +188,7 @@ class Client extends Person
     */
     public function setUsername($username)
     {
-    $this->username = $username;
+    $this->username = trim($username);
 
     return $this;
     }

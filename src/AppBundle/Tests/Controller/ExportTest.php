@@ -2,7 +2,6 @@
 
 namespace AppBundle\Tests\Controller;
 
-use AppBundle\Component\Utils;
 use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
@@ -14,11 +13,11 @@ use Liip\FunctionalTestBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
 
 /**
- * Class ArrivalTest
+ * Class ExportTest
  * @package AppBundle\Tests\Controller
- * @group arrival
+ * @group export
  */
-class ArrivalTest extends WebTestCase {
+class ExportTest extends WebTestCase {
 
   /** @var RequestClient */
   private $client;
@@ -63,7 +62,7 @@ class ArrivalTest extends WebTestCase {
     if(!$isLocalTestDatabase) {
       dump(TestConstant::TEST_DB_ERROR_MESSAGE);die;
     }
-    
+
     self::$location = DoctrineUtil::getRandomActiveLocation(self::$em);
     self::$accessTokenCode = self::$location->getCompany()->getOwner()->getAccessToken();
   }
@@ -75,56 +74,38 @@ class ArrivalTest extends WebTestCase {
   public function setUp()
   {
     $this->client = parent::createClient();
+
     $this->defaultHeaders = array(
         'CONTENT_TYPE' => 'application/json',
         'HTTP_ACCESSTOKEN' => self::$accessTokenCode,
     );
   }
-
-
-  /**
-   * @group get
-   * @group arrival-get
-   * @group import
-   * Test arrival getter endpoints
-   */
-  public function testArrivalsGetters()
-  {
-    $this->client->request('GET',
-      Endpoint::DECLARE_ARRIVAL_ENDPOINT.'-history',
-      array(), array(), $this->defaultHeaders
-    );
-    $this->assertStatusCode(200, $this->client);
-
-    $this->client->request('GET',
-        Endpoint::DECLARE_ARRIVAL_ENDPOINT.'-errors',
-        array(), array(), $this->defaultHeaders
-    );
-    $this->assertStatusCode(200, $this->client);
-  }
-
-
+  
+  
   /**
    * @group post
-   * @group arrival-post
-   * Test arrival post endpoint
+   * @group export-post
+   * Test export post endpoint
    */
-  public function testArrivalPost()
+  public function testExportPost()
   {
+    $animal = DoctrineUtil::getRandomAnimalFromLocation(self::$em, self::$location);
+    $reasonOfExport = "a very good reason";
+
     $declareMateJson =
         json_encode(
             [
-                "is_import_animal" => false,
-                "ubn_previous_owner" => "123456",
-                "arrival_date" => "2016-07-31T18:25:43-05:00",
+                "reason_of_depart" => $reasonOfExport,
+                "is_export_animal" => true,
                 "animal" => [
-                              "uln_country_code" => "NL",
-                              "uln_number" => "123456789012"
-                            ]
+                      "uln_country_code" => $animal->getUlnCountryCode(),
+                      "uln_number" => $animal->getUlnNumber()
+                ],
+                "depart_date" => "2012-04-21T18:25:43-05:00"
             ]);
 
     $this->client->request('POST',
-        Endpoint::DECLARE_ARRIVAL_ENDPOINT,
+        Endpoint::DECLARE_DEPART_ENDPOINT,
         array(),
         array(),
         $this->defaultHeaders,
@@ -135,7 +116,7 @@ class ArrivalTest extends WebTestCase {
     $data = json_decode($response->getContent(), true);
     $this->assertStatusCode(200, $this->client);
   }
-
+  
 
   /**
    * Runs after each testcase

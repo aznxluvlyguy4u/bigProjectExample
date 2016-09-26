@@ -390,25 +390,14 @@ class IRSerializer implements IRSerializerInterface
     {
         $contentArray["type"] = RequestType::DECLARE_TAG_REPLACE_ENTITY;
 
-        $animal = $contentArray['animal'];
-        $tag = $contentArray['tag'];
-
-        $replaceDate = null;
-        if($contentArray->containsKey('replace_date')) {
-            if($contentArray->get('replace_date') != "" && $contentArray->get('replace_date') != null) {
-                $replaceDate = $contentArray['replace_date'];
-            }
-        }
+        $replaceDate = Utils::getNullCheckedArrayCollectionDateValue('replace_date', $contentArray);
         //Set replaceDate = logDate in MessageBuilder if 'replace_date' was not given.
-
-        $ulnCountryCodeToReplace = $animal['uln_country_code'];
-        $ulnNumberToReplace = $animal['uln_number'];
 
         //denormalize the content to an object
         $retrievedAnimal = $this->entityGetter->retrieveAnimal($contentArray);
-        $contentArray->set(Constant::ANIMAL_NAMESPACE, $this->returnAnimalArray($retrievedAnimal));
-        $json = $this->serializeToJSON($contentArray);
-        $declareTagReplace = $this->deserializeToObject($json, RequestType::DECLARE_TAG_REPLACE_ENTITY);
+        $declareTagReplace = new DeclareTagReplace();
+
+        $declareTagReplace->setReplaceDate($replaceDate);
 
         $declareTagReplace->setUlnCountryCodeToReplace($retrievedAnimal->getUlnCountryCode());
         $declareTagReplace->setUlnNumberToReplace($retrievedAnimal->getUlnNumber());
@@ -420,13 +409,14 @@ class IRSerializer implements IRSerializerInterface
         $tagsRepository = $this->entityManager->getRepository(Constant::TAG_REPOSITORY);
 
         //create filter to search tag
+        $tag = $contentArray['tag'];
         $tagFilter = array("ulnCountryCode" =>  $ulnCountryCodeReplacement = $tag['uln_country_code'],
           "ulnNumber" => $ulnNumberReplacement= $tag['uln_number']);
 
         //Fetch tag from database
         $fetchedTag = $tagsRepository->findOneBy($tagFilter);
 
-        //If tag was found, add it to the declare tag replac request
+        //If tag was found, add it to the declare tag replace request
         if($fetchedTag != null) {
 
             //Check if Tag status is UNASSIGNED && No animal is assigned to it
@@ -460,14 +450,16 @@ class IRSerializer implements IRSerializerInterface
         //Add retrieved animal properties including type to initial animalContentArray
         $declareLossContentArray['animal'] = $retrievedAnimal;
 
-        //denormalize the content to an object
-        $json = $this->serializeToJSON($declareLossContentArray, 'DECLARE');
+        $dateOfDeath = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::DATE_OF_DEATH, $declareLossContentArray);
+        $reasonOfLoss = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::REASON_OF_LOSS, $declareLossContentArray);
+        $ubnProcessor = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::UBN_PROCESSOR, $declareLossContentArray);
 
-        $declareLossRequest = $this->deserializeToObject($json, RequestType::DECLARE_LOSS_ENTITY);
-
+        $declareLossRequest = new DeclareLoss();
         //Add retrieved animal to DeclareLoss
         $declareLossRequest->setAnimal($retrievedAnimal);
-        $declareLossRequest->setUbnDestructor($declareLossContentArray['ubn_processor']);
+        $declareLossRequest->setDateOfDeath($dateOfDeath);
+        $declareLossRequest->setUbnDestructor($ubnProcessor);
+        $declareLossRequest->setReasonOfLoss($reasonOfLoss);
         $declareLossRequest->setAnimalObjectType(Utils::getClassName($retrievedAnimal));
 
         if($isEditMessage) {

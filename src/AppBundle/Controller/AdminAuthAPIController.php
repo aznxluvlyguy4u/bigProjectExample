@@ -17,6 +17,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Company;
 use AppBundle\Enumerator\MigrationStatus;
 use AppBundle\Setting\MigrationSetting;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Validation\PasswordValidator;
@@ -113,6 +114,7 @@ class AdminAuthAPIController extends APIController {
 
     /** @var Employee $admin */
     $admin = $em->getRepository(Employee::class)->findOneByEmailAddress($emailAddress);
+    $log = ActionLogWriter::adminPasswordReset($em, $admin, $emailAddress);
 
     //Verify if email is correct
     if($admin == null) {
@@ -123,6 +125,8 @@ class AdminAuthAPIController extends APIController {
     $passwordLength = 9;
     $newPassword = $this->persistNewPassword($admin, $passwordLength);
     $this->emailNewPasswordToPerson($admin, $newPassword, true);
+
+    $log = ActionLogWriter::completeActionLog($em, $log);
 
     return new JsonResponse(array("code" => 200,
         "message"=>"Your new password has been emailed to: " . $emailAddress), 200);

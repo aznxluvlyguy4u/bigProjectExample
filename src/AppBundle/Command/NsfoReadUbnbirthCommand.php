@@ -103,7 +103,7 @@ class NsfoReadUbnbirthCommand extends ContainerAwareCommand
                 $vsmAnimalPrimaryKey = $rowData[0];
                 $dateOfBirth = $rowData[1];
                 $ubnOfBirth = $rowData[2];
-                if ($ubnOfBirth == 'Onbekend') {
+                if ($ubnOfBirth == 'Onbekend' || $ubnOfBirth == 'Afgevoerd') {
                     $ubnOfBirth = null;
                 }
 

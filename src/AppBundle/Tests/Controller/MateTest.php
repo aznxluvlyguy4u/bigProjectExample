@@ -111,6 +111,47 @@ class MateTest extends WebTestCase {
 
 
   /**
+   * @group post
+   * @group matings-post
+   * Test matings post endpoint
+   */
+  public function testMatingPost()
+  {
+    $ram = DoctrineUtil::getRandomRamFromLocation(self::$em, self::$location);
+    $ewe = DoctrineUtil::getRandomEweFromLocation(self::$em, self::$location);
+    
+    $declareMateJson =
+        json_encode(
+        [
+          "start_date" => "2016-07-31T18:25:43-05:00",
+            "end_date" => "2016-07-31T18:25:43-05:00",
+                  "ki" => false,
+                "pmsg" => false,
+                  "ram" => [
+                              "uln_country_code" => $ram->getUlnCountryCode(),
+                              "uln_number" => $ram->getUlnNumber()
+                            ],
+                  "ewe" => [
+                              "uln_country_code" => $ewe->getUlnCountryCode(),
+                              "uln_number" => $ewe->getUlnNumber()
+                            ]
+        ]);
+
+    $this->client->request('POST',
+      $this::DECLARE_MATINGS_ENDPOINT,
+      array(),
+      array(),
+      $this->defaultHeaders,
+        $declareMateJson
+    );
+
+    $response = $this->client->getResponse();
+    $data = json_decode($response->getContent(), true);
+    $this->assertStatusCode(200, $this->client);
+  }
+
+
+  /**
    * Runs after each testcase
    */
   public function tearDown() {

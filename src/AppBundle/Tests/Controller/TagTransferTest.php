@@ -2,6 +2,7 @@
 
 namespace AppBundle\Tests\Controller;
 
+use AppBundle\Constant\Endpoint;
 use AppBundle\Constant\TestConstant;
 use AppBundle\Entity\Location;
 use AppBundle\Service\IRSerializer;
@@ -17,8 +18,6 @@ use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
  * @group tag-transfer
  */
 class TagTransferTest extends WebTestCase {
-
-  const DECLARE_TAGS_TRANSFERS_ENDPOINT = "/api/v1/tags-transfers";
 
   /** @var RequestClient */
   private $client;
@@ -92,17 +91,58 @@ class TagTransferTest extends WebTestCase {
   {
     //Get tags-transfers
     $this->client->request('GET',
-      $this::DECLARE_TAGS_TRANSFERS_ENDPOINT.'-history',
+      Endpoint::DECLARE_TAGS_TRANSFERS_ENDPOINT.'-history',
       array(), array(), $this->defaultHeaders
     );
     $this->assertStatusCode(200, $this->client);
 
     $this->client->request('GET',
-        $this::DECLARE_TAGS_TRANSFERS_ENDPOINT.'-errors',
+        Endpoint::DECLARE_TAGS_TRANSFERS_ENDPOINT.'-errors',
         array(), array(), $this->defaultHeaders
     );
     $this->assertStatusCode(200, $this->client);
   }
+
+
+  /**
+   * @group post
+   * @group tag-transfer-post
+   * Test tag-transfer post endpoint
+   */
+  public function testTagTransferPost()
+  {
+    $tag = DoctrineUtil::getRandomUnassignedTag(self::$em, self::$location);
+    $locationReceiver = DoctrineUtil::getRandomActiveLocation(self::$em, self::$location);
+    $relationNumberAcceptant = $locationReceiver->getCompany()->getOwner()->getRelationNumberKeeper();
+    $ubnNewOwner = $locationReceiver->getUbn();
+
+    $declareMateJson =
+        json_encode(
+            [
+                "relation_number_acceptant" => $relationNumberAcceptant,
+                "ubn_new_owner" => $ubnNewOwner,
+                "tags" =>
+                [
+                    [
+                        "uln_country_code" => $tag->getUlnCountryCode(),
+                        "uln_number" => $tag->getUlnNumber()
+                    ]
+                ]
+            ]);
+
+    $this->client->request('POST',
+        Endpoint::DECLARE_TAGS_TRANSFERS_ENDPOINT,
+        array(),
+        array(),
+        $this->defaultHeaders,
+        $declareMateJson
+    );
+
+    $response = $this->client->getResponse();
+    $data = json_decode($response->getContent(), true);
+    $this->assertStatusCode(200, $this->client);
+  }
+
 
 
   /**

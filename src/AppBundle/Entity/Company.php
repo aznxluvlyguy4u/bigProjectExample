@@ -249,7 +249,7 @@ class Company
      */
     public function setCompanyName($companyName)
     {
-        $this->companyName = $companyName;
+        $this->companyName = trim($companyName);
 
         return $this;
     }
@@ -392,7 +392,7 @@ class Company
      */
     public function setVatNumber($vatNumber)
     {
-        $this->vatNumber = $vatNumber;
+        $this->vatNumber = trim($vatNumber);
     }
 
     /**
@@ -408,7 +408,7 @@ class Company
      */
     public function setChamberOfCommerceNumber($chamberOfCommerceNumber)
     {
-        $this->chamberOfCommerceNumber = $chamberOfCommerceNumber;
+        $this->chamberOfCommerceNumber = trim($chamberOfCommerceNumber);
     }
 
     /**
@@ -424,7 +424,7 @@ class Company
      */
     public function setCompanyRelationNumber($companyRelationNumber)
     {
-        $this->companyRelationNumber = $companyRelationNumber;
+        $this->companyRelationNumber = trim($companyRelationNumber);
     }
 
     /**
@@ -440,7 +440,7 @@ class Company
      */
     public function setTelephoneNumber($telephoneNumber)
     {
-        $this->telephoneNumber = $telephoneNumber;
+        $this->telephoneNumber = trim($telephoneNumber);
     }
 
     /**
@@ -456,7 +456,7 @@ class Company
      */
     public function setVeterinarianDapNumber($veterinarianDapNumber)
     {
-        $this->veterinarianDapNumber = $veterinarianDapNumber;
+        $this->veterinarianDapNumber = trim($veterinarianDapNumber);
     }
 
     /**
@@ -472,7 +472,7 @@ class Company
      */
     public function setVeterinarianCompanyName($veterinarianCompanyName)
     {
-        $this->veterinarianCompanyName = $veterinarianCompanyName;
+        $this->veterinarianCompanyName = trim($veterinarianCompanyName);
     }
 
     /**
@@ -488,7 +488,7 @@ class Company
      */
     public function setVeterinarianTelephoneNumber($veterinarianTelephoneNumber)
     {
-        $this->veterinarianTelephoneNumber = $veterinarianTelephoneNumber;
+        $this->veterinarianTelephoneNumber = trim($veterinarianTelephoneNumber);
     }
 
     /**
@@ -504,7 +504,7 @@ class Company
      */
     public function setVeterinarianEmailAddress($veterinarianEmailAddress)
     {
-        $this->veterinarianEmailAddress = strtolower($veterinarianEmailAddress);
+        $this->veterinarianEmailAddress = trim(strtolower($veterinarianEmailAddress));
     }
 
 
@@ -522,7 +522,7 @@ class Company
      */
     public function setDebtorNumber($debtorNumber)
     {
-        $this->debtorNumber = $debtorNumber;
+        $this->debtorNumber = trim($debtorNumber);
     }
 
     /**

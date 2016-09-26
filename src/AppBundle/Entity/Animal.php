@@ -478,14 +478,29 @@ abstract class Animal
     protected $pedigreeRegister;
 
     /**
-     * @var
+     * @var integer
+     * @JMS\Type("integer")
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    protected $mixblupBlock;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(type="float", nullable=true, options={"default":null})
+     * @JMS\Type("float")
+     */
+    protected $inbreedingCoefficient;
+
+    /**
+     * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      */
     protected $birthProgress;
 
     /**
-     * @var
+     * @var boolean
      * @JMS\Type("boolean")
      * @ORM\Column(type="boolean", nullable=true)
      */
@@ -541,7 +556,7 @@ abstract class Animal
      */
     public function setPedigreeCountryCode($pedigreeCountryCode)
     {
-        $this->pedigreeCountryCode = $pedigreeCountryCode;
+        $this->pedigreeCountryCode = trim(strtoupper($pedigreeCountryCode));
 
         return $this;
     }
@@ -565,7 +580,7 @@ abstract class Animal
      */
     public function setPedigreeNumber($pedigreeNumber)
     {
-        $this->pedigreeNumber = $pedigreeNumber;
+        $this->pedigreeNumber = trim($pedigreeNumber);
 
         return $this;
     }
@@ -669,7 +684,7 @@ abstract class Animal
      */
     public function setName($name)
     {
-        $this->name = $name;
+        $this->name = trim($name);
 
         return $this;
     }
@@ -693,7 +708,7 @@ abstract class Animal
      */
     public function setGender($gender)
     {
-        $this->gender = $gender;
+        $this->gender = trim($gender);
 
         return $this;
     }
@@ -1007,7 +1022,7 @@ abstract class Animal
      */
     public function setUlnNumber($ulnNumber)
     {
-        $this->ulnNumber = $ulnNumber;
+        $this->ulnNumber = trim($ulnNumber);
 
         return $this;
     }
@@ -1021,7 +1036,7 @@ abstract class Animal
      */
     public function setUlnCountryCode($ulnCountryCode)
     {
-        $this->ulnCountryCode = $ulnCountryCode;
+        $this->ulnCountryCode = trim(strtoupper($ulnCountryCode));
 
         return $this;
     }
@@ -1389,7 +1404,7 @@ abstract class Animal
      */
     public function setAnimalCountryOrigin($animalCountryOrigin)
     {
-        $this->animalCountryOrigin = $animalCountryOrigin;
+        $this->animalCountryOrigin = trim($animalCountryOrigin);
 
         return $this;
     }
@@ -1417,7 +1432,7 @@ abstract class Animal
      */
     public function setTransferState($transferState)
     {
-        $this->transferState = $transferState;
+        $this->transferState = trim($transferState);
     }
 
     /**
@@ -1731,7 +1746,7 @@ abstract class Animal
      */
     public function setBreed($breed)
     {
-        $this->breed = $breed;
+        $this->breed = trim($breed);
     }
 
     /**
@@ -1743,7 +1758,7 @@ abstract class Animal
      */
     public function setBreedType($breedType)
     {
-        $this->breedType = $breedType;
+        $this->breedType = trim($breedType);
 
         return $this;
     }
@@ -1767,7 +1782,7 @@ abstract class Animal
      */
     public function setBreedCode($breedCode)
     {
-        $this->breedCode = $breedCode;
+        $this->breedCode = trim($breedCode);
 
         return $this;
     }
@@ -1791,7 +1806,7 @@ abstract class Animal
      */
     public function setScrapieGenotype($scrapieGenotype)
     {
-        $this->scrapieGenotype = $scrapieGenotype;
+        $this->scrapieGenotype = trim($scrapieGenotype);
 
         return $this;
     }
@@ -1989,7 +2004,7 @@ abstract class Animal
      */
     public function setUbnOfBirth($ubnOfBirth)
     {
-        $this->ubnOfBirth = $ubnOfBirth;
+        $this->ubnOfBirth = trim($ubnOfBirth);
     }
 
     /**
@@ -2023,8 +2038,43 @@ abstract class Animal
         $this->pedigreeRegister = $pedigreeRegister;
     }
 
+    
     /**
-     * @return mixed
+     * @return integer
+     */
+    public function getMixblupBlock()
+    {
+        return $this->mixblupBlock;
+    }
+
+    /**
+     * @param integer $mixblupBlock
+     */
+    public function setMixblupBlock($mixblupBlock)
+    {
+        $this->mixblupBlock = $mixblupBlock;
+    }
+
+
+    /**
+     * @return float
+     */
+    public function getInbreedingCoefficient()
+    {
+        return $this->inbreedingCoefficient;
+    }
+
+    /**
+     * @param float $inbreedingCoefficient
+     */
+    public function setInbreedingCoefficient($inbreedingCoefficient)
+    {
+        $this->inbreedingCoefficient = $inbreedingCoefficient;
+    }
+
+
+    /**
+     * @return string
      */
     public function getBirthProgress()
     {
@@ -2032,7 +2082,7 @@ abstract class Animal
     }
 
     /**
-     * @param mixed $birthProgress
+     * @param string $birthProgress
      */
     public function setBirthProgress($birthProgress)
     {
@@ -2040,7 +2090,7 @@ abstract class Animal
     }
 
     /**
-     * @return mixed
+     * @return boolean
      */
     public function getLambar()
     {
@@ -2048,12 +2098,13 @@ abstract class Animal
     }
 
     /**
-     * @param mixed $lambar
+     * @param boolean $lambar
      */
     public function setLambar($lambar)
     {
         $this->lambar = $lambar;
     }
+
 
     /**
      * All values except relationships to other Entities are duplicated.

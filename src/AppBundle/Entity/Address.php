@@ -106,7 +106,7 @@ abstract class Address {
      */
     public function setStreetName($streetName)
     {
-        $this->streetName = $streetName;
+        $this->streetName = trim($streetName);
 
         return $this;
     }
@@ -130,7 +130,7 @@ abstract class Address {
      */
     public function setAddressNumber($addressNumber)
     {
-        $this->addressNumber = $addressNumber;
+        $this->addressNumber = trim($addressNumber);
 
         return $this;
     }
@@ -154,7 +154,7 @@ abstract class Address {
      */
     public function setAddressNumberSuffix($addressNumberSuffix)
     {
-        $this->addressNumberSuffix = $addressNumberSuffix;
+        $this->addressNumberSuffix = trim($addressNumberSuffix);
 
         return $this;
     }
@@ -178,7 +178,7 @@ abstract class Address {
      */
     public function setPostalCode($postalCode)
     {
-        $this->postalCode = strtoupper($postalCode);
+        $this->postalCode = trim(strtoupper($postalCode));
 
         return $this;
     }
@@ -202,7 +202,7 @@ abstract class Address {
      */
     public function setCity($city)
     {
-        $this->city = strtoupper($city);
+        $this->city = trim(strtoupper($city));
 
         return $this;
     }
@@ -226,7 +226,7 @@ abstract class Address {
      */
     public function setCountry($country)
     {
-        $this->country = $country;
+        $this->country = trim($country);
 
         return $this;
     }
@@ -250,7 +250,7 @@ abstract class Address {
      */
     public function setState($state)
     {
-        $this->state = $state;
+        $this->state = trim($state);
 
         return $this;
     }

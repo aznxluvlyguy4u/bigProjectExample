@@ -14,6 +14,7 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\TokenType;
 use AppBundle\Output\AccessLevelOverviewOutput;
 use AppBundle\Output\AdminOverviewOutput;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\CreateAdminValidator;
 use AppBundle\Validation\EditAdminValidator;
@@ -101,7 +102,10 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
             return $adminValidator->createJsonErrorResponse();
         }
 
+        $em = $this->getDoctrine()->getManager();
         $content = $this->getContentAsArray($request);
+
+        $log = ActionLogWriter::createAdmin($em, $admin, $content);
 
         // Validate content
         $firstName = $content->get('first_name');
@@ -114,9 +118,6 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
                 'code'=> 400,
                 "message" => "REQUIRED VALUES MISSING"), 400);
         }
-
-
-        $em = $this->getDoctrine()->getManager();
 
         $inputValidator = new CreateAdminValidator($em, $content);
         if (!$inputValidator->getIsValid()) {
@@ -140,6 +141,8 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
             ));
 
         $result = AdminOverviewOutput::createAdminOverview($admin);
+
+        $log = ActionLogWriter::completeActionLog($em, $log);
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
   }
@@ -174,8 +177,10 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
         if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
             return $adminValidator->createJsonErrorResponse();
         }
-
+        
+        $em = $this->getDoctrine()->getManager();
         $content = $this->getContentAsArray($request);
+        $log = ActionLogWriter::editAdmin($em, $admin, $content);
 
         // Validate content
         $personId = $content->get('person_id');
@@ -183,8 +188,6 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
         $lastName = $content->get('last_name');
         $emailAddress = $content->get('email_address');
         $accessLevel = $content->get('access_level');
-
-        $em = $this->getDoctrine()->getManager();
 
         $inputValidator = new EditAdminValidator($em, $content);
         if (!$inputValidator->getIsValid()) {
@@ -207,6 +210,8 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
             'isActive' => $admin->getIsActive()
         ));
         $result = AdminOverviewOutput::createAdminOverview($newAdmin);
+
+        $log = ActionLogWriter::completeActionLog($em, $log);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
   }
@@ -248,16 +253,18 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
     $content = $this->getContentAsArray($request);
 
     $personId = $content->get('person_id');
-    $admin = $repository->findOneBy(['personId' => $personId]);
+    /** @var Employee $adminToDeactivate */
+    $adminToDeactivate = $repository->findOneBy(['personId' => $personId]);
+    $log = ActionLogWriter::deactivateAdmin($em, $admin, $adminToDeactivate);
 
     //Validate input
-    if($admin == null) {
+    if($adminToDeactivate == null) {
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ADMIN NOT FOUND'), 428);
     }
 
     //deactivate
-    $admin->setIsActive(false);
-    $em->persist($admin);
+    $adminToDeactivate->setIsActive(false);
+    $em->persist($adminToDeactivate);
     $em->flush();
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);

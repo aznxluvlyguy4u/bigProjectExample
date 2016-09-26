@@ -16,7 +16,17 @@ use Symfony\Component\Filesystem\Filesystem;
 
 class NullChecker
 {
+    const DEFAULT_FLOAT_ACCURACY = 0.0001;
 
+    /**
+     * @param $input
+     * @return bool
+     */
+    public static function isNull($input)
+    {
+        return !self::isNotNull($input);
+    }
+    
     /**
      * @param $input
      * @return bool
@@ -35,6 +45,15 @@ class NullChecker
      * @param $input
      * @return bool
      */
+    public static function numberIsNull($input)
+    {
+        return !self::numberIsNotNull($input);
+    }
+
+    /**
+     * @param $input
+     * @return bool
+     */
     public static function numberIsNotNull($input)
     {
         if($input != null && $input != 0 && $input !== '' && $input !== ' ') {
@@ -42,6 +61,17 @@ class NullChecker
         } else {
             return false;
         }
+    }
+
+
+    /**
+     * @param float $float
+     * @param float $accuracy
+     * @return bool
+     */
+    public static function floatIsNotZero($float, $accuracy = self::DEFAULT_FLOAT_ACCURACY)
+    {
+        return !NumberUtil::isFloatZero($float, $accuracy);
     }
 
 
