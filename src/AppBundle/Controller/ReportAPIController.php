@@ -129,6 +129,13 @@ class ReportAPIController extends APIController {
     $reportResults = new InbreedingCoefficientReportData($em, $content, $client);
     $reportData = $reportResults->getData();
 
+    $useProductionReady = $this->getCurrentEnvironment() == Environment::PROD;
+    if($useProductionReady) {
+      $reportData[ReportLabel::IS_PROD_ENV] = true;
+    } else {
+      $reportData[ReportLabel::IS_PROD_ENV] = false;
+    }
+
     $twigFile = 'Report/inbreeding_coefficient_report.html.twig';
     $html = $this->renderView($twigFile, ['variables' => $reportData]);
     $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,

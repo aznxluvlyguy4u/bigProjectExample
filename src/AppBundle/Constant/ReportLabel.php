@@ -7,6 +7,7 @@ class ReportLabel
 {
     //General
     const ENTITY = 'entity';
+    const IS_PROD_ENV = 'isProdEnv';
 
     //Person
     const OWNER_NAME = "ownerName";
