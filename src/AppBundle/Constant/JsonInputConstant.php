@@ -98,7 +98,9 @@ class JsonInputConstant
     const CODES = 'codes';
 
     //Loss
-    const UBN_DESTRUCTOR = "ubn_destructor";
+    const UBN_PROCESSOR = "ubn_processor";
+    const DATE_OF_DEATH = "date_of_death";
+    const REASON_OF_LOSS = "reason_of_loss";
 
     //Location / UBN
     const UBN = 'ubn';

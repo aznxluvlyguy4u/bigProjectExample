@@ -96,9 +96,9 @@ class ActionLogWriter
 
         $ubn = NullChecker::getUbnFromLocation($location);
         $uln = NullChecker::getUlnOrPedigreeStringFromArray(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ANIMAL, $content));
-        $ubnDestructor = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::UBN_DESTRUCTOR, $content);
+        $ubnProcessor = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::UBN_PROCESSOR, $content);
 
-        $description = 'ubn: '.$ubn.'. ubn destructor: '.$ubnDestructor.'. uln: '.$uln;
+        $description = 'ubn: '.$ubn.'. ubn processor: '.$ubnProcessor.'. uln: '.$uln;
 
         $log = new ActionLog($client, $loggedInUser, $userActionType, false, $description);
         DoctrineUtil::persistAndFlush($om, $log);
