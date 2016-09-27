@@ -141,7 +141,7 @@ class Exterior extends Measurement {
       $this->skull = 0.00;
       $this->muscularity = 0.00;
       $this->proportion = 0.00;
-      $this->type = 0.00;
+      $this->exteriorType = 0.00;
       $this->legWork = 0.00;
       $this->fur = 0.00;
       $this->generalAppearence = 0.00;
@@ -160,6 +160,28 @@ class Exterior extends Measurement {
     public function getId()
     {
         return $this->id;
+    }
+
+
+    /**
+     * @param float $minLimit
+     * @return bool
+     */
+    public function hasAnyValuesAbove($minLimit)
+    {
+        return
+        $this->skull > $minLimit ||
+        $this->muscularity > $minLimit ||
+        $this->proportion > $minLimit ||
+        $this->exteriorType > $minLimit ||
+        $this->legWork > $minLimit ||
+        $this->fur > $minLimit ||
+        $this->generalAppearence > $minLimit ||
+        $this->height > $minLimit ||
+        $this->breastDepth > $minLimit ||
+        $this->torsoLength > $minLimit ||
+        $this->markings > $minLimit ||
+        $this->progress > $minLimit;
     }
 
     /**
