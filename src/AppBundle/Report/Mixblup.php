@@ -111,6 +111,9 @@ class Mixblup
     const FERTILITY = 'vruchtbaarheid';
     const ERRORS = 'errors';
 
+    //Validation Limits
+    const EXTERIOR_VALUE_LIMIT = 100.0;
+
     //Versions
     const IS_GROUP_BY_ANIMAL_AND_MEASUREMENT_DATE = true;
 
@@ -933,7 +936,8 @@ class Mixblup
         $animal = $measurement->getAnimal();
 
         if(!$this->isAnimalNotNullAndPrintErrors($animal, $measurement->getId())) { return null; }
-
+        if($this->hasExteriorValuesAboveLimitAndPrintErrors($measurement)) { return null; }
+        
         $rowBase = $this->formatFirstPartDataRecordRowExteriorAttributes($animal);
         $measurementDate = self::formatMeasurementDate($measurement->getMeasurementDate());
         $exteriorRowPart = $this->formatExteriorMeasurementsRowPart($measurement);
@@ -1438,6 +1442,23 @@ class Mixblup
         $result->set(BreedCodeType::OV, $ov);
 
         return $result;
+    }
+
+
+    /**
+     * @param Exterior $exterior
+     * @return boolean
+     */
+    private function hasExteriorValuesAboveLimitAndPrintErrors(Exterior $exterior)
+    {
+        //This error might occur when a measurement is deleted in the database without removing the Measurement parent row
+        if($exterior->hasAnyValuesAbove(self::EXTERIOR_VALUE_LIMIT)) {
+            file_put_contents($this->errorsFilePath, 'Measurement with id: '.$exterior->getId()
+                .' has values above '.self::EXTERIOR_VALUE_LIMIT."\n", FILE_APPEND);
+            return true;
+        } else {
+            return false;
+        }
     }
 
 
