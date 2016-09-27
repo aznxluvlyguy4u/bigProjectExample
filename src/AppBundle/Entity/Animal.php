@@ -427,7 +427,7 @@ abstract class Animal
     protected $breedCode;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Breeder")
+     * @ORM\ManyToOne(targetEntity="Client")
      * @ORM\JoinColumn(name="breeder_id", referencedColumnName="id")
      */
     protected $breeder;
@@ -1910,7 +1910,7 @@ abstract class Animal
     }
 
     /**
-     * @return Breeder
+     * @return Client
      */
     public function getBreeder()
     {
@@ -1918,7 +1918,7 @@ abstract class Animal
     }
 
     /**
-     * @param Breeder $breeder
+     * @param Client $breeder
      */
     public function setBreeder($breeder)
     {
