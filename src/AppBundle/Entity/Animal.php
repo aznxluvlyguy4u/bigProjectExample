@@ -486,14 +486,6 @@ abstract class Animal
     protected $mixblupBlock;
 
     /**
-     * @var float
-     *
-     * @ORM\Column(type="float", nullable=true, options={"default":null})
-     * @JMS\Type("float")
-     */
-    protected $inbreedingCoefficient;
-
-    /**
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
@@ -2091,23 +2083,6 @@ abstract class Animal
     public function setMixblupBlock($mixblupBlock)
     {
         $this->mixblupBlock = $mixblupBlock;
-    }
-
-
-    /**
-     * @return float
-     */
-    public function getInbreedingCoefficient()
-    {
-        return $this->inbreedingCoefficient;
-    }
-
-    /**
-     * @param float $inbreedingCoefficient
-     */
-    public function setInbreedingCoefficient($inbreedingCoefficient)
-    {
-        $this->inbreedingCoefficient = $inbreedingCoefficient;
     }
 
 
