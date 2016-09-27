@@ -250,6 +250,7 @@ class HealthInspectionController extends APIController
             array(
                 'orientation' => 'Portrait',
                 'default-header'=> false,
+                'disable-smart-shrinking' => false,
                 'page-height' => 25,
                 'page-width' => 100,
                 'margin-top'    => 2,
