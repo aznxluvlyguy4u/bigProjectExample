@@ -7,6 +7,7 @@ class ReportLabel
 {
     //General
     const ENTITY = 'entity';
+    const IS_PROD_ENV = 'isProdEnv';
 
     //Person
     const OWNER_NAME = "ownerName";
@@ -31,6 +32,10 @@ class ReportLabel
     const F_BREEDER_INDEX_NO_ACC = 'fBreederIndexNoAcc';
     const EXT_INDEX_NO_ACC = 'extIndexNoAcc';
     const VL_INDEX_NO_ACC = 'vlIndexNoAcc';
+    
+    //Breed values
+    const INBREEDING_COEFFICIENT = 'inbreedingCoefficient';
+    const IS_RAM_MISSING = 'isRamMissing';
 
     //Address
     const ADDRESS = 'address';
@@ -41,6 +46,9 @@ class ReportLabel
 
     //Animal
     const ANIMALS = 'animals';
+    const RAM = 'ram';
+    const EWE = 'ewe';
+    const EWES = 'ewes';
     const GENDER = 'gender';
     const ULN_COUNTRY_CODE = 'ulnCountryCode';
     const ULN_NUMBER = 'ulnNumber';

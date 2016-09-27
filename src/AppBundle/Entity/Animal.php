@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -110,7 +111,7 @@ abstract class Animal
     protected $gender;
 
     /**
-     * @var Animal
+     * @var Ram
      *
      * @ORM\ManyToOne(targetEntity="Ram", inversedBy="children", cascade={"persist"})
      * @ORM\JoinColumn(name="parent_father_id", referencedColumnName="id", onDelete="set null")
@@ -119,7 +120,7 @@ abstract class Animal
     protected $parentFather;
 
     /**
-     * @var Animal
+     * @var Ewe
      *
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="children", cascade={"persist"})
      * @ORM\JoinColumn(name="parent_mother_id", referencedColumnName="id", onDelete="set null")
@@ -597,6 +598,20 @@ abstract class Animal
 
 
     /**
+     * @param string $nullFiller
+     * @return null|string
+     */
+    public function getPedigreeString($nullFiller = null)
+    {
+        if(NullChecker::isNotNull($this->pedigreeCountryCode) && NullChecker::isNotNull($this->pedigreeNumber)) {
+            return $this->pedigreeCountryCode.$this->pedigreeNumber;
+        } else {
+            return $nullFiller;
+        }
+    }
+
+
+    /**
      * Get ulnCountryCode
      *
      * @return string
@@ -625,6 +640,26 @@ abstract class Animal
     {
         return $this->ulnCountryCode . $this->ulnNumber;
     }
+
+
+    /**
+     * @return bool
+     */
+    public function isUlnExists()
+    {
+        return NullChecker::isNotNull($this->ulnCountryCode) && NullChecker::isNotNull($this->ulnNumber);
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function isPedigreeExists()
+    {
+        return NullChecker::isNotNull($this->pedigreeCountryCode) && NullChecker::isNotNull($this->pedigreeNumber);
+    }
+
+
 
     /**
      * @return string
@@ -894,11 +929,11 @@ abstract class Animal
     /**
      * Set parentFather
      *
-     * @param Animal
+     * @param Ram
      *
-     * @return Animal
+     * @return Ram
      */
-    public function setParentFather(Animal $parentFather = null)
+    public function setParentFather(Ram $parentFather = null)
     {
         $this->parentFather = $parentFather;
         //$parentFather->getChildren()->add($this);
@@ -909,31 +944,46 @@ abstract class Animal
     /**
      * Get parentFather
      *
-     * @return Animal
+     * @return Ram
      */
     public function getParentFather()
     {
-        if($this->parentFather != null) {
-            return $this->parentFather;
-        } else {
-            /** @var Animal $parent */
-            foreach ($this->parents as $parent) {
-                $gender = $parent->getGender();
-                if($gender == GenderType::MALE || $gender == GenderType::M) {
-                    return $parent;
-                }
-            }
-        }
-        //if no father has been found
-        return null;
+        return $this->parentFather;
     }
+
+
+    /**
+     * @return int|null
+     */
+    public function getParentFatherId()
+    {
+        if($this->parentFather != null) {
+            return $this->parentFather->getId();
+        } else {
+            return null;
+        }
+    }
+
+
+    /**
+     * @return int|null
+     */
+    public function getParentMotherId()
+    {
+        if($this->parentMother != null) {
+            return $this->parentMother->getId();
+        } else {
+            return null;
+        }
+    }
+
 
     /**
      * Set parentMother
      *
-     * @param Animal $parentMother
+     * @param Ewe $parentMother
      *
-     * @return Animal
+     * @return Ewe
      */
     public function setParentMother($parentMother = null)
     {
@@ -946,23 +996,11 @@ abstract class Animal
     /**
      * Get parentMother
      *
-     * @return Animal
+     * @return Ewe
      */
     public function getParentMother()
     {
-        if($this->parentMother != null) {
-            return $this->parentMother;
-        } else {
-            /** @var Animal $parent */
-            foreach ($this->parents as $parent) {
-                $gender = $parent->getGender();
-                if($gender == GenderType::FEMALE || $gender == GenderType::V) {
-                    return $parent;
-                }
-            }
-        }
-        //if no mother has been found
-        return null;
+        return $this->parentMother;
     }
     
     /**
