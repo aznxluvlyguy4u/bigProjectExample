@@ -83,6 +83,24 @@ class InbreedingCoefficientOffspring
 
 
     /**
+     * @return array
+     */
+    public function getClosedLoopPaths()
+    {
+        return $this->closedLoopPaths;
+    }
+
+
+    /**
+     * @return array
+     */
+    public function getCommonAncestorInbreedingCoefficients()
+    {
+        return $this->commonAncestorsInbreedingCoefficient;
+    }
+
+
+    /**
      * @return float
      */
     private function run()
@@ -100,7 +118,7 @@ class InbreedingCoefficientOffspring
 
         // 3. Find closed loop paths and
         // 4. Recursively calculate the inbreeding coefficients of the common ancestors
-        $this->getClosedLoopPaths();
+        $this->findClosedLoopPaths();
 
         // 5. Calculate inbreeding coefficient
         $this->calculateInbreedingCoefficient();
@@ -113,10 +131,12 @@ class InbreedingCoefficientOffspring
         if(count($this->closedLoopPaths) > 0) {
             $commonAncestorsAnimalId = array_keys($this->commonAncestorsInbreedingCoefficient);
             foreach ($commonAncestorsAnimalId as $commonAncestorAnimalId) {
-                $closedLoopPath = $this->closedLoopPaths[$commonAncestorAnimalId];
-                $inbreedingCoefficientCommonAncestor = $this->commonAncestorsInbreedingCoefficient[$commonAncestorAnimalId];
-                $animalsInLoop = count($closedLoopPath);
-                $this->inbreedingCoefficient += pow(0.5,$animalsInLoop)*(1+$inbreedingCoefficientCommonAncestor);
+                $closedLoopPathsOfAncestor = $this->closedLoopPaths[$commonAncestorAnimalId];
+                foreach ($closedLoopPathsOfAncestor as $closedLoopPath) {
+                    $inbreedingCoefficientCommonAncestor = $this->commonAncestorsInbreedingCoefficient[$commonAncestorAnimalId];
+                    $animalsInLoop = count($closedLoopPath);
+                    $this->inbreedingCoefficient += pow(0.5,$animalsInLoop)*(1+$inbreedingCoefficientCommonAncestor);
+                }
             }
         }
     }
@@ -253,7 +273,7 @@ class InbreedingCoefficientOffspring
     }
 
 
-    private function getClosedLoopPaths()
+    private function findClosedLoopPaths()
     {
         $animalIds = array_keys($this->childrenSearchArray);
 
