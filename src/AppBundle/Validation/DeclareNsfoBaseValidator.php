@@ -17,62 +17,23 @@ use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 
-abstract class DeclareNsfoBaseValidator
+abstract class DeclareNsfoBaseValidator extends BaseValidator
 {
-    const ERROR_CODE = 428;
-    const ERROR_MESSAGE = 'INVALID INPUT';
-    const VALID_CODE = 200;
-    const VALID_MESSAGE = 'OK';
-
     const MESSAGE_ID_ERROR     = 'MESSAGE ID: NO MESSAGE FOUND FOR GIVEN MESSAGE ID AND CLIENT';
     const MESSAGE_OVERWRITTEN  = 'MESSAGE ID: MESSAGE IS ALREADY OVERWRITTEN';
 
-    /** @var boolean */
-    protected $isInputValid;
-
     /** @var AnimalRepository */
     protected $animalRepository;
-
-    /** @var ObjectManager */
-    protected $manager;
-
+    
     /** @var Client */
     protected $client;
-
-    /** @var array */
-    protected $errors;
     
 
     public function __construct(ObjectManager $manager, ArrayCollection $content, Client $client)
     {
-        $this->manager = $manager;
+        parent::__construct($manager, $content);
         $this->animalRepository = $this->manager->getRepository(Animal::class);
         $this->client = $client;
-        $this->isInputValid = false;
-        $this->errors = array();
-    }
-
-
-    /**
-     * @return bool
-     */
-    public function getIsInputValid()
-    {
-        return $this->isInputValid;
-    }
-
-
-
-    /**
-     * @return JsonResponse
-     */
-    public function createJsonResponse()
-    {
-        if($this->isInputValid){
-            return Validator::createJsonResponse(self::VALID_MESSAGE, self::VALID_CODE);
-        } else {
-            return Validator::createJsonResponse(self::ERROR_MESSAGE, self::ERROR_CODE, $this->errors);
-        }
     }
     
     

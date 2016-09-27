@@ -7,7 +7,9 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\Environment;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Country;
+use AppBundle\Report\InbreedingCoefficientReportData;
 use AppBundle\Report\PedigreeCertificates;
+use AppBundle\Validation\InbreedingCoefficientInputValidator;
 use AppBundle\Validation\UlnValidator;
 use Aws\S3\S3Client;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -90,6 +92,70 @@ class ReportAPIController extends APIController {
 
     return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
   }
+
+
+  /**
+   * Generate inbreeding coefficient pdf report of (hypothetical) offspring of a Ram and a list of Ewes.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Generate inbreeding coefficient pdf report of (hypothetical) offspring of a Ram and a list of Ewes",
+   *   output = "AppBundle\Entity\Animal"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/inbreeding-coefficients")
+   * @Method("POST")
+   */
+  public function getInbreedingCoefficientsReport(Request $request)
+  {
+    $client = $this->getAuthenticatedUser($request);
+    $content = $this->getContentAsArray($request);
+    $em = $this->getDoctrine()->getManager();
+
+    $inbreedingCoefficientInputValidator = new InbreedingCoefficientInputValidator($em, $content, $client);
+    if(!$inbreedingCoefficientInputValidator->getIsInputValid()) {
+      return $inbreedingCoefficientInputValidator->createJsonResponse();
+    }
+
+    $reportResults = new InbreedingCoefficientReportData($em, $content, $client);
+    $reportData = $reportResults->getData();
+
+    $useProductionReady = $this->getCurrentEnvironment() == Environment::PROD;
+    if($useProductionReady) {
+      $reportData[ReportLabel::IS_PROD_ENV] = true;
+    } else {
+      $reportData[ReportLabel::IS_PROD_ENV] = false;
+    }
+
+    $twigFile = 'Report/inbreeding_coefficient_report.html.twig';
+    $html = $this->renderView($twigFile, ['variables' => $reportData]);
+    $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,
+        array(
+            'orientation'=>'Portrait',
+            'default-header'=>false,
+            'disable-smart-shrinking'=>true,
+            'print-media-type' => true,
+            'margin-top'    => 6,
+            'margin-right'  => 8,
+            'margin-bottom' => 4,
+            'margin-left'   => 8,
+        ));
+    
+    $s3Service = $this->getStorageService();
+    $url = $s3Service->uploadPdf($pdfOutput, $reportResults->getS3Key());
+
+    return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
+  }
+
 
   /**
    * @param Request $request the request object

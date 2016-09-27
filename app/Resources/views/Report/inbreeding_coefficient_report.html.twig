@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+    {% set doubleSpace = '&nbsp; &nbsp;' %}
+
+    {% set ramUln = variables.ram.uln %}
+    {% set ramPedigree = variables.ram.pedigree %}
+    {% set isRamMissing = variables.isRamMissing %}
+    {% set isProdEnv = variables.isProdEnv %}
+
+
+    {% if isProdEnv %}
+        <div class="nsfo-logo">
+            <img src="{{ absolute_url(asset('assets/images/nsfo-logo.png')) }}">
+        </div>
+    {% else %}
+        <div class="nsfo-logo">
+            <img src="https://one8rg-ch3301.files.1drv.com/y3m-UwC3zslAIMpjS9PwPtD6mAFgcAUimwX0OYMPGL16nsU5s1Qiejw0NEpefnqWrYqTuIRWzrZ2Pc-P_HmAeds9vA9QgS6Bco6PP6gAQEabSaxyZcZpjH0JKVGVfQq6zEAc1Pq2d3YHUQTTdKCbvsvqMf04J8Adk5FocZwylanEPo?width=1668&height=2102&cropmode=none" width="556" height="70" />
+        </div>
+    {% endif %}
+
+
+    <h2>Inteeltcoëfficiënt van nageslacht na paring</h2>
+
+    <p>Ram A: {{ ramUln }}, stn: {{ ramPedigree }} </p>
+
+    <div class="tg-wrap"><table class="tg">
+            <tr>
+                <td class="tg-yw4l">Ooi ULN</td>
+                <td class="tg-yw4l">Ooi STN</td>
+                <td class="tg-lqy6">Ram A</td>
+            </tr>
+
+    {% for key,value in variables.ewes %}
+        {% set uln = key %}
+        {% set ewe = value %}
+
+        {#<p>Ooi {{ uln }}, stn: {{ ewe.pedigree }}: {{ ewe.inbreedingCoefficient }}</p>#}
+
+                <tr>
+                    <td class="tg-yw4l">{{ uln }}</td>
+                    <td class="tg-yw4l">{{ ewe.pedigree }}</td>
+                    <td class="tg-lqy6">{{ ewe.inbreedingCoefficient }}</td>
+                </tr>
+
+        {#{% if loop.last == false %}#}
+        {#<footer></footer> #}{# necessary to enforce a pagebreak using css #}
+        {#{% endif %}#}
+
+    {% endfor %}
+
+    </table></div>
+
+{% endblock %}
+
+{% block stylesheets %}
+    {#<style>#}
+
+        {#/* Always insert a page break after each <footer> element (when printing) */#}
+        {#/*@media print {*/#}
+        {#/*footer {page-break-after: always;}*/#}
+        {#/*}*/#}
+
+    {#</style>#}
+
+    <style type="text/css">
+        .tg  {border-collapse:collapse;border-spacing:0;}
+        .tg td{font-family:SansSerif, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+        .tg th{font-family:SansSerif, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+        .tg .tg-lqy6{text-align:right;vertical-align:top}
+        .tg .tg-ddb2{font-family:serif !important;;text-align:center;vertical-align:top}
+        .tg .tg-yw4l{vertical-align:top}
+        @media screen and (max-width: 767px) {.tg {width: auto !important;}.tg col {width: auto !important;}.tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;}}
+    </style>
+
+{% endblock %}

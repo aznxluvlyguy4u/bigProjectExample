@@ -491,4 +491,36 @@ class AnimalRepository extends BaseRepository
 
     return $array;
   }
+
+
+  /**
+   * @param $animalId
+   * @return int|null
+   */
+  public function getMotherId($animalId)
+  {
+    if(is_int($animalId)) {
+      $sql = "SELECT parent_mother_id as id_mother FROM animal WHERE id = ".$animalId;
+      $result = $this->getManager()->getConnection()->query($sql)->fetch();
+      return $result['id_mother'];
+    } else {
+      return null;
+    }
+  }
+
+
+  /**
+   * @param $animalId
+   * @return int|null
+   */
+  public function getFatherId($animalId)
+  {
+    if(is_int($animalId)) {
+      $sql = "SELECT parent_father_id as id_father FROM animal WHERE id = ".$animalId;
+      $result = $this->getManager()->getConnection()->query($sql)->fetch();
+      return $result['id_father'];
+    } else {
+      return null;
+    }
+  }
 }

@@ -16,13 +16,12 @@ use Doctrine\Common\Persistence\ObjectManager;
 /**
  * Class PedigreeCertificates
  */
-class PedigreeCertificates
+class PedigreeCertificates extends ReportBase
 {
+    const FILE_NAME_REPORT_TYPE = 'afstammingsbewijs';
+
     /** @var array */
     private $reports;
-
-    /** @var Client */
-    private $client;
 
     /** @var string */
     private $ulnOfLastChild;
@@ -43,6 +42,8 @@ class PedigreeCertificates
     public function __construct(ObjectManager $em, Collection $content, Client $client,
                                 Location $location, $generationOfAscendants = 3)
     {
+        parent::__construct($em, $client, self::FILE_NAME_REPORT_TYPE);
+        
         $this->reports = array();
         $this->client = $client;
 
@@ -104,26 +105,4 @@ class PedigreeCertificates
         return $this->animalCount;
     }
 
-    /**
-     * @param string $mainDirectory
-     * @return string
-     */
-    public function getFilePath($mainDirectory)
-    {
-        return $mainDirectory.'/'.$this->getS3Key();
-    }
-
-    public function getFileName()
-    {
-        $dateTimeNow = new \DateTime();
-        $datePrint = $dateTimeNow->format('Y-m-d_').$dateTimeNow->format('H').'h'.$dateTimeNow->format('i').'m'.$dateTimeNow->format('s').'s';
-
-        return 'afstammingsbewijs-'.$datePrint.'.pdf';
-    }
-
-    public function getS3Key()
-    {
-        //TODO when each client has a permanent unique identifier, replace the id with that identifier.
-        return 'reports/'.$this->client->getId().'/'.$this->getFileName();
-    }
 }
