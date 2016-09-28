@@ -8,6 +8,7 @@ use AppBundle\Enumerator\MeasurementType;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\NumberUtil;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -444,6 +445,9 @@ class WeightRepository extends MeasurementRepository {
         $animalId = $parts[MeasurementConstant::ANIMAL_ID];
         $measurementDateString = $parts[MeasurementConstant::DATE];
 
+        $isBirthWeight = StringUtil::getBooleanAsString($isBirthWeight);
+        $isRevoked = StringUtil::getBooleanAsString($isRevoked);
+        
         $isInsertSuccessful = false;
         $isInsertParentSuccessful = $this->insertNewMeasurementInParentTable($animalIdAndDate, $measurementDateString, MeasurementType::WEIGHT, $inspectorId);
         if($isInsertParentSuccessful && NullChecker::floatIsNotZero($weightValue)) {

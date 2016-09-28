@@ -147,4 +147,15 @@ class TimeUtil
         return implode('-',array_reverse($dateParts));
     }
 
+
+    /**
+     * DateString format should be YYYY-MM-DD, where MM and DD can also be one digit in length 
+     * 
+     * @param string $dateString
+     * @return bool
+     */
+    public static function isFormatYYYYMMDD($dateString)
+    {
+        return (bool)preg_match("/^[0-9]{4}-((0[1-9]|1[0-2])|[1-9])-((0[1-9]|[1-2][0-9]|3[0-1])|[1-9])$/",$dateString);
+    }
 }

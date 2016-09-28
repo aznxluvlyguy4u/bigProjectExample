@@ -75,9 +75,13 @@ class MeasurementRepository extends BaseRepository {
 
         $isInsertSuccessful = false;
         if(NullChecker::isNotNull($measurementDateString) && NullChecker::isNotNull($animalIdAndDate) && NullChecker::isNotNull($type)) {
-            if(MeasurementsUtil::isValidMeasurementType($type)) {
+            if(MeasurementsUtil::isValidMeasurementType($type) && TimeUtil::isFormatYYYYMMDD($measurementDateString)) {
 
-                $sql = "INSERT INTO measurement (id, log_date, measurement_date, type, inspector_id) VALUES (nextval('measurement_id_seq'),'" .$logDateString. "','" . $measurementDateString . "','".$type."', ".$inspectorId.")";
+                if(NullChecker::isNull($inspectorId)) {
+                    $inspectorId = 'NULL';
+                }
+
+                $sql = "INSERT INTO measurement (id, log_date, measurement_date, type, inspector_id, animal_id_and_date) VALUES (nextval('measurement_id_seq'),'" .$logDateString. "','" . $measurementDateString . "','".$type."', ".$inspectorId.",'".$animalIdAndDate."')";
                 $this->getManager()->getConnection()->exec($sql);
 
                 $isInsertSuccessful = true;

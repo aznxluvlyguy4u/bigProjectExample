@@ -94,4 +94,14 @@ class MeasurementsUtil
     {
         return array_key_exists($type, MeasurementType::getTypes());
     }
+
+
+    /**
+     * @param float $weightValue
+     * @return bool
+     */
+    public static function isValidBirthWeightValue($weightValue)
+    {
+        return $weightValue <= 10.0;
+    }
 }
