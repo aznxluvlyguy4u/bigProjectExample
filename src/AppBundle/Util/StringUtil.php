@@ -134,4 +134,14 @@ class StringUtil
             return false;
         }
     }
+
+
+    /**
+     * @param boolean $boolean
+     * @return string
+     */
+    public static function getBooleanAsString($boolean)
+    {
+        return ($boolean) ? 'true' : 'false';
+    }
 }
