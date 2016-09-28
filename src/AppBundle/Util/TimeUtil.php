@@ -135,4 +135,16 @@ class TimeUtil
     {
         return (new \DateTime())->format($format);
     }
+
+
+    /**
+     * @param string $date
+     * @return string
+     */
+    public static function flipDateStringOrder($date)
+    {
+        $dateParts = explode('-', $date);
+        return implode('-',array_reverse($dateParts));
+    }
+
 }
