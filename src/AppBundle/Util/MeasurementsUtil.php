@@ -3,6 +3,8 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Constant\MeasurementConstant;
+use AppBundle\Enumerator\MeasurementType;
 use Doctrine\Common\Persistence\ObjectManager;
 
 class MeasurementsUtil
@@ -68,6 +70,28 @@ class MeasurementsUtil
         
         return count($results);
     }
-    
 
+
+    /**
+     * @param string $animalIdAndDate
+     * @return array
+     */
+    public static function getIdAndDateFromAnimalIdAndDateString($animalIdAndDate)
+    {
+        $parts = explode('_', $animalIdAndDate);
+        return [
+            MeasurementConstant::ANIMAL_ID => $parts[0],
+            MeasurementConstant::DATE => $parts[1]
+        ];
+    }
+
+
+    /**
+     * @param $type
+     * @return boolean
+     */
+    public static function isValidMeasurementType($type)
+    {
+        return array_key_exists($type, MeasurementType::getTypes());
+    }
 }

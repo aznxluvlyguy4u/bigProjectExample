@@ -9,4 +9,5 @@ class MeasurementConstant
     const ONE = 'one';
     const TWO = 'two';
     const THREE = 'three';
+    const ANIMAL_ID = 'animal_id';
 }

@@ -2,6 +2,10 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\MeasurementConstant;
+use AppBundle\Util\MeasurementsUtil;
+use AppBundle\Util\NullChecker;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -56,5 +60,30 @@ class MeasurementRepository extends BaseRepository {
         }
         return $measurementsGroupedByAnimalAndDate;
     }
-    
+
+
+    /**
+     * @param string $animalIdAndDate
+     * @param string $measurementDateString
+     * @param string $type
+     * @param int $inspectorId
+     * @return bool
+     */
+    protected function insertNewMeasurementInParentTable($animalIdAndDate, $measurementDateString, $type, $inspectorId)
+    {
+        $logDateString = TimeUtil::getTimeStampNow('Y-m-d H:i:s');
+
+        $isInsertSuccessful = false;
+        if(NullChecker::isNotNull($measurementDateString) && NullChecker::isNotNull($animalIdAndDate) && NullChecker::isNotNull($type)) {
+            if(MeasurementsUtil::isValidMeasurementType($type)) {
+
+                $sql = "INSERT INTO measurement (id, log_date, measurement_date, type, inspector_id) VALUES (nextval('measurement_id_seq'),'" .$logDateString. "','" . $measurementDateString . "','".$type."', ".$inspectorId.")";
+                $this->getManager()->getConnection()->exec($sql);
+
+                $isInsertSuccessful = true;
+
+            }
+        }
+        return $isInsertSuccessful;
+    }
 }
