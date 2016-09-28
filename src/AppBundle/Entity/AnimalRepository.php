@@ -491,4 +491,20 @@ class AnimalRepository extends BaseRepository
 
     return $array;
   }
+
+
+  /**
+   * @return array
+   */
+  public function getAnimalPrimaryKeysByVsmIdArray()
+  {
+    $sql = "SELECT name as vsm_id, id FROM animal WHERE name IS NOT NULL";
+    $results= $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+    $searchArray = array();
+    foreach ($results as $result) {
+      $searchArray[$result['vsm_id']] = $result['id'];
+    }
+    return $searchArray;
+  }
 }
