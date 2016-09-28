@@ -269,14 +269,15 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
      */
     private function processMuscleThicknessMeasurement($animalIdAndDate, $muscleThickness, $inspectorId)
     {
-        $parts = MeasurementsUtil::getIdAndDateFromAnimalIdAndDateString($animalIdAndDate);
-        $animalId = $parts[MeasurementConstant::ANIMAL_ID];
-        $measurementDateString = $parts[MeasurementConstant::DATE];
+//        $parts = MeasurementsUtil::getIdAndDateFromAnimalIdAndDateString($animalIdAndDate);
+//        $animalId = $parts[MeasurementConstant::ANIMAL_ID];
+//        $measurementDateString = $parts[MeasurementConstant::DATE];
 
         $muscleThicknessesInDb = Utils::getNullCheckedArrayValue($animalIdAndDate, $this->muscleThicknessesInDb);
         if($muscleThicknessesInDb == null) {
             //No measurements found in db
             //Persist new measurement TODO
+            $this->muscleThicknessRepository->insertNewMuscleThickness($animalIdAndDate, $muscleThickness, $inspectorId);
         }
     }
 

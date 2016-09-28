@@ -1,6 +1,10 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Constant\MeasurementConstant;
+use AppBundle\Enumerator\MeasurementType;
+use AppBundle\Util\MeasurementsUtil;
+use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\Criteria;
 
 /**
@@ -111,5 +115,28 @@ class MuscleThicknessRepository extends MeasurementRepository {
         } else {
             return $results;
         }
+    }
+
+
+    /**
+     * @param string $animalIdAndDate
+     * @param int $inspectorId
+     * @param float $muscleThicknessValue
+     * @return bool
+     */
+    public function insertNewMuscleThickness($animalIdAndDate, $muscleThicknessValue, $inspectorId = null)
+    {
+        $parts = MeasurementsUtil::getIdAndDateFromAnimalIdAndDateString($animalIdAndDate);
+        $animalId = $parts[MeasurementConstant::ANIMAL_ID];
+        $measurementDateString = $parts[MeasurementConstant::DATE];
+
+        $isInsertSuccessful = false;
+        $isInsertParentSuccessful = $this->insertNewMeasurementInParentTable($animalIdAndDate, $measurementDateString, MeasurementType::MUSCLE_THICKNESS, $inspectorId);
+        if($isInsertParentSuccessful && NullChecker::floatIsNotZero($muscleThicknessValue)) {
+            $sql = "INSERT INTO muscle_thickness (id, animal_id, muscle_thickness) VALUES (currval('measurement_id_seq'),'".$animalId."','".$muscleThicknessValue."')";
+            $this->getManager()->getConnection()->exec($sql);
+            $isInsertSuccessful = true;
+        }
+        return $isInsertSuccessful;
     }
 }
