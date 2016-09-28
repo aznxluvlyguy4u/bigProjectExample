@@ -3,17 +3,22 @@
 namespace AppBundle\Command;
 
 use AppBundle\Component\Utils;
+use AppBundle\Constant\MeasurementConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BodyFatRepository;
 use AppBundle\Entity\ExteriorRepository;
+use AppBundle\Entity\Inspector;
+use AppBundle\Entity\InspectorRepository;
 use AppBundle\Entity\MuscleThickness;
 use AppBundle\Entity\MuscleThicknessRepository;
 use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
+use AppBundle\Enumerator\MeasurementType;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -37,6 +42,9 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
 
     /** @var AnimalRepository $animalRepository */
     private $animalRepository;
+
+    /** @var InspectorRepository $inspectorRepository */
+    private $inspectorRepository;
 
     /** @var WeightRepository $weightRepository */
     private $weightRepository;
@@ -102,13 +110,15 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
 
         //Set repositories
         $this->animalRepository = $this->em->getRepository(Animal::class);
+        $this->inspectorRepository = $this->em->getRepository(Inspector::class);
         $this->weightRepository = $this->em->getRepository(Weight::class);
         $this->bodyFatRepository = $this->em->getRepository(BodyFat::class);
         $this->muscleThicknessRepository = $this->em->getRepository(MuscleThickness::class);
 
         //Generate search arrays
         $this->idByAiindArray = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
-        $this->weightsInDb = $this->weightRepository->getAllWeightsBySql(self::IS_GROUPED_BY_ANIMAL_AND_DATE);
+        $isIncludeRevokedWeights = false;
+        $this->weightsInDb = $this->weightRepository->getAllWeightsBySql(self::IS_GROUPED_BY_ANIMAL_AND_DATE, $isIncludeRevokedWeights);
         $this->bodyFatsInDb = $this->bodyFatRepository->getAllBodyFatsBySql(self::IS_GROUPED_BY_ANIMAL_AND_DATE);
         $this->muscleThicknessesInDb = $this->muscleThicknessRepository->getAllMuscleThicknessesBySql(self::IS_GROUPED_BY_ANIMAL_AND_DATE);
 
@@ -125,7 +135,7 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
         {
             $vsmId = $row[0];
             $measurementDateString = TimeUtil::flipDateStringOrder($row[1]);
-            $inspector = $row[2];
+            $inspectorName = $row[2];
 
             $weight = $row[7];
             $fat1 = $row[8];
@@ -140,21 +150,21 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
                 $vsmIdsNotInDatabase[$vsmId] = $vsmId;
 
             } else {
+                $inspectorId = $this->getInspectorIdAndCreateNewInspectorIfNotInDb($inspectorName);
+
                 //Check weights
-                if(NullChecker::isNotNull($weight)) {
-
-//                Block Birth Weights > 10 kg TODO
-
+                if(NullChecker::floatIsNotZero($weight)) {
+                    $this->processWeightMeasurement($animalIdAndDate, $weight, $inspectorId);
                 }
 
                 //Check BodyFats
-                if(NullChecker::isNotNull($fat1) && NullChecker::isNotNull($fat2) && NullChecker::isNotNull($fat3)) {
-
+                if(NullChecker::floatIsNotZero($fat1) && NullChecker::floatIsNotZero($fat2) && NullChecker::floatIsNotZero($fat3)) {
+                    $this->processBodyFatMeasurement($animalIdAndDate, $fat1, $fat2, $fat3, $inspectorId);
                 }
 
                 //Check MuscleThicknesses
-                if(NullChecker::isNotNull($muscleThickness)) {
-
+                if(NullChecker::floatIsNotZero($muscleThickness)) {
+                    $this->processMuscleThicknessMeasurement($animalIdAndDate, $muscleThickness, $inspectorId);
                 }
             }
 
@@ -187,9 +197,110 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
     }
 
 
+    /**
+     * @param string $animalIdAndDate
+     * @param float $weight
+     * @param int $inspectorId
+     * @return null
+     */
+    private function processWeightMeasurement($animalIdAndDate, $weight, $inspectorId)
+    {
+        if(NullChecker::isNull($animalIdAndDate) || NullChecker::numberIsNull($weight)) { return null; }
 
-    
-    
+        $parts = MeasurementsUtil::getIdAndDateFromAnimalIdAndDateString($animalIdAndDate);
+        $animalId = $parts[MeasurementConstant::ANIMAL_ID];
+        $measurementDateString = $parts[MeasurementConstant::DATE];
+
+        $weightsInDb = Utils::getNullCheckedArrayValue($animalIdAndDate, $this->weightsInDb);
+        if($weightsInDb == null) {
+            //No measurements found in db
+            //Persist new measurement
+            $isDateOfBirth = $this->animalRepository->isDateOfBirth($animalId, $measurementDateString);
+            if($isDateOfBirth === null) {
+                //Date format is incorrect, so it is highly likely that the measurementDate is missing
+                //Skip measurement if measurementDate is missing.
+            } else {
+                if($isDateOfBirth) {
+                    if(!MeasurementsUtil::isValidBirthWeightValue($weight)){
+                        //Block birthWeights higher than 10 kg
+                        return null;
+                    }
+                }
+
+                $this->weightRepository->insertNewWeight($animalIdAndDate, $weight, $inspectorId, $isDateOfBirth);
+            }
+            
+            return null;
+
+        } else {
+
+        }
+    }
+
+
+    /**
+     * @param string $animalIdAndDate
+     * @param float $fat1
+     * @param float $fat2
+     * @param float $fat3
+     * @param int $inspectorId
+     * @return null
+     */
+    private function processBodyFatMeasurement($animalIdAndDate, $fat1, $fat2, $fat3, $inspectorId)
+    {
+        $parts = MeasurementsUtil::getIdAndDateFromAnimalIdAndDateString($animalIdAndDate);
+        $animalId = $parts[MeasurementConstant::ANIMAL_ID];
+        $measurementDateString = $parts[MeasurementConstant::DATE];
+
+        $bodyFatsInDb = Utils::getNullCheckedArrayValue($animalIdAndDate, $this->bodyFatsInDb);
+        if($bodyFatsInDb == null) {
+            //No measurements found in db
+            //Persist new measurement TODO
+            return null;
+        }
+    }
+
+
+    /**
+     * @param string $animalIdAndDate
+     * @param float $muscleThickness
+     * @param int $inspectorId
+     * @return null
+     */
+    private function processMuscleThicknessMeasurement($animalIdAndDate, $muscleThickness, $inspectorId)
+    {
+        $parts = MeasurementsUtil::getIdAndDateFromAnimalIdAndDateString($animalIdAndDate);
+        $animalId = $parts[MeasurementConstant::ANIMAL_ID];
+        $measurementDateString = $parts[MeasurementConstant::DATE];
+
+        $muscleThicknessesInDb = Utils::getNullCheckedArrayValue($animalIdAndDate, $this->muscleThicknessesInDb);
+        if($muscleThicknessesInDb == null) {
+            //No measurements found in db
+            //Persist new measurement TODO
+        }
+    }
+
+
+    /**
+     * @param string $inspectorName
+     * @return int|null
+     */
+    private function getInspectorIdAndCreateNewInspectorIfNotInDb($inspectorName)
+    {
+        if(NullChecker::isNotNull($inspectorName)) {
+            $inspectorId = $this->inspectorRepository->findFirstIdByLastName($inspectorName);
+            if($inspectorId == null) {
+                $firstName = '';
+                $lastName = $inspectorName;
+                $this->inspectorRepository->insertNewInspector($firstName, $lastName);
+                $inspectorId = $this->inspectorRepository->findFirstIdByLastName($inspectorName);
+            }
+            return $inspectorId;
+            
+        } else {
+            return null;
+        }
+    }
     
 
     private function parseCSV() {
