@@ -89,4 +89,27 @@ class MuscleThicknessRepository extends MeasurementRepository {
               LEFT JOIN animal a ON a.id = z.animal_id";
         return  $this->getManager()->getConnection()->query($sql)->fetchAll();
     }
+
+
+    /**
+     * @param boolean $isGetGroupedByAnimalAndDate
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getAllMuscleThicknessesBySql($isGetGroupedByAnimalAndDate = false)
+    {
+        $sql = "
+             SELECT n.*, z.*, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, p.last_name as inspector_last_name FROM measurement n
+
+              INNER JOIN muscle_thickness z ON z.id = n.id
+              LEFT JOIN person p ON p.id = n.inspector_id
+              LEFT JOIN animal a ON a.id = z.animal_id";
+        $results =  $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+        if($isGetGroupedByAnimalAndDate) {
+            return $this->groupSqlMeasurementResultsByAnimalIdAndDate($results);
+        } else {
+            return $results;
+        }
+    }
 }

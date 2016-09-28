@@ -275,4 +275,33 @@ class BodyFatRepository extends MeasurementRepository {
                   LEFT JOIN person i ON i.id = n.inspector_id";
         return $em->getConnection()->query($sql)->fetchAll();
     }
+
+
+    /**
+     * @param bool $isGetGroupedByAnimalAndDate
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getAllBodyFatsBySql($isGetGroupedByAnimalAndDate = false)
+    {
+        $sql = "SELECT n.id as id, a.id as animal_id, n.animal_id_and_date, n.measurement_date, 
+                        fat1.fat as fat1,  fat2.fat as fat2, fat3.fat as fat3,
+                        n.inspector_id, p.last_name as inspector_last_name
+                  FROM measurement n
+                  INNER JOIN body_fat z ON z.id = n.id
+                  INNER JOIN fat1 ON z.fat1_id = fat1.id
+                  INNER JOIN fat2 ON z.fat2_id = fat2.id
+                  INNER JOIN fat3 ON z.fat3_id = fat3.id
+                  LEFT JOIN animal a ON a.id = z.animal_id
+                  LEFT JOIN person p ON p.id = n.inspector_id";
+        $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+        if($isGetGroupedByAnimalAndDate) {
+            return $this->groupSqlMeasurementResultsByAnimalIdAndDate($results);
+        } else {
+            return $results;
+        }
+
+    }
+
 }
