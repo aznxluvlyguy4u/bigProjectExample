@@ -201,7 +201,7 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
      * @param string $animalIdAndDate
      * @param float $weight
      * @param int $inspectorId
-     * @return null
+     * @return null|boolean
      */
     private function processWeightMeasurement($animalIdAndDate, $weight, $inspectorId)
     {
@@ -219,6 +219,8 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
             if($isDateOfBirth === null) {
                 //Date format is incorrect, so it is highly likely that the measurementDate is missing
                 //Skip measurement if measurementDate is missing.
+                return null;
+                
             } else {
                 if($isDateOfBirth) {
                     if(!MeasurementsUtil::isValidBirthWeightValue($weight)){
@@ -226,11 +228,9 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
                         return null;
                     }
                 }
-
                 $this->weightRepository->insertNewWeight($animalIdAndDate, $weight, $inspectorId, $isDateOfBirth);
+                return true;
             }
-            
-            return null;
 
         } else {
 
@@ -255,7 +255,8 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
         $bodyFatsInDb = Utils::getNullCheckedArrayValue($animalIdAndDate, $this->bodyFatsInDb);
         if($bodyFatsInDb == null) {
             //No measurements found in db
-            //Persist new measurement TODO
+            //Persist new measurement
+            $this->bodyFatRepository->insertNewBodyFat($animalIdAndDate, $fat1, $fat2, $fat3, $inspectorId);
             return null;
         }
     }
@@ -276,7 +277,7 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
         $muscleThicknessesInDb = Utils::getNullCheckedArrayValue($animalIdAndDate, $this->muscleThicknessesInDb);
         if($muscleThicknessesInDb == null) {
             //No measurements found in db
-            //Persist new measurement TODO
+            //Persist new measurement
             $this->muscleThicknessRepository->insertNewMuscleThickness($animalIdAndDate, $muscleThickness, $inspectorId);
         }
     }

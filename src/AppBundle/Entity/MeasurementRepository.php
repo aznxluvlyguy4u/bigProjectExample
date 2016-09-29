@@ -90,4 +90,15 @@ class MeasurementRepository extends BaseRepository {
         }
         return $isInsertSuccessful;
     }
+
+
+    /**
+     * @return int|null
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getMaxId()
+    {
+        $sql = "SELECT MAX(id) FROM measurement";
+        return $this->executeSqlQuery($sql);
+    }
 }
