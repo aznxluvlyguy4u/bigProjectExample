@@ -17,6 +17,7 @@ class ExteriorRepository extends MeasurementRepository {
 
     const FILE_NAME = 'exterior_deleted_duplicates';
     const FILE_EXTENSION = '.txt';
+    const FILE_NAME_TIME_STAMP_FORMAT = 'Y-m-d_H';
 
     /** @var boolean */
     private $isPrintDeletedExteriors;
@@ -436,7 +437,7 @@ class ExteriorRepository extends MeasurementRepository {
     {
         if($this->isPrintDeletedExteriors) {
             $row = $input['animal_id_and_date'].$input['kind'].$input['progress'].$input['height'].$input['inspector_id'];
-            $filePath = $this->mutationsFolder.'/'.self::FILE_NAME.TimeUtil::getTimeStampNow().self::FILE_EXTENSION;
+            $filePath = $this->mutationsFolder.'/'.self::FILE_NAME.TimeUtil::getTimeStampNow(self::FILE_NAME_TIME_STAMP_FORMAT).self::FILE_EXTENSION;
             file_put_contents($filePath, $row."\n", FILE_APPEND);
         }
     }
