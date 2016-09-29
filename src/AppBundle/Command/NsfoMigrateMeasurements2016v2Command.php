@@ -410,6 +410,8 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
     private function updateInspectorIdIfNotEqual($measurementId, $inspectorIdInDb, $newInspectorId)
     {
         if($inspectorIdInDb != $newInspectorId) {
+            if($newInspectorId == null) { $newInspectorId = 'NULL'; }
+
             //Update the db value with the value in the import file
             $sql = "UPDATE measurement SET inspector_id = '".$newInspectorId."' WHERE id = ".$measurementId;
             $this->em->getConnection()->exec($sql);
