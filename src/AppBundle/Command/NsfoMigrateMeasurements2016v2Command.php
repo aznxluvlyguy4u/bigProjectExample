@@ -144,7 +144,7 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
 
 
         //column headers of duplicate files
-        file_put_contents($this->outputFolder.'/'.self::DUPLICATE_MUSCLE_THICKNESSES_FILE_NAME,
+        file_put_contents($this->outputFolder.'/'.self::DUPLICATE_BODY_FATS_FILE_NAME,
             'uln'.self::SEPARATOR.'stn'.self::SEPARATOR.'vsmId'.self::SEPARATOR.'meetdatum'
             .self::SEPARATOR.'fat1'.self::SEPARATOR.'fat2'.self::SEPARATOR.'fat3'.self::SEPARATOR.'inspector'.self::SEPARATOR.'bron'
             ."\n", FILE_APPEND);
@@ -154,7 +154,7 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
             .self::SEPARATOR.'muscle_thickness'.self::SEPARATOR.'inspector'.self::SEPARATOR.'bron'
             ."\n", FILE_APPEND);
 
-        file_put_contents($this->outputFolder.'/'.self::DUPLICATE_MUSCLE_THICKNESSES_FILE_NAME,
+        file_put_contents($this->outputFolder.'/'.self::DUPLICATE_WEIGHTS_FILE_NAME,
             'uln'.self::SEPARATOR.'stn'.self::SEPARATOR.'vsmId'.self::SEPARATOR.'meetdatum'.self::SEPARATOR.'geboortegewicht'
             .self::SEPARATOR.'gewicht'.self::SEPARATOR.'inspector'.self::SEPARATOR.'bron'
             ."\n", FILE_APPEND);
