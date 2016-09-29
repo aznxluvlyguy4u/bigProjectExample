@@ -88,13 +88,12 @@ class BodyFatRepository extends MeasurementRepository {
         $hasDuplicates = true;
         while($hasDuplicates) {
             $sql = "
-              SELECT MIN(m.id) as min_id, COUNT(*), measurement_date, animal_id, m.inspector_id, fat1.fat as fat1, fat2.fat as fat2, fat3.fat as fat3, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, a.name as vsm_id
+              SELECT MIN(m.id) as min_id, COUNT(*), m.measurement_date, b.animal_id, m.inspector_id, fat1.fat as fat1, fat2.fat as fat2, fat3.fat as fat3
               FROM body_fat b INNER JOIN measurement m ON m.id = b.id
               LEFT JOIN fat1 ON b.fat1_id = fat1.id
               LEFT JOIN fat2 ON b.fat2_id = fat2.id
               LEFT JOIN fat3 ON b.fat3_id = fat3.id
-              INNER JOIN animal a ON b.animal_id = a.id
-              GROUP BY measurement_date, type, b.animal_id, m.inspector_id, fat1.fat, fat2.fat, fat3.fat
+              GROUP BY m.measurement_date, m.type, b.animal_id, m.inspector_id, fat1.fat, fat2.fat, fat3.fat
               HAVING COUNT(*) > 1";
             $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
             
