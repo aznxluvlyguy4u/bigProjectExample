@@ -72,23 +72,8 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
     /** @var array */
     private $muscleThicknessesInDb;
 
-    /** @var int */
-    private $deletedDuplicates;
-
-    /** @var int */
-    private $fixedDuplicates;
-
     /** @var string */
     private $outputFolder;
-
-    /** @var array */
-    private $duplicateWeights;
-
-    /** @var array */
-    private $duplicateBodyFats;
-
-    /** @var array */
-    private $duplicateMuscleThicknesses;
 
     private $csvParsingOptions = array(
         'finder_in' => 'app/Resources/imports/',
@@ -144,13 +129,8 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
 
         //Result arrays
         $vsmIdsNotInDatabase = array();
-        $this->duplicateWeights = array();
-        $this->duplicateBodyFats = array();
-        $this->duplicateMuscleThicknesses = array();
 
         //Counters
-        $this->fixedDuplicates = 0;
-        $this->deletedDuplicates = 0;
         $rowCount = 0;
         $weightsNew = 0;
         $weightsFixed = 0;
@@ -161,6 +141,23 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
         $muscleThicknessesNew = 0;
         $muscleThicknessesFixed = 0;
         $muscleThicknessesSkipped = 0;
+
+
+        //column headers of duplicate files
+        file_put_contents($this->outputFolder.'/'.self::DUPLICATE_MUSCLE_THICKNESSES_FILE_NAME,
+            'uln'.self::SEPARATOR.'stn'.self::SEPARATOR.'vsmId'.self::SEPARATOR.'meetdatum'
+            .self::SEPARATOR.'fat1'.self::SEPARATOR.'fat2'.self::SEPARATOR.'fat3'.self::SEPARATOR.'inspector'.self::SEPARATOR.'bron'
+            ."\n", FILE_APPEND);
+
+        file_put_contents($this->outputFolder.'/'.self::DUPLICATE_MUSCLE_THICKNESSES_FILE_NAME,
+            'uln'.self::SEPARATOR.'stn'.self::SEPARATOR.'vsmId'.self::SEPARATOR.'meetdatum'
+            .self::SEPARATOR.'muscle_thickness'.self::SEPARATOR.'inspector'.self::SEPARATOR.'bron'
+            ."\n", FILE_APPEND);
+
+        file_put_contents($this->outputFolder.'/'.self::DUPLICATE_MUSCLE_THICKNESSES_FILE_NAME,
+            'uln'.self::SEPARATOR.'stn'.self::SEPARATOR.'vsmId'.self::SEPARATOR.'meetdatum'.self::SEPARATOR.'geboortegewicht'
+            .self::SEPARATOR.'gewicht'.self::SEPARATOR.'inspector'.self::SEPARATOR.'bron'
+            ."\n", FILE_APPEND);
 
 
         foreach ($csv as $row)
@@ -228,7 +225,7 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
             $message = $rowCount.' Weights : '.$weightsSkipped.'/'.$weightsNew.'/'.$weightsFixed
                                 .' | BodyFats: '.$bodyFatsSkipped.'/'.$bodyFatsNew.'/'.$bodyFatsFixed
                                 .' | MuscleThicknesses: '.$muscleThicknessesSkipped.'/'.$muscleThicknessesNew.'/'.$muscleThicknessesFixed
-                                .' (skipped/new/updated) '.$this->deletedDuplicates.'/'.$this->fixedDuplicates.' (deleted-/fixed duplicates)'
+                                .' (skipped/new/updated)'
                         ;
             $cmdUtil->advanceProgressBar(1, $message);
         }
@@ -236,35 +233,6 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
         //Printing Errors
         foreach ($vsmIdsNotInDatabase as $vsmId) {
             file_put_contents($this->outputFolder.'/'.self::FILE_NAME_VSM_IDS_NOT_IN_DB, $vsmId."\n", FILE_APPEND);
-        }
-
-        /* Print duplicates */
-
-        //column header
-        file_put_contents($this->outputFolder.'/'.self::DUPLICATE_MUSCLE_THICKNESSES_FILE_NAME,
-        'uln'.self::SEPARATOR.'stn'.self::SEPARATOR.'vsmId'.self::SEPARATOR.'meetdatum'
-        .self::SEPARATOR.'fat1'.self::SEPARATOR.'fat2'.self::SEPARATOR.'fat3'.self::SEPARATOR.'inspector'.self::SEPARATOR.'bron'
-        ."\n", FILE_APPEND);
-        foreach ($this->duplicateBodyFats as $row) {
-            file_put_contents($this->outputFolder.'/'.self::DUPLICATE_BODY_FATS_FILE_NAME, $row."\n", FILE_APPEND);
-        }
-
-        //column header
-        file_put_contents($this->outputFolder.'/'.self::DUPLICATE_MUSCLE_THICKNESSES_FILE_NAME,
-            'uln'.self::SEPARATOR.'stn'.self::SEPARATOR.'vsmId'.self::SEPARATOR.'meetdatum'
-            .self::SEPARATOR.'muscle_thickness'.self::SEPARATOR.'inspector'.self::SEPARATOR.'bron'
-        ."\n", FILE_APPEND);
-        foreach ($this->duplicateMuscleThicknesses as $row) {
-            file_put_contents($this->outputFolder.'/'.self::DUPLICATE_MUSCLE_THICKNESSES_FILE_NAME, $row."\n", FILE_APPEND);
-        }
-
-        //column header
-        file_put_contents($this->outputFolder.'/'.self::DUPLICATE_MUSCLE_THICKNESSES_FILE_NAME,
-            'uln'.self::SEPARATOR.'stn'.self::SEPARATOR.'vsmId'.self::SEPARATOR.'meetdatum'.self::SEPARATOR.'geboortegewicht'
-            .self::SEPARATOR.'gewicht'.self::SEPARATOR.'inspector'.self::SEPARATOR.'bron'
-        ."\n", FILE_APPEND);
-        foreach ($this->duplicateWeights as $row) {
-            file_put_contents($this->outputFolder.'/'.self::DUPLICATE_WEIGHTS_FILE_NAME, $row."\n", FILE_APPEND);
         }
 
         $cmdUtil->setEndTimeAndPrintFinalOverview();
@@ -340,18 +308,20 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
             
             //write measurements in the db
             foreach($weightsInDb as $weightInDb) {
-                $this->duplicateWeights[] = $base.self::SEPARATOR
-                                            .$weightInDb['weight'].self::SEPARATOR
-                                            .$weightInDb['inspector_last_name'].self::SEPARATOR
-                                            .self::SOURCE_DB;
+                $row = $base.self::SEPARATOR
+                        .$weightInDb['weight'].self::SEPARATOR
+                        .$weightInDb['inspector_last_name'].self::SEPARATOR
+                        .self::SOURCE_DB;
+                file_put_contents($this->outputFolder.'/'.self::DUPLICATE_WEIGHTS_FILE_NAME, $row."\n", FILE_APPEND);
             }
             
             //write measurement from import file
             $inspectorLastName = $this->inspectorRepository->getLastNameById($inspectorId);
-            $this->duplicateWeights[] = $base.self::SEPARATOR
-                                        .$weight.self::SEPARATOR
-                                        .$inspectorLastName.self::SEPARATOR
-                                        .self::SOURCE_IMPORT_FILE;
+            $row = $base.self::SEPARATOR
+                    .$weight.self::SEPARATOR
+                    .$inspectorLastName.self::SEPARATOR
+                    .self::SOURCE_IMPORT_FILE;
+            file_put_contents($this->outputFolder.'/'.self::DUPLICATE_WEIGHTS_FILE_NAME, $row."\n", FILE_APPEND);
 
         } else {
             $weightInDb = $weightsInDb[0];
@@ -422,22 +392,24 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
 
                 //write measurements in the db
                 foreach($bodyFatsInDb as $bodyFatInDb) {
-                    $this->duplicateBodyFats[] = $base.self::SEPARATOR
+                    $row = $base.self::SEPARATOR
                         .$bodyFatInDb['fat1'].self::SEPARATOR
                         .$bodyFatInDb['fat2'].self::SEPARATOR
                         .$bodyFatInDb['fat3'].self::SEPARATOR
                         .$bodyFatInDb['inspector_last_name'].self::SEPARATOR
                         .self::SOURCE_DB;
+                    file_put_contents($this->outputFolder.'/'.self::DUPLICATE_BODY_FATS_FILE_NAME, $row."\n", FILE_APPEND);
                 }
 
                 //write measurement from import file
                 $inspectorLastName = $this->inspectorRepository->getLastNameById($inspectorId);
-                $this->duplicateWeights[] = $base.self::SEPARATOR
+                $row = $base.self::SEPARATOR
                     .$fat1.self::SEPARATOR
                     .$fat2.self::SEPARATOR
                     .$fat3.self::SEPARATOR
                     .$inspectorLastName.self::SEPARATOR
                     .self::SOURCE_IMPORT_FILE;
+                file_put_contents($this->outputFolder.'/'.self::DUPLICATE_BODY_FATS_FILE_NAME, $row."\n", FILE_APPEND);
 
             } else {
                 $bodyFatInDb = $bodyFatsInDb[0];
@@ -506,18 +478,20 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
 
                 //write measurements in the db
                 foreach($muscleThicknessesInDb as $muscleThicknessInDb) {
-                    $this->duplicateBodyFats[] = $base.self::SEPARATOR
+                    $row = $base.self::SEPARATOR
                         .$muscleThicknessInDb['muscle_thickness'].self::SEPARATOR
                         .$muscleThicknessInDb['inspector_last_name'].self::SEPARATOR
                         .self::SOURCE_DB;
+                    file_put_contents($this->outputFolder.'/'.self::DUPLICATE_MUSCLE_THICKNESSES_FILE_NAME, $row."\n", FILE_APPEND);
                 }
 
                 //write measurement from import file
                 $inspectorLastName = $this->inspectorRepository->getLastNameById($inspectorId);
-                $this->duplicateWeights[] = $base.self::SEPARATOR
+                $row = $base.self::SEPARATOR
                     .$muscleThickness.self::SEPARATOR
                     .$inspectorLastName.self::SEPARATOR
                     .self::SOURCE_IMPORT_FILE;
+                file_put_contents($this->outputFolder.'/'.self::DUPLICATE_MUSCLE_THICKNESSES_FILE_NAME, $row."\n", FILE_APPEND);
 
             } else {
                 $muscleThicknessInDb = $muscleThicknessesInDb[0];
