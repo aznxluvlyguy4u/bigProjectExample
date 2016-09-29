@@ -8,15 +8,12 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BodyFatRepository;
-use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\Inspector;
 use AppBundle\Entity\InspectorRepository;
 use AppBundle\Entity\MuscleThickness;
 use AppBundle\Entity\MuscleThicknessRepository;
-use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
-use AppBundle\Enumerator\MeasurementType;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;
@@ -24,9 +21,7 @@ use AppBundle\Util\NumberUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 
@@ -132,6 +127,13 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
         $weightsNew = 0;
         $weightsFixed = 0;
         $weightsSkipped = 0;
+        $bodyFatsNew = 0;
+        $bodyFatsFixed = 0;
+        $bodyFatsSkipped = 0;
+        $muscleThicknessesNew = 0;
+        $muscleThicknessesFixed = 0;
+        $muscleThicknessesSkipped = 0;
+
 
         foreach ($csv as $row)
         {
@@ -157,21 +159,49 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
 
                 //Check weights
                 if(NullChecker::floatIsNotZero($weight)) {
-                    $this->processWeightMeasurement($animalIdAndDate, $weight, $inspectorId);
+                    $weightResult = $this->processWeightMeasurement($animalIdAndDate, $weight, $inspectorId);
+
+                    if($weightResult == null) {
+                        $weightsSkipped++;
+                    } elseif ($weightResult = [true, false]) {
+                        $weightsNew++;
+                    } elseif ($weightResult = [true, true]) {
+                        $weightsFixed++;
+                    }
                 }
 
                 //Check BodyFats
                 if(NullChecker::floatIsNotZero($fat1) && NullChecker::floatIsNotZero($fat2) && NullChecker::floatIsNotZero($fat3)) {
-                    $this->processBodyFatMeasurement($animalIdAndDate, $fat1, $fat2, $fat3, $inspectorId);
+                    $bodyFatResult = $this->processBodyFatMeasurement($animalIdAndDate, $fat1, $fat2, $fat3, $inspectorId);
+
+                    if($bodyFatResult == null) {
+                        $bodyFatsSkipped++;
+                    } elseif ($bodyFatResult = [true, false]) {
+                        $bodyFatsNew++;
+                    } elseif ($bodyFatResult = [true, true]) {
+                        $bodyFatsFixed++;
+                    }
                 }
 
                 //Check MuscleThicknesses
                 if(NullChecker::floatIsNotZero($muscleThickness)) {
-                    $this->processMuscleThicknessMeasurement($animalIdAndDate, $muscleThickness, $inspectorId);
+                    $muscleThicknessResult = $this->processMuscleThicknessMeasurement($animalIdAndDate, $muscleThickness, $inspectorId);
+
+                    if($muscleThicknessResult == null) {
+                        $muscleThicknessesSkipped++;
+                    } elseif ($muscleThicknessResult = [true, false]) {
+                        $muscleThicknessesNew++;
+                    } elseif ($muscleThicknessResult = [true, true]) {
+                        $muscleThicknessesFixed++;
+                    }
                 }
             }
 
-            $message = $rowCount; //FIXME
+            $message = $rowCount.' Weights : '.$weightsSkipped.'/'.$weightsNew.'/'.$weightsFixed
+                                .' | BodyFats: '.$bodyFatsSkipped.'/'.$bodyFatsNew.'/'.$bodyFatsFixed
+                                .' | MuscleThicknesses: '.$muscleThicknessesSkipped.'/'.$muscleThicknessesNew.'/'.$muscleThicknessesFixed
+                                .' (skipped/new/updated)'
+                        ;
             $cmdUtil->advanceProgressBar(1, $message);
         }
 
@@ -232,12 +262,32 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
                     }
                 }
                 $this->weightRepository->insertNewWeight($animalIdAndDate, $weight, $inspectorId, $isDateOfBirth);
-                return true;
+                return [true, false]; //successful insert
             }
 
         } else {
             if(count($weightsInDb) > 1) {
                 dump(self::DUPLICATE_MEASUREMENTS_ERROR_MESSAGE);die;
+
+            } else {
+                $weightInDb = $weightsInDb[0];
+                $weightValueInDb = $weightInDb['weight'];
+                $weightId = $weightInDb['id'];
+
+                $isUpdateInspector = $this->updateInspectorIdIfNotEqual($weightId, $weightInDb['inspector_id'], $inspectorId);
+                $isUpdateWeight = $weightValueInDb != $weight;
+                if($isUpdateWeight) {
+                    //Update the db value with the value in the import file
+                    $sql = "UPDATE weight SET weight = '".$weight."' WHERE id = ".$weightId;
+                    $this->em->getConnection()->exec($sql);
+                }
+                //If they are equal, do nothing
+
+                if($isUpdateInspector || $isUpdateWeight) {
+                    return [true, true]; //successful update
+                } else {
+                    return null; //no changes
+                }
             }
         }
     }
@@ -267,6 +317,40 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
         } else {
             if(count($bodyFatsInDb)>1) {
                 dump(self::DUPLICATE_MEASUREMENTS_ERROR_MESSAGE);die;
+
+            } else {
+                $bodyFatInDb = $bodyFatsInDb[0];
+                $bodyFatId = $bodyFatInDb['id'];
+                $fat1ValueInDb = $bodyFatInDb['fat1'];
+                $fat2ValueInDb = $bodyFatInDb['fat2'];
+                $fat3ValueInDb = $bodyFatInDb['fat3'];
+
+                $isUpdateInspector = $this->updateInspectorIdIfNotEqual($bodyFatId, $bodyFatInDb['inspector_id'], $inspectorId);
+
+                $isUpdateFat1 = $fat1ValueInDb != $fat1;
+                if($isUpdateFat1) {
+                    $sql = "UPDATE fat1 SET fat = '".$fat1."' WHERE id = ".$bodyFatInDb['fat1_id'];
+                    $this->em->getConnection()->exec($sql);
+                }
+
+                $isUpdateFat2 = $fat2ValueInDb != $fat2;
+                if($isUpdateFat2) {
+                    $sql = "UPDATE fat2 SET fat = '".$fat2."' WHERE id = ".$bodyFatInDb['fat2_id'];
+                    $this->em->getConnection()->exec($sql);
+                }
+
+                $isUpdateFat3 = $fat3ValueInDb != $fat3;
+                if($isUpdateFat3) {
+                    $sql = "UPDATE fat3 SET fat = '".$fat3."' WHERE id = ".$bodyFatInDb['fat3_id'];
+                    $this->em->getConnection()->exec($sql);
+                }
+                
+
+                if($isUpdateInspector || $isUpdateFat1 || $isUpdateFat2 || $isUpdateFat3) {
+                    return [true, true]; //successful update
+                } else {
+                    return null; //no changes
+                }
             }
 
         }
@@ -281,10 +365,6 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
      */
     private function processMuscleThicknessMeasurement($animalIdAndDate, $muscleThickness, $inspectorId)
     {
-//        $parts = MeasurementsUtil::getIdAndDateFromAnimalIdAndDateString($animalIdAndDate);
-//        $animalId = $parts[MeasurementConstant::ANIMAL_ID];
-//        $measurementDateString = $parts[MeasurementConstant::DATE];
-
         $muscleThicknessesInDb = Utils::getNullCheckedArrayValue($animalIdAndDate, $this->muscleThicknessesInDb);
         if($muscleThicknessesInDb == null) {
             //No measurements found in db
@@ -294,8 +374,48 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
         } else {
             if(count($muscleThicknessesInDb)>1){
                 dump(self::DUPLICATE_MEASUREMENTS_ERROR_MESSAGE);die;
+
+            } else {
+                $muscleThicknessInDb = $muscleThicknessesInDb[0];
+                $muscleThicknessValueInDb = $muscleThicknessInDb['muscle_thickness'];
+                $muscleThicknessId = $muscleThicknessInDb['id'];
+
+                $isUpdateInspector = $this->updateInspectorIdIfNotEqual($muscleThicknessId, $muscleThicknessInDb['inspector_id'], $inspectorId);
+                $isUpdateMuscleThickness = $muscleThicknessValueInDb != $muscleThickness;
+
+                if($isUpdateMuscleThickness) {
+                    //Update the db value with the value in the import file
+                    $sql = "UPDATE muscle_thickness SET muscle_thickness = '".$muscleThickness."' WHERE id = ".$muscleThicknessId;
+                    $this->em->getConnection()->exec($sql);
+                }
+                //If they are equal, do nothing
+
+                if($isUpdateInspector || $isUpdateMuscleThickness) {
+                    return [true, true]; //successful update
+                } else {
+                    return null; //no changes
+                }
             }
 
+        }
+    }
+
+
+    /**
+     * @param $measurementId
+     * @param $inspectorIdInDb
+     * @param $newInspectorId
+     * @return boolean
+     */
+    private function updateInspectorIdIfNotEqual($measurementId, $inspectorIdInDb, $newInspectorId)
+    {
+        if($inspectorIdInDb != $newInspectorId) {
+            //Update the db value with the value in the import file
+            $sql = "UPDATE measurement SET inspector_id = '".$newInspectorId."' WHERE id = ".$measurementId;
+            $this->em->getConnection()->exec($sql);
+            return true;
+        } else {
+            return false;
         }
     }
 

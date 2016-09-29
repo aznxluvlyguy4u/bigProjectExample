@@ -288,7 +288,7 @@ class BodyFatRepository extends MeasurementRepository {
     public function getAllBodyFatsBySql($isGetGroupedByAnimalAndDate = false)
     {
         $sql = "SELECT n.id as id, a.id as animal_id, n.animal_id_and_date, n.measurement_date, 
-                        fat1.fat as fat1,  fat2.fat as fat2, fat3.fat as fat3,
+                        fat1.fat as fat1,  fat2.fat as fat2, fat3.fat as fat3, fat1_id, fat2_id, fat3_id,
                         n.inspector_id, p.last_name as inspector_last_name
                   FROM measurement n
                   INNER JOIN body_fat z ON z.id = n.id
