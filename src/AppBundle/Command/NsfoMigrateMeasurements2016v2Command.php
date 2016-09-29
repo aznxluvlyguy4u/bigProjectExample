@@ -20,6 +20,7 @@ use AppBundle\Enumerator\MeasurementType;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\NumberUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
@@ -138,11 +139,12 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
             $measurementDateString = TimeUtil::flipDateStringOrder($row[1]);
             $inspectorName = $row[2];
 
-            $weight = $row[7];
-            $fat1 = $row[8];
-            $fat2 = $row[9];
-            $fat3 = $row[10];
-            $muscleThickness = $row[11];
+            //Replace ',' decimals by '.'
+            $weight = NumberUtil::replaceCommaByDot($row[7]);
+            $fat1 = NumberUtil::replaceCommaByDot($row[8]);
+            $fat2 = NumberUtil::replaceCommaByDot($row[9]);
+            $fat3 = NumberUtil::replaceCommaByDot($row[10]);
+            $muscleThickness = NumberUtil::replaceCommaByDot($row[11]);
 
             $animalIdAndDate = $this->writeAnimalIdAndDate($vsmId, $measurementDateString);
 
