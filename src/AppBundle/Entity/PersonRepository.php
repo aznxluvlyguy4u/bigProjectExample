@@ -46,6 +46,20 @@ class PersonRepository extends BaseRepository
 
 
   /**
+   * @param int $id
+   * @return string|null
+   */
+  public function getLastNameById($id)
+  {
+    if($id == null || strtoupper($id) == 'NULL') { return null; }
+
+    $sql = "SELECT last_name FROM person WHERE id = ".$id;
+    $result = $this->getManager()->getConnection()->query($sql)->fetch();
+    return $result['last_name'];
+  }
+
+
+  /**
    * @param string $type
    * @param string $firstName
    * @param string $lastName

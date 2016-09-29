@@ -416,7 +416,7 @@ class WeightRepository extends MeasurementRepository {
             $filter = "WHERE is_revoked = false";
         }
         
-        $sql = "SELECT n.*, z.*, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, a.date_of_birth, p.last_name as inspector_last_name FROM measurement n
+        $sql = "SELECT n.*, z.*, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, a.name as vsm_id, a.date_of_birth, p.last_name as inspector_last_name FROM measurement n
                   INNER JOIN weight z ON z.id = n.id
                   INNER JOIN animal a ON a.id = z.animal_id
                   LEFT JOIN person p ON p.id = n.inspector_id ".$filter;

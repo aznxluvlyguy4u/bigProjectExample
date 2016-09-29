@@ -103,7 +103,7 @@ class MuscleThicknessRepository extends MeasurementRepository {
     public function getAllMuscleThicknessesBySql($isGetGroupedByAnimalAndDate = false)
     {
         $sql = "
-             SELECT n.*, z.*, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, p.last_name as inspector_last_name FROM measurement n
+             SELECT n.*, z.*, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, a.name as vsm_id, p.last_name as inspector_last_name FROM measurement n
 
               INNER JOIN muscle_thickness z ON z.id = n.id
               LEFT JOIN person p ON p.id = n.inspector_id
