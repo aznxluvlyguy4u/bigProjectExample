@@ -36,6 +36,7 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
     const IS_GROUPED_BY_ANIMAL_AND_DATE = true;
     const FOLDER_NAME = 'migration';
     const FILE_NAME_VSM_IDS_NOT_IN_DB = 'vsmId_van_metingen_waarvan_er_geen_dieren_in_de_database_zitten.txt';
+    const DUPLICATE_MEASUREMENTS_ERROR_MESSAGE = 'There are duplicate measurements! Run duplicate measurements fix in nsfo:dump:mixblup option 5';
 
     /** @var ObjectManager $em */
     private $em;
@@ -233,7 +234,9 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
             }
 
         } else {
-
+            if(count($weightsInDb) > 1) {
+                dump(self::DUPLICATE_MEASUREMENTS_ERROR_MESSAGE);die;
+            }
         }
     }
 
@@ -258,6 +261,12 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
             //Persist new measurement
             $this->bodyFatRepository->insertNewBodyFat($animalIdAndDate, $fat1, $fat2, $fat3, $inspectorId);
             return null;
+
+        } else {
+            if(count($bodyFatsInDb)>1) {
+                dump(self::DUPLICATE_MEASUREMENTS_ERROR_MESSAGE);die;
+            }
+
         }
     }
 
@@ -279,6 +288,12 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
             //No measurements found in db
             //Persist new measurement
             $this->muscleThicknessRepository->insertNewMuscleThickness($animalIdAndDate, $muscleThickness, $inspectorId);
+
+        } else {
+            if(count($muscleThicknessesInDb)>1){
+                dump(self::DUPLICATE_MEASUREMENTS_ERROR_MESSAGE);die;
+            }
+
         }
     }
 
