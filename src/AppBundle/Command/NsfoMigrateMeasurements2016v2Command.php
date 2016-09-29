@@ -3,6 +3,7 @@
 namespace AppBundle\Command;
 
 use AppBundle\Component\Utils;
+use AppBundle\Constant\Constant;
 use AppBundle\Constant\MeasurementConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
@@ -33,6 +34,13 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
     const FOLDER_NAME = 'migration';
     const FILE_NAME_VSM_IDS_NOT_IN_DB = 'vsmId_van_metingen_waarvan_er_geen_dieren_in_de_database_zitten.txt';
     const DUPLICATE_MEASUREMENTS_ERROR_MESSAGE = 'There are duplicate measurements! Run duplicate measurements fix in nsfo:dump:mixblup option 5';
+    const SEPARATOR = ';';
+    const DUPLICATE_BODY_FATS_FILE_NAME = 'dubbele_vetmetingen.txt';
+    const DUPLICATE_WEIGHTS_FILE_NAME = 'dubbele_gewichten.txt';
+    const DUPLICATE_MUSCLE_THICKNESSES_FILE_NAME = 'dubbele_muscle_thicknesses.txt';
+    const SOURCE_DB = 'database';
+    const SOURCE_IMPORT_FILE = 'import_bestand';
+
 
     /** @var ObjectManager $em */
     private $em;
@@ -64,8 +72,23 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
     /** @var array */
     private $muscleThicknessesInDb;
 
+    /** @var int */
+    private $deletedDuplicates;
+
+    /** @var int */
+    private $fixedDuplicates;
+
     /** @var string */
     private $outputFolder;
+
+    /** @var array */
+    private $duplicateWeights;
+
+    /** @var array */
+    private $duplicateBodyFats;
+
+    /** @var array */
+    private $duplicateMuscleThicknesses;
 
     private $csvParsingOptions = array(
         'finder_in' => 'app/Resources/imports/',
@@ -121,8 +144,13 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
 
         //Result arrays
         $vsmIdsNotInDatabase = array();
+        $this->duplicateWeights = array();
+        $this->duplicateBodyFats = array();
+        $this->duplicateMuscleThicknesses = array();
 
         //Counters
+        $this->fixedDuplicates = 0;
+        $this->deletedDuplicates = 0;
         $rowCount = 0;
         $weightsNew = 0;
         $weightsFixed = 0;
@@ -200,7 +228,7 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
             $message = $rowCount.' Weights : '.$weightsSkipped.'/'.$weightsNew.'/'.$weightsFixed
                                 .' | BodyFats: '.$bodyFatsSkipped.'/'.$bodyFatsNew.'/'.$bodyFatsFixed
                                 .' | MuscleThicknesses: '.$muscleThicknessesSkipped.'/'.$muscleThicknessesNew.'/'.$muscleThicknessesFixed
-                                .' (skipped/new/updated)'
+                                .' (skipped/new/updated) '.$this->deletedDuplicates.'/'.$this->fixedDuplicates.' (deleted-/fixed duplicates)'
                         ;
             $cmdUtil->advanceProgressBar(1, $message);
         }
@@ -208,6 +236,35 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
         //Printing Errors
         foreach ($vsmIdsNotInDatabase as $vsmId) {
             file_put_contents($this->outputFolder.'/'.self::FILE_NAME_VSM_IDS_NOT_IN_DB, $vsmId."\n", FILE_APPEND);
+        }
+
+        /* Print duplicates */
+
+        //column header
+        file_put_contents($this->outputFolder.'/'.self::DUPLICATE_MUSCLE_THICKNESSES_FILE_NAME,
+        'uln'.self::SEPARATOR.'stn'.self::SEPARATOR.'vsmId'.self::SEPARATOR.'meetdatum'
+        .self::SEPARATOR.'fat1'.self::SEPARATOR.'fat2'.self::SEPARATOR.'fat3'.self::SEPARATOR.'inspector'.self::SEPARATOR.'bron'
+        ."\n", FILE_APPEND);
+        foreach ($this->duplicateBodyFats as $row) {
+            file_put_contents($this->outputFolder.'/'.self::DUPLICATE_BODY_FATS_FILE_NAME, $row."\n", FILE_APPEND);
+        }
+
+        //column header
+        file_put_contents($this->outputFolder.'/'.self::DUPLICATE_MUSCLE_THICKNESSES_FILE_NAME,
+            'uln'.self::SEPARATOR.'stn'.self::SEPARATOR.'vsmId'.self::SEPARATOR.'meetdatum'
+            .self::SEPARATOR.'muscle_thickness'.self::SEPARATOR.'inspector'.self::SEPARATOR.'bron'
+        ."\n", FILE_APPEND);
+        foreach ($this->duplicateMuscleThicknesses as $row) {
+            file_put_contents($this->outputFolder.'/'.self::DUPLICATE_MUSCLE_THICKNESSES_FILE_NAME, $row."\n", FILE_APPEND);
+        }
+
+        //column header
+        file_put_contents($this->outputFolder.'/'.self::DUPLICATE_MUSCLE_THICKNESSES_FILE_NAME,
+            'uln'.self::SEPARATOR.'stn'.self::SEPARATOR.'vsmId'.self::SEPARATOR.'meetdatum'.self::SEPARATOR.'geboortegewicht'
+            .self::SEPARATOR.'gewicht'.self::SEPARATOR.'inspector'.self::SEPARATOR.'bron'
+        ."\n", FILE_APPEND);
+        foreach ($this->duplicateWeights as $row) {
+            file_put_contents($this->outputFolder.'/'.self::DUPLICATE_WEIGHTS_FILE_NAME, $row."\n", FILE_APPEND);
         }
 
         $cmdUtil->setEndTimeAndPrintFinalOverview();
@@ -245,50 +302,90 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
         $measurementDateString = $parts[MeasurementConstant::DATE];
 
         $weightsInDb = Utils::getNullCheckedArrayValue($animalIdAndDate, $this->weightsInDb);
+
+        //BirthWeightCheck
+        $isDateOfBirth = $this->animalRepository->isDateOfBirth($animalId, $measurementDateString);
+        if($isDateOfBirth === null) {
+            //Date format is incorrect, so it is highly likely that the measurementDate is missing
+            //Skip measurement if measurementDate is missing.
+            return null;
+
+        } else {
+            if ($isDateOfBirth) {
+                if (!MeasurementsUtil::isValidBirthWeightValue($weight)) {
+                    //Block birthWeights higher than 10 kg
+                    return null;
+                }
+            }
+        }
+        //End of birthWeightCheck
+
+
         if($weightsInDb == null) {
             //No measurements found in db
             //Persist new measurement
-            $isDateOfBirth = $this->animalRepository->isDateOfBirth($animalId, $measurementDateString);
-            if($isDateOfBirth === null) {
-                //Date format is incorrect, so it is highly likely that the measurementDate is missing
-                //Skip measurement if measurementDate is missing.
-                return null;
-                
-            } else {
-                if($isDateOfBirth) {
-                    if(!MeasurementsUtil::isValidBirthWeightValue($weight)){
-                        //Block birthWeights higher than 10 kg
-                        return null;
-                    }
-                }
-                $this->weightRepository->insertNewWeight($animalIdAndDate, $weight, $inspectorId, $isDateOfBirth);
-                return [true, false]; //successful insert
+
+            $this->weightRepository->insertNewWeight($animalIdAndDate, $weight, $inspectorId, $isDateOfBirth);
+            return [true, false]; //successful insert
+
+        } elseif(count($weightsInDb) > 1) {
+
+            //base
+            $weightInDb = $weightsInDb[0];
+            $base = $weightInDb['uln'].self::SEPARATOR
+                .$weightInDb['stn'].self::SEPARATOR
+                .$weightInDb['vsm_id'].self::SEPARATOR
+                .$measurementDateString.self::SEPARATOR
+                .$weightInDb['is_birth_weight'];
+            
+            //write measurements in the db
+            foreach($weightsInDb as $weightInDb) {
+                $this->duplicateWeights[] = $base.self::SEPARATOR
+                                            .$weightInDb['weight'].self::SEPARATOR
+                                            .$weightInDb['inspector_last_name'].self::SEPARATOR
+                                            .self::SOURCE_DB;
             }
+            
+            //write measurement from import file
+            $inspectorLastName = $this->inspectorRepository->getLastNameById($inspectorId);
+            $this->duplicateWeights[] = $base.self::SEPARATOR
+                                        .$weight.self::SEPARATOR
+                                        .$inspectorLastName.self::SEPARATOR
+                                        .self::SOURCE_IMPORT_FILE;
 
         } else {
-            if(count($weightsInDb) > 1) {
-                dump(self::DUPLICATE_MEASUREMENTS_ERROR_MESSAGE);die;
+            $weightInDb = $weightsInDb[0];
+            return $this->updateWeightIfDifferentInDb($inspectorId, $weightInDb, $weight);
+        }
+    }
 
-            } else {
-                $weightInDb = $weightsInDb[0];
-                $weightValueInDb = $weightInDb['weight'];
-                $weightId = $weightInDb['id'];
 
-                $isUpdateInspector = $this->updateInspectorIdIfNotEqual($weightId, $weightInDb['inspector_id'], $inspectorId);
-                $isUpdateWeight = $weightValueInDb != $weight;
-                if($isUpdateWeight) {
-                    //Update the db value with the value in the import file
-                    $sql = "UPDATE weight SET weight = '".$weight."' WHERE id = ".$weightId;
-                    $this->em->getConnection()->exec($sql);
-                }
-                //If they are equal, do nothing
+    /**
+     * @param int $inspectorId
+     * @param array $weightInDb
+     * @param float $newWeight
+     * @return array|null
+     */
+    private function updateWeightIfDifferentInDb($inspectorId, $weightInDb, $newWeight)
+    {
+        //The birthWeight check must be done before the logic below
 
-                if($isUpdateInspector || $isUpdateWeight) {
-                    return [true, true]; //successful update
-                } else {
-                    return null; //no changes
-                }
-            }
+        $weightValueInDb = $weightInDb['weight'];
+        $weightId = $weightInDb['id'];
+
+        $isUpdateInspector = $this->updateInspectorIdIfNotEqual($weightId, $weightInDb['inspector_id'], $inspectorId);
+        $isUpdateWeight = $weightValueInDb != $newWeight;
+        if($isUpdateWeight) {
+            //Update the db value with the value in the import file
+            $sql = "UPDATE weight SET weight = '".$newWeight."' WHERE id = ".$weightId;
+            $this->em->getConnection()->exec($sql);
+        }
+        //If they are equal, do nothing
+
+        if($isUpdateInspector || $isUpdateWeight) {
+            return [true, true]; //successful update
+        } else {
+            return null; //no changes
         }
     }
 
@@ -316,7 +413,31 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
 
         } else {
             if(count($bodyFatsInDb)>1) {
-                dump(self::DUPLICATE_MEASUREMENTS_ERROR_MESSAGE);die;
+                //base
+                $bodyFatInDb = $bodyFatsInDb[0];
+                $base = $bodyFatInDb['uln'].self::SEPARATOR
+                    .$bodyFatInDb['stn'].self::SEPARATOR
+                    .$bodyFatInDb['vsm_id'].self::SEPARATOR
+                    .$measurementDateString.self::SEPARATOR;
+
+                //write measurements in the db
+                foreach($bodyFatsInDb as $bodyFatInDb) {
+                    $this->duplicateBodyFats[] = $base.self::SEPARATOR
+                        .$bodyFatInDb['fat1'].self::SEPARATOR
+                        .$bodyFatInDb['fat2'].self::SEPARATOR
+                        .$bodyFatInDb['fat3'].self::SEPARATOR
+                        .$bodyFatInDb['inspector_last_name'].self::SEPARATOR
+                        .self::SOURCE_DB;
+                }
+
+                //write measurement from import file
+                $inspectorLastName = $this->inspectorRepository->getLastNameById($inspectorId);
+                $this->duplicateWeights[] = $base.self::SEPARATOR
+                    .$fat1.self::SEPARATOR
+                    .$fat2.self::SEPARATOR
+                    .$fat3.self::SEPARATOR
+                    .$inspectorLastName.self::SEPARATOR
+                    .self::SOURCE_IMPORT_FILE;
 
             } else {
                 $bodyFatInDb = $bodyFatsInDb[0];
@@ -365,6 +486,9 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
      */
     private function processMuscleThicknessMeasurement($animalIdAndDate, $muscleThickness, $inspectorId)
     {
+        $parts = MeasurementsUtil::getIdAndDateFromAnimalIdAndDateString($animalIdAndDate);
+        $measurementDateString = $parts[MeasurementConstant::DATE];
+        
         $muscleThicknessesInDb = Utils::getNullCheckedArrayValue($animalIdAndDate, $this->muscleThicknessesInDb);
         if($muscleThicknessesInDb == null) {
             //No measurements found in db
@@ -373,7 +497,27 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
 
         } else {
             if(count($muscleThicknessesInDb)>1){
-                dump(self::DUPLICATE_MEASUREMENTS_ERROR_MESSAGE);die;
+                //base
+                $muscleThicknessInDb = $muscleThicknessesInDb[0];
+                $base = $muscleThicknessInDb['uln'].self::SEPARATOR
+                    .$muscleThicknessInDb['stn'].self::SEPARATOR
+                    .$muscleThicknessInDb['vsm_id'].self::SEPARATOR
+                    .$measurementDateString.self::SEPARATOR;
+
+                //write measurements in the db
+                foreach($muscleThicknessesInDb as $muscleThicknessInDb) {
+                    $this->duplicateBodyFats[] = $base.self::SEPARATOR
+                        .$muscleThicknessInDb['muscle_thickness'].self::SEPARATOR
+                        .$muscleThicknessInDb['inspector_last_name'].self::SEPARATOR
+                        .self::SOURCE_DB;
+                }
+
+                //write measurement from import file
+                $inspectorLastName = $this->inspectorRepository->getLastNameById($inspectorId);
+                $this->duplicateWeights[] = $base.self::SEPARATOR
+                    .$muscleThickness.self::SEPARATOR
+                    .$inspectorLastName.self::SEPARATOR
+                    .self::SOURCE_IMPORT_FILE;
 
             } else {
                 $muscleThicknessInDb = $muscleThicknessesInDb[0];
@@ -413,7 +557,7 @@ class NsfoMigrateMeasurements2016v2Command extends ContainerAwareCommand
             if($newInspectorId == null) { $newInspectorId = 'NULL'; }
 
             //Update the db value with the value in the import file
-            $sql = "UPDATE measurement SET inspector_id = '".$newInspectorId."' WHERE id = ".$measurementId;
+            $sql = "UPDATE measurement SET inspector_id = ".$newInspectorId." WHERE id = ".$measurementId;
             $this->em->getConnection()->exec($sql);
             return true;
         } else {
