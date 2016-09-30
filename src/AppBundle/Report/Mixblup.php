@@ -308,6 +308,8 @@ class Mixblup
             ' CovNH      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,
             ' CovSW      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,
             ' CovOV      I !missing '.self::BREED_CODE_PARTS_NULL_FILLER,  //other  (NN means unknown)
+            ' CovHet     T !missing '.self::HETEROSIS_NULL_FILLER.' #Heterosis van het dier',  //other  (NN means unknown)
+            ' CovRec     T !missing '.self::RECOMBINATION_NULL_FILLER.' #Recombinatie van het dier',  //other  (NN means unknown)
             ' scrgen     A !missing '.self::SCRAPIE_GENOTYPE_NULL_FILLER.' #scrapiegenotype',
             ' n-ling     I !missing '.self::NLING_NULL_FILLER.' #worp grootte',  //Litter->size()
             ' worpnr     A !missing '.self::LITTER_GROUP_NULL_FILLER.' #worpnummer',  //worpnummer/litterGroup
@@ -896,6 +898,12 @@ class Mixblup
 
         $breedCode = Utils::fillNullOrEmptyString($animalData['breed_code'], self::BREED_CODE_NULL_FILLER);
         $breedType = Utils::fillNullOrEmptyString(Translation::translateBreedType($animalData['breed_type']), self::BREED_TYPE_NULL_FILLER);
+
+        $geneDiversity = BreedValueUtil::getHeterosisAndRecombinationBy8Parts($this->em, $animalId, self::HETEROSIS_AND_RECOMBINATION_ROUNDING_ACCURACY);
+
+        $heterosis = Utils::fillNullOrEmptyString($geneDiversity[BreedValueUtil::HETEROSIS], self::HETEROSIS_NULL_FILLER);
+        $recombination = Utils::fillNullOrEmptyString($geneDiversity[BreedValueUtil::RECOMBINATION], self::RECOMBINATION_NULL_FILLER);
+
         $scrapieGenotype = Utils::fillNullOrEmptyString($animalData['scrapie_genotype'], self::SCRAPIE_GENOTYPE_NULL_FILLER);
         $nLing = Utils::fillNullOrEmptyString($animalData['born_alive_count'] + $animalData['stillborn_count'], self::NLING_NULL_FILLER);
         $litterGroup = Utils::fillNullOrEmptyString($animalData['litter_group'], self::LITTER_GROUP_NULL_FILLER);
@@ -916,6 +924,8 @@ class Mixblup
             .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::NH), self::COLUMN_WIDTH_BREED_CODE_PART, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::SW), self::COLUMN_WIDTH_BREED_CODE_PART, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($breedCodeValues->get(BreedCodeType::OV), self::COLUMN_WIDTH_BREED_CODE_PART, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($heterosis, self::COLUMN_WIDTH_HETEROSIS, self::COLUMN_PADDING_SIZE)
+            .Utils::addPaddingToStringForColumnFormatCenter($recombination, self::COLUMN_WIDTH_RECOMBINATION, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($scrapieGenotype, self::COLUMN_WIDTH_GENOTYPE, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($nLing, self::COLUMN_WIDTH_NLING, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($litterGroup, self::COLUMN_WIDTH_LITTER_GROUP, self::COLUMN_PADDING_SIZE)
