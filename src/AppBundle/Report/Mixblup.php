@@ -892,7 +892,7 @@ class Mixblup
         $animalUln = self::formatUlnByValue($animalData['uln_country_code_a'], $animalData['uln_number_a'], self::ULN_NULL_FILLER);
         $fatherUln = self::formatUlnByValue($animalData['uln_country_code_f'], $animalData['uln_number_f'], self::ULN_NULL_FILLER);
         $motherUln = self::formatUlnByValue($animalData['uln_country_code_m'], $animalData['uln_number_m'], self::ULN_NULL_FILLER);
-        $gender = Utils::fillNullOrEmptyString($animalData['gender'], self::GENDER_NULL_FILLER);
+        $gender = Utils::fillNullOrEmptyString(self::formatGender($animalData['gender']), self::GENDER_NULL_FILLER);
 
         $breedCode = Utils::fillNullOrEmptyString($animalData['breed_code'], self::BREED_CODE_NULL_FILLER);
         $breedType = Utils::fillNullOrEmptyString(Translation::translateBreedType($animalData['breed_type']), self::BREED_TYPE_NULL_FILLER);
@@ -1042,9 +1042,9 @@ class Mixblup
      */
     public static function formatGender($gender)
     {
-        if($gender == GenderType::M || $gender == GenderType::MALE) {
+        if($gender == GenderType::M || $gender == GenderType::MALE || $gender == self::RAM) {
             $gender = self::RAM;
-        } else if($gender == GenderType::V || $gender == GenderType::FEMALE) {
+        } else if($gender == GenderType::V || $gender == GenderType::FEMALE || $gender = self::EWE) {
             $gender = self::EWE;
         } else {
             $gender = self::GENDER_NULL_FILLER;
