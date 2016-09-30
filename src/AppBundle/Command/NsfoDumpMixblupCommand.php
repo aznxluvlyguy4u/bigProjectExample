@@ -273,6 +273,12 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
     private function deleteDuplicateMeasurements()
     {
+
+        $isRemoveTimeFromMeasurementDates = $this->cmdUtil->generateConfirmationQuestion('Remove time from MeasurementDates? (y/n): ');
+        if($isRemoveTimeFromMeasurementDates) {
+            $this->weightRepository->removeTimeFromAllMeasurementDates();
+        }
+        
         $isClearDuplicates = $this->cmdUtil->generateConfirmationQuestion('Fix measurements and then Clear ALL duplicate measurements? (y/n): ');
         if ($isClearDuplicates) {
 

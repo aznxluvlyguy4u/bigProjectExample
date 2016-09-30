@@ -101,4 +101,11 @@ class MeasurementRepository extends BaseRepository {
         $sql = "SELECT MAX(id) FROM measurement";
         return $this->executeSqlQuery($sql);
     }
+
+    
+    public function removeTimeFromAllMeasurementDates()
+    {
+        $sql = "UPDATE measurement SET measurement_date = DATE(measurement_date)";
+        $this->getManager()->getConnection()->exec($sql);
+    }
 }
