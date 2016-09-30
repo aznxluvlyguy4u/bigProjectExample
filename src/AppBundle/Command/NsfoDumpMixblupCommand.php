@@ -182,7 +182,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         }
 
         //Non-Export Animals with ubn of birth
-        $sql = "UPDATE animal SET mixblup_block = CAST(ubn_of_birth AS INT) WHERE mixblup_block IS NULL AND animal.ubn_of_birth IS NOT NULL AND ".$typeSelection;
+        $sql = "UPDATE animal SET mixblup_block = CAST(ubn_of_birth AS INT) WHERE mixblup_block IS NULL AND animal.ubn_of_birth IS NOT NULL AND animal.ubn_of_birth <> '' AND ".$typeSelection;
         $this->em->getConnection()->exec($sql);
 
         //If no ubn of birth is available, then take the ubn of the current location
