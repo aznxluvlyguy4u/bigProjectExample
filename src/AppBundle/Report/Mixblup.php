@@ -36,7 +36,7 @@ class Mixblup
 {
     //Formatting
     const BLOCK_NULL_FILLER = 3;
-    const ULN_NULL_FILLER = 'N_B';
+    const ULN_NULL_FILLER = 0;
     const BREED_CODE_NULL_FILLER = 'N_B';
     const BREED_CODE_PARTS_NULL_FILLER = -99;
     const BREED_TYPE_NULL_FILLER = 'N_B';
