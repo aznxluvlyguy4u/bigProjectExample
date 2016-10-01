@@ -7,17 +7,9 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BreedCode;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
-use AppBundle\Entity\Fat1;
-use AppBundle\Entity\Fat2;
-use AppBundle\Entity\Fat3;
-use AppBundle\Entity\Measurement;
-use AppBundle\Entity\MeasurementRepository;
-use AppBundle\Entity\MuscleThickness;
-use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
 use AppBundle\Enumerator\BreedCodeType;
@@ -177,6 +169,9 @@ class Mixblup
     /** @var int */
     private $lastMeasurementYear;
 
+    /** @var boolean */
+    private $isGetMeasurements;
+
     /** @var ArrayCollection */
     private $animalRowBases;
 
@@ -208,9 +203,16 @@ class Mixblup
         $this->animalRowBases = new ArrayCollection();
         $this->testAttributes = new ArrayCollection();
         $this->measurementCodes = array();
+        $this->cmdUtil = $cmdUtil;
+
+        if($firstMeasurementYear == null && $lastMeasurementYear == null) {
+            $this->isGetAllMeasurements = true;
+        } else {
+            $this->isGetAllMeasurements = false;
+        }
+
         $this->firstMeasurementYear = $firstMeasurementYear;
         $this->lastMeasurementYear = $lastMeasurementYear;
-        $this->cmdUtil = $cmdUtil;
 
         $this->weightRepository = $this->em->getRepository(Weight::class);
 
@@ -267,10 +269,16 @@ class Mixblup
 
     private function getTestMeasurementsBySql()
     {
-        $startDate = $this->firstMeasurementYear.'-01-01';
-        $endDate = ($this->lastMeasurementYear+1).'-01-01';
+        if($this->isGetAllMeasurements) {
+            $sql = "SELECT DISTINCT(animal_id_and_date) as code FROM measurement m WHERE (type = 'BodyFat' OR type = 'Weight' OR type = 'MuscleThickness' OR type = 'TailLength')";
 
-        $sql = "SELECT DISTINCT(animal_id_and_date) as code FROM measurement m WHERE measurement_date BETWEEN '".$startDate."' AND '".$endDate."' AND (type = 'BodyFat' OR type = 'Weight' OR type = 'MuscleThickness' OR type = 'TailLength')";
+        } else {
+            $startDate = $this->firstMeasurementYear.'-01-01';
+            $endDate = ($this->lastMeasurementYear+1).'-01-01';
+
+            $sql = "SELECT DISTINCT(animal_id_and_date) as code FROM measurement m WHERE measurement_date BETWEEN '".$startDate."' AND '".$endDate."' AND (type = 'BodyFat' OR type = 'Weight' OR type = 'MuscleThickness' OR type = 'TailLength')";
+        }
+
         $results = $this->em->getConnection()->query($sql)->fetchAll();
 
         foreach($results as $result) {
@@ -288,7 +296,14 @@ class Mixblup
     {
         /** @var ExteriorRepository $exteriorRepository */
         $exteriorRepository = $this->em->getRepository(Exterior::class);
-        $this->exteriorMeasurements = $exteriorRepository->getExteriorsBetweenYears($this->firstMeasurementYear, $this->lastMeasurementYear);
+
+        if($this->isGetAllMeasurements) {
+            $this->exteriorMeasurements = $exteriorRepository->findAll();
+            
+        } else {
+            $this->exteriorMeasurements = $exteriorRepository->getExteriorsBetweenYears($this->firstMeasurementYear, $this->lastMeasurementYear);
+        }
+
         return $this->exteriorMeasurements;
     }
 

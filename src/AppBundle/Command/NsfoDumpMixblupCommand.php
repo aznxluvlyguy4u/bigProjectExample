@@ -3,10 +3,8 @@
 namespace AppBundle\Command;
 
 use AppBundle\Constant\Constant;
-use AppBundle\Entity\Animal;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BodyFatRepository;
-use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\MuscleThickness;
@@ -16,17 +14,12 @@ use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
 use AppBundle\Report\Mixblup;
-use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class NsfoDumpMixblupCommand extends ContainerAwareCommand
@@ -35,11 +28,13 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
     const DATA_FILENAME = 'databestand';
     const PEDIGREE_FILENAME = 'afstamming';
     const INSTRUCTIONS_FILENAME = 'mixblup_instructions';
-    const START_YEAR_MEASUREMENT = 2014;
-    const END_YEAR_MEASUREMENTS = 2016;
     const DEFAULT_OUTPUT_FOLDER_PATH = '/Resources/outputs/mixblup';
     const DEFAULT_MUTATIONS_FOLDER_PATH = '/Resources/mutations';
     const DEFAULT_OPTION = 0;
+
+    /* To get all the measurements set both years to null */
+    const START_YEAR_MEASUREMENT = null;
+    const END_YEAR_MEASUREMENTS = null;
 
     /** @var CommandUtil */
     private $cmdUtil;
