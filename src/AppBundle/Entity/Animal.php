@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -623,8 +624,22 @@ abstract class Animal
      */
     public function getUln()
     {
-        return $this->ulnCountryCode . $this->ulnNumber;
+        if($this->isUlnExists()) {
+            return $this->ulnCountryCode . $this->ulnNumber;
+        } else {
+            return null;
+        }
     }
+
+
+    /**
+     * @return bool
+     */
+    public function isUlnExists()
+    {
+        return NullChecker::isNotNull($this->ulnCountryCode) && NullChecker::isNotNull($this->ulnNumber);
+    }
+
 
     /**
      * @return string

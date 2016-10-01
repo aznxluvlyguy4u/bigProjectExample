@@ -492,7 +492,9 @@ class Mixblup
 
         foreach ($this->animals as $animalArray) {
             $row = $this->writePedigreeRecord($animalArray);
-            file_put_contents($this->pedigreeFilePath, $row."\n", FILE_APPEND);
+            if($row != null) {
+                file_put_contents($this->pedigreeFilePath, $row."\n", FILE_APPEND);
+            }
             $this->cmdUtil->advanceProgressBar(1, 'Generating pedigree file...');
         }
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
@@ -560,6 +562,13 @@ class Mixblup
         $animalUln = Utils::fillNullOrEmptyString($animalArray['uln'], self::ULN_NULL_FILLER);
         $motherUln = Utils::fillNullOrEmptyString($animalArray['uln_mother'], self::ULN_NULL_FILLER);
         $fatherUln = Utils::fillNullOrEmptyString($animalArray['uln_father'], self::ULN_NULL_FILLER);
+
+        $isUlnChildMissing = $animalUln == self::ULN_NULL_FILLER;
+        $isBothParentsMissing = $motherUln == self::ULN_NULL_FILLER && $fatherUln == self::ULN_NULL_FILLER;
+        if($isUlnChildMissing || $isBothParentsMissing) {
+            //skip record
+            return null;
+        }
 
         $breedCode = Utils::fillNullOrEmptyString($animalArray['breed_code'], self::BREED_CODE_NULL_FILLER);
         $gender = Utils::fillNullOrEmptyString(self::formatGender($animalArray['gender']));
@@ -711,6 +720,8 @@ class Mixblup
         $measurementDateString = $codeParts[1];
 
         $rowBaseAndDateOfBirthArray = $this->formatFirstPartDataRecordRowTestAttributesByAnimalDatabaseId($animalId);
+        if($rowBaseAndDateOfBirthArray == null) { return null; }
+
         $rowBase = $rowBaseAndDateOfBirthArray[self::ROW_DATA];
         $dateOfBirthString = $rowBaseAndDateOfBirthArray[self::DATE_OF_BIRTH];
 
@@ -915,6 +926,9 @@ class Mixblup
         $motherUln = self::formatUlnByValue($animalData['uln_country_code_m'], $animalData['uln_number_m'], self::ULN_NULL_FILLER);
         $gender = Utils::fillNullOrEmptyString(self::formatGender($animalData['gender']), self::GENDER_NULL_FILLER);
 
+        // Skip rows with missing uln
+        if($animalUln == self::ULN_NULL_FILLER) { return null; }
+
         $breedCode = Utils::fillNullOrEmptyString($animalData['breed_code'], self::BREED_CODE_NULL_FILLER);
         $breedType = Utils::fillNullOrEmptyString(Translation::translateBreedType($animalData['breed_type']), self::BREED_TYPE_NULL_FILLER);
 
@@ -966,6 +980,7 @@ class Mixblup
 
         if(!$this->isAnimalNotNullAndPrintErrors($animal, $measurement->getId())) { return null; }
         if($this->hasExteriorValuesAboveLimitAndPrintErrors($measurement)) { return null; }
+        if(!$animal->isUlnExists()) { return null; }
         
         $rowBase = $this->formatFirstPartDataRecordRowExteriorAttributes($animal);
         $measurementDate = self::formatMeasurementDate($measurement->getMeasurementDate());
