@@ -19,7 +19,8 @@ class BreedValueUtil
     const EIGHT_PART_DENOMINATOR = 64;
     const HUNDRED_PART_DENOMINATOR = 10000;
     const IS_IGNORE_INCOMPLETE_CODES = true;
-
+    const DEFAULT_DECIMAL_SYMBOL = '.';
+    
 
     /**
      * @param float $weightOnThatMoment
@@ -32,13 +33,14 @@ class BreedValueUtil
     public static function getGrowthValue($weightOnThatMoment, $ageInDays,
                                           $ageNullFiller = self::DEFAULT_AGE_NULL_FILLER,
                                           $growthNullFiller = self::DEFAULT_GROWTH_NULL_FILLER,
-                                          $weightNullFiller = self::DEFAULT_WEIGHT_NULL_FILLER)
+                                          $weightNullFiller = self::DEFAULT_WEIGHT_NULL_FILLER,
+                                          $decimalSymbol = self::DEFAULT_DECIMAL_SYMBOL)
     {
         if($weightOnThatMoment == null || $weightOnThatMoment == 0 || $weightOnThatMoment == $weightNullFiller
             || $ageInDays == null || $ageInDays == 0 || $ageInDays == $ageNullFiller) {
             return $growthNullFiller;
         } else {
-            return number_format($weightOnThatMoment / $ageInDays, 5, ',', '');
+            return number_format($weightOnThatMoment / $ageInDays, 5, $decimalSymbol, '');
         }
     }
 

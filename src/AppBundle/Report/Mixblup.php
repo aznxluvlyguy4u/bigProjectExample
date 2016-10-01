@@ -34,6 +34,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 
 class Mixblup
 {
+    //Formatting
     const BLOCK_NULL_FILLER = 3;
     const ULN_NULL_FILLER = 'N_B';
     const BREED_CODE_NULL_FILLER = 'N_B';
@@ -67,6 +68,8 @@ class Mixblup
     const EWE = 'ooi';
     const GENDER_NULL_FILLER = 'N_B';
     const NEUTER = 'N_B';
+
+    const DECIMAL_SYMBOL = '.';
 
     //Rounding Accuracies
     const HETEROSIS_AND_RECOMBINATION_ROUNDING_ACCURACY = 2;
@@ -777,7 +780,7 @@ class Mixblup
                 $weight = Utils::fillZero($results[0]['weight'], self::WEIGHT_NULL_FILLER);
                 $birthWeight = self::WEIGHT_NULL_FILLER;
                 $growth = BreedValueUtil::getGrowthValue($weight, $ageAtMeasurement,
-                    self::AGE_NULL_FILLER, self::GROWTH_NULL_FILLER, self::WEIGHT_NULL_FILLER);
+                    self::AGE_NULL_FILLER, self::GROWTH_NULL_FILLER, self::WEIGHT_NULL_FILLER, self::DECIMAL_SYMBOL);
             }
 
         } else {
