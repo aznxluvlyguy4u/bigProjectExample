@@ -946,6 +946,11 @@ class Mixblup
         $dateOfBirthString = explode(' ', $animalData['date_of_birth'])[0];
         $yearAndUbnOfBirth = self::getYearAndUbnOfBirthStringByValue($dateOfBirthYear, $animalData['ubn_of_birth']);
 
+        //skip rows where to much information is missing
+        if($gender == self::GENDER_NULL_FILLER && $fatherUln == self::ULN_NULL_FILLER && $motherUln == self::ULN_NULL_FILLER && $yearAndUbnOfBirth == self::YEAR_UBN_NULL_FILLER) {
+            return null;
+        }
+
         $rowBase =
             Utils::addPaddingToStringForColumnFormatSides($animalUln, self::COLUMN_WIDTH_ULN)
             .Utils::addPaddingToStringForColumnFormatCenter($gender, self::COLUMN_WIDTH_GENDER, self::COLUMN_PADDING_SIZE)
