@@ -170,7 +170,7 @@ class Mixblup
     private $lastMeasurementYear;
 
     /** @var boolean */
-    private $isGetMeasurements;
+    private $isGetAllMeasurements;
 
     /** @var ArrayCollection */
     private $animalRowBases;
