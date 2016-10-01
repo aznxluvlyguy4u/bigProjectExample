@@ -690,7 +690,7 @@ class Mixblup
         /* get animal values */
         $codeParts = explode('_', $animalIdAndDateOfMeasurement);
         $animalId = $codeParts[0];
-        $measurementDate = $codeParts[1];
+        $measurementDateString = $codeParts[1];
 
         $rowBaseAndDateOfBirthArray = $this->formatFirstPartDataRecordRowTestAttributesByAnimalDatabaseId($animalId);
         $rowBase = $rowBaseAndDateOfBirthArray[self::ROW_DATA];
@@ -715,7 +715,8 @@ class Mixblup
 
         //Test values might all be empty if all measurements were contradicting duplicates
         $isAnimalMissing = explode(' ', $rowBase)[0] == self::ULN_NULL_FILLER;
-        $isMeasurementDateMissing = $measurementDate == null || $measurementDate == '';
+        $isMeasurementDateMissing = $measurementDateString == null || $measurementDateString == '';
+        $measurementDate = self::formatMeasurementDate(new \DateTime($measurementDateString));
         $isAllTestValuesEmpty = $isAgeGrowthWeightEmpty && $isBodyFatEmpty && $isMuscleThicknessEmpty && $isTailLengthEmpty;
 
         if($isAllTestValuesEmpty || $isAnimalMissing || $isMeasurementDateMissing) {
