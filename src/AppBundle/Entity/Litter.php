@@ -81,7 +81,7 @@ class Litter extends DeclareNsfoBase
     private $isPseudoPregnancy;
 
     /**
-     * @ORM\OneToMany(targetEntity="Animal", mappedBy="litter")
+     * @ORM\OneToMany(targetEntity="Animal", mappedBy="litter", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     private $children;

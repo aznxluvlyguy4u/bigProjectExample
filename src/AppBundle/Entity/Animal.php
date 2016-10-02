@@ -451,7 +451,7 @@ abstract class Animal
     /**
      * @var Litter
      * @JMS\Type("AppBundle\Entity\Litter")
-     * @ORM\ManyToOne(targetEntity="Litter", inversedBy="children")
+     * @ORM\ManyToOne(targetEntity="Litter", inversedBy="children", cascade={"persist"})
      * @ORM\JoinColumn(name="litter_id", referencedColumnName="id")
      */
     protected $litter;
@@ -2155,7 +2155,17 @@ abstract class Animal
             $this->setBreedCode($animal->getBreedCode());
             $this->setScrapieGenotype($animal->getScrapieGenotype());
             $this->setNote($animal->getNote());
-            
+
+            /* Unidirectional OneToOne relationships */
+            $this->setBreeder($animal->getBreeder());
+
+            /* OneToMany relationships */
+            $litter = $animal->getLitter();
+            if($litter instanceof Litter) {
+                $litter->addChild($this);
+                $this->setLitter($litter);
+            }
+
             /* ManyToOne relationships */
             $father = $animal->getParentFather();
             if ($father instanceof Ram) { $this->setParentFather($father); }
@@ -2263,7 +2273,7 @@ abstract class Animal
      */
     private function replaceAnimalInNonParentManyToManyRelationships($collection)
     {
-        /** @var DeclareArrival|DeclareDepart|DeclareImport|DeclareExport|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclareTagReplace|DeclareWeight|AnimalResidence|BodyFat|MuscleThickness|TailLength|Weight|Exterior|Tag $item */
+        /** @var DeclareArrival|DeclareDepart|DeclareImport|DeclareExport|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclareTagReplace|DeclareWeight|AnimalResidence|BodyFat|MuscleThickness|TailLength|Weight|Exterior|Tag|Litter $item */
         foreach ($collection as $item) {
             $item->setAnimal(null);
             $item->setAnimal($this);
