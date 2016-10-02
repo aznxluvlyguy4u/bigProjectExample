@@ -97,6 +97,8 @@ class Litter extends DeclareNsfoBase
      */
     public function __construct()
     {
+        parent::__construct();
+
         $this->children = new ArrayCollection();
         $this->logDate = new \DateTime();
         $this->stillbornCount = 0;
