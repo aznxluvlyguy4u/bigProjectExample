@@ -490,11 +490,21 @@ class Mixblup
 
         $this->cmdUtil->setStartTimeAndPrintIt(count($this->animals) + 1, 1, 'Generating pedigree file...');
 
+        $pedigreeRecords = new ArrayCollection();
         foreach ($this->animals as $animalArray) {
             $row = $this->writePedigreeRecord($animalArray);
-            if($row != null) {
+
+            if($row == null) {
+                file_put_contents($this->pedigreeFilePath.'errors.txt', $animalArray['uln']."\n", FILE_APPEND);
+
+            } elseif($pedigreeRecords->contains($row)) {
+                file_put_contents($this->pedigreeFilePath.'duplicates.txt', $row."\n", FILE_APPEND);
+
+            } else {
                 file_put_contents($this->pedigreeFilePath, $row."\n", FILE_APPEND);
+                $pedigreeRecords->add($row);
             }
+
             $this->cmdUtil->advanceProgressBar(1, 'Generating pedigree file...');
         }
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
@@ -511,19 +521,25 @@ class Mixblup
         $message = 'Generating exterior measurements...';
         $this->cmdUtil->setStartTimeAndPrintIt($this->exteriorMeasurements->count()+1, 1, $message);
 
+        $exteriorAttributesRows  = new ArrayCollection();
         /** @var Exterior $exteriorMeasurement */
         foreach ($this->exteriorMeasurements as $exteriorMeasurement) {
             $row = $this->writeDataRecordExteriorAttributes($exteriorMeasurement);
-            if($row != null) {
-                file_put_contents($this->dataFilePathExteriorAttributes, $row."\n", FILE_APPEND);
-            } else {
+
+            if($row == null) {
                 if($exteriorMeasurement instanceof Exterior) {
                     $row = 'measuremendId: '.$exteriorMeasurement->getId();
                 } else {
                     $row = 'non-Exterior measurement';
                 }
                 file_put_contents($this->dataFilePathExteriorAttributes.'errors.txt', $row."\n", FILE_APPEND);
+            } elseif($exteriorAttributesRows->contains($row)) {
+                file_put_contents($this->dataFilePathExteriorAttributes.'duplicates.txt', $row."\n", FILE_APPEND);
+            } else {
+                file_put_contents($this->dataFilePathExteriorAttributes, $row."\n", FILE_APPEND);
+                $exteriorAttributesRows->add($row);
             }
+
             $this->cmdUtil->advanceProgressBar(1, $message);
         }
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
@@ -533,17 +549,21 @@ class Mixblup
         $this->getTestMeasurementsBySql();
         $testMeasurementsCount = count($this->measurementCodes);
         $message = 'Generating test measurements...';
-        $isSkipConflictingMeasurements = true; //TODO NOTE Duplicates and Controdicting measurements have to been fixed separatedly.
+        $isSkipConflictingMeasurements = true; //NOTE Duplicates and Contradicting measurements have to been fixed separately.
 
         $this->cmdUtil->setStartTimeAndPrintIt($testMeasurementsCount+1, 1, $message);
+        $testAttributeRows = new ArrayCollection();
         /** @var string $code */
         foreach ($this->measurementCodes as $code) {
             $row = $this->writeDataRecordTestAttributes($code, $isSkipConflictingMeasurements);
-            if($row != null) {
-                file_put_contents($this->dataFilePathTestAttributes, $row."\n", FILE_APPEND);
-            } else {
+            if($row == null) {
                 $row = 'animalIdAndDate: '.$code;
                 file_put_contents($this->dataFilePathTestAttributes.'errors.txt', $row."\n", FILE_APPEND);
+            } elseif($testAttributeRows->contains($row)) {
+                file_put_contents($this->dataFilePathTestAttributes.'duplicates.txt', $row."\n", FILE_APPEND);
+            } else {
+                file_put_contents($this->dataFilePathTestAttributes, $row."\n", FILE_APPEND);
+                $testAttributeRows->add($row);
             }
             $this->cmdUtil->advanceProgressBar(1, $message);
         }
