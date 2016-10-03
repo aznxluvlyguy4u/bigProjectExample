@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\DeclareNsfoBase;
+use AppBundle\Entity\DeclareWeight;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\Output;
@@ -123,8 +124,8 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
             return Output::createStandardJsonErrorResponse();
         }
 
-        $mate = self::revoke($declarationFromMessageId, $loggedInUser);
-        $this->persistAndFlush($mate);
+        $nsfoDeclaration = self::revoke($declarationFromMessageId, $loggedInUser);
+        $this->persistAndFlush($nsfoDeclaration);
 
         $output = 'Revoke complete';
 
@@ -140,6 +141,12 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
      */
     public static function revoke(DeclareNsfoBase $declareNsfoBase, $loggedInUser)
     {
+        if($declareNsfoBase instanceof DeclareWeight) {
+            if($declareNsfoBase->getWeightMeasurement() != null) {
+                $declareNsfoBase->getWeightMeasurement()->setIsRevoked(true);
+            }
+        }
+
         $declareNsfoBase->setRequestState(RequestStateType::REVOKED);
         $declareNsfoBase->setRevokeDate(new \DateTime('now'));
         $declareNsfoBase->setRevokedBy($loggedInUser);
