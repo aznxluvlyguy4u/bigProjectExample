@@ -654,9 +654,9 @@ class Mixblup
                 WHERE m.animal_id_and_date = '".$animalIdAndDate."'";
         $results = $this->em->getConnection()->query($sql)->fetchAll();
         $muscleThicknessValue = $this->getMeasurementFromSqlResults($results, $isSkipConflictingMeasurements, 'muscle_thickness');
-
+        $isEmptyMeasurement = NullChecker::numberIsNull($muscleThicknessValue);
         $muscleThicknessValue = Utils::fillZero($muscleThicknessValue,self::MUSCLE_THICKNESS_NULL_FILLER);
-        $isEmptyMeasurement = $muscleThicknessValue == self::MUSCLE_THICKNESS_NULL_FILLER;
+
         $result = Utils::addPaddingToStringForColumnFormatCenter($muscleThicknessValue, self::COLUMN_WIDTH_MUSCLE_THICKNESS, self::COLUMN_PADDING_SIZE);
 
         return [JsonInputConstant::MEASUREMENT_ROW => $result,
@@ -676,9 +676,9 @@ class Mixblup
                 WHERE m.animal_id_and_date = '".$animalIdAndDate."'";
         $results = $this->em->getConnection()->query($sql)->fetchAll();
         $tailLengthValue = $this->getMeasurementFromSqlResults($results, $isSkipConflictingMeasurements, 'length');
-
+        $isEmptyMeasurement = NullChecker::numberIsNull($tailLengthValue);
         $tailLengthValue = Utils::fillZero($tailLengthValue, self::TAIL_LENGTH_NULL_FILLER);
-        $isEmptyMeasurement = $tailLengthValue == self::TAIL_LENGTH_NULL_FILLER;
+
         $result = Utils::addPaddingToStringForColumnFormatCenter($tailLengthValue, self::COLUMN_WIDTH_TAIL_LENGTH, self::COLUMN_PADDING_SIZE);
 
         return [JsonInputConstant::MEASUREMENT_ROW => $result,
@@ -717,13 +717,16 @@ class Mixblup
             $fat1 = Utils::fillZero($results[0]['fat1'], self::FAT_NULL_FILLER);
             $fat2 = Utils::fillZero($results[0]['fat2'], self::FAT_NULL_FILLER);
             $fat3 = Utils::fillZero($results[0]['fat3'], self::FAT_NULL_FILLER);
+
+            $isEmptyMeasurement =  NullChecker::numberIsNull($results[0]['fat1'])
+                                && NullChecker::numberIsNull($results[0]['fat2'])
+                                && NullChecker::numberIsNull($results[0]['fat3']);
         } else {
             $fat1 = self::FAT_NULL_FILLER;
             $fat2 = self::FAT_NULL_FILLER;
             $fat3 = self::FAT_NULL_FILLER;
+            $isEmptyMeasurement = true;
         }
-
-        $isEmptyMeasurement = $fat1 == self::FAT_NULL_FILLER && $fat2 == self::FAT_NULL_FILLER && $fat3 == self::FAT_NULL_FILLER;
 
         $result =
              Utils::addPaddingToStringForColumnFormatCenter($fat1, self::COLUMN_WIDTH_FAT, self::COLUMN_PADDING_SIZE)
@@ -748,6 +751,7 @@ class Mixblup
         $measurementDateString = $codeParts[1];
 
         $rowBaseAndDateOfBirthArray = $this->formatFirstPartDataRecordRowTestAttributesByAnimalDatabaseId($animalId);
+        //Includes check for missing Animal
         if($rowBaseAndDateOfBirthArray == null) { return null; }
 
         $rowBase = $rowBaseAndDateOfBirthArray[self::ROW_DATA];
@@ -771,12 +775,11 @@ class Mixblup
         $block = self::getMixblupBlockByAnimalId($this->em, $animalId);
 
         //Test values might all be empty if all measurements were contradicting duplicates
-        $isAnimalMissing = explode(' ', $rowBase)[0] == self::ULN_NULL_FILLER;
-        $isMeasurementDateMissing = $measurementDateString == null || $measurementDateString == '';
+        $isMeasurementDateMissing = NullChecker::isNull($measurementDateString);
         $measurementDate = self::formatMeasurementDate(new \DateTime($measurementDateString));
         $isAllTestValuesEmpty = $isAgeGrowthWeightEmpty && $isBodyFatEmpty && $isMuscleThicknessEmpty && $isTailLengthEmpty;
 
-        if($isAllTestValuesEmpty || $isAnimalMissing || $isMeasurementDateMissing) {
+        if($isAllTestValuesEmpty || $isMeasurementDateMissing) {
             return null;
         }
 
@@ -837,13 +840,14 @@ class Mixblup
                     self::AGE_NULL_FILLER, self::GROWTH_NULL_FILLER, self::WEIGHT_NULL_FILLER, self::DECIMAL_SYMBOL);
             }
 
+            $isEmptyMeasurement = NullChecker::numberIsNull($results[0]['weight']);
+
         } else {
             $growth = self::GROWTH_NULL_FILLER;
             $birthWeight = self::WEIGHT_NULL_FILLER;
             $weight = self::WEIGHT_NULL_FILLER;
+            $isEmptyMeasurement = true;
         }
-
-        $isEmptyMeasurement = $weight == self::WEIGHT_NULL_FILLER && $birthWeight == self::WEIGHT_NULL_FILLER;
 
         $result =
              Utils::addPaddingToStringForColumnFormatCenter($ageAtMeasurement, self::COLUMN_WIDTH_AGE, self::COLUMN_PADDING_SIZE)
