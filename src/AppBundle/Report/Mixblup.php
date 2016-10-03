@@ -23,6 +23,7 @@ use AppBundle\Util\Translation;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class Mixblup
 {
@@ -184,6 +185,9 @@ class Mixblup
     /** @var WeightRepository $weightRepository */
     private $weightRepository;
 
+    /** @var OutputInterface */
+    private $output;
+
 
     /**
      * Mixblup constructor.
@@ -196,14 +200,16 @@ class Mixblup
      * @param int $lastMeasurementYear
      * @param CommandUtil $cmdUtil
      * @param array $animals
+     * @param OutputInterface $output
      */
-    public function __construct(ObjectManager $em, $outputFolderPath, $instructionsFileName, $dataFileName, $pedigreeFileName, $firstMeasurementYear, $lastMeasurementYear, $cmdUtil, $animals = null)
+    public function __construct(ObjectManager $em, $outputFolderPath, $instructionsFileName, $dataFileName, $pedigreeFileName, $firstMeasurementYear, $lastMeasurementYear, $cmdUtil, $animals = null, $output)
     {
         $this->em = $em;
         $this->animalRowBases = new ArrayCollection();
         $this->testAttributes = new ArrayCollection();
         $this->measurementCodes = array();
         $this->cmdUtil = $cmdUtil;
+        $this->output = $output;
 
         if($firstMeasurementYear == null && $lastMeasurementYear == null) {
             $this->isGetAllMeasurements = true;
@@ -298,9 +304,11 @@ class Mixblup
         $exteriorRepository = $this->em->getRepository(Exterior::class);
 
         if($this->isGetAllMeasurements) {
+            $this->output->writeln('Retrieving all exterior measurements...');
             $this->exteriorMeasurements = $exteriorRepository->findAll();
             
         } else {
+            $this->output->writeln('Retrieving exterior measurements between '.$this->firstMeasurementYear.' and '.$this->lastMeasurementYear.' ...');
             $this->exteriorMeasurements = $exteriorRepository->getExteriorsBetweenYears($this->firstMeasurementYear, $this->lastMeasurementYear);
         }
 
@@ -1585,7 +1593,6 @@ class Mixblup
     public function validateMeasurementData($isWithoutValidation = false)
     {
         $isGenerateMixblupBlockValues = false;
-        $isFixBirthWeightBoolean = false;
 
         $emptyMixblupBlockCount = MeasurementsUtil::getEmptyAnimalIdAndDateCount($this->em);
         if($emptyMixblupBlockCount > 0) {
@@ -1597,11 +1604,6 @@ class Mixblup
             }
         }
 
-        $fixMeasurements = $this->cmdUtil->generateConfirmationQuestion('Fix incorrect measurements if necessary? (y/n)');
-
-        if($fixMeasurements) {
-            $this->weightRepository->fixMeasurements();
-        }
         if($isGenerateMixblupBlockValues) {
             MeasurementsUtil::generateAnimalIdAndDateValues($this->em, false);
         }
