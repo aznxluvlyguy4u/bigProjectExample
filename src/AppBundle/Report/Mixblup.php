@@ -583,8 +583,8 @@ class Mixblup
         $motherUln = Utils::fillNullOrEmptyString($animalArray['uln_mother'], self::ULN_NULL_FILLER);
         $fatherUln = Utils::fillNullOrEmptyString($animalArray['uln_father'], self::ULN_NULL_FILLER);
 
-        $isUlnChildMissing = $animalUln == self::ULN_NULL_FILLER;
-        $isBothParentsMissing = $motherUln == self::ULN_NULL_FILLER && $fatherUln == self::ULN_NULL_FILLER;
+        $isUlnChildMissing = NullChecker::isNull($animalArray['uln']);
+        $isBothParentsMissing = NullChecker::isNull($animalArray['uln_mother']) && NullChecker::isNull($animalArray['uln_father']);
         if($isUlnChildMissing || $isBothParentsMissing) {
             //skip record
             return null;
@@ -947,7 +947,7 @@ class Mixblup
         $gender = Utils::fillNullOrEmptyString(self::formatGender($animalData['gender']), self::GENDER_NULL_FILLER);
 
         // Skip rows with missing uln
-        if($animalUln == self::ULN_NULL_FILLER) { return null; }
+        if(NullChecker::isNull($animalData['uln_number_a'])) { return null; }
 
         $breedCode = Utils::fillNullOrEmptyString($animalData['breed_code'], self::BREED_CODE_NULL_FILLER);
         $breedType = Utils::fillNullOrEmptyString(Translation::translateBreedType($animalData['breed_type']), self::BREED_TYPE_NULL_FILLER);
@@ -967,7 +967,10 @@ class Mixblup
         $yearAndUbnOfBirth = self::getYearAndUbnOfBirthStringByValue($dateOfBirthYear, $animalData['ubn_of_birth']);
 
         //skip rows where to much information is missing
-        if($gender == self::GENDER_NULL_FILLER && $fatherUln == self::ULN_NULL_FILLER && $motherUln == self::ULN_NULL_FILLER && $yearAndUbnOfBirth == self::YEAR_UBN_NULL_FILLER) {
+        if(NullChecker::isNull($animalData['gender'])
+            && NullChecker::isNull($animalData['uln_number_f'])
+            && NullChecker::isNull($animalData['uln_number_m'])
+            && (NullChecker::isNull($animalData['date_of_birth']) || NullChecker::isNull($animalData['ubn_of_birth']))) {
             return null;
         }
 
