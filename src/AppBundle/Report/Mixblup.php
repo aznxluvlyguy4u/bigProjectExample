@@ -592,8 +592,7 @@ class Mixblup
         $fatherUln = Utils::fillNullOrEmptyString($animalArray['uln_father'], self::ULN_NULL_FILLER);
 
         $isUlnChildMissing = NullChecker::isNull($animalArray['uln']);
-        $isBothParentsMissing = NullChecker::isNull($animalArray['uln_mother']) && NullChecker::isNull($animalArray['uln_father']);
-        if($isUlnChildMissing || $isBothParentsMissing) {
+        if($isUlnChildMissing) {
             //skip record
             return null;
         }
