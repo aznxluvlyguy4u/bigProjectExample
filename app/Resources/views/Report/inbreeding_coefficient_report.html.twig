@@ -9,8 +9,9 @@
     {% set isRamMissing = variables.isRamMissing %}
     {% set isProdEnv = variables.isProdEnv %}
     {% set counter = 0 %}
+    {% set rowsPerPage = 28 %}
 
-    {#  #}
+    {# HEADER #}
 
     {% if isProdEnv %}
         <div class="nsfo-logo">
@@ -25,26 +26,17 @@
 
     <h2>Inteeltcoëfficiënt van nageslacht na paring</h2>
 
-
     <p>Ram A: {{ ramUln }}, stn: {{ ramPedigree }} </p>
 
-    <div class="tg-wrap"><table class="tg">
-            <tr>
-                <td class="tg-yw4l">Ooi ULN</td>
-                <td class="tg-yw4l">Ooi STN</td>
-                <td class="tg-lqy6">Ram A</td>
-            </tr>
 
-
-    {#  #}
+    {# END OF HEADER #}
 
     {% for key,value in variables.ewes %}
+
+    {# SET VALUES #}
+
         {% set uln = key %}
         {% set ewe = value %}
-        {% set counter = counter + 1 %}
-
-
-        {#<p>Ooi {{ uln }}, stn: {{ ewe.pedigree }}: {{ ewe.inbreedingCoefficient }}</p>#}
 
         {% if ewe['pedigree'] is defined %}
             {% set ewePedigree = ewe.pedigree %}
@@ -58,14 +50,35 @@
             {% set eweInbreedingCoefficient = '' %}
         {% endif %}
 
-                <tr>
-                    <td class="tg-yw4l">{{ uln }}</td>
-                    <td class="tg-yw4l">{{ ewePedigree }}</td>
-                    <td class="tg-lqy6">{{ eweInbreedingCoefficient }}</td>
-                </tr>
+        {% if counter is divisible by (rowsPerPage) %}
+        {# COLUMN HEADER #}
 
-        {% if counter is divisible by (28) and loop.last == false %}
+            <div class="tg-wrap"><table class="tg">
+            <tr>
+                <td class="tg-yw4l">Ooi ULN</td>
+                <td class="tg-yw4l">Ooi STN</td>
+                <td class="tg-lqy6">Ram A</td>
+            </tr>
+        {% endif %}
+
+        {# ROW DATA #}
+
+            <tr>
+                <td class="tg-yw4l">{{ uln }}</td>
+                <td class="tg-yw4l">{{ ewePedigree }}</td>
+                <td class="tg-lqy6">{{ eweInbreedingCoefficient }}</td>
+            </tr>
+
+        {% set counter = counter + 1 %}
+
+        {# END OF TABLE #}
+        {% if counter is divisible by (rowsPerPage) %}
             </table></div>
+        {% endif %}
+
+    {# BREAK TO NEW PAGE: WITH HEADER ON NEW PAGE #}
+
+        {% if counter is divisible by (rowsPerPage) and loop.last == false %}
 
             {#necessary to enforce a pagebreak using css#}
         <footer></footer>
@@ -83,15 +96,7 @@
 
             <h2>Inteeltcoëfficiënt van nageslacht na paring</h2>
 
-
             <p>Ram A: {{ ramUln }}, stn: {{ ramPedigree }} </p>
-
-            <div class="tg-wrap"><table class="tg">
-                    <tr>
-                        <td class="tg-yw4l">Ooi ULN</td>
-                        <td class="tg-yw4l">Ooi STN</td>
-                        <td class="tg-lqy6">Ram A</td>
-                    </tr>
 
         {% endif %}
 
@@ -102,14 +107,6 @@
 {% endblock %}
 
 {% block stylesheets %}
-    {#<style>#}
-
-        {#/* Always insert a page break after each <footer> element (when printing) */#}
-        {#/*@media print {*/#}
-        {#/*footer {page-break-after: always;}*/#}
-        {#/*}*/#}
-
-    {#</style>#}
 
     <style type="text/css">
         h2 { text-align: center }
