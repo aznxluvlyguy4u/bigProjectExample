@@ -56,7 +56,7 @@ class TimeUtil
         
         
         if($dateOfDeath != null) {
-            $endDate = $dateOfDeath;
+            $endDate = clone $dateOfDeath;
         } else {
             $endDate = new \DateTime('now');
         }
@@ -64,6 +64,27 @@ class TimeUtil
         $interval = $endDate->diff($dateOfBirth);
 
         return $interval->y;
+    }
+
+
+    /**
+     * @param \DateTime $dateOfBirth
+     * @param \DateTime $dateOfDeath
+     * @return int
+     */
+    public static function getAgeMonths($dateOfBirth, $dateOfDeath = null)
+    {
+
+
+        if($dateOfDeath != null) {
+            $endDate = clone $dateOfDeath;
+        } else {
+            $endDate = new \DateTime('now');
+        }
+
+        $interval = $endDate->diff($dateOfBirth);
+
+        return $interval->y * 12 + $interval->m;
     }
 
 
