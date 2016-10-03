@@ -8,7 +8,9 @@
     {% set ramPedigree = variables.ram.pedigree %}
     {% set isRamMissing = variables.isRamMissing %}
     {% set isProdEnv = variables.isProdEnv %}
+    {% set counter = 0 %}
 
+    {#  #}
 
     {% if isProdEnv %}
         <div class="nsfo-logo">
@@ -33,21 +35,65 @@
                 <td class="tg-lqy6">Ram A</td>
             </tr>
 
+
+    {#  #}
+
     {% for key,value in variables.ewes %}
         {% set uln = key %}
         {% set ewe = value %}
+        {% set counter = counter + 1 %}
+
 
         {#<p>Ooi {{ uln }}, stn: {{ ewe.pedigree }}: {{ ewe.inbreedingCoefficient }}</p>#}
 
+        {% if ewe['pedigree'] is defined %}
+            {% set ewePedigree = ewe.pedigree %}
+        {% else %}
+            {% set ewePedigree = '' %}
+        {% endif %}
+
+        {% if ewe['inbreedingCoefficient'] is defined %}
+            {% set eweInbreedingCoefficient = ewe.inbreedingCoefficient %}
+        {% else %}
+            {% set eweInbreedingCoefficient = '' %}
+        {% endif %}
+
                 <tr>
                     <td class="tg-yw4l">{{ uln }}</td>
-                    <td class="tg-yw4l">{{ ewe.pedigree }}</td>
-                    <td class="tg-lqy6">{{ ewe.inbreedingCoefficient }}</td>
+                    <td class="tg-yw4l">{{ ewePedigree }}</td>
+                    <td class="tg-lqy6">{{ eweInbreedingCoefficient }}</td>
                 </tr>
 
-        {#{% if loop.last == false %}#}
-        {#<footer></footer> #}{# necessary to enforce a pagebreak using css #}
-        {#{% endif %}#}
+        {% if counter is divisible by (28) and loop.last == false %}
+            </table></div>
+
+            {#necessary to enforce a pagebreak using css#}
+        <footer></footer>
+
+            {% if isProdEnv %}
+                <div class="nsfo-logo">
+                    <img src="{{ absolute_url(asset('assets/images/nsfo-logo.png')) }}" width="556" height="70" />
+                </div>
+            {% else %}
+                <div class="nsfo-logo">
+                    <img src="https://one8rg-ch3301.files.1drv.com/y3m-UwC3zslAIMpjS9PwPtD6mAFgcAUimwX0OYMPGL16nsU5s1Qiejw0NEpefnqWrYqTuIRWzrZ2Pc-P_HmAeds9vA9QgS6Bco6PP6gAQEabSaxyZcZpjH0JKVGVfQq6zEAc1Pq2d3YHUQTTdKCbvsvqMf04J8Adk5FocZwylanEPo?width=1668&height=2102&cropmode=none" width="556" height="70" />
+                </div>
+            {% endif %}
+
+
+            <h2>Inteeltcoëfficiënt van nageslacht na paring</h2>
+
+
+            <p>Ram A: {{ ramUln }}, stn: {{ ramPedigree }} </p>
+
+            <div class="tg-wrap"><table class="tg">
+                    <tr>
+                        <td class="tg-yw4l">Ooi ULN</td>
+                        <td class="tg-yw4l">Ooi STN</td>
+                        <td class="tg-lqy6">Ram A</td>
+                    </tr>
+
+        {% endif %}
 
     {% endfor %}
 
@@ -78,6 +124,11 @@
             .tg {width: auto !important;}
             .tg col {width: auto !important;}
             .tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;}
+        }
+
+        /* Always insert a page break after each <footer> element (when printing) */
+        @media print {
+            footer {page-break-after: always;}
         }
 
     </style>
