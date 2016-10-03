@@ -527,7 +527,7 @@ class Mixblup
         $this->getExteriorMeasurementsIfNull();
 
         $message = 'Generating exterior measurements...';
-        $this->cmdUtil->setStartTimeAndPrintIt($this->exteriorMeasurements->count()+1, 1, $message);
+        $this->cmdUtil->setStartTimeAndPrintIt(count($this->exteriorMeasurements)+1, 1, $message);
 
         $exteriorAttributesRows  = new ArrayCollection();
         /** @var Exterior $exteriorMeasurement */
