@@ -655,9 +655,15 @@ class Mixblup
                   INNER JOIN muscle_thickness t ON m.id = t.id
                 WHERE m.animal_id_and_date = '".$animalIdAndDate."'";
         $results = $this->em->getConnection()->query($sql)->fetchAll();
-        $muscleThicknessValue = $this->getMeasurementFromSqlResults($results, $isSkipConflictingMeasurements, 'muscle_thickness');
-        $isEmptyMeasurement = NullChecker::numberIsNull($muscleThicknessValue);
-        $muscleThicknessValue = Utils::fillZero($muscleThicknessValue,self::MUSCLE_THICKNESS_NULL_FILLER);
+        $foundMuscleThicknessValue = $this->getMeasurementFromSqlResults($results, $isSkipConflictingMeasurements, 'muscle_thickness');
+
+        if(MeasurementsUtil::isValidMuscleThicknessValue($foundMuscleThicknessValue)){
+            $muscleThicknessValue = Utils::fillZero($foundMuscleThicknessValue,self::MUSCLE_THICKNESS_NULL_FILLER);
+            $isEmptyMeasurement = false; //valid values are by default not empty
+        } else {
+            $muscleThicknessValue = self::MUSCLE_THICKNESS_NULL_FILLER;
+            $isEmptyMeasurement = true;
+        }
 
         $result = Utils::addPaddingToStringForColumnFormatCenter($muscleThicknessValue, self::COLUMN_WIDTH_MUSCLE_THICKNESS, self::COLUMN_PADDING_SIZE);
 

@@ -11,7 +11,8 @@ class MeasurementConstant
     const THREE = 'three';
     const ANIMAL_ID = 'animal_id';
 
-    /* Filter values */
+
+    /* Mixblup filter values */
 
     //Age is in days
     const BIRTH_WEIGHT_MIN_AGE = 0;
@@ -33,4 +34,6 @@ class MeasurementConstant
     const FAT_MAX_VALUE = 6.0;
     const MUSCLE_THICKNESS_MIN_VALUE = 15.0;
     const MUSCLE_THICKNESS_MAX_VALUE = 39.0;
+
+    /* End Mixblup values */
 }
