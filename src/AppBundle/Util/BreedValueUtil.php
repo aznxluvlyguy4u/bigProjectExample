@@ -28,6 +28,7 @@ class BreedValueUtil
      * @param int|string $ageNullFiller
      * @param int|string $growthNullFiller
      * @param int|string $weightNullFiller
+     * @param string $decimalSymbol
      * @return float
      */
     public static function getGrowthValue($weightOnThatMoment, $ageInDays,

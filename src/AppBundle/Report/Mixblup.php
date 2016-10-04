@@ -6,6 +6,7 @@ namespace AppBundle\Report;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\MeasurementConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\BreedCode;
 use AppBundle\Entity\Exterior;
@@ -14,6 +15,7 @@ use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
 use AppBundle\Enumerator\BreedCodeType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\WeightType;
 use AppBundle\Migration\BreedCodeReformatter;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
@@ -345,7 +347,8 @@ class Mixblup
             ' leeftijd   I !missing '.self::DATE_OF_BIRTH_NULL_FILLER.' #op moment van meting in dagen', //age of animal on measurementDate in days
             ' groei      T !missing '.self::GROWTH_NULL_FILLER.' #gewicht(kg)/leeftijd(dagen) op moment van meting', //growth weight(kg)/age(days) on measurementDate
             ' gebgewicht T !missing '.self::WEIGHT_NULL_FILLER.' #geboortegewicht',   //weight at birth
-            ' toetsgewicht T !missing '.self::WEIGHT_NULL_FILLER.' #normale gewichtmeting', //weight during normal measurement
+            ' gew8wk     T !missing '.self::WEIGHT_NULL_FILLER.' #8 weken gewichtmeting', //weight measurement at 8 weeks
+            ' gew20wk    T !missing '.self::WEIGHT_NULL_FILLER.' #20 weken gewichtmeting', //weight measurement at 20 weeks
             ' vet1       T !missing '.self::FAT_NULL_FILLER,
             ' vet2       T !missing '.self::FAT_NULL_FILLER,
             ' vet3       T !missing '.self::FAT_NULL_FILLER,
@@ -822,29 +825,48 @@ class Mixblup
         }
 
         if($isGetFirstValues) {
-            $isBirthWeight = $results[0]['is_birth_weight'];
-            if($ageAtMeasurement == 0) {
-                $isBirthWeight = true;
-            }
 
-            if($isBirthWeight) {
-                $weight = self::WEIGHT_NULL_FILLER;
-                $birthWeight = Utils::fillZero($results[0]['weight'], self::WEIGHT_NULL_FILLER);
-                //Don't calculate growth from birthWeight
-                $growth = self::GROWTH_NULL_FILLER;
-            } else {
-                $weight = Utils::fillZero($results[0]['weight'], self::WEIGHT_NULL_FILLER);
-                $birthWeight = self::WEIGHT_NULL_FILLER;
-                $growth = BreedValueUtil::getGrowthValue($weight, $ageAtMeasurement,
-                    self::AGE_NULL_FILLER, self::GROWTH_NULL_FILLER, self::WEIGHT_NULL_FILLER, self::DECIMAL_SYMBOL);
-            }
-
+            $foundWeight = Utils::fillZero($results[0]['weight'], self::WEIGHT_NULL_FILLER);
+            $weightType = MeasurementsUtil::getWeightType($ageAtMeasurement);
+            $isValidMixblupWeight = MeasurementsUtil::isValidMixblupWeight($ageAtMeasurement, floatval($results[0]['weight']));
             $isEmptyMeasurement = NullChecker::numberIsNull($results[0]['weight']);
+
+            /* Set default values */
+            $birthWeight = self::WEIGHT_NULL_FILLER;
+            $weightAt8Weeks = self::WEIGHT_NULL_FILLER;
+            $weightAt20Weeks = self::WEIGHT_NULL_FILLER;
+            $growth = self::GROWTH_NULL_FILLER;
+
+            if($isValidMixblupWeight) {
+                switch ($weightType) {
+                    case WeightType::BIRTH:
+                        $birthWeight = $foundWeight;
+                        //Don't calculate growth from birthWeight!!!
+                        break;
+
+                    case WeightType::EIGHT_WEEKS:
+                        $weightAt8Weeks = $foundWeight;
+                        break;
+
+                    case WeightType::TWENTY_WEEKS:
+                        $weightAt20Weeks = $foundWeight;
+                        $growth = BreedValueUtil::getGrowthValue($weightAt20Weeks, $ageAtMeasurement,
+                            self::AGE_NULL_FILLER, self::GROWTH_NULL_FILLER, self::WEIGHT_NULL_FILLER, self::DECIMAL_SYMBOL);
+                        break;
+
+                    default:
+                        $isEmptyMeasurement = true;
+                        break;
+                }
+            } else {
+                $isEmptyMeasurement = true;
+            }
 
         } else {
             $growth = self::GROWTH_NULL_FILLER;
             $birthWeight = self::WEIGHT_NULL_FILLER;
-            $weight = self::WEIGHT_NULL_FILLER;
+            $weightAt8Weeks = self::WEIGHT_NULL_FILLER;
+            $weightAt20Weeks = self::WEIGHT_NULL_FILLER;
             $isEmptyMeasurement = true;
         }
 
@@ -852,7 +874,8 @@ class Mixblup
              Utils::addPaddingToStringForColumnFormatCenter($ageAtMeasurement, self::COLUMN_WIDTH_AGE, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($growth, self::COLUMN_WIDTH_GROWTH, self::COLUMN_PADDING_SIZE)
             .Utils::addPaddingToStringForColumnFormatCenter($birthWeight, self::COLUMN_WIDTH_WEIGHT, self::COLUMN_PADDING_SIZE)
-            .Utils::addPaddingToStringForColumnFormatCenter($weight, self::COLUMN_WIDTH_WEIGHT, self::COLUMN_PADDING_SIZE);
+            .Utils::addPaddingToStringForColumnFormatCenter($weightAt8Weeks, self::COLUMN_WIDTH_WEIGHT, self::COLUMN_PADDING_SIZE)  //8wk weight
+            .Utils::addPaddingToStringForColumnFormatCenter($weightAt20Weeks, self::COLUMN_WIDTH_WEIGHT, self::COLUMN_PADDING_SIZE); //20wk weight
 
         return [JsonInputConstant::MEASUREMENT_ROW => $result,
                 JsonInputConstant::IS_EMPTY_MEASUREMENT => $isEmptyMeasurement];

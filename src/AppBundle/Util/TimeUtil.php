@@ -69,6 +69,20 @@ class TimeUtil
 
     /**
      * @param \DateTime $dateOfBirth
+     * @param \DateTime $measurementDate
+     * @return int
+     */
+    public static function getAgeInDays($dateOfBirth, $measurementDate)
+    {
+        $measurementDate = clone $measurementDate;
+        $dateOfBirth = clone $dateOfBirth;
+        $dateInterval = $measurementDate->diff($dateOfBirth);
+        return $dateInterval->days;
+    }
+
+
+    /**
+     * @param \DateTime $dateOfBirth
      * @param \DateTime $latestLitterDate
      * @return int
      */
