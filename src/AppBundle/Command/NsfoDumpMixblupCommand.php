@@ -236,7 +236,12 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         $this->output->writeln([' ', 'output folder: '.$outputFolderPath, ' ']);
 
         $isGeneratePedigreeFile = $this->cmdUtil->generateConfirmationQuestion('Generate pedigreefile? (y/n): ');
-        $isGenerateDataFile = $this->cmdUtil->generateConfirmationQuestion('Generate datafile? (y/n): ');
+        $isGenerateExteriorDataFile = $this->cmdUtil->generateConfirmationQuestion('Generate exterior measurements datafile? (y/n): ');
+        $isGenerateTestAttributesDataFile = $this->cmdUtil->generateConfirmationQuestion('Generate test attributes datafile? (y/n): ');
+
+        //TODO activate fertility datafile generation when it is necessary
+        $isGenerateFertilityDataFile = false;
+//        $isGenerateFertilityDataFile = $this->cmdUtil->generateConfirmationQuestion('Generate fertility datafile? (y/n): ');
 
         $this->cmdUtil->setStartTimeAndPrintIt();
 
@@ -244,7 +249,9 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         $mixBlup = new Mixblup($this->em, $outputFolderPath, self::INSTRUCTIONS_FILENAME, self::DATA_FILENAME, self::PEDIGREE_FILENAME, self::START_YEAR_MEASUREMENT, self::END_YEAR_MEASUREMENTS, $this->cmdUtil, null, $this->output);
         $this->cmdUtil->printElapsedTime('Time to prepare data');
 
-        if($isGenerateDataFile) {
+        $mixBlup->validateMeasurementData();
+
+        if($isGenerateExteriorDataFile || $isGenerateTestAttributesDataFile || $isGenerateFertilityDataFile) {
             $this->output->writeln([' ', 'Generating InstructionFiles... ']);
             $mixBlup->generateInstructionFiles();
             $this->cmdUtil->printElapsedTime('Time to generate instruction files');
@@ -256,10 +263,22 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
             $this->cmdUtil->printElapsedTime('Time to generate pedigreefile');
         }
 
-        if($isGenerateDataFile) {
-            $this->output->writeln([' ', 'Generating DataFiles... ']);
-            $mixBlup->generateDataFiles();
-            $this->cmdUtil->printElapsedTime('Time to generate datafiles');
+        if($isGenerateExteriorDataFile) {
+            $this->output->writeln([' ', 'Generating Exterior Measurements DataFiles... ']);
+            $mixBlup->generateExteriorMeasurementsDataFiles();
+            $this->cmdUtil->printElapsedTime('Time to generate exterior measurements datafiles');
+        }
+
+        if($isGenerateTestAttributesDataFile) {
+            $this->output->writeln([' ', 'Generating Test Attributes DataFiles... ']);
+            $mixBlup->generateTestAttributeMeasurementsDataFiles();
+            $this->cmdUtil->printElapsedTime('Time to generate test attributes datafiles');
+        }
+
+        if($isGenerateFertilityDataFile) {
+            $this->output->writeln([' ', 'Generating Fertility DataFiles... ']);
+            $mixBlup->generateFertilityDataFiles();
+            $this->cmdUtil->printElapsedTime('Time to generate fertility datafiles');
         }
 
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();

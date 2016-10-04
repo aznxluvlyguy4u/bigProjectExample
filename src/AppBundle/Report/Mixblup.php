@@ -520,9 +520,9 @@ class Mixblup
         }
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
-    
 
-    public function generateDataFiles()
+
+    public function generateExteriorMeasurementsDataFiles()
     {
         $this->validateMeasurementData();
 
@@ -554,7 +554,12 @@ class Mixblup
             $this->cmdUtil->advanceProgressBar(1, $message);
         }
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
 
+
+    public function generateTestAttributeMeasurementsDataFiles()
+    {
+        $this->validateMeasurementData();
 
         //TestAttributeMeasurements
         $this->getTestMeasurementsBySql();
@@ -579,6 +584,12 @@ class Mixblup
             $this->cmdUtil->advanceProgressBar(1, $message);
         }
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
+
+    public function generateFertilityDataFiles()
+    {
+        $this->validateMeasurementData();
 
         //TODO add fertility measurements
     }
