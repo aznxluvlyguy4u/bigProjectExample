@@ -657,10 +657,12 @@ class Mixblup
 
     /**
      * @param string $animalIdAndDate
+     * @param boolean $hasValid20WeeksWeightMeasurement
+     * @param boolean $isSkipConflictingMeasurements
      * @return string
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function writeMuscleThicknessRowPart($animalIdAndDate, $isSkipConflictingMeasurements = true)
+    private function writeMuscleThicknessRowPart($animalIdAndDate, $hasValid20WeeksWeightMeasurement, $isSkipConflictingMeasurements = true)
     {
         $sql = "SELECT t.muscle_thickness FROM measurement m
                   INNER JOIN muscle_thickness t ON m.id = t.id
@@ -668,7 +670,7 @@ class Mixblup
         $results = $this->em->getConnection()->query($sql)->fetchAll();
         $foundMuscleThicknessValue = $this->getMeasurementFromSqlResults($results, $isSkipConflictingMeasurements, 'muscle_thickness');
 
-        if(MeasurementsUtil::isValidMuscleThicknessValue($foundMuscleThicknessValue)){
+        if(MeasurementsUtil::isValidMuscleThicknessValue($foundMuscleThicknessValue, $hasValid20WeeksWeightMeasurement)){
             $muscleThicknessValue = Utils::fillZero($foundMuscleThicknessValue,self::MUSCLE_THICKNESS_NULL_FILLER);
             $isEmptyMeasurement = false; //valid values are by default not empty
         } else {
@@ -684,6 +686,7 @@ class Mixblup
 
 
     /**
+     * @param boolean $isSkipConflictingMeasurements
      * @param string $animalIdAndDate
      * @return string
      * @throws \Doctrine\DBAL\DBALException
@@ -707,10 +710,12 @@ class Mixblup
 
     /**
      * @param string $animalIdAndDate
+     * @param boolean $hasValid20WeeksWeightMeasurement
+     * @param boolean $isSkipConflictingMeasurements
      * @return string
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function writeBodyFatRowPart($animalIdAndDate, $isSkipConflictingMeasurements = true)
+    private function writeBodyFatRowPart($animalIdAndDate, $hasValid20WeeksWeightMeasurement, $isSkipConflictingMeasurements = true)
     {
         $sql = "SELECT fat1, fat2, fat3 FROM measurement m
                 INNER JOIN (
@@ -743,7 +748,7 @@ class Mixblup
             $foundFat2 = floatval($results[0]['fat2']);
             $foundFat3 = floatval($results[0]['fat3']);
 
-            $isValidBodyFatValues = MeasurementsUtil::isValidBodyFatValues($foundFat1, $foundFat2, $foundFat3);
+            $isValidBodyFatValues = MeasurementsUtil::isValidBodyFatValues($foundFat1, $foundFat2, $foundFat3, $hasValid20WeeksWeightMeasurement);
 
             if($isValidBodyFatValues) {
                 $fat1 = Utils::fillZero($foundFat1, self::FAT_NULL_FILLER);
@@ -784,8 +789,9 @@ class Mixblup
         $dateOfBirthString = $rowBaseAndDateOfBirthArray[self::DATE_OF_BIRTH];
 
         $ageGrowthWeightRowData = $this->formatAgeGrowthWeightsRowPart($animalIdAndDateOfMeasurement, $dateOfBirthString, $isSkipConflictingMeasurements);
-        $bodyFatRowData = $this->writeBodyFatRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);
-        $muscleThicknessRowData = $this->writeMuscleThicknessRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);
+        $hasValid20WeeksWeightMeasurement = $ageGrowthWeightRowData[JsonInputConstant::IS_VALID_20WEEK_WEIGHT_MEASUREMENT];
+        $bodyFatRowData = $this->writeBodyFatRowPart($animalIdAndDateOfMeasurement, $hasValid20WeeksWeightMeasurement, $isSkipConflictingMeasurements);
+        $muscleThicknessRowData = $this->writeMuscleThicknessRowPart($animalIdAndDateOfMeasurement, $hasValid20WeeksWeightMeasurement, $isSkipConflictingMeasurements);
         $tailLengthRowData = $this->writeTailLengthRowPart($animalIdAndDateOfMeasurement, $isSkipConflictingMeasurements);
         
         $ageGrowthWeightRowPart = $ageGrowthWeightRowData[JsonInputConstant::MEASUREMENT_ROW];
@@ -860,6 +866,7 @@ class Mixblup
             $weightAt8Weeks = self::WEIGHT_NULL_FILLER;
             $weightAt20Weeks = self::WEIGHT_NULL_FILLER;
             $growth = self::GROWTH_NULL_FILLER;
+            $isValid20WeekWeightMeasurement = false;
 
             if($isValidMixblupWeight) {
                 switch ($weightType) {
@@ -876,6 +883,7 @@ class Mixblup
                         $weightAt20Weeks = $foundWeight;
                         $growth = BreedValueUtil::getGrowthValue($weightAt20Weeks, $ageAtMeasurement,
                             self::AGE_NULL_FILLER, self::GROWTH_NULL_FILLER, self::WEIGHT_NULL_FILLER, self::DECIMAL_SYMBOL);
+                        $isValid20WeekWeightMeasurement = true;
                         break;
 
                     default:
@@ -892,6 +900,7 @@ class Mixblup
             $weightAt8Weeks = self::WEIGHT_NULL_FILLER;
             $weightAt20Weeks = self::WEIGHT_NULL_FILLER;
             $isEmptyMeasurement = true;
+            $isValid20WeekWeightMeasurement = false;
         }
 
         $result =
@@ -902,7 +911,9 @@ class Mixblup
             .Utils::addPaddingToStringForColumnFormatCenter($weightAt20Weeks, self::COLUMN_WIDTH_WEIGHT, self::COLUMN_PADDING_SIZE); //20wk weight
 
         return [JsonInputConstant::MEASUREMENT_ROW => $result,
-                JsonInputConstant::IS_EMPTY_MEASUREMENT => $isEmptyMeasurement];
+                JsonInputConstant::IS_EMPTY_MEASUREMENT => $isEmptyMeasurement,
+                JsonInputConstant::IS_VALID_20WEEK_WEIGHT_MEASUREMENT => $isValid20WeekWeightMeasurement
+        ];
     }
 
 
