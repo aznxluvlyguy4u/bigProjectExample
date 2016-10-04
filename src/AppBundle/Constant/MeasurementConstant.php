@@ -28,4 +28,9 @@ class MeasurementConstant
     const WEIGHT_AT_8_WEEKS_MAX_VALUE = 42.0;
     const WEIGHT_AT_20_WEEKS_MIN_VALUE = 15.0;
     const WEIGHT_AT_20_WEEKS_MAX_VALUE = 75.0;
+
+    const FAT_MIN_VALUE = 1.0;
+    const FAT_MAX_VALUE = 6.0;
+    const MUSCLE_THICKNESS_MIN_VALUE = 15.0;
+    const MUSCLE_THICKNESS_MAX_VALUE = 39.0;
 }

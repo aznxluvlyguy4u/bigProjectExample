@@ -109,6 +109,38 @@ class MeasurementsUtil
 
 
     /**
+     * @param float $muscleThickness
+     * @return bool
+     */
+    public static function isValidMuscleThicknessValue($muscleThickness)
+    {
+        return $muscleThickness >= MeasurementConstant::MUSCLE_THICKNESS_MIN_VALUE && $muscleThickness <= MeasurementConstant::MUSCLE_THICKNESS_MAX_VALUE;
+    }
+
+
+    /**
+     * @param float $fatValue
+     * @return bool
+     */
+    public static function isValidFatValue($fatValue)
+    {
+        return $fatValue >= MeasurementConstant::FAT_MIN_VALUE && $fatValue <= MeasurementConstant::FAT_MAX_VALUE;
+    }
+
+
+    /**
+     * @param float $fat1
+     * @param float $fat2
+     * @param float $fat3
+     * @return bool
+     */
+    public static function isValidBodyFatValues($fat1, $fat2, $fat3)
+    {
+        return self::isValidFatValue($fat1) && self::isValidFatValue($fat2) && self::isValidFatValue($fat3);
+    }
+
+
+    /**
      * @param int $ageAtMeasurement
      * @return null|string
      */

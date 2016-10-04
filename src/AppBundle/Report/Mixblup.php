@@ -715,19 +715,26 @@ class Mixblup
             $isGetFirstValues = true;
         }
 
-        if($isGetFirstValues) {
-            $fat1 = Utils::fillZero($results[0]['fat1'], self::FAT_NULL_FILLER);
-            $fat2 = Utils::fillZero($results[0]['fat2'], self::FAT_NULL_FILLER);
-            $fat3 = Utils::fillZero($results[0]['fat3'], self::FAT_NULL_FILLER);
+        //Default values
+        $fat1 = self::FAT_NULL_FILLER;
+        $fat2 = self::FAT_NULL_FILLER;
+        $fat3 = self::FAT_NULL_FILLER;
+        $isEmptyMeasurement = true;
 
-            $isEmptyMeasurement =  NullChecker::numberIsNull($results[0]['fat1'])
-                                && NullChecker::numberIsNull($results[0]['fat2'])
-                                && NullChecker::numberIsNull($results[0]['fat3']);
-        } else {
-            $fat1 = self::FAT_NULL_FILLER;
-            $fat2 = self::FAT_NULL_FILLER;
-            $fat3 = self::FAT_NULL_FILLER;
-            $isEmptyMeasurement = true;
+        if($isGetFirstValues) {
+            $foundFat1 = floatval($results[0]['fat1']);
+            $foundFat2 = floatval($results[0]['fat2']);
+            $foundFat3 = floatval($results[0]['fat3']);
+
+            $isValidBodyFatValues = MeasurementsUtil::isValidBodyFatValues($foundFat1, $foundFat2, $foundFat3);
+
+            if($isValidBodyFatValues) {
+                $fat1 = Utils::fillZero($foundFat1, self::FAT_NULL_FILLER);
+                $fat2 = Utils::fillZero($foundFat2, self::FAT_NULL_FILLER);
+                $fat3 = Utils::fillZero($foundFat3, self::FAT_NULL_FILLER);
+
+                $isEmptyMeasurement = false; //If values are valid they cannot be empty
+            }
         }
 
         $result =
