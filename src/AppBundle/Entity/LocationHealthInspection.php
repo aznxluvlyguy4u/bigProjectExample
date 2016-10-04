@@ -6,6 +6,7 @@ use AppBundle\Component\Utils;
 use \DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationHealthInspectionResult;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -63,6 +64,16 @@ class LocationHealthInspection
     private $requestDate;
 
     /**
+     * @var datetime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @Assert\NotBlank
+     * @JMS\Type("DateTime")
+     */
+    private $endDate;
+
+    /**
      * @var integer
      *
      * @ORM\Column(type="integer", nullable=true)
@@ -71,36 +82,29 @@ class LocationHealthInspection
     private $totalLeadTime;
 
     /**
-     * @var ArrayCollection
-     *
-     * @ORM\OneToMany(targetEntity="LocationHealthInspectionDirection", mappedBy="inspection")
-     * @JMS\Type("array")
-     */
-    private $directions;
-
-    /**
-     * @var Employee
-     *
-     * @ORM\ManyToOne(targetEntity="Employee", inversedBy="healthInspections")
-     * @JMS\Type("AppBundle\Entity\Employee")
-     */
-    private $authorizedBy;
-
-    /**
-     * @var Employee
-     *
-     * @ORM\ManyToOne(targetEntity="Employee")
-     * @JMS\Type("AppBundle\Entity\Employee")
-     */
-    private $actionTakenBy;
-
-    /**
      * @var string
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      */
     private $nextAction;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="LocationHealthInspectionDirection", mappedBy="inspection")
+     * @ORM\OrderBy({"directionDate" = "DESC"})
+     * @JMS\Type("array")
+     */
+    private $directions;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="LocationHealthInspectionResult", mappedBy="inspection")
+     * @JMS\Type("array")
+     */
+    private $results;
 
     /**
      * @var string
@@ -117,6 +121,8 @@ class LocationHealthInspection
     public function __construct()
     {
         $this->setInspectionId(Utils::generateTokenCode());
+        $this->directions = new ArrayCollection();
+        $this->results = new ArrayCollection();
     }
 
     /**
@@ -189,6 +195,22 @@ class LocationHealthInspection
     public function setRequestDate($requestDate)
     {
         $this->requestDate = $requestDate;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getEndDate()
+    {
+        return $this->endDate;
+    }
+
+    /**
+     * @param DateTime $endDate
+     */
+    public function setEndDate($endDate)
+    {
+        $this->endDate = $endDate;
     }
 
     /**
@@ -285,5 +307,21 @@ class LocationHealthInspection
     public function setStatus($status)
     {
         $this->status = $status;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getResults()
+    {
+        return $this->results;
+    }
+
+    /**
+     * @param ArrayCollection $results
+     */
+    public function setResults($results)
+    {
+        $this->results = $results;
     }
 }

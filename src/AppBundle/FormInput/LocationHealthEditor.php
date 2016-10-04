@@ -57,6 +57,7 @@ class LocationHealthEditor
         
         $newScrapieStatus = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::SCRAPIE_STATUS, $content);
         $newScrapieCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_CHECK_DATE, $content);
+        $newScrapieEndDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_END_DATE, $content);
 
         if($newScrapieCheckDate == null) {
             $newScrapieCheckDate = new \DateTime('now');
@@ -76,6 +77,7 @@ class LocationHealthEditor
         
         $newMaediVisnaStatus = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MAEDI_VISNA_STATUS, $content);
         $newMaediVisnaCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::MAEDI_VISNA_CHECK_DATE, $content);
+        $newMaediVisnaEndDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::MAEDI_VISNA_END_DATE, $content);
 
         if($newMaediVisnaCheckDate == null) {
             $newMaediVisnaCheckDate = new \DateTime('now');
@@ -96,6 +98,7 @@ class LocationHealthEditor
 
             $scrapie = new Scrapie($newScrapieStatus);
             $scrapie->setCheckDate($newScrapieCheckDate);
+            $scrapie->setEndDate($newScrapieEndDate);
             $scrapie->setIsManualEdit(true);
             $locationHealth->addScrapie($scrapie);
             $scrapie->setLocationHealth($locationHealth);
@@ -109,6 +112,7 @@ class LocationHealthEditor
 
             $maediVisna = new MaediVisna($newMaediVisnaStatus, $newMaediVisnaCheckDate);
             $maediVisna->setCheckDate($newMaediVisnaCheckDate);
+            $maediVisna->setEndDate($newMaediVisnaEndDate);
             $maediVisna->setIsManualEdit(true);
             $locationHealth->addMaediVisna($maediVisna);
             $maediVisna->setLocationHealth($locationHealth);
