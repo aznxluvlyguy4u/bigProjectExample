@@ -309,26 +309,20 @@ class MateValidator extends DeclareNsfoBaseValidator
             $this->errors[] = self::START_DATE_MISSING;
             $allNonAnimalValuesAreValid =  false;
         }
-        else {
-            if(self::IS_VALIDATE_IF_START_DATE_IS_IN_THE_FUTURE) {
-                if($startDate > new \DateTime('now')) {
-                    $this->errors[] = self::START_DATE_IN_FUTURE;
-                    $allNonAnimalValuesAreValid =  false;
-                }
-            }
+
+        if($startDate > new \DateTime('now')) {
+            $this->errors[] = self::START_DATE_IN_FUTURE;
+            $allNonAnimalValuesAreValid =  false;
         }
 
         if($endDate === null) {
             $this->errors[] = self::END_DATE_MISSING;
             $allNonAnimalValuesAreValid =  false;
         }
-        else {
-            if(self::IS_VALIDATE_IF_END_DATE_IS_IN_THE_FUTURE) {
-                if ($endDate > new \DateTime('now')) {
-                    $this->errors[] = self::END_DATE_IN_FUTURE;
-                    $allNonAnimalValuesAreValid = false;
-                }
-            }
+
+        if ($endDate > new \DateTime('now')) {
+            $this->errors[] = self::END_DATE_IN_FUTURE;
+            $allNonAnimalValuesAreValid = false;
         }
 
         if($startDate != null && $endDate != null) {

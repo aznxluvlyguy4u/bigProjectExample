@@ -17,6 +17,7 @@ class JsonInputConstant
     const ANIMAL = 'animal';
     const RAM = 'ram';
     const EWE = 'ewe';
+    const EWES = 'ewes';
     const ULN_COUNTRY_CODE = 'uln_country_code';
     const ULN_NUMBER = 'uln_number';
     const PEDIGREE_COUNTRY_CODE = 'pedigree_country_code';

@@ -500,7 +500,7 @@ class AnimalRepository extends BaseRepository
   public function getAnimalPrimaryKeysByVsmIdArray()
   {
     $sql = "SELECT name as vsm_id, id FROM animal WHERE name IS NOT NULL";
-    $results= $this->getManager()->getConnection()->query($sql)->fetchAll();
+    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
     $searchArray = array();
     foreach ($results as $result) {
@@ -517,10 +517,10 @@ class AnimalRepository extends BaseRepository
    */
   public function isDateOfBirth($animalId, $measurementDateString)
   {
-    if(TimeUtil::isFormatYYYYMMDD($measurementDateString)) {
-      $sql = "SELECT DATE(date_of_birth) as date_of_birth FROM animal WHERE id = ".intval($animalId);
+    if (TimeUtil::isFormatYYYYMMDD($measurementDateString)) {
+      $sql = "SELECT DATE(date_of_birth) as date_of_birth FROM animal WHERE id = " . intval($animalId);
       $result = $this->getManager()->getConnection()->query($sql)->fetch();
-      if($result['date_of_birth'] == $measurementDateString) {
+      if ($result['date_of_birth'] == $measurementDateString) {
         return true;
       } else {
         return false;
@@ -528,5 +528,38 @@ class AnimalRepository extends BaseRepository
     }
 
     return null;
+  }
+
+
+  /**
+   * @param $animalId
+   * @return int|null
+   */
+  public function getMotherId($animalId)
+  {
+    if(is_int($animalId)) {
+      $sql = "SELECT parent_mother_id as id_mother FROM animal WHERE id = ".$animalId;
+      $result = $this->getManager()->getConnection()->query($sql)->fetch();
+      return $result['id_mother'];
+    } else {
+      return null;
+    }
+  }
+
+
+  /**
+   * @param $animalId
+   * @return int|null
+   */
+  public function getFatherId($animalId)
+  {
+    if(is_int($animalId)) {
+      $sql = "SELECT parent_father_id as id_father FROM animal WHERE id = ".$animalId;
+      $result = $this->getManager()->getConnection()->query($sql)->fetch();
+      return $result['id_father'];
+    } else {
+      return null;
+    }
+
   }
 }

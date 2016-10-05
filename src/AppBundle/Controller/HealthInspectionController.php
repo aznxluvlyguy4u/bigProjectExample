@@ -225,7 +225,8 @@ class HealthInspectionController extends APIController
                   FROM animal
                     INNER JOIN location ON animal.location_id = location.id
                   WHERE
-                    location.ubn = '".$content['ubn']."' AND location.is_active = TRUE AND animal.is_alive = TRUE";
+                    location.ubn = '".$content['ubn']."' AND location.is_active = TRUE AND animal.is_alive = TRUE
+                  ORDER BY animal.animal_order_number ASC";
         $results = $em->getConnection()->query($sql)->fetchAll();
 
         $barcodes = array();
@@ -250,6 +251,7 @@ class HealthInspectionController extends APIController
             array(
                 'orientation' => 'Portrait',
                 'default-header'=> false,
+                'disable-smart-shrinking' => false,
                 'page-height' => 25,
                 'page-width' => 100,
                 'margin-top'    => 2,
