@@ -186,4 +186,22 @@ class BreedValueUtil
     }
 
 
+    /**
+     * @param $breedValueReliability
+     * @param bool $isInPercentages
+     * @return float
+     */
+    public static function getAccuracyFromReliability($breedValueReliability, $isInPercentages = true)
+    {
+        if($isInPercentages) {
+            $factor = 100;
+            $decimalPrecision = 0;
+        } else {
+            $factor = 1;
+            $decimalPrecision = 2;
+        }
+        return  round(sqrt($breedValueReliability)*$factor, $decimalPrecision);
+    }
+
+
 }
