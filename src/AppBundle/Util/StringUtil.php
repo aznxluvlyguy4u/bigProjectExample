@@ -144,4 +144,14 @@ class StringUtil
     {
         return ($boolean) ? 'true' : 'false';
     }
+
+
+    /**
+     * @param $stringOrArray
+     * @return string|array|null
+     */
+    public static function replaceMultipleSpacesByOne($stringOrArray)
+    {
+        return preg_replace('!\s+!', ' ', $stringOrArray);
+    }
 }

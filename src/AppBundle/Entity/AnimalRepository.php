@@ -562,4 +562,26 @@ class AnimalRepository extends BaseRepository
     }
 
   }
+
+
+  /**
+   * @return ArrayCollection
+   */
+  public function getAnimalPrimaryKeysByUlnString($isCountryCodeSeparatedByString = false)
+  {
+    if($isCountryCodeSeparatedByString) {
+      $ulnFormat = "uln_country_code,' ',uln_number";
+    } else {
+      $ulnFormat = "uln_country_code,uln_number";
+    }
+    $sql = "SELECT CONCAT(".$ulnFormat.") as uln, id FROM animal";
+    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+    $array = new ArrayCollection();
+    foreach ($results as $result) {
+      $array->set($result['uln'], $result['id']);
+    }
+
+    return $array;
+  }
 }
