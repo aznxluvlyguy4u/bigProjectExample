@@ -7,22 +7,17 @@
     {% set ramUln = variables.ram.uln %}
     {% set ramPedigree = variables.ram.pedigree %}
     {% set isRamMissing = variables.isRamMissing %}
-    {% set isProdEnv = variables.isProdEnv %}
     {% set counter = 0 %}
     {% set rowsPerPage = 28 %}
+    {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
 
     {# HEADER #}
 
-    {% if isProdEnv %}
-        <div class="nsfo-logo">
-            <img src="{{ absolute_url(asset('assets/images/nsfo-logo.png')) }}" width="556" height="70" />
-        </div>
-    {% else %}
-        <div class="nsfo-logo">
-            <img src="https://one8rg-ch3301.files.1drv.com/y3m-UwC3zslAIMpjS9PwPtD6mAFgcAUimwX0OYMPGL16nsU5s1Qiejw0NEpefnqWrYqTuIRWzrZ2Pc-P_HmAeds9vA9QgS6Bco6PP6gAQEabSaxyZcZpjH0JKVGVfQq6zEAc1Pq2d3YHUQTTdKCbvsvqMf04J8Adk5FocZwylanEPo?width=1668&height=2102&cropmode=none" width="556" height="70" />
-        </div>
-    {% endif %}
+    <div class="nsfo-logo">
+        <img src="{{ imagesDirectory }}" width="556" height="70" />
+    </div>
 
+    {#<h3>{{ imagesDirectory }}</h3>#}
 
     <h2>Inteeltcoëfficiënt van nageslacht na paring</h2>
 
@@ -82,16 +77,9 @@
             {#necessary to enforce a pagebreak using css#}
         <footer></footer>
 
-            {% if isProdEnv %}
-                <div class="nsfo-logo">
-                    <img src="{{ absolute_url(asset('assets/images/nsfo-logo.png')) }}" width="556" height="70" />
-                </div>
-            {% else %}
-                <div class="nsfo-logo">
-                    <img src="https://one8rg-ch3301.files.1drv.com/y3m-UwC3zslAIMpjS9PwPtD6mAFgcAUimwX0OYMPGL16nsU5s1Qiejw0NEpefnqWrYqTuIRWzrZ2Pc-P_HmAeds9vA9QgS6Bco6PP6gAQEabSaxyZcZpjH0JKVGVfQq6zEAc1Pq2d3YHUQTTdKCbvsvqMf04J8Adk5FocZwylanEPo?width=1668&height=2102&cropmode=none" width="556" height="70" />
-                </div>
-            {% endif %}
-
+            <div class="nsfo-logo">
+                <img src="{{ imagesDirectory }}" width="556" height="70" />
+            </div>
 
             <h2>Inteeltcoëfficiënt van nageslacht na paring</h2>
 

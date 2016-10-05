@@ -61,7 +61,7 @@ class ReportAPIController extends APIController {
     if(!$ulnValidator->getIsUlnSetValid()) {
       return $ulnValidator->createArrivalJsonErrorResponse();
     }
-    
+
     $useProductionReady = true;// $this->getCurrentEnvironment() == Environment::PROD;
     if($useProductionReady) {
       $twigFile = 'Report/pedigree_certificates.html.twig';
@@ -128,13 +128,7 @@ class ReportAPIController extends APIController {
 
     $reportResults = new InbreedingCoefficientReportData($em, $content, $client);
     $reportData = $reportResults->getData();
-
-    $useProductionReady = $this->getCurrentEnvironment() == Environment::PROD;
-    if($useProductionReady) {
-      $reportData[ReportLabel::IS_PROD_ENV] = true;
-    } else {
-      $reportData[ReportLabel::IS_PROD_ENV] = false;
-    }
+    $reportData[ReportLabel::IMAGES_DIRECTORY] = $this->getImagesDirectory();
 
     $twigFile = 'Report/inbreeding_coefficient_report.html.twig';
     $html = $this->renderView($twigFile, ['variables' => $reportData]);
