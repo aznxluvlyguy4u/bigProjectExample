@@ -427,7 +427,7 @@ abstract class Animal
     protected $breedCode;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Breeder")
+     * @ORM\ManyToOne(targetEntity="Client")
      * @ORM\JoinColumn(name="breeder_id", referencedColumnName="id")
      */
     protected $breeder;
@@ -484,14 +484,6 @@ abstract class Animal
      * @ORM\Column(type="integer", nullable=true)
      */
     protected $mixblupBlock;
-
-    /**
-     * @var float
-     *
-     * @ORM\Column(type="float", nullable=true, options={"default":null})
-     * @JMS\Type("float")
-     */
-    protected $inbreedingCoefficient;
 
     /**
      * @var string
@@ -1922,7 +1914,7 @@ abstract class Animal
     }
 
     /**
-     * @return Breeder
+     * @return Client
      */
     public function getBreeder()
     {
@@ -1930,7 +1922,7 @@ abstract class Animal
     }
 
     /**
-     * @param Breeder $breeder
+     * @param Client $breeder
      */
     public function setBreeder($breeder)
     {
@@ -2103,23 +2095,6 @@ abstract class Animal
     public function setMixblupBlock($mixblupBlock)
     {
         $this->mixblupBlock = $mixblupBlock;
-    }
-
-
-    /**
-     * @return float
-     */
-    public function getInbreedingCoefficient()
-    {
-        return $this->inbreedingCoefficient;
-    }
-
-    /**
-     * @param float $inbreedingCoefficient
-     */
-    public function setInbreedingCoefficient($inbreedingCoefficient)
-    {
-        $this->inbreedingCoefficient = $inbreedingCoefficient;
     }
 
 
