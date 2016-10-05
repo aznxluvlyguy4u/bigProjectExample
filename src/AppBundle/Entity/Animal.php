@@ -502,11 +502,11 @@ abstract class Animal
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="BreedValues", mappedBy="animal", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="BreedValuesSet", mappedBy="animal", cascade={"persist"})
      * @ORM\OrderBy({"generationDate" = "ASC"})
-     * @JMS\Type("AppBundle\Entity\BreedValues")
+     * @JMS\Type("AppBundle\Entity\BreedValuesSet")
      */
-    protected $breedValues;
+    protected $breedValuesSets;
 
     /**
      * Animal constructor.
@@ -2134,13 +2134,13 @@ abstract class Animal
     /**
      * Add breedValues
      *
-     * @param BreedValues $breedValues
+     * @param BreedValuesSet $breedValuesSet
      *
      * @return Animal
      */
-    public function addBreedValues(BreedValues $breedValues)
+    public function addBreedValuesSet(BreedValuesSet $breedValuesSet)
     {
-        $this->breedValues[] = $breedValues;
+        $this->breedValuesSets[] = $breedValuesSet;
 
         return $this;
     }
@@ -2148,21 +2148,21 @@ abstract class Animal
     /**
      * Remove breedValues
      *
-     * @param BreedValues $breedValues
+     * @param BreedValuesSet $breedValuesSet
      */
-    public function removeBreedValues(BreedValues $breedValues)
+    public function removeBreedValuesSet(BreedValuesSet $breedValuesSet)
     {
-        $this->breedValues->removeElement($breedValues);
+        $this->breedValuesSets->removeElement($breedValuesSet);
     }
 
     /**
-     * Get breedValues
+     * Get BreedValuesSets
      *
      * @return \Doctrine\Common\Collections\Collection
      */
-    public function getBreedValues()
+    public function getBreedValuesSets()
     {
-        return $this->breedValues;
+        return $this->breedValuesSets;
     }
 
 

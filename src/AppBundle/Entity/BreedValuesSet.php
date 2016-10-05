@@ -15,7 +15,7 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\BreedValuesRepository")
  * @package AppBundle\Entity
  */
-class BreedValues
+class BreedValuesSet
 {
     /**
      * @var integer
@@ -27,7 +27,7 @@ class BreedValues
     private $id;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="breedValues")
+     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="breedValuesSets")
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     private $animal;
