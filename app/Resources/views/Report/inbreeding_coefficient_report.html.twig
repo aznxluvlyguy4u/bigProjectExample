@@ -8,11 +8,14 @@
     {% set ramPedigree = variables.ram.pedigree %}
     {% set isRamMissing = variables.isRamMissing %}
     {% set isProdEnv = variables.isProdEnv %}
+    {% set counter = 0 %}
+    {% set rowsPerPage = 28 %}
 
+    {# HEADER #}
 
     {% if isProdEnv %}
         <div class="nsfo-logo">
-            <img src="{{ absolute_url(asset('assets/images/nsfo-logo.png')) }}">
+            <img src="{{ absolute_url(asset('assets/images/nsfo-logo.png')) }}" width="556" height="70" />
         </div>
     {% else %}
         <div class="nsfo-logo">
@@ -25,53 +28,113 @@
 
     <p>Ram A: {{ ramUln }}, stn: {{ ramPedigree }} </p>
 
-    <div class="tg-wrap"><table class="tg">
+    {# END OF HEADER #}
+
+    {% for key,value in variables.ewes %}
+
+    {# SET VALUES #}
+
+        {% set uln = key %}
+        {% set ewe = value %}
+
+        {% if ewe['pedigree'] is defined %}
+            {% set ewePedigree = ewe.pedigree %}
+        {% else %}
+            {% set ewePedigree = '' %}
+        {% endif %}
+
+        {% if ewe['inbreedingCoefficient'] is defined %}
+            {% set eweInbreedingCoefficient = ewe.inbreedingCoefficient %}
+        {% else %}
+            {% set eweInbreedingCoefficient = '' %}
+        {% endif %}
+
+        {% if counter is divisible by (rowsPerPage) %}
+        {# COLUMN HEADER #}
+
+            <div class="tg-wrap"><table class="tg">
             <tr>
                 <td class="tg-yw4l">Ooi ULN</td>
                 <td class="tg-yw4l">Ooi STN</td>
                 <td class="tg-lqy6">Ram A</td>
             </tr>
+        {% endif %}
 
-    {% for key,value in variables.ewes %}
-        {% set uln = key %}
-        {% set ewe = value %}
+        {# ROW DATA #}
 
-        {#<p>Ooi {{ uln }}, stn: {{ ewe.pedigree }}: {{ ewe.inbreedingCoefficient }}</p>#}
+            <tr>
+                <td class="tg-yw4l">{{ uln }}</td>
+                <td class="tg-yw4l">{{ ewePedigree }}</td>
+                <td class="tg-lqy6">{{ eweInbreedingCoefficient }}</td>
+            </tr>
 
-                <tr>
-                    <td class="tg-yw4l">{{ uln }}</td>
-                    <td class="tg-yw4l">{{ ewe.pedigree }}</td>
-                    <td class="tg-lqy6">{{ ewe.inbreedingCoefficient }}</td>
-                </tr>
+        {% set counter = counter + 1 %}
 
-        {#{% if loop.last == false %}#}
-        {#<footer></footer> #}{# necessary to enforce a pagebreak using css #}
-        {#{% endif %}#}
+        {# END OF TABLE #}
+        {% if counter is divisible by (rowsPerPage) %}
+            </table></div>
+        {% endif %}
+
+    {# BREAK TO NEW PAGE: WITH HEADER ON NEW PAGE #}
+
+        {% if counter is divisible by (rowsPerPage * 2) and loop.last == false %}
+
+            {#necessary to enforce a pagebreak using css#}
+        <footer></footer>
+
+            {% if isProdEnv %}
+                <div class="nsfo-logo">
+                    <img src="{{ absolute_url(asset('assets/images/nsfo-logo.png')) }}" width="556" height="70" />
+                </div>
+            {% else %}
+                <div class="nsfo-logo">
+                    <img src="https://one8rg-ch3301.files.1drv.com/y3m-UwC3zslAIMpjS9PwPtD6mAFgcAUimwX0OYMPGL16nsU5s1Qiejw0NEpefnqWrYqTuIRWzrZ2Pc-P_HmAeds9vA9QgS6Bco6PP6gAQEabSaxyZcZpjH0JKVGVfQq6zEAc1Pq2d3YHUQTTdKCbvsvqMf04J8Adk5FocZwylanEPo?width=1668&height=2102&cropmode=none" width="556" height="70" />
+                </div>
+            {% endif %}
+
+
+            <h2>Inteeltcoëfficiënt van nageslacht na paring</h2>
+
+            <p>Ram A: {{ ramUln }}, stn: {{ ramPedigree }} </p>
+
+        {% endif %}
 
     {% endfor %}
-
-    </table></div>
 
 {% endblock %}
 
 {% block stylesheets %}
-    {#<style>#}
-
-        {#/* Always insert a page break after each <footer> element (when printing) */#}
-        {#/*@media print {*/#}
-        {#/*footer {page-break-after: always;}*/#}
-        {#/*}*/#}
-
-    {#</style>#}
 
     <style type="text/css">
-        .tg  {border-collapse:collapse;border-spacing:0;}
+        h2 { text-align: center; font-family:SansSerif, sans-serif;font-size:22px }
+        p { text-align: center; font-family:SansSerif, sans-serif;font-size:14px; margin-bottom: 18px}
+
+        .tg  {
+                border-collapse:collapse;
+                border-spacing:0;
+                float: left;
+                margin-left: 2cm;
+                /*margin:0px auto;   this centers the table on the page*/
+        }
+
+        .nsfo-logo { margin-top: 0.8cm; margin-bottom: 0.7cm; }
+
         .tg td{font-family:SansSerif, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
         .tg th{font-family:SansSerif, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
         .tg .tg-lqy6{text-align:right;vertical-align:top}
         .tg .tg-ddb2{font-family:serif !important;;text-align:center;vertical-align:top}
         .tg .tg-yw4l{vertical-align:top}
-        @media screen and (max-width: 767px) {.tg {width: auto !important;}.tg col {width: auto !important;}.tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;}}
+        @media screen and (max-width: 767px) {
+            .tg {width: auto !important;}
+            .tg col {width: auto !important;}
+            .tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;}
+        }
+
+        /* Always insert a page break after each <footer> element (when printing) */
+        @media print {
+            footer {page-break-after: always;}
+        }
+
     </style>
 
 {% endblock %}

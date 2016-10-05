@@ -48,33 +48,22 @@ class NsfoTestCommand extends ContainerAwareCommand
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
-        $totalNumberOfUnits = 20;
-        $startUnit = 10;
-        $startMessage = 'ARE YOU READY!';
+        $sql = "SELECT uln_country_code, uln_number FROM animal WHERE location_id = 957 AND gender = 'FEMALE'";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
 
-        $cmdUtil->setStartTimeAndPrintIt($totalNumberOfUnits, $startUnit, $startMessage);
+        $string = '';
+        foreach ($results as $result) {
+            $string = $string.'{ "uln_country_code": "'.$result['uln_country_code'].'", "uln_number": "'.$result['uln_number'].'"},';
 
-//        $csv = $this->parseCSV();
-//        $totalNumberOfRows = sizeof($csv);
-
-//        or use
-//        $fileContents = file_get_contents(self::INPUT_PATH);
-
-        for($i = 0; $i < 10; $i++) {
-//            $row = $csv[$i];
-            sleep(1);
-            $message = $i;
-            $cmdUtil->advanceProgressBar(1, $message);
         }
 
         $output->writeln(['',
             '=== Print Something ===',
             'Result 1: ',
             'Result 2: ',
-            '',
+            $string,
             '']);
 
-        $cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 
 
