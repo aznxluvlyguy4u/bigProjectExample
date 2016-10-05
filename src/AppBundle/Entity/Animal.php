@@ -508,6 +508,15 @@ abstract class Animal
     protected $lambar;
 
     /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="BreedValues", mappedBy="animal", cascade={"persist"})
+     * @ORM\OrderBy({"generationDate" = "ASC"})
+     * @JMS\Type("AppBundle\Entity\BreedValues")
+     */
+    protected $breedValues;
+
+    /**
      * Animal constructor.
      */
     public function __construct() {
@@ -2145,6 +2154,42 @@ abstract class Animal
     {
         $this->lambar = $lambar;
     }
+
+
+    /**
+     * Add breedValues
+     *
+     * @param BreedValues $breedValues
+     *
+     * @return Animal
+     */
+    public function addBreedValues(BreedValues $breedValues)
+    {
+        $this->breedValues[] = $breedValues;
+
+        return $this;
+    }
+
+    /**
+     * Remove breedValues
+     *
+     * @param BreedValues $breedValues
+     */
+    public function removeBreedValues(BreedValues $breedValues)
+    {
+        $this->breedValues->removeElement($breedValues);
+    }
+
+    /**
+     * Get breedValues
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getBreedValues()
+    {
+        return $this->breedValues;
+    }
+
 
 
     /**
