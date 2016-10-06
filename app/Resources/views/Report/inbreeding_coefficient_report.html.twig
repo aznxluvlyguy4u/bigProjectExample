@@ -8,7 +8,7 @@
     {% set ramPedigree = variables.ram.pedigree %}
     {% set isRamMissing = variables.isRamMissing %}
     {% set counter = 0 %}
-    {% set rowsPerPage = 28 %}
+    {% set rowsPerPage = 35 %}
     {% set ewesCount = variables.ewes|length %}
     {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
 
@@ -28,7 +28,7 @@
 
     {% for key,value in variables.ewes %}
 
-    {# SET VALUES #}
+     {#SET VALUES #}
 
         {% set uln = key %}
         {% set ewe = value %}
@@ -46,12 +46,16 @@
         {% endif %}
 
         {% if counter is divisible by (rowsPerPage) %}
-        {# COLUMN HEADER #}
 
+
+
+         {#COLUMN HEADER #}
             {% if ewesCount - counter <= rowsPerPage %}
-                <div class="tg-wrap"><table class="tg single-table">
-            {% else %}
-                <div class="tg-wrap"><table class="tg double-table">
+                <table class="single-table">
+            {% elseif counter is divisible by(2*rowsPerPage) %}
+                    <table class="table-one">
+            {% elseif counter is divisible by (rowsPerPage) %}
+                <table class="table-two">
             {% endif %}
 
             <tr>
@@ -61,7 +65,7 @@
             </tr>
         {% endif %}
 
-        {# ROW DATA #}
+         {#ROW DATA #}
 
             <tr>
                 <td class="tg-yw4l">{{ uln }}</td>
@@ -71,12 +75,13 @@
 
         {% set counter = counter + 1 %}
 
-        {# END OF TABLE #}
+         {#END OF TABLE#}
         {% if (counter is divisible by (rowsPerPage)) or (loop.last == true) %}
-            </table></div>
+            </table>
+                </div>
         {% endif %}
 
-    {# BREAK TO NEW PAGE: WITH HEADER ON NEW PAGE #}
+     {#BREAK TO NEW PAGE: WITH HEADER ON NEW PAGE#}
 
         {% if counter is divisible by (rowsPerPage * 2) and loop.last == false %}
 
@@ -105,19 +110,32 @@
 
         .nsfo-logo { margin-top: 0.8cm; margin-bottom: 0.7cm; }
 
-        .tg  {
-                border-collapse:collapse;
-                border-spacing:0;
+        table, td {
+            border-collapse:collapse;
+            border-spacing:0;
+            border-style:solid;
+            border-width:1px;
+            font-size: 14px;
         }
 
-        /* this places two tables next to each other */
-        .double-table {
+        table.table-one {
             float: left;
-            margin-left: 2cm;
+            margin-left: 80px;
+        }
+
+        table.table-two {
+            float: right;
+            margin-right: 80px;
+        }
+
+        td {
+            padding: 6px;
         }
 
         /* this centers the table on the page */
         .single-table {
+            /*float: left;*/
+            /*display: inline-block;*/
             margin:0px auto;
         }
 
