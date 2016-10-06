@@ -427,7 +427,7 @@ abstract class Animal
     protected $breedCode;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Breeder")
+     * @ORM\ManyToOne(targetEntity="Client")
      * @ORM\JoinColumn(name="breeder_id", referencedColumnName="id")
      */
     protected $breeder;
@@ -451,7 +451,7 @@ abstract class Animal
     /**
      * @var Litter
      * @JMS\Type("AppBundle\Entity\Litter")
-     * @ORM\ManyToOne(targetEntity="Litter", inversedBy="children")
+     * @ORM\ManyToOne(targetEntity="Litter", inversedBy="children", cascade={"persist"})
      * @ORM\JoinColumn(name="litter_id", referencedColumnName="id")
      */
     protected $litter;
@@ -486,14 +486,6 @@ abstract class Animal
     protected $mixblupBlock;
 
     /**
-     * @var float
-     *
-     * @ORM\Column(type="float", nullable=true, options={"default":null})
-     * @JMS\Type("float")
-     */
-    protected $inbreedingCoefficient;
-
-    /**
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
@@ -506,6 +498,15 @@ abstract class Animal
      * @ORM\Column(type="boolean", nullable=true)
      */
     protected $lambar;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="BreedValuesSet", mappedBy="animal", cascade={"persist"})
+     * @ORM\OrderBy({"generationDate" = "ASC"})
+     * @JMS\Type("AppBundle\Entity\BreedValuesSet")
+     */
+    protected $breedValuesSets;
 
     /**
      * Animal constructor.
@@ -638,7 +639,11 @@ abstract class Animal
      */
     public function getUln()
     {
-        return $this->ulnCountryCode . $this->ulnNumber;
+        if($this->isUlnExists()) {
+            return $this->ulnCountryCode . $this->ulnNumber;
+        } else {
+            return null;
+        }
     }
 
 
@@ -658,7 +663,6 @@ abstract class Animal
     {
         return NullChecker::isNotNull($this->pedigreeCountryCode) && NullChecker::isNotNull($this->pedigreeNumber);
     }
-
 
 
     /**
@@ -1910,7 +1914,7 @@ abstract class Animal
     }
 
     /**
-     * @return Breeder
+     * @return Client
      */
     public function getBreeder()
     {
@@ -1918,7 +1922,7 @@ abstract class Animal
     }
 
     /**
-     * @param Breeder $breeder
+     * @param Client $breeder
      */
     public function setBreeder($breeder)
     {
@@ -2095,23 +2099,6 @@ abstract class Animal
 
 
     /**
-     * @return float
-     */
-    public function getInbreedingCoefficient()
-    {
-        return $this->inbreedingCoefficient;
-    }
-
-    /**
-     * @param float $inbreedingCoefficient
-     */
-    public function setInbreedingCoefficient($inbreedingCoefficient)
-    {
-        $this->inbreedingCoefficient = $inbreedingCoefficient;
-    }
-
-
-    /**
      * @return string
      */
     public function getBirthProgress()
@@ -2142,6 +2129,42 @@ abstract class Animal
     {
         $this->lambar = $lambar;
     }
+
+
+    /**
+     * Add breedValues
+     *
+     * @param BreedValuesSet $breedValuesSet
+     *
+     * @return Animal
+     */
+    public function addBreedValuesSet(BreedValuesSet $breedValuesSet)
+    {
+        $this->breedValuesSets[] = $breedValuesSet;
+
+        return $this;
+    }
+
+    /**
+     * Remove breedValues
+     *
+     * @param BreedValuesSet $breedValuesSet
+     */
+    public function removeBreedValuesSet(BreedValuesSet $breedValuesSet)
+    {
+        $this->breedValuesSets->removeElement($breedValuesSet);
+    }
+
+    /**
+     * Get BreedValuesSets
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getBreedValuesSets()
+    {
+        return $this->breedValuesSets;
+    }
+
 
 
     /**
@@ -2178,7 +2201,17 @@ abstract class Animal
             $this->setBreedCode($animal->getBreedCode());
             $this->setScrapieGenotype($animal->getScrapieGenotype());
             $this->setNote($animal->getNote());
-            
+
+            /* Unidirectional OneToOne relationships */
+            $this->setBreeder($animal->getBreeder());
+
+            /* OneToMany relationships */
+            $litter = $animal->getLitter();
+            if($litter instanceof Litter) {
+                $litter->addChild($this);
+                $this->setLitter($litter);
+            }
+
             /* ManyToOne relationships */
             $father = $animal->getParentFather();
             if ($father instanceof Ram) { $this->setParentFather($father); }
@@ -2286,7 +2319,7 @@ abstract class Animal
      */
     private function replaceAnimalInNonParentManyToManyRelationships($collection)
     {
-        /** @var DeclareArrival|DeclareDepart|DeclareImport|DeclareExport|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclareTagReplace|DeclareWeight|AnimalResidence|BodyFat|MuscleThickness|TailLength|Weight|Exterior|Tag $item */
+        /** @var DeclareArrival|DeclareDepart|DeclareImport|DeclareExport|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclareTagReplace|DeclareWeight|AnimalResidence|BodyFat|MuscleThickness|TailLength|Weight|Exterior|Tag|Litter $item */
         foreach ($collection as $item) {
             $item->setAnimal(null);
             $item->setAnimal($this);

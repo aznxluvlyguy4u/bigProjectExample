@@ -3,10 +3,8 @@
 namespace AppBundle\Command;
 
 use AppBundle\Constant\Constant;
-use AppBundle\Entity\Animal;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BodyFatRepository;
-use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\MuscleThickness;
@@ -16,17 +14,12 @@ use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
 use AppBundle\Report\Mixblup;
-use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class NsfoDumpMixblupCommand extends ContainerAwareCommand
@@ -35,11 +28,13 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
     const DATA_FILENAME = 'databestand';
     const PEDIGREE_FILENAME = 'afstamming';
     const INSTRUCTIONS_FILENAME = 'mixblup_instructions';
-    const START_YEAR_MEASUREMENT = 2014;
-    const END_YEAR_MEASUREMENTS = 2016;
     const DEFAULT_OUTPUT_FOLDER_PATH = '/Resources/outputs/mixblup';
     const DEFAULT_MUTATIONS_FOLDER_PATH = '/Resources/mutations';
     const DEFAULT_OPTION = 0;
+
+    /* To get all the measurements set both years to null */
+    const START_YEAR_MEASUREMENT = null;
+    const END_YEAR_MEASUREMENTS = null;
 
     /** @var CommandUtil */
     private $cmdUtil;
@@ -182,7 +177,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         }
 
         //Non-Export Animals with ubn of birth
-        $sql = "UPDATE animal SET mixblup_block = CAST(ubn_of_birth AS INT) WHERE mixblup_block IS NULL AND animal.ubn_of_birth IS NOT NULL AND ".$typeSelection;
+        $sql = "UPDATE animal SET mixblup_block = CAST(ubn_of_birth AS INT) WHERE mixblup_block IS NULL AND animal.ubn_of_birth IS NOT NULL AND animal.ubn_of_birth <> '' AND ".$typeSelection;
         $this->em->getConnection()->exec($sql);
 
         //If no ubn of birth is available, then take the ubn of the current location
@@ -241,15 +236,22 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         $this->output->writeln([' ', 'output folder: '.$outputFolderPath, ' ']);
 
         $isGeneratePedigreeFile = $this->cmdUtil->generateConfirmationQuestion('Generate pedigreefile? (y/n): ');
-        $isGenerateDataFile = $this->cmdUtil->generateConfirmationQuestion('Generate datafile? (y/n): ');
+        $isGenerateExteriorDataFile = $this->cmdUtil->generateConfirmationQuestion('Generate exterior measurements datafile? (y/n): ');
+        $isGenerateTestAttributesDataFile = $this->cmdUtil->generateConfirmationQuestion('Generate test attributes datafile? (y/n): ');
+
+        //TODO activate fertility datafile generation when it is necessary
+        $isGenerateFertilityDataFile = false;
+//        $isGenerateFertilityDataFile = $this->cmdUtil->generateConfirmationQuestion('Generate fertility datafile? (y/n): ');
 
         $this->cmdUtil->setStartTimeAndPrintIt();
 
         $this->output->writeln([' ', 'Preparing data... ']);
-        $mixBlup = new Mixblup($this->em, $outputFolderPath, self::INSTRUCTIONS_FILENAME, self::DATA_FILENAME, self::PEDIGREE_FILENAME, self::START_YEAR_MEASUREMENT, self::END_YEAR_MEASUREMENTS, $this->cmdUtil);
+        $mixBlup = new Mixblup($this->em, $outputFolderPath, self::INSTRUCTIONS_FILENAME, self::DATA_FILENAME, self::PEDIGREE_FILENAME, self::START_YEAR_MEASUREMENT, self::END_YEAR_MEASUREMENTS, $this->cmdUtil, null, $this->output);
         $this->cmdUtil->printElapsedTime('Time to prepare data');
 
-        if($isGenerateDataFile) {
+        $mixBlup->validateMeasurementData();
+
+        if($isGenerateExteriorDataFile || $isGenerateTestAttributesDataFile || $isGenerateFertilityDataFile) {
             $this->output->writeln([' ', 'Generating InstructionFiles... ']);
             $mixBlup->generateInstructionFiles();
             $this->cmdUtil->printElapsedTime('Time to generate instruction files');
@@ -261,10 +263,22 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
             $this->cmdUtil->printElapsedTime('Time to generate pedigreefile');
         }
 
-        if($isGenerateDataFile) {
-            $this->output->writeln([' ', 'Generating DataFiles... ']);
-            $mixBlup->generateDataFiles();
-            $this->cmdUtil->printElapsedTime('Time to generate datafiles');
+        if($isGenerateExteriorDataFile) {
+            $this->output->writeln([' ', 'Generating Exterior Measurements DataFiles... ']);
+            $mixBlup->generateExteriorMeasurementsDataFiles();
+            $this->cmdUtil->printElapsedTime('Time to generate exterior measurements datafiles');
+        }
+
+        if($isGenerateTestAttributesDataFile) {
+            $this->output->writeln([' ', 'Generating Test Attributes DataFiles... ']);
+            $mixBlup->generateTestAttributeMeasurementsDataFiles();
+            $this->cmdUtil->printElapsedTime('Time to generate test attributes datafiles');
+        }
+
+        if($isGenerateFertilityDataFile) {
+            $this->output->writeln([' ', 'Generating Fertility DataFiles... ']);
+            $mixBlup->generateFertilityDataFiles();
+            $this->cmdUtil->printElapsedTime('Time to generate fertility datafiles');
         }
 
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
@@ -273,6 +287,12 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
     private function deleteDuplicateMeasurements()
     {
+
+        $isRemoveTimeFromMeasurementDates = $this->cmdUtil->generateConfirmationQuestion('Remove time from MeasurementDates? (y/n): ');
+        if($isRemoveTimeFromMeasurementDates) {
+            $this->weightRepository->removeTimeFromAllMeasurementDates();
+        }
+        
         $isClearDuplicates = $this->cmdUtil->generateConfirmationQuestion('Fix measurements and then Clear ALL duplicate measurements? (y/n): ');
         if ($isClearDuplicates) {
 

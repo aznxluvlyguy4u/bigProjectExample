@@ -58,4 +58,14 @@ class NumberUtil
             return false;
         }
     }
+
+
+    /**
+     * @param $string
+     * @return mixed
+     */
+    public static function replaceCommaByDot($string)
+    {
+        return str_replace(',','.',$string);
+    }
 }

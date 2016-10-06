@@ -3,7 +3,12 @@
 namespace AppBundle\Entity;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\MeasurementConstant;
+use AppBundle\Enumerator\MeasurementType;
+use AppBundle\Util\MeasurementsUtil;
+use AppBundle\Util\NullChecker;
 use AppBundle\Util\NumberUtil;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -394,5 +399,62 @@ class WeightRepository extends MeasurementRepository {
                   INNER JOIN animal a ON a.id = z.animal_id
                   LEFT JOIN person i ON i.id = n.inspector_id";
         return $em->getConnection()->query($sql)->fetchAll();
+    }
+
+
+    /**
+     * @param bool $isGetGroupedByAnimalAndDate
+     * @param bool $isIncludeRevokedWeights
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getAllWeightsBySql($isGetGroupedByAnimalAndDate = false, $isIncludeRevokedWeights = true)
+    {
+        if($isIncludeRevokedWeights) {
+            $filter = '';
+        } else {
+            $filter = "WHERE is_revoked = false";
+        }
+        
+        $sql = "SELECT n.*, z.*, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, a.name as vsm_id, a.date_of_birth, p.last_name as inspector_last_name FROM measurement n
+                  INNER JOIN weight z ON z.id = n.id
+                  INNER JOIN animal a ON a.id = z.animal_id
+                  LEFT JOIN person p ON p.id = n.inspector_id ".$filter;
+        $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+        if($isGetGroupedByAnimalAndDate) {
+            return $this->groupSqlMeasurementResultsByAnimalIdAndDate($results);
+        } else {
+            return $results;
+        }
+
+    }
+
+
+    /**
+     * @param string $animalIdAndDate
+     * @param int $inspectorId
+     * @param float $weightValue
+     * @param bool $isBirthWeight
+     * @param bool $isRevoked
+     * @return bool
+     */
+    public function insertNewWeight($animalIdAndDate, $weightValue, $inspectorId = null, $isBirthWeight = false, $isRevoked = false)
+    {
+        $parts = MeasurementsUtil::getIdAndDateFromAnimalIdAndDateString($animalIdAndDate);
+        $animalId = $parts[MeasurementConstant::ANIMAL_ID];
+        $measurementDateString = $parts[MeasurementConstant::DATE];
+
+        $isBirthWeight = StringUtil::getBooleanAsString($isBirthWeight);
+        $isRevoked = StringUtil::getBooleanAsString($isRevoked);
+        
+        $isInsertSuccessful = false;
+        $isInsertParentSuccessful = $this->insertNewMeasurementInParentTable($animalIdAndDate, $measurementDateString, MeasurementType::WEIGHT, $inspectorId);
+        if($isInsertParentSuccessful && NullChecker::floatIsNotZero($weightValue)) {
+            $sql = "INSERT INTO weight (id, animal_id, weight, is_birth_weight, is_revoked) VALUES (currval('measurement_id_seq'),'".$animalId."','".$weightValue."',".$isBirthWeight.",".$isRevoked.")";
+            $this->getManager()->getConnection()->exec($sql);
+            $isInsertSuccessful = true;
+        }
+        return $isInsertSuccessful;
     }
 }

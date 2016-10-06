@@ -452,7 +452,7 @@ class Utils
      */
     public static function fillNullOrEmptyString($value, $replacementText = "-")
     {
-        if($value === null || $value === "") {
+        if($value === null || $value === ""  || $value === " ") {
             return $replacementText;
         } else {
             return $value;

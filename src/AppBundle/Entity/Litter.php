@@ -81,7 +81,7 @@ class Litter extends DeclareNsfoBase
     private $isPseudoPregnancy;
 
     /**
-     * @ORM\OneToMany(targetEntity="Animal", mappedBy="litter")
+     * @ORM\OneToMany(targetEntity="Animal", mappedBy="litter", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Animal")
      */
     private $children;
@@ -97,6 +97,8 @@ class Litter extends DeclareNsfoBase
      */
     public function __construct()
     {
+        parent::__construct();
+
         $this->children = new ArrayCollection();
         $this->logDate = new \DateTime();
         $this->stillbornCount = 0;

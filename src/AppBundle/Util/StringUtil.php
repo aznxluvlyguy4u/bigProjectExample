@@ -134,4 +134,24 @@ class StringUtil
             return false;
         }
     }
+
+
+    /**
+     * @param boolean $boolean
+     * @return string
+     */
+    public static function getBooleanAsString($boolean)
+    {
+        return ($boolean) ? 'true' : 'false';
+    }
+
+
+    /**
+     * @param $stringOrArray
+     * @return string|array|null
+     */
+    public static function replaceMultipleSpacesByOne($stringOrArray)
+    {
+        return preg_replace('!\s+!', ' ', $stringOrArray);
+    }
 }
