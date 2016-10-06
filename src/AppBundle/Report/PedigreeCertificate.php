@@ -23,6 +23,7 @@ use AppBundle\Entity\MuscleThicknessRepository;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\TailLengthRepository;
+use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
@@ -41,6 +42,10 @@ class PedigreeCertificate
     const LITTER_SIZE = 'litterSize';
     const LITTER_GROUP = 'litterGroup';
     const N_LING = 'nLing';
+
+    const FAT_THICKNESS_DECIMAL_ACCURACY = 2;
+    const MUSCLE_THICKNESS_DECIMAL_ACCURACY = 2;
+    const GROWTH_DECIMAL_ACCURACY = 1;
 
     /** @var array */
     private $data;
@@ -499,5 +504,28 @@ class PedigreeCertificate
         } else {
             return self::MISSING_PEDIGREE_REGISTER;
         }
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param int $animalId
+     * @return array
+     */
+    public static function getGrowthMuscleThicknessAndFatWithAccuracies(ObjectManager $em, $animalId)
+    {
+        $sql = "SELECT * FROM breed_values_set WHERE animal_id = ".$animalId;
+        $results = $em->getConnection()->query($sql)->fetch();
+
+        $muscleThicknessValue = round($results['muscle_thickness'], self::MUSCLE_THICKNESS_DECIMAL_ACCURACY);
+        $muscleThicknessAccuracy = BreedValueUtil::getAccuracyFromReliability($results['muscle_thickness_reliability'], true);
+        $growthValue = round($results['growth'], self::GROWTH_DECIMAL_ACCURACY);
+        $growthAccuracy = BreedValueUtil::getAccuracyFromReliability($results['growth_reliability'], true);
+        $fatValue = round($results['fat'], self::FAT_THICKNESS_DECIMAL_ACCURACY);
+        $fatAccuracy = BreedValueUtil::getAccuracyFromReliability($results['fat_reliability'], true);
+
+        return [
+            
+        ];
     }
 }
