@@ -1,6 +1,10 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Constant\MeasurementConstant;
+use AppBundle\Enumerator\MeasurementType;
+use AppBundle\Util\MeasurementsUtil;
+use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\Criteria;
 
 /**
@@ -88,5 +92,51 @@ class MuscleThicknessRepository extends MeasurementRepository {
               LEFT JOIN person i ON i.id = n.inspector_id
               LEFT JOIN animal a ON a.id = z.animal_id";
         return  $this->getManager()->getConnection()->query($sql)->fetchAll();
+    }
+
+
+    /**
+     * @param boolean $isGetGroupedByAnimalAndDate
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getAllMuscleThicknessesBySql($isGetGroupedByAnimalAndDate = false)
+    {
+        $sql = "
+             SELECT n.*, z.*, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, a.name as vsm_id, p.last_name as inspector_last_name FROM measurement n
+
+              INNER JOIN muscle_thickness z ON z.id = n.id
+              LEFT JOIN person p ON p.id = n.inspector_id
+              LEFT JOIN animal a ON a.id = z.animal_id";
+        $results =  $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+        if($isGetGroupedByAnimalAndDate) {
+            return $this->groupSqlMeasurementResultsByAnimalIdAndDate($results);
+        } else {
+            return $results;
+        }
+    }
+
+
+    /**
+     * @param string $animalIdAndDate
+     * @param int $inspectorId
+     * @param float $muscleThicknessValue
+     * @return bool
+     */
+    public function insertNewMuscleThickness($animalIdAndDate, $muscleThicknessValue, $inspectorId = null)
+    {
+        $parts = MeasurementsUtil::getIdAndDateFromAnimalIdAndDateString($animalIdAndDate);
+        $animalId = $parts[MeasurementConstant::ANIMAL_ID];
+        $measurementDateString = $parts[MeasurementConstant::DATE];
+
+        $isInsertSuccessful = false;
+        $isInsertParentSuccessful = $this->insertNewMeasurementInParentTable($animalIdAndDate, $measurementDateString, MeasurementType::MUSCLE_THICKNESS, $inspectorId);
+        if($isInsertParentSuccessful && NullChecker::floatIsNotZero($muscleThicknessValue)) {
+            $sql = "INSERT INTO muscle_thickness (id, animal_id, muscle_thickness) VALUES (currval('measurement_id_seq'),'".$animalId."','".$muscleThicknessValue."')";
+            $this->getManager()->getConnection()->exec($sql);
+            $isInsertSuccessful = true;
+        }
+        return $isInsertSuccessful;
     }
 }

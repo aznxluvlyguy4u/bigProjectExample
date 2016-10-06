@@ -131,6 +131,7 @@ class JsonInputConstant
     const WEIGHT_MEASUREMENTS = 'weight_measurements';
     const WEIGHT = 'weight';
     const IS_BIRTH_WEIGHT = 'is_birth_weight';
+    const IS_VALID_20WEEK_WEIGHT_MEASUREMENT = 'is_valid_20_week_weight_measurement';
 
     //BodyFat measurements
     const FAT1 = 'fat1';

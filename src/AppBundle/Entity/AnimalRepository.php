@@ -9,6 +9,7 @@ use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -494,6 +495,43 @@ class AnimalRepository extends BaseRepository
 
 
   /**
+   * @return array
+   */
+  public function getAnimalPrimaryKeysByVsmIdArray()
+  {
+    $sql = "SELECT name as vsm_id, id FROM animal WHERE name IS NOT NULL";
+    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+    $searchArray = array();
+    foreach ($results as $result) {
+      $searchArray[$result['vsm_id']] = $result['id'];
+    }
+    return $searchArray;
+  }
+
+
+  /**
+   * @param int $animalId
+   * @param  $measurementDateString
+   * @return bool|null
+   */
+  public function isDateOfBirth($animalId, $measurementDateString)
+  {
+    if (TimeUtil::isFormatYYYYMMDD($measurementDateString)) {
+      $sql = "SELECT DATE(date_of_birth) as date_of_birth FROM animal WHERE id = " . intval($animalId);
+      $result = $this->getManager()->getConnection()->query($sql)->fetch();
+      if ($result['date_of_birth'] == $measurementDateString) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    return null;
+  }
+
+
+  /**
    * @param $animalId
    * @return int|null
    */
@@ -522,5 +560,28 @@ class AnimalRepository extends BaseRepository
     } else {
       return null;
     }
+
+  }
+
+
+  /**
+   * @return ArrayCollection
+   */
+  public function getAnimalPrimaryKeysByUlnString($isCountryCodeSeparatedByString = false)
+  {
+    if($isCountryCodeSeparatedByString) {
+      $ulnFormat = "uln_country_code,' ',uln_number";
+    } else {
+      $ulnFormat = "uln_country_code,uln_number";
+    }
+    $sql = "SELECT CONCAT(".$ulnFormat.") as uln, id FROM animal";
+    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+    $array = new ArrayCollection();
+    foreach ($results as $result) {
+      $array->set($result['uln'], $result['id']);
+    }
+
+    return $array;
   }
 }

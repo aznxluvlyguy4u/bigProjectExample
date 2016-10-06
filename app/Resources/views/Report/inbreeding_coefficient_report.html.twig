@@ -7,22 +7,18 @@
     {% set ramUln = variables.ram.uln %}
     {% set ramPedigree = variables.ram.pedigree %}
     {% set isRamMissing = variables.isRamMissing %}
-    {% set isProdEnv = variables.isProdEnv %}
     {% set counter = 0 %}
     {% set rowsPerPage = 28 %}
+    {% set ewesCount = variables.ewes|length %}
+    {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
 
     {# HEADER #}
 
-    {% if isProdEnv %}
-        <div class="nsfo-logo">
-            <img src="{{ absolute_url(asset('assets/images/nsfo-logo.png')) }}" width="556" height="70" />
-        </div>
-    {% else %}
-        <div class="nsfo-logo">
-            <img src="https://one8rg-ch3301.files.1drv.com/y3m-UwC3zslAIMpjS9PwPtD6mAFgcAUimwX0OYMPGL16nsU5s1Qiejw0NEpefnqWrYqTuIRWzrZ2Pc-P_HmAeds9vA9QgS6Bco6PP6gAQEabSaxyZcZpjH0JKVGVfQq6zEAc1Pq2d3YHUQTTdKCbvsvqMf04J8Adk5FocZwylanEPo?width=1668&height=2102&cropmode=none" width="556" height="70" />
-        </div>
-    {% endif %}
+    <div class="nsfo-logo">
+        <img src="{{ imagesDirectory }}" width="556" height="70" />
+    </div>
 
+    {#<h3>{{ imagesDirectory }}</h3>#}
 
     <h2>Inteeltcoëfficiënt van nageslacht na paring</h2>
 
@@ -52,7 +48,12 @@
         {% if counter is divisible by (rowsPerPage) %}
         {# COLUMN HEADER #}
 
-            <div class="tg-wrap"><table class="tg">
+            {% if ewesCount - counter <= rowsPerPage %}
+                <div class="tg-wrap"><table class="tg single-table">
+            {% else %}
+                <div class="tg-wrap"><table class="tg double-table">
+            {% endif %}
+
             <tr>
                 <td class="tg-yw4l">Ooi ULN</td>
                 <td class="tg-yw4l">Ooi STN</td>
@@ -71,7 +72,7 @@
         {% set counter = counter + 1 %}
 
         {# END OF TABLE #}
-        {% if counter is divisible by (rowsPerPage) %}
+        {% if (counter is divisible by (rowsPerPage)) or (loop.last == true) %}
             </table></div>
         {% endif %}
 
@@ -82,16 +83,9 @@
             {#necessary to enforce a pagebreak using css#}
         <footer></footer>
 
-            {% if isProdEnv %}
-                <div class="nsfo-logo">
-                    <img src="{{ absolute_url(asset('assets/images/nsfo-logo.png')) }}" width="556" height="70" />
-                </div>
-            {% else %}
-                <div class="nsfo-logo">
-                    <img src="https://one8rg-ch3301.files.1drv.com/y3m-UwC3zslAIMpjS9PwPtD6mAFgcAUimwX0OYMPGL16nsU5s1Qiejw0NEpefnqWrYqTuIRWzrZ2Pc-P_HmAeds9vA9QgS6Bco6PP6gAQEabSaxyZcZpjH0JKVGVfQq6zEAc1Pq2d3YHUQTTdKCbvsvqMf04J8Adk5FocZwylanEPo?width=1668&height=2102&cropmode=none" width="556" height="70" />
-                </div>
-            {% endif %}
-
+            <div class="nsfo-logo">
+                <img src="{{ imagesDirectory }}" width="556" height="70" />
+            </div>
 
             <h2>Inteeltcoëfficiënt van nageslacht na paring</h2>
 
@@ -109,15 +103,23 @@
         h2 { text-align: center; font-family:SansSerif, sans-serif;font-size:22px }
         p { text-align: center; font-family:SansSerif, sans-serif;font-size:14px; margin-bottom: 18px}
 
+        .nsfo-logo { margin-top: 0.8cm; margin-bottom: 0.7cm; }
+
         .tg  {
                 border-collapse:collapse;
                 border-spacing:0;
-                float: left;
-                margin-left: 2cm;
-                /*margin:0px auto;   this centers the table on the page*/
         }
 
-        .nsfo-logo { margin-top: 0.8cm; margin-bottom: 0.7cm; }
+        /* this places two tables next to each other */
+        .double-table {
+            float: left;
+            margin-left: 2cm;
+        }
+
+        /* this centers the table on the page */
+        .single-table {
+            margin:0px auto;
+        }
 
         .tg td{font-family:SansSerif, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
         .tg th{font-family:SansSerif, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
