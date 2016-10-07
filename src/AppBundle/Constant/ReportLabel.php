@@ -102,5 +102,11 @@ class ReportLabel
     const CHILD_KEY = 'c';
     const FATHER_KEY = 'f';
     const MOTHER_KEY = 'm';
+
+    //BreedValues
+    const FAT = 'FAT';
+    const FAT_ACCURACY = 'FAT_ACCURACY';
+    const MUSCLE_THICKNESS_ACCURACY = 'MUSCLE_THICKNESS_ACCURACY';
+    const GROWTH_ACCURACY = 'GROWTH_ACCURACY';
     
 }

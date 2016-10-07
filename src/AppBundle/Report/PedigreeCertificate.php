@@ -10,6 +10,8 @@ use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BodyFatRepository;
+use AppBundle\Entity\BreedValuesSet;
+use AppBundle\Entity\BreedValuesSetRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Exterior;
@@ -71,6 +73,10 @@ class PedigreeCertificate
     /** @var ExteriorRepository */
     private $exteriorRepository;
 
+    /** @var BreedValuesSetRepository */
+    private $breedValuesSetRepository;
+
+
     /**
      * PedigreeCertificate constructor.
      * @param ObjectManager $em
@@ -88,6 +94,7 @@ class PedigreeCertificate
 //        $this->muscleThicknessRepository = $em->getRepository(MuscleThickness::class);
 //        $this->bodyFatRepository = $em->getRepository(BodyFat::class);
 //        $this->tailLengthRepository = $em->getRepository(TailLength::class);
+        $this->breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
 
         $this->data = array();
         $this->generationOfAscendants = $generationOfAscendants;
@@ -506,26 +513,11 @@ class PedigreeCertificate
         }
     }
 
-
     /**
-     * @param ObjectManager $em
      * @param int $animalId
-     * @return array
      */
-    public static function getGrowthMuscleThicknessAndFatWithAccuracies(ObjectManager $em, $animalId)
+    private function getFormattedGrowthMuscleThicknessFat($animalId)
     {
-        $sql = "SELECT * FROM breed_values_set WHERE animal_id = ".$animalId;
-        $results = $em->getConnection()->query($sql)->fetch();
-
-        $muscleThicknessValue = round($results['muscle_thickness'], self::MUSCLE_THICKNESS_DECIMAL_ACCURACY);
-        $muscleThicknessAccuracy = BreedValueUtil::getAccuracyFromReliability($results['muscle_thickness_reliability'], true);
-        $growthValue = round($results['growth'], self::GROWTH_DECIMAL_ACCURACY);
-        $growthAccuracy = BreedValueUtil::getAccuracyFromReliability($results['growth_reliability'], true);
-        $fatValue = round($results['fat'], self::FAT_THICKNESS_DECIMAL_ACCURACY);
-        $fatAccuracy = BreedValueUtil::getAccuracyFromReliability($results['fat_reliability'], true);
-
-        return [
-            
-        ];
+        $result = $this->breedValuesSetRepository->getGrowthMuscleThicknessAndFatWithAccuracies($animalId);
     }
 }
