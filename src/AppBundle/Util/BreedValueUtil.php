@@ -187,11 +187,27 @@ class BreedValueUtil
 
 
     /**
-     * @param $breedValueReliability
+     * @param float $breedValueReliability
+     * @param bool $isFormatted
+     * @return float
+     */
+    public static function getAccuracyFromReliability($breedValueReliability, $isFormatted = false)
+    {
+        $breedValueAccuracy = sqrt($breedValueReliability);
+
+        if($isFormatted) {
+            return self::formatAccuracyForDisplay($breedValueAccuracy);
+        }
+        return $breedValueAccuracy;
+    }
+
+
+    /**
+     * @param float $breedValueAccuracy
      * @param bool $isInPercentages
      * @return float
      */
-    public static function getAccuracyFromReliability($breedValueReliability, $isInPercentages = true)
+    public static function formatAccuracyForDisplay($breedValueAccuracy, $isInPercentages = true)
     {
         if($isInPercentages) {
             $factor = 100;
@@ -200,8 +216,38 @@ class BreedValueUtil
             $factor = 1;
             $decimalPrecision = 2;
         }
-        return  round(sqrt($breedValueReliability)*$factor, $decimalPrecision);
+        return  round($breedValueAccuracy*$factor, $decimalPrecision);
     }
 
+
+    /**
+     * @param float $muscleThicknessCoefficient
+     * @param float $muscleThicknessCorrectedBreedValue
+     * @param float $growthCoefficient
+     * @param float $growthCorrectedBreedValue
+     * @param float $fatCoefficient
+     * @param float $fatCorrectedBreedValue
+     * @return float
+     */
+    public static function getLambMeatIndex($muscleThicknessCoefficient, $muscleThicknessCorrectedBreedValue,
+                                            $growthCoefficient, $growthCorrectedBreedValue,
+                                            $fatCoefficient, $fatCorrectedBreedValue)
+    {
+        return $muscleThicknessCoefficient * $muscleThicknessCorrectedBreedValue
+             + $growthCoefficient * $growthCorrectedBreedValue
+             + $fatCoefficient * $fatCorrectedBreedValue;
+    }
+
+
+    private static function getLambMeatIndexReliability()
+    {
+
+    }
+
+
+    public static function getLambMeatIndexAccuracy()
+    {
+
+    }
 
 }

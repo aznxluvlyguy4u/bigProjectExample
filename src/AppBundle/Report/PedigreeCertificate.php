@@ -45,9 +45,12 @@ class PedigreeCertificate
     const LITTER_GROUP = 'litterGroup';
     const N_LING = 'nLing';
 
-    const FAT_THICKNESS_DECIMAL_ACCURACY = 2;
+    const FAT_DECIMAL_ACCURACY = 2;
     const MUSCLE_THICKNESS_DECIMAL_ACCURACY = 2;
     const GROWTH_DECIMAL_ACCURACY = 1;
+
+    const STARS_NULL_VALUE = null;
+    const EMPTY_BREED_VALUE = '-/-';
 
     /** @var array */
     private $data;
@@ -513,11 +516,70 @@ class PedigreeCertificate
         }
     }
 
+
     /**
      * @param int $animalId
+     * @return array
      */
-    private function getFormattedGrowthMuscleThicknessFat($animalId)
+    private function getUnformattedBreedValues($animalId)
     {
-        $result = $this->breedValuesSetRepository->getGrowthMuscleThicknessAndFatWithAccuracies($animalId);
+        return $this->breedValuesSetRepository->getBreedValuesWithAccuracies($animalId);
+    }
+
+
+    /**
+     * @param array $breedValues
+     * @return array
+     */
+    private function getFormattedBreedValues($breedValues)
+    {
+        $traits = new ArrayCollection();
+        $traits->set(ReportLabel::GROWTH_ACCURACY, ReportLabel::GROWTH);
+        $traits->set(ReportLabel::MUSCLE_THICKNESS_ACCURACY, ReportLabel::MUSCLE_THICKNESS);
+        $traits->set(ReportLabel::FAT_ACCURACY, ReportLabel::FAT);
+        //Add new breedValues here
+
+        $decimalAccuracyLabels = new ArrayCollection();
+        $decimalAccuracyLabels->set(ReportLabel::GROWTH_ACCURACY, self::GROWTH_DECIMAL_ACCURACY);
+        $decimalAccuracyLabels->set(ReportLabel::MUSCLE_THICKNESS_ACCURACY, self::MUSCLE_THICKNESS_DECIMAL_ACCURACY);
+        $decimalAccuracyLabels->set(ReportLabel::FAT_ACCURACY, self::FAT_DECIMAL_ACCURACY);
+        //Add new decimal_accuracies here
+
+        $results = array();
+
+        $accuracyLabels = $traits->getKeys();
+        foreach ($accuracyLabels as $accuracyLabel) {
+            $traitLabel = $traits->get($accuracyLabel);
+            if($accuracyLabel == null) {
+                $displayedString = self::EMPTY_BREED_VALUE;
+            } else {
+                $breedValue = round($breedValues[$traitLabel], $decimalAccuracyLabels->get($accuracyLabel));
+                $accuracy = BreedValueUtil::formatAccuracyForDisplay($breedValues[$accuracyLabel]);
+                $displayedString = $this->getPlusSignIfNumberIsPositive($breedValue).$breedValue.'/'.$accuracy;
+            }
+            $results[$traitLabel] = $displayedString;
+        }
+
+        return $results;
+    }
+
+
+    private function getLambMeatIndexValues()
+    {
+
+    }
+
+
+    /**
+     * @param $number
+     * @return string
+     */
+    private function getPlusSignIfNumberIsPositive($number)
+    {
+        if($number > 0) {
+            return '+';
+        } else {
+            return '';
+        }
     }
 }

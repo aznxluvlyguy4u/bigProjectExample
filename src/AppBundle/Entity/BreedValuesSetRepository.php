@@ -16,7 +16,7 @@ class BreedValuesSetRepository extends BaseRepository {
      * @param int $animalId
      * @return array
      */
-    public function getGrowthMuscleThicknessAndFatWithAccuracies($animalId)
+    public function getBreedValuesWithAccuracies($animalId)
     {
         $em = $this->getManager();
     
@@ -32,19 +32,21 @@ class BreedValuesSetRepository extends BaseRepository {
         $growthAccuracy = null;
         $fatAccuracy = null;
 
+        $isGetFormattedAccuracies = false;
+
         if(NullChecker::floatIsNotZero($results['muscle_thickness_reliability'])) {
-            $muscleThicknessValue = round($results['muscle_thickness'], PedigreeCertificate::MUSCLE_THICKNESS_DECIMAL_ACCURACY);
-            $muscleThicknessAccuracy = BreedValueUtil::getAccuracyFromReliability($results['muscle_thickness_reliability'], true);
+            $muscleThicknessValue = $results['muscle_thickness'];
+            $muscleThicknessAccuracy = BreedValueUtil::getAccuracyFromReliability($results['muscle_thickness_reliability'], $isGetFormattedAccuracies);
         }
 
         if(NullChecker::floatIsNotZero($results['growth_reliability'])) {
-            $growthValue = round($results['growth'], PedigreeCertificate::GROWTH_DECIMAL_ACCURACY);
-            $growthAccuracy = BreedValueUtil::getAccuracyFromReliability($results['growth_reliability'], true);
+            $growthValue = $results['growth'];
+            $growthAccuracy = BreedValueUtil::getAccuracyFromReliability($results['growth_reliability'], $isGetFormattedAccuracies);
         }
 
         if(NullChecker::floatIsNotZero($results['fat_reliability'])) {
-            $fatValue = round($results['fat'], PedigreeCertificate::FAT_THICKNESS_DECIMAL_ACCURACY);
-            $fatAccuracy = BreedValueUtil::getAccuracyFromReliability($results['fat_reliability'], true);
+            $fatValue = $results['fat'];
+            $fatAccuracy = BreedValueUtil::getAccuracyFromReliability($results['fat_reliability'], $isGetFormattedAccuracies);
         }
 
         return [
