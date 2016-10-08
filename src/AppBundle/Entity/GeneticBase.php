@@ -37,14 +37,13 @@ class GeneticBase
     private $logDate;
 
     /**
-     * @var \DateTime
+     * @var integer
      *
-     * @ORM\Column(type="datetime")
-     * @Assert\Date
+     * @ORM\Column(type="integer")
      * @Assert\NotBlank
-     * @JMS\Type("DateTime")
+     * @JMS\Type("integer")
      */
-    private $generationDate;
+    private $year;
 
 
     /**
@@ -76,9 +75,13 @@ class GeneticBase
     private $fat;
     
 
-    public function __construct()
+    public function __construct($year = null, $muscleThickness = null, $growth = null, $fat = null)
     {
         $this->logDate = new \DateTime();
+        $this->year = $year;
+        $this->muscleThickness = $muscleThickness;
+        $this->growth = $growth;
+        $this->fat = $fat;
     }
 
     /**
@@ -106,21 +109,23 @@ class GeneticBase
         $this->logDate = $logDate;
     }
 
+
     /**
-     * @return \DateTime
+     * @return int
      */
-    public function getGenerationDate()
+    public function getYear()
     {
-        return $this->generationDate;
+        return $this->year;
     }
 
     /**
-     * @param \DateTime $generationDate
+     * @param int $year
      */
-    public function setGenerationDate($generationDate)
+    public function setYear($year)
     {
-        $this->generationDate = $generationDate;
+        $this->year = $year;
     }
+
 
     /**
      * @return float
