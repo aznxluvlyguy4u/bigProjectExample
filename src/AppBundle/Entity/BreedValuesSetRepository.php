@@ -47,21 +47,28 @@ class BreedValuesSetRepository extends BaseRepository {
         $growthAccuracy = null;
         $fatAccuracy = null;
 
+        $muscleThicknessReliability = null;
+        $growthReliability = null;
+        $fatReliability = null;
+
         $isGetFormattedAccuracies = false;
 
         if(NullChecker::floatIsNotZero($results['muscle_thickness_reliability'])) {
             $muscleThicknessValue = $results['muscle_thickness'] - $geneticBases->getMuscleThickness();
-            $muscleThicknessAccuracy = BreedValueUtil::getAccuracyFromReliability($results['muscle_thickness_reliability'], $isGetFormattedAccuracies);
+            $muscleThicknessReliability = $results['muscle_thickness_reliability'];
+            $muscleThicknessAccuracy = BreedValueUtil::getAccuracyFromReliability($muscleThicknessReliability, $isGetFormattedAccuracies);
         }
 
         if(NullChecker::floatIsNotZero($results['growth_reliability'])) {
             $growthValue = $results['growth'] - $geneticBases->getGrowth();
-            $growthAccuracy = BreedValueUtil::getAccuracyFromReliability($results['growth_reliability'], $isGetFormattedAccuracies);
+            $growthReliability = $results['growth_reliability'];
+            $growthAccuracy = BreedValueUtil::getAccuracyFromReliability($growthReliability, $isGetFormattedAccuracies);
         }
 
         if(NullChecker::floatIsNotZero($results['fat_reliability'])) {
             $fatValue = $results['fat'] - $geneticBases->getFat();
-            $fatAccuracy = BreedValueUtil::getAccuracyFromReliability($results['fat_reliability'], $isGetFormattedAccuracies);
+            $fatReliability = $results['fat_reliability'];
+            $fatAccuracy = BreedValueUtil::getAccuracyFromReliability($fatReliability, $isGetFormattedAccuracies);
         }
 
         return [
@@ -70,7 +77,10 @@ class BreedValuesSetRepository extends BaseRepository {
             ReportLabel::FAT => $fatValue,
             ReportLabel::GROWTH_ACCURACY => $growthAccuracy,
             ReportLabel::MUSCLE_THICKNESS_ACCURACY => $muscleThicknessAccuracy,
-            ReportLabel::FAT_ACCURACY => $fatAccuracy
+            ReportLabel::FAT_ACCURACY => $fatAccuracy,
+            ReportLabel::GROWTH_RELIABILITY => $growthReliability,
+            ReportLabel::MUSCLE_THICKNESS_RELIABILITY => $muscleThicknessReliability,
+            ReportLabel::FAT_RELIABILITY => $fatReliability
         ];
     }
 

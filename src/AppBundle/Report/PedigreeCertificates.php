@@ -7,7 +7,11 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\BreedValueCoefficient;
+use AppBundle\Entity\BreedValueCoefficientRepository;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\GeneticBase;
+use AppBundle\Entity\GeneticBaseRepository;
 use AppBundle\Entity\Location;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -50,8 +54,19 @@ class PedigreeCertificates extends ReportBase
         $animals = self::getAnimalsInContentArray($em, $content);
         $this->animalCount = 0;
 
+        /** @var GeneticBaseRepository $geneticBaseRepository */
+        $geneticBaseRepository = $em->getRepository(GeneticBase::class);
+
+        $breedValuesYear = $geneticBaseRepository->getLatestYear();
+        $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
+
+        /** @var BreedValueCoefficientRepository $breedValueCoefficientRepository */
+        $breedValueCoefficientRepository = $em->getRepository(GeneticBase::class);
+
+        $lambMeatIndexCoefficients = $breedValueCoefficientRepository->getLambMeatIndexCoefficients();
+
         foreach ($animals as $animal) {
-            $pedigreeCertificate = new PedigreeCertificate($em, $client, $location, $animal, $generationOfAscendants);
+            $pedigreeCertificate = new PedigreeCertificate($em, $client, $location, $animal, $generationOfAscendants, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients);
 
             $this->reports[$this->animalCount] = $pedigreeCertificate->getData();
 

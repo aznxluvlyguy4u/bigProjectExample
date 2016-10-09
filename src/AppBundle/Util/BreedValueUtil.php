@@ -4,7 +4,10 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Component\Utils;
+use AppBundle\Constant\ReportLabel;
 use AppBundle\Enumerator\BreedCodeType;
+use AppBundle\Report\PedigreeCertificate;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 
 class BreedValueUtil
@@ -221,33 +224,118 @@ class BreedValueUtil
 
 
     /**
-     * @param float $muscleThicknessCoefficient
-     * @param float $muscleThicknessCorrectedBreedValue
-     * @param float $growthCoefficient
-     * @param float $growthCorrectedBreedValue
-     * @param float $fatCoefficient
-     * @param float $fatCorrectedBreedValue
+     * @param array $breedValues
+     * @return array
+     */
+    public static function getFormattedBreedValues($breedValues)
+    {
+        $traits = new ArrayCollection();
+        $traits->set(ReportLabel::GROWTH_ACCURACY, ReportLabel::GROWTH);
+        $traits->set(ReportLabel::MUSCLE_THICKNESS_ACCURACY, ReportLabel::MUSCLE_THICKNESS);
+        $traits->set(ReportLabel::FAT_ACCURACY, ReportLabel::FAT);
+        //Add new breedValues here
+
+        $decimalAccuracyLabels = new ArrayCollection();
+        $decimalAccuracyLabels->set(ReportLabel::GROWTH_ACCURACY, PedigreeCertificate::GROWTH_DECIMAL_ACCURACY);
+        $decimalAccuracyLabels->set(ReportLabel::MUSCLE_THICKNESS_ACCURACY, PedigreeCertificate::MUSCLE_THICKNESS_DECIMAL_ACCURACY);
+        $decimalAccuracyLabels->set(ReportLabel::FAT_ACCURACY, PedigreeCertificate::FAT_DECIMAL_ACCURACY);
+        //Add new decimal_accuracies here
+
+        $results = array();
+
+        $accuracyLabels = $traits->getKeys();
+        foreach ($accuracyLabels as $accuracyLabel) {
+            $traitLabel = $traits->get($accuracyLabel);
+            if($accuracyLabel == null) {
+                $displayedString = PedigreeCertificate::EMPTY_BREED_VALUE;
+            } else {
+                $rawBreedValue = Utils::getNullCheckedArrayValue($traitLabel, $breedValues);
+                if($rawBreedValue == null) {
+                    $displayedString = PedigreeCertificate::EMPTY_BREED_VALUE;
+                } else {
+                    $breedValue = round($rawBreedValue, $decimalAccuracyLabels->get($accuracyLabel));
+                    $accuracy = BreedValueUtil::formatAccuracyForDisplay($breedValues[$accuracyLabel]);
+                    $displayedString = NumberUtil::getPlusSignIfNumberIsPositive($breedValue).$breedValue.'/'.$accuracy;
+                }
+            }
+            $results[$traitLabel] = $displayedString;
+        }
+
+        return $results;
+    }
+
+
+
+
+    /**
+     * @param array $breedValues
+     * @param array $lambMeatIndexCoefficients
      * @return float
      */
-    public static function getLambMeatIndex($muscleThicknessCoefficient, $muscleThicknessCorrectedBreedValue,
-                                            $growthCoefficient, $growthCorrectedBreedValue,
-                                            $fatCoefficient, $fatCorrectedBreedValue)
+    public static function getLambMeatIndex($breedValues, $lambMeatIndexCoefficients)
     {
+        $muscleThicknessAccuracy = Utils::getNullCheckedArrayValue(ReportLabel::MUSCLE_THICKNESS_ACCURACY, $breedValues);
+        $fatAccuracy = Utils::getNullCheckedArrayValue(ReportLabel::FAT_ACCURACY, $breedValues);
+        $growthAccuracy = Utils::getNullCheckedArrayValue(ReportLabel::GROWTH_ACCURACY, $breedValues);
+
+        //Only calculate the LambMeatIndex if all values are not null
+        if(NullChecker::floatIsNotZero($muscleThicknessAccuracy) || NullChecker::floatIsNotZero($fatAccuracy) || NullChecker::floatIsNotZero($growthAccuracy) || $lambMeatIndexCoefficients == null) {
+            return null;
+        }
+
+        $muscleThicknessCorrectedBreedValue = Utils::getNullCheckedArrayValue(ReportLabel::MUSCLE_THICKNESS, $breedValues);
+        $growthCorrectedBreedValue = Utils::getNullCheckedArrayValue(ReportLabel::GROWTH, $breedValues);
+        $fatCorrectedBreedValue = Utils::getNullCheckedArrayValue(ReportLabel::FAT, $breedValues);
+
+        $muscleThicknessCoefficient = Utils::getNullCheckedArrayValue(ReportLabel::MUSCLE_THICKNESS, $lambMeatIndexCoefficients);
+        $growthCoefficient = Utils::getNullCheckedArrayValue(ReportLabel::GROWTH, $lambMeatIndexCoefficients);
+        $fatCoefficient = Utils::getNullCheckedArrayValue(ReportLabel::FAT, $lambMeatIndexCoefficients);
+
         return $muscleThicknessCoefficient * $muscleThicknessCorrectedBreedValue
              + $growthCoefficient * $growthCorrectedBreedValue
              + $fatCoefficient * $fatCorrectedBreedValue;
     }
 
 
-    private static function getLambMeatIndexReliability()
+    /**
+     * @param array $breedValues
+     * @param array $lambMeatIndexCoefficients
+     * @return float|null
+     */
+    public static function getLambMeatIndexReliability($breedValues, $lambMeatIndexCoefficients)
     {
+        $muscleThicknessReliability = Utils::getNullCheckedArrayValue(ReportLabel::MUSCLE_THICKNESS_RELIABILITY, $breedValues);
+        $fatReliability = Utils::getNullCheckedArrayValue(ReportLabel::FAT_RELIABILITY, $breedValues);
+        $growthReliability = Utils::getNullCheckedArrayValue(ReportLabel::GROWTH_RELIABILITY, $breedValues);
 
+        //Only calculate the LambMeatIndex if all values are not null
+        if(NullChecker::floatIsNotZero($muscleThicknessReliability) || NullChecker::floatIsNotZero($fatReliability) || NullChecker::floatIsNotZero($growthReliability) || $lambMeatIndexCoefficients == null) {
+            return null;
+        }
+
+        $muscleThicknessCoefficientSquared = Utils::getNullCheckedArrayValue(ReportLabel::MUSCLE_THICKNESS, $lambMeatIndexCoefficients) ** 2;
+        $growthCoefficientSquared = Utils::getNullCheckedArrayValue(ReportLabel::GROWTH, $lambMeatIndexCoefficients) ** 2;
+        $fatCoefficientSquared = Utils::getNullCheckedArrayValue(ReportLabel::FAT, $lambMeatIndexCoefficients) ** 2;
+
+        return 1.0 - ((
+            $muscleThicknessCoefficientSquared * (1-$muscleThicknessReliability)
+            + $growthCoefficientSquared * (1-$growthReliability)
+            + $fatCoefficientSquared * (1-$fatReliability)
+        ) / ($muscleThicknessCoefficientSquared + $growthCoefficientSquared + $fatCoefficientSquared));
     }
 
 
-    public static function getLambMeatIndexAccuracy()
+    /**
+     * @param array $breedValues
+     * @param array $lambMeatIndexCoefficients
+     * @return float|null
+     */
+    public static function getLambMeatIndexAccuracy($breedValues, $lambMeatIndexCoefficients)
     {
+        $lambMeatIndexReliability = self::getLambMeatIndexReliability($breedValues, $lambMeatIndexCoefficients);
+        if($lambMeatIndexReliability == null) { return null; }
 
+        return sqrt($lambMeatIndexReliability);
     }
 
 }

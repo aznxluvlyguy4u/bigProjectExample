@@ -51,4 +51,21 @@ class BreedValueCoefficientRepository extends BaseRepository {
         if($hasSomethingChanged) { $em->flush(); }
     }
 
+
+    /**
+     * @return array|null
+     */
+    public function getLambMeatIndexCoefficients()
+    {
+        $breedValueCoefficients = $this->findBy(['index_type' => BreedIndexType::LAMB_MEAT_INDEX]);
+
+        if(count($breedValueCoefficients) == 0) { return null; }
+
+        $results = array();
+        /** @var BreedValueCoefficient $breedValueCoefficient */
+        foreach ($breedValueCoefficients as $breedValueCoefficient) {
+            $results[$breedValueCoefficient->getTrait()] = $breedValueCoefficient->getValue();
+        }
+        return $results;
+    }
 }

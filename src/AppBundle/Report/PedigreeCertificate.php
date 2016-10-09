@@ -16,6 +16,7 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
+use AppBundle\Entity\GeneticBase;
 use AppBundle\Entity\Litter;
 use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\Location;
@@ -79,6 +80,14 @@ class PedigreeCertificate
     /** @var BreedValuesSetRepository */
     private $breedValuesSetRepository;
 
+    /** @var int */
+    private $breedValuesYear;
+
+    /** @var GeneticBase */
+    private $geneticBases;
+
+    /** @var array */
+    private $lambMeatIndexCoefficients;
 
     /**
      * PedigreeCertificate constructor.
@@ -87,8 +96,11 @@ class PedigreeCertificate
      * @param Location $location
      * @param Animal $animal
      * @param int $generationOfAscendants
+     * @param int $breedValuesYear
+     * @param GeneticBase $geneticBases
+     * @param array $lambMeatIndexCoefficients
      */
-    public function __construct(ObjectManager $em, Client $client, Location $location, Animal $animal, $generationOfAscendants = 3)
+    public function __construct(ObjectManager $em, Client $client, Location $location, Animal $animal, $generationOfAscendants = 3, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients)
     {
         $this->em = $em;
 
@@ -98,6 +110,9 @@ class PedigreeCertificate
 //        $this->bodyFatRepository = $em->getRepository(BodyFat::class);
 //        $this->tailLengthRepository = $em->getRepository(TailLength::class);
         $this->breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
+        $this->breedValuesYear = $breedValuesYear;
+        $this->geneticBases = $geneticBases;
+        $this->lambMeatIndexCoefficients = $lambMeatIndexCoefficients;
 
         $this->data = array();
         $this->generationOfAscendants = $generationOfAscendants;
@@ -245,10 +260,14 @@ class PedigreeCertificate
         $latestExterior = $this->exteriorRepository->getLatestExterior($animal);
 
         //Breedvalues: The actual breed value not the measurements!
+        $breedValues = $this->getUnformattedBreedValues($animal->getId());
+        $formattedBreedValues = BreedValueUtil::getFormattedBreedValues($breedValues);
+        
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] = Utils::fillNullOrEmptyString(null);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = Utils::fillNullOrEmptyString(null);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TAIL_LENGTH] = Utils::fillNullOrEmptyString(null);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GROWTH] = Utils::fillZero(0.00);
+
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TAIL_LENGTH] = Utils::fillNullOrEmptyString(null);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::VL] = Utils::fillZero(0.00); //TODO Add Vl variable to Exterior Entity ???
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SL] = Utils::fillZero(0.00); //TODO Add sl variable to Exterior Entity ??? Or is this just Tail Length?
 
@@ -523,63 +542,22 @@ class PedigreeCertificate
      */
     private function getUnformattedBreedValues($animalId)
     {
-        return $this->breedValuesSetRepository->getBreedValuesWithAccuracies($animalId);
+        return $this->breedValuesSetRepository->getBreedValuesCorrectedByGeneticBaseWithAccuracies($animalId, $this->breedValuesYear, $this->geneticBases);
     }
-
-
-    /**
-     * @param array $breedValues
-     * @return array
-     */
-    private function getFormattedBreedValues($breedValues)
+    
+    private function getLambMeatIndexValues($breedValues)
     {
-        $traits = new ArrayCollection();
-        $traits->set(ReportLabel::GROWTH_ACCURACY, ReportLabel::GROWTH);
-        $traits->set(ReportLabel::MUSCLE_THICKNESS_ACCURACY, ReportLabel::MUSCLE_THICKNESS);
-        $traits->set(ReportLabel::FAT_ACCURACY, ReportLabel::FAT);
-        //Add new breedValues here
-
-        $decimalAccuracyLabels = new ArrayCollection();
-        $decimalAccuracyLabels->set(ReportLabel::GROWTH_ACCURACY, self::GROWTH_DECIMAL_ACCURACY);
-        $decimalAccuracyLabels->set(ReportLabel::MUSCLE_THICKNESS_ACCURACY, self::MUSCLE_THICKNESS_DECIMAL_ACCURACY);
-        $decimalAccuracyLabels->set(ReportLabel::FAT_ACCURACY, self::FAT_DECIMAL_ACCURACY);
-        //Add new decimal_accuracies here
-
-        $results = array();
-
-        $accuracyLabels = $traits->getKeys();
-        foreach ($accuracyLabels as $accuracyLabel) {
-            $traitLabel = $traits->get($accuracyLabel);
-            if($accuracyLabel == null) {
-                $displayedString = self::EMPTY_BREED_VALUE;
-            } else {
-                $breedValue = round($breedValues[$traitLabel], $decimalAccuracyLabels->get($accuracyLabel));
-                $accuracy = BreedValueUtil::formatAccuracyForDisplay($breedValues[$accuracyLabel]);
-                $displayedString = $this->getPlusSignIfNumberIsPositive($breedValue).$breedValue.'/'.$accuracy;
-            }
-            $results[$traitLabel] = $displayedString;
-        }
-
-        return $results;
+        $lambMeatIndex = BreedValueUtil::getLambMeatIndex($breedValues, $this->lambMeatIndexCoefficients);
+        $lambMeatIndexAccuracy = BreedValueUtil::getLambMeatIndexAccuracy($breedValues, $this->lambMeatIndexCoefficients);
+        //TODO FORMAT VALUES
     }
 
-
-    private function getLambMeatIndexValues()
+    
+    private function getStarValue($lambMeatIndex)
     {
-
+        //TODO CREATE A FUNCTION TO GENERATE AND PERSIST THE RANK EVERY BREEDVALUE IMPORT ONCE A YEAR (WITH SOLANI/RELANI IMPORT)
     }
+    
+    
 
-
-    /**
-     * @param $number
-     * @return string
-     */
-    private function getPlusSignIfNumberIsPositive($number)
-    {
-        if($number > 0) {
-            return '+';
-        } else {
-            return '';
-        }
-    }
 }
