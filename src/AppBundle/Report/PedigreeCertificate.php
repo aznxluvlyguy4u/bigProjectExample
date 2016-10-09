@@ -7,8 +7,6 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
-use AppBundle\Entity\AnimalResidence;
-use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BodyFatRepository;
 use AppBundle\Entity\BreedValuesSet;
 use AppBundle\Entity\BreedValuesSetRepository;
@@ -21,10 +19,8 @@ use AppBundle\Entity\Litter;
 use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
-use AppBundle\Entity\MuscleThickness;
 use AppBundle\Entity\MuscleThicknessRepository;
 use AppBundle\Entity\Ram;
-use AppBundle\Entity\TailLength;
 use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\NullChecker;
@@ -557,7 +553,6 @@ class PedigreeCertificate
     {
         //TODO CREATE A FUNCTION TO GENERATE AND PERSIST THE RANK EVERY BREEDVALUE IMPORT ONCE A YEAR (WITH SOLANI/RELANI IMPORT)
     }
-    
     
 
 }
