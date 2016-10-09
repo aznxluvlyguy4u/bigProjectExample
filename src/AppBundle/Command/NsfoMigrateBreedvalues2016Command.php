@@ -19,6 +19,7 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
     const TITLE = 'Migrate Mixblup breedvalue output fo 2016 from Relani.out and Solani.out files';
     const ROWS_IN_SOURCE_FILE = 608983;
     const GENERATION_DATA_STRING = '2016-10-04 00:00:00';
+    const IS_PERSIST_ALSO_UNRELIABLE_BREEDVALUE = true;
 
     /** @var ObjectManager $em */
     private $em;
@@ -106,7 +107,6 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
                 $isGrowthReliable = NullChecker::floatIsNotZero($growthReliability);
                 $isFatReliable = NullChecker::floatIsNotZero($fatReliability);
 
-
                 $solaniParts = $this->solani[$animalId];
 
 //            $descendants = $solaniParts[1];
@@ -117,8 +117,16 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
                 $growth = floatval($solaniParts[4])*1000; //gram/dag
                 $fat = floatval($solaniParts[5]);
 
-                //Only create a new record if at least one trait is reliable
-                if($isMuscleThicknessReliable || $isGrowthReliable || $isFatReliable) {
+
+                if(self::IS_PERSIST_ALSO_UNRELIABLE_BREEDVALUE) {
+                    $isSaveToDatabase = true;
+                } else {
+                    //Only create a new record if at least one trait is reliable
+                    $isSaveToDatabase = $isMuscleThicknessReliable || $isGrowthReliable || $isFatReliable;
+                }
+
+
+                if($isSaveToDatabase) {
                     //Write to database
                     $sql = "SELECT MAX(id) FROM breed_values_set";
                     $foundId = $this->em->getConnection()->query($sql)->fetch()['max'];
