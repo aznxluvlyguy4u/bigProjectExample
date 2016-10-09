@@ -12,6 +12,26 @@ class  GeneticBaseRepository extends BaseRepository {
 
     const MIN_RELIABILITY_FOR_GENETIC_BASE = 0.16; //min accuracy = sqrt(0.16) = 0.4
 
+
+    /**
+     * @param int $year
+     * @return GeneticBase
+     */
+    public function getNullCheckedGeneticBases($year)
+    {
+        if($year == null) { return null; }
+        
+        /** @var GeneticBase $geneticBases */
+        $geneticBases = $this->findOneBy(['year' => $year]);
+
+        //If geneticBase is null, they probably have not been generated yet.
+        if($geneticBases == null) {
+            $geneticBases = $this->updateGeneticBases($year);
+        }
+
+        return $geneticBases;
+    }
+
     /**
      * @param int $year
      * @return GeneticBase
@@ -26,6 +46,17 @@ class  GeneticBaseRepository extends BaseRepository {
         $areAnyValuesUpdated = false;
 
         $geneticBase = $this->findOneBy(['year' => $year]);
+
+        //Remove geneticBases that would be update with any blank values
+        if($muscleThicknessGeneticBase == null || $growthGeneticBase == null || $fatGeneticBase == null) {
+            if ($geneticBase instanceof GeneticBase) {
+                $this->remove($geneticBase);
+            }
+
+            //Null check result
+            return null;
+        }
+
 
         if (!($geneticBase instanceof GeneticBase)) {
             //generate new geneticBase record
@@ -78,4 +109,17 @@ class  GeneticBaseRepository extends BaseRepository {
         return $results[$trait.'_average'];
     }
 
+
+    /**
+     * @return int
+     */
+    public function getLatestYear()
+    {
+        $sql = "SELECT MAX(year) FROM genetic_base;";
+        $result = $this->getManager()->getConnection()->query($sql)->fetch();
+
+        if($result == null) { return null; }
+
+        return $result['max'];
+    }
 }
