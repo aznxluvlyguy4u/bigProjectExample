@@ -109,6 +109,34 @@ class BreedValuesSet
      */
     private $fatReliability;
 
+    /**
+     * @var float
+     *
+     * @ORM\Column(type="float", options={"default":0})
+     * @JMS\Type("float")
+     * @Assert\NotBlank
+     */
+    private $lamMeatIndex;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(type="float", options={"default":0})
+     * @JMS\Type("float")
+     * @Assert\NotBlank
+     */
+    private $lamMeatIndexAccuracy;
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     * @Assert\NotBlank
+     */
+    private $lamMeatIndexRanking;
+
+
     public function __construct()
     {
         $this->logDate = new \DateTime();
@@ -266,7 +294,56 @@ class BreedValuesSet
     {
         $this->fatReliability = $fatReliability;
     }
+
+    /**
+     * @return float
+     */
+    public function getLamMeatIndex()
+    {
+        return $this->lamMeatIndex;
+    }
+
+    /**
+     * @param float $lamMeatIndex
+     */
+    public function setLamMeatIndex($lamMeatIndex)
+    {
+        $this->lamMeatIndex = $lamMeatIndex;
+    }
+
+    /**
+     * @return float
+     */
+    public function getLamMeatIndexAccuracy()
+    {
+        return $this->lamMeatIndexAccuracy;
+    }
+
+    /**
+     * @param float $lamMeatIndexAccuracy
+     */
+    public function setLamMeatIndexAccuracy($lamMeatIndexAccuracy)
+    {
+        $this->lamMeatIndexAccuracy = $lamMeatIndexAccuracy;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLamMeatIndexRanking()
+    {
+        return $this->lamMeatIndexRanking;
+    }
+
+    /**
+     * @param int $lamMeatIndexRanking
+     */
+    public function setLamMeatIndexRanking($lamMeatIndexRanking)
+    {
+        $this->lamMeatIndexRanking = $lamMeatIndexRanking;
+    }
     
     
-    
+
+
 }
