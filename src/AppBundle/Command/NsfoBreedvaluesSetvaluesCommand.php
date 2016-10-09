@@ -9,6 +9,7 @@ use AppBundle\Entity\BreedValueCoefficientRepository;
 use AppBundle\Entity\GeneticBase;
 use AppBundle\Entity\GeneticBaseRepository;
 use AppBundle\Enumerator\BreedTrait;
+use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
@@ -22,6 +23,7 @@ class NsfoBreedvaluesSetvaluesCommand extends ContainerAwareCommand
     const TITLE = 'Set Breed Values';
     const DEFAULT_OPTION = 0;
     const YEAR_GENETIC_BASE = 2016;
+    const GENERATION_DATE = '2016-10-04 00:00:00';
 
     /** @var CommandUtil */
     private $cmdUtil;
@@ -67,6 +69,8 @@ class NsfoBreedvaluesSetvaluesCommand extends ContainerAwareCommand
             'Choose option: ', "\n",
             '1: Generate LambMeatIndexCoefficients (vleeslamindexcoëfficienten) from values set in Constant\BreedTraitCoefficient', "\n",
             '2: Generate GeneticBases for BreedValues from '.self::YEAR_GENETIC_BASE, "\n",
+            '3: Generate LambMeatIndex values, accuracies '.self::YEAR_GENETIC_BASE, "\n",
+            '4: Generate LambMeatIndex rankings '.self::YEAR_GENETIC_BASE, "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -79,6 +83,16 @@ class NsfoBreedvaluesSetvaluesCommand extends ContainerAwareCommand
             case 2:
                 $this->geneticBaseRepository->updateGeneticBases(self::YEAR_GENETIC_BASE);
                 $output->writeln('GeneticBases updated for '.self::YEAR_GENETIC_BASE);
+                break;
+
+            case 3:
+                BreedValueUtil::generateAndPersistAllLambMeatIndicesAndTheirAccuracies($this->em, self::GENERATION_DATE, $this->cmdUtil);
+                $output->writeln('LambMeatIndex values updated for breedValues with generationDate: '.self::GENERATION_DATE);
+                break;
+
+            case 4:
+                BreedValueUtil::generateLamMeatIndexRanks($this->em, self::GENERATION_DATE, $this->cmdUtil);
+                $output->writeln('LambMeatIndex values updated for breedValues with generationDate: '.self::GENERATION_DATE);
                 break;
 
             default:

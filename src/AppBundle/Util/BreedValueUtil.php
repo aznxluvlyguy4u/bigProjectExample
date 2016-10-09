@@ -5,6 +5,8 @@ namespace AppBundle\Util;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\ReportLabel;
+use AppBundle\Entity\BreedValueCoefficient;
+use AppBundle\Entity\BreedValueCoefficientRepository;
 use AppBundle\Enumerator\BreedCodeType;
 use AppBundle\Report\PedigreeCertificate;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -309,7 +311,7 @@ class BreedValueUtil
         $growthReliability = Utils::getNullCheckedArrayValue(ReportLabel::GROWTH_RELIABILITY, $breedValues);
 
         //Only calculate the LambMeatIndex if all values are not null
-        if(NullChecker::floatIsNotZero($muscleThicknessReliability) || NullChecker::floatIsNotZero($fatReliability) || NullChecker::floatIsNotZero($growthReliability) || $lambMeatIndexCoefficients == null) {
+        if(NumberUtil::isFloatZero($muscleThicknessReliability) || NumberUtil::isFloatZero($fatReliability) || NumberUtil::isFloatZero($growthReliability) || $lambMeatIndexCoefficients == null) {
             return null;
         }
 
@@ -336,6 +338,114 @@ class BreedValueUtil
         if($lambMeatIndexReliability == null) { return null; }
 
         return sqrt($lambMeatIndexReliability);
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param string $generationDate
+     * @param CommandUtil $cmdUtil
+     */
+    public static function generateAndPersistAllLambMeatIndicesAndTheirAccuracies(ObjectManager $em, $generationDate, $cmdUtil = null)
+    {
+        /** @var BreedValueCoefficientRepository $breedValueCoefficientRepository */
+        $breedValueCoefficientRepository = $em->getRepository(BreedValueCoefficient::class);
+        
+        $lambMeatIndexCoefficients = $breedValueCoefficientRepository->getLambMeatIndexCoefficients();
+        
+        $sql = "SELECT * FROM breed_values_set WHERE generation_date = '".$generationDate."'";
+        $results = $em->getConnection()->query($sql)->fetchAll();
+
+        if($cmdUtil != null ) { $cmdUtil->setStartTimeAndPrintIt(count($results), 1 , 'Generating lamMeatIndexValues'); }
+
+        $countNewValues = 0;
+        foreach ($results as $result) {
+            $id = $result['id'];
+            $muscleThickness = floatval($result['muscle_thickness']);
+            $muscleThicknessReliability = floatval($result['muscle_thickness_reliability']);
+            $growth = floatval($result['growth']);
+            $growthReliability = floatval($result['growth_reliability']);
+            $fat = floatval($result['fat']);
+            $fatReliability = floatval($result['fat_reliability']);
+//            $lamMeatIndex = floatval($result['lam_meat_index']);
+//            $lamMeatIndexAccuracy = floatval($result['lam_meat_index_accuracy']);
+//            $lamMeatIndex = floatval($result['lam_meat_index_ranking']);
+
+            if(!self::areLamMeatIndexValuesProcessedYet($result)) {
+
+                $breedValues =
+                    [
+                        ReportLabel::MUSCLE_THICKNESS => $muscleThickness,
+                        ReportLabel::MUSCLE_THICKNESS_RELIABILITY => $muscleThicknessReliability,
+                        ReportLabel::GROWTH => $growth,
+                        ReportLabel::GROWTH_RELIABILITY => $growthReliability,
+                        ReportLabel::FAT => $fat,
+                        ReportLabel::FAT_RELIABILITY => $fatReliability,
+                    ]
+                ;
+
+                $lamMeatIndex = self::getLambMeatIndex($breedValues, $lambMeatIndexCoefficients);
+                if($lamMeatIndex == null) { $lamMeatIndex = 0.0; }
+
+                $lamMeatIndexAccuracy = self::getLambMeatIndexAccuracy($breedValues, $lambMeatIndexCoefficients);
+
+                if(NullChecker::floatIsNotZero($lamMeatIndexAccuracy)) {
+                    $sql = "UPDATE breed_values_set SET lam_meat_index = ".$lamMeatIndex.", lam_meat_index_accuracy = ".$lamMeatIndexAccuracy." WHERE id = ".$id;
+                    $em->getConnection()->exec($sql);
+                    $countNewValues++;
+                }
+            }
+
+            if($cmdUtil != null ) { $cmdUtil->advanceProgressBar(1, 'Generating lamMeatIndexValues | records with new values: '.$countNewValues); }
+        }
+        if($cmdUtil != null ) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param string $generationDate
+     * @param CommandUtil $cmdUtil
+     */
+    public static function generateLamMeatIndexRanks(ObjectManager $em, $generationDate, $cmdUtil = null)
+    {
+        $sql = "SELECT * FROM breed_values_set WHERE lam_meat_index_accuracy > 0 AND generation_date = '".$generationDate."' ORDER BY lam_meat_index DESC";
+        $results = $em->getConnection()->query($sql)->fetchAll();
+
+        if($cmdUtil != null ) { $cmdUtil->setStartTimeAndPrintIt(count($results), 1 , 'Rank lamMeatIndexValues'); }
+
+        $rank = 1;
+        foreach ($results as $result) {
+            $sql = "UPDATE breed_values_set SET lam_meat_index_ranking = ".$rank." WHERE id = ".$result['id'];
+            $em->getConnection()->exec($sql);
+
+            $rank++;
+            if($cmdUtil != null ) { $cmdUtil->advanceProgressBar(1); }
+        }
+        if($cmdUtil != null ) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
+    }
+
+
+    /**
+     * @param array $sqlResult
+     * @return bool
+     */
+    private static function areLamMeatIndexValuesProcessedYet($sqlResult)
+    {
+        $muscleThicknessReliability = $sqlResult['muscle_thickness_reliability'];
+        $growthReliability = $sqlResult['growth_reliability'];
+        $fatReliability = $sqlResult['fat_reliability'];
+        $lamMeatIndexAccuracy = $sqlResult['lam_meat_index_accuracy'];
+
+        if(NumberUtil::isFloatZero($muscleThicknessReliability) ||
+           NumberUtil::isFloatZero($growthReliability) ||
+           NumberUtil::isFloatZero($fatReliability)) {
+
+            return true;
+
+        } else {
+            return NullChecker::floatIsNotZero($lamMeatIndexAccuracy);
+        }
     }
 
 }
