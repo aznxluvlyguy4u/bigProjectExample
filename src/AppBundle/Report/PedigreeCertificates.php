@@ -61,7 +61,7 @@ class PedigreeCertificates extends ReportBase
         $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
 
         /** @var BreedValueCoefficientRepository $breedValueCoefficientRepository */
-        $breedValueCoefficientRepository = $em->getRepository(GeneticBase::class);
+        $breedValueCoefficientRepository = $em->getRepository(BreedValueCoefficient::class);
 
         $lambMeatIndexCoefficients = $breedValueCoefficientRepository->getLambMeatIndexCoefficients();
 

@@ -57,7 +57,7 @@ class BreedValueCoefficientRepository extends BaseRepository {
      */
     public function getLambMeatIndexCoefficients()
     {
-        $breedValueCoefficients = $this->findBy(['index_type' => BreedIndexType::LAMB_MEAT_INDEX]);
+        $breedValueCoefficients = $this->findBy(['indexType' => BreedIndexType::LAMB_MEAT_INDEX]);
 
         if(count($breedValueCoefficients) == 0) { return null; }
 

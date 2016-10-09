@@ -259,9 +259,9 @@ class PedigreeCertificate
         $breedValues = $this->getUnformattedBreedValues($animal->getId());
         $formattedBreedValues = BreedValueUtil::getFormattedBreedValues($breedValues);
         
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] = Utils::fillNullOrEmptyString(null);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = Utils::fillNullOrEmptyString(null);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GROWTH] = Utils::fillZero(0.00);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] = $formattedBreedValues[ReportLabel::MUSCLE_THICKNESS];
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = $formattedBreedValues[ReportLabel::BODY_FAT];
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GROWTH] = $formattedBreedValues[ReportLabel::GROWTH];
 
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TAIL_LENGTH] = Utils::fillNullOrEmptyString(null);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::VL] = Utils::fillZero(0.00); //TODO Add Vl variable to Exterior Entity ???
