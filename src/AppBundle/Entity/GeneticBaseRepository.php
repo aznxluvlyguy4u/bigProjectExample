@@ -122,4 +122,24 @@ class  GeneticBaseRepository extends BaseRepository {
 
         return $result['max'];
     }
+
+
+    /**
+     * @return array
+     */
+    public function getAllYears()
+    {
+        $sql = "SELECT DISTINCT(year) as year FROM genetic_base ORDER BY year ASC";
+        $sqlResults = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+        $result = array();
+
+        foreach($sqlResults as $sqlResult) {
+            $result[] = $sqlResult['year'];
+        }
+
+        return $result;
+    }
+    
+    
 }

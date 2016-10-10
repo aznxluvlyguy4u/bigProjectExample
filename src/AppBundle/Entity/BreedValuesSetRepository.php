@@ -85,4 +85,31 @@ class BreedValuesSetRepository extends BaseRepository {
         ];
     }
 
+
+    /**
+     * @param Animal $animal
+     * @return array
+     */
+    public function getLambMeatIndexWithAccuracy($animal)
+    {
+        $lambMeatIndex = null;
+        $lambMeatIndexAccuracy = null;
+
+        if($animal instanceof Animal) {
+            $id = $animal->getId();
+            if(is_int($id)) {
+                $sql = "SELECT * FROM breed_values_set WHERE animal_id = ".$id;
+                $result = $this->getManager()->getConnection()->query($sql)->fetch();
+
+                $lambMeatIndex = $result['lamb_meat_index'];
+                $lambMeatIndexAccuracy = $result['lamb_meat_index_accuracy'];
+            }
+        }
+
+        return [
+          BreedValueLabel::LAMB_MEAT_INDEX => $lambMeatIndex,
+          BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY => $lambMeatIndexAccuracy
+        ];
+    }
+
 }

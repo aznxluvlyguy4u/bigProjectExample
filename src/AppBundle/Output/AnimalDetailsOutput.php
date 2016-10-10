@@ -4,15 +4,21 @@ namespace AppBundle\Output;
 
 
 use AppBundle\Component\Utils;
+use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\BodyFat;
+use AppBundle\Entity\BreedValuesSet;
+use AppBundle\Entity\BreedValuesSetRepository;
 use AppBundle\Entity\Exterior;
+use AppBundle\Entity\GeneticBase;
+use AppBundle\Entity\GeneticBaseRepository;
 use AppBundle\Entity\MuscleThickness;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
 use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Component\ExpressionLanguage\Tests\Node\Obj;
 
 /**
  * Class DeclareAnimalDetailsOutput
@@ -178,6 +184,7 @@ class AnimalDetailsOutput
                         "birth_weight" =>       Utils::fillZero($birthWeight, $replacementString),
                         "birth_progress" =>     Utils::fillZero("", $replacementString)
                     ),
+                "breed_values" => self::createBreedValuesSetArray($em, $animal),
                 "breeder" =>
                     array(
                         "breeder" =>       Utils::fillNullOrEmptyString($breederName, $replacementString),
@@ -192,6 +199,46 @@ class AnimalDetailsOutput
         return $result;
     }
 
+
+    /**
+     * @param ObjectManager $em
+     * @param Animal $animal
+     * @return array
+     */
+    private static function createBreedValuesSetArray(ObjectManager $em, Animal $animal)
+    {
+        $results = array();
+
+        /** @var BreedValuesSetRepository $breedValuesSetRepository */
+        $breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
+
+        /** @var GeneticBaseRepository $geneticBaseRepository */
+        $geneticBaseRepository = $em->getRepository(GeneticBase::class);
+
+        $years = $geneticBaseRepository->getAllYears();
+
+        foreach($years as $year) {
+            $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($year);
+
+            $correctedBreedValues = $breedValuesSetRepository->getBreedValuesCorrectedByGeneticBaseWithAccuracies($animal->getId(), $year, $geneticBases);
+
+            $lambMeatIndexValues = $breedValuesSetRepository->getLambMeatIndexWithAccuracy($animal);
+            
+            $results[] = [
+                'year' => $year,
+                'growth' => $correctedBreedValues[BreedValueLabel::GROWTH],
+                'muscle_thickness' => $correctedBreedValues[BreedValueLabel::MUSCLE_THICKNESS],
+                'fat' => $correctedBreedValues[BreedValueLabel::FAT],
+                'growth_accuracy' => $correctedBreedValues[BreedValueLabel::GROWTH_ACCURACY],
+                'muscle_thickness_accuracy' => $correctedBreedValues[BreedValueLabel::MUSCLE_THICKNESS_ACCURACY],
+                'fat_accuracy' => $correctedBreedValues[BreedValueLabel::FAT_ACCURACY],
+                'lamb_meat_index' => $lambMeatIndexValues[BreedValueLabel::LAMB_MEAT_INDEX],
+                'lamb_meat_index_accuracy' => $lambMeatIndexValues[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY]
+            ];
+        }
+
+        return $results;
+    }
 
 
 }

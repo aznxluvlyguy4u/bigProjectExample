@@ -530,6 +530,7 @@ abstract class Animal
         $this->genderHistory = new ArrayCollection();
         $this->tagReplacements = new ArrayCollection();
         $this->parents = new ArrayCollection();
+        $this->breedValuesSets = new ArrayCollection();
         $this->isAlive = true;
         $this->ulnCountryCode = '';
         $this->ulnNumber = '';
@@ -2163,6 +2164,19 @@ abstract class Animal
     public function getBreedValuesSets()
     {
         return $this->breedValuesSets;
+    }
+
+
+    /**
+     * @return BreedValuesSet|null
+     */
+    public function getLastBreedValuesSet()
+    {
+        if(count($this->breedValuesSets) > 0) {
+            return $this->breedValuesSets->last();
+        } else {
+            return null;
+        }
     }
 
 

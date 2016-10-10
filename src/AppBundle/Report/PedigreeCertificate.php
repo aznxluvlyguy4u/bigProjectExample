@@ -558,21 +558,11 @@ class PedigreeCertificate
      */
     private function getFormattedLambMeatIndexWithAccuracy($animal)
     {
-        $lambMeatIndex = null;
-        $lambMeatIndexAccuracy = null;
+        $values = $this->breedValuesSetRepository->getLambMeatIndexWithAccuracy($animal);
 
-        if($animal instanceof Animal) {
-            $id = $animal->getId();
-            if(is_int($id)) {
-                $sql = "SELECT * FROM breed_values_set WHERE animal_id = ".$id;
-                $result = $this->em->getConnection()->query($sql)->fetch();
-
-                $lambMeatIndex = $result['lamb_meat_index'];
-                $lambMeatIndexAccuracy = $result['lamb_meat_index_accuracy'];
-            }
-        }
-
-        return BreedValueUtil::getFormattedLamMeatIndexWithAccuracy($lambMeatIndex, $lambMeatIndexAccuracy, self::EMPTY_INDEX_VALUE);
+        return BreedValueUtil::getFormattedLamMeatIndexWithAccuracy($values[BreedValueLabel::LAMB_MEAT_INDEX],
+                                                                    $values[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY],
+                                                                    self::EMPTY_INDEX_VALUE);
     }
 
     
