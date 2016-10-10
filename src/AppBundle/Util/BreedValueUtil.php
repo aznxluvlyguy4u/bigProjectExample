@@ -357,7 +357,7 @@ class BreedValueUtil
         $sql = "SELECT * FROM breed_values_set WHERE generation_date = '".$generationDate."'";
         $results = $em->getConnection()->query($sql)->fetchAll();
 
-        if($cmdUtil != null ) { $cmdUtil->setStartTimeAndPrintIt(count($results), 1 , 'Generating lamMeatIndexValues'); }
+        if($cmdUtil != null ) { $cmdUtil->setStartTimeAndPrintIt(count($results), 1 , 'Generating lambMeatIndexValues'); }
 
         $countNewValues = 0;
         foreach ($results as $result) {
@@ -368,9 +368,9 @@ class BreedValueUtil
             $growthReliability = floatval($result['growth_reliability']);
             $fat = floatval($result['fat']);
             $fatReliability = floatval($result['fat_reliability']);
-//            $lamMeatIndex = floatval($result['lam_meat_index']);
-//            $lamMeatIndexAccuracy = floatval($result['lam_meat_index_accuracy']);
-//            $lamMeatIndex = floatval($result['lam_meat_index_ranking']);
+//            $lambMeatIndex = floatval($result['lamb_meat_index']);
+//            $lambMeatIndexAccuracy = floatval($result['lamb_meat_index_accuracy']);
+//            $lambMeatIndex = floatval($result['lamb_meat_index_ranking']);
 
             if(!self::areLamMeatIndexValuesProcessedYet($result)) {
 
@@ -385,19 +385,19 @@ class BreedValueUtil
                     ]
                 ;
 
-                $lamMeatIndex = self::getLambMeatIndex($breedValues, $lambMeatIndexCoefficients);
-                if($lamMeatIndex == null) { $lamMeatIndex = 0.0; }
+                $lambMeatIndex = self::getLambMeatIndex($breedValues, $lambMeatIndexCoefficients);
+                if($lambMeatIndex == null) { $lambMeatIndex = 0.0; }
 
-                $lamMeatIndexAccuracy = self::getLambMeatIndexAccuracy($breedValues, $lambMeatIndexCoefficients);
+                $lambMeatIndexAccuracy = self::getLambMeatIndexAccuracy($breedValues, $lambMeatIndexCoefficients);
 
-                if(NullChecker::floatIsNotZero($lamMeatIndexAccuracy)) {
-                    $sql = "UPDATE breed_values_set SET lam_meat_index = ".$lamMeatIndex.", lam_meat_index_accuracy = ".$lamMeatIndexAccuracy." WHERE id = ".$id;
+                if(NullChecker::floatIsNotZero($lambMeatIndexAccuracy)) {
+                    $sql = "UPDATE breed_values_set SET lamb_meat_index = ".$lambMeatIndex.", lamb_meat_index_accuracy = ".$lambMeatIndexAccuracy." WHERE id = ".$id;
                     $em->getConnection()->exec($sql);
                     $countNewValues++;
                 }
             }
 
-            if($cmdUtil != null ) { $cmdUtil->advanceProgressBar(1, 'Generating lamMeatIndexValues | records with new values: '.$countNewValues); }
+            if($cmdUtil != null ) { $cmdUtil->advanceProgressBar(1, 'Generating lambMeatIndexValues | records with new values: '.$countNewValues); }
         }
         if($cmdUtil != null ) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
     }
@@ -410,14 +410,14 @@ class BreedValueUtil
      */
     public static function generateLamMeatIndexRanks(ObjectManager $em, $generationDate, $cmdUtil = null)
     {
-        $sql = "SELECT * FROM breed_values_set WHERE lam_meat_index_accuracy > 0 AND generation_date = '".$generationDate."' ORDER BY lam_meat_index DESC";
+        $sql = "SELECT * FROM breed_values_set WHERE lamb_meat_index_accuracy > 0 AND generation_date = '".$generationDate."' ORDER BY lamb_meat_index DESC";
         $results = $em->getConnection()->query($sql)->fetchAll();
 
-        if($cmdUtil != null ) { $cmdUtil->setStartTimeAndPrintIt(count($results), 1 , 'Rank lamMeatIndexValues'); }
+        if($cmdUtil != null ) { $cmdUtil->setStartTimeAndPrintIt(count($results), 1 , 'Rank lambMeatIndexValues'); }
 
         $rank = 1;
         foreach ($results as $result) {
-            $sql = "UPDATE breed_values_set SET lam_meat_index_ranking = ".$rank." WHERE id = ".$result['id'];
+            $sql = "UPDATE breed_values_set SET lamb_meat_index_ranking = ".$rank." WHERE id = ".$result['id'];
             $em->getConnection()->exec($sql);
 
             $rank++;
@@ -439,7 +439,7 @@ class BreedValueUtil
         $muscleThicknessReliability = $sqlResult['muscle_thickness_reliability'];
         $growthReliability = $sqlResult['growth_reliability'];
         $fatReliability = $sqlResult['fat_reliability'];
-        $lamMeatIndexAccuracy = $sqlResult['lam_meat_index_accuracy'];
+        $lambMeatIndexAccuracy = $sqlResult['lamb_meat_index_accuracy'];
 
         if(NumberUtil::isFloatZero($muscleThicknessReliability) ||
            NumberUtil::isFloatZero($growthReliability) ||
@@ -448,7 +448,7 @@ class BreedValueUtil
             return true;
 
         } else {
-            return NullChecker::floatIsNotZero($lamMeatIndexAccuracy);
+            return NullChecker::floatIsNotZero($lambMeatIndexAccuracy);
         }
     }
 

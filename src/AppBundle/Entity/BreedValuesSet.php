@@ -116,7 +116,7 @@ class BreedValuesSet
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
-    private $lamMeatIndex;
+    private $lambMeatIndex;
 
     /**
      * @var float
@@ -125,7 +125,7 @@ class BreedValuesSet
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
-    private $lamMeatIndexAccuracy;
+    private $lambMeatIndexAccuracy;
 
     /**
      * @var integer
@@ -134,7 +134,7 @@ class BreedValuesSet
      * @JMS\Type("integer")
      * @Assert\NotBlank
      */
-    private $lamMeatIndexRanking;
+    private $lambMeatIndexRanking;
 
 
     public function __construct()
@@ -298,49 +298,49 @@ class BreedValuesSet
     /**
      * @return float
      */
-    public function getLamMeatIndex()
+    public function getLambMeatIndex()
     {
-        return $this->lamMeatIndex;
+        return $this->lambMeatIndex;
     }
 
     /**
-     * @param float $lamMeatIndex
+     * @param float $lambMeatIndex
      */
-    public function setLamMeatIndex($lamMeatIndex)
+    public function setLambMeatIndex($lambMeatIndex)
     {
-        $this->lamMeatIndex = $lamMeatIndex;
+        $this->lambMeatIndex = $lambMeatIndex;
     }
 
     /**
      * @return float
      */
-    public function getLamMeatIndexAccuracy()
+    public function getLambMeatIndexAccuracy()
     {
-        return $this->lamMeatIndexAccuracy;
+        return $this->lambMeatIndexAccuracy;
     }
 
     /**
-     * @param float $lamMeatIndexAccuracy
+     * @param float $lambMeatIndexAccuracy
      */
-    public function setLamMeatIndexAccuracy($lamMeatIndexAccuracy)
+    public function setLambMeatIndexAccuracy($lambMeatIndexAccuracy)
     {
-        $this->lamMeatIndexAccuracy = $lamMeatIndexAccuracy;
+        $this->lambMeatIndexAccuracy = $lambMeatIndexAccuracy;
     }
 
     /**
      * @return int
      */
-    public function getLamMeatIndexRanking()
+    public function getLambMeatIndexRanking()
     {
-        return $this->lamMeatIndexRanking;
+        return $this->lambMeatIndexRanking;
     }
 
     /**
-     * @param int $lamMeatIndexRanking
+     * @param int $lambMeatIndexRanking
      */
-    public function setLamMeatIndexRanking($lamMeatIndexRanking)
+    public function setLambMeatIndexRanking($lambMeatIndexRanking)
     {
-        $this->lamMeatIndexRanking = $lamMeatIndexRanking;
+        $this->lambMeatIndexRanking = $lambMeatIndexRanking;
     }
     
     
