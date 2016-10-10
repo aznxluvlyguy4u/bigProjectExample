@@ -4,6 +4,7 @@ namespace AppBundle\Report;
 
 
 use AppBundle\Component\Utils;
+use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
@@ -45,9 +46,11 @@ class PedigreeCertificate
     const FAT_DECIMAL_ACCURACY = 2;
     const MUSCLE_THICKNESS_DECIMAL_ACCURACY = 2;
     const GROWTH_DECIMAL_ACCURACY = 1;
+    const LAMB_MEAT_INDEX_DECIMAL_ACCURACY = 1;
 
     const STARS_NULL_VALUE = null;
     const EMPTY_BREED_VALUE = '-/-';
+    const EMPTY_INDEX_VALUE = '-/-';
 
     /** @var array */
     private $data;
@@ -129,7 +132,7 @@ class PedigreeCertificate
         $this->data[ReportLabel::UBN] = $location->getUbn();
 
         //TODO Phase 2: BreedIndices (now mock values are used)
-        $this->addBreedIndex($animal);
+        $this->addBreedIndex($animal, $breedValuesYear);
 
         //TODO Phase 2: Add breeder information
         $this->data[ReportLabel::BREEDER] = null; //TODO pass Breeder entity
@@ -162,7 +165,7 @@ class PedigreeCertificate
 
         $generation = 0;
         $this->addParents($animal, $keyAnimal, $generation);
-        $this->addAnimalValuesToArray($keyAnimal, $animal);
+        $this->addAnimalValuesToArray($keyAnimal, $animal, $generation);
     }
 
     /**
@@ -192,9 +195,9 @@ class PedigreeCertificate
 
 //            $this->data[ReportLabel::ANIMALS][$keyFather][ReportLabel::ENTITY] = $father;
 //            $this->data[ReportLabel::ANIMALS][$keyMother][ReportLabel::ENTITY] = $mother;
-            
-            $this->addAnimalValuesToArray($keyFather, $father);
-            $this->addAnimalValuesToArray($keyMother, $mother);
+
+            $this->addAnimalValuesToArray($keyFather, $father, $generation);
+            $this->addAnimalValuesToArray($keyMother, $mother, $generation);
 
             $generation++;
 
@@ -246,8 +249,9 @@ class PedigreeCertificate
     /**
      * @param string $key
      * @param Animal|Ewe|Ram $animal
+     * @param int $generation
      */
-    private function addAnimalValuesToArray($key, $animal)
+    private function addAnimalValuesToArray($key, $animal, $generation)
     {
         //Body Measurement Values
 //        $latestMuscleThickness = $this->muscleThicknessRepository->getLatestMuscleThickness($animal);
@@ -259,12 +263,17 @@ class PedigreeCertificate
         $breedValues = $this->getUnformattedBreedValues($animal->getId());
         $formattedBreedValues = BreedValueUtil::getFormattedBreedValues($breedValues);
         
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] = $formattedBreedValues[ReportLabel::MUSCLE_THICKNESS];
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = $formattedBreedValues[ReportLabel::BODY_FAT];
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GROWTH] = $formattedBreedValues[ReportLabel::GROWTH];
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] = $formattedBreedValues[BreedValueLabel::MUSCLE_THICKNESS];
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = $formattedBreedValues[BreedValueLabel::FAT];
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GROWTH] = $formattedBreedValues[BreedValueLabel::GROWTH];
 
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TAIL_LENGTH] = Utils::fillNullOrEmptyString(null);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::VL] = Utils::fillZero(0.00); //TODO Add Vl variable to Exterior Entity ???
+
+        //TODO IF PedigreeCertificate is fixed.
+        //Only retrieve the lambMeatIndices for the child, parents and grandparents. AND REMOVE the variables from the twig file!!!
+        //if($generation < $this->generationOfAscendants - 1) {  }
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::VL] = $this->getFormattedLambMeatIndexWithAccuracy($animal);
+
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SL] = Utils::fillZero(0.00); //TODO Add sl variable to Exterior Entity ??? Or is this just Tail Length?
 
         //Exterior
@@ -318,8 +327,9 @@ class PedigreeCertificate
 
     /**
      * @param Animal $animal
+     * @param int $breedValuesYear
      */
-    private function addBreedIndex(Animal $animal)
+    private function addBreedIndex(Animal $animal, $breedValuesYear)
     {
         //TODO Phase 2: BreedIndices
         $breederStarCount = 5;
@@ -540,12 +550,33 @@ class PedigreeCertificate
     {
         return $this->breedValuesSetRepository->getBreedValuesCorrectedByGeneticBaseWithAccuracies($animalId, $this->breedValuesYear, $this->geneticBases);
     }
-    
-    private function getLambMeatIndexValues($breedValues)
+
+
+    /**
+     * @param Animal $animal
+     * @return string
+     */
+    private function getFormattedLambMeatIndexWithAccuracy($animal)
     {
-        $lambMeatIndex = BreedValueUtil::getLambMeatIndex($breedValues, $this->lambMeatIndexCoefficients);
-        $lambMeatIndexAccuracy = BreedValueUtil::getLambMeatIndexAccuracy($breedValues, $this->lambMeatIndexCoefficients);
-        //TODO FORMAT VALUES
+        $lambMeatIndex = null;
+        $lambMeatIndexAccuracy = null;
+
+        if($animal instanceof Animal) {
+            if($animal->getDateOfBirth() != null) {
+                $sql = "SELECT b.* FROM breed_values_set b
+                    INNER JOIN animal a ON a.id = b.animal_id
+                    WHERE EXTRACT(YEAR FROM a.date_of_birth) = ".$this->breedValuesYear."
+                    AND b.animal_id = ".$animal->getId();
+                $results = $this->em->getConnection()->query($sql)->fetch();
+
+                if(count($results) > 0) {
+                    $lambMeatIndex = $results['lamb_meat_index'];
+                    $lambMeatIndexAccuracy = $results['lamb_meat_index_accuracy'];
+                }
+            }
+        }
+
+        return BreedValueUtil::getFormattedLamMeatIndexWithAccuracy($lambMeatIndex, $lambMeatIndexAccuracy, self::EMPTY_INDEX_VALUE);
     }
 
     

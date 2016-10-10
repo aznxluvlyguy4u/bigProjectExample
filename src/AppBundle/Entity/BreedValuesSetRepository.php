@@ -24,11 +24,6 @@ class BreedValuesSetRepository extends BaseRepository {
      */
     public function getBreedValuesCorrectedByGeneticBaseWithAccuracies($animalId, $year, $geneticBases = null)
     {
-        $em = $this->getManager();
-    
-        $sql = "SELECT * FROM breed_values_set WHERE animal_id = ".$animalId." AND EXTRACT(YEAR FROM generation_date) = ".$year;
-        $results = $em->getConnection()->query($sql)->fetch();
-
         if($geneticBases == null) {
             /** @var GeneticBaseRepository $geneticBaseRepository */
             $geneticBaseRepository = $this->getManager()->getRepository(GeneticBase::class);
@@ -53,22 +48,28 @@ class BreedValuesSetRepository extends BaseRepository {
 
         $isGetFormattedAccuracies = false;
 
-        if(NullChecker::floatIsNotZero($results['muscle_thickness_reliability'])) {
-            $muscleThicknessValue = $results['muscle_thickness'] - $geneticBases->getMuscleThickness();
-            $muscleThicknessReliability = $results['muscle_thickness_reliability'];
-            $muscleThicknessAccuracy = BreedValueUtil::getAccuracyFromReliability($muscleThicknessReliability, $isGetFormattedAccuracies);
-        }
 
-        if(NullChecker::floatIsNotZero($results['growth_reliability'])) {
-            $growthValue = $results['growth'] - $geneticBases->getGrowth();
-            $growthReliability = $results['growth_reliability'];
-            $growthAccuracy = BreedValueUtil::getAccuracyFromReliability($growthReliability, $isGetFormattedAccuracies);
-        }
+        if($animalId != null && $year != null) {
+            $sql = "SELECT * FROM breed_values_set WHERE animal_id = ".$animalId." AND EXTRACT(YEAR FROM generation_date) = ".$year;
+            $results = $this->getManager()->getConnection()->query($sql)->fetch();
 
-        if(NullChecker::floatIsNotZero($results['fat_reliability'])) {
-            $fatValue = $results['fat'] - $geneticBases->getFat();
-            $fatReliability = $results['fat_reliability'];
-            $fatAccuracy = BreedValueUtil::getAccuracyFromReliability($fatReliability, $isGetFormattedAccuracies);
+            if(NullChecker::floatIsNotZero($results['muscle_thickness_reliability'])) {
+                $muscleThicknessValue = $results['muscle_thickness'] - $geneticBases->getMuscleThickness();
+                $muscleThicknessReliability = $results['muscle_thickness_reliability'];
+                $muscleThicknessAccuracy = BreedValueUtil::getAccuracyFromReliability($muscleThicknessReliability, $isGetFormattedAccuracies);
+            }
+
+            if(NullChecker::floatIsNotZero($results['growth_reliability'])) {
+                $growthValue = $results['growth'] - $geneticBases->getGrowth();
+                $growthReliability = $results['growth_reliability'];
+                $growthAccuracy = BreedValueUtil::getAccuracyFromReliability($growthReliability, $isGetFormattedAccuracies);
+            }
+
+            if(NullChecker::floatIsNotZero($results['fat_reliability'])) {
+                $fatValue = $results['fat'] - $geneticBases->getFat();
+                $fatReliability = $results['fat_reliability'];
+                $fatAccuracy = BreedValueUtil::getAccuracyFromReliability($fatReliability, $isGetFormattedAccuracies);
+            }
         }
 
         return [

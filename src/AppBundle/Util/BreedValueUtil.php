@@ -29,8 +29,9 @@ class BreedValueUtil
     const DEFAULT_DECIMAL_SYMBOL = '.';
 
     //Minimum accuracies
-    const MIN_LAMB_MEAT_INDEX_ACCURACY = 0.40;
-    
+    const MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX = 0.40;
+    const MIN_LAMB_MEAT_INDEX_ACCURACY = 0.0;
+
 
     /**
      * @param float $weightOnThatMoment
@@ -272,7 +273,24 @@ class BreedValueUtil
     }
 
 
+    /**
+     * @param $lambMeatIndex
+     * @param $lambMeatIndexAccuracy
+     * @param string $nullString
+     * @return string
+     */
+    public static function getFormattedLamMeatIndexWithAccuracy($lambMeatIndex, $lambMeatIndexAccuracy, $nullString = PedigreeCertificate::EMPTY_INDEX_VALUE)
+    {
+        if($lambMeatIndex == null || $lambMeatIndexAccuracy == null || NumberUtil::isFloatZero($lambMeatIndexAccuracy)) {
+            return $nullString;
 
+        } elseif($lambMeatIndexAccuracy < self::MIN_LAMB_MEAT_INDEX_ACCURACY) {
+            return $nullString;
+
+        } else {
+            return NumberUtil::getPlusSignIfNumberIsPositive($lambMeatIndex).round($lambMeatIndex, PedigreeCertificate::LAMB_MEAT_INDEX_DECIMAL_ACCURACY).'/'.round($lambMeatIndexAccuracy*100);
+        }
+    }
 
     /**
      * @param array $correctedBreedValues
@@ -474,9 +492,9 @@ class BreedValueUtil
         
         //First do a null check
         if($allValuesAreNotNull) {
-            return $muscleThicknessAccuracy >= self::MIN_LAMB_MEAT_INDEX_ACCURACY
-                && $fatAccuracy  >= self::MIN_LAMB_MEAT_INDEX_ACCURACY
-                && $lambMeatIndexCoefficients >= self::MIN_LAMB_MEAT_INDEX_ACCURACY;
+            return $muscleThicknessAccuracy >= self::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX
+                && $fatAccuracy  >= self::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX
+                && $lambMeatIndexCoefficients >= self::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX;
         } else {
             return false;
         }
@@ -492,8 +510,6 @@ class BreedValueUtil
      */
     private static function areLambMeatIndexInputReliabilitiesIncorrect($muscleThicknessReliability, $growthReliability, $fatReliability, $lambMeatIndexCoefficients)
     {
-        $minReliabilityValue = self::MIN_LAMB_MEAT_INDEX_ACCURACY ** 2;
-
          return self::areLambMeatIndexInputAccuraciesIncorrect($muscleThicknessReliability ** 2,
                                                         $growthReliability ** 2,
                                                         $fatReliability ** 2,
