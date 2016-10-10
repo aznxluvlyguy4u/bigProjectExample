@@ -348,7 +348,6 @@ class PedigreeCertificate
         $this->data[ReportLabel::M_BREEDER_INDEX_NO_ACC] = 'mb/acc';
         $this->data[ReportLabel::F_BREEDER_INDEX_NO_ACC] = 'fb/acc';
         $this->data[ReportLabel::EXT_INDEX_NO_ACC] = 'ex/acc';
-        $this->data[ReportLabel::VL_INDEX_NO_ACC] = 'vl/acc';
     }
 
 
