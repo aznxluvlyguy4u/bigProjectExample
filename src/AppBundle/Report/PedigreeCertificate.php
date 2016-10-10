@@ -562,17 +562,13 @@ class PedigreeCertificate
         $lambMeatIndexAccuracy = null;
 
         if($animal instanceof Animal) {
-            if($animal->getDateOfBirth() != null) {
-                $sql = "SELECT b.* FROM breed_values_set b
-                    INNER JOIN animal a ON a.id = b.animal_id
-                    WHERE EXTRACT(YEAR FROM a.date_of_birth) = ".$this->breedValuesYear."
-                    AND b.animal_id = ".$animal->getId();
-                $results = $this->em->getConnection()->query($sql)->fetch();
+            $id = $animal->getId();
+            if(is_int($id)) {
+                $sql = "SELECT * FROM breed_values_set WHERE animal_id = ".$id;
+                $result = $this->em->getConnection()->query($sql)->fetch();
 
-                if(count($results) > 0) {
-                    $lambMeatIndex = $results['lamb_meat_index'];
-                    $lambMeatIndexAccuracy = $results['lamb_meat_index_accuracy'];
-                }
+                $lambMeatIndex = $result['lamb_meat_index'];
+                $lambMeatIndexAccuracy = $result['lamb_meat_index_accuracy'];
             }
         }
 

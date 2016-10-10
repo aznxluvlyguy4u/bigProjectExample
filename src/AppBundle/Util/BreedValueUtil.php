@@ -5,6 +5,7 @@ namespace AppBundle\Util;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\BreedValueLabel;
+use AppBundle\Constant\ReportFormat;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\BreedValueCoefficient;
 use AppBundle\Entity\BreedValueCoefficientRepository;
@@ -227,7 +228,7 @@ class BreedValueUtil
             $factor = 1;
             $decimalPrecision = 2;
         }
-        return  round($breedValueAccuracy*$factor, $decimalPrecision);
+        return  number_format($breedValueAccuracy*$factor, $decimalPrecision, ReportFormat::DECIMAL_CHAR, ReportFormat::THOUSANDS_SEP_CHAR);
     }
 
 
@@ -249,6 +250,11 @@ class BreedValueUtil
         $decimalAccuracyLabels->set(BreedValueLabel::FAT_ACCURACY, PedigreeCertificate::FAT_DECIMAL_ACCURACY);
         //Add new decimal_accuracies here
 
+        $factors = new ArrayCollection();
+        $factors->set(BreedValueLabel::GROWTH_ACCURACY, ReportFormat::GROWTH_DISPLAY_FACTOR);
+        $factors->set(BreedValueLabel::MUSCLE_THICKNESS_ACCURACY, ReportFormat::MUSCLE_THICKNESS_DISPLAY_FACTOR);
+        $factors->set(BreedValueLabel::FAT_ACCURACY, ReportFormat::FAT_DISPLAY_FACTOR);
+        
         $results = array();
 
         $accuracyLabels = $traits->getKeys();
@@ -261,7 +267,7 @@ class BreedValueUtil
                 if($rawBreedValue == null) {
                     $displayedString = PedigreeCertificate::EMPTY_BREED_VALUE;
                 } else {
-                    $breedValue = round($rawBreedValue, $decimalAccuracyLabels->get($accuracyLabel));
+                    $breedValue = round($rawBreedValue*$factors->get($accuracyLabel), $decimalAccuracyLabels->get($accuracyLabel));
                     $accuracy = BreedValueUtil::formatAccuracyForDisplay($breedValues[$accuracyLabel]);
                     $displayedString = NumberUtil::getPlusSignIfNumberIsPositive($breedValue).$breedValue.'/'.$accuracy;
                 }
@@ -269,6 +275,8 @@ class BreedValueUtil
             $results[$traitLabel] = $displayedString;
         }
 
+        $traits = null; $decimalAccuracyLabels = null; $factors = null;
+        
         return $results;
     }
 
