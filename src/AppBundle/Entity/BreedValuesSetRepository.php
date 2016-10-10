@@ -1,7 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
-use AppBundle\Constant\ReportLabel;
+use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Report\PedigreeCertificate;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\NullChecker;
@@ -72,15 +72,15 @@ class BreedValuesSetRepository extends BaseRepository {
         }
 
         return [
-            ReportLabel::GROWTH => $growthValue,
-            ReportLabel::MUSCLE_THICKNESS => $muscleThicknessValue,
-            ReportLabel::FAT => $fatValue,
-            ReportLabel::GROWTH_ACCURACY => $growthAccuracy,
-            ReportLabel::MUSCLE_THICKNESS_ACCURACY => $muscleThicknessAccuracy,
-            ReportLabel::FAT_ACCURACY => $fatAccuracy,
-            ReportLabel::GROWTH_RELIABILITY => $growthReliability,
-            ReportLabel::MUSCLE_THICKNESS_RELIABILITY => $muscleThicknessReliability,
-            ReportLabel::FAT_RELIABILITY => $fatReliability
+            BreedValueLabel::GROWTH => $growthValue,
+            BreedValueLabel::MUSCLE_THICKNESS => $muscleThicknessValue,
+            BreedValueLabel::FAT => $fatValue,
+            BreedValueLabel::GROWTH_ACCURACY => $growthAccuracy,
+            BreedValueLabel::MUSCLE_THICKNESS_ACCURACY => $muscleThicknessAccuracy,
+            BreedValueLabel::FAT_ACCURACY => $fatAccuracy,
+            BreedValueLabel::GROWTH_RELIABILITY => $growthReliability,
+            BreedValueLabel::MUSCLE_THICKNESS_RELIABILITY => $muscleThicknessReliability,
+            BreedValueLabel::FAT_RELIABILITY => $fatReliability
         ];
     }
 
