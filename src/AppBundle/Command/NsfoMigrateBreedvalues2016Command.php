@@ -114,7 +114,7 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
 
                 //Null values cannot be saved to the database. Null is checked by reliability value
                 $muscleThickness = floatval($solaniParts[3]);
-                $growth = floatval($solaniParts[4])*1000; //gram/dag
+                $growth = floatval($solaniParts[4]); //kg/day
                 $fat = floatval($solaniParts[5]);
 
 
