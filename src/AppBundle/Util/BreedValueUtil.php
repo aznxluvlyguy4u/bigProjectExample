@@ -8,6 +8,7 @@ use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\BreedValueCoefficient;
 use AppBundle\Entity\BreedValueCoefficientRepository;
+use AppBundle\Entity\GeneticBase;
 use AppBundle\Enumerator\BreedCodeType;
 use AppBundle\Report\PedigreeCertificate;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -274,24 +275,24 @@ class BreedValueUtil
 
 
     /**
-     * @param array $breedValues
+     * @param array $correctedBreedValues
      * @param array $lambMeatIndexCoefficients
      * @return float
      */
-    public static function getLambMeatIndex($breedValues, $lambMeatIndexCoefficients)
+    public static function getLambMeatIndex($correctedBreedValues, $lambMeatIndexCoefficients)
     {
-        $muscleThicknessAccuracy = Utils::getNullCheckedArrayValue(BreedValueLabel::MUSCLE_THICKNESS_ACCURACY, $breedValues);
-        $fatAccuracy = Utils::getNullCheckedArrayValue(BreedValueLabel::FAT_ACCURACY, $breedValues);
-        $growthAccuracy = Utils::getNullCheckedArrayValue(BreedValueLabel::GROWTH_ACCURACY, $breedValues);
+        $muscleThicknessAccuracy = Utils::getNullCheckedArrayValue(BreedValueLabel::MUSCLE_THICKNESS_ACCURACY, $correctedBreedValues);
+        $fatAccuracy = Utils::getNullCheckedArrayValue(BreedValueLabel::FAT_ACCURACY, $correctedBreedValues);
+        $growthAccuracy = Utils::getNullCheckedArrayValue(BreedValueLabel::GROWTH_ACCURACY, $correctedBreedValues);
 
         //Only calculate the LambMeatIndex if all values are not null
         if(self::areLambMeatIndexInputAccuraciesIncorrect($muscleThicknessAccuracy, $growthAccuracy, $fatAccuracy, $lambMeatIndexCoefficients)) {
             return null;
         }
 
-        $muscleThicknessCorrectedBreedValue = Utils::getNullCheckedArrayValue(BreedValueLabel::MUSCLE_THICKNESS, $breedValues);
-        $growthCorrectedBreedValueInKgPerDay = Utils::getNullCheckedArrayValue(BreedValueLabel::GROWTH, $breedValues);
-        $fatCorrectedBreedValue = Utils::getNullCheckedArrayValue(BreedValueLabel::FAT, $breedValues);
+        $muscleThicknessCorrectedBreedValue = Utils::getNullCheckedArrayValue(BreedValueLabel::MUSCLE_THICKNESS, $correctedBreedValues);
+        $growthCorrectedBreedValueInKgPerDay = Utils::getNullCheckedArrayValue(BreedValueLabel::GROWTH, $correctedBreedValues);
+        $fatCorrectedBreedValue = Utils::getNullCheckedArrayValue(BreedValueLabel::FAT, $correctedBreedValues);
 
         $muscleThicknessCoefficient = Utils::getNullCheckedArrayValue(BreedValueLabel::MUSCLE_THICKNESS, $lambMeatIndexCoefficients);
         $growthCoefficient = Utils::getNullCheckedArrayValue(BreedValueLabel::GROWTH, $lambMeatIndexCoefficients);
@@ -304,15 +305,15 @@ class BreedValueUtil
 
 
     /**
-     * @param array $breedValues
+     * @param array $correctedBreedValues
      * @param array $lambMeatIndexCoefficients
      * @return float|null
      */
-    public static function getLambMeatIndexReliability($breedValues, $lambMeatIndexCoefficients)
+    public static function getLambMeatIndexReliability($correctedBreedValues, $lambMeatIndexCoefficients)
     {
-        $muscleThicknessReliability = Utils::getNullCheckedArrayValue(BreedValueLabel::MUSCLE_THICKNESS_RELIABILITY, $breedValues);
-        $fatReliability = Utils::getNullCheckedArrayValue(BreedValueLabel::FAT_RELIABILITY, $breedValues);
-        $growthReliability = Utils::getNullCheckedArrayValue(BreedValueLabel::GROWTH_RELIABILITY, $breedValues);
+        $muscleThicknessReliability = Utils::getNullCheckedArrayValue(BreedValueLabel::MUSCLE_THICKNESS_RELIABILITY, $correctedBreedValues);
+        $fatReliability = Utils::getNullCheckedArrayValue(BreedValueLabel::FAT_RELIABILITY, $correctedBreedValues);
+        $growthReliability = Utils::getNullCheckedArrayValue(BreedValueLabel::GROWTH_RELIABILITY, $correctedBreedValues);
 
         //Only calculate the LambMeatIndex if all values are not null
         if(self::areLambMeatIndexInputReliabilitiesIncorrect($muscleThicknessReliability, $growthReliability, $fatReliability, $lambMeatIndexCoefficients)) {
@@ -352,6 +353,10 @@ class BreedValueUtil
      */
     public static function generateAndPersistAllLambMeatIndicesAndTheirAccuracies(ObjectManager $em, $generationDate, $cmdUtil = null)
     {
+        $year = TimeUtil::getYearFromDateTimeString($generationDate);
+        /** @var GeneticBase $geneticBase */
+        $geneticBase = $em->getRepository(GeneticBase::class)->findOneBy(['year' => $year]);
+        
         /** @var BreedValueCoefficientRepository $breedValueCoefficientRepository */
         $breedValueCoefficientRepository = $em->getRepository(BreedValueCoefficient::class);
         
@@ -377,21 +382,21 @@ class BreedValueUtil
 
             if(!self::areLamMeatIndexValuesProcessedYet($result)) {
 
-                $breedValues =
+                $correctedBreedValues =
                     [
-                        BreedValueLabel::MUSCLE_THICKNESS => $muscleThickness,
+                        BreedValueLabel::MUSCLE_THICKNESS => $muscleThickness - $geneticBase->getMuscleThickness(),
                         BreedValueLabel::MUSCLE_THICKNESS_RELIABILITY => $muscleThicknessReliability,
-                        BreedValueLabel::GROWTH => $growth,
+                        BreedValueLabel::GROWTH => $growth - $geneticBase->getGrowth(),
                         BreedValueLabel::GROWTH_RELIABILITY => $growthReliability,
-                        BreedValueLabel::FAT => $fat,
+                        BreedValueLabel::FAT => $fat - $geneticBase->getFat(),
                         BreedValueLabel::FAT_RELIABILITY => $fatReliability,
                     ]
                 ;
 
-                $lambMeatIndex = self::getLambMeatIndex($breedValues, $lambMeatIndexCoefficients);
+                $lambMeatIndex = self::getLambMeatIndex($correctedBreedValues, $lambMeatIndexCoefficients);
                 if($lambMeatIndex == null) { $lambMeatIndex = 0.0; }
 
-                $lambMeatIndexAccuracy = self::getLambMeatIndexAccuracy($breedValues, $lambMeatIndexCoefficients);
+                $lambMeatIndexAccuracy = self::getLambMeatIndexAccuracy($correctedBreedValues, $lambMeatIndexCoefficients);
 
                 if(NullChecker::floatIsNotZero($lambMeatIndexAccuracy)) {
                     $sql = "UPDATE breed_values_set SET lamb_meat_index = ".$lambMeatIndex.", lamb_meat_index_accuracy = ".$lambMeatIndexAccuracy." WHERE id = ".$id;
