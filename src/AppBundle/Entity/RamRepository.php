@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Util\AnimalArrayReader;
@@ -37,4 +38,14 @@ class RamRepository extends AnimalRepository {
         }
     }
 
+
+    /**
+     * @param string $ulnString
+     * @return Ram|null
+     */
+    public function findRamByUlnString($ulnString)
+    {
+        $uln = Utils::getUlnFromString($ulnString);
+        return $this->findOneBy(['ulnCountryCode' => $uln[Constant::ULN_COUNTRY_CODE_NAMESPACE], 'ulnNumber' => $uln[Constant::ULN_NUMBER_NAMESPACE]]);
+    }
 }
