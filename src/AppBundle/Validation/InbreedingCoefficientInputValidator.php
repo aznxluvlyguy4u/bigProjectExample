@@ -9,6 +9,9 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Ewe;
+use AppBundle\Entity\EweRepository;
+use AppBundle\Entity\Ram;
+use AppBundle\Entity\RamRepository;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -31,6 +34,12 @@ class InbreedingCoefficientInputValidator extends BaseValidator
     /** @var AnimalRepository */
     protected $animalRepository;
 
+    /** @var EweRepository */
+    protected $eweRepository;
+
+    /** @var RamRepository */
+    protected $ramRepository;
+
     /** @var Client */
     protected $client;
     
@@ -41,6 +50,8 @@ class InbreedingCoefficientInputValidator extends BaseValidator
     {
         parent::__construct($manager, $content);
         $this->animalRepository = $this->manager->getRepository(Animal::class);
+        $this->eweRepository = $this->manager->getRepository(Ewe::class);
+        $this->ramRepository = $this->manager->getRepository(Ram::class);
         $this->client = $client;
         $this->validateEweGender = $validateEweGender;
 
@@ -99,7 +110,7 @@ class InbreedingCoefficientInputValidator extends BaseValidator
             }
 
             //If animal is in database, verify the gender
-            $animal = $this->animalRepository->findAnimalByUlnString($ulnString);
+            $animal = $this->ramRepository->findRamByUlnString($ulnString);
             if(!$animal) {
                 $this->errors[] = self::RAM_ULN_NOT_FOUND;
                 return false;
@@ -117,7 +128,7 @@ class InbreedingCoefficientInputValidator extends BaseValidator
             $pedigreeCodeExists = Validator::verifyPedigreeCodeInAnimalArray($this->manager, $ramArray, false);
             if($pedigreeCodeExists) {
                 //If animal is in database, verify the gender
-                $animal = $this->animalRepository->findAnimalByAnimalArray($ramArray);
+                $animal = $this->ramRepository->getRamByArray($ramArray);
                 $isMaleCheck = $this->validateIfRamUlnBelongsToMaleIfFoundInDatabase($animal);
                 if(!$isMaleCheck) {
                     $this->errors[] = self::RAM_PEDIGREE_FOUND_BUT_NOT_MALE;
@@ -164,7 +175,7 @@ class InbreedingCoefficientInputValidator extends BaseValidator
             return false;
         }
 
-        $foundAnimal = $this->animalRepository->findAnimalByAnimalArray($eweArray);
+        $foundAnimal = $this->eweRepository->getEweByArray($eweArray);
         if($foundAnimal == null) {
             $this->errors[] = self::EWE_NO_ANIMAL_FOUND;
             return false;
