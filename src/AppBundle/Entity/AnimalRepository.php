@@ -282,7 +282,9 @@ class AnimalRepository extends BaseRepository
 
       $showAnimal = $animal->getIsAlive() == $isAlive
           && $animal->getIsExportAnimal() == $isExported
-          && $animal->getIsDepartedAnimal() == $isDeparted;
+          && $animal->getIsDepartedAnimal() == $isDeparted
+          && ($animal->getTransferState() == AnimalTransferStatus::NULL
+              || $animal->getTransferState() == AnimalTransferStatus::TRANSFERRED);
 
       if ($showAnimal) {
         $animals[] = $animal;
