@@ -35,7 +35,8 @@
         "nelmio/api-doc-bundle": "^2.12",
         "symfony/finder": "^3.0",
         "knplabs/knp-snappy-bundle": "~1.4",
-        "tecnickcom/tc-lib-barcode": "1.15.0"
+        "tecnickcom/tc-lib-barcode": "1.15.0",
+        "liuggio/excelbundle": "^2.1"
     },
     "require-dev": {
         "sensio/generator-bundle": "^3.0",

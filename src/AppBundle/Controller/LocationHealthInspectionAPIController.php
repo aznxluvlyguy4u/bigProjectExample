@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\AppBundle;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\FTPFailedImport;
@@ -14,12 +15,15 @@ use AppBundle\Output\HealthInspectionOutput;
 use AppBundle\Validation\AdminValidator;
 use Com\Tecnick\Barcode\Barcode;
 use Doctrine\Common\Collections\ArrayCollection;
+use PHPExcel;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\Form\Extension\Core\DataMapper\RadioListMapper;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -556,4 +560,107 @@ class LocationHealthInspectionAPIController extends APIController
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
     }
+
+    /**
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/failed-results")
+     * @Method("GET")
+     */
+    public function getFailedInspectionResults(Request $request) {
+        // Validation if user is an admin
+        $admin = $this->getAuthenticatedEmployee($request);
+        $adminValidator = new AdminValidator($admin);
+
+        if (!$adminValidator->getIsAccessGranted()) {
+            return $adminValidator->createJsonErrorResponse();
+        }
+
+        $repository = $this->getDoctrine()->getRepository(Location::class);
+        $failedImports = $repository->findAll();
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $failedImports), 200);
+    }
+
+    /**
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/failed-results")
+     * @Method("PUT")
+     */
+    public function changeFailedInspectionResults(Request $request) {
+        // Validation if user is an admin
+        $admin = $this->getAuthenticatedEmployee($request);
+        $adminValidator = new AdminValidator($admin);
+
+        if (!$adminValidator->getIsAccessGranted()) {
+            return $adminValidator->createJsonErrorResponse();
+        }
+
+        $contentResults = $this->getContentAsArray($request);
+        $illness = $contentResults->get('illness');
+        $file = $contentResults->get('file');
+
+        if ($file != null) {
+            if ($file['extension'] == 'xls') {
+                $fileLocation = $this->getParameter('kernel.cache_dir').'/'.$file['filename'];
+                file_put_contents($fileLocation, $file);
+
+                /** @var PHPExcel $phpExcelObject */
+                $phpExcelObject = $this->get('phpexcel')->createPHPExcelObject($fileLocation);
+                $phpExcelObject->setActiveSheetIndex(0);
+                $ubn = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(1, 4);
+
+                $nRows = $phpExcelObject->getActiveSheet()->getHighestRow();
+                $results = [];
+                try {
+                    for ($row = 6; $row < $nRows; ++$row) {
+                        $customerSampleID = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(3, $row);
+                        $mgxSampleID = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(4, $row);
+                        $genotype = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(5, $row);
+                        $genotypeWithCondon = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(6, $row);
+                        $genotypeClass = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(7, $row);
+                        $receptionDate = new \DateTime($phpExcelObject->getActiveSheet()->getCellByColumnAndRow(8, $row));
+                        $resultDate = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(9, $row);
+                        $ulnCountryCode = mb_substr($customerSampleID, 0, 2);
+                        $ulnNumber = mb_substr($customerSampleID, 2);
+
+                        $result = [
+                            "uln_country_code" => $ulnCountryCode,
+                            "uln_number" => $ulnNumber,
+                            "customer_sample_id" => $customerSampleID,
+                            "mgx_sample_id" => $mgxSampleID,
+                            "genotype" => $genotype,
+                            "genotype_with_condon" => $genotypeWithCondon,
+                            "genotype_class" => $genotypeClass,
+                            "reception_date" => $receptionDate,
+                            "result_date" => $resultDate
+                        ];
+
+                        $results[] = $result;
+                    }
+                } catch (Exception $e) {
+                    return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'THE FILE IS INVALID'), 400);
+                }
+
+                $request = [
+                    "ubn" => $ubn,
+                    "illness" => $illness,
+                    "results" => $results
+                ];
+
+                $response = $this->forward('AppBundle:LocationHealthInspectionAPIController:createInspectionResults', $request);
+
+                // Send to S3 Bucket
+
+                // Remove record from Failed FTP File
+                unlink($fileLocation);
+                return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
+            }
+        }
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'THERE IS NO FILE'), 400);
+
+    }
+
 }
