@@ -6,6 +6,7 @@ namespace AppBundle\Report;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Constant\ReportLabel;
+use AppBundle\Constant\TwigCode;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BodyFatRepository;
@@ -333,10 +334,10 @@ class PedigreeCertificate
     {
         //TODO Phase 2: BreedIndices
         $breederStarCount = 5;
-        $motherBreederStarCount = 4;
-        $fatherBreederStarCount = 3;
-        $exteriorStarCount = 2;
-        $meatLambStarCount = 1;
+        $motherBreederStarCount = 4.5;
+        $fatherBreederStarCount = 2.5;
+        $exteriorStarCount = 1;
+        $meatLambStarCount = 0;
 
         $this->data[ReportLabel::BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($breederStarCount);
         $this->data[ReportLabel::M_BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($motherBreederStarCount);

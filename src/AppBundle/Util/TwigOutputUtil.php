@@ -8,37 +8,46 @@ use AppBundle\Constant\TwigCode;
 class TwigOutputUtil
 {    
     /**
-     * @param int $starScore
+     * @param float $starScore
      * @param int $totalStars
      * @return string
      */
     public static function createStarsIndex($starScore, $totalStars = 5)
     {
-        $spacer = '';
-
+        $spacer = ' ';
+        
         if($totalStars < 0) { $totalStars = 0; }
+
+        //Star score limit check
+        if($starScore < 0) {
+            $starScore = 0;
+        } elseif ($starScore > $totalStars) {
+            $starScore = $totalStars;
+        }
         
         //Initialize star counts
-        $whiteStarsCount = $totalStars - $starScore;
-        if($whiteStarsCount < 0) { $whiteStarsCount = 0; }
-
-        if($starScore > $totalStars) { $starScore = $totalStars; }
-        if($starScore < 0) { $starScore = 0; }
+        $starScore = round($starScore * 2) / 2; //round to nearest 0.5
+        $wholeStars = intval($starScore);
+        $hasHalfStar = !NumberUtil::isFloatZero($starScore - $wholeStars);
+        $halfStarCount = $hasHalfStar ? 1 : 0;
+        $emptyStarsCount = $totalStars - $wholeStars - $halfStarCount;
+        if($emptyStarsCount < 0) { $emptyStarsCount = 0; }
 
         //Generate star index code for three different possibilities
 
         //All stars are empty
         if($starScore == 0) {
-            $stars = self::createIconString($whiteStarsCount, TwigCode::WHITE_STAR, $spacer);
+            $stars = self::createIconString($emptyStarsCount, TwigCode::STAR_WHITE, $spacer);
             
         //All stars are black    
         } elseif ($starScore == $totalStars) {
-            $stars = self::createIconString($starScore, TwigCode::BLACK_STAR, $spacer);
+            $stars = self::createIconString($starScore, TwigCode::STAR_BLACK, $spacer);
 
-        // number of empty white stars + number of black stars    
+        // number of full black stars + possibly one half star + number of empty white stars
         } else {
-            $stars = self::createIconString($whiteStarsCount, TwigCode::WHITE_STAR).$spacer.
-                   self::createIconString($starScore, TwigCode::BLACK_STAR);
+            $stars = self::createIconString($wholeStars, TwigCode::STAR_BLACK, $spacer).$spacer.
+                self::createIconString($halfStarCount, TwigCode::STAR_HALF, $spacer).$spacer.
+                self::createIconString($emptyStarsCount, TwigCode::STAR_WHITE, $spacer);
         }
 
         return TwigCode::AUTO_ESCAPE_START.' '.$stars.' '.TwigCode::AUTO_ESCAPE_END;
