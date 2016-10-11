@@ -523,4 +523,43 @@ class BreedValueUtil
                                                         $fatReliability ** 2,
                                                         $lambMeatIndexCoefficients);
     }
+
+    /**
+     * @param int $indexRank
+     * @param int $totalIndexRankedAnimals
+     * @return float|int
+     */
+    public static function getStarValue($indexRank, $totalIndexRankedAnimals)
+    {
+        if(NullChecker::numberIsNull($indexRank) || NullChecker::numberIsNull($totalIndexRankedAnimals)) {
+            return 0;
+        }
+
+        $rankPercentage = floor((floatval($totalIndexRankedAnimals) - floatval($indexRank))/floatval($totalIndexRankedAnimals) * 100);
+
+        if($rankPercentage >= ReportFormat::STAR_SCORE_5_MIN_PERCENTAGE) {
+            return 5;
+
+        } elseif($rankPercentage >= ReportFormat::STAR_SCORE_4_AND_HALF_MIN_PERCENTAGE) {
+            return 4.5;
+
+        } elseif($rankPercentage >= ReportFormat::STAR_SCORE_4_MIN_PERCENTAGE) {
+            return 4;
+
+        } elseif($rankPercentage >= ReportFormat::STAR_SCORE_3_AND_HALF_MIN_PERCENTAGE) {
+            return 3.5;
+
+        } elseif($rankPercentage >= ReportFormat::STAR_SCORE_3_MIN_PERCENTAGE) {
+            return 3;
+
+        } elseif($rankPercentage >= ReportFormat::STAR_SCORE_2_AND_HALF_MIN_PERCENTAGE) {
+            return 2.5;
+
+        } elseif($rankPercentage >= ReportFormat::STAR_SCORE_2_MIN_PERCENTAGE) {
+            return 2;
+
+        } elseif($rankPercentage >= ReportFormat::STAR_SCORE_1_MIN_PERCENTAGE) {
+            return 1;
+        }
+    }
 }

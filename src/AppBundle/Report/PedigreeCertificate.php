@@ -5,6 +5,7 @@ namespace AppBundle\Report;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\BreedValueLabel;
+use AppBundle\Constant\ReportFormat;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Constant\TwigCode;
 use AppBundle\Entity\Animal;
@@ -89,6 +90,9 @@ class PedigreeCertificate
     /** @var array */
     private $lambMeatIndexCoefficients;
 
+    /** @var int */
+    private $totalLambMeatIndexRankedAnimals;
+
     /**
      * PedigreeCertificate constructor.
      * @param ObjectManager $em
@@ -99,8 +103,9 @@ class PedigreeCertificate
      * @param int $breedValuesYear
      * @param GeneticBase $geneticBases
      * @param array $lambMeatIndexCoefficients
+     * @param int $totalLambMeatIndexRankedAnimals
      */
-    public function __construct(ObjectManager $em, Client $client, Location $location, Animal $animal, $generationOfAscendants = 3, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients)
+    public function __construct(ObjectManager $em, Client $client, Location $location, Animal $animal, $generationOfAscendants = 3, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients, $totalLambMeatIndexRankedAnimals)
     {
         $this->em = $em;
 
@@ -113,6 +118,7 @@ class PedigreeCertificate
         $this->breedValuesYear = $breedValuesYear;
         $this->geneticBases = $geneticBases;
         $this->lambMeatIndexCoefficients = $lambMeatIndexCoefficients;
+        $this->totalLambMeatIndexRankedAnimals = $totalLambMeatIndexRankedAnimals;
 
         $this->data = array();
         $this->generationOfAscendants = $generationOfAscendants;
@@ -131,9 +137,6 @@ class PedigreeCertificate
         }
         $this->data[ReportLabel::POSTAL_CODE] = $postalCode;
         $this->data[ReportLabel::UBN] = $location->getUbn();
-
-        //TODO Phase 2: BreedIndices (now mock values are used)
-        $this->addBreedIndex($animal, $breedValuesYear);
 
         //TODO Phase 2: Add breeder information
         $this->data[ReportLabel::BREEDER] = null; //TODO pass Breeder entity
@@ -323,27 +326,30 @@ class PedigreeCertificate
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NAME] = '-';
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NUMBER] = '-';
 
+        if($key = ReportLabel::CHILD_KEY) {
+            $this->addBreedIndex($breedValues[BreedValueLabel::LAMB_MEAT_INDEX_RANKING]);
+        }
     }
 
 
     /**
-     * @param Animal $animal
-     * @param int $breedValuesYear
+     * @param int $lambMeatIndexRank
      */
-    private function addBreedIndex(Animal $animal, $breedValuesYear)
+    private function addBreedIndex($lambMeatIndexRank)
     {
-        //TODO Phase 2: BreedIndices
-        $breederStarCount = 5;
-        $motherBreederStarCount = 4.5;
-        $fatherBreederStarCount = 2.5;
-        $exteriorStarCount = 1;
-        $meatLambStarCount = 0;
+        //Empty
+        $breederStarCount = 0;
+        $motherBreederStarCount = 0;
+        $fatherBreederStarCount = 0;
+        $exteriorStarCount = 0;
+
+        $lambMeatStarCount = BreedValueUtil::getStarValue($lambMeatIndexRank, $this->totalLambMeatIndexRankedAnimals);
 
         $this->data[ReportLabel::BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($breederStarCount);
         $this->data[ReportLabel::M_BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($motherBreederStarCount);
         $this->data[ReportLabel::F_BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($fatherBreederStarCount);
         $this->data[ReportLabel::EXT_INDEX_STARS] = TwigOutputUtil::createStarsIndex($exteriorStarCount);
-        $this->data[ReportLabel::VL_INDEX_STARS] = TwigOutputUtil::createStarsIndex($meatLambStarCount);
+        $this->data[ReportLabel::VL_INDEX_STARS] = TwigOutputUtil::createStarsIndex($lambMeatStarCount);
 
         $this->data[ReportLabel::BREEDER_INDEX_NO_ACC] = 'ab/acc';
         $this->data[ReportLabel::M_BREEDER_INDEX_NO_ACC] = 'mb/acc';
@@ -565,11 +571,6 @@ class PedigreeCertificate
                                                                     self::EMPTY_INDEX_VALUE);
     }
 
-    
-    private function getStarValue($lambMeatIndex)
-    {
-        //TODO CREATE A FUNCTION TO GENERATE AND PERSIST THE RANK EVERY BREEDVALUE IMPORT ONCE A YEAR (WITH SOLANI/RELANI IMPORT)
-    }
-    
+
 
 }

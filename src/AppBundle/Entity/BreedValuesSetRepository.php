@@ -46,6 +46,10 @@ class BreedValuesSetRepository extends BaseRepository {
         $growthReliability = null;
         $fatReliability = null;
 
+        $lambMeatIndex = null;
+        $lambMeatIndexAccuracy = null;
+        $lambMeatIndexRanking = null;
+
         $isGetFormattedAccuracies = false;
 
 
@@ -70,6 +74,12 @@ class BreedValuesSetRepository extends BaseRepository {
                 $fatReliability = $results['fat_reliability'];
                 $fatAccuracy = BreedValueUtil::getAccuracyFromReliability($fatReliability, $isGetFormattedAccuracies);
             }
+
+            if(NullChecker::floatIsNotZero($results['lamb_meat_index_ranking'])) {
+                $lambMeatIndex = $results['lamb_meat_index'];
+                $lambMeatIndexAccuracy = $results['lamb_meat_index_accuracy'];
+                $lambMeatIndexRanking = $results['lamb_meat_index_ranking'];
+            }
         }
 
         return [
@@ -81,7 +91,10 @@ class BreedValuesSetRepository extends BaseRepository {
             BreedValueLabel::FAT_ACCURACY => $fatAccuracy,
             BreedValueLabel::GROWTH_RELIABILITY => $growthReliability,
             BreedValueLabel::MUSCLE_THICKNESS_RELIABILITY => $muscleThicknessReliability,
-            BreedValueLabel::FAT_RELIABILITY => $fatReliability
+            BreedValueLabel::FAT_RELIABILITY => $fatReliability,
+            BreedValueLabel::LAMB_MEAT_INDEX => $lambMeatIndex,
+            BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY => $lambMeatIndexAccuracy,
+            BreedValueLabel::LAMB_MEAT_INDEX_RANKING => $lambMeatIndexRanking
         ];
     }
 
@@ -110,6 +123,23 @@ class BreedValuesSetRepository extends BaseRepository {
           BreedValueLabel::LAMB_MEAT_INDEX => $lambMeatIndex,
           BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY => $lambMeatIndexAccuracy
         ];
+    }
+
+
+    /**
+     * @param int $year
+     * @return int
+     */
+    public function getLambMeatIndexRankedAnimalsCount($year = null)
+    {
+        if($year == null) {
+            /** @var GeneticBaseRepository $geneticBaseRepository */
+            $geneticBaseRepository = $this->getManager()->getRepository(GeneticBase::class);
+            $year = $geneticBaseRepository->getLatestYear();
+        }
+
+        $sql = "SELECT COUNT(*) FROM breed_values_set WHERE lamb_meat_index_ranking IS NOT NULL AND lamb_meat_index_ranking <> 0 AND EXTRACT(YEAR FROM generation_date) = ".$year;
+        return $this->getManager()->getConnection()->query($sql)->fetch()['count'];
     }
 
 }
