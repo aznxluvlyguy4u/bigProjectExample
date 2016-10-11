@@ -390,7 +390,7 @@ class BreedValueUtil
         
         $sql = "SELECT * FROM breed_values_set WHERE generation_date = '".$generationDate."'";
         $results = $em->getConnection()->query($sql)->fetchAll();
-
+        
         if($cmdUtil != null ) { $cmdUtil->setStartTimeAndPrintIt(count($results), 1 , 'Generating lambMeatIndexValues'); }
 
         $countNewValues = 0;
@@ -430,7 +430,7 @@ class BreedValueUtil
                     $countNewValues++;
                 }
             }
-
+            
             if($cmdUtil != null ) { $cmdUtil->advanceProgressBar(1, 'Generating lambMeatIndexValues | records with new values: '.$countNewValues); }
         }
         if($cmdUtil != null ) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
@@ -459,8 +459,6 @@ class BreedValueUtil
         }
         if($cmdUtil != null ) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
     }
-
-
 
 
 
