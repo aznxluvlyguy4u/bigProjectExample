@@ -59,6 +59,7 @@ class NsfoBreedvaluesSetvaluesCommand extends ContainerAwareCommand
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
         $this->output = $output;
         $this->animalRepository = $this->em->getRepository(Animal::class);
+        $this->breedValueCoefficientRepository = $this->em->getRepository(BreedValueCoefficient::class);
         $this->geneticBaseRepository = $this->em->getRepository(GeneticBase::class);
 
 

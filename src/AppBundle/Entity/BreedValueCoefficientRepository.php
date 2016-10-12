@@ -2,9 +2,9 @@
 
 namespace AppBundle\Entity;
 use AppBundle\Constant\BreedTraitCoefficient;
-use AppBundle\Constant\Constant;
-use AppBundle\Enumerator\BreedIndexType;
+use AppBundle\Enumerator\BreedValueCoefficientType;
 use AppBundle\Enumerator\BreedTrait;
+use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\NumberUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 
@@ -15,40 +15,60 @@ use Doctrine\Common\Collections\ArrayCollection;
 class BreedValueCoefficientRepository extends BaseRepository {
     
     public function generateLambMeatIndexCoefficients()
-    {
-        $em = $this->getManager();
-        
-        $hasSomethingChanged = false;
-        
-        $searchArray = new ArrayCollection();
-        $searchArray->set(BreedTrait::GROWTH, BreedTraitCoefficient::LAMB_MEAT_INDEX_GROWTH);
-        $searchArray->set(BreedTrait::FAT, BreedTraitCoefficient::LAMB_MEAT_INDEX_FAT);
-        $searchArray->set(BreedTrait::MUSCLE_THICKNESS, BreedTraitCoefficient::LAMB_MEAT_INDEX_MUSCLE_THICKNESS);
+    {        
+        $valueCoefficients = new ArrayCollection();
+        $valueCoefficients->set(BreedTrait::GROWTH, BreedTraitCoefficient::LAMB_MEAT_INDEX_GROWTH);
+        $valueCoefficients->set(BreedTrait::FAT, BreedTraitCoefficient::LAMB_MEAT_INDEX_FAT);
+        $valueCoefficients->set(BreedTrait::MUSCLE_THICKNESS, BreedTraitCoefficient::LAMB_MEAT_INDEX_MUSCLE_THICKNESS);
         //Add new trait-coefficient pairs here
-        
-        $traits = $searchArray->getKeys();
+
+        $geneticVarianceCoefficients = new ArrayCollection();
+        $geneticVarianceCoefficients->set(BreedTrait::GROWTH, BreedTraitCoefficient::LAMB_MEAT_INDEX_GROWTH_GENETIC_VARIANCE);
+        $geneticVarianceCoefficients->set(BreedTrait::FAT, BreedTraitCoefficient::LAMB_MEAT_INDEX_FAT_GENETIC_VARIANCE);
+        $geneticVarianceCoefficients->set(BreedTrait::MUSCLE_THICKNESS, BreedTraitCoefficient::LAMB_MEAT_INDEX_MUSCLE_THICKNESS_GENETIC_VARIANCE);
+        //Add new trait-coefficient pairs here
+
+
+        $traits = $valueCoefficients->getKeys();
         
         foreach ($traits as $trait) {
-            $coefficientValue = $searchArray->get($trait);
 
-            /** @var BreedValueCoefficient $coefficient */
-            $coefficient = $this->findOneBy(['indexType' => BreedIndexType::LAMB_MEAT_INDEX, 'trait' => $trait]);
+            $valueCoefficient = $valueCoefficients->get($trait);
+            $this->generateLambMeatIndexCoefficient(BreedValueCoefficientType::LAMB_MEAT_INDEX, $trait, $valueCoefficient);
 
-            if($coefficient == null) {
-                //Generate new coefficient
-                $coefficient = new BreedValueCoefficient(BreedIndexType::LAMB_MEAT_INDEX, $trait, $coefficientValue);
-                $em->persist($coefficient);
-                $hasSomethingChanged = true;
+            $geneticVarianceCoefficient = $geneticVarianceCoefficients->get($trait);
+            $this->generateLambMeatIndexCoefficient(BreedValueCoefficientType::LAMB_MEAT_INDEX_GENETIC_VARIANCE, $trait, $geneticVarianceCoefficient);
 
-            } elseif(NumberUtil::areFloatsEqual($coefficient->getValue(), $coefficientValue)) {
-                //Update the value
-                $coefficient->setValue($coefficientValue);
-                $em->persist($coefficient);
-                $hasSomethingChanged = true;
-            }
+            $accuracyCoefficient = BreedValueUtil::calculateLambMeatIndexAccuracyCoefficient($valueCoefficient, $geneticVarianceCoefficient);
+            $this->generateLambMeatIndexCoefficient(BreedValueCoefficientType::LAMB_MEAT_INDEX_ACCURACY, $trait, $accuracyCoefficient);
         }
+    }
 
-        if($hasSomethingChanged) { $em->flush(); }
+
+    /**
+     * @param string $indexType
+     * @param string $trait
+     * @param float $value
+     */
+    private function generateLambMeatIndexCoefficient($indexType, $trait, $value)
+    {
+        $em = $this->getManager();
+
+        /** @var BreedValueCoefficient $coefficient */
+        $coefficientEntity = $this->findOneBy(['indexType' => $indexType, 'trait' => $trait]);
+
+        if($coefficientEntity == null) {
+            //Generate new coefficient
+            $coefficientEntity = new BreedValueCoefficient($indexType, $trait, $value);
+            $em->persist($coefficientEntity);
+            $em->flush();
+
+        } elseif(!NumberUtil::areFloatsEqual($coefficientEntity->getValue(), $value)) {
+            //Update the value
+            $coefficientEntity->setValue($value);
+            $em->persist($coefficientEntity);
+            $em->flush();
+        }
     }
 
 
@@ -57,7 +77,25 @@ class BreedValueCoefficientRepository extends BaseRepository {
      */
     public function getLambMeatIndexCoefficients()
     {
-        $breedValueCoefficients = $this->findBy(['indexType' => BreedIndexType::LAMB_MEAT_INDEX]);
+        return $this->getLambMeatIndexCoefficientsByIndexType(BreedValueCoefficientType::LAMB_MEAT_INDEX);
+    }
+
+
+    /**
+     * @return array|null
+     */
+    public function getLambMeatIndexAccuracyCoefficients()
+    {
+        return $this->getLambMeatIndexCoefficientsByIndexType(BreedValueCoefficientType::LAMB_MEAT_INDEX_ACCURACY);
+    }
+
+
+    /**
+     * @return array|null
+     */
+    private function getLambMeatIndexCoefficientsByIndexType($indexType)
+    {
+        $breedValueCoefficients = $this->findBy(['indexType' => $indexType]);
 
         if(count($breedValueCoefficients) == 0) { return null; }
 

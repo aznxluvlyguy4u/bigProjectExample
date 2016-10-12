@@ -33,6 +33,8 @@ class BreedValueUtil
     const MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX = 0.40;
     const MIN_LAMB_MEAT_INDEX_ACCURACY = 0.0;
 
+    const DEFAULT_LAMB_MEAT_INDEX_ACCURACY_DECIMALS = 7;
+
 
     /**
      * @param float $weightOnThatMoment
@@ -559,5 +561,17 @@ class BreedValueUtil
         } elseif($rankPercentage >= ReportFormat::STAR_SCORE_1_MIN_PERCENTAGE) {
             return 1;
         }
+    }
+
+
+    /**
+     * @param float $lambMeatIndex
+     * @param float $lambMeatIndexGeneticVariance
+     * @param int $decimals
+     * @return float
+     */
+    public static function calculateLambMeatIndexAccuracyCoefficient($lambMeatIndex, $lambMeatIndexGeneticVariance, $decimals = self::DEFAULT_LAMB_MEAT_INDEX_ACCURACY_DECIMALS)
+    {
+        return round(($lambMeatIndex ** 2) * $lambMeatIndexGeneticVariance, $decimals);
     }
 }
