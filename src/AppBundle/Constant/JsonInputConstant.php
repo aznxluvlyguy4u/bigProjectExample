@@ -92,7 +92,8 @@ class JsonInputConstant
     const SCRAPIE_START_DATE = 'scrapie_start_date';
     const SCRAPIE_CHECK_DATE = 'scrapie_check_date';
     const SCRAPIE_END_DATE = 'scrapie_end_date';
-    const REASON_OF_HEALTH_EDIT = 'reason_of_health_edit';
+    const MAEDI_VISNA_REASON_OF_EDIT = 'maedi_visna_reason_of_edit';
+    const SCRAPIE_REASON_OF_EDIT = 'scrapie_reason_of_edit';
 
     //Locations
     const PROVINCES = 'provinces';
