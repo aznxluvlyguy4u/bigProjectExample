@@ -302,7 +302,7 @@ class BreedValueUtil
 
         } else {
             $scaledLambMeatIndex = self::calculateScaledLamMeatIndex($lambMeatIndex);
-            return NumberUtil::getPlusSignIfNumberIsPositive($scaledLambMeatIndex).round($scaledLambMeatIndex, PedigreeCertificate::LAMB_MEAT_INDEX_DECIMAL_ACCURACY).'/'.round($lambMeatIndexAccuracy*100);
+            return round($scaledLambMeatIndex, PedigreeCertificate::LAMB_MEAT_INDEX_DECIMAL_ACCURACY).'/'.round($lambMeatIndexAccuracy*100);
         }
     }
 
