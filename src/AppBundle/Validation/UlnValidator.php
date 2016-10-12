@@ -55,8 +55,9 @@ class UlnValidator
      * @param Client $client
      * @param Collection $content
      * @param boolean $multipleAnimals
+     * @param Location $location
      */
-    public function __construct(ObjectManager $manager, Collection $content, $multipleAnimals = false, Client $client = null)
+    public function __construct(ObjectManager $manager, Collection $content, $multipleAnimals = false, Client $client = null, $location)
     {
         $this->manager = $manager;
 
@@ -80,7 +81,7 @@ class UlnValidator
                     $this->isInputMissing = false;
                     $this->isUlnSetValid = true;
 
-                    $this->isUlnSetValid = $this->validateUlnInput($animalArray, $client);
+                    $this->isUlnSetValid = $this->validateUlnInput($animalArray, $client, $location);
                     $this->numberOfAnimals++;
                 }
             }
@@ -96,7 +97,7 @@ class UlnValidator
                     $this->isUlnSetValid = true;
 
                     foreach ($animalArrays as $animalArray) {
-                        $isUlnValid = $this->validateUlnInput($animalArray, $client);
+                        $isUlnValid = $this->validateUlnInput($animalArray, $client, $location);
 
                         if(!$isUlnValid) {
                             $this->isUlnSetValid = false;
@@ -116,9 +117,10 @@ class UlnValidator
     /**
      * @param array $animalArray
      * @param Client $client
+     * @param Location $location
      * @return boolean
      */
-    private function validateUlnInput($animalArray, $client)
+    private function validateUlnInput($animalArray, $client, $location)
     {
         $ulnExists = array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalArray) &&
             array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalArray);
@@ -135,7 +137,8 @@ class UlnValidator
 
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('ulnCountryCode', $countryCodeToCheck))
-            ->andWhere(Criteria::expr()->eq('ulnNumber', $numberToCheck));
+            ->andWhere(Criteria::expr()->eq('ulnNumber', $numberToCheck))
+            ->andWhere(Criteria::expr()->eq('location', $location ));
 
         $animal = $this->manager->getRepository(Animal::class)
             ->matching($criteria)->first();
