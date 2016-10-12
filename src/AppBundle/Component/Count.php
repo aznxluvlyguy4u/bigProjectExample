@@ -420,13 +420,6 @@ class Count
         $isAlive = true;
         $isDepartedOption = false;
         $isExportedOption = false;
-        $countTransferring = false;
-
-        if($countTransferring) {
-            $transferState = AnimalTransferStatus::TRANSFERRING;
-        } else {
-            $transferState = AnimalTransferStatus::NULL;
-        }
 
         //Initialize counters
         $pedigreeAdults = 0;
@@ -438,11 +431,7 @@ class Count
 
         foreach($location->getAnimals() as $animal) {
 
-            $isOwnedAnimal = $animal->getIsAlive() == $isAlive
-                && $animal->getIsExportAnimal() == $isExportedOption
-                && $animal->getIsDepartedAnimal() == $isDepartedOption
-                && ($animal->getTransferState() == AnimalTransferStatus::NULL
-                    || $animal->getTransferState() == $transferState);
+            $isOwnedAnimal =  Count::includeAnimal($animal, $isAlive, $isExportedOption, $isDepartedOption);
 
             $isPedigree = $animal->getPedigreeCountryCode() != null
                 && $animal->getPedigreeNumber() != null;
@@ -501,13 +490,6 @@ class Count
         $isAlive = true;
         $isDepartedOption = false;
         $isExportedOption = false;
-        $countTransferring = false;
-
-        if($countTransferring) {
-            $transferState = AnimalTransferStatus::TRANSFERRING;
-        } else {
-            $transferState = AnimalTransferStatus::NULL;
-        }
 
         //Initialize counters
         $pedigreeAdults = 0;
@@ -518,14 +500,12 @@ class Count
         $adultDateOfBirthLimit = Utils::getAdultDateOfBirthLimit();
 
         foreach($client->getCompanies() as $company) {
+            /** @var Location $location */
             foreach($company->getLocations() as $location) {
+                /** @var Animal $animal */
                 foreach($location->getAnimals() as $animal) {
 
-                    $isOwnedAnimal = $animal->getIsAlive() == $isAlive
-                        && $animal->getIsExportAnimal() == $isExportedOption
-                        && $animal->getIsDepartedAnimal() == $isDepartedOption
-                        && ($animal->getTransferState() == AnimalTransferStatus::NULL
-                            || $animal->getTransferState() == $transferState);
+                    $isOwnedAnimal = Count::includeAnimal($animal, $isAlive, $isExportedOption, $isDepartedOption);
 
                     $isPedigree = $animal->getPedigreeCountryCode() != null
                         && $animal->getPedigreeNumber() != null;
@@ -587,13 +567,6 @@ class Count
         $isAlive = true;
         $isDepartedOption = false;
         $isExportedOption = false;
-        $countTransferring = false;
-
-        if($countTransferring) {
-            $transferState = AnimalTransferStatus::TRANSFERRING;
-        } else {
-            $transferState = AnimalTransferStatus::NULL;
-        }
 
         //Initialize counters
         $ramUnderSix = 0;
@@ -610,18 +583,9 @@ class Count
 
 
         foreach($company->getLocations() as $location) {
+            /** @var Animal $animal */
             foreach($location->getAnimals() as $animal) {
-
-                /**
-                 * @var Animal $animal
-                 */
-
-                $isOwnedAnimal = $animal->getIsAlive() == $isAlive
-                    && $animal->getIsExportAnimal() == $isExportedOption
-                    && $animal->getIsDepartedAnimal() == $isDepartedOption
-                    && ($animal->getTransferState() == AnimalTransferStatus::NULL
-                        || $animal->getTransferState() == $transferState);
-
+                $isOwnedAnimal = Count::includeAnimal($animal, $isAlive, $isExportedOption, $isDepartedOption);
                 $dateOfBirth = $animal->getDateOfBirth();
 
                 // TODO Change Gender when switching to CLASS based distinction
@@ -690,5 +654,22 @@ class Count
         $count->set("NEUTER_OVER_TWELVE", $neuterOverTwelve);
 
         return $count;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param boolean $isAlive
+     * @param boolean $isExported
+     * @param boolean $isDeparted
+     * @return bool
+     */
+    public static function includeAnimal(Animal $animal, $isAlive, $isExported, $isDeparted)
+    {
+        return $animal->getIsAlive() == $isAlive
+            && $animal->getIsExportAnimal() == $isExported
+            && $animal->getIsDepartedAnimal() == $isDeparted
+            && ($animal->getTransferState() == AnimalTransferStatus::NULL
+                || $animal->getTransferState() == AnimalTransferStatus::TRANSFERRED);
     }
 }
