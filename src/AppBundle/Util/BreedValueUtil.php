@@ -29,6 +29,9 @@ class BreedValueUtil
     const IS_IGNORE_INCOMPLETE_CODES = true;
     const DEFAULT_DECIMAL_SYMBOL = '.';
 
+    //Scaling
+    const LAMB_MEAT_INDEX_SCALE = 100; //This will be added to the lambMeatIndex value
+
     //Minimum accuracies
     const MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX = 0.40;
     const MIN_LAMB_MEAT_INDEX_ACCURACY = 0.0;
@@ -298,9 +301,21 @@ class BreedValueUtil
             return $nullString;
 
         } else {
-            return NumberUtil::getPlusSignIfNumberIsPositive($lambMeatIndex).round($lambMeatIndex, PedigreeCertificate::LAMB_MEAT_INDEX_DECIMAL_ACCURACY).'/'.round($lambMeatIndexAccuracy*100);
+            $scaledLambMeatIndex = self::calculateScaledLamMeatIndex($lambMeatIndex);
+            return NumberUtil::getPlusSignIfNumberIsPositive($scaledLambMeatIndex).round($scaledLambMeatIndex, PedigreeCertificate::LAMB_MEAT_INDEX_DECIMAL_ACCURACY).'/'.round($lambMeatIndexAccuracy*100);
         }
     }
+
+
+    /**
+     * @param float $lambMeatIndex
+     * @return float
+     */
+    public static function calculateScaledLamMeatIndex($lambMeatIndex)
+    {
+        return $lambMeatIndex + self::LAMB_MEAT_INDEX_SCALE;
+    }
+
 
     /**
      * @param array $correctedBreedValues
