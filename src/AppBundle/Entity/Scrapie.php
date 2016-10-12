@@ -356,7 +356,7 @@ class Scrapie
      */
     public function setReasonOfEdit($reasonOfEdit)
     {
-        $this->reasonOfEdit = $reasonOfEdit;
+        $this->reasonOfEdit = trim($reasonOfEdit);
     }
     
     
