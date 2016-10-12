@@ -265,18 +265,11 @@ class AnimalRepository extends BaseRepository
    * @param bool $isAlive
    * @param bool $isDeparted
    * @param bool $isExported
-   * @param bool $showTransferring
    * @return array
    */
-  public function getLiveStock(Location $location, $isAlive = true, $isDeparted = false, $isExported = false, $showTransferring = false)
+  public function getLiveStock(Location $location, $isAlive = true, $isDeparted = false, $isExported = false)
   {
     $animals = array();
-
-    if ($showTransferring) {
-      $transferState = AnimalTransferStatus::TRANSFERRING;
-    } else {
-      $transferState = AnimalTransferStatus::NULL;
-    }
 
     foreach ($location->getAnimals() as $animal) {
 
