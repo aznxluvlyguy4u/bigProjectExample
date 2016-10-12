@@ -48,7 +48,7 @@ class PedigreeCertificate
     const FAT_DECIMAL_ACCURACY = 2;
     const MUSCLE_THICKNESS_DECIMAL_ACCURACY = 2;
     const GROWTH_DECIMAL_ACCURACY = 1;
-    const LAMB_MEAT_INDEX_DECIMAL_ACCURACY = 1;
+    const LAMB_MEAT_INDEX_DECIMAL_ACCURACY = 0;
 
     const STARS_NULL_VALUE = null;
     const EMPTY_BREED_VALUE = '-/-';
