@@ -37,13 +37,12 @@ class BreedValueUtil
     //Scaling
     const LAMB_MEAT_INDEX_SCALE = 100; //This will be added to the lambMeatIndex value
 
-    //Minimum accuracies
+    //Minimum accuracies for the calculation
     const MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX = 0.40;
-    const MIN_LAMB_MEAT_INDEX_ACCURACY = 0.0;
 
-    //Valid Growth, MuscleThickness and Fat BreedValues should at least have this accuracy
-    //If the accuracy is lower, they are ignored
-    const MIN_BREED_VALUE_ACCURACY = 0.30; //30%
+    //If the following accuracy are lower, they are ignored in the PedigreeCertificate
+    const MIN_LAMB_MEAT_INDEX_ACCURACY = 0.30;
+    const MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT = 0.30; //Valid Growth, MuscleThickness and Fat BreedValues should at least have this accuracy
 
     const DEFAULT_LAMB_MEAT_INDEX_ACCURACY_DECIMALS = 7;
 
@@ -278,7 +277,7 @@ class BreedValueUtil
                 $displayedString = PedigreeCertificate::EMPTY_BREED_VALUE;
             } else {
                 $rawBreedValue = Utils::getNullCheckedArrayValue($traitLabel, $breedValues);
-                if($rawBreedValue == null || $breedValues[$accuracyLabel] < self::MIN_BREED_VALUE_ACCURACY) {
+                if($rawBreedValue == null || $breedValues[$accuracyLabel] < self::MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT) {
                     $displayedString = PedigreeCertificate::EMPTY_BREED_VALUE;
                 } else {
                     $breedValue = round($rawBreedValue*$factors->get($accuracyLabel), $decimalAccuracyLabels->get($accuracyLabel));
