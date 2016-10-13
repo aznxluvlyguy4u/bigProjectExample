@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Util\NullChecker;
@@ -30,7 +31,7 @@ class ExteriorRepository extends MeasurementRepository {
      * @param Animal $animal
      * @return array
      */
-    public function getAllOfAnimalBySql(Animal $animal)
+    public function getAllOfAnimalBySql(Animal $animal, $nullFiller = '')
     {
         $results = [];
         //null check
@@ -48,23 +49,23 @@ class ExteriorRepository extends MeasurementRepository {
         foreach ($retrievedMeasurementData as $measurementData)
         {
             $results[] = [
-                JsonInputConstant::MEASUREMENT_DATE => $measurementData['measurement_date'],
-                JsonInputConstant::HEIGHT => $measurementData['height'],
-                JsonInputConstant::KIND => $measurementData['skull'],
-                JsonInputConstant::PROGRESS => $measurementData['progress'],
-                JsonInputConstant::SKULL => $measurementData['skull'],
-                JsonInputConstant::MUSCULARITY => $measurementData['muscularity'],
-                JsonInputConstant::PROPORTION => $measurementData['proportion'],
-                JsonInputConstant::EXTERIOR_TYPE => $measurementData['exterior_type'],
-                JsonInputConstant::LEG_WORK => $measurementData['leg_work'],
-                JsonInputConstant::FUR => $measurementData['fur'],
-                JsonInputConstant::GENERAL_APPEARANCE => $measurementData['general_appearence'],
-                JsonInputConstant::BREAST_DEPTH => $measurementData['breast_depth'],
-                JsonInputConstant::TORSO_LENGTH => $measurementData['torso_length'],
-                JsonInputConstant::MARKINGS => $measurementData['markings'],
-                JsonInputConstant::PERSON_ID => $measurementData['person_id'],
-                JsonInputConstant::FIRST_NAME => $measurementData['first_name'],
-                JsonInputConstant::LAST_NAME => $measurementData['last_name'],
+                JsonInputConstant::MEASUREMENT_DATE => Utils::fillNullOrEmptyString($measurementData['measurement_date'], $nullFiller),
+                JsonInputConstant::HEIGHT => Utils::fillNullOrEmptyString($measurementData['height'], $nullFiller),
+                JsonInputConstant::KIND => Utils::fillNullOrEmptyString($measurementData['skull'], $nullFiller),
+                JsonInputConstant::PROGRESS => Utils::fillNullOrEmptyString($measurementData['progress'], $nullFiller),
+                JsonInputConstant::SKULL => Utils::fillNullOrEmptyString($measurementData['skull'], $nullFiller),
+                JsonInputConstant::MUSCULARITY => Utils::fillNullOrEmptyString($measurementData['muscularity'], $nullFiller),
+                JsonInputConstant::PROPORTION => Utils::fillNullOrEmptyString($measurementData['proportion'], $nullFiller),
+                JsonInputConstant::EXTERIOR_TYPE => Utils::fillNullOrEmptyString($measurementData['exterior_type'], $nullFiller),
+                JsonInputConstant::LEG_WORK => Utils::fillNullOrEmptyString($measurementData['leg_work'], $nullFiller),
+                JsonInputConstant::FUR => Utils::fillNullOrEmptyString($measurementData['fur'], $nullFiller),
+                JsonInputConstant::GENERAL_APPEARANCE => Utils::fillNullOrEmptyString($measurementData['general_appearence'], $nullFiller),
+                JsonInputConstant::BREAST_DEPTH => Utils::fillNullOrEmptyString($measurementData['breast_depth'], $nullFiller),
+                JsonInputConstant::TORSO_LENGTH => Utils::fillNullOrEmptyString($measurementData['torso_length'], $nullFiller),
+                JsonInputConstant::MARKINGS => Utils::fillNullOrEmptyString($measurementData['markings'], $nullFiller),
+                JsonInputConstant::PERSON_ID => Utils::fillNullOrEmptyString($measurementData['person_id'], $nullFiller),
+                JsonInputConstant::FIRST_NAME => Utils::fillNullOrEmptyString($measurementData['first_name'], $nullFiller),
+                JsonInputConstant::LAST_NAME => Utils::fillNullOrEmptyString($measurementData['last_name'], $nullFiller),
             ];
         }
         return $results;

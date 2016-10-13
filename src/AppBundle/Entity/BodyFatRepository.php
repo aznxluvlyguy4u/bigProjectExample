@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\MeasurementConstant;
@@ -22,7 +23,7 @@ class BodyFatRepository extends MeasurementRepository {
      * @param Animal $animal
      * @return array
      */
-    public function getAllOfAnimalBySql(Animal $animal)
+    public function getAllOfAnimalBySql(Animal $animal, $nullFiller = '')
     {
         $results = [];
         //null check
@@ -43,13 +44,13 @@ class BodyFatRepository extends MeasurementRepository {
         foreach ($retrievedMeasurementData as $measurementData)
         {
             $results[] = [
-                JsonInputConstant::MEASUREMENT_DATE => $measurementData['measurement_date'],
-                JsonInputConstant::FAT1 => $measurementData['fat1'],
-                JsonInputConstant::FAT2 => $measurementData['fat2'],
-                JsonInputConstant::FAT3 => $measurementData['fat3'],
-                JsonInputConstant::PERSON_ID => $measurementData['person_id'],
-                JsonInputConstant::FIRST_NAME => $measurementData['first_name'],
-                JsonInputConstant::LAST_NAME => $measurementData['last_name'],
+                JsonInputConstant::MEASUREMENT_DATE => Utils::fillNullOrEmptyString($measurementData['measurement_date'], $nullFiller),
+                JsonInputConstant::FAT1 => Utils::fillNullOrEmptyString($measurementData['fat1'], $nullFiller),
+                JsonInputConstant::FAT2 => Utils::fillNullOrEmptyString($measurementData['fat2'], $nullFiller),
+                JsonInputConstant::FAT3 => Utils::fillNullOrEmptyString($measurementData['fat3'], $nullFiller),
+                JsonInputConstant::PERSON_ID =>  Utils::fillNullOrEmptyString($measurementData['person_id'], $nullFiller),
+                JsonInputConstant::FIRST_NAME => Utils::fillNullOrEmptyString($measurementData['first_name'], $nullFiller),
+                JsonInputConstant::LAST_NAME => Utils::fillNullOrEmptyString($measurementData['last_name'], $nullFiller),
             ];
         }
         return $results;
