@@ -27,6 +27,7 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\StarValueUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
@@ -343,7 +344,7 @@ class PedigreeCertificate
         $fatherBreederStarCount = 0;
         $exteriorStarCount = 0;
 
-        $lambMeatStarCount = BreedValueUtil::getStarValue($lambMeatIndexRank, $this->totalLambMeatIndexRankedAnimals);
+        $lambMeatStarCount = StarValueUtil::getStarValue($lambMeatIndexRank, $this->totalLambMeatIndexRankedAnimals);
 
         $this->data[ReportLabel::BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($breederStarCount);
         $this->data[ReportLabel::M_BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($motherBreederStarCount);
