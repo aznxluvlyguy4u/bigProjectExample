@@ -20,6 +20,42 @@ use Doctrine\Common\Collections\Criteria;
  */
 class WeightRepository extends MeasurementRepository {
 
+
+    /**
+     * @param Animal $animal
+     * @return array
+     */
+    public function getAllOfAnimalBySql(Animal $animal)
+    {
+        $results = [];
+        //null check
+        if(!($animal instanceof Animal)) { return $results; }
+        elseif(!is_int($animal->getId())){ return $results; }
+
+        $sql = "SELECT m.id as id, measurement_date, t.*, p.person_id, p.first_name, p.last_name
+                FROM measurement m
+                  INNER JOIN weight t ON t.id = m.id
+                  LEFT JOIN person p ON p.id = m.inspector_id
+                  INNER JOIN animal a ON a.id = t.animal_id
+                WHERE t.animal_id = ".$animal->getId();
+        $retrievedMeasurementData = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+        foreach ($retrievedMeasurementData as $measurementData)
+        {
+            $results[] = [
+                JsonInputConstant::MEASUREMENT_DATE => $measurementData['measurement_date'],
+                JsonInputConstant::WEIGHT => $measurementData['weight'],
+                JsonInputConstant::IS_BIRTH_WEIGHT => $measurementData['is_birth_weight'],
+                JsonInputConstant::IS_REVOKED => $measurementData['is_revoked'],
+                JsonInputConstant::PERSON_ID => $measurementData['person_id'],
+                JsonInputConstant::FIRST_NAME => $measurementData['first_name'],
+                JsonInputConstant::LAST_NAME => $measurementData['last_name'],
+            ];
+        }
+        return $results;
+    }
+    
+    
     /**
      * @param Animal $animal
      * @return float
