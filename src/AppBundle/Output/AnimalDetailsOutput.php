@@ -212,6 +212,7 @@ class AnimalDetailsOutput
                 "note" => Utils::fillNullOrEmptyString($animal->getNote(), $replacementString),
                 "body_fats" => $bodyFatRepository->getAllOfAnimalBySql($animal),
                 "exteriors" => $exteriorRepository->getAllOfAnimalBySql($animal),
+                "muscle_thicknesses" => $muscleThicknessRepository->getAllOfAnimalBySql($animal),
         );
 
         return $result;

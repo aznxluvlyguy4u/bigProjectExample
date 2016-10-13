@@ -156,4 +156,6 @@ class JsonInputConstant
     const TORSO_LENGTH = 'torso_length';
     const MARKINGS = 'markings';
 
+    //MuscleThickness
+    const MUSCLE_THICKNESS = 'muscle_thickness';
 }
