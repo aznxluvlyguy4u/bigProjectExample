@@ -22,6 +22,7 @@ class JsonInputConstant
     const ULN_NUMBER = 'uln_number';
     const PEDIGREE_COUNTRY_CODE = 'pedigree_country_code';
     const PEDIGREE_NUMBER = 'pedigree_number';
+    const DATE_OF_BIRTH = 'date_of_birth';
 
     //Request & Response
     const ERROR_CODE = 'error_code';
@@ -96,6 +97,7 @@ class JsonInputConstant
     const SCRAPIE_REASON_OF_EDIT = 'scrapie_reason_of_edit';
 
     //Locations
+    const LOCATION = 'location';
     const PROVINCES = 'provinces';
     const CODES = 'codes';
 

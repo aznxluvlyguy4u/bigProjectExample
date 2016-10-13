@@ -252,6 +252,42 @@ class AnimalRepository extends BaseRepository
     return $animals;
   }
 
+
+  /**
+   * @param bool $isIncludingOnlyAliveAnimals
+   * @param string $nullFiller
+   * @return array
+   */
+  public function getAllRams($isIncludingOnlyAliveAnimals = true, $nullFiller = '')
+  {
+    $extraFilter = "";
+    if($isIncludingOnlyAliveAnimals) { $extraFilter = " AND is_alive = true"; }
+
+    $sql = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number as work_number,
+                   a.date_of_birth, l.ubn, a.is_alive FROM animal a 
+                   LEFT JOIN location l ON l.id = a.location_id
+                   WHERE type = 'Ram'".$extraFilter;
+    $animalsData = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+    $results = [];
+    //Resetting the values in another array to include null checks
+    foreach ($animalsData as $result) {
+      $results[] = [
+        JsonInputConstant::ULN_COUNTRY_CODE => Utils::fillNullOrEmptyString($result['uln_country_code'], $nullFiller),
+        JsonInputConstant::ULN_NUMBER => Utils::fillNullOrEmptyString($result['uln_number'], $nullFiller),
+        JsonInputConstant::PEDIGREE_COUNTRY_CODE => Utils::fillNullOrEmptyString($result['pedigree_country_code'], $nullFiller),
+        JsonInputConstant::PEDIGREE_NUMBER => Utils::fillNullOrEmptyString($result['pedigree_number'], $nullFiller),
+        JsonInputConstant::WORK_NUMBER => Utils::fillNullOrEmptyString($result['work_number'], $nullFiller),
+        JsonInputConstant::DATE_OF_BIRTH => Utils::fillNullOrEmptyString($result['date_of_birth'], $nullFiller),
+        JsonInputConstant::UBN => Utils::fillNullOrEmptyString($result['ubn'], $nullFiller),
+        JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($result['is_alive'], $nullFiller),
+      ];
+    }
+    
+    return $results;
+  }
+  
+
   /**
    * @param Location $location
    * @param bool $isAlive
