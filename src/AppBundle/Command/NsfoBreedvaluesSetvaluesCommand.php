@@ -72,6 +72,7 @@ class NsfoBreedvaluesSetvaluesCommand extends ContainerAwareCommand
             '2: Generate GeneticBases for BreedValues from '.self::YEAR_GENETIC_BASE, "\n",
             '3: Generate LambMeatIndex values, accuracies '.self::YEAR_GENETIC_BASE, "\n",
             '4: Generate LambMeatIndex rankings '.self::YEAR_GENETIC_BASE, "\n",
+            '5: Generate normal distribution values for LambMeatIndex '.self::YEAR_GENETIC_BASE, "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -93,7 +94,12 @@ class NsfoBreedvaluesSetvaluesCommand extends ContainerAwareCommand
 
             case 4:
                 BreedValueUtil::generateLamMeatIndexRanks($this->em, self::GENERATION_DATE, $this->cmdUtil);
-                $output->writeln('LambMeatIndex values updated for breedValues with generationDate: '.self::GENERATION_DATE);
+                $output->writeln('LambMeatIndex ranking generated for generationDate: '.self::GENERATION_DATE);
+                break;
+
+            case 5:
+                BreedValueUtil::persistLambMeatIndexMeanAndStandardDeviation($this->em, self::GENERATION_DATE);
+                $output->writeln('LambMeatIndex mean and standardDeviation persisted for : '.self::GENERATION_DATE);
                 break;
 
             default:

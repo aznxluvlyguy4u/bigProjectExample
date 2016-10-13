@@ -9,8 +9,12 @@ use AppBundle\Constant\ReportFormat;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\BreedValueCoefficient;
 use AppBundle\Entity\BreedValueCoefficientRepository;
+use AppBundle\Entity\BreedValuesSetRepository;
 use AppBundle\Entity\GeneticBase;
+use AppBundle\Entity\NormalDistribution;
+use AppBundle\Entity\NormalDistributionRepository;
 use AppBundle\Enumerator\BreedCodeType;
+use AppBundle\Enumerator\BreedValueCoefficientType;
 use AppBundle\Report\PedigreeCertificate;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -589,5 +593,25 @@ class BreedValueUtil
     public static function calculateLambMeatIndexAccuracyCoefficient($lambMeatIndex, $lambMeatIndexGeneticVariance, $decimals = self::DEFAULT_LAMB_MEAT_INDEX_ACCURACY_DECIMALS)
     {
         return round(($lambMeatIndex ** 2) * $lambMeatIndexGeneticVariance, $decimals);
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param $generationDate
+     */
+    public static function persistLambMeatIndexMeanAndStandardDeviation(ObjectManager $em, $generationDate)
+    {
+        /** @var NormalDistributionRepository $normalDistributionRepository */
+        $normalDistributionRepository = $em->getRepository(NormalDistribution::class);
+
+        /** @var BreedValuesSetRepository $breedValuesSetRepository */
+        $breedValuesSetRepository = $em->getRepository(BreedValuesSetRepository::class);
+
+        foreach ([true, false] as $isIncludingOnlyAliveAnimals) {
+            $lambMeatIndexValues = $breedValuesSetRepository->getLambMeatIndexValues($generationDate, $isIncludingOnlyAliveAnimals);
+            $normalDistributionRepository->persistFromArray(BreedValueCoefficientType::LAMB_MEAT_INDEX,
+                TimeUtil::getYearFromDateTimeString($generationDate), $lambMeatIndexValues, $isIncludingOnlyAliveAnimals);
+        }
     }
 }
