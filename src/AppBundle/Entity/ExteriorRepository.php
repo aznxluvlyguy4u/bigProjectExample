@@ -25,6 +25,52 @@ class ExteriorRepository extends MeasurementRepository {
     /** @var string */
     private $mutationsFolder;
 
+
+    /**
+     * @param Animal $animal
+     * @return array
+     */
+    public function getAllOfAnimalBySql(Animal $animal)
+    {
+        $results = [];
+        //null check
+        if(!($animal instanceof Animal)) { return $results; }
+        elseif(!is_int($animal->getId())){ return $results; }
+
+        $sql = "SELECT m.id as id, measurement_date, x.*, p.person_id, p.first_name, p.last_name
+                FROM measurement m
+                  INNER JOIN exterior x ON x.id = m.id
+                  LEFT JOIN person p ON p.id = m.inspector_id
+                  INNER JOIN animal a ON a.id = x.animal_id
+                WHERE x.animal_id = ".$animal->getId();
+        $retrievedMeasurementData = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+        foreach ($retrievedMeasurementData as $measurementData)
+        {
+            $results[] = [
+                JsonInputConstant::MEASUREMENT_DATE => $measurementData['measurement_date'],
+                JsonInputConstant::HEIGHT => $measurementData['height'],
+                JsonInputConstant::KIND => $measurementData['skull'],
+                JsonInputConstant::PROGRESS => $measurementData['progress'],
+                JsonInputConstant::SKULL => $measurementData['skull'],
+                JsonInputConstant::MUSCULARITY => $measurementData['muscularity'],
+                JsonInputConstant::PROPORTION => $measurementData['proportion'],
+                JsonInputConstant::EXTERIOR_TYPE => $measurementData['exterior_type'],
+                JsonInputConstant::LEG_WORK => $measurementData['leg_work'],
+                JsonInputConstant::FUR => $measurementData['fur'],
+                JsonInputConstant::GENERAL_APPEARANCE => $measurementData['general_appearence'],
+                JsonInputConstant::BREAST_DEPTH => $measurementData['breast_depth'],
+                JsonInputConstant::TORSO_LENGTH => $measurementData['torso_length'],
+                JsonInputConstant::MARKINGS => $measurementData['markings'],
+                JsonInputConstant::PERSON_ID => $measurementData['person_id'],
+                JsonInputConstant::FIRST_NAME => $measurementData['first_name'],
+                JsonInputConstant::LAST_NAME => $measurementData['last_name'],
+            ];
+        }
+        return $results;
+    }
+
+
     /**
      * If no Exterior is found a blank Exterior entity is returned
      * 

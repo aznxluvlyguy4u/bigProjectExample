@@ -145,5 +145,15 @@ class JsonInputConstant
     const HEIGHT = 'height';
     const KIND = 'kind';
     const PROGRESS = 'progress';
+    const SKULL = 'skull';
+    const MUSCULARITY = 'muscularity';
+    const PROPORTION = 'proportion';
+    const EXTERIOR_TYPE = 'exterior_type';
+    const LEG_WORK = 'leg_work';
+    const FUR = 'fur';
+    const GENERAL_APPEARANCE = 'general_appearance';
+    const BREAST_DEPTH = 'breast_depth';
+    const TORSO_LENGTH = 'torso_length';
+    const MARKINGS = 'markings';
 
 }

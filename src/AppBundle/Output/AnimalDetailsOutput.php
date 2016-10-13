@@ -210,7 +210,8 @@ class AnimalDetailsOutput
                         "co-owner" =>      Utils::fillNullOrEmptyString("", $replacementString) //TODO
                     ),
                 "note" => Utils::fillNullOrEmptyString($animal->getNote(), $replacementString),
-                "body_fats" => $bodyFatRepository->getAllOfAnimalBySql($animal)
+                "body_fats" => $bodyFatRepository->getAllOfAnimalBySql($animal),
+                "exteriors" => $exteriorRepository->getAllOfAnimalBySql($animal),
         );
 
         return $result;
