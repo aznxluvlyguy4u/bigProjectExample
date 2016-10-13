@@ -53,6 +53,7 @@ class NormalDistribution
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=false, options={"default":0})
+     * @Assert\NotBlank
      */
     private $type;
 

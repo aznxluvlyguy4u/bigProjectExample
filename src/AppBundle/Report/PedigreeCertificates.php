@@ -15,6 +15,8 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\GeneticBase;
 use AppBundle\Entity\GeneticBaseRepository;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\NormalDistribution;
+use AppBundle\Enumerator\BreedValueCoefficientType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -71,9 +73,13 @@ class PedigreeCertificates extends ReportBase
         $breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
 
         $totalLambMeatIndexRankedAnimals = $breedValuesSetRepository->getLambMeatIndexRankedAnimalsCount($breedValuesYear);
-        
+
+        /** @var NormalDistribution $normalDistribution */
+        $normalDistribution = $em->getRepository(NormalDistribution::class)
+            ->findOneBy(['year' => $breedValuesYear, 'type' => BreedValueCoefficientType::LAMB_MEAT_INDEX, 'isIncludingOnlyAliveAnimals' => true]);
+
         foreach ($animals as $animal) {
-            $pedigreeCertificate = new PedigreeCertificate($em, $client, $location, $animal, $generationOfAscendants, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients, $totalLambMeatIndexRankedAnimals);
+            $pedigreeCertificate = new PedigreeCertificate($em, $client, $location, $animal, $generationOfAscendants, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients, $normalDistribution);
 
             $this->reports[$this->animalCount] = $pedigreeCertificate->getData();
 

@@ -23,6 +23,7 @@ use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\MuscleThicknessRepository;
+use AppBundle\Entity\NormalDistribution;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Util\BreedValueUtil;
@@ -91,8 +92,8 @@ class PedigreeCertificate
     /** @var array */
     private $lambMeatIndexCoefficients;
 
-    /** @var int */
-    private $totalLambMeatIndexRankedAnimals;
+    /** @var NormalDistribution */
+    private $normalDistribution;
 
     /**
      * PedigreeCertificate constructor.
@@ -104,9 +105,9 @@ class PedigreeCertificate
      * @param int $breedValuesYear
      * @param GeneticBase $geneticBases
      * @param array $lambMeatIndexCoefficients
-     * @param int $totalLambMeatIndexRankedAnimals
+     * @param NormalDistribution $normalDistribution
      */
-    public function __construct(ObjectManager $em, Client $client, Location $location, Animal $animal, $generationOfAscendants = 3, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients, $totalLambMeatIndexRankedAnimals)
+    public function __construct(ObjectManager $em, Client $client, Location $location, Animal $animal, $generationOfAscendants = 3, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients, $normalDistribution)
     {
         $this->em = $em;
 
@@ -119,7 +120,7 @@ class PedigreeCertificate
         $this->breedValuesYear = $breedValuesYear;
         $this->geneticBases = $geneticBases;
         $this->lambMeatIndexCoefficients = $lambMeatIndexCoefficients;
-        $this->totalLambMeatIndexRankedAnimals = $totalLambMeatIndexRankedAnimals;
+        $this->normalDistribution = $normalDistribution;
 
         $this->data = array();
         $this->generationOfAscendants = $generationOfAscendants;
@@ -328,15 +329,15 @@ class PedigreeCertificate
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NUMBER] = '-';
 
         if($key = ReportLabel::CHILD_KEY) {
-            $this->addBreedIndex($breedValues[BreedValueLabel::LAMB_MEAT_INDEX_RANKING]);
+            $this->addBreedIndex($breedValues[BreedValueLabel::LAMB_MEAT_INDEX]);
         }
     }
 
 
     /**
-     * @param int $lambMeatIndexRank
+     * @param float $lambMeatIndex
      */
-    private function addBreedIndex($lambMeatIndexRank)
+    private function addBreedIndex($lambMeatIndex)
     {
         //Empty
         $breederStarCount = 0;
@@ -344,7 +345,12 @@ class PedigreeCertificate
         $fatherBreederStarCount = 0;
         $exteriorStarCount = 0;
 
-        $lambMeatStarCount = StarValueUtil::getStarValue($lambMeatIndexRank, $this->totalLambMeatIndexRankedAnimals);
+        $mean = null;
+        if($this->normalDistribution instanceof NormalDistribution) {
+            $mean = $this->normalDistribution->getMean();
+        }
+        
+        $lambMeatStarCount = StarValueUtil::getStarValue($lambMeatIndex, $mean);
 
         $this->data[ReportLabel::BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($breederStarCount);
         $this->data[ReportLabel::M_BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($motherBreederStarCount);
