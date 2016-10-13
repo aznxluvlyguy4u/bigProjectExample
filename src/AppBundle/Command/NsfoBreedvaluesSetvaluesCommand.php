@@ -24,6 +24,7 @@ class NsfoBreedvaluesSetvaluesCommand extends ContainerAwareCommand
     const DEFAULT_OPTION = 0;
     const YEAR_GENETIC_BASE = 2016;
     const GENERATION_DATE = '2016-10-04 00:00:00';
+    const INCLUDE_ONLY_ALIVE_ANIMALS_FOR_RANKING = true;
 
     /** @var CommandUtil */
     private $cmdUtil;

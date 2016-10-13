@@ -170,4 +170,11 @@ class BreedValuesSetRepository extends BaseRepository {
         }
         return $result;
     }
+
+
+    public function clearLambMeatIndexRanking()
+    {
+        $sql = "UPDATE breed_values_set SET lamb_meat_index_ranking = 0";
+        $this->getManager()->getConnection()->exec($sql);
+    }
 }

@@ -464,10 +464,25 @@ class BreedValueUtil
      * @param ObjectManager $em
      * @param string $generationDate
      * @param CommandUtil $cmdUtil
+     * @param boolean $isIncludeOnlyAliveAnimals
      */
-    public static function generateLamMeatIndexRanks(ObjectManager $em, $generationDate, $cmdUtil = null)
+    public static function generateLamMeatIndexRanks(ObjectManager $em, $generationDate, $cmdUtil = null, $isIncludeOnlyAliveAnimals = true)
     {
-        $sql = "SELECT * FROM breed_values_set WHERE lamb_meat_index_accuracy > 0 AND generation_date = '".$generationDate."' ORDER BY lamb_meat_index DESC";
+        /** @var BreedValuesSetRepository $breedValuesSetRepository */
+        $breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
+        $breedValuesSetRepository->clearLambMeatIndexRanking();
+
+        if($isIncludeOnlyAliveAnimals) {
+            $sql = "SELECT b.* FROM breed_values_set b
+                    INNER JOIN animal a ON a.id = b.animal_id
+                    WHERE a.is_alive = TRUE
+                      AND b.lamb_meat_index_accuracy > 0
+                      AND b.generation_date = '".$generationDate."'
+                    ORDER BY b.lamb_meat_index DESC";
+        } else {
+            $sql = "SELECT * FROM breed_values_set WHERE lamb_meat_index_accuracy > 0 AND generation_date = '".$generationDate."' ORDER BY lamb_meat_index DESC";
+        }
+
         $results = $em->getConnection()->query($sql)->fetchAll();
 
         if($cmdUtil != null ) { $cmdUtil->setStartTimeAndPrintIt(count($results), 1 , 'Rank lambMeatIndexValues'); }
@@ -570,10 +585,34 @@ class BreedValueUtil
         /** @var BreedValuesSetRepository $breedValuesSetRepository */
         $breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
 
+        $year = TimeUtil::getYearFromDateTimeString($generationDate);
+        $type = BreedValueCoefficientType::LAMB_MEAT_INDEX;
+
         foreach ([true, false] as $isIncludingOnlyAliveAnimals) {
+            
             $lambMeatIndexValues = $breedValuesSetRepository->getLambMeatIndexValues($generationDate, $isIncludingOnlyAliveAnimals);
-            $normalDistributionRepository->persistFromArray(BreedValueCoefficientType::LAMB_MEAT_INDEX,
-                TimeUtil::getYearFromDateTimeString($generationDate), $lambMeatIndexValues, $isIncludingOnlyAliveAnimals);
+
+            $mean = array_sum($lambMeatIndexValues) / count($lambMeatIndexValues);
+            $standardDeviation = MathUtil::standardDeviation($lambMeatIndexValues, $mean);
+
+            $normalDistribution = $normalDistributionRepository->findOneBy(['year' => $year, 'type' => $type, 'isIncludingOnlyAliveAnimals' => $isIncludingOnlyAliveAnimals]);
+
+            if($normalDistribution instanceof NormalDistribution) {
+                /** @var NormalDistribution $normalDistribution */
+
+                //Update values if necessary
+                if(!NumberUtil::areFloatsEqual($normalDistribution->getMean(), $mean) || !NumberUtil::areFloatsEqual($normalDistribution->getStandardDeviation(), $standardDeviation)) {
+                    $normalDistribution->setMean($mean);
+                    $normalDistribution->setStandardDeviation($standardDeviation);
+                    $normalDistribution->setLogDate(new \DateTime());
+
+                    $em->persist($normalDistribution);
+                    $em->flush();
+                }
+            } else {
+                //Create a new entry
+                $normalDistributionRepository->persistFromValues($type, $year, $mean, $standardDeviation, $isIncludingOnlyAliveAnimals);
+            }
         }
     }
 }

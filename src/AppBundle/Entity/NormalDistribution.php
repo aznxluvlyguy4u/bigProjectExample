@@ -94,7 +94,7 @@ class NormalDistribution
      * @param float $mean
      * @param boolean $isIncludingOnlyAliveAnimals
      */
-    public function __construct($type, $year, $standardDeviation, $mean, $isIncludingOnlyAliveAnimals)
+    public function __construct($type, $year, $mean, $standardDeviation, $isIncludingOnlyAliveAnimals)
     {
         $this->logDate = new \DateTime();
         
