@@ -208,7 +208,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
             /** @var Location $departLocation */
             $repository = $this->getDoctrine()->getRepository(Location::class);
-            $departLocation = $repository->findOneBy(['ubn' => $messageObject->getUbnPreviousOwner()]);
+            $departLocation = $repository->findOneBy(['ubn' => $messageObject->getUbnPreviousOwner(), 'isActive' => true]);
 
             if($departLocation) {
                 $departOwner = $departLocation->getCompany()->getOwner();
@@ -244,7 +244,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
         $this->persist($messageObject);
 
         // Create Message for Receiving Owner
-        if(!$isImportAnimal) {
+        if(!$isImportAnimal && !$departLocation) {
             $uln = $messageObject->getUlnCountryCode() . $messageObject->getUlnNumber();
 
             $message = new Message();

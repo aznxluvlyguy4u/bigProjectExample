@@ -184,7 +184,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
             /** @var Location $arrivalLocation */
             $repository = $this->getDoctrine()->getRepository(Location::class);
-            $arrivalLocation = $repository->findOneBy(['ubn' => $messageObject->getUbnNewOwner()]);
+            $arrivalLocation = $repository->findOneBy(['ubn' => $messageObject->getUbnNewOwner(), 'isActive' => true]);
 
             if($arrivalLocation) {
                 $arrivalOwner = $arrivalLocation->getCompany()->getOwner();
@@ -222,7 +222,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
         $this->persist($messageObject);
 
         // Create Message for Receiving Owner
-        if(!$isExportAnimal) {
+        if(!$isExportAnimal && !$arrivalLocation) {
             $uln = $messageObject->getAnimal()->getUlnCountryCode() . $messageObject->getAnimal()->getUlnNumber();
 
             $message = new Message();
