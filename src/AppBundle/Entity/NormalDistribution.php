@@ -96,6 +96,8 @@ class NormalDistribution
      */
     public function __construct($type, $year, $standardDeviation, $mean, $isIncludingOnlyAliveAnimals)
     {
+        $this->logDate = new \DateTime();
+        
         $this->type = $type;
         $this->year = $year;
         $this->standardDeviation = $standardDeviation;

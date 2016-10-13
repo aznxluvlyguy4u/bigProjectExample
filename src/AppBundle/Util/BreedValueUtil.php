@@ -9,6 +9,7 @@ use AppBundle\Constant\ReportFormat;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\BreedValueCoefficient;
 use AppBundle\Entity\BreedValueCoefficientRepository;
+use AppBundle\Entity\BreedValuesSet;
 use AppBundle\Entity\BreedValuesSetRepository;
 use AppBundle\Entity\GeneticBase;
 use AppBundle\Entity\NormalDistribution;
@@ -606,7 +607,7 @@ class BreedValueUtil
         $normalDistributionRepository = $em->getRepository(NormalDistribution::class);
 
         /** @var BreedValuesSetRepository $breedValuesSetRepository */
-        $breedValuesSetRepository = $em->getRepository(BreedValuesSetRepository::class);
+        $breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
 
         foreach ([true, false] as $isIncludingOnlyAliveAnimals) {
             $lambMeatIndexValues = $breedValuesSetRepository->getLambMeatIndexValues($generationDate, $isIncludingOnlyAliveAnimals);

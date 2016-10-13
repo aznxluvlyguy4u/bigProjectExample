@@ -151,19 +151,19 @@ class BreedValuesSetRepository extends BaseRepository {
     public function getLambMeatIndexValues($generationDate, $isIncludingOnlyAliveAnimals = false)
     {
         if($isIncludingOnlyAliveAnimals) {
-            $sql = "SELECT b.lamb_meat_index FROM breed_values_set b
+            $sql = "SELECT lamb_meat_index FROM breed_values_set
                       WHERE lamb_meat_index_accuracy > 0 AND generation_date = '".$generationDate."'
                     ORDER BY lamb_meat_index DESC";
         } else {
             $sql = "SELECT b.lamb_meat_index FROM breed_values_set b
                     INNER JOIN animal a ON a.id = b.animal_id
                       WHERE a.is_alive = TRUE
-                      AND lamb_meat_index_accuracy > 0 AND generation_date = '".$generationDate."'
-                    ORDER BY lamb_meat_index DESC";
+                      AND b.lamb_meat_index_accuracy > 0 AND b.generation_date = '".$generationDate."'
+                    ORDER BY b.lamb_meat_index DESC";
         }
 
-        $values = $this->getManager()->getConnection()->query($sql)->fetchAll()['lamb_meat_index'];
-        
+        $values = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
         $result = array();
         foreach ($values as $value) {
             $result[] = $value['lamb_meat_index'];

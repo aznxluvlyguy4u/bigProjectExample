@@ -19,13 +19,17 @@ class NormalDistributionRepository extends BaseRepository {
      */
     public function persistFromArray($type, $year, $values, $isIncludingOnlyAliveAnimals)
     {
-        $mean = array_sum($values) / count($values);
-        $standardDeviation = MathUtil::standardDeviation($values, $mean);
+        $valuesCount = count($values);
 
-        $normalDistribution = new NormalDistribution($type, $year, $standardDeviation, $mean , $isIncludingOnlyAliveAnimals);
+        if($valuesCount > 0) {
+            $mean = array_sum($values) / count($values);
+            $standardDeviation = MathUtil::standardDeviation($values, $mean);
 
-        $this->getManager()->persist($normalDistribution);
-        $this->getManager()->flush();
+            $normalDistribution = new NormalDistribution($type, $year, $standardDeviation, $mean , $isIncludingOnlyAliveAnimals);
+
+            $this->getManager()->persist($normalDistribution);
+            $this->getManager()->flush();
+        }
     }
     
 }
