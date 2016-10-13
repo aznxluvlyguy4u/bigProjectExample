@@ -41,6 +41,10 @@ class BreedValueUtil
     const MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX = 0.40;
     const MIN_LAMB_MEAT_INDEX_ACCURACY = 0.0;
 
+    //Valid Growth, MuscleThickness and Fat BreedValues should at least have this accuracy
+    //If the accuracy is lower, they are ignored
+    const MIN_BREED_VALUE_ACCURACY = 0.30; //30%
+
     const DEFAULT_LAMB_MEAT_INDEX_ACCURACY_DECIMALS = 7;
 
 
@@ -274,7 +278,7 @@ class BreedValueUtil
                 $displayedString = PedigreeCertificate::EMPTY_BREED_VALUE;
             } else {
                 $rawBreedValue = Utils::getNullCheckedArrayValue($traitLabel, $breedValues);
-                if($rawBreedValue == null) {
+                if($rawBreedValue == null || $breedValues[$accuracyLabel] < self::MIN_BREED_VALUE_ACCURACY) {
                     $displayedString = PedigreeCertificate::EMPTY_BREED_VALUE;
                 } else {
                     $breedValue = round($rawBreedValue*$factors->get($accuracyLabel), $decimalAccuracyLabels->get($accuracyLabel));
