@@ -8,6 +8,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Collection;
@@ -62,7 +63,9 @@ class UlnValidator
         $this->manager = $manager;
 
         if($client != null) {
-            $this->locations = $manager->getRepository(Location::class)->findAllLocationsOfClient($client);
+            /** @var LocationRepository $locationRepository */
+            $locationRepository = $manager->getRepository(Location::class);
+            $this->locations = $locationRepository->findAllLocationsOfClient($client);
         }
 
         $animalArray = null;
@@ -154,7 +157,9 @@ class UlnValidator
 
         } else { //Get only animals owned by client
 
+            /** @var Location $location */
             foreach ($this->locations as $location) {
+                /** @var Animal $animal */
                 if($animal->getLocation() == $location) {
                     return true;
                 }
