@@ -9,14 +9,19 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\BodyFat;
+use AppBundle\Entity\BodyFatRepository;
 use AppBundle\Entity\BreedValuesSet;
 use AppBundle\Entity\BreedValuesSetRepository;
 use AppBundle\Entity\Exterior;
+use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\GeneticBase;
 use AppBundle\Entity\GeneticBaseRepository;
 use AppBundle\Entity\MuscleThickness;
+use AppBundle\Entity\MuscleThicknessRepository;
 use AppBundle\Entity\TailLength;
+use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Entity\Weight;
+use AppBundle\Entity\WeightRepository;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\ExpressionLanguage\Tests\Node\Obj;
 
@@ -132,7 +137,18 @@ class AnimalDetailsOutput
             $breederEmailAddress = $replacementString; //TODO replace with real value
             $breederTelephoneNumber = $replacementString; //TODO replace with real value
         }
-
+        
+        /** @var BodyFatRepository $bodyFatRepository */
+        $bodyFatRepository = $em->getRepository(BodyFat::class);
+        /** @var ExteriorRepository $exteriorRepository */
+        $exteriorRepository = $em->getRepository(Exterior::class);
+        /** @var WeightRepository $weightRepository */
+        $weightRepository = $em->getRepository(Weight::class);
+        /** @var MuscleThicknessRepository $muscleThicknessRepository */
+        $muscleThicknessRepository = $em->getRepository(MuscleThickness::class);
+        /** @var TailLengthRepository $tailLengthRepository */
+        $tailLengthRepository = $em->getRepository(TailLength::class);
+        
         $result = array(
                   Constant::ULN_COUNTRY_CODE_NAMESPACE =>      Utils::fillNullOrEmptyString($animal->getUlnCountryCode(), $replacementString),
                   Constant::ULN_NUMBER_NAMESPACE =>            Utils::fillNullOrEmptyString($animal->getUlnNumber(), $replacementString),
@@ -193,7 +209,8 @@ class AnimalDetailsOutput
                         "telephone" =>     Utils::fillNullOrEmptyString($breederTelephoneNumber, $replacementString),
                         "co-owner" =>      Utils::fillNullOrEmptyString("", $replacementString) //TODO
                     ),
-                "note" => Utils::fillNullOrEmptyString($animal->getNote(), $replacementString)
+                "note" => Utils::fillNullOrEmptyString($animal->getNote(), $replacementString),
+                "body_fats" => $bodyFatRepository->getAllOfAnimalBySql($animal)
         );
 
         return $result;

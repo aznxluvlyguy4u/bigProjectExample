@@ -123,6 +123,7 @@ class JsonInputConstant
     const PERSON_ID = 'person_id';
 
     //Measurements
+    const MEASUREMENT_ID = 'measurement_id';
     const DATE_OF_MEASUREMENT = 'date_of_measurement';
     const MEASUREMENT_DATE = 'measurement_date';
     const IS_EMPTY_MEASUREMENT = 'is_empty_measurement';

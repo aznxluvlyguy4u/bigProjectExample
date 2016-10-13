@@ -17,6 +17,45 @@ use Doctrine\Common\Collections\Criteria;
  */
 class BodyFatRepository extends MeasurementRepository {
 
+
+    /**
+     * @param Animal $animal
+     * @return array
+     */
+    public function getAllOfAnimalBySql(Animal $animal)
+    {
+        $results = [];
+        //null check
+        if(!($animal instanceof Animal)) { return $results; }
+        elseif(!is_int($animal->getId())){ return $results; }
+
+        $sql = "SELECT m.id as id, measurement_date, fat1.fat as fat1 , fat2.fat as fat2 , fat3.fat as fat3,
+                p.person_id, p.first_name, p.last_name
+                FROM measurement m
+                INNER JOIN body_fat bf ON bf.id = m.id
+                  LEFT JOIN fat1 ON bf.fat1_id = fat1.id
+                  LEFT JOIN fat2 ON bf.fat2_id = fat2.id
+                  LEFT JOIN fat3 ON bf.fat3_id = fat3.id
+                  LEFT JOIN person p ON p.id = m.inspector_id
+                WHERE bf.animal_id = ".$animal->getId();
+        $retrievedMeasurementData = $this->getManager()->getConnection()->query($sql)->fetchAll();
+        
+        foreach ($retrievedMeasurementData as $measurementData)
+        {
+            $results[] = [
+                JsonInputConstant::MEASUREMENT_DATE => $measurementData['measurement_date'],
+                JsonInputConstant::FAT1 => $measurementData['fat1'],
+                JsonInputConstant::FAT2 => $measurementData['fat2'],
+                JsonInputConstant::FAT3 => $measurementData['fat3'],
+                JsonInputConstant::PERSON_ID => $measurementData['person_id'],
+                JsonInputConstant::FIRST_NAME => $measurementData['first_name'],
+                JsonInputConstant::LAST_NAME => $measurementData['last_name'],
+            ];
+        }
+        return $results;
+    }
+
+
     /**
      * @param Animal $animal
      * @return array
