@@ -12,6 +12,7 @@ use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Util\Finder;
 use AppBundle\Util\LocationHealthUpdater;
+use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Validator\Constraints\DateTime;
@@ -54,9 +55,12 @@ class LocationHealthEditor
         $lastScrapieStatus = $latestIllnessStatuses->get(JsonInputConstant::SCRAPIE_STATUS);
         $lastScrapieStatus = Utils::fillNullOrEmptyString($lastScrapieStatus, self::defaultScrapieStatus);
         $lastScrapieCheckDate = $latestIllnessStatuses->get(JsonInputConstant::SCRAPIE_CHECK_DATE);
+        $lastReasonOfScrapieEdit = $latestIllnessStatuses->get(JsonInputConstant::SCRAPIE_REASON_OF_EDIT);
         
         $newScrapieStatus = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::SCRAPIE_STATUS, $content);
         $newScrapieCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_CHECK_DATE, $content);
+        $arrayReasonOfScrapieEdit = trim(Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::SCRAPIE_REASON_OF_EDIT, $content));
+        $newReasonOfScrapieEdit = (NullChecker::isNull($arrayReasonOfScrapieEdit) ? null : $arrayReasonOfScrapieEdit); //
 
         if($newScrapieCheckDate == null) {
             $newScrapieCheckDate = new \DateTime('now');
@@ -66,16 +70,19 @@ class LocationHealthEditor
         }
 
         $scrapieStatusChanged = $newScrapieStatus != $lastScrapieStatus;
-
+        $scrapieReasonOfEditChanged = $newReasonOfScrapieEdit != $lastReasonOfScrapieEdit;
         
         /* MaediVisna values */
 
         $lastMaediVisnaStatus = $latestIllnessStatuses->get(JsonInputConstant::MAEDI_VISNA_STATUS);
         $lastMaediVisnaStatus = Utils::fillNullOrEmptyString($lastMaediVisnaStatus, self::defaultMaediVisnaStatus);
         $lastMaediVisnaCheckDate = $latestIllnessStatuses->get(JsonInputConstant::MAEDI_VISNA_CHECK_DATE);
-        
+        $lastReasonOfMaediVisnaEdit = $latestIllnessStatuses->get(JsonInputConstant::MAEDI_VISNA_REASON_OF_EDIT);
+
         $newMaediVisnaStatus = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MAEDI_VISNA_STATUS, $content);
         $newMaediVisnaCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::MAEDI_VISNA_CHECK_DATE, $content);
+        $arrayReasonOfMaediVisnaEdit = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MAEDI_VISNA_REASON_OF_EDIT, $content);
+        $newReasonOfMaediVisnaEdit = (NullChecker::isNull($arrayReasonOfMaediVisnaEdit) ? null : $arrayReasonOfMaediVisnaEdit);
 
         if($newMaediVisnaCheckDate == null) {
             $newMaediVisnaCheckDate = new \DateTime('now');
@@ -85,12 +92,12 @@ class LocationHealthEditor
         }
 
         $maediVisnaStatusChanged = $newMaediVisnaStatus != $lastMaediVisnaStatus;
-
+        $maediVisnaReasonOfEditChanged = $newReasonOfMaediVisnaEdit != $lastReasonOfMaediVisnaEdit;
         
         /* LocationHealth Entity */
 
         //Only create a new Scrapie if there was any change in the values
-        if($scrapieStatusChanged || $scrapieDatesChanged) {
+        if($scrapieStatusChanged || $scrapieDatesChanged || $scrapieReasonOfEditChanged) {
             //First hide the obsolete scrapies
             LocationHealthUpdater::hideAllFollowingScrapies($em, $location, $newMaediVisnaCheckDate);
 
@@ -99,11 +106,12 @@ class LocationHealthEditor
             $scrapie->setIsManualEdit(true);
             $locationHealth->addScrapie($scrapie);
             $scrapie->setLocationHealth($locationHealth);
+            $scrapie->setReasonOfEdit($newReasonOfScrapieEdit);
             $em->persist($scrapie);
         }
 
         //Only create a new MaediVisna if there was any change in the values
-        if($maediVisnaStatusChanged || $maediVisnaDatesChanged) {
+        if($maediVisnaStatusChanged || $maediVisnaDatesChanged || $maediVisnaReasonOfEditChanged) {
             //First hide the obsolete maedi visnas
             LocationHealthUpdater::hideAllFollowingMaediVisnas($em, $location, $newMaediVisnaCheckDate);
 
@@ -112,6 +120,7 @@ class LocationHealthEditor
             $maediVisna->setIsManualEdit(true);
             $locationHealth->addMaediVisna($maediVisna);
             $maediVisna->setLocationHealth($locationHealth);
+            $maediVisna->setReasonOfEdit($newReasonOfMaediVisnaEdit);
             $em->persist($maediVisna);
         }
 
@@ -119,7 +128,7 @@ class LocationHealthEditor
         if($maediVisnaStatusChanged) { $locationHealth->setCurrentMaediVisnaStatus($newMaediVisnaStatus); }
         if($scrapieStatusChanged) { $locationHealth->setCurrentScrapieStatus($newScrapieStatus); }
 
-        if($maediVisnaStatusChanged || $maediVisnaDatesChanged || $scrapieStatusChanged || $scrapieDatesChanged) {
+        if($maediVisnaStatusChanged || $maediVisnaDatesChanged || $scrapieStatusChanged || $scrapieDatesChanged || $scrapieReasonOfEditChanged || $maediVisnaReasonOfEditChanged) {
             $em->persist($locationHealth);
             $em->flush();
         }
