@@ -159,4 +159,7 @@ class JsonInputConstant
 
     //MuscleThickness
     const MUSCLE_THICKNESS = 'muscle_thickness';
+
+    //TailLength
+    const LENGTH = 'length';
 }

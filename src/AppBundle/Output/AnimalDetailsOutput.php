@@ -214,6 +214,7 @@ class AnimalDetailsOutput
                 "exteriors" => $exteriorRepository->getAllOfAnimalBySql($animal),
                 "muscle_thicknesses" => $muscleThicknessRepository->getAllOfAnimalBySql($animal),
                 "weights" => $weightRepository->getAllOfAnimalBySql($animal),
+                "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
         );
 
         return $result;
