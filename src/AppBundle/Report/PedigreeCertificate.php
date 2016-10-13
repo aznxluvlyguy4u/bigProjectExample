@@ -92,9 +92,6 @@ class PedigreeCertificate
     /** @var array */
     private $lambMeatIndexCoefficients;
 
-    /** @var NormalDistribution */
-    private $normalDistribution;
-
     /**
      * PedigreeCertificate constructor.
      * @param ObjectManager $em
@@ -105,9 +102,8 @@ class PedigreeCertificate
      * @param int $breedValuesYear
      * @param GeneticBase $geneticBases
      * @param array $lambMeatIndexCoefficients
-     * @param NormalDistribution $normalDistribution
      */
-    public function __construct(ObjectManager $em, Client $client, Location $location, Animal $animal, $generationOfAscendants = 3, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients, $normalDistribution)
+    public function __construct(ObjectManager $em, Client $client, Location $location, Animal $animal, $generationOfAscendants = 3, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients)
     {
         $this->em = $em;
 
@@ -120,7 +116,6 @@ class PedigreeCertificate
         $this->breedValuesYear = $breedValuesYear;
         $this->geneticBases = $geneticBases;
         $this->lambMeatIndexCoefficients = $lambMeatIndexCoefficients;
-        $this->normalDistribution = $normalDistribution;
 
         $this->data = array();
         $this->generationOfAscendants = $generationOfAscendants;
@@ -344,13 +339,8 @@ class PedigreeCertificate
         $motherBreederStarCount = 0;
         $fatherBreederStarCount = 0;
         $exteriorStarCount = 0;
-
-        $mean = null;
-        if($this->normalDistribution instanceof NormalDistribution) {
-            $mean = $this->normalDistribution->getMean();
-        }
         
-        $lambMeatStarCount = StarValueUtil::getStarValue($lambMeatIndex, $mean);
+        $lambMeatStarCount = StarValueUtil::getStarValue($lambMeatIndex);
 
         $this->data[ReportLabel::BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($breederStarCount);
         $this->data[ReportLabel::M_BREEDER_INDEX_STARS] = TwigOutputUtil::createStarsIndex($motherBreederStarCount);

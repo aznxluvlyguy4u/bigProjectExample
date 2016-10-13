@@ -17,37 +17,36 @@ class StarValueUtil
 
     /**
      * @param int $indexValue
-     * @param int $meanIndexValue
      * @return float|int
      */
-    public static function getStarValue($indexValue, $meanIndexValue)
+    public static function getStarValue($indexValue)
     {
-        if($indexValue === null || $meanIndexValue === null) {
+        if($indexValue === null) {
             return 0;
         }
 
-        if($indexValue > self::STAR_SCORE_5_MIN_LAMB_MEAT_INDEX + $meanIndexValue) {
+        if($indexValue > self::STAR_SCORE_5_MIN_LAMB_MEAT_INDEX) {
             return 5;
 
-        } elseif($indexValue >= self::STAR_SCORE_4_AND_HALF_MIN_LAMB_MEAT_INDEX + $meanIndexValue) {
+        } elseif($indexValue >= self::STAR_SCORE_4_AND_HALF_MIN_LAMB_MEAT_INDEX) {
             return 4.5;
 
-        } elseif($indexValue >= self::STAR_SCORE_4_MIN_LAMB_MEAT_INDEX + $meanIndexValue) {
+        } elseif($indexValue >= self::STAR_SCORE_4_MIN_LAMB_MEAT_INDEX) {
             return 4;
 
-        } elseif($indexValue >= self::STAR_SCORE_3_AND_HALF_MIN_LAMB_MEAT_INDEX + $meanIndexValue) {
+        } elseif($indexValue >= self::STAR_SCORE_3_AND_HALF_MIN_LAMB_MEAT_INDEX) {
             return 3.5;
 
-        } elseif($indexValue >= self::STAR_SCORE_3_MIN_LAMB_MEAT_INDEX + $meanIndexValue) {
+        } elseif($indexValue >= self::STAR_SCORE_3_MIN_LAMB_MEAT_INDEX) {
             return 3;
 
-        } elseif($indexValue >= self::STAR_SCORE_2_AND_HALF_MIN_LAMB_MEAT_INDEX + $meanIndexValue) {
+        } elseif($indexValue >= self::STAR_SCORE_2_AND_HALF_MIN_LAMB_MEAT_INDEX) {
             return 2.5;
 
-        } elseif($indexValue >= self::STAR_SCORE_2_MIN_LAMB_MEAT_INDEX + $meanIndexValue) {
+        } elseif($indexValue >= self::STAR_SCORE_2_MIN_LAMB_MEAT_INDEX) {
             return 2;
 
-        } elseif($indexValue >= self::STAR_SCORE_1_MIN_LAMB_MEAT_INDEX + $meanIndexValue) {
+        } elseif($indexValue >= self::STAR_SCORE_1_MIN_LAMB_MEAT_INDEX) {
             return 1;
         }
     }

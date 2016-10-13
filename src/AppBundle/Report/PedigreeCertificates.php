@@ -74,12 +74,8 @@ class PedigreeCertificates extends ReportBase
 
         $totalLambMeatIndexRankedAnimals = $breedValuesSetRepository->getLambMeatIndexRankedAnimalsCount($breedValuesYear);
 
-        /** @var NormalDistribution $normalDistribution */
-        $normalDistribution = $em->getRepository(NormalDistribution::class)
-            ->findOneBy(['year' => $breedValuesYear, 'type' => BreedValueCoefficientType::LAMB_MEAT_INDEX, 'isIncludingOnlyAliveAnimals' => true]);
-
         foreach ($animals as $animal) {
-            $pedigreeCertificate = new PedigreeCertificate($em, $client, $location, $animal, $generationOfAscendants, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients, $normalDistribution);
+            $pedigreeCertificate = new PedigreeCertificate($em, $client, $location, $animal, $generationOfAscendants, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients);
 
             $this->reports[$this->animalCount] = $pedigreeCertificate->getData();
 
