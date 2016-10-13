@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Component\Count;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
@@ -226,28 +227,19 @@ class AnimalRepository extends BaseRepository
    * @param bool $isAlive
    * @param bool $isDeparted
    * @param bool $isExported
-   * @param bool $showTransferring
    * @return array
    */
-  public function getLiveStockAllLocations(Client $client, $isAlive = true, $isDeparted = false, $isExported = false, $showTransferring = false)
+  public function getLiveStockAllLocations(Client $client, $isAlive = true, $isDeparted = false, $isExported = false)
   {
     $animals = array();
 
-    if ($showTransferring) {
-      $transferState = AnimalTransferStatus::TRANSFERRING;
-    } else {
-      $transferState = AnimalTransferStatus::NULL;
-    }
-
     foreach ($client->getCompanies() as $company) {
+      /** @var Location $location */
       foreach ($company->getLocations() as $location) {
+        /** @var Animal $animal */
         foreach ($location->getAnimals() as $animal) {
 
-          $showAnimal = $animal->getIsAlive() == $isAlive
-              && $animal->getIsExportAnimal() == $isExported
-              && $animal->getIsDepartedAnimal() == $isDeparted
-              && ($animal->getTransferState() == AnimalTransferStatus::NULL
-                  || $animal->getTransferState() == $transferState);
+          $showAnimal = Count::includeAnimal($animal, $isAlive, $isExported, $isDeparted);
 
           if ($showAnimal) {
             $animals[] = $animal;
@@ -265,26 +257,15 @@ class AnimalRepository extends BaseRepository
    * @param bool $isAlive
    * @param bool $isDeparted
    * @param bool $isExported
-   * @param bool $showTransferring
    * @return array
    */
-  public function getLiveStock(Location $location, $isAlive = true, $isDeparted = false, $isExported = false, $showTransferring = false)
+  public function getLiveStock(Location $location, $isAlive = true, $isDeparted = false, $isExported = false)
   {
     $animals = array();
 
-    if ($showTransferring) {
-      $transferState = AnimalTransferStatus::TRANSFERRING;
-    } else {
-      $transferState = AnimalTransferStatus::NULL;
-    }
-
     foreach ($location->getAnimals() as $animal) {
 
-      $showAnimal = $animal->getIsAlive() == $isAlive
-          && $animal->getIsExportAnimal() == $isExported
-          && $animal->getIsDepartedAnimal() == $isDeparted
-          && ($animal->getTransferState() == AnimalTransferStatus::NULL
-              || $animal->getTransferState() == AnimalTransferStatus::TRANSFERRED);
+      $showAnimal = Count::includeAnimal($animal, $isAlive, $isExported, $isDeparted);
 
       if ($showAnimal) {
         $animals[] = $animal;
@@ -308,6 +289,7 @@ class AnimalRepository extends BaseRepository
     }
 
     foreach ($client->getCompanies() as $company) {
+      /** @var Location $location */
       foreach ($company->getLocations() as $location) {
         foreach ($location->getAnimals() as $animal) {
 

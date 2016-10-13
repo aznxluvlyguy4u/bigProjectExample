@@ -4,6 +4,7 @@ namespace AppBundle\Output;
 use AppBundle\Entity\Client;
 use AppBundle\Component\Count;
 use AppBundle\Entity\Content;
+use AppBundle\Entity\ContentRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Enumerator\RequestType;
@@ -31,6 +32,7 @@ class DashboardOutput extends Output
 
         self:: setUbnAndLocationHealthValues($em, $location);
 
+        /** @var ContentRepository $repository */
         $repository = $em->getRepository(Content::class);
         $cms = $repository->getCMS();
 
