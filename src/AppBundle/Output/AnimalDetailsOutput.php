@@ -8,14 +8,19 @@ use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BodyFatRepository;
 use AppBundle\Entity\BreedValuesSet;
 use AppBundle\Entity\BreedValuesSetRepository;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareArrivalRepository;
+use AppBundle\Entity\DeclareDepartRepository;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\GeneticBase;
 use AppBundle\Entity\GeneticBaseRepository;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\MuscleThickness;
 use AppBundle\Entity\MuscleThicknessRepository;
 use AppBundle\Entity\TailLength;
@@ -33,35 +38,36 @@ class AnimalDetailsOutput
     /**
      * @param ObjectManager $em
      * @param Animal $animal
+     * @param Location $location
      * @return array
      */
-    public static function create(ObjectManager $em, Animal $animal)
+    public static function create(ObjectManager $em, Animal $animal, Location $location)
     {
         $replacementString = "";
 
         $mother = $animal->getParentMother();
-        if($mother == null) {
+        if ($mother == null) {
             $ulnMother = $replacementString;
         } else {
             $ulnMother = Utils::getUlnStringFromAnimal($mother);
         }
 
         $father = $animal->getParentFather();
-        if($father == null) {
+        if ($father == null) {
             $ulnFather = $replacementString;
         } else {
             $ulnFather = Utils::getUlnStringFromAnimal($father);
         }
 
         $litter = $animal->getLitter();
-        if($litter == null) {
+        if ($litter == null) {
             $litterSize = $replacementString;
         } else {
             $litterSize = $litter->getSize();
         }
 
         $exteriors = $animal->getExteriorMeasurements();
-        if(sizeof($exteriors) == 0) {
+        if (sizeof($exteriors) == 0) {
             $exteriorDate = '';
             $skull = 0.00;
             $progress = 0.00;
@@ -96,14 +102,14 @@ class AnimalDetailsOutput
         }
 
         $bodyFats = $animal->getBodyFatMeasurements();
-        if(sizeof($bodyFats) == 0) {
+        if (sizeof($bodyFats) == 0) {
             $bodyFat = 0.00;
         } else {
             $bodyFat = $em->getRepository(BodyFat::class)->getLatestBodyFat($animal);
         }
 
         $weights = $animal->getWeightMeasurements();
-        if(sizeof($weights) == 0) {
+        if (sizeof($weights) == 0) {
             $weight = 0.00;
             $birthWeight = 0.00;
         } else {
@@ -112,21 +118,21 @@ class AnimalDetailsOutput
         }
 
         $muscleThicknesses = $animal->getMuscleThicknessMeasurements();
-        if(sizeof($muscleThicknesses) == 0) {
+        if (sizeof($muscleThicknesses) == 0) {
             $muscleThickness = 0.00;
         } else {
             $muscleThickness = $em->getRepository(MuscleThickness::class)->getLatestMuscleThickness($animal);
         }
 
         $tailLengths = $animal->getTailLengthMeasurements();
-        if(sizeof($tailLengths) == 0) {
+        if (sizeof($tailLengths) == 0) {
             $tailLength = 0.00;
         } else {
             $tailLength = $em->getRepository(TailLength::class)->getLatestTailLength($animal);
         }
 
         $breeder = $animal->getBreeder();
-        if($breeder == null) {
+        if ($breeder == null) {
             $breederName = $replacementString;
             $breederUbn = $replacementString;
             $breederEmailAddress = $replacementString;
@@ -137,7 +143,7 @@ class AnimalDetailsOutput
             $breederEmailAddress = $replacementString; //TODO replace with real value
             $breederTelephoneNumber = $replacementString; //TODO replace with real value
         }
-        
+
         /** @var BodyFatRepository $bodyFatRepository */
         $bodyFatRepository = $em->getRepository(BodyFat::class);
         /** @var ExteriorRepository $exteriorRepository */
@@ -148,73 +154,77 @@ class AnimalDetailsOutput
         $muscleThicknessRepository = $em->getRepository(MuscleThickness::class);
         /** @var TailLengthRepository $tailLengthRepository */
         $tailLengthRepository = $em->getRepository(TailLength::class);
-        
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $em->getRepository(Animal::class);
+
         $result = array(
-                  Constant::ULN_COUNTRY_CODE_NAMESPACE =>      Utils::fillNullOrEmptyString($animal->getUlnCountryCode(), $replacementString),
-                  Constant::ULN_NUMBER_NAMESPACE =>            Utils::fillNullOrEmptyString($animal->getUlnNumber(), $replacementString),
-                  Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE => Utils::fillNullOrEmptyString($animal->getPedigreeCountryCode(), $replacementString),
-                  Constant::PEDIGREE_NUMBER_NAMESPACE =>       Utils::fillNullOrEmptyString($animal->getPedigreeNumber(), $replacementString),
-                  JsonInputConstant::WORK_NUMBER =>    Utils::fillNullOrEmptyString($animal->getAnimalOrderNumber(), $replacementString),
-                  "collar_number" =>                   Utils::fillNullOrEmptyString("", $replacementString),
-                  "name" =>                            Utils::fillNullOrEmptyString($animal->getName(), $replacementString),
-                  Constant::DATE_OF_BIRTH_NAMESPACE => Utils::fillNullOrEmptyString($animal->getDateOfBirth(), $replacementString),
-                  "inbred_coefficient" =>              Utils::fillNullOrEmptyString("", $replacementString),
-                  Constant::GENDER_NAMESPACE =>        Utils::fillNullOrEmptyString($animal->getGender(), $replacementString),
-                  "litter_size" =>                     Utils::fillNullOrEmptyString($litterSize, $replacementString),
-                  Constant::MOTHER_NAMESPACE =>        Utils::fillNullOrEmptyString($ulnMother, $replacementString),
-                  Constant::FATHER_NAMESPACE =>        Utils::fillNullOrEmptyString($ulnFather, $replacementString),
-                  "rearing" =>                         Utils::fillNullOrEmptyString("", $replacementString),
-                  "suction_size" =>              Utils::fillNullOrEmptyString("", $replacementString),
-                  "blind_factor" =>              Utils::fillNullOrEmptyString("", $replacementString),
-                  "scrapie_genotype" =>          Utils::fillNullOrEmptyString($animal->getScrapieGenotype(), $replacementString),
-                  "breed" =>                     Utils::fillNullOrEmptyString($animal->getBreedCode(), $replacementString),
-                  "predicate" =>                 Utils::fillNullOrEmptyString("", $replacementString),
-                  "breed_status" =>              Utils::fillNullOrEmptyString($animal->getBreedType(), $replacementString),
-                  JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($animal->getIsAlive(), $replacementString),
-                "exterior" =>
-                    array(
-                        "measurement_date" =>      Utils::fillNullOrEmptyString($exteriorDate, $replacementString),
-                        "head" =>               Utils::fillZero($skull, $replacementString),
-                        "progress" =>           Utils::fillZero($progress, $replacementString),
-                        "muscularity" =>        Utils::fillZero($muscularity, $replacementString),
-                        "proportion" =>         Utils::fillZero($proportion, $replacementString),
-                        "type" =>               Utils::fillZero($type, $replacementString),
-                        "leg_work" =>           Utils::fillZero($legWork, $replacementString),
-                        "pelt" =>               Utils::fillZero($fur, $replacementString),
-                        "general_appearance" => Utils::fillZero($generalAppearance, $replacementString),
-                        "height" =>             Utils::fillZero($height, $replacementString),
-                        "breast_depth" =>       Utils::fillZero($breastDepth, $replacementString),
-                        "torso_length" =>       Utils::fillZero($torsoLength, $replacementString),
-                        "markings" =>           Utils::fillZero($markings, $replacementString),
-                        "kind" =>               Utils::fillZero($kind, $replacementString)
-                    ),
-                "measurement" =>
-                    array(
-                        "measurement_date" =>   Utils::fillNullOrEmptyString($bodyFat['date'], $replacementString),
-                        "fat_cover_one" =>      Utils::fillZero($bodyFat['one'], $replacementString),
-                        "fat_cover_two" =>      Utils::fillZero($bodyFat['two'], $replacementString),
-                        "fat_cover_three" =>    Utils::fillZero($bodyFat['three'], $replacementString),
-                        "muscular_thickness" => Utils::fillZero($muscleThickness, $replacementString),
-                        "scan_weight" =>        Utils::fillZero($weight, $replacementString),
-                        "tail_length" =>        Utils::fillZero($tailLength, $replacementString),
-                        "birth_weight" =>       Utils::fillZero($birthWeight, $replacementString),
-                        "birth_progress" =>     Utils::fillZero("", $replacementString)
-                    ),
-                "breed_values" => self::createBreedValuesSetArray($em, $animal),
-                "breeder" =>
-                    array(
-                        "breeder" =>       Utils::fillNullOrEmptyString($breederName, $replacementString),
-                        "ubn_breeder" =>   Utils::fillNullOrEmptyString($breederUbn, $replacementString),
-                        "email_address" => Utils::fillNullOrEmptyString($breederEmailAddress, $replacementString),
-                        "telephone" =>     Utils::fillNullOrEmptyString($breederTelephoneNumber, $replacementString),
-                        "co-owner" =>      Utils::fillNullOrEmptyString("", $replacementString) //TODO
-                    ),
-                "note" => Utils::fillNullOrEmptyString($animal->getNote(), $replacementString),
-                "body_fats" => $bodyFatRepository->getAllOfAnimalBySql($animal, $replacementString),
-                "exteriors" => $exteriorRepository->getAllOfAnimalBySql($animal, $replacementString),
-                "muscle_thicknesses" => $muscleThicknessRepository->getAllOfAnimalBySql($animal, $replacementString),
-                "weights" => $weightRepository->getAllOfAnimalBySql($animal, $replacementString),
-                "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
+            Constant::ULN_COUNTRY_CODE_NAMESPACE => Utils::fillNullOrEmptyString($animal->getUlnCountryCode(), $replacementString),
+            Constant::ULN_NUMBER_NAMESPACE => Utils::fillNullOrEmptyString($animal->getUlnNumber(), $replacementString),
+            Constant::PEDIGREE_COUNTRY_CODE_NAMESPACE => Utils::fillNullOrEmptyString($animal->getPedigreeCountryCode(), $replacementString),
+            Constant::PEDIGREE_NUMBER_NAMESPACE => Utils::fillNullOrEmptyString($animal->getPedigreeNumber(), $replacementString),
+            JsonInputConstant::WORK_NUMBER => Utils::fillNullOrEmptyString($animal->getAnimalOrderNumber(), $replacementString),
+            "collar_number" => Utils::fillNullOrEmptyString("", $replacementString),
+            "name" => Utils::fillNullOrEmptyString($animal->getName(), $replacementString),
+            Constant::DATE_OF_BIRTH_NAMESPACE => Utils::fillNullOrEmptyString($animal->getDateOfBirth(), $replacementString),
+            "inbred_coefficient" => Utils::fillNullOrEmptyString("", $replacementString),
+            Constant::GENDER_NAMESPACE => Utils::fillNullOrEmptyString($animal->getGender(), $replacementString),
+            "litter_size" => Utils::fillNullOrEmptyString($litterSize, $replacementString),
+            Constant::MOTHER_NAMESPACE => Utils::fillNullOrEmptyString($ulnMother, $replacementString),
+            Constant::FATHER_NAMESPACE => Utils::fillNullOrEmptyString($ulnFather, $replacementString),
+            "rearing" => Utils::fillNullOrEmptyString("", $replacementString),
+            "suction_size" => Utils::fillNullOrEmptyString("", $replacementString),
+            "blind_factor" => Utils::fillNullOrEmptyString("", $replacementString),
+            "scrapie_genotype" => Utils::fillNullOrEmptyString($animal->getScrapieGenotype(), $replacementString),
+            "breed" => Utils::fillNullOrEmptyString($animal->getBreedCode(), $replacementString),
+            "predicate" => Utils::fillNullOrEmptyString("", $replacementString),
+            "breed_status" => Utils::fillNullOrEmptyString($animal->getBreedType(), $replacementString),
+            JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($animal->getIsAlive(), $replacementString),
+            "exterior" =>
+                array(
+                    "measurement_date" => Utils::fillNullOrEmptyString($exteriorDate, $replacementString),
+                    "head" => Utils::fillZero($skull, $replacementString),
+                    "progress" => Utils::fillZero($progress, $replacementString),
+                    "muscularity" => Utils::fillZero($muscularity, $replacementString),
+                    "proportion" => Utils::fillZero($proportion, $replacementString),
+                    "type" => Utils::fillZero($type, $replacementString),
+                    "leg_work" => Utils::fillZero($legWork, $replacementString),
+                    "pelt" => Utils::fillZero($fur, $replacementString),
+                    "general_appearance" => Utils::fillZero($generalAppearance, $replacementString),
+                    "height" => Utils::fillZero($height, $replacementString),
+                    "breast_depth" => Utils::fillZero($breastDepth, $replacementString),
+                    "torso_length" => Utils::fillZero($torsoLength, $replacementString),
+                    "markings" => Utils::fillZero($markings, $replacementString),
+                    "kind" => Utils::fillZero($kind, $replacementString)
+                ),
+            "measurement" =>
+                array(
+                    "measurement_date" => Utils::fillNullOrEmptyString($bodyFat['date'], $replacementString),
+                    "fat_cover_one" => Utils::fillZero($bodyFat['one'], $replacementString),
+                    "fat_cover_two" => Utils::fillZero($bodyFat['two'], $replacementString),
+                    "fat_cover_three" => Utils::fillZero($bodyFat['three'], $replacementString),
+                    "muscular_thickness" => Utils::fillZero($muscleThickness, $replacementString),
+                    "scan_weight" => Utils::fillZero($weight, $replacementString),
+                    "tail_length" => Utils::fillZero($tailLength, $replacementString),
+                    "birth_weight" => Utils::fillZero($birthWeight, $replacementString),
+                    "birth_progress" => Utils::fillZero("", $replacementString)
+                ),
+            "breed_values" => self::createBreedValuesSetArray($em, $animal),
+            "breeder" =>
+                array(
+                    "breeder" => Utils::fillNullOrEmptyString($breederName, $replacementString),
+                    "ubn_breeder" => Utils::fillNullOrEmptyString($breederUbn, $replacementString),
+                    "email_address" => Utils::fillNullOrEmptyString($breederEmailAddress, $replacementString),
+                    "telephone" => Utils::fillNullOrEmptyString($breederTelephoneNumber, $replacementString),
+                    "co-owner" => Utils::fillNullOrEmptyString("", $replacementString) //TODO
+                ),
+            "note" => Utils::fillNullOrEmptyString($animal->getNote(), $replacementString),
+            "body_fats" => $bodyFatRepository->getAllOfAnimalBySql($animal, $replacementString),
+            "exteriors" => $exteriorRepository->getAllOfAnimalBySql($animal, $replacementString),
+            "muscle_thicknesses" => $muscleThicknessRepository->getAllOfAnimalBySql($animal, $replacementString),
+            "weights" => $weightRepository->getAllOfAnimalBySql($animal, $replacementString),
+            "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
+            "declare_log" => self::getLog($em, $animal, $location),
+            "children" => $animalRepository->getOffspringLogDataBySql($animal),
         );
 
         return $result;
@@ -238,13 +248,13 @@ class AnimalDetailsOutput
 
         $years = $geneticBaseRepository->getAllYears();
 
-        foreach($years as $year) {
+        foreach ($years as $year) {
             $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($year);
 
             $correctedBreedValues = $breedValuesSetRepository->getBreedValuesCorrectedByGeneticBaseWithAccuracies($animal->getId(), $year, $geneticBases);
 
             $lambMeatIndexValues = $breedValuesSetRepository->getLambMeatIndexWithAccuracy($animal);
-            
+
             $results[] = [
                 'year' => $year,
                 'growth' => $correctedBreedValues[BreedValueLabel::GROWTH],
@@ -261,5 +271,22 @@ class AnimalDetailsOutput
         return $results;
     }
 
+
+    /**
+     * @param ObjectManager $em
+     * @param Animal $animal
+     * @param Location $location
+     * @return array
+     */
+    private static function getLog(ObjectManager $em, Animal $animal, Location $location)
+    {
+        $results = [];
+
+        /** @var DeclareArrivalRepository $arrivalRepository */
+        $arrivalRepository = $em->getRepository(DeclareArrival::class);
+        $arrivalLog = $arrivalRepository->getLog($animal, $location);
+
+        return $results;
+    }
 
 }

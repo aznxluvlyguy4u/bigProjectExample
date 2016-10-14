@@ -328,13 +328,14 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   public function getAnimalDetailsByUln(Request $request, $ulnString) {
 
     $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
     $animal = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->getAnimalByUlnString($client, $ulnString);
 
     if($animal == null) {
       return new JsonResponse(array('code'=>404, "message" => "For this account, no animal was found with uln: " . $ulnString), 404);
     }
 
-    $output = AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $animal);
+    $output = AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $animal, $location);
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $output), 200);
   }
 

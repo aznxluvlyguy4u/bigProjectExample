@@ -602,4 +602,24 @@ class AnimalRepository extends BaseRepository
 
     return $array;
   }
+
+
+  /**
+   * @param $animal
+   * @return array
+   */
+  public function getOffspringLogDataBySql($animal)
+  {    
+    if($animal instanceof Ewe) {
+      $filter = "parent_mother_id = ".$animal->getId();
+    } elseif ($animal instanceof Ram) {
+      $filter = "parent_father_id = ".$animal->getId();
+    } else {
+      return [];
+    }
+
+    $sql = "SELECT uln_country_code, uln_number, pedigree_country_code, pedigree_number, gender FROM animal
+            WHERE ".$filter;
+    return $this->getManager()->getConnection()->query($sql)->fetchAll();
+  }
 }
