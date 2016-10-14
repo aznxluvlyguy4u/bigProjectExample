@@ -11,7 +11,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 class InbreedingCoefficientOffspring
 {
     const CHILD_ID = -1;
-    const GENERATION_OF_ASCENDANTS = 3;
+    const GENERATION_OF_ASCENDANTS = 8;
     const GENERATION_DIRECT_PARENTS = 1;
     const NO_INBREEDING = 0;
     const SEPARATOR = ';';
