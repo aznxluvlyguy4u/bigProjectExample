@@ -302,6 +302,7 @@ class Utils
 
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('animal', $animal))
+            ->andWhere(Criteria::expr()->eq('isRevoked', false))
             ->orderBy(['measurementDate' => Criteria::DESC, 'logDate' => Criteria::DESC])
             ->setMaxResults(1);
 
@@ -451,7 +452,7 @@ class Utils
      */
     public static function fillNullOrEmptyString($value, $replacementText = "-")
     {
-        if($value === null || $value === "") {
+        if($value === null || $value === ""  || $value === " ") {
             return $replacementText;
         } else {
             return $value;

@@ -1,6 +1,12 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Component\Utils;
+use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\MeasurementConstant;
+use AppBundle\Enumerator\MeasurementType;
+use AppBundle\Util\MeasurementsUtil;
+use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\Criteria;
 
 /**
@@ -9,6 +15,40 @@ use Doctrine\Common\Collections\Criteria;
  */
 class MuscleThicknessRepository extends MeasurementRepository {
 
+
+    /**
+     * @param Animal $animal
+     * @return array
+     */
+    public function getAllOfAnimalBySql(Animal $animal, $nullFiller = '')
+    {
+        $results = [];
+        //null check
+        if(!($animal instanceof Animal)) { return $results; }
+        elseif(!is_int($animal->getId())){ return $results; }
+
+        $sql = "SELECT m.id as id, measurement_date, t.*, p.person_id, p.first_name, p.last_name
+                FROM measurement m
+                  INNER JOIN muscle_thickness t ON t.id = m.id
+                  LEFT JOIN person p ON p.id = m.inspector_id
+                  INNER JOIN animal a ON a.id = t.animal_id
+                WHERE t.animal_id = ".$animal->getId();
+        $retrievedMeasurementData = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+        foreach ($retrievedMeasurementData as $measurementData)
+        {
+            $results[] = [
+                JsonInputConstant::MEASUREMENT_DATE => Utils::fillNullOrEmptyString($measurementData['measurement_date'], $nullFiller),
+                JsonInputConstant::MUSCLE_THICKNESS => Utils::fillNullOrEmptyString($measurementData['muscle_thickness'], $nullFiller),
+                JsonInputConstant::PERSON_ID =>  Utils::fillNullOrEmptyString($measurementData['person_id'], $nullFiller),
+                JsonInputConstant::FIRST_NAME => Utils::fillNullOrEmptyString($measurementData['first_name'], $nullFiller),
+                JsonInputConstant::LAST_NAME => Utils::fillNullOrEmptyString($measurementData['last_name'], $nullFiller),
+            ];
+        }
+        return $results;
+    }
+    
+    
     /**
      * @param Animal $animal
      * @return float
@@ -88,5 +128,51 @@ class MuscleThicknessRepository extends MeasurementRepository {
               LEFT JOIN person i ON i.id = n.inspector_id
               LEFT JOIN animal a ON a.id = z.animal_id";
         return  $this->getManager()->getConnection()->query($sql)->fetchAll();
+    }
+
+
+    /**
+     * @param boolean $isGetGroupedByAnimalAndDate
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getAllMuscleThicknessesBySql($isGetGroupedByAnimalAndDate = false)
+    {
+        $sql = "
+             SELECT n.*, z.*, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, a.name as vsm_id, p.last_name as inspector_last_name FROM measurement n
+
+              INNER JOIN muscle_thickness z ON z.id = n.id
+              LEFT JOIN person p ON p.id = n.inspector_id
+              LEFT JOIN animal a ON a.id = z.animal_id";
+        $results =  $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+        if($isGetGroupedByAnimalAndDate) {
+            return $this->groupSqlMeasurementResultsByAnimalIdAndDate($results);
+        } else {
+            return $results;
+        }
+    }
+
+
+    /**
+     * @param string $animalIdAndDate
+     * @param int $inspectorId
+     * @param float $muscleThicknessValue
+     * @return bool
+     */
+    public function insertNewMuscleThickness($animalIdAndDate, $muscleThicknessValue, $inspectorId = null)
+    {
+        $parts = MeasurementsUtil::getIdAndDateFromAnimalIdAndDateString($animalIdAndDate);
+        $animalId = $parts[MeasurementConstant::ANIMAL_ID];
+        $measurementDateString = $parts[MeasurementConstant::DATE];
+
+        $isInsertSuccessful = false;
+        $isInsertParentSuccessful = $this->insertNewMeasurementInParentTable($animalIdAndDate, $measurementDateString, MeasurementType::MUSCLE_THICKNESS, $inspectorId);
+        if($isInsertParentSuccessful && NullChecker::floatIsNotZero($muscleThicknessValue)) {
+            $sql = "INSERT INTO muscle_thickness (id, animal_id, muscle_thickness) VALUES (currval('measurement_id_seq'),'".$animalId."','".$muscleThicknessValue."')";
+            $this->getManager()->getConnection()->exec($sql);
+            $isInsertSuccessful = true;
+        }
+        return $isInsertSuccessful;
     }
 }

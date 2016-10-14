@@ -3,6 +3,10 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Constant\MeasurementConstant;
+use AppBundle\Entity\Weight;
+use AppBundle\Enumerator\MeasurementType;
+use AppBundle\Enumerator\WeightType;
 use Doctrine\Common\Persistence\ObjectManager;
 
 class MeasurementsUtil
@@ -68,6 +72,136 @@ class MeasurementsUtil
         
         return count($results);
     }
-    
 
+
+    /**
+     * @param string $animalIdAndDate
+     * @return array
+     */
+    public static function getIdAndDateFromAnimalIdAndDateString($animalIdAndDate)
+    {
+        $parts = explode('_', $animalIdAndDate);
+        return [
+            MeasurementConstant::ANIMAL_ID => $parts[0],
+            MeasurementConstant::DATE => $parts[1]
+        ];
+    }
+
+
+    /**
+     * @param $type
+     * @return boolean
+     */
+    public static function isValidMeasurementType($type)
+    {
+        return array_key_exists($type, MeasurementType::getTypes());
+    }
+
+
+    /**
+     * @param float $weightValue
+     * @return bool
+     */
+    public static function isValidBirthWeightValue($weightValue)
+    {
+        return $weightValue <= 10.0;
+    }
+
+
+    /**
+     * @param float $muscleThickness
+     * @param boolean $hasValid20WeeksWeightMeasurement
+     * @return bool
+     */
+    public static function isValidMuscleThicknessValue($muscleThickness, $hasValid20WeeksWeightMeasurement)
+    {
+        return $muscleThickness >= MeasurementConstant::MUSCLE_THICKNESS_MIN_VALUE && $muscleThickness <= MeasurementConstant::MUSCLE_THICKNESS_MAX_VALUE && $hasValid20WeeksWeightMeasurement;
+    }
+
+
+    /**
+     * @param float $fatValue
+     * @param boolean $hasValid20WeeksWeightMeasurement
+     * @return bool
+     */
+    public static function isValidFatValue($fatValue, $hasValid20WeeksWeightMeasurement)
+    {
+        return $fatValue >= MeasurementConstant::FAT_MIN_VALUE && $fatValue <= MeasurementConstant::FAT_MAX_VALUE && $hasValid20WeeksWeightMeasurement;
+    }
+
+
+    /**
+     * @param float $fat1
+     * @param float $fat2
+     * @param float $fat3
+     * @param boolean $hasValid20WeeksWeightMeasurement
+     * @return bool
+     */
+    public static function isValidBodyFatValues($fat1, $fat2, $fat3, $hasValid20WeeksWeightMeasurement)
+    {
+        return self::isValidFatValue($fat1, $hasValid20WeeksWeightMeasurement) 
+            && self::isValidFatValue($fat2, $hasValid20WeeksWeightMeasurement) 
+            && self::isValidFatValue($fat3, $hasValid20WeeksWeightMeasurement);
+    }
+
+
+    /**
+     * @param int $ageAtMeasurement
+     * @return null|string
+     */
+    public static function getWeightType($ageAtMeasurement)
+    {
+        if(!is_int($ageAtMeasurement)) { return null; }
+
+        if(MeasurementConstant::BIRTH_WEIGHT_MIN_AGE <= $ageAtMeasurement && $ageAtMeasurement <= MeasurementConstant::BIRTH_WEIGHT_MAX_AGE) {
+            return WeightType::BIRTH;
+
+        } elseif(MeasurementConstant::WEIGHT_AT_8_WEEKS_MIN_AGE <= $ageAtMeasurement && $ageAtMeasurement <= MeasurementConstant::WEIGHT_AT_8_WEEKS_MAX_AGE) {
+            return WeightType::EIGHT_WEEKS;
+
+        } elseif(MeasurementConstant::WEIGHT_AT_20_WEEKS_MIN_AGE <= $ageAtMeasurement && $ageAtMeasurement <= MeasurementConstant::WEIGHT_AT_20_WEEKS_MAX_AGE) {
+            return WeightType::TWENTY_WEEKS;
+
+        } else {
+            return null;
+        }
+    }
+
+
+    /**
+     * @param int $ageAtMeasurement
+     * @param float $weight
+     * @return bool
+     */
+    public static function isValidMixblupWeight($ageAtMeasurement, $weight)
+    {
+        if(!is_int($ageAtMeasurement)) { return false; }
+        if($weight < 0) { return false; }
+
+        switch (self::getWeightType($ageAtMeasurement)) {
+            case WeightType::BIRTH:
+                if(MeasurementConstant::BIRTH_WEIGHT_MIN_VALUE <= $weight && $weight <= MeasurementConstant::BIRTH_WEIGHT_MAX_VALUE) {
+                    return true;
+                } else {
+                    return false;
+                }
+                    
+            case WeightType::EIGHT_WEEKS:
+                if(MeasurementConstant::WEIGHT_AT_8_WEEKS_MIN_VALUE <= $weight && $weight <= MeasurementConstant::WEIGHT_AT_8_WEEKS_MAX_VALUE) {
+                    return true;
+                } else {
+                    return false;
+                }
+
+            case WeightType::TWENTY_WEEKS:
+                if(MeasurementConstant::WEIGHT_AT_20_WEEKS_MIN_VALUE <= $weight && $weight <= MeasurementConstant::WEIGHT_AT_20_WEEKS_MAX_VALUE) {
+                    return true;
+                } else {
+                    return false;
+                }
+
+            default:
+                return false;
+        }
+    }
 }

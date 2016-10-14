@@ -66,10 +66,12 @@ class Finder
             $results->set(JsonInputConstant::MAEDI_VISNA_STATUS, null);
             $results->set(JsonInputConstant::MAEDI_VISNA_CHECK_DATE, null);
             $results->set(JsonInputConstant::MAEDI_VISNA_END_DATE, null);
+            $results->set(JsonInputConstant::MAEDI_VISNA_REASON_OF_EDIT, null);
         } else {
             $results->set(JsonInputConstant::MAEDI_VISNA_STATUS, $lastMaediVisna->getStatus());
             $results->set(JsonInputConstant::MAEDI_VISNA_CHECK_DATE, $lastMaediVisna->getCheckDate());
             $results->set(JsonInputConstant::MAEDI_VISNA_END_DATE, $lastMaediVisna->getEndDate());
+            $results->set(JsonInputConstant::MAEDI_VISNA_REASON_OF_EDIT, $lastMaediVisna->getReasonOfEdit());
         }
         
         $lastScrapie = self::findLatestActiveScrapie($location, $em);
@@ -78,10 +80,12 @@ class Finder
             $results->set(JsonInputConstant::SCRAPIE_STATUS, null);
             $results->set(JsonInputConstant::SCRAPIE_CHECK_DATE, null);
             $results->set(JsonInputConstant::SCRAPIE_END_DATE, null);
+            $results->set(JsonInputConstant::SCRAPIE_REASON_OF_EDIT, null);
         } else {
             $results->set(JsonInputConstant::SCRAPIE_STATUS, $lastScrapie->getStatus());
             $results->set(JsonInputConstant::SCRAPIE_CHECK_DATE, $lastScrapie->getCheckDate());
             $results->set(JsonInputConstant::SCRAPIE_END_DATE, $lastScrapie->getEndDate());
+            $results->set(JsonInputConstant::SCRAPIE_REASON_OF_EDIT, $lastScrapie->getReasonOfEdit());
         }
 
         return $results;

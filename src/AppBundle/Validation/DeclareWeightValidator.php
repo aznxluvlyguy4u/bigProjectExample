@@ -11,6 +11,7 @@ use AppBundle\Entity\DeclareWeight;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -26,6 +27,7 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
 {
     //NOTE CHANGING THESE VALUES WILL AFFECT THE FRONT-END!
     const DEFAULT_MAX_WEIGHT = 200.00;
+    const DEFAULT_MAX_WEIGHT_LAMBS = 99.00;
     const DEFAULT_MIN_WEIGHT = 0.00;
     const MAX_NUMBER_OF_DECIMALS = 2; //integer
 
@@ -36,6 +38,7 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
 
     const WEIGHT_IS_TOO_LOW  = "WEIGHT IS TOO LOW. IT SHOULD BE AT LEAST 0 KG"; //Update if default weight has changed!
     const WEIGHT_IS_TOO_HIGH = "WEIGHT IS TOO HIGH. IT CANNOT EXCEED 200 KG"; //Update if default weight has changed!
+    const WEIGHT_IS_TOO_HIGH_LAMBS = "WEIGHT IS TOO HIGH. FOR LAMBS UP TO 8 MONTHS OLD, IT CANNOT EXCEED 99 KG"; //Update if default weight has changed!
     const WEIGHT_DIGITS_AFTER_COMMA = "WEIGHT: NUMBER OF DIGITS AFTER THE COMMA CANNOT EXCEED 2"; //Update if default has changed!
     const MEASUREMENT_DATE_IN_FUTURE = "MEASUREMENT DATE CANNOT BE IN THE FUTURE";
     const MEASUREMENT_DATE_BEFORE_BIRTH = "MEASUREMENT DATE CANNOT BE BEFORE DATE OF BIRTH";
@@ -52,6 +55,9 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
 
     /** @var float  */
     private $maxWeight;
+
+    /** @var float  */
+    private $maxWeightLambs;
 
     /** @var DeclareWeight */
     private $declareWeight;
@@ -70,17 +76,20 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
      * @param bool $isPost
      * @param float $minWeight
      * @param float $maxWeight
+     * @param float $maxWeightLambs
      */
     public function __construct(ObjectManager $manager, ArrayCollection $content, Client
     $client, $isPost = true,
                                 $minWeight = DeclareWeightValidator::DEFAULT_MIN_WEIGHT,
-                                $maxWeight = DeclareWeightValidator::DEFAULT_MAX_WEIGHT)
+                                $maxWeight = DeclareWeightValidator::DEFAULT_MAX_WEIGHT,
+                                $maxWeightLambs = DeclareWeightValidator::DEFAULT_MAX_WEIGHT_LAMBS)
     {
         parent::__construct($manager, $content, $client);
         
         //Set given values
         $this->minWeight = $minWeight;
         $this->maxWeight = $maxWeight;
+        $this->maxWeightLambs = $maxWeightLambs;
 
         if($isPost) {
             $this->validatePost($content);
@@ -103,6 +112,7 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
     private function validatePost($content) {
         $animalArray = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ANIMAL, $content);
 
+        //NOTE! Animal validation MUST precede the other validations, so it can retrieve the animal as well
         $isAnimalInputValid = $this->validateAnimalArray($animalArray);
         $isNonAnimalInputValid = $this->validateNonAnimalValues($content);
         $isMeasurementAlreadyExists = $this->validateIfMeasurementDoesNotExistsYet();
@@ -144,6 +154,7 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
 
         $animalArray = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::ANIMAL, $content);
 
+        //NOTE! Animal validation MUST precede the other validations, so it can retrieve the animal as well
         $isAnimalInputValid = $this->validateAnimalArray($animalArray);
         $isNonAnimalInputValid = $this->validateNonAnimalValues($content);
 
@@ -193,6 +204,8 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
         $weight = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::WEIGHT, $content);
         $measurementDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::MEASUREMENT_DATE, $content);
 
+        $isAnimalOlderThan8Months = $this->isAnimalOlderThan8Months($measurementDate);
+
         if($weight == null) {
             $this->errors[] = self::WEIGHT_IS_MISSING;
             $isValid = false;
@@ -202,10 +215,18 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
                 $isValid = false;
             }
 
-            if($weight > $this->maxWeight) {
-                $this->errors[] = self::WEIGHT_IS_TOO_HIGH;
-                $isValid = false;
+            if($isAnimalOlderThan8Months) {
+                if($weight > $this->maxWeight) {
+                    $this->errors[] = self::WEIGHT_IS_TOO_HIGH;
+                    $isValid = false;
+                }
+            } else {
+                if($weight > $this->maxWeightLambs) {
+                    $this->errors[] = self::WEIGHT_IS_TOO_HIGH_LAMBS;
+                    $isValid = false;
+                }
             }
+
 
             if(!Validator::isNumberOfDecimalsWithinLimit($weight, self::MAX_NUMBER_OF_DECIMALS)) {
                 $this->errors[] = self::WEIGHT_DIGITS_AFTER_COMMA;
@@ -273,4 +294,31 @@ class DeclareWeightValidator extends DeclareNsfoBaseValidator
         return false;
     }
 
+
+    /**
+     * @param $measurementDate
+     * @param $isByDefaultOlderThan8Months
+     * @return bool
+     */
+    private function isAnimalOlderThan8Months($measurementDate, $isByDefaultOlderThan8Months = true)
+    {
+        if($this->hasDateOfBirth()) {
+            return TimeUtil::getAgeMonths($this->animal->getDateOfBirth(), $measurementDate) > 8;
+        }
+        return $isByDefaultOlderThan8Months;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function hasDateOfBirth()
+    {
+        if($this->animal instanceof Animal) {
+            if($this->animal->getDateOfBirth() != null) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

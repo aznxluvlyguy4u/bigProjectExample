@@ -3,6 +3,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Component\Utils;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -10,10 +11,11 @@ use Doctrine\Common\Persistence\ObjectManager;
 class InbreedingCoefficientOffspring
 {
     const CHILD_ID = -1;
-    const GENERATION_OF_ASCENDANTS = 3;
+    const GENERATION_OF_ASCENDANTS = 8;
     const GENERATION_DIRECT_PARENTS = 1;
     const NO_INBREEDING = 0;
     const SEPARATOR = ';';
+    const DECIMAL_ACCURACY = 5;
 
     /** @var ObjectManager */
     private $em;
@@ -131,14 +133,17 @@ class InbreedingCoefficientOffspring
         if(count($this->closedLoopPaths) > 0) {
             $commonAncestorsAnimalId = array_keys($this->commonAncestorsInbreedingCoefficient);
             foreach ($commonAncestorsAnimalId as $commonAncestorAnimalId) {
-                $closedLoopPathsOfAncestor = $this->closedLoopPaths[$commonAncestorAnimalId];
-                foreach ($closedLoopPathsOfAncestor as $closedLoopPath) {
-                    $inbreedingCoefficientCommonAncestor = $this->commonAncestorsInbreedingCoefficient[$commonAncestorAnimalId];
-                    $animalsInLoop = count($closedLoopPath);
-                    $this->inbreedingCoefficient += pow(0.5,$animalsInLoop)*(1+$inbreedingCoefficientCommonAncestor);
+                $closedLoopPathsOfAncestor = Utils::getNullCheckedArrayValue($commonAncestorAnimalId, $this->closedLoopPaths);
+                if(NullChecker::isNotNull($closedLoopPathsOfAncestor)) {
+                    foreach ($closedLoopPathsOfAncestor as $closedLoopPath) {
+                        $inbreedingCoefficientCommonAncestor = $this->commonAncestorsInbreedingCoefficient[$commonAncestorAnimalId];
+                        $animalsInLoop = count($closedLoopPath);
+                        $this->inbreedingCoefficient += pow(0.5,$animalsInLoop)*(1+$inbreedingCoefficientCommonAncestor);
+                    }
                 }
             }
         }
+        $this->inbreedingCoefficient = round($this->inbreedingCoefficient, self::DECIMAL_ACCURACY);
     }
 
 
@@ -343,8 +348,10 @@ class InbreedingCoefficientOffspring
 
         } else {
 
-            $childrenArray = $this->childrenSearchArray[$animalId];
-            if(count($childrenArray) == 0) {
+            $childrenArray = Utils::getNullCheckedArrayValue($animalId, $this->childrenSearchArray);
+            if(NullChecker::isNull($childrenArray)) {
+                //See comment below
+            } elseif(count($childrenArray) == 0) {
                 //The end of the path has been reached, but it did not end in the childId
                 //So ignore this path
 

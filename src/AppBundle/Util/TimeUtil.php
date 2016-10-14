@@ -3,9 +3,6 @@
 namespace AppBundle\Util;
 
 
-use AppBundle\Entity\Animal;
-use AppBundle\Entity\AnimalResidence;
-
 class TimeUtil
 {
 
@@ -56,7 +53,7 @@ class TimeUtil
         
         
         if($dateOfDeath != null) {
-            $endDate = $dateOfDeath;
+            $endDate = clone $dateOfDeath;
         } else {
             $endDate = new \DateTime('now');
         }
@@ -64,6 +61,41 @@ class TimeUtil
         $interval = $endDate->diff($dateOfBirth);
 
         return $interval->y;
+    }
+
+
+    /**
+     * @param \DateTime $dateOfBirth
+     * @param \DateTime $dateOfDeath
+     * @return int
+     */
+    public static function getAgeMonths($dateOfBirth, $dateOfDeath = null)
+    {
+
+
+        if ($dateOfDeath != null) {
+            $endDate = clone $dateOfDeath;
+        } else {
+            $endDate = new \DateTime('now');
+        }
+
+        $interval = $endDate->diff($dateOfBirth);
+
+        return $interval->y * 12 + $interval->m;
+    }
+
+
+    /**
+     * @param \DateTime $dateOfBirth
+     * @param \DateTime $measurementDate
+     * @return int
+     */
+    public static function getAgeInDays($dateOfBirth, $measurementDate)
+    {
+        $measurementDate = clone $measurementDate;
+        $dateOfBirth = clone $dateOfBirth;
+        $dateInterval = $measurementDate->diff($dateOfBirth);
+        return $dateInterval->days;
     }
 
 
@@ -101,7 +133,7 @@ class TimeUtil
 
 
     /**
-     * FIXME the last 3 digits likely represent the timezone. So the time might be of a few hours.
+     * FIXME the last 3 digits likely represent the timezone. So the time might be off a few hours.
      *
      * @param string $awsSqsTimestamp
      * @return \DateTime
@@ -134,5 +166,42 @@ class TimeUtil
     public static function getTimeStampNow($format = 'Y-m-d_H:i:s')
     {
         return (new \DateTime())->format($format);
+    }
+
+
+    /**
+     * @param string $date
+     * @return string
+     */
+    public static function flipDateStringOrder($date)
+    {
+        $dateParts = explode('-', $date);
+        return implode('-',array_reverse($dateParts));
+    }
+
+
+    /**
+     * DateString format should be YYYY-MM-DD, where MM and DD can also be one digit in length 
+     * 
+     * @param string $dateString
+     * @return bool
+     */
+    public static function isFormatYYYYMMDD($dateString)
+    {
+        return (bool)preg_match("/^[0-9]{4}-((0[1-9]|1[0-2])|[1-9])-((0[1-9]|[1-2][0-9]|3[0-1])|[1-9])$/",$dateString);
+    }
+
+
+    /**
+     * @param string $dateTimeString
+     * @return bool|string
+     */
+    public static function getYearFromDateTimeString($dateTimeString) {
+        $parts = explode('-', $dateTimeString);
+        if(!$parts) {
+            return false;
+        } else {
+            return $parts[0];
+        }
     }
 }

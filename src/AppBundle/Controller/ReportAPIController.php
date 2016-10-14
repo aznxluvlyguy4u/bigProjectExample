@@ -9,6 +9,8 @@ use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Country;
 use AppBundle\Report\InbreedingCoefficientReportData;
 use AppBundle\Report\PedigreeCertificates;
+use AppBundle\Report\ReportBase;
+use AppBundle\Util\TwigOutputUtil;
 use AppBundle\Validation\InbreedingCoefficientInputValidator;
 use AppBundle\Validation\UlnValidator;
 use Aws\S3\S3Client;
@@ -28,6 +30,9 @@ use Symfony\Component\Validator\Constraints\DateTime;
  * @Route("/api/v1/reports")
  */
 class ReportAPIController extends APIController {
+
+  const IS_LOCAL_TESTING = false; //To save the generated files locally instead of in the S3 Bucket.
+  const IS_USE_PROD_VERSION_OUTPUT = true;
 
   /**
    * Generate pedigree certificates for multiple sheep and return a download link for the pdf.
@@ -57,13 +62,13 @@ class ReportAPIController extends APIController {
     $em = $this->getDoctrine()->getManager();
 
     //Validate if given ULNs are correct AND there should at least be one ULN given
-    $ulnValidator = new UlnValidator($em, $content, true, $client);
+    $ulnValidator = new UlnValidator($em, $content, true, $client, $location);
     if(!$ulnValidator->getIsUlnSetValid()) {
       return $ulnValidator->createArrivalJsonErrorResponse();
     }
-    
-    $useProductionReady = true;// $this->getCurrentEnvironment() == Environment::PROD;
-    if($useProductionReady) {
+
+    //Or use... $this->getCurrentEnvironment() == Environment::PROD;
+    if(self::IS_USE_PROD_VERSION_OUTPUT) {
       $twigFile = 'Report/pedigree_certificates.html.twig';
     } else {
       //containing extra unfinished features
@@ -71,21 +76,15 @@ class ReportAPIController extends APIController {
     }
 
     $pedigreeCertificateData = new PedigreeCertificates($em, $content, $client, $location);
-    $folderPath = $this->getParameter('kernel.cache_dir');
-    $generatedPdfPath = $pedigreeCertificateData->getFilePath($folderPath);
     $variables = $pedigreeCertificateData->getReports();
     $html = $this->renderView($twigFile, ['variables' => $variables]);
-    $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,
-        array(
-            'orientation'=>'Landscape',
-            'default-header'=>false,
-            'disable-smart-shrinking'=>true,
-            'print-media-type' => true,
-            'margin-top'    => 6,
-            'margin-right'  => 8,
-            'margin-bottom' => 4,
-            'margin-left'   => 8,
-    ));
+
+    if(self::IS_LOCAL_TESTING) {
+      //Save pdf in local cache
+      return new JsonResponse([Constant::RESULT_NAMESPACE => $this->saveFileLocally($pedigreeCertificateData, $html, TwigOutputUtil::pdfLandscapeOptions())], 200);
+    }
+
+    $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,TwigOutputUtil::pdfLandscapeOptions());
 
     $s3Service = $this->getStorageService();
     $url = $s3Service->uploadPdf($pdfOutput, $pedigreeCertificateData->getS3Key());
@@ -128,27 +127,17 @@ class ReportAPIController extends APIController {
 
     $reportResults = new InbreedingCoefficientReportData($em, $content, $client);
     $reportData = $reportResults->getData();
-
-    $useProductionReady = $this->getCurrentEnvironment() == Environment::PROD;
-    if($useProductionReady) {
-      $reportData[ReportLabel::IS_PROD_ENV] = true;
-    } else {
-      $reportData[ReportLabel::IS_PROD_ENV] = false;
-    }
+    $reportData[ReportLabel::IMAGES_DIRECTORY] = $this->getImagesDirectory();
 
     $twigFile = 'Report/inbreeding_coefficient_report.html.twig';
     $html = $this->renderView($twigFile, ['variables' => $reportData]);
-    $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,
-        array(
-            'orientation'=>'Portrait',
-            'default-header'=>false,
-            'disable-smart-shrinking'=>true,
-            'print-media-type' => true,
-            'margin-top'    => 6,
-            'margin-right'  => 8,
-            'margin-bottom' => 4,
-            'margin-left'   => 8,
-        ));
+
+    if(self::IS_LOCAL_TESTING) {
+      //Save pdf in local cache
+      return new JsonResponse([Constant::RESULT_NAMESPACE => $this->saveFileLocally($reportResults, $html, TwigOutputUtil::pdfPortraitOptions())], 200);
+    }
+
+    $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,TwigOutputUtil::pdfPortraitOptions());
     
     $s3Service = $this->getStorageService();
     $url = $s3Service->uploadPdf($pdfOutput, $reportResults->getS3Key());
@@ -166,5 +155,20 @@ class ReportAPIController extends APIController {
   public function test(Request $request)
   {
 
+  }
+
+
+  /**
+   * @param ReportBase $report
+   * @param $html
+   * @param array $pdfOptions
+   * @return string
+   */
+  private function saveFileLocally(ReportBase $report, $html, $pdfOptions = null)
+  {
+    $folderPath = $this->getParameter('kernel.cache_dir');
+    $generatedPdfPath = $report->getFilePath($folderPath);
+    $this->get('knp_snappy.pdf')->generateFromHtml($html, $generatedPdfPath, $pdfOptions);
+    return $generatedPdfPath;
   }
 }
