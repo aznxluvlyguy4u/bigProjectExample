@@ -302,6 +302,7 @@ class Utils
 
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('animal', $animal))
+            ->andWhere(Criteria::expr()->eq('isRevoked', false))
             ->orderBy(['measurementDate' => Criteria::DESC, 'logDate' => Criteria::DESC])
             ->setMaxResults(1);
 
