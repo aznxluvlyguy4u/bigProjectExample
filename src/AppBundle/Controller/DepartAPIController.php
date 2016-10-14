@@ -2,8 +2,16 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Component\ArrivalMessageBuilder;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\Location;
+use AppBundle\Entity\Message;
 use AppBundle\Enumerator\AnimalTransferStatus;
+use AppBundle\Enumerator\MessageType;
+use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\ActionLogWriter;
@@ -121,73 +129,117 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
   }
 
 
-  /**
-   *
-   * Create a new DeclareDepart Request.
-   *
-   * @ApiDoc(
-   *   requirements={
-   *     {
-   *       "name"="AccessToken",
-   *       "dataType"="string",
-   *       "requirement"="",
-   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-   *     }
-   *   },
-   *   resource = true,
-   *   description = "Post a DeclareDepart request",
-   *   input = "AppBundle\Entity\DeclareDepart",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
-   * )
-   * @param Request $request the request object
-   * @return JsonResponse
-   * @Route("")
-   * @Method("POST")
-   */
-  public function createDepart(Request $request)
-  {
-    $om = $this->getDoctrine()->getManager();
+    /**
+    *
+    * Create a new DeclareDepart Request.
+    *
+    * @ApiDoc(
+    *   requirements={
+    *     {
+    *       "name"="AccessToken",
+    *       "dataType"="string",
+    *       "requirement"="",
+    *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+    *     }
+    *   },
+    *   resource = true,
+    *   description = "Post a DeclareDepart request",
+    *   input = "AppBundle\Entity\DeclareDepart",
+    *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+    * )
+    * @param Request $request the request object
+    * @return JsonResponse
+    * @Route("")
+    * @Method("POST")
+    */
+    public function createDepart(Request $request)
+    {
+        $arrivalLocation = null;
+        $em = $this->getDoctrine()->getManager();
 
-    $content = $this->getContentAsArray($request);
-    $client = $this->getAuthenticatedUser($request);
-    $loggedInUser = $this->getLoggedInUser($request);
-    $location = $this->getSelectedLocation($request);
+        $content = $this->getContentAsArray($request);
+        $client = $this->getAuthenticatedUser($request);
+        $loggedInUser = $this->getLoggedInUser($request);
+        $location = $this->getSelectedLocation($request);
 
-    $log = ActionLogWriter::declareDepartOrExportPost($om, $client, $loggedInUser, $location, $content);
+        $log = ActionLogWriter::declareDepartOrExportPost($em, $client, $loggedInUser, $location, $content);
 
-    //Client can only depart/export own animals
-    $animal = $content->get(Constant::ANIMAL_NAMESPACE);
-    $isAnimalOfClient = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->verifyIfClientOwnsAnimal($client, $animal);
+        //Client can only depart/export own animals
+        $animal = $content->get(Constant::ANIMAL_NAMESPACE);
+        $isAnimalOfClient = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->verifyIfClientOwnsAnimal($client, $animal);
 
-    if(!$isAnimalOfClient) {
-      return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
+        if(!$isAnimalOfClient) {
+            return new JsonResponse(array('code'=>428, "message" => "Animal doesn't belong to this account."), 428);
+        }
+
+        $isExportAnimal = $content['is_export_animal'];
+
+        if($isExportAnimal) {
+            //Convert the array into an object and add the mandatory values retrieved from the database
+            $messageObject = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $loggedInUser, $location);
+
+        } else {
+            //Convert the array into an object and add the mandatory values retrieved from the database
+            $messageObject = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $client, $loggedInUser, $location);
+
+            /** @var Location $arrivalLocation */
+            $repository = $this->getDoctrine()->getRepository(Location::class);
+            $arrivalLocation = $repository->findOneBy(['ubn' => $messageObject->getUbnNewOwner(), 'isActive' => true]);
+
+            if($arrivalLocation) {
+                $arrivalOwner = $arrivalLocation->getCompany()->getOwner();
+
+                //DeclareArrival
+                $arrival = new DeclareArrival();
+                $arrival->setUlnCountryCode($messageObject->getUlnCountryCode());
+                $arrival->setUlnNumber($messageObject->getUlnNumber());
+                $arrival->setAnimal($messageObject->getAnimal());
+                $arrival->setArrivalDate($messageObject->getDepartDate());
+                $arrival->setIsImportAnimal(false);
+                $arrival->setAnimalObjectType(Utils::getClassName($messageObject->getAnimal()));
+                $arrival->setRelationNumberKeeper($arrivalOwner->getRelationNumberKeeper());
+                $arrival->setUbn($arrivalLocation->getUbn());
+                $arrival->setUbnPreviousOwner($location->getUbn());
+                $arrival->setRecoveryIndicator(RecoveryIndicatorType::N);
+                $arrival->setIsArrivedFromOtherNsfoClient(true);
+
+                $env = $this->get('kernel')->getEnvironment();
+                $arrivalMessage = new ArrivalMessageBuilder($em, $env);
+                $arrivalMessageObject = $arrivalMessage->buildMessage($arrival, $arrivalOwner, $loggedInUser, $arrivalLocation);
+                $this->persist($arrivalMessageObject);
+
+                $this->sendMessageObjectToQueue($arrivalMessageObject);
+            }
+        }
+
+        //Send it to the queue and persist/update any changed state to the database
+        $messageArray = $this->sendMessageObjectToQueue($messageObject);
+
+        //Reset isExportAnimal to false before persisting
+        $messageObject->getAnimal()->setIsExportAnimal(false);
+
+        //Persist object to Database
+        $this->persist($messageObject);
+
+        // Create Message for Receiving Owner
+        if(!$isExportAnimal && !$arrivalLocation) {
+            $uln = $messageObject->getAnimal()->getUlnCountryCode() . $messageObject->getAnimal()->getUlnNumber();
+
+            $message = new Message();
+            $message->setType(MessageType::DECLARE_DEPART);
+            $message->setSenderLocation($location);
+            $message->setReceiverLocation($arrivalLocation);
+            $message->setRequestMessage($messageObject);
+            $message->setData($uln);
+            $this->persist($message);
+        }
+
+        $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
+
+        ActionLogWriter::completeActionLog($em, $log);
+
+        return new JsonResponse($messageArray, 200);
     }
-
-    $isExportAnimal = $content['is_export_animal'];
-
-    if($isExportAnimal) {
-      //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::DECLARE_EXPORT_ENTITY, $content, $client, $loggedInUser, $location);
-
-    } else {
-      //Convert the array into an object and add the mandatory values retrieved from the database
-      $messageObject = $this->buildMessageObject(RequestType::DECLARE_DEPART_ENTITY, $content, $client, $loggedInUser, $location);
-    }
-
-    //Send it to the queue and persist/update any changed state to the database
-    $messageArray = $this->sendMessageObjectToQueue($messageObject);
-
-    //Reset isExportAnimal to false before persisting
-    $messageObject->getAnimal()->setIsExportAnimal(false);
-
-    //Persist object to Database
-    $this->persist($messageObject);
-    $this->persistAnimalTransferringStateAndFlush($messageObject->getAnimal());
-
-    $log = ActionLogWriter::completeActionLog($om, $log);
-
-    return new JsonResponse($messageArray, 200);
-  }
 
 
   /**
