@@ -5,6 +5,7 @@ namespace AppBundle\Command;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -18,6 +19,7 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
     const TITLE = 'Migrate Mixblup breedvalue output fo 2016 from Relani.out and Solani.out files';
     const ROWS_IN_SOURCE_FILE = 608983;
     const GENERATION_DATA_STRING = '2016-10-04 00:00:00';
+    const IS_PERSIST_ALSO_UNRELIABLE_BREEDVALUE = true;
 
     /** @var ObjectManager $em */
     private $em;
@@ -101,30 +103,46 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
                 $growthReliability = floatval($relaniParts[5]);
                 $fatReliability = floatval($relaniParts[6]);
 
+                $isMuscleThicknessReliable = NullChecker::floatIsNotZero($muscleThicknessReliability);
+                $isGrowthReliable = NullChecker::floatIsNotZero($growthReliability);
+                $isFatReliable = NullChecker::floatIsNotZero($fatReliability);
+
                 $solaniParts = $this->solani[$animalId];
 
 //            $descendants = $solaniParts[1];
 //            $observations = $solaniParts[2];
+
+                //Null values cannot be saved to the database. Null is checked by reliability value
                 $muscleThickness = floatval($solaniParts[3]);
-                $growth = floatval($solaniParts[4])*1000; //gram/dag
+                $growth = floatval($solaniParts[4]); //kg/day
                 $fat = floatval($solaniParts[5]);
 
 
-                //Write to database
-                $sql = "SELECT MAX(id) FROM breed_values_set";
-                $foundId = $this->em->getConnection()->query($sql)->fetch()['max'];
-                if($foundId == null) {
-                    $id = 1;
+                if(self::IS_PERSIST_ALSO_UNRELIABLE_BREEDVALUE) {
+                    $isSaveToDatabase = true;
                 } else {
-                    $id = $foundId + 1;
+                    //Only create a new record if at least one trait is reliable
+                    $isSaveToDatabase = $isMuscleThicknessReliable || $isGrowthReliable || $isFatReliable;
                 }
 
-                $values = $id.",".$animalId.",'".$logDateString."','".self::GENERATION_DATA_STRING."',".$muscleThickness.','.$growth.','.$fat.','.$muscleThicknessReliability.','.$growthReliability.','.$fatReliability;
 
-                $sql = "INSERT INTO breed_values_set (id, animal_id, log_date, generation_date, muscle_thickness, growth,
+                if($isSaveToDatabase) {
+                    //Write to database
+                    $sql = "SELECT MAX(id) FROM breed_values_set";
+                    $foundId = $this->em->getConnection()->query($sql)->fetch()['max'];
+                    if ($foundId == null) {
+                        $id = 1;
+                    } else {
+                        $id = $foundId + 1;
+                    }
+
+                    $values = $id . "," . $animalId . ",'" . $logDateString . "','" . self::GENERATION_DATA_STRING . "'," . $muscleThickness . ',' . $growth . ',' . $fat . ',' . $muscleThicknessReliability . ',' . $growthReliability . ',' . $fatReliability;
+
+                    $sql = "INSERT INTO breed_values_set (id, animal_id, log_date, generation_date, muscle_thickness, growth,
                     fat, muscle_thickness_reliability, growth_reliability, fat_reliability)
-                    VALUES (".$values.")";
-                $this->em->getConnection()->exec($sql);
+                    VALUES (" . $values . ")";
+                    $this->em->getConnection()->exec($sql);
+                }
             }
 
             $this->cmdUtil->advanceProgressBar(1);

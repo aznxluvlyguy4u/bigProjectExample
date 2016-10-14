@@ -8,6 +8,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Collection;
@@ -55,13 +56,16 @@ class UlnValidator
      * @param Client $client
      * @param Collection $content
      * @param boolean $multipleAnimals
+     * @param Location $location
      */
-    public function __construct(ObjectManager $manager, Collection $content, $multipleAnimals = false, Client $client = null)
+    public function __construct(ObjectManager $manager, Collection $content, $multipleAnimals = false, Client $client = null, $location)
     {
         $this->manager = $manager;
 
         if($client != null) {
-            $this->locations = $manager->getRepository(Location::class)->findAllLocationsOfClient($client);
+            /** @var LocationRepository $locationRepository */
+            $locationRepository = $manager->getRepository(Location::class);
+            $this->locations = $locationRepository->findAllLocationsOfClient($client);
         }
 
         $animalArray = null;
@@ -80,7 +84,7 @@ class UlnValidator
                     $this->isInputMissing = false;
                     $this->isUlnSetValid = true;
 
-                    $this->isUlnSetValid = $this->validateUlnInput($animalArray, $client);
+                    $this->isUlnSetValid = $this->validateUlnInput($animalArray, $client, $location);
                     $this->numberOfAnimals++;
                 }
             }
@@ -96,7 +100,7 @@ class UlnValidator
                     $this->isUlnSetValid = true;
 
                     foreach ($animalArrays as $animalArray) {
-                        $isUlnValid = $this->validateUlnInput($animalArray, $client);
+                        $isUlnValid = $this->validateUlnInput($animalArray, $client, $location);
 
                         if(!$isUlnValid) {
                             $this->isUlnSetValid = false;
@@ -116,9 +120,10 @@ class UlnValidator
     /**
      * @param array $animalArray
      * @param Client $client
+     * @param Location $location
      * @return boolean
      */
-    private function validateUlnInput($animalArray, $client)
+    private function validateUlnInput($animalArray, $client, $location)
     {
         $ulnExists = array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalArray) &&
             array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalArray);
@@ -135,7 +140,8 @@ class UlnValidator
 
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('ulnCountryCode', $countryCodeToCheck))
-            ->andWhere(Criteria::expr()->eq('ulnNumber', $numberToCheck));
+            ->andWhere(Criteria::expr()->eq('ulnNumber', $numberToCheck))
+            ->andWhere(Criteria::expr()->eq('location', $location ));
 
         $animal = $this->manager->getRepository(Animal::class)
             ->matching($criteria)->first();
@@ -151,7 +157,9 @@ class UlnValidator
 
         } else { //Get only animals owned by client
 
+            /** @var Location $location */
             foreach ($this->locations as $location) {
+                /** @var Animal $animal */
                 if($animal->getLocation() == $location) {
                     return true;
                 }

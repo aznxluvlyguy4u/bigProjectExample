@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Util\NullChecker;
@@ -24,6 +25,52 @@ class ExteriorRepository extends MeasurementRepository {
 
     /** @var string */
     private $mutationsFolder;
+
+
+    /**
+     * @param Animal $animal
+     * @return array
+     */
+    public function getAllOfAnimalBySql(Animal $animal, $nullFiller = '')
+    {
+        $results = [];
+        //null check
+        if(!($animal instanceof Animal)) { return $results; }
+        elseif(!is_int($animal->getId())){ return $results; }
+
+        $sql = "SELECT m.id as id, measurement_date, x.*, p.person_id, p.first_name, p.last_name
+                FROM measurement m
+                  INNER JOIN exterior x ON x.id = m.id
+                  LEFT JOIN person p ON p.id = m.inspector_id
+                  INNER JOIN animal a ON a.id = x.animal_id
+                WHERE x.animal_id = ".$animal->getId();
+        $retrievedMeasurementData = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+        foreach ($retrievedMeasurementData as $measurementData)
+        {
+            $results[] = [
+                JsonInputConstant::MEASUREMENT_DATE => Utils::fillNullOrEmptyString($measurementData['measurement_date'], $nullFiller),
+                JsonInputConstant::HEIGHT => Utils::fillNullOrEmptyString($measurementData['height'], $nullFiller),
+                JsonInputConstant::KIND => Utils::fillNullOrEmptyString($measurementData['skull'], $nullFiller),
+                JsonInputConstant::PROGRESS => Utils::fillNullOrEmptyString($measurementData['progress'], $nullFiller),
+                JsonInputConstant::SKULL => Utils::fillNullOrEmptyString($measurementData['skull'], $nullFiller),
+                JsonInputConstant::MUSCULARITY => Utils::fillNullOrEmptyString($measurementData['muscularity'], $nullFiller),
+                JsonInputConstant::PROPORTION => Utils::fillNullOrEmptyString($measurementData['proportion'], $nullFiller),
+                JsonInputConstant::EXTERIOR_TYPE => Utils::fillNullOrEmptyString($measurementData['exterior_type'], $nullFiller),
+                JsonInputConstant::LEG_WORK => Utils::fillNullOrEmptyString($measurementData['leg_work'], $nullFiller),
+                JsonInputConstant::FUR => Utils::fillNullOrEmptyString($measurementData['fur'], $nullFiller),
+                JsonInputConstant::GENERAL_APPEARANCE => Utils::fillNullOrEmptyString($measurementData['general_appearence'], $nullFiller),
+                JsonInputConstant::BREAST_DEPTH => Utils::fillNullOrEmptyString($measurementData['breast_depth'], $nullFiller),
+                JsonInputConstant::TORSO_LENGTH => Utils::fillNullOrEmptyString($measurementData['torso_length'], $nullFiller),
+                JsonInputConstant::MARKINGS => Utils::fillNullOrEmptyString($measurementData['markings'], $nullFiller),
+                JsonInputConstant::PERSON_ID => Utils::fillNullOrEmptyString($measurementData['person_id'], $nullFiller),
+                JsonInputConstant::FIRST_NAME => Utils::fillNullOrEmptyString($measurementData['first_name'], $nullFiller),
+                JsonInputConstant::LAST_NAME => Utils::fillNullOrEmptyString($measurementData['last_name'], $nullFiller),
+            ];
+        }
+        return $results;
+    }
+
 
     /**
      * If no Exterior is found a blank Exterior entity is returned

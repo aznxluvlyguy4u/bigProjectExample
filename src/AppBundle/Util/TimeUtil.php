@@ -172,4 +172,18 @@ class TimeUtil
     {
         return (bool)preg_match("/^[0-9]{4}-((0[1-9]|1[0-2])|[1-9])-((0[1-9]|[1-2][0-9]|3[0-1])|[1-9])$/",$dateString);
     }
+
+
+    /**
+     * @param string $dateTimeString
+     * @return bool|string
+     */
+    public static function getYearFromDateTimeString($dateTimeString) {
+        $parts = explode('-', $dateTimeString);
+        if(!$parts) {
+            return false;
+        } else {
+            return $parts[0];
+        }
+    }
 }

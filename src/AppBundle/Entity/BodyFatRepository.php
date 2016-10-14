@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\MeasurementConstant;
@@ -16,6 +17,45 @@ use Doctrine\Common\Collections\Criteria;
  * @package AppBundle\Entity
  */
 class BodyFatRepository extends MeasurementRepository {
+
+
+    /**
+     * @param Animal $animal
+     * @return array
+     */
+    public function getAllOfAnimalBySql(Animal $animal, $nullFiller = '')
+    {
+        $results = [];
+        //null check
+        if(!($animal instanceof Animal)) { return $results; }
+        elseif(!is_int($animal->getId())){ return $results; }
+
+        $sql = "SELECT m.id as id, measurement_date, fat1.fat as fat1 , fat2.fat as fat2 , fat3.fat as fat3,
+                p.person_id, p.first_name, p.last_name
+                FROM measurement m
+                INNER JOIN body_fat bf ON bf.id = m.id
+                  LEFT JOIN fat1 ON bf.fat1_id = fat1.id
+                  LEFT JOIN fat2 ON bf.fat2_id = fat2.id
+                  LEFT JOIN fat3 ON bf.fat3_id = fat3.id
+                  LEFT JOIN person p ON p.id = m.inspector_id
+                WHERE bf.animal_id = ".$animal->getId();
+        $retrievedMeasurementData = $this->getManager()->getConnection()->query($sql)->fetchAll();
+        
+        foreach ($retrievedMeasurementData as $measurementData)
+        {
+            $results[] = [
+                JsonInputConstant::MEASUREMENT_DATE => Utils::fillNullOrEmptyString($measurementData['measurement_date'], $nullFiller),
+                JsonInputConstant::FAT1 => Utils::fillNullOrEmptyString($measurementData['fat1'], $nullFiller),
+                JsonInputConstant::FAT2 => Utils::fillNullOrEmptyString($measurementData['fat2'], $nullFiller),
+                JsonInputConstant::FAT3 => Utils::fillNullOrEmptyString($measurementData['fat3'], $nullFiller),
+                JsonInputConstant::PERSON_ID =>  Utils::fillNullOrEmptyString($measurementData['person_id'], $nullFiller),
+                JsonInputConstant::FIRST_NAME => Utils::fillNullOrEmptyString($measurementData['first_name'], $nullFiller),
+                JsonInputConstant::LAST_NAME => Utils::fillNullOrEmptyString($measurementData['last_name'], $nullFiller),
+            ];
+        }
+        return $results;
+    }
+
 
     /**
      * @param Animal $animal

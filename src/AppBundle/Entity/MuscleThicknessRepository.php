@@ -1,6 +1,8 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Component\Utils;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\MeasurementConstant;
 use AppBundle\Enumerator\MeasurementType;
 use AppBundle\Util\MeasurementsUtil;
@@ -13,6 +15,40 @@ use Doctrine\Common\Collections\Criteria;
  */
 class MuscleThicknessRepository extends MeasurementRepository {
 
+
+    /**
+     * @param Animal $animal
+     * @return array
+     */
+    public function getAllOfAnimalBySql(Animal $animal, $nullFiller = '')
+    {
+        $results = [];
+        //null check
+        if(!($animal instanceof Animal)) { return $results; }
+        elseif(!is_int($animal->getId())){ return $results; }
+
+        $sql = "SELECT m.id as id, measurement_date, t.*, p.person_id, p.first_name, p.last_name
+                FROM measurement m
+                  INNER JOIN muscle_thickness t ON t.id = m.id
+                  LEFT JOIN person p ON p.id = m.inspector_id
+                  INNER JOIN animal a ON a.id = t.animal_id
+                WHERE t.animal_id = ".$animal->getId();
+        $retrievedMeasurementData = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+        foreach ($retrievedMeasurementData as $measurementData)
+        {
+            $results[] = [
+                JsonInputConstant::MEASUREMENT_DATE => Utils::fillNullOrEmptyString($measurementData['measurement_date'], $nullFiller),
+                JsonInputConstant::MUSCLE_THICKNESS => Utils::fillNullOrEmptyString($measurementData['muscle_thickness'], $nullFiller),
+                JsonInputConstant::PERSON_ID =>  Utils::fillNullOrEmptyString($measurementData['person_id'], $nullFiller),
+                JsonInputConstant::FIRST_NAME => Utils::fillNullOrEmptyString($measurementData['first_name'], $nullFiller),
+                JsonInputConstant::LAST_NAME => Utils::fillNullOrEmptyString($measurementData['last_name'], $nullFiller),
+            ];
+        }
+        return $results;
+    }
+    
+    
     /**
      * @param Animal $animal
      * @return float

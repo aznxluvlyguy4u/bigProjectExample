@@ -1,6 +1,8 @@
 <?php
 
+
 namespace AppBundle\Entity;
+
 
 use Doctrine\Common\Collections\ArrayCollection;
 use JMS\Serializer\Annotation\ExclusionPolicy;
@@ -10,12 +12,13 @@ use Symfony\Component\DependencyInjection\Tests\Compiler\A;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 
+
 /**
- * Class GeneticBase
- * @ORM\Entity(repositoryClass="AppBundle\Entity\GeneticBaseRepository")
+ * Class NormalDistribution
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\NormalDistributionRepository")
  * @package AppBundle\Entity
  */
-class GeneticBase
+class NormalDistribution
 {
     /**
      * @var integer
@@ -47,13 +50,12 @@ class GeneticBase
 
 
     /**
-     * @var float
-     *
-     * @ORM\Column(type="float", options={"default":0})
-     * @JMS\Type("float")
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=false, options={"default":0})
      * @Assert\NotBlank
      */
-    private $muscleThickness;
+    private $type;
 
 
     /**
@@ -63,7 +65,8 @@ class GeneticBase
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
-    private $growth;
+    private $standardDeviation;
+
 
     /**
      * @var float
@@ -72,16 +75,35 @@ class GeneticBase
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
-    private $fat;
-    
+    private $mean;
 
-    public function __construct($year = null, $muscleThickness = null, $growth = null, $fat = null)
+
+    /**
+     * @var boolean
+     * @Assert\NotBlank
+     * @ORM\Column(type="boolean", options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isIncludingOnlyAliveAnimals;
+
+
+    /**
+     * NormalDistribution constructor.
+     * @param string $type
+     * @param int $year
+     * @param float $standardDeviation
+     * @param float $mean
+     * @param boolean $isIncludingOnlyAliveAnimals
+     */
+    public function __construct($type, $year, $mean, $standardDeviation, $isIncludingOnlyAliveAnimals)
     {
         $this->logDate = new \DateTime();
+        
+        $this->type = $type;
         $this->year = $year;
-        $this->muscleThickness = $muscleThickness;
-        $this->growth = $growth;
-        $this->fat = $fat;
+        $this->standardDeviation = $standardDeviation;
+        $this->mean = $mean;
+        $this->isIncludingOnlyAliveAnimals = $isIncludingOnlyAliveAnimals;
     }
 
     /**
@@ -91,8 +113,7 @@ class GeneticBase
     {
         return $this->id;
     }
-    
-    
+
     /**
      * @return \DateTime
      */
@@ -108,7 +129,6 @@ class GeneticBase
     {
         $this->logDate = $logDate;
     }
-
 
     /**
      * @return int
@@ -126,55 +146,72 @@ class GeneticBase
         $this->year = $year;
     }
 
-
     /**
      * @return float
      */
-    public function getMuscleThickness()
+    public function getStandardDeviation()
     {
-        return $this->muscleThickness;
+        return $this->standardDeviation;
     }
 
     /**
-     * @param float $muscleThickness
+     * @param float $standardDeviation
      */
-    public function setMuscleThickness($muscleThickness)
+    public function setStandardDeviation($standardDeviation)
     {
-        $this->muscleThickness = $muscleThickness;
-    }
-
-    /**
-     * @return float
-     */
-    public function getGrowth()
-    {
-        return $this->growth;
-    }
-
-    /**
-     * @param float $growth
-     */
-    public function setGrowth($growth)
-    {
-        $this->growth = $growth;
+        $this->standardDeviation = $standardDeviation;
     }
 
     /**
      * @return float
      */
-    public function getFat()
+    public function getMean()
     {
-        return $this->fat;
+        return $this->mean;
     }
 
     /**
-     * @param float $fat
+     * @param float $mean
      */
-    public function setFat($fat)
+    public function setMean($mean)
     {
-        $this->fat = $fat;
+        $this->mean = $mean;
     }
-    
-    
+
+    /**
+     * @return boolean
+     */
+    public function isIsIncludingOnlyAliveAnimals()
+    {
+        return $this->isIncludingOnlyAliveAnimals;
+    }
+
+    /**
+     * @param boolean $isIncludingOnlyAliveAnimals
+     */
+    public function setIsIncludingOnlyAliveAnimals($isIncludingOnlyAliveAnimals)
+    {
+        $this->isIncludingOnlyAliveAnimals = $isIncludingOnlyAliveAnimals;
+    }
+
+    /**
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * @param string $type
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+    }
+
+
+
+
     
 }

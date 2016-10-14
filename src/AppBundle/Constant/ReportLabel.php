@@ -102,5 +102,4 @@ class ReportLabel
     const CHILD_KEY = 'c';
     const FATHER_KEY = 'f';
     const MOTHER_KEY = 'm';
-    
 }

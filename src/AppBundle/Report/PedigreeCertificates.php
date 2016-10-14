@@ -7,8 +7,16 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\BreedValueCoefficient;
+use AppBundle\Entity\BreedValueCoefficientRepository;
+use AppBundle\Entity\BreedValuesSet;
+use AppBundle\Entity\BreedValuesSetRepository;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\GeneticBase;
+use AppBundle\Entity\GeneticBaseRepository;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\NormalDistribution;
+use AppBundle\Enumerator\BreedValueCoefficientType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -50,8 +58,24 @@ class PedigreeCertificates extends ReportBase
         $animals = self::getAnimalsInContentArray($em, $content);
         $this->animalCount = 0;
 
+        /** @var GeneticBaseRepository $geneticBaseRepository */
+        $geneticBaseRepository = $em->getRepository(GeneticBase::class);
+
+        $breedValuesYear = $geneticBaseRepository->getLatestYear();
+        $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
+
+        /** @var BreedValueCoefficientRepository $breedValueCoefficientRepository */
+        $breedValueCoefficientRepository = $em->getRepository(BreedValueCoefficient::class);
+
+        $lambMeatIndexCoefficients = $breedValueCoefficientRepository->getLambMeatIndexCoefficients();
+
+        /** @var BreedValuesSetRepository $breedValuesSetRepository */
+        $breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
+
+        $totalLambMeatIndexRankedAnimals = $breedValuesSetRepository->getLambMeatIndexRankedAnimalsCount($breedValuesYear);
+
         foreach ($animals as $animal) {
-            $pedigreeCertificate = new PedigreeCertificate($em, $client, $location, $animal, $generationOfAscendants);
+            $pedigreeCertificate = new PedigreeCertificate($em, $client, $location, $animal, $generationOfAscendants, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients);
 
             $this->reports[$this->animalCount] = $pedigreeCertificate->getData();
 

@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Neuter;
@@ -153,6 +154,37 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
 
     return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
   }
+
+
+  /**
+   * Retrieve all alive rams in the NSFO database
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="Retrieve all alive rams in the NSFO database"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Retrieve all alive rams in the NSFO database",
+   *   output = "AppBundle\Entity\Animal"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-rams")
+   * @Method("GET")
+   */
+  public function getAllRams(Request $request) {
+    /** @var AnimalRepository $animalRepository */
+    $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+    $ramsArray = $animalRepository->getAllRams();
+
+    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $ramsArray), 200);
+  }
+
 
   /**
    * Create a RetrieveAnimal request

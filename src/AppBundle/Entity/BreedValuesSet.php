@@ -12,7 +12,8 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class BreedValues
- * @ORM\Entity(repositoryClass="AppBundle\Entity\BreedValuesRepository")
+ * @ORM\Table(name="breed_values_set",indexes={@ORM\Index(name="breed_value_set_idx", columns={"generation_date"})})
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\BreedValuesSetRepository")
  * @package AppBundle\Entity
  */
 class BreedValuesSet
@@ -107,6 +108,34 @@ class BreedValuesSet
      * @Assert\NotBlank
      */
     private $fatReliability;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(type="float", options={"default":0})
+     * @JMS\Type("float")
+     * @Assert\NotBlank
+     */
+    private $lambMeatIndex;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(type="float", options={"default":0})
+     * @JMS\Type("float")
+     * @Assert\NotBlank
+     */
+    private $lambMeatIndexAccuracy;
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     * @Assert\NotBlank
+     */
+    private $lambMeatIndexRanking;
+
 
     public function __construct()
     {
@@ -265,7 +294,56 @@ class BreedValuesSet
     {
         $this->fatReliability = $fatReliability;
     }
+
+    /**
+     * @return float
+     */
+    public function getLambMeatIndex()
+    {
+        return $this->lambMeatIndex;
+    }
+
+    /**
+     * @param float $lambMeatIndex
+     */
+    public function setLambMeatIndex($lambMeatIndex)
+    {
+        $this->lambMeatIndex = $lambMeatIndex;
+    }
+
+    /**
+     * @return float
+     */
+    public function getLambMeatIndexAccuracy()
+    {
+        return $this->lambMeatIndexAccuracy;
+    }
+
+    /**
+     * @param float $lambMeatIndexAccuracy
+     */
+    public function setLambMeatIndexAccuracy($lambMeatIndexAccuracy)
+    {
+        $this->lambMeatIndexAccuracy = $lambMeatIndexAccuracy;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLambMeatIndexRanking()
+    {
+        return $this->lambMeatIndexRanking;
+    }
+
+    /**
+     * @param int $lambMeatIndexRanking
+     */
+    public function setLambMeatIndexRanking($lambMeatIndexRanking)
+    {
+        $this->lambMeatIndexRanking = $lambMeatIndexRanking;
+    }
     
     
-    
+
+
 }
