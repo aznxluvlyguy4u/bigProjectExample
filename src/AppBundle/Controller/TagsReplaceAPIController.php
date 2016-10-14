@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Component\Utils;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Output\DeclareReplaceTagsOutput;
 use AppBundle\Util\ActionLogWriter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -98,4 +99,76 @@ class TagsReplaceAPIController extends APIController {
     
     return new JsonResponse($messageArray, 200);
   }
+
+    /**
+    * @param Request $request
+    * @return JsonResponse
+    * @Route("-history")
+    * @Method("GET")
+    */
+    public function getTagReplaceHistory(Request $request)
+    {
+        $this->getAuthenticatedUser($request);
+        $location = $this->getSelectedLocation($request);
+
+        $em = $this->getDoctrine()->getManager();
+        $sql = "SELECT
+                  declare_tag_replace.replace_date,
+                  declare_tag_replace.uln_country_code_to_replace,
+                  declare_tag_replace.uln_number_to_replace,
+                  declare_tag_replace.animal_order_number_to_replace,
+                  declare_tag_replace.uln_country_code_replacement,
+                  declare_tag_replace.uln_number_replacement,
+                  declare_tag_replace.animal_order_number_replacement,
+                  declare_base.request_id,
+                  declare_base.request_state,
+                  declare_base_response.message_number
+                FROM
+                  declare_tag_replace
+                INNER JOIN declare_base ON declare_tag_replace.id = declare_base.id
+                LEFT JOIN declare_tag_replace_response ON declare_tag_replace.id = declare_tag_replace_response.declare_tag_replace_request_message_id
+                LEFT JOIN declare_base_response ON declare_tag_replace_response.id = declare_base_response.id
+                WHERE declare_base.request_state <> 'FAILED' AND declare_tag_replace.location_id = '". $location->getId() ."'";
+        $results = $em->getConnection()->query($sql)->fetchAll();
+
+        $results = DeclareReplaceTagsOutput::createHistoryArray($results);
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $results), 200);
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @Route("-errors")
+     * @Method("GET")
+     */
+    public function getTagReplaceErrors(Request $request)
+    {
+        $this->getAuthenticatedUser($request);
+        $location = $this->getSelectedLocation($request);
+
+        $em = $this->getDoctrine()->getManager();
+        $sql = "SELECT
+                  declare_tag_replace.replace_date,
+                  declare_tag_replace.uln_country_code_to_replace,
+                  declare_tag_replace.uln_number_to_replace,
+                  declare_tag_replace.animal_order_number_to_replace,
+                  declare_tag_replace.uln_country_code_replacement,
+                  declare_tag_replace.uln_number_replacement,
+                  declare_tag_replace.animal_order_number_replacement,
+                  declare_base.request_id,
+                  declare_base.request_state,
+                  declare_base_response.message_number
+                FROM
+                  declare_tag_replace
+                INNER JOIN declare_base ON declare_tag_replace.id = declare_base.id
+                LEFT JOIN declare_tag_replace_response ON declare_tag_replace.id = declare_tag_replace_response.declare_tag_replace_request_message_id
+                LEFT JOIN declare_base_response ON declare_tag_replace_response.id = declare_base_response.id
+                WHERE declare_base.request_state = 'FAILED' AND declare_tag_replace.location_id = '". $location->getId() ."'";
+        $results = $em->getConnection()->query($sql)->fetchAll();
+
+        $results = DeclareReplaceTagsOutput::createHistoryArray($results);
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $results), 200);
+    }
 }
