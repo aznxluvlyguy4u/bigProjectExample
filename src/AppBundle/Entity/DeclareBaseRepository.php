@@ -76,6 +76,12 @@ class DeclareBaseRepository extends BaseRepository
                   INNER JOIN declare_base b ON a.id = b.id
                   LEFT JOIN person p ON p.id = b.action_by_id
                 WHERE (b.request_state = 'FINISHED' OR b.request_state = 'FINISHED_WITH_WARNING') AND location_id = ".$locationId." AND a.animal_id = ".$animalId."
+                UNION
+                SELECT b.log_date, a.replace_date as start_date, NULL as end_date, 'TAG REPLACE REPLACED ULN' as action, CONCAT(a.uln_country_code_to_replace,a.uln_number_to_replace) as data, p.first_name, p.last_name
+                FROM declare_tag_replace a
+                  INNER JOIN declare_base b ON a.id = b.id
+                  LEFT JOIN person p ON p.id = b.action_by_id
+                WHERE (b.request_state = 'FINISHED' OR b.request_state = 'FINISHED_WITH_WARNING') AND location_id = ".$locationId." AND a.animal_id = ".$animalId."
                 ORDER BY log_date DESC";
         
         $retrievedData = $this->getManager()->getConnection()->query($sql)->fetchAll();
