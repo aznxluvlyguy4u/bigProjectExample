@@ -8,6 +8,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\AnimalType;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\TimeUtil;
@@ -592,12 +593,18 @@ class AnimalRepository extends BaseRepository
     } else {
       $ulnFormat = "uln_country_code,uln_number";
     }
-    $sql = "SELECT CONCAT(".$ulnFormat.") as uln, id FROM animal";
+    $sql = "SELECT CONCAT(".$ulnFormat.") as uln, id, type FROM animal";
     $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
     $array = new ArrayCollection();
     foreach ($results as $result) {
-      $array->set($result['uln'], $result['id']);
+      if($array->containsKey($result['uln'])) {
+        if($result['type'] != 'Neuter') {
+          $array->set($result['uln'], $result['id']);
+        }
+      } else {
+        $array->set($result['uln'], $result['id']);
+      }
     }
 
     return $array;

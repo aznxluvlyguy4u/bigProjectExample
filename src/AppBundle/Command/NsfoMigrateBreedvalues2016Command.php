@@ -66,13 +66,13 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
-        if($this->cmdUtil->generateConfirmationQuestion('Only check if animals in Rolani.out and Solani.out match? (y/n)')) {
-            $this->checkIfBothFilesContainTheSameAnimals();
-        }
-
         //Create searchArrays
         $this->animalIdByUln = $this->animalRepository->getAnimalPrimaryKeysByUlnString(false);
         $this->parseInputFiles();
+
+        if($this->cmdUtil->generateConfirmationQuestion('Only check if animals in Rolani.out and Solani.out match? (y/n)')) {
+            $this->checkIfBothFilesContainTheSameAnimals();
+        }
 
         //Write to database
         $this->migrateRecords();
@@ -161,7 +161,9 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
         foreach($relaniRows as $relaniRow) {
             $relaniParts = explode(' ', StringUtil::replaceMultipleSpacesByOne($relaniRow)[0]);
             $animalId = $this->animalIdByUln->get($relaniParts[1]);
-            $this->relani[$animalId] = $relaniParts;
+            if($animalId != null) {
+                $this->relani[$animalId] = $relaniParts;
+            }
         }
 
         $this->cmdUtil->setProgressBarMessage('Parsing Solani.out');
@@ -171,7 +173,9 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
         foreach($solaniRows as $solaniRow) {
             $solaniParts = explode(' ', StringUtil::replaceMultipleSpacesByOne($solaniRow)[0]);
             $animalId = $this->animalIdByUln->get($solaniParts[0]);
-            $this->solani[$animalId] = $solaniParts;
+            if($animalId != null) {
+                $this->solani[$animalId] = $solaniParts;
+            }
         }
 
         $this->cmdUtil->setProgressBarMessage('Parsing complete!');
