@@ -2,7 +2,9 @@
 
 namespace AppBundle\FormInput;
 
+use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Location;
@@ -14,7 +16,6 @@ class CompanyProfile
      * @param Client $client
      * @param ArrayCollection $content
      * @param Company $company
-     * @param Location $location
      * @return Client
      */
     public static function update(Client $client, ArrayCollection $content, $company)
@@ -58,6 +59,11 @@ class CompanyProfile
         $company->setVeterinarianCompanyName($veterinarianArray['company_name']);
         $company->setVeterinarianTelephoneNumber($veterinarianArray['telephone_number']);
         $company->setVeterinarianEmailAddress(strtolower($veterinarianArray['email_address']));
+        
+        $isRevealHistoricAnimals = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::IS_REVEAL_HISTORIC_ANIMALS, $content);
+        if($isRevealHistoricAnimals !== null) {
+            $company->setIsRevealHistoricAnimals($isRevealHistoricAnimals);
+        }
         
         return $client;
     }

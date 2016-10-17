@@ -24,6 +24,7 @@ class JsonInputConstant
     const PEDIGREE_NUMBER = 'pedigree_number';
     const DATE_OF_BIRTH = 'date_of_birth';
     const GENDER = 'gender';
+    const IS_REVEAL_HISTORIC_ANIMALS = 'is_reveal_historic_animals';
 
     //Request & Response
     const ERROR_CODE = 'error_code';
