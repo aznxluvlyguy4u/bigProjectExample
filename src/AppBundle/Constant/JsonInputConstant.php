@@ -23,6 +23,7 @@ class JsonInputConstant
     const PEDIGREE_COUNTRY_CODE = 'pedigree_country_code';
     const PEDIGREE_NUMBER = 'pedigree_number';
     const DATE_OF_BIRTH = 'date_of_birth';
+    const GENDER = 'gender';
 
     //Request & Response
     const ERROR_CODE = 'error_code';

@@ -223,7 +223,7 @@ class AnimalDetailsOutput
             "weights" => $weightRepository->getAllOfAnimalBySql($animal, $replacementString),
             "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
             "declare_log" => self::getLog($em, $animal, $location, $replacementString),
-            "children" => $animalRepository->getOffspringLogDataBySql($animal),
+            "children" => $animalRepository->getOffspringLogDataBySql($animal, $replacementString),
         );
 
         return $result;
