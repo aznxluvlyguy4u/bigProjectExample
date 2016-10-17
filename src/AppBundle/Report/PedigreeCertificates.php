@@ -7,8 +7,16 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\BreedValueCoefficient;
+use AppBundle\Entity\BreedValueCoefficientRepository;
+use AppBundle\Entity\BreedValuesSet;
+use AppBundle\Entity\BreedValuesSetRepository;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\GeneticBase;
+use AppBundle\Entity\GeneticBaseRepository;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\NormalDistribution;
+use AppBundle\Enumerator\BreedValueCoefficientType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -16,13 +24,12 @@ use Doctrine\Common\Persistence\ObjectManager;
 /**
  * Class PedigreeCertificates
  */
-class PedigreeCertificates
+class PedigreeCertificates extends ReportBase
 {
+    const FILE_NAME_REPORT_TYPE = 'afstammingsbewijs';
+
     /** @var array */
     private $reports;
-
-    /** @var Client */
-    private $client;
 
     /** @var string */
     private $ulnOfLastChild;
@@ -43,14 +50,32 @@ class PedigreeCertificates
     public function __construct(ObjectManager $em, Collection $content, Client $client,
                                 Location $location, $generationOfAscendants = 3)
     {
+        parent::__construct($em, $client, self::FILE_NAME_REPORT_TYPE);
+        
         $this->reports = array();
         $this->client = $client;
 
         $animals = self::getAnimalsInContentArray($em, $content);
         $this->animalCount = 0;
 
+        /** @var GeneticBaseRepository $geneticBaseRepository */
+        $geneticBaseRepository = $em->getRepository(GeneticBase::class);
+
+        $breedValuesYear = $geneticBaseRepository->getLatestYear();
+        $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
+
+        /** @var BreedValueCoefficientRepository $breedValueCoefficientRepository */
+        $breedValueCoefficientRepository = $em->getRepository(BreedValueCoefficient::class);
+
+        $lambMeatIndexCoefficients = $breedValueCoefficientRepository->getLambMeatIndexCoefficients();
+
+        /** @var BreedValuesSetRepository $breedValuesSetRepository */
+        $breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
+
+        $totalLambMeatIndexRankedAnimals = $breedValuesSetRepository->getLambMeatIndexRankedAnimalsCount($breedValuesYear);
+
         foreach ($animals as $animal) {
-            $pedigreeCertificate = new PedigreeCertificate($em, $client, $location, $animal, $generationOfAscendants);
+            $pedigreeCertificate = new PedigreeCertificate($em, $client, $location, $animal, $generationOfAscendants, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients);
 
             $this->reports[$this->animalCount] = $pedigreeCertificate->getData();
 
@@ -104,26 +129,4 @@ class PedigreeCertificates
         return $this->animalCount;
     }
 
-    /**
-     * @param string $mainDirectory
-     * @return string
-     */
-    public function getFilePath($mainDirectory)
-    {
-        return $mainDirectory.'/'.$this->getS3Key();
-    }
-
-    public function getFileName()
-    {
-        $dateTimeNow = new \DateTime();
-        $datePrint = $dateTimeNow->format('Y-m-d_').$dateTimeNow->format('H').'h'.$dateTimeNow->format('i').'m'.$dateTimeNow->format('s').'s';
-
-        return 'afstammingsbewijs-'.$datePrint.'.pdf';
-    }
-
-    public function getS3Key()
-    {
-        //TODO when each client has a permanent unique identifier, replace the id with that identifier.
-        return 'reports/'.$this->client->getId().'/'.$this->getFileName();
-    }
 }

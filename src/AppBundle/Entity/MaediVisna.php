@@ -104,6 +104,16 @@ class MaediVisna
 
 
     /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @Expose
+     */
+    private $reasonOfEdit;
+
+    
+    /**
      * MaediVisna constructor.
      */
     public function __construct($status = null, $endDate = null)
@@ -333,6 +343,22 @@ class MaediVisna
     public function setIsManualEdit($isManualEdit)
     {
         $this->isManualEdit = $isManualEdit;
+    }
+
+    /**
+     * @return string
+     */
+    public function getReasonOfEdit()
+    {
+        return $this->reasonOfEdit;
+    }
+
+    /**
+     * @param string $reasonOfEdit
+     */
+    public function setReasonOfEdit($reasonOfEdit)
+    {
+        $this->reasonOfEdit = trim($reasonOfEdit);
     }
     
     

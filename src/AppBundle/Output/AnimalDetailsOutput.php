@@ -4,15 +4,26 @@ namespace AppBundle\Output;
 
 
 use AppBundle\Component\Utils;
+use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\BodyFat;
+use AppBundle\Entity\BodyFatRepository;
+use AppBundle\Entity\BreedValuesSet;
+use AppBundle\Entity\BreedValuesSetRepository;
 use AppBundle\Entity\Exterior;
+use AppBundle\Entity\ExteriorRepository;
+use AppBundle\Entity\GeneticBase;
+use AppBundle\Entity\GeneticBaseRepository;
 use AppBundle\Entity\MuscleThickness;
+use AppBundle\Entity\MuscleThicknessRepository;
 use AppBundle\Entity\TailLength;
+use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Entity\Weight;
+use AppBundle\Entity\WeightRepository;
 use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Component\ExpressionLanguage\Tests\Node\Obj;
 
 /**
  * Class DeclareAnimalDetailsOutput
@@ -126,7 +137,18 @@ class AnimalDetailsOutput
             $breederEmailAddress = $replacementString; //TODO replace with real value
             $breederTelephoneNumber = $replacementString; //TODO replace with real value
         }
-
+        
+        /** @var BodyFatRepository $bodyFatRepository */
+        $bodyFatRepository = $em->getRepository(BodyFat::class);
+        /** @var ExteriorRepository $exteriorRepository */
+        $exteriorRepository = $em->getRepository(Exterior::class);
+        /** @var WeightRepository $weightRepository */
+        $weightRepository = $em->getRepository(Weight::class);
+        /** @var MuscleThicknessRepository $muscleThicknessRepository */
+        $muscleThicknessRepository = $em->getRepository(MuscleThickness::class);
+        /** @var TailLengthRepository $tailLengthRepository */
+        $tailLengthRepository = $em->getRepository(TailLength::class);
+        
         $result = array(
                   Constant::ULN_COUNTRY_CODE_NAMESPACE =>      Utils::fillNullOrEmptyString($animal->getUlnCountryCode(), $replacementString),
                   Constant::ULN_NUMBER_NAMESPACE =>            Utils::fillNullOrEmptyString($animal->getUlnNumber(), $replacementString),
@@ -178,6 +200,7 @@ class AnimalDetailsOutput
                         "birth_weight" =>       Utils::fillZero($birthWeight, $replacementString),
                         "birth_progress" =>     Utils::fillZero("", $replacementString)
                     ),
+                "breed_values" => self::createBreedValuesSetArray($em, $animal),
                 "breeder" =>
                     array(
                         "breeder" =>       Utils::fillNullOrEmptyString($breederName, $replacementString),
@@ -186,12 +209,57 @@ class AnimalDetailsOutput
                         "telephone" =>     Utils::fillNullOrEmptyString($breederTelephoneNumber, $replacementString),
                         "co-owner" =>      Utils::fillNullOrEmptyString("", $replacementString) //TODO
                     ),
-                "note" => Utils::fillNullOrEmptyString($animal->getNote(), $replacementString)
+                "note" => Utils::fillNullOrEmptyString($animal->getNote(), $replacementString),
+                "body_fats" => $bodyFatRepository->getAllOfAnimalBySql($animal, $replacementString),
+                "exteriors" => $exteriorRepository->getAllOfAnimalBySql($animal, $replacementString),
+                "muscle_thicknesses" => $muscleThicknessRepository->getAllOfAnimalBySql($animal, $replacementString),
+                "weights" => $weightRepository->getAllOfAnimalBySql($animal, $replacementString),
+                "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
         );
 
         return $result;
     }
 
+
+    /**
+     * @param ObjectManager $em
+     * @param Animal $animal
+     * @return array
+     */
+    private static function createBreedValuesSetArray(ObjectManager $em, Animal $animal)
+    {
+        $results = array();
+
+        /** @var BreedValuesSetRepository $breedValuesSetRepository */
+        $breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
+
+        /** @var GeneticBaseRepository $geneticBaseRepository */
+        $geneticBaseRepository = $em->getRepository(GeneticBase::class);
+
+        $years = $geneticBaseRepository->getAllYears();
+
+        foreach($years as $year) {
+            $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($year);
+
+            $correctedBreedValues = $breedValuesSetRepository->getBreedValuesCorrectedByGeneticBaseWithAccuracies($animal->getId(), $year, $geneticBases);
+
+            $lambMeatIndexValues = $breedValuesSetRepository->getLambMeatIndexWithAccuracy($animal);
+            
+            $results[] = [
+                'year' => $year,
+                'growth' => $correctedBreedValues[BreedValueLabel::GROWTH],
+                'muscle_thickness' => $correctedBreedValues[BreedValueLabel::MUSCLE_THICKNESS],
+                'fat' => $correctedBreedValues[BreedValueLabel::FAT],
+                'growth_accuracy' => $correctedBreedValues[BreedValueLabel::GROWTH_ACCURACY],
+                'muscle_thickness_accuracy' => $correctedBreedValues[BreedValueLabel::MUSCLE_THICKNESS_ACCURACY],
+                'fat_accuracy' => $correctedBreedValues[BreedValueLabel::FAT_ACCURACY],
+                'lamb_meat_index' => $lambMeatIndexValues[BreedValueLabel::LAMB_MEAT_INDEX],
+                'lamb_meat_index_accuracy' => $lambMeatIndexValues[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY]
+            ];
+        }
+
+        return $results;
+    }
 
 
 }

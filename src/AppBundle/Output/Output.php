@@ -6,6 +6,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Util\Finder;
+use AppBundle\Util\NullChecker;
 use Doctrine\Common\Persistence\ObjectManager;
 
 /**
@@ -15,55 +16,41 @@ use Doctrine\Common\Persistence\ObjectManager;
  */
 abstract class Output
 {
-    /**
-     * @var string
-     */
+    /** @var string */
     static protected $ubn;
 
-    /**
-     * @var LocationHealth
-     */
+    /** @var LocationHealth */
     static protected $locationHealth;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     static protected $locationHealthStatus;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     static protected $maediVisnaStatus;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     static protected $scrapieStatus;
 
-    /**
-     * @var \DateTime
-     */
+    /** @var \DateTime */
     static protected $maediVisnaEndDate;
 
-    /**
-     * @var \DateTime
-     */
+    /** @var \DateTime */
     static protected $scrapieEndDate;
 
-    /**
-     * @var \DateTime
-     */
+    /** @var \DateTime */
     static protected $maediVisnaCheckDate;
 
-    /**
-     * @var \DateTime
-     */
+    /** @var \DateTime */
     static protected $scrapieCheckDate;
 
-    /**
-     * @var \DateTime
-     */
+    /** @var \DateTime */
     static protected $checkDate;
+
+    /** @var string */
+    static protected $maediVisnaReasonOfEdit;
+
+    /** @var string */
+    static protected $scrapieReasonOfEdit;
 
     /**
      * @param Location $location
@@ -88,6 +75,7 @@ abstract class Output
                 self::$scrapieStatus = $lastScrapie->getStatus();
                 self::$scrapieCheckDate = $lastScrapie->getCheckDate();
                 self::$scrapieEndDate = $lastScrapie->getEndDate();
+                self::$scrapieReasonOfEdit = NullChecker::isNull($lastScrapie->getReasonOfEdit()) ? "": $lastScrapie->getReasonOfEdit();
             }
 
             $lastMaediVisna = Finder::findLatestActiveMaediVisna($location, $em);
@@ -95,6 +83,7 @@ abstract class Output
                 self::$maediVisnaStatus = $lastMaediVisna->getStatus();
                 self::$maediVisnaCheckDate = $lastMaediVisna->getCheckDate();
                 self::$maediVisnaEndDate = $lastMaediVisna->getEndDate();
+                self::$maediVisnaReasonOfEdit = NullChecker::isNull($lastMaediVisna->getReasonOfEdit()) ? "": $lastMaediVisna->getReasonOfEdit();
             }
             
         //The default values    
@@ -107,6 +96,8 @@ abstract class Output
             self::$scrapieEndDate = "";
             self::$scrapieCheckDate = "";
             self::$checkDate = "";
+            self::$scrapieReasonOfEdit = "";
+            self::$maediVisnaReasonOfEdit = "";
         }
     }
 

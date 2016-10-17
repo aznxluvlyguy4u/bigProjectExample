@@ -31,7 +31,8 @@ class AppKernel extends Kernel
             new \Aws\Symfony\AwsBundle(),
             new Nelmio\CorsBundle\NelmioCorsBundle(),
             new Nelmio\ApiDocBundle\NelmioApiDocBundle(),
-            new Knp\Bundle\SnappyBundle\KnpSnappyBundle()
+            new Knp\Bundle\SnappyBundle\KnpSnappyBundle(),
+            new Liuggio\ExcelBundle\LiuggioExcelBundle()
         ];
 
         if (in_array($this->getEnvironment(), ['dev', 'test'], true)) {

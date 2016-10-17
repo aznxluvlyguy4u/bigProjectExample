@@ -19,13 +19,16 @@ use Symfony\Component\Console\Output\OutputInterface;
 class NsfoReadUbnbirthCommand extends ContainerAwareCommand
 {
     const TITLE = 'Read UBN of birth from text file and save it to animal';
-    const DEFAULT_INPUT_FOLDER_PATH = '/home/data/JVT/projects/NSFO/DocsVanNSFO/DierBedrijf.txt';
+    const DEFAULT_FILE_NAME = 'DierBedrijf.txt';
     const PERSIST_BATCH_SIZE = 1000;
     const MAX_ROWS_TO_PROCESS = 0; //set 0 for no limit
     const DEFAULT_START_ROW = 0;
 
     /** @var ObjectManager $em */
     private $em;
+
+    /** @var string */
+    private $defaultFolderPath;
 
     protected function configure()
     {
@@ -51,10 +54,12 @@ class NsfoReadUbnbirthCommand extends ContainerAwareCommand
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
 
+        $this->defaultFolderPath = $this->getContainer()->get('kernel')->getRootDir().'/Resources/imports';
+
         //input
         $isProcessUbnsOfBirth = $cmdUtil->generateConfirmationQuestion('Process UBN of Birth? (y/n): ');
         $isProcessDateOfBirths = $cmdUtil->generateConfirmationQuestion('Process Date of Births? (y/n): ');
-        $inputFile = $cmdUtil->generateQuestion('Please enter input file path', self::DEFAULT_INPUT_FOLDER_PATH);
+        $inputFile = $cmdUtil->generateQuestion('Please enter input file path', $this->defaultFolderPath.'/'.self::DEFAULT_FILE_NAME);
 
         $fileContents = file_get_contents($inputFile);
         $dataInRows = explode("\r\n", $fileContents);

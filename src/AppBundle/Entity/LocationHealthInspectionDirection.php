@@ -20,17 +20,17 @@ class LocationHealthInspectionDirection
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
+     * @JMS\Exclude
      */
     protected $id;
 
     /**
-     * @var string
+     * @var Employee
      *
-     * @ORM\Column(type="string")
-     * @Assert\NotBlank
-     * @JMS\Type("string")
+     * @ORM\ManyToOne(targetEntity="Employee")
+     * @JMS\Type("AppBundle\Entity\Employee")
      */
-    private $inspectionType;
+    private $actionTakenBy;
 
     /**
      * @var datetime
@@ -40,7 +40,18 @@ class LocationHealthInspectionDirection
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      */
-    private $inspectionDate;
+    private $directionDate;
+
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    private $directionType;
+
 
     /**
      * @Assert\NotBlank
@@ -65,35 +76,51 @@ class LocationHealthInspectionDirection
     }
 
     /**
-     * @return string
+     * @return Employee
      */
-    public function getInspectionType()
+    public function getActionTakenBy()
     {
-        return $this->inspectionType;
+        return $this->actionTakenBy;
     }
 
     /**
-     * @param string $inspectionType
+     * @param Employee $actionTakenBy
      */
-    public function setInspectionType($inspectionType)
+    public function setActionTakenBy($actionTakenBy)
     {
-        $this->inspectionType = $inspectionType;
+        $this->actionTakenBy = $actionTakenBy;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDirectionType()
+    {
+        return $this->directionType;
+    }
+
+    /**
+     * @param string $directionType
+     */
+    public function setDirectionType($directionType)
+    {
+        $this->directionType = $directionType;
     }
 
     /**
      * @return DateTime
      */
-    public function getInspectionDate()
+    public function getDirectionDate()
     {
-        return $this->inspectionDate;
+        return $this->directionDate;
     }
 
     /**
-     * @param DateTime $inspectionDate
+     * @param DateTime $directionDate
      */
-    public function setInspectionDate($inspectionDate)
+    public function setDirectionDate($directionDate)
     {
-        $this->inspectionDate = $inspectionDate;
+        $this->directionDate = $directionDate;
     }
 
     /**

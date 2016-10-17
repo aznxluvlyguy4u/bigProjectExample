@@ -17,10 +17,12 @@ class JsonInputConstant
     const ANIMAL = 'animal';
     const RAM = 'ram';
     const EWE = 'ewe';
+    const EWES = 'ewes';
     const ULN_COUNTRY_CODE = 'uln_country_code';
     const ULN_NUMBER = 'uln_number';
     const PEDIGREE_COUNTRY_CODE = 'pedigree_country_code';
     const PEDIGREE_NUMBER = 'pedigree_number';
+    const DATE_OF_BIRTH = 'date_of_birth';
 
     //Request & Response
     const ERROR_CODE = 'error_code';
@@ -91,8 +93,11 @@ class JsonInputConstant
     const SCRAPIE_START_DATE = 'scrapie_start_date';
     const SCRAPIE_CHECK_DATE = 'scrapie_check_date';
     const SCRAPIE_END_DATE = 'scrapie_end_date';
+    const MAEDI_VISNA_REASON_OF_EDIT = 'maedi_visna_reason_of_edit';
+    const SCRAPIE_REASON_OF_EDIT = 'scrapie_reason_of_edit';
 
     //Locations
+    const LOCATION = 'location';
     const PROVINCES = 'provinces';
     const CODES = 'codes';
 
@@ -120,6 +125,7 @@ class JsonInputConstant
     const PERSON_ID = 'person_id';
 
     //Measurements
+    const MEASUREMENT_ID = 'measurement_id';
     const DATE_OF_MEASUREMENT = 'date_of_measurement';
     const MEASUREMENT_DATE = 'measurement_date';
     const IS_EMPTY_MEASUREMENT = 'is_empty_measurement';
@@ -130,6 +136,8 @@ class JsonInputConstant
     const WEIGHT_MEASUREMENTS = 'weight_measurements';
     const WEIGHT = 'weight';
     const IS_BIRTH_WEIGHT = 'is_birth_weight';
+    const IS_VALID_20WEEK_WEIGHT_MEASUREMENT = 'is_valid_20_week_weight_measurement';
+    const IS_REVOKED = 'is_revoked';
 
     //BodyFat measurements
     const FAT1 = 'fat1';
@@ -140,5 +148,20 @@ class JsonInputConstant
     const HEIGHT = 'height';
     const KIND = 'kind';
     const PROGRESS = 'progress';
+    const SKULL = 'skull';
+    const MUSCULARITY = 'muscularity';
+    const PROPORTION = 'proportion';
+    const EXTERIOR_TYPE = 'exterior_type';
+    const LEG_WORK = 'leg_work';
+    const FUR = 'fur';
+    const GENERAL_APPEARANCE = 'general_appearance';
+    const BREAST_DEPTH = 'breast_depth';
+    const TORSO_LENGTH = 'torso_length';
+    const MARKINGS = 'markings';
 
+    //MuscleThickness
+    const MUSCLE_THICKNESS = 'muscle_thickness';
+
+    //TailLength
+    const LENGTH = 'length';
 }

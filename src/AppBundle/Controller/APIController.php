@@ -174,6 +174,19 @@ class APIController extends Controller implements APIControllerInterface
     return $this->get('kernel')->getEnvironment();
   }
 
+
+  /** @return mixed */
+  protected function getRootDirectory() { return $this->get('kernel')->getRootDir(); }
+
+  /** @return mixed */
+  protected function getWebDirectory() { return realpath($this->getRootDirectory() . '/../web'); }
+
+  /** @return mixed */
+  protected function getAssetsDirectory() { return $this->getWebDirectory().'/assets'; }
+
+  /** @return mixed */
+  protected function getImagesDirectory() { return $this->getAssetsDirectory().'/images'; }
+
   /**
    * @param Request $request
    * @return ArrayCollection

@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -110,7 +111,7 @@ abstract class Animal
     protected $gender;
 
     /**
-     * @var Animal
+     * @var Ram
      *
      * @ORM\ManyToOne(targetEntity="Ram", inversedBy="children", cascade={"persist"})
      * @ORM\JoinColumn(name="parent_father_id", referencedColumnName="id", onDelete="set null")
@@ -119,7 +120,7 @@ abstract class Animal
     protected $parentFather;
 
     /**
-     * @var Animal
+     * @var Ewe
      *
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="children", cascade={"persist"})
      * @ORM\JoinColumn(name="parent_mother_id", referencedColumnName="id", onDelete="set null")
@@ -426,7 +427,7 @@ abstract class Animal
     protected $breedCode;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Breeder")
+     * @ORM\ManyToOne(targetEntity="Client")
      * @ORM\JoinColumn(name="breeder_id", referencedColumnName="id")
      */
     protected $breeder;
@@ -450,7 +451,7 @@ abstract class Animal
     /**
      * @var Litter
      * @JMS\Type("AppBundle\Entity\Litter")
-     * @ORM\ManyToOne(targetEntity="Litter", inversedBy="children")
+     * @ORM\ManyToOne(targetEntity="Litter", inversedBy="children", cascade={"persist"})
      * @ORM\JoinColumn(name="litter_id", referencedColumnName="id")
      */
     protected $litter;
@@ -485,14 +486,6 @@ abstract class Animal
     protected $mixblupBlock;
 
     /**
-     * @var float
-     *
-     * @ORM\Column(type="float", nullable=true, options={"default":null})
-     * @JMS\Type("float")
-     */
-    protected $inbreedingCoefficient;
-
-    /**
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
@@ -505,6 +498,15 @@ abstract class Animal
      * @ORM\Column(type="boolean", nullable=true)
      */
     protected $lambar;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="BreedValuesSet", mappedBy="animal", cascade={"persist"})
+     * @ORM\OrderBy({"generationDate" = "ASC"})
+     * @JMS\Type("AppBundle\Entity\BreedValuesSet")
+     */
+    protected $breedValuesSets;
 
     /**
      * Animal constructor.
@@ -528,6 +530,7 @@ abstract class Animal
         $this->genderHistory = new ArrayCollection();
         $this->tagReplacements = new ArrayCollection();
         $this->parents = new ArrayCollection();
+        $this->breedValuesSets = new ArrayCollection();
         $this->isAlive = true;
         $this->ulnCountryCode = '';
         $this->ulnNumber = '';
@@ -597,6 +600,20 @@ abstract class Animal
 
 
     /**
+     * @param string $nullFiller
+     * @return null|string
+     */
+    public function getPedigreeString($nullFiller = null)
+    {
+        if(NullChecker::isNotNull($this->pedigreeCountryCode) && NullChecker::isNotNull($this->pedigreeNumber)) {
+            return $this->pedigreeCountryCode.$this->pedigreeNumber;
+        } else {
+            return $nullFiller;
+        }
+    }
+
+
+    /**
      * Get ulnCountryCode
      *
      * @return string
@@ -623,8 +640,31 @@ abstract class Animal
      */
     public function getUln()
     {
-        return $this->ulnCountryCode . $this->ulnNumber;
+        if($this->isUlnExists()) {
+            return $this->ulnCountryCode . $this->ulnNumber;
+        } else {
+            return null;
+        }
     }
+
+
+    /**
+     * @return bool
+     */
+    public function isUlnExists()
+    {
+        return NullChecker::isNotNull($this->ulnCountryCode) && NullChecker::isNotNull($this->ulnNumber);
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function isPedigreeExists()
+    {
+        return NullChecker::isNotNull($this->pedigreeCountryCode) && NullChecker::isNotNull($this->pedigreeNumber);
+    }
+
 
     /**
      * @return string
@@ -894,11 +934,11 @@ abstract class Animal
     /**
      * Set parentFather
      *
-     * @param Animal
+     * @param Ram
      *
-     * @return Animal
+     * @return Ram
      */
-    public function setParentFather(Animal $parentFather = null)
+    public function setParentFather(Ram $parentFather = null)
     {
         $this->parentFather = $parentFather;
         //$parentFather->getChildren()->add($this);
@@ -909,31 +949,46 @@ abstract class Animal
     /**
      * Get parentFather
      *
-     * @return Animal
+     * @return Ram
      */
     public function getParentFather()
     {
-        if($this->parentFather != null) {
-            return $this->parentFather;
-        } else {
-            /** @var Animal $parent */
-            foreach ($this->parents as $parent) {
-                $gender = $parent->getGender();
-                if($gender == GenderType::MALE || $gender == GenderType::M) {
-                    return $parent;
-                }
-            }
-        }
-        //if no father has been found
-        return null;
+        return $this->parentFather;
     }
+
+
+    /**
+     * @return int|null
+     */
+    public function getParentFatherId()
+    {
+        if($this->parentFather != null) {
+            return $this->parentFather->getId();
+        } else {
+            return null;
+        }
+    }
+
+
+    /**
+     * @return int|null
+     */
+    public function getParentMotherId()
+    {
+        if($this->parentMother != null) {
+            return $this->parentMother->getId();
+        } else {
+            return null;
+        }
+    }
+
 
     /**
      * Set parentMother
      *
-     * @param Animal $parentMother
+     * @param Ewe $parentMother
      *
-     * @return Animal
+     * @return Ewe
      */
     public function setParentMother($parentMother = null)
     {
@@ -946,23 +1001,11 @@ abstract class Animal
     /**
      * Get parentMother
      *
-     * @return Animal
+     * @return Ewe
      */
     public function getParentMother()
     {
-        if($this->parentMother != null) {
-            return $this->parentMother;
-        } else {
-            /** @var Animal $parent */
-            foreach ($this->parents as $parent) {
-                $gender = $parent->getGender();
-                if($gender == GenderType::FEMALE || $gender == GenderType::V) {
-                    return $parent;
-                }
-            }
-        }
-        //if no mother has been found
-        return null;
+        return $this->parentMother;
     }
     
     /**
@@ -1872,7 +1915,7 @@ abstract class Animal
     }
 
     /**
-     * @return Breeder
+     * @return Client
      */
     public function getBreeder()
     {
@@ -1880,7 +1923,7 @@ abstract class Animal
     }
 
     /**
-     * @param Breeder $breeder
+     * @param Client $breeder
      */
     public function setBreeder($breeder)
     {
@@ -2057,23 +2100,6 @@ abstract class Animal
 
 
     /**
-     * @return float
-     */
-    public function getInbreedingCoefficient()
-    {
-        return $this->inbreedingCoefficient;
-    }
-
-    /**
-     * @param float $inbreedingCoefficient
-     */
-    public function setInbreedingCoefficient($inbreedingCoefficient)
-    {
-        $this->inbreedingCoefficient = $inbreedingCoefficient;
-    }
-
-
-    /**
      * @return string
      */
     public function getBirthProgress()
@@ -2104,6 +2130,55 @@ abstract class Animal
     {
         $this->lambar = $lambar;
     }
+
+
+    /**
+     * Add breedValues
+     *
+     * @param BreedValuesSet $breedValuesSet
+     *
+     * @return Animal
+     */
+    public function addBreedValuesSet(BreedValuesSet $breedValuesSet)
+    {
+        $this->breedValuesSets[] = $breedValuesSet;
+
+        return $this;
+    }
+
+    /**
+     * Remove breedValues
+     *
+     * @param BreedValuesSet $breedValuesSet
+     */
+    public function removeBreedValuesSet(BreedValuesSet $breedValuesSet)
+    {
+        $this->breedValuesSets->removeElement($breedValuesSet);
+    }
+
+    /**
+     * Get BreedValuesSets
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getBreedValuesSets()
+    {
+        return $this->breedValuesSets;
+    }
+
+
+    /**
+     * @return BreedValuesSet|null
+     */
+    public function getLastBreedValuesSet()
+    {
+        if(count($this->breedValuesSets) > 0) {
+            return $this->breedValuesSets->last();
+        } else {
+            return null;
+        }
+    }
+
 
 
     /**
@@ -2140,7 +2215,17 @@ abstract class Animal
             $this->setBreedCode($animal->getBreedCode());
             $this->setScrapieGenotype($animal->getScrapieGenotype());
             $this->setNote($animal->getNote());
-            
+
+            /* Unidirectional OneToOne relationships */
+            $this->setBreeder($animal->getBreeder());
+
+            /* OneToMany relationships */
+            $litter = $animal->getLitter();
+            if($litter instanceof Litter) {
+                $litter->addChild($this);
+                $this->setLitter($litter);
+            }
+
             /* ManyToOne relationships */
             $father = $animal->getParentFather();
             if ($father instanceof Ram) { $this->setParentFather($father); }
@@ -2248,7 +2333,7 @@ abstract class Animal
      */
     private function replaceAnimalInNonParentManyToManyRelationships($collection)
     {
-        /** @var DeclareArrival|DeclareDepart|DeclareImport|DeclareExport|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclareTagReplace|DeclareWeight|AnimalResidence|BodyFat|MuscleThickness|TailLength|Weight|Exterior|Tag $item */
+        /** @var DeclareArrival|DeclareDepart|DeclareImport|DeclareExport|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclareTagReplace|DeclareWeight|AnimalResidence|BodyFat|MuscleThickness|TailLength|Weight|Exterior|Tag|Litter $item */
         foreach ($collection as $item) {
             $item->setAnimal(null);
             $item->setAnimal($this);

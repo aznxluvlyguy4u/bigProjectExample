@@ -58,4 +58,28 @@ class NumberUtil
             return false;
         }
     }
+
+
+    /**
+     * @param $string
+     * @return mixed
+     */
+    public static function replaceCommaByDot($string)
+    {
+        return str_replace(',','.',$string);
+    }
+
+
+    /**
+     * @param $number
+     * @return string
+     */
+    public static function getPlusSignIfNumberIsPositive($number)
+    {
+        if($number > 0) {
+            return '+';
+        } else {
+            return '';
+        }
+    }
 }

@@ -246,7 +246,7 @@ class CompanyOutput
             /*
              * @var $location Location
              */
-            $healthInspections[] = $location->getInspections();
+//            $healthInspections[] = $location->getInspections();
         }
 
         $users = $company->getCompanyUsers();
