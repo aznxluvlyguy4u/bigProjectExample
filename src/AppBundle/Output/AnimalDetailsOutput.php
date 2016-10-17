@@ -13,9 +13,8 @@ use AppBundle\Entity\BodyFat;
 use AppBundle\Entity\BodyFatRepository;
 use AppBundle\Entity\BreedValuesSet;
 use AppBundle\Entity\BreedValuesSetRepository;
-use AppBundle\Entity\DeclareArrival;
-use AppBundle\Entity\DeclareArrivalRepository;
-use AppBundle\Entity\DeclareDepartRepository;
+use AppBundle\Entity\DeclareBase;
+use AppBundle\Entity\DeclareBaseRepository;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\GeneticBase;
@@ -280,13 +279,9 @@ class AnimalDetailsOutput
      */
     private static function getLog(ObjectManager $em, Animal $animal, Location $location)
     {
-        $results = [];
-
-        /** @var DeclareArrivalRepository $arrivalRepository */
-        $arrivalRepository = $em->getRepository(DeclareArrival::class);
-        $arrivalLog = $arrivalRepository->getLog($animal, $location);
-
-        return $results;
+        /** @var DeclareBaseRepository $declareBaseRepository */
+        $declareBaseRepository = $em->getRepository(DeclareBase::class);
+        return $declareBaseRepository->getLog($animal, $location);
     }
 
 }

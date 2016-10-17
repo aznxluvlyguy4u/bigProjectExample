@@ -8,5 +8,75 @@ namespace AppBundle\Entity;
  */
 class DeclareBaseRepository extends BaseRepository
 {
+    /**
+     * @param Animal $animal
+     * @param Location $location
+     * @return array
+     */
+    public function getLog(Animal $animal, Location $location)
+    {
+        $results = [];
+        //null check
+        if(!($animal instanceof Animal) || !($location instanceof Location)) { return $results; }
+        elseif(!is_int($animal->getId())){ return $results; }
 
+        if($animal->getLocation() != $location) { return $results; }
+        
+        $locationId = $location->getId();
+        $animalId = $animal->getId();
+        
+        $sql = "SELECT b.log_date, start_date, end_date, 'MATE' as action, NULL as data, p.first_name, p.last_name
+                FROM mate d
+                  INNER JOIN declare_nsfo_base b ON d.id = b.id
+                  LEFT JOIN person p ON p.id = b.action_by_id
+                WHERE (b.request_state = 'FINISHED' OR b.request_state = 'FINISHED_WITH_WARNING') AND location_id = ".$locationId." AND (d.stud_ewe_id = ".$animalId." OR d.stud_ram_id = ".$animalId.")
+                UNION
+                SELECT b.log_date, d.date_of_birth as start_date, null as end_date, 'BIRTH' as action, NULL as data, p.first_name, p.last_name
+                FROM declare_birth d
+                  INNER JOIN declare_nsfo_base b ON d.id = b.id
+                  LEFT JOIN person p ON p.id = b.action_by_id
+                  LEFT JOIN litter l ON l.id = d.litter_id
+                WHERE (b.request_state = 'FINISHED' OR b.request_state = 'FINISHED_WITH_WARNING') AND location_id = ".$locationId." AND (l.animal_father_id = ".$animalId." OR l.animal_mother_id = ".$animalId.")
+                UNION
+                SELECT b.log_date, measurement_date as start_date, NULL as end_date, 'WEIGHT MEASUREMENT KG' as action, CAST(d.weight AS TEXT) as data, p.first_name, p.last_name
+                FROM declare_weight d
+                  INNER JOIN declare_nsfo_base b ON d.id = b.id
+                  LEFT JOIN person p ON p.id = b.action_by_id
+                WHERE (b.request_state = 'FINISHED' OR b.request_state = 'FINISHED_WITH_WARNING') AND location_id = ".$locationId." AND d.animal_id = ".$animalId."
+                UNION
+                SELECT b.log_date, a.arrival_date as start_date, NULL as end_date, 'ARRIVAL FROM UBN' as action, a.ubn_previous_owner as data, p.first_name, p.last_name
+                FROM declare_arrival a
+                  INNER JOIN declare_base b ON a.id = b.id
+                  LEFT JOIN person p ON p.id = b.action_by_id
+                WHERE (b.request_state = 'FINISHED' OR b.request_state = 'FINISHED_WITH_WARNING') AND location_id = ".$locationId." AND a.animal_id = ".$animalId."
+                UNION
+                SELECT b.log_date, a.import_date as start_date, NULL as end_date, 'IMPORT FROM' as action, a.animal_country_origin as data, p.first_name, p.last_name
+                FROM declare_import a
+                  INNER JOIN declare_base b ON a.id = b.id
+                  LEFT JOIN person p ON p.id = b.action_by_id
+                WHERE (b.request_state = 'FINISHED' OR b.request_state = 'FINISHED_WITH_WARNING') AND location_id = ".$locationId." AND a.animal_id = ".$animalId."
+                UNION
+                SELECT b.log_date, a.depart_date as start_date, NULL as end_date, 'DEPARTURE TO UBN' as action, a.ubn_new_owner as data, p.first_name, p.last_name
+                FROM declare_depart a
+                  INNER JOIN declare_base b ON a.id = b.id
+                  LEFT JOIN person p ON p.id = b.action_by_id
+                WHERE (b.request_state = 'FINISHED' OR b.request_state = 'FINISHED_WITH_WARNING') AND location_id = ".$locationId." AND a.animal_id = ".$animalId."
+                UNION
+                SELECT b.log_date, a.export_date as start_date, NULL as end_date, 'EXPORT' as action, NULL as data, p.first_name, p.last_name
+                FROM declare_export a
+                  INNER JOIN declare_base b ON a.id = b.id
+                  LEFT JOIN person p ON p.id = b.action_by_id
+                WHERE (b.request_state = 'FINISHED' OR b.request_state = 'FINISHED_WITH_WARNING') AND location_id = ".$locationId." AND a.animal_id = ".$animalId."
+                UNION
+                SELECT b.log_date, a.date_of_death as start_date, NULL as end_date, 'LOSS' as action, a.reason_of_loss as data, p.first_name, p.last_name
+                FROM declare_loss a
+                  INNER JOIN declare_base b ON a.id = b.id
+                  LEFT JOIN person p ON p.id = b.action_by_id
+                WHERE (b.request_state = 'FINISHED' OR b.request_state = 'FINISHED_WITH_WARNING') AND location_id = ".$locationId." AND a.animal_id = ".$animalId."
+                ORDER BY log_date DESC";
+        
+        $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+        return $results;
+    }
 }
