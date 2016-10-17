@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
@@ -153,6 +154,37 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $minimizedOutput = AnimalOutput::createAnimalsArray($animals, $this->getDoctrine()->getManager());
 
     return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
+  }
+
+
+  /**
+   * Retrieve all historic animals that ever resided on this location, dead or alive
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Retrieve all historic animals that ever resided on this location, dead or alive",
+   *   output = "AppBundle\Entity\Animal"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-historic-livestock")
+   * @Method("GET")
+   */
+  public function getHistoricLiveStock(Request $request) {
+    $location = $this->getSelectedLocation($request);
+    /** @var AnimalRepository $repository */
+    $repository = $this->getDoctrine()->getRepository(Animal::class);
+    $historicAnimalsInArray = $repository->getHistoricLiveStock($location);
+
+    return new JsonResponse([Constant::RESULT_NAMESPACE => $historicAnimalsInArray], 200);
   }
 
 
