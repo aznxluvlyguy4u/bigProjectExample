@@ -361,14 +361,19 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
 
     $client = $this->getAuthenticatedUser($request);
     $location = $this->getSelectedLocation($request);
-    $animal = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->getAnimalByUlnString($client, $ulnString);
+    /** @var AnimalRepository $repository */
+    $repository = $this->getDoctrine()->getRepository(Animal::class);
 
+    $animal = $repository->findAnimalByUlnString($ulnString);
     if($animal == null) {
-      return new JsonResponse(array('code'=>404, "message" => "For this account, no animal was found with uln: " . $ulnString), 404);
+      return new JsonResponse(['code'=>404, "message" => "Animal does not exist in our world :("], 404);
+    }
+    if(!$animal->isAnimalPublic()){
+      return new JsonResponse(['code'=>404, "message" => "The owner has not made this animal public"], 404);
     }
 
     $output = AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $animal, $location);
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $output), 200);
+    return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
   }
 
   /**

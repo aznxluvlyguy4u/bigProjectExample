@@ -2402,4 +2402,20 @@ abstract class Animal
             }
         }
     }
+
+
+    /**
+     * @return bool
+     */
+    public function isAnimalPublic()
+    {
+        $location = $this->getLocation();
+        if($location != null) {
+            $company = $location->getCompany();
+            if($company != null) {
+                return $company->getIsRevealHistoricAnimals();
+            }
+        }
+        return true;
+    }
 }
