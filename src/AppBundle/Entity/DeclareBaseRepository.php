@@ -1,6 +1,8 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Component\Utils;
+use AppBundle\Constant\JsonInputConstant;
 
 /**
  * Class DeclareBaseRepository
@@ -11,9 +13,10 @@ class DeclareBaseRepository extends BaseRepository
     /**
      * @param Animal $animal
      * @param Location $location
+     * @param string $replacementString
      * @return array
      */
-    public function getLog(Animal $animal, Location $location)
+    public function getLog(Animal $animal, Location $location, $replacementString = '')
     {
         $results = [];
         //null check
@@ -75,7 +78,19 @@ class DeclareBaseRepository extends BaseRepository
                 WHERE (b.request_state = 'FINISHED' OR b.request_state = 'FINISHED_WITH_WARNING') AND location_id = ".$locationId." AND a.animal_id = ".$animalId."
                 ORDER BY log_date DESC";
         
-        $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+        $retrievedData = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+        foreach ($retrievedData as $record) {
+            $results[] = [
+              JsonInputConstant::LOG_DATE => Utils::fillNullOrEmptyString($record['log_date'], $replacementString),
+              JsonInputConstant::START_DATE => Utils::fillNullOrEmptyString($record['start_date'], $replacementString),
+              JsonInputConstant::END_DATE => Utils::fillNullOrEmptyString($record['end_date'], $replacementString),
+              JsonInputConstant::ACTION => Utils::fillNullOrEmptyString($record['action'], $replacementString),
+              JsonInputConstant::DATA => Utils::fillNullOrEmptyString($record['data'], $replacementString),
+              JsonInputConstant::FIRST_NAME => Utils::fillNullOrEmptyString($record['first_name'], $replacementString),
+              JsonInputConstant::LAST_NAME => Utils::fillNullOrEmptyString($record['last_name'], $replacementString),
+            ];
+        }
 
         return $results;
     }

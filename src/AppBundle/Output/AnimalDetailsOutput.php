@@ -222,7 +222,7 @@ class AnimalDetailsOutput
             "muscle_thicknesses" => $muscleThicknessRepository->getAllOfAnimalBySql($animal, $replacementString),
             "weights" => $weightRepository->getAllOfAnimalBySql($animal, $replacementString),
             "tail_lengths" => $tailLengthRepository->getAllOfAnimalBySql($animal, $replacementString),
-            "declare_log" => self::getLog($em, $animal, $location),
+            "declare_log" => self::getLog($em, $animal, $location, $replacementString),
             "children" => $animalRepository->getOffspringLogDataBySql($animal),
         );
 
@@ -275,13 +275,14 @@ class AnimalDetailsOutput
      * @param ObjectManager $em
      * @param Animal $animal
      * @param Location $location
+     * @param string $replacementText
      * @return array
      */
-    private static function getLog(ObjectManager $em, Animal $animal, Location $location)
+    private static function getLog(ObjectManager $em, Animal $animal, Location $location, $replacementText)
     {
         /** @var DeclareBaseRepository $declareBaseRepository */
         $declareBaseRepository = $em->getRepository(DeclareBase::class);
-        return $declareBaseRepository->getLog($animal, $location);
+        return $declareBaseRepository->getLog($animal, $location, $replacementText);
     }
 
 }
