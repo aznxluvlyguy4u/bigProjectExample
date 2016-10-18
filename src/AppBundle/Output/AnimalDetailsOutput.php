@@ -18,10 +18,12 @@ use AppBundle\Entity\GeneticBase;
 use AppBundle\Entity\GeneticBaseRepository;
 use AppBundle\Entity\MuscleThickness;
 use AppBundle\Entity\MuscleThicknessRepository;
+use AppBundle\Entity\PedigreeRepository;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
+use AppBundle\Util\BreedValueUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\ExpressionLanguage\Tests\Node\Obj;
 
@@ -243,18 +245,48 @@ class AnimalDetailsOutput
 
             $correctedBreedValues = $breedValuesSetRepository->getBreedValuesCorrectedByGeneticBaseWithAccuracies($animal->getId(), $year, $geneticBases);
 
-            $lambMeatIndexValues = $breedValuesSetRepository->getLambMeatIndexWithAccuracy($animal);
-            
+            $growthAccuracy = $correctedBreedValues[BreedValueLabel::GROWTH_ACCURACY];
+            if($growthAccuracy >= BreedValueUtil::MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT) {
+                $growth = $correctedBreedValues[BreedValueLabel::GROWTH];
+            } else {
+                $growth = 0;
+                $growthAccuracy = 0;
+            }
+
+            $fatAccuracy = $correctedBreedValues[BreedValueLabel::FAT_ACCURACY];
+            if($fatAccuracy >= BreedValueUtil::MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT) {
+                $fat = $correctedBreedValues[BreedValueLabel::FAT];
+            } else {
+                $fat = 0;
+                $fatAccuracy = 0;
+            }
+
+            $muscleThicknessAccuracy = $correctedBreedValues[BreedValueLabel::MUSCLE_THICKNESS_ACCURACY];
+            if($muscleThicknessAccuracy >= BreedValueUtil::MIN_BREED_VALUE_ACCURACY_PEDIGREE_REPORT) {
+                $muscleThickness = $correctedBreedValues[BreedValueLabel::MUSCLE_THICKNESS];
+            } else {
+                $muscleThickness = 0;
+                $muscleThicknessAccuracy = 0;
+            }
+
+            $lambMeatIndexAccuracy = $correctedBreedValues[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY];
+            if($lambMeatIndexAccuracy >= BreedValueUtil::MIN_LAMB_MEAT_INDEX_ACCURACY) {
+                $lambMeatIndex = $correctedBreedValues[BreedValueLabel::LAMB_MEAT_INDEX];
+            } else {
+                $lambMeatIndex = 0;
+                $lambMeatIndexAccuracy = 0;
+            }
+
             $results[] = [
                 'year' => $year,
-                'growth' => $correctedBreedValues[BreedValueLabel::GROWTH],
-                'muscle_thickness' => $correctedBreedValues[BreedValueLabel::MUSCLE_THICKNESS],
-                'fat' => $correctedBreedValues[BreedValueLabel::FAT],
-                'growth_accuracy' => $correctedBreedValues[BreedValueLabel::GROWTH_ACCURACY],
-                'muscle_thickness_accuracy' => $correctedBreedValues[BreedValueLabel::MUSCLE_THICKNESS_ACCURACY],
-                'fat_accuracy' => $correctedBreedValues[BreedValueLabel::FAT_ACCURACY],
-                'lamb_meat_index' => $lambMeatIndexValues[BreedValueLabel::LAMB_MEAT_INDEX],
-                'lamb_meat_index_accuracy' => $lambMeatIndexValues[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY]
+                'growth' => $growth,
+                'muscle_thickness' => $muscleThickness,
+                'fat' => $fat,
+                'growth_accuracy' => $growthAccuracy,
+                'muscle_thickness_accuracy' => $muscleThicknessAccuracy,
+                'fat_accuracy' => $fatAccuracy,
+                'lamb_meat_index' => $lambMeatIndex,
+                'lamb_meat_index_accuracy' => $lambMeatIndexAccuracy
             ];
         }
 
