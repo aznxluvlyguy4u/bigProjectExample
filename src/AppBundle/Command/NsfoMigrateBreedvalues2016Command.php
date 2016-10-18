@@ -52,6 +52,9 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
     /** @var array */
     private $missingUlns;
 
+    /** @var array */
+    private $missingUlnsWithoutReplacementUln;
+
     private $csvParsingOptions = array(
         'finder_in' => 'app/Resources/imports/MixblupBreedValues2016_10_04',
         'finder_name_solani' => 'Solani.out',
@@ -78,6 +81,7 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
         $this->declareTagReplaceRepository = $this->em->getRepository(DeclareTagReplace::class);
         $this->output = $output;
         $this->missingUlns = [];
+        $this->missingUlnsWithoutReplacementUln = [];
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
@@ -109,7 +113,7 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
                 break;
 
             case 3:
-                $this->processMissingUlns();
+                $this->showMissingUlns();
                 break;
 
             default:
@@ -201,11 +205,23 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
         $this->cmdUtil->advanceProgressBar(1, 'Splitting Relani.out columns');
         foreach($relaniRows as $relaniRow) {
             $relaniParts = explode(' ', StringUtil::replaceMultipleSpacesByOne($relaniRow)[0]);
-            $animalId = $this->animalIdByUln->get($relaniParts[1]);
+            $uln = $relaniParts[1];
+            $animalId = $this->animalIdByUln->get($uln);
             if($animalId != null) {
                 $this->relani[$animalId] = $relaniParts;
+
             } else {
-                $this->missingUlns[$relaniParts[1]] = $relaniParts[1];
+                $this->missingUlns[$uln] = $uln;
+
+                $newReplacementUln = $this->declareTagReplaceRepository->getNewReplacementUln($uln);
+                if($newReplacementUln != null) {
+                    $animalId = $this->animalIdByUln->get($newReplacementUln);
+                    if($animalId != null) {
+                        $this->relani[$animalId] = $relaniParts;
+                    }
+                } else {
+                    $this->missingUlnsWithoutReplacementUln[$uln] = $uln;
+                }
             }
         }
 
@@ -215,11 +231,23 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
         $this->cmdUtil->advanceProgressBar(1, 'Splitting Solani.out columns');
         foreach($solaniRows as $solaniRow) {
             $solaniParts = explode(' ', StringUtil::replaceMultipleSpacesByOne($solaniRow)[0]);
-            $animalId = $this->animalIdByUln->get($solaniParts[0]);
+            $uln = $solaniParts[0];
+            $animalId = $this->animalIdByUln->get($uln);
             if($animalId != null) {
                 $this->solani[$animalId] = $solaniParts;
+
             } else {
-                $this->missingUlns[$solaniParts[0]] = $solaniParts[0];
+                $this->missingUlns[$uln] = $uln;
+
+                $newReplacementUln = $this->declareTagReplaceRepository->getNewReplacementUln($uln);
+                if($newReplacementUln != null) {
+                    $animalId = $this->animalIdByUln->get($newReplacementUln);
+                    if($animalId != null) {
+                        $this->solani[$animalId] = $solaniParts;
+                    }
+                } else {
+                    $this->missingUlnsWithoutReplacementUln[$uln] = $uln;
+                }
             }
         }
 
@@ -290,13 +318,19 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
     }
 
 
-    private function processMissingUlns()
+    private function showMissingUlns()
     {
         foreach ($this->missingUlns as $oldReplacedUln)
         {
             $newReplacementUln = $this->declareTagReplaceRepository->getNewReplacementUln($oldReplacedUln);
             $newReplacementUln = Utils::fillNullOrEmptyString($newReplacementUln, '');
             $this->output->writeln($oldReplacedUln.' old | new '.$newReplacementUln);
+        }
+
+        $this->output->writeln('ulns in input files without a replacement uln');
+        foreach ($this->missingUlnsWithoutReplacementUln as $oldReplacedUln)
+        {
+            $this->output->writeln($oldReplacedUln);
         }
     }
 }
