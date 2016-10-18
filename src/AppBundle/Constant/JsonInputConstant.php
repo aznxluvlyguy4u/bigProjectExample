@@ -23,6 +23,8 @@ class JsonInputConstant
     const PEDIGREE_COUNTRY_CODE = 'pedigree_country_code';
     const PEDIGREE_NUMBER = 'pedigree_number';
     const DATE_OF_BIRTH = 'date_of_birth';
+    const GENDER = 'gender';
+    const IS_REVEAL_HISTORIC_ANIMALS = 'is_reveal_historic_animals';
 
     //Request & Response
     const ERROR_CODE = 'error_code';
@@ -120,6 +122,7 @@ class JsonInputConstant
     const IS_OVERWRITTEN = 'is_overwritten';
     const REVOKED_BY = 'revoked_by';
     const REVOKE_DATE = 'revoke_date';
+    const DATA = 'data';
 
     //Persons
     const PERSON_ID = 'person_id';

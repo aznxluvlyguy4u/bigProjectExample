@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
@@ -153,6 +154,37 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $minimizedOutput = AnimalOutput::createAnimalsArray($animals, $this->getDoctrine()->getManager());
 
     return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
+  }
+
+
+  /**
+   * Retrieve all historic animals that ever resided on this location, dead or alive
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Retrieve all historic animals that ever resided on this location, dead or alive",
+   *   output = "AppBundle\Entity\Animal"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-historic-livestock")
+   * @Method("GET")
+   */
+  public function getHistoricLiveStock(Request $request) {
+    $location = $this->getSelectedLocation($request);
+    /** @var AnimalRepository $repository */
+    $repository = $this->getDoctrine()->getRepository(Animal::class);
+    $historicAnimalsInArray = $repository->getHistoricLiveStock($location);
+
+    return new JsonResponse([Constant::RESULT_NAMESPACE => $historicAnimalsInArray], 200);
   }
 
 
@@ -328,14 +360,20 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   public function getAnimalDetailsByUln(Request $request, $ulnString) {
 
     $client = $this->getAuthenticatedUser($request);
-    $animal = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->getAnimalByUlnString($client, $ulnString);
+    $location = $this->getSelectedLocation($request);
+    /** @var AnimalRepository $repository */
+    $repository = $this->getDoctrine()->getRepository(Animal::class);
 
+    $animal = $repository->findAnimalByUlnString($ulnString);
     if($animal == null) {
-      return new JsonResponse(array('code'=>404, "message" => "For this account, no animal was found with uln: " . $ulnString), 404);
+      return new JsonResponse(['code'=>404, "message" => "Animal does not exist in our world :("], 404);
+    }
+    if(!$animal->isAnimalPublic()){
+      return new JsonResponse(['code'=>404, "message" => "The owner has not made this animal public"], 404);
     }
 
-    $output = AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $animal);
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $output), 200);
+    $output = AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $animal, $location);
+    return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
   }
 
   /**
