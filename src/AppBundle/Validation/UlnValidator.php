@@ -5,6 +5,7 @@ namespace AppBundle\Validation;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
@@ -14,6 +15,7 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Validator\Constraints\IsNull;
 
 class UlnValidator
 {
@@ -125,12 +127,12 @@ class UlnValidator
      */
     private function validateUlnInput($animalArray, $client, $location)
     {
-        $ulnExists = array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalArray) &&
-            array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalArray);
+        $ulnExists = array_key_exists(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray) &&
+            array_key_exists(JsonInputConstant::ULN_NUMBER, $animalArray);
 
         if ($ulnExists) {
-            $numberToCheck = $animalArray[Constant::ULN_NUMBER_NAMESPACE];
-            $countryCodeToCheck = $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
+            $numberToCheck = $animalArray[JsonInputConstant::ULN_NUMBER];
+            $countryCodeToCheck = $animalArray[JsonInputConstant::ULN_COUNTRY_CODE];
             $this->ulnCountryCode = $countryCodeToCheck;
             $this->ulnNumber = $numberToCheck;
         } else {
@@ -143,13 +145,23 @@ class UlnValidator
             ->andWhere(Criteria::expr()->eq('ulnNumber', $numberToCheck))
             ->andWhere(Criteria::expr()->eq('location', $location ));
 
-        $animal = $this->manager->getRepository(Animal::class)
-            ->matching($criteria)->first();
+        $results = $this->manager->getRepository(Animal::class)
+            ->matching($criteria);
 
         //First verify if animal actually exists
-        if($animal == null) {
+        if(count($results) == 0) {
             $this->isInDatabase = false;
             return false;
+
+        } else {
+            //prioritize the non-duplicate Animal
+            $animal = $results->first();
+            /** @var Animal $foundAnimal */
+            foreach ($results as $foundAnimal) {
+                if($foundAnimal->getName() != null ) {
+                    $animal = $foundAnimal;
+                }
+            }
         }
 
         if($client == null) { //Get any animals regardless of client
