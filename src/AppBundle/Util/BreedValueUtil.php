@@ -535,7 +535,7 @@ class BreedValueUtil
      */
     private static function areLambMeatIndexInputAccuraciesIncorrect($muscleThicknessAccuracy, $growthAccuracy, $fatAccuracy, $lambMeatIndexCoefficients)
     {
-        $allValuesAreNotNull = NumberUtil::isFloatZero($muscleThicknessAccuracy) || NumberUtil::isFloatZero($fatAccuracy) || NumberUtil::isFloatZero($growthAccuracy) || $lambMeatIndexCoefficients == null;
+        $allValuesAreNotNull = $muscleThicknessAccuracy != null && $fatAccuracy != null && $growthAccuracy != null && $lambMeatIndexCoefficients != null;
         
         //First do a null check
         if($allValuesAreNotNull) {
@@ -557,10 +557,14 @@ class BreedValueUtil
      */
     private static function areLambMeatIndexInputReliabilitiesIncorrect($muscleThicknessReliability, $growthReliability, $fatReliability, $lambMeatIndexCoefficients)
     {
-         return self::areLambMeatIndexInputAccuraciesIncorrect($muscleThicknessReliability ** 2,
-                                                        $growthReliability ** 2,
-                                                        $fatReliability ** 2,
-                                                        $lambMeatIndexCoefficients);
+        if($muscleThicknessReliability == null || $growthReliability == null || $fatReliability == null || $lambMeatIndexCoefficients == null) {
+            return true;
+        } else {
+            return self::areLambMeatIndexInputAccuraciesIncorrect($muscleThicknessReliability ** 2,
+                $growthReliability ** 2,
+                $fatReliability ** 2,
+                $lambMeatIndexCoefficients);
+        }
     }
 
 
