@@ -45,10 +45,9 @@ class WeightRepository extends MeasurementRepository {
         {
             $results[] = [
                 JsonInputConstant::MEASUREMENT_DATE => Utils::fillNullOrEmptyString($measurementData['measurement_date'], $nullFiller),
-                JsonInputConstant::WEIGHT => Utils::fillNullOrEmptyString($measurementData['weight'], $nullFiller),
+                JsonInputConstant::WEIGHT => floatval($measurementData['weight']),
                 JsonInputConstant::IS_BIRTH_WEIGHT => Utils::fillNullOrEmptyString($measurementData['is_birth_weight'], $nullFiller),
                 JsonInputConstant::IS_REVOKED => Utils::fillNullOrEmptyString($measurementData['is_revoked'], $nullFiller),
-                JsonInputConstant::PERSON_ID =>  Utils::fillNullOrEmptyString($measurementData['person_id'], $nullFiller),
                 JsonInputConstant::FIRST_NAME => Utils::fillNullOrEmptyString($measurementData['first_name'], $nullFiller),
                 JsonInputConstant::LAST_NAME => Utils::fillNullOrEmptyString($measurementData['last_name'], $nullFiller),
             ];
