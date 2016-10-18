@@ -535,7 +535,7 @@ class BreedValueUtil
      */
     private static function areLambMeatIndexInputAccuraciesIncorrect($muscleThicknessAccuracy, $growthAccuracy, $fatAccuracy, $lambMeatIndexCoefficients)
     {
-        $allValuesAreNotNull = NumberUtil::isFloatZero($muscleThicknessAccuracy) || NumberUtil::isFloatZero($fatAccuracy) || NumberUtil::isFloatZero($growthAccuracy) || $lambMeatIndexCoefficients == null;
+        $allValuesAreNotNull = $muscleThicknessAccuracy != null && $fatAccuracy != null && $growthAccuracy != null && $lambMeatIndexCoefficients != null;
         
         //First do a null check
         if($allValuesAreNotNull) {

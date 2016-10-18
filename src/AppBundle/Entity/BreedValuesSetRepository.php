@@ -138,6 +138,8 @@ class BreedValuesSetRepository extends BaseRepository {
             $year = $geneticBaseRepository->getLatestYear();
         }
 
+        if($year == null) { return null; }
+
         $sql = "SELECT COUNT(*) FROM breed_values_set WHERE lamb_meat_index_ranking IS NOT NULL AND lamb_meat_index_ranking <> 0 AND EXTRACT(YEAR FROM generation_date) = ".$year;
         return $this->getManager()->getConnection()->query($sql)->fetch()['count'];
     }
