@@ -97,8 +97,8 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
             '1: Only check if animals in Rolani.out and Solani.out match', "\n",
-            '2: Migrate records (missing ulns are skipped)', "\n",
-            '3: Process missing ulns', "\n",
+            '2: Migrate records (missing ulns without any new valid replacement uln are skipped)', "\n",
+            '3: Show missing ulns', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
