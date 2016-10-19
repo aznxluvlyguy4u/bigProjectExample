@@ -323,7 +323,7 @@ class PedigreeCertificate
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NAME] = '-';
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NUMBER] = '-';
 
-        if($key = ReportLabel::CHILD_KEY) {
+        if($key == ReportLabel::CHILD_KEY) {
             $this->addBreedIndex($breedValues[BreedValueLabel::LAMB_MEAT_INDEX]);
         }
     }
