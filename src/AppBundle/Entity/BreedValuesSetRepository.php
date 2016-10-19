@@ -75,7 +75,7 @@ class BreedValuesSetRepository extends BaseRepository {
                 $fatAccuracy = BreedValueUtil::getAccuracyFromReliability($fatReliability, $isGetFormattedAccuracies);
             }
 
-            if(NullChecker::floatIsNotZero($results['lamb_meat_index_ranking'])) {
+            if(NullChecker::floatIsNotZero($results['lamb_meat_index_accuracy'])) {
                 $lambMeatIndex = $results['lamb_meat_index'];
                 $lambMeatIndexAccuracy = $results['lamb_meat_index_accuracy'];
                 $lambMeatIndexRanking = $results['lamb_meat_index_ranking'];
