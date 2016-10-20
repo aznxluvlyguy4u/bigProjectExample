@@ -95,7 +95,7 @@ class LitterRepository extends BaseRepository {
         $sql = "SELECT COUNT(*) as litter_count, SUM(born_alive_count) as total_born_alive_count,
                     SUM(stillborn_count) as total_stillborn_count, MIN(litter_date) as earliest_litter_date,
                     MAX(litter_date) as latest_litter_date 
-                FROM litter WHERE animal_mother_id = 2 OR animal_father_id = ".$animalId;
+                FROM litter WHERE animal_mother_id = ".$animalId." OR animal_father_id = ".$animalId;
         $result = $this->getManager()->getConnection()->query($sql)->fetch();
         return $result == false ? null : $result;
     }
