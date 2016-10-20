@@ -129,16 +129,17 @@ class ExteriorRepository extends MeasurementRepository {
         if(!is_int($animalId)) { return $nullResult; }
 
         $sqlBase = "SELECT x.id, x.animal_id, x.skull, x.muscularity, x.proportion, x.exterior_type, x.leg_work,
-                    x.fur, x.general_appearence as general_appearance, x.height, x.breast_depth, x.torso_length, x.markings, x.kind, x.progress, y.measurement_date
-                FROM exterior x
-                INNER JOIN (
-                SELECT animal_id, max(m.measurement_date) as measurement_date
-                  FROM exterior e
-                  INNER JOIN measurement m ON m.id = e.id
-                GROUP BY animal_id) y on y.animal_id = x.animal_id ";
+                      x.fur, x.general_appearence as general_appearance, x.height, x.breast_depth, x.torso_length, x.markings, x.kind, x.progress, m.measurement_date
+                    FROM exterior x
+                      INNER JOIN measurement m ON x.id = m.id
+                      INNER JOIN (
+                                   SELECT animal_id, max(m.measurement_date) as measurement_date
+                                   FROM exterior e
+                                     INNER JOIN measurement m ON m.id = e.id
+                                   GROUP BY animal_id) y on y.animal_id = x.animal_id WHERE m.measurement_date = y.measurement_date ";
 
         if(is_int($animalId)) {
-            $filter = "WHERE x.animal_id = " . $animalId;
+            $filter = "AND x.animal_id = " . $animalId;
             $sql = $sqlBase.$filter;
             $result = $this->getManager()->getConnection()->query($sql)->fetch();
         } else {
