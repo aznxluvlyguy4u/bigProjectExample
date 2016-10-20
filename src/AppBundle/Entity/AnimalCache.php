@@ -26,6 +26,15 @@ class AnimalCache
     private $id;
 
     /**
+     * @var DateTime
+     * @ORM\Column(type="datetime")
+     * @Assert\Date
+     * @Assert\NotBlank
+     * @JMS\Type("DateTime")
+     */
+    protected $logDate;
+
+    /**
      * @ORM\OneToOne(targetEntity="Animal")
      * @ORM\JoinColumn(name="animal_id", referencedColumnName="id")
      */
@@ -207,12 +216,35 @@ class AnimalCache
      */
     private $exteriorMeasurementDate;
 
+
+    public function __construct()
+    {
+        $this->logDate = new \DateTime();
+    }
+
+
     /**
      * @return int
      */
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getLogDate()
+    {
+        return $this->logDate;
+    }
+
+    /**
+     * @param \DateTime $logDate
+     */
+    public function setLogDate($logDate)
+    {
+        $this->logDate = $logDate;
     }
 
     /**
