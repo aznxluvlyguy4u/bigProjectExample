@@ -66,6 +66,35 @@ class AnimalRepository extends BaseRepository
     return $animal;
   }
 
+
+  /**
+   * @param string $countryCode
+   * @param string $ulnNumber
+   * @return int
+   */
+  public function sqlQueryAnimalIdByUlnCountryCodeAndNumber($countryCode, $ulnNumber)
+  {
+    $sql = "SELECT id, name FROM animal WHERE uln_country_code = '".$countryCode."' AND uln_number = '".$ulnNumber."'";
+    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+    if(count($results) == 1) {
+      return $results[0]['id'];
+
+    } elseif(count($results) == 0) {
+      return null;
+
+    } else {
+      //in case of duplicate uln, use the imported animal
+      foreach ($results as $result) {
+        if($result['name'] != null) {
+          return $result['id'];
+        }
+      }
+      //If none of the animals are imported, just take the first animal
+      return $results[0]['id'];
+    }
+  }
+  
+
   /**
    * @param $animalType
    * @param array $filterArray

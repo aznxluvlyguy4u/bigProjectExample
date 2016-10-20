@@ -102,16 +102,14 @@ class PedigreeCertificate
      * @param ObjectManager $em
      * @param Client $client
      * @param Location $location
-     * @param Animal $animal
+     * @param int $animalId
      * @param int $breedValuesYear
      * @param GeneticBase $geneticBases
      * @param array $lambMeatIndexCoefficients
      */
-    public function __construct(ObjectManager $em, Client $client, Location $location, Animal $animal, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients)
+    public function __construct(ObjectManager $em, Client $client, Location $location, $animalId, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients)
     {
         $this->em = $em;
-
-        $animalId = $animal->getId();
 
         $this->litterRepository = $em->getRepository(Litter::class);
         $this->exteriorRepository = $em->getRepository(Exterior::class);
@@ -168,7 +166,7 @@ class PedigreeCertificate
 
         $generation = 0;
         $this->addAnimalValuesBySql($keyAnimal, $animalId, $generation);
-        $this->addParents($animal, $keyAnimal, $generation);
+        $this->addParents($animalId, $keyAnimal, $generation);
     }
 
     /**
