@@ -284,27 +284,55 @@ class PedigreeCertificate
             $litterGroup = $litterData[JsonInputConstant::LITTER_GROUP];
         }
 
-        $sql = "SELECT a.id, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn,
+
+        if($animalId != null) {
+            $sql = "SELECT a.id, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn,
                   scrapie_genotype, breed, breed_type, breed_code, date_of_birth, gender, parent_father_id as father_id, parent_mother_id as mother_id
                 FROM animal a WHERE a.id = ".$animalId;
-        $animalData = $this->em->getConnection()->query($sql)->fetch();
-        
-        //AnimalData
-        $uln = $animalData[JsonInputConstant::ULN];
-        $stn = $animalData[JsonInputConstant::STN];
-        $scrapieGenotype = $animalData[JsonInputConstant::SCRAPIE_GENOTYPE];
-        $breed = $animalData[JsonInputConstant::BREED];
-        $breedCode = $animalData[JsonInputConstant::BREED_CODE];
-        $breedType = $animalData[JsonInputConstant::BREED_TYPE];
-        $scrapieGenotype = $animalData[JsonInputConstant::SCRAPIE_GENOTYPE];
-        $gender = $animalData[JsonInputConstant::GENDER];
+            $animalData = $this->em->getConnection()->query($sql)->fetch();
 
-        $dateOfBirthString = self::EMPTY_DATE_OF_BIRTH;
-        $dateOfBirthDateTime = null;
-        if($animalData[JsonInputConstant::DATE_OF_BIRTH] != null) {
-            $dateOfBirthDateTime = new \DateTime($animalData[JsonInputConstant::DATE_OF_BIRTH]);
-            $dateOfBirthString = $dateOfBirthDateTime->format('d-m-Y');
+            //AnimalData
+            $uln = $animalData[JsonInputConstant::ULN];
+            $stn = $animalData[JsonInputConstant::STN];
+            $scrapieGenotype = $animalData[JsonInputConstant::SCRAPIE_GENOTYPE];
+            $breed = $animalData[JsonInputConstant::BREED];
+            $breedCode = $animalData[JsonInputConstant::BREED_CODE];
+            $breedType = $animalData[JsonInputConstant::BREED_TYPE];
+            $scrapieGenotype = $animalData[JsonInputConstant::SCRAPIE_GENOTYPE];
+            $gender = $animalData[JsonInputConstant::GENDER];
+
+            $dateOfBirthString = self::EMPTY_DATE_OF_BIRTH;
+            $dateOfBirthDateTime = null;
+            if($animalData[JsonInputConstant::DATE_OF_BIRTH] != null) {
+                $dateOfBirthDateTime = new \DateTime($animalData[JsonInputConstant::DATE_OF_BIRTH]);
+                $dateOfBirthString = $dateOfBirthDateTime->format('d-m-Y');
+            }
+
+            //These ids are only used only inside this class and not in the twig file
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MOTHER_ID] = $animalData[ReportLabel::MOTHER_ID];
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::FATHER_ID] = $animalData[ReportLabel::FATHER_ID];
+        } else {
+            $uln = null;
+            $stn = null;
+            $scrapieGenotype = null;
+            $breed = null;
+            $breedCode = null;
+            $breedType = null;
+            $scrapieGenotype = null;
+            $gender = null;
+
+            $dateOfBirthString = self::EMPTY_DATE_OF_BIRTH;
+            $dateOfBirthDateTime = null;
+
+            //These ids are only used only inside this class and not in the twig file
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MOTHER_ID] = null;
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::FATHER_ID] = null;
         }
+
+        
+
+
+
 
         $inspectionDateString = null;
         $inspectionDateDateTime = null;
@@ -368,10 +396,6 @@ class PedigreeCertificate
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENDER] = Translation::getGenderInDutch($gender);
 
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PRODUCTION] = self::parseProductionString($dateOfBirthDateTime, $earliestLitterDate, $latestLitterDate, $litterCount, $totalOffSpringCountByLitterData, $totalBornAliveCount, $gender);
-
-        //These ids are only used only inside this class and not in the twig file
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MOTHER_ID] = $animalData[ReportLabel::MOTHER_ID];
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::FATHER_ID] = $animalData[ReportLabel::FATHER_ID];
 
         //TODO NOTE the name column contains VSM primaryKey at the moment Utils::fillNullOrEmptyString($animal->getName());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::NAME] = self::GENERAL_NULL_FILLER;
