@@ -258,7 +258,9 @@ class PedigreeCertificate
      * @return array
      */
     public static function getAnimalValuesBySql(ObjectManager $em, $key, $animalId, $generation, $breedValuesYear, GeneticBase $geneticBases)
-    {        
+    {
+        $results = [];
+        
         /** @var ExteriorRepository $exteriorRepository */
         $exteriorRepository = $em->getRepository(Exterior::class);
         /** @var LitterRepository $litterRepository */
@@ -271,11 +273,22 @@ class PedigreeCertificate
 
             //Only retrieve the breedValues and lambMeatIndices for the child, parents and grandparents. AND REMOVE the variables from the twig file!!!
             //TODO
-        }
+            //Breedvalues: The actual breed value not the measurements!
+            $breedValues = self::getUnformattedBreedValues($em, $animalId, $breedValuesYear, $geneticBases);
+            $formattedBreedValues = BreedValueUtil::getFormattedBreedValues($breedValues);
 
-        //Breedvalues: The actual breed value not the measurements!
-        $breedValues = self::getUnformattedBreedValues($em, $animalId, $breedValuesYear, $geneticBases);
-        $formattedBreedValues = BreedValueUtil::getFormattedBreedValues($breedValues);
+            // Set values in result array
+            $results[ReportLabel::MUSCLE_THICKNESS] = $formattedBreedValues[BreedValueLabel::MUSCLE_THICKNESS];
+            $results[ReportLabel::BODY_FAT] = $formattedBreedValues[BreedValueLabel::FAT];
+            $results[ReportLabel::GROWTH] = $formattedBreedValues[BreedValueLabel::GROWTH];
+            $results[ReportLabel::TAIL_LENGTH] = Utils::fillNullOrEmptyString(null);
+
+            //LambMeatIndex with Accuracy
+            $results[ReportLabel::VL] = self::getFormattedLambMeatIndexWithAccuracy($breedValues);
+            $results[ReportLabel::SL] = Utils::fillZero(0.00);
+
+            //TODO add BreedIndex
+        }
 
         //Litter in which animal was born
         $litterData = $litterRepository->getLitterData($animalId);
@@ -335,16 +348,7 @@ class PedigreeCertificate
 
         
         /* Set values into array */
-        $results = [];
-
-        $results[ReportLabel::MUSCLE_THICKNESS] = $formattedBreedValues[BreedValueLabel::MUSCLE_THICKNESS];
-        $results[ReportLabel::BODY_FAT] = $formattedBreedValues[BreedValueLabel::FAT];
-        $results[ReportLabel::GROWTH] = $formattedBreedValues[BreedValueLabel::GROWTH];
-        $results[ReportLabel::TAIL_LENGTH] = Utils::fillNullOrEmptyString(null);
-
-        //LambMeatIndex with Accuracy
-        $results[ReportLabel::VL] = self::getFormattedLambMeatIndexWithAccuracy($breedValues);
-        $results[ReportLabel::SL] = Utils::fillZero(0.00);
+        //Note the BreedValues and LambMeatIndex values are already set above
 
         //Exterior
         $results[ReportLabel::SKULL] = Utils::fillZero($latestExteriorArray[JsonInputConstant::SKULL]);
@@ -412,22 +416,27 @@ class PedigreeCertificate
 //        $latestTailLength = $this->tailLengthRepository->getLatestTailLength($animal);
         $latestExterior = $this->exteriorRepository->getLatestExterior($animal);
 
-        //Breedvalues: The actual breed value not the measurements!
-        $breedValues = self::getUnformattedBreedValues($this->em, $animal->getId(), $this->breedValuesYear, $this->geneticBases);
-        $formattedBreedValues = BreedValueUtil::getFormattedBreedValues($breedValues);
-        
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] = $formattedBreedValues[BreedValueLabel::MUSCLE_THICKNESS];
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = $formattedBreedValues[BreedValueLabel::FAT];
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GROWTH] = $formattedBreedValues[BreedValueLabel::GROWTH];
-
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TAIL_LENGTH] = Utils::fillNullOrEmptyString(null);
-
         //TODO IF PedigreeCertificate is fixed.
-        //Only retrieve the lambMeatIndices for the child, parents and grandparents. AND REMOVE the variables from the twig file!!!
-        //if($generation < self::GENERATION_OF_ASCENDANTS - 1) {  }
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::VL] = self::getFormattedLambMeatIndexWithAccuracy($breedValues);
+        //Only retrieve the breedValues and lambMeatIndices for the child, parents and grandparents.
+        if($generation < self::GENERATION_OF_ASCENDANTS - 1) {
+            //Breedvalues: The actual breed value not the measurements!
+            $breedValues = self::getUnformattedBreedValues($this->em, $animal->getId(), $this->breedValuesYear, $this->geneticBases);
+            $formattedBreedValues = BreedValueUtil::getFormattedBreedValues($breedValues);
 
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SL] = Utils::fillZero(0.00); //TODO Add sl variable to Exterior Entity ??? Or is this just Tail Length?
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] = $formattedBreedValues[BreedValueLabel::MUSCLE_THICKNESS];
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = $formattedBreedValues[BreedValueLabel::FAT];
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GROWTH] = $formattedBreedValues[BreedValueLabel::GROWTH];
+
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TAIL_LENGTH] = Utils::fillNullOrEmptyString(null);
+
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::VL] = self::getFormattedLambMeatIndexWithAccuracy($breedValues);
+
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SL] = Utils::fillZero(0.00); //TODO Add sl variable to Exterior Entity ??? Or is this just Tail Length?
+
+            if($key == ReportLabel::CHILD_KEY) {
+                $this->addBreedIndex($breedValues[BreedValueLabel::LAMB_MEAT_INDEX]);
+            }
+        }
 
         //Exterior
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SKULL] = Utils::fillZero($latestExterior->getSkull());
@@ -473,10 +482,6 @@ class PedigreeCertificate
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PRODUCTION] = $this->parseProductionStringByAnimal($this->em, $animal);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NAME] = '-';
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NUMBER] = '-';
-
-        if($key == ReportLabel::CHILD_KEY) {
-            $this->addBreedIndex($breedValues[BreedValueLabel::LAMB_MEAT_INDEX]);
-        }
     }
 
 
