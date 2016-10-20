@@ -96,6 +96,14 @@ class AnimalCache
     private $breedValueFat;
 
 
+    /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $lambMeatIndex;
+
+
     /* Latest Weight Data */
 
     /**
@@ -373,6 +381,22 @@ class AnimalCache
     public function setBreedValueFat($breedValueFat)
     {
         $this->breedValueFat = $breedValueFat;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLambMeatIndex()
+    {
+        return $this->lambMeatIndex;
+    }
+
+    /**
+     * @param string $lambMeatIndex
+     */
+    public function setLambMeatIndex($lambMeatIndex)
+    {
+        $this->lambMeatIndex = $lambMeatIndex;
     }
 
     /**
