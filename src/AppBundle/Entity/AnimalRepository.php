@@ -609,4 +609,16 @@ class AnimalRepository extends BaseRepository
 
     return $array;
   }
+
+
+  /**
+   * @param $animalId
+   * @return int
+   */
+  public function getOffspringCount($animalId)
+  {
+    if(!is_int($animalId)) { return 0; }
+    $sql = "SELECT COUNT(*) FROM animal a WHERE parent_father_id = ".$animalId." OR parent_mother_id = ".$animalId;
+    return $this->getManager()->getConnection()->query($sql)->fetch()['count'];
+  }
 }

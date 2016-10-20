@@ -5,6 +5,7 @@ namespace AppBundle\Report;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\BreedValueLabel;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportFormat;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Constant\TwigCode;
@@ -26,6 +27,7 @@ use AppBundle\Entity\MuscleThicknessRepository;
 use AppBundle\Entity\NormalDistribution;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\TailLengthRepository;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StarValueUtil;
@@ -42,6 +44,7 @@ class PedigreeCertificate
     const EMPTY_PRODUCTION = '-/-/-/-';
     const MISSING_PEDIGREE_REGISTER = '';
     const EMPTY_DATE_OF_BIRTH = '-';
+    const GENERAL_NULL_FILLER = '-';
 
     const LITTER_SIZE = 'litterSize';
     const LITTER_GROUP = 'litterGroup';
@@ -55,12 +58,12 @@ class PedigreeCertificate
     const STARS_NULL_VALUE = null;
     const EMPTY_BREED_VALUE = '-/-';
     const EMPTY_INDEX_VALUE = '-/-';
+    const EMPTY_SCRAPIE_GENOTYPE = '-/-';
+
+    const GENERATION_OF_ASCENDANTS = 3;
 
     /** @var array */
     private $data;
-
-    /** @var int */
-    private $generationOfAscendants;
 
     /** @var  ObjectManager */
     private $em;
@@ -98,12 +101,11 @@ class PedigreeCertificate
      * @param Client $client
      * @param Location $location
      * @param Animal $animal
-     * @param int $generationOfAscendants
      * @param int $breedValuesYear
      * @param GeneticBase $geneticBases
      * @param array $lambMeatIndexCoefficients
      */
-    public function __construct(ObjectManager $em, Client $client, Location $location, Animal $animal, $generationOfAscendants = 3, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients)
+    public function __construct(ObjectManager $em, Client $client, Location $location, Animal $animal, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients)
     {
         $this->em = $em;
 
@@ -118,7 +120,6 @@ class PedigreeCertificate
         $this->lambMeatIndexCoefficients = $lambMeatIndexCoefficients;
 
         $this->data = array();
-        $this->generationOfAscendants = $generationOfAscendants;
 
 //        $this->data[ReportLabel::OWNER] = $client;
 
@@ -178,7 +179,7 @@ class PedigreeCertificate
      */
     private function addParents(Animal $animal = null, $keyAnimal, $generation)
     {
-        if($generation < $this->generationOfAscendants) {
+        if($generation < self::GENERATION_OF_ASCENDANTS) {
 
             if($animal != null) {
                 $father = $animal->getParentFather();
@@ -248,6 +249,162 @@ class PedigreeCertificate
 
 
     /**
+     * @param ObjectManager $em
+     * @param string $key
+     * @param int $animalId
+     * @param int $generation
+     * @param int $breedValuesYear
+     * @param GeneticBase $geneticBases
+     * @return array
+     */
+    public static function getAnimalValues(ObjectManager $em, $key, $animalId, $generation, $breedValuesYear, GeneticBase $geneticBases)
+    {        
+        /** @var ExteriorRepository $exteriorRepository */
+        $exteriorRepository = $em->getRepository(Exterior::class);
+        /** @var LitterRepository $litterRepository */
+        $litterRepository = $em->getRepository(Litter::class);
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $em->getRepository(Animal::class);
+
+        $exteriorReplacementString = null;
+        $latestExteriorArray = $exteriorRepository->getLatestExteriorBySql($animalId, $exteriorReplacementString);
+
+        if($generation < self::GENERATION_OF_ASCENDANTS - 1) {
+
+            //Only retrieve the breedValues and lambMeatIndices for the child, parents and grandparents. AND REMOVE the variables from the twig file!!!
+            //TODO
+        }
+
+        //Breedvalues: The actual breed value not the measurements!
+        $breedValues = self::getUnformattedBreedValues($em, $animalId, $breedValuesYear, $geneticBases);
+        $formattedBreedValues = BreedValueUtil::getFormattedBreedValues($breedValues);
+
+        //Litter in which animal was born
+        $litterData = $litterRepository->getLitterData($animalId);
+        $litterSize = self::GENERAL_NULL_FILLER;
+        $nLing = self::GENERAL_NULL_FILLER;
+        $litterGroup = self::GENERAL_NULL_FILLER;
+        if($litterData != null) {
+            $litterSize = $litterData[JsonInputConstant::SIZE];
+            $nLing = $litterData[JsonInputConstant::N_LING];
+            $litterGroup = $litterData[JsonInputConstant::LITTER_GROUP];
+        }
+
+        $sql = "SELECT a.id, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn,
+                  scrapie_genotype, breed, breed_type, breed_code, date_of_birth, gender
+                FROM animal a WHERE a.id = ".$animalId;
+        $animalData = $em->getConnection()->query($sql)->fetch();
+        
+        //AnimalData
+        $uln = $animalData[JsonInputConstant::ULN];
+        $stn = $animalData[JsonInputConstant::STN];
+        $scrapieGenotype = $animalData[JsonInputConstant::SCRAPIE_GENOTYPE];
+        $breed = $animalData[JsonInputConstant::BREED];
+        $breedCode = $animalData[JsonInputConstant::BREED_CODE];
+        $breedType = $animalData[JsonInputConstant::BREED_TYPE];
+        $scrapieGenotype = $animalData[JsonInputConstant::SCRAPIE_GENOTYPE];
+        $gender = $animalData[JsonInputConstant::GENDER];
+
+        $dateOfBirthString = self::EMPTY_DATE_OF_BIRTH;
+        $dateOfBirthDateTime = null;
+        if($animalData[JsonInputConstant::DATE_OF_BIRTH] != null) {
+            $dateOfBirthDateTime = new \DateTime($animalData[JsonInputConstant::DATE_OF_BIRTH]);
+            $dateOfBirthString = $dateOfBirthDateTime->format('d-m-Y');
+        }
+
+        $inspectionDateString = null;
+        $inspectionDateDateTime = null;
+        if($latestExteriorArray[JsonInputConstant::MEASUREMENT_DATE] != null && $latestExteriorArray[JsonInputConstant::MEASUREMENT_DATE] != $exteriorReplacementString) {
+            $inspectionDateDateTime = new \DateTime($latestExteriorArray[JsonInputConstant::MEASUREMENT_DATE]);
+            $inspectionDateString = $inspectionDateDateTime->format('d-m-Y');
+        }
+
+        //Litters of offspring, data for production string
+        $offspringLitterData = $litterRepository->getAggregatedLitterDataOfOffspring($animalId); //data from the litter table
+
+        $litterCount = $offspringLitterData[JsonInputConstant::LITTER_COUNT];
+        $totalStillbornCount = $offspringLitterData[JsonInputConstant::TOTAL_STILLBORN_COUNT];
+        $totalBornAliveCount = $offspringLitterData[JsonInputConstant::TOTAL_BORN_ALIVE_COUNT];
+        $totalOffSpringCountByLitterData = $totalBornAliveCount + $totalStillbornCount;
+        $totalOffSpringCountByParentData = $animalRepository->getOffspringCount($animalId);
+        $earliestLitterDate = $offspringLitterData[JsonInputConstant::EARLIEST_LITTER_DATE];
+        $latestLitterDate = $offspringLitterData[JsonInputConstant::LATEST_LITTER_DATE];
+
+        // Blanks
+        $blindnessFactor = self::GENERAL_NULL_FILLER;
+        $predicate = self::GENERAL_NULL_FILLER;
+        $breederName = self::GENERAL_NULL_FILLER;
+        $breederNumber = self::GENERAL_NULL_FILLER;
+
+        
+        /* Set values into array */
+        $results = [];
+
+        $results[ReportLabel::MUSCLE_THICKNESS] = $formattedBreedValues[BreedValueLabel::MUSCLE_THICKNESS];
+        $results[ReportLabel::BODY_FAT] = $formattedBreedValues[BreedValueLabel::FAT];
+        $results[ReportLabel::GROWTH] = $formattedBreedValues[BreedValueLabel::GROWTH];
+        $results[ReportLabel::TAIL_LENGTH] = Utils::fillNullOrEmptyString(null);
+
+        //LambMeatIndex with Accuracy
+        $results[ReportLabel::VL] = self::getFormattedLambMeatIndexWithAccuracy($breedValues);
+        $results[ReportLabel::SL] = Utils::fillZero(0.00);
+
+        //Exterior
+        $results[ReportLabel::SKULL] = Utils::fillZero($latestExteriorArray[JsonInputConstant::SKULL]);
+        $results[ReportLabel::DEVELOPMENT] = Utils::fillZero($latestExteriorArray[JsonInputConstant::PROGRESS]);
+        $results[ReportLabel::MUSCULARITY] = Utils::fillZero($latestExteriorArray[JsonInputConstant::MUSCULARITY]);
+        $results[ReportLabel::PROPORTION] = Utils::fillZero($latestExteriorArray[JsonInputConstant::PROPORTION]);
+        $results[ReportLabel::TYPE] = Utils::fillZero($latestExteriorArray[JsonInputConstant::EXTERIOR_TYPE]);
+        $results[ReportLabel::LEGWORK] = Utils::fillZero($latestExteriorArray[JsonInputConstant::LEG_WORK]);
+        $results[ReportLabel::FUR] = Utils::fillZero($latestExteriorArray[JsonInputConstant::FUR]);
+        $results[ReportLabel::GENERAL_APPEARANCE] = Utils::fillZero($latestExteriorArray[JsonInputConstant::GENERAL_APPEARANCE]);
+        $results[ReportLabel::HEIGHT] = Utils::fillZero($latestExteriorArray[JsonInputConstant::HEIGHT]);
+        $results[ReportLabel::TORSO_LENGTH] = Utils::fillZero($latestExteriorArray[JsonInputConstant::TORSO_LENGTH]);
+        $results[ReportLabel::BREAST_DEPTH] = Utils::fillZero($latestExteriorArray[JsonInputConstant::BREAST_DEPTH]);
+        $results[ReportLabel::MARKINGS] = Utils::fillZero($latestExteriorArray[JsonInputConstant::MARKINGS]);
+
+        //Litter
+        $results[ReportLabel::LITTER_SIZE] = $litterSize;
+        $results[ReportLabel::LITTER_GROUP] = $litterGroup;
+        $results[ReportLabel::N_LING] = $nLing;
+
+        //Offspring
+        $results[ReportLabel::LITTER_COUNT] = Utils::fillZero($litterCount);
+        $results[ReportLabel::OFFSPRING_COUNT] =  Utils::fillZero($totalOffSpringCountByParentData);
+
+        $results[ReportLabel::ULN] = Utils::fillNullOrEmptyString($uln);
+        $results[ReportLabel::PEDIGREE] = Utils::fillNullOrEmptyString($stn);
+        $results[ReportLabel::SCRAPIE] = Utils::fillNullOrEmptyString($scrapieGenotype, self::EMPTY_SCRAPIE_GENOTYPE);
+        $results[ReportLabel::BREED] = Utils::fillNullOrEmptyString($breed);
+        $results[ReportLabel::BREED_TYPE] = Utils::fillNullOrEmptyString(Translation::translateBreedType($breedType));
+        $results[ReportLabel::BREED_CODE] = Utils::fillNullOrEmptyString($breedCode);
+        /* Dates. The null checks for dates are done here including the formatting */
+        $results[ReportLabel::DATE_OF_BIRTH] = Utils::fillNullOrEmptyString($dateOfBirthString, self::EMPTY_DATE_OF_BIRTH);
+        //NOTE measurementDate and inspectionDate are identical!
+        $results[ReportLabel::INSPECTION_DATE] = self::getTypeAndInspectionDateByDateTime(
+            $latestExteriorArray[JsonInputConstant::KIND], $inspectionDateDateTime, self::GENERAL_NULL_FILLER
+        );
+
+        /* variables translated to Dutch */
+        $results[ReportLabel::GENDER] = Translation::getGenderInDutchByAnimal($gender);
+
+        $results[ReportLabel::PRODUCTION] = self::parseProductionString($dateOfBirthDateTime, $earliestLitterDate, $latestLitterDate, $litterCount, $totalOffSpringCountByLitterData, $totalBornAliveCount, $gender);
+
+        //TODO NOTE the name column contains VSM primaryKey at the moment Utils::fillNullOrEmptyString($animal->getName());
+        $results[ReportLabel::NAME] = self::GENERAL_NULL_FILLER;
+
+        //TODO Add these variables to the entities INCLUDING NULL CHECKS!!!
+        $results[ReportLabel::BLINDNESS_FACTOR] = self::GENERAL_NULL_FILLER;
+        $results[ReportLabel::PREDICATE] = self::GENERAL_NULL_FILLER;
+        $results[ReportLabel::BREEDER_NAME] = self::GENERAL_NULL_FILLER;
+        $results[ReportLabel::BREEDER_NUMBER] = self::GENERAL_NULL_FILLER;
+        
+        return $results;
+    }
+    
+
+
+    /**
      * @param string $key
      * @param Animal|Ewe|Ram $animal
      * @param int $generation
@@ -261,7 +418,7 @@ class PedigreeCertificate
         $latestExterior = $this->exteriorRepository->getLatestExterior($animal);
 
         //Breedvalues: The actual breed value not the measurements!
-        $breedValues = $this->getUnformattedBreedValues($animal->getId());
+        $breedValues = self::getUnformattedBreedValues($this->em, $animal->getId(), $this->breedValuesYear, $this->geneticBases);
         $formattedBreedValues = BreedValueUtil::getFormattedBreedValues($breedValues);
         
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] = $formattedBreedValues[BreedValueLabel::MUSCLE_THICKNESS];
@@ -272,8 +429,8 @@ class PedigreeCertificate
 
         //TODO IF PedigreeCertificate is fixed.
         //Only retrieve the lambMeatIndices for the child, parents and grandparents. AND REMOVE the variables from the twig file!!!
-        //if($generation < $this->generationOfAscendants - 1) {  }
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::VL] = $this->getFormattedLambMeatIndexWithAccuracy($animal);
+        //if($generation < self::GENERATION_OF_ASCENDANTS - 1) {  }
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::VL] = self::getFormattedLambMeatIndexWithAccuracy($breedValues);
 
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SL] = Utils::fillZero(0.00); //TODO Add sl variable to Exterior Entity ??? Or is this just Tail Length?
 
@@ -295,7 +452,7 @@ class PedigreeCertificate
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_SIZE] = $this->getLitterValues($animal)->get(self::LITTER_SIZE);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_GROUP] = $this->getLitterValues($animal)->get(self::LITTER_GROUP);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::N_LING] = $this->getLitterValues($animal)->get(self::N_LING);
-        
+
         //Offspring
         $litterCount = $this->litterRepository->getLitters($animal)->count();
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_COUNT] = Utils::fillZero($litterCount);
@@ -303,23 +460,23 @@ class PedigreeCertificate
 
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::ULN] = Utils::fillNullOrEmptyString($animal->getUlnCountryCode().$animal->getUlnNumber());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PEDIGREE] = Utils::fillNullOrEmptyString($animal->getPedigreeCountryCode().$animal->getPedigreeNumber());
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::NAME] = '-';// TODO NOTE the name column contains VSM primaryKey at the moment Utils::fillNullOrEmptyString($animal->getName());
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SCRAPIE] = Utils::fillNullOrEmptyString($animal->getScrapieGenotype(), '-/-');
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::NAME] = self::GENERAL_NULL_FILLER;// TODO NOTE the name column contains VSM primaryKey at the moment Utils::fillNullOrEmptyString($animal->getName());
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SCRAPIE] = Utils::fillNullOrEmptyString($animal->getScrapieGenotype(), self::EMPTY_SCRAPIE_GENOTYPE);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED] = Utils::fillNullOrEmptyString($animal->getBreed());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_TYPE] = Utils::fillNullOrEmptyString(Translation::translateBreedType($animal->getBreedType()));
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_CODE] = Utils::fillNullOrEmptyString($animal->getBreedCode());
-        /* Dates. The null checks for dates are in the twig file, because it has to be combined with the formatting */
+        /* Dates. The null checks for dates are done here including the formatting */
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DATE_OF_BIRTH] = NullChecker::getNullCheckedDateOfBirthAsString($animal, self::EMPTY_DATE_OF_BIRTH);
         //NOTE measurementDate and inspectionDate are identical!
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::INSPECTION_DATE] = $this->getTypeAndInspectionDate($latestExterior);
 
         /* variables translated to Dutch */
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENDER] = Translation::getGenderInDutch($animal);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENDER] = Translation::getGenderInDutchByAnimal($animal);
 
         //TODO Add these variables to the entities INCLUDING NULL CHECKS!!!
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BLINDNESS_FACTOR] = '-';
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PREDICATE] = '-';
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PRODUCTION] = $this->parseProductionString($this->em, $animal);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PRODUCTION] = $this->parseProductionStringByAnimal($this->em, $animal);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NAME] = '-';
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NUMBER] = '-';
 
@@ -357,14 +514,26 @@ class PedigreeCertificate
 
     /**
      * @param Exterior $exterior
+     * @param string $replacementString
      * @return string
      */
-    private function getTypeAndInspectionDate($exterior)
+    private function getTypeAndInspectionDate(Exterior $exterior, $replacementString = self::GENERAL_NULL_FILLER)
     {
         $measurementDate = $exterior->getMeasurementDate();
         $kind = $exterior->getKind();
+        return self::getTypeAndInspectionDateByDateTime($kind, $measurementDate, $replacementString);
+    }
 
-        $kindExists = NullChecker::isNotNull($kind);
+
+    /**
+     * @param string $kind
+     * @param \DateTime $measurementDate
+     * @param string $replacementString
+     * @return string
+     */
+    private static function getTypeAndInspectionDateByDateTime($kind, $measurementDate, $replacementString = self::GENERAL_NULL_FILLER)
+    {
+        $kindExists = NullChecker::isNotNull($kind) && $kind != self::GENERAL_NULL_FILLER;
         $measurementDateExists = NullChecker::isNotNull($measurementDate);
 
         if($kindExists && $measurementDateExists) {
@@ -374,7 +543,7 @@ class PedigreeCertificate
             return $measurementDate->format('d-m-Y');
 
         } else {
-            return '-';
+            return $replacementString;
         }
 
     }
@@ -395,21 +564,21 @@ class PedigreeCertificate
                 $litterSize = $litter->getSize();
                 $nLing = $litter->getSize().'-ling';
             } else {
-                $litterSize = '-';
-                $nLing = '-';
+                $litterSize = self::GENERAL_NULL_FILLER;
+                $nLing = self::GENERAL_NULL_FILLER;
             }
 
             //TODO/WARNING litterGroup in Litter refers to the MixBlup Identification != worpgroep!!!
             if(true) { //FIXME WITH REAL DATA
-                $litterGroup = '-';
+                $litterGroup = self::GENERAL_NULL_FILLER;
             } else {
-                $litterGroup = '-';
+                $litterGroup = self::GENERAL_NULL_FILLER;
             }
 
         } else {
-            $litterSize = '-';
-            $litterGroup = '-';
-            $nLing = '-';
+            $litterSize = self::GENERAL_NULL_FILLER;
+            $litterGroup = self::GENERAL_NULL_FILLER;
+            $nLing = self::GENERAL_NULL_FILLER;
         }
 
         $litterValues->set(self::LITTER_SIZE, $litterSize);
@@ -453,7 +622,7 @@ class PedigreeCertificate
      * @param Animal $animal
      * @return string
      */
-    public static function parseProductionString(ObjectManager $em, $animal)
+    public static function parseProductionStringByAnimal(ObjectManager $em, $animal)
     {
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $em->getRepository(Animal::class);
@@ -509,6 +678,37 @@ class PedigreeCertificate
 
 
     /**
+     * @param \DateTime $dateOfBirth
+     * @param \DateTime $earliestLitterDate
+     * @param \DateTime $latestLitterDate
+     * @param int $litterCount
+     * @param int $totalBornCount
+     * @param int $bornAliveCount
+     * @param string $gender
+     * @return string
+     */
+    public static function parseProductionString($dateOfBirth, $earliestLitterDate, $latestLitterDate, $litterCount, $totalBornCount, $bornAliveCount, $gender)
+    {
+        if($gender == GenderType::NEUTER || $gender == GenderType::O || $litterCount == 0) { return self::EMPTY_PRODUCTION; }
+
+        //By default there is no oneYearMark
+        $oneYearMark = '';
+        if($gender == GenderType::FEMALE || $gender == GenderType::V) {
+            if(TimeUtil::isGaveBirthAsOneYearOld($dateOfBirth, $earliestLitterDate)){
+                $oneYearMark = '*';
+            }
+        }
+
+        $ageInTheNsfoSystem = TimeUtil::ageInSystemForProductionValue($dateOfBirth, $latestLitterDate);
+        if($ageInTheNsfoSystem == null) {
+            $ageInTheNsfoSystem = '-';
+        }
+
+        return $ageInTheNsfoSystem.'/'.$litterCount.'/'.$totalBornCount.'/'.$bornAliveCount.$oneYearMark;
+    }
+
+
+    /**
      * @param Location $location
      * @param Client $client
      * @return string
@@ -547,25 +747,29 @@ class PedigreeCertificate
 
     /**
      * @param int $animalId
+     * @param int $breedValuesYear
+     * @param GeneticBase $geneticBases
+     * @param ObjectManager $em
      * @return array
      */
-    private function getUnformattedBreedValues($animalId)
+    private static function getUnformattedBreedValues($em, $animalId, $breedValuesYear = null, $geneticBases = null)
     {
-        return $this->breedValuesSetRepository->getBreedValuesCorrectedByGeneticBaseWithAccuracies($animalId, $this->breedValuesYear, $this->geneticBases);
+        /** @var BreedValuesSetRepository $breedValuesSetRepository */
+        $breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
+        return $breedValuesSetRepository->getBreedValuesCorrectedByGeneticBaseWithAccuracies($animalId, $breedValuesYear, $geneticBases);
     }
 
 
     /**
-     * @param Animal $animal
+     * @param array $breedValuesArray
      * @return string
      */
-    private function getFormattedLambMeatIndexWithAccuracy($animal)
+    private static function getFormattedLambMeatIndexWithAccuracy($breedValuesArray)
     {
-        $values = $this->breedValuesSetRepository->getLambMeatIndexWithAccuracy($animal);
-
-        return BreedValueUtil::getFormattedLamMeatIndexWithAccuracy($values[BreedValueLabel::LAMB_MEAT_INDEX],
-                                                                    $values[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY],
-                                                                    self::EMPTY_INDEX_VALUE);
+        return BreedValueUtil::getFormattedLamMeatIndexWithAccuracy(
+            $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX],
+            $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY],
+            self::EMPTY_INDEX_VALUE);
     }
 
 

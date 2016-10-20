@@ -48,7 +48,7 @@ class PedigreeCertificates extends ReportBase
      * @param int $generationOfAscendants
      */
     public function __construct(ObjectManager $em, Collection $content, Client $client,
-                                Location $location, $generationOfAscendants = 3)
+                                Location $location)
     {
         parent::__construct($em, $client, self::FILE_NAME_REPORT_TYPE);
         
@@ -69,7 +69,7 @@ class PedigreeCertificates extends ReportBase
         $lambMeatIndexCoefficients = $breedValueCoefficientRepository->getLambMeatIndexCoefficients();
 
         foreach ($animals as $animal) {
-            $pedigreeCertificate = new PedigreeCertificate($em, $client, $location, $animal, $generationOfAscendants, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients);
+            $pedigreeCertificate = new PedigreeCertificate($em, $client, $location, $animal, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients);
 
             $this->reports[$this->animalCount] = $pedigreeCertificate->getData();
 
@@ -122,5 +122,5 @@ class PedigreeCertificates extends ReportBase
     {
         return $this->animalCount;
     }
-
+    
 }
