@@ -87,9 +87,6 @@ class PedigreeCertificate
     /** @var GeneticBase */
     private $geneticBases;
 
-    /** @var array */
-    private $lambMeatIndexCoefficients;
-
     /**
      * PedigreeCertificate constructor.
      * @param ObjectManager $em
@@ -98,11 +95,10 @@ class PedigreeCertificate
      * @param int $animalId
      * @param int $breedValuesYear
      * @param GeneticBase $geneticBases
-     * @param array $lambMeatIndexCoefficients
      * @param string $trimmedClientName
      * @param CompanyAddress $companyAddress
      */
-    public function __construct(ObjectManager $em, Client $client, $ubn, $animalId, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients, $trimmedClientName, $companyAddress)
+    public function __construct(ObjectManager $em, Client $client, $ubn, $animalId, $breedValuesYear, $geneticBases, $trimmedClientName, $companyAddress)
     {
         $this->em = $em;
 
@@ -111,7 +107,6 @@ class PedigreeCertificate
         $this->breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
         $this->breedValuesYear = $breedValuesYear;
         $this->geneticBases = $geneticBases;
-        $this->lambMeatIndexCoefficients = $lambMeatIndexCoefficients;
 
         $this->data = array();
         
