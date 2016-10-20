@@ -40,10 +40,19 @@ class Translation
      * @param Animal $animal
      * @return string
      */
-    public static function getGenderInDutch(Animal $animal)
+    public static function getGenderInDutchByAnimal(Animal $animal)
+    {
+        return self::getGenderInDutch($animal->getGender());
+    }
+
+
+    /**
+     * @param string $genderEnglish
+     * @return string
+     */
+    public static function getGenderInDutch($genderEnglish)
     {
         /* variables translated to Dutch */
-        $genderEnglish = $animal->getGender();
         if($genderEnglish == 'Ram' || $genderEnglish == GenderType::MALE || $genderEnglish == GenderType::M) {
             $genderDutch = 'Ram';
         } elseif ($genderEnglish == 'Ewe' || $genderEnglish == GenderType::FEMALE || $genderEnglish == GenderType::V) {
