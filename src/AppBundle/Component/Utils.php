@@ -9,6 +9,7 @@ use AppBundle\Entity\LocationHealthQueue;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Util\NumberUtil;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -473,6 +474,23 @@ class Utils
             return $value;
         }
     }
+
+    
+    /**
+     * Replace zeroes with replacement text.
+     *
+     * @param string|null $value
+     * @return string
+     */
+    public static function fillZeroFloat($value, $replacementText = "-")
+    {
+        if(NumberUtil::isFloatZero($value) || $value === null) {
+            return $replacementText;
+        } else {
+            return $value;
+        }
+    }
+    
 
     /**
      * @param string $key
