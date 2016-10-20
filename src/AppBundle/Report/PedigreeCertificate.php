@@ -9,12 +9,14 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportFormat;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Constant\TwigCode;
+use AppBundle\Entity\Address;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BodyFatRepository;
 use AppBundle\Entity\BreedValuesSet;
 use AppBundle\Entity\BreedValuesSetRepository;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
@@ -73,15 +75,6 @@ class PedigreeCertificate
     /** @var LitterRepository */
     private $litterRepository;
 
-    /** @var MuscleThicknessRepository */
-    private $muscleThicknessRepository;
-
-    /** @var BodyFatRepository */
-    private $bodyFatRepository;
-
-    /** @var TailLengthRepository */
-    private $tailLengthRepository;
-
     /** @var ExteriorRepository */
     private $exteriorRepository;
 
@@ -101,13 +94,15 @@ class PedigreeCertificate
      * PedigreeCertificate constructor.
      * @param ObjectManager $em
      * @param Client $client
-     * @param Location $location
+     * @param string $ubn
      * @param int $animalId
      * @param int $breedValuesYear
      * @param GeneticBase $geneticBases
      * @param array $lambMeatIndexCoefficients
+     * @param string $trimmedClientName
+     * @param CompanyAddress $companyAddress
      */
-    public function __construct(ObjectManager $em, Client $client, Location $location, $animalId, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients)
+    public function __construct(ObjectManager $em, Client $client, $ubn, $animalId, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients, $trimmedClientName, $companyAddress)
     {
         $this->em = $em;
 
@@ -119,19 +114,17 @@ class PedigreeCertificate
         $this->lambMeatIndexCoefficients = $lambMeatIndexCoefficients;
 
         $this->data = array();
-
-        $companyName = $this->getCompanyName($location, $client);
-        $trimmedClientName = StringUtil::trimStringWithAddedEllipsis($companyName, self::MAX_LENGTH_FULL_NAME);
+        
         $this->data[ReportLabel::OWNER_NAME] = $trimmedClientName;
-        $this->data[ReportLabel::ADDRESS] = $location->getCompany()->getAddress();
-        $postalCode = $location->getCompany()->getAddress()->getPostalCode();
+        $this->data[ReportLabel::ADDRESS] = $companyAddress;
+        $postalCode = $companyAddress->getPostalCode();
         if($postalCode != null && $postalCode != '' && $postalCode != ' ') {
             $postalCode = substr($postalCode, 0 ,4).' '.substr($postalCode, 4);
         } else {
             $postalCode = self::GENERAL_NULL_FILLER;
         }
         $this->data[ReportLabel::POSTAL_CODE] = $postalCode;
-        $this->data[ReportLabel::UBN] = $location->getUbn();
+        $this->data[ReportLabel::UBN] = $ubn;
 
         //TODO Phase 2: Add breeder information
         $this->data[ReportLabel::BREEDER] = null; //TODO pass Breeder entity
@@ -498,27 +491,6 @@ class PedigreeCertificate
         }
 
         return $ageInTheNsfoSystem.'/'.$litterCount.'/'.$totalBornCount.'/'.$bornAliveCount.$oneYearMark;
-    }
-
-
-    /**
-     * @param Location $location
-     * @param Client $client
-     * @return string
-     */
-    private function getCompanyName($location, $client)
-    {
-        $company = $location->getCompany();
-        if ($company != null) {
-            return $company->getCompanyName();
-        } else {
-            $company = $client->getCompanies()->first();
-            if ($company != null) {
-                return $company->getCompanyName();
-            } else {
-                return '-';
-            }
-        }
     }
 
 

@@ -18,6 +18,7 @@ use AppBundle\Entity\GeneticBaseRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\NormalDistribution;
 use AppBundle\Enumerator\BreedValueCoefficientType;
+use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -28,6 +29,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 class PedigreeCertificates extends ReportBase
 {
     const FILE_NAME_REPORT_TYPE = 'afstammingsbewijs';
+    const MAX_LENGTH_FULL_NAME = 30;
 
     /** @var array */
     private $reports;
@@ -65,8 +67,13 @@ class PedigreeCertificates extends ReportBase
         $breedValueCoefficientRepository = $em->getRepository(BreedValueCoefficient::class);
         $lambMeatIndexCoefficients = $breedValueCoefficientRepository->getLambMeatIndexCoefficients();
 
+        $companyName = $this->getCompanyName($location, $client);
+        $trimmedClientName = StringUtil::trimStringWithAddedEllipsis($companyName, self::MAX_LENGTH_FULL_NAME);
+        $companyAddress = $location->getCompany()->getAddress();
+        $ubn = $location->getUbn();
+
         foreach ($animalIds as $animalId) {
-            $pedigreeCertificate = new PedigreeCertificate($em, $client, $location, $animalId, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients);
+            $pedigreeCertificate = new PedigreeCertificate($em, $client, $ubn, $animalId, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients, $trimmedClientName, $companyAddress);
 
             $this->reports[$this->animalCount] = $pedigreeCertificate->getData();
 
@@ -119,6 +126,27 @@ class PedigreeCertificates extends ReportBase
     public function getAnimalCount()
     {
         return $this->animalCount;
+    }
+
+
+    /**
+     * @param Location $location
+     * @param Client $client
+     * @return string
+     */
+    private function getCompanyName($location, $client)
+    {
+        $company = $location->getCompany();
+        if ($company != null) {
+            return $company->getCompanyName();
+        } else {
+            $company = $client->getCompanies()->first();
+            if ($company != null) {
+                return $company->getCompanyName();
+            } else {
+                return '-';
+            }
+        }
     }
     
 }
