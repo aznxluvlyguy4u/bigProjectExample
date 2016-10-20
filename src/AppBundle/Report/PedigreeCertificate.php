@@ -25,6 +25,8 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\MuscleThicknessRepository;
 use AppBundle\Entity\NormalDistribution;
+use AppBundle\Entity\PedigreeRegister;
+use AppBundle\Entity\PedigreeRegisterRepository;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Enumerator\GenderType;
@@ -109,6 +111,8 @@ class PedigreeCertificate
     {
         $this->em = $em;
 
+        $animalId = $animal->getId();
+
         $this->litterRepository = $em->getRepository(Litter::class);
         $this->exteriorRepository = $em->getRepository(Exterior::class);
 //        $this->muscleThicknessRepository = $em->getRepository(MuscleThickness::class);
@@ -144,7 +148,10 @@ class PedigreeCertificate
         $breederLastName = '-';
         $trimmedBreederName = StringUtil::getTrimmedFullNameWithAddedEllipsis($breederFirstName, $breederLastName, self::MAX_LENGTH_FULL_NAME);
         $this->data[ReportLabel::BREEDER_NAME] = $trimmedBreederName;
-        $this->data[ReportLabel::PEDIGREE_REGISTER_NAME] = $this->getPedigreeRegisterText($animal);
+
+        /** @var PedigreeRegisterRepository $pedigreeRegisterRepository */
+        $pedigreeRegisterRepository = $em->getRepository(PedigreeRegister::class);
+        $this->data[ReportLabel::PEDIGREE_REGISTER_NAME] = $this->parsePedigreeRegisterText($pedigreeRegisterRepository->getFullnameByAnimalId($animalId));
 
         $emptyAddress = new LocationAddress(); //For now an empty Address entity is passed
         $emptyAddress->setStreetName('-');
@@ -716,14 +723,23 @@ class PedigreeCertificate
      */
     private function getPedigreeRegisterText($animal)
     {
-        $registerName = $animal->getPedigreeRegisterFullName();
+        return $this->parsePedigreeRegisterText($animal->getPedigreeRegisterFullName());
+    }
 
+
+    /**
+     * @param string $registerName
+     * @return string
+     */
+    private function parsePedigreeRegisterText($registerName)
+    {
         if($registerName != null && $registerName != '') {
             return 'Namens: '.$registerName;
         } else {
             return self::MISSING_PEDIGREE_REGISTER;
         }
     }
+
 
 
     /**
