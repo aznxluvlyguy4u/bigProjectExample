@@ -115,4 +115,19 @@ class LitterRepository extends BaseRepository {
         $result = $this->getManager()->getConnection()->query($sql)->fetch();
         return $result == false ? null : $result;
     }
+
+
+    /**
+     * @param $animalId
+     * @return mixed
+     */
+    public function getLitterSize($animalId)
+    {
+        if(!is_int($animalId)) { return null; }
+        $sql = "SELECT (stillborn_count + l.born_alive_count) as size
+                FROM animal a
+                  INNER JOIN litter l ON a.litter_id = l.id WHERE a.id = ".$animalId;
+        $result = $this->getManager()->getConnection()->query($sql)->fetch();
+        return $result == false ? null : $result;
+    }
 }

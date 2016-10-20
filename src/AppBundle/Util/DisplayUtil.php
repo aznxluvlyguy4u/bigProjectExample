@@ -51,5 +51,15 @@ class DisplayUtil
         return $ageInTheNsfoSystem.'/'.$litterCount.'/'.$totalBornCount.'/'.$bornAliveCount.$oneYearMark;
     }
 
-    
+
+    /**
+     * @param int $litterSize
+     * @return string
+     */
+    public static function parseNLingString($litterSize)
+    {
+        return $litterSize == null ? '0-ling' : $litterSize.'-ling';
+    }
+        
+        
 }
