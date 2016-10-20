@@ -257,14 +257,12 @@ class PedigreeCertificate
      * @param GeneticBase $geneticBases
      * @return array
      */
-    public static function getAnimalValues(ObjectManager $em, $key, $animalId, $generation, $breedValuesYear, GeneticBase $geneticBases)
+    public static function getAnimalValuesBySql(ObjectManager $em, $key, $animalId, $generation, $breedValuesYear, GeneticBase $geneticBases)
     {        
         /** @var ExteriorRepository $exteriorRepository */
         $exteriorRepository = $em->getRepository(Exterior::class);
         /** @var LitterRepository $litterRepository */
         $litterRepository = $em->getRepository(Litter::class);
-        /** @var AnimalRepository $animalRepository */
-        $animalRepository = $em->getRepository(Animal::class);
 
         $exteriorReplacementString = null;
         $latestExteriorArray = $exteriorRepository->getLatestExteriorBySql($animalId, $exteriorReplacementString);
@@ -326,7 +324,6 @@ class PedigreeCertificate
         $totalStillbornCount = $offspringLitterData[JsonInputConstant::TOTAL_STILLBORN_COUNT];
         $totalBornAliveCount = $offspringLitterData[JsonInputConstant::TOTAL_BORN_ALIVE_COUNT];
         $totalOffSpringCountByLitterData = $totalBornAliveCount + $totalStillbornCount;
-        $totalOffSpringCountByParentData = $animalRepository->getOffspringCount($animalId);
         $earliestLitterDate = $offspringLitterData[JsonInputConstant::EARLIEST_LITTER_DATE];
         $latestLitterDate = $offspringLitterData[JsonInputConstant::LATEST_LITTER_DATE];
 
@@ -370,7 +367,6 @@ class PedigreeCertificate
 
         //Offspring
         $results[ReportLabel::LITTER_COUNT] = Utils::fillZero($litterCount);
-        $results[ReportLabel::OFFSPRING_COUNT] =  Utils::fillZero($totalOffSpringCountByParentData);
 
         $results[ReportLabel::ULN] = Utils::fillNullOrEmptyString($uln);
         $results[ReportLabel::PEDIGREE] = Utils::fillNullOrEmptyString($stn);
@@ -401,7 +397,6 @@ class PedigreeCertificate
         
         return $results;
     }
-    
 
 
     /**
@@ -456,7 +451,6 @@ class PedigreeCertificate
         //Offspring
         $litterCount = $this->litterRepository->getLitters($animal)->count();
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_COUNT] = Utils::fillZero($litterCount);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::OFFSPRING_COUNT] =  Utils::fillZero($this->getOffspringCount($animal));
 
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::ULN] = Utils::fillNullOrEmptyString($animal->getUlnCountryCode().$animal->getUlnNumber());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PEDIGREE] = Utils::fillNullOrEmptyString($animal->getPedigreeCountryCode().$animal->getPedigreeNumber());
