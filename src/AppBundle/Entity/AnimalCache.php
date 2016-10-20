@@ -186,7 +186,7 @@ class AnimalCache
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      */
-    private $generalAppearence;
+    private $generalAppearance;
 
     /**
      * @var string
@@ -562,17 +562,17 @@ class AnimalCache
     /**
      * @return string
      */
-    public function getGeneralAppearence()
+    public function getGeneralAppearance()
     {
-        return $this->generalAppearence;
+        return $this->generalAppearance;
     }
 
     /**
-     * @param string $generalAppearence
+     * @param string $generalAppearance
      */
-    public function setGeneralAppearence($generalAppearence)
+    public function setGeneralAppearance($generalAppearance)
     {
-        $this->generalAppearence = $generalAppearence;
+        $this->generalAppearance = $generalAppearance;
     }
 
     /**
