@@ -115,17 +115,12 @@ class PedigreeCertificate
 
         $this->litterRepository = $em->getRepository(Litter::class);
         $this->exteriorRepository = $em->getRepository(Exterior::class);
-//        $this->muscleThicknessRepository = $em->getRepository(MuscleThickness::class);
-//        $this->bodyFatRepository = $em->getRepository(BodyFat::class);
-//        $this->tailLengthRepository = $em->getRepository(TailLength::class);
         $this->breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
         $this->breedValuesYear = $breedValuesYear;
         $this->geneticBases = $geneticBases;
         $this->lambMeatIndexCoefficients = $lambMeatIndexCoefficients;
 
         $this->data = array();
-
-//        $this->data[ReportLabel::OWNER] = $client;
 
         $companyName = $this->getCompanyName($location, $client);
         $trimmedClientName = StringUtil::trimStringWithAddedEllipsis($companyName, self::MAX_LENGTH_FULL_NAME);
@@ -135,7 +130,7 @@ class PedigreeCertificate
         if($postalCode != null && $postalCode != '' && $postalCode != ' ') {
             $postalCode = substr($postalCode, 0 ,4).' '.substr($postalCode, 4);
         } else {
-            $postalCode = '-';
+            $postalCode = self::GENERAL_NULL_FILLER;
         }
         $this->data[ReportLabel::POSTAL_CODE] = $postalCode;
         $this->data[ReportLabel::UBN] = $location->getUbn();
@@ -163,14 +158,13 @@ class PedigreeCertificate
         if($postalCode != null && $postalCode != '' && $postalCode != ' ') {
             $postalCode = substr($postalCode, 0 ,4).' '.substr($postalCode, 4);
         } else {
-            $postalCode = '-';
+            $postalCode = self::GENERAL_NULL_FILLER;
         }
         $this->data[ReportLabel::ADDRESS_BREEDER] = $emptyAddress; //TODO pass real Address entity
         $this->data[ReportLabel::POSTAL_CODE_BREEDER] = $postalCode; //TODO pass real Address entity //TODO Add a space between number and last two letters in postalCode
         $this->data[ReportLabel::BREEDER_NUMBER] = '-'; //TODO pass real breeder number
 
         $keyAnimal = ReportLabel::CHILD_KEY;
-//        $this->data[ReportLabel::ANIMALS][$keyAnimal][ReportLabel::ENTITY] = $animal;
 
         $generation = 0;
         $this->addParents($animal, $keyAnimal, $generation);
@@ -201,9 +195,6 @@ class PedigreeCertificate
 
             $keyFather = self::getFatherKey($keyAnimal);
             $keyMother = self::getMotherKey($keyAnimal);
-
-//            $this->data[ReportLabel::ANIMALS][$keyFather][ReportLabel::ENTITY] = $father;
-//            $this->data[ReportLabel::ANIMALS][$keyMother][ReportLabel::ENTITY] = $mother;
 
             $this->addAnimalValuesToArray($keyFather, $father, $generation);
             $this->addAnimalValuesToArray($keyMother, $mother, $generation);
@@ -399,10 +390,6 @@ class PedigreeCertificate
      */
     private function addAnimalValuesToArray($key, $animal, $generation)
     {
-        //Body Measurement Values
-//        $latestMuscleThickness = $this->muscleThicknessRepository->getLatestMuscleThickness($animal);
-//        $latestBodyFatAsString = $this->bodyFatRepository->getLatestBodyFatAsString($animal);
-//        $latestTailLength = $this->tailLengthRepository->getLatestTailLength($animal);
         $latestExterior = $this->exteriorRepository->getLatestExterior($animal);
 
         //TODO IF PedigreeCertificate is fixed.
