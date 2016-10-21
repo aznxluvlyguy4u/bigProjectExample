@@ -32,6 +32,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\RequestTypeNonIR;
 use AppBundle\Enumerator\TagStateType;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Validator\Constraints\DateTime;
 
 
@@ -350,22 +351,19 @@ class Count
     
 
     /**
-     * @param Client $client
+     * @param ObjectManager $em
+     * @param int $clientId
      * @return int
      */
-    public static function getUnassignedTagsCount(Client $client)
+    public static function getUnassignedTagsCount(ObjectManager $em, $clientId)
     {
-        $count = 0;
-
-        foreach($client->getTags() as $tag){
-            if($tag->getTagStatus() == TagStateType::UNASSIGNED) {
-                $count++;
-            }
-        }
-
-        return $count;
+        if(!is_int($clientId)) { return 0; }
+        $sql = "SELECT COUNT(*) FROM tag WHERE owner_id = ".$clientId." AND tag_status = 'UNASSIGNED'";
+        $result = $em->getConnection()->query($sql)->fetch();
+        return $result == false || $result == null ? 0 : $result['count'];
     }
-
+    
+    
     /**
      * @param DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|RetrieveAnimalDetails $declaration
      * @return bool
