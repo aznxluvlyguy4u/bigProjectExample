@@ -128,6 +128,6 @@ class LitterRepository extends BaseRepository {
                 FROM animal a
                   INNER JOIN litter l ON a.litter_id = l.id WHERE a.id = ".$animalId;
         $result = $this->getManager()->getConnection()->query($sql)->fetch();
-        return $result == false ? null : $result;
+        return $result == false ? null : $result['size'];
     }
 }
