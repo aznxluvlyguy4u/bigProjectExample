@@ -135,6 +135,7 @@ class AnimalCacher
         
         //TODO Still blank at the moment
         $breedValueLitterSize = null;
+        $predicate = null;
 
 
         //Clean database
@@ -157,6 +158,7 @@ class AnimalCacher
 
         $record->setAnimalId($animalId);
         $record->setDutchBreedStatus($dutchBreedStatus);
+        $record->setPredicate($predicate);
         $record->setNLing($nLing);
         $record->setProduction($production);
         $record->setBreedValueLitterSize($breedValueLitterSize);

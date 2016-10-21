@@ -48,7 +48,13 @@ class AnimalCache
      * @JMS\Type("string")
      */
     private $dutchBreedStatus;
-
+    
+    /**
+     * @var string
+     * @ORM\Column(type="string", options={"default":null}, nullable=true)
+     * @JMS\Type("string")
+     */
+    private $predicate;
 
     /* Latest Litter Data */
 
@@ -288,6 +294,22 @@ class AnimalCache
         $this->dutchBreedStatus = $dutchBreedStatus;
     }
 
+    /**
+     * @return string
+     */
+    public function getPredicate()
+    {
+        return $this->predicate;
+    }
+
+    /**
+     * @param string $predicate
+     */
+    public function setPredicate($predicate)
+    {
+        $this->predicate = $predicate;
+    }    
+    
     /**
      * @return string
      */
