@@ -27,7 +27,7 @@ class AnimalCache
 
     /**
      * @var DateTime
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", options={"default":"CURRENT_TIMESTAMP"}, nullable=true)
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
@@ -35,14 +35,16 @@ class AnimalCache
     protected $logDate;
 
     /**
-     * @ORM\OneToOne(targetEntity="Animal")
-     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id")
+     * @var integer
+     * @ORM\Column(type="integer", nullable=false)
+     * @Assert\NotBlank
+     * @JMS\Type("integer")
      */
-    private $animal;
+    private $animalId;
 
     /**
      * @var string
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", options={"default":null}, nullable=true)
      * @JMS\Type("string")
      */
     private $dutchBreedStatus;
@@ -52,14 +54,14 @@ class AnimalCache
 
     /**
      * @var string
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", options={"default":null}, nullable=true)
      * @JMS\Type("string")
      */
     private $nLing;
 
     /**
      * @var string
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", options={"default":"-/-/-/-"}, nullable=true)
      * @JMS\Type("string")
      */
     private $production;
@@ -69,28 +71,28 @@ class AnimalCache
 
     /**
      * @var string
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", options={"default":null}, nullable=true)
      * @JMS\Type("string")
      */
     private $breedValueLitterSize;
 
     /**
      * @var string
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", options={"default":null}, nullable=true)
      * @JMS\Type("string")
      */
     private $breedValueGrowth;
 
     /**
      * @var string
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", options={"default":null}, nullable=true)
      * @JMS\Type("string")
      */
     private $breedValueMuscleThickness;
 
     /**
      * @var string
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", options={"default":null}, nullable=true)
      * @JMS\Type("string")
      */
     private $breedValueFat;
@@ -98,7 +100,7 @@ class AnimalCache
 
     /**
      * @var string
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", options={"default":null}, nullable=true)
      * @JMS\Type("string")
      */
     private $lambMeatIndex;
@@ -107,15 +109,15 @@ class AnimalCache
     /* Latest Weight Data */
 
     /**
-     * @var string
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $lastWeight;
 
     /**
      * @var DateTime
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", options={"default":null}, nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
      */
@@ -126,99 +128,99 @@ class AnimalCache
 
     /**
      * @var string
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", options={"default":null}, nullable=true)
      * @JMS\Type("string")
      */
     private $kind;
 
 
     /**
-     * @var string
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $skull;
 
     /**
-     * @var string
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $muscularity;
 
     /**
-     * @var string
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $proportion;
 
     /**
-     * @var string
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $progress;
 
     /**
-     * @var string
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $exteriorType;
 
     /**
-     * @var string
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $legWork;
 
     /**
-     * @var string
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $fur;
 
     /**
-     * @var string
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $generalAppearance;
 
     /**
-     * @var string
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $height;
 
     /**
-     * @var string
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $breastDepth;
 
     /**
-     * @var string
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $torsoLength;
 
     /**
-     * @var string
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $markings;
 
     /**
      * @var DateTime
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", options={"default":null}, nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
      */
@@ -230,7 +232,6 @@ class AnimalCache
         $this->logDate = new \DateTime();
     }
 
-
     /**
      * @return int
      */
@@ -240,7 +241,7 @@ class AnimalCache
     }
 
     /**
-     * @return \DateTime
+     * @return DateTime
      */
     public function getLogDate()
     {
@@ -248,7 +249,7 @@ class AnimalCache
     }
 
     /**
-     * @param \DateTime $logDate
+     * @param DateTime $logDate
      */
     public function setLogDate($logDate)
     {
@@ -256,19 +257,19 @@ class AnimalCache
     }
 
     /**
-     * @return mixed
+     * @return int
      */
-    public function getAnimal()
+    public function getAnimalId()
     {
-        return $this->animal;
+        return $this->animalId;
     }
 
     /**
-     * @param mixed $animal
+     * @param int $animalId
      */
-    public function setAnimal($animal)
+    public function setAnimalId($animalId)
     {
-        $this->animal = $animal;
+        $this->animalId = $animalId;
     }
 
     /**
@@ -400,7 +401,7 @@ class AnimalCache
     }
 
     /**
-     * @return string
+     * @return float
      */
     public function getLastWeight()
     {
@@ -408,7 +409,7 @@ class AnimalCache
     }
 
     /**
-     * @param string $lastWeight
+     * @param float $lastWeight
      */
     public function setLastWeight($lastWeight)
     {
@@ -448,7 +449,7 @@ class AnimalCache
     }
 
     /**
-     * @return string
+     * @return float
      */
     public function getSkull()
     {
@@ -456,7 +457,7 @@ class AnimalCache
     }
 
     /**
-     * @param string $skull
+     * @param float $skull
      */
     public function setSkull($skull)
     {
@@ -464,7 +465,7 @@ class AnimalCache
     }
 
     /**
-     * @return string
+     * @return float
      */
     public function getMuscularity()
     {
@@ -472,7 +473,7 @@ class AnimalCache
     }
 
     /**
-     * @param string $muscularity
+     * @param float $muscularity
      */
     public function setMuscularity($muscularity)
     {
@@ -480,7 +481,7 @@ class AnimalCache
     }
 
     /**
-     * @return string
+     * @return float
      */
     public function getProportion()
     {
@@ -488,7 +489,7 @@ class AnimalCache
     }
 
     /**
-     * @param string $proportion
+     * @param float $proportion
      */
     public function setProportion($proportion)
     {
@@ -496,7 +497,7 @@ class AnimalCache
     }
 
     /**
-     * @return string
+     * @return float
      */
     public function getProgress()
     {
@@ -504,7 +505,7 @@ class AnimalCache
     }
 
     /**
-     * @param string $progress
+     * @param float $progress
      */
     public function setProgress($progress)
     {
@@ -512,7 +513,7 @@ class AnimalCache
     }
 
     /**
-     * @return string
+     * @return float
      */
     public function getExteriorType()
     {
@@ -520,7 +521,7 @@ class AnimalCache
     }
 
     /**
-     * @param string $exteriorType
+     * @param float $exteriorType
      */
     public function setExteriorType($exteriorType)
     {
@@ -528,7 +529,7 @@ class AnimalCache
     }
 
     /**
-     * @return string
+     * @return float
      */
     public function getLegWork()
     {
@@ -536,7 +537,7 @@ class AnimalCache
     }
 
     /**
-     * @param string $legWork
+     * @param float $legWork
      */
     public function setLegWork($legWork)
     {
@@ -544,7 +545,7 @@ class AnimalCache
     }
 
     /**
-     * @return string
+     * @return float
      */
     public function getFur()
     {
@@ -552,7 +553,7 @@ class AnimalCache
     }
 
     /**
-     * @param string $fur
+     * @param float $fur
      */
     public function setFur($fur)
     {
@@ -560,7 +561,7 @@ class AnimalCache
     }
 
     /**
-     * @return string
+     * @return float
      */
     public function getGeneralAppearance()
     {
@@ -568,7 +569,7 @@ class AnimalCache
     }
 
     /**
-     * @param string $generalAppearance
+     * @param float $generalAppearance
      */
     public function setGeneralAppearance($generalAppearance)
     {
@@ -576,7 +577,7 @@ class AnimalCache
     }
 
     /**
-     * @return string
+     * @return float
      */
     public function getHeight()
     {
@@ -584,7 +585,7 @@ class AnimalCache
     }
 
     /**
-     * @param string $height
+     * @param float $height
      */
     public function setHeight($height)
     {
@@ -592,7 +593,7 @@ class AnimalCache
     }
 
     /**
-     * @return string
+     * @return float
      */
     public function getBreastDepth()
     {
@@ -600,7 +601,7 @@ class AnimalCache
     }
 
     /**
-     * @param string $breastDepth
+     * @param float $breastDepth
      */
     public function setBreastDepth($breastDepth)
     {
@@ -608,7 +609,7 @@ class AnimalCache
     }
 
     /**
-     * @return string
+     * @return float
      */
     public function getTorsoLength()
     {
@@ -616,7 +617,7 @@ class AnimalCache
     }
 
     /**
-     * @param string $torsoLength
+     * @param float $torsoLength
      */
     public function setTorsoLength($torsoLength)
     {
@@ -624,7 +625,7 @@ class AnimalCache
     }
 
     /**
-     * @return string
+     * @return float
      */
     public function getMarkings()
     {
@@ -632,7 +633,7 @@ class AnimalCache
     }
 
     /**
-     * @param string $markings
+     * @param float $markings
      */
     public function setMarkings($markings)
     {
@@ -656,5 +657,5 @@ class AnimalCache
     }
 
 
-
+    
 }
