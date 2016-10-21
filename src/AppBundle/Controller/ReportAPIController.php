@@ -191,7 +191,7 @@ class ReportAPIController extends APIController {
 
     if(self::IS_LOCAL_TESTING) {
       //Save pdf in local cache
-      return new JsonResponse([Constant::RESULT_NAMESPACE => $this->saveFileLocally($reportResults, $html, TwigOutputUtil::pdfPortraitOptions())], 200);
+      return new JsonResponse([Constant::RESULT_NAMESPACE => $this->saveFileLocally($reportResults, $html, TwigOutputUtil::pdfLandscapeOptions())], 200);
     }
 
     $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,TwigOutputUtil::pdfLandscapeOptions());
