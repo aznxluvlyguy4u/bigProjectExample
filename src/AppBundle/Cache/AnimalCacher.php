@@ -4,17 +4,22 @@ namespace AppBundle\Cache;
 
 use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\AnimalCache;
+use AppBundle\Entity\AnimalCacheRepository;
 use AppBundle\Entity\BreedValuesSet;
 use AppBundle\Entity\BreedValuesSetRepository;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\GeneticBase;
+use AppBundle\Entity\GeneticBaseRepository;
 use AppBundle\Entity\Litter;
 use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
 use AppBundle\Util\BreedValueUtil;
+use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DisplayUtil;
+use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
 use \Doctrine\Common\Persistence\ObjectManager;
 
@@ -24,14 +29,47 @@ class AnimalCacher
     const EMPTY_DATE_OF_BIRTH = '-';
     const NEUTER_STRING = '-';
     const EMPTY_INDEX_VALUE = '-/-';
+    const FLUSH_BATCH_SIZE = 1000;
 
 
     /**
+     * @param ObjectManager $em
      * @param bool $ignoreAnimalsWithAnExistingCache
-     * @param null $ignoreCacheBeforeDateTime
+     * @param string $ignoreCacheBeforeDateString
+     * @param CommandUtil $cmdUtil
      */
-    public static function cacheAllAnimals($ignoreAnimalsWithAnExistingCache = true, $ignoreCacheBeforeDateTime = null) {
-        //TODO
+    public static function cacheAllAnimals(ObjectManager $em, $ignoreAnimalsWithAnExistingCache = true, $ignoreCacheBeforeDateString = null, $cmdUtil = null)
+    {
+        $flushPerRecord = false;
+
+        /** @var GeneticBaseRepository $geneticBaseRepository */
+        $geneticBaseRepository = $em->getRepository(GeneticBase::class);
+
+        $breedValuesYear = $geneticBaseRepository->getLatestYear();
+        $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
+        
+        /** @var AnimalCacheRepository $animalCacheRepository */
+        $animalCacheRepository = $em->getRepository(AnimalCache::class);
+        $animalCacherInputData = $animalCacheRepository->getAnimalCacherInputData($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString);
+
+        $count = 0;
+
+        if($cmdUtil instanceof CommandUtil) {
+            $cmdUtil->setStartTimeAndPrintIt(count($animalCacherInputData) + 1, 1, 'Generating animal cache records');
+            foreach ($animalCacherInputData as $record) {
+                self::cacheById($em, $record['animal_id'], $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+                if($count++%self::FLUSH_BATCH_SIZE == 0) { $em->flush(); }
+                $cmdUtil->advanceProgressBar(1);
+            }
+            $cmdUtil->setEndTimeAndPrintFinalOverview();
+        } else {
+            foreach ($animalCacherInputData as $record) {
+                self::cacheById($em, $record['animal_id'], $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+                if($count++%self::FLUSH_BATCH_SIZE == 0) { $em->flush(); }
+            }
+        }
+
+        if(!$flushPerRecord) { $em->flush(); }
     }
 
 
@@ -45,8 +83,9 @@ class AnimalCacher
      * @param int $breedValuesYear
      * @param GeneticBase $geneticBases
      * @param boolean $isUpdate
+     * @param boolean $flush
      */
-    public static function cacheById(ObjectManager $em, $animalId, $gender, $dateOfBirthString, $breedType, $breedValuesYear, $geneticBases, $isUpdate)
+    public static function cacheById(ObjectManager $em, $animalId, $gender, $dateOfBirthString, $breedType, $breedValuesYear, $geneticBases, $isUpdate, $flush = true)
     {
         //Animal Entity Data
         $gender = Translation::getGenderInDutch($gender, self::NEUTER_STRING);
@@ -72,6 +111,7 @@ class AnimalCacher
         $weight = $lastWeightMeasurementData[JsonInputConstant::WEIGHT];
         $isBirthWeight = $lastWeightMeasurementData[JsonInputConstant::IS_BIRTH_WEIGHT];
         $weightMeasurementDateString = $lastWeightMeasurementData[JsonInputConstant::MEASUREMENT_DATE];
+        $weightExists = $weightMeasurementDateString != null;
 
         //Exterior Data
         /** @var ExteriorRepository $exteriorRepository */
@@ -90,12 +130,63 @@ class AnimalCacher
         $breastDepth = $exteriorData[JsonInputConstant::BREAST_DEPTH];
         $torsoLength = $exteriorData[JsonInputConstant::TORSO_LENGTH];
         $markings = $exteriorData[JsonInputConstant::MARKINGS];
-        $exteriorMeasurementDate = $exteriorData[JsonInputConstant::MEASUREMENT_DATE];
-
+        $exteriorMeasurementDateString = $exteriorData[JsonInputConstant::MEASUREMENT_DATE];
+        $exteriorExists = $exteriorMeasurementDateString != null;
+        
         //TODO Still blank at the moment
         $breedValueLitterSize = null;
 
 
+        //Clean database
+        if($exteriorMeasurementDateString == '') {
+            $exteriorMeasurementDateString = null;
+        }
+
+
+        $logDate = TimeUtil::getLogDateString();
+
+        if($isUpdate) {
+            /** @var AnimalCacheRepository $repository */
+            $repository = $em->getRepository(AnimalCache::class);
+            $record = $repository->findOneBy(['animalId' => $animalId]);
+            if($record == null) { $record = new AnimalCache(); }
+        } else {
+            //New record
+            $record = new AnimalCache();
+        }
+
+        $record->setAnimalId($animalId);
+        $record->setDutchBreedStatus($dutchBreedStatus);
+        $record->setNLing($nLing);
+        $record->setProduction($production);
+        $record->setBreedValueLitterSize($breedValueLitterSize);
+        $record->setBreedValueGrowth($breedValueGrowth);
+        $record->setBreedValueMuscleThickness($breedValueMuscleThickness);
+        $record->setBreedValueFat($breedValueFat);
+        $record->setLambMeatIndex($lambMeatIndex);
+        if($weightExists) {
+            $record->setLastWeight($weight);
+            $record->setWeightMeasurementDate(new \DateTime($weightMeasurementDateString));
+        }
+        if($exteriorExists) {
+            $record->setKind($kind);
+            $record->setSkull($skull);
+            $record->setMuscularity($muscularity);
+            $record->setProportion($proportion);
+            $record->setProgress($progress);
+            $record->setExteriorType($exteriorType);
+            $record->setLegWork($legWork);
+            $record->setFur($fur);
+            $record->setGeneralAppearance($generalAppearance);
+            $record->setHeight($height);
+            $record->setBreastDepth($breastDepth);
+            $record->setTorsoLength($torsoLength);
+            $record->setMarkings($markings);
+            $record->setExteriorMeasurementDate(new \DateTime($exteriorMeasurementDateString));
+        }
+
+        $em->persist($record);
+        if($flush) { $em->flush(); }
     }
 
 
