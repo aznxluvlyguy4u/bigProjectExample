@@ -20,6 +20,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Symfony\Component\ExpressionLanguage\Tests\Node\Obj;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
@@ -176,6 +177,7 @@ class ReportAPIController extends APIController {
 //    $content = $this->getContentAsArray($request);
     $content = new ArrayCollection(); //Just a placeholder for the array holding the options
     
+    /** @var ObjectManager $em */
     $em = $this->getDoctrine()->getManager();
 
     //TODO add validation for options, when adding the options

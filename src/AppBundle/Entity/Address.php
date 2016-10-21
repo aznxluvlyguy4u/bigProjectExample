@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Util\NullChecker;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -263,5 +264,18 @@ abstract class Address {
     public function getState()
     {
         return $this->state;
+    }
+
+
+    /**
+     * @return null|string
+     */
+    public function getFullStreetNameAndNumber()
+    {
+        if(NullChecker::isNull($this->streetName)) { return null; }
+        $result = $this->streetName;
+        if(NullChecker::isNotNull($this->addressNumber)) { $result = $result.' '.$this->addressNumber; };
+        if(NullChecker::isNotNull($this->addressNumberSuffix)) { $result = $result.$this->addressNumberSuffix; };
+        return $result;
     }
 }

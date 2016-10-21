@@ -9,6 +9,7 @@ class ReportLabel
     const ENTITY = 'entity';
     const IS_PROD_ENV = 'isProdEnv';
     const IMAGES_DIRECTORY = 'imagesDirectory';
+    const DATE = 'date';
 
     //Person
     const OWNER_NAME = "ownerName";
