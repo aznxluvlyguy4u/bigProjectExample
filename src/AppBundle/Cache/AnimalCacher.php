@@ -38,7 +38,33 @@ class AnimalCacher
      * @param string $ignoreCacheBeforeDateString
      * @param CommandUtil $cmdUtil
      */
-    public static function cacheAllAnimals(ObjectManager $em, $ignoreAnimalsWithAnExistingCache = true, $ignoreCacheBeforeDateString = null, $cmdUtil = null)
+    public static function cacheAllAnimals(ObjectManager $em, $cmdUtil = null, $ignoreAnimalsWithAnExistingCache = true, $ignoreCacheBeforeDateString = null)
+    {
+        self::cacheAnimals($em, $ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $cmdUtil);
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param bool $ignoreAnimalsWithAnExistingCache
+     * @param null $ignoreCacheBeforeDateString
+     * @param null $cmdUtil
+     * @param $locationId
+     */
+    public static function cacheAnimalsOfLocationId(ObjectManager $em, $locationId, $cmdUtil = null, $ignoreAnimalsWithAnExistingCache = true, $ignoreCacheBeforeDateString = null)
+    {
+        self::cacheAnimals($em, $ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $cmdUtil, $locationId);
+    }
+    
+
+    /**
+     * @param ObjectManager $em
+     * @param bool $ignoreAnimalsWithAnExistingCache
+     * @param string $ignoreCacheBeforeDateString
+     * @param CommandUtil $cmdUtil
+     * @param int $locationId
+     */
+    private static function cacheAnimals(ObjectManager $em, $ignoreAnimalsWithAnExistingCache = true, $ignoreCacheBeforeDateString = null, $cmdUtil = null, $locationId = null)
     {
         $flushPerRecord = false;
 
@@ -50,7 +76,7 @@ class AnimalCacher
         
         /** @var AnimalCacheRepository $animalCacheRepository */
         $animalCacheRepository = $em->getRepository(AnimalCache::class);
-        $animalCacherInputData = $animalCacheRepository->getAnimalCacherInputData($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString);
+        $animalCacherInputData = $animalCacheRepository->getAnimalCacherInputData($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $locationId);
 
         $count = 0;
 
