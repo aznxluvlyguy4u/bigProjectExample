@@ -74,6 +74,7 @@ class ReportLabel
     const PREDICATE = 'predicate';
     const BLINDNESS_FACTOR = 'blindnessFactor';
     const PEDIGREE_REGISTER_NAME = 'pedigreeRegisterName';
+    const LIVESTOCK = 'livestock';
 
     //Measurements
     const EXTERIOR = 'exterior';
