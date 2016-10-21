@@ -3,6 +3,7 @@
 namespace AppBundle\Report;
 
 
+use AppBundle\Component\Count;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
@@ -47,6 +48,7 @@ class LivestockReportData extends ReportBase
         $this->data[ReportLabel::BREEDER_NUMBER] = '-'; //TODO
         $this->data[ReportLabel::UBN] = $this->location->getUbn();
         $this->data[ReportLabel::NAME.'_AND_'.ReportLabel::ADDRESS] = $this->parseNameAddressString();
+        $this->data[ReportLabel::LIVESTOCK] = Count::getLiveStockCountLocation($location);
         $this->data[ReportLabel::ANIMALS] = $this->retrieveLiveStockData();
     }
 
@@ -106,12 +108,12 @@ class LivestockReportData extends ReportBase
                   ac.predicate as a_predicate, mc.predicate as m_predicate, fc.predicate as f_predicate,
                   ac.predicate as a_predicate, mc.predicate as m_predicate, fc.predicate as f_predicate
                 FROM animal a
-                  INNER JOIN animal m ON a.parent_mother_id = m.id
-                  INNER JOIN animal f ON a.parent_father_id = f.id
+                  LEFT JOIN animal m ON a.parent_mother_id = m.id
+                  LEFT JOIN animal f ON a.parent_father_id = f.id
                   LEFT JOIN animal_cache ac ON a.id = ac.animal_id
                   LEFT JOIN animal_cache mc ON m.id = mc.animal_id
                   LEFT JOIN animal_cache fc ON f.id = fc.animal_id
-                WHERE a.location_id = ".$this->location->getId();
+                WHERE a.is_alive = true AND a.location_id = ".$this->location->getId();
         $results = $this->em->getConnection()->query($sql)->fetchAll();
 
         return $results;
