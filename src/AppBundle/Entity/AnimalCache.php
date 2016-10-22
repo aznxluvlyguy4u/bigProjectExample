@@ -455,6 +455,14 @@ class AnimalCache
     }
 
     /**
+     * @param string $weightMeasurementDateString
+     */
+    public function setWeightMeasurementDateByDateString($weightMeasurementDateString)
+    {
+        $this->weightMeasurementDate = new DateTime($weightMeasurementDateString);
+    }
+
+    /**
      * @return string
      */
     public function getKind()
@@ -677,7 +685,13 @@ class AnimalCache
     {
         $this->exteriorMeasurementDate = $exteriorMeasurementDate;
     }
-
-
+    
+    /**
+     * @param string $exteriorMeasurementDateString
+     */
+    public function setExteriorMeasurementDateByDateString($exteriorMeasurementDateString)
+    {
+        $this->exteriorMeasurementDate = new \DateTime($exteriorMeasurementDateString);
+    }
     
 }

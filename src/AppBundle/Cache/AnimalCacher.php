@@ -4,6 +4,7 @@ namespace AppBundle\Cache;
 
 use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalCache;
 use AppBundle\Entity\AnimalCacheRepository;
 use AppBundle\Entity\BreedValuesSet;
@@ -194,7 +195,7 @@ class AnimalCacher
         $record->setLambMeatIndex($lambMeatIndex);
         if($weightExists) {
             $record->setLastWeight($weight);
-            $record->setWeightMeasurementDate(new \DateTime($weightMeasurementDateString));
+            $record->setWeightMeasurementDateByDateString($weightMeasurementDateString);
         }
         if($exteriorExists) {
             $record->setKind($kind);
@@ -210,11 +211,56 @@ class AnimalCacher
             $record->setBreastDepth($breastDepth);
             $record->setTorsoLength($torsoLength);
             $record->setMarkings($markings);
-            $record->setExteriorMeasurementDate(new \DateTime($exteriorMeasurementDateString));
+            $record->setExteriorMeasurementDateByDateString($exteriorMeasurementDateString);
         }
 
         $em->persist($record);
         if($flush) { $em->flush(); }
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Animal $animal
+     * @param boolean $flush
+     */
+    public static function cacheWeightByAnimal(ObjectManager $em, Animal $animal, $flush = true)
+    {
+        $animalId = $animal->getId();
+
+        /** @var AnimalCacheRepository $repository */
+        $repository = $em->getRepository(AnimalCache::class);
+        /** @var AnimalCache $record */
+        $record = $repository->findOneBy(['animalId' => $animalId]);
+
+        if($record == null) {
+            //If no record exists yet, create a new complete one. Not just the weight data.
+
+            /** @var GeneticBaseRepository $geneticBaseRepository */
+            $geneticBaseRepository = $em->getRepository(GeneticBase::class);
+            $breedValuesYear = $geneticBaseRepository->getLatestYear();
+            $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
+
+            self::cacheById($em, $animalId, $animal->getGender(), $animal->getDateOfBirthString(), $animal->getBreedType(), $breedValuesYear, $geneticBases, false, $flush);
+
+        } else {
+            //Weight Data
+            /** @var WeightRepository $weightRepository */
+            $weightRepository = $em->getRepository(Weight::class);
+            $lastWeightMeasurementData = $weightRepository->getLatestWeightBySql($animalId);
+            $weight = $lastWeightMeasurementData[JsonInputConstant::WEIGHT];
+            $isBirthWeight = $lastWeightMeasurementData[JsonInputConstant::IS_BIRTH_WEIGHT];
+            $weightMeasurementDateString = $lastWeightMeasurementData[JsonInputConstant::MEASUREMENT_DATE];
+            $weightExists = $weightMeasurementDateString != null;
+
+            //If record already exists, only update the weight data
+            $record->setLastWeight($weight);
+            $record->setWeightMeasurementDateByDateString($weightMeasurementDateString);
+
+            $em->persist($record);
+            if($flush) { $em->flush(); }
+        }
+
     }
 
 
