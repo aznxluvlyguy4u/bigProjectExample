@@ -2,10 +2,147 @@
 
 {% block body %}
 
+    {% set date = variables.date %}
+    {% set breederNumber = variables.breederNumber %}
+    {% set ubn = variables.ubn %}
+    {% set nameAndAddress = variables.name_and_address %}
+    {% set livestock = variables.livestock %}
+    {% set animals = variables.animals %}
+
+    {% set counter = 0 %}
+    {% set rowsPerPage = 31 %}
+    {% set size = variables.animals|length %}
+    {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
+
+
+    {# HEADER #}
+
+    <header>
+        <h1>NSFO ONLINE</h1>   <h1>Stallijst</h1>     {{ date }}
+    </header>
+
+    <p>Fokkersnummer: {{ breederNumber }}</p>
+    <p>UBN: {{ ubn }}</p>
+    <p>{{ nameAndAddress }}</p>
+    
+    <p>stamboek volwassenen: {{ livestock.pedigree_adult }}</p>
+    <p>stamboek lammeren: {{ livestock.pedigree_lamb }}</p>
+    <p>stamboek totaal: {{ livestock.pedigree_total }}</p>
+    <p>niet-stamboek volwassenen: {{ livestock.non_pedigree_adult }}</p>
+    <p>niet-stamboek lammeren: {{ livestock.non_pedigree_lamb }}</p>
+    <p>niet-stamboek totaal: {{ livestock.non_pedigree_total }}</p>
+    <p>volwassenen: {{ livestock.adult }}</p>
+    <p>lammeren: {{ livestock.lamb }}</p>
+    <p>totaal: {{ livestock.total }}</p>
+
+    {# FIRST PAGE #}
+
+    <div class="nsfo-logo">
+        <img src="{{ imagesDirectory }}" width="556" height="70" />
+    </div>
+
+
+    {# ANIMALS #}
+    
+    <table style="width:100%">
+            {# column headers #}
+        <thead>
+            <tr>
+                <th>uln</th>
+                <th>stn</th>
+                <th>gesl.</th>
+                <th>Geb.dat.</th>
+                <th>N-ling</th>
+                <th>Ras</th>
+                <th>Status</th>
+                <th>Scrapie</th>
+                <th>Pred.</th>
+                <th>Besp</th>
+                <th>Algv</th>
+                <th>Prod</th>
+                <th>FW1</th>
+                <th>FW2</th>
+                <th>FW3</th>
+                <th>FW4</th>
+                <th>Vl</th>
+            </tr>
+        </thead>
+
+        {% for key,value in animals %}
+            {# animal #}
+            <tr>
+                <th>{{ value.a_uln }}</th>
+                <th>{{ value.a_stn }}</th>
+                <th>{{ value.gender }}</th>
+                <th>{{ value.a_date_of_birth }}</th>
+                <th>{{ value.a_n_ling }}</th>
+                <th>{{ value.a_breed_code }}</th>
+                <th>{{ value.a_dutch_breed_status }}</th>
+                <th>{{ value.a_scrapie_genotype }}</th>
+                <th>{{ value.a_predicate }}</th>
+                <th>{{ value.a_muscularity }}</th>
+                <th>{{ value.a_general_appearance }}</th>
+                <th>{{ value.a_production }}</th>
+                <th>{{ value.a_breed_value_litter_size }}</th>
+                <th>{{ value.a_breed_value_growth }}</th>
+                <th>{{ value.a_breed_value_muscle_thickness }}</th>
+                <th>{{ value.a_breed_value_fat }}</th>
+                <th>{{ value.a_lamb_meat_index }}</th>
+            </tr>
+            {# mother #}
+            <tr>
+                <th>{{ value.m_uln }}</th>
+                <th>{{ value.m_stn }}</th>
+                <th>ooi</th>
+                <th>{{ value.m_date_of_birth }}</th>
+                <th>{{ value.m_n_ling }}</th>
+                <th>{{ value.m_breed_code }}</th>
+                <th>{{ value.m_dutch_breed_status }}</th>
+                <th>{{ value.m_scrapie_genotype }}</th>
+                <th>{{ value.m_predicate }}</th>
+                <th>{{ value.m_muscularity }}</th>
+                <th>{{ value.m_general_appearance }}</th>
+                <th>{{ value.m_production }}</th>
+                <th>{{ value.m_breed_value_litter_size }}</th>
+                <th>{{ value.m_breed_value_growth }}</th>
+                <th>{{ value.m_breed_value_muscle_thickness }}</th>
+                <th>{{ value.m_breed_value_fat }}</th>
+                <th>{{ value.m_lamb_meat_index }}</th>
+            </tr>
+            {# father #}
+            <tr>
+                <th>{{ value.f_uln }}</th>
+                <th>{{ value.f_stn }}</th>
+                <th>ram</th>
+                <th>{{ value.f_date_of_birth }}</th>
+                <th>{{ value.f_n_ling }}</th>
+                <th>{{ value.f_breed_code }}</th>
+                <th>{{ value.f_dutch_breed_status }}</th>
+                <th>{{ value.f_scrapie_genotype }}</th>
+                <th>{{ value.f_predicate }}</th>
+                <th>{{ value.f_muscularity }}</th>
+                <th>{{ value.f_general_appearance }}</th>
+                <th>{{ value.f_production }}</th>
+                <th>{{ value.f_breed_value_litter_size }}</th>
+                <th>{{ value.f_breed_value_growth }}</th>
+                <th>{{ value.f_breed_value_muscle_thickness }}</th>
+                <th>{{ value.f_breed_value_fat }}</th>
+                <th>{{ value.f_lamb_meat_index }}</th>
+            </tr>
+        {% endfor %}
+        </table>
 
 {% endblock %}
 
 {% block stylesheets %}
 
+    {#http://stackoverflow.com/questions/1763639/how-to-deal-with-page-breaks-when-printing-a-large-html-table#}
+
+    <style type="text/css">
+        table { page-break-inside:auto }
+        div   { page-break-inside:avoid; } /* This is the key */
+        thead { display:table-header-group }
+        tfoot { display:table-footer-group }
+    </style>
 
 {% endblock %}
