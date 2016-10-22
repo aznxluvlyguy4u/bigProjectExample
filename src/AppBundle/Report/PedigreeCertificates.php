@@ -63,17 +63,13 @@ class PedigreeCertificates extends ReportBase
         $breedValuesYear = $geneticBaseRepository->getLatestYear();
         $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
 
-        /** @var BreedValueCoefficientRepository $breedValueCoefficientRepository */
-        $breedValueCoefficientRepository = $em->getRepository(BreedValueCoefficient::class);
-        $lambMeatIndexCoefficients = $breedValueCoefficientRepository->getLambMeatIndexCoefficients();
-
         $companyName = $this->getCompanyName($location, $client);
         $trimmedClientName = StringUtil::trimStringWithAddedEllipsis($companyName, self::MAX_LENGTH_FULL_NAME);
         $companyAddress = $location->getCompany()->getAddress();
         $ubn = $location->getUbn();
 
         foreach ($animalIds as $animalId) {
-            $pedigreeCertificate = new PedigreeCertificate($em, $client, $ubn, $animalId, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients, $trimmedClientName, $companyAddress);
+            $pedigreeCertificate = new PedigreeCertificate($em, $client, $ubn, $animalId, $breedValuesYear, $geneticBases, $trimmedClientName, $companyAddress);
 
             $this->reports[$this->animalCount] = $pedigreeCertificate->getData();
 

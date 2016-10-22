@@ -71,7 +71,7 @@ class MeasurementRepository extends BaseRepository {
      */
     protected function insertNewMeasurementInParentTable($animalIdAndDate, $measurementDateString, $type, $inspectorId)
     {
-        $logDateString = TimeUtil::getTimeStampNow('Y-m-d H:i:s');
+        $logDateString = TimeUtil::getLogDateString();
 
         $isInsertSuccessful = false;
         if(NullChecker::isNotNull($measurementDateString) && NullChecker::isNotNull($animalIdAndDate) && NullChecker::isNotNull($type)) {

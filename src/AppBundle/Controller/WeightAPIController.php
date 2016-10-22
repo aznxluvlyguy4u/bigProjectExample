@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Cache\AnimalCacher;
 use AppBundle\Component\DeclareWeightBuilder;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
@@ -70,6 +71,7 @@ class WeightAPIController extends APIController
         $declareWeight = DeclareWeightBuilder::post($manager, $content, $client, $loggedInUser, $location);
         $manager->persist($declareWeight->getWeightMeasurement());
         $this->persistAndFlush($declareWeight);
+        AnimalCacher::cacheWeightByAnimal($manager, $declareWeight->getAnimal());
 
         $log = ActionLogWriter::completeActionLog($manager, $log); 
 
@@ -122,6 +124,7 @@ class WeightAPIController extends APIController
         $declareWeight = DeclareWeightBuilder::edit($manager, $declareWeight, $content, $client, $loggedInUser, $location);
 
         $this->persistAndFlush($declareWeight);
+        AnimalCacher::cacheWeightByAnimal($manager, $declareWeight->getAnimal());
 
         $log = ActionLogWriter::completeActionLog($manager, $log);
 

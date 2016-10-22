@@ -9,6 +9,7 @@ class ReportLabel
     const ENTITY = 'entity';
     const IS_PROD_ENV = 'isProdEnv';
     const IMAGES_DIRECTORY = 'imagesDirectory';
+    const DATE = 'date';
 
     //Person
     const OWNER_NAME = "ownerName";
@@ -73,6 +74,7 @@ class ReportLabel
     const PREDICATE = 'predicate';
     const BLINDNESS_FACTOR = 'blindnessFactor';
     const PEDIGREE_REGISTER_NAME = 'pedigreeRegisterName';
+    const LIVESTOCK = 'livestock';
 
     //Measurements
     const EXTERIOR = 'exterior';

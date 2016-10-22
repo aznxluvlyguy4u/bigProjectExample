@@ -2,11 +2,13 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Cache\AnimalCacher;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\FormInput\AnimalDetails;
@@ -147,13 +149,14 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function getLiveStock(Request $request) {
     $client = $client = $this->getAuthenticatedUser($request);
+    /** @var Location $location */
     $location = $this->getSelectedLocation($request);
-    $animals = $this->getDoctrine()
-        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($location);
+    AnimalCacher::cacheAnimalsOfLocationId($this->getDoctrine()->getManager(), $location->getId(), null, true);
+    /** @var AnimalRepository $animalRepository */
+    $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+    $livestockArray = $animalRepository->getLiveStockBySql($location->getId());
 
-    $minimizedOutput = AnimalOutput::createAnimalsArray($animals, $this->getDoctrine()->getManager());
-
-    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
+    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $livestockArray), 200);
   }
 
 

@@ -268,4 +268,27 @@ class NullChecker
         }
         return $nullReplacementText;
     }
+
+
+    /**
+     * @param array $array
+     * @param string $replacementString
+     * @return array
+     */
+    public static function replaceNullInNestedArray($array, $replacementString = "")
+    {
+        $count = count($array);
+        $nestedKeys = [];
+        if($count > 0) { $nestedKeys = array_keys($array[0]); }
+
+        $keys = array_keys($array);
+
+        foreach ($keys as $key) {
+            foreach ($nestedKeys as $nestedKey) {
+                if($array[$key][$nestedKey] == null) { $array[$key][$nestedKey] = ""; }
+            }
+        }
+        
+        return $array;
+    }
 }

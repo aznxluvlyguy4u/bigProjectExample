@@ -169,6 +169,12 @@ class TimeUtil
     }
 
 
+    public static function getLogDateString()
+    {
+        return self::getTimeStampNow('Y-m-d H:i:s');
+    }
+
+
     /**
      * @param string $date
      * @return string
