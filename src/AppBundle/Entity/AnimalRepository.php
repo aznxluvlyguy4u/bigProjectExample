@@ -66,6 +66,35 @@ class AnimalRepository extends BaseRepository
     return $animal;
   }
 
+
+  /**
+   * @param string $countryCode
+   * @param string $ulnNumber
+   * @return int
+   */
+  public function sqlQueryAnimalIdByUlnCountryCodeAndNumber($countryCode, $ulnNumber)
+  {
+    $sql = "SELECT id, name FROM animal WHERE uln_country_code = '".$countryCode."' AND uln_number = '".$ulnNumber."'";
+    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+    if(count($results) == 1) {
+      return $results[0]['id'];
+
+    } elseif(count($results) == 0) {
+      return null;
+
+    } else {
+      //in case of duplicate uln, use the imported animal
+      foreach ($results as $result) {
+        if($result['name'] != null) {
+          return $result['id'];
+        }
+      }
+      //If none of the animals are imported, just take the first animal
+      return $results[0]['id'];
+    }
+  }
+  
+
   /**
    * @param $animalType
    * @param array $filterArray
@@ -267,8 +296,8 @@ class AnimalRepository extends BaseRepository
     $sql = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number as work_number,
                    a.date_of_birth, l.ubn, a.is_alive FROM animal a 
                    LEFT JOIN location l ON l.id = a.location_id
-                   WHERE type = 'Ram'".$extraFilter;
-    $animalsData = $this->getManager()->getConnection()->query($sql)->fetchAll();
+                   WHERE type = 'Ram'";
+    $animalsData = $this->getManager()->getConnection()->query($sql.$extraFilter)->fetchAll();
 
     $results = [];
     //Resetting the values in another array to include null checks
@@ -668,16 +697,16 @@ class AnimalRepository extends BaseRepository
   {
     $results = [];
 
-    if($animal instanceof Ewe) {
-      $filter = "parent_mother_id = ".$animal->getId();
+    if ($animal instanceof Ewe) {
+      $filter = "parent_mother_id = " . $animal->getId();
     } elseif ($animal instanceof Ram) {
-      $filter = "parent_father_id = ".$animal->getId();
+      $filter = "parent_father_id = " . $animal->getId();
     } else {
       return $results;
     }
 
     $sql = "SELECT uln_country_code, uln_number, pedigree_country_code, pedigree_number, gender, date_of_birth FROM animal
-            WHERE ".$filter;
+            WHERE " . $filter;
     $retrievedData = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
     foreach ($retrievedData as $record) {
@@ -691,5 +720,17 @@ class AnimalRepository extends BaseRepository
       ];
     }
     return $results;
+  }
+
+
+  /**
+   * @param $animalId
+   * @return int
+   */
+  public function getOffspringCount($animalId)
+  {
+    if(!is_int($animalId)) { return 0; }
+    $sql = "SELECT COUNT(*) FROM animal a WHERE parent_father_id = ".$animalId." OR parent_mother_id = ".$animalId;
+    return $this->getManager()->getConnection()->query($sql)->fetch()['count'];
   }
 }

@@ -13,7 +13,7 @@ class StarValueUtil
     const STAR_SCORE_3_MIN_LAMB_MEAT_INDEX = 0;
     const STAR_SCORE_2_AND_HALF_MIN_LAMB_MEAT_INDEX = -1;
     const STAR_SCORE_2_MIN_LAMB_MEAT_INDEX = -3;
-    const STAR_SCORE_1_MIN_LAMB_MEAT_INDEX = 0;
+    const STAR_SCORE_1_MIN_LAMB_MEAT_INDEX = -999999;
 
     /**
      * @param int $indexValue

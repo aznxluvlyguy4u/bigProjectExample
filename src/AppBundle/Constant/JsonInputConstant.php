@@ -15,6 +15,7 @@ class JsonInputConstant
     const WORK_NUMBER = 'work_number';
     const IS_ALIVE = 'is_alive';
     const ANIMAL = 'animal';
+    const ANIMAL_ID = 'animal_id';
     const RAM = 'ram';
     const EWE = 'ewe';
     const EWES = 'ewes';
@@ -25,6 +26,17 @@ class JsonInputConstant
     const DATE_OF_BIRTH = 'date_of_birth';
     const GENDER = 'gender';
     const IS_REVEAL_HISTORIC_ANIMALS = 'is_reveal_historic_animals';
+    const ULN = 'uln';
+    const STN = 'stn';
+    const SCRAPIE_GENOTYPE = 'scrapie_genotype';
+    const BREED = 'breed';
+    const BREED_CODE = 'breed_code';
+    const BREED_TYPE = 'breed_type';
+    const BLINDNESS_FACTOR = 'blindness_factor';
+    const PREDICATE = 'predicate';
+    const BREEDER_NAME = 'breeder_name';
+    const BREEDER_NUMBER = 'breeder_number';
+    const ANIMAL_TYPE = 'animal_type';
 
     //Request & Response
     const ERROR_CODE = 'error_code';
@@ -167,4 +179,14 @@ class JsonInputConstant
 
     //TailLength
     const LENGTH = 'length';
+
+    //Litter
+    const SIZE = 'size';
+    const N_LING = 'n_ling';
+    const LITTER_GROUP = 'litter_group';
+    const LITTER_COUNT = 'litter_count';
+    const TOTAL_BORN_ALIVE_COUNT = 'total_born_alive_count';
+    const TOTAL_STILLBORN_COUNT = 'total_stillborn_count';
+    const EARLIEST_LITTER_DATE = 'earliest_litter_date';
+    const LATEST_LITTER_DATE = 'latest_litter_date';
 }
