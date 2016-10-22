@@ -137,6 +137,7 @@ class WeightRepository extends MeasurementRepository {
                                    SELECT animal_id, max(m.measurement_date) as measurement_date
                                    FROM weight w
                                      INNER JOIN measurement m ON m.id = w.id
+                                     WHERE w.is_revoked = false
                                    GROUP BY animal_id) y on y.animal_id = x.animal_id 
                       WHERE m.measurement_date = y.measurement_date AND x.is_revoked = false ";
 
