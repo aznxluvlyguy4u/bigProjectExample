@@ -299,7 +299,7 @@ class LocationHealthInspectionAPIController extends APIController
                     INNER JOIN location ON animal.location_id = location.id
                   WHERE
                     location.ubn = '".$content['ubn']."' AND location.is_active = TRUE AND animal.is_alive = TRUE
-                  ORDER BY animal.animal_order_number ASC";
+                  ORDER BY animal.animal_order_number DESC";
         $results = $em->getConnection()->query($sql)->fetchAll();
 
         $barcodes = array();
@@ -308,7 +308,7 @@ class LocationHealthInspectionAPIController extends APIController
             $uln_number = $result['uln_number'];
 
             $barcode = new Barcode();
-            $barcodeObj = $barcode->getBarcodeObj('C128', $uln_country_code. ' ' .$uln_number, 0.5, 40);
+            $barcodeObj = $barcode->getBarcodeObj('C128', $uln_country_code. ' ' .$uln_number, 0.99, 40);
 
             $barcodes[] = [
                 "barcode" => $barcodeObj->getHtmlDiv(),

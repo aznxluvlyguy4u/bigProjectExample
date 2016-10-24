@@ -244,7 +244,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
         $this->persist($messageObject);
 
         // Create Message for Receiving Owner
-        if(!$isImportAnimal && !$departLocation) {
+        if(!$isImportAnimal && $departLocation) {
             $uln = $messageObject->getUlnCountryCode() . $messageObject->getUlnNumber();
 
             $message = new Message();
