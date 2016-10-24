@@ -10,6 +10,19 @@ use AppBundle\Enumerator\GenderType;
 class StringUtil
 {
 
+
+    /**
+     * Just remove the last 5 numbers of the uln
+     *
+     * @param string $ulnString
+     * @return string
+     */
+    public static function getUlnWithoutOrderNumber($ulnString)
+    {
+        return mb_substr($ulnString, 0, count($ulnString)-6);
+    }
+
+
     /**
      * @param string $firstName
      * @param string $lastName

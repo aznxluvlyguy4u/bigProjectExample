@@ -13,6 +13,7 @@ use AppBundle\Entity\EweRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\RamRepository;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -90,6 +91,7 @@ class LivestockReportData extends ReportBase
                   CONCAT(m.uln_country_code, m.uln_number) as m_uln, CONCAT(m.pedigree_country_code, m.pedigree_number) as m_stn,
                   CONCAT(f.uln_country_code, f.uln_number) as f_uln, CONCAT(f.pedigree_country_code, f.pedigree_number) as f_stn,
                   a.gender,
+                  a.animal_order_number as a_animal_order_number, f.animal_order_number as f_animal_order_number, m.animal_order_number as m_animal_order_number,
                   a.date_of_birth as a_date_of_birth, m.date_of_birth as m_date_of_birth, f.date_of_birth as f_date_of_birth,
                   a.breed_code as a_breed_code, m.breed_code as m_breed_code, f.breed_code as f_breed_code,
                   a.scrapie_genotype as a_scrapie_genotype, m.scrapie_genotype as m_scrapie_genotype, f.scrapie_genotype as f_scrapie_genotype,
@@ -113,9 +115,18 @@ class LivestockReportData extends ReportBase
                   LEFT JOIN animal_cache ac ON a.id = ac.animal_id
                   LEFT JOIN animal_cache mc ON m.id = mc.animal_id
                   LEFT JOIN animal_cache fc ON f.id = fc.animal_id
-                WHERE a.is_alive = true AND a.location_id = ".$this->location->getId();
+                WHERE a.is_alive = true AND a.location_id = ".$this->location->getId()."
+                ORDER BY a.animal_order_number ASC"
+        ;
         $results = $this->em->getConnection()->query($sql)->fetchAll();
 
+        $keys = array_keys($results);
+        foreach ($keys as $key) {
+            $results[$key]['a_uln_without_order_number'] = StringUtil::getUlnWithoutOrderNumber($results[$key]['a_uln']);
+            $results[$key]['f_uln_without_order_number'] = StringUtil::getUlnWithoutOrderNumber($results[$key]['f_uln']);
+            $results[$key]['m_uln_without_order_number'] = StringUtil::getUlnWithoutOrderNumber($results[$key]['m_uln']);
+        }
+        
         return $results;
     }
 }

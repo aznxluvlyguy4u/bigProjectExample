@@ -103,7 +103,9 @@
         {% for key,value in animals %}
             {# animal #}
             <tr>
+                <th>{{ value.a_animal_order_number }}</th>
                 <th>{{ value.a_uln }}</th>
+                <th>{{ value.a_uln_without_order_number }}<b>{{ value.a_animal_order_number }}</b></th>
                 <th>{{ value.a_stn }}</th>
                 <th>{{ value.gender }}</th>
                 <th>{{ value.a_date_of_birth }}</th>
@@ -123,7 +125,9 @@
             </tr>
             {# mother #}
             <tr>
+                <th>moeder</th>
                 <th>{{ value.m_uln }}</th>
+                <th>{{ value.m_uln_without_order_number }}<b>{{ value.m_animal_order_number }}</b></th>
                 <th>{{ value.m_stn }}</th>
                 <th>ooi</th>
                 <th>{{ value.m_date_of_birth }}</th>
@@ -143,7 +147,9 @@
             </tr>
             {# father #}
             <tr>
+                <th>vader</th>
                 <th>{{ value.f_uln }}</th>
+                <th>{{ value.f_uln_without_order_number }}<b>{{ value.f_animal_order_number }}</b></th>
                 <th>{{ value.f_stn }}</th>
                 <th>ram</th>
                 <th>{{ value.f_date_of_birth }}</th>
@@ -195,6 +201,10 @@
 
         table.OverviewTable thead {
             background-color: #e8e8e8;
+        }
+
+        th {
+            font-weight: normal;
         }
 
     </style>
