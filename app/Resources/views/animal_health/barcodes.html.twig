@@ -4,29 +4,34 @@
 
     {% for i in 0..(barcodes|length - 1) %}
         {% if i % 2 == 0 %}
-        <table style="font-family: Sans-Serif;">
+        <table style="font-family: Sans-Serif; height: 20mm; width: 95mm">
             <tr>
-                <td style="font-size: 0.7rem; padding: 0.5rem 0 0 1rem; width: 200px; font-weight: 900">
-                    {{ barcodes[i]['uln_country_code'] }} {{ barcodes[i]['uln_number_1'] }} <span style="font-size: 0.8rem;">{{ barcodes[i]['uln_number_2'] }}</span>
-                    {{ barcodes[i]['barcode'] | raw }}
+                <td style="font-size: 3mm; padding-left: 2mm; font-weight: 900">
+                    <span style="padding: 5mm 0;">
+                        {{ barcodes[i]['uln_country_code'] }} {{ barcodes[i]['uln_number_1'] }} <span style="font-size: 3.5mm;">{{ barcodes[i]['uln_number_2'] }}</span>
+                        {{ barcodes[i]['barcode'] | raw }}
+                    </span>
                 </td>
                 {% if barcodes[i+1] is defined %}
-                <td style="font-size: 0.7rem; padding: 0.5rem 0 0 2rem; width: 200px; font-weight: 900">
-                    {{ barcodes[i+1]['uln_country_code'] }} {{ barcodes[i+1]['uln_number_1'] }} <span style="font-size: 0.8rem;">{{ barcodes[i+1]['uln_number_2'] }}</span>
-                    {{ barcodes[i+1]['barcode'] | raw }}
+                <td style="font-size: 3mm; padding-left: 4.5mm; font-weight: 900">
+                    <span style="padding: 5mm 0;">
+                        {{ barcodes[i+1]['uln_country_code'] }} {{ barcodes[i+1]['uln_number_1'] }} <span style="font-size: 3.5mm;">{{ barcodes[i+1]['uln_number_2'] }}</span>
+                        {{ barcodes[i+1]['barcode'] | raw }}
+                    </span>
                 </td>
                 {% endif %}
             </tr>
         </table>
-        <br>
         {% endif %}
 
         {% if i % 2 == 1 and loop.last %}
-        <table style="font-family: Sans-Serif;">
+        <table style="font-family: Sans-Serif; height: 20mm; width: 95mm">
             <tr>
-                <td style="font-size: 0.7rem; padding: 0.5rem 0 0 1rem; width: 200px; font-weight: 900">
-                    {{ barcodes[i]['uln_country_code'] }} {{ barcodes[i]['uln_number_1'] }} <span style="font-size: 0.8rem;">{{ barcodes[i]['uln_number_2'] }}</span>
-                    {{ barcodes[i]['barcode'] | raw }}
+                <td style="font-size: 3mm; padding-left: 2mm; font-weight: 900">
+                    <span style="padding: 5mm 0;">
+                        {{ barcodes[i]['uln_country_code'] }} {{ barcodes[i]['uln_number_1'] }} <span style="font-size: 3.5mm;">{{ barcodes[i]['uln_number_2'] }}</span>
+                        {{ barcodes[i]['barcode'] | raw }}
+                     </span>
                 </td>
             </tr>
         </table>

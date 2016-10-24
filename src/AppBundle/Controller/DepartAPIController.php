@@ -222,7 +222,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
         $this->persist($messageObject);
 
         // Create Message for Receiving Owner
-        if(!$isExportAnimal && !$arrivalLocation) {
+        if(!$isExportAnimal && $arrivalLocation) {
             $uln = $messageObject->getAnimal()->getUlnCountryCode() . $messageObject->getAnimal()->getUlnNumber();
 
             $message = new Message();
