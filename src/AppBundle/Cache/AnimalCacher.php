@@ -9,12 +9,14 @@ use AppBundle\Entity\AnimalCache;
 use AppBundle\Entity\AnimalCacheRepository;
 use AppBundle\Entity\BreedValuesSet;
 use AppBundle\Entity\BreedValuesSetRepository;
+use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\GeneticBase;
 use AppBundle\Entity\GeneticBaseRepository;
 use AppBundle\Entity\Litter;
 use AppBundle\Entity\LitterRepository;
+use AppBundle\Entity\Ram;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
 use AppBundle\Util\BreedValueUtil;
@@ -258,6 +260,106 @@ class AnimalCacher
             $record->setLogDate(new \DateTime()); //update logDate
             $record->setLastWeight($weight);
             $record->setWeightMeasurementDateByDateString($weightMeasurementDateString);
+
+            $em->persist($record);
+            if($flush) { $em->flush(); }
+        }
+
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Litter $litter
+     * @param bool $flush
+     */
+    public static function cacheBirthLitter(ObjectManager $em, Litter $litter, $flush = true)
+    {
+        $mother = $litter->getAnimalMother();
+        if($mother instanceof Ewe) {
+            self::cacheProductionByAnimal($em, $mother, $flush);
+        }
+
+        $father = $litter->getAnimalFather();
+        if($father instanceof Ram) {
+            self::cacheProductionByAnimal($em, $father, $flush);
+        }
+
+        foreach ($litter->getChildren() as $child) {
+            self::cacheLitterOfBirthByAnimal($em, $child, $flush);
+        }
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Animal $animal
+     * @param boolean $flush
+     */
+    private static function cacheLitterOfBirthByAnimal(ObjectManager $em, Animal $animal, $flush = true)
+    {
+        $animalId = $animal->getId();
+        /** @var AnimalCacheRepository $repository */
+        $repository = $em->getRepository(AnimalCache::class);
+        /** @var AnimalCache $record */
+        $record = $repository->findOneBy(['animalId' => $animalId]);
+
+        if($record == null) {
+            //If no record exists yet, create a new complete one. Not just the weight data.
+
+            /** @var GeneticBaseRepository $geneticBaseRepository */
+            $geneticBaseRepository = $em->getRepository(GeneticBase::class);
+            $breedValuesYear = $geneticBaseRepository->getLatestYear();
+            $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
+
+            self::cacheById($em, $animalId, $animal->getGender(), $animal->getDateOfBirthString(), $animal->getBreedType(), $breedValuesYear, $geneticBases, false, $flush);
+
+        } else {
+            //Litter Data
+            $nLing = self::getNLingData($em, $animal->getId());
+
+            //If record already exists, only update the nLing data
+            $record->setLogDate(new \DateTime()); //update logDate
+            $record->setNLing($nLing);
+
+            $em->persist($record);
+            if($flush) { $em->flush(); }
+        }
+
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Animal $animal
+     * @param boolean $flush
+     */
+    private static function cacheProductionByAnimal(ObjectManager $em, Animal $animal, $flush = true)
+    {
+        $animalId = $animal->getId();
+
+        /** @var AnimalCacheRepository $repository */
+        $repository = $em->getRepository(AnimalCache::class);
+        /** @var AnimalCache $record */
+        $record = $repository->findOneBy(['animalId' => $animalId]);
+
+        if($record == null) {
+            //If no record exists yet, create a new complete one. Not just the weight data.
+
+            /** @var GeneticBaseRepository $geneticBaseRepository */
+            $geneticBaseRepository = $em->getRepository(GeneticBase::class);
+            $breedValuesYear = $geneticBaseRepository->getLatestYear();
+            $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
+
+            self::cacheById($em, $animalId, $animal->getGender(), $animal->getDateOfBirthString(), $animal->getBreedType(), $breedValuesYear, $geneticBases, false, $flush);
+
+        } else {
+            //Production Data
+            $production = self::generateProductionString($em, $animalId, $animal->getGender(), $animal->getDateOfBirthString());
+
+            //If record already exists, only update the production data
+            $record->setLogDate(new \DateTime()); //update logDate
+            $record->setProduction($production);
 
             $em->persist($record);
             if($flush) { $em->flush(); }
