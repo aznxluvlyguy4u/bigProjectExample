@@ -2,6 +2,7 @@
 
 {% block body %}
 
+    <!-- set variables -->
     {% set date = variables.date %}
     {% set breederNumber = variables.breederNumber %}
     {% set ubn = variables.ubn %}
@@ -22,18 +23,7 @@
     </header>
 
     <p>Fokkersnummer: {{ breederNumber }}</p>
-    <p>UBN: {{ ubn }}</p>
-    <p>{{ nameAndAddress }}</p>
-    
-    <p>stamboek volwassenen: {{ livestock.pedigree_adult }}</p>
-    <p>stamboek lammeren: {{ livestock.pedigree_lamb }}</p>
-    <p>stamboek totaal: {{ livestock.pedigree_total }}</p>
-    <p>niet-stamboek volwassenen: {{ livestock.non_pedigree_adult }}</p>
-    <p>niet-stamboek lammeren: {{ livestock.non_pedigree_lamb }}</p>
-    <p>niet-stamboek totaal: {{ livestock.non_pedigree_total }}</p>
-    <p>volwassenen: {{ livestock.adult }}</p>
-    <p>lammeren: {{ livestock.lamb }}</p>
-    <p>totaal: {{ livestock.total }}</p>
+    <p>UBN {{ nameAndAddress }}</p>
 
     {# FIRST PAGE #}
 
@@ -41,6 +31,48 @@
         <img src="{{ imagesDirectory }}" width="556" height="70" />
     </div>
 
+    <table class="OverviewTable">
+        <thead>
+        <tr>
+            <th></th>
+            <th>Totaal</th>
+            <th>Ouder dan 1 jaar</th>
+            <th>Lammeren</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Stamboek Dieren</td>
+            <td>{{ livestock.pedigree_total }}</td>
+            <td>{{ livestock.pedigree_adult }}</td>
+            <td>{{ livestock.pedigree_lamb }}</td>
+        </tr>
+        <tr>
+            <td>Niet Stamboek Dieren</td>
+            <td>{{ livestock.non_pedigree_total }}</td>
+            <td>{{ livestock.non_pedigree_adult }}</td>
+            <td>{{ livestock.non_pedigree_lamb }}</td>
+        </tr>
+        <tr>
+            <td>Alle Dieren</td>
+            <td>{{ livestock.total }}</td>
+            <td>{{ livestock.adult }}</td>
+            <td>{{ livestock.lamb }}</td>
+        </tr>
+        </tbody>
+    </table>
+
+
+    <h3>Legenda text nog toe te voegen</h3>
+    <p>FW 1 = Fokwaardeschatting Worpgrootte</p>
+    <p>FW 2 = Fokwaardeschatting Groei</p>
+    <p>FW 3 = Fokwaardeschatting Spier</p>
+    <p>FW 4 = Fokwaardeschatting Vet</p>
+    <p>Vl = Vleeslam index</p>
+    <p><b>FW / Nauwkeurigheid</b></p>
+
+    <p>Productie ooi: leeftijd in jaren tot en met datum laatste worp / aantal worpen / aantal lammeren / aantal levend geboren lammeren (* = als 1 jarige geworpen)</p>
+    <p>Productie ram: leeftijd in jaren tot en met datum laatste worp / aantal worpen / aantal lammeren / aantal levend geboren lammeren</p>
 
     {# ANIMALS #}
     
@@ -143,6 +175,29 @@
         div   { page-break-inside:avoid; } /* This is the key */
         thead { display:table-header-group }
         tfoot { display:table-footer-group }
+
+        table.OverviewTable {
+            width: 50%;
+            background-color: #ffffff;
+            border-collapse: collapse;
+            border-width: 2px;
+            border-color: #e8e8e8;
+            border-style: solid;
+            color: #000000;
+        }
+
+        table.OverviewTable td, table.OverviewTable th {
+            border-width: 2px;
+            border-color: #e8e8e8;
+            border-style: solid;
+            padding: 3px;
+        }
+
+        table.OverviewTable thead {
+            background-color: #e8e8e8;
+        }
+
     </style>
+
 
 {% endblock %}

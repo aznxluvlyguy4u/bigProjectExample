@@ -178,6 +178,7 @@ class AnimalCacher
             $repository = $em->getRepository(AnimalCache::class);
             $record = $repository->findOneBy(['animalId' => $animalId]);
             if($record == null) { $record = new AnimalCache(); }
+            $record->setLogDate(new \DateTime()); //update logDate
         } else {
             //New record
             $record = new AnimalCache();
@@ -254,6 +255,7 @@ class AnimalCacher
             $weightExists = $weightMeasurementDateString != null;
 
             //If record already exists, only update the weight data
+            $record->setLogDate(new \DateTime()); //update logDate
             $record->setLastWeight($weight);
             $record->setWeightMeasurementDateByDateString($weightMeasurementDateString);
 
