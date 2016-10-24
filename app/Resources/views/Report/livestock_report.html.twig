@@ -10,288 +10,300 @@
     {% set livestock = variables.livestock %}
     {% set animals = variables.animals %}
 
-    {% set counter = 0 %}
-    {% set rowsPerPage = 31 %}
+    {% set pageCounter = 0 %}
+    {% set rowsFirstPage = 9 %}
+    {% set rowsPerPage = 16 %}
     {% set size = variables.animals|length %}
+    {% set pageAmount = 1 %}
+    {% if size > rowsFirstPage %}
+        {% set pageAmount = ((size  - rowsFirstPage) / rowsPerPage) | round(0, 'ceil') %}
+    {% endif %}
     {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
 
 
     {# HEADER #}
+    {% for page in 1..pageAmount %}
 
-    <div class="header">
-        <div class="nsfo-logo">
-            <img src="{{ imagesDirectory }}"/>
+    {% if loop.last %}
+       <div id="page-without-break">
+    {% else %}
+        <div id="page">
+    {% endif %}
+        <div class="header">
+            <div class="nsfo-logo">
+                <img src="{{ imagesDirectory }}"/>
+            </div>
+            <div class="title">
+                Stallijst
+            </div>
+
+            <div class="date">
+                {{ date }}
+            </div>
         </div>
-        <div class="title">
-            Stallijst
+        <div class="sub-header">
+           <div class="left"> UBN {{ nameAndAddress }} </div>
+           <div class="right"> Pagina {{ page }} van {{ pageAmount }}</div>
         </div>
 
-        <div class="date">
-            {{ date }}
+        {# FIRST PAGE #}
+        {% if page == 1 %}
+        <div class="legend-container">
+            <div class="info">
+                <p> <span>Fokkersnummer: </span> {{ breederNumber }}</p>
+                <p> <span>UBN: </span> {{ ubn }}</p>
+                <p>Productie ooi: leeftijd in jaren tot en met datum laatste worp / aantal worpen / aantal lammeren / aantal levend geboren lammeren (* = als 1 jarige geworpen)</p>
+                <p>Productie ram: leeftijd in jaren tot en met datum laatste worp / aantal worpen / aantal lammeren / aantal levend geboren lammeren</p>
+            </div>
+            <ul>
+                <li class="legend-title">Legenda</li>
+                <li>FW 1 = Fokwaardeschatting Worpgrootte</li>
+                <li>FW 2 = Fokwaardeschatting Groei</li>
+                <li>FW 3 = Fokwaardeschatting Spier</li>
+                <li>FW 4 = Fokwaardeschatting Vet</li>
+                <li>Vl = Vleeslam index</li>
+                <li>FW / Nauwkeurigheid</li>
+            </ul>
         </div>
-    </div>
-    <div class="sub-header">
-       UBN {{ nameAndAddress }}
-    </div>
 
-    {# FIRST PAGE #}
-
-    <div class="legend-container">
-        <div class="info">
-            <p> <span>Fokkersnummer: </span> {{ breederNumber }}</p>
-            <p>Productie ooi: leeftijd in jaren tot en met datum laatste worp / aantal worpen / aantal lammeren / aantal levend geboren lammeren (* = als 1 jarige geworpen)</p>
-            <p>Productie ram: leeftijd in jaren tot en met datum laatste worp / aantal worpen / aantal lammeren / aantal levend geboren lammeren</p>
-        </div>
-        <ul>
-            <li class="legend-title">Legenda</li>
-            <li>FW 1 = Fokwaardeschatting Worpgrootte</li>
-            <li>FW 2 = Fokwaardeschatting Groei</li>
-            <li>FW 3 = Fokwaardeschatting Spier</li>
-            <li>FW 4 = Fokwaardeschatting Vet</li>
-            <li>Vl = Vleeslam index</li>
-            <li>FW / Nauwkeurigheid</li>
-        </ul>
-    </div>
-
-    {#<table class="OverviewTable">#}
-        {#<thead>#}
-        {#<tr>#}
-            {#<th></th>#}
-            {#<th>Totaal</th>#}
-            {#<th>Ouder dan 1 jaar</th>#}
-            {#<th>Lammeren</th>#}
-        {#</tr>#}
-        {#</thead>#}
-        {#<tbody>#}
-        {#<tr>#}
-            {#<td>Stamboek Dieren</td>#}
-            {#<td>{{ livestock.pedigree_total }}</td>#}
-            {#<td>{{ livestock.pedigree_adult }}</td>#}
-            {#<td>{{ livestock.pedigree_lamb }}</td>#}
-        {#</tr>#}
-        {#<tr>#}
-            {#<td>Niet Stamboek Dieren</td>#}
-            {#<td>{{ livestock.non_pedigree_total }}</td>#}
-            {#<td>{{ livestock.non_pedigree_adult }}</td>#}
-            {#<td>{{ livestock.non_pedigree_lamb }}</td>#}
-        {#</tr>#}
-        {#<tr>#}
-            {#<td>Alle Dieren</td>#}
-            {#<td>{{ livestock.total }}</td>#}
-            {#<td>{{ livestock.adult }}</td>#}
-            {#<td>{{ livestock.lamb }}</td>#}
-        {#</tr>#}
-        {#</tbody>#}
-    {#</table>#}
-
-
-
-    {# ANIMALS #}
-
-    <table>
-        <thead>
+        <table class="overview-table">
+            <thead>
             <tr>
-                <th>Werknr.</th>
-                <th>uln</th>
-                <th>stn</th>
-                <th>gesl.</th>
-                <th>Geb.dat.</th>
-                <th>N-ling</th>
-                <th>Ras</th>
-                <th>Status</th>
-                <th>Scrapie</th>
-                <th>Pred.</th>
-                <th>Besp</th>
-                <th>Algv</th>
-                <th>Prod</th>
-                <th>FW1</th>
-                <th>FW2</th>
-                <th>FW3</th>
-                <th>FW4</th>
-                <th>Vl</th>
+                <th></th>
+                <th class="center">Totaal</th>
+                <th class="center">Ouder dan 1 jaar</th>
+                <th class="center">Lammeren</th>
             </tr>
-        </thead>
-        <tbody>
-            {% for key,value in animals %}
+            </thead>
+            <tbody>
             <tr>
-                <td>
-                    {{ value.a_uln }} <br>
-                    {{ value.m_uln }} <br>
-                    {{ value.f_uln }} <br>
-                </td>
+                <td>Stamboek Dieren</td>
+                <td class="center">{{ livestock.pedigree_total }}</td>
+                <td class="center">{{ livestock.pedigree_adult }}</td>
+                <td class="center">{{ livestock.pedigree_lamb }}</td>
             </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <th>{{ value.a_animal_order_number }}</th>
-    <th>{{ value.a_uln }}</th>
-    <th>{{ value.a_uln_without_order_number }}<b>{{ value.a_animal_order_number }}</b></th>
-    <th>{{ value.m_uln }}</th>
-    <th>{{ value.m_uln_without_order_number }}<b>{{ value.m_animal_order_number }}</b></th>
-    <th>vader</th>
-    <th>{{ value.f_uln }}</th>
-    <th>{{ value.f_uln_without_order_number }}<b>{{ value.f_animal_order_number }}</b></th>
-    <th>{{ value.f_stn }}</th>
-            {# animal #}
-            {#<tr>#}
-                {#<th></th>#}
-                {#<th>{{ value.a_stn }}</th>#}
-                {#<th>{{ value.gender }}</th>#}
-                {#<th>{{ value.a_date_of_birth }}</th>#}
-                {#<th>{{ value.a_n_ling }}</th>#}
-                {#<th>{{ value.a_breed_code }}</th>#}
-                {#<th>{{ value.a_dutch_breed_status }}</th>#}
-                {#<th>{{ value.a_scrapie_genotype }}</th>#}
-                {#<th>{{ value.a_predicate }}</th>#}
-                {#<th>{{ value.a_muscularity }}</th>#}
-                {#<th>{{ value.a_general_appearance }}</th>#}
-                {#<th>{{ value.a_production }}</th>#}
-                {#<th>{{ value.a_breed_value_litter_size }}</th>#}
-                {#<th>{{ value.a_breed_value_growth }}</th>#}
-                {#<th>{{ value.a_breed_value_muscle_thickness }}</th>#}
-                {#<th>{{ value.a_breed_value_fat }}</th>#}
-                {#<th>{{ value.a_lamb_meat_index }}</th>#}
-            {#</tr>#}
-            {# mother #}
             <tr>
-                <th>moeder</th>
-                <th>{{ value.m_uln }}</th>
-                <th>{{ value.m_uln_without_order_number }}<b>{{ value.m_animal_order_number }}</b></th>
-                <th>{{ value.m_stn }}</th>
-                <th>ooi</th>
-                <th>{{ value.m_date_of_birth }}</th>
-                <th>{{ value.m_n_ling }}</th>
-                <th>{{ value.m_breed_code }}</th>
-                <th>{{ value.m_dutch_breed_status }}</th>
-                <th>{{ value.m_scrapie_genotype }}</th>
-                <th>{{ value.m_predicate }}</th>
-                <th>{{ value.m_muscularity }}</th>
-                <th>{{ value.m_general_appearance }}</th>
-                <th>{{ value.m_production }}</th>
-                <th>{{ value.m_breed_value_litter_size }}</th>
-                <th>{{ value.m_breed_value_growth }}</th>
-                <th>{{ value.m_breed_value_muscle_thickness }}</th>
-                <th>{{ value.m_breed_value_fat }}</th>
-                <th>{{ value.m_lamb_meat_index }}</th>
+                <td>Niet Stamboek Dieren</td>
+                <td class="center">{{ livestock.non_pedigree_total }}</td>
+                <td class="center">{{ livestock.non_pedigree_adult }}</td>
+                <td class="center">{{ livestock.non_pedigree_lamb }}</td>
             </tr>
-            {# father #}
             <tr>
-                <th>vader</th>
-                <th>{{ value.f_uln }}</th>
-                <th>{{ value.f_uln_without_order_number }}<b>{{ value.f_animal_order_number }}</b></th>
-                <th>{{ value.f_stn }}</th>
-                <th>ram</th>
-                <th>{{ value.f_date_of_birth }}</th>
-                <th>{{ value.f_n_ling }}</th>
-                <th>{{ value.f_breed_code }}</th>
-                <th>{{ value.f_dutch_breed_status }}</th>
-                <th>{{ value.f_scrapie_genotype }}</th>
-                <th>{{ value.f_predicate }}</th>
-                <th>{{ value.f_muscularity }}</th>
-                <th>{{ value.f_general_appearance }}</th>
-                <th>{{ value.f_production }}</th>
-                <th>{{ value.f_breed_value_litter_size }}</th>
-                <th>{{ value.f_breed_value_growth }}</th>
-                <th>{{ value.f_breed_value_muscle_thickness }}</th>
-                <th>{{ value.f_breed_value_fat }}</th>
-                <th>{{ value.f_lamb_meat_index }}</th>
+                <td>Alle Dieren</td>
+                <td class="center">{{ livestock.total }}</td>
+                <td class="center">{{ livestock.adult }}</td>
+                <td class="center">{{ livestock.lamb }}</td>
             </tr>
-        {% endfor %}
+            </tbody>
         </table>
-            {#<tr>#}
-                {#<th>{{ value.m_uln }}</th>#}
-                {#<th>{{ value.m_stn }}</th>#}
-                {#<th>ooi</th>#}
-                {#<th>{{ value.m_date_of_birth }}</th>#}
-                {#<th>{{ value.m_n_ling }}</th>#}
-                {#<th>{{ value.m_breed_code }}</th>#}
-                {#<th>{{ value.m_dutch_breed_status }}</th>#}
-                {#<th>{{ value.m_scrapie_genotype }}</th>#}
-                {#<th>{{ value.m_predicate }}</th>#}
-                {#<th>{{ value.m_muscularity }}</th>#}
-                {#<th>{{ value.m_general_appearance }}</th>#}
-                {#<th>{{ value.m_production }}</th>#}
-                {#<th>{{ value.m_breed_value_litter_size }}</th>#}
-                {#<th>{{ value.m_breed_value_growth }}</th>#}
-                {#<th>{{ value.m_breed_value_muscle_thickness }}</th>#}
-                {#<th>{{ value.m_breed_value_fat }}</th>#}
-                {#<th>{{ value.m_lamb_meat_index }}</th>#}
-            {#</tr>#}
-            {# father #}
-            {#<tr>#}
-                {#<th>{{ value.f_uln }}</th>#}
-                {#<th>{{ value.f_stn }}</th>#}
-                {#<th>ram</th>#}
-                {#<th>{{ value.f_date_of_birth }}</th>#}
-                {#<th>{{ value.f_n_ling }}</th>#}
-                {#<th>{{ value.f_breed_code }}</th>#}
-                {#<th>{{ value.f_dutch_breed_status }}</th>#}
-                {#<th>{{ value.f_scrapie_genotype }}</th>#}
-                {#<th>{{ value.f_predicate }}</th>#}
-                {#<th>{{ value.f_muscularity }}</th>#}
-                {#<th>{{ value.f_general_appearance }}</th>#}
-                {#<th>{{ value.f_production }}</th>#}
-                {#<th>{{ value.f_breed_value_litter_size }}</th>#}
-                {#<th>{{ value.f_breed_value_growth }}</th>#}
-                {#<th>{{ value.f_breed_value_muscle_thickness }}</th>#}
-                {#<th>{{ value.f_breed_value_fat }}</th>#}
-                {#<th>{{ value.f_lamb_meat_index }}</th>#}
-            {#</tr>#}
-        {#</table>#}
+        {% endif %}
 
+
+        {# ANIMALS #}
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Werknr.</th>
+                    <th>ULN</th>
+                    <th>stn</th>
+                    <th>gesl.</th>
+                    <th>Geb.dat.</th>
+                    <th>N-ling</th>
+                    <th>Ras</th>
+                    <th>Status</th>
+                    <th>Scrapie</th>
+                    <th>Pred.</th>
+                    <th>Besp</th>
+                    <th>Algv</th>
+                    <th>Prod</th>
+                    <th>FW1</th>
+                    <th>FW2</th>
+                    <th>FW3</th>
+                    <th>FW4</th>
+                    <th>Vl</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set beginValue = 0 %}
+                {% set endValue = 9 %}
+                {% if page == 2 %}
+                    {% set beginValue = rowsFirstPage + (page - 1) %}
+                    {% set endValue = beginValue + rowsPerPage %}
+                {% elseif page >= 3 %}
+                    {% set beginValue = ((page - 2) * rowsPerPage) + rowsFirstPage + (page - 1) %}
+                    {% set endValue = beginValue + rowsPerPage %}
+                {% endif %}
+                {% for i in beginValue..endValue %}
+
+                    {% if animals[i] is defined %}
+                    {% set value = animals[i] %}
+                    <tr>
+                        <td>
+                            {{ value.a_animal_order_number }} <br>
+                            M <br>
+                            V <br>
+                        </td>
+                        <td>
+                            {{ value.a_uln }} <br>
+                            {{ value.m_uln }} <br>
+                            {{ value.f_uln }} <br>
+                        </td>
+                        <td>
+                            {{ value.a_stn }} <br>
+                            {{ value.m_stn }} <br>
+                            {{ value.f_stn }} <br>
+                        </td>
+                        <td>
+                            {{ value.gender }} <br>
+                            Ooi <br>
+                            Ram <br>
+                        </td>
+                        <td>
+                            {{ value.a_date_of_birth }} <br>
+                            {{ value.m_date_of_birth }} <br>
+                            {{ value.f_date_of_birth }} <br>
+                        </td>
+                        <td>
+                            {{ value.a_n_ling }} <br>
+                            {{ value.m_n_ling }} <br>
+                            {{ value.f_n_ling }} <br>
+                        </td>
+                        <td>
+                            {{ value.a_breed_code }} <br>
+                            {{ value.m_breed_code }} <br>
+                            {{ value.f_breed_code }} <br>
+                        </td>
+                        <td>
+                            {{ value.a_dutch_breed_status }} <br>
+                            {{ value.m_dutch_breed_status }} <br>
+                            {{ value.f_dutch_breed_status }} <br>
+                        </td>
+                        <td>
+                            {{ value.a_scrapie_genotype }} <br>
+                            {{ value.m_scrapie_genotype }} <br>
+                            {{ value.f_scrapie_genotype }} <br>
+                        </td>
+                        <td>
+                            {{ value.a_predicate }} <br>
+                            {{ value.m_predicate }} <br>
+                            {{ value.f_predicate }} <br>
+                        </td>
+                        <td>
+                            {{ value.a_muscularity }} <br>
+                            {{ value.m_muscularity }} <br>
+                            {{ value.f_muscularity }} <br>
+                        </td>
+                        <td>
+                            {{ value.a_general_appearance }} <br>
+                            {{ value.m_general_appearance }} <br>
+                            {{ value.f_general_appearance }} <br>
+                        </td>
+                        <td>
+                            {{ value.a_production }} <br>
+                            {{ value.m_production }} <br>
+                            {{ value.f_production }} <br>
+                        </td>
+                        <td>
+                            {{ value.a_breed_value_litter_size }} <br>
+                            {{ value.m_breed_value_litter_size }} <br>
+                            {{ value.f_breed_value_litter_size }} <br>
+                        </td>
+                        <td>
+                            {{ value.a_breed_value_growth }} <br>
+                            {{ value.m_breed_value_growth }} <br>
+                            {{ value.f_breed_value_growth }} <br>
+                        </td>
+                        <td>
+                            {{ value.a_breed_value_muscle_thickness }} <br>
+                            {{ value.m_breed_value_muscle_thickness }} <br>
+                            {{ value.f_breed_value_muscle_thickness }} <br>
+                        </td>
+                        <td>
+                            {{ value.a_breed_value_fat }} <br>
+                            {{ value.m_breed_value_fat }} <br>
+                            {{ value.f_breed_value_fat }} <br>
+                        </td>
+                        <td>
+                            {{ value.a_lamb_meat_index }} <br>
+                            {{ value.m_lamb_meat_index }} <br>
+                            {{ value.f_lamb_meat_index }} <br>
+                        </td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
 {% endblock %}
 
 {% block stylesheets %}
-
-    {#http://stackoverflow.com/questions/1763639/how-to-deal-with-page-breaks-when-printing-a-large-html-table#}
 
     <style type="text/css">
         html {
             font-family: Sans-Serif;
         }
 
+        #page {
+            overflow: hidden;
+            page-break-after: always;
+        }
+
+        #page-without-break {
+            overflow: hidden;
+            page-break-after: avoid;
+        }
+
         .header {
             border-bottom: solid 2px #000;
             font-size: 3mm;
-            padding-bottom: 5mm;
             width: 100%;
         }
 
-        .nsfo-logo img {
+        .nsfo-logo {
             display: inline-block;
-            float: left;
+            width: 25%;
+        }
+
+        .nsfo-logo img {
             height: auto;
-            width: 60mm;
+            width: 100%;
         }
 
         .title {
             display: inline-block;
-            text-align: center;
+            vertical-align: top;
+            width: 50%;
             font-weight: 700;
+            font-size: 6.5mm;
+            text-align: center;
         }
 
         .date {
             display: inline-block;
-            float: right;
+            width: 24%;
             text-align: right;
         }
 
         .sub-header {
-            padding-top: 0.5mm;
+            padding-top: 1mm;
             font-size: 2.5mm;
         }
 
-        .row {
-            position: static;
-            display: block;
-            width: 100%;
+        .sub-header .left {
+            float: left;
+        }
+
+        .sub-header .right {
+            float: right;
         }
 
         .legend-container {
             position: relative;
-            font-size: 3mm;
+            padding-top: 5mm;
+            font-size: 2.5mm;
             height: 30mm;
-            background-color: #5eb5e0;
         }
 
         .info {
@@ -321,40 +333,29 @@
         }
 
         table {
+            width: 100%;
+            margin-top: 5mm;
             font-size: 2mm;
             border-collapse: collapse;
+        }
+
+        table.overview-table {
+            margin: 0 auto 5mm auto;
+            width: 40%;
         }
 
         tr {
             border-bottom: solid 1px #000000;
         }
 
-        /*table { page-break-inside:auto }*/
-        /*div   { page-break-inside:avoid; } !* This is the key *!*/
-        /*thead { display:table-header-group }*/
-        /*tfoot { display:table-footer-group }*/
+        td, th {
+            padding-left: 2mm;
+            padding-right: 2mm;
+        }
 
-        /*table.OverviewTable {*/
-            /*width: 50%;*/
-            /*background-color: #ffffff;*/
-            /*border-collapse: collapse;*/
-            /*border-width: 2px;*/
-            /*border-color: #e8e8e8;*/
-            /*border-style: solid;*/
-            /*color: #000000;*/
-        /*}*/
-
-        /*table.OverviewTable td, table.OverviewTable th {*/
-            /*border-width: 2px;*/
-            /*border-color: #e8e8e8;*/
-            /*border-style: solid;*/
-            /*padding: 3px;*/
-        /*}*/
-
-        /*table.OverviewTable thead {*/
-            /*background-color: #e8e8e8;*/
-        /*}*/
-
+        .center {
+            text-align: center;
+        }
     </style>
 
 
