@@ -18,68 +18,80 @@
 
     {# HEADER #}
 
-    <header>
-        <h1>NSFO ONLINE</h1>   <h1>Stallijst</h1>     {{ date }}
-    </header>
+    <div class="header">
+        <div class="nsfo-logo">
+            <img src="{{ imagesDirectory }}"/>
+        </div>
+        <div class="title">
+            Stallijst
+        </div>
 
-    <p>Fokkersnummer: {{ breederNumber }}</p>
-    <p>UBN {{ nameAndAddress }}</p>
+        <div class="date">
+            {{ date }}
+        </div>
+    </div>
+    <div class="sub-header">
+       UBN {{ nameAndAddress }}
+    </div>
 
     {# FIRST PAGE #}
 
-    <div class="nsfo-logo">
-        <img src="{{ imagesDirectory }}" width="556" height="70" />
+    <div class="legend-container">
+        <div class="info">
+            <p> <span>Fokkersnummer: </span> {{ breederNumber }}</p>
+            <p>Productie ooi: leeftijd in jaren tot en met datum laatste worp / aantal worpen / aantal lammeren / aantal levend geboren lammeren (* = als 1 jarige geworpen)</p>
+            <p>Productie ram: leeftijd in jaren tot en met datum laatste worp / aantal worpen / aantal lammeren / aantal levend geboren lammeren</p>
+        </div>
+        <ul>
+            <li class="legend-title">Legenda</li>
+            <li>FW 1 = Fokwaardeschatting Worpgrootte</li>
+            <li>FW 2 = Fokwaardeschatting Groei</li>
+            <li>FW 3 = Fokwaardeschatting Spier</li>
+            <li>FW 4 = Fokwaardeschatting Vet</li>
+            <li>Vl = Vleeslam index</li>
+            <li>FW / Nauwkeurigheid</li>
+        </ul>
     </div>
 
-    <table class="OverviewTable">
-        <thead>
-        <tr>
-            <th></th>
-            <th>Totaal</th>
-            <th>Ouder dan 1 jaar</th>
-            <th>Lammeren</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td>Stamboek Dieren</td>
-            <td>{{ livestock.pedigree_total }}</td>
-            <td>{{ livestock.pedigree_adult }}</td>
-            <td>{{ livestock.pedigree_lamb }}</td>
-        </tr>
-        <tr>
-            <td>Niet Stamboek Dieren</td>
-            <td>{{ livestock.non_pedigree_total }}</td>
-            <td>{{ livestock.non_pedigree_adult }}</td>
-            <td>{{ livestock.non_pedigree_lamb }}</td>
-        </tr>
-        <tr>
-            <td>Alle Dieren</td>
-            <td>{{ livestock.total }}</td>
-            <td>{{ livestock.adult }}</td>
-            <td>{{ livestock.lamb }}</td>
-        </tr>
-        </tbody>
-    </table>
+    {#<table class="OverviewTable">#}
+        {#<thead>#}
+        {#<tr>#}
+            {#<th></th>#}
+            {#<th>Totaal</th>#}
+            {#<th>Ouder dan 1 jaar</th>#}
+            {#<th>Lammeren</th>#}
+        {#</tr>#}
+        {#</thead>#}
+        {#<tbody>#}
+        {#<tr>#}
+            {#<td>Stamboek Dieren</td>#}
+            {#<td>{{ livestock.pedigree_total }}</td>#}
+            {#<td>{{ livestock.pedigree_adult }}</td>#}
+            {#<td>{{ livestock.pedigree_lamb }}</td>#}
+        {#</tr>#}
+        {#<tr>#}
+            {#<td>Niet Stamboek Dieren</td>#}
+            {#<td>{{ livestock.non_pedigree_total }}</td>#}
+            {#<td>{{ livestock.non_pedigree_adult }}</td>#}
+            {#<td>{{ livestock.non_pedigree_lamb }}</td>#}
+        {#</tr>#}
+        {#<tr>#}
+            {#<td>Alle Dieren</td>#}
+            {#<td>{{ livestock.total }}</td>#}
+            {#<td>{{ livestock.adult }}</td>#}
+            {#<td>{{ livestock.lamb }}</td>#}
+        {#</tr>#}
+        {#</tbody>#}
+    {#</table>#}
 
 
-    <h3>Legenda text nog toe te voegen</h3>
-    <p>FW 1 = Fokwaardeschatting Worpgrootte</p>
-    <p>FW 2 = Fokwaardeschatting Groei</p>
-    <p>FW 3 = Fokwaardeschatting Spier</p>
-    <p>FW 4 = Fokwaardeschatting Vet</p>
-    <p>Vl = Vleeslam index</p>
-    <p><b>FW / Nauwkeurigheid</b></p>
-
-    <p>Productie ooi: leeftijd in jaren tot en met datum laatste worp / aantal worpen / aantal lammeren / aantal levend geboren lammeren (* = als 1 jarige geworpen)</p>
-    <p>Productie ram: leeftijd in jaren tot en met datum laatste worp / aantal worpen / aantal lammeren / aantal levend geboren lammeren</p>
 
     {# ANIMALS #}
-    
-    <table style="width:100%">
-            {# column headers #}
+
+    <table>
         <thead>
             <tr>
+                <th>Werknr.</th>
                 <th>uln</th>
                 <th>stn</th>
                 <th>gesl.</th>
@@ -99,30 +111,47 @@
                 <th>Vl</th>
             </tr>
         </thead>
-
-        {% for key,value in animals %}
-            {# animal #}
+        <tbody>
+            {% for key,value in animals %}
             <tr>
-                <th>{{ value.a_animal_order_number }}</th>
-                <th>{{ value.a_uln }}</th>
-                <th>{{ value.a_uln_without_order_number }}<b>{{ value.a_animal_order_number }}</b></th>
-                <th>{{ value.a_stn }}</th>
-                <th>{{ value.gender }}</th>
-                <th>{{ value.a_date_of_birth }}</th>
-                <th>{{ value.a_n_ling }}</th>
-                <th>{{ value.a_breed_code }}</th>
-                <th>{{ value.a_dutch_breed_status }}</th>
-                <th>{{ value.a_scrapie_genotype }}</th>
-                <th>{{ value.a_predicate }}</th>
-                <th>{{ value.a_muscularity }}</th>
-                <th>{{ value.a_general_appearance }}</th>
-                <th>{{ value.a_production }}</th>
-                <th>{{ value.a_breed_value_litter_size }}</th>
-                <th>{{ value.a_breed_value_growth }}</th>
-                <th>{{ value.a_breed_value_muscle_thickness }}</th>
-                <th>{{ value.a_breed_value_fat }}</th>
-                <th>{{ value.a_lamb_meat_index }}</th>
+                <td>
+                    {{ value.a_uln }} <br>
+                    {{ value.m_uln }} <br>
+                    {{ value.f_uln }} <br>
+                </td>
             </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <th>{{ value.a_animal_order_number }}</th>
+    <th>{{ value.a_uln }}</th>
+    <th>{{ value.a_uln_without_order_number }}<b>{{ value.a_animal_order_number }}</b></th>
+    <th>{{ value.m_uln }}</th>
+    <th>{{ value.m_uln_without_order_number }}<b>{{ value.m_animal_order_number }}</b></th>
+    <th>vader</th>
+    <th>{{ value.f_uln }}</th>
+    <th>{{ value.f_uln_without_order_number }}<b>{{ value.f_animal_order_number }}</b></th>
+    <th>{{ value.f_stn }}</th>
+            {# animal #}
+            {#<tr>#}
+                {#<th></th>#}
+                {#<th>{{ value.a_stn }}</th>#}
+                {#<th>{{ value.gender }}</th>#}
+                {#<th>{{ value.a_date_of_birth }}</th>#}
+                {#<th>{{ value.a_n_ling }}</th>#}
+                {#<th>{{ value.a_breed_code }}</th>#}
+                {#<th>{{ value.a_dutch_breed_status }}</th>#}
+                {#<th>{{ value.a_scrapie_genotype }}</th>#}
+                {#<th>{{ value.a_predicate }}</th>#}
+                {#<th>{{ value.a_muscularity }}</th>#}
+                {#<th>{{ value.a_general_appearance }}</th>#}
+                {#<th>{{ value.a_production }}</th>#}
+                {#<th>{{ value.a_breed_value_litter_size }}</th>#}
+                {#<th>{{ value.a_breed_value_growth }}</th>#}
+                {#<th>{{ value.a_breed_value_muscle_thickness }}</th>#}
+                {#<th>{{ value.a_breed_value_fat }}</th>#}
+                {#<th>{{ value.a_lamb_meat_index }}</th>#}
+            {#</tr>#}
             {# mother #}
             <tr>
                 <th>moeder</th>
@@ -169,6 +198,46 @@
             </tr>
         {% endfor %}
         </table>
+            {#<tr>#}
+                {#<th>{{ value.m_uln }}</th>#}
+                {#<th>{{ value.m_stn }}</th>#}
+                {#<th>ooi</th>#}
+                {#<th>{{ value.m_date_of_birth }}</th>#}
+                {#<th>{{ value.m_n_ling }}</th>#}
+                {#<th>{{ value.m_breed_code }}</th>#}
+                {#<th>{{ value.m_dutch_breed_status }}</th>#}
+                {#<th>{{ value.m_scrapie_genotype }}</th>#}
+                {#<th>{{ value.m_predicate }}</th>#}
+                {#<th>{{ value.m_muscularity }}</th>#}
+                {#<th>{{ value.m_general_appearance }}</th>#}
+                {#<th>{{ value.m_production }}</th>#}
+                {#<th>{{ value.m_breed_value_litter_size }}</th>#}
+                {#<th>{{ value.m_breed_value_growth }}</th>#}
+                {#<th>{{ value.m_breed_value_muscle_thickness }}</th>#}
+                {#<th>{{ value.m_breed_value_fat }}</th>#}
+                {#<th>{{ value.m_lamb_meat_index }}</th>#}
+            {#</tr>#}
+            {# father #}
+            {#<tr>#}
+                {#<th>{{ value.f_uln }}</th>#}
+                {#<th>{{ value.f_stn }}</th>#}
+                {#<th>ram</th>#}
+                {#<th>{{ value.f_date_of_birth }}</th>#}
+                {#<th>{{ value.f_n_ling }}</th>#}
+                {#<th>{{ value.f_breed_code }}</th>#}
+                {#<th>{{ value.f_dutch_breed_status }}</th>#}
+                {#<th>{{ value.f_scrapie_genotype }}</th>#}
+                {#<th>{{ value.f_predicate }}</th>#}
+                {#<th>{{ value.f_muscularity }}</th>#}
+                {#<th>{{ value.f_general_appearance }}</th>#}
+                {#<th>{{ value.f_production }}</th>#}
+                {#<th>{{ value.f_breed_value_litter_size }}</th>#}
+                {#<th>{{ value.f_breed_value_growth }}</th>#}
+                {#<th>{{ value.f_breed_value_muscle_thickness }}</th>#}
+                {#<th>{{ value.f_breed_value_fat }}</th>#}
+                {#<th>{{ value.f_lamb_meat_index }}</th>#}
+            {#</tr>#}
+        {#</table>#}
 
 {% endblock %}
 
@@ -177,35 +246,114 @@
     {#http://stackoverflow.com/questions/1763639/how-to-deal-with-page-breaks-when-printing-a-large-html-table#}
 
     <style type="text/css">
-        table { page-break-inside:auto }
-        div   { page-break-inside:avoid; } /* This is the key */
-        thead { display:table-header-group }
-        tfoot { display:table-footer-group }
+        html {
+            font-family: Sans-Serif;
+        }
 
-        table.OverviewTable {
-            width: 50%;
-            background-color: #ffffff;
+        .header {
+            border-bottom: solid 2px #000;
+            font-size: 3mm;
+            padding-bottom: 5mm;
+            width: 100%;
+        }
+
+        .nsfo-logo img {
+            display: inline-block;
+            float: left;
+            height: auto;
+            width: 60mm;
+        }
+
+        .title {
+            display: inline-block;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .date {
+            display: inline-block;
+            float: right;
+            text-align: right;
+        }
+
+        .sub-header {
+            padding-top: 0.5mm;
+            font-size: 2.5mm;
+        }
+
+        .row {
+            position: static;
+            display: block;
+            width: 100%;
+        }
+
+        .legend-container {
+            position: relative;
+            font-size: 3mm;
+            height: 30mm;
+            background-color: #5eb5e0;
+        }
+
+        .info {
+            position: absolute;
+            left: 0;
+            width: 60%;
+        }
+
+        .legend-container .info p span {
+            font-weight: 700;
+        }
+
+        .legend-container ul {
+            position: absolute;
+            right: 0;
+            padding: 1.5mm;
+            background-color: #efe8dd;
+        }
+
+        .legend-container ul li {
+            list-style: none;
+        }
+
+        li.legend-title {
+            font-weight: 700;
+            padding-bottom: 1.5mm;
+        }
+
+        table {
+            font-size: 2mm;
             border-collapse: collapse;
-            border-width: 2px;
-            border-color: #e8e8e8;
-            border-style: solid;
-            color: #000000;
         }
 
-        table.OverviewTable td, table.OverviewTable th {
-            border-width: 2px;
-            border-color: #e8e8e8;
-            border-style: solid;
-            padding: 3px;
+        tr {
+            border-bottom: solid 1px #000000;
         }
 
-        table.OverviewTable thead {
-            background-color: #e8e8e8;
-        }
+        /*table { page-break-inside:auto }*/
+        /*div   { page-break-inside:avoid; } !* This is the key *!*/
+        /*thead { display:table-header-group }*/
+        /*tfoot { display:table-footer-group }*/
 
-        th {
-            font-weight: normal;
-        }
+        /*table.OverviewTable {*/
+            /*width: 50%;*/
+            /*background-color: #ffffff;*/
+            /*border-collapse: collapse;*/
+            /*border-width: 2px;*/
+            /*border-color: #e8e8e8;*/
+            /*border-style: solid;*/
+            /*color: #000000;*/
+        /*}*/
+
+        /*table.OverviewTable td, table.OverviewTable th {*/
+            /*border-width: 2px;*/
+            /*border-color: #e8e8e8;*/
+            /*border-style: solid;*/
+            /*padding: 3px;*/
+        /*}*/
+
+        /*table.OverviewTable thead {*/
+            /*background-color: #e8e8e8;*/
+        /*}*/
 
     </style>
 
