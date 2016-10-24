@@ -7,12 +7,12 @@ use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 
 /**
- * Class InvoiceRules
- * @ORM\Entity(repositoryClass="AppBundle\Entity\InvoiceRuleRepository")
+ * Class InvoiceRuleTemplate
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\InvoiceRuleTemplateRepository")
  * @package AppBundle\Entity
  */
-class InvoiceRule {
-
+class InvoiceRuleTemplate
+{
     /**
      * @ORM\Column(type="integer")
      * @ORM\Id
@@ -30,36 +30,54 @@ class InvoiceRule {
     private $description;
 
     /**
-     * @var integer
+     * @var float
      *
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="float")
      * @Assert\NotBlank
      * @JMS\Type("integer")
      */
     private $vatPercentageRate;
 
     /**
-     * @var integer
+     * @var float
      *
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="float")
      * @Assert\NotBlank
      * @JMS\Type("integer")
      */
     private $priceExclVat;
 
     /**
-     * @var Invoice
+     * @var integer
      *
-     * @ORM\ManyToOne(targetEntity="Invoice", inversedBy="invoiceRules", cascade={"persist"})
-     * @JMS\Type("array")
+     * @ORM\Column(type="integer")
+     * @Assert\NotBlank
+     * @JMS\Type("integer")
      */
-    private $invoice;
+    private $sortOrder;
 
     /**
-     * InvoiceRule constructor.
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    private $category;
+
+    /**
+     * InvoiceRuleTemplate constructor.
      */
     public function __construct()
     {
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getId()
+    {
+        return $this->id;
     }
 
     /**
@@ -79,7 +97,7 @@ class InvoiceRule {
     }
 
     /**
-     * @return string
+     * @return int
      */
     public function getVatPercentageRate()
     {
@@ -87,7 +105,7 @@ class InvoiceRule {
     }
 
     /**
-     * @param string $vatPercentageRate
+     * @param int $vatPercentageRate
      */
     public function setVatPercentageRate($vatPercentageRate)
     {
@@ -95,7 +113,7 @@ class InvoiceRule {
     }
 
     /**
-     * @return string
+     * @return int
      */
     public function getPriceExclVat()
     {
@@ -103,7 +121,7 @@ class InvoiceRule {
     }
 
     /**
-     * @param string $priceExclVat
+     * @param int $priceExclVat
      */
     public function setPriceExclVat($priceExclVat)
     {
@@ -111,18 +129,34 @@ class InvoiceRule {
     }
 
     /**
-     * @return Invoice
+     * @return int
      */
-    public function getInvoice()
+    public function getSortOrder()
     {
-        return $this->invoice;
+        return $this->sortOrder;
     }
 
     /**
-     * @param Invoice $invoice
+     * @param int $sortOrder
      */
-    public function setInvoice($invoice)
+    public function setSortOrder($sortOrder)
     {
-        $this->invoice = $invoice;
+        $this->sortOrder = $sortOrder;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCategory()
+    {
+        return $this->category;
+    }
+
+    /**
+     * @param string $category
+     */
+    public function setCategory($category)
+    {
+        $this->category = $category;
     }
 }
