@@ -22,8 +22,8 @@
     </header>
 
     <p>Fokkersnummer: {{ breederNumber }}</p>
-    <p>UBN: {{ ubn }}</p>
-    <p>{{ nameAndAddress }}</p>
+    {#<p>UBN: {{ ubn }}</p>#}
+    <p>ubn {{ nameAndAddress }}</p>
     
     <p>stamboek volwassenen: {{ livestock.pedigree_adult }}</p>
     <p>stamboek lammeren: {{ livestock.pedigree_lamb }}</p>
@@ -33,7 +33,7 @@
     <p>niet-stamboek totaal: {{ livestock.non_pedigree_total }}</p>
     <p>volwassenen: {{ livestock.adult }}</p>
     <p>lammeren: {{ livestock.lamb }}</p>
-    <p>totaal: {{ livestock.total }}</p>
+    <p>alle dieren: {{ livestock.total }}</p>
 
     {# FIRST PAGE #}
 
@@ -41,6 +41,36 @@
         <img src="{{ imagesDirectory }}" width="556" height="70" />
     </div>
 
+    <table class="OverviewTable">
+        <thead>
+        <tr>
+            <th></th>
+            <th>Totaal</th>
+            <th>Ouder dan 1 jaar</th>
+            <th>Lammeren</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Stamboek Dieren</td>
+            <td>{{ livestock.pedigree_total }}</td>
+            <td>{{ livestock.pedigree_adult }}</td>
+            <td>{{ livestock.pedigree_lamb }}</td>
+        </tr>
+        <tr>
+            <td>Niet Stamboek Dieren</td>
+            <td>{{ livestock.non_pedigree_total }}</td>
+            <td>{{ livestock.non_pedigree_adult }}</td>
+            <td>{{ livestock.non_pedigree_lamb }}</td>
+        </tr>
+        <tr>
+            <td>Alle Dieren</td>
+            <td>{{ livestock.total }}</td>
+            <td>{{ livestock.adult }}</td>
+            <td>{{ livestock.lamb }}</td>
+        </tr>
+        </tbody>
+    </table>
 
     {# ANIMALS #}
     
@@ -143,6 +173,29 @@
         div   { page-break-inside:avoid; } /* This is the key */
         thead { display:table-header-group }
         tfoot { display:table-footer-group }
+
+        table.OverviewTable {
+            width: 50%;
+            background-color: #ffffff;
+            border-collapse: collapse;
+            border-width: 2px;
+            border-color: #e8e8e8;
+            border-style: solid;
+            color: #000000;
+        }
+
+        table.OverviewTable td, table.OverviewTable th {
+            border-width: 2px;
+            border-color: #e8e8e8;
+            border-style: solid;
+            padding: 3px;
+        }
+
+        table.OverviewTable thead {
+            background-color: #e8e8e8;
+        }
+
     </style>
+
 
 {% endblock %}
