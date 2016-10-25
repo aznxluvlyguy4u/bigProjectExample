@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Util;
+use AppBundle\Constant\UnicodeSymbol;
 use AppBundle\Entity\Animal;
 use AppBundle\Enumerator\BreedTrait;
 use AppBundle\Enumerator\BreedType;
@@ -79,5 +80,25 @@ class Translation
         }
         return $genderDutch;
     }
+
+
+    /**
+     * @param string $genderEnglish
+     * @param string $neuterString
+     * @return string
+     */
+    public static function getGenderAsUnicodeSymbol($genderEnglish, $neuterString = '-')
+    {
+        /* variables translated to Dutch */
+        if($genderEnglish == 'Ram' || $genderEnglish == GenderType::MALE || $genderEnglish == GenderType::M) {
+            $genderUnicodeSymbol = UnicodeSymbol::MALE();
+        } elseif ($genderEnglish == 'Ewe' || $genderEnglish == GenderType::FEMALE || $genderEnglish == GenderType::V) {
+            $genderUnicodeSymbol = UnicodeSymbol::FEMALE();
+        } else {
+            $genderUnicodeSymbol = $neuterString;
+        }
+        return $genderUnicodeSymbol;
+    }
+
 
 }

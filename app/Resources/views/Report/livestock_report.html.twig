@@ -9,6 +9,10 @@
     {% set nameAndAddress = variables.name_and_address %}
     {% set livestock = variables.livestock %}
     {% set animals = variables.animals %}
+    {% set female_symbol = variables.female_symbol %}
+    {% set male_symbol = variables.male_symbol %}
+    {% set male_and_female_symbol = variables.male_and_female_symbol %}
+    {% set neuter_symbol = variables.neuter_symbol %}
 
     {% set pageCounter = 0 %}
     {% set rowsFirstPage = 9 %}
@@ -57,6 +61,11 @@
             </div>
             <ul>
                 <li class="legend-title">Legenda</li>
+                <li>{{ male_and_female_symbol }} = Geslacht</li>
+                <li>{{ male_symbol }} = Ram</li>
+                <li>{{ female_symbol }} = Ooi</li>
+                <li>N = N-ling</li>
+                <li>S = Rasstatus</li>
                 <li>FW 1 = Fokwaardeschatting Worpgrootte</li>
                 <li>FW 2 = Fokwaardeschatting Groei</li>
                 <li>FW 3 = Fokwaardeschatting Spier</li>
@@ -104,16 +113,15 @@
         <table>
             <thead>
                 <tr>
-                    <th>Werknr.</th>
                     <th>ULN</th>
-                    <th>stn</th>
-                    <th>gesl.</th>
+                    <th>STN</th>
+                    <th>{{ male_and_female_symbol }}</th>
                     <th>Geb.dat.</th>
-                    <th>N-ling</th>
+                    <th>N</th>
+                    <th>S</th>
                     <th>Ras</th>
-                    <th>Status</th>
                     <th>Scrapie</th>
-                    <th>Pred.</th>
+                    <th>Pred</th>
                     <th>Besp</th>
                     <th>Algv</th>
                     <th>Prod</th>
@@ -126,7 +134,7 @@
             </thead>
             <tbody>
                 {% set beginValue = 0 %}
-                {% set endValue = 9 %}
+                {% set endValue = rowsFirstPage %}
                 {% if page == 2 %}
                     {% set beginValue = rowsFirstPage + (page - 1) %}
                     {% set endValue = beginValue + rowsPerPage %}
@@ -140,14 +148,9 @@
                     {% set value = animals[i] %}
                     <tr>
                         <td>
-                            {{ value.a_animal_order_number }} <br>
-                            M <br>
-                            V <br>
-                        </td>
-                        <td>
-                            {{ value.a_uln }} <br>
-                            {{ value.m_uln }} <br>
-                            {{ value.f_uln }} <br>
+                            {{ value.a_uln_without_order_number }} <b>{{ value.a_animal_order_number }}</b> <br>
+                            {{ value.m_uln_without_order_number }} {{ value.m_animal_order_number }} <br>
+                            {{ value.f_uln_without_order_number }} {{ value.f_animal_order_number }} <br>
                         </td>
                         <td>
                             {{ value.a_stn }} <br>
@@ -156,8 +159,8 @@
                         </td>
                         <td>
                             {{ value.gender }} <br>
-                            Ooi <br>
-                            Ram <br>
+                            M <br>
+                            V <br>
                         </td>
                         <td>
                             {{ value.a_date_of_birth }} <br>
@@ -170,14 +173,14 @@
                             {{ value.f_n_ling }} <br>
                         </td>
                         <td>
-                            {{ value.a_breed_code }} <br>
-                            {{ value.m_breed_code }} <br>
-                            {{ value.f_breed_code }} <br>
-                        </td>
-                        <td>
                             {{ value.a_dutch_breed_status }} <br>
                             {{ value.m_dutch_breed_status }} <br>
                             {{ value.f_dutch_breed_status }} <br>
+                        </td>
+                        <td>
+                            {{ value.a_breed_code }} <br>
+                            {{ value.m_breed_code }} <br>
+                            {{ value.f_breed_code }} <br>
                         </td>
                         <td>
                             {{ value.a_scrapie_genotype }} <br>

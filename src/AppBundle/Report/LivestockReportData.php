@@ -7,6 +7,7 @@ use AppBundle\Component\Count;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
+use AppBundle\Constant\UnicodeSymbol;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\EweRepository;
@@ -24,7 +25,7 @@ class LivestockReportData extends ReportBase
     const FILE_NAME_REPORT_TYPE = 'stallijst';
     const PEDIGREE_NULL_FILLER = '-';
     const ULN_NULL_FILLER = '-';
-    const NEUTER_STRING = 'onb';
+    const NEUTER_STRING = '?';
 
     /** @var array */
     private $data;
@@ -53,6 +54,10 @@ class LivestockReportData extends ReportBase
         $this->data[ReportLabel::NAME.'_and_'.ReportLabel::ADDRESS] = $this->parseNameAddressString();
         $this->data[ReportLabel::LIVESTOCK] = Count::getLiveStockCountLocation($this->location, true);
         $this->data[ReportLabel::ANIMALS] = $this->retrieveLiveStockData();
+        $this->data[ReportLabel::FEMALE_SYMBOL] = UnicodeSymbol::FEMALE();
+        $this->data[ReportLabel::MALE_SYMBOL] = UnicodeSymbol::MALE();
+        $this->data[ReportLabel::MALE_AND_FEMALE_SYMBOL] = UnicodeSymbol::MALE_AND_FEMALE();
+        $this->data[ReportLabel::NEUTER_SYMBOL] = UnicodeSymbol::NEUTER();
     }
 
     /**
@@ -128,7 +133,11 @@ class LivestockReportData extends ReportBase
             $results[$key]['f_uln_without_order_number'] = StringUtil::getUlnWithoutOrderNumber($results[$key]['f_uln']);
             $results[$key]['m_uln_without_order_number'] = StringUtil::getUlnWithoutOrderNumber($results[$key]['m_uln']);
 
-            $results[$key]['gender'] = Translation::getGenderInDutch($results[$key]['gender'], self::NEUTER_STRING);
+            $results[$key]['gender'] = Translation::getGenderAsUnicodeSymbol($results[$key]['gender'], self::NEUTER_STRING);
+
+            $results[$key]['a_date_of_birth'] = TimeUtil::flipDateStringOrder($results[$key]['a_date_of_birth']);
+            $results[$key]['f_date_of_birth'] = TimeUtil::flipDateStringOrder($results[$key]['f_date_of_birth']);
+            $results[$key]['m_date_of_birth'] = TimeUtil::flipDateStringOrder($results[$key]['m_date_of_birth']);
 
             $results[$key]['a_n_ling'] = str_replace('-ling', '', $results[$key]['a_n_ling']);
             $results[$key]['f_n_ling'] = str_replace('-ling', '', $results[$key]['f_n_ling']);
