@@ -12,7 +12,7 @@
 
     {% set pageCounter = 0 %}
     {% set rowsFirstPage = 6 %}
-    {% set rowsPerPage = 11 %}
+    {% set rowsPerPage = 12 %}
     {% set size = variables.animals|length %}
     {% set pageAmount = 1 %}
     {% if size > rowsFirstPage %}
@@ -148,87 +148,135 @@
                         <td class="single-letter-column">
                             {{ value.gender }} <br>
                             M <br>
-                            V <br>
+                            V
                         </td>
                         <td style="min-width: 32mm; max-width: 32mm">
                             {{ value.a_uln_without_order_number }} <span style="font-weight: 700">{{ value.a_animal_order_number }}</span> <br>
                             {{ value.m_uln_without_order_number }} {{ value.m_animal_order_number }} <br>
-                            {{ value.f_uln_without_order_number }} {{ value.f_animal_order_number }} <br>
+                            {{ value.f_uln_without_order_number }} {{ value.f_animal_order_number }}
+                            {%if value.f_uln_without_order_number == null or value.f_uln_without_order_number == '' or value.f_uln_without_order_number == ' ' %}
+                            <br>
+                            {% endif %}
                         </td>
                         <td style="min-width: 30mm; max-width: 30mm">
                             {{ value.a_stn }} <br>
                             {{ value.m_stn }} <br>
-                            {{ value.f_stn }} <br>
+                            {{ value.f_stn }}
+                            {%if value.f_stn == null or value.f_stn == '' or value.f_stn == ' ' %}
+                            <br>
+                            {% endif %}
                         </td>
                         <td style="min-width: 16mm; max-width: 16mm">
                             {{ value.a_date_of_birth }} <br>
                             {{ value.m_date_of_birth }} <br>
-                            {{ value.f_date_of_birth }} <br>
+                            {{ value.f_date_of_birth }}
+                            {%if value.f_date_of_birth == null or value.f_date_of_birth == '' or value.f_date_of_birth == ' ' %}
+                            <br>
+                            {% endif %}
                         </td>
                         <td class="single-letter-column">
                             {{ value.a_n_ling }} <br>
                             {{ value.m_n_ling }} <br>
-                            {{ value.f_n_ling }} <br>
+                            {{ value.f_n_ling }}
+                            {%if value.f_n_ling == null or value.f_n_ling == '' or value.f_n_ling == ' ' %}
+                            <br>
+                            {% endif %}
                         </td>
                         <td class="single-letter-column">
                             {{ value.a_dutch_breed_status }} <br>
                             {{ value.m_dutch_breed_status }} <br>
-                            {{ value.f_dutch_breed_status }} <br>
+                            {{ value.f_dutch_breed_status }}
+                            {%if value.f_dutch_breed_status == null or value.f_dutch_breed_status == '' or value.f_dutch_breed_status == ' ' %}
+                            <br>
+                            {% endif %}
                         </td>
                         <td style="overflow: visible; text-overflow: clip; max-width: 25px">
                             {{ value.a_breed_code }} <br>
                             {{ value.m_breed_code }} <br>
-                            {{ value.f_breed_code }} <br>
+                            {{ value.f_breed_code }}
+                            {%if value.f_breed_code == null or value.f_breed_code == '' or value.f_breed_code == ' ' %}
+                            <br>
+                            {% endif %}
                         </td>
                         <td style="min-width: 15px; max-width: 15px">
                             {{ value.a_predicate }} <br>
                             {{ value.m_predicate }} <br>
-                            {{ value.f_predicate }} <br>
+                            {{ value.f_predicate }}
+                            {%if value.f_predicate == null or value.f_predicate == '' or value.f_predicate == ' ' %}
+                            <br>
+                            {% endif %}
                         </td>
                         <td class="exterior-column">
                             {{ value.a_scrapie_genotype }} <br>
                             {{ value.m_scrapie_genotype }} <br>
-                            {{ value.f_scrapie_genotype }} <br>
+                            {{ value.f_scrapie_genotype }}
+                            {%if value.f_scrapie_genotype == null or value.f_scrapie_genotype == '' or value.f_scrapie_genotype == ' ' %}
+                            <br>
+                            {% endif %}
                         </td>
                         <td class="exterior-column">
                             {{ value.a_muscularity }} <br>
                             {{ value.m_muscularity }} <br>
-                            {{ value.f_muscularity }} <br>
+                            {{ value.f_muscularity }}
+                            {%if value.f_muscularity == null or value.f_muscularity == '' or value.f_muscularity == ' ' %}
+                            <br>
+                            {% endif %}
                         </td>
                         <td >
                             {{ value.a_general_appearance }} <br>
                             {{ value.m_general_appearance }} <br>
-                            {{ value.f_general_appearance }} <br>
+                            {{ value.f_general_appearance }}
+                            {%if value.f_general_appearance == null or value.f_general_appearance == '' or value.f_general_appearance == ' ' %}
+                            <br>
+                            {% endif %}
                         </td>
                         <td>
                             {{ value.a_production }} <br>
                             {{ value.m_production }} <br>
-                            {{ value.f_production }} <br>
+                            {{ value.f_production }}
+                            {%if value.f_production == null or value.f_production == '' or value.f_production == ' ' %}
+                            <br>
+                            {% endif %}
                         </td>
                         <td>
                             {{ value.a_breed_value_litter_size }} <br>
                             {{ value.m_breed_value_litter_size }} <br>
-                            {{ value.f_breed_value_litter_size }} <br>
+                            {{ value.f_breed_value_litter_size }}
+                            {%if value.f_breed_value_litter_size == null or value.f_breed_value_litter_size == '' or value.f_breed_value_litter_size == ' ' %}
+                            <br>
+                            {% endif %}
                         </td>
                         <td>
                             {{ value.a_breed_value_growth }} <br>
                             {{ value.m_breed_value_growth }} <br>
-                            {{ value.f_breed_value_growth }} <br>
+                            {{ value.f_breed_value_growth }}
+                            {%if value.f_breed_value_growth == null or value.f_breed_value_growth == '' or value.f_breed_value_growth == ' ' %}
+                            <br>
+                            {% endif %}
                         </td>
                         <td>
                             {{ value.a_breed_value_muscle_thickness }} <br>
                             {{ value.m_breed_value_muscle_thickness }} <br>
-                            {{ value.f_breed_value_muscle_thickness }} <br>
+                            {{ value.f_breed_value_muscle_thickness }}
+                            {%if value.f_breed_value_muscle_thickness == null or value.f_breed_value_muscle_thickness == '' or value.f_breed_value_muscle_thickness == ' ' %}
+                            <br>
+                            {% endif %}
                         </td>
                         <td>
                             {{ value.a_breed_value_fat }} <br>
                             {{ value.m_breed_value_fat }} <br>
-                            {{ value.f_breed_value_fat }} <br>
+                            {{ value.f_breed_value_fat }}
+                            {%if value.f_breed_value_fat == null or value.f_breed_value_fat == '' or value.f_breed_value_fat == ' ' %}
+                            <br>
+                            {% endif %}
                         </td>
                         <td>
                             {{ value.a_lamb_meat_index }} <br>
                             {{ value.m_lamb_meat_index }} <br>
-                            {{ value.f_lamb_meat_index }} <br>
+                            {{ value.f_lamb_meat_index }}
+                            {%if value.f_lamb_meat_index == null or value.f_lamb_meat_index == '' or value.f_lamb_meat_index == ' ' %}
+                            <br>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endif %}
@@ -337,7 +385,7 @@
         table {
             width: 100%;
             margin-top: 10mm;
-            font-size: 3.7mm;
+            font-size: 4.1mm;
             border-collapse: collapse;
             vertical-align: text-bottom;
         }
