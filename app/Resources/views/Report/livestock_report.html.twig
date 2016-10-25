@@ -16,7 +16,7 @@
     {% set size = variables.animals|length %}
     {% set pageAmount = 1 %}
     {% if size > rowsFirstPage %}
-        {% set pageAmount = ((size  - rowsFirstPage) / rowsPerPage) | round(0, 'ceil') %}
+        {% set pageAmount = ((size  - rowsFirstPage) / rowsPerPage) | round(0, 'ceil') +1 %}
     {% endif %}
     {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
 
