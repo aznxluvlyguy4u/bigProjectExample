@@ -14,6 +14,7 @@ use AppBundle\Entity\EweRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\RamRepository;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
@@ -25,7 +26,9 @@ class LivestockReportData extends ReportBase
     const FILE_NAME_REPORT_TYPE = 'stallijst';
     const PEDIGREE_NULL_FILLER = '-';
     const ULN_NULL_FILLER = '-';
-    const NEUTER_STRING = '?';
+    const NEUTER_STRING = '-';
+    const EWE_LETTER = 'O';
+    const RAM_LETTER = 'R';
 
     /** @var array */
     private $data;
@@ -54,10 +57,6 @@ class LivestockReportData extends ReportBase
         $this->data[ReportLabel::NAME.'_and_'.ReportLabel::ADDRESS] = $this->parseNameAddressString();
         $this->data[ReportLabel::LIVESTOCK] = Count::getLiveStockCountLocation($this->location, true);
         $this->data[ReportLabel::ANIMALS] = $this->retrieveLiveStockData();
-        $this->data[ReportLabel::FEMALE_SYMBOL] = UnicodeSymbol::FEMALE();
-        $this->data[ReportLabel::MALE_SYMBOL] = UnicodeSymbol::MALE();
-        $this->data[ReportLabel::MALE_AND_FEMALE_SYMBOL] = UnicodeSymbol::MALE_AND_FEMALE();
-        $this->data[ReportLabel::NEUTER_SYMBOL] = UnicodeSymbol::NEUTER();
     }
 
     /**
@@ -133,7 +132,7 @@ class LivestockReportData extends ReportBase
             $results[$key]['f_uln_without_order_number'] = StringUtil::getUlnWithoutOrderNumber($results[$key]['f_uln']);
             $results[$key]['m_uln_without_order_number'] = StringUtil::getUlnWithoutOrderNumber($results[$key]['m_uln']);
 
-            $results[$key]['gender'] = Translation::getGenderAsUnicodeSymbol($results[$key]['gender'], self::NEUTER_STRING);
+            $results[$key]['gender'] = $this->getGenderLetter($results[$key]['gender']);
 
             $results[$key]['a_date_of_birth'] = TimeUtil::flipDateStringOrder($results[$key]['a_date_of_birth']);
             $results[$key]['f_date_of_birth'] = TimeUtil::flipDateStringOrder($results[$key]['f_date_of_birth']);
@@ -145,5 +144,22 @@ class LivestockReportData extends ReportBase
         }
         
         return $results;
+    }
+
+
+    /**
+     * @param string $genderEnglish
+     * @return string
+     */
+    private function getGenderLetter($genderEnglish)
+    {
+        /* variables translated to Dutch */
+        if($genderEnglish == 'Ram' || $genderEnglish == GenderType::MALE || $genderEnglish == GenderType::M) {
+            return self::RAM_LETTER;
+        } elseif ($genderEnglish == 'Ewe' || $genderEnglish == GenderType::FEMALE || $genderEnglish == GenderType::V) {
+            return self::EWE_LETTER;
+        } else {
+            return self::NEUTER_STRING;
+        }
     }
 }

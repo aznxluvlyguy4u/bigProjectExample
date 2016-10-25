@@ -9,14 +9,10 @@
     {% set nameAndAddress = variables.name_and_address %}
     {% set livestock = variables.livestock %}
     {% set animals = variables.animals %}
-    {% set female_symbol = variables.female_symbol %}
-    {% set male_symbol = variables.male_symbol %}
-    {% set male_and_female_symbol = variables.male_and_female_symbol %}
-    {% set neuter_symbol = variables.neuter_symbol %}
 
     {% set pageCounter = 0 %}
-    {% set rowsFirstPage = 9 %}
-    {% set rowsPerPage = 16 %}
+    {% set rowsFirstPage = 6 %}
+    {% set rowsPerPage = 11 %}
     {% set size = variables.animals|length %}
     {% set pageAmount = 1 %}
     {% if size > rowsFirstPage %}
@@ -61,11 +57,13 @@
             </div>
             <ul>
                 <li class="legend-title">Legenda</li>
-                <li>{{ male_and_female_symbol }} = Geslacht</li>
-                <li>{{ male_symbol }} = Ram</li>
-                <li>{{ female_symbol }} = Ooi</li>
+                <li>G = Geslacht</li>
+                <li>V = Vader &nbsp;&nbsp;&nbsp;  M = Moeder</li>
+                <li>R = Ram  &nbsp; &nbsp;&nbsp;&nbsp;  O = Ooi</li>
                 <li>N = N-ling</li>
                 <li>S = Rasstatus</li>
+                <li>SP = Bespiering</li>
+                <li>Al = Algemeen Voorkomen</li>
                 <li>FW 1 = Fokwaardeschatting Worpgrootte</li>
                 <li>FW 2 = Fokwaardeschatting Groei</li>
                 <li>FW 3 = Fokwaardeschatting Spier</li>
@@ -113,17 +111,17 @@
         <table>
             <thead>
                 <tr>
+                    <th class="single-letter-column">G</th>
                     <th>ULN</th>
                     <th>STN</th>
-                    <th>{{ male_and_female_symbol }}</th>
                     <th>Geb.dat.</th>
-                    <th>N</th>
-                    <th>S</th>
+                    <th class="single-letter-column">N</th>
+                    <th class="single-letter-column">S</th>
                     <th>Ras</th>
-                    <th>Scrapie</th>
                     <th>Pred</th>
-                    <th>Besp</th>
-                    <th>Algv</th>
+                    <th>Scrapie</th>
+                    <th>Sp</th>
+                    <th>Al</th>
                     <th>Prod</th>
                     <th>FW1</th>
                     <th>FW2</th>
@@ -134,70 +132,70 @@
             </thead>
             <tbody>
                 {% set beginValue = 0 %}
-                {% set endValue = rowsFirstPage %}
+                {% set endValue = rowsFirstPage-1 %}
                 {% if page == 2 %}
-                    {% set beginValue = rowsFirstPage + (page - 1) %}
-                    {% set endValue = beginValue + rowsPerPage %}
+                    {% set beginValue = (rowsFirstPage-1) + (page - 1) %}
+                    {% set endValue = beginValue + (rowsPerPage-1) %}
                 {% elseif page >= 3 %}
-                    {% set beginValue = ((page - 2) * rowsPerPage) + rowsFirstPage + (page - 1) %}
-                    {% set endValue = beginValue + rowsPerPage %}
+                    {% set beginValue = ((page - 2) * (rowsPerPage-1)) + (rowsFirstPage-1) + (page - 1) %}
+                    {% set endValue = beginValue + (rowsPerPage-1) %}
                 {% endif %}
                 {% for i in beginValue..endValue %}
 
                     {% if animals[i] is defined %}
                     {% set value = animals[i] %}
                     <tr>
-                        <td>
-                            {{ value.a_uln_without_order_number }} <b>{{ value.a_animal_order_number }}</b> <br>
-                            {{ value.m_uln_without_order_number }} {{ value.m_animal_order_number }} <br>
-                            {{ value.f_uln_without_order_number }} {{ value.f_animal_order_number }} <br>
-                        </td>
-                        <td>
-                            {{ value.a_stn }} <br>
-                            {{ value.m_stn }} <br>
-                            {{ value.f_stn }} <br>
-                        </td>
-                        <td>
+                        <td class="single-letter-column">
                             {{ value.gender }} <br>
                             M <br>
                             V <br>
                         </td>
-                        <td>
+                        <td style="min-width: 32mm; max-width: 32mm">
+                            {{ value.a_uln_without_order_number }} <span style="font-weight: 700">{{ value.a_animal_order_number }}</span> <br>
+                            {{ value.m_uln_without_order_number }} {{ value.m_animal_order_number }} <br>
+                            {{ value.f_uln_without_order_number }} {{ value.f_animal_order_number }} <br>
+                        </td>
+                        <td style="min-width: 30mm; max-width: 30mm">
+                            {{ value.a_stn }} <br>
+                            {{ value.m_stn }} <br>
+                            {{ value.f_stn }} <br>
+                        </td>
+                        <td style="min-width: 16mm; max-width: 16mm">
                             {{ value.a_date_of_birth }} <br>
                             {{ value.m_date_of_birth }} <br>
                             {{ value.f_date_of_birth }} <br>
                         </td>
-                        <td>
+                        <td class="single-letter-column">
                             {{ value.a_n_ling }} <br>
                             {{ value.m_n_ling }} <br>
                             {{ value.f_n_ling }} <br>
                         </td>
-                        <td>
+                        <td class="single-letter-column">
                             {{ value.a_dutch_breed_status }} <br>
                             {{ value.m_dutch_breed_status }} <br>
                             {{ value.f_dutch_breed_status }} <br>
                         </td>
-                        <td>
+                        <td style="overflow: visible; text-overflow: clip; max-width: 25px">
                             {{ value.a_breed_code }} <br>
                             {{ value.m_breed_code }} <br>
                             {{ value.f_breed_code }} <br>
                         </td>
-                        <td>
-                            {{ value.a_scrapie_genotype }} <br>
-                            {{ value.m_scrapie_genotype }} <br>
-                            {{ value.f_scrapie_genotype }} <br>
-                        </td>
-                        <td>
+                        <td style="min-width: 15px; max-width: 15px">
                             {{ value.a_predicate }} <br>
                             {{ value.m_predicate }} <br>
                             {{ value.f_predicate }} <br>
                         </td>
-                        <td>
+                        <td class="exterior-column">
+                            {{ value.a_scrapie_genotype }} <br>
+                            {{ value.m_scrapie_genotype }} <br>
+                            {{ value.f_scrapie_genotype }} <br>
+                        </td>
+                        <td class="exterior-column">
                             {{ value.a_muscularity }} <br>
                             {{ value.m_muscularity }} <br>
                             {{ value.f_muscularity }} <br>
                         </td>
-                        <td>
+                        <td >
                             {{ value.a_general_appearance }} <br>
                             {{ value.m_general_appearance }} <br>
                             {{ value.f_general_appearance }} <br>
@@ -246,6 +244,7 @@
     <style type="text/css">
         html {
             font-family: Sans-Serif;
+            font-stretch: semi-condensed;
         }
 
         #page {
@@ -260,7 +259,7 @@
 
         .header {
             border-bottom: solid 2px #000;
-            font-size: 4mm;
+            font-size: 6mm;
             width: 100%;
         }
 
@@ -285,13 +284,13 @@
 
         .date {
             display: inline-block;
-            width: 24%;
+            width: 23.8%;
             text-align: right;
         }
 
         .sub-header {
             padding-top: 1mm;
-            font-size: 3.5mm;
+            font-size: 4.5mm;
         }
 
         .sub-header .left {
@@ -305,7 +304,7 @@
         .legend-container {
             position: relative;
             padding-top: 5mm;
-            font-size: 3.5mm;
+            font-size: 4.5mm;
             height: 30mm;
         }
 
@@ -338,12 +337,13 @@
         table {
             width: 100%;
             margin-top: 10mm;
-            font-size: 3mm;
+            font-size: 3.7mm;
             border-collapse: collapse;
+            vertical-align: text-bottom;
         }
 
         table.overview-table {
-            margin: 15mm auto 5mm auto;
+            margin: 25mm auto 15mm auto;
             width: 40%;
         }
 
@@ -353,13 +353,24 @@
 
         td, th {
             text-align: left;
-            padding-left: 2mm;
-            padding-right: 2mm;
+            padding: 1mm 1mm 1mm 1mm;
         }
 
         .center {
             text-align: center;
         }
+
+        .single-letter-column {
+           text-align: left;
+           min-width: 2mm;
+           max-width: 2mm;
+        }
+
+        .exterior-column {
+            min-width: 4mm;
+            max-width: 4mm
+        }
+
     </style>
 
 
