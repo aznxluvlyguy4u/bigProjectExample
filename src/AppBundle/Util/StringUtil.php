@@ -167,4 +167,10 @@ class StringUtil
     {
         return preg_replace('!\s+!', ' ', $stringOrArray);
     }
+    
+    
+    public static function getUnicodeSymbol($unicodeCodePoint)
+    {
+        return mb_convert_encoding('&#x'.$unicodeCodePoint.';', 'UTF-8', 'HTML-ENTITIES');
+    }
 }
