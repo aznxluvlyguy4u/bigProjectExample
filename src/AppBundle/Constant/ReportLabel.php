@@ -9,6 +9,7 @@ class ReportLabel
     const ENTITY = 'entity';
     const IS_PROD_ENV = 'isProdEnv';
     const IMAGES_DIRECTORY = 'imagesDirectory';
+    const DATE = 'date';
 
     //Person
     const OWNER_NAME = "ownerName";
@@ -73,6 +74,7 @@ class ReportLabel
     const PREDICATE = 'predicate';
     const BLINDNESS_FACTOR = 'blindnessFactor';
     const PEDIGREE_REGISTER_NAME = 'pedigreeRegisterName';
+    const LIVESTOCK = 'livestock';
 
     //Measurements
     const EXTERIOR = 'exterior';
@@ -105,4 +107,10 @@ class ReportLabel
     
     const MOTHER_ID = 'mother_id';
     const FATHER_ID = 'father_id';
+    
+    //Gender
+    const FEMALE_SYMBOL = 'female_symbol';
+    const MALE_SYMBOL = 'male_symbol';
+    const MALE_AND_FEMALE_SYMBOL = 'male_and_female_symbol';
+    const NEUTER_SYMBOL = 'neuter_symbol';
 }

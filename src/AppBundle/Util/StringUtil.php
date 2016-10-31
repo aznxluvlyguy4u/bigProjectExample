@@ -10,6 +10,19 @@ use AppBundle\Enumerator\GenderType;
 class StringUtil
 {
 
+
+    /**
+     * Just remove the last 5 numbers of the uln
+     *
+     * @param string $ulnString
+     * @return string
+     */
+    public static function getUlnWithoutOrderNumber($ulnString)
+    {
+        return mb_substr($ulnString, 0, count($ulnString)-6);
+    }
+
+
     /**
      * @param string $firstName
      * @param string $lastName
@@ -153,5 +166,11 @@ class StringUtil
     public static function replaceMultipleSpacesByOne($stringOrArray)
     {
         return preg_replace('!\s+!', ' ', $stringOrArray);
+    }
+    
+    
+    public static function getUnicodeSymbol($unicodeCodePoint)
+    {
+        return mb_convert_encoding('&#x'.$unicodeCodePoint.';', 'UTF-8', 'HTML-ENTITIES');
     }
 }

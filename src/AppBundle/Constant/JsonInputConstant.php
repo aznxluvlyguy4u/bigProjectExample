@@ -24,13 +24,14 @@ class JsonInputConstant
     const PEDIGREE_COUNTRY_CODE = 'pedigree_country_code';
     const PEDIGREE_NUMBER = 'pedigree_number';
     const DATE_OF_BIRTH = 'date_of_birth';
+    const GENDER = 'gender';
+    const IS_REVEAL_HISTORIC_ANIMALS = 'is_reveal_historic_animals';
     const ULN = 'uln';
     const STN = 'stn';
     const SCRAPIE_GENOTYPE = 'scrapie_genotype';
     const BREED = 'breed';
     const BREED_CODE = 'breed_code';
     const BREED_TYPE = 'breed_type';
-    const GENDER = 'gender';
     const BLINDNESS_FACTOR = 'blindness_factor';
     const PREDICATE = 'predicate';
     const BREEDER_NAME = 'breeder_name';
@@ -133,6 +134,7 @@ class JsonInputConstant
     const IS_OVERWRITTEN = 'is_overwritten';
     const REVOKED_BY = 'revoked_by';
     const REVOKE_DATE = 'revoke_date';
+    const DATA = 'data';
 
     //Persons
     const PERSON_ID = 'person_id';

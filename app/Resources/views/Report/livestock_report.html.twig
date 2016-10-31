@@ -1,0 +1,425 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+    <!-- set variables -->
+    {% set date = variables.date %}
+    {% set breederNumber = variables.breederNumber %}
+    {% set ubn = variables.ubn %}
+    {% set nameAndAddress = variables.name_and_address %}
+    {% set livestock = variables.livestock %}
+    {% set animals = variables.animals %}
+
+    {% set pageCounter = 0 %}
+    {% set rowsFirstPage = 6 %}
+    {% set rowsPerPage = 12 %}
+    {% set size = variables.animals|length %}
+    {% set pageAmount = 1 %}
+    {% if size > rowsFirstPage %}
+        {% set pageAmount = ((size  - rowsFirstPage) / rowsPerPage) | round(0, 'ceil') +1 %}
+    {% endif %}
+    {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
+
+
+    {# HEADER #}
+    {% for page in 1..pageAmount %}
+
+    {% if loop.last %}
+       <div id="page-without-break">
+    {% else %}
+        <div id="page">
+    {% endif %}
+        <div class="header">
+            <div class="nsfo-logo">
+                <img src="{{ imagesDirectory }}"/>
+            </div>
+            <div class="title">
+                Stallijst
+            </div>
+
+            <div class="date">
+                {{ date }}
+            </div>
+        </div>
+        <div class="sub-header">
+           <div class="left"> UBN {{ nameAndAddress }} </div>
+           <div class="right"> Pagina {{ page }} van {{ pageAmount }}</div>
+        </div>
+
+        {# FIRST PAGE #}
+        {% if page == 1 %}
+        <div class="legend-container">
+            <div class="info">
+                <p> <span>Fokkersnummer: </span> {{ breederNumber }}</p>
+                <p> <span>UBN: </span> {{ ubn }}</p>
+                <p>Productie ooi: leeftijd in jaren tot en met datum laatste worp / aantal worpen / aantal lammeren / aantal levend geboren lammeren (* = als 1 jarige geworpen)</p>
+                <p>Productie ram: leeftijd in jaren tot en met datum laatste worp / aantal worpen / aantal lammeren / aantal levend geboren lammeren</p>
+            </div>
+            <ul>
+                <li class="legend-title">Legenda</li>
+                <li>G = Geslacht</li>
+                <li>V = Vader &nbsp;&nbsp;&nbsp;  M = Moeder</li>
+                <li>R = Ram  &nbsp; &nbsp;&nbsp;&nbsp;  O = Ooi</li>
+                <li>N = N-ling</li>
+                <li>S = Rasstatus</li>
+                <li>BE = Bespiering</li>
+                <li>AV = Algemeen Voorkomen</li>
+                <li>FW 1 = Fokwaardeschatting Worpgrootte</li>
+                <li>FW 2 = Fokwaardeschatting Groei</li>
+                <li>FW 3 = Fokwaardeschatting Spier</li>
+                <li>FW 4 = Fokwaardeschatting Vet</li>
+                <li>Vl = Vleeslam index</li>
+                <li>FW / Nauwkeurigheid</li>
+            </ul>
+        </div>
+
+        <table class="overview-table">
+            <thead>
+            <tr>
+                <th></th>
+                <th class="center">Totaal</th>
+                <th class="center">Ouder dan 1 jaar</th>
+                <th class="center">Lammeren</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Stamboek Dieren</td>
+                <td class="center">{{ livestock.pedigree_total }}</td>
+                <td class="center">{{ livestock.pedigree_adult }}</td>
+                <td class="center">{{ livestock.pedigree_lamb }}</td>
+            </tr>
+            <tr>
+                <td>Niet Stamboek Dieren</td>
+                <td class="center">{{ livestock.non_pedigree_total }}</td>
+                <td class="center">{{ livestock.non_pedigree_adult }}</td>
+                <td class="center">{{ livestock.non_pedigree_lamb }}</td>
+            </tr>
+            <tr>
+                <td>Alle Dieren</td>
+                <td class="center">{{ livestock.total }}</td>
+                <td class="center">{{ livestock.adult }}</td>
+                <td class="center">{{ livestock.lamb }}</td>
+            </tr>
+            </tbody>
+        </table>
+        {% endif %}
+
+
+        {# ANIMALS #}
+
+        <table>
+            <thead>
+                <tr>
+                    <th class="single-letter-column">G</th>
+                    <th>ULN</th>
+                    <th>STN</th>
+                    <th>Geb.dat.</th>
+                    <th class="single-letter-column">N</th>
+                    <th class="single-letter-column">S</th>
+                    <th>Ras</th>
+                    <th>Pred</th>
+                    <th>Scrapie</th>
+                    <th>BE</th>
+                    <th>AV</th>
+                    <th>Prod</th>
+                    <th>FW1</th>
+                    <th>FW2</th>
+                    <th>FW3</th>
+                    <th>FW4</th>
+                    <th>Vl</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set beginValue = 0 %}
+                {% set endValue = rowsFirstPage-1 %}
+                {% if page == 2 %}
+                    {% set beginValue = (rowsFirstPage-1) + (page - 1) %}
+                    {% set endValue = beginValue + (rowsPerPage-1) %}
+                {% elseif page >= 3 %}
+                    {% set beginValue = ((page - 2) * (rowsPerPage-1)) + (rowsFirstPage-1) + (page - 1) %}
+                    {% set endValue = beginValue + (rowsPerPage-1) %}
+                {% endif %}
+                {% for i in beginValue..endValue %}
+
+                    {% if animals[i] is defined %}
+                    {% set value = animals[i] %}
+                    <tr>
+                        <td class="single-letter-column">
+                            {{ value.gender }} <br>
+                            M <br>
+                            V
+                        </td>
+                        <td style="min-width: 32mm; max-width: 32mm">
+                            {{ value.a_uln_without_order_number }} <span style="font-weight: 700">{{ value.a_animal_order_number }}</span> <br>
+                            {{ value.m_uln_without_order_number }} {{ value.m_animal_order_number }} <br>
+                            {{ value.f_uln_without_order_number }} {{ value.f_animal_order_number }}
+                            {%if value.f_uln_without_order_number == null or value.f_uln_without_order_number == '' or value.f_uln_without_order_number == ' ' %}
+                            <br>
+                            {% endif %}
+                        </td>
+                        <td style="min-width: 30mm; max-width: 30mm">
+                            {{ value.a_stn }} <br>
+                            {{ value.m_stn }} <br>
+                            {{ value.f_stn }}
+                            {%if value.f_stn == null or value.f_stn == '' or value.f_stn == ' ' %}
+                            <br>
+                            {% endif %}
+                        </td>
+                        <td style="min-width: 16mm; max-width: 16mm">
+                            {{ value.a_date_of_birth }} <br>
+                            {{ value.m_date_of_birth }} <br>
+                            {{ value.f_date_of_birth }}
+                            {%if value.f_date_of_birth == null or value.f_date_of_birth == '' or value.f_date_of_birth == ' ' %}
+                            <br>
+                            {% endif %}
+                        </td>
+                        <td class="single-letter-column">
+                            {{ value.a_n_ling }} <br>
+                            {{ value.m_n_ling }} <br>
+                            {{ value.f_n_ling }}
+                            {%if value.f_n_ling == null or value.f_n_ling == '' or value.f_n_ling == ' ' %}
+                            <br>
+                            {% endif %}
+                        </td>
+                        <td class="single-letter-column">
+                            {{ value.a_dutch_breed_status }} <br>
+                            {{ value.m_dutch_breed_status }} <br>
+                            {{ value.f_dutch_breed_status }}
+                            {%if value.f_dutch_breed_status == null or value.f_dutch_breed_status == '' or value.f_dutch_breed_status == ' ' %}
+                            <br>
+                            {% endif %}
+                        </td>
+                        <td style="overflow: visible; text-overflow: clip; max-width: 25px">
+                            {{ value.a_breed_code }} <br>
+                            {{ value.m_breed_code }} <br>
+                            {{ value.f_breed_code }}
+                            {%if value.f_breed_code == null or value.f_breed_code == '' or value.f_breed_code == ' ' %}
+                            <br>
+                            {% endif %}
+                        </td>
+                        <td style="min-width: 15px; max-width: 15px">
+                            {{ value.a_predicate }} <br>
+                            {{ value.m_predicate }} <br>
+                            {{ value.f_predicate }}
+                            {%if value.f_predicate == null or value.f_predicate == '' or value.f_predicate == ' ' %}
+                            <br>
+                            {% endif %}
+                        </td>
+                        <td class="exterior-column">
+                            {{ value.a_scrapie_genotype }} <br>
+                            {{ value.m_scrapie_genotype }} <br>
+                            {{ value.f_scrapie_genotype }}
+                            {%if value.f_scrapie_genotype == null or value.f_scrapie_genotype == '' or value.f_scrapie_genotype == ' ' %}
+                            <br>
+                            {% endif %}
+                        </td>
+                        <td class="exterior-column">
+                            {{ value.a_muscularity }} <br>
+                            {{ value.m_muscularity }} <br>
+                            {{ value.f_muscularity }}
+                            {%if value.f_muscularity == null or value.f_muscularity == '' or value.f_muscularity == ' ' %}
+                            <br>
+                            {% endif %}
+                        </td>
+                        <td >
+                            {{ value.a_general_appearance }} <br>
+                            {{ value.m_general_appearance }} <br>
+                            {{ value.f_general_appearance }}
+                            {%if value.f_general_appearance == null or value.f_general_appearance == '' or value.f_general_appearance == ' ' %}
+                            <br>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ value.a_production }} <br>
+                            {{ value.m_production }} <br>
+                            {{ value.f_production }}
+                            {%if value.f_production == null or value.f_production == '' or value.f_production == ' ' %}
+                            <br>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ value.a_breed_value_litter_size }} <br>
+                            {{ value.m_breed_value_litter_size }} <br>
+                            {{ value.f_breed_value_litter_size }}
+                            {%if value.f_breed_value_litter_size == null or value.f_breed_value_litter_size == '' or value.f_breed_value_litter_size == ' ' %}
+                            <br>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ value.a_breed_value_growth }} <br>
+                            {{ value.m_breed_value_growth }} <br>
+                            {{ value.f_breed_value_growth }}
+                            {%if value.f_breed_value_growth == null or value.f_breed_value_growth == '' or value.f_breed_value_growth == ' ' %}
+                            <br>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ value.a_breed_value_muscle_thickness }} <br>
+                            {{ value.m_breed_value_muscle_thickness }} <br>
+                            {{ value.f_breed_value_muscle_thickness }}
+                            {%if value.f_breed_value_muscle_thickness == null or value.f_breed_value_muscle_thickness == '' or value.f_breed_value_muscle_thickness == ' ' %}
+                            <br>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ value.a_breed_value_fat }} <br>
+                            {{ value.m_breed_value_fat }} <br>
+                            {{ value.f_breed_value_fat }}
+                            {%if value.f_breed_value_fat == null or value.f_breed_value_fat == '' or value.f_breed_value_fat == ' ' %}
+                            <br>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ value.a_lamb_meat_index }} <br>
+                            {{ value.m_lamb_meat_index }} <br>
+                            {{ value.f_lamb_meat_index }}
+                            {%if value.f_lamb_meat_index == null or value.f_lamb_meat_index == '' or value.f_lamb_meat_index == ' ' %}
+                            <br>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+{% endblock %}
+
+{% block stylesheets %}
+
+    <style type="text/css">
+        html {
+            font-family: Sans-Serif;
+            font-stretch: semi-condensed;
+        }
+
+        #page {
+            overflow: hidden;
+            page-break-after: always;
+        }
+
+        #page-without-break {
+            overflow: hidden;
+            page-break-after: avoid;
+        }
+
+        .header {
+            border-bottom: solid 2px #000;
+            font-size: 6mm;
+            width: 100%;
+        }
+
+        .nsfo-logo {
+            display: inline-block;
+            width: 25%;
+        }
+
+        .nsfo-logo img {
+            height: auto;
+            width: 100%;
+        }
+
+        .title {
+            display: inline-block;
+            vertical-align: top;
+            width: 50%;
+            font-weight: 700;
+            font-size: 7.5mm;
+            text-align: center;
+        }
+
+        .date {
+            display: inline-block;
+            width: 23.8%;
+            text-align: right;
+        }
+
+        .sub-header {
+            padding-top: 1mm;
+            font-size: 4.5mm;
+        }
+
+        .sub-header .left {
+            float: left;
+        }
+
+        .sub-header .right {
+            float: right;
+        }
+
+        .legend-container {
+            position: relative;
+            padding-top: 5mm;
+            font-size: 4.5mm;
+            height: 30mm;
+        }
+
+        .info {
+            position: absolute;
+            left: 0;
+            width: 60%;
+        }
+
+        .legend-container .info p span {
+            font-weight: 700;
+        }
+
+        .legend-container ul {
+            position: absolute;
+            right: 0;
+            padding: 1.5mm;
+            background-color: #efe8dd;
+        }
+
+        .legend-container ul li {
+            list-style: none;
+        }
+
+        li.legend-title {
+            font-weight: 700;
+            padding-bottom: 1.5mm;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 10mm;
+            font-size: 4.1mm;
+            border-collapse: collapse;
+            vertical-align: text-bottom;
+        }
+
+        table.overview-table {
+            margin: 25mm auto 15mm auto;
+            width: 40%;
+        }
+
+        tr {
+            border-bottom: solid 1px #000000;
+        }
+
+        td, th {
+            text-align: left;
+            padding: 1mm 1mm 1mm 1mm;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .single-letter-column {
+           text-align: left;
+           min-width: 2mm;
+           max-width: 2mm;
+        }
+
+        .exterior-column {
+            min-width: 4mm;
+            max-width: 4mm
+        }
+
+    </style>
+
+
+{% endblock %}

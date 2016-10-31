@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Cache\AnimalCacher;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\DeclareNsfoBase;
@@ -128,6 +129,10 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
         $this->persistAndFlush($nsfoDeclaration);
 
         $output = 'Revoke complete';
+
+        if($nsfoDeclaration instanceof DeclareWeight) {
+            AnimalCacher::cacheWeightByAnimal($manager, $nsfoDeclaration->getAnimal());
+        }
 
         $log = ActionLogWriter::completeActionLog($manager, $log);
 

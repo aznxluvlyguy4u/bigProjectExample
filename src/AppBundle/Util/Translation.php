@@ -1,7 +1,9 @@
 <?php
 
 namespace AppBundle\Util;
+use AppBundle\Constant\UnicodeSymbol;
 use AppBundle\Entity\Animal;
+use AppBundle\Enumerator\BreedTrait;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\GenderType;
@@ -17,6 +19,21 @@ use AppBundle\Enumerator\GenderType;
  */
 class Translation
 {
+
+    /**
+     * @param string $breedType
+     * @return string
+     */
+    public static function getFirstLetterTranslatedBreedType($breedType)
+    {
+        return strtoupper(substr(self::translateBreedType($breedType), 0, 1));
+    }
+
+    /**
+     * @param string $breedType
+     * @param bool $isOnlyFirstLetterCapitilized
+     * @return string
+     */
     public static function translateBreedType($breedType, $isOnlyFirstLetterCapitilized = true)
     {
         switch ($breedType) {
@@ -48,9 +65,10 @@ class Translation
 
     /**
      * @param string $genderEnglish
+     * @param string $neuterString
      * @return string
      */
-    public static function getGenderInDutch($genderEnglish)
+    public static function getGenderInDutch($genderEnglish, $neuterString = 'Onbekend')
     {
         /* variables translated to Dutch */
         if($genderEnglish == 'Ram' || $genderEnglish == GenderType::MALE || $genderEnglish == GenderType::M) {
@@ -58,9 +76,29 @@ class Translation
         } elseif ($genderEnglish == 'Ewe' || $genderEnglish == GenderType::FEMALE || $genderEnglish == GenderType::V) {
             $genderDutch = 'Ooi';
         } else {
-            $genderDutch = 'Onbekend';
+            $genderDutch = $neuterString;
         }
         return $genderDutch;
     }
+
+
+    /**
+     * @param string $genderEnglish
+     * @param string $neuterString
+     * @return string
+     */
+    public static function getGenderAsUnicodeSymbol($genderEnglish, $neuterString = '-')
+    {
+        /* variables translated to Dutch */
+        if($genderEnglish == 'Ram' || $genderEnglish == GenderType::MALE || $genderEnglish == GenderType::M) {
+            $genderUnicodeSymbol = UnicodeSymbol::MALE();
+        } elseif ($genderEnglish == 'Ewe' || $genderEnglish == GenderType::FEMALE || $genderEnglish == GenderType::V) {
+            $genderUnicodeSymbol = UnicodeSymbol::FEMALE();
+        } else {
+            $genderUnicodeSymbol = $neuterString;
+        }
+        return $genderUnicodeSymbol;
+    }
+
 
 }

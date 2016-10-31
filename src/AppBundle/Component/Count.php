@@ -32,6 +32,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\RequestTypeNonIR;
 use AppBundle\Enumerator\TagStateType;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Validator\Constraints\DateTime;
 
 
@@ -350,22 +351,19 @@ class Count
     
 
     /**
-     * @param Client $client
+     * @param ObjectManager $em
+     * @param int $clientId
      * @return int
      */
-    public static function getUnassignedTagsCount(Client $client)
+    public static function getUnassignedTagsCount(ObjectManager $em, $clientId)
     {
-        $count = 0;
-
-        foreach($client->getTags() as $tag){
-            if($tag->getTagStatus() == TagStateType::UNASSIGNED) {
-                $count++;
-            }
-        }
-
-        return $count;
+        if(!is_int($clientId)) { return 0; }
+        $sql = "SELECT COUNT(*) FROM tag WHERE owner_id = ".$clientId." AND tag_status = 'UNASSIGNED'";
+        $result = $em->getConnection()->query($sql)->fetch();
+        return $result == false || $result == null ? 0 : $result['count'];
     }
-
+    
+    
     /**
      * @param DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|RetrieveAnimalDetails $declaration
      * @return bool
@@ -412,9 +410,10 @@ class Count
      * having an integer value for the amount of animals in that category.
      *
      * @param Location $location
-     * @return ArrayCollection
+     * @param boolean $returnArrayWithLowerCaseKeys
+     * @return ArrayCollection|array
      */
-    public static function getLiveStockCountLocation(Location $location)
+    public static function getLiveStockCountLocation(Location $location, $returnArrayWithLowerCaseKeys = false)
     {
         //Settings
         $isAlive = true;
@@ -459,16 +458,30 @@ class Count
         $pedigreeTotal = $pedigreeAdults + $pedigreeLambs;
         $nonPedigreeTotal = $nonPedigreeAdults + $nonPedigreeLambs;
 
-        $count = new ArrayCollection();
-        $count->set(LiveStockType::PEDIGREE_ADULT, $pedigreeAdults);
-        $count->set(LiveStockType::PEDIGREE_LAMB, $pedigreeLambs);
-        $count->set(LiveStockType::PEDIGREE_TOTAL, $pedigreeTotal);
-        $count->set(LiveStockType::NON_PEDIGREE_ADULT, $nonPedigreeAdults);
-        $count->set(LiveStockType::NON_PEDIGREE_LAMB, $nonPedigreeLambs);
-        $count->set(LiveStockType::NON_PEDIGREE_TOTAL, $nonPedigreeTotal);
-        $count->set(LiveStockType::ADULT, $nonPedigreeAdults + $pedigreeAdults);
-        $count->set(LiveStockType::LAMB, $nonPedigreeLambs + $pedigreeLambs);
-        $count->set(LiveStockType::TOTAL, $nonPedigreeTotal + $pedigreeTotal);
+        if($returnArrayWithLowerCaseKeys) {
+            $count = []; 
+            $count[strtolower(LiveStockType::PEDIGREE_ADULT)] = $pedigreeAdults;
+            $count[strtolower(LiveStockType::PEDIGREE_LAMB)] = $pedigreeLambs;
+            $count[strtolower(LiveStockType::PEDIGREE_TOTAL)] = $pedigreeTotal;
+            $count[strtolower(LiveStockType::NON_PEDIGREE_ADULT)] = $nonPedigreeAdults;
+            $count[strtolower(LiveStockType::NON_PEDIGREE_LAMB)] = $nonPedigreeLambs;
+            $count[strtolower(LiveStockType::NON_PEDIGREE_TOTAL)] = $nonPedigreeTotal;
+            $count[strtolower(LiveStockType::ADULT)] = $nonPedigreeAdults + $pedigreeAdults;
+            $count[strtolower(LiveStockType::LAMB)] = $nonPedigreeLambs + $pedigreeLambs;
+            $count[strtolower(LiveStockType::TOTAL)] = $nonPedigreeTotal + $pedigreeTotal;
+
+        } else {
+            $count = new ArrayCollection();
+            $count->set(LiveStockType::PEDIGREE_ADULT, $pedigreeAdults);
+            $count->set(LiveStockType::PEDIGREE_LAMB, $pedigreeLambs);
+            $count->set(LiveStockType::PEDIGREE_TOTAL, $pedigreeTotal);
+            $count->set(LiveStockType::NON_PEDIGREE_ADULT, $nonPedigreeAdults);
+            $count->set(LiveStockType::NON_PEDIGREE_LAMB, $nonPedigreeLambs);
+            $count->set(LiveStockType::NON_PEDIGREE_TOTAL, $nonPedigreeTotal);
+            $count->set(LiveStockType::ADULT, $nonPedigreeAdults + $pedigreeAdults);
+            $count->set(LiveStockType::LAMB, $nonPedigreeLambs + $pedigreeLambs);
+            $count->set(LiveStockType::TOTAL, $nonPedigreeTotal + $pedigreeTotal);   
+        }
 
         return $count;
     }

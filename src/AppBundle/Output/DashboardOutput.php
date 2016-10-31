@@ -22,13 +22,14 @@ class DashboardOutput extends Output
      * @param Client $client
      * @param ArrayCollection $declarationLogDate
      * @param Location $location
+     * @param ObjectManager $em
      * @return array
      */
     public static function create(ObjectManager $em, Client $client, ArrayCollection $declarationLogDate, $location)
     {
         $liveStockCount = Count::getLiveStockCountLocation($location);
         $errorCounts = Count::getErrorCountDeclarationsPerLocation($location);
-        $unassignedTagsCount = Count::getUnassignedTagsCount($client);
+        $unassignedTagsCount = Count::getUnassignedTagsCount($em, $client->getId());
 
         self:: setUbnAndLocationHealthValues($em, $location);
 

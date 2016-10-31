@@ -45,10 +45,9 @@ class WeightRepository extends MeasurementRepository {
         {
             $results[] = [
                 JsonInputConstant::MEASUREMENT_DATE => Utils::fillNullOrEmptyString($measurementData['measurement_date'], $nullFiller),
-                JsonInputConstant::WEIGHT => Utils::fillNullOrEmptyString($measurementData['weight'], $nullFiller),
+                JsonInputConstant::WEIGHT => floatval($measurementData['weight']),
                 JsonInputConstant::IS_BIRTH_WEIGHT => Utils::fillNullOrEmptyString($measurementData['is_birth_weight'], $nullFiller),
                 JsonInputConstant::IS_REVOKED => Utils::fillNullOrEmptyString($measurementData['is_revoked'], $nullFiller),
-                JsonInputConstant::PERSON_ID =>  Utils::fillNullOrEmptyString($measurementData['person_id'], $nullFiller),
                 JsonInputConstant::FIRST_NAME => Utils::fillNullOrEmptyString($measurementData['first_name'], $nullFiller),
                 JsonInputConstant::LAST_NAME => Utils::fillNullOrEmptyString($measurementData['last_name'], $nullFiller),
             ];
@@ -110,6 +109,47 @@ class WeightRepository extends MeasurementRepository {
             $latestBirthWeight = 0.00;
         }
         return $latestBirthWeight;
+    }
+
+
+    /**
+     * @param int $animalId
+     * @param string $replacementString
+     * @return array
+     */
+    public function getLatestWeightBySql($animalId = null, $replacementString = null)
+    {
+        $nullResult = [
+            JsonInputConstant::ID => $replacementString,
+            JsonInputConstant::ANIMAL_ID => $replacementString,
+            JsonInputConstant::WEIGHT => $replacementString,
+            JsonInputConstant::IS_BIRTH_WEIGHT => $replacementString,
+            JsonInputConstant::MEASUREMENT_DATE => $replacementString,
+        ];
+
+        if(!is_int($animalId)) { return $nullResult; }
+
+        $sqlBase = "SELECT x.id, x.animal_id, x.weight, x.is_birth_weight, m.measurement_date
+                    FROM weight x
+                      INNER JOIN measurement m ON x.id = m.id
+                      INNER JOIN (
+                                   SELECT animal_id, max(m.measurement_date) as measurement_date
+                                   FROM weight w
+                                     INNER JOIN measurement m ON m.id = w.id
+                                     WHERE w.is_revoked = false
+                                   GROUP BY animal_id) y on y.animal_id = x.animal_id 
+                      WHERE m.measurement_date = y.measurement_date AND x.is_revoked = false ";
+
+        if(is_int($animalId)) {
+            $filter = "AND x.animal_id = " . $animalId;
+            $sql = $sqlBase.$filter;
+            $result = $this->getManager()->getConnection()->query($sql)->fetch();
+        } else {
+            $filter = "";
+            $sql = $sqlBase.$filter;
+            $result = $this->getManager()->getConnection()->query($sql)->fetchAll();
+        }
+        return $result == false ? $nullResult : $result;
     }
 
 

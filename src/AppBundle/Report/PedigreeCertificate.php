@@ -33,6 +33,7 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\TailLengthRepository;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\BreedValueUtil;
+use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StarValueUtil;
 use AppBundle\Util\StringUtil;
@@ -45,7 +46,6 @@ use Doctrine\Common\Persistence\ObjectManager;
 class PedigreeCertificate
 {
     const MAX_LENGTH_FULL_NAME = 30;
-    const EMPTY_PRODUCTION = '-/-/-/-';
     const MISSING_PEDIGREE_REGISTER = '';
     const EMPTY_DATE_OF_BIRTH = '-';
     const GENERAL_NULL_FILLER = '-';
@@ -87,9 +87,6 @@ class PedigreeCertificate
     /** @var GeneticBase */
     private $geneticBases;
 
-    /** @var array */
-    private $lambMeatIndexCoefficients;
-
     /**
      * PedigreeCertificate constructor.
      * @param ObjectManager $em
@@ -98,11 +95,10 @@ class PedigreeCertificate
      * @param int $animalId
      * @param int $breedValuesYear
      * @param GeneticBase $geneticBases
-     * @param array $lambMeatIndexCoefficients
      * @param string $trimmedClientName
      * @param CompanyAddress $companyAddress
      */
-    public function __construct(ObjectManager $em, Client $client, $ubn, $animalId, $breedValuesYear, $geneticBases, $lambMeatIndexCoefficients, $trimmedClientName, $companyAddress)
+    public function __construct(ObjectManager $em, Client $client, $ubn, $animalId, $breedValuesYear, $geneticBases, $trimmedClientName, $companyAddress)
     {
         $this->em = $em;
 
@@ -111,7 +107,6 @@ class PedigreeCertificate
         $this->breedValuesSetRepository = $em->getRepository(BreedValuesSet::class);
         $this->breedValuesYear = $breedValuesYear;
         $this->geneticBases = $geneticBases;
-        $this->lambMeatIndexCoefficients = $lambMeatIndexCoefficients;
 
         $this->data = array();
         
@@ -322,10 +317,6 @@ class PedigreeCertificate
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::FATHER_ID] = null;
         }
 
-        
-
-
-
 
         $inspectionDateString = null;
         $inspectionDateDateTime = null;
@@ -388,7 +379,7 @@ class PedigreeCertificate
         /* variables translated to Dutch */
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENDER] = Translation::getGenderInDutch($gender);
 
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PRODUCTION] = self::parseProductionString($dateOfBirthDateTime, $earliestLitterDate, $latestLitterDate, $litterCount, $totalOffSpringCountByLitterData, $totalBornAliveCount, $gender);
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PRODUCTION] = DisplayUtil::parseProductionString($dateOfBirthDateTime, $earliestLitterDate, $latestLitterDate, $litterCount, $totalOffSpringCountByLitterData, $totalBornAliveCount, $gender);
 
         //TODO NOTE the name column contains VSM primaryKey at the moment Utils::fillNullOrEmptyString($animal->getName());
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::NAME] = self::GENERAL_NULL_FILLER;
@@ -449,48 +440,6 @@ class PedigreeCertificate
             return $replacementString;
         }
 
-    }
-
-
-    /**
-     *
-     * nLing = stillBornCount + bornAliveCount
-     * production = (ewe) litters (litter * nLing)
-
-    production: a/b/c/d e
-    a: age in years from birth until date of last Litter
-    b: litterCount
-    c: total number of offspring (stillborn + bornAlive)
-    d: total number of bornAliveCount
-    e: (*) als een ooi ooit heeft gelammerd tussen een leeftijd van 6 en 18 maanden
-     *
-     * @param \DateTime $dateOfBirth
-     * @param \DateTime $earliestLitterDate
-     * @param \DateTime $latestLitterDate
-     * @param int $litterCount
-     * @param int $totalBornCount
-     * @param int $bornAliveCount
-     * @param string $gender
-     * @return string
-     */
-    public static function parseProductionString($dateOfBirth, $earliestLitterDate, $latestLitterDate, $litterCount, $totalBornCount, $bornAliveCount, $gender)
-    {
-        if($gender == GenderType::NEUTER || $gender == GenderType::O || $litterCount == 0) { return self::EMPTY_PRODUCTION; }
-
-        //By default there is no oneYearMark
-        $oneYearMark = '';
-        if($gender == GenderType::FEMALE || $gender == GenderType::V) {
-            if(TimeUtil::isGaveBirthAsOneYearOld($dateOfBirth, $earliestLitterDate)){
-                $oneYearMark = '*';
-            }
-        }
-
-        $ageInTheNsfoSystem = TimeUtil::ageInSystemForProductionValue($dateOfBirth, $latestLitterDate);
-        if($ageInTheNsfoSystem == null) {
-            $ageInTheNsfoSystem = '-';
-        }
-
-        return $ageInTheNsfoSystem.'/'.$litterCount.'/'.$totalBornCount.'/'.$bornAliveCount.$oneYearMark;
     }
 
 
