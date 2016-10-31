@@ -107,7 +107,19 @@ class TimeUtil
     public static function ageInSystemForProductionValue($dateOfBirth, $latestLitterDate)
     {
         if($dateOfBirth == null || $latestLitterDate == null) { return null; }
-        return self::getAgeYear($dateOfBirth, $latestLitterDate);
+
+
+        $endDate = clone $latestLitterDate;
+        $interval = $endDate->diff($dateOfBirth);
+
+        $months = $interval->m;
+        $years = $interval->y;
+
+        if($months < 6) {
+            return $years;
+        } else {
+            return $years + 1;
+        }
     }
 
     
