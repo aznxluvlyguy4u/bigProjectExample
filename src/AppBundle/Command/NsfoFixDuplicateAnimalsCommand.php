@@ -85,11 +85,27 @@ class NsfoFixDuplicateAnimalsCommand extends ContainerAwareCommand
      */
     private function findDuplicateAnimals($isGetAnimalEntities = true)
     {
-        $sql = "SELECT a.id, CONCAT(a.uln_country_code, a.uln_number) as uln FROM animal a
-            INNER JOIN (
-                SELECT uln_country_code, uln_number FROM animal
-                GROUP BY uln_country_code, uln_number HAVING COUNT(*) > 1
-                ) d ON d.uln_number = a.uln_number AND d.uln_country_code = a.uln_country_code";
+        //Note! Only if uln and dateOfBirth are identical, will it be seen as a duplicate animal
+        $sql = "SELECT z.location_id, l.ubn, l.location_holder, z.id, CONCAT(z.uln_country_code, z.uln_number) as uln,
+                      z.uln_number, z.uln_country_code,
+                      z.name, z.gender, z.is_alive, z.date_of_birth, z.date_of_death, z.transfer_state 
+                FROM animal z
+                    INNER JOIN (
+                        SELECT
+                          a.id,
+                          CONCAT(a.uln_country_code, a.uln_number) AS uln
+                        FROM animal a
+                          INNER JOIN (
+                                       SELECT
+                                         uln_country_code,
+                                         uln_number
+                                       FROM animal
+                                       GROUP BY uln_country_code, uln_number, date_of_birth
+                                       HAVING COUNT(*) > 1
+                                     ) d ON d.uln_number = a.uln_number AND d.uln_country_code = a.uln_country_code
+                        ORDER BY (a.uln_number, a.uln_country_code) ASC, a.name ISNULL, a.name DESC
+                        ) y ON y.id = z.id
+                    LEFT JOIN location l ON z.location_id = l.id";
         $ulnResults = $this->em->getConnection()->query($sql)->fetchAll();
 
         $this->animalsGroupedByUln = new ArrayCollection();
