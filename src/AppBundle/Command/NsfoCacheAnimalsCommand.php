@@ -47,6 +47,8 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '3: Regenerate all AnimalCache records for all animals', "\n",
             '4: Regenerate AnimalCache records only for given locationId', "\n",
             '5: Regenerate all AnimalCache records older than given stringDateTime (YYYY-MM-DD HH:MM:SS)', "\n",
+            '6: Generate all AnimalCache records for animal and ascendants (3gen) for given locationId', "\n",
+            '7: Regenerate all AnimalCache records for animal and ascendants (3gen) for given locationId', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -77,6 +79,18 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 $todayDateString = TimeUtil::getTimeStampToday().' 00:00:00';
                 $dateString = intval($this->cmdUtil->generateQuestion('insert dateTimeString (default = '.$todayDateString.')', $todayDateString));
                 AnimalCacher::cacheAllAnimals($em, $this->cmdUtil, false, $dateString);
+                $output->writeln('DONE!');
+                break;
+
+            case 6:
+                $locationId = intval($this->cmdUtil->generateQuestion('insert locationId (default = '.self::DEFAULT_LOCATION_ID.')', self::DEFAULT_LOCATION_ID));
+                AnimalCacher::cacheAnimalsAndAscendantsByLocationId($em, true, null, $this->cmdUtil, $locationId);
+                $output->writeln('DONE!');
+                break;
+
+            case 7:
+                $locationId = intval($this->cmdUtil->generateQuestion('insert locationId (default = '.self::DEFAULT_LOCATION_ID.')', self::DEFAULT_LOCATION_ID));
+                AnimalCacher::cacheAnimalsAndAscendantsByLocationId($em, false, null, $this->cmdUtil, $locationId);
                 $output->writeln('DONE!');
                 break;
 
