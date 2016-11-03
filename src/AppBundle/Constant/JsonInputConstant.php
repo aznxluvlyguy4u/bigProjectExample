@@ -173,6 +173,7 @@ class JsonInputConstant
     const BREAST_DEPTH = 'breast_depth';
     const TORSO_LENGTH = 'torso_length';
     const MARKINGS = 'markings';
+    const EXTERIOR_MEASUREMENT_DATE = 'exterior_measurement_date';
 
     //MuscleThickness
     const MUSCLE_THICKNESS = 'muscle_thickness';
@@ -189,4 +190,13 @@ class JsonInputConstant
     const TOTAL_STILLBORN_COUNT = 'total_stillborn_count';
     const EARLIEST_LITTER_DATE = 'earliest_litter_date';
     const LATEST_LITTER_DATE = 'latest_litter_date';
+    const PRODUCTION = 'production';
+
+    //BreedValues
+    const BREED_VALUE_LITTER_SIZE = "breed_value_litter_size";
+    const BREED_VALUE_GROWTH = "breed_value_growth";
+    const BREED_VALUE_MUSCLE_THICKNESS = "breed_value_muscle_thickness";
+    const BREED_VALUE_FAT = "breed_value_fat";
+    const LAMB_MEAT_INDEX = "lamb_meat_index";
+    const LAMB_MEAT_INDEX_WITHOUT_ACCURACY = "lamb_meat_index_without_accuracy";
 }

@@ -413,7 +413,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                     'ulnCountryCode' => $contentChild['uln_country_code'],
                     'ulnNumber' => $contentChild['uln_number'],
                     'tagStatus' => 'UNASSIGNED',
-                    'owner' => $company->getOwner()
+                    'owner' => $company->getOwner(),
+                    'location' => $location
                 ]);
 
                 if($tag == null) {

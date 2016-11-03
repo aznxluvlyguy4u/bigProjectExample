@@ -6,6 +6,9 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\BreedCodes;
+use AppBundle\Entity\BreedValuesSet;
+use AppBundle\Entity\DeclareDepart;
+use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Migration\BreedCodeReformatter;
@@ -19,8 +22,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class NsfoFixDuplicateAnimalsCommand extends ContainerAwareCommand
 {
-    const TITLE = 'Fix Duplicate Animals: Due to Animal Import after AnimalSync around July-Aug 2016';
-    const ID_LIMIT = 611040;
+    const TITLE = 'Fix Duplicate Animals: Due to Animal Import after AnimalSync around July-Aug 2016 and TagReplace error in Sep2016';
     const OLD_DATE = '2016-09-22 11';
 
     /** @var ObjectManager $em */
@@ -85,11 +87,27 @@ class NsfoFixDuplicateAnimalsCommand extends ContainerAwareCommand
      */
     private function findDuplicateAnimals($isGetAnimalEntities = true)
     {
-        $sql = "SELECT a.id, CONCAT(a.uln_country_code, a.uln_number) as uln FROM animal a
-            INNER JOIN (
-                SELECT uln_country_code, uln_number FROM animal
-                GROUP BY uln_country_code, uln_number HAVING COUNT(*) > 1
-                ) d ON d.uln_number = a.uln_number AND d.uln_country_code = a.uln_country_code";
+        //Note! Only if uln and dateOfBirth are identical, will it be seen as a duplicate animal
+        $sql = "SELECT z.location_id, l.ubn, l.location_holder, z.id, CONCAT(z.uln_country_code, z.uln_number) as uln,
+                      z.uln_number, z.uln_country_code,
+                      z.name, z.gender, z.is_alive, z.date_of_birth, z.date_of_death, z.transfer_state 
+                FROM animal z
+                    INNER JOIN (
+                        SELECT
+                          a.id,
+                          CONCAT(a.uln_country_code, a.uln_number) AS uln
+                        FROM animal a
+                          INNER JOIN (
+                                       SELECT
+                                         uln_country_code,
+                                         uln_number
+                                       FROM animal
+                                       GROUP BY uln_country_code, uln_number, date_of_birth
+                                       HAVING COUNT(*) > 1
+                                     ) d ON d.uln_number = a.uln_number AND d.uln_country_code = a.uln_country_code
+                        ORDER BY (a.uln_number, a.uln_country_code) ASC, a.name ISNULL, a.name DESC
+                        ) y ON y.id = z.id
+                    LEFT JOIN location l ON z.location_id = l.id";
         $ulnResults = $this->em->getConnection()->query($sql)->fetchAll();
 
         $this->animalsGroupedByUln = new ArrayCollection();
@@ -137,57 +155,38 @@ class NsfoFixDuplicateAnimalsCommand extends ContainerAwareCommand
             $animal2 = $animalsGroup[1];
 
             /* Assuming there are only 2 animals per duplicate pair, as checked in the database by sql-query,
-             * Keep the synced animals, identified by the lower id, because they contain the relationships with declares
-             * Fix the gender where possible, read from the imported animal data
-             * And copy the missing data from the imported animal to the synced animal
+             * Keep the imported animals and transfer the data from the synced animals
+             * At this moment (2016nov2) the synced animals have the latest declare data
+             * (depart & loss) and some measurements (fat, muscle, weight, breed_values_set)
              */
-
-            //TODO ONLY PASS animal ID and find/set the animals here
-            /* 1. Identify primary animal */
-            if($animal1->getId() > self::ID_LIMIT) {
-                $primaryAnimal = $animal1;
-                $secondaryAnimal = $animal2;
-            } elseif($animal2->getId() > self::ID_LIMIT) {
-                $primaryAnimal = $animal2;
-                $secondaryAnimal = $animal1;
-            } elseif($animal1->getId() < $animal2->getId()) {
-                $primaryAnimal = $animal1;
-                $secondaryAnimal = $animal2;
-            } else {
-                $primaryAnimal = $animal2;
-                $secondaryAnimal = $animal1;
-            }
-
-            /* 2. Fix Gender if possible */
-            $genderPrimaryAnimal = $primaryAnimal->getGender();
-            $genderSecondaryAnimal = $secondaryAnimal->getGender();
-            if($genderPrimaryAnimal != $genderSecondaryAnimal && $genderSecondaryAnimal != GenderType::NEUTER) {
-                /* Note that Neuters are not set as parents anymore
-
-                You can check it with this sql
-
-                SELECT * FROM animal a
-                LEFT JOIN animal f ON a.parent_father_id = f.id
-                LEFT JOIN animal m ON a.parent_mother_id = m.id
-                WHERE f.gender = 'NEUTER' OR m.gender = 'NEUTER';
+            
+            if($animal1->getName() != null || $animal2->getName() != null) {
                 
-                */
+                /* 1. Identify primary animal */
+                if($animal1->getName() != null) {
+                    $primaryAnimal = $animal1;
+                    $secondaryAnimal = $animal2;
+                } else {
+                    $primaryAnimal = $animal2;
+                    $secondaryAnimal = $animal1;
+                }
+                
+                //No gender fix necessary, because the imported animal is the primaryAnimal
 
-                if($genderSecondaryAnimal == GenderType::FEMALE) { $primaryAnimal = $this->genderChanger->makeFemale($primaryAnimal); }
-                elseif($genderSecondaryAnimal == GenderType::MALE) { $primaryAnimal = $this->genderChanger->makeMale($primaryAnimal); }
+                /* 2. */
+                $this->mergeValuesWithImportedAnimalAsPrimaryAnimal($primaryAnimal, $secondaryAnimal);
+
+                /* 3 Remove unnecessary duplicate */
+                /** @var Animal $secondaryAnimal */
+                $this->removeAnimal($secondaryAnimal); //TODO VERIFY THIS FUNCTION!
+
+                $this->em->persist($primaryAnimal);
+                $this->em->flush();
+
+                $this->cmdUtil->advanceProgressBar(1, 'Fixed animal: '.$primaryAnimal->getUln());
+            } else {
+                $this->cmdUtil->advanceProgressBar(1, 'No imported animal found for: '.$animal1->getUln());
             }
-
-            /* 3. */
-            $this->mergeValues($primaryAnimal, $secondaryAnimal);
-
-            /* 4 Remove unnecessary duplicate */
-            /** @var Animal $secondaryAnimal */
-            $this->removeAnimal($secondaryAnimal);
-
-            $this->em->persist($primaryAnimal);
-            $this->em->flush();
-
-            $this->cmdUtil->advanceProgressBar(1, 'Fixed animal: '.$primaryAnimal->getUln());
         }
 
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
@@ -226,17 +225,140 @@ class NsfoFixDuplicateAnimalsCommand extends ContainerAwareCommand
         $sql = "DELETE FROM breed_codes WHERE animal_id = ".$animal->getId();
         $this->em->getConnection()->exec($sql);
 
+        $sql = "DELETE FROM breed_codes WHERE animal_id = ".$animal->getId();
+        $this->em->getConnection()->exec($sql);
+
         /** @var Animal $animal */
         $animal = $this->em->merge($animal);
         $this->em->remove($animal);
+        $this->em->flush();
     }
-
 
     /**
      * @param Animal $primaryAnimal
      * @param Animal $secondaryAnimal
      */
-    private function mergeValues($primaryAnimal, $secondaryAnimal)
+    private function mergeValuesWithImportedAnimalAsPrimaryAnimal($primaryAnimal, $secondaryAnimal)
+    {
+        //NOTE!!! At this point (2016nov2) only the following values need to be merged
+        //DeclareDepart logic values and animalId in fat, muscle, weight
+
+        $tablesToUpdateOnlyAnimalId = ['body_fat', 'muscle_thickness', 'weight'];
+        foreach($tablesToUpdateOnlyAnimalId as $table) {
+            $sql = "UPDATE ".$table." SET animal_id = ".$primaryAnimal->getId()." WHERE animal_id = ".$secondaryAnimal->getId();
+            $this->em->getConnection()->exec($sql);
+        }
+
+        //Fix alive status
+        if($secondaryAnimal->getIsAlive() != $primaryAnimal->getIsAlive()) {
+            $bool = $secondaryAnimal->getIsAlive() ? 'true' : 'false';
+            $sql = "UPDATE animal SET is_alive = ".$bool." WHERE id = ".$primaryAnimal->getId();
+            $this->em->getConnection()->exec($sql);
+        }
+
+
+
+
+        //DeclareDepart
+
+        //Set TransferState
+        if($secondaryAnimal->getTransferState() != null) {
+            $sql = "UPDATE animal SET transfer_state = '".$secondaryAnimal->getTransferState()."' WHERE id = ".$primaryAnimal->getId();
+            $this->em->getConnection()->exec($sql);
+        }
+
+        //Set Location
+        $currentLocation = $secondaryAnimal->getLocation();
+        if($currentLocation != $primaryAnimal->getLocation()) {
+            if($currentLocation == null) {
+                $locationId = null;
+            } else {
+                $locationId = $currentLocation->getId();
+            }
+
+            $sql = "UPDATE animal SET location_id = '".$locationId."' WHERE id = ".$primaryAnimal->getId();
+            $this->em->getConnection()->exec($sql);
+        }
+
+        //Set TransferState
+        if($secondaryAnimal->getIsExportAnimal() != $primaryAnimal->getIsExportAnimal()) {
+            $bool = $secondaryAnimal->getIsExportAnimal() ? 'true' : 'false';
+            $sql = "UPDATE animal SET is_export_animal = '".$bool."' WHERE id = ".$primaryAnimal->getId();
+            $this->em->getConnection()->exec($sql);
+        }
+
+        if($secondaryAnimal->getDepartures()->count() > 0) {
+            /** @var DeclareDepart $departure */
+            foreach ($secondaryAnimal->getDepartures() as $departure)
+            {
+                $sql = "UPDATE declare_depart SET animal_id = ".$primaryAnimal->getId()." WHERE id = ".$departure->getId();
+                $this->em->getConnection()->exec($sql);
+
+            }
+
+            //Depart Logic for Animal
+            
+            //Currently (2016nov2) for the imported animals, most have no animalResidence and some have one animalResidence with only a startDate
+            //And the synced animals have only one animalResidence
+
+
+            //Find last animalResidence of syncedAnimal
+            $sql = "SELECT * FROM animal_residence WHERE animal_id = ".$secondaryAnimal->getId()."
+                    ORDER BY start_date DESC LIMIT 1";
+            $lastAnimalResidenceSyncedAnimal = $this->em->getConnection()->query($sql)->fetch();
+
+
+            //Find last animalResidence of importedAnimal
+            $sql = "SELECT * FROM animal_residence WHERE animal_id = ".$primaryAnimal->getId()."
+                    ORDER BY start_date DESC LIMIT 1";
+            $lastAnimalResidenceImportedAnimal = $this->em->getConnection()->query($sql)->fetch();
+
+
+            if($lastAnimalResidenceSyncedAnimal) { //the synced residence exists | All synced duplicate animals with a declareDepart also have an animalResidence
+
+                if($lastAnimalResidenceImportedAnimal) { //the imported residence exists, delete it
+                    $sql = "DELETE FROM animal_residence WHERE id = ".$lastAnimalResidenceImportedAnimal['id'];
+                    $this->em->getConnection()->exec($sql);
+                }
+
+                $sql = "UPDATE animal_residence SET animal_id = ".$primaryAnimal->getId()." WHERE animal_id = ".$secondaryAnimal->getId();
+                $this->em->getConnection()->exec($sql);
+            }
+        }
+
+        /** @var BreedValuesSet $breedValuesSetImportedAnimal */
+        $breedValuesSetImportedAnimal = $this->em->getRepository(BreedValuesSet::class)->findOneBy(['animal' => $primaryAnimal]);
+        /** @var BreedValuesSet $breedValuesSetSyncedAnimal */
+        $breedValuesSetSyncedAnimal = $this->em->getRepository(BreedValuesSet::class)->findOneBy(['animal' => $secondaryAnimal]);
+
+        if($breedValuesSetImportedAnimal == null && $breedValuesSetSyncedAnimal != null) {
+            $breedValuesSetSyncedAnimal->setAnimal($primaryAnimal);
+            $this->em->flush();
+        } else if($breedValuesSetImportedAnimal != null && $breedValuesSetSyncedAnimal == null) {
+            //Do nothing
+        } else if($breedValuesSetImportedAnimal != null && $breedValuesSetSyncedAnimal != null) {
+            if($breedValuesSetImportedAnimal->getLambMeatIndexAccuracy() == 0) {
+                $breedValuesSetSyncedAnimal->setAnimal($primaryAnimal);
+                $this->em->remove($breedValuesSetImportedAnimal);
+                $this->em->flush();
+            } else {
+                $this->em->remove($breedValuesSetSyncedAnimal);
+                $this->em->flush();
+            }
+        }
+
+
+        //Finally remove all animalResidences of the to be deleted synced Animal
+        $sql = "DELETE FROM animal_residence WHERE animal_id = ".$secondaryAnimal->getId();
+        $this->em->getConnection()->exec($sql);
+    }
+    
+    
+    /**
+     * @param Animal $primaryAnimal
+     * @param Animal $secondaryAnimal
+     */
+    private function mergeValuesWithSyncedAnimalAsPrimaryAnimal($primaryAnimal, $secondaryAnimal)
     {
         if($primaryAnimal->getPedigreeCountryCode() == null) {
             $primaryAnimal->setPedigreeCountryCode($secondaryAnimal->getPedigreeCountryCode());
@@ -299,7 +421,7 @@ class NsfoFixDuplicateAnimalsCommand extends ContainerAwareCommand
         }
 
         if($secondaryAnimal->getDepartures()->count() > 0) {
-            /** @var Weight $weight */
+            /** @var DeclareDepart $departure */
             foreach ($secondaryAnimal->getDepartures() as $departure)
             {
                 $departure->setAnimal($primaryAnimal);
@@ -307,7 +429,7 @@ class NsfoFixDuplicateAnimalsCommand extends ContainerAwareCommand
         }
 
         if($secondaryAnimal->getDeaths()->count() > 0) {
-            /** @var Weight $weight */
+            /** @var DeclareLoss $loss */
             foreach ($secondaryAnimal->getDeaths() as $loss)
             {
                 $loss->setAnimal($primaryAnimal);

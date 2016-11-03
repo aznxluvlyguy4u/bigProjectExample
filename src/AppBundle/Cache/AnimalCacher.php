@@ -79,7 +79,7 @@ class AnimalCacher
         
         /** @var AnimalCacheRepository $animalCacheRepository */
         $animalCacheRepository = $em->getRepository(AnimalCache::class);
-        $animalCacherInputData = $animalCacheRepository->getAnimalCacherInputData($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $locationId);
+        $animalCacherInputData = $animalCacheRepository->getAnimalCacherInputDataPerLocation($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $locationId);
 
         $count = 0;
 
@@ -102,6 +102,85 @@ class AnimalCacher
     }
 
 
+    /**
+     * @param ObjectManager $em
+     * @param boolean $ignoreAnimalsWithAnExistingCache
+     * @param string $ignoreCacheBeforeDateString
+     * @param CommandUtil $cmdUtil
+     * @param int $locationId
+     */
+    public static function cacheAnimalsAndAscendantsByLocationId(ObjectManager $em, $ignoreAnimalsWithAnExistingCache = true, $ignoreCacheBeforeDateString = null, $cmdUtil = null, $locationId = null) {
+        $filter = $locationId == null ? '' : " WHERE location_id = ".$locationId;
+        $sql = "SELECT id FROM animal ".$filter;
+        $results = $em->getConnection()->query($sql)->fetchAll();
+        $animalIds = [];
+        foreach ($results as $result) {
+            $animalIds[] = $result['id'];
+        }
+
+        self::cacheAnimalsAndAscendantsByIds($em, $ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $cmdUtil, $animalIds);
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param boolean $ignoreAnimalsWithAnExistingCache
+     * @param string $ignoreCacheBeforeDateString
+     * @param CommandUtil $cmdUtil
+     * @param array $animalIds
+     */
+    public static function cacheAnimalsAndAscendantsByIds(ObjectManager $em, $ignoreAnimalsWithAnExistingCache = true, $ignoreCacheBeforeDateString = null, $cmdUtil = null, $animalIds = []) {
+
+        $flushPerRecord = false;
+
+        /** @var GeneticBaseRepository $geneticBaseRepository */
+        $geneticBaseRepository = $em->getRepository(GeneticBase::class);
+
+        $breedValuesYear = $geneticBaseRepository->getLatestYear();
+        $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
+
+        /** @var AnimalCacheRepository $animalCacheRepository */
+        $animalCacheRepository = $em->getRepository(AnimalCache::class);
+
+        $count = 0;
+
+        if($cmdUtil instanceof CommandUtil) {
+            $cmdUtil->setStartTimeAndPrintIt(count($animalIds) + 1, 1, 'Generating animal cache records');
+
+            foreach ($animalIds as $animalId) {
+                if(is_int($animalId)) {
+
+                    $animalCacherInputData = $animalCacheRepository->getAnimalCacherInputDataForAnimalAndAscendants($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $animalId);
+
+                    foreach ($animalCacherInputData as $record) {
+                        self::cacheById($em, $record['animal_id'], $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+                    }
+                    if($count++%self::FLUSH_BATCH_SIZE == 0) { $em->flush(); }
+                    $cmdUtil->advanceProgressBar(1);
+                }
+            }
+            $cmdUtil->setEndTimeAndPrintFinalOverview();
+
+        } else {
+            foreach ($animalIds as $animalId) {
+                if (is_int($animalId)) {
+
+                    $animalCacherInputData = $animalCacheRepository->getAnimalCacherInputDataForAnimalAndAscendants($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $animalId);
+
+                    foreach ($animalCacherInputData as $record) {
+                        self::cacheById($em, $record['animal_id'], $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+                    }
+                    if ($count++ % self::FLUSH_BATCH_SIZE == 0) {
+                        $em->flush();
+                    }
+                }
+            }
+        }
+
+        if(!$flushPerRecord) { $em->flush(); }
+    }
+    
+    
 
     /**
      * @param ObjectManager $em
@@ -126,6 +205,12 @@ class AnimalCacher
 
         //Breed Values
         $breedValuesArray = self::getUnformattedBreedValues($em, $animalId, $breedValuesYear, $geneticBases);
+        $lambMeatIndexAccuracy = $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY];
+        //NOTE! Only include the lambIndexValue if the accuracy is at least the MIN accuracy required
+        $lambMeatIndexWithoutAccuracy = null;
+        if($lambMeatIndexAccuracy >= BreedValueUtil::MIN_LAMB_MEAT_INDEX_ACCURACY) {
+            $lambMeatIndexWithoutAccuracy = $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX];
+        }
         $formattedBreedValues = BreedValueUtil::getFormattedBreedValues($breedValuesArray);
 
         $breedValueGrowth = $formattedBreedValues[BreedValueLabel::GROWTH];
@@ -196,6 +281,7 @@ class AnimalCacher
         $record->setBreedValueMuscleThickness($breedValueMuscleThickness);
         $record->setBreedValueFat($breedValueFat);
         $record->setLambMeatIndex($lambMeatIndex);
+        $record->setLambMeatIndexWithoutAccuracy($lambMeatIndexWithoutAccuracy);
         if($weightExists) {
             $record->setLastWeight($weight);
             $record->setWeightMeasurementDateByDateString($weightMeasurementDateString);

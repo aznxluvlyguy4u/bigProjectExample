@@ -2,6 +2,9 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\DeclareTagReplace;
+use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\DeclareTagsTransferRepository;
 use AppBundle\Entity\TagTransferItemResponse;
 use AppBundle\Util\ActionLogWriter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -66,7 +69,9 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
     //TODO Phase 2, with history and error tab in front-end, we can do a less strict filter. And only remove the incorrect tags and process the rest. However for proper feedback to the client we need to show the successful and failed TagTransfer history.
 
     //Check if ALL tags are unassigned and in the database, else don't send any TagTransfer
-    $validation = $this->getDoctrine()->getRepository(Constant::DECLARE_TAGS_TRANSFER_REPOSITORY)->validateTags($client, $content);
+    /** @var DeclareTagsTransferRepository $repository */
+    $repository = $this->getDoctrine()->getRepository(DeclareTagsTransfer::class);
+    $validation = $repository->validateTags($client, $location, $content);
     if($validation[Constant::IS_VALID_NAMESPACE] == false) {
       return new JsonResponse($validation[Constant::MESSAGE_NAMESPACE], $validation[Constant::CODE_NAMESPACE]);
     }

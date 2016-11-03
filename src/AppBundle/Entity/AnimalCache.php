@@ -111,6 +111,16 @@ class AnimalCache
     private $lambMeatIndex;
 
 
+    /**
+     * NOTE! Only include the lambIndexValue if the accuracy is at least the MIN accuracy required
+     * 
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $lambMeatIndexWithoutAccuracy;
+
+
     /* Latest Weight Data */
 
     /**
@@ -419,6 +429,22 @@ class AnimalCache
     public function setLambMeatIndex($lambMeatIndex)
     {
         $this->lambMeatIndex = $lambMeatIndex;
+    }
+
+    /**
+     * @return float
+     */
+    public function getLambMeatIndexWithoutAccuracy()
+    {
+        return $this->lambMeatIndexWithoutAccuracy;
+    }
+
+    /**
+     * @param float $lambMeatIndexWithoutAccuracy
+     */
+    public function setLambMeatIndexWithoutAccuracy($lambMeatIndexWithoutAccuracy)
+    {
+        $this->lambMeatIndexWithoutAccuracy = $lambMeatIndexWithoutAccuracy;
     }
 
     /**

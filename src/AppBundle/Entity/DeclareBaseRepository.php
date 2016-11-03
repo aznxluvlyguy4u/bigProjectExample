@@ -36,7 +36,7 @@ class DeclareBaseRepository extends BaseRepository
                 UNION
                 SELECT b.log_date, d.date_of_birth as start_date, null as end_date, 'BIRTH' as action, NULL as data, p.first_name, p.last_name
                 FROM declare_birth d
-                  INNER JOIN declare_nsfo_base b ON d.id = b.id
+                  INNER JOIN declare_base b ON d.id = b.id
                   LEFT JOIN person p ON p.id = b.action_by_id
                   LEFT JOIN litter l ON l.id = d.litter_id
                 WHERE (b.request_state = 'FINISHED' OR b.request_state = 'FINISHED_WITH_WARNING') AND location_id = ".$locationId." AND (l.animal_father_id = ".$animalId." OR l.animal_mother_id = ".$animalId.")

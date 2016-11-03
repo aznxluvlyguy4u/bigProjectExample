@@ -46,7 +46,7 @@ class StarValueUtil
         } elseif($indexValue >= self::STAR_SCORE_2_MIN_LAMB_MEAT_INDEX) {
             return 2;
 
-        } elseif($indexValue >= self::STAR_SCORE_1_MIN_LAMB_MEAT_INDEX) {
+        } else {
             return 1;
         }
     }

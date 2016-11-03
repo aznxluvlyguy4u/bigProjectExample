@@ -3,8 +3,12 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Component\Utils;
+use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\DeclareTagsTransferRepository;
+use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\DeclareReplaceTagsOutput;
+use AppBundle\Output\DeclareTagsTransferResponseOutput;
 use AppBundle\Util\ActionLogWriter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -65,12 +69,15 @@ class TagsReplaceAPIController extends APIController {
 
     //Check if tag replacement is unassigned and in the database, else don't send any TagReplace
     $tagContent = $content->get(Constant::TAG_NAMESPACE);
-    $validation = $this->getDoctrine()->getRepository(Constant::DECLARE_TAGS_TRANSFER_REPOSITORY)->validateTag($client, $tagContent[Constant::ULN_COUNTRY_CODE_NAMESPACE], $tagContent[Constant::ULN_NUMBER_NAMESPACE]);
+    /** @var DeclareTagsTransferRepository $declareTagTransferRepository */
+    $declareTagTransferRepository = $this->getDoctrine()->getRepository(DeclareTagsTransfer::class);
+    $validation = $declareTagTransferRepository->validateTag($client, $location,$tagContent[Constant::ULN_COUNTRY_CODE_NAMESPACE], $tagContent[Constant::ULN_NUMBER_NAMESPACE]);
 
     if($validation == null) {
       $errorMessage =  array(Constant::MESSAGE_NAMESPACE => "TAG IS NOT FOUND", Constant::CODE_NAMESPACE => 428);
       return new JsonResponse($errorMessage, 428);
     } else if($validation[Constant::VALIDITY_NAMESPACE] == false) {
+        /** @var Tag $tag */
         $tag = $validation[Constant::TAG_NAMESPACE];
 
         if($tag != null) {

@@ -7,6 +7,9 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\Location;
+use AppBundle\Entity\Tag;
+use AppBundle\Entity\TagRepository;
 use AppBundle\Util\AnimalArrayReader;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\Common\Collections\Collection;
@@ -41,19 +44,25 @@ class TagValidator
     /** @var Client */
     private $client;
 
+    /** @var Location */
+    private $location;
+
     /** @var ObjectManager */
     private $manager;
 
     /**
      * TagValidator constructor.
      * @param ObjectManager $manager
+     * @param Client $client
+     * @param Location $location
      * @param Collection $content
      * @param DeclareImport|null $declareImport
      */
-    public function __construct(ObjectManager $manager, Client $client, Collection $content, $declareImport = null)
+    public function __construct(ObjectManager $manager, Client $client, Location $location, Collection $content, $declareImport = null)
     {
         $this->manager = $manager;
         $this->client = $client;
+        $this->location = $location;
 
         //If input is for a DeclareImport POST
         if($this->verifyIsDeclareImportPost($content, $declareImport)) {
@@ -149,10 +158,11 @@ class TagValidator
      */
     private function validateImportPostInput()
     {
-        $repository = $this->manager->getRepository(Constant::TAG_REPOSITORY);
-        $tagCountOfClient = $repository->findTags($this->client)->count();
+        /** @var TagRepository $repository */
+        $repository = $this->manager->getRepository(Tag::class);
+        $tagCountOfClientOnLocation = $repository->getUnassignedTagCount($this->client, $this->location);
 
-        if($tagCountOfClient > 0) {
+        if($tagCountOfClientOnLocation > 0) {
             $this->isTagCollectionEmpty = false;
         } else {
             $this->isTagCollectionEmpty = true;
@@ -163,7 +173,7 @@ class TagValidator
         } else {
             $this->isInputEmpty = false;
 
-            $isAnUnassignedTag = $repository->isAnUnassignedTag($this->client, $this->ulnNumberTag);
+            $isAnUnassignedTag = $repository->isAnUnassignedTag($this->client, $this->location, $this->ulnNumberTag);
 
             if($isAnUnassignedTag) {
                 $this->isTagValid = true;
