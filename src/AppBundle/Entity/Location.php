@@ -207,6 +207,14 @@ class Location
     private $inspections;
 
     /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="Tag", mappedBy="location", cascade={"persist"})
+     * @JMS\Type("array")
+     */
+    private $tags;
+  
+    /**
      * @var boolean
      *
      * @ORM\Column(type="boolean", options={"default":true})
@@ -234,6 +242,7 @@ class Location
     $this->declareWeights = new ArrayCollection();
     $this->healthMessages = new ArrayCollection();
     $this->animalResidenceHistory = new ArrayCollection();
+    $this->tags = new ArrayCollection();
     $this->setLocationId(Utils::generateTokenCode());
   }
 
@@ -876,7 +885,49 @@ class Location
         $this->inspections = $inspections;
     }
 
+
     /**
+     * @return ArrayCollection
+     */
+    public function getTags()
+    {
+      return $this->tags;
+    }
+  
+    /**
+     * @param ArrayCollection $tags
+     */
+    public function setTags($tags)
+    {
+      $this->tags = $tags;
+    }
+  
+    /**
+     * Add tag
+     *
+     * @param \AppBundle\Entity\Tag $tag
+     *
+     * @return Client
+     */
+    public function addTag(\AppBundle\Entity\Tag $tag)
+    {
+      $this->tags[] = $tag;
+  
+      return $this;
+    }
+  
+    /**
+     * Remove tag
+     *
+     * @param \AppBundle\Entity\Tag $tag
+     */
+    public function removeTag(\AppBundle\Entity\Tag $tag)
+    {
+      $this->tags->removeElement($tag);
+    }
+
+
+  /**
      * @return mixed
      */
     public function getIsActive()

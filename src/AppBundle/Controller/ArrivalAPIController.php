@@ -195,7 +195,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
         if($isImportAnimal) { //DeclareImport
 
             //Validate if ulnNumber matches that of an unassigned Tag in the tag collection of the client
-            $tagValidator = new TagValidator($this->getDoctrine()->getManager(), $client, $content);
+            $tagValidator = new TagValidator($this->getDoctrine()->getManager(), $client, $location, $content);
             if($tagValidator->getIsTagCollectionEmpty() || !$tagValidator->getIsTagValid() || $tagValidator->getIsInputEmpty()) {
                 return $tagValidator->createImportJsonErrorResponse();
             }
