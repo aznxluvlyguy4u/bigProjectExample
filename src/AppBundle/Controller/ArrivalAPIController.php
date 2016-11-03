@@ -22,6 +22,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\HealthChecker;
 use AppBundle\Util\LocationHealthUpdater;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\TagValidator;
 use AppBundle\Validation\UbnValidator;
@@ -496,7 +497,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
 
     if($pedigreeNumber != null) {
-      $pedigreeNumber = strtoupper($pedigreeNumber);
+      $pedigreeNumber = StringUtil::capitalizePedigreeNumber($pedigreeNumber);
       $animalArray[JsonInputConstant::PEDIGREE_NUMBER] = $pedigreeNumber;
       $content->set(Constant::ANIMAL_NAMESPACE, $animalArray);
     }

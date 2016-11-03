@@ -173,4 +173,27 @@ class StringUtil
     {
         return mb_convert_encoding('&#x'.$unicodeCodePoint.';', 'UTF-8', 'HTML-ENTITIES');
     }
+
+
+    /**
+     * Only the first half of the pedigreeNumber is capitalized.
+     * A lowercase first letter after the dash replaces the first letter of an animalOrderNumber,
+     * in case an identical one already exists.
+     * 
+     * @param string $pedigreeNumber
+     * @return string
+     */
+    public static function capitalizePedigreeNumber($pedigreeNumber)
+    {
+        if($pedigreeNumber != null) {
+
+            $a = substr($pedigreeNumber, 0, 6); //First half including the dash
+            $b = substr($pedigreeNumber, 6, 1); //First char after dash
+            $c = substr($pedigreeNumber, 7, 4); //Last 4 chars
+
+            $pedigreeNumber = strtoupper($a).$b.$c;
+        }
+
+        return $pedigreeNumber;
+    }
 }
