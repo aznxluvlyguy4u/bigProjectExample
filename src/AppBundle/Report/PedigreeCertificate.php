@@ -153,7 +153,7 @@ class PedigreeCertificate
         $keyAnimal = ReportLabel::CHILD_KEY;
 
         $generation = 0;
-        $this->addAnimalValuesBySql($keyAnimal, $animalId, $generation);
+        $this->addAnimalValues($keyAnimal, $animalId, $generation);
         $this->addParents($animalId, $keyAnimal, $generation);
     }
 
@@ -234,6 +234,164 @@ class PedigreeCertificate
      * @param int $animalId
      * @param int $generation
      */
+    private function addAnimalValues($key, $animalId, $generation)
+    {
+        $sql = "SELECT * FROM animal_cache WHERE animal_id = ".$animalId;
+        $animalCache = $this->em->getConnection()->query($sql)->fetch();
+
+        if($animalCache) {
+
+            if($animalId != null) {
+                $sql = "SELECT a.id, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn,
+                  scrapie_genotype, breed, breed_type, breed_code, date_of_birth, gender, parent_father_id as father_id, parent_mother_id as mother_id
+                FROM animal a WHERE a.id = ".$animalId;
+                $animalData = $this->em->getConnection()->query($sql)->fetch();
+
+                //AnimalData
+                $uln = $animalData[JsonInputConstant::ULN];
+                $stn = $animalData[JsonInputConstant::STN];
+                $breed = $animalData[JsonInputConstant::BREED];
+                $breedCode = $animalData[JsonInputConstant::BREED_CODE];
+                $breedType = $animalData[JsonInputConstant::BREED_TYPE];
+                $scrapieGenotype = $animalData[JsonInputConstant::SCRAPIE_GENOTYPE];
+                $gender = $animalData[JsonInputConstant::GENDER];
+
+                $dateOfBirthString = self::EMPTY_DATE_OF_BIRTH;
+                $dateOfBirthDateTime = null;
+                if($animalData[JsonInputConstant::DATE_OF_BIRTH] != null) {
+                    $dateOfBirthDateTime = new \DateTime($animalData[JsonInputConstant::DATE_OF_BIRTH]);
+                    $dateOfBirthString = $dateOfBirthDateTime->format('d-m-Y');
+                }
+
+                //These ids are only used only inside this class and not in the twig file
+                $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MOTHER_ID] = $animalData[ReportLabel::MOTHER_ID];
+                $this->data[ReportLabel::ANIMALS][$key][ReportLabel::FATHER_ID] = $animalData[ReportLabel::FATHER_ID];
+            } else {
+                $uln = null;
+                $stn = null;
+                $scrapieGenotype = null;
+                $breed = null;
+                $breedCode = null;
+                $breedType = null;
+                $scrapieGenotype = null;
+                $gender = null;
+
+                $dateOfBirthString = self::EMPTY_DATE_OF_BIRTH;
+                $dateOfBirthDateTime = null;
+
+                //These ids are only used only inside this class and not in the twig file
+                $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MOTHER_ID] = null;
+                $this->data[ReportLabel::ANIMALS][$key][ReportLabel::FATHER_ID] = null;
+            }
+
+
+            $nLing = $animalCache['n_ling'];
+            $nLingPart = explode('-', $nLing);
+            $litterSize = 0;
+            if(count($nLingPart) > 0) {
+                $litterSize = intval($nLingPart[0]);
+            }
+            
+            $production = $animalCache[JsonInputConstant::PRODUCTION];
+            $productionPart = explode('/', $production);
+            $litterCount = 0;
+            if(count($productionPart) > 4) {
+                $litterCount = intval($productionPart[1]);
+            }
+
+            if($generation < self::GENERATION_OF_ASCENDANTS - 1) {
+                //Only retrieve the breedValues and lambMeatIndices for the child, parents and grandparents.
+                $lambMeatIndexWithAccuracy = $animalCache[JsonInputConstant::LAMB_MEAT_INDEX];
+                $lambMeatIndexWithoutAccuracy = $animalCache[JsonInputConstant::LAMB_MEAT_INDEX_WITHOUT_ACCURACY];
+
+                // Set values in result array
+                $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCLE_THICKNESS] = $animalCache[JsonInputConstant::BREED_VALUE_MUSCLE_THICKNESS];
+                $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BODY_FAT] = $animalCache[JsonInputConstant::BREED_VALUE_FAT];
+                $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GROWTH] = $animalCache[JsonInputConstant::BREED_VALUE_GROWTH];
+                $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TAIL_LENGTH] = Utils::fillNullOrEmptyString(null);
+
+                //LambMeatIndex with Accuracy
+                $this->data[ReportLabel::ANIMALS][$key][ReportLabel::VL] = $lambMeatIndexWithAccuracy;
+                $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SL] = Utils::fillZero(0.00);
+
+                if($key == ReportLabel::CHILD_KEY) {
+                    $this->addBreedIndex($lambMeatIndexWithoutAccuracy);
+                }
+            }
+
+
+            $exteriorMeasurementDateString = $animalCache[JsonInputConstant::EXTERIOR_MEASUREMENT_DATE];
+            if($exteriorMeasurementDateString == null) {
+                $exteriorMeasurementDate = null;
+            } else {
+                $exteriorMeasurementDate = new \DateTime($exteriorMeasurementDateString);
+            }
+
+            /* Set values into array */
+            //Note the BreedValues and LambMeatIndex values are already set above
+
+            //Exterior
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SKULL] = Utils::fillZeroFloat($animalCache[JsonInputConstant::SKULL]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DEVELOPMENT] = Utils::fillZeroFloat($animalCache[JsonInputConstant::PROGRESS]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MUSCULARITY] = Utils::fillZeroFloat($animalCache[JsonInputConstant::MUSCULARITY]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PROPORTION] = Utils::fillZeroFloat($animalCache[JsonInputConstant::PROPORTION]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TYPE] = Utils::fillZeroFloat($animalCache[JsonInputConstant::EXTERIOR_TYPE]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LEGWORK] = Utils::fillZeroFloat($animalCache[JsonInputConstant::LEG_WORK]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::FUR] = Utils::fillZeroFloat($animalCache[JsonInputConstant::FUR]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENERAL_APPEARANCE] = Utils::fillZeroFloat($animalCache[JsonInputConstant::GENERAL_APPEARANCE]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::HEIGHT] = Utils::fillZeroFloat($animalCache[JsonInputConstant::HEIGHT]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::TORSO_LENGTH] = Utils::fillZeroFloat($animalCache[JsonInputConstant::TORSO_LENGTH]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREAST_DEPTH] = Utils::fillZeroFloat($animalCache[JsonInputConstant::BREAST_DEPTH]);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MARKINGS] = Utils::fillZeroFloat($animalCache[JsonInputConstant::MARKINGS]);
+
+            //Litter
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_SIZE] = $litterSize;
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::N_LING] = $nLing;
+
+            //Offspring
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_COUNT] = Utils::fillZero($litterCount);
+
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::ULN] = Utils::fillNullOrEmptyString($uln);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PEDIGREE] = Utils::fillNullOrEmptyString($stn);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SCRAPIE] = Utils::fillNullOrEmptyString($scrapieGenotype, self::EMPTY_SCRAPIE_GENOTYPE);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED] = Utils::fillNullOrEmptyString($breed);
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_TYPE] = Utils::fillNullOrEmptyString(Translation::translateBreedType($breedType));
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_CODE] = Utils::fillNullOrEmptyString($breedCode);
+            /* Dates. The null checks for dates are done here including the formatting */
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DATE_OF_BIRTH] = Utils::fillNullOrEmptyString($dateOfBirthString, self::EMPTY_DATE_OF_BIRTH);
+            //NOTE measurementDate and inspectionDate are identical!
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::INSPECTION_DATE] = self::getTypeAndInspectionDateByDateTime(
+                $animalCache[JsonInputConstant::KIND], $exteriorMeasurementDate, self::GENERAL_NULL_FILLER
+            );
+
+            /* variables translated to Dutch */
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENDER] = Translation::getGenderInDutch($gender);
+
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PRODUCTION] = $production;
+
+            //TODO NOTE the name column contains VSM primaryKey at the moment Utils::fillNullOrEmptyString($animal->getName());
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::NAME] = self::GENERAL_NULL_FILLER;
+
+            //TODO Add these variables to the entities INCLUDING NULL CHECKS!!!
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BLINDNESS_FACTOR] = self::GENERAL_NULL_FILLER;
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PREDICATE] = self::GENERAL_NULL_FILLER;
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NAME] = self::GENERAL_NULL_FILLER;
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NUMBER] = self::GENERAL_NULL_FILLER;
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_GROUP] = self::GENERAL_NULL_FILLER;
+
+        } else {
+            $this->addAnimalValuesBySql($key, $animalId, $generation);
+        }
+
+    }
+
+
+
+    /**
+     * @param string $key
+     * @param int $animalId
+     * @param int $generation
+     */
     private function addAnimalValuesBySql($key, $animalId, $generation)
     {
         $exteriorReplacementString = null;
@@ -282,7 +440,6 @@ class PedigreeCertificate
             //AnimalData
             $uln = $animalData[JsonInputConstant::ULN];
             $stn = $animalData[JsonInputConstant::STN];
-            $scrapieGenotype = $animalData[JsonInputConstant::SCRAPIE_GENOTYPE];
             $breed = $animalData[JsonInputConstant::BREED];
             $breedCode = $animalData[JsonInputConstant::BREED_CODE];
             $breedType = $animalData[JsonInputConstant::BREED_TYPE];

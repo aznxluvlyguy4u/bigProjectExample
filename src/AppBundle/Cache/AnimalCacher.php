@@ -205,6 +205,12 @@ class AnimalCacher
 
         //Breed Values
         $breedValuesArray = self::getUnformattedBreedValues($em, $animalId, $breedValuesYear, $geneticBases);
+        $lambMeatIndexAccuracy = $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY];
+        //NOTE! Only include the lambIndexValue if the accuracy is at least the MIN accuracy required
+        $lambMeatIndexWithoutAccuracy = null;
+        if($lambMeatIndexAccuracy >= BreedValueUtil::MIN_LAMB_MEAT_INDEX_ACCURACY) {
+            $lambMeatIndexWithoutAccuracy = $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX];
+        }
         $formattedBreedValues = BreedValueUtil::getFormattedBreedValues($breedValuesArray);
 
         $breedValueGrowth = $formattedBreedValues[BreedValueLabel::GROWTH];
@@ -275,6 +281,7 @@ class AnimalCacher
         $record->setBreedValueMuscleThickness($breedValueMuscleThickness);
         $record->setBreedValueFat($breedValueFat);
         $record->setLambMeatIndex($lambMeatIndex);
+        $record->setLambMeatIndexWithoutAccuracy($lambMeatIndexWithoutAccuracy);
         if($weightExists) {
             $record->setLastWeight($weight);
             $record->setWeightMeasurementDateByDateString($weightMeasurementDateString);

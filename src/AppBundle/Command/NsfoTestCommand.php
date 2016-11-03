@@ -48,7 +48,7 @@ class NsfoTestCommand extends ContainerAwareCommand
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
-        $sql = "SELECT uln_country_code, uln_number FROM animal WHERE location_id = 957 AND gender = 'FEMALE'";
+        $sql = "SELECT uln_country_code, uln_number FROM animal WHERE location_id = 262 AND gender = 'FEMALE'";
         $results = $this->em->getConnection()->query($sql)->fetchAll();
 
         $string = '';

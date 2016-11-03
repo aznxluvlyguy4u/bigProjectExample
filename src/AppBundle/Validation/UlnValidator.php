@@ -28,11 +28,17 @@ class UlnValidator
     const MISSING_ANIMAL_CODE = 428;
     const MISSING_ANIMAL_MESSAGE = 'ANIMAL IS NOT REGISTERED WITH NSFO';
 
+    const MAX_ANIMALS = 50;
+    const ERROR_MESSAGE_MAX_ANIMALS_EXCEEDED = 'NO MORE THAN 50 ANIMALS CAN BE SELECTED AT A TIME';
+
     /** @var boolean */
     private $isUlnSetValid;
 
     /** @var boolean */
     private $isInputMissing;
+
+    /** @var boolean */
+    private $isAnimalCountWithinLimit;
 
     /** @var boolean */
     private $isInDatabase;
@@ -74,6 +80,7 @@ class UlnValidator
         $this->isInputMissing = true;
         $this->isUlnSetValid = false;
         $this->isInDatabase = true;
+        $this->isAnimalCountWithinLimit = true;
         $this->numberOfAnimals = 0;
 
         if($multipleAnimals == false) {
@@ -100,14 +107,18 @@ class UlnValidator
 
                     $this->isInputMissing = false;
                     $this->isUlnSetValid = true;
+                    $this->numberOfAnimals = count($animalArrays);
 
-                    foreach ($animalArrays as $animalArray) {
-                        $isUlnValid = $this->validateUlnInput($animalArray, $client, $location);
-
-                        if(!$isUlnValid) {
-                            $this->isUlnSetValid = false;
+                    if($this->numberOfAnimals > self::MAX_ANIMALS) {
+                        $this->isAnimalCountWithinLimit = false;
+                        $this->isUlnSetValid = false;
+                    } else {
+                        foreach ($animalArrays as $animalArray) {
+                            $isUlnValid = $this->validateUlnInput($animalArray, $client, $location);
+                            if(!$isUlnValid) {
+                                $this->isUlnSetValid = false;
+                            }
                         }
-                        $this->numberOfAnimals++;
                     }
                 }
             }
@@ -190,7 +201,10 @@ class UlnValidator
     {
         $uln = null;
 
-        if($this->isUlnSetValid) {
+        if(!$this->isAnimalCountWithinLimit) {
+            $code = self::ERROR_CODE;
+            $message = self::ERROR_MESSAGE_MAX_ANIMALS_EXCEEDED;
+        } else if($this->isUlnSetValid) {
             $code = self::VALID_CODE;
             $message = self::VALID_MESSAGE;
         } else {
