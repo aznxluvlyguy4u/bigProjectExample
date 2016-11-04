@@ -5,7 +5,9 @@ namespace AppBundle\Controller;
 use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\DeclareTagsTransferRepository;
+use AppBundle\Entity\TagTransferItemRequest;
 use AppBundle\Entity\TagTransferItemResponse;
+use AppBundle\Entity\TagTransferItemResponseRepository;
 use AppBundle\Util\ActionLogWriter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -118,9 +120,11 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
   public function getTagTransferItemErrors(Request $request)
   {
     $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
+    /** @var TagTransferItemResponseRepository $repository */
     $repository = $this->getDoctrine()->getRepository(TagTransferItemResponse::class);
-    $tagTransfers = $repository->getTagTransferItemRequestsWithLastErrorResponses($client);
+    $tagTransfers = $repository->getTagTransferItemRequestsWithLastErrorResponses($client, $location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $tagTransfers), 200);
   }
@@ -154,9 +158,11 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
   public function getTagTransferItemHistory(Request $request)
   {
     $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
 
+    /** @var TagTransferItemResponseRepository $repository */
     $repository = $this->getDoctrine()->getRepository(TagTransferItemResponse::class);
-    $tagTransfers = $repository->getTagTransferItemRequestsWithLastHistoryResponses($client);
+    $tagTransfers = $repository->getTagTransferItemRequestsWithLastHistoryResponses($client, $location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $tagTransfers),200);
   }
