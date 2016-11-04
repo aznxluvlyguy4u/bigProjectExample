@@ -126,6 +126,13 @@ abstract class DeclareBase
      */
     protected $actionBy;
 
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    protected $hideFailedMessage;
 
     /**
      * DeclareBase constructor.
@@ -367,6 +374,22 @@ abstract class DeclareBase
     public function setActionBy($actionBy)
     {
         $this->actionBy = $actionBy;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isHideFailedMessage()
+    {
+        return $this->hideFailedMessage;
+    }
+
+    /**
+     * @param boolean $hideFailedMessage
+     */
+    public function setHideFailedMessage($hideFailedMessage)
+    {
+        $this->hideFailedMessage = $hideFailedMessage;
     }
 
 
