@@ -353,12 +353,13 @@ class Count
     /**
      * @param ObjectManager $em
      * @param int $clientId
+     * @param int $locationId
      * @return int
      */
-    public static function getUnassignedTagsCount(ObjectManager $em, $clientId)
+    public static function getUnassignedTagsCount(ObjectManager $em, $clientId, $locationId)
     {
-        if(!is_int($clientId)) { return 0; }
-        $sql = "SELECT COUNT(*) FROM tag WHERE owner_id = ".$clientId." AND tag_status = 'UNASSIGNED'";
+        if(!is_int($clientId) || !is_int($locationId)) { return 0; }
+        $sql = "SELECT COUNT(*) FROM tag WHERE owner_id = ".$clientId." AND tag.location_id = ".$locationId." AND tag_status = 'UNASSIGNED'";
         $result = $em->getConnection()->query($sql)->fetch();
         return $result == false || $result == null ? 0 : $result['count'];
     }

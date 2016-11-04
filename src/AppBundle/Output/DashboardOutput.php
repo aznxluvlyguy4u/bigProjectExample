@@ -29,16 +29,16 @@ class DashboardOutput extends Output
     {
         $liveStockCount = Count::getLiveStockCountLocation($location);
         $errorCounts = Count::getErrorCountDeclarationsPerLocation($location);
-        $unassignedTagsCount = Count::getUnassignedTagsCount($em, $client->getId());
+        $unassignedTagsCount = Count::getUnassignedTagsCount($em, $client->getId(), $location->getId());
 
         self:: setUbnAndLocationHealthValues($em, $location);
 
         /** @var ContentRepository $repository */
         $repository = $em->getRepository(Content::class);
-        $cms = $repository->getCMS();
+        $dashBoardIntroductionText = $repository->getDashBoardIntroductionText();
 
         $result = array(
-                  "introduction" =>  $cms->getDashBoardIntroductionText(),
+                  "introduction" =>  $dashBoardIntroductionText,
                   "ubn" => self::$ubn,
                   "health_status" =>
                   array(
