@@ -31,6 +31,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\RequestTypeNonIR;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Validator\Constraints\DateTime;
@@ -61,17 +62,110 @@ class Count
      * @param Location $location
      * @return ArrayCollection
      */
-    public static function getErrorCountDeclarationsPerLocation(Location $location)
+    public static function getErrorCountDeclarationsPerLocation(ObjectManager $em, Location $location)
     {
         $errorCounts = new ArrayCollection();
-        $errorCounts->set(RequestType::DECLARE_ARRIVAL, Count::getErrorCountArrivalsAndImportsPerLocation($location));
-        $errorCounts->set(RequestType::DECLARE_DEPART, Count::getErrorCountDepartsAndExportsPerLocation($location));
-        $errorCounts->set(RequestType::DECLARE_LOSS, Count::getErrorCountLossesLocation($location));
-        $errorCounts->set(RequestType::DECLARE_BIRTH, Count::getErrorCountBirthsLocation($location));
-        $errorCounts->set(RequestTypeNonIR::MATE, Count::getErrorCountMatingsLocation($location));
+
+        if(!is_int($location->getId())) {
+            $defaultErrorCount = 0;
+            $errorCounts->set(RequestType::DECLARE_ARRIVAL, $defaultErrorCount);
+            $errorCounts->set(RequestType::DECLARE_DEPART, $defaultErrorCount);
+            $errorCounts->set(RequestType::DECLARE_LOSS, $defaultErrorCount);
+            $errorCounts->set(RequestType::DECLARE_BIRTH, $defaultErrorCount);
+            $errorCounts->set(RequestTypeNonIR::MATE, $defaultErrorCount);
+            return $errorCounts;
+        }
+
+        $sql = "SELECT COUNT(*), type
+                FROM declare_base b
+                INNER JOIN
+                  declare_arrival x ON b.id = x.id
+                WHERE b.request_state = 'FAILED' AND b.hide_failed_message = FALSE AND x.location_id = 262
+                GROUP BY type
+                UNION
+                SELECT COUNT(*), type
+                FROM declare_base b
+                  INNER JOIN
+                  declare_import x ON b.id = x.id
+                WHERE b.request_state = 'FAILED' AND b.hide_failed_message = FALSE AND x.location_id = 262
+                GROUP BY type
+                UNION
+                SELECT COUNT(*), type
+                FROM declare_base b
+                  INNER JOIN
+                  declare_depart x ON b.id = x.id
+                WHERE b.request_state = 'FAILED' AND b.hide_failed_message = FALSE AND x.location_id = 262
+                GROUP BY type
+                UNION
+                SELECT COUNT(*), type
+                FROM declare_base b
+                  INNER JOIN
+                  declare_export x ON b.id = x.id
+                WHERE b.request_state = 'FAILED' AND b.hide_failed_message = FALSE AND x.location_id = 262
+                GROUP BY type
+                UNION
+                SELECT COUNT(*), type
+                FROM declare_base b
+                  INNER JOIN
+                  declare_loss x ON b.id = x.id
+                WHERE b.request_state = 'FAILED' AND b.hide_failed_message = FALSE AND x.location_id = 262
+                GROUP BY type
+                UNION
+                SELECT COUNT(*), type
+                FROM declare_base b
+                  INNER JOIN
+                  declare_birth x ON b.id = x.id
+                WHERE b.request_state = 'FAILED' AND b.hide_failed_message = FALSE AND x.location_id = 262
+                GROUP BY type
+                UNION
+                SELECT COUNT(*), type
+                FROM declare_base b
+                  INNER JOIN
+                  declare_tags_transfer x ON b.id = x.id
+                WHERE b.request_state = 'FAILED' AND b.hide_failed_message = FALSE AND x.location_id = 262
+                GROUP BY type
+                UNION
+                SELECT COUNT(*), type
+                FROM mate m
+                  INNER JOIN declare_nsfo_base b ON m.id = b.id
+                WHERE b.request_state = 'FAILED' AND b.is_hidden = FALSE AND m.location_id = 262
+                GROUP BY type";
+
+        $results = $em->getConnection()->query($sql)->fetchAll();
+
+        $searchArray = [];
+        foreach ($results as $result) {
+            $searchArray[$result['type']] = $result['count'];
+        }
+        
+        $errorCounts->set(RequestType::DECLARE_ARRIVAL, self::getCountFromSearchArray(DeclareArrival::class, $searchArray)
+                                                      + self::getCountFromSearchArray(DeclareImport::class, $searchArray));
+        $errorCounts->set(RequestType::DECLARE_DEPART, self::getCountFromSearchArray(DeclareDepart::class, $searchArray)
+                                                     + self::getCountFromSearchArray(DeclareExport::class, $searchArray));
+        $errorCounts->set(RequestType::DECLARE_LOSS, self::getCountFromSearchArray(DeclareLoss::class, $searchArray));
+        $errorCounts->set(RequestType::DECLARE_BIRTH, self::getCountFromSearchArray(DeclareBirth::class, $searchArray));
+        $errorCounts->set(RequestTypeNonIR::MATE, self::getCountFromSearchArray(Mate::class, $searchArray));
 
         return $errorCounts;
     }
+
+
+    /**
+     * @param string $classPath
+     * @param array $searchArray
+     * @return int
+     */
+    private static function getCountFromSearchArray($classPath, $searchArray)
+    {
+        $key = StringUtil::getEntityName($classPath);
+
+        if(array_key_exists($key, $searchArray)){
+            return $searchArray[$key];
+        } else {
+            return 0;
+        }
+    }
+        
 
     /**
      * @param Client $client

@@ -196,4 +196,15 @@ class StringUtil
 
         return $pedigreeNumber;
     }
+
+
+    /**
+     * @param string $classPath
+     * @return string
+     */
+    public static function getEntityName($classPath)
+    {
+        $parts = explode('\\', $classPath);
+        return end($parts);
+    }
 }
