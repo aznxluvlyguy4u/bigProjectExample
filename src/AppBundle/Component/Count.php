@@ -160,51 +160,56 @@ class Count
      * - total
      * having an integer value for the amount of animals in that category.
      *
+     * @param ObjectManager $em
      * @param Location $location
      * @param boolean $returnArrayWithLowerCaseKeys
      * @return ArrayCollection|array
      */
-    public static function getLiveStockCountLocation(Location $location, $returnArrayWithLowerCaseKeys = false)
+    public static function getLiveStockCountLocation(ObjectManager $em, Location $location, $returnArrayWithLowerCaseKeys = false)
     {
-        //Settings
-        $isAlive = true;
-        $isDepartedOption = false;
-        $isExportedOption = false;
+        $locationId = $location->getId();
+        if(!is_int($locationId)) { return 0; }
+        
+        $adultDateOfBirthLimit = Utils::getAdultDateStringOfBirthLimit();
 
-        //Initialize counters
-        $pedigreeAdults = 0;
-        $pedigreeLambs = 0;
-        $nonPedigreeAdults = 0;
-        $nonPedigreeLambs = 0;
+        $sql = "SELECT COUNT(date_of_birth), '".LiveStockType::PEDIGREE_ADULT."' as type FROM animal
+                WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
+                      AND (transfer_state ISNULL OR transfer_state = 'TRANSFERRED')
+                      AND location_id = ".$locationId."
+                AND pedigree_country_code NOTNULL AND animal.pedigree_number NOTNULL
+                AND animal.date_of_birth <= '".$adultDateOfBirthLimit."'
+                UNION
+                SELECT COUNT(date_of_birth), '".LiveStockType::PEDIGREE_LAMB."' as type FROM animal
+                WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
+                      AND (transfer_state ISNULL OR transfer_state = 'TRANSFERRED')
+                      AND location_id = ".$locationId."
+                AND pedigree_country_code NOTNULL AND animal.pedigree_number NOTNULL
+                AND animal.date_of_birth > '".$adultDateOfBirthLimit."'
+                UNION
+                SELECT COUNT(date_of_birth), '".LiveStockType::NON_PEDIGREE_ADULT."' as type FROM animal
+                WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
+                      AND (transfer_state ISNULL OR transfer_state = 'TRANSFERRED')
+                      AND location_id = ".$locationId."
+                      AND (pedigree_country_code ISNULL OR animal.pedigree_number ISNULL)
+                      AND animal.date_of_birth <= '".$adultDateOfBirthLimit."'
+                UNION
+                SELECT COUNT(date_of_birth), '".LiveStockType::NON_PEDIGREE_LAMB."' as type FROM animal
+                WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
+                      AND (transfer_state ISNULL OR transfer_state = 'TRANSFERRED')
+                      AND location_id = ".$locationId."
+                      AND (pedigree_country_code ISNULL OR animal.pedigree_number ISNULL)
+                      AND animal.date_of_birth > '".$adultDateOfBirthLimit."'";
+        $results = $em->getConnection()->query($sql)->fetchAll();
 
-        $adultDateOfBirthLimit = Utils::getAdultDateOfBirthLimit();
-
-        foreach($location->getAnimals() as $animal) {
-
-            $isOwnedAnimal =  Count::includeAnimal($animal, $isAlive, $isExportedOption, $isDepartedOption);
-
-            $isPedigree = $animal->getPedigreeCountryCode() != null
-                && $animal->getPedigreeNumber() != null;
-
-            $dateOfBirth = $animal->getDateOfBirth();
-
-            if($isOwnedAnimal) {
-                if($isPedigree) {
-                    if($dateOfBirth > $adultDateOfBirthLimit) { // is under 1 years old
-                        $pedigreeLambs++;
-                    } else { // is adult
-                        $pedigreeAdults++;
-                    }
-
-                } else { //is non-pedigree
-                    if($dateOfBirth > $adultDateOfBirthLimit) { // is under 1 years old
-                        $nonPedigreeLambs++;
-                    } else { // is adult
-                        $nonPedigreeAdults++;
-                    }
-                }
-            }
+        $searchArray = [];
+        foreach ($results as $result) {
+            $searchArray[$result['type']] = $result['count'];
         }
+
+        $pedigreeAdults = $searchArray[LiveStockType::PEDIGREE_ADULT];
+        $pedigreeLambs = $searchArray[LiveStockType::PEDIGREE_LAMB];
+        $nonPedigreeAdults = $searchArray[LiveStockType::NON_PEDIGREE_ADULT];
+        $nonPedigreeLambs = $searchArray[LiveStockType::NON_PEDIGREE_LAMB];
 
         $pedigreeTotal = $pedigreeAdults + $pedigreeLambs;
         $nonPedigreeTotal = $nonPedigreeAdults + $nonPedigreeLambs;

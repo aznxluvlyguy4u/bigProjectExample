@@ -27,7 +27,7 @@ class DashboardOutput extends Output
      */
     public static function create(ObjectManager $em, Client $client, ArrayCollection $declarationLogDate, $location)
     {
-        $liveStockCount = Count::getLiveStockCountLocation($location);
+        $liveStockCount = Count::getLiveStockCountLocation($em, $location);
         $errorCounts = Count::getErrorCountDeclarationsPerLocation($em, $location);
         $unassignedTagsCount = Count::getUnassignedTagsCount($em, $client->getId(), $location->getId());
 
