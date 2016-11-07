@@ -55,7 +55,7 @@ class LivestockReportData extends ReportBase
         $this->data[ReportLabel::BREEDER_NUMBER] = '-'; //TODO
         $this->data[ReportLabel::UBN] = $this->location->getUbn();
         $this->data[ReportLabel::NAME.'_and_'.ReportLabel::ADDRESS] = $this->parseNameAddressString();
-        $this->data[ReportLabel::LIVESTOCK] = Count::getLiveStockCountLocation($this->location, true);
+        $this->data[ReportLabel::LIVESTOCK] = Count::getLiveStockCountLocation($em, $this->location, true);
         $this->data[ReportLabel::ANIMALS] = $this->retrieveLiveStockData();
     }
 

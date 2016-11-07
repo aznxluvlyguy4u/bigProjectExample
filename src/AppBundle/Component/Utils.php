@@ -111,6 +111,17 @@ class Utils
         return self::getDateLimitForAge($adultAgeLimit, $accurateOnTheSecond);
     }
 
+
+    /**
+     * @param bool $accurateOnTheSecond if false it only looks at the day and not the hours, minutes and seconds
+     * @return string
+     */
+    public static function getAdultDateStringOfBirthLimit($accurateOnTheSecond = false)
+    {
+        return self::getAdultDateOfBirthLimit($accurateOnTheSecond)->format('Y-m-d H:i:s');
+    }
+    
+
     /**
      * Generate a random string, using a cryptographically secure
      * pseudorandom number generator (random_int)

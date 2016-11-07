@@ -27,18 +27,18 @@ class DashboardOutput extends Output
      */
     public static function create(ObjectManager $em, Client $client, ArrayCollection $declarationLogDate, $location)
     {
-        $liveStockCount = Count::getLiveStockCountLocation($location);
-        $errorCounts = Count::getErrorCountDeclarationsPerLocation($location);
-        $unassignedTagsCount = Count::getUnassignedTagsCount($em, $client->getId());
+        $liveStockCount = Count::getLiveStockCountLocation($em, $location);
+        $errorCounts = Count::getErrorCountDeclarationsPerLocation($em, $location);
+        $unassignedTagsCount = Count::getUnassignedTagsCount($em, $client->getId(), $location->getId());
 
         self:: setUbnAndLocationHealthValues($em, $location);
 
         /** @var ContentRepository $repository */
         $repository = $em->getRepository(Content::class);
-        $cms = $repository->getCMS();
+        $dashBoardIntroductionText = $repository->getDashBoardIntroductionText();
 
         $result = array(
-                  "introduction" =>  $cms->getDashBoardIntroductionText(),
+                  "introduction" =>  $dashBoardIntroductionText,
                   "ubn" => self::$ubn,
                   "health_status" =>
                   array(

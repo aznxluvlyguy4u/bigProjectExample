@@ -7,6 +7,11 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
+use AppBundle\Entity\Animal;
+use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Neuter;
+use AppBundle\Entity\Ram;
+use AppBundle\Enumerator\GenderType;
 
 class AnimalArrayReader
 {
@@ -86,4 +91,56 @@ class AnimalArrayReader
 
         return $animal;
     }
+
+    
+    /**
+     * @param array $animals
+     * @return null|Animal|Ram|Ewe|Neuter
+     */
+    public static function prioritizeImportedAnimalFromArray($animals)
+    {
+        $count = count($animals);
+        if($count == 1) {
+            return $animals[0];
+
+        } elseif($count > 1) {
+
+            $lowestAnimalId = self::getLowestAnimalId($animals);
+
+            /** @var Animal $animal */
+            foreach ($animals as $animal) {
+                //Prioritize imported animal, based on vsmId saved in name column
+                if($animal->getName() != null) { return $animal;
+                    //Then prioritize non-Neuter animal
+                } elseif($animal->getGender() != GenderType::NEUTER && $animal->getGender() != GenderType::O) { return $animal;
+                    //Then prioritize Animal with lowest id
+                } elseif($animal->getId() == $lowestAnimalId) { return $animal; }
+            }
+            //By default return the first Animal
+            return $animals[0];
+
+        } else { //count == 0
+            return null;
+        }
+    }
+
+
+    /**
+     * @param $animals
+     * @return int|null
+     */
+    public static function getLowestAnimalId($animals)
+    {
+        if(count($animals) == 0) { return null; }
+        /** @var Animal $firstAnimal */
+        $firstAnimal = $animals[0];
+        $lowestId = $firstAnimal->getId();
+
+        /** @var Animal $animal */
+        foreach ($animals as $animal) {
+            if($animal->getId() < $lowestId) { $lowestId = $animal->getId(); }
+        }
+        return $lowestId;
+    }
+
 }

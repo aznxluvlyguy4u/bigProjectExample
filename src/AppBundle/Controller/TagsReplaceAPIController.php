@@ -171,7 +171,7 @@ class TagsReplaceAPIController extends APIController {
                 INNER JOIN declare_base ON declare_tag_replace.id = declare_base.id
                 LEFT JOIN declare_tag_replace_response ON declare_tag_replace.id = declare_tag_replace_response.declare_tag_replace_request_message_id
                 LEFT JOIN declare_base_response ON declare_tag_replace_response.id = declare_base_response.id
-                WHERE declare_base.request_state = 'FAILED' AND declare_tag_replace.location_id = '". $location->getId() ."'";
+                WHERE declare_base.request_state = 'FAILED' AND declare_base.hide_failed_message = FALSE AND declare_tag_replace.location_id = '". $location->getId() ."'";
         $results = $em->getConnection()->query($sql)->fetchAll();
 
         $results = DeclareReplaceTagsOutput::createHistoryArray($results);
