@@ -138,7 +138,7 @@ abstract class DeclareBase
      * DeclareBase constructor.
      */
     public function __construct() {
-
+        $this->setHideFailedMessage(false);
     }
 
     /**
