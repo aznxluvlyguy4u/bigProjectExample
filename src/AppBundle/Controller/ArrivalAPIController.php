@@ -9,8 +9,11 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareArrivalRepository;
+use AppBundle\Entity\DeclareArrivalResponseRepository;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareImportResponseRepository;
 use AppBundle\Entity\LocationHealthInspection;
 use AppBundle\Entity\Message;
 use AppBundle\Enumerator\MessageType;
@@ -385,9 +388,11 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
   {
     $location = $this->getSelectedLocation($request);
 
+    /** @var DeclareArrivalResponseRepository $repository */  
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
     $declareArrivals = $repository->getArrivalsWithLastErrorResponses($location);
 
+    /** @var DeclareImportResponseRepository $repository */  
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_RESPONSE_REPOSITORY);
     $declareImports = $repository->getImportsWithLastErrorResponses($location);
 
@@ -422,10 +427,12 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
   public function getArrivalHistory(Request $request)
   {
     $location = $this->getSelectedLocation($request);
-
+      
+    /** @var DeclareArrivalResponseRepository $repository */  
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
     $declareArrivals = $repository->getArrivalsWithLastHistoryResponses($location);
 
+    /** @var DeclareImportResponseRepository $repository */  
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_RESPONSE_REPOSITORY);
     $declareImports = $repository->getImportsWithLastHistoryResponses($location);
 

@@ -10,6 +10,7 @@ use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\LiveStockType;
+use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -61,9 +62,8 @@ class AnimalRepository extends BaseRepository
    */
   public function findByUlnCountryCodeAndNumber($countryCode, $ulnNumber)
   {
-    $animal = $this->findOneBy(array('ulnCountryCode' => $countryCode, 'ulnNumber' => $ulnNumber));
-
-    return $animal;
+    $animals = $this->findBy(array('ulnCountryCode' => $countryCode, 'ulnNumber' => $ulnNumber));
+    return AnimalArrayReader::prioritizeImportedAnimalFromArray($animals);
   }
 
 
