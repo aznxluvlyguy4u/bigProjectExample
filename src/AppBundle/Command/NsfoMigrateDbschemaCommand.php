@@ -45,12 +45,18 @@ class NsfoMigrateDbschemaCommand extends ContainerAwareCommand
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
             '1: Copy isRemoveByUser from DeclareBaseReponse to hideFailedMessage in DeclareBase', "\n",
+            '2: hideFailedMessages that do not have DeclareBaseResponses', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
             case 1:
                 HiddenMessage::migrateHiddenMessageStatusFromResponseToRequestBase($em, $this->cmdUtil);
+                $output->writeln('DONE!');
+                break;
+
+            case 2:
+                HiddenMessage::hideFailedMessagesMissingAResponse($em, $this->cmdUtil);
                 $output->writeln('DONE!');
                 break;
 
