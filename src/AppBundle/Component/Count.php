@@ -16,6 +16,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Mate;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\LiveStockType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\RequestTypeNonIR;
 use AppBundle\Util\StringUtil;
@@ -30,6 +31,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 class Count
 {
     /**
+     * @param ObjectManager $em
      * @param Location $location
      * @return ArrayCollection
      */
@@ -37,7 +39,8 @@ class Count
     {
         $errorCounts = new ArrayCollection();
 
-        if(!is_int($location->getId())) {
+        $locationId = $location->getId();
+        if(!is_int($locationId)) {
             $defaultErrorCount = 0;
             $errorCounts->set(RequestType::DECLARE_ARRIVAL, $defaultErrorCount);
             $errorCounts->set(RequestType::DECLARE_DEPART, $defaultErrorCount);
@@ -51,55 +54,55 @@ class Count
                 FROM declare_base b
                 INNER JOIN
                   declare_arrival x ON b.id = x.id
-                WHERE b.request_state = 'FAILED' AND b.hide_failed_message = FALSE AND x.location_id = 262
+                WHERE b.request_state = '".RequestStateType::FAILED."' AND b.hide_failed_message = FALSE AND x.location_id = ".$locationId."
                 GROUP BY type
                 UNION
                 SELECT COUNT(*), type
                 FROM declare_base b
                   INNER JOIN
                   declare_import x ON b.id = x.id
-                WHERE b.request_state = 'FAILED' AND b.hide_failed_message = FALSE AND x.location_id = 262
+                WHERE b.request_state = '".RequestStateType::FAILED."' AND b.hide_failed_message = FALSE AND x.location_id = ".$locationId."
                 GROUP BY type
                 UNION
                 SELECT COUNT(*), type
                 FROM declare_base b
                   INNER JOIN
                   declare_depart x ON b.id = x.id
-                WHERE b.request_state = 'FAILED' AND b.hide_failed_message = FALSE AND x.location_id = 262
+                WHERE b.request_state = '".RequestStateType::FAILED."' AND b.hide_failed_message = FALSE AND x.location_id = ".$locationId."
                 GROUP BY type
                 UNION
                 SELECT COUNT(*), type
                 FROM declare_base b
                   INNER JOIN
                   declare_export x ON b.id = x.id
-                WHERE b.request_state = 'FAILED' AND b.hide_failed_message = FALSE AND x.location_id = 262
+                WHERE b.request_state = '".RequestStateType::FAILED."' AND b.hide_failed_message = FALSE AND x.location_id = ".$locationId."
                 GROUP BY type
                 UNION
                 SELECT COUNT(*), type
                 FROM declare_base b
                   INNER JOIN
                   declare_loss x ON b.id = x.id
-                WHERE b.request_state = 'FAILED' AND b.hide_failed_message = FALSE AND x.location_id = 262
+                WHERE b.request_state = '".RequestStateType::FAILED."' AND b.hide_failed_message = FALSE AND x.location_id = ".$locationId."
                 GROUP BY type
                 UNION
                 SELECT COUNT(*), type
                 FROM declare_base b
                   INNER JOIN
                   declare_birth x ON b.id = x.id
-                WHERE b.request_state = 'FAILED' AND b.hide_failed_message = FALSE AND x.location_id = 262
+                WHERE b.request_state = '".RequestStateType::FAILED."' AND b.hide_failed_message = FALSE AND x.location_id = ".$locationId."
                 GROUP BY type
                 UNION
                 SELECT COUNT(*), type
                 FROM declare_base b
                   INNER JOIN
                   declare_tags_transfer x ON b.id = x.id
-                WHERE b.request_state = 'FAILED' AND b.hide_failed_message = FALSE AND x.location_id = 262
+                WHERE b.request_state = '".RequestStateType::FAILED."' AND b.hide_failed_message = FALSE AND x.location_id = ".$locationId."
                 GROUP BY type
                 UNION
                 SELECT COUNT(*), type
                 FROM mate m
                   INNER JOIN declare_nsfo_base b ON m.id = b.id
-                WHERE b.request_state = 'FAILED' AND b.is_hidden = FALSE AND m.location_id = 262
+                WHERE b.request_state = '".RequestStateType::FAILED."' AND b.is_hidden = FALSE AND m.location_id = ".$locationId."
                 GROUP BY type";
 
         $results = $em->getConnection()->query($sql)->fetchAll();
@@ -174,28 +177,28 @@ class Count
 
         $sql = "SELECT COUNT(date_of_birth), '".LiveStockType::PEDIGREE_ADULT."' as type FROM animal
                 WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
-                      AND (transfer_state ISNULL OR transfer_state = 'TRANSFERRED')
+                      AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
                       AND location_id = ".$locationId."
                 AND pedigree_country_code NOTNULL AND animal.pedigree_number NOTNULL
                 AND animal.date_of_birth <= '".$adultDateOfBirthLimit."'
                 UNION
                 SELECT COUNT(date_of_birth), '".LiveStockType::PEDIGREE_LAMB."' as type FROM animal
                 WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
-                      AND (transfer_state ISNULL OR transfer_state = 'TRANSFERRED')
+                      AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
                       AND location_id = ".$locationId."
                 AND pedigree_country_code NOTNULL AND animal.pedigree_number NOTNULL
                 AND animal.date_of_birth > '".$adultDateOfBirthLimit."'
                 UNION
                 SELECT COUNT(date_of_birth), '".LiveStockType::NON_PEDIGREE_ADULT."' as type FROM animal
                 WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
-                      AND (transfer_state ISNULL OR transfer_state = 'TRANSFERRED')
+                      AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
                       AND location_id = ".$locationId."
                       AND (pedigree_country_code ISNULL OR animal.pedigree_number ISNULL)
                       AND animal.date_of_birth <= '".$adultDateOfBirthLimit."'
                 UNION
                 SELECT COUNT(date_of_birth), '".LiveStockType::NON_PEDIGREE_LAMB."' as type FROM animal
                 WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
-                      AND (transfer_state ISNULL OR transfer_state = 'TRANSFERRED')
+                      AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
                       AND location_id = ".$locationId."
                       AND (pedigree_country_code ISNULL OR animal.pedigree_number ISNULL)
                       AND animal.date_of_birth > '".$adultDateOfBirthLimit."'";
