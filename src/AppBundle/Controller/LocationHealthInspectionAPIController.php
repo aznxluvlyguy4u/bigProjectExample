@@ -406,7 +406,21 @@ class LocationHealthInspectionAPIController extends APIController
         }
 
         $now = new \DateTime('now');
-        $now = $now->format('d/m/Y');
+
+        $months[0] = 'januari';
+        $months[1] = 'februari';
+        $months[2] = 'maart';
+        $months[3] = 'april';
+        $months[4] = 'mei';
+        $months[5] = 'juni';
+        $months[6] = 'juli';
+        $months[7] = 'augustus';
+        $months[8] = 'september';
+        $months[8] = 'oktober';
+        $months[9] = 'november';
+        $months[10] = 'december';
+
+        $now = $now->format('d') . ' ' . $months[($now->format('m') - 1)] . ' ' . $now->format('Y');
         $html = $this->renderView($twigFile, ['letters' => $letters, 'now' => $now]);
         $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,
             array(
