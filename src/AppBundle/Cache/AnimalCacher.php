@@ -310,6 +310,28 @@ class AnimalCacher
 
     /**
      * @param ObjectManager $em
+     * @param CommandUtil $cmdUtil
+     */
+    public static function deleteDuplicateAnimalCacheRecords(ObjectManager $em, $cmdUtil = null)
+    {
+        $sql = "SELECT animal_id FROM animal_cache
+                GROUP BY animal_id HAVING COUNT(*) > 1";
+        $results = $em->getConnection()->query($sql)->fetchAll();
+
+        if($cmdUtil != null){ $cmdUtil->setStartTimeAndPrintIt(count($results)+1, 1); }
+
+        foreach ($results as $result) {
+            $sql = "DELETE FROM animal_cache WHERE animal_id = ".$result['animal_id'];
+            $em->getConnection()->exec($sql);
+
+            if($cmdUtil != null){ $cmdUtil->advanceProgressBar(1); }
+        }
+        if($cmdUtil != null){ $cmdUtil->setEndTimeAndPrintFinalOverview(); }
+    }
+
+
+    /**
+     * @param ObjectManager $em
      * @param Animal $animal
      * @param boolean $flush
      */
