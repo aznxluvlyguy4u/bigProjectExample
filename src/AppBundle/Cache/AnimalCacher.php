@@ -352,17 +352,26 @@ class AnimalCacher
      */
     public static function deleteDuplicateAnimalCacheRecords(ObjectManager $em, $cmdUtil = null)
     {
-        $sql = "SELECT animal_id FROM animal_cache
+        $hasDuplicates = true;
+        $isFirstIteration = true;
+        while($hasDuplicates) {
+
+            $sql = "SELECT animal_id, MIN(id) as min_id FROM animal_cache
                 GROUP BY animal_id HAVING COUNT(*) > 1";
-        $results = $em->getConnection()->query($sql)->fetchAll();
+            $results = $em->getConnection()->query($sql)->fetchAll();
 
-        if($cmdUtil != null){ $cmdUtil->setStartTimeAndPrintIt(count($results)+1, 1); }
+            if($cmdUtil != null && $isFirstIteration){
+                $cmdUtil->setStartTimeAndPrintIt(count($results)+1, 1);
+                $isFirstIteration = false;
+            }
 
-        foreach ($results as $result) {
-            $sql = "DELETE FROM animal_cache WHERE animal_id = ".$result['animal_id'];
-            $em->getConnection()->exec($sql);
+            foreach ($results as $result) {
+                $sql = "DELETE FROM animal_cache WHERE id = ".$result['min_id'];
+                $em->getConnection()->exec($sql);
 
-            if($cmdUtil != null){ $cmdUtil->advanceProgressBar(1); }
+                if($cmdUtil != null){ $cmdUtil->advanceProgressBar(1); }
+            }
+            if(count($results) == 0) { $hasDuplicates = false; }
         }
         if($cmdUtil != null){ $cmdUtil->setEndTimeAndPrintFinalOverview(); }
     }
