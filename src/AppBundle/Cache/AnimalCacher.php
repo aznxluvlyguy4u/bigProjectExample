@@ -83,17 +83,34 @@ class AnimalCacher
 
         $count = 0;
 
+
+        //Get ids of already cached animals
+        $sql = "SELECT animal_id FROM animal_cache";
+        $results = $em->getConnection()->query($sql)->fetchAll();
+        $cachedAnimalIds = [];
+        foreach ($results as $result) {
+            $animalId = intval($result['animal_id']);
+            $cachedAnimalIds[$animalId] = $animalId;
+        }
+        
+
         if($cmdUtil instanceof CommandUtil) {
             $cmdUtil->setStartTimeAndPrintIt(count($animalCacherInputData) + 1, 1, 'Generating animal cache records');
             foreach ($animalCacherInputData as $record) {
-                self::cacheById($em, $record['animal_id'], $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+                $animalId = $record['animal_id'];
+                if(!array_key_exists($animalId, $cachedAnimalIds)) { //Double checks for duplicates
+                    self::cacheById($em, $animalId, $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+                }
                 if($count++%self::FLUSH_BATCH_SIZE == 0) { $em->flush(); }
                 $cmdUtil->advanceProgressBar(1);
             }
             $cmdUtil->setEndTimeAndPrintFinalOverview();
         } else {
             foreach ($animalCacherInputData as $record) {
-                self::cacheById($em, $record['animal_id'], $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+                $animalId = $record['animal_id'];
+                if(!array_key_exists($animalId, $cachedAnimalIds)) { //Double checks for duplicates
+                    self::cacheById($em, $record['animal_id'], $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+                }
                 if($count++%self::FLUSH_BATCH_SIZE == 0) { $em->flush(); }
             }
         }
