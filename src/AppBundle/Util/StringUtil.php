@@ -15,11 +15,28 @@ class StringUtil
      * Just remove the last 5 numbers of the uln
      *
      * @param string $ulnString
+     * @param string $animalOrderNumberString
      * @return string
      */
-    public static function getUlnWithoutOrderNumber($ulnString)
+    public static function getUlnWithoutOrderNumber($ulnString, $animalOrderNumberString)
     {
-        return mb_substr($ulnString, 0, count($ulnString)-6);
+        $startChar = 0;
+        $length = strlen($ulnString)-strlen($animalOrderNumberString);
+        return mb_substr($ulnString, $startChar, $length);
+    }
+
+
+    /**
+     * @param string $string
+     * @return string
+     */
+    public static function getLast5CharactersFromString($string)
+    {
+        if(strlen($string) < 5) {
+            return $string;
+        } else {
+            return substr($string, strlen($string)-5, strlen($string));
+        }
     }
 
 

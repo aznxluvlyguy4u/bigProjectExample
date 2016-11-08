@@ -128,9 +128,9 @@ class LivestockReportData extends ReportBase
 
         $keys = array_keys($results);
         foreach ($keys as $key) {
-            $results[$key]['a_uln_without_order_number'] = StringUtil::getUlnWithoutOrderNumber($results[$key]['a_uln']);
-            $results[$key]['f_uln_without_order_number'] = StringUtil::getUlnWithoutOrderNumber($results[$key]['f_uln']);
-            $results[$key]['m_uln_without_order_number'] = StringUtil::getUlnWithoutOrderNumber($results[$key]['m_uln']);
+            $results[$key]['a_uln_without_order_number'] = StringUtil::getUlnWithoutOrderNumber($results[$key]['a_uln'], $results[$key]['a_animal_order_number']);
+            $results[$key]['f_uln_without_order_number'] = StringUtil::getUlnWithoutOrderNumber($results[$key]['f_uln'], $results[$key]['f_animal_order_number']);
+            $results[$key]['m_uln_without_order_number'] = StringUtil::getUlnWithoutOrderNumber($results[$key]['m_uln'], $results[$key]['m_animal_order_number']);
 
             $results[$key]['gender'] = $this->getGenderLetter($results[$key]['gender']);
 

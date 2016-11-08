@@ -34,6 +34,9 @@ class AnimalCacher
     const EMPTY_INDEX_VALUE = '-/-';
     const FLUSH_BATCH_SIZE = 1000;
 
+    //Cache setting
+    const CHECK_ANIMAL_CACHE_BEFORE_PERSISTING = true;
+
 
     /**
      * @param ObjectManager $em
@@ -71,29 +74,46 @@ class AnimalCacher
     {
         $flushPerRecord = false;
 
+        /** @var AnimalCacheRepository $animalCacheRepository */
+        $animalCacheRepository = $em->getRepository(AnimalCache::class);
+        $animalCacherInputData = $animalCacheRepository->getAnimalCacherInputDataPerLocation($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $locationId);
+        if(count($animalCacherInputData) == 0) { return; }
+
         /** @var GeneticBaseRepository $geneticBaseRepository */
         $geneticBaseRepository = $em->getRepository(GeneticBase::class);
 
         $breedValuesYear = $geneticBaseRepository->getLatestYear();
         $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
-        
-        /** @var AnimalCacheRepository $animalCacheRepository */
-        $animalCacheRepository = $em->getRepository(AnimalCache::class);
-        $animalCacherInputData = $animalCacheRepository->getAnimalCacherInputDataPerLocation($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $locationId);
 
         $count = 0;
+
+        //Get ids of already cached animals
+        $sql = "SELECT animal_id FROM animal_cache";
+        $results = $em->getConnection()->query($sql)->fetchAll();
+        $cachedAnimalIds = [];
+        foreach ($results as $result) {
+            $animalId = intval($result['animal_id']);
+            $cachedAnimalIds[$animalId] = $animalId;
+        }
+        
 
         if($cmdUtil instanceof CommandUtil) {
             $cmdUtil->setStartTimeAndPrintIt(count($animalCacherInputData) + 1, 1, 'Generating animal cache records');
             foreach ($animalCacherInputData as $record) {
-                self::cacheById($em, $record['animal_id'], $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+                $animalId = $record['animal_id'];
+                if(!array_key_exists($animalId, $cachedAnimalIds)) { //Double checks for duplicates
+                    self::cacheById($em, $animalId, $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+                }
                 if($count++%self::FLUSH_BATCH_SIZE == 0) { $em->flush(); }
                 $cmdUtil->advanceProgressBar(1);
             }
             $cmdUtil->setEndTimeAndPrintFinalOverview();
         } else {
             foreach ($animalCacherInputData as $record) {
-                self::cacheById($em, $record['animal_id'], $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+                $animalId = $record['animal_id'];
+                if(!array_key_exists($animalId, $cachedAnimalIds)) { //Double checks for duplicates
+                    self::cacheById($em, $record['animal_id'], $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+                }
                 if($count++%self::FLUSH_BATCH_SIZE == 0) { $em->flush(); }
             }
         }
@@ -281,15 +301,22 @@ class AnimalCacher
 
         $logDate = TimeUtil::getLogDateString();
 
+        /** @var AnimalCacheRepository $repository */
+        $repository = $em->getRepository(AnimalCache::class);
+
         if($isUpdate) {
-            /** @var AnimalCacheRepository $repository */
-            $repository = $em->getRepository(AnimalCache::class);
             $record = $repository->findOneBy(['animalId' => $animalId]);
             if($record == null) { $record = new AnimalCache(); }
             $record->setLogDate(new \DateTime()); //update logDate
         } else {
-            //New record
-            $record = new AnimalCache();
+            if(self::CHECK_ANIMAL_CACHE_BEFORE_PERSISTING) {
+                $record = $repository->findOneBy(['animalId' => $animalId]);
+                if($record == null) { $record = new AnimalCache(); }
+                $record->setLogDate(new \DateTime()); //update logDate
+            } else {
+                //New record
+                $record = new AnimalCache();
+            }
         }
 
         $record->setAnimalId($animalId);
@@ -335,17 +362,26 @@ class AnimalCacher
      */
     public static function deleteDuplicateAnimalCacheRecords(ObjectManager $em, $cmdUtil = null)
     {
-        $sql = "SELECT animal_id FROM animal_cache
+        $hasDuplicates = true;
+        $isFirstIteration = true;
+        while($hasDuplicates) {
+
+            $sql = "SELECT animal_id, MIN(id) as min_id FROM animal_cache
                 GROUP BY animal_id HAVING COUNT(*) > 1";
-        $results = $em->getConnection()->query($sql)->fetchAll();
+            $results = $em->getConnection()->query($sql)->fetchAll();
 
-        if($cmdUtil != null){ $cmdUtil->setStartTimeAndPrintIt(count($results)+1, 1); }
+            if($cmdUtil != null && $isFirstIteration){
+                $cmdUtil->setStartTimeAndPrintIt(count($results)+1, 1);
+                $isFirstIteration = false;
+            }
 
-        foreach ($results as $result) {
-            $sql = "DELETE FROM animal_cache WHERE animal_id = ".$result['animal_id'];
-            $em->getConnection()->exec($sql);
+            foreach ($results as $result) {
+                $sql = "DELETE FROM animal_cache WHERE id = ".$result['min_id'];
+                $em->getConnection()->exec($sql);
 
-            if($cmdUtil != null){ $cmdUtil->advanceProgressBar(1); }
+                if($cmdUtil != null){ $cmdUtil->advanceProgressBar(1); }
+            }
+            if(count($results) == 0) { $hasDuplicates = false; }
         }
         if($cmdUtil != null){ $cmdUtil->setEndTimeAndPrintFinalOverview(); }
     }
