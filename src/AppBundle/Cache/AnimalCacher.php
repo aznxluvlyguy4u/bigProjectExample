@@ -71,18 +71,18 @@ class AnimalCacher
     {
         $flushPerRecord = false;
 
+        /** @var AnimalCacheRepository $animalCacheRepository */
+        $animalCacheRepository = $em->getRepository(AnimalCache::class);
+        $animalCacherInputData = $animalCacheRepository->getAnimalCacherInputDataPerLocation($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $locationId);
+        if(count($animalCacherInputData) == 0) { return; }
+
         /** @var GeneticBaseRepository $geneticBaseRepository */
         $geneticBaseRepository = $em->getRepository(GeneticBase::class);
 
         $breedValuesYear = $geneticBaseRepository->getLatestYear();
         $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
-        
-        /** @var AnimalCacheRepository $animalCacheRepository */
-        $animalCacheRepository = $em->getRepository(AnimalCache::class);
-        $animalCacherInputData = $animalCacheRepository->getAnimalCacherInputDataPerLocation($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $locationId);
 
         $count = 0;
-
 
         //Get ids of already cached animals
         $sql = "SELECT animal_id FROM animal_cache";
