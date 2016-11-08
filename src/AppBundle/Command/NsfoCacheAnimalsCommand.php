@@ -49,6 +49,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '5: Regenerate all AnimalCache records older than given stringDateTime (YYYY-MM-DD HH:MM:SS)', "\n",
             '6: Generate all AnimalCache records for animal and ascendants (3gen) for given locationId', "\n",
             '7: Regenerate all AnimalCache records for animal and ascendants (3gen) for given locationId', "\n",
+            '8: Delete duplicate records', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -91,6 +92,11 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             case 7:
                 $locationId = intval($this->cmdUtil->generateQuestion('insert locationId (default = '.self::DEFAULT_LOCATION_ID.')', self::DEFAULT_LOCATION_ID));
                 AnimalCacher::cacheAnimalsAndAscendantsByLocationId($em, false, null, $this->cmdUtil, $locationId);
+                $output->writeln('DONE!');
+                break;
+
+            case 8:
+                AnimalCacher::deleteDuplicateAnimalCacheRecords($em, $this->cmdUtil);
                 $output->writeln('DONE!');
                 break;
 

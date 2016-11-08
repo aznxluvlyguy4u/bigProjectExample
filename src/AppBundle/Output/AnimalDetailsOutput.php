@@ -288,14 +288,14 @@ class AnimalDetailsOutput
 
             $results[] = [
                 'year' => $year,
-                'growth' => $growth,
-                'muscle_thickness' => $muscleThickness,
-                'fat' => $fat,
-                'growth_accuracy' => $growthAccuracy,
-                'muscle_thickness_accuracy' => $muscleThicknessAccuracy,
-                'fat_accuracy' => $fatAccuracy,
-                'lamb_meat_index' => $lambMeatIndex,
-                'lamb_meat_index_accuracy' => $lambMeatIndexAccuracy
+                'growth' => floatval($growth),
+                'muscle_thickness' => floatval($muscleThickness),
+                'fat' => floatval($fat),
+                'growth_accuracy' => floatval($growthAccuracy),
+                'muscle_thickness_accuracy' => floatval($muscleThicknessAccuracy),
+                'fat_accuracy' => floatval($fatAccuracy),
+                'lamb_meat_index' => floatval($lambMeatIndex),
+                'lamb_meat_index_accuracy' => floatval($lambMeatIndexAccuracy)
             ];
         }
 

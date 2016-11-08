@@ -133,6 +133,15 @@ class AnimalCacher
 
         $flushPerRecord = false;
 
+        //Get ids of already cached animals
+        $sql = "SELECT animal_id FROM animal_cache";
+        $results = $em->getConnection()->query($sql)->fetchAll();
+        $cachedAnimalIds = [];
+        foreach ($results as $result) {
+            $animalId = intval($result['animal_id']);
+            $cachedAnimalIds[$animalId] = $animalId;
+        }
+
         /** @var GeneticBaseRepository $geneticBaseRepository */
         $geneticBaseRepository = $em->getRepository(GeneticBase::class);
 
@@ -147,13 +156,19 @@ class AnimalCacher
         if($cmdUtil instanceof CommandUtil) {
             $cmdUtil->setStartTimeAndPrintIt(count($animalIds) + 1, 1, 'Generating animal cache records');
 
-            foreach ($animalIds as $animalId) {
-                if(is_int($animalId)) {
+            foreach ($animalIds as $animalIdChild) {
+                if(is_int($animalIdChild)) {
 
-                    $animalCacherInputData = $animalCacheRepository->getAnimalCacherInputDataForAnimalAndAscendants($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $animalId);
+                    $animalCacherInputData = $animalCacheRepository->getAnimalCacherInputDataForAnimalAndAscendants($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $animalIdChild);
 
                     foreach ($animalCacherInputData as $record) {
-                        self::cacheById($em, $record['animal_id'], $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+                        $animalId = $record['animal_id'];
+                        if(!array_key_exists($animalId, $cachedAnimalIds)) { //THIS PREVENTS DUPLICATES!
+                            self::cacheById($em, $animalId, $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+
+                            //Add animalId to array to check for duplicates
+                            $cachedAnimalIds[$animalId] = $animalId;
+                        }
                     }
                     if($count++%self::FLUSH_BATCH_SIZE == 0) { $em->flush(); }
                     $cmdUtil->advanceProgressBar(1);
@@ -162,13 +177,19 @@ class AnimalCacher
             $cmdUtil->setEndTimeAndPrintFinalOverview();
 
         } else {
-            foreach ($animalIds as $animalId) {
-                if (is_int($animalId)) {
+            foreach ($animalIds as $animalIdChild) {
+                if (is_int($animalIdChild)) {
 
-                    $animalCacherInputData = $animalCacheRepository->getAnimalCacherInputDataForAnimalAndAscendants($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $animalId);
+                    $animalCacherInputData = $animalCacheRepository->getAnimalCacherInputDataForAnimalAndAscendants($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $animalIdChild);
 
                     foreach ($animalCacherInputData as $record) {
-                        self::cacheById($em, $record['animal_id'], $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+                        $animalId = $record['animal_id'];
+                        if(!array_key_exists($animalId, $cachedAnimalIds)) { //THIS PREVENTS DUPLICATES!
+                            self::cacheById($em, $animalId, $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
+
+                            //Add animalId to array to check for duplicates
+                            $cachedAnimalIds[$animalId] = $animalId;
+                        }
                     }
                     if ($count++ % self::FLUSH_BATCH_SIZE == 0) {
                         $em->flush();
@@ -305,6 +326,28 @@ class AnimalCacher
 
         $em->persist($record);
         if($flush) { $em->flush(); }
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param CommandUtil $cmdUtil
+     */
+    public static function deleteDuplicateAnimalCacheRecords(ObjectManager $em, $cmdUtil = null)
+    {
+        $sql = "SELECT animal_id FROM animal_cache
+                GROUP BY animal_id HAVING COUNT(*) > 1";
+        $results = $em->getConnection()->query($sql)->fetchAll();
+
+        if($cmdUtil != null){ $cmdUtil->setStartTimeAndPrintIt(count($results)+1, 1); }
+
+        foreach ($results as $result) {
+            $sql = "DELETE FROM animal_cache WHERE animal_id = ".$result['animal_id'];
+            $em->getConnection()->exec($sql);
+
+            if($cmdUtil != null){ $cmdUtil->advanceProgressBar(1); }
+        }
+        if($cmdUtil != null){ $cmdUtil->setEndTimeAndPrintFinalOverview(); }
     }
 
 
