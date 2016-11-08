@@ -34,6 +34,9 @@ class AnimalCacher
     const EMPTY_INDEX_VALUE = '-/-';
     const FLUSH_BATCH_SIZE = 1000;
 
+    //Cache setting
+    const CHECK_ANIMAL_CACHE_BEFORE_PERSISTING = true;
+
 
     /**
      * @param ObjectManager $em
@@ -298,15 +301,22 @@ class AnimalCacher
 
         $logDate = TimeUtil::getLogDateString();
 
+        /** @var AnimalCacheRepository $repository */
+        $repository = $em->getRepository(AnimalCache::class);
+
         if($isUpdate) {
-            /** @var AnimalCacheRepository $repository */
-            $repository = $em->getRepository(AnimalCache::class);
             $record = $repository->findOneBy(['animalId' => $animalId]);
             if($record == null) { $record = new AnimalCache(); }
             $record->setLogDate(new \DateTime()); //update logDate
         } else {
-            //New record
-            $record = new AnimalCache();
+            if(self::CHECK_ANIMAL_CACHE_BEFORE_PERSISTING) {
+                $record = $repository->findOneBy(['animalId' => $animalId]);
+                if($record == null) { $record = new AnimalCache(); }
+                $record->setLogDate(new \DateTime()); //update logDate
+            } else {
+                //New record
+                $record = new AnimalCache();
+            }
         }
 
         $record->setAnimalId($animalId);
