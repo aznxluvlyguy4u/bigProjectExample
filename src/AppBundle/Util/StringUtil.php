@@ -27,6 +27,20 @@ class StringUtil
 
 
     /**
+     * @param string $string
+     * @return string
+     */
+    public static function getLast5CharactersFromString($string)
+    {
+        if(strlen($string) < 5) {
+            return $string;
+        } else {
+            return substr($string, strlen($string)-5, strlen($string));
+        }
+    }
+
+
+    /**
      * @param string $firstName
      * @param string $lastName
      * @return string
