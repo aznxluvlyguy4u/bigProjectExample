@@ -3,6 +3,8 @@
 namespace AppBundle\Util;
 use AppBundle\Constant\UnicodeSymbol;
 use AppBundle\Entity\Animal;
+use AppBundle\Enumerator\BirthType;
+use AppBundle\Enumerator\BirthTypeDutch;
 use AppBundle\Enumerator\BreedTrait;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\BreedTypeDutch;
@@ -31,10 +33,10 @@ class Translation
 
     /**
      * @param string $breedType
-     * @param bool $isOnlyFirstLetterCapitilized
+     * @param bool $isOnlyFirstLetterCapitalized
      * @return string
      */
-    public static function translateBreedType($breedType, $isOnlyFirstLetterCapitilized = true)
+    public static function translateBreedType($breedType, $isOnlyFirstLetterCapitalized = true)
     {
         switch ($breedType) {
             case BreedType::BLIND_FACTOR:       $result = BreedTypeDutch::BLIND_FACTOR; break;
@@ -46,7 +48,7 @@ class Translation
             case BreedType::UNDETERMINED:       $result = BreedTypeDutch::UNDETERMINED; break;
             default: $result = $breedType; break; //no translation
         }
-        if($isOnlyFirstLetterCapitilized) {
+        if($isOnlyFirstLetterCapitalized) {
             return ucfirst(strtolower($result));
         } else {
             return $result;
@@ -101,4 +103,27 @@ class Translation
     }
 
 
+    /**
+     * @param string $birthTypeDutch
+     * @param bool $isOnlyFirstLetterCapitalized
+     * @return string
+     */
+    public static function getBirthTypeInEnglish($birthTypeDutch, $isOnlyFirstLetterCapitalized = true)
+    {
+        switch ($birthTypeDutch) {
+            case BirthTypeDutch::NO_HELP:                       $result = BirthType::NO_HELP; break;
+            case BirthTypeDutch::LIGHT_WITH_HELP:               $result = BirthType::LIGHT_WITH_HELP; break;
+            case BirthTypeDutch::NORMAL_WITH_HELP:              $result = BirthType::NORMAL_WITH_HELP; break;
+            case BirthTypeDutch::HEAVY_WITH_HELP:               $result = BirthType::HEAVY_WITH_HELP; break;
+            case BirthTypeDutch::CAESARIAN_LAMB_TOO_BIG:        $result = BirthType::CAESARIAN_LAMB_TOO_BIG; break;
+            case BirthTypeDutch::CAESARIAN_INSUFFICIENT_ACCESS: $result = BirthType::CAESARIAN_INSUFFICIENT_ACCESS; break;
+            default: $result = $birthTypeDutch; break; //no translation
+        }
+        if($isOnlyFirstLetterCapitalized) {
+            return ucfirst(strtolower($result));
+        } else {
+            return $result;
+        }
+    }
+    
 }
