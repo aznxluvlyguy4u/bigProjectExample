@@ -449,6 +449,13 @@ abstract class Animal
     protected $scrapieGenotype;
 
     /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true, options={"default":null})
+     */
+    protected $myoMax;
+
+    /**
      * @var Litter
      * @JMS\Type("AppBundle\Entity\Litter")
      * @ORM\ManyToOne(targetEntity="Litter", inversedBy="children", cascade={"persist"})
@@ -1863,6 +1870,22 @@ abstract class Animal
     {
         return $this->scrapieGenotype;
     }
+
+    /**
+     * @return string
+     */
+    public function getMyoMax()
+    {
+        return $this->myoMax;
+    }
+
+    /**
+     * @param string $myoMax
+     */
+    public function setMyoMax($myoMax)
+    {
+        $this->myoMax = $myoMax;
+    }    
 
     /**
      * Add exteriorMeasurement
