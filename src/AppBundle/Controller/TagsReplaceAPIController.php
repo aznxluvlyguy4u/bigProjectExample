@@ -6,6 +6,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\DeclareTagsTransferRepository;
 use AppBundle\Entity\Tag;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\DeclareReplaceTagsOutput;
 use AppBundle\Output\DeclareTagsTransferResponseOutput;
@@ -135,7 +136,11 @@ class TagsReplaceAPIController extends APIController {
                 INNER JOIN declare_base ON declare_tag_replace.id = declare_base.id
                 LEFT JOIN declare_tag_replace_response ON declare_tag_replace.id = declare_tag_replace_response.declare_tag_replace_request_message_id
                 LEFT JOIN declare_base_response ON declare_tag_replace_response.id = declare_base_response.id
-                WHERE declare_base.request_state <> 'FAILED' AND declare_tag_replace.location_id = '". $location->getId() ."'";
+                WHERE (request_state = '".RequestStateType::OPEN."' OR
+                      request_state = '".RequestStateType::REVOKING."' OR
+                      request_state = '".RequestStateType::REVOKED."' OR
+                      request_state = '".RequestStateType::FINISHED."' OR
+                      request_state = '".RequestStateType::FINISHED_WITH_WARNING."') AND declare_tag_replace.location_id = '". $location->getId() ."'";
         $results = $em->getConnection()->query($sql)->fetchAll();
 
         $results = DeclareReplaceTagsOutput::createHistoryArray($results);
@@ -171,7 +176,7 @@ class TagsReplaceAPIController extends APIController {
                 INNER JOIN declare_base ON declare_tag_replace.id = declare_base.id
                 LEFT JOIN declare_tag_replace_response ON declare_tag_replace.id = declare_tag_replace_response.declare_tag_replace_request_message_id
                 LEFT JOIN declare_base_response ON declare_tag_replace_response.id = declare_base_response.id
-                WHERE declare_base.request_state = 'FAILED' AND declare_base.hide_failed_message = FALSE AND declare_tag_replace.location_id = '". $location->getId() ."'";
+                WHERE declare_base.request_state = '".RequestStateType::FAILED."' AND declare_base.hide_failed_message = FALSE AND declare_tag_replace.location_id = '". $location->getId() ."'";
         $results = $em->getConnection()->query($sql)->fetchAll();
 
         $results = DeclareReplaceTagsOutput::createHistoryArray($results);
