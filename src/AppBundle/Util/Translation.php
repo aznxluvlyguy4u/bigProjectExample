@@ -9,6 +9,8 @@ use AppBundle\Enumerator\BreedTrait;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\PredicateType;
+use AppBundle\Enumerator\PredicateTypeDutch;
 
 /**
  * This class translates the English used in the API to Dutch values displayed in the output.
@@ -125,5 +127,70 @@ class Translation
             return $result;
         }
     }
+
+
+    /**
+     * @param string $predicateTypeDutch
+     * @param bool $isOnlyFirstLetterCapitalized
+     * @return string
+     */
+    public static function getPredicateTypeInEnglish($predicateTypeDutch, $isOnlyFirstLetterCapitalized = true)
+    {
+        switch ($predicateTypeDutch) {
+            case PredicateTypeDutch::DEFINITIVE_PREMIUM_RAM:     $result = PredicateType::DEFINITIVE_PREMIUM_RAM; break;
+            case PredicateTypeDutch::GRADE_RAM:                  $result = PredicateType::GRADE_RAM; break;
+            case PredicateTypeDutch::PREFERENT:                  $result = PredicateType::PREFERENT; break;
+            case PredicateTypeDutch::PREFERENT_1:                $result = PredicateType::PREFERENT_1; break;
+            case PredicateTypeDutch::PREFERENT_2:                $result = PredicateType::PREFERENT_2; break;
+            case PredicateTypeDutch::PREFERENT_A:                $result = PredicateType::PREFERENT_A; break;
+            case PredicateTypeDutch::PRIME_RAM:                  $result = PredicateType::PRIME_RAM; break;
+            case PredicateTypeDutch::MOTHER_OF_RAMS:             $result = PredicateType::MOTHER_OF_RAMS; break;
+            case PredicateTypeDutch::STAR_EWE:                   $result = PredicateType::STAR_EWE; break;
+            case PredicateTypeDutch::STAR_EWE_1:                 $result = PredicateType::STAR_EWE_1; break;
+            case PredicateTypeDutch::STAR_EWE_2:                 $result = PredicateType::STAR_EWE_2; break;
+            case PredicateTypeDutch::STAR_EWE_3:                 $result = PredicateType::STAR_EWE_3; break;
+            case PredicateTypeDutch::PROVISIONAL_MOTHER_OF_RAMS: $result = PredicateType::PROVISIONAL_MOTHER_OF_RAMS; break;
+            case PredicateTypeDutch::PROVISIONAL_PRIME_RAM:      $result = PredicateType::PROVISIONAL_PRIME_RAM; break;
+            default: $result = $predicateTypeDutch; break; //no translation
+        }
+        if($isOnlyFirstLetterCapitalized) {
+            return ucfirst(strtolower($result));
+        } else {
+            return $result;
+        }
+    }
+
+
+    /**
+     * @param string $predicateTypeEnglish
+     * @param bool $isOnlyFirstLetterCapitalized
+     * @return string
+     */
+    public static function getPredicateTypeInDutch($predicateTypeEnglish, $isOnlyFirstLetterCapitalized = true)
+    {
+        switch ($predicateTypeEnglish) {
+            case PredicateType::DEFINITIVE_PREMIUM_RAM:     $result = PredicateTypeDutch::DEFINITIVE_PREMIUM_RAM; break;
+            case PredicateType::GRADE_RAM:                  $result = PredicateTypeDutch::GRADE_RAM; break;
+            case PredicateType::PREFERENT:                  $result = PredicateTypeDutch::PREFERENT; break;
+            case PredicateType::PREFERENT_1:                $result = PredicateTypeDutch::PREFERENT_1; break;
+            case PredicateType::PREFERENT_2:                $result = PredicateTypeDutch::PREFERENT_2; break;
+            case PredicateType::PREFERENT_A:                $result = PredicateTypeDutch::PREFERENT_A; break;
+            case PredicateType::PRIME_RAM:                  $result = PredicateTypeDutch::PRIME_RAM; break;
+            case PredicateType::MOTHER_OF_RAMS:             $result = PredicateTypeDutch::MOTHER_OF_RAMS; break;
+            case PredicateType::STAR_EWE:                   $result = PredicateTypeDutch::STAR_EWE; break;
+            case PredicateType::STAR_EWE_1:                 $result = PredicateTypeDutch::STAR_EWE_1; break;
+            case PredicateType::STAR_EWE_2:                 $result = PredicateTypeDutch::STAR_EWE_2; break;
+            case PredicateType::STAR_EWE_3:                 $result = PredicateTypeDutch::STAR_EWE_3; break;
+            case PredicateType::PROVISIONAL_MOTHER_OF_RAMS: $result = PredicateTypeDutch::PROVISIONAL_MOTHER_OF_RAMS; break;
+            case PredicateType::PROVISIONAL_PRIME_RAM:      $result = PredicateTypeDutch::PROVISIONAL_PRIME_RAM; break;
+            default: $result = $predicateTypeEnglish; break; //no translation
+        }
+        if($isOnlyFirstLetterCapitalized) {
+            return ucfirst(strtolower($result));
+        } else {
+            return $result;
+        }
+    }
+    
     
 }
