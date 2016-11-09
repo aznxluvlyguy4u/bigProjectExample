@@ -238,6 +238,23 @@ class NullChecker
 
 
     /**
+     * @param string $rootDir
+     * @param array $csvParsingOptions
+     */
+    public static function createFolderPathsFromArrayIfNull($rootDir, array $csvParsingOptions)
+    {
+        if(!is_string($rootDir) OR !is_array($csvParsingOptions)) { return; }
+
+        //removing the app at the end
+        $pathStart = substr($rootDir, 0, strlen($rootDir)-3);
+
+        /* Setup folders */
+        NullChecker::createFolderPathIfNull($pathStart.$csvParsingOptions['finder_in']);
+        NullChecker::createFolderPathIfNull($pathStart.$csvParsingOptions['finder_out']);
+    }
+
+
+    /**
      * @param Animal $animal
      * @param string $nullReplacementText
      * @return string|null
