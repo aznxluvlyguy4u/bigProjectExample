@@ -119,6 +119,9 @@ class AnimalCacher
         }
 
         if(!$flushPerRecord) { $em->flush(); }
+
+        //DuplicateCheck
+        self::deleteDuplicateAnimalCacheRecords($em);
     }
 
 
@@ -219,6 +222,9 @@ class AnimalCacher
         }
 
         if(!$flushPerRecord) { $em->flush(); }
+
+        //DuplicateCheck
+        self::deleteDuplicateAnimalCacheRecords($em);
     }
     
     
