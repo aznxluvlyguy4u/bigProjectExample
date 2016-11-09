@@ -88,7 +88,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                     INNER JOIN litter ON declare_nsfo_base.id = litter.id
                     INNER JOIN animal AS mother ON litter.animal_mother_id = mother.id
                 LEFT JOIN animal AS father ON litter.animal_father_id = father.id
-                WHERE (request_state <> 'IMPORTED' OR request_state <> 'FAILED') AND declare_nsfo_base.ubn = '" . $location->getUbn() ."'";
+                WHERE (request_state <> '".RequestStateType::IMPORTED."' OR request_state <> '".RequestStateType::FAILED."') AND declare_nsfo_base.ubn = '" . $location->getUbn() ."'";
 
         $birthDeclarations = $em->getConnection()->query($sql)->fetchAll();
         $result = DeclareBirthResponseOutput::createHistoryResponse($birthDeclarations);
