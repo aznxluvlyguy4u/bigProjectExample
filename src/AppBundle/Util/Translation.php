@@ -30,31 +30,7 @@ class Translation
      */
     public static function getFirstLetterTranslatedBreedType($breedType)
     {
-        return strtoupper(substr(self::translateBreedType($breedType), 0, 1));
-    }
-
-    /**
-     * @param string $breedType
-     * @param bool $isOnlyFirstLetterCapitalized
-     * @return string
-     */
-    public static function translateBreedType($breedType, $isOnlyFirstLetterCapitalized = true)
-    {
-        switch ($breedType) {
-            case BreedType::BLIND_FACTOR:       $result = BreedTypeDutch::BLIND_FACTOR; break;
-            case BreedType::MEAT_LAMB_FATHER :  $result = BreedTypeDutch::MEAT_LAMB_FATHER; break;
-            case BreedType::PARENT_ANIMAL:      $result = BreedTypeDutch::PARENT_ANIMAL; break;
-            case BreedType::PURE_BRED:          $result = BreedTypeDutch::PURE_BRED; break;
-            case BreedType::REGISTER:           $result = BreedTypeDutch::REGISTER; break;
-            case BreedType::SECONDARY_REGISTER: $result = BreedTypeDutch::SECONDARY_REGISTER; break;
-            case BreedType::UNDETERMINED:       $result = BreedTypeDutch::UNDETERMINED; break;
-            default: $result = $breedType; break; //no translation
-        }
-        if($isOnlyFirstLetterCapitalized) {
-            return ucfirst(strtolower($result));
-        } else {
-            return $result;
-        }
+        return strtoupper(substr(self::getDutch($breedType), 0, 1));
     }
 
     /**
@@ -106,91 +82,87 @@ class Translation
 
 
     /**
-     * @param string $birthTypeDutch
-     * @param bool $isOnlyFirstLetterCapitalized
+     * @param string $dutchString
      * @return string
      */
-    public static function getBirthTypeInEnglish($birthTypeDutch, $isOnlyFirstLetterCapitalized = true)
+    public static function getEnglishUcFirst($dutchString) { return self::getEnglish($dutchString, true); }
+
+
+    /**
+     * @param string $dutchString
+     * @param boolean $isOnlyFirstLetterCapitalized
+     * @return string
+     */
+    public static function getEnglish($dutchString, $isOnlyFirstLetterCapitalized = false)
     {
-        switch ($birthTypeDutch) {
-            case BirthTypeDutch::NO_HELP:                       $result = BirthType::NO_HELP; break;
-            case BirthTypeDutch::LIGHT_WITH_HELP:               $result = BirthType::LIGHT_WITH_HELP; break;
-            case BirthTypeDutch::NORMAL_WITH_HELP:              $result = BirthType::NORMAL_WITH_HELP; break;
-            case BirthTypeDutch::HEAVY_WITH_HELP:               $result = BirthType::HEAVY_WITH_HELP; break;
-            case BirthTypeDutch::CAESARIAN_LAMB_TOO_BIG:        $result = BirthType::CAESARIAN_LAMB_TOO_BIG; break;
-            case BirthTypeDutch::CAESARIAN_INSUFFICIENT_ACCESS: $result = BirthType::CAESARIAN_INSUFFICIENT_ACCESS; break;
-            default: $result = $birthTypeDutch; break; //no translation
-        }
+        $englishString = strtr($dutchString, array_flip(self::getEnglishToDutchTranslationArray()));
+
         if($isOnlyFirstLetterCapitalized) {
-            return ucfirst(strtolower($result));
+            return ucfirst(strtolower($englishString));
         } else {
-            return $result;
+            return $englishString;
         }
     }
 
 
     /**
-     * @param string $predicateTypeDutch
-     * @param bool $isOnlyFirstLetterCapitalized
+     * @param string $englishString
      * @return string
      */
-    public static function getPredicateTypeInEnglish($predicateTypeDutch, $isOnlyFirstLetterCapitalized = true)
-    {
-        switch ($predicateTypeDutch) {
-            case PredicateTypeDutch::DEFINITIVE_PREMIUM_RAM:     $result = PredicateType::DEFINITIVE_PREMIUM_RAM; break;
-            case PredicateTypeDutch::GRADE_RAM:                  $result = PredicateType::GRADE_RAM; break;
-            case PredicateTypeDutch::PREFERENT:                  $result = PredicateType::PREFERENT; break;
-            case PredicateTypeDutch::PREFERENT_1:                $result = PredicateType::PREFERENT_1; break;
-            case PredicateTypeDutch::PREFERENT_2:                $result = PredicateType::PREFERENT_2; break;
-            case PredicateTypeDutch::PREFERENT_A:                $result = PredicateType::PREFERENT_A; break;
-            case PredicateTypeDutch::PRIME_RAM:                  $result = PredicateType::PRIME_RAM; break;
-            case PredicateTypeDutch::MOTHER_OF_RAMS:             $result = PredicateType::MOTHER_OF_RAMS; break;
-            case PredicateTypeDutch::STAR_EWE:                   $result = PredicateType::STAR_EWE; break;
-            case PredicateTypeDutch::STAR_EWE_1:                 $result = PredicateType::STAR_EWE_1; break;
-            case PredicateTypeDutch::STAR_EWE_2:                 $result = PredicateType::STAR_EWE_2; break;
-            case PredicateTypeDutch::STAR_EWE_3:                 $result = PredicateType::STAR_EWE_3; break;
-            case PredicateTypeDutch::PROVISIONAL_MOTHER_OF_RAMS: $result = PredicateType::PROVISIONAL_MOTHER_OF_RAMS; break;
-            case PredicateTypeDutch::PROVISIONAL_PRIME_RAM:      $result = PredicateType::PROVISIONAL_PRIME_RAM; break;
-            default: $result = $predicateTypeDutch; break; //no translation
-        }
-        if($isOnlyFirstLetterCapitalized) {
-            return ucfirst(strtolower($result));
-        } else {
-            return $result;
-        }
-    }
-
+    public static function getDutchUcFirst($englishString) { return self::getDutch($englishString, true); }
 
     /**
-     * @param string $predicateTypeEnglish
-     * @param bool $isOnlyFirstLetterCapitalized
+     * @param $englishString
+     * @param boolean $isOnlyFirstLetterCapitalized
      * @return string
      */
-    public static function getPredicateTypeInDutch($predicateTypeEnglish, $isOnlyFirstLetterCapitalized = true)
+    public static function getDutch($englishString, $isOnlyFirstLetterCapitalized = false)
     {
-        switch ($predicateTypeEnglish) {
-            case PredicateType::DEFINITIVE_PREMIUM_RAM:     $result = PredicateTypeDutch::DEFINITIVE_PREMIUM_RAM; break;
-            case PredicateType::GRADE_RAM:                  $result = PredicateTypeDutch::GRADE_RAM; break;
-            case PredicateType::PREFERENT:                  $result = PredicateTypeDutch::PREFERENT; break;
-            case PredicateType::PREFERENT_1:                $result = PredicateTypeDutch::PREFERENT_1; break;
-            case PredicateType::PREFERENT_2:                $result = PredicateTypeDutch::PREFERENT_2; break;
-            case PredicateType::PREFERENT_A:                $result = PredicateTypeDutch::PREFERENT_A; break;
-            case PredicateType::PRIME_RAM:                  $result = PredicateTypeDutch::PRIME_RAM; break;
-            case PredicateType::MOTHER_OF_RAMS:             $result = PredicateTypeDutch::MOTHER_OF_RAMS; break;
-            case PredicateType::STAR_EWE:                   $result = PredicateTypeDutch::STAR_EWE; break;
-            case PredicateType::STAR_EWE_1:                 $result = PredicateTypeDutch::STAR_EWE_1; break;
-            case PredicateType::STAR_EWE_2:                 $result = PredicateTypeDutch::STAR_EWE_2; break;
-            case PredicateType::STAR_EWE_3:                 $result = PredicateTypeDutch::STAR_EWE_3; break;
-            case PredicateType::PROVISIONAL_MOTHER_OF_RAMS: $result = PredicateTypeDutch::PROVISIONAL_MOTHER_OF_RAMS; break;
-            case PredicateType::PROVISIONAL_PRIME_RAM:      $result = PredicateTypeDutch::PROVISIONAL_PRIME_RAM; break;
-            default: $result = $predicateTypeEnglish; break; //no translation
-        }
+        $dutchString = strtr($englishString, self::getEnglishToDutchTranslationArray());
+
         if($isOnlyFirstLetterCapitalized) {
-            return ucfirst(strtolower($result));
+            return ucfirst(strtolower($dutchString));
         } else {
-            return $result;
+            return $dutchString;
         }
     }
-    
-    
+
+    /**
+     * @return array
+     */
+    public static function getEnglishToDutchTranslationArray()
+    {
+        return array(
+            //BirthType
+            BirthType::NO_HELP                        => BirthTypeDutch::NO_HELP,
+            BirthType::LIGHT_WITH_HELP                => BirthTypeDutch::LIGHT_WITH_HELP,
+            BirthType::NORMAL_WITH_HELP               => BirthTypeDutch::NORMAL_WITH_HELP,
+            BirthType::HEAVY_WITH_HELP                => BirthTypeDutch::HEAVY_WITH_HELP,
+            BirthType::CAESARIAN_LAMB_TOO_BIG         => BirthTypeDutch::CAESARIAN_LAMB_TOO_BIG,
+            BirthType::CAESARIAN_INSUFFICIENT_ACCESS  => BirthTypeDutch::CAESARIAN_INSUFFICIENT_ACCESS,
+            //BreedType
+            BreedType::BLIND_FACTOR        => BreedTypeDutch::BLIND_FACTOR,
+            BreedType::MEAT_LAMB_FATHER    => BreedTypeDutch::MEAT_LAMB_FATHER,
+            BreedType::PARENT_ANIMAL       => BreedTypeDutch::PARENT_ANIMAL,
+            BreedType::PURE_BRED           => BreedTypeDutch::PURE_BRED,
+            BreedType::REGISTER            => BreedTypeDutch::REGISTER,
+            BreedType::SECONDARY_REGISTER  => BreedTypeDutch::SECONDARY_REGISTER,
+            BreedType::UNDETERMINED        => BreedTypeDutch::UNDETERMINED,
+            //PredicateType
+            PredicateType::DEFINITIVE_PREMIUM_RAM     =>  PredicateTypeDutch::DEFINITIVE_PREMIUM_RAM,
+            PredicateType::GRADE_RAM                  =>  PredicateTypeDutch::GRADE_RAM,
+            PredicateType::PREFERENT                  =>  PredicateTypeDutch::PREFERENT,
+            PredicateType::PREFERENT_1                =>  PredicateTypeDutch::PREFERENT_1,
+            PredicateType::PREFERENT_2                =>  PredicateTypeDutch::PREFERENT_2,
+            PredicateType::PREFERENT_A                =>  PredicateTypeDutch::PREFERENT_A,
+            PredicateType::PRIME_RAM                  =>  PredicateTypeDutch::PRIME_RAM,
+            PredicateType::MOTHER_OF_RAMS             =>  PredicateTypeDutch::MOTHER_OF_RAMS,
+            PredicateType::STAR_EWE                   =>  PredicateTypeDutch::STAR_EWE,
+            PredicateType::STAR_EWE_1                 =>  PredicateTypeDutch::STAR_EWE_1,
+            PredicateType::STAR_EWE_2                 =>  PredicateTypeDutch::STAR_EWE_2,
+            PredicateType::STAR_EWE_3                 =>  PredicateTypeDutch::STAR_EWE_3,
+            PredicateType::PROVISIONAL_MOTHER_OF_RAMS =>  PredicateTypeDutch::PROVISIONAL_MOTHER_OF_RAMS,
+            PredicateType::PROVISIONAL_PRIME_RAM      =>  PredicateTypeDutch::PROVISIONAL_PRIME_RAM,
+        );
+    }
 }
