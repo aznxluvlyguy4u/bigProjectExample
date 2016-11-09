@@ -371,6 +371,7 @@ class AnimalCacher
             $results = $em->getConnection()->query($sql)->fetchAll();
 
             if($cmdUtil != null && $isFirstIteration){
+                if(count($results) == 0) { return; }
                 $cmdUtil->setStartTimeAndPrintIt(count($results)+1, 1);
                 $isFirstIteration = false;
             }
