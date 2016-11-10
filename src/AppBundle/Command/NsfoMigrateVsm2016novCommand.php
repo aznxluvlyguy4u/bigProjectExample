@@ -93,6 +93,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             'Choose option: ', "\n",
             '1: option 1', "\n",
             '2: Migrate Races', "\n",
+            '3: Migrate MyoMax', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -103,6 +104,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
             case 2:
                 $result = $this->migrateRaces() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 3:
+                $result = $this->migrateMyoMax() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
@@ -160,18 +166,18 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $newCount = 0;
         foreach ($data as $record) {
 
-            $fullName = utf8_encode($record['2']);
+            $fullName = utf8_encode($record[2]);
 
             if(!array_key_exists($fullName, $searchArray)) {
-                //$vsmId = $record['0'];
-                $abbreviation = $record['1'];
-                $startDate = new \DateTime($record['3']);
-                $endDate = new \DateTime($record['4']);
-                //$createdByString = $record['5'];
-                //$creationDate = $record['6'];
-                //$lastUpdatedByString = $record['7'];
-                //$lastUpdateDate = $record['8'];
-                $specie = $this->convertSpecieData($record['9']);
+                //$vsmId = $record[0];
+                $abbreviation = $record[1];
+                $startDate = new \DateTime($record[3]);
+                $endDate = new \DateTime($record[4]);
+                //$createdByString = $record[5];
+                //$creationDate = $record[6];
+                //$lastUpdatedByString = $record[7];
+                //$lastUpdateDate = $record[8];
+                $specie = $this->convertSpecieData($record[9]);
 
                 $race = new Race($abbreviation, $fullName);
                 $race->setStartDate($startDate);
@@ -198,5 +204,39 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
      */
     private function convertSpecieData($vsmSpecieData){
         return strtr($vsmSpecieData, [ 'SC' => Specie::SHEEP, 'GE' => Specie::GOAT]);
+    }
+    
+    
+    public function migrateMyoMax()
+    {
+        $data = $this->parseCSV($this->filenames[self::MYO_MAX]);
+
+        if(count($data) == 0) { return false; }
+        else { $this->cmdUtil->setStartTimeAndPrintIt(count($data)+1, 1); }
+
+        $sql = "SELECT myo_max, name FROM animal WHERE myo_max NOTNULL";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $searchArray = [];
+        foreach ($results as $result) {
+            $searchArray[$result['name']] = $result['myo_max'];
+        }
+
+        $newCount = 0;
+        foreach ($data as $record) {
+
+            $vsmId = utf8_encode($record[0]);
+
+            if (!array_key_exists($vsmId, $searchArray)) {
+                $myoMax = $record[1];
+                $sql = "UPDATE animal SET myo_max = '".$myoMax."' WHERE name = '".$vsmId."'";
+                $this->em->getConnection()->exec($sql);
+                $newCount++;
+            }
+            $this->cmdUtil->advanceProgressBar(1);
+        }
+        $this->cmdUtil->setProgressBarMessage($newCount.' new records persisted');
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+
+        return true;
     }
 }
