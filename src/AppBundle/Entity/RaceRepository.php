@@ -6,5 +6,5 @@ namespace AppBundle\Entity;
  * Class RaceRepository
  * @package AppBundle\Entity
  */
-class RaceRepository {
+class RaceRepository extends BaseRepository {
 }
