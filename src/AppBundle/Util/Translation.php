@@ -132,7 +132,7 @@ class Translation
     /**
      * @return array
      */
-    public static function getEnglishToDutchTranslationArray()
+    private static function getEnglishToDutchTranslationArray()
     {
         return array(
             //BirthType
@@ -170,4 +170,40 @@ class Translation
             PredicateType::PROVISIONAL_PRIME_RAM      =>  PredicateTypeDutch::PROVISIONAL_PRIME_RAM,
         );
     }
+
+
+    /**
+     * @param string $englishString
+     * @return string
+     */
+    public static function getAbbreviation($englishString)
+    {
+        return strtr($englishString, self::getEnglishToAbbreviationArray());
+    }
+
+    /**
+     * @return array
+     */
+    private static function getEnglishToAbbreviationArray()
+    {
+        return array(
+            //PredicateType
+            PredicateType::DEFINITIVE_PREMIUM_RAM => 'DP',
+            PredicateType::GRADE_RAM => 'K',
+            PredicateType::PREFERENT => 'Pref',
+            PredicateType::PREFERENT_1 => 'Pref1',
+            PredicateType::PREFERENT_2 => 'Pref2',
+            PredicateType::PREFERENT_A => 'PrefA',
+            PredicateType::PRIME_RAM => 'P',
+            PredicateType::MOTHER_OF_RAMS => '', //TODO
+            PredicateType::STAR_EWE => 'S',
+            PredicateType::STAR_EWE_1 => 'S1',
+            PredicateType::STAR_EWE_2 => 'S2',
+            PredicateType::STAR_EWE_3 => 'S3',
+            PredicateType::PROVISIONAL_PRIME_RAM => '', //TODO
+            PredicateType::PROVISIONAL_MOTHER_OF_RAMS => '', //TODO
+        );
+    }
+
+
 }
