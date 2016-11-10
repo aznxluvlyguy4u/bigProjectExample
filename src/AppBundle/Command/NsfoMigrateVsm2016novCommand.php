@@ -2,11 +2,17 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\BlindnessFactor;
+use AppBundle\Entity\BlindnessFactorRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Race;
 use AppBundle\Enumerator\Specie;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Translation;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
@@ -19,6 +25,8 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 {
     const TITLE = 'Migrate vsm import files until 2016 nov';
     const DEFAULT_OPTION = 0;
+
+    const DEVELOPER_PRIMARY_KEY = 2151; //Used as the person that creates and edits imported data
 
     const RACES = 'races';
     const BIRTH = 'birth';
@@ -53,6 +61,9 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     /** @var Employee */
     private $developer;
 
+    /** @var AnimalRepository */
+    private $animalRepository;
+
     protected function configure()
     {
         $this
@@ -70,7 +81,10 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
 
-        $this->developer = $em->getRepository(Employee::class)->find(2151);
+        /** @var AnimalRepository $repository */
+        $this->animalRepository = $this->em->getRepository(Animal::class);
+
+        $this->developer = $em->getRepository(Employee::class)->find(self::DEVELOPER_PRIMARY_KEY);
 
         $this->filenames = array(
             self::RACES => 'rassen.txt',
@@ -94,6 +108,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '1: option 1', "\n",
             '2: Migrate Races', "\n",
             '3: Migrate MyoMax', "\n",
+            '4: Migrate BlindnessFactor and update values in Animal', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -109,6 +124,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
             case 3:
                 $result = $this->migrateMyoMax() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 4:
+                $result = $this->migrateBlindnessFactors() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
@@ -148,7 +168,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     /**
      * @return bool
      */
-    public function migrateRaces()
+    private function migrateRaces()
     {
         $data = $this->parseCSV($this->filenames[self::RACES]);
 
@@ -171,8 +191,8 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             if(!array_key_exists($fullName, $searchArray)) {
                 //$vsmId = $record[0];
                 $abbreviation = $record[1];
-                $startDate = new \DateTime($record[3]);
-                $endDate = new \DateTime($record[4]);
+                $startDate = TimeUtil::getDateTimeFromFlippedAndNullCheckedDateString($record[3]);
+                $endDate = TimeUtil::getDateTimeFromFlippedAndNullCheckedDateString($record[4]);
                 //$createdByString = $record[5];
                 //$creationDate = $record[6];
                 //$lastUpdatedByString = $record[7];
@@ -207,7 +227,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     }
     
     
-    public function migrateMyoMax()
+    private function migrateMyoMax()
     {
         $data = $this->parseCSV($this->filenames[self::MYO_MAX]);
 
@@ -224,7 +244,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $newCount = 0;
         foreach ($data as $record) {
 
-            $vsmId = utf8_encode($record[0]);
+            $vsmId = $record[0];
 
             if (!array_key_exists($vsmId, $searchArray)) {
                 $myoMax = $record[1];
@@ -239,4 +259,65 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
         return true;
     }
+
+
+    /**
+     * Note, it has already been checked that, no animal has more than one blindnessFactor
+     *
+     * @return bool
+     */
+    private function migrateBlindnessFactors()
+    {
+        $data = $this->parseCSV($this->filenames[self::BLINDNESS_FACTOR]);
+
+        if(count($data) == 0) { return false; }
+        else { $this->cmdUtil->setStartTimeAndPrintIt(count($data)+1, 1); }
+
+        $sql = "SELECT animal_id, log_date, blindness_factor FROM blindness_factor";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $blindnessFactorSearchArray = [];
+        foreach ($results as $result) {
+            $blindnessFactorSearchArray[$result['animal_id']] = $result['blindness_factor'];
+        }
+        $animalIdByVsmIdSearchArray = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
+
+        $newCount = 0;
+        foreach ($data as $record) {
+
+            $vsmId = $record[0];
+
+            if(array_key_exists($vsmId, $animalIdByVsmIdSearchArray)) {
+
+                $animalId = $animalIdByVsmIdSearchArray[$vsmId];
+
+                if (!array_key_exists($animalId, $blindnessFactorSearchArray)) {
+                    $blindnessFactorValue = Translation::getEnglish($record[1]);
+                    $logDate = TimeUtil::getDateTimeFromFlippedAndNullCheckedDateString($record[2]);
+                    /** @var Animal $animal */
+                    $animal = $this->animalRepository->find($animalId);
+                    $blindnessFactor = new BlindnessFactor($animal, $blindnessFactorValue, $logDate);
+                    $this->em->persist($blindnessFactor);
+                    $newCount++;
+                }
+            }
+            $this->cmdUtil->advanceProgressBar(1);
+        }
+        $this->em->flush();
+        $this->cmdUtil->setProgressBarMessage($newCount.' new records persisted');
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+
+        $this->updateBlindnessFactorValuesInAnimal();
+        
+        return true;
+    }
+    
+
+    private function updateBlindnessFactorValuesInAnimal()
+    {
+        /** @var BlindnessFactorRepository $repository */
+        $repository = $this->em->getRepository(BlindnessFactor::class);
+        $repository->setLatestBlindnessFactorsOnAllAnimals($this->cmdUtil);
+    }
+
+    
 }

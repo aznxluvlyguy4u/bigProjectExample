@@ -222,4 +222,14 @@ class TimeUtil
             return $parts[0];
         }
     }
+
+
+    /**
+     * @param string $dateString
+     * @return \DateTime|null
+     */
+    public static function getDateTimeFromFlippedAndNullCheckedDateString($dateString)
+    {
+        return $dateString != null ? new \DateTime(TimeUtil::flipDateStringOrder($dateString)) : null;
+    }
 }
