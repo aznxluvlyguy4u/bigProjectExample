@@ -55,6 +55,13 @@ class Predicate
      */
     private $predicate;
 
+    /**
+     * @var integer
+     * @JMS\Type("integer")
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $predicateScore;
+
 
     public function __construct()
     {
@@ -138,6 +145,22 @@ class Predicate
     public function setPredicate($predicate)
     {
         $this->predicate = $predicate;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPredicateScore()
+    {
+        return $this->predicateScore;
+    }
+
+    /**
+     * @param int $predicateScore
+     */
+    public function setPredicateScore($predicateScore)
+    {
+        $this->predicateScore = $predicateScore;
     }
 
 

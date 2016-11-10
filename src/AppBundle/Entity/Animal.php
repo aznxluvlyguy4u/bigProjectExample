@@ -442,12 +442,17 @@ abstract class Animal
 
     /**
      * @var string
-     *
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
      */
     protected $predicate;
+
+    /**
+     * @var integer
+     * @JMS\Type("integer")
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    protected $predicateScore;
     
     /**
      * @var string
@@ -1887,6 +1892,22 @@ abstract class Animal
     public function setPredicate($predicate)
     {
         $this->predicate = $predicate;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPredicateScore()
+    {
+        return $this->predicateScore;
+    }
+
+    /**
+     * @param int $predicateScore
+     */
+    public function setPredicateScore($predicateScore)
+    {
+        $this->predicateScore = $predicateScore;
     }
 
     /**
