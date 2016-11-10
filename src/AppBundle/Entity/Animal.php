@@ -439,6 +439,15 @@ abstract class Animal
      * @JMS\Type("AppBundle\Entity\BreedCodes")
      */
     protected $breedCodes;
+
+    /**
+     * @var string
+     *
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    protected $predicate;
     
     /**
      * @var string
@@ -1862,6 +1871,22 @@ abstract class Animal
     public function getBreedCode()
     {
         return $this->breedCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPredicate()
+    {
+        return $this->predicate;
+    }
+
+    /**
+     * @param string $predicate
+     */
+    public function setPredicate($predicate)
+    {
+        $this->predicate = $predicate;
     }
 
     /**
