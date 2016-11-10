@@ -526,6 +526,13 @@ abstract class Animal
     protected $breedValuesSets;
 
     /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    protected $nickname;
+
+    /**
      * Animal constructor.
      */
     public function __construct() {
@@ -2226,6 +2233,23 @@ abstract class Animal
         } else {
             return null;
         }
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getNickname()
+    {
+        return $this->nickname;
+    }
+
+    /**
+     * @param string $nickname
+     */
+    public function setNickname($nickname)
+    {
+        $this->nickname = $nickname;
     }
 
 
