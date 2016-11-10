@@ -5,6 +5,8 @@ use AppBundle\Constant\UnicodeSymbol;
 use AppBundle\Entity\Animal;
 use AppBundle\Enumerator\BirthType;
 use AppBundle\Enumerator\BirthTypeDutch;
+use AppBundle\Enumerator\BlindnessFactorType;
+use AppBundle\Enumerator\BlindnessFactorTypeDutch;
 use AppBundle\Enumerator\BreedTrait;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\BreedTypeDutch;
@@ -140,6 +142,9 @@ class Translation
             BirthType::HEAVY_WITH_HELP                => BirthTypeDutch::HEAVY_WITH_HELP,
             BirthType::CAESARIAN_LAMB_TOO_BIG         => BirthTypeDutch::CAESARIAN_LAMB_TOO_BIG,
             BirthType::CAESARIAN_INSUFFICIENT_ACCESS  => BirthTypeDutch::CAESARIAN_INSUFFICIENT_ACCESS,
+            //BlindnessFactor
+            BlindnessFactorType::BLINDNESS_FACTOR_CARRIER => BlindnessFactorTypeDutch::BLINDNESS_FACTOR_CARRIER,
+            BlindnessFactorType::BLINDNESS_FACTOR_FREE    => BlindnessFactorTypeDutch::BLINDNESS_FACTOR_FREE,
             //BreedType
             BreedType::BLIND_FACTOR        => BreedTypeDutch::BLIND_FACTOR,
             BreedType::MEAT_LAMB_FATHER    => BreedTypeDutch::MEAT_LAMB_FATHER,
