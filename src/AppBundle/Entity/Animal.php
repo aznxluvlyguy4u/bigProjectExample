@@ -449,6 +449,16 @@ abstract class Animal
     protected $scrapieGenotype;
 
     /**
+     * The current blindnessFactor
+     *
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    protected $blindnessFactor;
+
+
+    /**
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true, options={"default":null})
@@ -1869,6 +1879,22 @@ abstract class Animal
     public function getScrapieGenotype()
     {
         return $this->scrapieGenotype;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBlindnessFactor()
+    {
+        return $this->blindnessFactor;
+    }
+
+    /**
+     * @param string $blindnessFactor
+     */
+    public function setBlindnessFactor($blindnessFactor)
+    {
+        $this->blindnessFactor = $blindnessFactor;
     }
 
     /**
