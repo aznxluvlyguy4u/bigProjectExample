@@ -50,6 +50,9 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     const START_DATE = 'start_date';
     const END_DATE = 'end_date';
 
+    //NullFillers
+    const PREDICATE_START_DATE_NULL_FILLER = '1899-01-01';
+
     /** @var array */
     private $filenames;
 
@@ -423,7 +426,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             $csvStartDate = $csvPredicateData[self::START_DATE];
             $csvEndDate = $csvPredicateData[self::END_DATE];
             $csvPredicateScore = $csvPredicateData[self::PREDICATE_SCORE];
-            $csvPredicateValue = $csvPredicateData[self::PREDICATE_VALUE];
+            $csvPredicateValue = Translation::getEnglish($csvPredicateData[self::PREDICATE_VALUE]);
 
             $persistNewPredicate = true;
             if($predicatesFromDbSearchArray->containsKey($animalId)) {
@@ -449,7 +452,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
 
                 if($useSql) {
-                    $csvStartDateString = $csvStartDateString == null ? 'NULL' : "'".$csvStartDateString."'";
+                    $csvStartDateString = $csvStartDateString == null ? "'".self::PREDICATE_START_DATE_NULL_FILLER."'" : "'".$csvStartDateString."'";
                     $csvEndDateString = $csvEndDateString == null ? 'NULL' : "'".$csvEndDateString."'";
                     $csvPredicateScore = $csvPredicateScore == null ? 'NULL' : $csvPredicateScore;
 
