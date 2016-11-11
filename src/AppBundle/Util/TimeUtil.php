@@ -181,6 +181,17 @@ class TimeUtil
     }
 
 
+    /**
+     * @param \DateTime $dateTime
+     * @param string $format
+     * @return string
+     */
+    public static function getTimeStampForSql($dateTime, $format = 'Y-m-d H:i:s')
+    {
+        return $dateTime != null ? $dateTime->format($format) : null;
+    }
+
+
     public static function getLogDateString()
     {
         return self::getTimeStampNow('Y-m-d H:i:s');
@@ -225,11 +236,21 @@ class TimeUtil
 
 
     /**
+     * @param string $flippedDateString
+     * @return \DateTime|null
+     */
+    public static function getDateTimeFromFlippedAndNullCheckedDateString($flippedDateString)
+    {
+        return self::getDateTimeFromNullCheckedDateString(TimeUtil::flipDateStringOrder($flippedDateString));
+    }
+
+
+    /**
      * @param string $dateString
      * @return \DateTime|null
      */
-    public static function getDateTimeFromFlippedAndNullCheckedDateString($dateString)
+    public static function getDateTimeFromNullCheckedDateString($dateString)
     {
-        return $dateString != null ? new \DateTime(TimeUtil::flipDateStringOrder($dateString)) : null;
+        return $dateString != null ? new \DateTime($dateString) : null;
     }
 }

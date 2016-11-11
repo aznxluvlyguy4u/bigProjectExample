@@ -7,12 +7,15 @@ use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BlindnessFactor;
 use AppBundle\Entity\BlindnessFactorRepository;
 use AppBundle\Entity\Employee;
+use AppBundle\Entity\Predicate;
+use AppBundle\Entity\PredicateRepository;
 use AppBundle\Entity\Race;
 use AppBundle\Enumerator\Specie;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
@@ -25,9 +28,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 {
     const TITLE = 'Migrate vsm import files until 2016 nov';
     const DEFAULT_OPTION = 0;
+    const BATCH_SIZE = 1000;
 
     const DEVELOPER_PRIMARY_KEY = 2151; //Used as the person that creates and edits imported data
 
+    //FileName arrayKeys
     const RACES = 'races';
     const BIRTH = 'birth';
     const ANIMAL_RESIDENCE = 'animal_residence';
@@ -38,6 +43,12 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     const TAG_REPLACES = 'tag_replaces';
     const PREDICATES = 'predicates';
     const SUBSCRIPTIONS = 'subscriptions';
+
+    //ArrayConstants
+    const PREDICATE_SCORE = 'predicate_score';
+    const PREDICATE_VALUE = 'predicate_value';
+    const START_DATE = 'start_date';
+    const END_DATE = 'end_date';
 
     /** @var array */
     private $filenames;
@@ -109,6 +120,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '2: Migrate Races', "\n",
             '3: Migrate MyoMax', "\n",
             '4: Migrate BlindnessFactor and update values in Animal', "\n",
+            '5: Migrate Predicates and update values in Animal', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -129,6 +141,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
             case 4:
                 $result = $this->migrateBlindnessFactors() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 5:
+                $result = $this->migratePredicates() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
@@ -307,7 +324,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
         $this->updateBlindnessFactorValuesInAnimal();
-        
+
         return true;
     }
     
@@ -319,5 +336,162 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $repository->setLatestBlindnessFactorsOnAllAnimals($this->cmdUtil);
     }
 
-    
+
+    /**
+     * Note, it has already been checked that, no animal has more than one blindnessFactor
+     *
+     * @return bool
+     */
+    private function migratePredicates($useSql = true)
+    {
+        $data = $this->parseCSV($this->filenames[self::PREDICATES]);
+
+        if(count($data) == 0) { return false; }
+        else { $this->cmdUtil->setStartTimeAndPrintIt(count($data)+1, 1); }
+
+        //1. Create predicateSearchArrays with latest startDates
+        $latestStartDateSearchArray = new ArrayCollection();
+        $latestCsvPredicatesByAnimalId = new ArrayCollection();
+
+        $animalIdByVsmIdSearchArray = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
+
+        foreach ($data as $records) {
+
+            $vsmId = $records[0];
+            //Skip data for missing animals
+            if(array_key_exists($vsmId, $animalIdByVsmIdSearchArray)) {
+                $animalId = $animalIdByVsmIdSearchArray[$vsmId];
+                $startDate = TimeUtil::getDateTimeFromFlippedAndNullCheckedDateString($records[1]);
+                $endDate = TimeUtil::getDateTimeFromFlippedAndNullCheckedDateString($records[2]);
+                $predicateScore = $records[3] != '' ? $records[3] : null;
+                $predicateValue = $records[4];
+
+                $isLatestRecord = false;
+                if($latestStartDateSearchArray->containsKey($animalId)) {
+                    $latestStartDate = $latestStartDateSearchArray->get($animalId);
+
+                    if($latestStartDate == null && $startDate != null) {
+                        $latestStartDateSearchArray->set($animalId, $startDate);
+                        $isLatestRecord = true;
+                    } else if($startDate >= $latestStartDate) {
+                        $latestStartDateSearchArray->set($animalId, $startDate);
+                        $isLatestRecord = true;
+                    }
+                } else {
+                    $latestStartDateSearchArray->set($animalId, $startDate);
+                    $isLatestRecord = true;
+                }
+
+                if($isLatestRecord) {
+                    $latestCsvPredicatesByAnimalId->set($animalId,
+                        [ self::START_DATE => $startDate,
+                            self::END_DATE => $endDate,
+                            self::PREDICATE_SCORE => $predicateScore,
+                            self::PREDICATE_VALUE => $predicateValue,
+                        ]);
+                }
+            }
+        }
+
+        //2. Get searchArrays of current data
+        $sql = "SELECT animal_id, start_date, end_date, predicate, predicate_score FROM predicate";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $predicatesFromDbSearchArray = new ArrayCollection();
+        foreach ($results as $result) {
+
+            $animalId = $result['animal_id'];
+            $startDate = TimeUtil::getDateTimeFromNullCheckedDateString($result['start_date']);
+            $endDate = TimeUtil::getDateTimeFromNullCheckedDateString($result['end_date']);
+            $predicateScore = $result['predicate_score'];
+            $predicateValue = $result['predicate'];
+
+            $predicatesFromDbSearchArray->set($animalId,
+                [ self::START_DATE => $startDate,
+                    self::END_DATE => $endDate,
+                    self::PREDICATE_SCORE => $predicateScore,
+                    self::PREDICATE_VALUE => $predicateValue,
+                ]);
+        }
+        
+
+        $newCount = 0;
+        $totalCount = 0;
+        $animalIds = $latestCsvPredicatesByAnimalId->getKeys();
+        foreach ($animalIds as $animalId) {
+
+            $csvPredicateData = $latestCsvPredicatesByAnimalId->get($animalId);
+            $csvStartDate = $csvPredicateData[self::START_DATE];
+            $csvEndDate = $csvPredicateData[self::END_DATE];
+            $csvPredicateScore = $csvPredicateData[self::PREDICATE_SCORE];
+            $csvPredicateValue = $csvPredicateData[self::PREDICATE_VALUE];
+
+            $persistNewPredicate = true;
+            if($predicatesFromDbSearchArray->containsKey($animalId)) {
+                $dbPredicateData = $predicatesFromDbSearchArray->get($animalId);
+                $dbStartDate = $dbPredicateData[self::START_DATE];
+                $dbEndDate = $dbPredicateData[self::END_DATE];
+                $dbPredicateScore = $dbPredicateData[self::PREDICATE_SCORE];
+                $dbPredicateValue = $dbPredicateData[self::PREDICATE_VALUE];
+
+                if($csvStartDate < $dbStartDate) {
+                    $persistNewPredicate = false;
+                } elseif ($csvStartDate == $dbStartDate && $csvPredicateScore == $dbPredicateScore
+                        && $csvPredicateValue == $dbPredicateValue) {
+                    $persistNewPredicate = false;
+                }
+            }
+
+
+            if($persistNewPredicate) {
+
+                $csvStartDateString = TimeUtil::getTimeStampForSql($csvStartDate);
+                $csvEndDateString = TimeUtil::getTimeStampForSql($csvEndDate);
+
+
+                if($useSql) {
+                    $csvStartDateString = $csvStartDateString == null ? 'NULL' : "'".$csvStartDateString."'";
+                    $csvEndDateString = $csvEndDateString == null ? 'NULL' : "'".$csvEndDateString."'";
+                    $csvPredicateScore = $csvPredicateScore == null ? 'NULL' : $csvPredicateScore;
+
+                    $sql = "INSERT INTO predicate (id, animal_id, start_date, end_date, predicate, predicate_score) VALUES (nextval('measurement_id_seq')," . $animalId . "," . $csvStartDateString . "," . $csvEndDateString . ",'" . $csvPredicateValue . "'," . $csvPredicateScore . ")";
+                    $this->em->getConnection()->exec($sql);
+
+                } else {
+                    /** @var Animal $animal */
+                    $animal = $this->animalRepository->find($animalId);
+
+                    $predicate = new Predicate();
+                    $predicate->setAnimal($animal);
+                    $predicate->setStartDate($csvStartDate);
+                    $predicate->setEndDate($csvEndDate);
+                    $predicate->setPredicate($csvPredicateValue);
+                    $predicate->setPredicateScore($csvPredicateScore);
+
+                    $this->em->persist($predicate);
+                }
+                $newCount++;
+            }
+            $totalCount++;
+            $this->cmdUtil->advanceProgressBar(1);
+
+            if(!$useSql) {
+                if($totalCount%self::BATCH_SIZE == 0) { $this->em->flush(); }
+            }
+        }
+        if(!$useSql) { $this->em->flush(); }
+        $this->cmdUtil->setProgressBarMessage($newCount.' new records persisted');
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+
+        //TODO
+//        $this->updatePredicateValuesInAnimal();
+
+        return true;
+    }
+
+    private function updatePredicateValuesInAnimal()
+    {
+        /** @var PredicateRepository $repository */
+        $repository = $this->em->getRepository(Predicate::class);
+        $repository->setLatestPredicateValuesOnAllAnimals($this->cmdUtil);
+    }
 }
