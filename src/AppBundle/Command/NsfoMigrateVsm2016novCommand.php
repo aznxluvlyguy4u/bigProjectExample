@@ -482,16 +482,17 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $this->cmdUtil->setProgressBarMessage($newCount.' new records persisted');
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
-        //TODO
-//        $this->updatePredicateValuesInAnimal();
+        $this->updatePredicateValuesInAnimal();
 
         return true;
     }
-
+    
+    
     private function updatePredicateValuesInAnimal()
     {
         /** @var PredicateRepository $repository */
         $repository = $this->em->getRepository(Predicate::class);
         $repository->setLatestPredicateValuesOnAllAnimals($this->cmdUtil);
+        $repository->fillPredicateValuesInAnimalForPredicatesWithoutStartDates($this->cmdUtil);
     }
 }
