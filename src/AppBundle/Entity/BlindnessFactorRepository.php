@@ -28,9 +28,7 @@ class BlindnessFactorRepository extends BaseRepository {
 
     public function setLatestBlindnessFactorsOnAllAnimals(CommandUtil $cmdUtil = null)
     {
-        /** @var BlindnessFactorRepository $blindnessFactorRepository */
-        $blindnessFactorRepository = $this->getManager()->getRepository(BlindnessFactor::class);
-        $latestBlindnessFactors = $blindnessFactorRepository->getLatestBlindnessFactors();
+        $latestBlindnessFactors = $this->getLatestBlindnessFactors();
         $animalIds = array_keys($latestBlindnessFactors);
 
         $currentBlindnessFactorValueInAnimals = $this->getBlindnessFactorValueInAnimals();
