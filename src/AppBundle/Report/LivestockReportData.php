@@ -15,6 +15,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\RamRepository;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
@@ -104,7 +105,8 @@ class LivestockReportData extends ReportBase
                   a.breed_code as a_breed_code, m.breed_code as m_breed_code, f.breed_code as f_breed_code,
                   ac.dutch_breed_status as a_dutch_breed_status, mc.dutch_breed_status as m_dutch_breed_status, fc.dutch_breed_status as f_dutch_breed_status,
                   ac.n_ling as a_n_ling, mc.n_ling as m_n_ling, fc.n_ling as f_n_ling,
-                  ac.predicate as a_predicate, mc.predicate as m_predicate, fc.predicate as f_predicate,
+                  a.predicate as a_predicate_value, m.predicate as m_predicate_value, f.predicate as f_predicate_value,
+                  a.predicate_score as a_predicate_score, m.predicate_score as m_predicate_score, f.predicate_score as f_predicate_score,
                   ac.muscularity as a_muscularity, mc.muscularity as m_muscularity, fc.muscularity as f_muscularity,
                   ac.general_appearance as a_general_appearance, mc.general_appearance as m_general_appearance, fc.general_appearance as f_general_appearance,
                   ac.production as a_production, mc.production as m_production, fc.production as f_production,
@@ -112,9 +114,7 @@ class LivestockReportData extends ReportBase
                   ac.breed_value_growth as a_breed_value_growth, mc.breed_value_growth as m_breed_value_growth, fc.breed_value_growth as f_breed_value_growth,
                   ac.breed_value_muscle_thickness as a_breed_value_muscle_thickness, mc.breed_value_muscle_thickness as m_breed_value_muscle_thickness, fc.breed_value_muscle_thickness as f_breed_value_muscle_thickness,
                   ac.breed_value_fat as a_breed_value_fat, mc.breed_value_fat as m_breed_value_fat, fc.breed_value_fat as f_breed_value_fat,
-                  ac.lamb_meat_index as a_lamb_meat_index, mc.lamb_meat_index as m_lamb_meat_index, fc.lamb_meat_index as f_lamb_meat_index,
-                  ac.predicate as a_predicate, mc.predicate as m_predicate, fc.predicate as f_predicate,
-                  ac.predicate as a_predicate, mc.predicate as m_predicate, fc.predicate as f_predicate
+                  ac.lamb_meat_index as a_lamb_meat_index, mc.lamb_meat_index as m_lamb_meat_index, fc.lamb_meat_index as f_lamb_meat_index
                 FROM animal a
                   LEFT JOIN animal m ON a.parent_mother_id = m.id
                   LEFT JOIN animal f ON a.parent_father_id = f.id
@@ -141,6 +141,10 @@ class LivestockReportData extends ReportBase
             $results[$key]['a_n_ling'] = str_replace('-ling', '', $results[$key]['a_n_ling']);
             $results[$key]['f_n_ling'] = str_replace('-ling', '', $results[$key]['f_n_ling']);
             $results[$key]['m_n_ling'] = str_replace('-ling', '', $results[$key]['m_n_ling']);
+
+            $results[$key]['a_predicate'] = DisplayUtil::parsePredicateString($results[$key]['a_predicate_value'], $results[$key]['a_predicate_score']);
+            $results[$key]['f_predicate'] = DisplayUtil::parsePredicateString($results[$key]['f_predicate_value'], $results[$key]['f_predicate_score']);
+            $results[$key]['m_predicate'] = DisplayUtil::parsePredicateString($results[$key]['m_predicate_value'], $results[$key]['m_predicate_score']);
         }
         
         return $results;

@@ -195,13 +195,13 @@ class Translation
             PredicateType::PREFERENT_2 => 'Pref2',
             PredicateType::PREFERENT_A => 'PrefA',
             PredicateType::PRIME_RAM => 'P',
-            PredicateType::MOTHER_OF_RAMS => '', //TODO
+            PredicateType::MOTHER_OF_RAMS => 'RM',
             PredicateType::STAR_EWE => 'S',
             PredicateType::STAR_EWE_1 => 'S1',
             PredicateType::STAR_EWE_2 => 'S2',
             PredicateType::STAR_EWE_3 => 'S3',
-            PredicateType::PROVISIONAL_PRIME_RAM => '', //TODO
-            PredicateType::PROVISIONAL_MOTHER_OF_RAMS => '', //TODO
+            PredicateType::PROVISIONAL_PRIME_RAM => 'VP',
+            PredicateType::PROVISIONAL_MOTHER_OF_RAMS => 'VRM',
         );
     }
 

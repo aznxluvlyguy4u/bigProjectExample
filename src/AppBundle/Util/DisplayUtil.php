@@ -5,6 +5,7 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\PredicateType;
 
 class DisplayUtil
 {
@@ -60,6 +61,18 @@ class DisplayUtil
     {
         return $litterSize == null ? '0-ling' : $litterSize.'-ling';
     }
-        
-        
+
+
+    /**
+     * @param string $predicate
+     * @param int $predicateScore
+     * @return null|string
+     */
+    public static function parsePredicateString($predicate, $predicateScore)
+    {
+        if(!array_key_exists($predicate, PredicateType::getAll())) { return null; }
+        $score = $predicateScore != null ? '('.$predicateScore.')' : null;
+
+        return Translation::getAbbreviation($predicate).$score;
+    }
 }
