@@ -351,7 +351,6 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $data = $this->parseCSV($this->filenames[self::PREDICATES]);
 
         if(count($data) == 0) { return false; }
-        else { $this->cmdUtil->setStartTimeAndPrintIt(count($data)+1, 1); }
 
         //1. Create predicateSearchArrays with latest startDates
         $latestStartDateSearchArray = new ArrayCollection();
@@ -416,11 +415,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                     self::PREDICATE_VALUE => $predicateValue,
                 ]);
         }
-        
 
         $newCount = 0;
         $totalCount = 0;
         $animalIds = $latestCsvPredicatesByAnimalId->getKeys();
+        $this->cmdUtil->setStartTimeAndPrintIt(count($animalIds)+1, 1);
         foreach ($animalIds as $animalId) {
 
             $csvPredicateData = $latestCsvPredicatesByAnimalId->get($animalId);
