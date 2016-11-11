@@ -34,6 +34,7 @@ class JsonInputConstant
     const BREED_TYPE = 'breed_type';
     const BLINDNESS_FACTOR = 'blindness_factor';
     const PREDICATE = 'predicate';
+    const PREDICATE_SCORE = 'predicate_score';
     const BREEDER_NAME = 'breeder_name';
     const BREEDER_NUMBER = 'breeder_number';
     const ANIMAL_TYPE = 'animal_type';
