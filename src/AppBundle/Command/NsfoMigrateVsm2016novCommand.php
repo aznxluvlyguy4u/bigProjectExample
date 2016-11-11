@@ -10,6 +10,7 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\Predicate;
 use AppBundle\Entity\PredicateRepository;
 use AppBundle\Entity\Race;
+use AppBundle\Enumerator\PredicateType;
 use AppBundle\Enumerator\Specie;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
@@ -425,8 +426,16 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             $csvPredicateData = $latestCsvPredicatesByAnimalId->get($animalId);
             $csvStartDate = $csvPredicateData[self::START_DATE];
             $csvEndDate = $csvPredicateData[self::END_DATE];
-            $csvPredicateScore = $csvPredicateData[self::PREDICATE_SCORE];
             $csvPredicateValue = Translation::getEnglish($csvPredicateData[self::PREDICATE_VALUE]);
+
+            $csvPredicateScore = null;
+            //Only save scores of StarEwes
+            if($csvPredicateValue == PredicateType::STAR_EWE_1 || $csvPredicateValue == PredicateType::STAR_EWE_2 ||
+               $csvPredicateValue == PredicateType::STAR_EWE_3 || $csvPredicateValue == PredicateType::STAR_EWE) {
+                $retrievedCsvPredicateScore = $csvPredicateData[self::PREDICATE_SCORE];
+                //Ignore 0 scores
+                $csvPredicateScore = $retrievedCsvPredicateScore == 0 ? null : $retrievedCsvPredicateScore;
+            }
 
             $persistNewPredicate = true;
             if($predicatesFromDbSearchArray->containsKey($animalId)) {

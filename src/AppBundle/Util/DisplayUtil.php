@@ -10,6 +10,7 @@ use AppBundle\Enumerator\PredicateType;
 class DisplayUtil
 {
     const EMPTY_PRODUCTION = '-/-/-/-';
+    const MIN_PREDICATE_SCORE_FOR_DISPLAY = 13;
 
     /**
      *
@@ -71,7 +72,7 @@ class DisplayUtil
     public static function parsePredicateString($predicate, $predicateScore)
     {
         if(!array_key_exists($predicate, PredicateType::getAll())) { return null; }
-        $score = $predicateScore != null ? '('.$predicateScore.')' : null;
+        $score = $predicateScore != null && $predicateScore >= self::MIN_PREDICATE_SCORE_FOR_DISPLAY ? '('.$predicateScore.')' : null;
 
         return Translation::getAbbreviation($predicate).$score;
     }
