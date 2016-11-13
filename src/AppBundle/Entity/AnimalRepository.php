@@ -638,12 +638,18 @@ class AnimalRepository extends BaseRepository
    * @param  $measurementDateString
    * @return bool|null
    */
-  public function isDateOfBirth($animalId, $measurementDateString)
+  public function isWithin3DaysAfterDateOfBirth($animalId, $measurementDateString)
   {
     if (TimeUtil::isFormatYYYYMMDD($measurementDateString)) {
       $sql = "SELECT DATE(date_of_birth) as date_of_birth FROM animal WHERE id = " . intval($animalId);
       $result = $this->getManager()->getConnection()->query($sql)->fetch();
-      if ($result['date_of_birth'] == $measurementDateString) {
+      
+      $dateOfBirth = new \DateTime($result['date_of_birth']);
+      $measurementDate = new \DateTime($measurementDateString);
+      $dateOfBirthPlus3Days = clone $dateOfBirth;
+      $dateOfBirthPlus3Days->add(new \DateInterval('P3D'));
+
+      if ($dateOfBirth <= $measurementDate && $measurementDate <= $dateOfBirthPlus3Days) {
         return true;
       } else {
         return false;

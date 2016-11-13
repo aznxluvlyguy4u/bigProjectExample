@@ -12,6 +12,7 @@ use AppBundle\Entity\PredicateRepository;
 use AppBundle\Entity\Race;
 use AppBundle\Enumerator\PredicateType;
 use AppBundle\Enumerator\Specie;
+use AppBundle\Migration\PerformanceMeasurementsMigrator;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\TimeUtil;
@@ -79,6 +80,9 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     /** @var AnimalRepository */
     private $animalRepository;
 
+    /** @var string */
+    private $rootDir;
+
     protected function configure()
     {
         $this
@@ -115,8 +119,8 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         );
 
         //Setup folders if missing
-        $rootDir = $this->getContainer()->get('kernel')->getRootDir();
-        NullChecker::createFolderPathsFromArrayIfNull($rootDir, $this->csvParsingOptions);
+        $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
+        NullChecker::createFolderPathsFromArrayIfNull($this->rootDir, $this->csvParsingOptions);
         
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
@@ -125,6 +129,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '3: Migrate MyoMax', "\n",
             '4: Migrate BlindnessFactor and update values in Animal', "\n",
             '5: Migrate Predicates and update values in Animal', "\n",
+            '6: Migrate Performance Measurements', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -150,6 +155,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
             case 5:
                 $result = $this->migratePredicates() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 6:
+                $result = $this->migratePerformanceMeasurements() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
@@ -344,6 +354,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     /**
      * Note, it has already been checked that, no animal has more than one blindnessFactor
      *
+     * @param boolean $useSql
      * @return bool
      */
     private function migratePredicates($useSql = true)
@@ -505,5 +516,19 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $repository = $this->em->getRepository(Predicate::class);
         $repository->setLatestPredicateValuesOnAllAnimals($this->cmdUtil);
         $repository->fillPredicateValuesInAnimalForPredicatesWithoutStartDates($this->cmdUtil);
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function migratePerformanceMeasurements()
+    {
+        $data = $this->parseCSV($this->filenames[self::PERFORMANCE_MEASUREMENTS]);
+        if(count($data) == 0) { return false; }
+        
+        /** @var PerformanceMeasurementsMigrator $migrator */
+        $migrator = new PerformanceMeasurementsMigrator($this->cmdUtil, $this->em, $data, $this->rootDir, $this->output);
+        return $migrator->isSuccessFull();
     }
 }

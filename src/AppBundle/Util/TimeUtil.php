@@ -213,11 +213,17 @@ class TimeUtil
      * DateString format should be YYYY-MM-DD, where MM and DD can also be one digit in length 
      * 
      * @param string $dateString
+     * @param boolean $mustHaveLeadingZeroes
      * @return bool
      */
-    public static function isFormatYYYYMMDD($dateString)
+    public static function isFormatYYYYMMDD($dateString, $mustHaveLeadingZeroes = false)
     {
-        return (bool)preg_match("/^[0-9]{4}-((0[1-9]|1[0-2])|[1-9])-((0[1-9]|[1-2][0-9]|3[0-1])|[1-9])$/",$dateString);
+        if($mustHaveLeadingZeroes) {
+            $regex = "/^[0-9]{4}-((0[1-9]|1[0-2]))-((0[1-9]|[1-2][0-9]|3[0-1]))$/";
+        } else {
+            $regex = "/^[0-9]{4}-((0[1-9]|1[0-2])|[1-9])-((0[1-9]|[1-2][0-9]|3[0-1])|[1-9])$/";
+        }
+        return (bool)preg_match($regex,$dateString);
     }
 
 
@@ -252,5 +258,37 @@ class TimeUtil
     public static function getDateTimeFromNullCheckedDateString($dateString)
     {
         return $dateString != null ? new \DateTime($dateString) : null;
+    }
+
+
+    /**
+     * Fill the D-M-Y or Y-M-D with leading zeros and flips them in the correct order
+     * into the YYYY-MM-DD format.
+     *
+     * @param $dateString
+     * @return null|string
+     */
+    public static function fillDateStringWithLeadingZeroes($dateString)
+    {
+        if(!is_string($dateString)) { return null; }
+
+        $parts = explode('-', $dateString);
+
+        if(count($parts) != 3) { return null; }
+
+        if(strlen($parts[0]) == 4) {
+            $dateString = str_pad($parts[0],4,'0', STR_PAD_LEFT).'-'
+                         .str_pad($parts[1],2,'0', STR_PAD_LEFT).'-'
+                         .str_pad($parts[2],2,'0', STR_PAD_LEFT);
+
+        } else if(strlen($parts[2]) == 4) {
+            $dateString = str_pad($parts[2],4,'0', STR_PAD_LEFT).'-'
+                         .str_pad($parts[1],2,'0', STR_PAD_LEFT).'-'
+                         .str_pad($parts[0],2,'0', STR_PAD_LEFT);
+        } else {
+            return null;
+        }
+
+        return self::isFormatYYYYMMDD($dateString, true) ? $dateString : null;
     }
 }
