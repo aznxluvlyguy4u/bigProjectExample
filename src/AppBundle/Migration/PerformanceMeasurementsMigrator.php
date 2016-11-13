@@ -62,9 +62,6 @@ class PerformanceMeasurementsMigrator extends MigratorBase
     /** @var MuscleThicknessRepository $muscleThicknessRepository */
     private $muscleThicknessRepository;
     
-    /** @var string */
-    private $rootDir;
-
     /** @var array */
     private $idByAiindArray;
 
@@ -83,9 +80,6 @@ class PerformanceMeasurementsMigrator extends MigratorBase
     /** @var MeasurementsFixer */
     private $measurementsFixer;
 
-    /** @var string */
-    private $outputFolder;
-
     /**
      * PerformanceMeasurementsMigrator constructor.
      * @param CommandUtil $cmdUtil
@@ -96,11 +90,7 @@ class PerformanceMeasurementsMigrator extends MigratorBase
      */
     public function __construct(CommandUtil $cmdUtil, ObjectManager $em, $data, $rootDir, OutputInterface $outputInterface)
     {
-        parent::__construct($cmdUtil, $em, $outputInterface, $data);
-        
-        $this->rootDir = $rootDir;
-        $this->outputFolder = $rootDir.'/Resources/outputs/migration';
-        NullChecker::createFolderPathIfNull($this->outputFolder);
+        parent::__construct($cmdUtil, $em, $outputInterface, $data, $rootDir);
 
         //Initialize values
         $this->isSuccessFull = false;

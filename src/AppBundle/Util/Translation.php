@@ -148,11 +148,14 @@ class Translation
             //BreedType
             BreedType::BLIND_FACTOR        => BreedTypeDutch::BLIND_FACTOR,
             BreedType::MEAT_LAMB_FATHER    => BreedTypeDutch::MEAT_LAMB_FATHER,
+            BreedType::MEAT_LAMB_MOTHER    => BreedTypeDutch::MEAT_LAMB_MOTHER,
             BreedType::PARENT_ANIMAL       => BreedTypeDutch::PARENT_ANIMAL,
             BreedType::PURE_BRED           => BreedTypeDutch::PURE_BRED,
             BreedType::REGISTER            => BreedTypeDutch::REGISTER,
             BreedType::SECONDARY_REGISTER  => BreedTypeDutch::SECONDARY_REGISTER,
             BreedType::UNDETERMINED        => BreedTypeDutch::UNDETERMINED,
+            BreedType::EN_MANAGEMENT       => BreedTypeDutch::EN_MANAGEMENT,
+            BreedType::EN_BASIS            => BreedTypeDutch::EN_BASIS,
             //PredicateType
             PredicateType::DEFINITIVE_PREMIUM_RAM     =>  PredicateTypeDutch::DEFINITIVE_PREMIUM_RAM,
             PredicateType::GRADE_RAM                  =>  PredicateTypeDutch::GRADE_RAM,

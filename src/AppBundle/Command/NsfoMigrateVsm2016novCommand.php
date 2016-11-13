@@ -3,6 +3,7 @@
 namespace AppBundle\Command;
 
 use AppBundle\Entity\Employee;
+use AppBundle\Migration\AnimalTableMigrator;
 use AppBundle\Migration\BlindnessFactorsMigrator;
 use AppBundle\Migration\MyoMaxMigrator;
 use AppBundle\Migration\PerformanceMeasurementsMigrator;
@@ -94,7 +95,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
-            '1: option 1', "\n",
+            '1: Migrate AnimalTable data', "\n",
             '2: Migrate Races', "\n",
             '3: Migrate MyoMax', "\n",
             '4: Migrate BlindnessFactor and update values in Animal', "\n",
@@ -105,7 +106,8 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
         switch ($option) {
             case 1:
-                $output->writeln('DONE!');
+                $result = $this->migrateAnimalTable() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
                 break;
 
             case 2:
@@ -148,6 +150,9 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             ->in($this->csvParsingOptions['finder_in'])
             ->name($filename)
         ;
+
+        $this->output->writeln('Parsing csv file...');
+
         foreach ($finder as $file) { $csv = $file; }
 
         $rows = array();
@@ -166,6 +171,22 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     }
 
 
+    /**
+     * @return bool
+     */
+    private function migrateAnimalTable()
+    {
+        $data = $this->parseCSV($this->filenames[self::ANIMAL_TABLE]);
+        if(count($data) == 0) { return false; }
+
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        $animalTableMigrator->verifyData();
+//        $animalTableMigrator->migrate(); TODO
+
+        return true;
+    }
+    
+    
     /**
      * @return bool
      */
