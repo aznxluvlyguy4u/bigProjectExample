@@ -21,17 +21,8 @@ use AppBundle\Util\CommandUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class MeasurementsFixer
+class MeasurementsFixer extends MigratorBase
 {
-    /** @var CommandUtil */
-    private $cmdUtil;
-
-    /** @var OutputInterface */
-    private $output;
-
-    /** @var ObjectManager */
-    private $em;
-
     /** @var MeasurementRepository $measurementsRepository */
     private $measurementsRepository;
 
@@ -59,11 +50,8 @@ class MeasurementsFixer
      */
     public function __construct(ObjectManager $em, CommandUtil $cmdUtil, OutputInterface $output)
     {
-        /** @var ObjectManager $em */
-        $this->em = $em;
-        $this->cmdUtil = $cmdUtil;
-        $this->output = $output;
-
+        parent::__construct($cmdUtil, $em, $output);
+        
         $this->measurementsRepository = $this->em->getRepository(Measurement::class);
         $this->exteriorRepository = $this->em->getRepository(Exterior::class);
         $this->weightRepository = $this->em->getRepository(Weight::class);
