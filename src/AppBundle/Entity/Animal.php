@@ -82,6 +82,14 @@ abstract class Animal
     protected $ubnOfBirth;
 
     /**
+     * @var Location
+     * @ORM\ManyToOne(targetEntity="Location")
+     * @ORM\JoinColumn(name="location_of_birth_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\Location")
+     */
+    protected $locationOfBirth;
+
+    /**
      * @var DateTime
      *
      * @ORM\Column(type="datetime", nullable=true)
@@ -2150,6 +2158,22 @@ abstract class Animal
     public function setUbnOfBirth($ubnOfBirth)
     {
         $this->ubnOfBirth = trim($ubnOfBirth);
+    }
+
+    /**
+     * @return Location
+     */
+    public function getLocationOfBirth()
+    {
+        return $this->locationOfBirth;
+    }
+
+    /**
+     * @param Location $locationOfBirth
+     */
+    public function setLocationOfBirth($locationOfBirth)
+    {
+        $this->locationOfBirth = $locationOfBirth;
     }
 
     /**
