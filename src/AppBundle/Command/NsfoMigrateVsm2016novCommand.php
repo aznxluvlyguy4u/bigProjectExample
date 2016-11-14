@@ -9,6 +9,7 @@ use AppBundle\Migration\MyoMaxMigrator;
 use AppBundle\Migration\PerformanceMeasurementsMigrator;
 use AppBundle\Migration\PredicatesMigrator;
 use AppBundle\Migration\RacesMigrator;
+use AppBundle\Migration\TagReplaceMigrator;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -95,6 +96,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
+            'A: Migrate TagReplaces', "\n",
             '1: Update pedigreeRegisters', "\n",
             '2: Migrate AnimalTable data', "\n",
             '3: Migrate Races', "\n",
@@ -106,6 +108,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
+            case 'A':
+                $result = $this->migrateTagReplaces() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
             case 1:
                 $result = $this->updatePedigreeRegister() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
@@ -174,6 +181,22 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         }
 
         return $rows;
+    }
+
+
+
+    /**
+     * @return bool
+     */
+    private function migrateTagReplaces()
+    {
+        $data = $this->parseCSV($this->filenames[self::TAG_REPLACES]);
+        if(count($data) == 0) { return false; }
+
+        $developer = $this->em->getRepository(Employee::class)->find(self::DEVELOPER_PRIMARY_KEY);
+        $tagReplaceMigrator = new TagReplaceMigrator($this->cmdUtil, $this->em, $this->output, $data, $developer);
+        $tagReplaceMigrator->migrate();
+        return true;
     }
 
 
