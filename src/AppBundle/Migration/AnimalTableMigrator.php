@@ -9,10 +9,12 @@ use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\Specie;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\GenderChanger;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
 use AppBundle\Util\Validator;
+use ClassesWithParents\G;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Validator\Constraints\Time;
@@ -77,7 +79,7 @@ class AnimalTableMigrator extends MigratorBase
 //        }
 
 //        $this->cmdUtil->setStartTimeAndPrintIt(count($this->data)+1, 1);
-
+        
         
         $newCount = 0;
         foreach ($this->data as $record) {
@@ -107,29 +109,14 @@ class AnimalTableMigrator extends MigratorBase
 
         }
 
-        /*
-         * PedigreeRegister
-         * "* Onbekend stamboek Schaap"
-         *
-         * |TSNH : Texels Schapenstamboek in Noord Holland
-         * |NTS : Nederlands Texels Schapenstamboek
-|* Onbekend stamboek Schaap
-|NH : Schapenfokvereniging De Noord Hollander
-|BdM : Bleu du Maine rasvereniging
-|LAX : Luxemburger Schafergenossenschaft
-|NFS: Nederlands Flevolander Schapenstamboek
-|CF : Clun Forest Schapenvereniging
-|Soay : Soay rasvereniging
-|EN-Management
-|EN-Basis
-|RUI : Rui-Schaap
-         *
-         */
+
     }
 
 
     public function verifyData()
     {
+        $neutersByVsmId = $this->getNeutersByVsmId();
+        
         $vsmIdCollection = [];
         $stnImportCollection = [];
         $animalOrderNumberImportCollection = [];
@@ -190,12 +177,14 @@ class AnimalTableMigrator extends MigratorBase
 
         $vsmIdsMissing = 0;
         $invalidVsmId = [];
+        $neuterVsmIdsCount = 0;
         foreach ($vsmIdCollection as $vsmId) {
             //Check if vsmId only contains digits.
             if($vsmId == null || $vsmId == '') { $vsmIdsMissing++; }
             else if(!ctype_digit($vsmId)) { $invalidVsmId[] = $vsmId; }
+            else if(array_key_exists($vsmId, $neutersByVsmId)) { $neuterVsmIdsCount++; }
         }
-        $this->output->writeln('vsmIds missing: '.$vsmIdsMissing.' | '.'invalidVsmIds: '.count($invalidVsmId));
+        $this->output->writeln('vsmIds missing: '.$vsmIdsMissing.' | '.'invalidVsmIds: '.count($invalidVsmId).' | VsmIds without gender: '.$neuterVsmIdsCount);
 
         $stnMissing = 0;
         $invalidStn = [];
@@ -464,5 +453,89 @@ class AnimalTableMigrator extends MigratorBase
         }
 
         $this->em->flush();
+    }
+
+
+    /**
+     * @return array
+     */
+    private function getNeutersByVsmId()
+    {
+        $sql = "SELECT id, name, gender FROM animal WHERE gender <> 'FEMALE' AND gender <> 'MALE'";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $neutersByVsmId = [];
+        foreach ($results as $result) {
+            $neutersByVsmId[$result['name']] = $result['name'];
+        }
+        return $neutersByVsmId;
+    }
+
+
+    public function fixGendersInDatabase()
+    {
+        $neutersByVsmId = $this->getNeutersByVsmId();
+        $animalIdByVsmIds = $this->animalRepository->getAnimalPrimaryKeysByVsmId();
+
+        $animalIdsOfNeutersToFemale = [];
+        $animalIdsOfNeutersToMale = [];
+
+
+        foreach ($this->data as $record) {
+
+            $vsmId = $record[0];
+            $gender = $this->parseGender($record[7]);
+
+            if (array_key_exists($vsmId, $neutersByVsmId)) {
+                //Neuter with this vsmId currently exists in the database
+                $animalId = $animalIdByVsmIds[$vsmId];
+                if (is_int($animalId)) {
+                    if($gender == GenderType::MALE) { $animalIdsOfNeutersToMale[$animalId] = $animalId; }
+                    else if($gender == GenderType::FEMALE) { $animalIdsOfNeutersToFemale[$animalId] = $animalId; }
+                }
+            }
+
+            $vsmIdFather = $record[5];
+            if (array_key_exists($vsmIdFather, $neutersByVsmId)) {
+                $animalId = $animalIdByVsmIds[$vsmIdFather];
+                if (is_int($animalId)) {
+                    $animalIdsOfNeutersToMale[$animalId] = $animalId;
+                }
+            }
+
+            $vsmIdMother = $record[6];
+            if (array_key_exists($vsmIdMother, $neutersByVsmId)) {
+                $animalId = $animalIdByVsmIds[$vsmIdMother];
+                if (is_int($animalId)) {
+                    $animalIdsOfNeutersToFemale[$animalId] = $animalId;
+                }
+            }
+        }
+
+        $count = 0;
+        $totalCount = count($animalIdsOfNeutersToFemale) + count($animalIdsOfNeutersToMale);
+
+        if($totalCount > 0) {
+            $this->cmdUtil->setStartTimeAndPrintIt($totalCount + 1, 1, 'Fixing gender of neuters...');
+
+            $animalIdsFemale = array_keys($animalIdsOfNeutersToFemale);
+            foreach ($animalIdsFemale as $animalId) {
+                GenderChanger::changeNeuterToFemaleBySql($this->em, $animalId);
+                $this->cmdUtil->advanceProgressBar(1, 'id|gender : ' . $animalId . '|' . GenderType::FEMALE);
+                $count++;
+            }
+
+            $animalIdsMale = array_keys($animalIdsOfNeutersToMale);
+            foreach ($animalIdsMale as $animalId) {
+                GenderChanger::changeNeuterToMaleBySql($this->em, $animalId);
+                $this->cmdUtil->advanceProgressBar(1, 'id|gender : ' . $animalId . '|' . GenderType::MALE);
+                $count++;
+            }
+
+            $this->cmdUtil->setProgressBarMessage('Genders Fixed: ' . $count);
+            $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+        } else {
+            $this->output->writeln('No genders to fix');
+        }
+
     }
 }

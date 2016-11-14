@@ -109,5 +109,74 @@ class GenderChanger
             return null;
         }
     }
-    
+
+
+    /**
+     * @param ObjectManager $em
+     * @param int $animalId
+     * @param string $gender
+     */
+    public static function changeGenderOfNeuter(ObjectManager $em, $animalId, $gender)
+    {
+        if(is_int($animalId) && is_string($gender)) {
+            switch ($gender) {
+                case GenderType::MALE:      self::changeNeuterToMaleBySql($em, $animalId);      break;
+                case GenderType::FEMALE:    self::changeNeuterToFemaleBySql($em, $animalId);    break;
+                default: break;
+            }
+        }
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param int $animalId
+     */
+    public static function changeNeuterToFemaleBySql(ObjectManager $em, $animalId)
+    {
+        $sql = "UPDATE animal SET type='Ewe', gender = '".GenderType::FEMALE."' WHERE id = ". $animalId;
+        $em->getConnection()->exec($sql);
+
+        $sql = "SELECT id FROM ewe WHERE id = ". $animalId;
+        $resultEwe = $em->getConnection()->query($sql)->fetch();
+
+        if($resultEwe['id'] == '' || $resultEwe['id'] == null) {
+            $sql = "INSERT INTO ewe VALUES (" . $animalId . ", 'Ewe')";
+            $em->getConnection()->exec($sql);
+        }
+
+        $sql = "SELECT id FROM neuter WHERE id = ". $animalId;
+        $resultNeuter = $em->getConnection()->query($sql)->fetch();
+
+        if($resultNeuter['id'] != '' || $resultNeuter['id'] != null) {
+            $sql = "DELETE FROM neuter WHERE id = " . $animalId;
+            $em->getConnection()->exec($sql);
+        }
+    }
+
+    /**
+     * @param ObjectManager $em
+     * @param int $animalId
+     */
+    public static function changeNeuterToMaleBySql(ObjectManager $em, $animalId)
+    {
+        $sql = "UPDATE animal SET type='Ram', gender = '".GenderType::MALE."' WHERE id = ". $animalId;
+        $em->getConnection()->exec($sql);
+
+        $sql = "SELECT id FROM ram WHERE id = ". $animalId;
+        $resultRam = $em->getConnection()->query($sql)->fetch();
+
+        if($resultRam['id'] == '' || $resultRam['id'] == null) {
+            $sql = "INSERT INTO ram VALUES (" . $animalId . ", 'Ram')";
+            $em->getConnection()->exec($sql);
+        }
+
+        $sql = "SELECT id FROM neuter WHERE id = ". $animalId;
+        $resultNeuter = $em->getConnection()->query($sql)->fetch();
+
+        if($resultNeuter['id'] != '' || $resultNeuter['id'] != null) {
+            $sql = "DELETE FROM neuter WHERE id = " . $animalId;
+            $em->getConnection()->exec($sql);
+        }
+    }
 }

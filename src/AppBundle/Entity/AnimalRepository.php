@@ -610,7 +610,7 @@ class AnimalRepository extends BaseRepository
 
     $array = new ArrayCollection();
     foreach ($results as $result) {
-      $array->set($result['name'], $result['id']);
+      $array->set($result['name'], intval($result['id']));
     }
 
     return $array;

@@ -5,6 +5,7 @@ namespace AppBundle\Command;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\GenderChanger;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Query\ResultSetMapping;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
@@ -50,24 +51,7 @@ class NsfoSetGenderOnParentsCommand extends ContainerAwareCommand
 
         $counterMale = 0;
         foreach ($results as $result) {
-            $sql = "UPDATE animal SET type='Ram' WHERE id = ". $result['id'];
-            $em->getConnection()->exec($sql);
-
-            $sql = "SELECT id FROM ram WHERE id = ". $result['id'];
-            $result = $em->getConnection()->query($sql)->fetch();
-
-            if($result['id'] == '' || $result['id'] == null) {
-                $sql = "INSERT INTO ram VALUES (" . $result['id'] . ", 'Ram')";
-                $em->getConnection()->exec($sql);
-            }
-
-            $sql = "SELECT id FROM neuter WHERE id = ". $result['id'];
-            $result = $em->getConnection()->query($sql)->fetch();
-
-            if($result['id'] != '' || $result['id'] != null) {
-                $sql = "DELETE FROM neuter WHERE id = " . $result['id'];
-                $em->getConnection()->exec($sql);
-            }
+            GenderChanger::changeNeuterToMaleBySql($em, $result['id']);
             $counterMale++;
         }
 
@@ -77,24 +61,7 @@ class NsfoSetGenderOnParentsCommand extends ContainerAwareCommand
 
         $counterFemale = 0;
         foreach ($results as $result) {
-            $sql = "UPDATE animal SET type='Ewe' WHERE id = ". $result['id'];
-            $em->getConnection()->exec($sql);
-
-            $sql = "SELECT id FROM ewe WHERE id = ". $result['id'];
-            $result = $em->getConnection()->query($sql)->fetch();
-
-            if($result['id'] == '' || $result['id'] == null) {
-                $sql = "INSERT INTO ewe VALUES (" . $result['id'] . ", 'Ewe')";
-                $em->getConnection()->exec($sql);
-            }
-
-            $sql = "SELECT id FROM neuter WHERE id = ". $result['id'];
-            $result = $em->getConnection()->query($sql)->fetch();
-
-            if($result['id'] != '' || $result['id'] != null) {
-                $sql = "DELETE FROM neuter WHERE id = " . $result['id'];
-                $em->getConnection()->exec($sql);
-            }
+            GenderChanger::changeNeuterToFemaleBySql($em, $result['id']);
             $counterFemale++;
         }
 
