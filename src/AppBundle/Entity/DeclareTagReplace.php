@@ -84,7 +84,6 @@ class DeclareTagReplace extends DeclareBase {
     private $replaceDate;
 
     /**
-     * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="tagTransfers", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
      */
