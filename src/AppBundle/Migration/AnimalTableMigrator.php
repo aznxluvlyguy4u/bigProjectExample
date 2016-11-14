@@ -4,17 +4,23 @@
 namespace AppBundle\Migration;
 
 
+use AppBundle\Component\Utils;
+use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\DeclareTagReplace;
+use AppBundle\Entity\DeclareTagReplaceRepository;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\Specie;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
 use AppBundle\Util\Validator;
 use ClassesWithParents\G;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Validator\Constraints\Time;
@@ -23,6 +29,7 @@ class AnimalTableMigrator extends MigratorBase
 {
     const PRINT_OUT_INVALID_UBNS_OF_BIRTH = true;
     const UBNS_PER_ROW = 8;
+    const FILENAME_CORRECTED_CSV = '2016nov_gecorrigeerde_diertabel.csv';
     const FILENAME_INCORRECT_ULNS = 'incorrect_ulns.csv';
 
     const VALUE = 'VALUE';
@@ -63,6 +70,135 @@ class AnimalTableMigrator extends MigratorBase
     {
         parent::__construct($cmdUtil, $em, $outputInterface, $data, $rootDir);
     }
+
+
+    public function generateCorrectedCsvFile()
+    {
+        //TODO Migrate PedigreeRegisterData NsfoMigratePedigreeregistersCommand
+
+        //TODO Regender animals to Ewe/Ram before setting parents-children
+
+        //TODO SEARCH ARRAY CURRENT ANIMAL DATA
+//        $sql = "SELECT myo_max, name FROM animal WHERE myo_max NOTNULL";
+//        $results = $this->em->getConnection()->query($sql)->fetchAll();
+//        $searchArray = [];
+//        foreach ($results as $result) {
+//            $searchArray[$result['name']] = $result['myo_max'];
+//        }
+
+//        $this->cmdUtil->setStartTimeAndPrintIt(count($this->data)+1, 1);
+
+        $animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmId();
+        
+        $columnHeaders = 'vsmId;animalId;ulnCountryCode;ulnNumber;animalOrderNumber;pedigreeCountryCode;pedigreeNumber;nickName;'.
+                         'fatherVsmId;fatherId;motherVsmId;motherId;genderInFile;genderInDatabase;dateOfBirth;breedCode;ubnOfBirth;locationOfBirth;'.
+                         'pedigreeRegisterId;BreedType;scrapieGenotype;'
+                        ;
+        $this->writeCorrectedCsvRecord($columnHeaders);
+
+        $newCount = 0;
+        foreach ($this->data as $record) {
+
+            $vsmId = $record[0];
+            $stnImport = $record[1];
+            $animalOrderNumberImport = $record[2];
+
+            $uln = $this->parseUln($record[3]);
+            $ulnCountryCode = $uln[JsonInputConstant::ULN_COUNTRY_CODE];
+            $ulnNumber = $uln[JsonInputConstant::ULN_NUMBER];
+
+            $nickName = $record[4];
+            $vsmIdFather = $record[5];
+            $vsmIdMother = $record[6];
+            $gender = $this->parseGender($record[7]);
+            $dateOfBirthString = $record[8];
+            $breedCode = $record[9];
+            $ubnOfBirth = $record[10]; //ubnOfBreeder
+
+            $pedigreeRegister = self::parsePedigreeRegister($record[11]);
+            $pedigreeRegisterFullname = $pedigreeRegister[self::VALUE];
+            $pedigreeRegisterAbbreviation = $pedigreeRegister[self::ABBREVIATION];
+
+            $breedType = Translation::getEnglish(strtoupper($record[12]));
+            $scrapieGenotype = $record[13];
+
+            //Corrected values
+            //$vsmId
+            $animalId = 0;
+            $ulnCountryCode = 0;
+            $ulnNumber = 0;
+            $animalOrderNumber = 0;
+            $pedigreeCountryCode = 0;
+            $pedigreeNumber = 0;
+            $nickName = 0;
+            $fatherVsmId = 0;
+            $fatherId = 0;
+            $motherVsmId = 0;
+            $motherId = 0;
+            $genderInFile = 0;
+            $genderInDatabase = 0;
+            $dateOfBirth = 0;
+            $breedCode = 0;
+            $ubnOfBirth = 0;
+            $locationOfBirth = 0;
+            $pedigreeRegisterId = 0;
+            $breedType = 0;
+            $scrapieGenotype = 0;
+
+            $this->writeCorrectedCsvRecord($vsmId . ';' . $animalId . ';' . $ulnCountryCode . ';' . $ulnNumber . ';' . $animalOrderNumber . ';' . $pedigreeCountryCode.';'.$pedigreeNumber.';'.$nickName.';'.$fatherVsmId.';'.$fatherId.';'.$motherVsmId.';'.$motherId
+                .';'.$genderInFile.';'.$genderInDatabase.';'.$dateOfBirth.';'.$breedCode.';'.$ubnOfBirth.';'.$locationOfBirth
+                .';'.$pedigreeRegisterId.';'.$breedType.';'.$scrapieGenotype);
+        }
+    }
+
+    /**
+     * @param string $vsmId
+     * @param string $ulnCountryCode
+     * @param string $ulnNumber
+     * @param ArrayCollection $animalIdsByVsmId
+     * @return int
+     */
+    private function findAnimalIdOfVsmId($vsmId, $ulnCountryCode, $ulnNumber, $animalIdsByVsmId)
+    {
+        if($animalIdsByVsmId->containsKey($vsmId)) {
+            return intval($animalIdsByVsmId->get($vsmId));
+        } 
+
+        $ulnNumber = StringUtil::padUlnNumberWithZeroes($ulnNumber);
+
+        //Note that duplicate animals will not be in this result, because at least one of the duplicate animals will have a vsmId
+        $sql = "SELECT id FROM animal WHERE uln_country_code = '".$ulnCountryCode."' AND uln_number = '".$ulnNumber."'";
+        $animalId = $this->em->getConnection()->query($sql)->fetch()['id'];
+        
+        if($animalId != null) {
+            return intval($animalId);
+        }
+
+
+        //Finally check if the uln has been replaced
+        /** @var DeclareTagReplaceRepository $declareTagReplaceRepository */
+        $declareTagReplaceRepository = $this->em->getRepository(DeclareTagReplace::class);
+        $newestUln = $declareTagReplaceRepository->getNewReplacementUln($ulnCountryCode.$ulnNumber);
+        
+        if($newestUln != null) {
+            $ulnParts = Utils::getUlnFromString($newestUln);
+            $ulnCountryCode = $ulnParts[Constant::ULN_COUNTRY_CODE_NAMESPACE];
+            $ulnNumber = $ulnParts[Constant::ULN_NUMBER_NAMESPACE];
+            
+            $sql = "SELECT id FROM animal WHERE uln_country_code = '".$ulnCountryCode."' AND uln_number = '".$ulnNumber."'";
+            $animalId = $this->em->getConnection()->query($sql)->fetch()['id'];
+            
+            if($animalId != null) { return $animalId; }
+        }
+        return null;
+    }
+
+
+    private function a()
+    {
+        
+    }
+
 
     public function migrate()
     {
@@ -540,5 +676,15 @@ class AnimalTableMigrator extends MigratorBase
             $this->output->writeln('No genders to fix');
         }
 
+    }
+
+    /**
+     * @param string $row
+     */
+    private function writeCorrectedCsvRecord($row)
+    {
+        file_put_contents($this->outputFolder.'/'.self::FILENAME_CORRECTED_CSV,
+            $row
+            ."\n", FILE_APPEND);
     }
 }

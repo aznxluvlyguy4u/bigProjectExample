@@ -11,11 +11,13 @@ use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Util\AnimalArrayReader;
+use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class AnimalRepository
@@ -765,5 +767,48 @@ class AnimalRepository extends BaseRepository
     if(!is_int($animalId)) { return 0; }
     $sql = "SELECT COUNT(*) FROM animal a WHERE parent_father_id = ".$animalId." OR parent_mother_id = ".$animalId;
     return $this->getManager()->getConnection()->query($sql)->fetch()['count'];
+  }
+
+
+  /**
+   * @param OutputInterface|null $output
+   * @param CommandUtil|null $cmdUtil
+   */
+  public function deleteTestAnimal(OutputInterface $output = null, CommandUtil $cmdUtil = null)
+  {
+    if($output != null) { $output->writeln('Delete breedValuesSets of testAnimals'); }
+
+    $sql = "SELECT id FROM animal WHERE uln_country_code = 'XD'";
+    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+    foreach ($results as $result) {
+      $animalId = intval($result['id']);
+      $sql = "DELETE FROM breed_values_set WHERE animal_id = ".$animalId;
+      $this->getManager()->getConnection()->exec($sql);
+    }
+    if($output != null) {
+      $output->writeln('BreedValuesSets of testAnimals deleted'); 
+      $output->writeln('Find all testAnimals...');
+    }
+    
+    /** @var AnimalRepository $animalRepository */
+    $animalRepository = $this->getManager()->getRepository(Animal::class);
+    $testAnimals = $animalRepository->findBy(['ulnCountryCode' => 'XD']);
+
+    $count = count($testAnimals);
+    if($count == 0) {
+      if($output != null) {
+        $output->writeln('No testAnimals in Database');
+      }
+    }
+
+    if($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt($count + 1, 1, 'Deleting testAnimals'); }
+    foreach ($testAnimals as $testAnimal) {
+      $this->getManager()->remove($testAnimal);
+      if($cmdUtil != null) {
+        $cmdUtil->advanceProgressBar(1); 
+      }
+    }
+    $this->getManager()->flush();
+    if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
   }
 }

@@ -2,6 +2,8 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Migration\AnimalTableMigrator;
 use AppBundle\Migration\BlindnessFactorsMigrator;
@@ -96,6 +98,8 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
+            'c: Delete (test)animals with ulnCountryCode \'XD\'', "\n",
+            'b: Generated Corrected csv', "\n",
             'A: Migrate TagReplaces', "\n",
             '1: Update pedigreeRegisters', "\n",
             '2: Migrate AnimalTable data', "\n",
@@ -108,6 +112,16 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
+            case 'c':
+                $result = $this->deleteTestAnimals() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 'b':
+                $result = $this->generateCorrectedCsv() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+            
             case 'A':
                 $result = $this->migrateTagReplaces() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
@@ -184,6 +198,30 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     }
 
 
+    /**
+     * @return bool
+     */
+    private function deleteTestAnimals()
+    {
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->em->getRepository(Animal::class);
+        $animalRepository->deleteTestAnimal($this->output, $this->cmdUtil);
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function generateCorrectedCsv()
+    {
+        $data = $this->parseCSV($this->filenames[self::ANIMAL_TABLE]);
+        if(count($data) == 0) { return false; }
+
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        $animalTableMigrator->generateCorrectedCsvFile(); //TODO
+    }
+    
 
     /**
      * @return bool
