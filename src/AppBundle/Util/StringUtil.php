@@ -9,7 +9,7 @@ use AppBundle\Enumerator\GenderType;
 
 class StringUtil
 {
-
+    const ULN_LENGTH = 12;
 
     /**
      * Just remove the last 5 numbers of the uln
@@ -223,5 +223,15 @@ class StringUtil
     {
         $parts = explode('\\', $classPath);
         return end($parts);
+    }
+
+
+    /**
+     * @param string $ulnNumber
+     * @return string
+     */
+    public static function padUlnNumberWithZeroes($ulnNumber)
+    {
+        return str_pad($ulnNumber, self::ULN_LENGTH, 0, STR_PAD_LEFT);
     }
 }

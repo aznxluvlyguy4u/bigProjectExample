@@ -344,7 +344,7 @@ class AnimalTableMigrator extends MigratorBase
 
     /**
      *
-     * @param $ulnString
+     * @param string $ulnString
      * @return array
      */
     private function parseUln($ulnString)
@@ -352,13 +352,16 @@ class AnimalTableMigrator extends MigratorBase
         if(Validator::verifyUlnFormat($ulnString)) {
             $parts = explode(' ', $ulnString);
             $parts[0] = str_replace('GB', 'UK', $parts[0]);
-        } //TODO ELSE
 
+            return [
+                JsonInputConstant::ULN_COUNTRY_CODE => $parts[0],
+                JsonInputConstant::ULN_NUMBER => $parts[1],
+            ];
 
-        return [
-          JsonInputConstant::ULN_COUNTRY_CODE => $parts[0],
-          JsonInputConstant::ULN_NUMBER => $parts[1],
-        ];
+        } else {
+            return null;
+        }
+
     }
 
     private function parseStn($stnString)

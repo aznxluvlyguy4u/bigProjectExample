@@ -11,6 +11,7 @@ use AppBundle\Enumerator\ActionType;
 use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -37,6 +38,9 @@ class TagReplaceMigrator extends MigratorBase
     
     public function migrate()
     {
+        //TODO
+        dump('TODO');die;
+
         $this->cmdUtil->setStartTimeAndPrintIt(count($this->data)+1, 1);
         $animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmId();
 
@@ -68,26 +72,26 @@ class TagReplaceMigrator extends MigratorBase
                 $oldUlnNumber = null;
                 switch (count($oldUlnParts)) {
                     case 1:
-                        $oldUlnCountryCode = null;
-                        $oldUlnNumber = $oldUlnParts[0];
+                        $oldUlnCountryCode = 'NL';
+                        $oldUlnNumber = StringUtil::padUlnNumberWithZeroes($oldUlnParts[0]);
                         break;
 
                     case 2:
                         $oldUlnCountryCode = $oldUlnParts[0];
-                        $oldUlnNumber = $oldUlnParts[1];
+                        $oldUlnNumber = StringUtil::padUlnNumberWithZeroes($oldUlnParts[1]);
                         break;
 
                     case 3:
                         $oldUlnCountryCode = $oldUlnParts[0];
-                        $oldUlnNumber = $oldUlnParts[1].' '.$oldUlnParts[2];
+                        $oldUlnNumber =  StringUtil::padUlnNumberWithZeroes($oldUlnParts[2]);
                         break;
                 }
 
                 $newUlnParts = explode(' ', $ulnNew);
                 $newUlnCountryCode = $newUlnParts[0];
-                $newUlnNumber = $newUlnParts[1];
+                $newUlnNumber = StringUtil::padUlnNumberWithZeroes($newUlnParts[1]);
 
-                if($newUlnCountryCode != null && $newUlnNumber != null && $oldUlnNumber != null) {
+                if($newUlnCountryCode != null && $newUlnNumber != null && $oldUlnNumber != null && $oldUlnCountryCode != null) {
                     $declareTagTransfer = new DeclareTagReplace();
                     $declareTagTransfer->setUlnCountryCodeToReplace($oldUlnCountryCode);
                     $declareTagTransfer->setUlnNumberToReplace($oldUlnNumber);
