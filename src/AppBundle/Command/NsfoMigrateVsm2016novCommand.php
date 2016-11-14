@@ -95,42 +95,48 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
-            '1: Migrate AnimalTable data', "\n",
-            '2: Migrate Races', "\n",
-            '3: Migrate MyoMax', "\n",
-            '4: Migrate BlindnessFactor and update values in Animal', "\n",
-            '5: Migrate Predicates and update values in Animal', "\n",
-            '6: Migrate Performance Measurements', "\n",
+            '1: Update pedigreeRegisters', "\n",
+            '2: Migrate AnimalTable data', "\n",
+            '3: Migrate Races', "\n",
+            '4: Migrate MyoMax', "\n",
+            '5: Migrate BlindnessFactor and update values in Animal', "\n",
+            '6: Migrate Predicates and update values in Animal', "\n",
+            '7: Migrate Performance Measurements', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
             case 1:
-                $result = $this->migrateAnimalTable() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->updatePedigreeRegister() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
             case 2:
-                $result = $this->migrateRaces() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->migrateAnimalTable() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
             case 3:
-                $result = $this->migrateMyoMax() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->migrateRaces() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
             case 4:
-                $result = $this->migrateBlindnessFactors() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->migrateMyoMax() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
             case 5:
-                $result = $this->migratePredicates() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->migrateBlindnessFactors() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
             case 6:
+                $result = $this->migratePredicates() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 7:
                 $result = $this->migratePerformanceMeasurements() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
@@ -168,6 +174,17 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         }
 
         return $rows;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function updatePedigreeRegister()
+    {
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $animalTableMigrator->updatePedigreeRegister();
+        return true;
     }
 
 

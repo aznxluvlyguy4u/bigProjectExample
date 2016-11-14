@@ -5,7 +5,9 @@ namespace AppBundle\Migration;
 
 
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\Specie;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\TimeUtil;
@@ -373,5 +375,94 @@ class AnimalTableMigrator extends MigratorBase
     private function parseStn($stnString)
     {
 
+    }
+
+
+    /**
+     * These values are based on the pedigreeRegister data in the import file
+     * compared to the values in the database on 2016
+     */
+    public function updatePedigreeRegister()
+    {
+        $clunForestNewFullName = 'Clun Forest Schapenvereniging';
+        $clunForestAbbr = 'CF';
+        $nfsFullName = 'Nederlands Flevolander Schapenstamboek';
+        $nfsAbbr = 'NFS';
+        $tsnhFullName = 'Texels Schapenstamboek in Noord Holland';
+        $tsnhAbbr = 'TSNH';
+        $enManagementFullName = 'EN-Management';
+        $enManagementAbbr = 'ENM';
+        $enBasisFullName = 'EN-Basis';
+        $enBasisAbbr = 'ENB';
+
+        $sql = "SELECT * FROM pedigree_register";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        
+        $allSpeciesAreSheep = true;
+        $nfsExists = false;
+        $tsnhExists = false;
+        $enManagementExists = false;
+        $enBasisExists = false;
+        foreach ($results as $result) {
+            $id = $result['id'];
+            $abbreviation = $result['abbreviation'];
+            $fullName = $result['full_name'];
+            $specie = $result['specie'];
+
+            //Update full_name
+            if($abbreviation == $clunForestAbbr && $fullName != $clunForestNewFullName) {
+                $sql = "UPDATE pedigree_register SET full_name = '".$clunForestNewFullName."' WHERE id = ".$id;
+                $this->em->getConnection()->exec($sql);
+            }
+            
+            if($specie != Specie::SHEEP) { $allSpeciesAreSheep = false; }
+            if($abbreviation == $nfsAbbr) { $nfsExists = true; }
+            if($abbreviation == $tsnhAbbr) { $tsnhExists = true; }
+            if($fullName == self::PR_EN_MANAGEMENT) { $enManagementExists = true; }
+            if($fullName == self::PR_EN_BASIS) { $enBasisExists = true; }
+        }
+        
+        if(!$allSpeciesAreSheep) {
+            $sql = "UPDATE pedigree_register SET specie = '".Specie::SHEEP."'";
+            $this->em->getConnection()->exec($sql);
+        }
+
+        if(!$nfsExists) {
+            $nfs = new PedigreeRegister();
+            $nfs->setAbbreviation($nfsAbbr);
+            $nfs->setFullName($nfsFullName);
+            $nfs->setSpecie(Specie::SHEEP);
+            $nfs->setCreationDate(new \DateTime());
+            $this->em->persist($nfs);
+        }
+
+        if(!$tsnhExists) {
+            $tsnh = new PedigreeRegister();
+            $tsnh->setAbbreviation($tsnhAbbr);
+            $tsnh->setFullName($tsnhFullName);
+            $tsnh->setSpecie(Specie::SHEEP);
+            $tsnh->setCreationDate(new \DateTime());
+            $this->em->persist($tsnh);
+        }
+
+        if(!$enManagementExists) {
+            $enManagement = new PedigreeRegister();
+            $enManagement->setAbbreviation($enManagementAbbr);
+            $enManagement->setFullName($enManagementFullName);
+            $enManagement->setSpecie(Specie::SHEEP);
+            $enManagement->setCreationDate(new \DateTime());
+            $this->em->persist($enManagement);
+        }
+
+        if(!$enBasisExists) {
+            $enBasis = new PedigreeRegister();
+            $enBasis->setAbbreviation($enBasisAbbr);
+            $enBasis->setFullName($enBasisFullName);
+            $enBasis->setSpecie(Specie::SHEEP);
+            $enBasis->setCreationDate(new \DateTime());
+            $this->em->persist($enBasis);
+        }
+
+        $this->em->flush();
     }
 }
