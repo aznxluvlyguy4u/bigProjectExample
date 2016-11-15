@@ -145,7 +145,7 @@ class AnimalTableMigrator extends MigratorBase
                 $animalOrderNumber = StringUtil::getNullAsStringOrWrapInQuotes(StringUtil::padAnimalOrderNumberWithZeroes($record[2]));
             }
 
-			$nickName = StringUtil::getNullAsStringOrWrapInQuotes($record[4]);
+			$nickName = StringUtil::getNullAsStringOrWrapInQuotes(StringUtil::escapeSingleApostrophes($record[4]));
             $fatherVsmId = $this->getNullCheckedValueForSqlQuery($record[5], false);
             $motherVsmId = $this->getNullCheckedValueForSqlQuery($record[6], false);
             $genderInFile = StringUtil::getNullAsStringOrWrapInQuotes($this->parseGender($record[7]));

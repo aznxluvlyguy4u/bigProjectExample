@@ -199,6 +199,16 @@ class StringUtil
 
 
     /**
+     * @param $string
+     * @return string
+     */
+    public static function escapeSingleApostrophes($string)
+    {
+        return strtr($string, ["'" => "''"]);
+    }
+
+
+    /**
      * @param $stringOrArray
      * @return string|array|null
      */
