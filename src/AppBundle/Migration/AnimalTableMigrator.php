@@ -16,16 +16,13 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\Specie;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\GenderChanger;
-use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
 use AppBundle\Util\Validator;
-use ClassesWithParents\G;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Validator\Constraints\Time;
 
 class AnimalTableMigrator extends MigratorBase
 {
