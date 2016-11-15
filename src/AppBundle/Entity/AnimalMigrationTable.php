@@ -157,6 +157,20 @@ class AnimalMigrationTable
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      */
+    private $oldBreedCode;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isBreedCodeUpdated;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
     private $ubnOfBirth;
 
     /**
@@ -496,6 +510,38 @@ class AnimalMigrationTable
     public function setBreedCode($breedCode)
     {
         $this->breedCode = $breedCode;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOldBreedCode()
+    {
+        return $this->oldBreedCode;
+    }
+
+    /**
+     * @param string $oldBreedCode
+     */
+    public function setOldBreedCode($oldBreedCode)
+    {
+        $this->oldBreedCode = $oldBreedCode;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isIsBreedCodeUpdated()
+    {
+        return $this->isBreedCodeUpdated;
+    }
+
+    /**
+     * @param boolean $isBreedCodeUpdated
+     */
+    public function setIsBreedCodeUpdated($isBreedCodeUpdated)
+    {
+        $this->isBreedCodeUpdated = $isBreedCodeUpdated;
     }
 
     /**
