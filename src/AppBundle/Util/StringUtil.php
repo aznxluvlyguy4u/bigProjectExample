@@ -10,6 +10,7 @@ use AppBundle\Enumerator\GenderType;
 class StringUtil
 {
     const ULN_LENGTH = 12;
+    const ANIMAL_ORDER_NUMBER_LENGTH = 5;
 
     /**
      * Just remove the last 5 numbers of the uln
@@ -177,6 +178,27 @@ class StringUtil
 
 
     /**
+     * @param mixed $value
+     * @param boolean $wrapNonNullInQuotes
+     * @return string
+     */
+    public static function getNullAsString($value, $wrapNonNullInQuotes = false)
+    {
+        return $value == null || $value == '' ? 'NULL' : ($wrapNonNullInQuotes ? "'".$value."'" : $value);
+    }
+
+
+    /**
+     * @param $value
+     * @return string
+     */
+    public static function getNullAsStringOrWrapInQuotes($value)
+    {
+        return self::getNullAsString($value, true);
+    }
+
+
+    /**
      * @param $stringOrArray
      * @return string|array|null
      */
@@ -233,5 +255,15 @@ class StringUtil
     public static function padUlnNumberWithZeroes($ulnNumber)
     {
         return str_pad($ulnNumber, self::ULN_LENGTH, 0, STR_PAD_LEFT);
+    }
+
+
+    /**
+     * @param string $animalOrderNumber
+     * @return string
+     */
+    public static function padAnimalOrderNumberWithZeroes($animalOrderNumber)
+    {
+        return str_pad($animalOrderNumber, self::ANIMAL_ORDER_NUMBER_LENGTH, 0, STR_PAD_LEFT);
     }
 }
