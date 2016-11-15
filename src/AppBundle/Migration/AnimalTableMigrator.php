@@ -14,6 +14,7 @@ use AppBundle\Entity\DeclareTagReplaceRepository;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\Specie;
+use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\StringUtil;
@@ -76,7 +77,7 @@ class AnimalTableMigrator extends MigratorBase
 	}
 
 
-	public function generateCorrectedCsvFile()
+	public function importAnimalTableCsvFileIntoDatabase()
 	{
 		//TODO Migrate PedigreeRegisterData NsfoMigratePedigreeregistersCommand
 
@@ -178,6 +179,7 @@ class AnimalTableMigrator extends MigratorBase
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
 
+
 	/**
 	 * @param string $vsmId
 	 * @param string $ulnCountryCode
@@ -230,53 +232,19 @@ class AnimalTableMigrator extends MigratorBase
 
 
 
+    public function fixValuesInAnimalMigrationTable()
+    {
+		$this->output->writeln('TODO: TEST FIX BREEDCODES AFTER MAKING A BACKUP OF THE DATABASE (INCL CLEAN ANIMAL_MIGRATION_TABLE)');
+
+        $breedCodeUtil = new BreedCodeUtil($this->em, $this->cmdUtil);
+//		$breedCodeUtil->fixBreedCodes(); TODO
+    }
+
+
 
 	public function migrate()
 	{
-		//TODO Migrate PedigreeRegisterData NsfoMigratePedigreeregistersCommand
-
-		//TODO Regender animals to Ewe/Ram before setting parents-children
-
-		//TODO SEARCH ARRAY CURRENT ANIMAL DATA
-//        $sql = "SELECT myo_max, name FROM animal WHERE myo_max NOTNULL";
-//        $results = $this->em->getConnection()->query($sql)->fetchAll();
-//        $searchArray = [];
-//        foreach ($results as $result) {
-//            $searchArray[$result['name']] = $result['myo_max'];
-//        }
-
-//        $this->cmdUtil->setStartTimeAndPrintIt(count($this->data)+1, 1);
-
-
-		$newCount = 0;
-		foreach ($this->data as $record) {
-
-			$vsmId = $record[0];
-			$stnImport = $record[1];
-			$animalOrderNumberImport = $record[2];
-
-			$uln = $this->parseUln($record[3]);
-			$ulnCountryCode = $uln[JsonInputConstant::ULN_COUNTRY_CODE];
-			$ulnNumber = $uln[JsonInputConstant::ULN_NUMBER];
-
-			$nickName = $record[4];
-			$vsmIdFather = $record[5];
-			$vsmIdMother = $record[6];
-			$gender = $this->parseGender($record[7]);
-			$dateOfBirthString = $record[8];
-			$breedCode = $record[9];
-			$ubnOfBirth = $record[10]; //ubnOfBreeder
-
-			$pedigreeRegister = self::parsePedigreeRegister($record[11]);
-			$pedigreeRegisterFullname = $pedigreeRegister[self::VALUE];
-			$pedigreeRegisterAbbreviation = $pedigreeRegister[self::ABBREVIATION];
-
-			$breedType = Translation::getEnglish(strtoupper($record[12]));
-			$scrapieGenotype = $record[13];
-
-		}
-
-
+		//TODO
 	}
 
 

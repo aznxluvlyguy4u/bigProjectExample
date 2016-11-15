@@ -98,8 +98,9 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
-            'c: Delete (test)animals with ulnCountryCode \'XD\'', "\n",
-            'b: Generated Corrected csv', "\n",
+            'z: Delete (test)animals with ulnCountryCode \'XD\'', "\n",
+            'b: Import AnimalTable csv file into database', "\n",
+            'c: Fix imported animalTable data', "\n",
             'A: Migrate TagReplaces', "\n",
             '1: Update pedigreeRegisters', "\n",
             '2: Migrate AnimalTable data', "\n",
@@ -112,13 +113,18 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
-            case 'c':
+            case 'z':
                 $result = $this->deleteTestAnimals() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
             case 'b':
-                $result = $this->generateCorrectedCsv() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->importAnimalTableCsvFileIntoDatabase() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 'c':
+                $result = $this->fixImportedAnimalTableData() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
             
@@ -213,13 +219,24 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     /**
      * @return bool
      */
-    private function generateCorrectedCsv()
+    private function importAnimalTableCsvFileIntoDatabase()
     {
         $data = $this->parseCSV($this->filenames[self::ANIMAL_TABLE]);
         if(count($data) == 0) { return false; }
 
         $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
-        $animalTableMigrator->generateCorrectedCsvFile(); //TODO
+        $animalTableMigrator->importAnimalTableCsvFileIntoDatabase(); //TODO
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function fixImportedAnimalTableData()
+    {
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $animalTableMigrator->fixValuesInAnimalMigrationTable();
+        //TODO
     }
     
 
