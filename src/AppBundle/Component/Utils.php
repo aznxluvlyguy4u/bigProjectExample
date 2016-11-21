@@ -645,7 +645,7 @@ class Utils
      */
     public static function separateLettersAndNumbersOfString($string)
     {
-        return preg_split("/(,?\s+)|((?<=[a-z])(?=\d))|((?<=\d)(?=[a-z]))/i", $string);
+        return is_string($string) ? preg_split("/(,?\s+)|((?<=[a-z])(?=\d))|((?<=\d)(?=[a-z]))/i", $string) : null;
     }
 
 
