@@ -333,6 +333,8 @@ class AnimalTableMigrator extends MigratorBase
 					break;
 			}
 		}
+		
+		$animalIdsOfSimultaneousMotherAndFather = [];
 
 		$this->output->writeln(['===== VSM in CSV =====' ,
 			'NEUTERS: '.count($vsmNeuters).' MALES: '.count($vsmMales).' FEMALES: '.count($vsmFemales).' MOTHERS: '.count($vsmMothers).' FATHERS: '.count($vsmFathers)]);
@@ -355,11 +357,12 @@ class AnimalTableMigrator extends MigratorBase
 			}
 
 			if($isVsmMother && $isVsmFather) {
-				$errorMessage = $vsmId.'; NEUTER is both mother and father';
-				file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
+				$errorMessage = $vsmId.'; NEUTER is both mother & father in csv file'.$this->getChildrenCountByParentTypeAsString($vsmId, $animalIdByVsmId);
+					file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
 				$this->output->writeln($errorMessage);
 				$areAllNeutersGenderless = false;
 				$allNeuterHaveOnlyOneGender = false;
+				$animalIdsOfSimultaneousMotherAndFather[$vsmId] = $vsmId;
 
 			} else if($isVsmMother) {
 				if(!$isAnimalIdFather) {
@@ -404,10 +407,11 @@ class AnimalTableMigrator extends MigratorBase
 			}
 
 			if($isVsmMother && $isVsmFather) {
-				$errorMessage = $vsmId.'; FEMALE is both mother and a father';
+				$errorMessage = $vsmId.'; FEMALE is both mother & father in csv file'.$this->getChildrenCountByParentTypeAsString($vsmId, $animalIdByVsmId);
 				file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
 				$this->output->writeln($errorMessage);
 				$areAllFemalesOnlyMothers = false;
+				$animalIdsOfSimultaneousMotherAndFather[$vsmId] = $vsmId;
 
 			} else if($isVsmFather) {
 				if(!$isAnimalIdMother) {
@@ -440,10 +444,11 @@ class AnimalTableMigrator extends MigratorBase
 			}
 
 			if($isVsmMother && $isVsmFather) {
-				$errorMessage = $vsmId.'; MALE is both mother and a father';
+				$errorMessage = $vsmId.'; MALE is both mother & father in csv file'.$this->getChildrenCountByParentTypeAsString($vsmId, $animalIdByVsmId);
 				file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
 				$this->output->writeln($errorMessage);
 				$areAllMalesOnlyFathers = false;
+				$animalIdsOfSimultaneousMotherAndFather[$vsmId] = $vsmId;
 
 			} else if($isVsmMother) {
 				if(!$isAnimalIdFather) {
@@ -457,7 +462,75 @@ class AnimalTableMigrator extends MigratorBase
 			}
 		}
 
+		foreach($animalIdsOfSimultaneousMotherAndFather as $vsmId) {
+			//TODO Printout overview or fix it
+
+		}
+
 		return $allNeuterHaveOnlyOneGender && $areAllFemalesOnlyMothers && $areAllMalesOnlyFathers;
+	}
+
+
+	/**
+	 * @param int $vsmId
+	 * @param array $animalIdByVsmId
+	 * @throws \Doctrine\DBAL\DBALException
+	 * @return string
+	 */
+	private function getChildrenCountByParentTypeAsString($vsmId, $animalIdByVsmId)
+	{
+		$sql = "SELECT COUNT(*), 'father' as type FROM animal_migration_table WHERE father_vsm_id = ".$vsmId."
+				UNION
+				SELECT COUNT(*), 'mother' as type FROM animal_migration_table WHERE mother_vsm_id = ".$vsmId;
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$message = $this->parseChildrenCountArray('', $results, 'with');
+
+		if(array_key_exists($vsmId, $animalIdByVsmId)) {
+			$animalId = $animalIdByVsmId[$vsmId];
+			$sql = "SELECT COUNT(*), 'father' as type FROM animal WHERE parent_father_id = ".$animalId."
+					UNION
+					SELECT COUNT(*), 'mother' as type FROM animal WHERE parent_mother_id = ".$animalId;
+			$results = $this->conn->query($sql)->fetchAll();
+			
+			$message = $this->parseChildrenCountArray($message, $results, 'in database has');
+		}
+		
+		$sql = "SELECT CONCAT(uln_country_code,' ',uln_number) as uln, CONCAT(pedigree_country_code,' ',pedigree_number) as stn, vsm_id FROM animal_migration_table
+				WHERE vsm_id = ".$vsmId;
+		$result = $this->conn->query($sql)->fetch();
+		$id = '; uln: '.$result['uln'].'; stn: '.$result['stn'];
+
+		return $message.$id;
+	}
+
+
+	/**
+	 * @param string $message
+	 * @param string $prefix
+	 * @param array $results
+	 * @return string
+	 */
+	private function parseChildrenCountArray($message, array $results, $prefix)
+	{
+		$count0 = $results[0]['count'];
+		$count1 = $results[1]['count'];
+		$type0 = $results[0]['type'];
+		$type1 = $results[1]['type'];
+
+		if(($count0 + $count1) > 0) {
+			$message = $message.' '.$prefix.' ';
+			if($count0 > 0) {
+				$message = $message.$count0.' children as '.$type0;
+			}
+			if($count0 > 0 && $count1 > 0) {
+				$message = $message.' and ';
+			}
+			if($count1 > 0) {
+				$message = $message.$count1.' children as '.$type1;
+			}
+		}
+		return $message;
 	}
 
 
