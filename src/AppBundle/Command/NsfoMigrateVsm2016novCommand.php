@@ -100,11 +100,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
             '1: Delete (test)animals with ulnCountryCode \'XD\'', "\n",
-            '2: Import AnimalTable csv file into database', "\n",
-            '3: Migrate TagReplaces', "\n",
-            '4: Fix imported animalTable data', "\n",
-            '5: BLANK', "\n",
-            '6: Update pedigreeRegisters', "\n",
+            '2: Update pedigreeRegisters', "\n",
+            '3: Import AnimalTable csv file into database. Update PedigreeRegisters First!', "\n",
+            '4: Set AnimalIds on current TagReplaces, THEN Migrate TagReplaces', "\n",
+            '5: Fix imported animalTable data', "\n",
+            '6: BLANK', "\n",
             '7: Migrate AnimalTable data', "\n",
             '8: Migrate Races', "\n",
             '9: Migrate MyoMax', "\n",
@@ -121,30 +121,28 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                 break;
 
             case 2:
-                $result = $this->importAnimalTableCsvFileIntoDatabase() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->updatePedigreeRegister() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
             case 3:
-                $result = $this->setAnimalIdsOnCurrentTagReplaces() ? 'AnimalIds set on current tagReplaces' : 'Current tagReplaces already have animalIds' ;
-                $output->writeln($result);
-                $result = $this->migrateTagReplaces() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->importAnimalTableCsvFileIntoDatabase() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
             case 4:
-                $result = $this->fixImportedAnimalTableData() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->migrateTagReplaces() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
             case 5:
-//                $result = $this->fixImportedAnimalTableData() ? 'DONE' : 'NO DATA!' ;
-//                $output->writeln($result);
+                $result = $this->fixImportedAnimalTableData() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
                 break;
 
             case 6:
-                $result = $this->updatePedigreeRegister() ? 'DONE' : 'NO DATA!' ;
-                $output->writeln($result);
+//                $result = $this->fixImportedAnimalTableData() ? 'DONE' : 'NO DATA!' ;
+//                $output->writeln($result);
                 break;
 
             case 7:
@@ -234,7 +232,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         if(count($data) == 0) { return false; }
 
         $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
-        $animalTableMigrator->importAnimalTableCsvFileIntoDatabase(); //TODO
+        $animalTableMigrator->importAnimalTableCsvFileIntoDatabase();
         return true;
     }
 
@@ -267,6 +265,9 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
      */
     private function migrateTagReplaces()
     {
+        $result = $this->setAnimalIdsOnCurrentTagReplaces() ? 'AnimalIds set on current tagReplaces' : 'Current tagReplaces already have animalIds' ;
+        $this->output->writeln($result);
+        
         $data = $this->parseCSV($this->filenames[self::TAG_REPLACES]);
         if(count($data) == 0) { return false; }
 

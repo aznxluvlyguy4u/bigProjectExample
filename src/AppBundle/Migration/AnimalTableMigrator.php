@@ -79,8 +79,7 @@ class AnimalTableMigrator extends MigratorBase
 
 
 	public function importAnimalTableCsvFileIntoDatabase()
-	{
-		//TODO Migrate PedigreeRegisterData NsfoMigratePedigreeregistersCommand
+	{		
 
 		//TODO Regender animals to Ewe/Ram before setting parents-children
 
