@@ -22,6 +22,12 @@ class TagReplaceMigrator extends MigratorBase
     /** @var Employee */
     private $developer;
 
+    /** @var array */
+    private $declareTagReplaceIdByOldUlns;
+
+    /** @var array */
+    private $oldUlnsByNewUlns;
+
     /**
      * RacesMigrator constructor.
      * @param CommandUtil $cmdUtil
@@ -41,7 +47,6 @@ class TagReplaceMigrator extends MigratorBase
         //TODO
         dump('TODO');die;
 
-        $this->cmdUtil->setStartTimeAndPrintIt(count($this->data)+1, 1);
         $animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmId();
 
         $sql = "SELECT uln_country_code_replacement, uln_country_code_to_replace, uln_number_to_replace, uln_number_replacement FROM declare_tag_replace";
@@ -123,6 +128,72 @@ class TagReplaceMigrator extends MigratorBase
         $this->em->flush();
         $this->cmdUtil->setProgressBarMessage($newCount.' new records persisted');
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function setAnimalIdsOnDeclareTagReplaces()
+    {
+        //Create SearchArrays
+        $sql = "SELECT id, uln_country_code_to_replace, uln_number_to_replace, uln_country_code_replacement, uln_number_replacement FROM declare_tag_replace
+                WHERE animal_id ISNULL ";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        
+        if(count($results) == 0) { return false; }
+
+        $this->declareTagReplaceIdByOldUlns = [];
+        $this->oldUlnsByNewUlns = [];
+        foreach ($results as $result) {
+            $oldUln = $result['uln_country_code_to_replace'].$result['uln_number_to_replace'];
+            $declareTagReplaceId = $result['id'];
+            $this->declareTagReplaceIdByOldUlns[$oldUln] = $declareTagReplaceId;
+
+            $newUln = $result['uln_country_code_replacement'].$result['uln_number_replacement'];
+            $this->oldUlnsByNewUlns[$newUln] = $oldUln;
+        }
+
+
+        //Set AnimalIds
+        $sql = "SELECT a.id as animal_id, a.uln_country_code, a.uln_number, t.id, t.uln_country_code_to_replace, t.uln_number_to_replace FROM animal a
+                INNER JOIN declare_tag_replace t ON a.uln_country_code = t.uln_country_code_replacement AND a.uln_number = t.uln_number_replacement
+                WHERE animal_id ISNULL ";
+        $results = $this->em->getConnection()->query($sql)->fetchAll();
+
+        foreach ($results as $result) {
+            $animalId = intval($result['animal_id']);
+            $declareTagReplaceId = intval($result['id']);
+            $sql = "UPDATE declare_tag_replace SET animal_id = ".$animalId." WHERE id = ".$declareTagReplaceId;
+            $this->em->getConnection()->exec($sql);
+
+            $oldUln = $result['uln_country_code_to_replace'].$result['uln_number_to_replace'];
+            $this->setAnimalIdByOldUln($animalId, $oldUln);
+        }
+        
+        return true;
+    }
+
+
+    /**
+     * @param int $animalId
+     * @param string $oldUln
+     */
+    private function setAnimalIdByOldUln($animalId, $oldUln)
+    {
+        if(array_key_exists($oldUln, $this->declareTagReplaceIdByOldUlns)) {
+            $declareTagReplaceId = $this->declareTagReplaceIdByOldUlns[$oldUln];
+
+            $sql = "UPDATE declare_tag_replace SET animal_id = ".$animalId." WHERE id = ".$declareTagReplaceId;
+            $this->em->getConnection()->exec($sql);
+            unset($this->declareTagReplaceIdByOldUlns[$oldUln]);
+
+            //Recursively search for old ulns
+            if(array_key_exists($oldUln, $this->declareTagReplaceIdByOldUlns)) {
+                $olderUln = $this->oldUlnsByNewUlns[$oldUln];
+                $this->setAnimalIdByOldUln($animalId, $olderUln);
+            }
+        }
     }
 
 }

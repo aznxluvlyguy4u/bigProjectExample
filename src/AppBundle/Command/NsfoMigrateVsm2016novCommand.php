@@ -125,6 +125,8 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                 break;
 
             case 3:
+                $result = $this->setAnimalIdsOnCurrentTagReplaces() ? 'AnimalIds set on current tagReplaces' : 'Current tagReplaces already have animalIds' ;
+                $output->writeln($result);
                 $result = $this->migrateTagReplaces() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
@@ -246,7 +248,18 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         //TODO
         return true;
     }
-    
+
+
+    /**
+     * @return bool
+     */
+    private function setAnimalIdsOnCurrentTagReplaces()
+    {
+        $developer = $this->em->getRepository(Employee::class)->find(self::DEVELOPER_PRIMARY_KEY);
+        $tagReplaceMigrator = new TagReplaceMigrator($this->cmdUtil, $this->em, $this->output, [], $developer);
+        return $tagReplaceMigrator->setAnimalIdsOnDeclareTagReplaces();
+    }
+
 
     /**
      * @return bool
