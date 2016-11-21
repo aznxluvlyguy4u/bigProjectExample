@@ -45,6 +45,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 
 class PedigreeCertificate
 {
+    const SHOW_PREDICATE_IN_REPORT = false;
     const MAX_LENGTH_FULL_NAME = 30;
     const MISSING_PEDIGREE_REGISTER = '';
     const EMPTY_DATE_OF_BIRTH = '-';
@@ -243,7 +244,8 @@ class PedigreeCertificate
 
             if($animalId != null) {
                 $sql = "SELECT a.id, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn,
-                  scrapie_genotype, breed, breed_type, breed_code, date_of_birth, gender, parent_father_id as father_id, parent_mother_id as mother_id
+                    scrapie_genotype, breed, breed_type, breed_code, date_of_birth, gender, predicate, predicate_score,
+                    parent_father_id as father_id, parent_mother_id as mother_id
                 FROM animal a WHERE a.id = ".$animalId;
                 $animalData = $this->em->getConnection()->query($sql)->fetch();
 
@@ -255,6 +257,11 @@ class PedigreeCertificate
                 $breedType = $animalData[JsonInputConstant::BREED_TYPE];
                 $scrapieGenotype = $animalData[JsonInputConstant::SCRAPIE_GENOTYPE];
                 $gender = $animalData[JsonInputConstant::GENDER];
+                $predicate = self::GENERAL_NULL_FILLER;
+                if(self::SHOW_PREDICATE_IN_REPORT) {
+                    $formattedPredicate = DisplayUtil::parsePredicateString($animalData[JsonInputConstant::PREDICATE], $animalData[JsonInputConstant::PREDICATE_SCORE]);
+                    $predicate = $formattedPredicate != null ? $formattedPredicate : self::GENERAL_NULL_FILLER;
+                }
 
                 $dateOfBirthString = self::EMPTY_DATE_OF_BIRTH;
                 $dateOfBirthDateTime = null;
@@ -275,6 +282,7 @@ class PedigreeCertificate
                 $breedType = null;
                 $scrapieGenotype = null;
                 $gender = null;
+                $predicate = null;
 
                 $dateOfBirthString = self::EMPTY_DATE_OF_BIRTH;
                 $dateOfBirthDateTime = null;
@@ -355,7 +363,7 @@ class PedigreeCertificate
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PEDIGREE] = Utils::fillNullOrEmptyString($stn);
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SCRAPIE] = Utils::fillNullOrEmptyString($scrapieGenotype, self::EMPTY_SCRAPIE_GENOTYPE);
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED] = Utils::fillNullOrEmptyString($breed);
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_TYPE] = Utils::fillNullOrEmptyString(Translation::translateBreedType($breedType));
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_TYPE] = Utils::fillNullOrEmptyString(Translation::getDutchUcFirst($breedType));
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_CODE] = Utils::fillNullOrEmptyString($breedCode);
             /* Dates. The null checks for dates are done here including the formatting */
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DATE_OF_BIRTH] = Utils::fillNullOrEmptyString($dateOfBirthString, self::EMPTY_DATE_OF_BIRTH);
@@ -374,7 +382,7 @@ class PedigreeCertificate
 
             //TODO Add these variables to the entities INCLUDING NULL CHECKS!!!
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BLINDNESS_FACTOR] = self::GENERAL_NULL_FILLER;
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PREDICATE] = self::GENERAL_NULL_FILLER;
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PREDICATE] = $predicate;
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NAME] = self::GENERAL_NULL_FILLER;
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NUMBER] = self::GENERAL_NULL_FILLER;
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_GROUP] = self::GENERAL_NULL_FILLER;
@@ -524,7 +532,7 @@ class PedigreeCertificate
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PEDIGREE] = Utils::fillNullOrEmptyString($stn);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::SCRAPIE] = Utils::fillNullOrEmptyString($scrapieGenotype, self::EMPTY_SCRAPIE_GENOTYPE);
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED] = Utils::fillNullOrEmptyString($breed);
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_TYPE] = Utils::fillNullOrEmptyString(Translation::translateBreedType($breedType));
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_TYPE] = Utils::fillNullOrEmptyString(Translation::getDutchUcFirst($breedType));
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREED_CODE] = Utils::fillNullOrEmptyString($breedCode);
         /* Dates. The null checks for dates are done here including the formatting */
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::DATE_OF_BIRTH] = Utils::fillNullOrEmptyString($dateOfBirthString, self::EMPTY_DATE_OF_BIRTH);

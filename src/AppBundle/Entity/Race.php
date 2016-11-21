@@ -1,5 +1,6 @@
 <?php
 
+
 namespace AppBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -7,11 +8,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 
 /**
- * Class PedigreeRegister
- * @ORM\Entity(repositoryClass="AppBundle\Entity\PedigreeRegisterRepository")
+ * Class Race
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\RaceRepository")
  * @package AppBundle\Entity
  */
-class PedigreeRegister
+class Race
 {
     /**
      * @var integer
@@ -57,7 +58,7 @@ class PedigreeRegister
      * @JMS\Type("DateTime")
      */
     private $endDate;
-    
+
     /**
      * @var Person
      *
@@ -264,6 +265,7 @@ class PedigreeRegister
     {
         $this->specie = $specie;
     }
+
 
 
 

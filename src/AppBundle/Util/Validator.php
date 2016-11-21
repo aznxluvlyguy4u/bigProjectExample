@@ -47,18 +47,23 @@ class Validator
     
 
     /**
-     * validate if Id is of format: AZ123456789
+     * validate if Id is of format: AZ123456789012
      *
      * @param string $ulnString
+     * @param boolean $includesSpaceBetweenCountryCodeAndNumber
      * @return bool
      */
-    public static function verifyUlnFormat($ulnString)
+    public static function verifyUlnFormat($ulnString, $includesSpaceBetweenCountryCodeAndNumber = false)
     {
-        $countryCodeLength = 2;
-        $numberLength = 12;
-        $ulnLength = $countryCodeLength + $numberLength;
+        if($includesSpaceBetweenCountryCodeAndNumber) {
+            $ulnLength = 15;
+            $pregMatch = "/([A-Z]{2})+[ ]+([0-9]{12})/";
+        } else {
+            $ulnLength = 14;
+            $pregMatch = "/([A-Z]{2})+([0-9]{12})/";
+        }
 
-        if(preg_match("/([A-Z]{2})+([0-9]{12})/",$ulnString)
+        if(preg_match($pregMatch,$ulnString)
             && strlen($ulnString) == $ulnLength) {
             return true;
         } else {
@@ -77,6 +82,30 @@ class Validator
 
         if(preg_match("/([A-Z0-9]{5}[-][a-zA-Z0-9]{5})/",$pedigreeNumber)
             && strlen($pedigreeNumber) == $numberLengthIncludingDash) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+    /**
+     * @param string $stn
+     * @param boolean $includesSpaceBetweenCountryCodeAndNumber
+     * @return bool
+     */
+    public static function verifyPedigreeCountryCodeAndNumberFormat($stn, $includesSpaceBetweenCountryCodeAndNumber = false)
+    {
+        if($includesSpaceBetweenCountryCodeAndNumber) {
+            $numberLengthIncludingDash = 14;
+            $pregMatch = "/([A-Z]{2}[ ][A-Z0-9]{5}[-][a-zA-Z0-9]{5})/";
+        } else {
+            $numberLengthIncludingDash = 13;
+            $pregMatch = "/([A-Z]{2}[A-Z0-9]{5}[-][a-zA-Z0-9]{5})/";
+        }
+
+        if(preg_match($pregMatch,$stn)
+            && strlen($stn) == $numberLengthIncludingDash) {
             return true;
         } else {
             return false;

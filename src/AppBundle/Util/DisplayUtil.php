@@ -5,10 +5,12 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\PredicateType;
 
 class DisplayUtil
 {
     const EMPTY_PRODUCTION = '-/-/-/-';
+    const MIN_PREDICATE_SCORE_FOR_DISPLAY = 13;
 
     /**
      *
@@ -60,6 +62,18 @@ class DisplayUtil
     {
         return $litterSize == null ? '0-ling' : $litterSize.'-ling';
     }
-        
-        
+
+
+    /**
+     * @param string $predicate
+     * @param int $predicateScore
+     * @return null|string
+     */
+    public static function parsePredicateString($predicate, $predicateScore)
+    {
+        if(!array_key_exists($predicate, PredicateType::getAll())) { return null; }
+        $score = $predicateScore != null && $predicateScore >= self::MIN_PREDICATE_SCORE_FOR_DISPLAY ? '('.$predicateScore.')' : null;
+
+        return Translation::getAbbreviation($predicate).$score;
+    }
 }

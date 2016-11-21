@@ -2,17 +2,7 @@
 
 namespace AppBundle\Command;
 
-use AppBundle\Constant\Constant;
-use AppBundle\Entity\BodyFat;
-use AppBundle\Entity\BodyFatRepository;
-use AppBundle\Entity\Exterior;
-use AppBundle\Entity\ExteriorRepository;
-use AppBundle\Entity\MuscleThickness;
-use AppBundle\Entity\MuscleThicknessRepository;
-use AppBundle\Entity\TailLength;
-use AppBundle\Entity\TailLengthRepository;
-use AppBundle\Entity\Weight;
-use AppBundle\Entity\WeightRepository;
+use AppBundle\Migration\MeasurementsFixer;
 use AppBundle\Report\Mixblup;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\MeasurementsUtil;
@@ -44,21 +34,6 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
     /** @var ObjectManager */
     private $em;
-    
-    /** @var ExteriorRepository $exteriorRepository */
-    private $exteriorRepository;
-
-    /** @var WeightRepository $weightRepository */
-    private $weightRepository;
-
-    /** @var TailLengthRepository $tailLengthRepository */
-    private $tailLengthRepository;
-    
-    /** @var MuscleThicknessRepository */
-    private $muscleThicknessRepository;
-    
-    /** @var BodyFatRepository */
-    private $bodyFatRepository;
 
     /** @var string */
     private $outputFolder;
@@ -82,12 +57,6 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
         $this->output = $output;
-        
-        $this->exteriorRepository = $this->em->getRepository(Exterior::class);
-        $this->weightRepository = $this->em->getRepository(Weight::class);
-        $this->tailLengthRepository  = $this->em->getRepository(TailLength::class);
-        $this->muscleThicknessRepository = $this->em->getRepository(MuscleThickness::class);
-        $this->bodyFatRepository = $this->em->getRepository(BodyFat::class);
 
         /* Setup folders */
         $this->outputFolder = $this->getContainer()->get('kernel')->getRootDir().self::DEFAULT_OUTPUT_FOLDER_PATH;
@@ -287,89 +256,13 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
     private function deleteDuplicateMeasurements()
     {
+        $measurementsFixer = new MeasurementsFixer($this->em, $this->cmdUtil, $this->output);
 
-        $isRemoveTimeFromMeasurementDates = $this->cmdUtil->generateConfirmationQuestion('Remove time from MeasurementDates? (y/n): ');
-        if($isRemoveTimeFromMeasurementDates) {
-            $this->weightRepository->removeTimeFromAllMeasurementDates();
-        }
-        
-        $isClearDuplicates = $this->cmdUtil->generateConfirmationQuestion('Fix measurements and then Clear ALL duplicate measurements? (y/n): ');
-        if ($isClearDuplicates) {
-
-            $this->cmdUtil->setStartTimeAndPrintIt(4, 1, 'Fixing measurements...');
-
-            $weightFixResult = $this->weightRepository->fixMeasurements();
-            $message = $weightFixResult[Constant::MESSAGE_NAMESPACE];
-            $this->cmdUtil->advanceProgressBar(1, $message);
-
-            $bodyFatFixResult = $this->bodyFatRepository->fixMeasurements();
-            $message = $message .'| '. $bodyFatFixResult[Constant::MESSAGE_NAMESPACE];
-            $this->cmdUtil->advanceProgressBar(1, $message);
-
-            $exteriorFixResult = $this->exteriorRepository->fixMeasurements($this->mutationsFolder);
-            $message = $message .'| '. $exteriorFixResult[Constant::MESSAGE_NAMESPACE];
-            $this->cmdUtil->advanceProgressBar(1, $message);
-
-            $totalDuplicatesDeleted = $weightFixResult[Constant::COUNT] + $bodyFatFixResult[Constant::COUNT]
-            + $exteriorFixResult[Constant::COUNT];
-            if($totalDuplicatesDeleted == 0) {
-                $message =  'No measurements fixed';
-                $this->cmdUtil->setProgressBarMessage($message);
-            }
-            $this->cmdUtil->setEndTimeAndPrintFinalOverview();
-
-
-
-            $this->cmdUtil->setStartTimeAndPrintIt(6, 1, 'Deleting duplicate measurements...');
-
-            $exteriorsDeleted = $this->exteriorRepository->deleteDuplicates();
-            $message = 'Duplicates deleted, exteriors: ' . $exteriorsDeleted;
-            $this->cmdUtil->advanceProgressBar(1, $message);
-
-            $weightsDeleted = $this->weightRepository->deleteDuplicates();
-            $message = $message . '| weights: ' . $weightsDeleted;
-            $this->cmdUtil->advanceProgressBar(1, $message);
-
-            $tailLengthsDeleted = $this->tailLengthRepository->deleteDuplicates();
-            $message = $message . '| tailLength: ' . $tailLengthsDeleted;
-            $this->cmdUtil->advanceProgressBar(1, $message);
-
-            $muscleThicknessesDeleted = $this->muscleThicknessRepository->deleteDuplicates();
-            $message = $message . '| muscle: ' . $muscleThicknessesDeleted;
-            $this->cmdUtil->advanceProgressBar(1, $message);
-
-            $bodyFatsDeleted = $this->bodyFatRepository->deleteDuplicates();
-            $message = $message . '| BodyFat: ' . $bodyFatsDeleted;
-            $this->cmdUtil->advanceProgressBar(1, $message);
-
-            $totalDuplicatesDeleted = $exteriorsDeleted + $weightsDeleted + $tailLengthsDeleted + $muscleThicknessesDeleted + $bodyFatsDeleted;
-            if($totalDuplicatesDeleted == 0) {
-                $message =  'No duplicates deleted';
-                $this->cmdUtil->setProgressBarMessage($message);
-            }
-
-            $this->cmdUtil->setEndTimeAndPrintFinalOverview();
-
-
-            //Final overview
-            $contradictingWeightsLeft = count($this->weightRepository->getContradictingWeightsForExportFile());
-            $contradictingMuscleThicknessesLeft = count($this->muscleThicknessRepository->getContradictingMuscleThicknessesForExportFile());
-            $contradictingTailLengthsLeft = count($this->tailLengthRepository->getContradictingTailLengthsForExportFile());
-            $contradictingBodyFatsLeft = count($this->bodyFatRepository->getContradictingBodyFatsForExportFile());
-            $contradictingExteriorsLeft = count($this->exteriorRepository->getContradictingExteriorsForExportFile());
-            $contradictingMeasurementsLeft = $contradictingWeightsLeft + $contradictingMuscleThicknessesLeft + $contradictingTailLengthsLeft + $contradictingExteriorsLeft;
-
-            if($contradictingMeasurementsLeft > 0) {
-                $this->output->writeln('=== Contradicting measurements left ===');
-                if($contradictingWeightsLeft > 0) { $this->output->writeln('weights: '.$contradictingWeightsLeft); }
-                if($contradictingMuscleThicknessesLeft > 0) { $this->output->writeln('muscleThickness: '.$contradictingMuscleThicknessesLeft); }
-                if($contradictingTailLengthsLeft > 0) { $this->output->writeln('tailLengths: '.$contradictingTailLengthsLeft); }
-                if($contradictingBodyFatsLeft > 0) { $this->output->writeln('bodyFats: '.$contradictingBodyFatsLeft); }
-                if($contradictingExteriorsLeft > 0) { $this->output->writeln('exteriors: '.$contradictingExteriorsLeft); }
-
-            } else {
-                $this->output->writeln('No contradicting measurements left!');
-            }
+        $isFixAndClearDuplicates = $this->cmdUtil->generateConfirmationQuestion('Fix measurements and then Clear ALL duplicate measurements? (y/n): ');
+        if ($isFixAndClearDuplicates) {
+            $measurementsFixer->removeTimeFromDateTimeInAllMeasurements();
+            $measurementsFixer->fixMeasurements(false, $this->mutationsFolder);
+            $measurementsFixer->deleteDuplicateMeasurements(false);
         }
     }
 

@@ -43,5 +43,28 @@ class DeclareTagReplaceRepository extends BaseRepository {
         }
         while($foundNewerReplacementUln != null);
     }
+
+
+    /**
+     * @return array
+     */
+    public function getAnimalIdsByUlns()
+    {
+        $sql = "SELECT animal_id, uln_country_code_replacement, uln_number_replacement, uln_country_code_to_replace, uln_number_to_replace
+                    FROM declare_tag_replace t
+                    INNER JOIN declare_base b ON b.id = t.id
+                WHERE (b.request_state = 'FINISHED' OR b.request_state = 'FINISHED_WITH_WARNING')";
+        $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+        
+        $searchArray = [];
+        foreach ($results as $result) {
+            $animalId = $result['animal_id'];
+            $ulnNew = $result['uln_country_code_replacement'].$result['uln_number_replacement'];
+            $ulnOld = $result['uln_country_code_to_replace'].$result['uln_number_to_replace'];
+            $searchArray[$ulnNew] = $animalId;
+            $searchArray[$ulnOld] = $animalId;
+        }
+        return $searchArray;
+    }
     
 }

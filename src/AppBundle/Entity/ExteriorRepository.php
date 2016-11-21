@@ -212,7 +212,6 @@ class ExteriorRepository extends MeasurementRepository {
 
     /**
      * @param string $mutationsFolder
-     * @param boolean $isPrintDeletedExteriors
      * @return array
      */
     public function fixMeasurements($mutationsFolder = null)
