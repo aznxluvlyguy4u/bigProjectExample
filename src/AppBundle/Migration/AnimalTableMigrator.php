@@ -32,6 +32,7 @@ class AnimalTableMigrator extends MigratorBase
 	const UBNS_PER_ROW = 8;
 	const FILENAME_CORRECTED_CSV = '2016nov_gecorrigeerde_diertabel.csv';
 	const FILENAME_INCORRECT_ULNS = 'incorrect_ulns.csv';
+	const FILENAME_INCORRECT_GENDERS = 'incorrect_genders.csv';
 
 	const VALUE = 'VALUE';
 	const ABBREVIATION = 'ABBREVIATION';
@@ -238,13 +239,187 @@ class AnimalTableMigrator extends MigratorBase
 
         $breedCodeUtil = new BreedCodeUtil($this->em, $this->cmdUtil);
 //		$breedCodeUtil->fixBreedCodes(); TODO
+
+		$this->verifyGendersInCSV();
     }
+
+
+	public function fixGenders()
+	{
+		/*
+		 * 1. First check if csv NEUTERS are mothers or fathers and update the genders accordingly.
+		 *    Use $this->verifyNeutersInCSV();
+		 *
+		 * 2. Check if csv FEMALEs are only mothers
+		 * 3. Check if csv MALEs are only fathers
+		 *
+		 * 4. Fix database genders based on the genders in the CSV file
+		 *
+		 *    			  |		Database values
+		 *  			  |	MALE   NEUTER   FEMALE
+		 * ----------------------------------------
+		 *  CSV	   	 MALE |	 V		 U1		 F2M
+		 * values  NEUTER |  U2      U2      U2
+		 * 		   FEMALE |	 M2F     U1      V
+		 *
+		 * V = good, keep gender
+		 * U1 = update NEUTER to gender in CSV file
+		 * U2 = after step 1 we know NEUTER in csv are really NEUTER, so keep the genders in the database
+		 * M2F = (after check in step 2), check if MALES in database also are only fathers in the database ...TODO
+		 * F2M = (after check in step 3), check if FEMALES in database also are only mothers in the database ...TODO
+		 *
+		 */
+
+//Fix neuters that are Mothers and Fathers TODO
+
+		//MALE DB vs FEMALE CSV
+
+//		$sql = "SELECT m.* FROM animal_migration_table m
+//				WHERE m.gender_in_database = 'MALE' AND m.gender_in_file = 'FEMALE'";
+//		$results = $this->em->getConnection()->query($sql)->fetchAll();
+
+
+		//FEMALE DB vs MALE CSV
+
+	}
 
 
 
 	public function migrate()
 	{
 		//TODO
+	}
+
+
+	/**
+	 * @return bool
+	 */
+	private function verifyGendersInCSV()
+	{
+		//Create searchArrays
+		$animalIdByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
+
+		$sql = "SELECT m.mother_vsm_id, m.father_vsm_id FROM animal_migration_table m";
+		$results = $this->em->getConnection()->query($sql)->fetchAll();
+
+		$vsmMothers = [];
+		$vsmFathers = [];
+		foreach ($results as $result) {
+			$motherVsmId = $result['mother_vsm_id'];
+			$fatherVsmId = $result['father_vsm_id'];
+			if($motherVsmId != null && $motherVsmId != 0) { $vsmMothers[$motherVsmId] = $motherVsmId; }
+			if($fatherVsmId != null && $fatherVsmId != 0) { $vsmFathers[$fatherVsmId] = $fatherVsmId; }
+		}
+
+		$sql = "SELECT m.vsm_id, gender_in_file FROM animal_migration_table m";
+		$results = $this->em->getConnection()->query($sql)->fetchAll();
+
+		$vsmNeuters = [];
+		$vsmMales = [];
+		$vsmFemales = [];
+		foreach($results as $result) {
+			$vsmId = $result['vsm_id'];
+			$genderInFile = $result['gender_in_file'];
+			switch ($genderInFile) {
+				case GenderType::FEMALE:
+					$vsmFemales[$vsmId] = $vsmId;
+					break;
+				case GenderType::MALE:
+					$vsmMales[$vsmId] = $vsmId;
+					break;
+				case GenderType::NEUTER:
+					$vsmNeuters[$vsmId] = $vsmId;
+					break;
+				default:
+					$vsmNeuters[$vsmId] = $vsmId;
+					break;
+			}
+		}
+
+		$this->output->writeln(['===== VSM in CSV =====' ,
+			'NEUTERS: '.count($vsmNeuters).' MALES: '.count($vsmMales).' FEMALES: '.count($vsmFemales).' MOTHERS: '.count($vsmMothers).' FATHERS: '.count($vsmFathers)]);
+
+		//Check NEUTERs in csv
+		$areAllNeutersGenderless = true;
+		$allNeuterHaveOnlyOneGender = true;
+		foreach ($vsmNeuters as $vsmId) {
+			$isMother = array_key_exists($vsmId, $vsmMothers);
+			$isFather = array_key_exists($vsmId, $vsmFathers);
+
+			if($isMother && $isFather) {
+				$errorMessage = $vsmId.'; NEUTER is both mother and father';
+				file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
+				$this->output->writeln($errorMessage);
+				$areAllNeutersGenderless = false;
+				$allNeuterHaveOnlyOneGender = false;
+
+			} else if($isMother) {
+				//TODO Update gender
+				if(array_key_exists($vsmId, $animalIdByVsmId)) {
+					$animalId = $animalIdByVsmId[$vsmId];
+					$sql = 'SELECT COUNT(*) FROM animal a WHERE parent_father_id = '.$animalId;
+					$count = $this->em->getConnection()->query($sql)->fetch()['count'];
+				}
+
+				$areAllNeutersGenderless = false;
+			} else if($isFather) {
+				//TODO Update gender
+				if(array_key_exists($vsmId, $animalIdByVsmId)) {
+					$animalId = $animalIdByVsmId[$vsmId];
+					$sql = 'SELECT COUNT(*) FROM animal a WHERE parent_father_id = '.$animalId;
+					$count = $this->em->getConnection()->query($sql)->fetch()['count'];
+				}
+
+				$areAllNeutersGenderless = false;
+			}
+		}
+
+
+		//Check FEMALEs in csv
+		$areAllFemalesOnlyMothers = true;
+		foreach ($vsmFemales as $vsmId) {
+			$isMother = array_key_exists($vsmId, $vsmMothers);
+			$isFather = array_key_exists($vsmId, $vsmFathers);
+
+			if($isMother && $isFather) {
+				$errorMessage = $vsmId.'; FEMALE is both mother and a father';
+				file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
+				$this->output->writeln($errorMessage);
+				$areAllFemalesOnlyMothers = false;
+
+			} else if($isFather) {
+				$errorMessage = $vsmId.'; FEMALE is a father';
+				file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
+				$this->output->writeln($errorMessage);
+				$areAllFemalesOnlyMothers = false;
+			}
+		}
+
+
+		//Check MALEs in csv
+		$areAllMalesOnlyFathers = true;
+		foreach ($vsmMales as $vsmId) {
+			$isMother = array_key_exists($vsmId, $vsmMothers);
+			$isFather = array_key_exists($vsmId, $vsmFathers);
+
+			if($isMother && $isFather) {
+				$errorMessage = $vsmId.'; MALE is both mother and a father';
+				file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
+				$this->output->writeln($errorMessage);
+				$areAllMalesOnlyFathers = false;
+
+			} else if($isMother) {
+				$errorMessage = $vsmId.'; MALE is a mother';
+				file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
+				$this->output->writeln($errorMessage);
+				$areAllMalesOnlyFathers = false;
+			}
+		}
+
+		$allNeuterHaveOnlyOneGender && $areAllFemalesOnlyMothers && $areAllMalesOnlyFathers ? dump('YEAH!!!!') : dump('SAD!');
+		die; //TODO
+
+		return $allNeuterHaveOnlyOneGender && $areAllFemalesOnlyMothers && $areAllMalesOnlyFathers;
 	}
 
 
