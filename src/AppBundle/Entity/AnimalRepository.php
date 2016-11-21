@@ -25,6 +25,8 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class AnimalRepository extends BaseRepository
 {
+  const BATCH = 1000;
+
   /**
    * @param $Id
    * @return null|Animal|Ram|Ewe|Neuter
@@ -776,19 +778,26 @@ class AnimalRepository extends BaseRepository
    */
   public function deleteTestAnimal(OutputInterface $output = null, CommandUtil $cmdUtil = null)
   {
-    if($output != null) { $output->writeln('Delete breedValuesSets of testAnimals'); }
-
-    $sql = "SELECT id FROM animal WHERE uln_country_code = 'XD'";
+    $sql = "SELECT a.id FROM animal a
+            INNER JOIN breed_values_set b ON a.id = b.animal_id
+            WHERE a.uln_country_code = 'XD'";
     $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
-    foreach ($results as $result) {
-      $animalId = intval($result['id']);
-      $sql = "DELETE FROM breed_values_set WHERE animal_id = ".$animalId;
-      $this->getManager()->getConnection()->exec($sql);
+    if(count($results) > 0) {
+
+      if($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt(count($results) + 1, 1, 'Deleting breedValuesSets of testAnimals'); }
+      foreach ($results as $result) {
+        $animalId = intval($result['id']);
+        $sql = "DELETE FROM breed_values_set WHERE animal_id = ".$animalId;
+        $this->getManager()->getConnection()->exec($sql);
+        if($cmdUtil != null) { $cmdUtil->advanceProgressBar(1, 'Deleting breedValuesSets of testAnimals'); }
+      }
+      if($cmdUtil != null) {
+        $cmdUtil->setProgressBarMessage('BreedValuesSets of testAnimals deleted');
+        $cmdUtil->setEndTimeAndPrintFinalOverview();
+      }
     }
-    if($output != null) {
-      $output->writeln('BreedValuesSets of testAnimals deleted'); 
-      $output->writeln('Find all testAnimals...');
-    }
+
+    if($output != null) { $output->writeln('Find all testAnimals...'); }
     
     /** @var AnimalRepository $animalRepository */
     $animalRepository = $this->getManager()->getRepository(Animal::class);
@@ -799,16 +808,19 @@ class AnimalRepository extends BaseRepository
       if($output != null) {
         $output->writeln('No testAnimals in Database');
       }
-    }
-
-    if($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt($count + 1, 1, 'Deleting testAnimals'); }
-    foreach ($testAnimals as $testAnimal) {
-      $this->getManager()->remove($testAnimal);
-      if($cmdUtil != null) {
-        $cmdUtil->advanceProgressBar(1); 
+    } else {
+      $counter = 0;
+      if($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt($count + 1, 1, 'Deleting testAnimals'); }
+      foreach ($testAnimals as $testAnimal) {
+        $this->getManager()->remove($testAnimal);
+        if($cmdUtil != null) {
+          $cmdUtil->advanceProgressBar(1);
+        }
+        $counter++;
+        if($counter%self::BATCH == 0) { $this->getManager()->flush(); }
       }
+      $this->getManager()->flush();
+      if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
     }
-    $this->getManager()->flush();
-    if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
   }
 }
