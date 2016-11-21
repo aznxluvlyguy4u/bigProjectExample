@@ -17,6 +17,7 @@ use AppBundle\Enumerator\Specie;
 use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\GenderChanger;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
@@ -144,27 +145,27 @@ class AnimalTableMigrator extends MigratorBase
             }
 
 			$nickName = StringUtil::getNullAsStringOrWrapInQuotes(utf8_encode(StringUtil::escapeSingleApostrophes($record[4])));
-            $fatherVsmId = $this->getNullCheckedValueForSqlQuery($record[5], false);
-            $motherVsmId = $this->getNullCheckedValueForSqlQuery($record[6], false);
+            $fatherVsmId = SqlUtil::getNullCheckedValueForSqlQuery($record[5], false);
+            $motherVsmId = SqlUtil::getNullCheckedValueForSqlQuery($record[6], false);
             $genderInFile = StringUtil::getNullAsStringOrWrapInQuotes($this->parseGender($record[7]));
 			$dateOfBirthString = StringUtil::getNullAsStringOrWrapInQuotes($record[8]);
 			$breedCode = StringUtil::getNullAsStringOrWrapInQuotes($record[9]);
 			$ubnOfBirth = StringUtil::getNullAsStringOrWrapInQuotes($record[10]); //ubnOfBreeder
-            $locationOfBirth = $this->getSearchArrayCheckedValueForSqlQuery($record[10], $locationIdByUbnSearchArray, false);
+            $locationOfBirth = SqlUtil::getSearchArrayCheckedValueForSqlQuery($record[10], $locationIdByUbnSearchArray, false);
 
 			$pedigreeRegister = self::parsePedigreeRegister($record[11]);
 			$pedigreeRegisterFullname = $pedigreeRegister[self::VALUE];
 			$pedigreeRegisterAbbreviation = $pedigreeRegister[self::ABBREVIATION];
 
-            $pedigreeRegisterId = $this->getSearchArrayCheckedValueForSqlQuery($pedigreeRegisterAbbreviation, $pedigreeRegisterIdByAbbreviationSearchArray, false);
-            $breedType = $this->getNullCheckedValueForSqlQuery(Translation::getEnglish(strtoupper($record[12])), true);
-			$scrapieGenotype = $this->getNullCheckedValueForSqlQuery($record[13], true);
+            $pedigreeRegisterId = SqlUtil::getSearchArrayCheckedValueForSqlQuery($pedigreeRegisterAbbreviation, $pedigreeRegisterIdByAbbreviationSearchArray, false);
+            $breedType = SqlUtil::getNullCheckedValueForSqlQuery(Translation::getEnglish(strtoupper($record[12])), true);
+			$scrapieGenotype = SqlUtil::getNullCheckedValueForSqlQuery($record[13], true);
 
 			$animalId = StringUtil::getNullAsString($this->findAnimalIdOfVsmId($vsmId, $ulnCountryCode, $ulnNumber, $animalIdsByVsmId));
 			$fatherId = StringUtil::getNullAsString($this->findAnimalIdOfVsmId(intval($record[5]), null, null, $animalIdsByVsmId));
 			$motherId = StringUtil::getNullAsString($this->findAnimalIdOfVsmId(intval($record[6]), null, null, $animalIdsByVsmId));
 
-            $genderInDatabase = $this->getSearchArrayCheckedValueForSqlQuery($vsmId, $genderInDatabaseByVsmIdSearchArray, true);
+            $genderInDatabase = SqlUtil::getSearchArrayCheckedValueForSqlQuery($vsmId, $genderInDatabaseByVsmIdSearchArray, true);
 
 
 			$sql = "INSERT INTO animal_migration_table (id, vsm_id, animal_id, uln_origin, stn_origin, uln_country_code, uln_number, animal_order_number,
@@ -763,33 +764,4 @@ class AnimalTableMigrator extends MigratorBase
     }
 
 
-    /**
-     * @param mixed $value
-     * @param boolean $includeQuotes
-     * @return string
-     */
-    private function getNullCheckedValueForSqlQuery($value, $includeQuotes)
-    {
-        if($value != null && $value != '') {
-            return $includeQuotes ? StringUtil::getNullAsStringOrWrapInQuotes($value) : StringUtil::getNullAsString($value);
-        } else {
-            return 'NULL';
-        }
-    }
-
-
-    /**
-     * @param mixed $value
-     * @param array $searchArray
-     * @param boolean $includeQuotes
-     * @return string
-     */
-    private function getSearchArrayCheckedValueForSqlQuery($value, $searchArray, $includeQuotes)
-    {
-        if(array_key_exists($value, $searchArray)) {
-            return $includeQuotes ? StringUtil::getNullAsStringOrWrapInQuotes($searchArray[$value]) : StringUtil::getNullAsString($searchArray[$value]);
-        } else {
-            return 'NULL';
-        }
-    }
 }

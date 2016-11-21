@@ -8,9 +8,12 @@ use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\Employee;
 use AppBundle\Enumerator\ActionType;
+use AppBundle\Enumerator\AnimalType;
 use AppBundle\Enumerator\RecoveryIndicatorType;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Enumerator\TagStateType;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -44,13 +47,11 @@ class TagReplaceMigrator extends MigratorBase
     
     public function migrate()
     {
-        //TODO
-        dump('TODO');die;
-
+        $this->cmdUtil->setStartTimeAndPrintIt(count($this->data)+1, 1);
         $animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmId();
 
         $sql = "SELECT uln_country_code_replacement, uln_country_code_to_replace, uln_number_to_replace, uln_number_replacement FROM declare_tag_replace";
-        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $results = $this->conn->query($sql)->fetchAll();
         $ulnReplacementsInDatabase = [];
         foreach ($results as $result) {
             $uln = $result['uln_country_code_replacement'].' '.$result['uln_number_replacement'];
@@ -67,7 +68,7 @@ class TagReplaceMigrator extends MigratorBase
 
                 $vsmId = $record[0];
                 $dateTimeString = $record[1];
-                $dateTime = $dateTimeString == null || $dateTimeString == '' ? null : new \DateTime($dateTimeString);
+                $dateTime = $dateTimeString == null || $dateTimeString == '' ? self::getBlankDateFillerDateTime() : new \DateTime($dateTimeString);
                 $ulnOld = $record[2];
 
 
@@ -103,6 +104,10 @@ class TagReplaceMigrator extends MigratorBase
                     $declareTagTransfer->setUlnCountryCodeReplacement($newUlnCountryCode);
                     $declareTagTransfer->setUlnNumberReplacement($newUlnNumber);
 
+                    $declareTagTransfer->setAnimalOrderNumberReplacement(StringUtil::getLast5CharactersFromString($newUlnNumber));
+                    $declareTagTransfer->setAnimalOrderNumberToReplace(StringUtil::getLast5CharactersFromString($oldUlnNumber));
+
+                    $declareTagTransfer->setAnimalType(AnimalType::sheep);
                     $declareTagTransfer->setReplaceDate($dateTime);
                     $declareTagTransfer->setLogDate(new \DateTime());
                     $declareTagTransfer->setRequestState(RequestStateType::IMPORTED);
@@ -111,13 +116,18 @@ class TagReplaceMigrator extends MigratorBase
                     $declareTagTransfer->setMessageId($requestId);
                     $declareTagTransfer->setAction(ActionType::V_MUTATE);
                     $declareTagTransfer->setRecoveryIndicator(RecoveryIndicatorType::N);
-                    //TODO
+                    $declareTagTransfer->setRelationNumberKeeper(RequestStateType::IMPORTED);
+                    $declareTagTransfer->setUbn(RequestStateType::IMPORTED);
+                    $declareTagTransfer->setActionBy($this->developer);
 
+                    $animalId = null;
                     if($animalIdsByVsmId->containsKey($vsmId)) {
                         $animal = $this->animalRepository->find($animalIdsByVsmId->get($vsmId));
                         $declareTagTransfer->setAnimal($animal);
+                        $animalId = $animal->getId();
                     }
                     $this->em->persist($declareTagTransfer);
+                    $this->insertReplacedTag($oldUlnCountryCode, $oldUlnNumber, $dateTime, $animalId);
                     $newCount++;
                 }
 
@@ -132,6 +142,37 @@ class TagReplaceMigrator extends MigratorBase
 
 
     /**
+     * @param string $oldUlnCountryCode
+     * @param string $oldUlnNumber
+     * @param \DateTime $orderDate
+     * @param int $animalIdUlnHistory
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function insertReplacedTag($oldUlnCountryCode, $oldUlnNumber, $orderDate, $animalIdUlnHistory)
+    {
+        if(!is_string($oldUlnCountryCode) || !is_string($oldUlnNumber)) { return null; }
+
+        $animalIdInReplacedTag = SqlUtil::NULL;
+        $animalOrderNumber =  StringUtil::getLast5CharactersFromString($oldUlnNumber);
+        $dateString = $orderDate != null ? $orderDate->format(SqlUtil::DATE_FORMAT) : self::getBlankDateFillerDateString();
+
+        $sql = "SELECT MAX(id) FROM tag";
+        $maxId = $this->conn->query($sql)->fetch()['max'];
+        $tagId = $maxId + 1;
+        
+        $sql = "INSERT INTO tag (id, animal_id, tag_status, animal_order_number, order_date, uln_country_code, uln_number) VALUES (".$tagId.",".$animalIdInReplacedTag.",'".TagStateType::REPLACED."','".$animalOrderNumber."','". $dateString."','".$oldUlnCountryCode."','".$oldUlnNumber."')";
+        $this->conn->exec($sql);
+
+        if(is_int($animalIdUlnHistory)) {
+            $sql = "INSERT INTO ulns_history (tag_id, animal_id) VALUES (".$tagId.",".$animalIdUlnHistory.")";
+            $this->conn->exec($sql);
+        }
+    }
+
+
+
+    /**
      * @return bool
      */
     public function setAnimalIdsOnDeclareTagReplaces()
@@ -139,7 +180,7 @@ class TagReplaceMigrator extends MigratorBase
         //Create SearchArrays
         $sql = "SELECT id, uln_country_code_to_replace, uln_number_to_replace, uln_country_code_replacement, uln_number_replacement FROM declare_tag_replace
                 WHERE animal_id ISNULL ";
-        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $results = $this->conn->query($sql)->fetchAll();
         
         if(count($results) == 0) { return false; }
 
@@ -159,13 +200,13 @@ class TagReplaceMigrator extends MigratorBase
         $sql = "SELECT a.id as animal_id, a.uln_country_code, a.uln_number, t.id, t.uln_country_code_to_replace, t.uln_number_to_replace FROM animal a
                 INNER JOIN declare_tag_replace t ON a.uln_country_code = t.uln_country_code_replacement AND a.uln_number = t.uln_number_replacement
                 WHERE animal_id ISNULL ";
-        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $results = $this->conn->query($sql)->fetchAll();
 
         foreach ($results as $result) {
             $animalId = intval($result['animal_id']);
             $declareTagReplaceId = intval($result['id']);
             $sql = "UPDATE declare_tag_replace SET animal_id = ".$animalId." WHERE id = ".$declareTagReplaceId;
-            $this->em->getConnection()->exec($sql);
+            $this->conn->exec($sql);
 
             $oldUln = $result['uln_country_code_to_replace'].$result['uln_number_to_replace'];
             $this->setAnimalIdByOldUln($animalId, $oldUln);
@@ -185,7 +226,7 @@ class TagReplaceMigrator extends MigratorBase
             $declareTagReplaceId = $this->declareTagReplaceIdByOldUlns[$oldUln];
 
             $sql = "UPDATE declare_tag_replace SET animal_id = ".$animalId." WHERE id = ".$declareTagReplaceId;
-            $this->em->getConnection()->exec($sql);
+            $this->conn->exec($sql);
             unset($this->declareTagReplaceIdByOldUlns[$oldUln]);
 
             //Recursively search for old ulns

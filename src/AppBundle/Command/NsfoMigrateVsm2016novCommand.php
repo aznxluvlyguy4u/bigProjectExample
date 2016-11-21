@@ -7,6 +7,7 @@ use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Migration\AnimalTableMigrator;
 use AppBundle\Migration\BlindnessFactorsMigrator;
+use AppBundle\Migration\MigratorBase;
 use AppBundle\Migration\MyoMaxMigrator;
 use AppBundle\Migration\PerformanceMeasurementsMigrator;
 use AppBundle\Migration\PredicatesMigrator;

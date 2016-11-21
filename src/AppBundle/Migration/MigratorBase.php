@@ -8,12 +8,15 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class MigratorBase
 {
     const MIGRATION_OUTPUT_FOLDER = '/Resources/outputs/migration';
+    const BLANK_DATE_FILLER = '1899-01-01';
 
     /** @var ObjectManager */
     protected $em;
@@ -36,6 +39,9 @@ class MigratorBase
     /** @var string */
     protected $rootDir;
 
+    /** @var Connection $conn */
+    protected $conn;
+
     /**
      * MigratorBase constructor.
      * @param CommandUtil $cmdUtil
@@ -48,6 +54,7 @@ class MigratorBase
     {
         $this->cmdUtil = $cmdUtil;
         $this->em = $em;
+        $this->conn = $em->getConnection();
         $this->output = $outputInterface;
         $this->data = $data;
         /** @var AnimalRepository animalRepository */
@@ -59,5 +66,23 @@ class MigratorBase
             $this->outputFolder = $rootDir.self::MIGRATION_OUTPUT_FOLDER;
             NullChecker::createFolderPathIfNull($this->outputFolder);
         }
+    }
+
+
+    /**
+     * @return \DateTime
+     */
+    public static function getBlankDateFillerDateTime()
+    {
+        return new \DateTime(self::BLANK_DATE_FILLER);
+    }
+
+
+    /**
+     * @return \DateTime
+     */
+    public static function getBlankDateFillerDateString()
+    {
+        return self::getBlankDateFillerDateTime()->format(SqlUtil::DATE_FORMAT);
     }
 }
