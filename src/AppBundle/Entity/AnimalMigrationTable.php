@@ -137,6 +137,13 @@ class AnimalMigrationTable
     private $genderInDatabase;
 
     /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $correctedGender;
+
+    /**
      * @var \DateTime
      *
      * @ORM\Column(type="datetime", nullable=true)
@@ -478,6 +485,22 @@ class AnimalMigrationTable
     public function setGenderInDatabase($genderInDatabase)
     {
         $this->genderInDatabase = $genderInDatabase;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCorrectedGender()
+    {
+        return $this->correctedGender;
+    }
+
+    /**
+     * @param string $correctedGender
+     */
+    public function setCorrectedGender($correctedGender)
+    {
+        $this->correctedGender = $correctedGender;
     }
 
     /**
