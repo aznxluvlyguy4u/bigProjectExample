@@ -238,8 +238,8 @@ class AnimalTableMigrator extends MigratorBase
 		$this->output->writeln('TODO: TEST FIX BREEDCODES AFTER MAKING A BACKUP OF THE DATABASE (INCL CLEAN ANIMAL_MIGRATION_TABLE)');
 
         $breedCodeUtil = new BreedCodeUtil($this->em, $this->cmdUtil);
-//		$breedCodeUtil->fixBreedCodes(); TODO
-
+		$breedCodeUtil->fixBreedCodes();
+		
 		$this->fixGenders();
     }
 

@@ -48,19 +48,34 @@ class BreedCodeUtil
      */
     public function fixBreedCodes()
     {
-        $sql = "SELECT id, vsm_id, breed_code, father_vsm_id, mother_vsm_id, is_breed_code_updated FROM animal_migration_table";
+        $sql = "SELECT animal_id, vsm_id, breed_code, father_vsm_id, mother_vsm_id, is_breed_code_updated FROM animal_migration_table";
         $results = $this->conn->query($sql)->fetchAll();
 
         if($this->cmdUtil != null) { $this->cmdUtil->setStartTimeAndPrintIt(count($results), 1); }
 
         //Create searchArrays
         foreach ($results as $result) {
-            $breedCodeString = $result['breed_code'];
             $vsmId = $result['vsm_id'];
-            $this->breedCodesByVsmId[$vsmId] = $breedCodeString;
-            $this->fathers[$vsmId] = $result['father_vsm_id'];
-            $this->mothers[$vsmId] = $result['mother_vsm_id'];
-            $this->animalIdByVsmId[$vsmId] = $result['id'];
+
+            $breedCodeString = $result['breed_code'];
+            if($breedCodeString != null && $breedCodeString != ''){
+                $this->breedCodesByVsmId[$vsmId] = $breedCodeString;
+            }
+
+            $fatherVsmId = $result['father_vsm_id'];
+            if($fatherVsmId != null && $fatherVsmId != 0 && $fatherVsmId != ''){
+                $this->fathers[$vsmId] = $fatherVsmId;
+            }
+
+            $motherVsmId = $result['mother_vsm_id'];
+            if($motherVsmId != null && $motherVsmId != 0 && $motherVsmId != ''){
+                $this->mothers[$vsmId] = $motherVsmId;
+            }
+
+            $animalId = $result['animal_id'];
+            if($animalId != null && $animalId != 0 && $animalId != ''){
+                $this->animalIdByVsmId[$vsmId] = $animalId;
+            }
         }
 
         $alreadyProcessedBreedCodes = 0;
@@ -108,23 +123,32 @@ class BreedCodeUtil
      */
     private function calculateBreedCodeFromParentsAndPersistNewValue($vsmId)
     {
-        $fatherVsmId = $this->fathers[$vsmId];
-        $motherVsmId = $this->mothers[$vsmId];
+        $fatherVsmId = Utils::getNullCheckedArrayValue($vsmId, $this->fathers);
+        $motherVsmId = Utils::getNullCheckedArrayValue($vsmId, $this->mothers);
+        if(NullChecker::isNull($fatherVsmId) || NullChecker::isNull($motherVsmId)) { return null; }
 
         $breedCodeStringOfFather = Utils::getNullCheckedArrayValue($fatherVsmId, $this->breedCodesByVsmId);
         $breedCodePartsOfFather = Utils::separateLettersAndNumbersOfString($breedCodeStringOfFather);
         $breedCodeStringOfMother = Utils::getNullCheckedArrayValue($motherVsmId, $this->breedCodesByVsmId);
         $breedCodePartsOfMother = Utils::separateLettersAndNumbersOfString($breedCodeStringOfMother);
 
+        if($breedCodeStringOfFather == null || $breedCodeStringOfMother == null) { return null; }
+        if(!is_array($breedCodePartsOfFather) || !is_array($breedCodePartsOfMother)) { return null; }
+        if(count($breedCodePartsOfFather) < 2 || count($breedCodePartsOfMother) < 2) { return null; }
+        
         //Two recursive loops to find the breedCodeValues of the parents
         if(!self::verifySumOfBreedCodeParts($breedCodePartsOfFather)) {
             $breedCodePartsOfFather = $this->calculateBreedCodeFromParentsAndPersistNewValue($fatherVsmId);
-            $this->breedCodesByVsmId[$fatherVsmId] = self::implodeBreedCodeParts($breedCodePartsOfFather); //Update search array
+            if($breedCodePartsOfFather != null) {
+                $this->breedCodesByVsmId[$fatherVsmId] = self::implodeBreedCodeParts($breedCodePartsOfFather); //Update search array
+            }
         }
 
         if(!self::verifySumOfBreedCodeParts($breedCodePartsOfMother)) {
             $breedCodePartsOfMother = $this->calculateBreedCodeFromParentsAndPersistNewValue($motherVsmId);
-            $this->breedCodesByVsmId[$motherVsmId] = self::implodeBreedCodeParts($breedCodePartsOfMother); //Update search array
+            if($breedCodePartsOfMother != null) {
+                $this->breedCodesByVsmId[$motherVsmId] = self::implodeBreedCodeParts($breedCodePartsOfMother); //Update search array
+            }
         }
 
         if(self::verifySumOfBreedCodeParts($breedCodePartsOfFather) && self::verifySumOfBreedCodeParts($breedCodePartsOfMother)) {
@@ -234,11 +258,11 @@ class BreedCodeUtil
         if(!is_array($breedCodeParts)) { return false; }
 
         $count = count($breedCodeParts);
-        if($count == 0) { return false; }
+        if($count < 2) { return false; }
 
         $sumOfNumbers = 0;
 
-        for($i = 0; $i < $count-1; $i += 2) {
+        for($i = 0; $i < $count-2; $i += 2) {
             if(ctype_alpha($breedCodeParts[$i]) && ctype_alnum($breedCodeParts[$i+1])) {
                 $breedCode = $breedCodeParts[$i];
                 $number = $breedCodeParts[$i+1];
