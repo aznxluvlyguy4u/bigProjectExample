@@ -50,7 +50,7 @@ class BreedCodeUtil
      */
     public function fixBreedCodes()
     {
-        $sql = "SELECT id, vsm_id, breed_code, father_vsm_id, mother_vsm_id, is_breed_code_updated FROM animal_migration_table";
+        $sql = "SELECT id, vsm_id, breed_code, father_vsm_id, mother_vsm_id, is_breed_code_updated FROM animal_migration_table ORDER BY date_of_birth";
         $results = $this->conn->query($sql)->fetchAll();
 
         if($this->cmdUtil != null) { $this->cmdUtil->setStartTimeAndPrintIt(count($results), 1); }
@@ -277,7 +277,7 @@ class BreedCodeUtil
                 $breedCode = $breedCodeParts[$i];
                 $number = $breedCodeParts[$i+1];
                 $sumOfNumbers += $number;
-                
+
             }
         }
 
