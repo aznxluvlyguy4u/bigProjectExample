@@ -22,6 +22,9 @@ class BreedCodeUtil
     private $breedCodesByVsmId;
 
     /** @var array */
+    private $updatedBreedCodes;
+
+    /** @var array */
     private $fathers;
 
     /** @var array */
@@ -37,6 +40,7 @@ class BreedCodeUtil
     {
         $this->em = $em;
         $this->breedCodesByVsmId = [];
+        $this->updatedBreedCodes = [];
         $this->fathers = [];
         $this->mothers = [];
         $this->migrationTableIdByVsmId = [];
@@ -62,6 +66,11 @@ class BreedCodeUtil
             $breedCodeString = $result['breed_code'];
             if($breedCodeString != null && $breedCodeString != ''){
                 $this->breedCodesByVsmId[$vsmId] = $breedCodeString;
+            }
+
+            $isBreedCodeUpdated = boolval($result['is_breed_code_updated']);
+            if($isBreedCodeUpdated){
+                $this->updatedBreedCodes[$vsmId] = $vsmId;
             }
 
             $fatherVsmId = $result['father_vsm_id'];
@@ -133,7 +142,10 @@ class BreedCodeUtil
         //Two recursive loops to find the breedCodeValues of the parents
 
         $breedCodePartsOfFather = null;
-        if($fatherVsmId != null && $fatherVsmId != 0 && $fatherVsmId != '' && $nestingLevel < self::NESTING_LEVEL_LIMIT) {
+        if($fatherVsmId != null && $fatherVsmId != 0 && $fatherVsmId != ''
+            && $nestingLevel < self::NESTING_LEVEL_LIMIT
+            && !array_key_exists($fatherVsmId, $this->updatedBreedCodes)
+        ) {
             $breedCodeStringOfFather = Utils::getNullCheckedArrayValue($fatherVsmId, $this->breedCodesByVsmId);
             $breedCodePartsOfFather = Utils::separateLettersAndNumbersOfString($breedCodeStringOfFather);
 
@@ -147,7 +159,10 @@ class BreedCodeUtil
 
 
         $breedCodePartsOfMother = null;
-        if($motherVsmId != null && $motherVsmId != 0 && $motherVsmId != '' && $nestingLevel < self::NESTING_LEVEL_LIMIT) {
+        if($motherVsmId != null && $motherVsmId != 0 && $motherVsmId != ''
+            && $nestingLevel < self::NESTING_LEVEL_LIMIT
+            && !array_key_exists($motherVsmId, $this->updatedBreedCodes)
+        ) {
             $breedCodeStringOfMother = Utils::getNullCheckedArrayValue($motherVsmId, $this->breedCodesByVsmId);
             $breedCodePartsOfMother = Utils::separateLettersAndNumbersOfString($breedCodeStringOfMother);
 
@@ -168,6 +183,8 @@ class BreedCodeUtil
 
             $sql = "UPDATE animal_migration_table SET is_breed_code_updated = TRUE, old_breed_code = breed_code, breed_code = ".$newBreedCodeForSql." WHERE id = ". $this->migrationTableIdByVsmId[$vsmId];
             $this->conn->exec($sql);
+
+            $this->updatedBreedCodes[$vsmId] = $vsmId;
 
             return $newBreedCodeParts;
         }
