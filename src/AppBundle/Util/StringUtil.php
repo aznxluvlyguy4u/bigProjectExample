@@ -276,4 +276,21 @@ class StringUtil
     {
         return str_pad($animalOrderNumber, self::ANIMAL_ORDER_NUMBER_LENGTH, 0, STR_PAD_LEFT);
     }
+
+
+    /**
+     * Remove last 5 characters and leading zeroes
+     *
+     * @param string $ulnNumber
+     * @return string
+     */
+    public static function getUbnFromUlnNumber($ulnNumber)
+    {
+        if(!is_string($ulnNumber)) { return null; }
+        if(strlen($ulnNumber) > 12) { return null; }
+
+        $ubn = ltrim(substr(trim($ulnNumber), 0, -5), '0');
+
+        return Validator::hasValidUbnFormat($ubn) ? $ubn : null;
+    }
 }

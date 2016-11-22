@@ -79,6 +79,15 @@ class AnimalTableMigrator extends MigratorBase
 	}
 
 
+	public function fixValuesInAnimalMigrationTable()
+	{
+		$breedCodeUtil = new BreedCodeUtil($this->em, $this->cmdUtil);
+		$breedCodeUtil->fixBreedCodes();
+		$this->fixGenders();
+		$this->getUbnOfBirthFromUln();
+	}
+
+
 	public function importAnimalTableCsvFileIntoDatabase()
 	{		
 
@@ -230,18 +239,6 @@ class AnimalTableMigrator extends MigratorBase
 
 		return null;
 	}
-
-
-
-    public function fixValuesInAnimalMigrationTable()
-    {
-		$this->output->writeln('TODO: TEST FIX BREEDCODES AFTER MAKING A BACKUP OF THE DATABASE (INCL CLEAN ANIMAL_MIGRATION_TABLE)');
-
-        $breedCodeUtil = new BreedCodeUtil($this->em, $this->cmdUtil);
-		$breedCodeUtil->fixBreedCodes();
-		
-		$this->fixGenders();
-    }
 
 
 	public function migrate()
@@ -468,6 +465,43 @@ class AnimalTableMigrator extends MigratorBase
 		}
 
 		return $allNeuterHaveOnlyOneGender && $areAllFemalesOnlyMothers && $areAllMalesOnlyFathers;
+	}
+
+
+	/**
+	 * @throws \Doctrine\DBAL\DBALException
+	 */
+	private function getUbnOfBirthFromUln()
+	{
+		$sql = "SELECT ubn_of_birth, uln_number, date_of_birth, id FROM animal_migration_table
+				WHERE date_of_birth < '2010-01-01' AND ubn_of_birth ISNULL AND uln_number NOTNULL 
+					AND is_ubn_updated = FALSE ";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$count = count($results);
+		if($count == 0) {
+			$this->output->writeln('All UbnsOfBirth have already been processed');
+			return;
+		}
+
+		$this->cmdUtil->setStartTimeAndPrintIt($count+1, 1);
+
+		$updateCount = 0;
+		foreach ($results as $result) {
+			$id = $result['id'];
+			$ulnNumber = $result['uln_number'];
+			$ubn = StringUtil::getUbnFromUlnNumber($ulnNumber);
+			if($ubn != null) {
+				$sql = "UPDATE animal_migration_table SET is_ubn_updated = TRUE, ubn_of_birth = '".$ubn."' WHERE id = ".$id;
+				$updateCount++;
+			} else {
+				$sql = "UPDATE animal_migration_table SET is_ubn_updated = TRUE WHERE id = ".$id;
+			}
+			$this->conn->exec($sql);
+			$this->cmdUtil->advanceProgressBar(1, 'ubnsOfBirth updated: '.$updateCount);
+		}
+		$this->cmdUtil->setProgressBarMessage('ubnsOfBirth updated: '.$updateCount);
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
 
 
