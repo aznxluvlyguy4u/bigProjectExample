@@ -10,6 +10,8 @@ use Doctrine\DBAL\Connection;
 
 class BreedCodeUtil
 {
+    const NESTING_LEVEL_LIMIT = 255;
+
     /** @var  ObjectManager */
     private $em;
 
@@ -26,7 +28,7 @@ class BreedCodeUtil
     private $mothers;
 
     /** @var array */
-    private $animalIdByVsmId;
+    private $migrationTableIdByVsmId;
 
     /** @var CommandUtil */
     private $cmdUtil;
@@ -37,7 +39,7 @@ class BreedCodeUtil
         $this->breedCodesByVsmId = [];
         $this->fathers = [];
         $this->mothers = [];
-        $this->animalIdByVsmId = [];
+        $this->migrationTableIdByVsmId = [];
         $this->conn = $this->em->getConnection();
         $this->cmdUtil = $cmdUtil;
     }
@@ -48,7 +50,7 @@ class BreedCodeUtil
      */
     public function fixBreedCodes()
     {
-        $sql = "SELECT animal_id, vsm_id, breed_code, father_vsm_id, mother_vsm_id, is_breed_code_updated FROM animal_migration_table";
+        $sql = "SELECT id, vsm_id, breed_code, father_vsm_id, mother_vsm_id, is_breed_code_updated FROM animal_migration_table";
         $results = $this->conn->query($sql)->fetchAll();
 
         if($this->cmdUtil != null) { $this->cmdUtil->setStartTimeAndPrintIt(count($results), 1); }
@@ -72,9 +74,9 @@ class BreedCodeUtil
                 $this->mothers[$vsmId] = $motherVsmId;
             }
 
-            $animalId = $result['animal_id'];
-            if($animalId != null && $animalId != 0 && $animalId != ''){
-                $this->animalIdByVsmId[$vsmId] = $animalId;
+            $migrationTableId = $result['id'];
+            if($migrationTableId != null && $migrationTableId != 0 && $migrationTableId != ''){
+                $this->migrationTableIdByVsmId[$vsmId] = $migrationTableId;
             }
         }
 
@@ -84,9 +86,9 @@ class BreedCodeUtil
 
         foreach ($results as $result) {
             if($result['is_breed_code_updated']) {
+                $alreadyProcessedBreedCodes++;
                 if($this->cmdUtil != null) { $this->cmdUtil->advanceProgressBar(1, 'Already done: '.$alreadyProcessedBreedCodes.' | Correct Skipped: '.$correctBreedCodesSkipped
                     .' | incorrect processed (including parents): '.$incorrectBreedCodesProcessed); }
-                $alreadyProcessedBreedCodes++;
                 continue;
             }
 
@@ -96,14 +98,15 @@ class BreedCodeUtil
             if($isValidBreedCode) {
                 $sql = "UPDATE animal_migration_table SET is_breed_code_updated = TRUE WHERE id = ". $result['id'];
                 $this->conn->exec($sql);
+                $correctBreedCodesSkipped++;
                 if($this->cmdUtil != null) { $this->cmdUtil->advanceProgressBar(1, 'Already done: '.$alreadyProcessedBreedCodes.' | Correct Skipped: '.$correctBreedCodesSkipped
                     .' | incorrect processed (including parents): '.$incorrectBreedCodesProcessed); }
-                $correctBreedCodesSkipped++;
                 continue;
             }
 
             $vsmId = $result['vsm_id'];
-            $this->calculateBreedCodeFromParentsAndPersistNewValue($vsmId);
+            $nestingLevel = 1;
+            $this->calculateBreedCodeFromParentsAndPersistNewValue($vsmId, $nestingLevel);
             $incorrectBreedCodesProcessed++;
 
             if($this->cmdUtil != null) { $this->cmdUtil->advanceProgressBar(1, 'Already done: '.$alreadyProcessedBreedCodes.' | Correct Skipped: '.$correctBreedCodesSkipped
@@ -119,37 +122,43 @@ class BreedCodeUtil
 
     /**
      * @param int $vsmId
+     * @param int $nestingLevel
      * @return array
      */
-    private function calculateBreedCodeFromParentsAndPersistNewValue($vsmId)
+    private function calculateBreedCodeFromParentsAndPersistNewValue($vsmId, $nestingLevel)
     {
         $fatherVsmId = Utils::getNullCheckedArrayValue($vsmId, $this->fathers);
         $motherVsmId = Utils::getNullCheckedArrayValue($vsmId, $this->mothers);
-        if(NullChecker::isNull($fatherVsmId) || NullChecker::isNull($motherVsmId)) { return null; }
 
-        $breedCodeStringOfFather = Utils::getNullCheckedArrayValue($fatherVsmId, $this->breedCodesByVsmId);
-        $breedCodePartsOfFather = Utils::separateLettersAndNumbersOfString($breedCodeStringOfFather);
-        $breedCodeStringOfMother = Utils::getNullCheckedArrayValue($motherVsmId, $this->breedCodesByVsmId);
-        $breedCodePartsOfMother = Utils::separateLettersAndNumbersOfString($breedCodeStringOfMother);
-
-        if($breedCodeStringOfFather == null || $breedCodeStringOfMother == null) { return null; }
-        if(!is_array($breedCodePartsOfFather) || !is_array($breedCodePartsOfMother)) { return null; }
-        if(count($breedCodePartsOfFather) < 2 || count($breedCodePartsOfMother) < 2) { return null; }
-        
         //Two recursive loops to find the breedCodeValues of the parents
-        if(!self::verifySumOfBreedCodeParts($breedCodePartsOfFather)) {
-            $breedCodePartsOfFather = $this->calculateBreedCodeFromParentsAndPersistNewValue($fatherVsmId);
-            if($breedCodePartsOfFather != null) {
-                $this->breedCodesByVsmId[$fatherVsmId] = self::implodeBreedCodeParts($breedCodePartsOfFather); //Update search array
+
+        $breedCodePartsOfFather = null;
+        if($fatherVsmId != null && $fatherVsmId != 0 && $fatherVsmId != '' && $nestingLevel < self::NESTING_LEVEL_LIMIT) {
+            $breedCodeStringOfFather = Utils::getNullCheckedArrayValue($fatherVsmId, $this->breedCodesByVsmId);
+            $breedCodePartsOfFather = Utils::separateLettersAndNumbersOfString($breedCodeStringOfFather);
+
+            if(!self::verifySumOfBreedCodeParts($breedCodePartsOfFather)) {
+                $breedCodePartsOfFather = $this->calculateBreedCodeFromParentsAndPersistNewValue($fatherVsmId, $nestingLevel+1);
+                if($breedCodePartsOfFather != null) {
+                    $this->breedCodesByVsmId[$fatherVsmId] = self::implodeBreedCodeParts($breedCodePartsOfFather); //Update search array
+                }
             }
         }
 
-        if(!self::verifySumOfBreedCodeParts($breedCodePartsOfMother)) {
-            $breedCodePartsOfMother = $this->calculateBreedCodeFromParentsAndPersistNewValue($motherVsmId);
-            if($breedCodePartsOfMother != null) {
-                $this->breedCodesByVsmId[$motherVsmId] = self::implodeBreedCodeParts($breedCodePartsOfMother); //Update search array
+
+        $breedCodePartsOfMother = null;
+        if($motherVsmId != null && $motherVsmId != 0 && $motherVsmId != '' && $nestingLevel < self::NESTING_LEVEL_LIMIT) {
+            $breedCodeStringOfMother = Utils::getNullCheckedArrayValue($motherVsmId, $this->breedCodesByVsmId);
+            $breedCodePartsOfMother = Utils::separateLettersAndNumbersOfString($breedCodeStringOfMother);
+
+            if(!self::verifySumOfBreedCodeParts($breedCodePartsOfMother)) {
+                $breedCodePartsOfMother = $this->calculateBreedCodeFromParentsAndPersistNewValue($motherVsmId, $nestingLevel+1);
+                if($breedCodePartsOfMother != null) {
+                    $this->breedCodesByVsmId[$motherVsmId] = self::implodeBreedCodeParts($breedCodePartsOfMother); //Update search array
+                }
             }
         }
+
 
         if(self::verifySumOfBreedCodeParts($breedCodePartsOfFather) && self::verifySumOfBreedCodeParts($breedCodePartsOfMother)) {
 
@@ -157,11 +166,12 @@ class BreedCodeUtil
             $newBreedCode = self::implodeBreedCodeParts($newBreedCodeParts);
             $newBreedCodeForSql = StringUtil::getNullAsStringOrWrapInQuotes($newBreedCode);
 
-            $sql = "UPDATE animal_migration_table SET is_breed_code_updated = TRUE, old_breed_code = breed_code, breed_code = ".$newBreedCodeForSql." WHERE id = ". $this->animalIdByVsmId[$vsmId];
+            $sql = "UPDATE animal_migration_table SET is_breed_code_updated = TRUE, old_breed_code = breed_code, breed_code = ".$newBreedCodeForSql." WHERE id = ". $this->migrationTableIdByVsmId[$vsmId];
             $this->conn->exec($sql);
 
             return $newBreedCodeParts;
         }
+        //TODO decide what to do with incorrect BreedCodes that cannot be fixed
         return null;
     }
 
@@ -262,11 +272,12 @@ class BreedCodeUtil
 
         $sumOfNumbers = 0;
 
-        for($i = 0; $i < $count-2; $i += 2) {
+        for($i = 0; $i < $count-1; $i += 2) {
             if(ctype_alpha($breedCodeParts[$i]) && ctype_alnum($breedCodeParts[$i+1])) {
                 $breedCode = $breedCodeParts[$i];
                 $number = $breedCodeParts[$i+1];
                 $sumOfNumbers += $number;
+                
             }
         }
 
