@@ -290,7 +290,7 @@ class BreedCodeUtil
         $sumOfNumbers = 0;
 
         for($i = 0; $i < $count-1; $i += 2) {
-            if(array_key_exists($i, $count) && array_key_exists($i+1, $count)) {
+            if(array_key_exists($i, $breedCodeParts) && array_key_exists($i+1, $breedCodeParts)) {
                 $breedCode = $breedCodeParts[$i];
                 $number = $breedCodeParts[$i+1];
                 if(ctype_alpha($breedCode) && ctype_alnum($number)) {
