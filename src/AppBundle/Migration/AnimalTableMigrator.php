@@ -475,7 +475,7 @@ class AnimalTableMigrator extends MigratorBase
 	private function getUbnOfBirthFromUln()
 	{
 		$sql = "SELECT ubn_of_birth, uln_number, date_of_birth, id FROM animal_migration_table
-				WHERE date_of_birth < '2010-01-01' AND ubn_of_birth ISNULL AND uln_number NOTNULL 
+				WHERE uln_country_code = 'NL' AND date_of_birth < '2010-01-01' AND ubn_of_birth ISNULL AND uln_number NOTNULL 
 					AND is_ubn_updated = FALSE ";
 		$results = $this->conn->query($sql)->fetchAll();
 
