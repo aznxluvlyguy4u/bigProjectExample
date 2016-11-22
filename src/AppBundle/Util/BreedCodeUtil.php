@@ -285,16 +285,17 @@ class BreedCodeUtil
         if(!is_array($breedCodeParts)) { return false; }
 
         $count = count($breedCodeParts);
-        if($count < 2) { return false; }
+        if($count < 2 || $count%2 != 0) { return false; }
 
         $sumOfNumbers = 0;
 
         for($i = 0; $i < $count-1; $i += 2) {
-            if(ctype_alpha($breedCodeParts[$i]) && ctype_alnum($breedCodeParts[$i+1])) {
+            if(array_key_exists($i, $count) && array_key_exists($i+1, $count)) {
                 $breedCode = $breedCodeParts[$i];
                 $number = $breedCodeParts[$i+1];
-                $sumOfNumbers += $number;
-
+                if(ctype_alpha($breedCode) && ctype_alnum($number)) {
+                    $sumOfNumbers += $number;
+                }
             }
         }
 
