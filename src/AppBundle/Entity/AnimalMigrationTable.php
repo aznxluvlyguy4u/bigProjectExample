@@ -173,6 +173,38 @@ class AnimalMigrationTable
      */
     private $isBreedCodeUpdated;
 
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isUbnUpdated;
+
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isUlnUpdated;
+
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isStnUpdated;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isAnimalOrderNumberUpdated;
+
+
     /**
      * @var string
      * @ORM\Column(type="string", nullable=true)
@@ -645,6 +677,70 @@ class AnimalMigrationTable
     public function setScrapieGenotype($scrapieGenotype)
     {
         $this->scrapieGenotype = $scrapieGenotype;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isUbnUpdated()
+    {
+        return $this->isUbnUpdated;
+    }
+
+    /**
+     * @param boolean $isUbnUpdated
+     */
+    public function setIsUbnUpdated($isUbnUpdated)
+    {
+        $this->isUbnUpdated = $isUbnUpdated;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isUlnUpdated()
+    {
+        return $this->isUlnUpdated;
+    }
+
+    /**
+     * @param boolean $isUlnUpdated
+     */
+    public function setIsUlnUpdated($isUlnUpdated)
+    {
+        $this->isUlnUpdated = $isUlnUpdated;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isStnUpdated()
+    {
+        return $this->isStnUpdated;
+    }
+
+    /**
+     * @param boolean $isStnUpdated
+     */
+    public function setIsStnUpdated($isStnUpdated)
+    {
+        $this->isStnUpdated = $isStnUpdated;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isAnimalOrderNumberUpdated()
+    {
+        return $this->isAnimalOrderNumberUpdated;
+    }
+
+    /**
+     * @param boolean $isAnimalOrderNumberUpdated
+     */
+    public function setIsAnimalOrderNumberUpdated($isAnimalOrderNumberUpdated)
+    {
+        $this->isAnimalOrderNumberUpdated = $isAnimalOrderNumberUpdated;
     }
 
 
