@@ -85,6 +85,7 @@ class AnimalTableMigrator extends MigratorBase
 		$breedCodeUtil->fixBreedCodes();
 		$this->fixGenders();
 		$this->getUbnOfBirthFromUln();
+		$this->fixMissingAnimalOrderNumbers();
 	}
 
 
@@ -479,11 +480,7 @@ class AnimalTableMigrator extends MigratorBase
 		$results = $this->conn->query($sql)->fetchAll();
 
 		$count = count($results);
-		if($count == 0) {
-			$this->output->writeln('All UbnsOfBirth have already been processed');
-			return;
-		}
-
+		if($count == 0) { $this->output->writeln('All UbnsOfBirth have already been processed'); return; }
 		$this->cmdUtil->setStartTimeAndPrintIt($count+1, 1);
 
 		$updateCount = 0;
@@ -504,6 +501,46 @@ class AnimalTableMigrator extends MigratorBase
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
 
+
+	/**
+	 * @throws \Doctrine\DBAL\DBALException
+	 */
+	private function fixMissingAnimalOrderNumbers()
+	{
+		$sql = "SELECT pedigree_number, uln_number, id FROM animal_migration_table
+				WHERE animal_order_number ISNULL AND stn_origin NOTNULL AND is_animal_order_number_updated = FALSE";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$count = count($results);
+		if($count == 0) { $this->output->writeln('All AnimalOrderNumbers have already been processed'); return; }
+		$this->cmdUtil->setStartTimeAndPrintIt($count+1, 1);
+
+		$updateCount = 0;
+		foreach ($results as $result) {
+			$id = $result['id'];
+			$pedigreeNumber = $result['pedigree_number'];
+			$ulnNumber = $result['uln_number'];
+
+			$animalOrderNumber = null;
+			if($ulnNumber != null) {
+				$animalOrderNumber = StringUtil::getLast5CharactersFromString($ulnNumber);
+			} else if($pedigreeNumber != null) {
+				$animalOrderNumber = StringUtil::getLast5CharactersFromString($pedigreeNumber);
+				if(!ctype_digit($animalOrderNumber)) { $animalOrderNumber = null; }
+			}
+
+			if($animalOrderNumber != null) {
+				$sql = "UPDATE animal_migration_table SET is_animal_order_number_updated = TRUE, animal_order_number = '".$animalOrderNumber."' WHERE id = ".$id;
+			} else {
+				$sql = "UPDATE animal_migration_table SET is_animal_order_number_updated = TRUE WHERE id = ".$id;
+			}
+			$this->conn->exec($sql);$this->conn->exec($sql);
+			$this->cmdUtil->advanceProgressBar(1, 'animalOrderNumbers updated: '.$updateCount);
+		}
+		$this->cmdUtil->setProgressBarMessage('animalOrderNumbers updated: '.$updateCount);
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
+	}
+	
 
 	/**
 	 * @param int $vsmId
