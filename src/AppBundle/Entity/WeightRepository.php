@@ -203,12 +203,21 @@ class WeightRepository extends MeasurementRepository {
     {
         $em = $this->getManager();
 
+        //SearchArray
+        $sql = "SELECT weight_measurement_id FROM declare_weight";
+        $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+        $weightIdsInDeclareWeight = [];
+        foreach ($results as $result) {
+            $weightId = intval($result['weight_measurement_id']);
+            $weightIdsInDeclareWeight[$weightId] = $weightId;
+        }
+
         $count = 0;
         
         $hasDuplicates = true;
         while($hasDuplicates) {
             $sql = "
-              SELECT MIN(measurement.id) as min_id, COUNT(*), measurement_date, animal_id, weight, is_birth_weight, is_revoked
+              SELECT MIN(measurement.id) as min_id, MAX(measurement.id) as max_id, COUNT(*), measurement_date, animal_id, weight, is_birth_weight, is_revoked
               FROM measurement INNER JOIN weight x ON measurement.id = x.id
               GROUP BY measurement_date, type, x.animal_id, x.weight, x.is_birth_weight, x.is_revoked
               HAVING COUNT(*) > 1";
@@ -216,10 +225,23 @@ class WeightRepository extends MeasurementRepository {
 
             foreach ($results as $result) {
                 $minId = $result['min_id'];
-                $sql = "DELETE FROM weight WHERE id = '".$minId."'";
-                $em->getConnection()->exec($sql);
-                $sql = "DELETE FROM measurement WHERE id = '".$minId."'";
-                $em->getConnection()->exec($sql);
+                $maxId = $result['max_id'];
+
+                $idToDelete = !array_key_exists($minId, $weightIdsInDeclareWeight) ? $minId : (!array_key_exists($maxId, $weightIdsInDeclareWeight) ? $maxId: null);
+
+                //Never delete declared weights
+                if($idToDelete != null) {
+                    $sql = "DELETE FROM weight WHERE id = '".$idToDelete."'";
+                    $em->getConnection()->exec($sql);
+                    $sql = "DELETE FROM measurement WHERE id = '".$idToDelete."'";
+                    $em->getConnection()->exec($sql);
+
+                //if all duplicate weights are declared weights, revoke one of them
+                } else {
+                    $sql = "UPDATE weight SET is_revoked = TRUE WHERE id = '".$maxId."'";
+                    $em->getConnection()->exec($sql);
+                }
+
                 $count++;
             }
             if(count($results) == 0) { $hasDuplicates = false; }
