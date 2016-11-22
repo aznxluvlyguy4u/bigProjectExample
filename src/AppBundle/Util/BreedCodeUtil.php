@@ -132,6 +132,10 @@ class BreedCodeUtil
         $breedCodeStringOfMother = Utils::getNullCheckedArrayValue($motherVsmId, $this->breedCodesByVsmId);
         $breedCodePartsOfMother = Utils::separateLettersAndNumbersOfString($breedCodeStringOfMother);
 
+        if($breedCodeStringOfFather == null || $breedCodeStringOfMother == null) { return null; }
+        if(!is_array($breedCodePartsOfFather) || !is_array($breedCodePartsOfMother)) { return null; }
+        if(count($breedCodePartsOfFather) < 2 || count($breedCodePartsOfMother) < 2) { return null; }
+        
         //Two recursive loops to find the breedCodeValues of the parents
         if(!self::verifySumOfBreedCodeParts($breedCodePartsOfFather)) {
             $breedCodePartsOfFather = $this->calculateBreedCodeFromParentsAndPersistNewValue($fatherVsmId);
