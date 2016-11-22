@@ -298,10 +298,8 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         if(count($data) == 0) { return false; }
 
         $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
-        $this->output->writeln('Fixing genders in the database');
-        $animalTableMigrator->fixGendersInDatabase();
-        $animalTableMigrator->verifyData();
-//        $animalTableMigrator->migrate(); TODO
+//        $animalTableMigrator->verifyData();
+        $animalTableMigrator->migrate();
 
         return true;
     }
