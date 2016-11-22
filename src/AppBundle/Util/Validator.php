@@ -514,4 +514,34 @@ class Validator
             return $isUnique;
         }
     }
+
+
+    /**
+     * @param string|int $ubn
+     * @return bool
+     */
+    public static function hasValidUbnFormat($ubn)
+    {
+        //Verify type, ensure ubn is a string
+        if(is_int($ubn)) { $ubn = (string)$ubn; }
+        else if(is_string($ubn)) {  if(!ctype_digit($ubn)) { return false; }}
+        else { return false; }
+
+        $maxLength = 7;
+        $minLength = 2;
+        $length = strlen($ubn);
+
+        if($length < $minLength || $length > $maxLength) { return false; }
+
+        $ubnReversed = strrev(str_pad($ubn, $maxLength, 0, STR_PAD_LEFT));
+        $ubnDigits = str_split($ubnReversed, 1);
+        $weights = [1, 3, 7, 1, 3, 7, 1];
+
+        $sum = 0;
+        for($i=0; $i < $maxLength; $i++) {
+            $sum += intval($ubnDigits[$i]) * $weights[$i];
+        }
+
+        return $sum%10 == 0;
+    }
 }
