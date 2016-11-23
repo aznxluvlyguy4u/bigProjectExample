@@ -554,10 +554,13 @@ class AnimalTableMigrator extends MigratorBase
 		//SearchArrays
 		$ubnsOfBirthByBreederNumber = $this->breederNumberRepository->getUbnOfBirthByBreederNumberSearchArray();
 		$usedUlnNumbers = $this->animalMigrationTableRepository->getExistingUlnsInAnimalAndAnimalMigrationTables();
-
+		$this->output->writeln('=== Fix missing ulns by pedigreeNumber and ubnOfBirth ===');
 		$usedUlnNumbers = $this->fixMissingUlnsByPedigreeNumberAndUbnOfBirth($usedUlnNumbers);
+		$this->output->writeln('=== Fix missing ulns by pedigreeNumber only ===');
 		$usedUlnNumbers = $this->fixMissingUlnsByPedigreeNumberOnly($ubnsOfBirthByBreederNumber, $usedUlnNumbers);
 
+		$count = $this->animalMigrationTableRepository->countAnimalOrderNumbersNotMatchingUlnNumbers();
+		$this->output->writeln("=== Fix ".$count." animalOrderNumbers to match updated ulnNumbers ===");
 		$this->animalMigrationTableRepository->fixAnimalOrderNumberToMatchUlnNumber();
 	}
 
