@@ -540,7 +540,16 @@ class AnimalTableMigrator extends MigratorBase
 		$this->cmdUtil->setProgressBarMessage('animalOrderNumbers updated: '.$updateCount);
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
-	
+
+
+	private function fixMissingUlns()
+	{
+		//SearchArrays
+		
+		$ubnsOfBirthByBreederNumber = $this->animalMigrationTableRepository->getUbnOfBirthByBreederNumberSearchArray();
+		
+	}
+
 
 	/**
 	 * @param int $vsmId

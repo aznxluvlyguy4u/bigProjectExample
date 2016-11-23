@@ -28,6 +28,16 @@ class StringUtil
 
 
     /**
+     * @param string $pedigreeNumber
+     * @return string
+     */
+    public static function getBreederNumberFromPedigreeNumber($pedigreeNumber)
+    {
+        return substr($pedigreeNumber, 0, 5);
+    }
+
+
+    /**
      * @param string $string
      * @return string
      */
