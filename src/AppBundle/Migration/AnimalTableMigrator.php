@@ -549,6 +549,7 @@ class AnimalTableMigrator extends MigratorBase
 
 		//SearchArrays
 		$ubnsOfBirthByBreederNumber = $this->animalMigrationTableRepository->getUbnOfBirthByBreederNumberSearchArray();
+		$usedUlnNumbers = $this->animalMigrationTableRepository->getExistingUlnsInAnimalAndAnimalMigrationTables();
 
 		//Animals with valid PedigreeNumber but missing uln and ubnOfBirth
 		$sql = "SELECT id, pedigree_number, animal_order_number FROM animal_migration_table t
@@ -579,11 +580,14 @@ class AnimalTableMigrator extends MigratorBase
 				$ubnsOfBirthUpdated++;
 
 				if(ctype_digit($animalOrderNumber)) {
-					$ulnNumber = $ubnOfBirth.$animalOrderNumber;
+					$ulnNumber = StringUtil::padUlnNumberWithZeroes($ubnOfBirth.$animalOrderNumber);
 
-					$sql = "UPDATE animal_migration_table SET is_uln_updated = TRUE, uln_country_code = '".$countryCode."', uln_number = '".$ulnNumber."' WHERE id = ".$id;
-					$this->conn->exec($sql);$this->conn->exec($sql);
-					$ulnsUpdated++;
+					if(!array_key_exists($ulnNumber, $usedUlnNumbers)) {
+						$sql = "UPDATE animal_migration_table SET is_uln_updated = TRUE, uln_country_code = '".$countryCode."', uln_number = '".$ulnNumber."' WHERE id = ".$id;
+						$this->conn->exec($sql);$this->conn->exec($sql);
+						$ulnsUpdated++;
+						$usedUlnNumbers[$ulnNumber] = $ulnNumber;
+					}
 
 					if($animalOrderNumberInDb == null || $animalOrderNumberInDb == '') {
 						$sql = "UPDATE animal_migration_table SET is_animal_order_number_updated = TRUE
