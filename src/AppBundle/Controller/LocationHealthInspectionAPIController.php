@@ -137,12 +137,54 @@ class LocationHealthInspectionAPIController extends APIController
         $location = $repository->findOneBy(array('ubn' => $content->get('ubn'), 'isActive' => true));
 
         if($location) {
+            $em = $this->getDoctrine()->getManager();
+            $sql = "SELECT COUNT(id)
+                    FROM location_health_inspection
+                    WHERE location_health_inspection.ubn = '".$content->get("ubn")."'
+                    AND location_health_inspection.inspection = '".$content->get("inspection")."'";
+            $result = $em->getConnection()->query($sql)->fetch();
+            $orderNumber = $result[0] + 1;
+            $orderYear = date("Y");
+            $orderLaboratory = "";
+            if($content->get("inspection") == "SCRAPIE") {
+                $orderLaboratory = "2";
+            }
+
+            if($content->get("inspection") == "MAEDI VISNA") {
+                $orderLaboratory = "1";
+            }
+
+            $count = 1000 + $orderNumber;
+            if($count > 99999) {
+                $count = $orderNumber;
+            }
+
+            $orderCount = strval($count);
+            if($count < 10000) {
+                $orderCount = '0' . strval($count);
+            }
+
+            if($count < 1000) {
+                $orderCount = '00' . strval($count);
+            }
+
+            if($count < 100) {
+                $orderCount = '000' . strval($count);
+            }
+
+            if($count < 10) {
+                $orderCount = '0000' . strval($count);
+            }
+
+            $order = $orderYear . $orderLaboratory . $orderCount;
+
             $inspection = new LocationHealthInspection();
             $inspection->setLocation($location);
             $inspection->setInspectionSubject($content->get('inspection'));
             $inspection->setRequestDate(new \DateTime($content->get('request_date')));
             $inspection->setStatus('ANNOUNCED');
             $inspection->setNextAction('SEND FORMS');
+            $inspection->setOrderNumber($order);
 
             $direction = new LocationHealthInspectionDirection();
             $direction->setDirectionDate(new \DateTime());
@@ -283,6 +325,7 @@ class LocationHealthInspectionAPIController extends APIController
         // Validation if user is an admin
         $admin = $this->getAuthenticatedEmployee($request);
         $adminValidator = new AdminValidator($admin);
+        $dateTimeNow = new \DateTime();
 
         if (!$adminValidator->getIsAccessGranted()) {
             return $adminValidator->createJsonErrorResponse();
@@ -294,21 +337,32 @@ class LocationHealthInspectionAPIController extends APIController
 
         $em = $this->getDoctrine()->getManager();
         $sql = "SELECT
-                    animal.uln_country_code, animal.uln_number
+                    animal.uln_country_code, animal.uln_number, location.ubn, person.first_name, person.last_name
                   FROM animal
                     INNER JOIN location ON animal.location_id = location.id
+                    INNER JOIN company ON location.company_id = company.id
+                    INNER JOIN person ON company.owner_id = person.id
                   WHERE
                     location.ubn = '".$content['ubn']."' AND location.is_active = TRUE AND animal.is_alive = TRUE
                   ORDER BY animal.animal_order_number DESC";
         $results = $em->getConnection()->query($sql)->fetchAll();
 
-        $barcodes = array();
+        $owner = [];
+        if(sizeof($results) > 0) {
+            $owner['ubn'] = $results[0]['ubn'];
+            $owner['first_name'] = $results[0]['first_name'];
+            $owner['last_name'] = $results[0]['last_name'];
+        }
+
+        $barcodes = [];
         foreach ($results as $result) {
             $uln_country_code = $result['uln_country_code'];
             $uln_number = $result['uln_number'];
 
             $barcode = new Barcode();
-            $barcodeObj = $barcode->getBarcodeObj('C128', $uln_country_code. ' ' .$uln_number, 0.99, 40);
+            $barcodeObj = $barcode->getBarcodeObj('C128', $uln_country_code. ' ' .$uln_number, -1, 54);
+//            $barcodeObj->setSize(162, 54);
+//            dump($barcodeObj->getHtmlDiv()); die;
 
             $barcodes[] = [
                 "barcode" => $barcodeObj->getHtmlDiv(),
@@ -318,7 +372,18 @@ class LocationHealthInspectionAPIController extends APIController
             ];
         }
 
-        $html = $this->renderView($twigFile, ['barcodes' => $barcodes]);
+        $results["order_number"] = "";
+        if($content['inspection_id']) {
+            $sql = "SELECT location_health_inspection.order_number
+                    FROM location_health_inspection
+                    WHERE location_health_inspection.inspection_id = '".$content['inspection_id']."'";
+            $results = $em->getConnection()->query($sql)->fetch();
+        }
+        $html = $this->renderView($twigFile, [
+            'barcodes' => $barcodes,
+            'owner' => $owner,
+            'orderNumber' => $results["order_number"],
+            'now' => $dateTimeNow->format('d-m-Y')]);
 
         $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,
             array(
@@ -328,14 +393,13 @@ class LocationHealthInspectionAPIController extends APIController
                 'page-height' => 25,
                 'page-width' => 100,
                 'margin-top'    => 2,
-                'margin-bottom' => 0,
+                'margin-bottom' => 2,
                 'margin-left'   => 0,
-                'margin-right'  => 0
+                'margin-right'  => 2,
+                'viewport-size' => '640x480'
             ));
 
         $s3Service = $this->getStorageService();
-
-        $dateTimeNow = new \DateTime();
         $datePrint = $dateTimeNow->format('Y-m-d_').$dateTimeNow->format('H').'h'.$dateTimeNow->format('i').'m'.$dateTimeNow->format('s').'s';
 
         $filename = 'barcode-'.$datePrint.'.pdf';
@@ -416,9 +480,9 @@ class LocationHealthInspectionAPIController extends APIController
         $months[6] = 'juli';
         $months[7] = 'augustus';
         $months[8] = 'september';
-        $months[8] = 'oktober';
-        $months[9] = 'november';
-        $months[10] = 'december';
+        $months[9] = 'oktober';
+        $months[10] = 'november';
+        $months[11] = 'december';
 
         $now = $now->format('d') . ' ' . $months[($now->format('m') - 1)] . ' ' . $now->format('Y');
         $html = $this->renderView($twigFile, ['letters' => $letters, 'now' => $now]);

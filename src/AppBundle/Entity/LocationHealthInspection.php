@@ -37,6 +37,14 @@ class LocationHealthInspection
     private $inspectionId;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $orderNumber;
+
+    /**
      * @var Location
      *
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="inspections")
@@ -323,5 +331,21 @@ class LocationHealthInspection
     public function setResults($results)
     {
         $this->results = $results;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOrderNumber()
+    {
+        return $this->orderNumber;
+    }
+
+    /**
+     * @param string $orderNumber
+     */
+    public function setOrderNumber($orderNumber)
+    {
+        $this->orderNumber = $orderNumber;
     }
 }

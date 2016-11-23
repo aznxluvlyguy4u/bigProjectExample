@@ -2,39 +2,134 @@
 
 {% block body %}
 
-    {% for i in 0..(barcodes|length - 1) %}
-        {% if i % 2 == 0 %}
-        <table style="font-family: Sans-Serif; height: 20mm; width: 95mm">
+    <table>
+        <tr>
+            <td class="left-column centered">
+                <div class="container">
+                    {{ owner['first_name'] }} {{ owner['last_name'] }} <br>
+                    UBN {{ owner['ubn'] }} <br>
+                    Aangemaakt op {{ now }}
+                </div>
+            </td>
+            <td class="right-column centered">
+                <div class="container">
+                    {{ owner['first_name'] }} {{ owner['last_name'] }} <br>
+                    UBN {{ owner['ubn'] }} <br>
+                    Aangemaakt op {{ now }}
+                </div>
+            </td>
+        </tr>
+    </table>
+    {%- if orderNumber -%}
+        <table>
             <tr>
-                <td style="font-size: 3mm; padding-left: 2mm; font-weight: 900">
-                    <span style="padding: 5mm 0;">
-                        {{ barcodes[i]['uln_country_code'] }} {{ barcodes[i]['uln_number_1'] }} <span style="font-size: 3.5mm;">{{ barcodes[i]['uln_number_2'] }}</span>
-                        {{ barcodes[i]['barcode'] | raw }}
-                    </span>
+                <td class="left-column centered">
+                    <div class="container">
+                        Opdrachtnummer <br>
+                        {{ orderNumber }}
+                    </div>
                 </td>
-                {% if barcodes[i+1] is defined %}
-                <td style="font-size: 3mm; padding-left: 4.5mm; font-weight: 900">
-                    <span style="padding: 5mm 0;">
-                        {{ barcodes[i+1]['uln_country_code'] }} {{ barcodes[i+1]['uln_number_1'] }} <span style="font-size: 3.5mm;">{{ barcodes[i+1]['uln_number_2'] }}</span>
+                <td class="right-column centered">
+                    <div class="container">
+                        Opdrachtnummer <br>
+                        {{ orderNumber }}
+                    </div>
+                </td>
+            </tr>
+        </table>
+    {%- endif -%}
+    {%- for i in 0..(barcodes|length - 1) -%}
+        {%- if i % 2 == 0 -%}
+        <table>
+            <tr>
+                <td class="left-column">
+                    <div class="barcode">
+                        {{ barcodes[i]['barcode'] | raw }}
+                    </div>
+                    <div class="text-description">
+                        {{ barcodes[i]['uln_country_code'] }} {{ barcodes[i]['uln_number_1'] }}
+                        <span>{{ barcodes[i]['uln_number_2'] }}</span>
+                    </div>
+                </td>
+                {%- if barcodes[i+1] is defined -%}
+                <td class="right-column">
+                    <div class="barcode">
                         {{ barcodes[i+1]['barcode'] | raw }}
-                    </span>
+                    </div>
+                    <div class="text-description">
+                        {{ barcodes[i+1]['uln_country_code'] }} {{ barcodes[i+1]['uln_number_1'] }}
+                        <span>{{ barcodes[i+1]['uln_number_2'] }}</span>
+                    </div>
                 </td>
-                {% endif %}
+                {%- endif -%}
             </tr>
         </table>
-        {% endif %}
+        {%- endif -%}
 
-        {% if i % 2 == 1 and loop.last %}
-        <table style="font-family: Sans-Serif; height: 20mm; width: 95mm">
+        {%- if i % 2 == 1 and loop.last -%}
+        <table>
             <tr>
-                <td style="font-size: 3mm; padding-left: 2mm; font-weight: 900">
-                    <span style="padding: 5mm 0;">
-                        {{ barcodes[i]['uln_country_code'] }} {{ barcodes[i]['uln_number_1'] }} <span style="font-size: 3.5mm;">{{ barcodes[i]['uln_number_2'] }}</span>
+                <td class="left-column">
+                    <div class="barcode">
                         {{ barcodes[i]['barcode'] | raw }}
-                     </span>
+                    </div>
+                    <div class="text-description">
+                        {{ barcodes[i]['uln_country_code'] }} {{ barcodes[i]['uln_number_1'] }}
+                        <span>{{ barcodes[i]['uln_number_2'] }}</span>
+                    </div>
                 </td>
             </tr>
         </table>
-        {% endif %}
+        {%- endif -%}
     {% endfor %}
+
+
+    <style>
+        table {
+            font-family: Sans-Serif;
+            height: 20.65mm;
+            width: 95mm;
+        }
+
+        .left-column, .right-column {
+            position: relative;
+            vertical-align: top;
+            width: 38mm;
+            font-size: 3mm;
+            padding: 0 1mm;
+        }
+
+        .left-column {
+            border-right: solid 3mm transparent;
+        }
+
+        .right-column {
+            border-left: solid 3mm transparent;
+        }
+
+        .container {
+        }
+
+        .centered {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .text-description {
+            position: absolute;
+            bottom: 1mm;
+            font-weight: 900;
+        }
+
+        .text-description span {
+            font-size: 3.5mm;
+        }
+
+        .barcode {
+            position: absolute;
+            top: 0;
+            left: 1mm;
+            color: #0f0f0f;
+        }
+    </style>
 {% endblock %}
