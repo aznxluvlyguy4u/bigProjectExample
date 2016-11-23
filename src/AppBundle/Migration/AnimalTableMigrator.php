@@ -613,9 +613,8 @@ class AnimalTableMigrator extends MigratorBase
 			}
 			
 			$this->cmdUtil->advanceProgressBar(1,'ulns updated: '.$ulnsUpdated.' | animalOrderNumbers updated: '.$animalOrderNumbersUpdated);
-
-			$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 		}
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 		return $usedUlnNumbers;
 	}
 	
@@ -678,8 +677,8 @@ class AnimalTableMigrator extends MigratorBase
 				}
 				$this->cmdUtil->advanceProgressBar(1,'ubnsOfBirth updated: '.$ubnsOfBirthUpdated.' | ulns updated: '.$ulnsUpdated.' | animalOrderNumbers updated: '.$animalOrderNumbersUpdated);
 			}
-			$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 		}
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 		return $usedUlnNumbers;
 	}
 	
