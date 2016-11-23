@@ -38,6 +38,30 @@ class StringUtil
 
 
     /**
+     * @param string $stnOrigin
+     * @param boolean $padWithZeroes
+     * @return string
+     */
+    public static function getBreederNumberFromStnOrigin($stnOrigin, $padWithZeroes = false)
+    {
+        $prefix = 'NL ';
+        $maxLength = 5;
+        
+        $containsDash = is_int(strpos($stnOrigin, '-'));
+        $isDutch = substr($stnOrigin, 0, 3) == $prefix;
+        if(!$containsDash || !$isDutch) { return null; }
+
+        $breederNumber = explode("-",ltrim($stnOrigin, $prefix))[0];
+
+        if($padWithZeroes && strlen($breederNumber) < $maxLength){
+            $breederNumber = str_pad($breederNumber, $maxLength, '0', STR_PAD_LEFT);
+        }
+
+        return $breederNumber;
+    }
+
+
+    /**
      * @param string $string
      * @return string
      */
