@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\Validator;
 
 /**
  * Class AnimalMigrationTableRepository
@@ -30,7 +31,9 @@ class AnimalMigrationTableRepository extends BaseRepository {
             }
             $ubnOfBirth = $result['ubn_of_birth'];
 
-            $searchArray[$breederNumber] = $ubnOfBirth;
+            if(Validator::hasValidUbnFormat($ubnOfBirth)) {
+                $searchArray[$breederNumber] = $ubnOfBirth;
+            }
         }
         return $searchArray;
     }

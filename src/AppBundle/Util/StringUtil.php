@@ -313,6 +313,18 @@ class StringUtil
 
 
     /**
+     * Make sure only valid pedigreeNumbers are inserted!
+     * 
+     * @param $pedigreeNumber
+     * @return mixed
+     */
+    public static function getAnimalOrderNumberFromPedigreeNumber($pedigreeNumber)
+    {
+        return explode('-', $pedigreeNumber)[1];
+    }
+
+
+    /**
      * Remove last 5 characters and leading zeroes
      *
      * @param string $ulnNumber

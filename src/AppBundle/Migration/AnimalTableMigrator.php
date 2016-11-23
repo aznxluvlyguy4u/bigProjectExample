@@ -86,6 +86,7 @@ class AnimalTableMigrator extends MigratorBase
 		$this->fixGenders();
 		$this->getUbnOfBirthFromUln();
 		$this->fixMissingAnimalOrderNumbers();
+		$this->fixMissingUlns();
 	}
 
 
@@ -544,10 +545,58 @@ class AnimalTableMigrator extends MigratorBase
 
 	private function fixMissingUlns()
 	{
+		$countryCode = 'NL';
+
 		//SearchArrays
-		
 		$ubnsOfBirthByBreederNumber = $this->animalMigrationTableRepository->getUbnOfBirthByBreederNumberSearchArray();
-		
+
+		//Animals with valid PedigreeNumber but missing uln and ubnOfBirth
+		$sql = "SELECT id, pedigree_number, animal_order_number FROM animal_migration_table t
+				WHERE SUBSTR(stn_origin,0,3) = '".$countryCode."' AND t.ubn_of_birth ISNULL
+					  AND t.uln_country_code ISNULL AND date_of_birth < '2010-01-01'
+					  AND t.pedigree_country_code NOTNULL AND is_uln_updated = FALSE";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$count = count($results);
+		if($count == 0) { $this->output->writeln('All AnimalOrderNumbers have already been processed'); return; }
+		$this->cmdUtil->setStartTimeAndPrintIt($count+1, 1);
+
+		$ulnsUpdated = 0;
+		$animalOrderNumbersUpdated = 0;
+		$ubnsOfBirthUpdated = 0;
+		foreach ($results as $result) {
+			$id = $result['id'];
+			$pedigreeNumber = $result['pedigree_number'];
+			$animalOrderNumberInDb = $result['animal_order_number'];
+			$breederNumber = StringUtil::getBreederNumberFromPedigreeNumber($pedigreeNumber);
+
+			if(array_key_exists($breederNumber, $ubnsOfBirthByBreederNumber)) {
+				$ubnOfBirth = $ubnsOfBirthByBreederNumber[$breederNumber];
+				$animalOrderNumber = StringUtil::getAnimalOrderNumberFromPedigreeNumber($pedigreeNumber);
+
+				$sql = "UPDATE animal_migration_table SET is_ubn_updated = TRUE, ubn_of_birth = '".$ubnOfBirth."' WHERE id = ".$id;
+				$this->conn->exec($sql);$this->conn->exec($sql);
+				$ubnsOfBirthUpdated++;
+
+				if(ctype_digit($animalOrderNumber)) {
+					$ulnNumber = $ubnOfBirth.$animalOrderNumber;
+
+					$sql = "UPDATE animal_migration_table SET is_uln_updated = TRUE, uln_country_code = '".$countryCode."', uln_number = '".$ulnNumber."' WHERE id = ".$id;
+					$this->conn->exec($sql);$this->conn->exec($sql);
+					$ulnsUpdated++;
+
+					if($animalOrderNumberInDb == null || $animalOrderNumberInDb == '') {
+						$sql = "UPDATE animal_migration_table SET is_animal_order_number_updated = TRUE
+ 								, animal_order_number = '".$animalOrderNumber."' WHERE id = ".$id;
+						$this->conn->exec($sql);$this->conn->exec($sql);
+						$animalOrderNumbersUpdated++;
+					}
+
+				}
+				$this->cmdUtil->advanceProgressBar(1,'ubnsOfBirth updated: '.$ubnsOfBirthUpdated.' | ulns updated: '.$ulnsUpdated.' | animalOrderNumbers updated: '.$animalOrderNumbersUpdated);
+			}
+			$this->cmdUtil->setEndTimeAndPrintFinalOverview();
+		}
 	}
 
 
