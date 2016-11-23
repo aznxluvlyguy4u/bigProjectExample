@@ -51,6 +51,12 @@ class FTPFailedImport
     private $serverName;
 
     /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $illness;
+
+    /**
      * FTPFailedImport constructor.
      */
     public function __construct()
@@ -136,5 +142,21 @@ class FTPFailedImport
     public function setServerName($serverName)
     {
         $this->serverName = $serverName;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getIllness()
+    {
+        return $this->illness;
+    }
+
+    /**
+     * @param mixed $illness
+     */
+    public function setIllness($illness)
+    {
+        $this->illness = $illness;
     }
 }

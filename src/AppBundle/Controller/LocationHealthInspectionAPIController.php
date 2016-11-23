@@ -50,7 +50,7 @@ class LocationHealthInspectionAPIController extends APIController
             return $adminValidator->createJsonErrorResponse();
         }
 
-        // Get all NEW HealthInspections
+        // Get all NEW SCRAPIE HealthInspections
         $em = $this->getDoctrine()->getManager();
         $sql = "SELECT 
                   location.ubn as ubn, 
@@ -71,7 +71,30 @@ class LocationHealthInspectionAPIController extends APIController
                   location_health_inspection.location_id IS NULL
                 GROUP BY location.ubn, person.last_name, person.first_name";
         $results = $em->getConnection()->query($sql)->fetchAll();
-        $newInspections = HealthInspectionOutput::createNewScrapieInspections($results);
+        $scrapieInspections = HealthInspectionOutput::filterScrapieInspections($results);
+
+        // Get all NEW MAEDI VISNA HealthInspections
+        $em = $this->getDoctrine()->getManager();
+        $sql = "SELECT
+                  location.ubn as ubn,
+                  person.last_name as last_name,
+                  person.first_name as first_name,
+                  MAX(maedi_visna.check_date) as maedi_visna_check_date
+                FROM location
+                  INNER JOIN location_health ON location.location_health_id = location_health.id
+                  INNER JOIN maedi_visna ON location_health.id = maedi_visna.location_health_id
+                  LEFT JOIN location_health_inspection ON location.id = location_health_inspection.location_id
+                  INNER JOIN company ON location.company_id = company.id
+                  INNER JOIN client ON company.owner_id = client.id
+                  INNER JOIN person ON client.id = person.id
+                WHERE
+                  location_health.current_scrapie_status = 'UNDER OBSERVATION' AND
+                  company.is_active = TRUE AND
+                  location.is_active = TRUE AND
+                  location_health_inspection.location_id IS NULL
+                GROUP BY location.ubn, person.last_name, person.first_name";
+        $results = $em->getConnection()->query($sql)->fetchAll();
+        $maediVisnaInspections = HealthInspectionOutput::filterMaediVisnaInspections($results);
 
         // Get all OTHER HealthInspections
         $sql = "SELECT
@@ -109,7 +132,8 @@ class LocationHealthInspectionAPIController extends APIController
             $otherInspections[] = HealthInspectionOutput::createInspections($result, $directions);
         }
 
-        $inspections = array_merge($newInspections, $otherInspections);
+        $inspections = array_merge($maediVisnaInspections, $scrapieInspections);
+        $inspections = array_merge($inspections, $otherInspections);
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $inspections), 200);
     }
@@ -654,7 +678,7 @@ class LocationHealthInspectionAPIController extends APIController
             return $adminValidator->createJsonErrorResponse();
         }
 
-        $repository = $this->getDoctrine()->getRepository(Location::class);
+        $repository = $this->getDoctrine()->getRepository(FTPFailedImport::class);
         $failedImports = $repository->findAll();
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $failedImports), 200);
@@ -676,13 +700,16 @@ class LocationHealthInspectionAPIController extends APIController
         }
 
         $contentResults = $this->getContentAsArray($request);
+        $fileExtension = $contentResults->get('extension');
+        $encodedContent = $contentResults->get('content');
+        $fileName = $contentResults->get('filename');
         $illness = $contentResults->get('illness');
-        $file = $contentResults->get('file');
 
-        if ($file != null) {
-            if ($file['extension'] == 'xls') {
-                $fileLocation = $this->getParameter('kernel.cache_dir').'/'.$file['filename'];
-                file_put_contents($fileLocation, $file);
+        if ($fileExtension == 'xls') {
+            if ($encodedContent) {
+                $content = base64_decode($encodedContent);
+                $fileLocation = $this->getParameter('kernel.cache_dir').'/'.$fileName;
+                file_put_contents($fileLocation, $content);
 
                 /** @var PHPExcel $phpExcelObject */
                 $phpExcelObject = $this->get('phpexcel')->createPHPExcelObject($fileLocation);
