@@ -9,6 +9,8 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\AnimalMigrationTable;
 use AppBundle\Entity\AnimalMigrationTableRepository;
+use AppBundle\Entity\BreederNumber;
+use AppBundle\Entity\BreederNumberRepository;
 use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagReplaceRepository;
 use AppBundle\Entity\PedigreeRegister;
@@ -64,6 +66,9 @@ class AnimalTableMigrator extends MigratorBase
 	/** @var AnimalMigrationTableRepository */
 	private $animalMigrationTableRepository;
 
+	/** @var BreederNumberRepository */
+	private $breederNumberRepository;
+
 	/**
 	 * MyoMaxMigrator constructor.
 	 * @param CommandUtil $cmdUtil
@@ -76,6 +81,7 @@ class AnimalTableMigrator extends MigratorBase
 	{
 		parent::__construct($cmdUtil, $em, $outputInterface, $data, $rootDir);
 		$this->animalMigrationTableRepository = $this->em->getRepository(AnimalMigrationTable::class);
+		$this->breederNumberRepository = $this->em->getRepository(BreederNumber::class);
 	}
 
 
@@ -91,7 +97,7 @@ class AnimalTableMigrator extends MigratorBase
 
 
 	public function importAnimalTableCsvFileIntoDatabase()
-	{		
+	{
 
 		//TODO Regender animals to Ewe/Ram before setting parents-children
 
@@ -546,7 +552,7 @@ class AnimalTableMigrator extends MigratorBase
 	private function fixMissingUlns()
 	{
 		//SearchArrays
-		$ubnsOfBirthByBreederNumber = $this->animalMigrationTableRepository->getUbnOfBirthByBreederNumberSearchArray();
+		$ubnsOfBirthByBreederNumber = $this->breederNumberRepository->getUbnOfBirthByBreederNumberSearchArray();
 		$usedUlnNumbers = $this->animalMigrationTableRepository->getExistingUlnsInAnimalAndAnimalMigrationTables();
 
 		$usedUlnNumbers = $this->fixMissingUlnsByPedigreeNumberAndUbnOfBirth($usedUlnNumbers);

@@ -11,6 +11,7 @@ class StringUtil
 {
     const ULN_LENGTH = 12;
     const ANIMAL_ORDER_NUMBER_LENGTH = 5;
+    const BREEDER_NUMBER_LENGTH = 5;
 
     /**
      * Just remove the last 5 numbers of the uln
@@ -33,19 +34,17 @@ class StringUtil
      */
     public static function getBreederNumberFromPedigreeNumber($pedigreeNumber)
     {
-        return substr($pedigreeNumber, 0, 5);
+        return self::padBreederNumberWithZeroes(substr($pedigreeNumber, 0, 5));
     }
 
 
     /**
      * @param string $stnOrigin
-     * @param boolean $padWithZeroes
      * @return string
      */
-    public static function getBreederNumberFromStnOrigin($stnOrigin, $padWithZeroes = false)
+    public static function getBreederNumberFromStnOrigin($stnOrigin)
     {
         $prefix = 'NL ';
-        $maxLength = 5;
         
         $containsDash = is_int(strpos($stnOrigin, '-'));
         $isDutch = substr($stnOrigin, 0, 3) == $prefix;
@@ -53,11 +52,7 @@ class StringUtil
 
         $breederNumber = explode("-",ltrim($stnOrigin, $prefix))[0];
 
-        if($padWithZeroes && strlen($breederNumber) < $maxLength){
-            $breederNumber = str_pad($breederNumber, $maxLength, '0', STR_PAD_LEFT);
-        }
-
-        return $breederNumber;
+        return self::padBreederNumberWithZeroes($breederNumber);
     }
 
 
@@ -311,6 +306,16 @@ class StringUtil
         return str_pad($animalOrderNumber, self::ANIMAL_ORDER_NUMBER_LENGTH, 0, STR_PAD_LEFT);
     }
 
+    
+    /**
+     * @param string $breederNumber
+     * @return string
+     */
+    public static function padBreederNumberWithZeroes($breederNumber)
+    {
+        return str_pad($breederNumber, self::BREEDER_NUMBER_LENGTH, 0, STR_PAD_LEFT);
+    }
+    
 
     /**
      * Make sure only valid pedigreeNumbers are inserted!

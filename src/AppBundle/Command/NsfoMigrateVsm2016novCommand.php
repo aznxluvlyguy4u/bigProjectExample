@@ -7,6 +7,7 @@ use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Migration\AnimalTableMigrator;
 use AppBundle\Migration\BlindnessFactorsMigrator;
+use AppBundle\Migration\BreederNumberMigrator;
 use AppBundle\Migration\MigratorBase;
 use AppBundle\Migration\MyoMaxMigrator;
 use AppBundle\Migration\PerformanceMeasurementsMigrator;
@@ -103,14 +104,15 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '2: Update pedigreeRegisters', "\n",
             '3: Import AnimalTable csv file into database. Update PedigreeRegisters First!', "\n",
             '4: Set AnimalIds on current TagReplaces, THEN Migrate TagReplaces', "\n",
-            '5: Fix imported animalTable data', "\n",
-            '6: BLANK', "\n",
-            '7: Migrate AnimalTable data', "\n",
-            '8: Migrate Races', "\n",
-            '9: Migrate MyoMax', "\n",
-            '10: Migrate BlindnessFactor and update values in Animal', "\n",
-            '11: Migrate Predicates and update values in Animal', "\n",
-            '12: Migrate Performance Measurements', "\n",
+            '5: Import breederNumbers', "\n",
+            '6: Fix imported animalTable data', "\n",
+            '7: BLANK', "\n",
+            '8: Migrate AnimalTable data', "\n",
+            '9: Migrate Races', "\n",
+            '10: Migrate MyoMax', "\n",
+            '11: Migrate BlindnessFactor and update values in Animal', "\n",
+            '12: Migrate Predicates and update values in Animal', "\n",
+            '13: Migrate Performance Measurements', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -136,41 +138,46 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                 break;
 
             case 5:
-                $result = $this->fixImportedAnimalTableData() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->migrateBreedNumbers() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
             case 6:
+                $result = $this->fixImportedAnimalTableData() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 7:
 //                $result = $this->fixImportedAnimalTableData() ? 'DONE' : 'NO DATA!' ;
 //                $output->writeln($result);
                 break;
 
-            case 7:
+            case 8:
                 $result = $this->migrateAnimalTable() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
-            case 8:
+            case 9:
                 $result = $this->migrateRaces() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
-            case 9:
+            case 10:
                 $result = $this->migrateMyoMax() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
-            case 10:
+            case 11:
                 $result = $this->migrateBlindnessFactors() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
-            case 11:
+            case 12:
                 $result = $this->migratePredicates() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
-            case 12:
+            case 13:
                 $result = $this->migratePerformanceMeasurements() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
@@ -274,6 +281,20 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $developer = $this->em->getRepository(Employee::class)->find(self::DEVELOPER_PRIMARY_KEY);
         $tagReplaceMigrator = new TagReplaceMigrator($this->cmdUtil, $this->em, $this->output, $data, $developer);
         $tagReplaceMigrator->migrate();
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function migrateBreedNumbers()
+    {
+        $data = $this->parseCSV($this->filenames[self::SUBSCRIPTIONS]);
+        if(count($data) == 0) { return false; }
+        
+        $animalTableMigrator = new BreederNumberMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        $animalTableMigrator->migrate();
         return true;
     }
 
