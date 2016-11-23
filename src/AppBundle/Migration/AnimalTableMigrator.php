@@ -587,6 +587,8 @@ class AnimalTableMigrator extends MigratorBase
 
 		$ulnsUpdated = 0;
 		$animalOrderNumbersUpdated = 0;
+		$occupiedUlns = 0;
+		$incorrectOrderNumbers = 0;
 		foreach ($results as $result) {
 			$id = $result['id'];
 			$pedigreeNumber = $result['pedigree_number'];
@@ -612,10 +614,10 @@ class AnimalTableMigrator extends MigratorBase
 					$this->conn->exec($sql);
 					$ulnsUpdated++;
 					$usedUlnNumbers[$ulnNumber] = $ulnNumber;
-				}
-			}
+				} else { $occupiedUlns++; }
+			} else { $incorrectOrderNumbers++; }
 			
-			$this->cmdUtil->advanceProgressBar(1,'ulns updated: '.$ulnsUpdated.' | animalOrderNumbers updated: '.$animalOrderNumbersUpdated);
+			$this->cmdUtil->advanceProgressBar(1,'updated ulns|animalOrderNumbers: '.$ulnsUpdated.'|'.$animalOrderNumbersUpdated.' | ulns occupied|incorrect aOrderNrs: '.$occupiedUlns.'|'.$incorrectOrderNumbers);
 		}
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 		return $usedUlnNumbers;
@@ -646,6 +648,9 @@ class AnimalTableMigrator extends MigratorBase
 		$ulnsUpdated = 0;
 		$animalOrderNumbersUpdated = 0;
 		$ubnsOfBirthUpdated = 0;
+		$occupiedUlns = 0;
+		$missingBreederNumbers = 0;
+		$incorrectOrderNumbers = 0;
 		foreach ($results as $result) {
 			$id = $result['id'];
 			$pedigreeNumber = $result['pedigree_number'];
@@ -668,6 +673,8 @@ class AnimalTableMigrator extends MigratorBase
 						$this->conn->exec($sql);
 						$ulnsUpdated++;
 						$usedUlnNumbers[$ulnNumber] = $ulnNumber;
+					} else {
+						$occupiedUlns++;
 					}
 
 					if($animalOrderNumberInDb == null || $animalOrderNumberInDb == '') {
@@ -676,9 +683,9 @@ class AnimalTableMigrator extends MigratorBase
 						$this->conn->exec($sql);
 						$animalOrderNumbersUpdated++;
 					}
-				}
-			}
-			$this->cmdUtil->advanceProgressBar(1,'ubnsOfBirth updated: '.$ubnsOfBirthUpdated.' | ulns updated: '.$ulnsUpdated.' | animalOrderNumbers updated: '.$animalOrderNumbersUpdated);
+				} else { $incorrectOrderNumbers++; }
+			} else { $missingBreederNumbers++; }
+			$this->cmdUtil->advanceProgressBar(1,'updated ubnsOfBirth|ulns|animalOrderNumbers: '.$ubnsOfBirthUpdated.'|'.$ulnsUpdated.'|'.$animalOrderNumbersUpdated.' | ulns occupied|incorrect aOrderNrs|missingBreederNrs: '.$occupiedUlns.'|'.$incorrectOrderNumbers.'|'.$missingBreederNumbers);
 		}
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 		return $usedUlnNumbers;
