@@ -315,12 +315,17 @@ class StringUtil
     /**
      * Make sure only valid pedigreeNumbers are inserted!
      * 
-     * @param $pedigreeNumber
-     * @return mixed
+     * @param string $pedigreeNumber
+     * @param boolean $mayOnlyContainDigits
+     * @return string
      */
-    public static function getAnimalOrderNumberFromPedigreeNumber($pedigreeNumber)
+    public static function getAnimalOrderNumberFromPedigreeNumber($pedigreeNumber, $mayOnlyContainDigits = true)
     {
-        return explode('-', $pedigreeNumber)[1];
+        $animalOrderNumber = self::padAnimalOrderNumberWithZeroes(explode('-', $pedigreeNumber)[1]);
+        if($mayOnlyContainDigits) {
+            return ctype_digit($animalOrderNumber) ? $animalOrderNumber : null;
+        }
+        return $animalOrderNumber;
     }
 
 
