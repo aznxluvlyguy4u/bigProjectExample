@@ -676,10 +676,9 @@ class AnimalTableMigrator extends MigratorBase
 						$this->conn->exec($sql);
 						$animalOrderNumbersUpdated++;
 					}
-
 				}
-				$this->cmdUtil->advanceProgressBar(1,'ubnsOfBirth updated: '.$ubnsOfBirthUpdated.' | ulns updated: '.$ulnsUpdated.' | animalOrderNumbers updated: '.$animalOrderNumbersUpdated);
 			}
+			$this->cmdUtil->advanceProgressBar(1,'ubnsOfBirth updated: '.$ubnsOfBirthUpdated.' | ulns updated: '.$ulnsUpdated.' | animalOrderNumbers updated: '.$animalOrderNumbersUpdated);
 		}
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 		return $usedUlnNumbers;
