@@ -35,5 +35,22 @@ class AnimalMigrationTableRepository extends BaseRepository {
 
         return $searchArray;
     }
+    
+    
+    public function fixAnimalOrderNumberToMatchUlnNumber()
+    {
+        $sql = "UPDATE animal_migration_table SET animal_order_number = SUBSTR(uln_number, 8, 5) WHERE uln_number NOTNULL AND LENGTH(uln_number) = 12 AND SUBSTR(uln_number, 8, 5) <> animal_order_number";
+        $this->getConnection()->exec($sql);
+    }
+    
+    
+    public function countAnimalOrderNumbersNotMatchingUlnNumbers()
+    {
+        $sql = "SELECT uln_number, LENGTH(uln_number), SUBSTR(uln_number, 8, 5), animal_order_number 
+                FROM animal_migration_table
+                WHERE uln_number NOTNULL AND LENGTH(uln_number) = 12 AND SUBSTR(uln_number, 8, 5) <> animal_order_number";
+        $results = $this->getConnection()->query($sql)->fetchAll();
+        return count($results);
+    }
 
 }

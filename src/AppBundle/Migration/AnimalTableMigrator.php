@@ -541,7 +541,7 @@ class AnimalTableMigrator extends MigratorBase
 			} else {
 				$sql = "UPDATE animal_migration_table SET is_animal_order_number_updated = TRUE WHERE id = ".$id;
 			}
-			$this->conn->exec($sql);$this->conn->exec($sql);
+			$this->conn->exec($sql);
 			$this->cmdUtil->advanceProgressBar(1, 'animalOrderNumbers updated: '.$updateCount);
 		}
 		$this->cmdUtil->setProgressBarMessage('animalOrderNumbers updated: '.$updateCount);
@@ -558,7 +558,7 @@ class AnimalTableMigrator extends MigratorBase
 		$usedUlnNumbers = $this->fixMissingUlnsByPedigreeNumberAndUbnOfBirth($usedUlnNumbers);
 		$usedUlnNumbers = $this->fixMissingUlnsByPedigreeNumberOnly($ubnsOfBirthByBreederNumber, $usedUlnNumbers);
 
-		//TODO ADD THE END, MAKE SURE THE AnimalOrderNumber matches the last 5 numbers of the ULN
+		$this->animalMigrationTableRepository->fixAnimalOrderNumberToMatchUlnNumber();
 	}
 
 
@@ -613,9 +613,8 @@ class AnimalTableMigrator extends MigratorBase
 			}
 			
 			$this->cmdUtil->advanceProgressBar(1,'ulns updated: '.$ulnsUpdated.' | animalOrderNumbers updated: '.$animalOrderNumbersUpdated);
-
-			$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 		}
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 		return $usedUlnNumbers;
 	}
 	
@@ -678,8 +677,8 @@ class AnimalTableMigrator extends MigratorBase
 				}
 				$this->cmdUtil->advanceProgressBar(1,'ubnsOfBirth updated: '.$ubnsOfBirthUpdated.' | ulns updated: '.$ulnsUpdated.' | animalOrderNumbers updated: '.$animalOrderNumbersUpdated);
 			}
-			$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 		}
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 		return $usedUlnNumbers;
 	}
 	
