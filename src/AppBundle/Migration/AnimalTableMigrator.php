@@ -93,6 +93,7 @@ class AnimalTableMigrator extends MigratorBase
 		$this->getUbnOfBirthFromUln();
 		$this->fixMissingAnimalOrderNumbers();
 		$this->fixMissingUlns();
+		$this->findMissingFathers();
 	}
 
 
@@ -1201,6 +1202,67 @@ class AnimalTableMigrator extends MigratorBase
 		$this->writeCorrectedCsvRecord($columnHeaders);
 	}
 
+	/**
+	 * @throws \Doctrine\DBAL\DBALException
+	 */
+	private function findMissingFathers()
+	{
+		//SearchArrays
+		$sql = "SELECT CONCAT(mother_vsm_id,'--',DATE(date_of_birth)) as key, father_vsm_id
+				FROM animal_migration_table t
+				WHERE mother_vsm_id <> 0 AND father_vsm_id <> 0
+				GROUP BY mother_vsm_id, DATE(date_of_birth), father_vsm_id";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$fatherVsmIdsByMotherVsmIdAndDateOfBirth = [];
+		foreach ($results as $result) {
+			$fatherVsmIdsByMotherVsmIdAndDateOfBirth[$result['key']] = $result['father_vsm_id'];
+		}
+
+		$animalIdByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
+
+		//Animals without father, but with mother
+		$sql = "SELECT CONCAT(mother_vsm_id,'--',DATE(date_of_birth)) as key, id
+				FROM animal_migration_table t
+				WHERE mother_vsm_id <> 0 AND father_vsm_id = 0 AND is_father_updated = FALSE";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$count = count($results);
+		if($count == 0) {
+			$this->output->writeln('All possible missing fathers have already been found and set');
+			return;
+		}
+		$this->cmdUtil->setStartTimeAndPrintIt($count, 1);
+		
+		$newFatherVsmIdsSet = 0;
+		$newFatherIdsSet = 0;
+		$fathersMissing = 0;
+		foreach ($results as $result) {
+			$searchKey = $result['key'];
+			$migrationTableId = $result['id'];
+
+			if(array_key_exists($searchKey, $fatherVsmIdsByMotherVsmIdAndDateOfBirth)) {
+				$fatherVsmId = $fatherVsmIdsByMotherVsmIdAndDateOfBirth[$searchKey];
+
+				$setFatherId = '';
+				if(array_key_exists($fatherVsmId, $animalIdByVsmId)) {
+					$fatherId = $animalIdByVsmId[$fatherVsmId];
+					$setFatherId = ", father_id = ".$fatherId;
+					$newFatherIdsSet++;
+				}
+
+				$sql = "UPDATE animal_migration_table SET is_father_updated = TRUE, father_vsm_id = ".$fatherVsmId.$setFatherId.
+					   " WHERE id = ".$migrationTableId;
+				$this->conn->exec($sql);
+				$newFatherVsmIdsSet++;
+			} else {
+				$fathersMissing++;
+			}
+			$this->cmdUtil->advanceProgressBar(1, 'NewFatherVsmIds|NewFatherIds|FathersMissing: '.$newFatherVsmIdsSet.'|'.$newFatherIdsSet.'|'.$fathersMissing);
+		}
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
+	}
+	
 
 	/**
      * Example
