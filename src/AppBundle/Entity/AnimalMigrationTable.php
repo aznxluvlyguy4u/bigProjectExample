@@ -257,6 +257,13 @@ class AnimalMigrationTable
     private $deletedStnOrigin;
 
     /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $deletedUlnOrigin;
+
+    /**
      * AnimalMigrationTable constructor.
      */
     public function __construct()
@@ -789,6 +796,22 @@ class AnimalMigrationTable
     public function setDeletedStnOrigin($deletedStnOrigin)
     {
         $this->deletedStnOrigin = $deletedStnOrigin;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDeletedUlnOrigin()
+    {
+        return $this->deletedUlnOrigin;
+    }
+
+    /**
+     * @param string $deletedUlnOrigin
+     */
+    public function setDeletedUlnOrigin($deletedUlnOrigin)
+    {
+        $this->deletedUlnOrigin = $deletedUlnOrigin;
     }
 
 
