@@ -561,6 +561,9 @@ class AnimalTableMigrator extends MigratorBase
 
 	private function fixMissingUlns()
 	{
+		$this->output->writeln('=== Delete incorrect ulns and stns ===');
+		$this->deleteIncorrectUlnsAndStns();
+
 		//SearchArrays
 		$ubnsOfBirthByBreederNumber = $this->breederNumberRepository->getUbnOfBirthByBreederNumberSearchArray();
 		$usedUlnNumbers = $this->animalMigrationTableRepository->getExistingUlnsInAnimalAndAnimalMigrationTables();
@@ -574,7 +577,50 @@ class AnimalTableMigrator extends MigratorBase
 		$this->animalMigrationTableRepository->fixAnimalOrderNumberToMatchUlnNumber();
 	}
 
+	
+	
+	private function deleteIncorrectUlnsAndStns()
+	{
+		//Delete XD animals. They are test animals.
+		$sql = "SELECT COUNT(*) FROM animal_migration_table WHERE SUBSTR(uln_origin, 1, 2) = 'XD'";
+		$count = $this->conn->query($sql)->fetch()['count'];
+		if($count == 0) {
+			$this->output->writeln('All XD testanimal have already been deleted');
+		} else {
+			$sql = "UPDATE animal_migration_table SET deleted_uln_origin = uln_origin, uln_origin = NULL
+				    WHERE SUBSTR(uln_origin, 1, 2) = 'XD'";
+			$this->conn->exec($sql);
+			$this->output->writeln($count.'');
+		}
+		
+		//Delete stns in uln_origin
+		$sql = "SELECT COUNT(*) FROM animal_migration_table
+				WHERE uln_origin = stn_origin AND pedigree_number NOTNULL";
+		$count = $this->conn->query($sql)->fetch()['count'];
+		if($count == 0) {
+			$this->output->writeln('All stns in uln_origin have been deleted');
+		} else {
+			$sql = "UPDATE animal_migration_table SET deleted_uln_origin = uln_origin, uln_origin = NULL
+				    WHERE uln_origin = stn_origin AND pedigree_number NOTNULL";
+			$this->conn->exec($sql);
+			$this->output->writeln($count.' stns in uln_origin deleted');
+		}
 
+		//Delete ulns in stn_origin
+		$sql = "SELECT COUNT(*) FROM animal_migration_table
+				WHERE uln_origin = stn_origin AND uln_number NOTNULL";
+		$count = $this->conn->query($sql)->fetch()['count'];
+		if($count == 0) {
+			$this->output->writeln('All ulns in stn_origin have been deleted');
+		} else {
+			$sql = "UPDATE animal_migration_table SET deleted_stn_origin = stn_origin, stn_origin = NULL 
+					WHERE uln_origin = stn_origin AND uln_number NOTNULL";
+			$this->conn->exec($sql);
+			$this->output->writeln($count.' ulns in stn_origin deleted');
+		}
+	}
+	
+	
 	/**
 	 * @param array $usedUlnNumbers
 	 * @return array
