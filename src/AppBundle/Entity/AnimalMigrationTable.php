@@ -247,6 +247,13 @@ class AnimalMigrationTable
     private $scrapieGenotype;
 
     /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $deletedStnOrigin;
+
+    /**
      * AnimalMigrationTable constructor.
      */
     public function __construct()
@@ -763,6 +770,22 @@ class AnimalMigrationTable
     public function setIsFatherUpdated($isFatherUpdated)
     {
         $this->isFatherUpdated = $isFatherUpdated;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDeletedStnOrigin()
+    {
+        return $this->deletedStnOrigin;
+    }
+
+    /**
+     * @param string $deletedStnOrigin
+     */
+    public function setDeletedStnOrigin($deletedStnOrigin)
+    {
+        $this->deletedStnOrigin = $deletedStnOrigin;
     }
 
 
