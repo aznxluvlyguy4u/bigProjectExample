@@ -19,18 +19,48 @@ class AnimalMigrationTableRepository extends BaseRepository {
     {
         $searchArray = [];
 
-        $sql = "SELECT uln_number FROM animal_migration_table t";
+        $sql = "SELECT DISTINCT(uln_number) FROM animal_migration_table t
+                WHERE uln_number NOTNULL";
         $results = $this->getConnection()->query($sql)->fetchAll();
         foreach ($results as $result) {
             $ulnNumber = $result['uln_number'];
             $searchArray[$ulnNumber] = $ulnNumber;
         }
 
-        $sql = "SELECT uln_number FROM animal a";
+        $sql = "SELECT DISTINCT(uln_number) FROM animal a
+                WHERE uln_number NOTNULL";
         $results = $this->getConnection()->query($sql)->fetchAll();
         foreach ($results as $result) {
             $ulnNumber = $result['uln_number'];
             $searchArray[$ulnNumber] = $ulnNumber;
+        }
+
+        return $searchArray;
+    }
+
+
+    /**
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getExistingPedigreeNumbersInAnimalAndAnimalMigrationTables()
+    {
+        $searchArray = [];
+
+        $sql = "SELECT DISTINCT(pedigree_number) FROM animal_migration_table t
+                WHERE pedigree_number NOTNULL";
+        $results = $this->getConnection()->query($sql)->fetchAll();
+        foreach ($results as $result) {
+            $pedigreeNumber = $result['pedigree_number'];
+            $searchArray[$pedigreeNumber] = $pedigreeNumber;
+        }
+
+        $sql = "SELECT DISTINCT(pedigree_number) FROM animal a
+                WHERE pedigree_number NOTNULL";
+        $results = $this->getConnection()->query($sql)->fetchAll();
+        foreach ($results as $result) {
+            $pedigreeNumber = $result['pedigree_number'];
+            $searchArray[$pedigreeNumber] = $pedigreeNumber;
         }
 
         return $searchArray;

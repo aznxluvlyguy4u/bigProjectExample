@@ -561,12 +561,15 @@ class AnimalTableMigrator extends MigratorBase
 
 	private function fixMissingUlns()
 	{
-		$this->output->writeln('=== Delete incorrect ulns and stns ===');
-		$this->deleteIncorrectUlnsAndStns();
-
 		//SearchArrays
 		$ubnsOfBirthByBreederNumber = $this->breederNumberRepository->getUbnOfBirthByBreederNumberSearchArray();
+		$breederNumberByUbnsOfBirth = array_flip($ubnsOfBirthByBreederNumber);
 		$usedUlnNumbers = $this->animalMigrationTableRepository->getExistingUlnsInAnimalAndAnimalMigrationTables();
+		$usedPedigreeNumbers = $this->animalMigrationTableRepository->getExistingPedigreeNumbersInAnimalAndAnimalMigrationTables();
+		
+		$this->output->writeln('=== Delete incorrect ulns and stns ===');
+		$usedPedigreeNumbers = $this->deleteIncorrectUlnsAndStns($usedPedigreeNumbers, $breederNumberByUbnsOfBirth);	
+		
 		$this->output->writeln('=== Fix missing ulns by pedigreeNumber and ubnOfBirth ===');
 		$usedUlnNumbers = $this->fixMissingUlnsByPedigreeNumberAndUbnOfBirth($usedUlnNumbers);
 		$this->output->writeln('=== Fix missing ulns by pedigreeNumber only ===');
@@ -577,9 +580,14 @@ class AnimalTableMigrator extends MigratorBase
 		$this->animalMigrationTableRepository->fixAnimalOrderNumberToMatchUlnNumber();
 	}
 
-	
-	
-	private function deleteIncorrectUlnsAndStns()
+
+	/**
+	 * @param array $usedPedigreeNumbers
+	 * @param array $breederNumberByUbnsOfBirth
+	 * @return array
+	 * @throws \Doctrine\DBAL\DBALException
+	 */
+	private function deleteIncorrectUlnsAndStns($usedPedigreeNumbers, $breederNumberByUbnsOfBirth)
 	{
 		//Delete XD animals. They are test animals.
 		$sql = "SELECT COUNT(*) FROM animal_migration_table WHERE SUBSTR(uln_origin, 1, 2) = 'XD'";
@@ -606,18 +614,84 @@ class AnimalTableMigrator extends MigratorBase
 			$this->output->writeln($count.' stns in uln_origin deleted');
 		}
 
-		//Delete ulns in stn_origin
+		//Delete ulns in stn_origin. The logic is based on Reinard's instructions in point 8
 		$sql = "SELECT COUNT(*) FROM animal_migration_table
 				WHERE uln_origin = stn_origin AND uln_number NOTNULL";
 		$count = $this->conn->query($sql)->fetch()['count'];
 		if($count == 0) {
-			$this->output->writeln('All ulns in stn_origin have been deleted');
+			$this->output->writeln('All ulns in stn_origin have been deleted/updated');
 		} else {
+			$sql = "SELECT * FROM animal_migration_table 
+					WHERE uln_origin = stn_origin AND uln_number NOTNULL
+				  	AND ((pedigree_register_id ISNULL OR pedigree_register_id = 15 OR pedigree_register_id = 16)
+				  	OR animal_migration_table.ubn_of_birth ISNULL)";
+			$count = $this->conn->query($sql)->fetch()['count'];
+			
 			$sql = "UPDATE animal_migration_table SET deleted_stn_origin = stn_origin, stn_origin = NULL 
-					WHERE uln_origin = stn_origin AND uln_number NOTNULL";
+					WHERE uln_origin = stn_origin AND uln_number NOTNULL
+					  AND ((pedigree_register_id ISNULL OR pedigree_register_id = 15 OR pedigree_register_id = 16) 
+					  OR animal_migration_table.ubn_of_birth ISNULL)";
 			$this->conn->exec($sql);
-			$this->output->writeln($count.' ulns in stn_origin deleted');
+			$this->output->writeln($count.'non pedigree ulns and those missing ubnOfBirth in stn_origin deleted');
+
+			/*
+			 * Note this logic may seem similar to the one in fixMissingUlnsByPedigreeNumberOnly,
+			 * but this one is regardless of dateOfBirth
+			 */
+			$sql = "SELECT id, ubn_of_birth, uln_origin, stn_origin, uln_number, uln_country_code, animal_order_number
+					FROM animal_migration_table
+					WHERE uln_origin = stn_origin AND uln_number NOTNULL
+					  AND pedigree_register_id NOTNULL AND pedigree_register_id <> 15 AND pedigree_register_id <> 16
+					  AND ubn_of_birth NOTNULL";
+			$results = $this->conn->query($sql)->fetchAll();
+			$count = count($results);
+
+			$animalOrderNumbersUpdated = 0;
+			$stnsUpdated = 0;
+			$ulnsInStnOriginDeleted = 0;
+			foreach($results as $result) {
+				$id = $result['id'];
+				$ubnOfBirth = $result['ubn_of_birth'];
+				$countryCode = $result['uln_country_code'];
+				$ulnNumber = $result['uln_number'];
+				$animalOrderNumberInDb = $result['animal_order_number'];
+
+				$animalOrderNumber = StringUtil::getLast5CharactersFromString($ulnNumber);
+
+				$deleteUlnInStn = true;
+				if($animalOrderNumber != null) {
+					if(array_key_exists($ubnOfBirth, $breederNumberByUbnsOfBirth)) {
+						$breederNumber = $breederNumberByUbnsOfBirth[$ubnOfBirth];
+						$pedigreeNumber = StringUtil::padUlnNumberWithZeroes($breederNumber.'-'.$animalOrderNumber);
+
+						if(!array_key_exists($pedigreeNumber, $usedPedigreeNumbers)) {
+							$sql = "UPDATE animal_migration_table SET is_stn_updated = TRUE, pedigree_country_code = '".$countryCode."', pedigree_number = '".$pedigreeNumber."', deleted_stn_origin = stn_origin, stn_origin = NULL WHERE id = ".$id;
+							$this->conn->exec($sql);
+							$stnsUpdated++;
+							$usedPedigreeNumbers[$pedigreeNumber] = $pedigreeNumber;
+							$deleteUlnInStn = false;
+						}
+					}
+
+					if($animalOrderNumberInDb != $animalOrderNumber) {
+						$sql = "UPDATE animal_migration_table SET is_animal_order_number_updated = TRUE
+ 								, animal_order_number = '".$animalOrderNumber."' WHERE id = ".$id;
+						$this->conn->exec($sql);
+						$animalOrderNumbersUpdated++;
+					}
+				}
+
+				if($deleteUlnInStn) {
+					$sql = "UPDATE animal_migration_table SET deleted_stn_origin = stn_origin, stn_origin = NULL WHERE id = ".$id;
+					$this->conn->exec($sql);
+					$ulnsInStnOriginDeleted++;
+				}
+			}
+
+			$this->output->writeln('StnsUpdated|DuplicateUlnInStnOriginDeleted|aOrderNrsUpdated: '.$stnsUpdated.'|'.$ulnsInStnOriginDeleted.'|'.$animalOrderNumbersUpdated);
 		}
+		
+		return $usedPedigreeNumbers;
 	}
 	
 	
@@ -734,8 +808,8 @@ class AnimalTableMigrator extends MigratorBase
 					}
 
 				}
-				$this->cmdUtil->advanceProgressBar(1,'ubnsOfBirth updated: '.$ubnsOfBirthUpdated.' | ulns updated: '.$ulnsUpdated.' | animalOrderNumbers updated: '.$animalOrderNumbersUpdated);
 			}
+			$this->cmdUtil->advanceProgressBar(1,'ubnsOfBirth updated: '.$ubnsOfBirthUpdated.' | ulns updated: '.$ulnsUpdated.' | animalOrderNumbers updated: '.$animalOrderNumbersUpdated);
 		}
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 		return $usedUlnNumbers;
