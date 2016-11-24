@@ -27,6 +27,7 @@ class BreederNumber
      * @var string
      *
      * @ORM\Column(type="string", unique=true, nullable=false)
+     * @Assert\Length(min = 5, max = 5)
      * @Assert\NotBlank
      * @JMS\Type("string")
      */
