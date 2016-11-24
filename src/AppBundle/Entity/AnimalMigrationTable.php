@@ -204,6 +204,12 @@ class AnimalMigrationTable
      */
     private $isAnimalOrderNumberUpdated;
 
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isFatherUpdated;
 
     /**
      * @var string
@@ -741,6 +747,22 @@ class AnimalMigrationTable
     public function setIsAnimalOrderNumberUpdated($isAnimalOrderNumberUpdated)
     {
         $this->isAnimalOrderNumberUpdated = $isAnimalOrderNumberUpdated;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isIsFatherUpdated()
+    {
+        return $this->isFatherUpdated;
+    }
+
+    /**
+     * @param boolean $isFatherUpdated
+     */
+    public function setIsFatherUpdated($isFatherUpdated)
+    {
+        $this->isFatherUpdated = $isFatherUpdated;
     }
 
 
