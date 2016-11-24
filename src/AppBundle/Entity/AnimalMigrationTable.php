@@ -123,6 +123,9 @@ class AnimalMigrationTable
     private $motherId;
 
     /**
+     * This the actual gender to be saved to the database.
+     * The final corrected value will be saved here and the old value is saved in the 'correctedGender' column
+     * 
      * @var string
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")

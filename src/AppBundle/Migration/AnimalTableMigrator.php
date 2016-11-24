@@ -253,6 +253,13 @@ class AnimalTableMigrator extends MigratorBase
 	public function migrate()
 	{
 		//TODO
+		/*
+		 * NOTE!!!! FIRST UPDATE THE ANIMALS IN THE DATABASE TO THE CORRECT GENDER !!!!
+		 * The correct gender is in the gender_in_file. Read that one to the database
+		 * If EWE don't import children as father
+		 * If RAM don't import children as mother
+		 */
+		
 	}
 
 
@@ -282,6 +289,9 @@ class AnimalTableMigrator extends MigratorBase
 		 * U2 = after step 1 we know NEUTER in csv are really NEUTER, so keep the genders in the database
 		 * M2F = (after check in step 2), fix
 		 * F2M = (after check in step 3), fix
+		 * For M2F and F2M, use the gender in the CSV file,
+		 * which will hopefully not cause conflicts because those animals don't have any children
+		 * as the gender opposite from the on in the CSV file.
 		 *
 		 * TODO fix animals that are simultaneously a mother and father
 		 */
@@ -372,8 +382,10 @@ class AnimalTableMigrator extends MigratorBase
 
 			} else if($isVsmMother) {
 				if(!$isAnimalIdFather) {
-					$sql = "UPDATE animal_migration_table SET corrected_gender = gender_in_file, gender_in_file = '" . GenderType::FEMALE . "' WHERE vsm_id = ".$vsmId;
-					$this->conn->exec($sql);
+					/*
+					 * DON'T UPDATE GENDER. ASSUME GENDER IS CORRECT AND DON'T IMPORT THE CHILDREN
+					 * SEE EMAIL REINARD 2016-11-24
+					 */
 				} else {
 					$errorMessage = $vsmId.'; NEUTER is a mother in csv and father in db';
 					file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
@@ -383,8 +395,10 @@ class AnimalTableMigrator extends MigratorBase
 				$areAllNeutersGenderless = false;
 			} else if($isVsmFather) {
 				if(!$isAnimalIdMother) {
-					$sql = "UPDATE animal_migration_table SET corrected_gender = gender_in_file, gender_in_file = '".GenderType::MALE."' WHERE vsm_id = ".$vsmId;
-					$this->conn->exec($sql);
+					/*
+					 * DON'T UPDATE GENDER. ASSUME GENDER IS CORRECT AND DON'T IMPORT THE CHILDREN
+					 * SEE EMAIL REINARD 2016-11-24
+					 */
 				} else {
 					$errorMessage = $vsmId.'; NEUTER is a father in csv and mother in db';
 					file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
@@ -466,11 +480,6 @@ class AnimalTableMigrator extends MigratorBase
 					$this->output->writeln($errorMessage);
 				}
 			}
-		}
-
-		foreach($animalIdsOfSimultaneousMotherAndFather as $vsmId) {
-			//TODO Printout overview or fix it
-
 		}
 
 		return $allNeuterHaveOnlyOneGender && $areAllFemalesOnlyMothers && $areAllMalesOnlyFathers;
