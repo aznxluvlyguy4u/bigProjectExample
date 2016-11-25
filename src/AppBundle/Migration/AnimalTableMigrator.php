@@ -91,9 +91,11 @@ class AnimalTableMigrator extends MigratorBase
 		$breedCodeUtil->fixBreedCodes();
 		$this->fixGenders();
 		$this->getUbnOfBirthFromUln();
+		$this->fixAnimalOrderNumbers();
 		$this->fixMissingAnimalOrderNumbers();
 		$this->fixMissingUlns();
 		$this->findMissingFathers();
+		$this->fixAnimalOrderNumbers();
 	}
 
 
@@ -518,6 +520,36 @@ class AnimalTableMigrator extends MigratorBase
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
 
+	
+	private function fixAnimalOrderNumbers()
+	{
+		//Match animalOrderNumbers with ulnNumbers
+		$sql = "SELECT COUNT(*) FROM animal_migration_table
+				WHERE uln_number NOTNULL AND SUBSTR(uln_number, 8,12) <> animal_order_number";
+		$count = $this->conn->query($sql)->fetch()['count'];
+		if($count > 0) {
+			$sql = "UPDATE animal_migration_table SET animal_order_number = SUBSTR(uln_number, 8,12)
+					WHERE uln_number NOTNULL AND SUBSTR(uln_number, 8,12) <> animal_order_number";
+			$this->conn->exec($sql);
+			$this->output->writeln($count.' non-matching AnimalOrderNumbers matched with ulnNumbers');
+		}
+		
+		//Delete animalOrderNumbers with incorrect formatting
+		$sql = "SELECT COUNT(*) FROM animal_migration_table
+				WHERE animal_order_number SIMILAR TO '%[a-bA-Z]%'
+				OR animal_order_number NOT SIMILAR TO '%[0-9]%'
+				OR length(animal_order_number) <> 5";
+		$count = $this->conn->query($sql)->fetch()['count'];
+		if($count > 0) {
+			$sql = "UPDATE animal_migration_table SET animal_order_number = NULL
+					WHERE animal_order_number SIMILAR TO '%[a-bA-Z]%'
+					OR animal_order_number NOT SIMILAR TO '%[0-9]%'
+					OR length(animal_order_number) <> 5";
+			$this->conn->exec($sql);
+			$this->output->writeln($count.' AnimalOrderNumbers with incorrect formatting deleted');
+		}
+	}
+	
 
 	/**
 	 * @throws \Doctrine\DBAL\DBALException
