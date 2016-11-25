@@ -556,7 +556,7 @@ class AnimalTableMigrator extends MigratorBase
 	 */
 	private function fixMissingAnimalOrderNumbers()
 	{
-		$sql = "SELECT pedigree_number, uln_number, id FROM animal_migration_table
+		$sql = "SELECT id, pedigree_number, uln_number, stn_origin FROM animal_migration_table
 				WHERE animal_order_number ISNULL AND stn_origin NOTNULL AND is_animal_order_number_updated = FALSE";
 		$results = $this->conn->query($sql)->fetchAll();
 
@@ -569,12 +569,16 @@ class AnimalTableMigrator extends MigratorBase
 			$id = $result['id'];
 			$pedigreeNumber = $result['pedigree_number'];
 			$ulnNumber = $result['uln_number'];
+			$stnOrigin = $result['stn_origin'];
 
 			$animalOrderNumber = null;
 			if($ulnNumber != null) {
 				$animalOrderNumber = StringUtil::getLast5CharactersFromString($ulnNumber);
 			} else if($pedigreeNumber != null) {
 				$animalOrderNumber = StringUtil::getLast5CharactersFromString($pedigreeNumber);
+				if(!ctype_digit($animalOrderNumber)) { $animalOrderNumber = null; }
+			} else if($stnOrigin != null) {
+				$animalOrderNumber = StringUtil::getLast5CharactersFromString($stnOrigin);
 				if(!ctype_digit($animalOrderNumber)) { $animalOrderNumber = null; }
 			}
 
