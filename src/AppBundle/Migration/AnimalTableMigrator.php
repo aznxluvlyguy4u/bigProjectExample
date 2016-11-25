@@ -90,6 +90,7 @@ class AnimalTableMigrator extends MigratorBase
 		//NOTE! The order of operations here is important!
 		$this->deleteTestAnimals();
 		$this->fixScientificNotationInStnAndUlnOrigin();
+		$this->fixMinorFormattingIssues();
 		$this->fixGenders();
 		$this->getUbnOfBirthFromUln();
 		$this->fixAnimalOrderNumbers();
@@ -102,7 +103,7 @@ class AnimalTableMigrator extends MigratorBase
 		$breedCodeUtil = new BreedCodeUtil($this->em, $this->cmdUtil);
 		$breedCodeUtil->fixBreedCodes();
 	}
-	
+
 
 	public function importAnimalTableCsvFileIntoDatabase()
 	{
@@ -309,6 +310,13 @@ class AnimalTableMigrator extends MigratorBase
 			$this->conn->exec($sql);
 		}
 		$this->output->writeln($ulnCount.' scientificNotations in uln_origin fixed');
+	}
+
+
+	private function fixMinorFormattingIssues()
+	{
+		$sql = "UPDATE animal_migration_table SET stn_origin = NULL WHERE stn_origin = ' '";
+		$this->conn->exec($sql);
 	}
 
 
