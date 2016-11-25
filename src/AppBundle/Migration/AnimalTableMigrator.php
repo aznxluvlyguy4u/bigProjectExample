@@ -95,7 +95,7 @@ class AnimalTableMigrator extends MigratorBase
 		$this->getUbnOfBirthFromUln();
 		$this->fixAnimalOrderNumbers();
 		$this->fixMissingAnimalOrderNumbers();
-		$this->fixMissingUlns();
+		$this->fixUlnsAndStns();
 		$this->findMissingFathers();
 		$this->fixAnimalOrderNumbers();
 
@@ -663,7 +663,7 @@ class AnimalTableMigrator extends MigratorBase
 	}
 
 
-	private function fixMissingUlns()
+	private function fixUlnsAndStns()
 	{
 		//SearchArrays
 		$ubnsOfBirthByBreederNumber = $this->breederNumberRepository->getUbnOfBirthByBreederNumberSearchArray();
@@ -693,18 +693,6 @@ class AnimalTableMigrator extends MigratorBase
 	 */
 	private function deleteIncorrectUlnsAndStns($usedPedigreeNumbers, $breederNumberByUbnsOfBirth)
 	{
-		//Delete XD animals. They are test animals.
-		$sql = "SELECT COUNT(*) FROM animal_migration_table WHERE SUBSTR(uln_origin, 1, 2) = 'XD'";
-		$count = $this->conn->query($sql)->fetch()['count'];
-		if($count == 0) {
-			$this->output->writeln('All XD testanimal have already been deleted');
-		} else {
-			$sql = "UPDATE animal_migration_table SET deleted_uln_origin = uln_origin, uln_origin = NULL
-				    WHERE SUBSTR(uln_origin, 1, 2) = 'XD'";
-			$this->conn->exec($sql);
-			$this->output->writeln($count.'');
-		}
-		
 		//Delete stns in uln_origin
 		$sql = "SELECT COUNT(*) FROM animal_migration_table
 				WHERE uln_origin = stn_origin AND pedigree_number NOTNULL";
