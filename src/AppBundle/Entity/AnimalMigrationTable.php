@@ -264,9 +264,9 @@ class AnimalMigrationTable
     private $deletedUlnOrigin;
 
     /**
-     * @var string
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
      */
     private $isCorrectRecord;
 
@@ -822,15 +822,15 @@ class AnimalMigrationTable
     }
 
     /**
-     * @return string
+     * @return boolean
      */
-    public function getIsCorrectRecord()
+    public function isIsCorrectRecord()
     {
         return $this->isCorrectRecord;
     }
 
     /**
-     * @param string $isCorrectRecord
+     * @param boolean $isCorrectRecord
      */
     public function setIsCorrectRecord($isCorrectRecord)
     {
