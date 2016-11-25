@@ -269,8 +269,7 @@ class AnimalTableMigrator extends MigratorBase
 			return;
 		}
 
-		$sql = "UPDATE animal_migration_table a SET deleted_uln_origin = uln_origin, deleted_stn_origin = stn_origin,
-				  uln_origin = NULL, stn_origin = NULL, is_uln_updated = TRUE, is_stn_updated = TRUE
+		$sql = "DELETE FROM animal_migration_table a
 				WHERE substring(a.stn_origin, 1,2) = 'XD' OR substring(a.uln_origin, 1,2) = 'XD'";
 		$this->conn->exec($sql);
 
