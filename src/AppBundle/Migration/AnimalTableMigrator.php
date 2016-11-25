@@ -87,8 +87,6 @@ class AnimalTableMigrator extends MigratorBase
 
 	public function fixValuesInAnimalMigrationTable()
 	{
-		$breedCodeUtil = new BreedCodeUtil($this->em, $this->cmdUtil);
-		$breedCodeUtil->fixBreedCodes();
 		$this->fixGenders();
 		$this->getUbnOfBirthFromUln();
 		$this->fixAnimalOrderNumbers();
@@ -96,6 +94,10 @@ class AnimalTableMigrator extends MigratorBase
 		$this->fixMissingUlns();
 		$this->findMissingFathers();
 		$this->fixAnimalOrderNumbers();
+
+		//Fix breedCodes last, because it might take a while
+		$breedCodeUtil = new BreedCodeUtil($this->em, $this->cmdUtil);
+		$breedCodeUtil->fixBreedCodes();
 	}
 
 
