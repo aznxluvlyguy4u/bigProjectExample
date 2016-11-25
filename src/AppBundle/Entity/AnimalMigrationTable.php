@@ -265,7 +265,7 @@ class AnimalMigrationTable
 
     /**
      * @var string
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=false, options={"default":false})
      * @JMS\Type("string")
      */
     private $isCorrectRecord;
