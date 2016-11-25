@@ -6,6 +6,7 @@ use AppBundle\Util\CommandUtil;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
@@ -21,6 +22,9 @@ class NsfoTestCommand extends ContainerAwareCommand
 
     /** @var ObjectManager $em */
     private $em;
+
+    /** @var Connection $conn */
+    private $conn;
 
     private $csvParsingOptions = array(
         'finder_in' => 'app/Resources/imports/',
@@ -42,6 +46,7 @@ class NsfoTestCommand extends ContainerAwareCommand
         /** @var ObjectManager $em */
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
+        $this->conn = $em->getConnection();
         $helper = $this->getHelper('question');
         $cmdUtil = new CommandUtil($input, $output, $helper);
 
@@ -49,7 +54,7 @@ class NsfoTestCommand extends ContainerAwareCommand
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
         $sql = "SELECT uln_country_code, uln_number FROM animal WHERE location_id = 262 AND gender = 'FEMALE'";
-        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $results = $this->conn->query($sql)->fetchAll();
 
         $string = '';
         foreach ($results as $result) {
