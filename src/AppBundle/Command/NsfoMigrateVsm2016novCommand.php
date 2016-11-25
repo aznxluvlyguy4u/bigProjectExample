@@ -8,6 +8,7 @@ use AppBundle\Entity\Employee;
 use AppBundle\Migration\AnimalTableMigrator;
 use AppBundle\Migration\BlindnessFactorsMigrator;
 use AppBundle\Migration\BreederNumberMigrator;
+use AppBundle\Migration\CompanySubscriptionMigrator;
 use AppBundle\Migration\MigratorBase;
 use AppBundle\Migration\MyoMaxMigrator;
 use AppBundle\Migration\PerformanceMeasurementsMigrator;
@@ -113,6 +114,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '11: Migrate BlindnessFactor and update values in Animal', "\n",
             '12: Migrate Predicates and update values in Animal', "\n",
             '13: Migrate Performance Measurements', "\n",
+            '14: Migrate Company SubscriptionDate', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -179,6 +181,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
             case 13:
                 $result = $this->migratePerformanceMeasurements() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 14:
+                $result = $this->migrateCompanySubscriptionDate() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
@@ -395,5 +402,20 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         /** @var PerformanceMeasurementsMigrator $migrator */
         $migrator = new PerformanceMeasurementsMigrator($this->cmdUtil, $this->em, $data, $this->rootDir, $this->output);
         return $migrator->isSuccessFull();
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function migrateCompanySubscriptionDate()
+    {
+        $data = $this->parseCSV($this->filenames[self::SUBSCRIPTIONS]);
+        if(count($data) == 0) { return false; }
+
+        $migrator = new CompanySubscriptionMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        $migrator->migrate();
+        $migrator->printOutCsvOfCompaniesWithoutSubscriptionDate();
+        return true;
     }
 }
