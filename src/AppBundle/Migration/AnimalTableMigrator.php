@@ -102,61 +102,6 @@ class AnimalTableMigrator extends MigratorBase
 		$breedCodeUtil = new BreedCodeUtil($this->em, $this->cmdUtil);
 		$breedCodeUtil->fixBreedCodes();
 	}
-
-	
-	private function deleteTestAnimals()
-	{
-		$sql = "SELECT COUNT(*) FROM animal_migration_table a
-				WHERE substring(a.stn_origin, 1,2) = 'XD' OR substring(a.uln_origin, 1,2) = 'XD'";
-		$count = $this->conn->query($sql)->fetch()['count'];
-
-		if($count == 0) {
-			$this->output->writeln('All XD testAnimals have already been deleted from stn_origin and uln_origin');
-			return;
-		}
-
-		$sql = "UPDATE animal_migration_table a SET deleted_uln_origin = uln_origin, deleted_stn_origin = stn_origin,
-				  uln_origin = NULL, stn_origin = NULL, is_uln_updated = TRUE, is_stn_updated = TRUE
-				WHERE substring(a.stn_origin, 1,2) = 'XD' OR substring(a.uln_origin, 1,2) = 'XD'";
-		$this->conn->exec($sql);
-
-		$this->output->writeln($count.' XD testAnimals have been deleted from stn_origin and uln_origin');
-	}
-
-
-	private function fixScientificNotationInStnAndUlnOrigin()
-	{
-		$sql = "SELECT id, stn_origin FROM animal_migration_table
-				WHERE stn_origin SIMILAR TO '%[+]%'";
-		$stnResults = $this->conn->query($sql)->fetchAll();
-
-		$sql = "SELECT id, uln_origin FROM animal_migration_table
-				WHERE uln_origin SIMILAR TO '%[+]%'";
-		$ulnResults = $this->conn->query($sql)->fetchAll();
-		
-		$stnCount = count($stnResults);
-		$ulnCount = count($ulnResults);
-		if($ulnCount + $stnCount == 0) {
-			$this->output->writeln('All ScientificNotations in stn_origin and uln_origin have already fixed');
-			return;
-		}
-
-		foreach ($stnResults as $stnResult) {
-			$stnOrigin = strval(intval(floatval(strtr($stnResult['stn_origin'],[',' =>'.']))));
-			$sql = "UPDATE animal_migration_table SET deleted_stn_origin = stn_origin, stn_origin = '".$stnOrigin."'
-					WHERE id = ".$stnResult['id'];
-			$this->conn->exec($sql);
-		}
-		$this->output->writeln($stnCount.' scientificNotations in stn_origin fixed');
-
-		foreach ($ulnResults as $ulnResult) {
-			$ulnOrigin = strval(intval(floatval(strtr($ulnResult['uln_origin'],[',' =>'.']))));
-			$sql = "UPDATE animal_migration_table SET deleted_uln_origin = uln_origin, uln_origin = '".$ulnOrigin."'
-					WHERE id = ".$ulnResult['id'];
-			$this->conn->exec($sql);
-		}
-		$this->output->writeln($ulnCount.' scientificNotations in uln_origin fixed');
-	}
 	
 
 	public function importAnimalTableCsvFileIntoDatabase()
@@ -309,6 +254,61 @@ class AnimalTableMigrator extends MigratorBase
         }
 
 		return null;
+	}
+
+
+	private function deleteTestAnimals()
+	{
+		$sql = "SELECT COUNT(*) FROM animal_migration_table a
+				WHERE substring(a.stn_origin, 1,2) = 'XD' OR substring(a.uln_origin, 1,2) = 'XD'";
+		$count = $this->conn->query($sql)->fetch()['count'];
+
+		if($count == 0) {
+			$this->output->writeln('All XD testAnimals have already been deleted from stn_origin and uln_origin');
+			return;
+		}
+
+		$sql = "UPDATE animal_migration_table a SET deleted_uln_origin = uln_origin, deleted_stn_origin = stn_origin,
+				  uln_origin = NULL, stn_origin = NULL, is_uln_updated = TRUE, is_stn_updated = TRUE
+				WHERE substring(a.stn_origin, 1,2) = 'XD' OR substring(a.uln_origin, 1,2) = 'XD'";
+		$this->conn->exec($sql);
+
+		$this->output->writeln($count.' XD testAnimals have been deleted from stn_origin and uln_origin');
+	}
+
+
+	private function fixScientificNotationInStnAndUlnOrigin()
+	{
+		$sql = "SELECT id, stn_origin FROM animal_migration_table
+				WHERE stn_origin SIMILAR TO '%[+]%'";
+		$stnResults = $this->conn->query($sql)->fetchAll();
+
+		$sql = "SELECT id, uln_origin FROM animal_migration_table
+				WHERE uln_origin SIMILAR TO '%[+]%'";
+		$ulnResults = $this->conn->query($sql)->fetchAll();
+
+		$stnCount = count($stnResults);
+		$ulnCount = count($ulnResults);
+		if($ulnCount + $stnCount == 0) {
+			$this->output->writeln('All ScientificNotations in stn_origin and uln_origin have already fixed');
+			return;
+		}
+
+		foreach ($stnResults as $stnResult) {
+			$stnOrigin = strval(intval(floatval(strtr($stnResult['stn_origin'],[',' =>'.']))));
+			$sql = "UPDATE animal_migration_table SET deleted_stn_origin = stn_origin, stn_origin = '".$stnOrigin."'
+					WHERE id = ".$stnResult['id'];
+			$this->conn->exec($sql);
+		}
+		$this->output->writeln($stnCount.' scientificNotations in stn_origin fixed');
+
+		foreach ($ulnResults as $ulnResult) {
+			$ulnOrigin = strval(intval(floatval(strtr($ulnResult['uln_origin'],[',' =>'.']))));
+			$sql = "UPDATE animal_migration_table SET deleted_uln_origin = uln_origin, uln_origin = '".$ulnOrigin."'
+					WHERE id = ".$ulnResult['id'];
+			$this->conn->exec($sql);
+		}
+		$this->output->writeln($ulnCount.' scientificNotations in uln_origin fixed');
 	}
 
 
