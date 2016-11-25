@@ -689,7 +689,7 @@ class AnimalTableMigrator extends MigratorBase
 		$usedPedigreeNumbers = $this->animalMigrationTableRepository->getExistingPedigreeNumbersInAnimalAndAnimalMigrationTables();
 
 		$this->output->writeln('=== Fix duplicate stns ===');
-		$this->fixDuplicateStns();
+//		$this->fixDuplicateStns(); TODO
 
 		$this->output->writeln('=== Delete incorrect ulns and stns ===');
 		$usedPedigreeNumbers = $this->deleteIncorrectUlnsAndStns($usedPedigreeNumbers, $breederNumberByUbnsOfBirth);	
@@ -704,10 +704,6 @@ class AnimalTableMigrator extends MigratorBase
 		$this->animalMigrationTableRepository->fixAnimalOrderNumberToMatchUlnNumber();
 	}
 
-	public function test()
-	{
-		$this->fixDuplicateStns();
-	}
 
 	private function fixDuplicateStns()
 	{
@@ -841,7 +837,7 @@ class AnimalTableMigrator extends MigratorBase
 		if($count == 0) {
 			$this->output->writeln('All ulns in stn_origin have been deleted/updated');
 		} else {
-			$sql = "SELECT * FROM animal_migration_table 
+			$sql = "SELECT COUNT(*) FROM animal_migration_table 
 					WHERE uln_origin = stn_origin AND uln_number NOTNULL
 				  	AND ((pedigree_register_id ISNULL OR pedigree_register_id = 15 OR pedigree_register_id = 16)
 				  	OR animal_migration_table.ubn_of_birth ISNULL)";
