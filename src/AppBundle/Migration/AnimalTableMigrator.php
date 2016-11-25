@@ -296,7 +296,7 @@ class AnimalTableMigrator extends MigratorBase
 
 		foreach ($stnResults as $stnResult) {
 			$stnOrigin = strval(intval(floatval(strtr($stnResult['stn_origin'],[',' =>'.']))));
-			$sql = "UPDATE animal_migration_table SET deleted_stn_origin = stn_origin, stn_origin = '".$stnOrigin."'
+			$sql = "UPDATE animal_migration_table SET stn_origin = '".$stnOrigin."'
 					WHERE id = ".$stnResult['id'];
 			$this->conn->exec($sql);
 		}
@@ -304,7 +304,7 @@ class AnimalTableMigrator extends MigratorBase
 
 		foreach ($ulnResults as $ulnResult) {
 			$ulnOrigin = strval(intval(floatval(strtr($ulnResult['uln_origin'],[',' =>'.']))));
-			$sql = "UPDATE animal_migration_table SET deleted_uln_origin = uln_origin, uln_origin = '".$ulnOrigin."'
+			$sql = "UPDATE animal_migration_table SET uln_origin = '".$ulnOrigin."'
 					WHERE id = ".$ulnResult['id'];
 			$this->conn->exec($sql);
 		}
@@ -316,6 +316,24 @@ class AnimalTableMigrator extends MigratorBase
 	{
 		$sql = "UPDATE animal_migration_table SET stn_origin = NULL WHERE stn_origin = ' '";
 		$this->conn->exec($sql);
+
+		$sql = "SELECT id, uln_origin, stn_origin FROM animal_migration_table";
+		$results = $this->conn->query($sql)->fetchAll();
+
+//		//Find uln & stn with non alpha numeric
+//		foreach ($results as $result) {
+//			$id = $result['id'];
+//			$ulnOrigin = strtr($result['uln_origin'], ['-' => '', ' ' => '']);
+//			$stnOrigin = strtr($result['stn_origin'], ['-' => '', ' ' => '']);
+//
+//			if($ulnOrigin != null || $ulnOrigin != '') {
+//				if(!ctype_alnum($ulnOrigin)) { dump(['uln: '.$id => $result['uln_origin'].' == '.$result['stn_origin']]); }
+//			}
+//
+//			if($stnOrigin != null || $stnOrigin != '') {
+//				if(!ctype_alnum($stnOrigin)) { dump(['stn: '.$id => $result['stn_origin'].' == '.$result['uln_origin']]); }
+//			}
+//		}
 	}
 
 
@@ -669,7 +687,10 @@ class AnimalTableMigrator extends MigratorBase
 		$breederNumberByUbnsOfBirth = array_flip($ubnsOfBirthByBreederNumber);
 		$usedUlnNumbers = $this->animalMigrationTableRepository->getExistingUlnsInAnimalAndAnimalMigrationTables();
 		$usedPedigreeNumbers = $this->animalMigrationTableRepository->getExistingPedigreeNumbersInAnimalAndAnimalMigrationTables();
-		
+
+		$this->output->writeln('=== Fix duplicate stns ===');
+		$this->fixDuplicateStns();
+
 		$this->output->writeln('=== Delete incorrect ulns and stns ===');
 		$usedPedigreeNumbers = $this->deleteIncorrectUlnsAndStns($usedPedigreeNumbers, $breederNumberByUbnsOfBirth);	
 		
@@ -681,6 +702,114 @@ class AnimalTableMigrator extends MigratorBase
 		$count = $this->animalMigrationTableRepository->countAnimalOrderNumbersNotMatchingUlnNumbers();
 		$this->output->writeln("=== Fix ".$count." animalOrderNumbers to match updated ulnNumbers ===");
 		$this->animalMigrationTableRepository->fixAnimalOrderNumberToMatchUlnNumber();
+	}
+
+	public function test()
+	{
+		$this->fixDuplicateStns();
+	}
+
+	private function fixDuplicateStns()
+	{
+		$sql = "SELECT id, m.mother_vsm_id, m.father_vsm_id FROM animal_migration_table m";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$vsmMothers = [];
+		$vsmFathers = [];
+		foreach ($results as $result) {
+			$migrationTableId = $result['id'];
+			$motherVsmId = $result['mother_vsm_id'];
+			$fatherVsmId = $result['father_vsm_id'];
+			if($motherVsmId != null && $motherVsmId != 0) { $vsmMothers[$motherVsmId] = $migrationTableId; }
+			if($fatherVsmId != null && $fatherVsmId != 0) { $vsmFathers[$fatherVsmId] = $migrationTableId; }
+		}
+
+		$duplicatesSearchArray = [];
+
+//		$sql = "SELECT a.vsm_id, a.animal_id, a.uln_origin, a.stn_origin, a.pedigree_country_code, a.pedigree_number,
+//					a.id, a.uln_country_code, a.uln_number, a.animal_order_number, a.father_id, a.mother_id,
+// 					a.father_vsm_id, a.mother_vsm_id, a.gender_in_file, a.date_of_birth, a.ubn_of_birth,
+// 					a.breed_type, a.breed_code, a.is_ubn_updated, a.gender_in_database
+//				FROM animal_migration_table a
+//				INNER JOIN (
+//					SELECT stn_origin FROM animal_migration_table
+//					WHERE stn_origin NOTNULL
+//					GROUP BY stn_origin HAVING COUNT(*) > 1
+//					)g ON g.stn_origin = a.stn_origin";
+
+		$sql = "SELECT a.vsm_id, a.animal_id, a.uln_origin, a.stn_origin, a.pedigree_country_code, a.pedigree_number,
+					a.id, a.uln_country_code, a.uln_number, a.animal_order_number, a.father_id, a.mother_id,
+ 					a.father_vsm_id, a.mother_vsm_id, a.gender_in_file, a.date_of_birth, a.ubn_of_birth,
+ 					a.breed_type, a.breed_code, a.is_ubn_updated, a.gender_in_database
+				FROM animal_migration_table a
+				INNER JOIN (
+					SELECT stn_origin FROM animal_migration_table
+					WHERE stn_origin NOTNULL AND animal_migration_table.date_of_birth NOTNULL 
+					GROUP BY stn_origin, date_of_birth HAVING COUNT(*) > 1
+					)g ON g.stn_origin = a.stn_origin";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		//Create grouped searchArray
+		foreach ($results as $result) {
+			$stnOrigin = $result['stn_origin'];
+			if(!array_key_exists($stnOrigin, $duplicatesSearchArray)) {
+				$duplicatesSearchArray[$stnOrigin] = [];
+			}
+			$stnOriginGroup = $duplicatesSearchArray[$stnOrigin];
+			$stnOriginGroup[] = $result;
+			$duplicatesSearchArray[$stnOrigin] = $stnOriginGroup;
+		}
+
+		$countDoubles = 0;
+		$countMultiples = 0;
+		foreach ($duplicatesSearchArray as $stnOrigin => $stnOriginGroup) {
+			//Process Duplicates of 2
+			if(count($stnOriginGroup) == 2) {
+
+				$mergedValues = $this->getMergedValues($stnOriginGroup);
+				$countDoubles++;
+
+			//Process Duplicates with more than 2
+			} else {
+
+//				$mergedValues = $this->getMergedValues($stnOriginGroup);
+				$countMultiples++;
+			}
+		}
+		dump($countDoubles, $countMultiples);die;
+	}
+
+
+	private function getMergedValues($stnOriginGroup)
+	{
+		$mergedArray = [];
+
+		$variables = array_keys($stnOriginGroup[0]);
+		foreach ($variables as $variable) {
+			//Skip the following values
+			if($variable == 'vsm_id' || $variable == 'id' || $variable == 'breed_code' || $variable == 'uln_origin'
+				|| $variable == 'uln_country_code' || $variable == 'uln_number' || $variable == 'father_vsm_id' || $variable == 'mother_vsm_id') { continue; }
+
+			foreach ($stnOriginGroup as $animal) {
+				$oldValue = null;
+				if(array_key_exists($variable, $mergedArray)) {
+					$oldValue = $mergedArray[$variable];
+				}
+				$value = $animal[$variable];
+				if($value != null && $oldValue == null) {
+					$mergedArray[$variable] = $value;
+				} elseif ($value == null && $oldValue != null) {
+					$mergedArray[$variable] = $oldValue;
+				} elseif ($value == $oldValue) {
+					$mergedArray[$variable] = $oldValue;
+				} elseif ($value != null && $oldValue != null) {
+					dump($animal['stn_origin'], $variable, $value, $oldValue);die;
+				} else {
+					$mergedArray[$variable] = null;
+				}
+			}
+		}
+		return $mergedArray;
 	}
 
 
