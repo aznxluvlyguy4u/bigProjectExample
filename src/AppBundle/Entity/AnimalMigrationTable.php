@@ -264,6 +264,13 @@ class AnimalMigrationTable
     private $deletedUlnOrigin;
 
     /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $isCorrectRecord;
+
+    /**
      * AnimalMigrationTable constructor.
      */
     public function __construct()
@@ -812,6 +819,22 @@ class AnimalMigrationTable
     public function setDeletedUlnOrigin($deletedUlnOrigin)
     {
         $this->deletedUlnOrigin = $deletedUlnOrigin;
+    }
+
+    /**
+     * @return string
+     */
+    public function getIsCorrectRecord()
+    {
+        return $this->isCorrectRecord;
+    }
+
+    /**
+     * @param string $isCorrectRecord
+     */
+    public function setIsCorrectRecord($isCorrectRecord)
+    {
+        $this->isCorrectRecord = $isCorrectRecord;
     }
 
 
