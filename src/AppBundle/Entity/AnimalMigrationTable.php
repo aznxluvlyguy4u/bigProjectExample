@@ -278,6 +278,20 @@ class AnimalMigrationTable
     private $isRecordMigrated;
 
     /**
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     */
+    private $deletedFatherVsmId;
+
+    /**
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     */
+    private $deletedMotherVsmId;
+
+    /**
      * AnimalMigrationTable constructor.
      */
     public function __construct()
@@ -858,6 +872,38 @@ class AnimalMigrationTable
     public function setIsRecordMigrated($isRecordMigrated)
     {
         $this->isRecordMigrated = $isRecordMigrated;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDeletedFatherVsmId()
+    {
+        return $this->deletedFatherVsmId;
+    }
+
+    /**
+     * @param int $deletedFatherVsmId
+     */
+    public function setDeletedFatherVsmId($deletedFatherVsmId)
+    {
+        $this->deletedFatherVsmId = $deletedFatherVsmId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDeletedMotherVsmId()
+    {
+        return $this->deletedMotherVsmId;
+    }
+
+    /**
+     * @param int $deletedMotherVsmId
+     */
+    public function setDeletedMotherVsmId($deletedMotherVsmId)
+    {
+        $this->deletedMotherVsmId = $deletedMotherVsmId;
     }
 
 
