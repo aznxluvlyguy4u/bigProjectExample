@@ -271,6 +271,13 @@ class AnimalMigrationTable
     private $isCorrectRecord;
 
     /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isRecordMigrated;
+
+    /**
      * AnimalMigrationTable constructor.
      */
     public function __construct()
@@ -835,6 +842,22 @@ class AnimalMigrationTable
     public function setIsCorrectRecord($isCorrectRecord)
     {
         $this->isCorrectRecord = $isCorrectRecord;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isIsRecordMigrated()
+    {
+        return $this->isRecordMigrated;
+    }
+
+    /**
+     * @param boolean $isRecordMigrated
+     */
+    public function setIsRecordMigrated($isRecordMigrated)
+    {
+        $this->isRecordMigrated = $isRecordMigrated;
     }
 
 
