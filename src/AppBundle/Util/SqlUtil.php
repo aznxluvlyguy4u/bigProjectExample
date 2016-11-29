@@ -38,4 +38,26 @@ class SqlUtil
             return self::NULL;
         }
     }
+
+
+    /**
+     * @param array $sqlResultsArray
+     * @param string $keyToGroupBy
+     * @return array
+     */
+    public static function createGroupedSearchArrayFromSqlResults($sqlResultsArray, $keyToGroupBy)
+    {
+        $duplicatesSearchArray = [];
+        //Create grouped searchArray
+        foreach ($sqlResultsArray as $result) {
+            $stnOrigin = $result[$keyToGroupBy];
+            if(!array_key_exists($stnOrigin, $duplicatesSearchArray)) {
+                $duplicatesSearchArray[$stnOrigin] = [];
+            }
+            $stnOriginGroup = $duplicatesSearchArray[$stnOrigin];
+            $stnOriginGroup[] = $result;
+            $duplicatesSearchArray[$stnOrigin] = $stnOriginGroup;
+        }
+        return $duplicatesSearchArray;
+    }
 }
