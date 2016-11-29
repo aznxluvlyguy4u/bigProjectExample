@@ -744,7 +744,7 @@ class AnimalTableMigrator extends MigratorBase
 				INNER JOIN (
 					SELECT stn_origin FROM animal_migration_table
 					WHERE stn_origin NOTNULL AND animal_migration_table.date_of_birth NOTNULL 
-					GROUP BY stn_origin, date_of_birth, uln_origin HAVING COUNT(*) > 1
+					GROUP BY stn_origin, date_of_birth HAVING COUNT(*) > 1
 					)g ON g.stn_origin = a.stn_origin";
 		$results = $this->conn->query($sql)->fetchAll();
 		$duplicatesSearchArray = SqlUtil::createGroupedSearchArrayFromSqlResults($results, 'stn_origin');
@@ -759,6 +759,7 @@ class AnimalTableMigrator extends MigratorBase
 			//Merge values
 			$animalId = null;
 			$ulnOrigin = null;
+			$validatedUlnOrigin = null;
 			$stnOrigin = null;
 			$pedigreeCountryCode = null;
 			$pedigreeNumber = null;
@@ -779,6 +780,7 @@ class AnimalTableMigrator extends MigratorBase
 
 			foreach($stnOriginGroup as $animalRecord) {
 
+				if(Validator::verifyUlnFormat($animalRecord['uln_origin'] ,true)) { $validatedUlnOrigin = $animalRecord['uln_origin']; }
 				if($animalRecord['animal_id'] != null) 	{ $animalId = $animalRecord['animal_id']; }
 				if($animalRecord['uln_origin'] != null) { $ulnOrigin = $animalRecord['uln_origin'];	}
 				if($animalRecord['stn_origin'] != null) { $stnOrigin = $animalRecord['stn_origin']; }
@@ -796,6 +798,10 @@ class AnimalTableMigrator extends MigratorBase
 
 			}
 
+			if($validatedUlnOrigin != null) {
+				$ulnOrigin = $this->declareTagReplaceRepository->getNewReplacementUln($validatedUlnOrigin);
+			}
+			
 			$ulnParts = $this->parseUln($ulnOrigin);
 			$ulnCountryCode = $ulnParts[JsonInputConstant::ULN_COUNTRY_CODE];
 			$ulnNumber = $ulnParts[JsonInputConstant::ULN_NUMBER];

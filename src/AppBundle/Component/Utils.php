@@ -68,15 +68,21 @@ class Utils
     }
     
 
-    public static function getUlnFromString($ulnString)
+    public static function getUlnFromString($ulnString, $hasSpaceBetweenCountryCodeAndNumber = false)
     {
         //Verify format first
-        if(!Validator::verifyUlnFormat($ulnString)) {
+        if(!Validator::verifyUlnFormat($ulnString, $hasSpaceBetweenCountryCodeAndNumber)) {
             return null;
         }
 
-        $countryCode = mb_substr($ulnString, 0, 2, 'utf-8');
-        $ulnNumber = mb_substr($ulnString, 2, strlen($ulnString));
+        if($hasSpaceBetweenCountryCodeAndNumber) {
+            $parts = explode(' ', $ulnString);
+            $countryCode = $parts[0];
+            $ulnNumber = $parts[1];
+        } else {
+            $countryCode = mb_substr($ulnString, 0, 2, 'utf-8');
+            $ulnNumber = mb_substr($ulnString, 2, strlen($ulnString));
+        }
 
         return array(Constant::ULN_COUNTRY_CODE_NAMESPACE => $countryCode, Constant::ULN_NUMBER_NAMESPACE => $ulnNumber);
     }
