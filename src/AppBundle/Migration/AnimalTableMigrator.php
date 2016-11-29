@@ -706,12 +706,6 @@ class AnimalTableMigrator extends MigratorBase
 	}
 
 
-	public function test()
-	{
-		$this->fixDuplicateStns();
-	}
-
-
 	private function fixDuplicateStns()
 	{
 		$sql = "SELECT id, m.mother_vsm_id, m.father_vsm_id FROM animal_migration_table m";
@@ -884,40 +878,6 @@ class AnimalTableMigrator extends MigratorBase
 			$this->cmdUtil->advanceProgressBar(1);
 		}
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
-
-	}
-
-
-	private function getMergedValues($stnOriginGroup)
-	{
-		$mergedArray = [];
-
-		$variables = array_keys($stnOriginGroup[0]);
-		foreach ($variables as $variable) {
-			//Skip the following values
-			if($variable == 'vsm_id' || $variable == 'id' || $variable == 'breed_code' || $variable == 'uln_origin'
-				|| $variable == 'uln_country_code' || $variable == 'uln_number' || $variable == 'father_vsm_id' || $variable == 'mother_vsm_id') { continue; }
-
-			foreach ($stnOriginGroup as $animal) {
-				$oldValue = null;
-				if(array_key_exists($variable, $mergedArray)) {
-					$oldValue = $mergedArray[$variable];
-				}
-				$value = $animal[$variable];
-				if($value != null && $oldValue == null) {
-					$mergedArray[$variable] = $value;
-				} elseif ($value == null && $oldValue != null) {
-					$mergedArray[$variable] = $oldValue;
-				} elseif ($value == $oldValue) {
-					$mergedArray[$variable] = $oldValue;
-				} elseif ($value != null && $oldValue != null) {
-					dump($animal['stn_origin'], $variable, $value, $oldValue);die;
-				} else {
-					$mergedArray[$variable] = null;
-				}
-			}
-		}
-		return $mergedArray;
 	}
 
 
@@ -1789,4 +1749,8 @@ class AnimalTableMigrator extends MigratorBase
     }
 
 
+	public function test()
+	{
+		$this->fixDuplicateStns();
+	}
 }
