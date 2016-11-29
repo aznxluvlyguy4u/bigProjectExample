@@ -31,6 +31,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class AnimalTableMigrator extends MigratorBase
 {
 	const PRINT_OUT_INVALID_UBNS_OF_BIRTH = true;
+	const PRINT_OUT_FILENAME_INCORRECT_GENDERS = false;
 	const UBNS_PER_ROW = 8;
 	const FILENAME_CORRECTED_CSV = '2016nov_gecorrigeerde_diertabel.csv';
 	const FILENAME_INCORRECT_ULNS = 'incorrect_ulns.csv';
@@ -91,6 +92,9 @@ class AnimalTableMigrator extends MigratorBase
 
 	public function fixValuesInAnimalMigrationTable()
 	{
+		//NOTE! This fixes stuff in the animal table
+		$this->fixMinorFormattingIssuesInAnimalTable();
+
 		//NOTE! The order of operations here is important!
 		$this->deleteTestAnimals();
 		$this->fixScientificNotationInStnAndUlnOrigin();
@@ -313,6 +317,17 @@ class AnimalTableMigrator extends MigratorBase
 	}
 
 
+	private function fixMinorFormattingIssuesInAnimalTable()
+	{
+		$sql = "SELECT COUNT(*) FROM animal WHERE uln_country_code = 'GB'";
+		$gbCount = $this->conn->query($sql)->fetch()['count'];
+		if($gbCount > 0) {
+			$sql = "UPDATE animal SET uln_country_code = 'UK' WHERE uln_country_code = 'GB'";
+			$this->conn->exec($sql);
+		}
+	}
+
+
 	private function fixMinorFormattingIssues()
 	{
 		$sql = "UPDATE animal_migration_table SET stn_origin = NULL WHERE stn_origin = ' '";
@@ -463,9 +478,11 @@ class AnimalTableMigrator extends MigratorBase
 			}
 
 			if($isVsmMother && $isVsmFather) {
-				$errorMessage = $vsmId.'; NEUTER is both mother & father in csv file'.$this->getChildrenCountByParentTypeAsString($vsmId, $animalIdByVsmId);
+				if(self::PRINT_OUT_FILENAME_INCORRECT_GENDERS) {
+					$errorMessage = $vsmId.'; NEUTER is both mother & father in csv file'.$this->getChildrenCountByParentTypeAsString($vsmId, $animalIdByVsmId);
 					file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
-				$this->output->writeln($errorMessage);
+					$this->output->writeln($errorMessage);
+				}
 				$areAllNeutersGenderless = false;
 				$allNeuterHaveOnlyOneGender = false;
 				$animalIdsOfSimultaneousMotherAndFather[$vsmId] = $vsmId;
@@ -477,9 +494,11 @@ class AnimalTableMigrator extends MigratorBase
 					 * SEE EMAIL REINARD 2016-11-24
 					 */
 				} else {
-					$errorMessage = $vsmId.'; NEUTER is a mother in csv and father in db';
-					file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
-					$this->output->writeln($errorMessage);
+					if(self::PRINT_OUT_FILENAME_INCORRECT_GENDERS) {
+						$errorMessage = $vsmId.'; NEUTER is a mother in csv and father in db';
+						file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
+						$this->output->writeln($errorMessage);
+					}
 				}
 
 				$areAllNeutersGenderless = false;
@@ -490,9 +509,11 @@ class AnimalTableMigrator extends MigratorBase
 					 * SEE EMAIL REINARD 2016-11-24
 					 */
 				} else {
-					$errorMessage = $vsmId.'; NEUTER is a father in csv and mother in db';
-					file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
-					$this->output->writeln($errorMessage);
+					if(self::PRINT_OUT_FILENAME_INCORRECT_GENDERS) {
+						$errorMessage = $vsmId.'; NEUTER is a father in csv and mother in db';
+						file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
+						$this->output->writeln($errorMessage);
+					}
 				}
 
 				$areAllNeutersGenderless = false;
@@ -517,9 +538,11 @@ class AnimalTableMigrator extends MigratorBase
 			}
 
 			if($isVsmMother && $isVsmFather) {
-				$errorMessage = $vsmId.'; FEMALE is both mother & father in csv file'.$this->getChildrenCountByParentTypeAsString($vsmId, $animalIdByVsmId);
-				file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
-				$this->output->writeln($errorMessage);
+				if(self::PRINT_OUT_FILENAME_INCORRECT_GENDERS) {
+					$errorMessage = $vsmId.'; FEMALE is both mother & father in csv file'.$this->getChildrenCountByParentTypeAsString($vsmId, $animalIdByVsmId);
+					file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
+					$this->output->writeln($errorMessage);
+				}
 				$areAllFemalesOnlyMothers = false;
 				$animalIdsOfSimultaneousMotherAndFather[$vsmId] = $vsmId;
 
@@ -528,9 +551,11 @@ class AnimalTableMigrator extends MigratorBase
 					$sql = "UPDATE animal_migration_table SET corrected_gender = gender_in_file, gender_in_file = '".GenderType::MALE."' WHERE vsm_id = ".$vsmId;
 					$this->conn->exec($sql);
 				} else {
-					$errorMessage = $vsmId.'; FEMALE is a father in csv and mother in db';
-					file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
-					$this->output->writeln($errorMessage);
+					if(self::PRINT_OUT_FILENAME_INCORRECT_GENDERS) {
+						$errorMessage = $vsmId.'; FEMALE is a father in csv and mother in db';
+						file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
+						$this->output->writeln($errorMessage);
+					}
 				}
 				$areAllFemalesOnlyMothers = false;
 			}
@@ -554,9 +579,11 @@ class AnimalTableMigrator extends MigratorBase
 			}
 
 			if($isVsmMother && $isVsmFather) {
-				$errorMessage = $vsmId.'; MALE is both mother & father in csv file'.$this->getChildrenCountByParentTypeAsString($vsmId, $animalIdByVsmId);
-				file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
-				$this->output->writeln($errorMessage);
+				if(self::PRINT_OUT_FILENAME_INCORRECT_GENDERS) {
+					$errorMessage = $vsmId.'; MALE is both mother & father in csv file'.$this->getChildrenCountByParentTypeAsString($vsmId, $animalIdByVsmId);
+					file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
+					$this->output->writeln($errorMessage);
+				}
 				$areAllMalesOnlyFathers = false;
 				$animalIdsOfSimultaneousMotherAndFather[$vsmId] = $vsmId;
 
@@ -565,9 +592,11 @@ class AnimalTableMigrator extends MigratorBase
 					$sql = "UPDATE animal_migration_table SET corrected_gender = gender_in_file, gender_in_file = '" . GenderType::FEMALE . "' WHERE vsm_id = ".$vsmId;
 					$this->conn->exec($sql);
 				} else {
-					$errorMessage = $vsmId.'; MALE is a mother in csv and father in db';
-					file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
-					$this->output->writeln($errorMessage);
+					if(self::PRINT_OUT_FILENAME_INCORRECT_GENDERS) {
+						$errorMessage = $vsmId.'; MALE is a mother in csv and father in db';
+						file_put_contents($this->outputFolder.'/'.self::FILENAME_INCORRECT_GENDERS, $errorMessage."\n", FILE_APPEND);
+						$this->output->writeln($errorMessage);
+					}
 				}
 			}
 		}
@@ -713,6 +742,15 @@ class AnimalTableMigrator extends MigratorBase
 
 	private function fixDuplicateUlns($usedUlnNumbers)
 	{
+		$this->fixUlnDuplicatesWithMoreThan2Records();
+		$this->fixUlnDuplicatesWith2RecordsOfIdenticalAnimals();
+		
+		return $usedUlnNumbers;
+	}
+
+
+	private function fixUlnDuplicatesWithMoreThan2Records()
+	{
 		//First fix the duplicates with more than 2
 
 		$sql = "SELECT COUNT(*) FROM animal_migration_table a
@@ -722,68 +760,67 @@ class AnimalTableMigrator extends MigratorBase
 					GROUP BY uln_country_code, uln_number HAVING COUNT(*) > 2
 					)d ON d.uln_country_code = a.uln_country_code AND d.uln_number = a.uln_number";
 		$count = $this->conn->query($sql)->fetch()['count'];
-		if($count > 0) {
-			//CASE: NL 109994833896
+		if($count == 0) { $this->output->writeln('Uln duplicates of more than 2 have already been deleted!'); return; }
+		
+		//CASE: NL 109994833896
 
-			//Update first letter in animalOrderNumber (incl uln) to 9
-			$sql = "UPDATE animal_migration_table SET animal_id = NULL, uln_number = 109994893896,
- 				animal_order_number = 93896, deleted_uln_origin = uln_origin, uln_origin = 'NL 109994893896' WHERE id = 958253";
-			$this->conn->exec($sql);
+		//Update first letter in animalOrderNumber (incl uln) to 9
+		$sql = "UPDATE animal_migration_table SET animal_id = NULL, uln_number = 109994893896,
+			animal_order_number = 93896, deleted_uln_origin = uln_origin, uln_origin = 'NL 109994893896' WHERE id = 958253";
+		$this->conn->exec($sql);
 
-			$sql = "DELETE FROM animal_migration_table WHERE id = 1072556";
-			$this->conn->exec($sql);
+		$sql = "DELETE FROM animal_migration_table WHERE id = 1072556";
+		$this->conn->exec($sql);
 
-			//CASE: NL 076474802053
+		//CASE: NL 076474802053
 
-			$sql = "SELECT * FROM animal_migration_table a
-				INNER JOIN (
-					SELECT uln_country_code, uln_number FROM animal_migration_table
-					WHERE uln_country_code NOTNULL AND uln_number NOTNULL
-					GROUP BY uln_country_code, uln_number HAVING COUNT(*) > 2
-					)d ON d.uln_country_code = a.uln_country_code AND d.uln_number = a.uln_number
-				WHERE uln_origin = 'NL 076474802053'";
-			$results = $this->conn->query($sql)->fetchAll();
+		$sql = "SELECT * FROM animal_migration_table a
+			INNER JOIN (
+				SELECT uln_country_code, uln_number FROM animal_migration_table
+				WHERE uln_country_code NOTNULL AND uln_number NOTNULL
+				GROUP BY uln_country_code, uln_number HAVING COUNT(*) > 2
+				)d ON d.uln_country_code = a.uln_country_code AND d.uln_number = a.uln_number
+			WHERE uln_origin = 'NL 076474802053'";
+		$results = $this->conn->query($sql)->fetchAll();
 
 
-			$primaryVsmId = null;
-			foreach ($results as $result) {
-				if($result['date_of_birth'] != null) {
-					$primaryVsmId = $result['vsm_id'];
-				}
+		$primaryVsmId = null;
+		foreach ($results as $result) {
+			if($result['date_of_birth'] != null) {
+				$primaryVsmId = $result['vsm_id'];
 			}
-
-			foreach ($results as $result) {
-				if($result['date_of_birth'] != null) {
-					$primaryVsmId = $result['vsm_id'];
-				}
-			}
-
-			$vsmIdGroups = $this->getVsmIdGroups();
-			foreach($results as $result) {
-				$vsmId = $result['vsm_id'];
-				if($result['date_of_birth'] == null) {
-					$this->updateChildrenVsmIds($primaryVsmId, $vsmId);
-					$this->saveVsmIdGroup($primaryVsmId, $vsmId, $vsmIdGroups);
-					//They all don't have any parents
-					$sql = "DELETE FROM animal_migration_table WHERE id = ".$result['id'];
-					$this->conn->exec($sql);
-				}
-			}
-			$this->output->writeln('Duplicates of more than 2 are deleted!');
-
-		} else {
-			$this->output->writeln('Duplicates of more than 2 have already been deleted!');
 		}
 
+		foreach ($results as $result) {
+			if($result['date_of_birth'] != null) {
+				$primaryVsmId = $result['vsm_id'];
+			}
+		}
 
-		//TODO fix doubles
-//		$this->animalRepository->bumpUlnNumberWithVerification($ulnNumber, $usedUlnNumbers);
+		$vsmIdGroups = $this->getVsmIdGroups();
+		foreach($results as $result) {
+			$vsmId = $result['vsm_id'];
+			if($result['date_of_birth'] == null) {
+				$this->updateChildrenVsmIds($primaryVsmId, $vsmId);
+				$this->saveVsmIdGroup($primaryVsmId, $vsmId, $vsmIdGroups);
+				//They all don't have any parents
+				$sql = "DELETE FROM animal_migration_table WHERE id = ".$result['id'];
+				$this->conn->exec($sql);
+			}
+		}
+		$this->output->writeln('Uln duplicates of more than 2 are deleted!');
+	}
 
-		/**
-		 * We can only be sure a duplicate record belongs to the same animal
-		 * if the following traits are identical:
-		 * uln_country_code, uln_number, date_of_birth, father_vsm_id, mother_vsm_id
-		 */
+
+	/**
+	 * Fixing double ulns of same animal
+	 *
+	 * We can only be sure a duplicate record belongs to the same animal
+	 * if the following traits are identical:
+	 * uln_country_code, uln_number, date_of_birth, father_vsm_id, mother_vsm_id
+	 */
+	private function fixUlnDuplicatesWith2RecordsOfIdenticalAnimals()
+	{
 		$sql ="SELECT * FROM animal_migration_table a
 			  INNER JOIN (
 				   SELECT uln_country_code, uln_number FROM animal_migration_table
@@ -791,16 +828,176 @@ class AnimalTableMigrator extends MigratorBase
 				   GROUP BY uln_country_code, uln_number, date_of_birth, father_vsm_id, mother_vsm_id HAVING COUNT(*) > 1
 				 )d ON d.uln_country_code = a.uln_country_code AND d.uln_number = a.uln_number";
 		$results = $this->conn->query($sql)->fetchAll();
+		if(count($results) == 0) {
+			$this->output->writeln('Uln duplicates with 2 records of identical animal have already been merged');
+			return;
+		}
 
 		$groupedSearchArray = SqlUtil::createGroupedSearchArrayFromSqlResults($results, 'uln_country_code', 'uln_number');
-		dump($groupedSearchArray);die;
-		
-		return $usedUlnNumbers;
+		$vsmIdGroups = $this->getVsmIdGroups();
+
+		$this->cmdUtil->setStartTimeAndPrintIt(count($groupedSearchArray),1);
+
+		foreach ($groupedSearchArray as $ulnGroup) {
+
+			//Merge values
+			$animalId = null;
+			$ulnOrigin = null;
+			$validatedUlnOrigin = null;
+			$stnOrigin = null;
+			$validatedStnOrigin = null;
+			$pedigreeCountryCode = null;
+			$pedigreeNumber = null;
+			$ulnCountryCode = null;
+			$ulnNumber = null;
+			$animalOrderNumber = null;
+			$fatherVsmId = 0;
+			$motherVsmId = 0;
+			$genderInFile = GenderType::NEUTER;
+			$genderInDatabase = GenderType::NEUTER;
+			$ubnOfBirth = null;
+			$breedType = null;
+			$breedCode = null;
+			$scrapieGenotype = null;
+			$locationOfBirthId = null;
+			$pedigreeRegisterId = null;
+			$nickName = null;
+
+			foreach ($ulnGroup as $animalRecord) {
+
+				if(Validator::verifyUlnFormat($animalRecord['uln_origin'] ,true)) {
+					$validatedUlnOrigin = $animalRecord['uln_origin']; }
+				if(Validator::verifyPedigreeCountryCodeAndNumberFormat($animalRecord['stn_origin'],true)) {
+					$validatedStnOrigin = $animalRecord['stn_origin']; }
+
+				if($animalRecord['uln_origin'] != null) { $ulnOrigin = $animalRecord['uln_origin'];	}
+				if($animalRecord['stn_origin'] != null) { $stnOrigin = $animalRecord['stn_origin']; }
+
+				if($animalRecord['animal_id'] != null) 	{ $animalId = $animalRecord['animal_id']; }
+				if($animalRecord['father_vsm_id'] != 0) { $fatherVsmId = $animalRecord['father_vsm_id']; }
+				if($animalRecord['mother_vsm_id'] != 0) { $motherVsmId = $animalRecord['mother_vsm_id']; }
+				if($animalRecord['gender_in_file'] != GenderType::NEUTER) 		{ $genderInFile = $animalRecord['gender_in_file']; }
+				if($animalRecord['gender_in_database'] != GenderType::NEUTER) 	{ $genderInDatabase = $animalRecord['gender_in_database']; }
+				if($animalRecord['ubn_of_birth'] != null) { $ubnOfBirth = $animalRecord['ubn_of_birth']; }
+				if($animalRecord['breed_type'] != null) { $breedType = $animalRecord['breed_type']; }
+				if($animalRecord['breed_code'] != null) { $breedCode = $animalRecord['breed_code']; }
+				if($animalRecord['scrapie_genotype'] != null) { $scrapieGenotype = $animalRecord['scrapie_genotype']; }
+				if($animalRecord['location_of_birth_id'] != null) { $locationOfBirthId = $animalRecord['location_of_birth_id']; }
+				if($animalRecord['pedigree_register_id'] != null) { $pedigreeRegisterId = $animalRecord['pedigree_register_id']; }
+
+				if($animalRecord['nick_name'] != null) {
+					$nickName = strtr($animalRecord['nick_name'],
+						['JT 14' => 'Oak Tree Lisa 17',
+							'8,26223E+14' => 'LAX 92/02',
+							'Oak Tree Jack' => '32 JT03 KHS (Oak Tree Jack)',
+							'32 JT03 KHS' => '32 JT03 KHS (Oak Tree Jack)']);
+				}
+
+				//Note! That the SQL is grouped by uln_number and uln_country_code, so we can use those values directly
+				$ulnCountryCode = $animalRecord['uln_country_code'];
+				$ulnNumber = $animalRecord['uln_number'];
+
+				//Use the pedigree data already processed in previous steps
+				if($animalRecord['pedigree_country_code'] != null) { $pedigreeCountryCode = $animalRecord['pedigree_country_code']; }
+				if($animalRecord['pedigree_number'] != null) { $pedigreeNumber = $animalRecord['pedigree_number']; }
+			}
+
+			if($validatedUlnOrigin != null) {
+				$newestFormatValidatedUlnOrigin = $this->declareTagReplaceRepository->getNewReplacementUln($validatedUlnOrigin);
+				if($newestFormatValidatedUlnOrigin != null) {
+					$ulnOrigin = $validatedUlnOrigin;
+				}
+			}
+			$animalOrderNumber = $ulnNumber != null ? StringUtil::getLast5CharactersFromString($ulnNumber) : null;
+
+			if($validatedStnOrigin != null) { $stnOrigin = $validatedStnOrigin; }
+
+			$fatherId = null;
+			if($this->animalIdsByVsmId->containsKey($fatherVsmId)) { $fatherId = intval($this->animalIdsByVsmId->get($fatherVsmId)); }
+			$motherId = null;
+			if($this->animalIdsByVsmId->containsKey($motherVsmId)) { $motherId = intval($this->animalIdsByVsmId->get($motherVsmId)); }
+
+			$fatherVsmIdSql = SqlUtil::getNullCheckedValueForSqlQuery($fatherVsmId, true);
+			$fatherIdSql = SqlUtil::getNullCheckedValueForSqlQuery($fatherId, true);
+			$motherVsmIdSql = SqlUtil::getNullCheckedValueForSqlQuery($motherVsmId, true);
+			$motherIdSql = SqlUtil::getNullCheckedValueForSqlQuery($motherId, true);
+
+			//Unifying of parentIds is not necessary here because the Sql GROUP BY already includes the parents vsmIds
+
+			//Update the first record with merged values. Delete duplicates and save the secondary vsmIds.
+			$firstId = $ulnGroup[0]['id'];
+			$sql = "UPDATE animal_migration_table SET
+					animal_id = ".SqlUtil::getNullCheckedValueForSqlQuery($animalId, false).", 
+					uln_origin = ".SqlUtil::getNullCheckedValueForSqlQuery($ulnOrigin, true).", 
+					uln_country_code = ".SqlUtil::getNullCheckedValueForSqlQuery($ulnCountryCode, true).", 
+					uln_number = ".SqlUtil::getNullCheckedValueForSqlQuery($ulnNumber, true).", 
+					animal_order_number = ".SqlUtil::getNullCheckedValueForSqlQuery($animalOrderNumber, true).", 
+					stn_origin = ".SqlUtil::getNullCheckedValueForSqlQuery($stnOrigin, true).", 
+					pedigree_country_code = ".SqlUtil::getNullCheckedValueForSqlQuery($pedigreeCountryCode, true).", 
+					pedigree_number = ".SqlUtil::getNullCheckedValueForSqlQuery($pedigreeNumber, true).", 
+					father_vsm_id = ".$fatherVsmIdSql.", 
+					father_id = ".$fatherIdSql.", 
+					mother_vsm_id = ".$motherVsmIdSql.", 
+					mother_id = ".$motherIdSql.",
+					gender_in_file = ".SqlUtil::getNullCheckedValueForSqlQuery($genderInFile, true).", 
+					gender_in_database = ".SqlUtil::getNullCheckedValueForSqlQuery($genderInDatabase, true).", 
+					ubn_of_birth = ".SqlUtil::getNullCheckedValueForSqlQuery($ubnOfBirth, true).", 
+					breed_type = ".SqlUtil::getNullCheckedValueForSqlQuery($breedType, true).", 
+					breed_code = ".SqlUtil::getNullCheckedValueForSqlQuery($breedCode, true).", 
+					scrapie_genotype = ".SqlUtil::getNullCheckedValueForSqlQuery($scrapieGenotype, true).", 
+					location_of_birth_id = ".SqlUtil::getNullCheckedValueForSqlQuery($locationOfBirthId, false).", 
+					pedigree_register_id = ".SqlUtil::getNullCheckedValueForSqlQuery($pedigreeRegisterId, false).", 
+					nick_name = ".SqlUtil::getNullCheckedValueForSqlQuery($nickName, true)."
+				WHERE id = ".$firstId;
+			$this->conn->exec($sql);
+
+			$primaryVsmId = $ulnGroup[0]['vsm_id'];
+
+			for($i=1; $i<count($ulnGroup); $i++) {
+				$animalRecord = $ulnGroup[$i];
+				$id = $animalRecord['id'];
+				$vsmId = $animalRecord['vsm_id'];
+
+				$this->saveVsmIdGroup($primaryVsmId, $vsmId, $vsmIdGroups);
+
+				//Update children
+				$this->updateChildrenVsmIds($primaryVsmId, $vsmId);
+
+				//DELETE DUPLICATE RECORDS
+				$sql = "DELETE FROM animal_migration_table WHERE id = ".$id;
+				$this->conn->exec($sql);
+			}
+			$this->cmdUtil->advanceProgressBar(1);
+		}
+		$this->cmdUtil->setProgressBarMessage('Merged double uln records of identical Animal');
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
+
 	}
 
 
 	private function fixDuplicateStns()
 	{
+		$sql = "SELECT a.vsm_id, a.animal_id, a.uln_origin, a.stn_origin, a.pedigree_country_code, a.pedigree_number,
+					a.id, a.uln_country_code, a.uln_number, a.animal_order_number, a.father_id, a.mother_id,
+ 					a.father_vsm_id, a.mother_vsm_id, a.gender_in_file, a.date_of_birth, a.ubn_of_birth,
+ 					a.breed_type, a.breed_code, a.is_ubn_updated, a.gender_in_database, a.location_of_birth_id, a.pedigree_register_id,
+ 					a.nick_name, a.scrapie_genotype
+				FROM animal_migration_table a
+				INNER JOIN (
+					SELECT stn_origin FROM animal_migration_table
+					WHERE stn_origin NOTNULL AND animal_migration_table.date_of_birth NOTNULL 
+					GROUP BY stn_origin, date_of_birth HAVING COUNT(*) > 1
+					)g ON g.stn_origin = a.stn_origin";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		if(count($results) == 0) {
+			$this->output->writeln('Duplicate stns have already been processed');
+			return;
+		}
+
+		//SearchArrays
+		$duplicatesSearchArray = SqlUtil::createGroupedSearchArrayFromSqlResults($results, 'stn_origin');
+
 		$sql = "SELECT id, m.mother_vsm_id, m.father_vsm_id FROM animal_migration_table m";
 		$results = $this->conn->query($sql)->fetchAll();
 
@@ -814,24 +1011,8 @@ class AnimalTableMigrator extends MigratorBase
 			if($fatherVsmId != null && $fatherVsmId != 0) { $vsmFathers[$fatherVsmId] = $migrationTableId; }
 		}
 
-		$sql = "SELECT id, primary_vsm_id, secondary_vsm_id FROM vsm_id_group";
-		$results = $this->conn->query($sql)->fetchAll();
-
 		$vsmIdGroups = $this->getVsmIdGroups();
-		
-		$sql = "SELECT a.vsm_id, a.animal_id, a.uln_origin, a.stn_origin, a.pedigree_country_code, a.pedigree_number,
-					a.id, a.uln_country_code, a.uln_number, a.animal_order_number, a.father_id, a.mother_id,
- 					a.father_vsm_id, a.mother_vsm_id, a.gender_in_file, a.date_of_birth, a.ubn_of_birth,
- 					a.breed_type, a.breed_code, a.is_ubn_updated, a.gender_in_database, a.location_of_birth_id, a.pedigree_register_id,
- 					a.nick_name, a.scrapie_genotype
-				FROM animal_migration_table a
-				INNER JOIN (
-					SELECT stn_origin FROM animal_migration_table
-					WHERE stn_origin NOTNULL AND animal_migration_table.date_of_birth NOTNULL 
-					GROUP BY stn_origin, date_of_birth HAVING COUNT(*) > 1
-					)g ON g.stn_origin = a.stn_origin";
-		$results = $this->conn->query($sql)->fetchAll();
-		$duplicatesSearchArray = SqlUtil::createGroupedSearchArrayFromSqlResults($results, 'stn_origin');
+
 
 		$this->cmdUtil->setStartTimeAndPrintIt(count($duplicatesSearchArray), 1);
 
@@ -845,6 +1026,7 @@ class AnimalTableMigrator extends MigratorBase
 			$ulnOrigin = null;
 			$validatedUlnOrigin = null;
 			$stnOrigin = null;
+			$validatedStnOrigin = null;
 			$pedigreeCountryCode = null;
 			$pedigreeNumber = null;
 			$ulnCountryCode = null;
@@ -864,7 +1046,11 @@ class AnimalTableMigrator extends MigratorBase
 
 			foreach($stnOriginGroup as $animalRecord) {
 
-				if(Validator::verifyUlnFormat($animalRecord['uln_origin'] ,true)) { $validatedUlnOrigin = $animalRecord['uln_origin']; }
+				if(Validator::verifyUlnFormat($animalRecord['uln_origin'] ,true)) {
+					$validatedUlnOrigin = $animalRecord['uln_origin']; }
+				if(Validator::verifyPedigreeCountryCodeAndNumberFormat($animalRecord['stn_origin'],true)) {
+					$validatedStnOrigin = $animalRecord['stn_origin']; }
+
 				if($animalRecord['animal_id'] != null) 	{ $animalId = $animalRecord['animal_id']; }
 				if($animalRecord['uln_origin'] != null) { $ulnOrigin = $animalRecord['uln_origin'];	}
 				if($animalRecord['stn_origin'] != null) { $stnOrigin = $animalRecord['stn_origin']; }
@@ -883,13 +1069,18 @@ class AnimalTableMigrator extends MigratorBase
 			}
 
 			if($validatedUlnOrigin != null) {
-				$ulnOrigin = $this->declareTagReplaceRepository->getNewReplacementUln($validatedUlnOrigin);
+				$newestFormatValidatedUlnOrigin = $this->declareTagReplaceRepository->getNewReplacementUln($validatedUlnOrigin);
+				if($newestFormatValidatedUlnOrigin != null) {
+					$ulnOrigin = $validatedUlnOrigin;
+				}
 			}
-			
+
 			$ulnParts = $this->parseUln($ulnOrigin);
 			$ulnCountryCode = $ulnParts[JsonInputConstant::ULN_COUNTRY_CODE];
 			$ulnNumber = $ulnParts[JsonInputConstant::ULN_NUMBER];
 			$animalOrderNumber = $ulnNumber != null ? StringUtil::getLast5CharactersFromString($ulnNumber) : null;
+
+			if($validatedStnOrigin != null) { $stnOrigin = $validatedStnOrigin;	}
 
 			$stnParts = $this->parseStn($stnOrigin);
 			$pedigreeCountryCode = $stnParts[JsonInputConstant::PEDIGREE_COUNTRY_CODE];
@@ -904,7 +1095,7 @@ class AnimalTableMigrator extends MigratorBase
 			$fatherIdSql = SqlUtil::getNullCheckedValueForSqlQuery($fatherId, true);
 			$motherVsmIdSql = SqlUtil::getNullCheckedValueForSqlQuery($motherVsmId, true);
 			$motherIdSql = SqlUtil::getNullCheckedValueForSqlQuery($motherId, true);
-			
+
 			//Unify father and mother ids
 			foreach($stnOriginGroup as $animalRecord) {
 				$id = $animalRecord['id'];
@@ -917,8 +1108,8 @@ class AnimalTableMigrator extends MigratorBase
 					$this->conn->exec($sql);
 				}
 			}
-			
-			
+
+
 			//Update the first record with merged values. Delete duplicates and save the secondary vsmIds.
 			$firstId = $stnOriginGroup[0]['id'];
 			$sql = "UPDATE animal_migration_table SET
@@ -965,6 +1156,7 @@ class AnimalTableMigrator extends MigratorBase
 			$countDuplicates++;
 			$this->cmdUtil->advanceProgressBar(1);
 		}
+		$this->cmdUtil->setProgressBarMessage('Duplicate stns are processed!');
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
 

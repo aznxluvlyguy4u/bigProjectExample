@@ -92,12 +92,13 @@ class BreedCodeUtil
         $alreadyProcessedBreedCodes = 0;
         $correctBreedCodesSkipped = 0;
         $incorrectBreedCodesProcessed = 0;
+        $emptyBreedCodesProcessed = 0;
 
         foreach ($results as $result) {
             if($result['is_breed_code_updated']) {
                 $alreadyProcessedBreedCodes++;
-                if($this->cmdUtil != null) { $this->cmdUtil->advanceProgressBar(1, 'Already done: '.$alreadyProcessedBreedCodes.' | Correct Skipped: '.$correctBreedCodesSkipped
-                    .' | incorrect processed (including parents): '.$incorrectBreedCodesProcessed); }
+                if($this->cmdUtil != null) { $this->cmdUtil->advanceProgressBar(1, 'BreedCodesFix - AlreadyDone|CorrectSkipped|Empty|IncorrectProcessed(including parents): '.$alreadyProcessedBreedCodes.'|'.$correctBreedCodesSkipped.'|'.$emptyBreedCodesProcessed
+                    .'|'.$incorrectBreedCodesProcessed); }
                 continue;
             }
 
@@ -108,22 +109,28 @@ class BreedCodeUtil
                 $sql = "UPDATE animal_migration_table SET is_breed_code_updated = TRUE WHERE id = ". $result['id'];
                 $this->conn->exec($sql);
                 $correctBreedCodesSkipped++;
-                if($this->cmdUtil != null) { $this->cmdUtil->advanceProgressBar(1, 'Already done: '.$alreadyProcessedBreedCodes.' | Correct Skipped: '.$correctBreedCodesSkipped
-                    .' | incorrect processed (including parents): '.$incorrectBreedCodesProcessed); }
+                if($this->cmdUtil != null) { $this->cmdUtil->advanceProgressBar('BreedCodesFix - AlreadyDone|CorrectSkipped|Empty|IncorrectProcessed(including parents): '.$alreadyProcessedBreedCodes.'|'.$correctBreedCodesSkipped.'|'.$emptyBreedCodesProcessed
+                    .'|'.$incorrectBreedCodesProcessed); }
                 continue;
             }
 
             $vsmId = $result['vsm_id'];
             $nestingLevel = 1;
-            $this->calculateBreedCodeFromParentsAndPersistNewValue($vsmId, $nestingLevel);
-            $incorrectBreedCodesProcessed++;
+            $newBreedCodeParts = $this->calculateBreedCodeFromParentsAndPersistNewValue($vsmId, $nestingLevel);
 
-            if($this->cmdUtil != null) { $this->cmdUtil->advanceProgressBar(1, 'Already done: '.$alreadyProcessedBreedCodes.' | Correct Skipped: '.$correctBreedCodesSkipped
-                .' | incorrect processed (including parents): '.$incorrectBreedCodesProcessed); }
+            if($newBreedCodeParts == null) {
+                $emptyBreedCodesProcessed++;
+            } else {
+                $incorrectBreedCodesProcessed++;
+            }
+
+
+            if($this->cmdUtil != null) { $this->cmdUtil->advanceProgressBar(1, 'BreedCodesFix - AlreadyDone|CorrectSkipped|Empty|IncorrectProcessed(including parents): '.$alreadyProcessedBreedCodes.'|'.$correctBreedCodesSkipped.'|'.$emptyBreedCodesProcessed
+                .'|'.$incorrectBreedCodesProcessed); }
         }
         if($this->cmdUtil != null) {
-            $this->cmdUtil->setProgressBarMessage('Already done: '.$alreadyProcessedBreedCodes.' | Correct Skipped: '.$correctBreedCodesSkipped
-                .' | incorrect processed (including parents): '.$incorrectBreedCodesProcessed);
+            $this->cmdUtil->setProgressBarMessage('BreedCodesFix - AlreadyDone|CorrectSkipped|Empty|IncorrectProcessed(including parents): '.$alreadyProcessedBreedCodes.'|'.$correctBreedCodesSkipped.'|'.$emptyBreedCodesProcessed
+                .'|'.$incorrectBreedCodesProcessed);
             $this->cmdUtil->setEndTimeAndPrintFinalOverview();
         }
     }
