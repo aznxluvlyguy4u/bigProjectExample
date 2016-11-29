@@ -779,6 +779,22 @@ class AnimalTableMigrator extends MigratorBase
 		//TODO fix doubles
 //		$this->animalRepository->bumpUlnNumberWithVerification($ulnNumber, $usedUlnNumbers);
 
+		/**
+		 * We can only be sure a duplicate record belongs to the same animal
+		 * if the following traits are identical:
+		 * uln_country_code, uln_number, date_of_birth, father_vsm_id, mother_vsm_id
+		 */
+		$sql ="SELECT * FROM animal_migration_table a
+			  INNER JOIN (
+				   SELECT uln_country_code, uln_number FROM animal_migration_table
+				   WHERE uln_country_code NOTNULL AND uln_number NOTNULL
+				   GROUP BY uln_country_code, uln_number, date_of_birth, father_vsm_id, mother_vsm_id HAVING COUNT(*) > 1
+				 )d ON d.uln_country_code = a.uln_country_code AND d.uln_number = a.uln_number";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$groupedSearchArray = SqlUtil::createGroupedSearchArrayFromSqlResults($results, 'uln_country_code', 'uln_number');
+		dump($groupedSearchArray);die;
+		
 		return $usedUlnNumbers;
 	}
 
@@ -1865,6 +1881,7 @@ class AnimalTableMigrator extends MigratorBase
 
 	public function test()
 	{
-		$this->fixDuplicateUlns();
+		$usedUlnNumbers = $this->animalMigrationTableRepository->getExistingUlnsInAnimalAndAnimalMigrationTables();
+		$this->fixDuplicateUlns($usedUlnNumbers);
 	}
 }

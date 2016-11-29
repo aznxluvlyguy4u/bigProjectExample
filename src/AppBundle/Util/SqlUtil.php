@@ -42,21 +42,28 @@ class SqlUtil
 
     /**
      * @param array $sqlResultsArray
-     * @param string $keyToGroupBy
+     * @param string $variable1ToGroupBy
+     * @param string $variable2ToGroupBy
      * @return array
      */
-    public static function createGroupedSearchArrayFromSqlResults($sqlResultsArray, $keyToGroupBy)
+    public static function createGroupedSearchArrayFromSqlResults($sqlResultsArray, $variable1ToGroupBy, $variable2ToGroupBy = null)
     {
         $duplicatesSearchArray = [];
         //Create grouped searchArray
         foreach ($sqlResultsArray as $result) {
-            $stnOrigin = $result[$keyToGroupBy];
-            if(!array_key_exists($stnOrigin, $duplicatesSearchArray)) {
-                $duplicatesSearchArray[$stnOrigin] = [];
+
+            $keyToGroupBy = $result[$variable1ToGroupBy];
+            if($variable2ToGroupBy != null) {
+                $keyToGroupBy = $result[$variable1ToGroupBy].$result[$variable2ToGroupBy];
             }
-            $stnOriginGroup = $duplicatesSearchArray[$stnOrigin];
-            $stnOriginGroup[] = $result;
-            $duplicatesSearchArray[$stnOrigin] = $stnOriginGroup;
+
+            if(!array_key_exists($keyToGroupBy, $duplicatesSearchArray)) {
+                $duplicatesSearchArray[$keyToGroupBy] = [];
+            }
+
+            $group = $duplicatesSearchArray[$keyToGroupBy];
+            $group[] = $result;
+            $duplicatesSearchArray[$keyToGroupBy] = $group;
         }
         return $duplicatesSearchArray;
     }
