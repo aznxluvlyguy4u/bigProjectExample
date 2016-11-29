@@ -346,6 +346,8 @@ class AnimalTableMigrator extends MigratorBase
 		 * The correct gender is in the gender_in_file. Read that one to the database
 		 * If EWE don't import children as father
 		 * If RAM don't import children as mother
+		 *
+		 * VsmIds for duplicate animals are found in the vsm_id_group table
 		 */
 		
 	}
@@ -705,11 +707,11 @@ class AnimalTableMigrator extends MigratorBase
 		$this->animalMigrationTableRepository->fixAnimalOrderNumberToMatchUlnNumber();
 
 		$this->output->writeln("=== Fix duplicate ulns ===");
-		$this->fixDuplicateUlns();
+		$usedUlnNumbers = $this->fixDuplicateUlns($usedUlnNumbers);
 	}
 
 
-	private function fixDuplicateUlns()
+	private function fixDuplicateUlns($usedUlnNumbers)
 	{
 		//First fix the duplicates with more than 2
 
@@ -774,9 +776,10 @@ class AnimalTableMigrator extends MigratorBase
 		}
 
 
-
 		//TODO fix doubles
+//		$this->animalRepository->bumpUlnNumberWithVerification($ulnNumber, $usedUlnNumbers);
 
+		return $usedUlnNumbers;
 	}
 
 

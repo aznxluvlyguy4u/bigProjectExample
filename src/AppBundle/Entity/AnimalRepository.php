@@ -13,6 +13,7 @@ use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -822,5 +823,19 @@ class AnimalRepository extends BaseRepository
       $this->getManager()->flush();
       if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
     }
+  }
+
+
+  /**
+   * @param string $ulnNumber
+   * @param array $usedUlnNumbers
+   * @return null|string
+   */
+  public function bumpUlnNumberWithVerification($ulnNumber, $usedUlnNumbers)
+  {
+      $newUlnNumber = StringUtil::bumpUlnNumber($ulnNumber);
+      if($newUlnNumber == $ulnNumber) { return null; }
+      if(array_key_exists($ulnNumber, $usedUlnNumbers)) { return null; }
+      return $newUlnNumber;
   }
 }

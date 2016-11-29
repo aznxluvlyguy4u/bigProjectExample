@@ -62,11 +62,31 @@ class StringUtil
      */
     public static function getLast5CharactersFromString($string)
     {
-        if(strlen($string) < 5) {
+        if($string == null) { return null; }
+        else if(strlen($string) < 5) {
             return $string;
         } else {
             return substr($string, strlen($string)-5, strlen($string));
         }
+    }
+
+
+    /**
+     * In case of a duplicate uln, the convention is to bump the ulnNumber
+     * by converting the first char of the animalOrderPart in the ulnNumber to 9.
+     *
+     * If format is invalid, null is returned
+     *
+     * @param string $ulnNumber
+     * @return string
+     */
+    public static function bumpUlnNumber($ulnNumber)
+    {
+        if(!Validator::verifyUlnNumberFormat($ulnNumber)) { return null; }
+        
+        $newUlnNumber = substr($ulnNumber, 0, strlen($ulnNumber)); //copy the string before editing!
+        $newUlnNumber[7] = '9';
+        return $newUlnNumber;
     }
 
 
