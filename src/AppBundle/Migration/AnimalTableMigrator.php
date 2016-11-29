@@ -703,6 +703,80 @@ class AnimalTableMigrator extends MigratorBase
 		$count = $this->animalMigrationTableRepository->countAnimalOrderNumbersNotMatchingUlnNumbers();
 		$this->output->writeln("=== Fix ".$count." animalOrderNumbers to match updated ulnNumbers ===");
 		$this->animalMigrationTableRepository->fixAnimalOrderNumberToMatchUlnNumber();
+
+		$this->output->writeln("=== Fix duplicate ulns ===");
+		$this->fixDuplicateUlns();
+	}
+
+
+	private function fixDuplicateUlns()
+	{
+		//First fix the duplicates with more than 2
+
+		$sql = "SELECT COUNT(*) FROM animal_migration_table a
+				INNER JOIN (
+					SELECT uln_country_code, uln_number FROM animal_migration_table
+					WHERE uln_country_code NOTNULL AND uln_number NOTNULL
+					GROUP BY uln_country_code, uln_number HAVING COUNT(*) > 2
+					)d ON d.uln_country_code = a.uln_country_code AND d.uln_number = a.uln_number";
+		$count = $this->conn->query($sql)->fetch()['count'];
+		if($count > 0) {
+			//CASE: NL 109994833896
+
+			//Update first letter in animalOrderNumber (incl uln) to 9
+			$sql = "UPDATE animal_migration_table SET animal_id = NULL, uln_number = 109994893896,
+ 				animal_order_number = 93896, deleted_uln_origin = uln_origin, uln_origin = 'NL 109994893896' WHERE id = 958253";
+			$this->conn->exec($sql);
+
+			$sql = "DELETE FROM animal_migration_table WHERE id = 1072556";
+			$this->conn->exec($sql);
+
+			//CASE: NL 076474802053
+
+			$sql = "SELECT * FROM animal_migration_table a
+				INNER JOIN (
+					SELECT uln_country_code, uln_number FROM animal_migration_table
+					WHERE uln_country_code NOTNULL AND uln_number NOTNULL
+					GROUP BY uln_country_code, uln_number HAVING COUNT(*) > 2
+					)d ON d.uln_country_code = a.uln_country_code AND d.uln_number = a.uln_number
+				WHERE uln_origin = 'NL 076474802053'";
+			$results = $this->conn->query($sql)->fetchAll();
+
+
+			$primaryVsmId = null;
+			foreach ($results as $result) {
+				if($result['date_of_birth'] != null) {
+					$primaryVsmId = $result['vsm_id'];
+				}
+			}
+
+			foreach ($results as $result) {
+				if($result['date_of_birth'] != null) {
+					$primaryVsmId = $result['vsm_id'];
+				}
+			}
+
+			$vsmIdGroups = $this->getVsmIdGroups();
+			foreach($results as $result) {
+				$vsmId = $result['vsm_id'];
+				if($result['date_of_birth'] == null) {
+					$this->updateChildrenVsmIds($primaryVsmId, $vsmId);
+					$this->saveVsmIdGroup($primaryVsmId, $vsmId, $vsmIdGroups);
+					//They all don't have any parents
+					$sql = "DELETE FROM animal_migration_table WHERE id = ".$result['id'];
+					$this->conn->exec($sql);
+				}
+			}
+			$this->output->writeln('Duplicates of more than 2 are deleted!');
+
+		} else {
+			$this->output->writeln('Duplicates of more than 2 have already been deleted!');
+		}
+
+
+
+		//TODO fix doubles
+
 	}
 
 
@@ -724,10 +798,7 @@ class AnimalTableMigrator extends MigratorBase
 		$sql = "SELECT id, primary_vsm_id, secondary_vsm_id FROM vsm_id_group";
 		$results = $this->conn->query($sql)->fetchAll();
 
-		$vsmIdGroups = [];
-		foreach ($results as $result) {
-			$vsmIdGroups[$result['secondary_vsm_id']] = $result['primary_vsm_id'];
-		}
+		$vsmIdGroups = $this->getVsmIdGroups();
 		
 		$sql = "SELECT a.vsm_id, a.animal_id, a.uln_origin, a.stn_origin, a.pedigree_country_code, a.pedigree_number,
 					a.id, a.uln_country_code, a.uln_number, a.animal_order_number, a.father_id, a.mother_id,
@@ -863,12 +934,10 @@ class AnimalTableMigrator extends MigratorBase
 				$id = $animalRecord['id'];
 				$vsmId = $animalRecord['vsm_id'];
 
-				if(!array_key_exists($vsmId, $vsmIdGroups)) {
-					$sql = "INSERT INTO vsm_id_group (id, primary_vsm_id, secondary_vsm_id
-						)VALUES(nextval('vsm_id_group_id_seq'),".$primaryVsmId.",".$vsmId.")";
-					$this->conn->exec($sql);
-					$vsmIdGroups[$vsmId] = $primaryVsmId;
-				}
+				$this->saveVsmIdGroup($primaryVsmId, $vsmId, $vsmIdGroups);
+
+				//Update children
+				$this->updateChildrenVsmIds($primaryVsmId, $vsmId);
 
 				//DELETE DUPLICATE RECORDS
 				$sql = "DELETE FROM animal_migration_table WHERE id = ".$id;
@@ -1749,8 +1818,50 @@ class AnimalTableMigrator extends MigratorBase
     }
 
 
+	/**
+	 * @param string|int $primaryVsmId
+	 * @param string|int $vsmId
+	 * @throws \Doctrine\DBAL\DBALException
+	 */
+	private function updateChildrenVsmIds($primaryVsmId, $vsmId)
+	{
+		$sql = "UPDATE animal_migration_table SET mother_vsm_id = ".$primaryVsmId." WHERE mother_vsm_id = ".$vsmId;
+		$this->conn->exec($sql);
+		$sql = "UPDATE animal_migration_table SET father_vsm_id = ".$primaryVsmId." WHERE father_vsm_id = ".$vsmId;
+		$this->conn->exec($sql);
+	}
+
+
+	private function saveVsmIdGroup($primaryVsmId, $vsmId, $vsmIdGroups)
+	{
+		if(!array_key_exists($vsmId, $vsmIdGroups)) {
+			$sql = "INSERT INTO vsm_id_group (id, primary_vsm_id, secondary_vsm_id
+						)VALUES(nextval('vsm_id_group_id_seq'),".$primaryVsmId.",".$vsmId.")";
+			$this->conn->exec($sql);
+			$vsmIdGroups[$vsmId] = $primaryVsmId;
+		}
+	}
+
+
+	/**
+	 * @return array
+	 * @throws \Doctrine\DBAL\DBALException
+	 */
+	private function getVsmIdGroups()
+	{
+		$sql = "SELECT id, primary_vsm_id, secondary_vsm_id FROM vsm_id_group";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$vsmIdGroups = [];
+		foreach ($results as $result) {
+			$vsmIdGroups[$result['secondary_vsm_id']] = $result['primary_vsm_id'];
+		}
+		return $vsmIdGroups;
+	}
+
+
 	public function test()
 	{
-		$this->fixDuplicateStns();
+		$this->fixDuplicateUlns();
 	}
 }
