@@ -106,6 +106,7 @@ class AnimalTableMigrator extends MigratorBase
 		$this->fixUlnsAndStns();
 		$this->findMissingFathers();
 		$this->fixAnimalOrderNumbers();
+		$this->checkAnimalIds();
 
 		//Fix breedCodes last, because it might take a while
 		$breedCodeUtil = new BreedCodeUtil($this->em, $this->cmdUtil);
@@ -1966,6 +1967,81 @@ class AnimalTableMigrator extends MigratorBase
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
 	
+	
+	
+	public function checkAnimalIds()
+	{
+		//SeachArrays
+
+		$animalIdByVsmIds = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
+		$animalIdByUlnString = $this->animalRepository->getAnimalPrimaryKeysByUlnString(true);
+
+		$sql = "SELECT id, vsm_id, animal_id, father_vsm_id, mother_vsm_id, father_id, mother_id,
+					  uln_country_code, uln_number
+				FROM animal_migration_table";
+		$results = $this->conn->query($sql)->fetchAll();
+
+
+		$this->cmdUtil->setStartTimeAndPrintIt(count($results),1);
+
+		$recordsUpdated = 0;
+		$recordsSkipped = 0;
+		foreach ($results as $result) {
+			$id = $result['id'];
+			$vsmId = $result['vsm_id'];
+			$animalIdInDb = $result['animal_id'];
+			$fatherIdInDb = $result['father_id'];
+			$fatherVsmId = $result['father_vsm_id'];
+			$motherIdInDb = $result['mother_id'];
+			$motherVsmId = $result['mother_vsm_id'];
+
+
+			$animalId = null;
+			if(array_key_exists($vsmId, $animalIdByVsmIds)) {
+				$animalId = $animalIdByVsmIds[$vsmId];
+
+			} else {
+				$ulnCountryCode = $result['uln_country_code'];
+				$ulnNumber = $result['uln_number'];
+				$uln = null;
+				if(is_string($ulnCountryCode) && is_string($ulnNumber)) {
+					$uln = $ulnCountryCode.' '.$ulnNumber;
+				}
+
+				if($animalIdByUlnString->contains($uln)) {
+					$animalId = $animalIdByUlnString->get($uln);
+				}
+			}
+
+			$fatherId  = null;
+			if(array_key_exists($fatherVsmId, $animalIdByVsmIds)) {
+				$fatherId = $animalIdByVsmIds[$fatherVsmId];
+			}
+
+			$motherId = null;
+			if(array_key_exists($motherVsmId, $animalIdByVsmIds)) {
+				$motherId = $animalIdByVsmIds[$motherVsmId];
+			}
+
+			if($animalIdInDb != $animalId || $fatherIdInDb != $fatherId || $motherIdInDb != $motherId) {
+				$animalId = SqlUtil::getNullCheckedValueForSqlQuery($animalId, false);
+				$fatherId = SqlUtil::getNullCheckedValueForSqlQuery($fatherId, false);
+				$motherId = SqlUtil::getNullCheckedValueForSqlQuery($motherId, false);
+
+				$sql = "UPDATE animal_migration_table SET 
+						  		animal_id = ".$animalId.
+						", mother_id = ".$motherId.
+						", father_id = ".$fatherId.
+						" WHERE id = ".$id;
+				$this->conn->exec($sql);
+				$recordsUpdated++;
+			} else { $recordsSkipped++; }
+
+			$this->cmdUtil->advanceProgressBar(1,'AnimalIds updated|skipped: '.$recordsUpdated.'|'.$recordsSkipped);
+		}
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
+	}
+	
 
 	/**
      * Example
@@ -2073,7 +2149,6 @@ class AnimalTableMigrator extends MigratorBase
 
 	public function test()
 	{
-		$usedUlnNumbers = $this->animalMigrationTableRepository->getExistingUlnsInAnimalAndAnimalMigrationTables();
-		$this->fixDuplicateUlns($usedUlnNumbers);
+		$this->checkAnimalIds();
 	}
 }
