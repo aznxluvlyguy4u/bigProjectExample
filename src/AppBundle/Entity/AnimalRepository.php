@@ -375,7 +375,13 @@ class AnimalRepository extends BaseRepository
             WHERE r.location_id = ".$location->getId()." AND (c.is_reveal_historic_animals = TRUE OR a.location_id ISNULL)";
     $retrievedAnimalData = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
+    $currentUbn = $location->getUbn();
+
     foreach ($retrievedAnimalData as $record) {
+      $ubnOfAnimal = $record['ubn'];
+      $isAlive = $record['is_alive'];
+      $isHistoricAnimal = $ubnOfAnimal != $currentUbn || !$isAlive;
+
       $results[] = [
         JsonInputConstant::ULN_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['uln_country_code'], $replacementString),
         JsonInputConstant::ULN_NUMBER => Utils::fillNullOrEmptyString($record['uln_number'], $replacementString),
@@ -385,8 +391,9 @@ class AnimalRepository extends BaseRepository
         JsonInputConstant::GENDER => Utils::fillNullOrEmptyString($record['gender'], $replacementString),
         JsonInputConstant::DATE_OF_BIRTH => Utils::fillNullOrEmptyString($record['date_of_birth'], $replacementString),
         JsonInputConstant::DATE_OF_DEATH => Utils::fillNullOrEmptyString($record['date_of_death'], $replacementString),
-        JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($record['is_alive'], $replacementString),
-        JsonInputConstant::UBN => Utils::fillNullOrEmptyString($record['ubn'], $replacementString),
+        JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($isAlive, $replacementString),
+        JsonInputConstant::UBN => Utils::fillNullOrEmptyString($ubnOfAnimal, $replacementString),
+        JsonInputConstant::IS_HISTORIC_ANIMAL => Utils::fillNullOrEmptyString($isHistoricAnimal, $replacementString),
       ];
     }
 
