@@ -6,6 +6,8 @@ namespace AppBundle\Migration;
 
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\DeclareTagReplace;
+use AppBundle\Entity\DeclareTagReplaceRepository;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\SqlUtil;
@@ -33,6 +35,9 @@ class MigratorBase
     /** @var AnimalRepository */
     protected $animalRepository;
 
+    /** @var DeclareTagReplaceRepository */
+    protected $declareTagReplaceRepository;
+
     /** @var string */
     protected $outputFolder;
 
@@ -59,7 +64,8 @@ class MigratorBase
         $this->data = $data;
         /** @var AnimalRepository animalRepository */
         $this->animalRepository = $em->getRepository(Animal::class);
-        
+        $this->declareTagReplaceRepository = $em->getRepository(DeclareTagReplace::class);
+
         $this->rootDir = null;
         if(is_string($rootDir)) {
             $this->rootDir = $rootDir;

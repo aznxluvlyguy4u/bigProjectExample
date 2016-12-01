@@ -26,6 +26,7 @@ class JsonInputConstant
     const DATE_OF_BIRTH = 'date_of_birth';
     const GENDER = 'gender';
     const IS_REVEAL_HISTORIC_ANIMALS = 'is_reveal_historic_animals';
+    const IS_HISTORIC_ANIMAL = 'is_historic_animal';
     const ULN = 'uln';
     const STN = 'stn';
     const SCRAPIE_GENOTYPE = 'scrapie_genotype';

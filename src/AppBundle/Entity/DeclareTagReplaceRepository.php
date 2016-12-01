@@ -12,11 +12,13 @@ class DeclareTagReplaceRepository extends BaseRepository {
 
     /**
      * @param string $oldReplacedUln
+     * @param boolean $hasSpaceBetweenCountryCodeAndNumber
+     * @param boolean $isFirstIteration
      * @return string
      */
-    public function getNewReplacementUln($oldReplacedUln)
+    public function getNewReplacementUln($oldReplacedUln, $hasSpaceBetweenCountryCodeAndNumber = false, $isFirstIteration = true)
     {
-        $ulnParts = Utils::getUlnFromString($oldReplacedUln);
+        $ulnParts = Utils::getUlnFromString($oldReplacedUln, $hasSpaceBetweenCountryCodeAndNumber);        
         if($ulnParts == null) { return null; }
 
         $oldReplacedUlnCountryCode = $ulnParts[Constant::ULN_COUNTRY_CODE_NAMESPACE];
@@ -32,9 +34,11 @@ class DeclareTagReplaceRepository extends BaseRepository {
 
         $foundNewReplacementUln = $result['new_replacement_uln'];
 
+        if($isFirstIteration && $foundNewReplacementUln == null) { return $oldReplacedUln; }
+
         //Loop until you find the newest version of the uln for the animal
         do {
-            $foundNewerReplacementUln = $this->getNewReplacementUln($foundNewReplacementUln);
+            $foundNewerReplacementUln = $this->getNewReplacementUln($foundNewReplacementUln, $hasSpaceBetweenCountryCodeAndNumber, false);
             if($foundNewerReplacementUln == null) {
                 return $foundNewReplacementUln;
             } else {

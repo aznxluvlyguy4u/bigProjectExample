@@ -10,7 +10,7 @@ use JMS\Serializer\Annotation as JMS;
 /**
  * Class AnimalMigrationTable
  * @ORM\Table(name="animal_migration_table",indexes={@ORM\Index(name="migration_idx", columns={"vsm_id", "animal_id"})})
- * @ORM\Entity(repositoryClass="AppBundle\Entity\CountryRepository")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\AnimalMigrationTableRepository")
  * @package AppBundle\Entity
  */
 class AnimalMigrationTable
@@ -123,6 +123,9 @@ class AnimalMigrationTable
     private $motherId;
 
     /**
+     * This the actual gender to be saved to the database.
+     * The final corrected value will be saved here and the old value is saved in the 'correctedGender' column
+     * 
      * @var string
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
@@ -173,6 +176,44 @@ class AnimalMigrationTable
      */
     private $isBreedCodeUpdated;
 
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isUbnUpdated;
+
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isUlnUpdated;
+
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isStnUpdated;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isAnimalOrderNumberUpdated;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isFatherUpdated;
+
     /**
      * @var string
      * @ORM\Column(type="string", nullable=true)
@@ -207,6 +248,48 @@ class AnimalMigrationTable
      * @JMS\Type("string")
      */
     private $scrapieGenotype;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $deletedStnOrigin;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $deletedUlnOrigin;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isCorrectRecord;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isRecordMigrated;
+
+    /**
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     */
+    private $deletedFatherVsmId;
+
+    /**
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     */
+    private $deletedMotherVsmId;
 
     /**
      * AnimalMigrationTable constructor.
@@ -645,6 +728,182 @@ class AnimalMigrationTable
     public function setScrapieGenotype($scrapieGenotype)
     {
         $this->scrapieGenotype = $scrapieGenotype;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isUbnUpdated()
+    {
+        return $this->isUbnUpdated;
+    }
+
+    /**
+     * @param boolean $isUbnUpdated
+     */
+    public function setIsUbnUpdated($isUbnUpdated)
+    {
+        $this->isUbnUpdated = $isUbnUpdated;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isUlnUpdated()
+    {
+        return $this->isUlnUpdated;
+    }
+
+    /**
+     * @param boolean $isUlnUpdated
+     */
+    public function setIsUlnUpdated($isUlnUpdated)
+    {
+        $this->isUlnUpdated = $isUlnUpdated;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isStnUpdated()
+    {
+        return $this->isStnUpdated;
+    }
+
+    /**
+     * @param boolean $isStnUpdated
+     */
+    public function setIsStnUpdated($isStnUpdated)
+    {
+        $this->isStnUpdated = $isStnUpdated;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isAnimalOrderNumberUpdated()
+    {
+        return $this->isAnimalOrderNumberUpdated;
+    }
+
+    /**
+     * @param boolean $isAnimalOrderNumberUpdated
+     */
+    public function setIsAnimalOrderNumberUpdated($isAnimalOrderNumberUpdated)
+    {
+        $this->isAnimalOrderNumberUpdated = $isAnimalOrderNumberUpdated;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isIsFatherUpdated()
+    {
+        return $this->isFatherUpdated;
+    }
+
+    /**
+     * @param boolean $isFatherUpdated
+     */
+    public function setIsFatherUpdated($isFatherUpdated)
+    {
+        $this->isFatherUpdated = $isFatherUpdated;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDeletedStnOrigin()
+    {
+        return $this->deletedStnOrigin;
+    }
+
+    /**
+     * @param string $deletedStnOrigin
+     */
+    public function setDeletedStnOrigin($deletedStnOrigin)
+    {
+        $this->deletedStnOrigin = $deletedStnOrigin;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDeletedUlnOrigin()
+    {
+        return $this->deletedUlnOrigin;
+    }
+
+    /**
+     * @param string $deletedUlnOrigin
+     */
+    public function setDeletedUlnOrigin($deletedUlnOrigin)
+    {
+        $this->deletedUlnOrigin = $deletedUlnOrigin;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isIsCorrectRecord()
+    {
+        return $this->isCorrectRecord;
+    }
+
+    /**
+     * @param boolean $isCorrectRecord
+     */
+    public function setIsCorrectRecord($isCorrectRecord)
+    {
+        $this->isCorrectRecord = $isCorrectRecord;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isIsRecordMigrated()
+    {
+        return $this->isRecordMigrated;
+    }
+
+    /**
+     * @param boolean $isRecordMigrated
+     */
+    public function setIsRecordMigrated($isRecordMigrated)
+    {
+        $this->isRecordMigrated = $isRecordMigrated;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDeletedFatherVsmId()
+    {
+        return $this->deletedFatherVsmId;
+    }
+
+    /**
+     * @param int $deletedFatherVsmId
+     */
+    public function setDeletedFatherVsmId($deletedFatherVsmId)
+    {
+        $this->deletedFatherVsmId = $deletedFatherVsmId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDeletedMotherVsmId()
+    {
+        return $this->deletedMotherVsmId;
+    }
+
+    /**
+     * @param int $deletedMotherVsmId
+     */
+    public function setDeletedMotherVsmId($deletedMotherVsmId)
+    {
+        $this->deletedMotherVsmId = $deletedMotherVsmId;
     }
 
 

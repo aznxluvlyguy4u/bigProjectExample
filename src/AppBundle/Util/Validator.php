@@ -38,11 +38,7 @@ class Validator
     public static function isNumberOfDecimalsWithinLimit($number, $maxNumberOfDecimals)
     {
         $roundedNumber = round($number,$maxNumberOfDecimals);
-        if($roundedNumber == $number) {
-            return true;
-        } else {
-            return false;
-        }
+        return $roundedNumber == $number;
     }
     
 
@@ -63,12 +59,16 @@ class Validator
             $pregMatch = "/([A-Z]{2})+([0-9]{12})/";
         }
 
-        if(preg_match($pregMatch,$ulnString)
-            && strlen($ulnString) == $ulnLength) {
-            return true;
-        } else {
-            return false;
-        }
+        return preg_match($pregMatch,$ulnString) && strlen($ulnString) == $ulnLength;
+    }
+
+
+    public static function verifyUlnNumberFormat($ulnNumber)
+    {
+        $ulnLength = 12;
+        $pregMatch = "/([0-9]{12})/";
+
+        return preg_match($pregMatch,$ulnNumber) && strlen($ulnNumber) == $ulnLength;
     }
 
 
@@ -79,13 +79,8 @@ class Validator
     public static function verifyPedigreeNumberFormat($pedigreeNumber)
     {
         $numberLengthIncludingDash = 11;
-
-        if(preg_match("/([A-Z0-9]{5}[-][a-zA-Z0-9]{5})/",$pedigreeNumber)
-            && strlen($pedigreeNumber) == $numberLengthIncludingDash) {
-            return true;
-        } else {
-            return false;
-        }
+        return preg_match("/([A-Z0-9]{5}[-][a-zA-Z0-9]{5})/",$pedigreeNumber)
+        && strlen($pedigreeNumber) == $numberLengthIncludingDash;
     }
 
 
@@ -103,13 +98,7 @@ class Validator
             $numberLengthIncludingDash = 13;
             $pregMatch = "/([A-Z]{2}[A-Z0-9]{5}[-][a-zA-Z0-9]{5})/";
         }
-
-        if(preg_match($pregMatch,$stn)
-            && strlen($stn) == $numberLengthIncludingDash) {
-            return true;
-        } else {
-            return false;
-        }
+        return preg_match($pregMatch,$stn) && strlen($stn) == $numberLengthIncludingDash;
     }
 
 
@@ -206,11 +195,7 @@ class Validator
         $ownerOfAnimal = $company->getOwner();
         if($ownerOfAnimal == null) { return $nullInputResult; }
 
-        if($ownerOfAnimal->getId() == $client->getId()) {
-            return true;
-        } else {
-            return false;
-        }
+        return $ownerOfAnimal->getId() == $client->getId();
     }
 
 
@@ -228,11 +213,7 @@ class Validator
         $locationOfAnimal = $animal->getLocation();
         if(!($locationOfAnimal instanceof Location)) { return $nullInputResult; }
 
-        if($locationOfAnimal->getId() == $location->getId()) {
-            return true;
-        } else {
-            return false;
-        }
+        return $locationOfAnimal->getId() == $location->getId();
     }
 
 
@@ -270,16 +251,9 @@ class Validator
             /** @var AnimalRepository $animalRepository */
             $animalRepository = $manager->getRepository(Constant::ANIMAL_REPOSITORY);
             $animal = $animalRepository->findByPedigreeCountryCodeAndNumber($pedigreeCountryCode, $pedigreeNumber);
-
-            if($animal != null) {
-                return true;
-            } else {
-                return false;
-            }
-
-        } else {
-            return $nullResult;
+            return $animal != null;
         }
+        return $nullResult;
     }
 
 
@@ -293,9 +267,7 @@ class Validator
             return true;
         } elseif ($animal instanceof Neuter) {
             $genderValue = $animal->getGender();
-            if ($genderValue === GenderType::MALE || $genderValue === GenderType::M) {
-                return true;
-            }
+            return $genderValue === GenderType::MALE || $genderValue === GenderType::M;
         }
 
         return false;
@@ -513,5 +485,35 @@ class Validator
             }
             return $isUnique;
         }
+    }
+
+
+    /**
+     * @param string|int $ubn
+     * @return bool
+     */
+    public static function hasValidUbnFormat($ubn)
+    {
+        //Verify type, ensure ubn is a string
+        if(is_int($ubn)) { $ubn = (string)$ubn; }
+        else if(is_string($ubn)) {  if(!ctype_digit($ubn)) { return false; }}
+        else { return false; }
+
+        $maxLength = 7;
+        $minLength = 2;
+        $length = strlen($ubn);
+
+        if($length < $minLength || $length > $maxLength) { return false; }
+
+        $ubnReversed = strrev(str_pad($ubn, $maxLength, 0, STR_PAD_LEFT));
+        $ubnDigits = str_split($ubnReversed, 1);
+        $weights = [1, 3, 7, 1, 3, 7, 1];
+
+        $sum = 0;
+        for($i=0; $i < $maxLength; $i++) {
+            $sum += intval($ubnDigits[$i]) * $weights[$i];
+        }
+
+        return $sum%10 == 0;
     }
 }

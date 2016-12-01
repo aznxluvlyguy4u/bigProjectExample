@@ -7,6 +7,9 @@ use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Migration\AnimalTableMigrator;
 use AppBundle\Migration\BlindnessFactorsMigrator;
+use AppBundle\Migration\BreederNumberMigrator;
+use AppBundle\Migration\CFToonVerhoevenMigrator;
+use AppBundle\Migration\CompanySubscriptionMigrator;
 use AppBundle\Migration\MigratorBase;
 use AppBundle\Migration\MyoMaxMigrator;
 use AppBundle\Migration\PerformanceMeasurementsMigrator;
@@ -40,6 +43,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     const TAG_REPLACES = 'tag_replaces';
     const PREDICATES = 'predicates';
     const SUBSCRIPTIONS = 'subscriptions';
+    const CF_TOON_VERHOEVEN = 'cf_toon_verhoeven';
 
     /** @var array */
     private $filenames;
@@ -91,6 +95,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             self::TAG_REPLACES => '20161018_1058_DierOmnummeringen.csv',
             self::PREDICATES => '20161019_0854_DierPredikaat_NSFO-correct.csv',
             self::SUBSCRIPTIONS => 'lidmaatschappen_voor_2010.txt',
+            self::CF_TOON_VERHOEVEN => 'Overzicht_UK-dieren_CF_ToonVerhoeven.csv',
         );
 
         //Setup folders if missing
@@ -103,14 +108,16 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '2: Update pedigreeRegisters', "\n",
             '3: Import AnimalTable csv file into database. Update PedigreeRegisters First!', "\n",
             '4: Set AnimalIds on current TagReplaces, THEN Migrate TagReplaces', "\n",
-            '5: Fix imported animalTable data', "\n",
-            '6: BLANK', "\n",
-            '7: Migrate AnimalTable data', "\n",
-            '8: Migrate Races', "\n",
-            '9: Migrate MyoMax', "\n",
-            '10: Migrate BlindnessFactor and update values in Animal', "\n",
-            '11: Migrate Predicates and update values in Animal', "\n",
-            '12: Migrate Performance Measurements', "\n",
+            '5: Import breederNumbers', "\n",
+            '6: Import data for CF ToonVerhoeven', "\n",
+            '7: Fix imported animalTable data', "\n",
+            '8: Migrate AnimalTable data', "\n",
+            '9: Migrate Races', "\n",
+            '10: Migrate MyoMax', "\n",
+            '11: Migrate BlindnessFactor and update values in Animal', "\n",
+            '12: Migrate Predicates and update values in Animal', "\n",
+            '13: Migrate Performance Measurements', "\n",
+            '14: Migrate Company SubscriptionDate', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -136,42 +143,52 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                 break;
 
             case 5:
-                $result = $this->fixImportedAnimalTableData() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->migrateBreedNumbers() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
             case 6:
-//                $result = $this->fixImportedAnimalTableData() ? 'DONE' : 'NO DATA!' ;
-//                $output->writeln($result);
+                $result = $this->importCFAnimal() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
                 break;
 
             case 7:
-                $result = $this->migrateAnimalTable() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->fixImportedAnimalTableData() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
             case 8:
-                $result = $this->migrateRaces() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->migrateAnimalTable() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
             case 9:
-                $result = $this->migrateMyoMax() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->migrateRaces() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
             case 10:
-                $result = $this->migrateBlindnessFactors() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->migrateMyoMax() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
             case 11:
-                $result = $this->migratePredicates() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->migrateBlindnessFactors() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
             case 12:
+                $result = $this->migratePredicates() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 13:
                 $result = $this->migratePerformanceMeasurements() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 14:
+                $result = $this->migrateCompanySubscriptionDate() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
@@ -240,6 +257,20 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     /**
      * @return bool
      */
+    private function importCFAnimal()
+    {
+        $data = $this->parseCSV($this->filenames[self::CF_TOON_VERHOEVEN]);
+        if(count($data) == 0) { return false; }
+
+        $animalTableMigrator = new CFToonVerhoevenMigrator($this->cmdUtil, $this->em, $this->output, $data);
+        $animalTableMigrator->migrate();
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
     private function fixImportedAnimalTableData()
     {
         $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
@@ -281,6 +312,20 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     /**
      * @return bool
      */
+    private function migrateBreedNumbers()
+    {
+        $data = $this->parseCSV($this->filenames[self::SUBSCRIPTIONS]);
+        if(count($data) == 0) { return false; }
+        
+        $animalTableMigrator = new BreederNumberMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        $animalTableMigrator->migrate();
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
     private function updatePedigreeRegister()
     {
         $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
@@ -298,10 +343,8 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         if(count($data) == 0) { return false; }
 
         $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
-        $this->output->writeln('Fixing genders in the database');
-        $animalTableMigrator->fixGendersInDatabase();
-        $animalTableMigrator->verifyData();
-//        $animalTableMigrator->migrate(); TODO
+//        $animalTableMigrator->verifyData();
+        $animalTableMigrator->migrate();
 
         return true;
     }
@@ -376,5 +419,20 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         /** @var PerformanceMeasurementsMigrator $migrator */
         $migrator = new PerformanceMeasurementsMigrator($this->cmdUtil, $this->em, $data, $this->rootDir, $this->output);
         return $migrator->isSuccessFull();
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function migrateCompanySubscriptionDate()
+    {
+        $data = $this->parseCSV($this->filenames[self::SUBSCRIPTIONS]);
+        if(count($data) == 0) { return false; }
+
+        $migrator = new CompanySubscriptionMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        $migrator->migrate();
+        $migrator->printOutCsvOfCompaniesWithoutSubscriptionDate();
+        return true;
     }
 }

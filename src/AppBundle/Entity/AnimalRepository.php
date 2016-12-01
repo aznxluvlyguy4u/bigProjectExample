@@ -13,6 +13,7 @@ use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -25,6 +26,8 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class AnimalRepository extends BaseRepository
 {
+  const BATCH = 1000;
+
   /**
    * @param $Id
    * @return null|Animal|Ram|Ewe|Neuter
@@ -372,7 +375,13 @@ class AnimalRepository extends BaseRepository
             WHERE r.location_id = ".$location->getId()." AND (c.is_reveal_historic_animals = TRUE OR a.location_id ISNULL)";
     $retrievedAnimalData = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
+    $currentUbn = $location->getUbn();
+
     foreach ($retrievedAnimalData as $record) {
+      $ubnOfAnimal = $record['ubn'];
+      $isAlive = $record['is_alive'];
+      $isHistoricAnimal = $ubnOfAnimal != $currentUbn || !$isAlive;
+
       $results[] = [
         JsonInputConstant::ULN_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['uln_country_code'], $replacementString),
         JsonInputConstant::ULN_NUMBER => Utils::fillNullOrEmptyString($record['uln_number'], $replacementString),
@@ -382,8 +391,9 @@ class AnimalRepository extends BaseRepository
         JsonInputConstant::GENDER => Utils::fillNullOrEmptyString($record['gender'], $replacementString),
         JsonInputConstant::DATE_OF_BIRTH => Utils::fillNullOrEmptyString($record['date_of_birth'], $replacementString),
         JsonInputConstant::DATE_OF_DEATH => Utils::fillNullOrEmptyString($record['date_of_death'], $replacementString),
-        JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($record['is_alive'], $replacementString),
-        JsonInputConstant::UBN => Utils::fillNullOrEmptyString($record['ubn'], $replacementString),
+        JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($isAlive, $replacementString),
+        JsonInputConstant::UBN => Utils::fillNullOrEmptyString($ubnOfAnimal, $replacementString),
+        JsonInputConstant::IS_HISTORIC_ANIMAL => Utils::fillNullOrEmptyString($isHistoricAnimal, $replacementString),
       ];
     }
 
@@ -776,19 +786,26 @@ class AnimalRepository extends BaseRepository
    */
   public function deleteTestAnimal(OutputInterface $output = null, CommandUtil $cmdUtil = null)
   {
-    if($output != null) { $output->writeln('Delete breedValuesSets of testAnimals'); }
-
-    $sql = "SELECT id FROM animal WHERE uln_country_code = 'XD'";
+    $sql = "SELECT a.id FROM animal a
+            INNER JOIN breed_values_set b ON a.id = b.animal_id
+            WHERE a.uln_country_code = 'XD'";
     $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
-    foreach ($results as $result) {
-      $animalId = intval($result['id']);
-      $sql = "DELETE FROM breed_values_set WHERE animal_id = ".$animalId;
-      $this->getManager()->getConnection()->exec($sql);
+    if(count($results) > 0) {
+
+      if($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt(count($results) + 1, 1, 'Deleting breedValuesSets of testAnimals'); }
+      foreach ($results as $result) {
+        $animalId = intval($result['id']);
+        $sql = "DELETE FROM breed_values_set WHERE animal_id = ".$animalId;
+        $this->getManager()->getConnection()->exec($sql);
+        if($cmdUtil != null) { $cmdUtil->advanceProgressBar(1, 'Deleting breedValuesSets of testAnimals'); }
+      }
+      if($cmdUtil != null) {
+        $cmdUtil->setProgressBarMessage('BreedValuesSets of testAnimals deleted');
+        $cmdUtil->setEndTimeAndPrintFinalOverview();
+      }
     }
-    if($output != null) {
-      $output->writeln('BreedValuesSets of testAnimals deleted'); 
-      $output->writeln('Find all testAnimals...');
-    }
+
+    if($output != null) { $output->writeln('Find all testAnimals...'); }
     
     /** @var AnimalRepository $animalRepository */
     $animalRepository = $this->getManager()->getRepository(Animal::class);
@@ -799,16 +816,33 @@ class AnimalRepository extends BaseRepository
       if($output != null) {
         $output->writeln('No testAnimals in Database');
       }
-    }
-
-    if($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt($count + 1, 1, 'Deleting testAnimals'); }
-    foreach ($testAnimals as $testAnimal) {
-      $this->getManager()->remove($testAnimal);
-      if($cmdUtil != null) {
-        $cmdUtil->advanceProgressBar(1); 
+    } else {
+      $counter = 0;
+      if($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt($count + 1, 1, 'Deleting testAnimals'); }
+      foreach ($testAnimals as $testAnimal) {
+        $this->getManager()->remove($testAnimal);
+        if($cmdUtil != null) {
+          $cmdUtil->advanceProgressBar(1);
+        }
+        $counter++;
+        if($counter%self::BATCH == 0) { $this->getManager()->flush(); }
       }
+      $this->getManager()->flush();
+      if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
     }
-    $this->getManager()->flush();
-    if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
+  }
+
+
+  /**
+   * @param string $ulnNumber
+   * @param array $usedUlnNumbers
+   * @return null|string
+   */
+  public function bumpUlnNumberWithVerification($ulnNumber, $usedUlnNumbers)
+  {
+      $newUlnNumber = StringUtil::bumpUlnNumber($ulnNumber);
+      if($newUlnNumber == $ulnNumber) { return null; }
+      if(array_key_exists($ulnNumber, $usedUlnNumbers)) { return null; }
+      return $newUlnNumber;
   }
 }

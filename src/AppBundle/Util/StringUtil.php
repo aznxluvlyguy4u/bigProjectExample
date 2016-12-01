@@ -11,6 +11,7 @@ class StringUtil
 {
     const ULN_LENGTH = 12;
     const ANIMAL_ORDER_NUMBER_LENGTH = 5;
+    const BREEDER_NUMBER_LENGTH = 5;
 
     /**
      * Just remove the last 5 numbers of the uln
@@ -28,16 +29,64 @@ class StringUtil
 
 
     /**
+     * @param string $pedigreeNumber
+     * @return string
+     */
+    public static function getBreederNumberFromPedigreeNumber($pedigreeNumber)
+    {
+        return self::padBreederNumberWithZeroes(substr($pedigreeNumber, 0, 5));
+    }
+
+
+    /**
+     * @param string $stnOrigin
+     * @return string
+     */
+    public static function getBreederNumberFromStnOrigin($stnOrigin)
+    {
+        $prefix = 'NL ';
+        
+        $containsDash = is_int(strpos($stnOrigin, '-'));
+        $isDutch = substr($stnOrigin, 0, 3) == $prefix;
+        if(!$containsDash || !$isDutch) { return null; }
+
+        $breederNumber = explode("-",ltrim($stnOrigin, $prefix))[0];
+
+        return self::padBreederNumberWithZeroes($breederNumber);
+    }
+
+
+    /**
      * @param string $string
      * @return string
      */
     public static function getLast5CharactersFromString($string)
     {
-        if(strlen($string) < 5) {
+        if($string == null) { return null; }
+        else if(strlen($string) < 5) {
             return $string;
         } else {
             return substr($string, strlen($string)-5, strlen($string));
         }
+    }
+
+
+    /**
+     * In case of a duplicate uln, the convention is to bump the ulnNumber
+     * by converting the first char of the animalOrderPart in the ulnNumber to 9.
+     *
+     * If format is invalid, null is returned
+     *
+     * @param string $ulnNumber
+     * @return string
+     */
+    public static function bumpUlnNumber($ulnNumber)
+    {
+        if(!Validator::verifyUlnNumberFormat($ulnNumber)) { return null; }
+        
+        $newUlnNumber = substr($ulnNumber, 0, strlen($ulnNumber)); //copy the string before editing!
+        $newUlnNumber[7] = '9';
+        return $newUlnNumber;
     }
 
 
@@ -275,5 +324,49 @@ class StringUtil
     public static function padAnimalOrderNumberWithZeroes($animalOrderNumber)
     {
         return str_pad($animalOrderNumber, self::ANIMAL_ORDER_NUMBER_LENGTH, 0, STR_PAD_LEFT);
+    }
+
+    
+    /**
+     * @param string $breederNumber
+     * @return string
+     */
+    public static function padBreederNumberWithZeroes($breederNumber)
+    {
+        return str_pad($breederNumber, self::BREEDER_NUMBER_LENGTH, 0, STR_PAD_LEFT);
+    }
+    
+
+    /**
+     * Make sure only valid pedigreeNumbers are inserted!
+     * 
+     * @param string $pedigreeNumber
+     * @param boolean $mayOnlyContainDigits
+     * @return string
+     */
+    public static function getAnimalOrderNumberFromPedigreeNumber($pedigreeNumber, $mayOnlyContainDigits = true)
+    {
+        $animalOrderNumber = self::padAnimalOrderNumberWithZeroes(explode('-', $pedigreeNumber)[1]);
+        if($mayOnlyContainDigits) {
+            return ctype_digit($animalOrderNumber) ? $animalOrderNumber : null;
+        }
+        return $animalOrderNumber;
+    }
+
+
+    /**
+     * Remove last 5 characters and leading zeroes
+     *
+     * @param string $ulnNumber
+     * @return string
+     */
+    public static function getUbnFromUlnNumber($ulnNumber)
+    {
+        if(!is_string($ulnNumber)) { return null; }
+        if(strlen($ulnNumber) > 12) { return null; }
+
+        $ubn = ltrim(substr(trim($ulnNumber), 0, -5), '0');
+
+        return Validator::hasValidUbnFormat($ubn) ? $ubn : null;
     }
 }
