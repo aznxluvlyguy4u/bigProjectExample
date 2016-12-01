@@ -179,4 +179,77 @@ class GenderChanger
             $em->getConnection()->exec($sql);
         }
     }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param int $animalId
+     */
+    public static function changeMaleToFemaleBySql(ObjectManager $em, $animalId)
+    {
+        $sql = "UPDATE animal SET type='Ewe', gender = '".GenderType::FEMALE."' WHERE id = ". $animalId;
+        $em->getConnection()->exec($sql);
+
+        $sql = "SELECT id FROM ewe WHERE id = ". $animalId;
+        $resultEwe = $em->getConnection()->query($sql)->fetch();
+
+        if($resultEwe['id'] == '' || $resultEwe['id'] == null) {
+            $sql = "INSERT INTO ewe VALUES (" . $animalId . ", 'Ewe')";
+            $em->getConnection()->exec($sql);
+        }
+
+        $sql = "SELECT id FROM ram WHERE id = ". $animalId;
+        $resultNeuter = $em->getConnection()->query($sql)->fetch();
+
+        if($resultNeuter['id'] != '' || $resultNeuter['id'] != null) {
+            $sql = "DELETE FROM ram WHERE id = " . $animalId;
+            $em->getConnection()->exec($sql);
+        }
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param int $animalId
+     */
+    public static function changeFemaleToMaleBySql(ObjectManager $em, $animalId)
+    {
+        $sql = "UPDATE animal SET type='Ram', gender = '".GenderType::MALE."' WHERE id = ". $animalId;
+        $em->getConnection()->exec($sql);
+
+        $sql = "SELECT id FROM ram WHERE id = ". $animalId;
+        $resultRam = $em->getConnection()->query($sql)->fetch();
+
+        if($resultRam['id'] == '' || $resultRam['id'] == null) {
+            $sql = "INSERT INTO ram VALUES (" . $animalId . ", 'Ram')";
+            $em->getConnection()->exec($sql);
+        }
+
+        $sql = "SELECT id FROM ewe WHERE id = ". $animalId;
+        $resultNeuter = $em->getConnection()->query($sql)->fetch();
+
+        if($resultNeuter['id'] != '' || $resultNeuter['id'] != null) {
+            $sql = "DELETE FROM ewe WHERE id = " . $animalId;
+            $em->getConnection()->exec($sql);
+        }
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param int $animalId
+     * @param string $oldGender
+     * @param string $newGender
+     */
+    public static function changeGenderBySql(ObjectManager $em, $animalId, $oldGender, $newGender) {
+        if($oldGender == GenderType::NEUTER && $newGender == GenderType::FEMALE) {
+            self::changeNeuterToFemaleBySql($em, $animalId);
+        } elseif ($oldGender == GenderType::NEUTER && $newGender == GenderType::MALE) {
+            self::changeNeuterToMaleBySql($em, $animalId);
+        } else if($oldGender == GenderType::MALE && $newGender == GenderType::FEMALE) {
+            self::changeMaleToFemaleBySql($em, $animalId);
+        } else if($oldGender == GenderType::FEMALE && $newGender == GenderType::MALE) {
+            self::changeFemaleToMaleBySql($em, $animalId);
+        }
+    }
 }
