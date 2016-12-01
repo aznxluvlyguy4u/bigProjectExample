@@ -44,8 +44,7 @@ class LocationHealthInspectionResult
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
-     * @Assert\NotBlank
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      */
     private $customerSampleId;
@@ -53,8 +52,7 @@ class LocationHealthInspectionResult
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
-     * @Assert\NotBlank
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      */
     private $mgxSampleId;
@@ -62,8 +60,7 @@ class LocationHealthInspectionResult
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
-     * @Assert\NotBlank
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      */
     private $genotype;
@@ -71,8 +68,7 @@ class LocationHealthInspectionResult
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
-     * @Assert\NotBlank
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      */
     private $genotypeWithCondon;
@@ -80,18 +76,48 @@ class LocationHealthInspectionResult
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
-     * @Assert\NotBlank
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      */
     private $genotypeClass;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $vetName;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $subRef;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $mvnp;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $mvCAEPool;
+
+    /**
      * @var datetime
      *
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
-     * @Assert\NotBlank
      * @JMS\Type("DateTime")
      */
     private $receptionDate;
@@ -242,6 +268,70 @@ class LocationHealthInspectionResult
     public function setGenotypeClass($genotypeClass)
     {
         $this->genotypeClass = $genotypeClass;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVetName()
+    {
+        return $this->vetName;
+    }
+
+    /**
+     * @param string $vetName
+     */
+    public function setVetName($vetName)
+    {
+        $this->vetName = $vetName;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubRef()
+    {
+        return $this->subRef;
+    }
+
+    /**
+     * @param string $subRef
+     */
+    public function setSubRef($subRef)
+    {
+        $this->subRef = $subRef;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMvnp()
+    {
+        return $this->mvnp;
+    }
+
+    /**
+     * @param string $mvnp
+     */
+    public function setMvnp($mvnp)
+    {
+        $this->mvnp = $mvnp;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMvCAEPool()
+    {
+        return $this->mvCAEPool;
+    }
+
+    /**
+     * @param string $mvCAEPool
+     */
+    public function setMvCAEPool($mvCAEPool)
+    {
+        $this->mvCAEPool = $mvCAEPool;
     }
 
     /**

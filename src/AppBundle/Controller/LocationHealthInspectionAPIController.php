@@ -577,13 +577,26 @@ class LocationHealthInspectionAPIController extends APIController
             $result = new LocationHealthInspectionResult();
             $result->setInspection($inspection);
             $result->setAnimal($animal);
-            $result->setCustomerSampleId($contentResult['customer_sample_id']);
-            $result->setMgxSampleId($contentResult['mgx_sample_id']);
-            $result->setGenotype($contentResult['genotype']);
-            $result->setGenotypeWithCondon($contentResult['genotype_with_condon']);
-            $result->setGenotypeClass($contentResult['genotype_class']);
-            $result->setReceptionDate(new \DateTime($contentResult['reception_date']));
-            $result->setResultDate(new \DateTime($contentResult['result_date']));
+
+
+            if($illness == 'SCRAPIE') {
+                $result->setCustomerSampleId($contentResult['customer_sample_id']);
+                $result->setMgxSampleId($contentResult['mgx_sample_id']);
+                $result->setGenotype($contentResult['genotype']);
+                $result->setGenotypeWithCondon($contentResult['genotype_with_condon']);
+                $result->setGenotypeClass($contentResult['genotype_class']);
+                $result->setReceptionDate(new \DateTime($contentResult['reception_date']));
+                $result->setResultDate(new \DateTime($contentResult['result_date']));
+            }
+
+            if($illness == 'MAEDI VISNA') {
+                $result->setCustomerSampleId($contentResult['customer_sample_id']);
+                $result->setVetName($contentResult['vet_name']);
+                $result->setSubRef($contentResult['subref']);
+                $result->setMvnp($contentResult['mvnp']);
+                $result->setMvCAEPool($contentResult['mv_cae_pool']);
+                $result->setResultDate(new \DateTime($contentResult['result_date']));
+            }
 
             // Save to Database
             $this->getDoctrine()->getManager()->persist($result);
@@ -617,13 +630,17 @@ class LocationHealthInspectionAPIController extends APIController
                   animal.uln_country_code,
                   animal.uln_number,
                   animal.date_of_birth,
+                  location_health_inspection.inspection_subject,
                   location_health_inspection_result.result_date,
                   location_health_inspection_result.reception_date,
                   location_health_inspection_result.customer_sample_id,
                   location_health_inspection_result.genotype,
                   location_health_inspection_result.genotype_with_condon,
                   location_health_inspection_result.genotype_class,
-                  location_health_inspection_result.mgx_sample_id
+                  location_health_inspection_result.vet_name,
+                  location_health_inspection_result.sub_ref,
+                  location_health_inspection_result.mvnp,
+                  location_health_inspection_result.mv_caepool
                 FROM
                   location_health_inspection_result
                   INNER JOIN animal ON location_health_inspection_result.animal_id = animal.id
