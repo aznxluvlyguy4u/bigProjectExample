@@ -118,6 +118,8 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '12: Migrate Predicates and update values in Animal', "\n",
             '13: Migrate Performance Measurements', "\n",
             '14: Migrate Company SubscriptionDate', "\n",
+            '15: Export animal_migration_table to csv', "\n",
+            '16: Import animal_migration_table from exported csv', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -192,6 +194,16 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                 $output->writeln($result);
                 break;
 
+            case 15:
+                $result = $this->exportAnimalMigrationTableCsv() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 16:
+                $result = $this->importAnimalMigrationTableCsv() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
             default:
                 $output->writeln('ABORTED');
                 break;
@@ -225,6 +237,30 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         }
 
         return $rows;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function exportAnimalMigrationTableCsv()
+    {
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $this->output->writeln('Exporting animal_migration_table to csv');
+        $animalTableMigrator->exportToCsv();
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function importAnimalMigrationTableCsv()
+    {
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $this->output->writeln('Importing animal_migration_table from csv');
+        $animalTableMigrator->importFromCsv();
+        return true;
     }
 
 

@@ -36,6 +36,7 @@ class AnimalTableMigrator extends MigratorBase
 	const FILENAME_CORRECTED_CSV = '2016nov_gecorrigeerde_diertabel.csv';
 	const FILENAME_INCORRECT_ULNS = 'incorrect_ulns.csv';
 	const FILENAME_INCORRECT_GENDERS = 'incorrect_genders.csv';
+	const FILENAME_CSV_EXPORT = 'animal_migration_table.csv';
 
 	const VALUE = 'VALUE';
 	const ABBREVIATION = 'ABBREVIATION';
@@ -2308,5 +2309,18 @@ class AnimalTableMigrator extends MigratorBase
 	public function test()
 	{
 		$this->migrate();
+	}
+
+
+	public function exportToCsv()
+	{
+		SqlUtil::exportToCsv($this->em, 'animal_migration_table', $this->outputFolder, self::FILENAME_CSV_EXPORT, $this->output, $this->cmdUtil);
+	}
+
+
+	public function importFromCsv()
+	{
+		//TODO
+//		SqlUtil::importFromCsv($this->em, 'animal_migration_table', $this->outputFolder, self::FILENAME_CSV_EXPORT, $this->output);
 	}
 }

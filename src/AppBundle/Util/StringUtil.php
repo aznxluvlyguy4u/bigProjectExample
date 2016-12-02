@@ -218,10 +218,14 @@ class StringUtil
 
     /**
      * @param boolean $boolean
+     * @param string $nullString
      * @return string
      */
-    public static function getBooleanAsString($boolean)
+    public static function getBooleanAsString($boolean, $nullString = '')
     {
+        if($boolean === null) {
+            return $nullString;
+        }
         return ($boolean) ? 'true' : 'false';
     }
 
