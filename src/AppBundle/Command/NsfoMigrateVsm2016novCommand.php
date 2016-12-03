@@ -211,12 +211,19 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     }
 
 
-    private function parseCSV($filename) {
+    /**
+     * @param string $filename
+     * @param bool $useImportFolder
+     * @return array
+     */
+    private function parseCSV($filename, $useImportFolder = true) {
         $ignoreFirstLine = $this->csvParsingOptions['ignoreFirstLine'];
+
+        $folderOption = $useImportFolder ? 'finder_in' : 'finder_out';
 
         $finder = new Finder();
         $finder->files()
-            ->in($this->csvParsingOptions['finder_in'])
+            ->in($this->csvParsingOptions[$folderOption])
             ->name($filename)
         ;
 
@@ -241,6 +248,35 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
 
     /**
+     * @param string $filename
+     * @param bool $useImportFolder
+     * @return array|null
+     */
+    private function parseCSVHeader($filename, $useImportFolder = true) {
+        $folderOption = $useImportFolder ? 'finder_in' : 'finder_out';
+
+        $finder = new Finder();
+        $finder->files()
+            ->in($this->csvParsingOptions[$folderOption])
+            ->name($filename)
+        ;
+
+        $this->output->writeln('Parsing csv file header...');
+
+        foreach ($finder as $file) { $csv = $file; }
+
+        if (($handle = fopen($csv->getRealPath(), "r")) !== FALSE) {
+            $data = fgetcsv($handle, null, ";");
+            fclose($handle);
+            gc_collect_cycles();
+            return $data;
+        }
+
+        return null;
+    }
+
+
+    /**
      * @return bool
      */
     private function exportAnimalMigrationTableCsv()
@@ -257,7 +293,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
      */
     private function importAnimalMigrationTableCsv()
     {
-        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $columnHeaders = $this->parseCSVHeader(AnimalTableMigrator::FILENAME_CSV_EXPORT, false);
+        $data = $this->parseCSV(AnimalTableMigrator::FILENAME_CSV_EXPORT, false);
+        if(count($data) == 0 && $columnHeaders != null) { return false; }
+
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir, $columnHeaders);
         $this->output->writeln('Importing animal_migration_table from csv');
         $animalTableMigrator->importFromCsv();
         return true;

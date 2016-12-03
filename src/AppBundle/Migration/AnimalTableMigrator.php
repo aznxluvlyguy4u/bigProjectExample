@@ -14,6 +14,7 @@ use AppBundle\Entity\BreederNumberRepository;
 use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagReplaceRepository;
 use AppBundle\Entity\PedigreeRegister;
+use AppBundle\Enumerator\ColumnType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\Specie;
 use AppBundle\Util\BreedCodeUtil;
@@ -38,6 +39,8 @@ class AnimalTableMigrator extends MigratorBase
 	const FILENAME_INCORRECT_GENDERS = 'incorrect_genders.csv';
 	const FILENAME_CSV_EXPORT = 'animal_migration_table.csv';
 
+	const TABLE_NAME_IN_SNAKE_CASE = 'animal_migration_table';
+	
 	const VALUE = 'VALUE';
 	const ABBREVIATION = 'ABBREVIATION';
 
@@ -77,6 +80,9 @@ class AnimalTableMigrator extends MigratorBase
 	/** @var ArrayCollection $animalIdsByVsmId */
 	private $animalIdsByVsmId;
 
+	/** @var string */
+	private $columnHeaders;
+
 	/**
 	 * MyoMaxMigrator constructor.
 	 * @param CommandUtil $cmdUtil
@@ -84,13 +90,15 @@ class AnimalTableMigrator extends MigratorBase
 	 * @param OutputInterface $outputInterface
 	 * @param array $data
 	 * @param string $rootDir
+	 * @param string $columnHeaders
 	 */
-	public function __construct(CommandUtil $cmdUtil, ObjectManager $em, OutputInterface $outputInterface, array $data, $rootDir)
+	public function __construct(CommandUtil $cmdUtil, ObjectManager $em, OutputInterface $outputInterface, array $data, $rootDir, $columnHeaders = null)
 	{
 		parent::__construct($cmdUtil, $em, $outputInterface, $data, $rootDir);
 		$this->animalMigrationTableRepository = $this->em->getRepository(AnimalMigrationTable::class);
 		$this->breederNumberRepository = $this->em->getRepository(BreederNumber::class);
 		$this->animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmId();
+		$this->columnHeaders = $columnHeaders;
 	}
 
 
@@ -2314,13 +2322,68 @@ class AnimalTableMigrator extends MigratorBase
 
 	public function exportToCsv()
 	{
-		SqlUtil::exportToCsv($this->em, 'animal_migration_table', $this->outputFolder, self::FILENAME_CSV_EXPORT, $this->output, $this->cmdUtil);
+		SqlUtil::exportToCsv($this->em, self::TABLE_NAME_IN_SNAKE_CASE, $this->outputFolder, self::FILENAME_CSV_EXPORT, $this->output, $this->cmdUtil);
 	}
 
 
 	public function importFromCsv()
 	{
-		//TODO
-//		SqlUtil::importFromCsv($this->em, 'animal_migration_table', $this->outputFolder, self::FILENAME_CSV_EXPORT, $this->output);
+		$columnTypes = [];
+
+		foreach ($this->columnHeaders as $columnHeader) {
+			$columnTypes[] = $this->getColumnType($columnHeader);
+		}
+
+		SqlUtil::importFromCsv($this->em, self::TABLE_NAME_IN_SNAKE_CASE, $this->columnHeaders, $columnTypes, $this->data, $this->output, $this->cmdUtil);
+	}
+
+
+	/**
+	 * @param string $columnHeader
+	 * @return string
+	 */
+	private function getColumnType($columnHeader)
+	{
+		switch ($columnHeader) {
+			case "id": return ColumnType::INTEGER;
+			case "vsm_id": return ColumnType::INTEGER;
+			case "animal_id": return ColumnType::INTEGER;
+			case "uln_origin": return ColumnType::STRING;
+			case "stn_origin": return ColumnType::STRING;
+			case "uln_country_code": return ColumnType::STRING;
+			case "uln_number": return ColumnType::STRING;
+			case "animal_order_number": return ColumnType::STRING;
+			case "pedigree_country_code": return ColumnType::STRING;
+			case "pedigree_number": return ColumnType::STRING;
+			case "nick_name": return ColumnType::STRING;
+			case "father_vsm_id": return ColumnType::INTEGER;
+			case "father_id": return ColumnType::INTEGER;
+			case "mother_vsm_id": return ColumnType::INTEGER;
+			case "mother_id": return ColumnType::INTEGER;
+			case "gender_in_file": return ColumnType::STRING;
+			case "gender_in_database": return ColumnType::STRING;
+			case "date_of_birth": return ColumnType::DATETIME;
+			case "breed_code": return ColumnType::STRING;
+			case "ubn_of_birth": return ColumnType::STRING;
+			case "location_of_birth_id": return ColumnType::INTEGER;
+			case "pedigree_register_id": return ColumnType::INTEGER;
+			case "breed_type": return ColumnType::STRING;
+			case "scrapie_genotype": return ColumnType::STRING;
+			case "is_breed_code_updated": return ColumnType::BOOLEAN;
+			case "old_breed_code": return ColumnType::STRING;
+			case "corrected_gender": return ColumnType::STRING;
+			case "is_ubn_updated": return ColumnType::BOOLEAN;
+			case "is_uln_updated": return ColumnType::BOOLEAN;
+			case "is_stn_updated": return ColumnType::BOOLEAN;
+			case "is_animal_order_number_updated": return ColumnType::BOOLEAN;
+			case "is_father_updated": return ColumnType::BOOLEAN;
+			case "deleted_stn_origin": return ColumnType::STRING;
+			case "deleted_uln_origin": return ColumnType::STRING;
+			case "is_correct_record": return ColumnType::BOOLEAN;
+			case "is_record_migrated": return ColumnType::BOOLEAN;
+			case "deleted_father_vsm_id": return ColumnType::INTEGER;
+			case "deleted_mother_vsm_id": return ColumnType::INTEGER;
+			default: return ColumnType::STRING;
+		}
 	}
 }
