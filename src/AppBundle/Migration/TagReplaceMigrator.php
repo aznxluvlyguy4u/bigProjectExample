@@ -55,7 +55,7 @@ class TagReplaceMigrator extends MigratorBase
         $ulnReplacementsInDatabase = [];
         foreach ($results as $result) {
             $uln = $result['uln_country_code_replacement'].' '.$result['uln_number_replacement'];
-            $searchArray[$uln] = $uln;
+            $ulnReplacementsInDatabase[$uln] = $uln;
         }
 
         $newCount = 0;
