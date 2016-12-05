@@ -625,6 +625,9 @@ class AnimalTableMigrator extends MigratorBase
 		}
 
 		if($migrateParents) {
+			//Double check the data again
+			$this->fixParentAnimalIdsInMigrationTable();
+
 			//TODO MigrateParents
 		}
 	}
@@ -2480,7 +2483,7 @@ class AnimalTableMigrator extends MigratorBase
 				$fatherId = SqlUtil::getNullCheckedValueForSqlQuery($fatherId, false);
 				$motherId = SqlUtil::getNullCheckedValueForSqlQuery($motherId, false);
 
-				$sql = "UPDATE animal_migration_table SET 
+				$sql = "UPDATE animal_migration_table SET
 						  		animal_id = ".$animalId.
 						", mother_id = ".$motherId.
 						", father_id = ".$fatherId.
@@ -2493,9 +2496,17 @@ class AnimalTableMigrator extends MigratorBase
 		}
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
+		$this->fixParentAnimalIdsInMigrationTable();
+	}
 
-		//Fix parent animalIds in AnimalMigrationTable
 
+	/**
+	 * Fix parent animalIds in AnimalMigrationTable
+	 *
+	 * @throws \Doctrine\DBAL\DBALException
+	 */
+	private function fixParentAnimalIdsInMigrationTable()
+	{
 		$sql = "SELECT a.id, mother.gender FROM animal_migration_table a
 					INNER JOIN animal mother ON mother.id = a.mother_id
 					WHERE gender <> 'FEMALE'";
@@ -2506,22 +2517,25 @@ class AnimalTableMigrator extends MigratorBase
 					WHERE gender <> 'FEMALE'";
 		$fatherResults = $this->conn->query($sql)->fetchAll();
 
-		$this->cmdUtil->setStartTimeAndPrintIt(count($motherResults) + count($fatherResults), 1);
+		$totalCount = count($motherResults) + count($fatherResults);
+		if($totalCount > 0) {
+			$this->cmdUtil->setStartTimeAndPrintIt($totalCount, 1);
 
-		foreach ($motherResults as $result) {
-			$migrationTableId = $result['id'];
-			$sql = "UPDATE animal_migration_table SET mother_id = NULL WHERE id = ".$migrationTableId;
-			$this->conn->exec($sql);
-			$this->cmdUtil->advanceProgressBar(1, 'Parent animalIds in AnimalMigrationTable cleared (due to mismatched gender)');
-		}
+			foreach ($motherResults as $result) {
+				$migrationTableId = $result['id'];
+				$sql = "UPDATE animal_migration_table SET mother_id = NULL WHERE id = ".$migrationTableId;
+				$this->conn->exec($sql);
+				$this->cmdUtil->advanceProgressBar(1, 'Parent animalIds in AnimalMigrationTable cleared (due to mismatched gender)');
+			}
 
-		foreach ($fatherResults as $result) {
-			$migrationTableId = $result['id'];
-			$sql = "UPDATE animal_migration_table SET mother_id = NULL WHERE id = ".$migrationTableId;
-			$this->conn->exec($sql);
-			$this->cmdUtil->advanceProgressBar(1, 'Parent animalIds in AnimalMigrationTable cleared (due to mismatched gender)');
+			foreach ($fatherResults as $result) {
+				$migrationTableId = $result['id'];
+				$sql = "UPDATE animal_migration_table SET mother_id = NULL WHERE id = ".$migrationTableId;
+				$this->conn->exec($sql);
+				$this->cmdUtil->advanceProgressBar(1, 'Parent animalIds in AnimalMigrationTable cleared (due to mismatched gender)');
+			}
+			$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 		}
-		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
 	
 	
