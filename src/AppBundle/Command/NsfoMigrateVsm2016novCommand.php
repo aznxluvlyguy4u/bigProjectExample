@@ -415,11 +415,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
      */
     private function migrateAnimalTable()
     {
-        $data = $this->parseCSV($this->filenames[self::ANIMAL_TABLE]);
-        if(count($data) == 0) { return false; }
-
-        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
-//        $animalTableMigrator->verifyData();
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
         $animalTableMigrator->migrate();
 
         return true;
