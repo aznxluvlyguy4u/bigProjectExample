@@ -83,6 +83,9 @@ class AnimalTableMigrator extends MigratorBase
 	/** @var string */
 	private $columnHeaders;
 
+	/** @var array */
+	private $parentVsmIdsUpdated;
+
 	/**
 	 * MyoMaxMigrator constructor.
 	 * @param CommandUtil $cmdUtil
@@ -381,14 +384,16 @@ class AnimalTableMigrator extends MigratorBase
 		 * VsmIds for duplicate animals are found in the vsm_id_group table
 		 */
 
+		$this->cmdUtil->setStartTimeAndPrintIt(7,1,'Retrieving data ...');
+
 //		$this->checkAnimalIds();
 
-		$this->output->writeln('Retrieving data and generating newestUlnByOldUln searchArray ...');
-		
+
 		//SeachArrays
+		$this->cmdUtil->advanceProgressBar(1, 'Retrieving data and generating newestUlnByOldUln searchArray ...');
 		$newestUlnByOldUln = $this->declareTagReplaceRepository->getNewReplacementUlnSearchArray();
 
-		$this->output->writeln('Retrieving data and generating animalData by animalId searchArrays ...');
+		$this->cmdUtil->advanceProgressBar(1, 'Retrieving data and generating animalData searchArrays ...');
 		$sql = "SELECT id, name, uln_country_code, uln_number, animal_order_number, pedigree_country_code, pedigree_number,
 				  nickname, parent_father_id, parent_mother_id, date_of_birth, breed_code, ubn_of_birth, gender,
 				  location_of_birth_id, pedigree_register_id, breed_type, scrapie_genotype, location_id
@@ -396,34 +401,69 @@ class AnimalTableMigrator extends MigratorBase
 		$results = $this->conn->query($sql)->fetchAll();
 		$animalsByAnimalId = [];
 		$animalIdsOnLocation = [];
+		$animalIdByVsmId = [];
+		$genderByAnimalId = [];
 		foreach($results as $result) {
 			$animalId = $result['id'];
+			$vsmId = $result['name'];
+			$gender = $result['gender'];
 			$animalsByAnimalId[$animalId] = $result;
 
 			if($result['location_id'] != null) {
 				$animalIdsOnLocation[$animalId] = $animalId;
+			}
+
+			if(is_string($vsmId)) {
+				if(ctype_digit($vsmId)) {
+					$animalIdByVsmId[$vsmId] = $animalId;
+				}
+			}
+
+			if($animalId != null) {
+				$genderByAnimalId[$animalId] = $gender;
 			}
 		}
 
 
 
 
-		$this->output->writeln('Retrieving animalMigration data ...');
+
+		$this->cmdUtil->advanceProgressBar(1, 'Retrieving animalMigration data ...');
 
 		//Only process animals where genders match will those in the database
-		$sql = "SELECT id, vsm_id, animal_id, uln_country_code, uln_number, animal_order_number, pedigree_country_code, pedigree_number,
-				  nick_name, father_vsm_id, father_id, mother_vsm_id, mother_id, gender_in_file, date_of_birth, breed_code, ubn_of_birth,
-				  location_of_birth_id, pedigree_register_id, breed_type, scrapie_genotype
-				FROM animal_migration_table
-				WHERE (gender_in_database ISNULL OR gender_in_file = gender_in_database) AND is_record_migrated = FALSE ORDER BY date_of_birth";
+		$sql = "SELECT a.id, a.vsm_id, a.animal_id, a.uln_country_code, a.uln_number, a.animal_order_number, a.pedigree_country_code,
+				  a.pedigree_number, a.nick_name, a.father_vsm_id, a.father_id, a.mother_vsm_id, a.mother_id, a.gender_in_file,
+				  a.date_of_birth, a.breed_code, a.ubn_of_birth, a.location_of_birth_id, a.pedigree_register_id, a.breed_type, a.scrapie_genotype
+				FROM animal_migration_table a
+				--Exclude duplicate ulns
+				INNER JOIN (
+					SELECT uln_number, uln_country_code FROM animal_migration_table t
+					GROUP BY uln_country_code, uln_number HAVING COUNT(*) = 1
+					)u ON u.uln_country_code = a.uln_country_code AND u.uln_number = a.uln_number
+				--Exclude duplicate stns
+				LEFT JOIN (
+					SELECT id as double_pedigree_id FROM animal_migration_table x
+					INNER JOIN (
+						SELECT pedigree_number, pedigree_country_code FROM animal_migration_table z
+						GROUP BY pedigree_country_code, pedigree_number HAVING COUNT(*) > 1
+						)y ON x.pedigree_country_code = y.pedigree_country_code AND x.pedigree_number = y.pedigree_number
+					)p ON double_pedigree_id = a.id
+				WHERE p.double_pedigree_id ISNULL AND
+				  --Exclude animals with mismatching genders
+					  (gender_in_database ISNULL OR gender_in_file = gender_in_database) AND a.is_record_migrated = FALSE 
+				ORDER BY date_of_birth";
 		$results = $this->conn->query($sql)->fetchAll();
-		
+
+		$this->cmdUtil->setProgressBarMessage('Retrieved data and created searchArrays');
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
 		//First import animals
 
 		$newAnimals = 0;
 		$skippedAnimals = 0;
 		$updatedAnimals = 0;
+
+		$this->parentVsmIdsUpdated = [];
 
 		$this->cmdUtil->setStartTimeAndPrintIt(count($results), 1);
 
@@ -437,11 +477,12 @@ class AnimalTableMigrator extends MigratorBase
 			$pedigreeCountryCode = $result['pedigree_country_code'];
 			$pedigreeNumber = $result['pedigree_number'];
 			$nickName = $result['nick_name'];
-			$fatherVsmId = $result['father_vsm_id'];
-			$fatherId = $result['father_id'];
-			$motherVsmId = $result['mother_vsm_id'];
-			$motherId = $result['mother_id'];
 			$gender = $result['gender_in_file'];
+			$type = GenderChanger::getClassNameByGender($gender);
+			$fatherVsmId = $result['father_vsm_id'];
+			$fatherId = $this->checkAndFillEmptyAnimalId($result['father_id'], $fatherVsmId, $animalIdByVsmId, $genderByAnimalId, Constant::FATHER_NAMESPACE);
+			$motherVsmId = $result['mother_vsm_id'];
+			$motherId = $this->checkAndFillEmptyAnimalId($result['mother_id'], $motherVsmId, $animalIdByVsmId, $genderByAnimalId, Constant::MOTHER_NAMESPACE);
 			$dateOfBirth = $result['date_of_birth'];
 			$breedCode = $result['breed_code'];
 			$ubnOfBirth = $result['ubn_of_birth'];
@@ -449,7 +490,6 @@ class AnimalTableMigrator extends MigratorBase
 			$pedigreeRegisterId = $result['pedigree_register_id'];
 			$breedType = $result['breed_type'];
 			$scrapieGenotype = $result['scrapie_genotype'];
-			$type = GenderChanger::getClassNameByGender($gender);
 
 
 			//If animal has been synced, just use the current uln data
@@ -532,6 +572,10 @@ class AnimalTableMigrator extends MigratorBase
 					$sql = "UPDATE animal_migration_table SET is_record_migrated = TRUE WHERE id = ".$migrationTableId;
 					$this->conn->exec($sql);
 
+					//Update searchArrays
+					$animalIdByVsmId[$vsmId] = $animalId;
+					$genderByAnimalId[$animalId] = $gender;
+
 					$updatedAnimals++;
 				} else {
 					$skippedAnimals++;
@@ -560,7 +604,11 @@ class AnimalTableMigrator extends MigratorBase
 
 				$sql = "UPDATE animal_migration_table SET is_record_migrated = TRUE WHERE id = ".$migrationTableId;
 				$this->conn->exec($sql);
-				
+
+				//Update searchArrays
+				$animalIdByVsmId[$vsmId] = $animalId;
+				$genderByAnimalId[$animalId] = $gender;
+
 				$newAnimals++;
 			}
 			$this->cmdUtil->advanceProgressBar(1, 'Migrating animalData new|updated|skipped: '.$newAnimals.'|'.$updatedAnimals.'|'.$skippedAnimals);
@@ -568,6 +616,62 @@ class AnimalTableMigrator extends MigratorBase
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
 		//Update parentIds in animalMigrationTable and set those new values on the Animals
+	}
+
+
+	/**
+	 * @param int $animalId
+	 * @param string $vsmId
+	 * @param array $animalIdByVsmId
+	 * @param array $genderByAnimalId
+	 * @param string $parent
+	 * @return null|int
+	 */
+	private function checkAndFillEmptyAnimalId($animalId, $vsmId, $animalIdByVsmId, $genderByAnimalId, $parent)
+	{
+		if(!array_key_exists($animalId, $genderByAnimalId) && !is_array($animalIdByVsmId)) { return null; }
+
+		if($animalId != null) {
+			$gender = $genderByAnimalId[$animalId];
+			if(array_key_exists($vsmId, $this->parentVsmIdsUpdated)) {
+				if(($parent == Constant::FATHER_NAMESPACE && $gender == GenderType::MALE) ||
+					$parent == Constant::MOTHER_NAMESPACE && $gender == GenderType::FEMALE) {
+					return intval($animalId);
+				}
+
+			} elseif(ctype_digit($vsmId)) {
+				if(array_key_exists($vsmId, $animalIdByVsmId)) {
+
+					$animalId = $animalIdByVsmId[$vsmId];
+
+					//Update animalMigrationTable
+					if(!array_key_exists($vsmId, $this->parentVsmIdsUpdated)) {
+
+						if($gender == GenderType::FEMALE) {
+							$sql = "UPDATE animal_migration_table SET mother_id = ".$animalId." WHERE mother_vsm_id = '".$vsmId."'";
+							$this->conn->exec($sql);
+							$sql = "UPDATE animal_migration_table SET father_id = NULL WHERE father_vsm_id = '".$vsmId."'";
+							$this->conn->exec($sql);
+						} elseif($gender == GenderType::MALE) {
+							$sql = "UPDATE animal_migration_table SET father_id = ".$animalId." WHERE father_vsm_id = '".$vsmId."'";
+							$this->conn->exec($sql);
+							$sql = "UPDATE animal_migration_table SET mother_id = NULL WHERE mother_vsm_id = '".$vsmId."'";
+							$this->conn->exec($sql);
+						}
+						//Skip if gender is not known
+
+						$this->parentVsmIdsUpdated[$vsmId] = $vsmId;
+					}
+
+					if(($parent == Constant::FATHER_NAMESPACE && $gender == GenderType::MALE) ||
+						$parent == Constant::MOTHER_NAMESPACE && $gender == GenderType::FEMALE) {
+						return intval($animalId);
+					}
+				}
+			}
+		}
+		
+		return null;
 	}
 
 
