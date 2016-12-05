@@ -845,4 +845,55 @@ class AnimalRepository extends BaseRepository
       if(array_key_exists($ulnNumber, $usedUlnNumbers)) { return null; }
       return $newUlnNumber;
   }
+
+
+  /**
+   * @return int
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function updateAllLocationOfBirths()
+  {
+    $ubnsUpdated = 0;
+
+    /*
+     * 1. Set current active locations on missing locationOfBirth where possible
+     * 2. Set deactivated locations on missing locationOfBirth where possible
+     */
+    foreach ([TRUE, FALSE] as $isActive) {
+      $sql = "SELECT a.ubn_of_birth, l.id as location_id, l.is_active FROM animal a
+              LEFT JOIN location l ON a.ubn_of_birth = l.ubn
+            WHERE a.location_of_birth_id ISNULL AND l.id NOTNULL AND a.ubn_of_birth NOTNULL AND l.is_active = ".$isActive."
+            GROUP BY ubn_of_birth, l.id, l.is_active";
+      $results = $this->getConnection()->query($sql)->fetchAll();
+
+      foreach ($results as $result) {
+        $ubnOfBirth = $result['ubn_of_birth'];
+        $locationId = $result['location_id'];
+        $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'";
+        $this->getConnection()->exec($sql);
+        $ubnsUpdated++;
+      }
+    }
+
+    /*
+     * 3. Do an extra check to see if any deactivated locations can be replaced by active locations
+     */
+    $sql = "SELECT a.ubn_of_birth, l.id as location_id FROM animal a
+              LEFT JOIN location l ON a.ubn_of_birth = l.ubn
+              LEFT JOIN location n ON n.id = a.location_of_birth_id
+            WHERE a.location_of_birth_id ISNULL AND l.id NOTNULL AND a.ubn_of_birth NOTNULL AND l.is_active = TRUE
+              AND n.is_active = FALSE
+            GROUP BY ubn_of_birth, l.id";
+    $results = $this->getConnection()->query($sql)->fetchAll();
+
+    foreach ($results as $result) {
+      $ubnOfBirth = $result['ubn_of_birth'];
+      $locationId = $result['location_id'];
+      $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'";
+      $this->getConnection()->exec($sql);
+      $ubnsUpdated++;
+    }
+
+    return $ubnsUpdated;
+  }
 }

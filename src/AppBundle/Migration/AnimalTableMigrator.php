@@ -630,6 +630,10 @@ class AnimalTableMigrator extends MigratorBase
 
 			//TODO MigrateParents
 		}
+		
+		
+		
+		$this->animalRepository->updateAllLocationOfBirths();
 	}
 
 
