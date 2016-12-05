@@ -384,10 +384,10 @@ class AnimalTableMigrator extends MigratorBase
 		 * VsmIds for duplicate animals are found in the vsm_id_group table
 		 */
 
+		$this->output->writeln('Check animalIds...');
+		$this->checkAnimalIds();
+
 		$this->cmdUtil->setStartTimeAndPrintIt(7,1,'Retrieving data ...');
-
-//		$this->checkAnimalIds();
-
 
 		//SeachArrays
 		$this->cmdUtil->advanceProgressBar(1, 'Retrieving data and generating newestUlnByOldUln searchArray ...');
@@ -2394,6 +2394,16 @@ class AnimalTableMigrator extends MigratorBase
 	{
 		//SearchArrays
 
+		$genderByAnimalIds = [];
+		$sql = "SELECT id, gender
+				FROM animal";
+		$results = $this->conn->query($sql)->fetchAll();
+		foreach ($results as $result) {
+			$gender = $result['gender'];
+			$id = $result['id'];
+			$genderByAnimalIds[$id] = $gender;
+		}
+
 		$animalIdByVsmIds = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
 		$animalIdByUlnString = $this->animalRepository->getAnimalPrimaryKeysByUlnString(true);
 
@@ -2436,12 +2446,22 @@ class AnimalTableMigrator extends MigratorBase
 
 			$fatherId  = null;
 			if(array_key_exists($fatherVsmId, $animalIdByVsmIds)) {
-				$fatherId = $animalIdByVsmIds[$fatherVsmId];
+				$fatherIdRetrieved = $animalIdByVsmIds[$fatherVsmId];
+				if(array_key_exists($fatherIdRetrieved, $genderByAnimalIds)) {
+					if($genderByAnimalIds[$fatherIdRetrieved] == GenderType::MALE) {
+						$fatherId = $fatherIdRetrieved;
+					}
+				}
 			}
 
 			$motherId = null;
 			if(array_key_exists($motherVsmId, $animalIdByVsmIds)) {
-				$motherId = $animalIdByVsmIds[$motherVsmId];
+				$motherIdRetrieved = $animalIdByVsmIds[$motherVsmId];
+				if(array_key_exists($motherIdRetrieved, $genderByAnimalIds)) {
+					if($genderByAnimalIds[$motherIdRetrieved] == GenderType::FEMALE) {
+						$motherId = $motherIdRetrieved;
+					}
+				}
 			}
 
 			if($animalIdInDb != $animalId || $fatherIdInDb != $fatherId || $motherIdInDb != $motherId) {
