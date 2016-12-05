@@ -252,4 +252,20 @@ class GenderChanger
             self::changeFemaleToMaleBySql($em, $animalId);
         }
     }
+
+
+    /**
+     * @param string $gender
+     * @return string
+     */
+    public static function getClassNameByGender($gender)
+    {
+        switch ($gender)
+        {
+            case GenderType::FEMALE: return 'Ewe';
+            case GenderType::MALE: return 'Ram';
+            case GenderType::NEUTER: return 'Neuter';
+            default: return 'Neuter';
+        }
+    }
 }
