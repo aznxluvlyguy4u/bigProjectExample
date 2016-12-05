@@ -848,6 +848,8 @@ class AnimalRepository extends BaseRepository
 
 
   /**
+   * This information is necessary to show the most up to date information on the PedigreeCertificates
+   *
    * @return int
    * @throws \Doctrine\DBAL\DBALException
    */
@@ -895,5 +897,39 @@ class AnimalRepository extends BaseRepository
     }
 
     return $ubnsUpdated;
+  }
+
+
+  /**
+   * This information is necessary to show the most up to date information on the PedigreeCertificates
+   *
+   * @param Location $locationOfBirth
+   */
+  public function updateLocationOfBirth($locationOfBirth)
+  {
+    if($locationOfBirth instanceof Location) {
+      $ubn = $locationOfBirth->getUbn();
+      $id = $locationOfBirth->getId();
+      if($locationOfBirth->getIsActive() && ctype_digit($ubn) && is_int($id)) {
+        $sql = "UPDATE animal SET location_of_birth_id = ".$id." WHERE ubn_of_birth = '".$ubn."'";
+        $this->getConnection()->exec($sql);
+      }
+    }
+  }
+
+
+  /**
+   * This information is necessary to show the most up to date information on the PedigreeCertificates
+   *
+   * @param Company $company
+   */
+  public function updateLocationOfBirthByCompany(Company $company)
+  {
+    if($company instanceof Company) {
+      /** @var Location $location */
+      foreach($company->getLocations() as $location) {
+        $this->updateLocationOfBirth($location);
+      }
+    }
   }
 }
