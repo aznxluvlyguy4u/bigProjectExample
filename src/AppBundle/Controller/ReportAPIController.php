@@ -64,7 +64,7 @@ class ReportAPIController extends APIController {
     $em = $this->getDoctrine()->getManager();
 
     //Validate if given ULNs are correct AND there should at least be one ULN given
-    $ulnValidator = new UlnValidator($em, $content, true, $client, $location);
+    $ulnValidator = new UlnValidator($em, $content, true, null, $location);
     if(!$ulnValidator->getIsUlnSetValid()) {
       return $ulnValidator->createArrivalJsonErrorResponse();
     }
