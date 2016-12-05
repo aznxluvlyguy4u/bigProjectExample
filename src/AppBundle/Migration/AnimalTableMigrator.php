@@ -374,6 +374,11 @@ class AnimalTableMigrator extends MigratorBase
 
 	public function migrate()
 	{
+		$checkAnimalIds = true;
+		$migrateAnimals = true;
+		$migrateParents = true;
+
+
 		//TODO
 		/*
 		 * NOTE!!!! FIRST UPDATE THE ANIMALS IN THE DATABASE TO THE CORRECT GENDER !!!!
@@ -384,54 +389,54 @@ class AnimalTableMigrator extends MigratorBase
 		 * VsmIds for duplicate animals are found in the vsm_id_group table
 		 */
 
-		$this->output->writeln('Check animalIds...');
-		$this->checkAnimalIds();
+		if($checkAnimalIds) {
+			$this->output->writeln('Check animalIds...');
+			$this->checkAnimalIds();
+		}
+		
+		if($migrateAnimals) {
+			$this->cmdUtil->setStartTimeAndPrintIt(7,1,'Retrieving data ...');
 
-		$this->cmdUtil->setStartTimeAndPrintIt(7,1,'Retrieving data ...');
+			//SeachArrays
+			$this->cmdUtil->advanceProgressBar(1, 'Retrieving data and generating newestUlnByOldUln searchArray ...');
+			$newestUlnByOldUln = $this->declareTagReplaceRepository->getNewReplacementUlnSearchArray();
 
-		//SeachArrays
-		$this->cmdUtil->advanceProgressBar(1, 'Retrieving data and generating newestUlnByOldUln searchArray ...');
-		$newestUlnByOldUln = $this->declareTagReplaceRepository->getNewReplacementUlnSearchArray();
-
-		$this->cmdUtil->advanceProgressBar(1, 'Retrieving data and generating animalData searchArrays ...');
-		$sql = "SELECT id, name, uln_country_code, uln_number, animal_order_number, pedigree_country_code, pedigree_number,
+			$this->cmdUtil->advanceProgressBar(1, 'Retrieving data and generating animalData searchArrays ...');
+			$sql = "SELECT id, name, uln_country_code, uln_number, animal_order_number, pedigree_country_code, pedigree_number,
 				  nickname, parent_father_id, parent_mother_id, date_of_birth, breed_code, ubn_of_birth, gender,
 				  location_of_birth_id, pedigree_register_id, breed_type, scrapie_genotype, location_id
 				FROM animal";
-		$results = $this->conn->query($sql)->fetchAll();
-		$animalsByAnimalId = [];
-		$animalIdsOnLocation = [];
-		$animalIdByVsmId = [];
-		$genderByAnimalId = [];
-		foreach($results as $result) {
-			$animalId = $result['id'];
-			$vsmId = $result['name'];
-			$gender = $result['gender'];
-			$animalsByAnimalId[$animalId] = $result;
+			$results = $this->conn->query($sql)->fetchAll();
+			$animalsByAnimalId = [];
+			$animalIdsOnLocation = [];
+			$animalIdByVsmId = [];
+			$genderByAnimalId = [];
+			foreach($results as $result) {
+				$animalId = $result['id'];
+				$vsmId = $result['name'];
+				$gender = $result['gender'];
+				$animalsByAnimalId[$animalId] = $result;
 
-			if($result['location_id'] != null) {
-				$animalIdsOnLocation[$animalId] = $animalId;
-			}
+				if($result['location_id'] != null) {
+					$animalIdsOnLocation[$animalId] = $animalId;
+				}
 
-			if(is_string($vsmId)) {
-				if(ctype_digit($vsmId)) {
-					$animalIdByVsmId[$vsmId] = $animalId;
+				if(is_string($vsmId)) {
+					if(ctype_digit($vsmId)) {
+						$animalIdByVsmId[$vsmId] = $animalId;
+					}
+				}
+
+				if($animalId != null) {
+					$genderByAnimalId[$animalId] = $gender;
 				}
 			}
 
-			if($animalId != null) {
-				$genderByAnimalId[$animalId] = $gender;
-			}
-		}
+			
+			$this->cmdUtil->advanceProgressBar(1, 'Retrieving animalMigration data ...');
 
-
-
-
-
-		$this->cmdUtil->advanceProgressBar(1, 'Retrieving animalMigration data ...');
-
-		//Only process animals where genders match will those in the database
-		$sql = "SELECT a.id, a.vsm_id, a.animal_id, a.uln_country_code, a.uln_number, a.animal_order_number, a.pedigree_country_code,
+			//Only process animals where genders match will those in the database
+			$sql = "SELECT a.id, a.vsm_id, a.animal_id, a.uln_country_code, a.uln_number, a.animal_order_number, a.pedigree_country_code,
 				  a.pedigree_number, a.nick_name, a.father_vsm_id, a.father_id, a.mother_vsm_id, a.mother_id, a.gender_in_file,
 				  a.date_of_birth, a.breed_code, a.ubn_of_birth, a.location_of_birth_id, a.pedigree_register_id, a.breed_type, a.scrapie_genotype
 				FROM animal_migration_table a
@@ -452,104 +457,105 @@ class AnimalTableMigrator extends MigratorBase
 				  --Exclude animals with mismatching genders
 					  (gender_in_database ISNULL OR gender_in_file = gender_in_database) AND a.is_record_migrated = FALSE 
 				ORDER BY date_of_birth";
-		$results = $this->conn->query($sql)->fetchAll();
+			$results = $this->conn->query($sql)->fetchAll();
 
-		$this->cmdUtil->setProgressBarMessage('Retrieved data and created searchArrays');
-		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
-
-		//First import animals
-
-		$newAnimals = 0;
-		$skippedAnimals = 0;
-		$updatedAnimals = 0;
-
-		$this->parentVsmIdsUpdated = [];
-
-		$this->cmdUtil->setStartTimeAndPrintIt(count($results), 1);
-
-		foreach ($results as $result) {
-			$migrationTableId = $result['id'];
-			$vsmId = $result['vsm_id'];
-			$animalId = $result['animal_id'];
-			$ulnCountryCode = $result['uln_country_code'];
-			$ulnNumber = $result['uln_number'];
-			$animalOrderNumber = $result['animal_order_number'];
-			$pedigreeCountryCode = $result['pedigree_country_code'];
-			$pedigreeNumber = $result['pedigree_number'];
-			$nickName = $result['nick_name'];
-			$gender = $result['gender_in_file'];
-			$type = GenderChanger::getClassNameByGender($gender);
-			$fatherVsmId = $result['father_vsm_id'];
-			$fatherId = $this->checkAndFillEmptyAnimalId($result['father_id'], $fatherVsmId, $animalIdByVsmId, $genderByAnimalId, Constant::FATHER_NAMESPACE);
-			$motherVsmId = $result['mother_vsm_id'];
-			$motherId = $this->checkAndFillEmptyAnimalId($result['mother_id'], $motherVsmId, $animalIdByVsmId, $genderByAnimalId, Constant::MOTHER_NAMESPACE);
-			$dateOfBirth = $result['date_of_birth'];
-			$breedCode = $result['breed_code'];
-			$ubnOfBirth = $result['ubn_of_birth'];
-			$locationOfBirthId = $result['location_of_birth_id'];
-			$pedigreeRegisterId = $result['pedigree_register_id'];
-			$breedType = $result['breed_type'];
-			$scrapieGenotype = $result['scrapie_genotype'];
+			$this->cmdUtil->setProgressBarMessage('Retrieved data and created searchArrays');
+			$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
 
-			//If animal has been synced, just use the current uln data
-			if(!array_key_exists($animalId, $animalIdsOnLocation)) {
-				//Get newest uln
-				if(is_string($ulnCountryCode) && is_string($ulnNumber) ) {
-					if(array_key_exists($ulnCountryCode.$ulnNumber, $newestUlnByOldUln)) {
-						$ulnParts = $newestUlnByOldUln[$ulnCountryCode.$ulnNumber];
-						if(is_array($ulnParts)) {
-							$ulnCountryCode = Utils::getNullCheckedArrayValue(Constant::ULN_COUNTRY_CODE_NAMESPACE, $ulnParts);
-							$ulnNumber = Utils::getNullCheckedArrayValue(Constant::ULN_NUMBER_NAMESPACE, $ulnParts);
+			//First import animals
+
+			$newAnimals = 0;
+			$skippedAnimals = 0;
+			$updatedAnimals = 0;
+
+			$this->parentVsmIdsUpdated = [];
+
+			$this->cmdUtil->setStartTimeAndPrintIt(count($results), 1);
+
+			foreach ($results as $result) {
+				$migrationTableId = $result['id'];
+				$vsmId = $result['vsm_id'];
+				$animalId = $result['animal_id'];
+				$ulnCountryCode = $result['uln_country_code'];
+				$ulnNumber = $result['uln_number'];
+				$animalOrderNumber = $result['animal_order_number'];
+				$pedigreeCountryCode = $result['pedigree_country_code'];
+				$pedigreeNumber = $result['pedigree_number'];
+				$nickName = $result['nick_name'];
+				$gender = $result['gender_in_file'];
+				$type = GenderChanger::getClassNameByGender($gender);
+				$fatherVsmId = $result['father_vsm_id'];
+				$fatherId = $this->checkAndFillEmptyAnimalId($result['father_id'], $fatherVsmId, $animalIdByVsmId, $genderByAnimalId, Constant::FATHER_NAMESPACE);
+				$motherVsmId = $result['mother_vsm_id'];
+				$motherId = $this->checkAndFillEmptyAnimalId($result['mother_id'], $motherVsmId, $animalIdByVsmId, $genderByAnimalId, Constant::MOTHER_NAMESPACE);
+				$dateOfBirth = $result['date_of_birth'];
+				$breedCode = $result['breed_code'];
+				$ubnOfBirth = $result['ubn_of_birth'];
+				$locationOfBirthId = $result['location_of_birth_id'];
+				$pedigreeRegisterId = $result['pedigree_register_id'];
+				$breedType = $result['breed_type'];
+				$scrapieGenotype = $result['scrapie_genotype'];
+
+
+				//If animal has been synced, just use the current uln data
+				if(!array_key_exists($animalId, $animalIdsOnLocation)) {
+					//Get newest uln
+					if(is_string($ulnCountryCode) && is_string($ulnNumber) ) {
+						if(array_key_exists($ulnCountryCode.$ulnNumber, $newestUlnByOldUln)) {
+							$ulnParts = $newestUlnByOldUln[$ulnCountryCode.$ulnNumber];
+							if(is_array($ulnParts)) {
+								$ulnCountryCode = Utils::getNullCheckedArrayValue(Constant::ULN_COUNTRY_CODE_NAMESPACE, $ulnParts);
+								$ulnNumber = Utils::getNullCheckedArrayValue(Constant::ULN_NUMBER_NAMESPACE, $ulnParts);
+							}
 						}
 					}
 				}
-			}
 
 
-			$vsmIdSql = SqlUtil::getNullCheckedValueForSqlQuery($vsmId, true);
-			$ulnCountryCodeSql = SqlUtil::getNullCheckedValueForSqlQuery($ulnCountryCode, true);
-			$ulnNumberSql = SqlUtil::getNullCheckedValueForSqlQuery($ulnNumber, true);
-			$animalOrderNumberSql = SqlUtil::getNullCheckedValueForSqlQuery($animalOrderNumber, true);
-			$pedigreeCountryCodeSql = SqlUtil::getNullCheckedValueForSqlQuery($pedigreeCountryCode, true);
-			$pedigreeNumberSql =  SqlUtil::getNullCheckedValueForSqlQuery($pedigreeNumber, true);
-			$nickNameSql = SqlUtil::getNullCheckedValueForSqlQuery(utf8_encode(StringUtil::escapeSingleApostrophes($nickName)), true);
-			$fatherIdSql = SqlUtil::getNullCheckedValueForSqlQuery($fatherId, false);
-			$motherIdSql = SqlUtil::getNullCheckedValueForSqlQuery($motherId, false);
-			$genderSql = SqlUtil::getNullCheckedValueForSqlQuery($gender, true);
-			$dateOfBirthSql = SqlUtil::getNullCheckedValueForSqlQuery($dateOfBirth, true);
-			$breedCodeSql = SqlUtil::getNullCheckedValueForSqlQuery($breedCode, true);
-			$ubnOfBirthSql = SqlUtil::getNullCheckedValueForSqlQuery($ubnOfBirth, true);
-			$locationOfBirthIdSql = SqlUtil::getNullCheckedValueForSqlQuery($locationOfBirthId, false);
-			$pedigreeRegisterIdSql = SqlUtil::getNullCheckedValueForSqlQuery($pedigreeRegisterId, true);
-			$breedTypeSql = SqlUtil::getNullCheckedValueForSqlQuery($breedType, true);
-			$scrapieGenotypeSql = SqlUtil::getNullCheckedValueForSqlQuery($scrapieGenotype, true);
-			
-			
-			if($animalId != null) {
-				$oldValues = $animalsByAnimalId[$animalId];
+				$vsmIdSql = SqlUtil::getNullCheckedValueForSqlQuery($vsmId, true);
+				$ulnCountryCodeSql = SqlUtil::getNullCheckedValueForSqlQuery($ulnCountryCode, true);
+				$ulnNumberSql = SqlUtil::getNullCheckedValueForSqlQuery($ulnNumber, true);
+				$animalOrderNumberSql = SqlUtil::getNullCheckedValueForSqlQuery($animalOrderNumber, true);
+				$pedigreeCountryCodeSql = SqlUtil::getNullCheckedValueForSqlQuery($pedigreeCountryCode, true);
+				$pedigreeNumberSql =  SqlUtil::getNullCheckedValueForSqlQuery($pedigreeNumber, true);
+				$nickNameSql = SqlUtil::getNullCheckedValueForSqlQuery(utf8_encode(StringUtil::escapeSingleApostrophes($nickName)), true);
+				$fatherIdSql = SqlUtil::getNullCheckedValueForSqlQuery($fatherId, false);
+				$motherIdSql = SqlUtil::getNullCheckedValueForSqlQuery($motherId, false);
+				$genderSql = SqlUtil::getNullCheckedValueForSqlQuery($gender, true);
+				$dateOfBirthSql = SqlUtil::getNullCheckedValueForSqlQuery($dateOfBirth, true);
+				$breedCodeSql = SqlUtil::getNullCheckedValueForSqlQuery($breedCode, true);
+				$ubnOfBirthSql = SqlUtil::getNullCheckedValueForSqlQuery($ubnOfBirth, true);
+				$locationOfBirthIdSql = SqlUtil::getNullCheckedValueForSqlQuery($locationOfBirthId, false);
+				$pedigreeRegisterIdSql = SqlUtil::getNullCheckedValueForSqlQuery($pedigreeRegisterId, true);
+				$breedTypeSql = SqlUtil::getNullCheckedValueForSqlQuery($breedType, true);
+				$scrapieGenotypeSql = SqlUtil::getNullCheckedValueForSqlQuery($scrapieGenotype, true);
 
-				//Check if animal values need to be updated
-				$haveValuesChanged = $vsmId != $oldValues['name'] ||
-									$animalId != $oldValues['id'] ||
-									$ulnCountryCode != $oldValues['uln_country_code'] ||
-									$ulnNumber != $oldValues['uln_number'] ||
-									$animalOrderNumber != $oldValues['animal_order_number'] ||
-									$pedigreeCountryCode != $oldValues['pedigree_country_code'] ||
-									$pedigreeNumber != $oldValues['pedigree_number'] ||
-									$nickName != $oldValues['nickname'] ||
-									$fatherId != $oldValues['parent_father_id'] ||
-									$motherId != $oldValues['parent_mother_id'] ||
-									$gender != $oldValues['gender'] ||
-									$dateOfBirth != $oldValues['date_of_birth'] ||
-									$breedCode != $oldValues['breed_code'] ||
-									$ubnOfBirth != $oldValues['ubn_of_birth'] ||
-									$locationOfBirthId != $oldValues['location_of_birth_id'] ||
-									$pedigreeRegisterId != $oldValues['pedigree_register_id'] ||
-									$breedType != $oldValues['breed_type'] ||
-									$scrapieGenotype != $oldValues['scrapie_genotype'];
-				if($haveValuesChanged) {
-					$sql = "UPDATE animal SET name = ".$vsmIdSql.",
+
+				if($animalId != null) {
+					$oldValues = $animalsByAnimalId[$animalId];
+
+					//Check if animal values need to be updated
+					$haveValuesChanged = $vsmId != $oldValues['name'] ||
+						$animalId != $oldValues['id'] ||
+						$ulnCountryCode != $oldValues['uln_country_code'] ||
+						$ulnNumber != $oldValues['uln_number'] ||
+						$animalOrderNumber != $oldValues['animal_order_number'] ||
+						$pedigreeCountryCode != $oldValues['pedigree_country_code'] ||
+						$pedigreeNumber != $oldValues['pedigree_number'] ||
+						$nickName != $oldValues['nickname'] ||
+						$fatherId != $oldValues['parent_father_id'] ||
+						$motherId != $oldValues['parent_mother_id'] ||
+						$gender != $oldValues['gender'] ||
+						$dateOfBirth != $oldValues['date_of_birth'] ||
+						$breedCode != $oldValues['breed_code'] ||
+						$ubnOfBirth != $oldValues['ubn_of_birth'] ||
+						$locationOfBirthId != $oldValues['location_of_birth_id'] ||
+						$pedigreeRegisterId != $oldValues['pedigree_register_id'] ||
+						$breedType != $oldValues['breed_type'] ||
+						$scrapieGenotype != $oldValues['scrapie_genotype'];
+					if($haveValuesChanged) {
+						$sql = "UPDATE animal SET name = ".$vsmIdSql.",
 							uln_country_code = ".$ulnCountryCodeSql.",
 							uln_number = ".$ulnNumberSql.",
 							animal_order_number = ".$animalOrderNumberSql.",
@@ -567,6 +573,41 @@ class AnimalTableMigrator extends MigratorBase
 						  	breed_type = ".$breedTypeSql.",
 						  	scrapie_genotype = ".$scrapieGenotypeSql."
 							 WHERE id = ".$animalId;
+						$this->conn->exec($sql);
+
+						$sql = "UPDATE animal_migration_table SET is_record_migrated = TRUE WHERE id = ".$migrationTableId;
+						$this->conn->exec($sql);
+
+						//Update searchArrays
+						$animalIdByVsmId[$vsmId] = $animalId;
+						$genderByAnimalId[$animalId] = $gender;
+
+						$updatedAnimals++;
+					} else {
+						$sql = "UPDATE animal_migration_table SET is_record_migrated = TRUE WHERE id = ".$migrationTableId;
+						$this->conn->exec($sql);
+						$skippedAnimals++;
+					}
+
+				} else {
+					//Insert new animal
+					$sql = "INSERT INTO animal (id, name, uln_country_code, uln_number, animal_order_number,
+						  pedigree_country_code, pedigree_number, nickname, parent_father_id, 
+						  parent_mother_id, gender, date_of_birth, breed_code, ubn_of_birth,
+						  location_of_birth_id, pedigree_register_id, breed_type, scrapie_genotype,
+						  animal_type, animal_category, is_alive, is_departed_animal, is_export_animal, is_import_animal,
+						  type						  
+						)VALUES(nextval('animal_id_seq'),".$vsmIdSql.",".$ulnCountryCodeSql.",".$ulnNumberSql.",".$animalOrderNumberSql
+						.",".$pedigreeCountryCodeSql.",".$pedigreeNumberSql.",".$nickNameSql.",".$fatherIdSql
+						.",".$motherIdSql.",".$genderSql.",".$dateOfBirthSql.",".$breedCodeSql.",".$ubnOfBirthSql
+						.",".$locationOfBirthIdSql.",".$pedigreeRegisterIdSql.",".$breedTypeSql.",".$scrapieGenotypeSql
+						.",3,3,TRUE,FALSE,FALSE,FALSE,'".$type."')";
+					$this->conn->exec($sql);
+
+					$sql = "SELECT id FROM animal WHERE name = '". $vsmId."'";
+					$animalId = $this->conn->query($sql)->fetch()['id'];
+
+					$sql = "INSERT INTO ".strtolower($type)." VALUES (" . $animalId . ", '".$type."')";
 					$this->conn->exec($sql);
 
 					$sql = "UPDATE animal_migration_table SET is_record_migrated = TRUE WHERE id = ".$migrationTableId;
@@ -576,46 +617,16 @@ class AnimalTableMigrator extends MigratorBase
 					$animalIdByVsmId[$vsmId] = $animalId;
 					$genderByAnimalId[$animalId] = $gender;
 
-					$updatedAnimals++;
-				} else {
-					$skippedAnimals++;
+					$newAnimals++;
 				}
-
-			} else {
-				//Insert new animal
-				$sql = "INSERT INTO animal (id, name, uln_country_code, uln_number, animal_order_number,
-						  pedigree_country_code, pedigree_number, nickname, parent_father_id, 
-						  parent_mother_id, gender, date_of_birth, breed_code, ubn_of_birth,
-						  location_of_birth_id, pedigree_register_id, breed_type, scrapie_genotype,
-						  animal_type, animal_category, is_alive, is_departed_animal, is_export_animal, is_import_animal,
-						  type						  
-						)VALUES(nextval('animal_id_seq'),".$vsmIdSql.",".$ulnCountryCodeSql.",".$ulnNumberSql.",".$animalOrderNumberSql
-					.",".$pedigreeCountryCodeSql.",".$pedigreeNumberSql.",".$nickNameSql.",".$fatherIdSql
-					.",".$motherIdSql.",".$genderSql.",".$dateOfBirthSql.",".$breedCodeSql.",".$ubnOfBirthSql
-					.",".$locationOfBirthIdSql.",".$pedigreeRegisterIdSql.",".$breedTypeSql.",".$scrapieGenotypeSql
-					.",3,3,TRUE,FALSE,FALSE,FALSE,'".$type."')";
-				$this->conn->exec($sql);
-
-				$sql = "SELECT id FROM animal WHERE name = '". $vsmId."'";
-				$animalId = $this->conn->query($sql)->fetch()['id'];
-
-				$sql = "INSERT INTO ".strtolower($type)." VALUES (" . $animalId . ", '".$type."')";
-				$this->conn->exec($sql);
-
-				$sql = "UPDATE animal_migration_table SET is_record_migrated = TRUE WHERE id = ".$migrationTableId;
-				$this->conn->exec($sql);
-
-				//Update searchArrays
-				$animalIdByVsmId[$vsmId] = $animalId;
-				$genderByAnimalId[$animalId] = $gender;
-
-				$newAnimals++;
+				$this->cmdUtil->advanceProgressBar(1, 'Migrating animalData new|updated|skipped: '.$newAnimals.'|'.$updatedAnimals.'|'.$skippedAnimals);
 			}
-			$this->cmdUtil->advanceProgressBar(1, 'Migrating animalData new|updated|skipped: '.$newAnimals.'|'.$updatedAnimals.'|'.$skippedAnimals);
+			$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 		}
-		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
-		//Update parentIds in animalMigrationTable and set those new values on the Animals
+		if($migrateParents) {
+			//TODO MigrateParents
+		}
 	}
 
 
@@ -2469,7 +2480,7 @@ class AnimalTableMigrator extends MigratorBase
 				$fatherId = SqlUtil::getNullCheckedValueForSqlQuery($fatherId, false);
 				$motherId = SqlUtil::getNullCheckedValueForSqlQuery($motherId, false);
 
-				$sql = "UPDATE animal_migration_table SET 
+				$sql = "UPDATE animal_migration_table SET
 						  		animal_id = ".$animalId.
 						", mother_id = ".$motherId.
 						", father_id = ".$fatherId.
@@ -2481,6 +2492,39 @@ class AnimalTableMigrator extends MigratorBase
 			$this->cmdUtil->advanceProgressBar(1,'AnimalIds updated|skipped: '.$recordsUpdated.'|'.$recordsSkipped);
 		}
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
+
+
+		//Fix parent animalIds in AnimalMigrationTable
+
+		$sql = "SELECT a.id, mother.gender FROM animal_migration_table a
+					INNER JOIN animal mother ON mother.id = a.mother_id
+					WHERE gender <> 'FEMALE'";
+		$motherResults = $this->conn->query($sql)->fetchAll();
+
+		$sql = "SELECT a.id, mother.gender FROM animal_migration_table a
+					INNER JOIN animal mother ON mother.id = a.mother_id
+					WHERE gender <> 'FEMALE'";
+		$fatherResults = $this->conn->query($sql)->fetchAll();
+
+		$totalCount = count($motherResults) + count($fatherResults);
+		if($totalCount > 0) {
+			$this->cmdUtil->setStartTimeAndPrintIt($totalCount, 1);
+
+			foreach ($motherResults as $result) {
+				$migrationTableId = $result['id'];
+				$sql = "UPDATE animal_migration_table SET mother_id = NULL WHERE id = ".$migrationTableId;
+				$this->conn->exec($sql);
+				$this->cmdUtil->advanceProgressBar(1, 'Parent animalIds in AnimalMigrationTable cleared (due to mismatched gender)');
+			}
+
+			foreach ($fatherResults as $result) {
+				$migrationTableId = $result['id'];
+				$sql = "UPDATE animal_migration_table SET mother_id = NULL WHERE id = ".$migrationTableId;
+				$this->conn->exec($sql);
+				$this->cmdUtil->advanceProgressBar(1, 'Parent animalIds in AnimalMigrationTable cleared (due to mismatched gender)');
+			}
+			$this->cmdUtil->setEndTimeAndPrintFinalOverview();
+		}
 	}
 	
 	
