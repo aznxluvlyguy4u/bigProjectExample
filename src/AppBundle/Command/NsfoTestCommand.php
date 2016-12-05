@@ -2,6 +2,10 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationRepository;
 use AppBundle\Util\CommandUtil;
 
 use AppBundle\Util\NullChecker;
@@ -35,6 +39,12 @@ class NsfoTestCommand extends ContainerAwareCommand
     /** @var string */
     private $rootDir;
 
+    /** @var LocationRepository */
+    private $locationRepository;
+
+    /** @var AnimalRepository */
+    private $animalRepository;
+
     private $csvParsingOptions = array(
         'finder_in' => 'app/Resources/imports/',
         'finder_out' => 'app/Resources/outputs/',
@@ -60,7 +70,9 @@ class NsfoTestCommand extends ContainerAwareCommand
         $helper = $this->getHelper('question');
         $cmdUtil = new CommandUtil($input, $output, $helper);
         if(self::CREATE_TEST_FOLDER_IF_NULL) { NullChecker::createFolderPathIfNull($this->rootDir.self::OUTPUT_FOLDER_NAME); }
-
+        $this->locationRepository = $em->getRepository(Location::class);
+        $this->animalRepository = $em->getRepository(Animal::class);
+        
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
