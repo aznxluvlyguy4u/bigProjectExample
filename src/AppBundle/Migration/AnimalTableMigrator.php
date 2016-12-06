@@ -387,7 +387,7 @@ class AnimalTableMigrator extends MigratorBase
 
 	public function migrate()
 	{
-		$checkAnimalIds = false;
+		$checkAnimalIdsExcludingIdOfParents = true;
 		$migrateAnimals = true;
 		$migrateParents = true;
 
@@ -402,9 +402,9 @@ class AnimalTableMigrator extends MigratorBase
 		 * VsmIds for duplicate animals are found in the vsm_id_group table
 		 */
 
-		if($checkAnimalIds) {
+		if($checkAnimalIdsExcludingIdOfParents) {
 			$this->output->writeln('Check animalIds...');
-			$this->checkAnimalIds();
+			$this->checkAnimalIds(false);
 		}
 		
 		if($migrateAnimals) {
@@ -2480,10 +2480,13 @@ class AnimalTableMigrator extends MigratorBase
 		}
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
-	
-	
-	
-	public function checkAnimalIds()
+
+
+	/**
+	 * @param bool $alsoCheckAnimalIdsOfParents
+	 * @throws \Doctrine\DBAL\DBALException
+	 */
+	public function checkAnimalIds($alsoCheckAnimalIdsOfParents = true)
 	{
 		//SearchArrays
 
@@ -2537,39 +2540,53 @@ class AnimalTableMigrator extends MigratorBase
 				}
 			}
 
-			$fatherId  = null;
-			if(array_key_exists($fatherVsmId, $animalIdByVsmIds)) {
-				$fatherIdRetrieved = $animalIdByVsmIds[$fatherVsmId];
-				if(array_key_exists($fatherIdRetrieved, $genderByAnimalIds)) {
-					if($genderByAnimalIds[$fatherIdRetrieved] == GenderType::MALE) {
-						$fatherId = $fatherIdRetrieved;
+			if($alsoCheckAnimalIdsOfParents) {
+
+				$fatherId  = null;
+				if(array_key_exists($fatherVsmId, $animalIdByVsmIds)) {
+					$fatherIdRetrieved = $animalIdByVsmIds[$fatherVsmId];
+					if(array_key_exists($fatherIdRetrieved, $genderByAnimalIds)) {
+						if($genderByAnimalIds[$fatherIdRetrieved] == GenderType::MALE) {
+							$fatherId = $fatherIdRetrieved;
+						}
 					}
 				}
-			}
 
-			$motherId = null;
-			if(array_key_exists($motherVsmId, $animalIdByVsmIds)) {
-				$motherIdRetrieved = $animalIdByVsmIds[$motherVsmId];
-				if(array_key_exists($motherIdRetrieved, $genderByAnimalIds)) {
-					if($genderByAnimalIds[$motherIdRetrieved] == GenderType::FEMALE) {
-						$motherId = $motherIdRetrieved;
+				$motherId = null;
+				if(array_key_exists($motherVsmId, $animalIdByVsmIds)) {
+					$motherIdRetrieved = $animalIdByVsmIds[$motherVsmId];
+					if(array_key_exists($motherIdRetrieved, $genderByAnimalIds)) {
+						if($genderByAnimalIds[$motherIdRetrieved] == GenderType::FEMALE) {
+							$motherId = $motherIdRetrieved;
+						}
 					}
 				}
-			}
 
-			if($animalIdInDb != $animalId || $fatherIdInDb != $fatherId || $motherIdInDb != $motherId) {
-				$animalId = SqlUtil::getNullCheckedValueForSqlQuery($animalId, false);
-				$fatherId = SqlUtil::getNullCheckedValueForSqlQuery($fatherId, false);
-				$motherId = SqlUtil::getNullCheckedValueForSqlQuery($motherId, false);
+				if($animalIdInDb != $animalId || $fatherIdInDb != $fatherId || $motherIdInDb != $motherId) {
+					$animalId = SqlUtil::getNullCheckedValueForSqlQuery($animalId, false);
+					$fatherId = SqlUtil::getNullCheckedValueForSqlQuery($fatherId, false);
+					$motherId = SqlUtil::getNullCheckedValueForSqlQuery($motherId, false);
 
-				$sql = "UPDATE animal_migration_table SET
+					$sql = "UPDATE animal_migration_table SET
 						  		animal_id = ".$animalId.
 						", mother_id = ".$motherId.
 						", father_id = ".$fatherId.
 						" WHERE id = ".$id;
-				$this->conn->exec($sql);
-				$recordsUpdated++;
-			} else { $recordsSkipped++; }
+					$this->conn->exec($sql);
+
+					$recordsUpdated++;
+				} else { $recordsSkipped++; }
+
+			} else {
+				if($animalIdInDb != $animalId) {
+					$animalId = SqlUtil::getNullCheckedValueForSqlQuery($animalId, false);
+
+					$sql = "UPDATE animal_migration_table SET animal_id = ".$animalId." WHERE id = ".$id;
+					$this->conn->exec($sql);
+
+					$recordsUpdated++;
+				} else { $recordsSkipped++; }
+			}
 
 			$this->cmdUtil->advanceProgressBar(1,'AnimalIds updated|skipped: '.$recordsUpdated.'|'.$recordsSkipped);
 		}
