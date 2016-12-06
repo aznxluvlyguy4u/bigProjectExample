@@ -395,7 +395,7 @@ class AnimalTableMigrator extends MigratorBase
 		}
 		
 		if($migrateAnimals) {
-			$this->cmdUtil->setStartTimeAndPrintIt(7,1,'Retrieving data ...');
+			$this->cmdUtil->setStartTimeAndPrintIt(8,1,'Retrieving data ...');
 
 			//SeachArrays
 			$this->cmdUtil->advanceProgressBar(1, 'Retrieving data and generating newestUlnByOldUln searchArray ...');
@@ -459,9 +459,13 @@ class AnimalTableMigrator extends MigratorBase
 				ORDER BY date_of_birth";
 			$results = $this->conn->query($sql)->fetchAll();
 
-			$this->cmdUtil->setProgressBarMessage('Retrieved data and created searchArrays');
+			$this->cmdUtil->setProgressBarMessage('Fixing possible missing ewe/ram/neuter table records');
+			$missingTableExtentions = $this->animalRepository->fixMissingAnimalTableExtentions();
+			$this->cmdUtil->setProgressBarMessage($missingTableExtentions.' missing ewe/ram/neuter table records added');
+			
 			$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
+			$this->output->writeln('Retrieved data and created searchArrays');
 
 			//First import animals
 

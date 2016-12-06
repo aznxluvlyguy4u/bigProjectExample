@@ -932,4 +932,79 @@ class AnimalRepository extends BaseRepository
       }
     }
   }
+
+
+  /**
+   * @return int
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function fixMissingAnimalTableExtentions()
+  {
+    $sql = "SELECT a.id, 'Ewe' as type FROM animal a
+            LEFT JOIN ewe e ON a.id = e.id
+            WHERE a.type = 'Ewe' AND e.id ISNULL
+            UNION
+            SELECT a.id, 'Ram' as type FROM animal a
+              LEFT JOIN ram r ON a.id = r.id
+            WHERE a.type = 'Ram' AND r.id ISNULL
+            UNION
+            SELECT a.id, 'Neuter' as type FROM animal a
+              LEFT JOIN neuter n ON a.id = n.id
+            WHERE a.type = 'Neuter' AND n.id ISNULL";
+    $results = $this->getConnection()->query($sql)->fetchAll();
+
+    $totalCount = count($results);
+
+    if($totalCount > 0) {
+
+      $eweAnimalIds = [];
+      $ramAnimalIds = [];
+      $neuterAnimalIds = [];
+      foreach ($results as $result) {
+        $animalId = $result['id'];
+        $type = $result['type'];
+
+        switch ($type) {
+          case 'Ewe': $eweAnimalIds[$animalId] = $animalId; break;
+          case 'Ram': $ramAnimalIds[$animalId] = $animalId; break;
+          case 'Neuter': $neuterAnimalIds[$animalId] = $animalId; break;
+        }
+      }
+      $this->insertAnimalTableExtentions($eweAnimalIds, 'Ewe');
+      $this->insertAnimalTableExtentions($ramAnimalIds, 'Ram');
+      $this->insertAnimalTableExtentions($neuterAnimalIds, 'Neuter');
+    }
+
+    return $totalCount;
+  }
+
+  
+  private function insertAnimalTableExtentions($animalIds, $type)
+  {
+    $batchSize = 1000;
+    $tableName = strtolower($type);
+
+    $counter = 0;
+    $totalCount = count($animalIds);
+    $valuesString = '';
+    $animalIds = array_keys($animalIds);
+    foreach ($animalIds as $animalId) {
+
+      $valuesString = $valuesString."(" . $animalId . ", '".$type."')";
+      $counter++;
+
+      if($counter%$batchSize == 0) {
+        $sql = "INSERT INTO ".$tableName." VALUES ".$valuesString;
+        $this->getConnection()->exec($sql);
+        $valuesString = '';
+
+      } elseif($counter != $totalCount) {
+        $valuesString = $valuesString.',';
+      }
+    }
+    if($valuesString != '') {
+      $sql = "INSERT INTO ".$tableName." VALUES ".$valuesString;
+      $this->getConnection()->exec($sql);
+    }
+  }
 }
