@@ -387,7 +387,7 @@ class AnimalTableMigrator extends MigratorBase
 
 	public function migrate()
 	{
-		$checkAnimalIds = true;
+		$checkAnimalIds = false;
 		$migrateAnimals = true;
 		$migrateParents = true;
 
@@ -482,13 +482,12 @@ class AnimalTableMigrator extends MigratorBase
 				$type = GenderChanger::getClassNameByGender($gender);
 
 				/*
-				 * Note that the checkAnimalIds() before fixes the animalIds for parents
-				 * And the parentIds will be set after all the animals are inserted
+				 * Get animalId from vsmId to make sure the gender is correct
 				 */
 				$fatherVsmId = $result['father_vsm_id'];
-				$fatherId = $result['father_id'];
+				$fatherId = $this->getGenderCheckedAnimalIdOfParent($fatherVsmId, $this->animalIdByVsmId, $this->genderByAnimalId, Constant::FATHER_NAMESPACE);
 				$motherVsmId = $result['mother_vsm_id'];
-				$motherId = $result['mother_id'];
+				$motherId = $this->getGenderCheckedAnimalIdOfParent($motherVsmId, $this->animalIdByVsmId, $this->genderByAnimalId, Constant::MOTHER_NAMESPACE);
 
 				$dateOfBirth = $result['date_of_birth'];
 				$breedCode = $result['breed_code'];
@@ -641,6 +640,8 @@ class AnimalTableMigrator extends MigratorBase
 			$this->resetAnimalIdVsmLocationAndGenderSearchArrays();
 //			$this->checkAndFillEmptyAnimalId();
 			//TODO MigrateParents
+			
+			//TODO Find missingFathers!!!!
 		}
 		
 		
@@ -679,6 +680,38 @@ class AnimalTableMigrator extends MigratorBase
 	}
 
 
+	/**
+	 * @param string $vsmId
+	 * @param array $animalIdByVsmId
+	 * @param array $genderByAnimalId
+	 * @param string $parent
+	 * @return null|int
+	 */
+	private function getGenderCheckedAnimalIdOfParent($vsmId, $animalIdByVsmId, $genderByAnimalId, $parent)
+	{
+		if(!is_array($animalIdByVsmId) || !is_array($genderByAnimalId)) { return null; }
+			
+		if(ctype_digit($vsmId)) {
+			if(array_key_exists($vsmId, $animalIdByVsmId)) {
+
+				$animalId = $animalIdByVsmId[$vsmId];
+
+				if(array_key_exists($animalId, $genderByAnimalId)) {
+
+						$gender = $genderByAnimalId[$animalId];
+
+						if(($parent == Constant::FATHER_NAMESPACE && $gender == GenderType::MALE) ||
+							$parent == Constant::MOTHER_NAMESPACE && $gender == GenderType::FEMALE) {
+							return intval($animalId);
+						}
+				}
+			}
+		}
+
+		return null;
+	}
+	
+	
 	/**
 	 * @param int $animalId
 	 * @param string $vsmId
