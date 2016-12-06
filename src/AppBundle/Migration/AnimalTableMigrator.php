@@ -480,10 +480,16 @@ class AnimalTableMigrator extends MigratorBase
 				$nickName = $result['nick_name'];
 				$gender = $result['gender_in_file'];
 				$type = GenderChanger::getClassNameByGender($gender);
+
+				/*
+				 * Note that the checkAnimalIds() before fixes the animalIds for parents
+				 * And the parentIds will be set after all the animals are inserted
+				 */
 				$fatherVsmId = $result['father_vsm_id'];
-				$fatherId = $this->checkAndFillEmptyAnimalId($result['father_id'], $fatherVsmId, $this->animalIdByVsmId, $this->genderByAnimalId, Constant::FATHER_NAMESPACE);
+				$fatherId = $result['father_id'];
 				$motherVsmId = $result['mother_vsm_id'];
-				$motherId = $this->checkAndFillEmptyAnimalId($result['mother_id'], $motherVsmId, $this->animalIdByVsmId, $this->genderByAnimalId, Constant::MOTHER_NAMESPACE);
+				$motherId = $result['mother_id'];
+
 				$dateOfBirth = $result['date_of_birth'];
 				$breedCode = $result['breed_code'];
 				$ubnOfBirth = $result['ubn_of_birth'];
@@ -592,11 +598,15 @@ class AnimalTableMigrator extends MigratorBase
 					$migrationTableCheckListIds[$migrationTableId] = $migrationTableId;
 
 					$maxAnimalId++;
-					$insertString = $insertString."(".$maxAnimalId."),".$vsmIdSql.",".$ulnCountryCodeSql.",".$ulnNumberSql.",".$animalOrderNumberSql
+					$insertString = $insertString."(".$maxAnimalId.",".$vsmIdSql.",".$ulnCountryCodeSql.",".$ulnNumberSql.",".$animalOrderNumberSql
 						.",".$pedigreeCountryCodeSql.",".$pedigreeNumberSql.",".$nickNameSql.",".$fatherIdSql
 						.",".$motherIdSql.",".$genderSql.",".$dateOfBirthSql.",".$breedCodeSql.",".$ubnOfBirthSql
 						.",".$locationOfBirthIdSql.",".$pedigreeRegisterIdSql.",".$breedTypeSql.",".$scrapieGenotypeSql
 						.",3,3,TRUE,FALSE,FALSE,FALSE,'".$type."')";
+
+					if(!($insertBatchCount%self::INSERT_BATCH_SIZE == 0 && $insertBatchCount != 0)) {
+						$insertString = $insertString.',';
+					}
 				}
 
 
@@ -610,6 +620,7 @@ class AnimalTableMigrator extends MigratorBase
 					$insertBatchCount = 0;
 					$newAnimals += self::INSERT_BATCH_SIZE;
 				}
+
 				$this->cmdUtil->advanceProgressBar(1, 'Migrating animalData new|updated|skipped: '.$newAnimals.'|'.$updatedAnimals.'|'.$skippedAnimals.'  insertBatch: '.$insertBatchCount);
 			}
 
@@ -628,7 +639,7 @@ class AnimalTableMigrator extends MigratorBase
 			//Double check the data again
 			$this->fixParentAnimalIdsInMigrationTable();
 			$this->resetAnimalIdVsmLocationAndGenderSearchArrays();
-			
+//			$this->checkAndFillEmptyAnimalId();
 			//TODO MigrateParents
 		}
 		
@@ -2556,6 +2567,7 @@ class AnimalTableMigrator extends MigratorBase
 		if($totalCount > 0) {
 			$this->cmdUtil->setStartTimeAndPrintIt($totalCount, 1);
 
+			
 			foreach ($motherResults as $result) {
 				$migrationTableId = $result['id'];
 				$sql = "UPDATE animal_migration_table SET mother_id = NULL WHERE id = ".$migrationTableId;
