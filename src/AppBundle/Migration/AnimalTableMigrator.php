@@ -100,7 +100,7 @@ class AnimalTableMigrator extends MigratorBase
 	private $genderByAnimalId;
 
 	/**
-	 * MyoMaxMigrator constructor.
+	 * AnimalTableMigrator constructor.
 	 * @param CommandUtil $cmdUtil
 	 * @param ObjectManager $em
 	 * @param OutputInterface $outputInterface

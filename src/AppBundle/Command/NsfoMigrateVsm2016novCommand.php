@@ -5,6 +5,7 @@ namespace AppBundle\Command;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Employee;
+use AppBundle\Entity\VsmIdGroup;
 use AppBundle\Migration\AnimalTableMigrator;
 use AppBundle\Migration\BlindnessFactorsMigrator;
 use AppBundle\Migration\BreederNumberMigrator;
@@ -16,6 +17,7 @@ use AppBundle\Migration\PerformanceMeasurementsMigrator;
 use AppBundle\Migration\PredicatesMigrator;
 use AppBundle\Migration\RacesMigrator;
 use AppBundle\Migration\TagReplaceMigrator;
+use AppBundle\Migration\VsmIdGroupMigrator;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -120,6 +122,8 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '14: Migrate Company SubscriptionDate', "\n",
             '15: Export animal_migration_table to csv', "\n",
             '16: Import animal_migration_table from exported csv', "\n",
+            '17: Export vsm_id_group to csv', "\n",
+            '18: Import vsm_id_group from exported csv', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -201,6 +205,16 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
             case 16:
                 $result = $this->importAnimalMigrationTableCsv() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 17:
+                $result = $this->exportVsmIdGroupCsv() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 18:
+                $result = $this->importVsmIdGroupCsv() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
@@ -299,6 +313,34 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
         $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir, $columnHeaders);
         $this->output->writeln('Importing animal_migration_table from csv');
+        $animalTableMigrator->importFromCsv();
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function exportVsmIdGroupCsv()
+    {
+        $animalTableMigrator = new VsmIdGroupMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $this->output->writeln('Exporting vsm_id_group to csv');
+        $animalTableMigrator->exportToCsv();
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function importVsmIdGroupCsv()
+    {
+        $columnHeaders = $this->parseCSVHeader(VsmIdGroupMigrator::FILENAME_CSV_EXPORT, false);
+        $data = $this->parseCSV(VsmIdGroupMigrator::FILENAME_CSV_EXPORT, false);
+        if(count($data) == 0 && $columnHeaders != null) { return false; }
+
+        $animalTableMigrator = new VsmIdGroupMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir, $columnHeaders);
+        $this->output->writeln('Importing vsm_id_group from csv');
         $animalTableMigrator->importFromCsv();
         return true;
     }
