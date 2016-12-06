@@ -348,6 +348,8 @@ class AnimalRepository extends BaseRepository
 
 
   /**
+   * Returns only historic animals EXCLUDING animals on current location
+   *
    * @param Location $location
    * @param string $replacementString
    * @return array
@@ -360,16 +362,7 @@ class AnimalRepository extends BaseRepository
     if(!($location instanceof Location)) { return $results; }
     elseif (!is_int($location->getId())) { return $results; }
 
-    
     $sql = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
-              a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn,
-              c.is_reveal_historic_animals as is_public
-            FROM animal a
-              INNER JOIN location l ON a.location_id = l.id
-              INNER JOIN company c ON c.id = l.company_id
-            WHERE a.location_id = ".$location->getId()."
-            UNION
-            SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
               a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn,
               c.is_reveal_historic_animals as is_public
             FROM animal_residence r
@@ -388,20 +381,23 @@ class AnimalRepository extends BaseRepository
       $isPublicInDb = $record['is_public'];
       $isPublic = $isPublicInDb === true || $isPublicInDb === null ? true : false;
 
-      $results[] = [
-        JsonInputConstant::ULN_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['uln_country_code'], $replacementString),
-        JsonInputConstant::ULN_NUMBER => Utils::fillNullOrEmptyString($record['uln_number'], $replacementString),
-        JsonInputConstant::PEDIGREE_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['pedigree_country_code'], $replacementString),
-        JsonInputConstant::PEDIGREE_NUMBER => Utils::fillNullOrEmptyString($record['pedigree_number'], $replacementString),
-        JsonInputConstant::WORK_NUMBER => Utils::fillNullOrEmptyString($record['animal_order_number'], $replacementString),
-        JsonInputConstant::GENDER => Utils::fillNullOrEmptyString($record['gender'], $replacementString),
-        JsonInputConstant::DATE_OF_BIRTH => Utils::fillNullOrEmptyString($record['date_of_birth'], $replacementString),
-        JsonInputConstant::DATE_OF_DEATH => Utils::fillNullOrEmptyString($record['date_of_death'], $replacementString),
-        JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($isAlive, $replacementString),
-        JsonInputConstant::UBN => Utils::fillNullOrEmptyString($ubnOfAnimal, $replacementString),
-        JsonInputConstant::IS_HISTORIC_ANIMAL => Utils::fillNullOrEmptyString($isHistoricAnimal, $replacementString),
-        JsonInputConstant::IS_PUBLIC => Utils::fillNullOrEmptyString($isPublic, $replacementString),
-      ];
+      //Filter out animals on current location
+      if($isHistoricAnimal) {
+        $results[] = [
+            JsonInputConstant::ULN_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['uln_country_code'], $replacementString),
+            JsonInputConstant::ULN_NUMBER => Utils::fillNullOrEmptyString($record['uln_number'], $replacementString),
+            JsonInputConstant::PEDIGREE_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['pedigree_country_code'], $replacementString),
+            JsonInputConstant::PEDIGREE_NUMBER => Utils::fillNullOrEmptyString($record['pedigree_number'], $replacementString),
+            JsonInputConstant::WORK_NUMBER => Utils::fillNullOrEmptyString($record['animal_order_number'], $replacementString),
+            JsonInputConstant::GENDER => Utils::fillNullOrEmptyString($record['gender'], $replacementString),
+            JsonInputConstant::DATE_OF_BIRTH => Utils::fillNullOrEmptyString($record['date_of_birth'], $replacementString),
+            JsonInputConstant::DATE_OF_DEATH => Utils::fillNullOrEmptyString($record['date_of_death'], $replacementString),
+            JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($isAlive, $replacementString),
+            JsonInputConstant::UBN => Utils::fillNullOrEmptyString($ubnOfAnimal, $replacementString),
+            JsonInputConstant::IS_HISTORIC_ANIMAL => Utils::fillNullOrEmptyString($isHistoricAnimal, $replacementString),
+            JsonInputConstant::IS_PUBLIC => Utils::fillNullOrEmptyString($isPublic, $replacementString),
+        ];
+      }
     }
 
     return $results;
