@@ -91,7 +91,6 @@ class PedigreeCertificate
     /**
      * PedigreeCertificate constructor.
      * @param ObjectManager $em
-     * @param Client $client
      * @param string $ubn
      * @param int $animalId
      * @param int $breedValuesYear
@@ -99,7 +98,7 @@ class PedigreeCertificate
      * @param string $trimmedClientName
      * @param CompanyAddress $companyAddress
      */
-    public function __construct(ObjectManager $em, Client $client, $ubn, $animalId, $breedValuesYear, $geneticBases, $trimmedClientName, $companyAddress)
+    public function __construct(ObjectManager $em, $ubn, $animalId, $breedValuesYear, $geneticBases, $trimmedClientName, $companyAddress)
     {
         $this->em = $em;
 
@@ -112,11 +111,11 @@ class PedigreeCertificate
         $this->data = array();
 
         //Set Default Owner details
-        $this->data[ReportLabel::OWNER_NAME] = $trimmedClientName;
-        $this->data[ReportLabel::ADDRESS] = $companyAddress;
-        $postalCode = StringUtil::addSpaceInDutchPostalCode($companyAddress->getPostalCode(), self::GENERAL_NULL_FILLER);
+        $this->data[ReportLabel::OWNER_NAME] = $trimmedClientName != null ? $trimmedClientName: self::GENERAL_NULL_FILLER;
+        $this->data[ReportLabel::ADDRESS] = $companyAddress != null ? $companyAddress : $this->getEmptyLocationAddress();
+        $postalCode = $companyAddress != null ? StringUtil::addSpaceInDutchPostalCode($companyAddress->getPostalCode(), self::GENERAL_NULL_FILLER) : self::GENERAL_NULL_FILLER;
         $this->data[ReportLabel::POSTAL_CODE] = $postalCode;
-        $this->data[ReportLabel::UBN] = $ubn;
+        $this->data[ReportLabel::UBN] = $ubn != null ? $ubn : self::GENERAL_NULL_FILLER;
         //Set CurrentOwner Details!
         $this->setOwnerDataFromAnimalIdBySql($animalId);
 

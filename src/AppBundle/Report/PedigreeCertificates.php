@@ -46,8 +46,7 @@ class PedigreeCertificates extends ReportBase
      * @param Client $client
      * @param Location $location
      */
-    public function __construct(ObjectManager $em, Collection $content, Client $client,
-                                Location $location)
+    public function __construct(ObjectManager $em, Collection $content, $client, $location)
     {
         parent::__construct($em, $client, self::FILE_NAME_REPORT_TYPE);
         
@@ -63,13 +62,20 @@ class PedigreeCertificates extends ReportBase
         $breedValuesYear = $geneticBaseRepository->getLatestYear();
         $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
 
-        $companyName = $this->getCompanyName($location, $client);
-        $trimmedCompanyName = StringUtil::trimStringWithAddedEllipsis($companyName, self::MAX_LENGTH_FULL_NAME);
-        $companyAddress = $location->getCompany()->getAddress();
-        $ubn = $location->getUbn();
+        if($client == null && $location == null) { //user is admin
+            $companyName = null;
+            $trimmedCompanyName = null;
+            $companyAddress = null;
+            $ubn = null;
+        } else {
+            $companyName = $this->getCompanyName($location, $client);
+            $trimmedCompanyName = StringUtil::trimStringWithAddedEllipsis($companyName, self::MAX_LENGTH_FULL_NAME);
+            $companyAddress = $location->getCompany()->getAddress();
+            $ubn = $location->getUbn();
+        }
 
         foreach ($animalIds as $animalId) {
-            $pedigreeCertificate = new PedigreeCertificate($em, $client, $ubn, $animalId, $breedValuesYear, $geneticBases, $trimmedCompanyName, $companyAddress);
+            $pedigreeCertificate = new PedigreeCertificate($em, $ubn, $animalId, $breedValuesYear, $geneticBases, $trimmedCompanyName, $companyAddress);
 
             $this->reports[$this->animalCount] = $pedigreeCertificate->getData();
 
