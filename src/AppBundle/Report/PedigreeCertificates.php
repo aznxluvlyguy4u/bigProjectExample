@@ -64,12 +64,12 @@ class PedigreeCertificates extends ReportBase
         $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
 
         $companyName = $this->getCompanyName($location, $client);
-        $trimmedClientName = StringUtil::trimStringWithAddedEllipsis($companyName, self::MAX_LENGTH_FULL_NAME);
+        $trimmedCompanyName = StringUtil::trimStringWithAddedEllipsis($companyName, self::MAX_LENGTH_FULL_NAME);
         $companyAddress = $location->getCompany()->getAddress();
         $ubn = $location->getUbn();
 
         foreach ($animalIds as $animalId) {
-            $pedigreeCertificate = new PedigreeCertificate($em, $client, $ubn, $animalId, $breedValuesYear, $geneticBases, $trimmedClientName, $companyAddress);
+            $pedigreeCertificate = new PedigreeCertificate($em, $client, $ubn, $animalId, $breedValuesYear, $geneticBases, $trimmedCompanyName, $companyAddress);
 
             $this->reports[$this->animalCount] = $pedigreeCertificate->getData();
 
