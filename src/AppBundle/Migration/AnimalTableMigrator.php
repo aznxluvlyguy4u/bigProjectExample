@@ -34,6 +34,7 @@ class AnimalTableMigrator extends MigratorBase
 	const PRINT_OUT_INVALID_UBNS_OF_BIRTH = true;
 	const PRINT_OUT_FILENAME_INCORRECT_GENDERS = true;
 	const UBNS_PER_ROW = 8;
+	const INSERT_BATCH_SIZE = 1000;
 	const FILENAME_CORRECTED_CSV = '2016nov_gecorrigeerde_diertabel.csv';
 	const FILENAME_INCORRECT_ULNS = 'incorrect_ulns.csv';
 	const FILENAME_INCORRECT_GENDERS = 'incorrect_genders.csv';
@@ -477,6 +478,13 @@ class AnimalTableMigrator extends MigratorBase
 
 			$this->cmdUtil->setStartTimeAndPrintIt(count($results), 1);
 
+			$insertString = '';
+			$migrationTableCheckListIds = [];
+			$insertBatchCount = 0;
+
+			$sql = "SELECT MAX(id) FROM animal";
+			$maxAnimalId = $this->conn->query($sql)->fetch()['max'];
+
 			foreach ($results as $result) {
 				$migrationTableId = $result['id'];
 				$vsmId = $result['vsm_id'];
@@ -594,37 +602,42 @@ class AnimalTableMigrator extends MigratorBase
 					}
 
 				} else {
-					//Insert new animal
-					$sql = "INSERT INTO animal (id, name, uln_country_code, uln_number, animal_order_number,
-						  pedigree_country_code, pedigree_number, nickname, parent_father_id, 
-						  parent_mother_id, gender, date_of_birth, breed_code, ubn_of_birth,
-						  location_of_birth_id, pedigree_register_id, breed_type, scrapie_genotype,
-						  animal_type, animal_category, is_alive, is_departed_animal, is_export_animal, is_import_animal,
-						  type						  
-						)VALUES(nextval('animal_id_seq'),".$vsmIdSql.",".$ulnCountryCodeSql.",".$ulnNumberSql.",".$animalOrderNumberSql
+
+					//Insert new animal, process it as a batch
+
+					$insertBatchCount++;
+					$migrationTableCheckListIds[$migrationTableId] = $migrationTableId;
+
+					$maxAnimalId++;
+					$insertString = $insertString."(".$maxAnimalId."),".$vsmIdSql.",".$ulnCountryCodeSql.",".$ulnNumberSql.",".$animalOrderNumberSql
 						.",".$pedigreeCountryCodeSql.",".$pedigreeNumberSql.",".$nickNameSql.",".$fatherIdSql
 						.",".$motherIdSql.",".$genderSql.",".$dateOfBirthSql.",".$breedCodeSql.",".$ubnOfBirthSql
 						.",".$locationOfBirthIdSql.",".$pedigreeRegisterIdSql.",".$breedTypeSql.",".$scrapieGenotypeSql
 						.",3,3,TRUE,FALSE,FALSE,FALSE,'".$type."')";
-					$this->conn->exec($sql);
-
-					$sql = "SELECT id FROM animal WHERE name = '". $vsmId."'";
-					$animalId = $this->conn->query($sql)->fetch()['id'];
-
-					$sql = "INSERT INTO ".strtolower($type)." VALUES (" . $animalId . ", '".$type."')";
-					$this->conn->exec($sql);
-
-					$sql = "UPDATE animal_migration_table SET is_record_migrated = TRUE WHERE id = ".$migrationTableId;
-					$this->conn->exec($sql);
-
-					//Update searchArrays
-					$animalIdByVsmId[$vsmId] = $animalId;
-					$genderByAnimalId[$animalId] = $gender;
-
-					$newAnimals++;
 				}
-				$this->cmdUtil->advanceProgressBar(1, 'Migrating animalData new|updated|skipped: '.$newAnimals.'|'.$updatedAnimals.'|'.$skippedAnimals);
+
+
+				//Inserting by Batch
+				if($insertBatchCount%self::INSERT_BATCH_SIZE == 0) {
+					$this->insertByBatch($migrationTableCheckListIds, $insertString);
+
+					//Reset batch values AFTER insert
+					$insertString = '';
+					$migrationTableCheckListIds = [];
+					$insertBatchCount = 0;
+					$newAnimals += self::INSERT_BATCH_SIZE;
+				}
+				$this->cmdUtil->advanceProgressBar(1, 'Migrating animalData new|updated|skipped: '.$newAnimals.'|'.$updatedAnimals.'|'.$skippedAnimals.'  insertBatch: '.$insertBatchCount);
 			}
+
+			if($insertString != '') {
+				//Final batch insert
+				$this->insertByBatch($migrationTableCheckListIds, $insertString);
+				$insertBatchCount = 0;
+				$newAnimals += self::INSERT_BATCH_SIZE;
+			}
+			$this->cmdUtil->advanceProgressBar(1, 'Migrating animalData new|updated|skipped: '.$newAnimals.'|'.$updatedAnimals.'|'.$skippedAnimals.'  insertBatch: '.$insertBatchCount);
+
 			$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 		}
 
@@ -638,6 +651,36 @@ class AnimalTableMigrator extends MigratorBase
 		
 		
 		$this->animalRepository->updateAllLocationOfBirths();
+	}
+
+
+	private function insertByBatch(array $migrationTableCheckListIds, $insertString)
+	{
+		//Insert new animal
+		$sql = "INSERT INTO animal (id, name, uln_country_code, uln_number, animal_order_number,
+						  pedigree_country_code, pedigree_number, nickname, parent_father_id, 
+						  parent_mother_id, gender, date_of_birth, breed_code, ubn_of_birth,
+						  location_of_birth_id, pedigree_register_id, breed_type, scrapie_genotype,
+						  animal_type, animal_category, is_alive, is_departed_animal, is_export_animal, is_import_animal,
+						  type						  
+						)VALUES ".$insertString;
+		$this->conn->exec($sql);
+
+		//Add new records in ewe/ram/neuter tables
+		$this->animalRepository->fixMissingAnimalTableExtentions();
+
+		//Check records that are updated
+		$updateString = '';
+		$finalId = end($migrationTableCheckListIds);
+		foreach ($migrationTableCheckListIds as $id) {
+			$updateString = $updateString.' id = '.$id;
+			if($id !== $finalId) {
+				$updateString = $updateString.' OR';
+			}				
+		}
+
+		$sql = "UPDATE animal_migration_table SET is_record_migrated = TRUE WHERE ".$updateString;
+		$this->conn->exec($sql);
 	}
 
 
