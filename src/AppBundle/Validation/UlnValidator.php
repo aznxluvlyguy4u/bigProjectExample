@@ -58,6 +58,12 @@ class UlnValidator
     /** @var ObjectManager */
     private $manager;
 
+    /** @var array */
+    private $ulns;
+
+    /** @var boolean */
+    private $allowAllAnimals;
+
     /**
      * UbnValidator constructor.
      * @param ObjectManager $manager
@@ -70,10 +76,20 @@ class UlnValidator
     {
         $this->manager = $manager;
 
+        $this->ulns = [];
+        $this->allowAllAnimals = false;
         if($client != null) {
             /** @var LocationRepository $locationRepository */
             $locationRepository = $manager->getRepository(Location::class);
             $this->locations = $locationRepository->findAllLocationsOfClient($client);
+            $this->fillUlnSearchArrayOfHistoricAnimalsAllLocations();
+        } elseif ($location != null) {
+            $this->locations = new ArrayCollection();
+            $this->locations->add($location);
+            $this->fillUlnSearchArrayOfHistoricAnimalsAllLocations();
+        } else {
+            //If both client and location are null
+            $this->allowAllAnimals = true;
         }
 
         $animalArray = null;
@@ -130,6 +146,32 @@ class UlnValidator
 
     }
 
+
+    private function fillUlnSearchArrayOfHistoricAnimalsAllLocations()
+    {
+        /** @var Location $location */
+        foreach ($this->locations as $location) {
+            $sql = "SELECT CONCAT(a.uln_country_code, a.uln_number) as uln
+            FROM animal a
+              INNER JOIN location l ON a.location_id = l.id
+            WHERE a.location_id = ".$location->getId()."
+            UNION
+            SELECT CONCAT(a.uln_country_code, a.uln_number) as uln
+            FROM animal_residence r
+              INNER JOIN animal a ON r.animal_id = a.id
+              LEFT JOIN location l ON a.location_id = l.id
+              LEFT JOIN company c ON c.id = l.company_id
+            WHERE r.location_id = ".$location->getId()." AND (c.is_reveal_historic_animals = TRUE OR a.location_id ISNULL)";
+            $retrievedAnimalData = $this->manager->getConnection()->query($sql)->fetchAll();
+
+            foreach ($retrievedAnimalData as $animalData) {
+                $uln = $animalData['uln'];
+                $this->ulns[$uln] = $uln;
+            }
+        }
+    }
+
+
     /**
      * @param array $animalArray
      * @param Client $client
@@ -151,6 +193,15 @@ class UlnValidator
             return false;
         }
 
+        if(!is_string($countryCodeToCheck) || !is_string($numberToCheck)) { return false; }
+
+        if(!$this->allowAllAnimals) {
+            //First check if the animals is a historic animal
+            if(array_key_exists($countryCodeToCheck.$numberToCheck, $this->ulns)) {
+                return true;
+            }
+        }
+
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('ulnCountryCode', $countryCodeToCheck))
             ->andWhere(Criteria::expr()->eq('ulnNumber', $numberToCheck))
@@ -165,30 +216,8 @@ class UlnValidator
             return false;
 
         } else {
-            //prioritize the non-duplicate Animal
-            $animal = $results->first();
-            /** @var Animal $foundAnimal */
-            foreach ($results as $foundAnimal) {
-                if($foundAnimal->getName() != null ) {
-                    $animal = $foundAnimal;
-                }
-            }
-        }
-
-        if($client == null) { //Get any animals regardless of client
+            //If animal exists, get any animals regardless of client
             return true;
-
-        } else { //Get only animals owned by client
-
-            /** @var Location $location */
-            foreach ($this->locations as $location) {
-                /** @var Animal $animal */
-                if($animal->getLocation() == $location) {
-                    return true;
-                }
-            }
-
-            return false;
         }
     }
 

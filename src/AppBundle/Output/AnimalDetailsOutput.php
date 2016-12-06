@@ -42,7 +42,7 @@ class AnimalDetailsOutput
      * @param Location $location
      * @return array
      */
-    public static function create(ObjectManager $em, Animal $animal, Location $location)
+    public static function create(ObjectManager $em, Animal $animal, $location)
     {
         $replacementString = "";
 
@@ -310,7 +310,7 @@ class AnimalDetailsOutput
      * @param string $replacementText
      * @return array
      */
-    private static function getLog(ObjectManager $em, Animal $animal, Location $location, $replacementText)
+    private static function getLog(ObjectManager $em, Animal $animal, $location, $replacementText)
     {
         /** @var DeclareBaseRepository $declareBaseRepository */
         $declareBaseRepository = $em->getRepository(DeclareBase::class);

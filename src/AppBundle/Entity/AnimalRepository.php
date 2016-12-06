@@ -360,19 +360,23 @@ class AnimalRepository extends BaseRepository
     if(!($location instanceof Location)) { return $results; }
     elseif (!is_int($location->getId())) { return $results; }
 
+    
     $sql = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
-              a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn
+              a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn,
+              c.is_reveal_historic_animals as is_public
             FROM animal a
               INNER JOIN location l ON a.location_id = l.id
+              INNER JOIN company c ON c.id = l.company_id
             WHERE a.location_id = ".$location->getId()."
             UNION
             SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
-              a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn
+              a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn,
+              c.is_reveal_historic_animals as is_public
             FROM animal_residence r
               INNER JOIN animal a ON r.animal_id = a.id
               LEFT JOIN location l ON a.location_id = l.id
               LEFT JOIN company c ON c.id = l.company_id
-            WHERE r.location_id = ".$location->getId()." AND (c.is_reveal_historic_animals = TRUE OR a.location_id ISNULL)";
+            WHERE r.location_id = ".$location->getId();
     $retrievedAnimalData = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
     $currentUbn = $location->getUbn();
@@ -381,6 +385,8 @@ class AnimalRepository extends BaseRepository
       $ubnOfAnimal = $record['ubn'];
       $isAlive = $record['is_alive'];
       $isHistoricAnimal = $ubnOfAnimal != $currentUbn || !$isAlive;
+      $isPublicInDb = $record['is_public'];
+      $isPublic = $isPublicInDb === true || $isPublicInDb === null ? true : false;
 
       $results[] = [
         JsonInputConstant::ULN_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['uln_country_code'], $replacementString),
@@ -394,6 +400,7 @@ class AnimalRepository extends BaseRepository
         JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($isAlive, $replacementString),
         JsonInputConstant::UBN => Utils::fillNullOrEmptyString($ubnOfAnimal, $replacementString),
         JsonInputConstant::IS_HISTORIC_ANIMAL => Utils::fillNullOrEmptyString($isHistoricAnimal, $replacementString),
+        JsonInputConstant::IS_PUBLIC => Utils::fillNullOrEmptyString($isPublic, $replacementString),
       ];
     }
 
@@ -837,5 +844,167 @@ class AnimalRepository extends BaseRepository
       if($newUlnNumber == $ulnNumber) { return null; }
       if(array_key_exists($ulnNumber, $usedUlnNumbers)) { return null; }
       return $newUlnNumber;
+  }
+
+
+  /**
+   * This information is necessary to show the most up to date information on the PedigreeCertificates
+   *
+   * @return int
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function updateAllLocationOfBirths()
+  {
+    $ubnsUpdated = 0;
+
+    /*
+     * 1. Set current active locations on missing locationOfBirth where possible
+     * 2. Set deactivated locations on missing locationOfBirth where possible
+     */
+    foreach ([TRUE, FALSE] as $isActive) {
+      $sql = "SELECT a.ubn_of_birth, l.id as location_id, l.is_active FROM animal a
+              LEFT JOIN location l ON a.ubn_of_birth = l.ubn
+            WHERE a.location_of_birth_id ISNULL AND l.id NOTNULL AND a.ubn_of_birth NOTNULL AND l.is_active = ".$isActive."
+            GROUP BY ubn_of_birth, l.id, l.is_active";
+      $results = $this->getConnection()->query($sql)->fetchAll();
+
+      foreach ($results as $result) {
+        $ubnOfBirth = $result['ubn_of_birth'];
+        $locationId = $result['location_id'];
+        $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'";
+        $this->getConnection()->exec($sql);
+        $ubnsUpdated++;
+      }
+    }
+
+    /*
+     * 3. Do an extra check to see if any deactivated locations can be replaced by active locations
+     */
+    $sql = "SELECT a.ubn_of_birth, l.id as location_id FROM animal a
+              LEFT JOIN location l ON a.ubn_of_birth = l.ubn
+              LEFT JOIN location n ON n.id = a.location_of_birth_id
+            WHERE a.location_of_birth_id ISNULL AND l.id NOTNULL AND a.ubn_of_birth NOTNULL AND l.is_active = TRUE
+              AND n.is_active = FALSE
+            GROUP BY ubn_of_birth, l.id";
+    $results = $this->getConnection()->query($sql)->fetchAll();
+
+    foreach ($results as $result) {
+      $ubnOfBirth = $result['ubn_of_birth'];
+      $locationId = $result['location_id'];
+      $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'";
+      $this->getConnection()->exec($sql);
+      $ubnsUpdated++;
+    }
+
+    return $ubnsUpdated;
+  }
+
+
+  /**
+   * This information is necessary to show the most up to date information on the PedigreeCertificates
+   *
+   * @param Location $locationOfBirth
+   */
+  public function updateLocationOfBirth($locationOfBirth)
+  {
+    if($locationOfBirth instanceof Location) {
+      $ubn = $locationOfBirth->getUbn();
+      $id = $locationOfBirth->getId();
+      if($locationOfBirth->getIsActive() && ctype_digit($ubn) && is_int($id)) {
+        $sql = "UPDATE animal SET location_of_birth_id = ".$id." WHERE ubn_of_birth = '".$ubn."'";
+        $this->getConnection()->exec($sql);
+      }
+    }
+  }
+
+
+  /**
+   * This information is necessary to show the most up to date information on the PedigreeCertificates
+   *
+   * @param Company $company
+   */
+  public function updateLocationOfBirthByCompany(Company $company)
+  {
+    if($company instanceof Company) {
+      /** @var Location $location */
+      foreach($company->getLocations() as $location) {
+        $this->updateLocationOfBirth($location);
+      }
+    }
+  }
+
+
+  /**
+   * @return int
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function fixMissingAnimalTableExtentions()
+  {
+    $sql = "SELECT a.id, 'Ewe' as type FROM animal a
+            LEFT JOIN ewe e ON a.id = e.id
+            WHERE a.type = 'Ewe' AND e.id ISNULL
+            UNION
+            SELECT a.id, 'Ram' as type FROM animal a
+              LEFT JOIN ram r ON a.id = r.id
+            WHERE a.type = 'Ram' AND r.id ISNULL
+            UNION
+            SELECT a.id, 'Neuter' as type FROM animal a
+              LEFT JOIN neuter n ON a.id = n.id
+            WHERE a.type = 'Neuter' AND n.id ISNULL";
+    $results = $this->getConnection()->query($sql)->fetchAll();
+
+    $totalCount = count($results);
+
+    if($totalCount > 0) {
+
+      $eweAnimalIds = [];
+      $ramAnimalIds = [];
+      $neuterAnimalIds = [];
+      foreach ($results as $result) {
+        $animalId = $result['id'];
+        $type = $result['type'];
+
+        switch ($type) {
+          case 'Ewe': $eweAnimalIds[$animalId] = $animalId; break;
+          case 'Ram': $ramAnimalIds[$animalId] = $animalId; break;
+          case 'Neuter': $neuterAnimalIds[$animalId] = $animalId; break;
+        }
+      }
+      $this->insertAnimalTableExtentions($eweAnimalIds, 'Ewe');
+      $this->insertAnimalTableExtentions($ramAnimalIds, 'Ram');
+      $this->insertAnimalTableExtentions($neuterAnimalIds, 'Neuter');
+    }
+
+    return $totalCount;
+  }
+
+  
+  private function insertAnimalTableExtentions($animalIds, $type)
+  {
+    $batchSize = 1000;
+    $tableName = strtolower($type);
+
+    $counter = 0;
+    $totalCount = count($animalIds);
+    $valuesString = '';
+    $animalIds = array_keys($animalIds);
+    foreach ($animalIds as $animalId) {
+
+      $valuesString = $valuesString."(" . $animalId . ", '".$type."')";
+      $counter++;
+
+      if($counter%$batchSize == 0) {
+        $sql = "INSERT INTO ".$tableName." VALUES ".$valuesString;
+        $this->getConnection()->exec($sql);
+        $valuesString = '';
+
+      } elseif($counter != $totalCount) {
+        $valuesString = $valuesString.',';
+      }
+    }
+    if($valuesString != '') {
+      $sql = "INSERT INTO ".$tableName." VALUES ".$valuesString;
+      $this->getConnection()->exec($sql);
+    }
   }
 }

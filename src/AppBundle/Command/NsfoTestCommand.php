@@ -2,8 +2,14 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationRepository;
 use AppBundle\Util\CommandUtil;
 
+use AppBundle\Util\NullChecker;
+use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -19,12 +25,25 @@ class NsfoTestCommand extends ContainerAwareCommand
 {
     const TITLE = 'TESTING';
     const INPUT_PATH = '/path/to/file.txt';
+    const OUTPUT_FOLDER_NAME = '/Resources/outputs/test';
+    const FILENAME = 'test.csv';
+
+    const CREATE_TEST_FOLDER_IF_NULL = true;
 
     /** @var ObjectManager $em */
     private $em;
 
     /** @var Connection $conn */
     private $conn;
+
+    /** @var string */
+    private $rootDir;
+
+    /** @var LocationRepository */
+    private $locationRepository;
+
+    /** @var AnimalRepository */
+    private $animalRepository;
 
     private $csvParsingOptions = array(
         'finder_in' => 'app/Resources/imports/',
@@ -47,9 +66,13 @@ class NsfoTestCommand extends ContainerAwareCommand
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
         $this->conn = $em->getConnection();
+        $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
         $helper = $this->getHelper('question');
         $cmdUtil = new CommandUtil($input, $output, $helper);
-
+        if(self::CREATE_TEST_FOLDER_IF_NULL) { NullChecker::createFolderPathIfNull($this->rootDir.self::OUTPUT_FOLDER_NAME); }
+        $this->locationRepository = $em->getRepository(Location::class);
+        $this->animalRepository = $em->getRepository(Animal::class);
+        
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 

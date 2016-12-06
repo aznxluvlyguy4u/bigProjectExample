@@ -16,7 +16,7 @@ class DeclareBaseRepository extends BaseRepository
      * @param string $replacementString
      * @return array
      */
-    public function getLog(Animal $animal, Location $location, $replacementString = '')
+    public function getLog(Animal $animal, $location, $replacementString = '')
     {
         $results = [];
         //null check
