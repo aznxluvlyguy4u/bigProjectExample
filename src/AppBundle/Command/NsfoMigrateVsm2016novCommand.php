@@ -124,6 +124,8 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '16: Import animal_migration_table from exported csv', "\n",
             '17: Export vsm_id_group to csv', "\n",
             '18: Import vsm_id_group from exported csv', "\n",
+            '19: Export breeder_number to csv', "\n",
+            '20: Import breeder_number from exported csv', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -215,6 +217,16 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
             case 18:
                 $result = $this->importVsmIdGroupCsv() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 19:
+                $result = $this->exportBreederNumberCsv() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 20:
+                $result = $this->importBreederNumberCsv() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
@@ -323,9 +335,9 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
      */
     private function exportVsmIdGroupCsv()
     {
-        $animalTableMigrator = new VsmIdGroupMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $vsmIdGroupMigrator = new VsmIdGroupMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
         $this->output->writeln('Exporting vsm_id_group to csv');
-        $animalTableMigrator->exportToCsv();
+        $vsmIdGroupMigrator->exportToCsv();
         return true;
     }
 
@@ -339,9 +351,37 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $data = $this->parseCSV(VsmIdGroupMigrator::FILENAME_CSV_EXPORT, false);
         if(count($data) == 0 && $columnHeaders != null) { return false; }
 
-        $animalTableMigrator = new VsmIdGroupMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir, $columnHeaders);
+        $vsmIdGroupMigrator = new VsmIdGroupMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir, $columnHeaders);
         $this->output->writeln('Importing vsm_id_group from csv');
-        $animalTableMigrator->importFromCsv();
+        $vsmIdGroupMigrator->importFromCsv();
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function exportBreederNumberCsv()
+    {
+        $breederNumberMigrator = new BreederNumberMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $this->output->writeln('Exporting vsm_id_group to csv');
+        $breederNumberMigrator->exportToCsv();
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function importBreederNumberCsv()
+    {
+        $columnHeaders = $this->parseCSVHeader(BreederNumberMigrator::FILENAME_CSV_EXPORT, false);
+        $data = $this->parseCSV(BreederNumberMigrator::FILENAME_CSV_EXPORT, false);
+        if(count($data) == 0 && $columnHeaders != null) { return false; }
+
+        $breederNumberMigrator = new BreederNumberMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir, $columnHeaders);
+        $this->output->writeln('Importing vsm_id_group from csv');
+        $breederNumberMigrator->importFromCsv();
         return true;
     }
 
