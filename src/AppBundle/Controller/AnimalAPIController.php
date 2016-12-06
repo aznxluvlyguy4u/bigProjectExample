@@ -11,10 +11,13 @@ use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\FormInput\AnimalDetails;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
 use AppBundle\Util\GenderChanger;
+use AppBundle\Validation\AdminValidator;
+use AppBundle\Validation\AnimalDetailsValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -362,20 +365,23 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function getAnimalDetailsByUln(Request $request, $ulnString) {
 
-    $client = $this->getAuthenticatedUser($request);
-    $location = $this->getSelectedLocation($request);
-    /** @var AnimalRepository $repository */
-    $repository = $this->getDoctrine()->getRepository(Animal::class);
+    $admin = $this->getAuthenticatedEmployee($request);
+    $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
+    $isAdmin = $adminValidator->getIsAccessGranted();
+    $em = $this->getDoctrine()->getManager();
 
-    $animal = $repository->findAnimalByUlnString($ulnString);
-    if($animal == null) {
-      return new JsonResponse(['code'=>404, "message" => "Animal does not exist in our world :("], 404);
-    }
-    if(!$animal->isAnimalPublic()){
-      return new JsonResponse(['code'=>404, "message" => "The owner has not made this animal public"], 404);
+    $location = null;
+    if(!$isAdmin) { $location = $this->getSelectedLocation($request); }
+
+    $animalDetailsValidator = new AnimalDetailsValidator($em, $isAdmin, $location, $ulnString);
+    if(!$animalDetailsValidator->getIsInputValid()) {
+      return $animalDetailsValidator->createJsonResponse();
     }
 
-    $output = AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $animal, $location);
+    $animal = $animalDetailsValidator->getAnimal();
+    if($location == null) { $location = $animal->getLocation(); }
+
+    $output = AnimalDetailsOutput::create($em, $animal, $location);
     return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
   }
 

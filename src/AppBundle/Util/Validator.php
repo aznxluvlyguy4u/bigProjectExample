@@ -516,4 +516,41 @@ class Validator
 
         return $sum%10 == 0;
     }
+
+
+    /**
+     * Animal should belong to the location,
+     * or it should be an historic animal that was not hidden by the current owner
+     * 
+     * @param ObjectManager $em
+     * @param string $ulnString
+     * @param Location $location
+     * @throws \Doctrine\DBAL\DBALException
+     * @return boolean
+     */
+    public static function validateIfUlnStringBelongsToPublicHistoricAnimal(ObjectManager $em, $ulnString, Location $location)
+    {
+        if(is_string($ulnString) && $location instanceof Location) {
+            if(Validator::verifyUlnFormat($ulnString)) {
+
+                $sql = "SELECT CONCAT(a.uln_country_code, a.uln_number) as uln
+            FROM animal a
+              INNER JOIN location l ON a.location_id = l.id
+            WHERE a.location_id = ".$location->getId()."
+                AND CONCAT(uln_country_code,uln_number) = '".$ulnString."'
+            UNION
+            SELECT CONCAT(a.uln_country_code, a.uln_number) as uln
+            FROM animal_residence r
+              INNER JOIN animal a ON r.animal_id = a.id
+              LEFT JOIN location l ON a.location_id = l.id
+              LEFT JOIN company c ON c.id = l.company_id
+            WHERE r.location_id = ".$location->getId()." AND (c.is_reveal_historic_animals = TRUE OR a.location_id ISNULL)
+                AND CONCAT(uln_country_code,uln_number) = '".$ulnString."'";
+                $results = $em->getConnection()->query($sql)->fetchAll();
+
+                if(count($results) > 0) { return true; }
+            }
+        }
+        return false;
+    }
 }
