@@ -360,19 +360,23 @@ class AnimalRepository extends BaseRepository
     if(!($location instanceof Location)) { return $results; }
     elseif (!is_int($location->getId())) { return $results; }
 
+    
     $sql = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
-              a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn
+              a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn,
+              c.is_reveal_historic_animals as is_public
             FROM animal a
               INNER JOIN location l ON a.location_id = l.id
+              INNER JOIN company c ON c.id = l.company_id
             WHERE a.location_id = ".$location->getId()."
             UNION
             SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
-              a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn
+              a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn,
+              c.is_reveal_historic_animals as is_public
             FROM animal_residence r
               INNER JOIN animal a ON r.animal_id = a.id
               LEFT JOIN location l ON a.location_id = l.id
               LEFT JOIN company c ON c.id = l.company_id
-            WHERE r.location_id = ".$location->getId()." AND (c.is_reveal_historic_animals = TRUE OR a.location_id ISNULL)";
+            WHERE r.location_id = ".$location->getId();
     $retrievedAnimalData = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
     $currentUbn = $location->getUbn();
@@ -381,6 +385,8 @@ class AnimalRepository extends BaseRepository
       $ubnOfAnimal = $record['ubn'];
       $isAlive = $record['is_alive'];
       $isHistoricAnimal = $ubnOfAnimal != $currentUbn || !$isAlive;
+      $isPublicInDb = $record['is_public'];
+      $isPublic = $isPublicInDb === true || $isPublicInDb === null ? true : false;
 
       $results[] = [
         JsonInputConstant::ULN_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['uln_country_code'], $replacementString),
@@ -394,6 +400,7 @@ class AnimalRepository extends BaseRepository
         JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($isAlive, $replacementString),
         JsonInputConstant::UBN => Utils::fillNullOrEmptyString($ubnOfAnimal, $replacementString),
         JsonInputConstant::IS_HISTORIC_ANIMAL => Utils::fillNullOrEmptyString($isHistoricAnimal, $replacementString),
+        JsonInputConstant::IS_PUBLIC => Utils::fillNullOrEmptyString($isPublic, $replacementString),
       ];
     }
 
