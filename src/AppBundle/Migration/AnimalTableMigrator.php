@@ -37,6 +37,7 @@ class AnimalTableMigrator extends MigratorBase
 	const PRINT_OUT_FILENAME_INCORRECT_GENDERS = true;
 	const UBNS_PER_ROW = 8;
 	const INSERT_BATCH_SIZE = 1000;
+	const UPDATE_BATCH_SIZE = 1000;
 	const FILENAME_CORRECTED_CSV = '2016nov_gecorrigeerde_diertabel.csv';
 	const FILENAME_INCORRECT_ULNS = 'incorrect_ulns.csv';
 	const FILENAME_INCORRECT_GENDERS = 'incorrect_genders.csv';
@@ -685,7 +686,8 @@ class AnimalTableMigrator extends MigratorBase
 			$this->resetAnimalIdVsmLocationAndGenderSearchArrays();
 			$this->migrateParents();
 			
-			//TODO Find missingFathers!!!!
+			$this->setMissingFathersOnAnimal();
+			$this->setMissingFathersOnLitters();
 		}
 
 		//TODO Update location_of_birth_ids? see function in AnimalRepository updateAllLocationOfBirths()
@@ -829,7 +831,74 @@ class AnimalTableMigrator extends MigratorBase
 	
 	private function migrateParents()
 	{
+		//Get the
+		$sql = "SELECT a.id as animal_id, vsm_id,
+				  father_vsm_id, f.id as father_id_from_vsm_id, a.parent_father_id,
+				  mother_vsm_id, m.id as mother_id_from_vsm_id, a.parent_mother_id
+				FROM animal a
+				INNER JOIN animal_migration_table t ON a.name = cast(t.vsm_id as varchar(255))
+				LEFT JOIN animal f ON f.name = cast(t.father_vsm_id as varchar(255))
+				LEFT JOIN animal m ON m.name = cast(t.mother_vsm_id as varchar(255))
+				WHERE (f.id <> a.parent_father_id) OR (m.id <> a.parent_mother_id)
+				OR (f.id ISNULL AND a.parent_father_id NOTNULL) OR (m.id ISNULL AND a.parent_mother_id NOTNULL)
+				OR (f.id NOTNULL AND a.parent_father_id ISNULL) OR (m.id NOTNULL AND a.parent_mother_id ISNULL)";
+
 		//TODO MigrateParents
+	}
+	
+	
+	private function setMissingFathersOnAnimal()
+	{
+		$sql = "SELECT x.id as animal_id, a.parent_mother_id, a.parent_father_id, y.parent_father_id as found_father_id
+				FROM animal a
+				INNER JOIN (
+					SELECT CONCAT(m.parent_mother_id,'--',DATE(m.date_of_birth)) as key, m.id
+					FROM animal m
+					WHERE m.parent_mother_id NOTNULL AND m.parent_father_id ISNULL
+					)x ON x.id = a.id
+				INNER JOIN (
+					SELECT CONCAT(i.parent_mother_id,'--',DATE(i.date_of_birth)) as key, i.parent_father_id
+					FROM animal i
+					WHERE i.parent_mother_id NOTNULL AND i.parent_father_id NOTNULL
+					GROUP BY i.parent_mother_id, DATE(i.date_of_birth), i.parent_father_id
+					)y ON y.key = x.key";
+		$results = $this->conn->query($sql)->fetchAll();
+		$totalCount = count($results);
+
+		$this->cmdUtil->setStartTimeAndPrintIt($totalCount, 1);
+
+		$updateString = '';
+		$count = 0;
+		$inBatchCount = 0;
+		$updatedCount = 0;
+		foreach ($results as $result) {
+			$animalId = $result['animal_id'];
+			$foundFatherId = $result['found_father_id'];
+
+			$updateString = $updateString.'('.$foundFatherId.','.$animalId.')';
+			$count++;
+			if($count == $totalCount || $count%self::UPDATE_BATCH_SIZE == 0) {
+				$sql = "UPDATE animal as a SET parent_father_id = v.found_father_id
+						FROM (VALUES ".$updateString."
+							 ) as v(found_father_id, animal_id) WHERE a.id = v.animal_id";
+				$this->conn->exec($sql);
+				//Reset batch string and counters
+				$updateString = '';
+				$updatedCount += $inBatchCount;
+				$inBatchCount = 0;
+			} else {
+				$inBatchCount++;
+				$updateString = $updateString.',';
+			}
+			$this->cmdUtil->advanceProgressBar(1, 'Set missing fathers by common mother and dateOfBirth. processed|inBatch: '.$updatedCount.'|'.$inBatchCount);
+		}
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
+	}
+	
+	
+	private function setMissingFathersOnLitters()
+	{
+		
 	}
 	
 
