@@ -401,6 +401,7 @@ class AnimalTableMigrator extends MigratorBase
 		$migrateAnimals = true;
 		$migrateParents = true;
 		$updateLocationIdsOfBirth = true;
+		$clearPedigreeCountryCodesAndNumbersWithoutPedigreeRegisters = true;
 
 
 		//TODO
@@ -713,16 +714,13 @@ class AnimalTableMigrator extends MigratorBase
 			$this->setMissingFathersOnAnimal();
 			$this->setMissingFathersOnLitters();
 		}
-
 		
-		if($updateLocationIdsOfBirth) {
-			$this->animalRepository->updateAllLocationOfBirths($this->cmdUtil);
+		if($updateLocationIdsOfBirth) { $this->animalRepository->updateAllLocationOfBirths($this->cmdUtil);	}
+		if($clearPedigreeCountryCodesAndNumbersWithoutPedigreeRegisters) {
+			$this->animalRepository->removePedigreeCountryCodeAndNumberIfPedigreeRegisterIsMissing($this->output);
 		}
 
-		
-		if($migrateParents) {
-			$this->fixParentAnimalIdsInMigrationTable();
-		}
+		if($migrateParents) { $this->fixParentAnimalIdsInMigrationTable(); }
 	}
 
 
