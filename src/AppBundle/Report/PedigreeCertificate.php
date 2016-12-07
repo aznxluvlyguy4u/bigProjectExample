@@ -45,9 +45,9 @@ use Doctrine\Common\Persistence\ObjectManager;
 
 class PedigreeCertificate
 {
-    const SHOW_PREDICATE_IN_REPORT = false;
-    const SHOW_BLINDNESS_FACTOR_IN_REPORT = false;
-    const SHOW_NICKNAME = false;
+    const SHOW_PREDICATE_IN_REPORT = true;
+    const SHOW_BLINDNESS_FACTOR_IN_REPORT = true;
+    const SHOW_NICKNAME = true;
     const MAX_LENGTH_FULL_NAME = 30;
     const MAX_LENGTH_CITY_NAME = 16;
     const MISSING_PEDIGREE_REGISTER = '';
