@@ -692,6 +692,7 @@ class AnimalTableMigrator extends MigratorBase
 		$results = $this->conn->query($sql)->fetchAll();
 
 		if(count($results) > 0) {
+			$this->cmdUtil->setStartTimeAndPrintIt(count($results),1);
 			foreach ($results as $result) {
 				$animalId = $result['id'];
 				$primaryVsmId = $result['primary_vsm_id'];
@@ -699,8 +700,10 @@ class AnimalTableMigrator extends MigratorBase
 
 				$sql = "UPDATE animal SET name = '".$primaryVsmId."' WHERE id = ".$animalId;
 				$this->conn->exec($sql);
+				$this->cmdUtil->advanceProgressBar(1, 'Fixing secondaryVsmIds');
 			}
 		}
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 
 		if($migrateParents) {
 			//Double check the data again
@@ -939,8 +942,8 @@ class AnimalTableMigrator extends MigratorBase
 			if(($totalCountMother == $loopCounter || ($mothersToUpdateCount%self::UPDATE_BATCH_SIZE == 0 && $mothersToUpdateCount != 0))
 			&& $motherUpdateString != '') {
 				$motherUpdateString = rtrim($motherUpdateString, ',');
-				$sql = "UPDATE animal as a SET parent_father_id = c.new_father_id
-				FROM (VALUES ".$motherUpdateString.") as c(new_father_id, id) WHERE c.id = a.id ";
+				$sql = "UPDATE animal as a SET parent_mother_id = c.new_mother_id
+				FROM (VALUES ".$motherUpdateString.") as c(new_mother_id, id) WHERE c.id = a.id ";
 				$this->conn->exec($sql);
 				//Reset batch values
 				$motherUpdateString = '';
