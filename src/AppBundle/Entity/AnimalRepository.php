@@ -872,32 +872,48 @@ class AnimalRepository extends BaseRepository
   /**
    * This information is necessary to show the most up to date information on the PedigreeCertificates
    *
+   * @param CommandUtil $cmdUtil
    * @return int
    * @throws \Doctrine\DBAL\DBALException
    */
-  public function updateAllLocationOfBirths()
+  public function updateAllLocationOfBirths(CommandUtil $cmdUtil = null)
   {
     $ubnsUpdated = 0;
-
+    $updatedWithActiveLocations = 0;
+    $updatedWithDeactivatedLocations = 0;
+    
     /*
      * 1. Set current active locations on missing locationOfBirth where possible
      * 2. Set deactivated locations on missing locationOfBirth where possible
      */
-    foreach ([TRUE, FALSE] as $isActive) {
+    foreach (['TRUE', 'FALSE'] as $isActive) {
       $sql = "SELECT a.ubn_of_birth, l.id as location_id, l.is_active FROM animal a
               LEFT JOIN location l ON a.ubn_of_birth = l.ubn
             WHERE a.location_of_birth_id ISNULL AND l.id NOTNULL AND a.ubn_of_birth NOTNULL AND l.is_active = ".$isActive."
             GROUP BY ubn_of_birth, l.id, l.is_active";
       $results = $this->getConnection()->query($sql)->fetchAll();
 
-      foreach ($results as $result) {
-        $ubnOfBirth = $result['ubn_of_birth'];
-        $locationId = $result['location_id'];
-        $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'
+      $internalCount = count($results);
+      
+      if($internalCount > 0) {
+        if($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt($internalCount,1); }
+
+        foreach ($results as $result) {
+          $ubnOfBirth = $result['ubn_of_birth'];
+          $locationId = $result['location_id'];
+          $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'
                 AND location_of_birth_id <> ".$locationId;
-        $this->getConnection()->exec($sql);
-        $ubnsUpdated++;
+          $this->getConnection()->exec($sql);
+          $ubnsUpdated++;
+
+          if($isActive == 'TRUE') { $updatedWithActiveLocations++; }
+          elseif($isActive == 'FALSE') { $updatedWithDeactivatedLocations++; }
+          if($cmdUtil != null) { $cmdUtil->advanceProgressBar(1, 'LocationIdOfBirths updated, active|non-active: '
+              .$updatedWithActiveLocations.'|'.$updatedWithDeactivatedLocations); }
+        }
+        if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
       }
+
     }
 
     /*
@@ -911,13 +927,23 @@ class AnimalRepository extends BaseRepository
             GROUP BY ubn_of_birth, l.id";
     $results = $this->getConnection()->query($sql)->fetchAll();
 
-    foreach ($results as $result) {
-      $ubnOfBirth = $result['ubn_of_birth'];
-      $locationId = $result['location_id'];
-      $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'
+    $internalCount = count($results);
+
+    if($internalCount > 0) {
+      if ($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt($internalCount, 1); }
+
+      foreach ($results as $result) {
+        $ubnOfBirth = $result['ubn_of_birth'];
+        $locationId = $result['location_id'];
+        $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'
               AND location_of_birth_id <> ".$locationId;
-      $this->getConnection()->exec($sql);
-      $ubnsUpdated++;
+        $this->getConnection()->exec($sql);
+        $ubnsUpdated++;
+        $updatedWithActiveLocations++;
+        if($cmdUtil != null) { $cmdUtil->advanceProgressBar(1, 'LocationIdOfBirths updated, active|non-active: '
+            .$updatedWithActiveLocations.'|'.$updatedWithDeactivatedLocations); }
+      }
+      if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
     }
 
     return $ubnsUpdated;
