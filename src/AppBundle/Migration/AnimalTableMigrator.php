@@ -846,12 +846,14 @@ class AnimalTableMigrator extends MigratorBase
 				  father_vsm_id, f.id as father_id_from_vsm_id, a.parent_father_id,
 				  mother_vsm_id, m.id as mother_id_from_vsm_id, a.parent_mother_id
 				FROM animal a
-				INNER JOIN animal_migration_table t ON a.name = cast(t.vsm_id as varchar(255))
-				LEFT JOIN animal f ON f.name = cast(t.father_vsm_id as varchar(255))
-				LEFT JOIN animal m ON m.name = cast(t.mother_vsm_id as varchar(255))
-				WHERE (f.id <> a.parent_father_id) OR (m.id <> a.parent_mother_id)
-				OR (f.id ISNULL AND a.parent_father_id NOTNULL) OR (m.id ISNULL AND a.parent_mother_id NOTNULL)
-				OR (f.id NOTNULL AND a.parent_father_id ISNULL) OR (m.id NOTNULL AND a.parent_mother_id ISNULL)";
+				  INNER JOIN animal_migration_table t ON a.name = cast(t.vsm_id as varchar(255))
+				  LEFT JOIN animal f ON f.name = cast(t.father_vsm_id as varchar(255))
+				  LEFT JOIN animal m ON m.name = cast(t.mother_vsm_id as varchar(255))
+				WHERE (((f.id <> a.parent_father_id) OR (f.id ISNULL AND a.parent_father_id NOTNULL) 
+					  	OR (f.id NOTNULL AND a.parent_father_id ISNULL)) AND f.type = 'Ram')
+					  OR
+					  (((m.id <> a.parent_mother_id) OR (m.id ISNULL AND a.parent_mother_id NOTNULL)
+					   	OR (m.id NOTNULL AND a.parent_mother_id ISNULL)) AND m.type = 'Ewe')";
 		$results = $this->conn->query($sql)->fetchAll();
 
 		$fatherUpdateString = '';
