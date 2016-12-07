@@ -195,17 +195,23 @@ class UlnValidator
 
         if(!is_string($countryCodeToCheck) || !is_string($numberToCheck)) { return false; }
 
-        if(!$this->allowAllAnimals) {
+        if($this->allowAllAnimals) {
+            //If all animals are allowed only check if the animal is in the database or not
+            $criteria = Criteria::create()
+                ->where(Criteria::expr()->eq('ulnCountryCode', $countryCodeToCheck))
+                ->andWhere(Criteria::expr()->eq('ulnNumber', $numberToCheck));
+
+        } else {
             //First check if the animals is a historic animal
             if(array_key_exists($countryCodeToCheck.$numberToCheck, $this->ulns)) {
                 return true;
             }
-        }
 
-        $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq('ulnCountryCode', $countryCodeToCheck))
-            ->andWhere(Criteria::expr()->eq('ulnNumber', $numberToCheck))
-            ->andWhere(Criteria::expr()->eq('location', $location ));
+            $criteria = Criteria::create()
+                ->where(Criteria::expr()->eq('ulnCountryCode', $countryCodeToCheck))
+                ->andWhere(Criteria::expr()->eq('ulnNumber', $numberToCheck))
+                ->andWhere(Criteria::expr()->eq('location', $location ));
+        }
 
         $results = $this->manager->getRepository(Animal::class)
             ->matching($criteria);
