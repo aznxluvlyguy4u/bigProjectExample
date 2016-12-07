@@ -192,7 +192,7 @@ class PedigreeCertificate
     private function setBreederDataFromAnimalIdBySql($animalId)
     {
         if(is_string($animalId) || is_int($animalId)) {
-            $sql = "SElECT l.ubn, c.company_name, d.street_name, d.address_number, d.address_number_suffix, d.postal_code, d.city, n.breeder_number, n.source FROM animal a
+            $sql = "SElECT l.ubn, c.company_name, d.street_name, d.address_number, d.address_number_suffix, d.postal_code, d.city, n.breeder_number, n.source, a.ubn_of_birth FROM animal a
                       INNER JOIN location l ON a.location_of_birth_id = l.id
                       LEFT JOIN company c ON l.company_id = c.id
                       LEFT JOIN address d ON d.id = c.address_id
@@ -208,7 +208,7 @@ class PedigreeCertificate
                 $this->data[ReportLabel::POSTAL_CODE_BREEDER] = self::GENERAL_NULL_FILLER;
                 $this->data[ReportLabel::BREEDER_NUMBER] = self::GENERAL_NULL_FILLER;
             } else {
-                $ubnOfBreeder = Utils::getNullCheckedArrayValue('ubn', $result);
+                $ubnOfBreeder = Utils::getNullCheckedArrayValue('ubn_of_birth', $result);
 
                 //Use currentOwner values
                 $breederNumber = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('breeder_number', $result), self::GENERAL_NULL_FILLER);
@@ -230,7 +230,7 @@ class PedigreeCertificate
                 $this->data[ReportLabel::BREEDER_NAME] = StringUtil::trimStringWithAddedEllipsis($companyName, PedigreeCertificates::MAX_LENGTH_FULL_NAME);
                 $this->data[ReportLabel::ADDRESS_BREEDER] = $address;
                 $this->data[ReportLabel::POSTAL_CODE_BREEDER] = StringUtil::addSpaceInDutchPostalCode($rawPostalCode, self::GENERAL_NULL_FILLER);
-                $this->data[ReportLabel::BREEDER_NUMBER] = $breederNumber;
+                $this->data[ReportLabel::BREEDER_NUMBER] = $ubnOfBreeder;
             }
         }
     }
