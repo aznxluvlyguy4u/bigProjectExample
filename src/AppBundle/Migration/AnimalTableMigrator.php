@@ -517,6 +517,11 @@ class AnimalTableMigrator extends MigratorBase
 				$animalOrderNumber = $result['animal_order_number'];
 				$pedigreeCountryCode = $result['pedigree_country_code'];
 				$pedigreeNumber = $result['pedigree_number'];
+				$pedigreeRegisterId = $result['pedigree_register_id'];
+				if($pedigreeRegisterId == null) {
+					$pedigreeCountryCode = null;
+					$pedigreeNumber = null;
+				}
 				$nickName = $result['nick_name'];
 				$type = GenderChanger::getClassNameByGender($gender);
 
@@ -532,7 +537,6 @@ class AnimalTableMigrator extends MigratorBase
 				$breedCode = $result['breed_code'];
 				$ubnOfBirth = $result['ubn_of_birth'];
 				$locationOfBirthId = $result['location_of_birth_id'];
-				$pedigreeRegisterId = $result['pedigree_register_id'];
 				$breedType = $result['breed_type'];
 				$scrapieGenotype = $result['scrapie_genotype'];
 
@@ -683,7 +687,6 @@ class AnimalTableMigrator extends MigratorBase
 
 		if($migrateParents) {
 			//Double check the data again
-			$this->fixParentAnimalIdsInMigrationTable();
 			$this->resetAnimalIdVsmLocationAndGenderSearchArrays();
 			$this->migrateParents();
 			
@@ -691,8 +694,14 @@ class AnimalTableMigrator extends MigratorBase
 			$this->setMissingFathersOnLitters();
 		}
 
+		
 		if($updateLocationIdsOfBirth) {
 			$this->animalRepository->updateAllLocationOfBirths();
+		}
+
+		
+		if($migrateParents) {
+			$this->fixParentAnimalIdsInMigrationTable();
 		}
 	}
 
@@ -712,6 +721,9 @@ class AnimalTableMigrator extends MigratorBase
 
 	private function insertByBatch(array $migrationTableCheckListIds, $insertString)
 	{
+		//Remove possible trailing comma
+		$insertString = rtrim($insertString,',');
+
 		//Insert new animal
 		$sql = "INSERT INTO animal (id, name, uln_country_code, uln_number, animal_order_number,
 						  pedigree_country_code, pedigree_number, nickname, parent_father_id, 
@@ -830,7 +842,6 @@ class AnimalTableMigrator extends MigratorBase
 	
 	private function migrateParents()
 	{
-		//Get the
 		$sql = "SELECT a.id as animal_id, vsm_id,
 				  father_vsm_id, f.id as father_id_from_vsm_id, a.parent_father_id,
 				  mother_vsm_id, m.id as mother_id_from_vsm_id, a.parent_mother_id
@@ -841,8 +852,67 @@ class AnimalTableMigrator extends MigratorBase
 				WHERE (f.id <> a.parent_father_id) OR (m.id <> a.parent_mother_id)
 				OR (f.id ISNULL AND a.parent_father_id NOTNULL) OR (m.id ISNULL AND a.parent_mother_id NOTNULL)
 				OR (f.id NOTNULL AND a.parent_father_id ISNULL) OR (m.id NOTNULL AND a.parent_mother_id ISNULL)";
+		$results = $this->conn->query($sql)->fetchAll();
 
-		//TODO MigrateParents
+		$fatherUpdateString = '';
+		$motherUpdateString = '';
+		$fathersToUpdateCount = 0;
+		$fathersUpdatedCount = 0;
+		$mothersToUpdateCount = 0;
+		$mothersUpdatedCount = 0;
+		$overallCount = 0;
+		$totalCount = count($results);
+
+		$this->cmdUtil->setStartTimeAndPrintIt($totalCount, 1);
+
+		foreach ($results as $result) {
+			$animalId = $result['animal_id'];
+			$fatherIdFromVsmId = $result['father_id_from_vsm_id'];
+			$currentFatherId = $result['parent_father_id'];
+			$motherIdFromVsmId = $result['mother_id_from_vsm_id'];
+			$currentMotherId = $result['parent_mother_id'];
+
+			if($currentFatherId == null && $fatherIdFromVsmId != null) {
+				$fatherUpdateString = $fatherUpdateString.'('.$fatherIdFromVsmId.','.$animalId.'),';
+				$fathersToUpdateCount++;
+			}
+
+			if($currentMotherId == null && $motherIdFromVsmId != null) {
+				$motherUpdateString = $motherUpdateString.'('.$motherIdFromVsmId.','.$animalId.'),';
+				$mothersToUpdateCount++;
+			}
+
+			$overallCount++;
+
+			//Update fathers
+			if(($overallCount == $totalCount || ($fathersToUpdateCount%self::UPDATE_BATCH_SIZE == 0 && $fathersToUpdateCount != 0))
+			&& $fatherUpdateString != '') {
+				$fatherUpdateString = rtrim($fatherUpdateString, ',');
+				$sql = "UPDATE animal as a SET parent_father_id = c.new_father_id
+				FROM (VALUES ".$fatherUpdateString.") as c(new_father_id, id) WHERE c.id = a.id ";
+				$this->conn->exec($sql);
+				//Reset batch values
+				$fatherUpdateString = '';
+				$fathersUpdatedCount += $fathersToUpdateCount;
+				$fathersToUpdateCount = 0;
+			}
+
+			//Update mothers
+			if(($overallCount == $totalCount || ($fathersToUpdateCount%self::UPDATE_BATCH_SIZE == 0 && $fathersToUpdateCount != 0))
+			&& $motherUpdateString != '') {
+				$fatherUpdateString = rtrim($fatherUpdateString, ',');
+				$sql = "UPDATE animal as a SET parent_father_id = c.new_father_id
+				FROM (VALUES ".$fatherUpdateString.") as c(new_father_id, id) WHERE c.id = a.id ";
+				$this->conn->exec($sql);
+				//Reset batch values
+				$fatherUpdateString = '';
+				$fathersUpdatedCount += $fathersToUpdateCount;
+				$fathersToUpdateCount = 0;
+			}
+			$this->cmdUtil->advanceProgressBar(1, 'Fathers updated|inBatch: '.$fathersUpdatedCount.'|'.$fathersToUpdateCount.' - '
+												 .'Mothers updated|inBatch: '.$mothersUpdatedCount.'|'.$mothersToUpdateCount);
+		}
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
 	
 	
