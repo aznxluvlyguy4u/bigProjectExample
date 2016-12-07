@@ -40,6 +40,7 @@ class JsonInputConstant
     const BREEDER_NAME = 'breeder_name';
     const BREEDER_NUMBER = 'breeder_number';
     const ANIMAL_TYPE = 'animal_type';
+    const NICKNAME = 'nickname';
 
     //Request & Response
     const ERROR_CODE = 'error_code';
@@ -97,6 +98,7 @@ class JsonInputConstant
     //Company
     const COMPANY_ID = 'company_id';
     const COMPANY_NAME = 'company_name';
+    const CITY = 'city';
     const VAT_NUMBER = 'vat_number';
     const CHAMBER_OF_COMMERCE_NUMBER = 'chamber_of_commerce_number';
     const COMPANY_RELATION_NUMBER = 'company_relation_number';

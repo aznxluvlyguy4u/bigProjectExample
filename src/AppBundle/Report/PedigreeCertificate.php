@@ -47,6 +47,7 @@ class PedigreeCertificate
 {
     const SHOW_PREDICATE_IN_REPORT = false;
     const SHOW_BLINDNESS_FACTOR_IN_REPORT = false;
+    const SHOW_NICKNAME = false;
     const MAX_LENGTH_FULL_NAME = 30;
     const MISSING_PEDIGREE_REGISTER = '';
     const EMPTY_DATE_OF_BIRTH = '-';
@@ -339,7 +340,8 @@ class PedigreeCertificate
             if($animalId != null) {
                 $sql = "SELECT a.id, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn,
                     scrapie_genotype, breed, breed_type, breed_code, date_of_birth, gender, predicate, predicate_score,
-                    parent_father_id as father_id, parent_mother_id as mother_id, blindness_factor, c.company_name, d.city
+                    parent_father_id as father_id, parent_mother_id as mother_id, blindness_factor, c.company_name, d.city,
+                    a.nickname
                 FROM animal a
                     LEFT JOIN location l ON a.location_of_birth_id = l.id
                     LEFT JOIN company c ON l.company_id = c.id
@@ -355,6 +357,12 @@ class PedigreeCertificate
                 $breedType = $animalData[JsonInputConstant::BREED_TYPE];
                 $scrapieGenotype = $animalData[JsonInputConstant::SCRAPIE_GENOTYPE];
                 $gender = $animalData[JsonInputConstant::GENDER];
+
+                $nickname = null;
+                if(self::SHOW_NICKNAME) {
+                    $nickname = $animalData[JsonInputConstant::NICKNAME];
+                }
+
                 $predicate = self::GENERAL_NULL_FILLER;
                 if(self::SHOW_PREDICATE_IN_REPORT) {
                     $formattedPredicate = DisplayUtil::parsePredicateString($animalData[JsonInputConstant::PREDICATE], $animalData[JsonInputConstant::PREDICATE_SCORE]);
@@ -373,6 +381,9 @@ class PedigreeCertificate
                     $dateOfBirthString = $dateOfBirthDateTime->format('d-m-Y');
                 }
 
+                $companyName = $animalData[JsonInputConstant::COMPANY_NAME];
+                $city = $animalData[JsonInputConstant::CITY];
+
                 //These ids are only used only inside this class and not in the twig file
                 $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MOTHER_ID] = $animalData[ReportLabel::MOTHER_ID];
                 $this->data[ReportLabel::ANIMALS][$key][ReportLabel::FATHER_ID] = $animalData[ReportLabel::FATHER_ID];
@@ -385,11 +396,15 @@ class PedigreeCertificate
                 $breedType = null;
                 $scrapieGenotype = null;
                 $gender = null;
+                $nickname = null;
                 $predicate = self::GENERAL_NULL_FILLER;
                 $blindnessFactor = self::GENERAL_NULL_FILLER;
 
                 $dateOfBirthString = self::EMPTY_DATE_OF_BIRTH;
                 $dateOfBirthDateTime = null;
+
+                $companyName = null;
+                $city = null;
 
                 //These ids are only used only inside this class and not in the twig file
                 $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MOTHER_ID] = null;
@@ -409,6 +424,11 @@ class PedigreeCertificate
             $litterCount = 0;
             if(count($productionPart) > 4) {
                 $litterCount = intval($productionPart[1]);
+            }
+
+            $breederName = self::GENERAL_NULL_FILLER;
+            if($companyName != null && $city != null) {
+                $breederName = $companyName.';'.$city;
             }
 
             if($generation < self::GENERATION_OF_ASCENDANTS - 1) {
@@ -478,17 +498,16 @@ class PedigreeCertificate
 
             /* variables translated to Dutch */
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENDER] = Translation::getGenderInDutch($gender);
-
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PRODUCTION] = $production;
-
-            //TODO NOTE the name column contains VSM primaryKey at the moment Utils::fillNullOrEmptyString($animal->getName());
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::NAME] = self::GENERAL_NULL_FILLER;
-
-            //TODO Add these variables to the entities INCLUDING NULL CHECKS!!!
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BLINDNESS_FACTOR] = $blindnessFactor;
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PREDICATE] = $predicate;
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NAME] = self::GENERAL_NULL_FILLER;
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NUMBER] = self::GENERAL_NULL_FILLER;
+            
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PRODUCTION] = $production;
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NAME] = $breederName;
+
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::NAME] = $nickname != null ? $nickname : self::GENERAL_NULL_FILLER;
+
+            //TODO Add these variables to the entities INCLUDING NULL CHECKS!!!
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NUMBER] = self::GENERAL_NULL_FILLER; //At this moment replace by only breederName
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_GROUP] = self::GENERAL_NULL_FILLER;
 
         } else {
