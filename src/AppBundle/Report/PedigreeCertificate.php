@@ -46,6 +46,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 class PedigreeCertificate
 {
     const SHOW_PREDICATE_IN_REPORT = false;
+    const SHOW_BLINDNESS_FACTOR_IN_REPORT = false;
     const MAX_LENGTH_FULL_NAME = 30;
     const MISSING_PEDIGREE_REGISTER = '';
     const EMPTY_DATE_OF_BIRTH = '-';
@@ -338,8 +339,12 @@ class PedigreeCertificate
             if($animalId != null) {
                 $sql = "SELECT a.id, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn,
                     scrapie_genotype, breed, breed_type, breed_code, date_of_birth, gender, predicate, predicate_score,
-                    parent_father_id as father_id, parent_mother_id as mother_id
-                FROM animal a WHERE a.id = ".$animalId;
+                    parent_father_id as father_id, parent_mother_id as mother_id, blindness_factor, c.company_name, d.city
+                FROM animal a
+                    LEFT JOIN location l ON a.location_of_birth_id = l.id
+                    LEFT JOIN company c ON l.company_id = c.id
+                    LEFT JOIN address d ON d.id = c.address_id
+                WHERE a.id = ".$animalId;
                 $animalData = $this->em->getConnection()->query($sql)->fetch();
 
                 //AnimalData
@@ -354,6 +359,11 @@ class PedigreeCertificate
                 if(self::SHOW_PREDICATE_IN_REPORT) {
                     $formattedPredicate = DisplayUtil::parsePredicateString($animalData[JsonInputConstant::PREDICATE], $animalData[JsonInputConstant::PREDICATE_SCORE]);
                     $predicate = $formattedPredicate != null ? $formattedPredicate : self::GENERAL_NULL_FILLER;
+                }
+                $blindnessFactor = self::GENERAL_NULL_FILLER;
+                if(self::SHOW_BLINDNESS_FACTOR_IN_REPORT) {
+                    $formattedBlindnessFactor = Translation::getDutchUcFirst($animalData[JsonInputConstant::BLINDNESS_FACTOR]);
+                    $blindnessFactor = $formattedBlindnessFactor != null ? $formattedBlindnessFactor : self::GENERAL_NULL_FILLER;
                 }
 
                 $dateOfBirthString = self::EMPTY_DATE_OF_BIRTH;
@@ -375,7 +385,8 @@ class PedigreeCertificate
                 $breedType = null;
                 $scrapieGenotype = null;
                 $gender = null;
-                $predicate = null;
+                $predicate = self::GENERAL_NULL_FILLER;
+                $blindnessFactor = self::GENERAL_NULL_FILLER;
 
                 $dateOfBirthString = self::EMPTY_DATE_OF_BIRTH;
                 $dateOfBirthDateTime = null;
@@ -474,7 +485,7 @@ class PedigreeCertificate
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::NAME] = self::GENERAL_NULL_FILLER;
 
             //TODO Add these variables to the entities INCLUDING NULL CHECKS!!!
-            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BLINDNESS_FACTOR] = self::GENERAL_NULL_FILLER;
+            $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BLINDNESS_FACTOR] = $blindnessFactor;
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PREDICATE] = $predicate;
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NAME] = self::GENERAL_NULL_FILLER;
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BREEDER_NUMBER] = self::GENERAL_NULL_FILLER;
