@@ -7,11 +7,13 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\Environment;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Country;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Report\InbreedingCoefficientReportData;
 use AppBundle\Report\LivestockReportData;
 use AppBundle\Report\PedigreeCertificates;
 use AppBundle\Report\ReportBase;
 use AppBundle\Util\TwigOutputUtil;
+use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\InbreedingCoefficientInputValidator;
 use AppBundle\Validation\UlnValidator;
 use Aws\S3\S3Client;
@@ -58,8 +60,17 @@ class ReportAPIController extends APIController {
    * @Method("POST")
    */
   public function getPedigreeCertificates(Request $request) {
-    $client = $this->getAuthenticatedUser($request);
-    $location = $this->getSelectedLocation($request);
+
+    $admin = $this->getAuthenticatedEmployee($request);
+    $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
+    $isAdmin = $adminValidator->getIsAccessGranted();
+
+    $client = null;
+    $location = null;
+    if(!$isAdmin) {
+      $client = $this->getAuthenticatedUser($request);
+      $location = $this->getSelectedLocation($request);
+    }
     $content = $this->getContentAsArray($request);
     $em = $this->getDoctrine()->getManager();
 

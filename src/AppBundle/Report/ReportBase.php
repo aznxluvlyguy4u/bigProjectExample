@@ -50,7 +50,8 @@ class ReportBase
 
     public function getS3Key()
     {
-        return 'reports/'.$this->client->getPersonId().'/'.$this->getFileName();
+        $folderName = $this->client != null ? $this->client->getPersonId() : 'admin';
+        return 'reports/'.$folderName.'/'.$this->getFileName();
     }
 
 }

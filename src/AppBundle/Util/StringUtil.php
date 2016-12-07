@@ -39,6 +39,20 @@ class StringUtil
 
 
     /**
+     * @param string $postalCodeWithoutSpace
+     * @param string $nullFiller
+     * @return null|string
+     */
+    public static function addSpaceInDutchPostalCode($postalCodeWithoutSpace, $nullFiller = null)
+    {
+        if($postalCodeWithoutSpace != null && $postalCodeWithoutSpace != '' && $postalCodeWithoutSpace != ' ') {
+            return substr($postalCodeWithoutSpace, 0 ,4).' '.substr($postalCodeWithoutSpace, 4);
+        }
+        return $nullFiller;
+    }
+
+
+    /**
      * @param string $stnOrigin
      * @return string
      */

@@ -91,7 +91,6 @@ class PedigreeCertificate
     /**
      * PedigreeCertificate constructor.
      * @param ObjectManager $em
-     * @param Client $client
      * @param string $ubn
      * @param int $animalId
      * @param int $breedValuesYear
@@ -99,7 +98,7 @@ class PedigreeCertificate
      * @param string $trimmedClientName
      * @param CompanyAddress $companyAddress
      */
-    public function __construct(ObjectManager $em, Client $client, $ubn, $animalId, $breedValuesYear, $geneticBases, $trimmedClientName, $companyAddress)
+    public function __construct(ObjectManager $em, $ubn, $animalId, $breedValuesYear, $geneticBases, $trimmedClientName, $companyAddress)
     {
         $this->em = $em;
 
@@ -110,46 +109,23 @@ class PedigreeCertificate
         $this->geneticBases = $geneticBases;
 
         $this->data = array();
-        
-        $this->data[ReportLabel::OWNER_NAME] = $trimmedClientName;
-        $this->data[ReportLabel::ADDRESS] = $companyAddress;
-        $postalCode = $companyAddress->getPostalCode();
-        if($postalCode != null && $postalCode != '' && $postalCode != ' ') {
-            $postalCode = substr($postalCode, 0 ,4).' '.substr($postalCode, 4);
-        } else {
-            $postalCode = self::GENERAL_NULL_FILLER;
-        }
+
+        //Set Default Owner details
+        $this->data[ReportLabel::OWNER_NAME] = $trimmedClientName != null ? $trimmedClientName: self::GENERAL_NULL_FILLER;
+        $this->data[ReportLabel::ADDRESS] = $companyAddress != null ? $companyAddress : $this->getEmptyLocationAddress();
+        $postalCode = $companyAddress != null ? StringUtil::addSpaceInDutchPostalCode($companyAddress->getPostalCode(), self::GENERAL_NULL_FILLER) : self::GENERAL_NULL_FILLER;
         $this->data[ReportLabel::POSTAL_CODE] = $postalCode;
-        $this->data[ReportLabel::UBN] = $ubn;
+        $this->data[ReportLabel::UBN] = $ubn != null ? $ubn : self::GENERAL_NULL_FILLER;
+        //Set CurrentOwner Details!
+        $this->setOwnerDataFromAnimalIdBySql($animalId);
 
         //TODO Phase 2: Add breeder information
-        $this->data[ReportLabel::BREEDER] = null; //TODO pass Breeder entity
-
-        //TODO: BreederName
-        $breederFirstName = '';
-        $breederLastName = '-';
-        $trimmedBreederName = StringUtil::getTrimmedFullNameWithAddedEllipsis($breederFirstName, $breederLastName, self::MAX_LENGTH_FULL_NAME);
-        $this->data[ReportLabel::BREEDER_NAME] = $trimmedBreederName;
+        $this->data[ReportLabel::BREEDER] = null; //TODO delete this from twig file
+        $this->setBreederDataFromAnimalIdBySql($animalId);
 
         /** @var PedigreeRegisterRepository $pedigreeRegisterRepository */
         $pedigreeRegisterRepository = $em->getRepository(PedigreeRegister::class);
         $this->data[ReportLabel::PEDIGREE_REGISTER_NAME] = $this->parsePedigreeRegisterText($pedigreeRegisterRepository->getFullnameByAnimalId($animalId));
-
-        $emptyAddress = new LocationAddress(); //For now an empty Address entity is passed
-        $emptyAddress->setStreetName('-');
-        $emptyAddress->setAddressNumber('-');
-        $emptyAddress->setAddressNumberSuffix('-');
-        $emptyAddress->setCity('-');
-        $emptyAddress->setPostalCode('-');
-        $postalCode = '-'; //TODO enter a real postalCode here later
-        if($postalCode != null && $postalCode != '' && $postalCode != ' ') {
-            $postalCode = substr($postalCode, 0 ,4).' '.substr($postalCode, 4);
-        } else {
-            $postalCode = self::GENERAL_NULL_FILLER;
-        }
-        $this->data[ReportLabel::ADDRESS_BREEDER] = $emptyAddress; //TODO pass real Address entity
-        $this->data[ReportLabel::POSTAL_CODE_BREEDER] = $postalCode; //TODO pass real Address entity //TODO Add a space between number and last two letters in postalCode
-        $this->data[ReportLabel::BREEDER_NUMBER] = '-'; //TODO pass real breeder number
 
         $keyAnimal = ReportLabel::CHILD_KEY;
 
@@ -158,6 +134,123 @@ class PedigreeCertificate
         $this->addParents($animalId, $keyAnimal, $generation);
     }
 
+
+    /**
+     * @param $animalId
+     */
+    private function setOwnerDataFromAnimalIdBySql($animalId)
+    {
+        if(is_string($animalId) || is_int($animalId)) {
+            $sql = "SElECT l.ubn, c.company_name, d.street_name, d.address_number, d.address_number_suffix, d.postal_code, d.city FROM animal a
+                INNER JOIN location l ON a.location_id = l.id
+                INNER JOIN company c ON l.company_id = c.id
+                INNER JOIN address d ON d.id = c.address_id
+                WHERE a.id = ".intval($animalId);
+            $result = $this->em->getConnection()->query($sql)->fetch();
+
+            $currentUbnOfAnimal = is_array($result) ? Utils::getNullCheckedArrayValue('ubn', $result) : null;
+
+            if($currentUbnOfAnimal == $this->data[ReportLabel::UBN]) {
+                return; //just use current default values
+
+            } elseif($currentUbnOfAnimal == null) {
+                //Set all owner values as empty
+                $this->data[ReportLabel::OWNER_NAME] = self::GENERAL_NULL_FILLER;
+                $this->data[ReportLabel::ADDRESS] = $this->getEmptyLocationAddress();
+                $this->data[ReportLabel::POSTAL_CODE] = self::GENERAL_NULL_FILLER;
+                $this->data[ReportLabel::UBN] = self::GENERAL_NULL_FILLER;
+
+            } else {
+                //Use currentOwner values
+                $companyName = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('company_name', $result), self::GENERAL_NULL_FILLER);
+                $streetName = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('street_name', $result), self::GENERAL_NULL_FILLER);
+                $addressNumber = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('address_number', $result), self::GENERAL_NULL_FILLER);
+                $addressNumberSuffix = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('address_number_suffix', $result), '');
+                $rawPostalCode = Utils::getNullCheckedArrayValue('postal_code', $result);
+                $postalCode = Utils::fillNullOrEmptyString($rawPostalCode, self::GENERAL_NULL_FILLER);
+                $city = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('city', $result), self::GENERAL_NULL_FILLER);
+
+                $address = new LocationAddress();
+                $address->setStreetName($streetName);
+                $address->setAddressNumber($addressNumber);
+                $address->setAddressNumberSuffix($addressNumberSuffix);
+                $address->setPostalCode($postalCode);
+                $address->setCity($city);
+
+                $this->data[ReportLabel::OWNER_NAME] = StringUtil::trimStringWithAddedEllipsis($companyName, PedigreeCertificates::MAX_LENGTH_FULL_NAME);
+                $this->data[ReportLabel::ADDRESS] = $address;
+                $this->data[ReportLabel::POSTAL_CODE] = StringUtil::addSpaceInDutchPostalCode($rawPostalCode, self::GENERAL_NULL_FILLER);
+                $this->data[ReportLabel::UBN] = $currentUbnOfAnimal;
+            }
+        }
+    }
+
+
+    /**
+     * @param $animalId
+     */
+    private function setBreederDataFromAnimalIdBySql($animalId)
+    {
+        if(is_string($animalId) || is_int($animalId)) {
+            $sql = "SElECT l.ubn, c.company_name, d.street_name, d.address_number, d.address_number_suffix, d.postal_code, d.city, n.breeder_number, n.source FROM animal a
+                      INNER JOIN location l ON a.location_of_birth_id = l.id
+                      LEFT JOIN company c ON l.company_id = c.id
+                      LEFT JOIN address d ON d.id = c.address_id
+                      LEFT JOIN breeder_number n ON n.ubn_of_birth = a.ubn_of_birth
+                    WHERE a.id = ".intval($animalId)."
+                    ORDER BY n.source DESC LIMIT 1";
+            $result = $this->em->getConnection()->query($sql)->fetch();
+
+            if(!is_array($result)) {
+                //Set all breeder values as empty
+                $this->data[ReportLabel::BREEDER_NAME] = self::GENERAL_NULL_FILLER;
+                $this->data[ReportLabel::ADDRESS_BREEDER] = $this->getEmptyLocationAddress();
+                $this->data[ReportLabel::POSTAL_CODE_BREEDER] = self::GENERAL_NULL_FILLER;
+                $this->data[ReportLabel::BREEDER_NUMBER] = self::GENERAL_NULL_FILLER;
+            } else {
+                $ubnOfBreeder = Utils::getNullCheckedArrayValue('ubn', $result);
+
+                //Use currentOwner values
+                $breederNumber = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('breeder_number', $result), self::GENERAL_NULL_FILLER);
+                $companyName = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('company_name', $result), self::GENERAL_NULL_FILLER);
+                $streetName = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('street_name', $result), self::GENERAL_NULL_FILLER);
+                $addressNumber = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('address_number', $result), self::GENERAL_NULL_FILLER);
+                $addressNumberSuffix = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('address_number_suffix', $result), '');
+                $rawPostalCode = Utils::getNullCheckedArrayValue('postal_code', $result);
+                $postalCode = Utils::fillNullOrEmptyString($rawPostalCode, self::GENERAL_NULL_FILLER);
+                $city = Utils::fillNullOrEmptyString(Utils::getNullCheckedArrayValue('city', $result), self::GENERAL_NULL_FILLER);
+
+                $address = new LocationAddress();
+                $address->setStreetName($streetName);
+                $address->setAddressNumber($addressNumber);
+                $address->setAddressNumberSuffix($addressNumberSuffix);
+                $address->setPostalCode($postalCode);
+                $address->setCity($city);
+
+                $this->data[ReportLabel::BREEDER_NAME] = StringUtil::trimStringWithAddedEllipsis($companyName, PedigreeCertificates::MAX_LENGTH_FULL_NAME);
+                $this->data[ReportLabel::ADDRESS_BREEDER] = $address;
+                $this->data[ReportLabel::POSTAL_CODE_BREEDER] = StringUtil::addSpaceInDutchPostalCode($rawPostalCode, self::GENERAL_NULL_FILLER);
+                $this->data[ReportLabel::BREEDER_NUMBER] = $breederNumber;
+            }
+        }
+    }
+    
+
+    /**
+     * @return LocationAddress
+     */
+    private function getEmptyLocationAddress()
+    {
+        $emptyAddress = new LocationAddress();
+        $emptyAddress->setStreetName('-');
+        $emptyAddress->setAddressNumber('-');
+        $emptyAddress->setAddressNumberSuffix('');
+        $emptyAddress->setCity('-');
+        $emptyAddress->setPostalCode('-');
+        return $emptyAddress;
+    }
+    
+    
     /**
      * Recursively add the previous generations of ascendants.
      *
