@@ -3165,4 +3165,89 @@ class AnimalTableMigrator extends MigratorBase
 			default: return ColumnType::STRING;
 		}
 	}
+
+
+	public function fixAnimalTableAfterImport()
+	{
+		$this->removeIdenticalAnimals();
+	}
+
+	private function removeIdenticalAnimals()
+	{
+		//SearchArrays
+		$sql = "SELECT primary_vsm_id, secondary_vsm_id FROM vsm_id_group";
+		$vsmIdGroupResults = $this->conn->query($sql)->fetchAll();
+		
+		$primaryVsmIds = [];
+		$primaryVsmIdBySecondaryVsmIds = [];
+		foreach($vsmIdGroupResults as $result) {
+			$primaryVsmId = $result['primary_vsm_id'];
+			$secondaryVsmId = $result['secondary_vsm_id'];
+			$primaryVsmIds[$primaryVsmId] = $primaryVsmId;
+			$primaryVsmIdBySecondaryVsmIds[$secondaryVsmId] = $primaryVsmId;
+		}
+
+		$sql = "SELECT DISTINCT(parent_father_id) as parent_id FROM animal WHERE parent_father_id NOTNULL
+				UNION
+				SELECT DISTINCT(parent_mother_id) as parent_id FROM animal WHERE parent_mother_id NOTNULL
+				ORDER BY parent_id";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$parentIds = [];
+		foreach ($results as $result) {
+			$parentId = $result['parent_id'];
+			$parentIds[$parentId] = $parentId;
+		}
+
+
+		$sql = "SELECT id, name FROM animal a
+				INNER JOIN (
+					SELECT uln_country_code, uln_number, date_of_birth, type FROM animal
+					GROUP BY uln_country_code, uln_number, date_of_birth, parent_father_id, parent_mother_id, location_id,
+					  pedigree_country_code, pedigree_number, date_of_birth, date_of_death, gender, transfer_state, is_alive,
+					  animal_order_number, type, breed_type, breed_code, scrapie_genotype, litter_id, note, breed_codes_id, ubn_of_birth,
+					  pedigree_register_id, predicate_score, predicate, blindness_factor, myo_max, nickname, name
+					HAVING COUNT(*) > 1
+					)u ON u.uln_number = a.uln_number AND u.uln_country_code = a.uln_country_code";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$groupedAnimalIdsByName = [];
+		foreach($results as $result) {
+			$animalId = $result['id'];
+			$name = $result['name'];
+			if(array_key_exists($name, $groupedAnimalIdsByName)) {
+				$group = $groupedAnimalIdsByName[$name];
+			} else {
+				$group = [];
+			}
+			$group[] = $animalId;
+			$groupedAnimalIdsByName[$name] = $group;
+		}
+
+		$names = array_keys($groupedAnimalIdsByName);
+		foreach ($names as $name) {
+			$group = $groupedAnimalIdsByName[$name];
+			$animalId0 = $group[0];
+			$animalId1 = $group[1];
+
+			$animalId0IsParent = array_key_exists($animalId0, $parentIds);
+			$animalId1IsParent = array_key_exists($animalId1, $parentIds);
+
+			if(array_key_exists($name, $primaryVsmIdBySecondaryVsmIds)) {
+				dump('name is a secondaryVsmId '.$name); //Does not occur on production so skip this logic
+			}
+			
+			if($animalId0IsParent && $animalId1IsParent) {
+				dump('double parents ======== '.$name); //Does not occur on production so skip this logic
+			} elseif($animalId0IsParent && !$animalId1IsParent) {
+
+			} else {
+				/*
+				 * !$animalId0IsParent && $animalId1IsParent
+				 * OR
+				 * !$animalId0IsParent && !$animalId1IsParent
+				 */
+			}
+		}
+	}
 }

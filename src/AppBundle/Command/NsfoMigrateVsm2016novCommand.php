@@ -105,6 +105,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         NullChecker::createFolderPathsFromArrayIfNull($this->rootDir, $this->csvParsingOptions);
         
         $option = $this->cmdUtil->generateMultiLineQuestion([
+            ' ', "\n",
             'Choose option: ', "\n",
             '1: Delete (test)animals with ulnCountryCode \'XD\'', "\n",
             '2: Update pedigreeRegisters', "\n",
@@ -113,6 +114,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '5: Import breederNumbers', "\n",
             '6: Import data for CF ToonVerhoeven', "\n",
             '7: Fix imported animalTable data', "\n",
+            '----------------------------------------------------', "\n",
             '8: Migrate AnimalTable data', "\n",
             '9: Migrate Races', "\n",
             '10: Migrate MyoMax', "\n",
@@ -120,12 +122,15 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '12: Migrate Predicates and update values in Animal', "\n",
             '13: Migrate Performance Measurements', "\n",
             '14: Migrate Company SubscriptionDate', "\n",
+            '----------------------------------------------------', "\n",
             '15: Export animal_migration_table to csv', "\n",
             '16: Import animal_migration_table from exported csv', "\n",
             '17: Export vsm_id_group to csv', "\n",
             '18: Import vsm_id_group from exported csv', "\n",
             '19: Export breeder_number to csv', "\n",
             '20: Import breeder_number from exported csv', "\n",
+            '----------------------------------------------------', "\n",
+            '21: Fix animal table after animalTable migration', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -227,6 +232,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
             case 20:
                 $result = $this->importBreederNumberCsv() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 21:
+                $result = $this->fixAnimalTable() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
@@ -587,6 +597,15 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $migrator = new CompanySubscriptionMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
         $migrator->migrate();
         $migrator->printOutCsvOfCompaniesWithoutSubscriptionDate();
+        return true;
+    }
+
+
+    private function fixAnimalTable()
+    {
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $this->output->writeln('Fixing animalTable');
+        $animalTableMigrator->fixAnimalTableAfterImport();
         return true;
     }
 }
