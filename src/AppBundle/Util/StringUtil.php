@@ -149,6 +149,8 @@ class StringUtil
      */
     public static function trimStringWithAddedEllipsis($string, $maxLength)
     {
+        if($string == null) { return null; }
+        
         if(strlen($string) > $maxLength) {
             return substr($string, 0, $maxLength).'...';
         } else {
