@@ -716,7 +716,7 @@ class AnimalTableMigrator extends MigratorBase
 
 		
 		if($updateLocationIdsOfBirth) {
-			$this->animalRepository->updateAllLocationOfBirths();
+			$this->animalRepository->updateAllLocationOfBirths($this->cmdUtil);
 		}
 
 		
@@ -867,8 +867,7 @@ class AnimalTableMigrator extends MigratorBase
 				FROM animal a
 				  INNER JOIN animal_migration_table t ON a.name = cast(t.vsm_id as varchar(255))
 				  LEFT JOIN animal f ON f.name = cast(t.father_vsm_id as varchar(255))
-				WHERE (((f.id <> a.parent_father_id) OR (f.id ISNULL AND a.parent_father_id NOTNULL) 
-					  	OR (f.id NOTNULL AND a.parent_father_id ISNULL)) AND f.type = 'Ram')";
+				WHERE f.id NOTNULL AND a.parent_father_id ISNULL AND f.type = 'Ram'";
 		$resultsOfFather = $this->conn->query($sql)->fetchAll();
 
 		$sql = "SELECT a.id as animal_id, vsm_id,
@@ -876,8 +875,7 @@ class AnimalTableMigrator extends MigratorBase
 				FROM animal a
 				  INNER JOIN animal_migration_table t ON a.name = cast(t.vsm_id as varchar(255))
 				  LEFT JOIN animal m ON m.name = cast(t.mother_vsm_id as varchar(255))
-				WHERE (((m.id <> a.parent_mother_id) OR (m.id ISNULL AND a.parent_mother_id NOTNULL)
-					   	OR (m.id NOTNULL AND a.parent_mother_id ISNULL)) AND m.type = 'Ewe')";
+				WHERE m.id NOTNULL AND a.parent_mother_id ISNULL AND m.type = 'Ewe'";
 		$resultsOfMothers = $this->conn->query($sql)->fetchAll();
 
 		$fatherUpdateString = '';
@@ -889,6 +887,11 @@ class AnimalTableMigrator extends MigratorBase
 		$overallCount = 0;
 		$totalCountFather = count($resultsOfFather);
 		$totalCountMother = count($resultsOfMothers);
+
+		if($totalCountFather+$totalCountMother == 0) {
+			$this->output->writeln('All missing parents have already been set');
+			return;
+		}
 
 		$this->cmdUtil->setStartTimeAndPrintIt($totalCountFather + $totalCountMother, 1);
 
@@ -1004,11 +1007,61 @@ class AnimalTableMigrator extends MigratorBase
 		}
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
-	
-	
+
+
+	/**
+	 * Note that all litters have known mothers, so we do not have to check if they are missing
+	 *
+	 * @throws \Doctrine\DBAL\DBALException
+	 */
 	private function setMissingFathersOnLitters()
 	{
-		
+		$sql = "SELECT a.parent_father_id, l.animal_father_id, l.id as litter_id FROM litter l
+				INNER JOIN animal a ON l.id = a.litter_id
+				WHERE a.parent_father_id NOTNULL AND l.animal_father_id ISNULL";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$totalCount = count($results);
+
+		if($totalCount == 0) {
+			$this->output->writeln('No missing fathers in litter');
+			return;
+		}
+
+		$this->cmdUtil->setStartTimeAndPrintIt($totalCount, 1);
+
+		$updateString = '';
+		$count = 0;
+		$inBatchCount = 0;
+		$updatedCount = 0;
+
+		foreach($results as $result) {
+			$litterId = $result['litter_id'];
+			$foundFatherId = $result['parent_father_id'];
+
+			$updateString = $updateString.'('.$foundFatherId.','.$litterId.'),';
+			$count++;
+
+			if($count == $totalCount || $count%self::UPDATE_BATCH_SIZE == 0) {
+				$updateString = rtrim($updateString, ',');
+
+				$sql = "UPDATE litter as a SET animal_father_id = v.found_father_id
+						FROM (VALUES ".$updateString."
+							 ) as v(found_father_id, litter_id) WHERE a.id = v.litter_id";
+				$this->conn->exec($sql);
+
+				//Reset batch string and counters
+				$updateString = '';
+				$updatedCount += $inBatchCount;
+				$inBatchCount = 0;
+
+			} else {
+				$inBatchCount++;
+			}
+			$this->cmdUtil->advanceProgressBar(1, 'Set missing fathers by common mother and dateOfBirth. processed|inBatch: '.$updatedCount.'|'.$inBatchCount);
+		}
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
+
 	}
 	
 
