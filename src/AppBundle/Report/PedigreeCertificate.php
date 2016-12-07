@@ -431,7 +431,7 @@ class PedigreeCertificate
 
             $breederName = self::GENERAL_NULL_FILLER;
             if($companyName != null && $city != null) {
-                $breederName = $companyName.';'.$city;
+                $breederName = $companyName.'; '.$city;
             }
 
             if($generation < self::GENERATION_OF_ASCENDANTS - 1) {
@@ -643,7 +643,7 @@ class PedigreeCertificate
 
         $breederName = self::GENERAL_NULL_FILLER;
         if($companyName != null && $city != null) {
-            $breederName = $companyName.';'.$city;
+            $breederName = $companyName.'; '.$city;
         }
 
         $inspectionDateString = null;
