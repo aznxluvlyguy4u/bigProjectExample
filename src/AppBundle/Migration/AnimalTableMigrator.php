@@ -14,6 +14,8 @@ use AppBundle\Entity\BreederNumberRepository;
 use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagReplaceRepository;
 use AppBundle\Entity\PedigreeRegister;
+use AppBundle\Entity\VsmIdGroup;
+use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Enumerator\ColumnType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\Specie;
@@ -78,6 +80,9 @@ class AnimalTableMigrator extends MigratorBase
 	/** @var BreederNumberRepository */
 	private $breederNumberRepository;
 
+	/** @var VsmIdGroupRepository */
+	private $vsmIdGroupRepository;
+
 	/** @var ArrayCollection $animalIdsByVsmId */
 	private $animalIdsByVsmId;
 
@@ -99,6 +104,9 @@ class AnimalTableMigrator extends MigratorBase
 	/** @var array */
 	private $genderByAnimalId;
 
+	/** @var array */
+	private $primaryVsmIdsForSecondaryIds;
+
 	/**
 	 * AnimalTableMigrator constructor.
 	 * @param CommandUtil $cmdUtil
@@ -113,6 +121,7 @@ class AnimalTableMigrator extends MigratorBase
 		parent::__construct($cmdUtil, $em, $outputInterface, $data, $rootDir);
 		$this->animalMigrationTableRepository = $this->em->getRepository(AnimalMigrationTable::class);
 		$this->breederNumberRepository = $this->em->getRepository(BreederNumber::class);
+		$this->vsmIdGroupRepository = $this->em->getRepository(VsmIdGroup::class);
 		$this->animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmId();
 		$this->columnHeaders = $columnHeaders;
 	}
@@ -408,11 +417,14 @@ class AnimalTableMigrator extends MigratorBase
 		}
 		
 		if($migrateAnimals) {
-			$this->cmdUtil->setStartTimeAndPrintIt(8,1,'Retrieving data ...');
+			$this->cmdUtil->setStartTimeAndPrintIt(9,1,'Retrieving data ...');
 
 			//SeachArrays
 			$this->cmdUtil->advanceProgressBar(1, 'Retrieving data and generating newestUlnByOldUln searchArray ...');
 			$newestUlnByOldUln = $this->declareTagReplaceRepository->getNewReplacementUlnSearchArray();
+
+			$this->cmdUtil->advanceProgressBar(1, 'Retrieving data and generating primaryVsmIdsBySecondaryVsmId searchArrays ...');
+			$this->primaryVsmIdsForSecondaryIds = $this->vsmIdGroupRepository->getPrimaryVsmIdsBySecondaryVsmId();
 
 			$this->cmdUtil->advanceProgressBar(1, 'Retrieving data and generating animalData searchArrays ...');
 			$this->resetAnimalIdVsmLocationAndGenderSearchArrays();
@@ -471,6 +483,15 @@ class AnimalTableMigrator extends MigratorBase
 			foreach ($results as $result) {
 				$migrationTableId = $result['id'];
 				$vsmId = $result['vsm_id'];
+
+				//Skip duplicateVsmIds!
+				if(array_key_exists($vsmId, $this->primaryVsmIdsForSecondaryIds)) {
+					$sql = "UPDATE animal_migration_table SET is_record_migrated = TRUE WHERE id = ".$migrationTableId;
+					$this->conn->exec($sql);
+					$skippedAnimals++;
+					continue;
+				}
+
 				$animalId = $result['animal_id'];
 				$ulnCountryCode = $result['uln_country_code'];
 				$ulnNumber = $result['uln_number'];
@@ -484,9 +505,9 @@ class AnimalTableMigrator extends MigratorBase
 				/*
 				 * Get animalId from vsmId to make sure the gender is correct
 				 */
-				$fatherVsmId = $result['father_vsm_id'];
+				$fatherVsmId = $this->getPrimaryVsmId($result['father_vsm_id']);
 				$fatherId = $this->getGenderCheckedAnimalIdOfParent($fatherVsmId, $this->animalIdByVsmId, $this->genderByAnimalId, Constant::FATHER_NAMESPACE);
-				$motherVsmId = $result['mother_vsm_id'];
+				$motherVsmId = $this->getPrimaryVsmId($result['mother_vsm_id']);
 				$motherId = $this->getGenderCheckedAnimalIdOfParent($motherVsmId, $this->animalIdByVsmId, $this->genderByAnimalId, Constant::MOTHER_NAMESPACE);
 
 				$dateOfBirth = $result['date_of_birth'];
@@ -647,6 +668,19 @@ class AnimalTableMigrator extends MigratorBase
 		
 		
 		$this->animalRepository->updateAllLocationOfBirths();
+	}
+
+
+	/**
+	 * @param string $vsmId
+	 * @return string
+	 */
+	private function getPrimaryVsmId($vsmId)
+	{
+		if(array_key_exists($vsmId, $this->primaryVsmIdsForSecondaryIds)) {
+			return $this->primaryVsmIdsForSecondaryIds[$vsmId];
+		}
+		return $vsmId;
 	}
 
 
