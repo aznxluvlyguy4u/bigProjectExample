@@ -400,6 +400,7 @@ class AnimalTableMigrator extends MigratorBase
 		$checkAnimalIdsExcludingIdOfParents = false;
 		$migrateAnimals = true;
 		$migrateParents = true;
+		$updateLocationIdsOfBirth = true;
 
 
 		//TODO
@@ -690,11 +691,9 @@ class AnimalTableMigrator extends MigratorBase
 			$this->setMissingFathersOnLitters();
 		}
 
-		//TODO Update location_of_birth_ids? see function in AnimalRepository updateAllLocationOfBirths()
-		
-		
-		
-		$this->animalRepository->updateAllLocationOfBirths();
+		if($updateLocationIdsOfBirth) {
+			$this->animalRepository->updateAllLocationOfBirths();
+		}
 	}
 
 

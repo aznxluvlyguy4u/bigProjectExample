@@ -867,7 +867,8 @@ class AnimalRepository extends BaseRepository
       foreach ($results as $result) {
         $ubnOfBirth = $result['ubn_of_birth'];
         $locationId = $result['location_id'];
-        $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'";
+        $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'
+                AND location_of_birth_id <> ".$locationId;
         $this->getConnection()->exec($sql);
         $ubnsUpdated++;
       }
@@ -887,7 +888,8 @@ class AnimalRepository extends BaseRepository
     foreach ($results as $result) {
       $ubnOfBirth = $result['ubn_of_birth'];
       $locationId = $result['location_id'];
-      $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'";
+      $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'
+              AND location_of_birth_id <> ".$locationId;
       $this->getConnection()->exec($sql);
       $ubnsUpdated++;
     }
