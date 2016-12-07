@@ -10,17 +10,17 @@ use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class BreederNumberMigrator extends MigratorBase
+class VsmIdGroupMigrator extends MigratorBase
 {
-	const FILENAME_CSV_EXPORT = 'breeder_number.csv';
-	const TABLE_NAME_IN_SNAKE_CASE = 'breeder_number';
+	const FILENAME_CSV_EXPORT = 'vsm_id_group.csv';
+	const TABLE_NAME_IN_SNAKE_CASE = 'vsm_id_group';
 
 
 	/** @var string */
 	private $columnHeaders;
 
 	/**
-	 * BreederNumberMigrator constructor.
+	 * VsmIdGroupMigrator constructor.
 	 * @param CommandUtil $cmdUtil
 	 * @param ObjectManager $em
 	 * @param OutputInterface $outputInterface
@@ -61,9 +61,8 @@ class BreederNumberMigrator extends MigratorBase
 	{
 		switch ($columnHeader) {
 			case "id": return ColumnType::INTEGER;
-			case "breeder_number": return ColumnType::STRING;
-			case "ubn_of_birth": return ColumnType::STRING;
-			case "source": return ColumnType::STRING;
+			case "primary_vsm_id": return ColumnType::STRING;
+			case "secondary_vsm_id": return ColumnType::STRING;
 			default: return ColumnType::STRING;
 		}
 	}

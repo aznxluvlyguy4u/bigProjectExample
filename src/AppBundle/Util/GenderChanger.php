@@ -10,6 +10,7 @@ use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\GenderType;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 
 /**
  * Class GenderChanger
@@ -23,6 +24,9 @@ class GenderChanger
      */
     private $manager;
 
+    /** @var Connection */
+    private $conn;
+
     /**
      * GenderChanger constructor.
      * @param ObjectManager $manager
@@ -30,6 +34,7 @@ class GenderChanger
     public function __construct(ObjectManager $manager)
     {
         $this->manager = $manager;
+        $this->conn = $manager->getConnection();
     }
 
     /**
@@ -44,6 +49,29 @@ class GenderChanger
             return false;
         }
     }
+
+
+    /**
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function updateNeuterTypeByGender()
+    {
+        $sql = "SELECT type, gender, id, name
+                FROM animal
+                WHERE ((type = 'Ram' AND gender <> 'MALE') OR (type = 'Ewe' AND gender <> 'FEMALE') OR (type = 'Neuter' AND gender <> 'NEUTER')) AND type = 'Neuter'";
+        $results = $this->conn->query($sql)->fetchAll();
+
+        foreach ($results as $result) {
+            $animalId = $result['id'];
+            $newGender = $result['gender'];
+            $type = $result['type'];
+            $oldGender = self::getGenderByClassName($type);
+            self::changeGenderBySql($this->manager, $animalId, $oldGender, $newGender);
+        }
+        return count($results);
+    }
+    
 
     /**
      * @param Animal $animal
@@ -266,6 +294,18 @@ class GenderChanger
             case GenderType::MALE: return 'Ram';
             case GenderType::NEUTER: return 'Neuter';
             default: return 'Neuter';
+        }
+    }
+
+
+    public static function getGenderByClassName($type)
+    {
+        switch ($type)
+        {
+            case 'Ewe': return GenderType::FEMALE;
+            case 'Ram': return GenderType::MALE;
+            case 'Neuter': return GenderType::NEUTER;
+            default: return null;
         }
     }
 }
