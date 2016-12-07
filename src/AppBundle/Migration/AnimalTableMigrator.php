@@ -396,7 +396,7 @@ class AnimalTableMigrator extends MigratorBase
 
 	public function migrate()
 	{
-		$checkAnimalIdsExcludingIdOfParents = true;
+		$checkAnimalIdsExcludingIdOfParents = false;
 		$migrateAnimals = true;
 		$migrateParents = true;
 
@@ -619,7 +619,7 @@ class AnimalTableMigrator extends MigratorBase
 						//Update gender
 						$oldType = $oldValues['type'];
 						$typeChanged =  $type != $oldType;
-						if($typeChanged && $oldType == GenderType::NEUTER) {
+						if($typeChanged && $oldType == GenderChanger::getClassNameByGender(GenderType::NEUTER)) {
 							GenderChanger::changeGenderOfNeuter($this->em, $animalId, $gender);
 						}
 						
@@ -687,6 +687,8 @@ class AnimalTableMigrator extends MigratorBase
 			
 			//TODO Find missingFathers!!!!
 		}
+
+		//TODO Update location_of_birth_ids? see function in AnimalRepository updateAllLocationOfBirths()
 		
 		
 		
