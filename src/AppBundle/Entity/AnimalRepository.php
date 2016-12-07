@@ -348,7 +348,7 @@ class AnimalRepository extends BaseRepository
 
 
   /**
-   * Returns only historic animals EXCLUDING animals on current location
+   * Returns historic animals INCLUDING animals on current location
    *
    * @param Location $location
    * @param string $replacementString
@@ -362,27 +362,53 @@ class AnimalRepository extends BaseRepository
     if(!($location instanceof Location)) { return $results; }
     elseif (!is_int($location->getId())) { return $results; }
 
-    $sql = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
-              a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn,
-              c.is_reveal_historic_animals as is_public
+    $idCurrentLocation = $location->getId();
+
+    $sqlNormalLivestock = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
+                            a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn, a.id,
+                            true as is_public, true as current_livestock
+                          FROM animal a
+                            INNER JOIN location l ON a.location_id = l.id
+                          WHERE a.is_alive = TRUE AND (a.transfer_state ISNULL OR a.transfer_state <> 'TRANSFERRING') 
+                            AND a.location_id = ".$idCurrentLocation;
+    $retrievedNormalLivestock = $this->getConnection()->query($sqlNormalLivestock)->fetchAll();
+
+    $sqlHistoricAnimals = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
+              a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn, a.id,
+              c.is_reveal_historic_animals as is_public, false as current_livestock
             FROM animal_residence r
               INNER JOIN animal a ON r.animal_id = a.id
               LEFT JOIN location l ON a.location_id = l.id
               LEFT JOIN company c ON c.id = l.company_id
-            WHERE r.location_id = ".$location->getId();
-    $retrievedAnimalData = $this->getManager()->getConnection()->query($sql)->fetchAll();
+            WHERE r.location_id = ".$idCurrentLocation.
+            " AND (a.location_id <> ".$idCurrentLocation." OR a.location_id ISNULL)";
+    $retrievedHistoricAnimals = $this->getConnection()->query($sqlHistoricAnimals)->fetchAll();
 
     $currentUbn = $location->getUbn();
+    $animalIdsCurrentLivestock = [];
 
-    foreach ($retrievedAnimalData as $record) {
-      $ubnOfAnimal = $record['ubn'];
-      $isAlive = $record['is_alive'];
-      $isHistoricAnimal = $ubnOfAnimal != $currentUbn || !$isAlive;
-      $isPublicInDb = $record['is_public'];
-      $isPublic = $isPublicInDb === true || $isPublicInDb === null ? true : false;
+    //It is important to FIRST process the normalLivestock BEFORE the historicAnimals
+    foreach ([$retrievedNormalLivestock, $retrievedHistoricAnimals] as $retrievedAnimalData) {
+      foreach ($retrievedAnimalData as $record) {
+        $isCurrentLivestock = $record['current_livestock'];
+        $animalId = $record['id'];
 
-      //Filter out animals on current location
-      if($isHistoricAnimal) {
+        if($isCurrentLivestock) {
+          $animalIdsCurrentLivestock[$animalId] = $animalId;
+        } elseif(array_key_exists($animalId, $animalIdsCurrentLivestock)) {
+          continue;
+          /*
+           * This prevents duplicates with currentLivestock,
+           * and prevents overwriting hardcoded is_public = true output for current livestock animals.
+           */
+        }
+
+        $ubnOfAnimal = $record['ubn'];
+        $isAlive = $record['is_alive'];
+        $isHistoricAnimal = $ubnOfAnimal != $currentUbn || !$isAlive;
+        $isPublicInDb = $record['is_public'];
+        $isPublic = $isPublicInDb === true || $isPublicInDb === null ? true : false;
+
         $results[] = [
             JsonInputConstant::ULN_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['uln_country_code'], $replacementString),
             JsonInputConstant::ULN_NUMBER => Utils::fillNullOrEmptyString($record['uln_number'], $replacementString),
