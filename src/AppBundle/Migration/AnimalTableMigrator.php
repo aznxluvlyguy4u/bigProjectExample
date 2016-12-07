@@ -498,7 +498,8 @@ class AnimalTableMigrator extends MigratorBase
 				//Skip duplicateVsmIds!
 				$isDuplicateVsmId = array_key_exists($vsmId, $this->primaryVsmIdsForSecondaryIds);
 				$isGenderMismatched = false;
-				if($currentGenderInDatabase != null) {
+				if($currentGenderInDatabase != null && $currentGenderInDatabase != GenderType::NEUTER) {
+					//NOTE! Neuters must be given the new gender, if the gender will be updated!
 					$isGenderMismatched = $currentGenderInDatabase != $gender;
 				}
 
@@ -590,6 +591,7 @@ class AnimalTableMigrator extends MigratorBase
 						$pedigreeRegisterId != $oldValues['pedigree_register_id'] ||
 						$breedType != $oldValues['breed_type'] ||
 						$scrapieGenotype != $oldValues['scrapie_genotype'];
+						
 					if($haveValuesChanged) {
 						$sql = "UPDATE animal SET name = ".$vsmIdSql.",
 							uln_country_code = ".$ulnCountryCodeSql.",
@@ -614,6 +616,13 @@ class AnimalTableMigrator extends MigratorBase
 						$sql = "UPDATE animal_migration_table SET is_record_migrated = TRUE WHERE id = ".$migrationTableId;
 						$this->conn->exec($sql);
 
+						//Update gender
+						$oldType = $oldValues['type'];
+						$typeChanged =  $type != $oldType;
+						if($typeChanged && $oldType == GenderType::NEUTER) {
+							GenderChanger::changeGenderOfNeuter($this->em, $animalId, $gender);
+						}
+						
 						//Update searchArrays
 						$this->animalIdByVsmId[$vsmId] = $animalId;
 						$this->genderByAnimalId[$animalId] = $gender;
@@ -2822,7 +2831,7 @@ class AnimalTableMigrator extends MigratorBase
 	{
 		$sql = "SELECT id, name, uln_country_code, uln_number, animal_order_number, pedigree_country_code, pedigree_number,
 				  nickname, parent_father_id, parent_mother_id, date_of_birth, breed_code, ubn_of_birth, gender,
-				  location_of_birth_id, pedigree_register_id, breed_type, scrapie_genotype, location_id
+				  location_of_birth_id, pedigree_register_id, breed_type, scrapie_genotype, location_id, type
 				FROM animal";
 		$results = $this->conn->query($sql)->fetchAll();
 		$this->animalsByAnimalId = [];
