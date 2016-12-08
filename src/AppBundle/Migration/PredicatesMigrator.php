@@ -47,10 +47,16 @@ class PredicatesMigrator extends MigratorBase
         $latestCsvPredicatesByAnimalId = new ArrayCollection();
 
         $animalIdByVsmIdSearchArray = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
-
+        $this->resetPrimaryVsmIdsBySecondaryVsmId();
+        
         foreach ($this->data as $records) {
 
             $vsmId = $records[0];
+            if(array_key_exists($vsmId, $this->primaryVsmIdsBySecondaryVsmId)) {
+                $vsmId = $this->primaryVsmIdsBySecondaryVsmId[$vsmId];
+            }
+
+
             //Skip data for missing animals
             if(array_key_exists($vsmId, $animalIdByVsmIdSearchArray)) {
                 $animalId = $animalIdByVsmIdSearchArray[$vsmId];

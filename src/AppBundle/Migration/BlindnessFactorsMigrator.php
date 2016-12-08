@@ -38,11 +38,15 @@ class BlindnessFactorsMigrator extends MigratorBase
             $blindnessFactorSearchArray[$result['animal_id']] = $result['blindness_factor'];
         }
         $animalIdByVsmIdSearchArray = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
+        $this->resetPrimaryVsmIdsBySecondaryVsmId();
 
         $newCount = 0;
         foreach ($this->data as $record) {
 
             $vsmId = $record[0];
+            if(array_key_exists($vsmId, $this->primaryVsmIdsBySecondaryVsmId)) {
+                $vsmId = $this->primaryVsmIdsBySecondaryVsmId[$vsmId];
+            }
 
             if(array_key_exists($vsmId, $animalIdByVsmIdSearchArray)) {
 

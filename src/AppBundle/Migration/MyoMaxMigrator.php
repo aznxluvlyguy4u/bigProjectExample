@@ -25,6 +25,7 @@ class MyoMaxMigrator extends MigratorBase
     public function migrate()
     {
         $this->cmdUtil->setStartTimeAndPrintIt(count($this->data)+1, 1);
+        $this->resetPrimaryVsmIdsBySecondaryVsmId();
 
         $sql = "SELECT myo_max, name FROM animal WHERE myo_max NOTNULL";
         $results = $this->em->getConnection()->query($sql)->fetchAll();
@@ -37,6 +38,9 @@ class MyoMaxMigrator extends MigratorBase
         foreach ($this->data as $record) {
 
             $vsmId = $record[0];
+            if(array_key_exists($vsmId, $this->primaryVsmIdsBySecondaryVsmId)) {
+                $vsmId = $this->primaryVsmIdsBySecondaryVsmId[$vsmId];
+            }
 
             if (!array_key_exists($vsmId, $searchArray)) {
                 $myoMax = $record[1];
