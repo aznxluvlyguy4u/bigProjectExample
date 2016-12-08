@@ -432,7 +432,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
         $unlNumberMigrator = new UlnByAnimalIdMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir, $columnHeaders);
         $this->output->writeln('Importing ulns by animalId from csv');
-        $unlNumberMigrator->importFromCsv();
+        $unlNumberMigrator->updateUlnsFromCsv();
         return true;
     }
 

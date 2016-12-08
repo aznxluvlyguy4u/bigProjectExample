@@ -17,6 +17,7 @@ class UlnByAnimalIdMigrator extends MigratorBase
 	const FILENAME_CSV_EXPORT = 'uln_by_animal_id.csv';
 	const TABLE_NAME_IN_SNAKE_CASE = 'animal';
 
+	const UPDATE_ANIMAL_MIGRATION_TABLE = true;
 
 	/** @var string */
 	private $columnHeaders;
@@ -32,7 +33,7 @@ class UlnByAnimalIdMigrator extends MigratorBase
 	 */
 	public function __construct(CommandUtil $cmdUtil, ObjectManager $em, OutputInterface $outputInterface, array $data, $rootDir, $columnHeaders = null)
 	{
-		parent::__construct($this->cmdUtil, $em, $outputInterface, $data, $rootDir);
+		parent::__construct($cmdUtil, $em, $outputInterface, $data, $rootDir);
 		$this->columnHeaders = $columnHeaders;
 	}
 
@@ -47,7 +48,7 @@ class UlnByAnimalIdMigrator extends MigratorBase
 
 		if($this->output != null) { $this->output->writeln('Retrieving data from animal table'); }
 
-		$sql = "SELECT id, uln_number, uln_country_code FROM animal";
+		$sql = "SELECT id, uln_country_code, uln_number FROM animal";
 		$results = $this->conn->query($sql)->fetchAll();
 
 		if($this->output != null) { $this->output->writeln('Data retrieved!'); }
@@ -82,13 +83,53 @@ class UlnByAnimalIdMigrator extends MigratorBase
 
 	public function updateUlnsFromCsv()
 	{
-		$columnTypes = [];
+		//Create searchArrays
+		$ulnCountryCodeByAnimalId = [];
+		$ulnNumberByAnimalId = [];
+		foreach($this->data as $result) {
+			if(count($result) < 2) { continue; }
 
-		foreach ($this->columnHeaders as $columnHeader) {
-			$columnTypes[] = $this->getColumnType($columnHeader);
+			$animalId = $result[0];
+			$ulnCountryCode = $result[1];
+			$ulnNumber = $result[2];
+
+			$ulnCountryCodeByAnimalId[$animalId] = $ulnCountryCode;
+			$ulnNumberByAnimalId[$animalId] = $ulnNumber;
 		}
 
-//		SqlUtil::importFromCsv($this->em, 'animal', $this->columnHeaders, $columnTypes, $this->data, $this->output, $this->cmdUtil);
+
+		$sql = "SELECT id, name FROM animal WHERE (uln_number ISNULL OR uln_country_code ISNULL)";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$ulnNumbersUpdated = 0;
+		$ulnNumbersMissing = 0;
+
+		$this->cmdUtil->setStartTimeAndPrintIt(count($results),1);
+
+		foreach ($results as $result) {
+			$animalId = $result['id'];
+			$vsmId = $result['name'];
+
+			if(array_key_exists($animalId, $ulnCountryCodeByAnimalId) && array_key_exists($animalId, $ulnNumberByAnimalId)) {
+				$ulnCountryCode = $ulnCountryCodeByAnimalId[$animalId];
+				$ulnNumber = $ulnNumberByAnimalId[$animalId];
+
+				"UPDATE animal SET uln_country_code = '".$ulnCountryCode."', uln_number = '".$ulnNumber."' 
+						WHERE uln_country_code ISNULL OR uln_number ISNULL AND id = ".$animalId;
+				$this->conn->exec($sql);
+
+				if(self::UPDATE_ANIMAL_MIGRATION_TABLE && $vsmId != null) {
+					"UPDATE animal_migration_table SET is_record_migrated = TRUE WHERE vsm_id = '".$vsmId."' AND is_record_migrated = FALSE";
+					$this->conn->exec($sql);
+				}
+
+				$ulnNumbersUpdated++;
+			} else {
+				$ulnNumbersMissing++;
+			}
+			$this->cmdUtil->advanceProgressBar(1, 'missingUlnNumbers updated|missing: '.$ulnNumbersUpdated.'|'.$ulnNumbersMissing);
+		}
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
 
 
@@ -100,8 +141,8 @@ class UlnByAnimalIdMigrator extends MigratorBase
 	{
 		switch ($columnHeader) {
 			case "id": return ColumnType::INTEGER;
-			case "primary_vsm_id": return ColumnType::STRING;
-			case "secondary_vsm_id": return ColumnType::STRING;
+			case "uln_country_code": return ColumnType::STRING;
+			case "uln_number": return ColumnType::STRING;
 			default: return ColumnType::STRING;
 		}
 	}
