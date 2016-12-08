@@ -162,10 +162,11 @@ class LocationHealthInspectionAPIController extends APIController
 
         if($location) {
             $em = $this->getDoctrine()->getManager();
-            $sql = "SELECT COUNT(id)
+            $sql = "SELECT COUNT(location_health_inspection.id) 
                     FROM location_health_inspection
-                    WHERE location_health_inspection.ubn = '".$content->get("ubn")."'
-                    AND location_health_inspection.inspection = '".$content->get("inspection")."'";
+                    INNER JOIN location ON location_health_inspection.location_id = location.id
+                    WHERE location.ubn = '".$content->get("ubn")."' 
+                    AND location_health_inspection.inspection_subject = '".$content->get("inspection")."'";
             $result = $em->getConnection()->query($sql)->fetch();
             $orderNumber = $result[0] + 1;
             $orderYear = date("Y");
