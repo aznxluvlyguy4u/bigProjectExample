@@ -4,6 +4,8 @@
 namespace AppBundle\Migration;
 
 
+use AppBundle\Component\Utils;
+use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\ColumnType;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
@@ -98,6 +100,8 @@ class UlnByAnimalIdMigrator extends MigratorBase
 		}
 
 
+		$newestUlnByOldUln = $this->declareTagReplaceRepository->getNewReplacementUlnSearchArray();
+
 		$sql = "SELECT id, name FROM animal WHERE (uln_number ISNULL OR uln_country_code ISNULL)";
 		$results = $this->conn->query($sql)->fetchAll();
 
@@ -113,6 +117,18 @@ class UlnByAnimalIdMigrator extends MigratorBase
 			if(array_key_exists($animalId, $ulnCountryCodeByAnimalId) && array_key_exists($animalId, $ulnNumberByAnimalId)) {
 				$ulnCountryCode = $ulnCountryCodeByAnimalId[$animalId];
 				$ulnNumber = $ulnNumberByAnimalId[$animalId];
+
+				//Get newest uln
+				if(is_string($ulnCountryCode) && is_string($ulnNumber) ) {
+					if (array_key_exists($ulnCountryCode . $ulnNumber, $newestUlnByOldUln)) {
+						$ulnParts = $newestUlnByOldUln[$ulnCountryCode . $ulnNumber];
+						if (is_array($ulnParts)) {
+							$ulnCountryCode = Utils::getNullCheckedArrayValue(Constant::ULN_COUNTRY_CODE_NAMESPACE, $ulnParts);
+							$ulnNumber = Utils::getNullCheckedArrayValue(Constant::ULN_NUMBER_NAMESPACE, $ulnParts);
+						}
+					}
+				}
+
 
 				"UPDATE animal SET uln_country_code = '".$ulnCountryCode."', uln_number = '".$ulnNumber."' 
 						WHERE uln_country_code ISNULL OR uln_number ISNULL AND id = ".$animalId;
