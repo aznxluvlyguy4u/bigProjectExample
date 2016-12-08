@@ -134,7 +134,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '22: Import uln by animalId to csv', "\n",
             '----------------------------------------------------', "\n",
             '23: Fix animal table after animalTable migration', "\n",
-            '24: Fix missing ulns by data in declares', "\n",
+            '24: Fix missing ulns by data in declares and migrationTable', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -255,7 +255,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                 break;
 
             case 24:
-                $result = $this->fixMissingUlnsByDeclares() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->fixMissingUlnsByDeclaresAndMigrationTable() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
@@ -446,11 +446,12 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     /**
      * @return bool
      */
-    private function fixMissingUlnsByDeclares()
+    private function fixMissingUlnsByDeclaresAndMigrationTable()
     {
         $unlNumberMigrator = new UlnByAnimalIdMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir, null);
-        $this->output->writeln('Fix missing ulns by declares');
+        $this->output->writeln('Fix missing ulns by declares and animalMigrationData');
         $unlNumberMigrator->fixUlnsByDeclares();
+        $unlNumberMigrator->fixMissingUlnsByVsmIdInMigrationTable();
         return true;
     }
 

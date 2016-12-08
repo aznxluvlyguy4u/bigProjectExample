@@ -229,10 +229,36 @@ class UlnByAnimalIdMigrator extends MigratorBase
 				GROUP BY a.id, d.uln_country_code, d.uln_number, a.name";
 		$results = $this->conn->query($sql)->fetchAll();
 
+		$nullcheckString = 'All animals related to declares have a ulnCountryCode and ulnNumber';
+		$this->processUlnFix($results, $nullcheckString);
+	}
+
+
+	public function fixMissingUlnsByVsmIdInMigrationTable()
+	{
+
+		$sql = "SELECT a.id, name, t.uln_country_code, t.uln_number FROM animal a
+				  INNER JOIN animal_migration_table t ON a.name = cast(t.vsm_id as varchar(255))
+				WHERE (a.uln_country_code ISNULL OR a.uln_number ISNULL) AND a.name NOTNULL
+				AND t.uln_country_code NOTNULL AND t.uln_number NOTNULL";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$nullcheckString = 'All animals with ulnCountryCode and ulnNumber data from the migrationTable already have them';
+		$this->processUlnFix($results, $nullcheckString);
+	}
+
+
+	/**
+	 * @param array $results
+	 * @param string $nullcheckString
+	 * @throws \Doctrine\DBAL\DBALException
+	 */
+	private function processUlnFix(array $results, $nullcheckString)
+	{
 		$totalCount = count($results);
 
 		if($totalCount == 0) {
-			$this->output->writeln('All animals related to declares have a ulnCountryCode and ulnNumber');
+			$this->output->writeln($nullcheckString);
 			return;
 		}
 
@@ -297,6 +323,4 @@ class UlnByAnimalIdMigrator extends MigratorBase
 		}
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
-
-
 }
