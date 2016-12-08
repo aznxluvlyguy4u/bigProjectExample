@@ -20,6 +20,7 @@ class UlnByAnimalIdMigrator extends MigratorBase
 	const TABLE_NAME_IN_SNAKE_CASE = 'animal';
 
 	const UPDATE_ANIMAL_MIGRATION_TABLE = true;
+	const UPDATE_BATCH_SIZE = 10000;
 
 	/** @var string */
 	private $columnHeaders;
@@ -112,12 +113,15 @@ class UlnByAnimalIdMigrator extends MigratorBase
 			return;
 		}
 
+		$this->cmdUtil->setStartTimeAndPrintIt($totalCount,1);
+
 		$ulnNumbersUpdated = 0;
 		$ulnNumbersMissing = 0;
 		$ulnReplaced = 0;
-
-		$this->cmdUtil->setStartTimeAndPrintIt($totalCount,1);
-
+		$ulnUpdateString = '';
+		$migrationTableUpdateString = '';
+		$loopCounter = 0;
+		$ulnsToUpdateCount = 0;
 		foreach ($results as $result) {
 			$animalId = $result['id'];
 			$vsmId = $result['name'];
@@ -137,23 +141,53 @@ class UlnByAnimalIdMigrator extends MigratorBase
 					}
 				}
 
+//				"UPDATE animal SET uln_country_code = '".$ulnCountryCode."', uln_number = '".$ulnNumber."' WHERE id = ".$animalId;
+//				$this->conn->exec($sql);
 
-				"UPDATE animal SET uln_country_code = '".$ulnCountryCode."', uln_number = '".$ulnNumber."' WHERE id = ".$animalId;
-				$this->conn->exec($sql);
+//				if(self::UPDATE_ANIMAL_MIGRATION_TABLE && $vsmId != null) {
+//					"UPDATE animal_migration_table SET is_record_migrated = TRUE WHERE vsm_id = '".$vsmId."'";
+//					$this->conn->exec($sql);
+//				}
 
-				if(self::UPDATE_ANIMAL_MIGRATION_TABLE && $vsmId != null) {
-					"UPDATE animal_migration_table SET is_record_migrated = TRUE WHERE vsm_id = '".$vsmId."'";
-					$this->conn->exec($sql);
+				$ulnUpdateString = $ulnUpdateString."('".$ulnCountryCode."','".$ulnNumber."',".$animalId."),";
+
+				if(self::UPDATE_ANIMAL_MIGRATION_TABLE){
+					$migrationTableUpdateString = $migrationTableUpdateString." vsm_id = '".$vsmId."' OR";
 				}
 
-				$ulnNumbersUpdated++;
+				$ulnsToUpdateCount++;
+
+				$loopCounter++;
+
+				//Update fathers
+				if(($totalCount == $loopCounter || ($ulnsToUpdateCount%self::UPDATE_BATCH_SIZE == 0 && $ulnsToUpdateCount != 0))
+					&& $ulnUpdateString != '') {
+					$ulnUpdateString = rtrim($ulnUpdateString, ',');
+					$sql = "UPDATE animal as a SET uln_country_code = c.found_uln_country_code, uln_number = c.found_uln_number
+							FROM (VALUES ".$ulnUpdateString.") as c(found_uln_country_code, found_uln_number, id) WHERE c.id = a.id ";
+					$this->conn->exec($sql);
+					//Reset batch values
+					$ulnUpdateString = '';
+					$ulnNumbersUpdated += $ulnsToUpdateCount;
+					$ulnsToUpdateCount = 0;
+
+					if($migrationTableUpdateString != '') {
+						$migrationTableUpdateString = rtrim($migrationTableUpdateString, 'OR');
+						"UPDATE animal_migration_table SET is_record_migrated = TRUE WHERE ".$migrationTableUpdateString;
+						$this->conn->exec($sql);
+						$migrationTableUpdateString = '';
+					}
+				}
 			} else {
 				$ulnNumbersMissing++;
 			}
-			$this->cmdUtil->advanceProgressBar(1, 'missingUlnNumbers updated|missing: '.$ulnNumbersUpdated.'|'.$ulnNumbersMissing.' - ulnReplaced: '.$ulnReplaced);
+			$this->cmdUtil->advanceProgressBar(1, 'missingUlnNumbers updated|batch|missing: '.$ulnNumbersUpdated.'|'.$ulnsToUpdateCount.'|'.$ulnNumbersMissing.' - ulnReplaced: '.$ulnReplaced);
 		}
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
+
+
+
 
 
 	/**
