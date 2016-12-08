@@ -141,14 +141,6 @@ class UlnByAnimalIdMigrator extends MigratorBase
 					}
 				}
 
-//				"UPDATE animal SET uln_country_code = '".$ulnCountryCode."', uln_number = '".$ulnNumber."' WHERE id = ".$animalId;
-//				$this->conn->exec($sql);
-
-//				if(self::UPDATE_ANIMAL_MIGRATION_TABLE && $vsmId != null) {
-//					"UPDATE animal_migration_table SET is_record_migrated = TRUE WHERE vsm_id = '".$vsmId."'";
-//					$this->conn->exec($sql);
-//				}
-
 				$ulnUpdateString = $ulnUpdateString."('".$ulnCountryCode."','".$ulnNumber."',".$animalId."),";
 
 				if(self::UPDATE_ANIMAL_MIGRATION_TABLE){
