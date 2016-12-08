@@ -1066,7 +1066,7 @@ class AnimalRepository extends BaseRepository
    */
   public function removePedigreeCountryCodeAndNumberIfPedigreeRegisterIsMissing(OutputInterface $output = null)
   {
-    $sql = "SELECT COUNT(*) FROM animal a WHERE uln_number NOTNULL AND pedigree_register_id ISNULL";
+    $sql = "SELECT COUNT(*) FROM animal a WHERE pedigree_number NOTNULL AND pedigree_register_id ISNULL";
     $count = $this->getConnection()->query($sql)->fetch()['count'];
 
     if($count == 0) {
@@ -1076,8 +1076,8 @@ class AnimalRepository extends BaseRepository
 
     if($output != null) { $output->writeln('Clearing '.$count.' pedigreeNumbers for animals without a pedigreeRegister ...'); }
     
-    $sql = "UPDATE animal SET uln_country_code = NULL, uln_number = NULL 
-            WHERE pedigree_register_id ISNULL AND (uln_number NOTNULL OR uln_country_code NOTNULL)";
+    $sql = "UPDATE animal SET pedigree_country_code = NULL, pedigree_number = NULL 
+            WHERE pedigree_register_id ISNULL AND (pedigree_country_code NOTNULL OR pedigree_number NOTNULL)";
     $this->getConnection()->exec($sql);
 
     if($output != null) { $output->writeln($count.' pedigreeNumbers cleared for animals without a pedigreeRegister'); }
