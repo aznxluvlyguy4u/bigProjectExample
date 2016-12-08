@@ -138,7 +138,7 @@ class UlnByAnimalIdMigrator extends MigratorBase
 
 
 				"UPDATE animal SET uln_country_code = '".$ulnCountryCode."', uln_number = '".$ulnNumber."' 
-						WHERE uln_country_code ISNULL OR uln_number ISNULL AND id = ".$animalId;
+						WHERE (uln_country_code ISNULL OR uln_number ISNULL) AND id = ".$animalId;
 				$this->conn->exec($sql);
 
 				if(self::UPDATE_ANIMAL_MIGRATION_TABLE && $vsmId != null) {
