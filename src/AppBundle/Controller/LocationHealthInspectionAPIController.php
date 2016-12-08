@@ -385,8 +385,6 @@ class LocationHealthInspectionAPIController extends APIController
 
             $barcode = new Barcode();
             $barcodeObj = $barcode->getBarcodeObj('C128', $uln_country_code. ' ' .$uln_number, -1, 54);
-//            $barcodeObj->setSize(162, 54);
-//            dump($barcodeObj->getHtmlDiv()); die;
 
             $barcodes[] = [
                 "barcode" => $barcodeObj->getHtmlDiv(),
