@@ -7,7 +7,7 @@ namespace AppBundle\Output;
  */
 class HealthInspectionOutput extends Output
 {
-    public static function createNewScrapieInspections($inspections) {
+    public static function filterScrapieInspections($inspections) {
         $results = array();
 
         foreach($inspections as $inspection) {
@@ -15,13 +15,40 @@ class HealthInspectionOutput extends Output
             $now = new \DateTime();
             $interval = $scrapieEndDate->diff($now);
 
-            if ($interval->days >= 42) {
+            if ($interval->days >= 42 && $interval->invert == false) {
                 $requestDate = $scrapieEndDate->add(new \DateInterval('P42D'));
                 $result = array(
                     "ubn" => $inspection["ubn"],
                     "last_name" => $inspection["last_name"],
                     "first_name" => $inspection["first_name"],
                     "inspection" => "SCRAPIE",
+                    "request_date" => $requestDate,
+                    "next_action" => "SEND FORMS",
+                    "directions" => [],
+                    "status" => "NEW"
+                );
+
+                $results[] = $result;
+            };
+        }
+
+        return $results;
+    }
+
+    public static function filterMaediVisnaInspections($inspections) {
+        $results = array();
+
+        foreach($inspections as $inspection) {
+            $maediVisnaEndDate = new \DateTime($inspection["maedi_visna_check_date"]);
+            $now = new \DateTime();
+            $interval = $maediVisnaEndDate->diff($now);
+            if ($interval->days >= 42 && $interval->invert == false) {
+                $requestDate = $maediVisnaEndDate->add(new \DateInterval('P42D'));
+                $result = array(
+                    "ubn" => $inspection["ubn"],
+                    "last_name" => $inspection["last_name"],
+                    "first_name" => $inspection["first_name"],
+                    "inspection" => "MAEDI VISNA",
                     "request_date" => $requestDate,
                     "next_action" => "SEND FORMS",
                     "directions" => [],

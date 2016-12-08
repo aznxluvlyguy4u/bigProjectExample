@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "d0b71c6ab165511780d2ba8610eeed4a",
-    "content-hash": "1040af66be959ee561672aba1062cd72",
+    "hash": "d7b1cda4d4d422e68a58cd11db6523d5",
+    "content-hash": "649fce453f4024fba4ae5883e86d0b6a",
     "packages": [
         {
             "name": "aws/aws-sdk-php",
@@ -1078,6 +1078,51 @@
                 "uri"
             ],
             "time": "2016-06-24 23:00:38"
+        },
+        {
+            "name": "ijanki/ftp-bundle",
+            "version": "v1.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/iJanki/FtpBundle.git",
+                "reference": "9b2cff3e1753b19313eb5784df80bee0512a6e31"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/iJanki/FtpBundle/zipball/9b2cff3e1753b19313eb5784df80bee0512a6e31",
+                "reference": "9b2cff3e1753b19313eb5784df80bee0512a6e31",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.2",
+                "symfony/config": "*",
+                "symfony/dependency-injection": "*",
+                "symfony/http-kernel": "*"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "Ijanki\\Bundle\\FtpBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Daniele Cesarini",
+                    "email": "daniele.cesarini@gmail.com",
+                    "homepage": "http://www.danielecesarini.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A Symfony2 Bundle to wrap the PHP ftp extension functionality in a more classy way.",
+            "homepage": "https://github.com/iJanki/FtpBundle",
+            "keywords": [
+                "ftp"
+            ],
+            "time": "2016-11-18 09:06:05"
         },
         {
             "name": "incenteev/composer-parameter-handler",
@@ -2500,70 +2545,6 @@
             "time": "2016-09-16 15:25:46"
         },
         {
-            "name": "sonata-project/intl-bundle",
-            "version": "2.2.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/sonata-project/SonataIntlBundle.git",
-                "reference": "d49bb8156466a9396e186610fe19d62a50c76202"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/sonata-project/SonataIntlBundle/zipball/d49bb8156466a9396e186610fe19d62a50c76202",
-                "reference": "d49bb8156466a9396e186610fe19d62a50c76202",
-                "shasum": ""
-            },
-            "require": {
-                "symfony/dependency-injection": "~2.2|~3.0",
-                "symfony/http-kernel": "~2.2|~3.0",
-                "symfony/intl": "^2.3.21|~3.0",
-                "symfony/templating": "~2.2|~3.0",
-                "twig/twig": "~1.12"
-            },
-            "require-dev": {
-                "matthiasnoback/symfony-dependency-injection-test": "^0.7.6",
-                "sonata-project/user-bundle": "~2.2",
-                "symfony/phpunit-bridge": "~2.7|~3.0",
-                "symfony/security": "~2.2|~3.0",
-                "symfony/security-acl": "~2.2|~3.0"
-            },
-            "type": "symfony-bundle",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "2.2.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Sonata\\IntlBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Sonata Community",
-                    "homepage": "https://github.com/sonata-project/SonataIntlBundle/contributors"
-                },
-                {
-                    "name": "Thomas Rabaix",
-                    "email": "thomas.rabaix@sonata-project.org"
-                }
-            ],
-            "description": "Symfony SonataIntlBundle",
-            "homepage": "https://sonata-project.org/bundles/intl",
-            "keywords": [
-                "date",
-                "intl",
-                "number",
-                "sonata",
-                "time"
-            ],
-            "time": "2016-02-20 16:29:57"
-        },
-        {
             "name": "swiftmailer/swiftmailer",
             "version": "v5.4.3",
             "source": {
@@ -3600,6 +3581,70 @@
             ],
             "description": "This bundle generates code for you",
             "time": "2016-11-06 19:25:27"
+        },
+        {
+            "name": "sonata-project/intl-bundle",
+            "version": "2.2.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sonata-project/SonataIntlBundle.git",
+                "reference": "d49bb8156466a9396e186610fe19d62a50c76202"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sonata-project/SonataIntlBundle/zipball/d49bb8156466a9396e186610fe19d62a50c76202",
+                "reference": "d49bb8156466a9396e186610fe19d62a50c76202",
+                "shasum": ""
+            },
+            "require": {
+                "symfony/dependency-injection": "~2.2|~3.0",
+                "symfony/http-kernel": "~2.2|~3.0",
+                "symfony/intl": "^2.3.21|~3.0",
+                "symfony/templating": "~2.2|~3.0",
+                "twig/twig": "~1.12"
+            },
+            "require-dev": {
+                "matthiasnoback/symfony-dependency-injection-test": "^0.7.6",
+                "sonata-project/user-bundle": "~2.2",
+                "symfony/phpunit-bridge": "~2.7|~3.0",
+                "symfony/security": "~2.2|~3.0",
+                "symfony/security-acl": "~2.2|~3.0"
+            },
+            "type": "symfony-bundle",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.2.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Sonata\\IntlBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Sonata Community",
+                    "homepage": "https://github.com/sonata-project/SonataIntlBundle/contributors"
+                },
+                {
+                    "name": "Thomas Rabaix",
+                    "email": "thomas.rabaix@sonata-project.org"
+                }
+            ],
+            "description": "Symfony SonataIntlBundle",
+            "homepage": "https://sonata-project.org/bundles/intl",
+            "keywords": [
+                "date",
+                "intl",
+                "number",
+                "sonata",
+                "time"
+            ],
+            "time": "2016-02-20 16:29:57"
         },
         {
             "name": "symfony/phpunit-bridge",
