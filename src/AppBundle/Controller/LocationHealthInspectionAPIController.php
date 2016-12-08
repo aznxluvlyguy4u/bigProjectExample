@@ -10,12 +10,14 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealthInspection;
 use AppBundle\Entity\LocationHealthInspectionDirection;
 use AppBundle\Entity\LocationHealthInspectionResult;
+use AppBundle\Entity\LocationHealthInspectionResultRepository;
 use AppBundle\FormInput\LocationHealthEditor;
 use AppBundle\Output\HealthInspectionOutput;
 use AppBundle\Validation\AdminValidator;
 use Com\Tecnick\Barcode\Barcode;
 use Doctrine\Common\Collections\ArrayCollection;
 use PHPExcel;
+use PHPExcel_Style_NumberFormat;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -553,50 +555,15 @@ class LocationHealthInspectionAPIController extends APIController
         $inspection = $repository->findOneBy(['location' => $location, 'inspectionSubject' => $illness, 'status' => 'ONGOING']);
 
         if($inspection == null) {
-            return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'INSPECTION (UBN: '. $ubn .') NOT FOUND'), 400);
+            return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'INSPECTION (UBN: '. $ubn .')
+             NOT FOUND'), 400);
         }
 
-        /** @var LocationHealthInspection $inspection */
-        $inspection->setResults(new ArrayCollection());
-        $this->getDoctrine()->getManager()->persist($inspection);
+        $locationHealthInspectionResultRepo = $this->getDoctrine()->getRepository(LocationHealthInspectionResultRepository::class);
+        $isLoaded = $locationHealthInspectionResultRepo->createInspectionResults($illness, $location, $inspection, $contentResults);
 
-        foreach($contentResults->get('results') as $contentResult) {
-            $ulnCountryCode = $contentResult['uln_country_code'];
-            $ulnNumber = $contentResult['uln_number'];
-
-            $repository = $this->getDoctrine()->getRepository(Animal::class);
-            $animal = $repository->findOneBy(['ulnCountryCode' => $ulnCountryCode, 'ulnNumber' => $ulnNumber, 'location' => $location]);
-
-            if($animal == null) {
-                return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ANIMAL: '. $ulnCountryCode.$ulnNumber .' NOT FOUND'), 400);
-            }
-
-            $result = new LocationHealthInspectionResult();
-            $result->setInspection($inspection);
-            $result->setAnimal($animal);
-
-
-            if($illness == 'SCRAPIE') {
-                $result->setCustomerSampleId($contentResult['customer_sample_id']);
-                $result->setMgxSampleId($contentResult['mgx_sample_id']);
-                $result->setGenotype($contentResult['genotype']);
-                $result->setGenotypeWithCondon($contentResult['genotype_with_condon']);
-                $result->setGenotypeClass($contentResult['genotype_class']);
-                $result->setReceptionDate(new \DateTime($contentResult['reception_date']));
-                $result->setResultDate(new \DateTime($contentResult['result_date']));
-            }
-
-            if($illness == 'MAEDI VISNA') {
-                $result->setCustomerSampleId($contentResult['customer_sample_id']);
-                $result->setVetName($contentResult['vet_name']);
-                $result->setSubRef($contentResult['subref']);
-                $result->setMvnp($contentResult['mvnp']);
-                $result->setMvCAEPool($contentResult['mv_cae_pool']);
-                $result->setResultDate(new \DateTime($contentResult['result_date']));
-            }
-
-            // Save to Database
-            $this->getDoctrine()->getManager()->persist($result);
+        if(!$isLoaded) {
+            return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ANIMAL NOT FOUND'), 400);
         }
 
         $inspection->setStatus('AUTHORIZATION');
@@ -718,6 +685,7 @@ class LocationHealthInspectionAPIController extends APIController
         $encodedContent = $contentResults->get('content');
         $fileName = $contentResults->get('filename');
         $illness = $contentResults->get('illness');
+        $failedImportId = $contentResults->get('failed_import_id');
 
         if ($fileExtension == 'xls') {
             if ($encodedContent) {
@@ -728,58 +696,117 @@ class LocationHealthInspectionAPIController extends APIController
                 /** @var PHPExcel $phpExcelObject */
                 $phpExcelObject = $this->get('phpexcel')->createPHPExcelObject($fileLocation);
                 $phpExcelObject->setActiveSheetIndex(0);
-                $ubn = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(1, 4);
 
-                $nRows = $phpExcelObject->getActiveSheet()->getHighestRow();
-                $results = [];
-                try {
-                    for ($row = 6; $row < $nRows; ++$row) {
-                        $customerSampleID = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(3, $row);
-                        $mgxSampleID = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(4, $row);
-                        $genotype = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(5, $row);
-                        $genotypeWithCondon = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(6, $row);
-                        $genotypeClass = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(7, $row);
-                        $receptionDate = new \DateTime($phpExcelObject->getActiveSheet()->getCellByColumnAndRow(8, $row));
-                        $resultDate = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(9, $row);
-                        $ulnCountryCode = mb_substr($customerSampleID, 0, 2);
-                        $ulnNumber = mb_substr($customerSampleID, 2);
+                if ($illness == 'SCRAPIE') {
+                    $ubn = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(1, 4);
 
-                        $result = [
-                            "uln_country_code" => $ulnCountryCode,
-                            "uln_number" => $ulnNumber,
-                            "customer_sample_id" => $customerSampleID,
-                            "mgx_sample_id" => $mgxSampleID,
-                            "genotype" => $genotype,
-                            "genotype_with_condon" => $genotypeWithCondon,
-                            "genotype_class" => $genotypeClass,
-                            "reception_date" => $receptionDate,
-                            "result_date" => $resultDate
-                        ];
+                    $nRows = $phpExcelObject->getActiveSheet()->getHighestRow();
+                    $results = [];
+                    try {
+                        for ($row = 6; $row < $nRows; ++$row) {
+                            $customerSampleID = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(3, $row)->getValue();
+                            $mgxSampleID = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(4, $row)->getValue();
+                            $genotype = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(5, $row)->getValue();
+                            $genotypeWithCondon = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(6, $row)->getValue();
+                            $genotypeClass = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(7, $row)->getValue();
+                            $receptionDate = PHPExcel_Style_NumberFormat::toFormattedString($phpExcelObject->getActiveSheet()->getCellByColumnAndRow(8, $row)->getValue(),'YYYY-MM-DD');
+                            $resultDate = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(9, $row)->getValue();
+                            $ulnCountryCode = mb_substr($customerSampleID, 0, 2);
+                            $ulnNumber = mb_substr($customerSampleID, 2);
 
-                        $results[] = $result;
+                            $result = [
+                                "uln_country_code" => $ulnCountryCode,
+                                "uln_number" => $ulnNumber,
+                                "customer_sample_id" => $customerSampleID,
+                                "mgx_sample_id" => $mgxSampleID,
+                                "genotype" => $genotype,
+                                "genotype_with_condon" => $genotypeWithCondon,
+                                "genotype_class" => $genotypeClass,
+                                "reception_date" => $receptionDate,
+                                "result_date" => $resultDate
+                            ];
+
+                            $results[] = $result;
+                        }
+                    } catch (Exception $e) {
+                        return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'THE FILE IS INVALID'), 400);
                     }
-                } catch (Exception $e) {
-                    return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'THE FILE IS INVALID'), 400);
+                } elseif ($illness == 'MAEDI VISNA') {
+                    $ubn = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(2, 2)->getValue();
+
+                    $nRows = $phpExcelObject->getActiveSheet()->getHighestRow();
+                    $results = [];
+                    try {
+                        for ($row = 2; $row < $nRows + 1; ++$row) {
+                            $subref = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(0, $row)->getValue();
+                            $vetName = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(1, $row)->getValue();
+                            $ciName = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(2, $row)->getValue();
+                            $sampleId = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(3, $row)->getValue();
+                            $dateSampled = PHPExcel_Style_NumberFormat::toFormattedString($phpExcelObject->getActiveSheet()->getCellByColumnAndRow(4, $row)->getValue(),'YYYY-MM-DD');
+                            $mvnp = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(5, $row)->getValue();
+                            $mvCAEPool = $phpExcelObject->getActiveSheet()->getCellByColumnAndRow(6, $row)->getValue();
+                            $ulnCountryCode = mb_substr($sampleId, 0, 2);
+                            $ulnNumber = mb_substr($sampleId, 2);
+
+                            $result = [
+                                "uln_country_code" => $ulnCountryCode,
+                                "uln_number" => $ulnNumber,
+                                "customer_sample_id" => $sampleId,
+                                "vet_name" => $vetName,
+                                "subref" => $subref,
+                                "result_date" => $dateSampled,
+                                "mvnp" => $mvnp,
+                                "mv_cae_pool" => $mvCAEPool
+                            ];
+
+                            $results[] = $result;
+                        }
+                    } catch (Exception $e) {
+                        return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'THE FILE IS INVALID'), 400);
+                    }
+                } else {
+                    return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ILLNESS NOT SUPPORTED'), 400);
                 }
 
-                $request = [
-                    "ubn" => $ubn,
-                    "illness" => $illness,
-                    "results" => $results
-                ];
+                $repository = $this->getDoctrine()->getRepository(Location::class);
+                $location = $repository->findOneBy(['ubn' => $ubn]);
 
-                $response = $this->forward('AppBundle:LocationHealthInspectionAPIController:createInspectionResults', $request);
+                if($location == null) {
+                    return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'LOCATION: '. $ubn .' NOT FOUND'), 400);
+                }
 
-                // Send to S3 Bucket
+                $repository = $this->getDoctrine()->getRepository(LocationHealthInspection::class);
+                $inspection = $repository->findOneBy(['location' => $location, 'inspectionSubject' => $illness, 'status' => 'ONGOING']);
 
-                // Remove record from Failed FTP File
+                if($inspection == null) {
+                    return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'INSPECTION (UBN: '. $ubn .') NOT FOUND'), 400);
+                }
+
+                $repository = $this->getDoctrine()->getRepository(FTPFailedImport::class);
+                $failedImport = $repository->findOneBy(['failedImportId' => $failedImportId]);
+
+                if($inspection == null) {
+                    return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'INSPECTION (UBN: '. $ubn .') NOT FOUND'), 400);
+                }
+
+                $locationHealthInspectionResultRepo = $this->getDoctrine()->getRepository(LocationHealthInspectionResult::class);
+                $isLoaded = $locationHealthInspectionResultRepo->createInspectionResults($illness, $location, $inspection, $results);
+
+                if(!$isLoaded) {
+                    return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ANIMAL NOT FOUND'), 400);
+                }
+
+                $inspection->setStatus('AUTHORIZATION');
+                $this->getDoctrine()->getManager()->remove($failedImport);
+                $this->getDoctrine()->getManager()->persist($inspection);
+                $this->getDoctrine()->getManager()->flush();
+
+                // Remove temp file
                 unlink($fileLocation);
                 return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
             }
         }
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'THERE IS NO FILE'), 400);
-
     }
-
 }
