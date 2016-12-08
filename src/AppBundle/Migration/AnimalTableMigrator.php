@@ -81,9 +81,6 @@ class AnimalTableMigrator extends MigratorBase
 	/** @var BreederNumberRepository */
 	private $breederNumberRepository;
 
-	/** @var VsmIdGroupRepository */
-	private $vsmIdGroupRepository;
-
 	/** @var ArrayCollection $animalIdsByVsmId */
 	private $animalIdsByVsmId;
 
