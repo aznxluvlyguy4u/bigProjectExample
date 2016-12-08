@@ -114,6 +114,7 @@ class UlnByAnimalIdMigrator extends MigratorBase
 
 		$ulnNumbersUpdated = 0;
 		$ulnNumbersMissing = 0;
+		$ulnReplaced = 0;
 
 		$this->cmdUtil->setStartTimeAndPrintIt($totalCount,1);
 
@@ -141,7 +142,7 @@ class UlnByAnimalIdMigrator extends MigratorBase
 				$this->conn->exec($sql);
 
 				if(self::UPDATE_ANIMAL_MIGRATION_TABLE && $vsmId != null) {
-					"UPDATE animal_migration_table SET is_record_migrated = TRUE WHERE vsm_id = '".$vsmId."' AND is_record_migrated = FALSE";
+					"UPDATE animal_migration_table SET is_record_migrated = TRUE WHERE vsm_id = '".$vsmId."'";
 					$this->conn->exec($sql);
 				}
 
@@ -149,7 +150,7 @@ class UlnByAnimalIdMigrator extends MigratorBase
 			} else {
 				$ulnNumbersMissing++;
 			}
-			$this->cmdUtil->advanceProgressBar(1, 'missingUlnNumbers updated|missing: '.$ulnNumbersUpdated.'|'.$ulnNumbersMissing);
+			$this->cmdUtil->advanceProgressBar(1, 'missingUlnNumbers updated|missing: '.$ulnNumbersUpdated.'|'.$ulnNumbersMissing.' - ulnReplaced: '.$ulnReplaced);
 		}
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
