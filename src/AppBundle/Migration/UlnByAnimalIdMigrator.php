@@ -12,6 +12,7 @@ use AppBundle\Util\NullChecker;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class UlnByAnimalIdMigrator extends MigratorBase
@@ -24,6 +25,9 @@ class UlnByAnimalIdMigrator extends MigratorBase
 
 	/** @var string */
 	private $columnHeaders;
+
+	/** @var array */
+	private $newestUlnByOldUln;
 
 	/**
 	 * UlnByAnimalIdMigrator constructor.
@@ -100,9 +104,6 @@ class UlnByAnimalIdMigrator extends MigratorBase
 			$ulnNumberByAnimalId[$animalId] = $ulnNumber;
 		}
 
-
-		$newestUlnByOldUln = $this->declareTagReplaceRepository->getNewReplacementUlnSearchArray();
-
 		$sql = "SELECT id, name FROM animal WHERE (uln_number ISNULL OR uln_country_code ISNULL)";
 		$results = $this->conn->query($sql)->fetchAll();
 
@@ -114,6 +115,7 @@ class UlnByAnimalIdMigrator extends MigratorBase
 		}
 
 		$this->cmdUtil->setStartTimeAndPrintIt($totalCount,1);
+		$this->newestUlnByOldUln = $this->declareTagReplaceRepository->getNewReplacementUlnSearchArray();
 
 		$ulnNumbersUpdated = 0;
 		$ulnNumbersMissing = 0;
@@ -132,8 +134,8 @@ class UlnByAnimalIdMigrator extends MigratorBase
 
 				//Get newest uln
 				if(is_string($ulnCountryCode) && is_string($ulnNumber) ) {
-					if (array_key_exists($ulnCountryCode . $ulnNumber, $newestUlnByOldUln)) {
-						$ulnParts = $newestUlnByOldUln[$ulnCountryCode . $ulnNumber];
+					if (array_key_exists($ulnCountryCode . $ulnNumber, $this->newestUlnByOldUln)) {
+						$ulnParts = $this->newestUlnByOldUln[$ulnCountryCode . $ulnNumber];
 						if (is_array($ulnParts)) {
 							$ulnCountryCode = Utils::getNullCheckedArrayValue(Constant::ULN_COUNTRY_CODE_NAMESPACE, $ulnParts);
 							$ulnNumber = Utils::getNullCheckedArrayValue(Constant::ULN_NUMBER_NAMESPACE, $ulnParts);
@@ -143,7 +145,7 @@ class UlnByAnimalIdMigrator extends MigratorBase
 
 				$ulnUpdateString = $ulnUpdateString."('".$ulnCountryCode."','".$ulnNumber."',".$animalId."),";
 
-				if(self::UPDATE_ANIMAL_MIGRATION_TABLE){
+				if(self::UPDATE_ANIMAL_MIGRATION_TABLE && $vsmId != null){
 					$migrationTableUpdateString = $migrationTableUpdateString." vsm_id = '".$vsmId."' OR";
 				}
 
@@ -195,5 +197,106 @@ class UlnByAnimalIdMigrator extends MigratorBase
 			default: return ColumnType::STRING;
 		}
 	}
+
+
+	public function fixUlnsByDeclares()
+	{
+
+		$sql = "SELECT a.id, d.uln_number, d.uln_country_code, a.name
+				FROM animal a
+				  INNER JOIN declare_arrival d ON d.animal_id = a.id
+				WHERE (a.uln_number ISNULL OR a.uln_country_code ISNULL)
+				UNION
+				SELECT a.id, d.uln_number, d.uln_country_code, a.name
+				FROM animal a
+				  INNER JOIN declare_export d ON d.animal_id = a.id
+				WHERE (a.uln_number ISNULL OR a.uln_country_code ISNULL)
+				UNION
+				SELECT a.id, d.uln_number, d.uln_country_code, a.name
+				FROM animal a
+				  INNER JOIN declare_import d ON d.animal_id = a.id
+				WHERE (a.uln_number ISNULL OR a.uln_country_code ISNULL)
+				UNION
+				SELECT a.id, d.uln_number, d.uln_country_code, a.name
+				FROM animal a
+				  INNER JOIN declare_depart d ON d.animal_id = a.id
+				WHERE (a.uln_number ISNULL OR a.uln_country_code ISNULL)
+				UNION
+				SELECT a.id, d.uln_number, d.uln_country_code, a.name
+				FROM animal a
+				  INNER JOIN declare_loss d ON d.animal_id = a.id
+				WHERE (a.uln_number ISNULL OR a.uln_country_code ISNULL)
+				GROUP BY a.id, d.uln_country_code, d.uln_number, a.name";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$totalCount = count($results);
+
+		if($totalCount == 0) {
+			$this->output->writeln('All animals related to declares have a ulnCountryCode and ulnNumber');
+			return;
+		}
+
+		$this->cmdUtil->setStartTimeAndPrintIt($totalCount, 1);
+		$this->newestUlnByOldUln = $this->declareTagReplaceRepository->getNewReplacementUlnSearchArray();
+
+		$ulnNumbersUpdated = 0;
+		$ulnNumbersMissing = 0;
+		$ulnReplaced = 0;
+		$ulnUpdateString = '';
+		$migrationTableUpdateString = '';
+		$loopCounter = 0;
+		$ulnsToUpdateCount = 0;
+		foreach ($results as $result) {
+			$animalId = $result['id'];
+			$vsmId = $result['name'];
+			$ulnCountryCode = $result['uln_country_code'];
+			$ulnNumber = $result['uln_number'];
+
+			//Get newest uln
+			if(is_string($ulnCountryCode) && is_string($ulnNumber) ) {
+				if (array_key_exists($ulnCountryCode . $ulnNumber, $this->newestUlnByOldUln)) {
+					$ulnParts = $this->newestUlnByOldUln[$ulnCountryCode . $ulnNumber];
+					if (is_array($ulnParts)) {
+						$ulnCountryCode = Utils::getNullCheckedArrayValue(Constant::ULN_COUNTRY_CODE_NAMESPACE, $ulnParts);
+						$ulnNumber = Utils::getNullCheckedArrayValue(Constant::ULN_NUMBER_NAMESPACE, $ulnParts);
+					}
+				}
+			}
+
+			$ulnUpdateString = $ulnUpdateString."('".$ulnCountryCode."','".$ulnNumber."',".$animalId."),";
+
+			if(self::UPDATE_ANIMAL_MIGRATION_TABLE && $vsmId != null){
+				$migrationTableUpdateString = $migrationTableUpdateString." vsm_id = '".$vsmId."' OR";
+			}
+
+			$ulnsToUpdateCount++;
+
+			$loopCounter++;
+
+			//Update fathers
+			if(($totalCount == $loopCounter || ($ulnsToUpdateCount%self::UPDATE_BATCH_SIZE == 0 && $ulnsToUpdateCount != 0))
+				&& $ulnUpdateString != '') {
+				$ulnUpdateString = rtrim($ulnUpdateString, ',');
+				$sql = "UPDATE animal as a SET uln_country_code = c.found_uln_country_code, uln_number = c.found_uln_number
+							FROM (VALUES ".$ulnUpdateString.") as c(found_uln_country_code, found_uln_number, id) WHERE c.id = a.id ";
+				$this->conn->exec($sql);
+				//Reset batch values
+				$ulnUpdateString = '';
+				$ulnNumbersUpdated += $ulnsToUpdateCount;
+				$ulnsToUpdateCount = 0;
+
+				if($migrationTableUpdateString != '') {
+					$migrationTableUpdateString = rtrim($migrationTableUpdateString, 'OR');
+					"UPDATE animal_migration_table SET is_record_migrated = TRUE WHERE ".$migrationTableUpdateString;
+					$this->conn->exec($sql);
+					$migrationTableUpdateString = '';
+				}
+			}
+
+			$this->cmdUtil->advanceProgressBar(1, 'missingUlnNumbers updated|batch|missing: '.$ulnNumbersUpdated.'|'.$ulnsToUpdateCount.'|'.$ulnNumbersMissing.' - ulnReplaced: '.$ulnReplaced);
+		}
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
+	}
+
 
 }
