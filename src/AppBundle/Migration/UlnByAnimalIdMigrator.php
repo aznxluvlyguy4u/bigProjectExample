@@ -105,10 +105,17 @@ class UlnByAnimalIdMigrator extends MigratorBase
 		$sql = "SELECT id, name FROM animal WHERE (uln_number ISNULL OR uln_country_code ISNULL)";
 		$results = $this->conn->query($sql)->fetchAll();
 
+		$totalCount = count($results);
+
+		if($totalCount == 0) {
+			$this->output->writeln('All animals have a ulnCountryCode and ulnNumber!');
+			return;
+		}
+
 		$ulnNumbersUpdated = 0;
 		$ulnNumbersMissing = 0;
 
-		$this->cmdUtil->setStartTimeAndPrintIt(count($results),1);
+		$this->cmdUtil->setStartTimeAndPrintIt($totalCount,1);
 
 		foreach ($results as $result) {
 			$animalId = $result['id'];
