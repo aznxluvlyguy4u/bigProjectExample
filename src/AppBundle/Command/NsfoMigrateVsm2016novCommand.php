@@ -17,6 +17,7 @@ use AppBundle\Migration\PerformanceMeasurementsMigrator;
 use AppBundle\Migration\PredicatesMigrator;
 use AppBundle\Migration\RacesMigrator;
 use AppBundle\Migration\TagReplaceMigrator;
+use AppBundle\Migration\UlnByAnimalIdMigrator;
 use AppBundle\Migration\VsmIdGroupMigrator;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
@@ -129,8 +130,10 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '18: Import vsm_id_group from exported csv', "\n",
             '19: Export breeder_number to csv', "\n",
             '20: Import breeder_number from exported csv', "\n",
+            '21: Export uln by animalId to csv', "\n",
+            '22: Import uln by animalId to csv', "\n",
             '----------------------------------------------------', "\n",
-            '21: Fix animal table after animalTable migration', "\n",
+            '23: Fix animal table after animalTable migration', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -236,6 +239,16 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                 break;
 
             case 21:
+                $result = $this->exportUlnByAnimalId() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 22:
+                $result = $this->importUlnByAnimalId() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 23:
                 $result = $this->fixAnimalTable() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
@@ -392,6 +405,34 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $breederNumberMigrator = new BreederNumberMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir, $columnHeaders);
         $this->output->writeln('Importing vsm_id_group from csv');
         $breederNumberMigrator->importFromCsv();
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function exportUlnByAnimalId()
+    {
+        $unlNumberMigrator = new UlnByAnimalIdMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $this->output->writeln('Exporting ulns by animalId to csv');
+        $unlNumberMigrator->exportToCsv();
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function importUlnByAnimalId()
+    {
+        $columnHeaders = $this->parseCSVHeader(UlnByAnimalIdMigrator::FILENAME_CSV_EXPORT, false);
+        $data = $this->parseCSV(UlnByAnimalIdMigrator::FILENAME_CSV_EXPORT, false);
+        if(count($data) == 0 && $columnHeaders != null) { return false; }
+
+        $unlNumberMigrator = new UlnByAnimalIdMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir, $columnHeaders);
+        $this->output->writeln('Importing ulns by animalId from csv');
+        $unlNumberMigrator->importFromCsv();
         return true;
     }
 
