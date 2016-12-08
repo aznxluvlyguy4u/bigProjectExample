@@ -435,13 +435,10 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                     //CREATE LITTERS
                     if (!$this->isLitterAlreadyExists($eweId, $litterDateString)) {
 
-                        $sql = "SELECT MAX(id) FROM litter";
-                        $result = $this->conn->query($sql)->fetch();
-                        $litterId = $result['max'] + 1;
-
 //                      Litter data has not been migrated yet, so persist a new litter
-                        $sql = "INSERT INTO litter (id, animal_mother_id, log_date, litter_date, stillborn_count, born_alive_count) VALUES ('" . $litterId . "','" . $eweId . "','" . $todayString . "','" . $litterDateString . "','" . $stillbornCount . "','" . $bornAliveCount . "')";
+                        $sql = "INSERT INTO litter (id, animal_mother_id, litter_date, stillborn_count, born_alive_count) VALUES (nextval('litter_id_seq'),'" . $eweId . "','" . $todayString . "','" . $litterDateString . "','" . $stillbornCount . "','" . $bornAliveCount . "')";
                         $this->conn->exec($sql);
+                        
                         $litterCount++;
                     } else {
                         $skippedCount++;
