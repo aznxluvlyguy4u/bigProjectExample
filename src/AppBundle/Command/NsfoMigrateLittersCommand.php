@@ -11,6 +11,7 @@ use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -56,6 +57,12 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     /** @var ObjectManager $em */
     private $em;
 
+    /** @var Connection */
+    private $conn;
+
+    /** @var array */
+    private $litterSearchArray;
+
     protected function configure()
     {
         $this
@@ -70,6 +77,8 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $this->em = $em;
         $this->eweRepository = $this->em->getRepository(Ewe::class);
         $this->output = $output;
+
+        $this->conn = $em->getConnection();
 
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
@@ -139,7 +148,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $maxId = $litterRepository->getMaxLitterId();
 
         $sql = "SELECT COUNT(id) FROM litter WHERE id >= '".$minId."'";
-        $totalLitterSize = $this->em->getConnection()->query($sql)->fetch()['count'];
+        $totalLitterSize = $this->conn->query($sql)->fetch()['count'];
 
         $this->cmdUtil->setStartTimeAndPrintIt($totalLitterSize, 1, 'Data retrieved from database. Now checking born alive count...');
 
@@ -190,7 +199,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $batchSize = self::BATCH_SIZE;
 
         $sql = "SELECT COUNT(id) FROM ewe WHERE id >= '".$minId."'";
-        $totalEweCount = $this->em->getConnection()->query($sql)->fetch()['count'];
+        $totalEweCount = $this->conn->query($sql)->fetch()['count'];
 
         $this->cmdUtil->setStartTimeAndPrintIt($totalEweCount, 1, 'Data retrieved from database. Now finding fathers for children...');
         
@@ -227,10 +236,10 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $totalMissingFathersStart = $this->getMissingFathersCount();
 
         $sql = "SELECT id as animal_id, animal.litter_id as animal_litter_id FROM animal WHERE animal.litter_id IS NOT NULL AND animal.parent_father_id IS NULL";
-        $childrenResults = $this->em->getConnection()->query($sql)->fetchAll();
+        $childrenResults = $this->conn->query($sql)->fetchAll();
 
         $sql = "SELECT animal_father_id, id as litter_id FROM litter WHERE animal_father_id IS NOT NULL";
-        $litterResults = $this->em->getConnection()->query($sql)->fetchAll();
+        $litterResults = $this->conn->query($sql)->fetchAll();
 
         $this->cmdUtil->setStartTimeAndPrintIt(count($childrenResults), 1, 'Data retrieved from database. Now finding fathers for children...');
 
@@ -253,7 +262,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
             $fatherId = $fatherSearchArray->get($litterId);
             if ($litterId != null && $fatherId != null) {
                 $sql = "UPDATE animal SET parent_father_id = '" . $fatherId . "' WHERE id = '" . $animalId . "'";
-                $this->em->getConnection()->exec($sql);
+                $this->conn->exec($sql);
 
                 $animalProgressBarMessage = 'FATHER FOUND FOR ANIMAL: ' . $animalId;
             } else {
@@ -274,10 +283,10 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     private function matchChildrenWithExistingLittersAndSetFatherInLitter()
     {
         $sql = "SELECT DATE(date_of_birth) as date_of_birth, id as animal_id, animal.litter_id as animal_litter_id, parent_mother_id, parent_father_id FROM animal";
-        $childrenResults = $this->em->getConnection()->query($sql)->fetchAll();
+        $childrenResults = $this->conn->query($sql)->fetchAll();
 
         $sql = "SELECT animal_mother_id, DATE(litter.litter_date) as litter_date, id as litter_id FROM litter";
-        $litterResults = $this->em->getConnection()->query($sql)->fetchAll();
+        $litterResults = $this->conn->query($sql)->fetchAll();
 
         $this->cmdUtil->setStartTimeAndPrintIt(count($childrenResults), 1, 'Data retrieved from database. Now matching Children with Litters...');
 
@@ -316,11 +325,11 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                 if ($litterId != null) {
 
                     $sql = "UPDATE animal SET litter_id = '" . $litterId . "' WHERE id = '" . $animalId . "'";
-                    $this->em->getConnection()->exec($sql);
+                    $this->conn->exec($sql);
 
                     if ($fatherId != null) {
                         $sql = "UPDATE litter SET animal_father_id = '" . $fatherId . "' WHERE id = '" . $litterId . "'";
-                        $this->em->getConnection()->exec($sql);
+                        $this->conn->exec($sql);
                         $missingFatherCount++;
                     }
 
@@ -402,6 +411,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
 
         $litterCount = 0;
         $eweCount = 0;
+        $skippedCount = 0;
 
         $today = new \DateTime('today');
         $todayString = $today->format('Y-m-d');
@@ -426,16 +436,18 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                     if (!$this->isLitterAlreadyExists($eweId, $litterDateString)) {
 
                         $sql = "SELECT MAX(id) FROM litter";
-                        $result = $this->em->getConnection()->query($sql)->fetch();
+                        $result = $this->conn->query($sql)->fetch();
                         $litterId = $result['max'] + 1;
 
 //                      Litter data has not been migrated yet, so persist a new litter
                         $sql = "INSERT INTO litter (id, animal_mother_id, log_date, litter_date, stillborn_count, born_alive_count) VALUES ('" . $litterId . "','" . $eweId . "','" . $todayString . "','" . $litterDateString . "','" . $stillbornCount . "','" . $bornAliveCount . "')";
-                        $this->em->getConnection()->exec($sql);
+                        $this->conn->exec($sql);
                         $litterCount++;
+                    } else {
+                        $skippedCount++;
                     }
 
-                    $this->cmdUtil->advanceProgressBar(1, 'Checked LitterCount: ' . $litterCount . ' |  EweCount: ' . $eweCount . ' |  last Id: ' . $eweId);
+                    $this->cmdUtil->advanceProgressBar(1, 'LitterCount inserted|skipped: '.$litterCount.'|'.$skippedCount.' -  EweCount: ' . $eweCount . ' |  last Id: ' . $eweId);
                 }
                 $eweCount++;
             }
@@ -501,19 +513,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     private function isEweExists($eweId)
     {
         $sql = "SELECT id FROM ewe WHERE id = '" . $eweId . "'";
-        $result = $this->em->getConnection()->query($sql)->fetch();
-        if ($result['id'] != null) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-
-    private function isLitterAlreadyExists($eweId, $measurementDateString)
-    {
-        $sql = "SELECT id FROM litter WHERE animal_mother_id = '" . $eweId . "' AND litter_date = '" . $measurementDateString . "'";
-        $result = $this->em->getConnection()->query($sql)->fetch();
+        $result = $this->conn->query($sql)->fetch();
         if ($result['id'] != null) {
             return true;
         } else {
@@ -523,11 +523,38 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
 
 
     /**
+     * @param $eweId
+     * @param $measurementDateString
+     * @return bool
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function isLitterAlreadyExists($eweId, $measurementDateString)
+    {
+        if($this->litterSearchArray == null) {
+
+            $sql = "SELECT CONCAT(animal_mother_id,'___',litter_date) as key FROM litter WHERE animal_mother_id = '" . $eweId . "' AND litter_date = '" . $measurementDateString . "'";
+            $results = $this->conn->query($sql)->fetchAll();
+
+            $this->litterSearchArray = [];
+
+            foreach ($results as $result) {
+                $key = $result['key'];
+                $this->litterSearchArray[$key] = $key;
+            }
+        }
+
+        $searchKey = $eweId.'___'.$measurementDateString;
+
+        return array_key_exists($searchKey, $this->litterSearchArray);
+    }
+
+
+    /**
      * @return int
      */
     private function getMissingFathersCount()
     {
         $sql = "SELECT COUNT(id) FROM animal WHERE animal.parent_father_id IS NULL";
-        return $this->em->getConnection()->query($sql)->fetch()['count'];
+        return $this->conn->query($sql)->fetch()['count'];
     }
 }
