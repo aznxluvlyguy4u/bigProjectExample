@@ -1084,4 +1084,40 @@ class AnimalRepository extends BaseRepository
 
     return $count;
   }
+
+
+  /**
+   * @param string $type
+   * @param int|string $animalId
+   * @return boolean
+   */
+  public function deleteAnimalBySql($type, $animalId)
+  {
+    if(!is_string($type) || (!is_int($animalId) && !ctype_digit($animalId))) { return false; }
+    if($type != 'Ewe' && $type != 'Ram' && $type != 'Neuter') { return false; }
+
+    //Deleting breedCodes
+
+    $sql = "SELECT id FROM breed_codes WHERE animal_id = ".$animalId;
+    $breedCodesId = $this->getConnection()->query($sql)->fetch()['id'];
+
+    $sql = "DELETE FROM breed_code WHERE breed_codes_id = ".$breedCodesId;
+    $this->getConnection()->exec($sql);
+
+    $sql = "UPDATE animal SET breed_codes_id = NULL WHERE id = ".$animalId;
+    $this->getConnection()->exec($sql);
+
+    $sql = "DELETE FROM breed_codes WHERE animal_id = ".$animalId;
+    $this->getConnection()->exec($sql);
+
+    //Deleting animal
+
+    $sql = "DELETE FROM ".strtolower($type)." WHERE id = ".$animalId;
+    $this->getConnection()->exec($sql);
+
+    $sql = "DELETE FROM animal WHERE id = ".$animalId;
+    $this->getConnection()->exec($sql);
+
+    return true;
+  }
 }

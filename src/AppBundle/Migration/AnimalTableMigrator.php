@@ -3200,7 +3200,7 @@ class AnimalTableMigrator extends MigratorBase
 		}
 
 
-		$sql = "SELECT id, name FROM animal a
+		$sql = "SELECT a.id, a.name, a.type FROM animal a
 				INNER JOIN (
 					SELECT uln_country_code, uln_number, date_of_birth, type FROM animal
 					GROUP BY uln_country_code, uln_number, date_of_birth, parent_father_id, parent_mother_id, location_id,
@@ -3212,9 +3212,12 @@ class AnimalTableMigrator extends MigratorBase
 		$results = $this->conn->query($sql)->fetchAll();
 
 		$groupedAnimalIdsByName = [];
+		$typeByName = [];
 		foreach($results as $result) {
 			$animalId = $result['id'];
 			$name = $result['name'];
+			$type = $result['type'];
+
 			if(array_key_exists($name, $groupedAnimalIdsByName)) {
 				$group = $groupedAnimalIdsByName[$name];
 			} else {
@@ -3222,13 +3225,23 @@ class AnimalTableMigrator extends MigratorBase
 			}
 			$group[] = $animalId;
 			$groupedAnimalIdsByName[$name] = $group;
+
+			$typeByName[$name] = $type;
 		}
+
+		if(count($groupedAnimalIdsByName) == 0) {
+			$this->output->writeln('There are no identical animals in the database');
+			return;
+		}
+
+		$this->cmdUtil->setStartTimeAndPrintIt(count($groupedAnimalIdsByName),1);
 
 		$names = array_keys($groupedAnimalIdsByName);
 		foreach ($names as $name) {
 			$group = $groupedAnimalIdsByName[$name];
 			$animalId0 = $group[0];
 			$animalId1 = $group[1];
+			$type = $typeByName[$name];
 
 			$animalId0IsParent = array_key_exists($animalId0, $parentIds);
 			$animalId1IsParent = array_key_exists($animalId1, $parentIds);
@@ -3236,18 +3249,44 @@ class AnimalTableMigrator extends MigratorBase
 			if(array_key_exists($name, $primaryVsmIdBySecondaryVsmIds)) {
 				dump('name is a secondaryVsmId '.$name); //Does not occur on production so skip this logic
 			}
-			
-			if($animalId0IsParent && $animalId1IsParent) {
-				dump('double parents ======== '.$name); //Does not occur on production so skip this logic
-			} elseif($animalId0IsParent && !$animalId1IsParent) {
 
+
+			if($animalId0IsParent && $animalId1IsParent) {
+				//Keep ids
+			} elseif($animalId0IsParent && !$animalId1IsParent) {
+				//Keep ids
 			} else {
 				/*
 				 * !$animalId0IsParent && $animalId1IsParent
 				 * OR
 				 * !$animalId0IsParent && !$animalId1IsParent
+				 *
+				 * Switch ids
 				 */
+				$animalId1 = $group[0];
+				$animalId0 = $group[1];
 			}
+
+			if($type == 'Ewe') {
+				$sql = "UPDATE litter SET animal_mother_id = ".$animalId0." WHERE animal_mother_id = ".$animalId1;
+				$this->conn->exec($sql);
+				$sql = "UPDATE animal SET parent_mother_id = ".$animalId0." WHERE parent_mother_id = ".$animalId1;
+				$this->conn->exec($sql);
+			} elseif($type == 'Ram') {
+				$sql = "UPDATE litter SET animal_father_id = ".$animalId0." WHERE animal_father_id = ".$animalId1;
+				$this->conn->exec($sql);
+				$sql = "UPDATE animal SET parent_father_id = ".$animalId0." WHERE parent_father_id = ".$animalId1;
+				$this->conn->exec($sql);
+			}
+			foreach (['weight','exterior','body_fat'] as $tableName) {
+				$sql = "UPDATE ".$tableName." SET animal_id = ".$animalId0." WHERE animal_id = ".$animalId1;
+				$this->conn->exec($sql);
+			}
+
+			$this->animalRepository->deleteAnimalBySql($type, $animalId1);
+
+			$this->cmdUtil->advanceProgressBar(1,'Deleting identical animals');
 		}
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
 }
