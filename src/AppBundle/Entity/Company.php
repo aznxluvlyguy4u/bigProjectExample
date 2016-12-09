@@ -204,6 +204,16 @@ class Company
      */
     private $notes;
 
+
+    /**
+     * @var boolean
+     *
+     * @Assert\NotBlank
+     * @ORM\Column(type="boolean", options={"default":true})
+     * @JMS\Type("boolean")
+     */
+    private $isRevealHistoricAnimals;
+
   /**
    * Company constructor.
    */
@@ -686,4 +696,22 @@ class Company
     {
         $this->notes->removeElement($note);
     }
+
+    /**
+     * @return boolean
+     */
+    public function getIsRevealHistoricAnimals()
+    {
+        return $this->isRevealHistoricAnimals;
+    }
+
+    /**
+     * @param boolean $isRevealHistoricAnimals
+     */
+    public function setIsRevealHistoricAnimals($isRevealHistoricAnimals)
+    {
+        $this->isRevealHistoricAnimals = $isRevealHistoricAnimals;
+    }
+
+
 }

@@ -18,13 +18,15 @@ class TagTransferItemResponseRepository extends BaseRepository {
 
     /**
      * @param Client $client
+     * @param Location $location
      * @param $messageNumber
      * @return TagTransferItemResponse|null
      */
-    public function getTagTransferItemResponseByMessageNumber(Client $client, $messageNumber)
+    public function getTagTransferItemResponseByMessageNumber(Client $client, Location $location, $messageNumber)
     {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('relationNumberKeeper', $client->getRelationNumberKeeper()))
+            ->andWhere(Criteria::expr()->eq('location', $location))
             ->andWhere(Criteria::expr()->eq('messageNumber', $messageNumber))
             ->orderBy(['logDate' => Criteria::ASC]);
 
@@ -36,13 +38,15 @@ class TagTransferItemResponseRepository extends BaseRepository {
 
     /**
      * @param Client $client
+     * @param Location $location
      * @return ArrayCollection
      */
-    public function getTagTransferItemRequestsWithLastHistoryResponses(Client $client)
+    public function getTagTransferItemRequestsWithLastHistoryResponses(Client $client, Location $location)
     {
         //Get only the declareTagTransfers of the given client
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('relationNumberKeeper', $client->getRelationNumberKeeper()))
+            ->andWhere(Criteria::expr()->eq('location', $location))
             ->orderBy(['logDate' => Criteria::ASC]);
 
         $declareTagsTransfers = $this->getManager()->getRepository(DeclareTagsTransfer::class)
@@ -75,11 +79,12 @@ class TagTransferItemResponseRepository extends BaseRepository {
      * @param Client $client
      * @return array
      */
-    public function getTagTransferItemRequestsWithLastErrorResponses(Client $client)
+    public function getTagTransferItemRequestsWithLastErrorResponses(Client $client, Location $location)
     {
         //Get only the declareTagTransfers of the given client
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('relationNumberKeeper', $client->getRelationNumberKeeper()))
+            ->andWhere(Criteria::expr()->eq('location', $location))
             ->orderBy(['logDate' => Criteria::ASC]);
 
         $declareTagsTransfers = $this->getManager()->getRepository(DeclareTagsTransfer::class)
@@ -87,6 +92,7 @@ class TagTransferItemResponseRepository extends BaseRepository {
 
         $results = array();
 
+        /** @var DeclareTagsTransfer $declareTagsTransfer */
         foreach ($declareTagsTransfers as $declareTagsTransfer) {
             foreach ($declareTagsTransfer->getTagTransferRequests() as $tagTransferItemRequest) {
 

@@ -107,7 +107,19 @@ class TimeUtil
     public static function ageInSystemForProductionValue($dateOfBirth, $latestLitterDate)
     {
         if($dateOfBirth == null || $latestLitterDate == null) { return null; }
-        return self::getAgeYear($dateOfBirth, $latestLitterDate);
+
+
+        $endDate = clone $latestLitterDate;
+        $interval = $endDate->diff($dateOfBirth);
+
+        $months = $interval->m;
+        $years = $interval->y;
+
+        if($months < 6) {
+            return $years;
+        } else {
+            return $years + 1;
+        }
     }
 
     
@@ -170,6 +182,23 @@ class TimeUtil
 
 
     /**
+     * @param \DateTime $dateTime
+     * @param string $format
+     * @return string
+     */
+    public static function getTimeStampForSql($dateTime, $format = 'Y-m-d H:i:s')
+    {
+        return $dateTime != null ? $dateTime->format($format) : null;
+    }
+
+
+    public static function getLogDateString()
+    {
+        return self::getTimeStampNow('Y-m-d H:i:s');
+    }
+
+
+    /**
      * @param string $date
      * @return string
      */
@@ -184,11 +213,17 @@ class TimeUtil
      * DateString format should be YYYY-MM-DD, where MM and DD can also be one digit in length 
      * 
      * @param string $dateString
+     * @param boolean $mustHaveLeadingZeroes
      * @return bool
      */
-    public static function isFormatYYYYMMDD($dateString)
+    public static function isFormatYYYYMMDD($dateString, $mustHaveLeadingZeroes = false)
     {
-        return (bool)preg_match("/^[0-9]{4}-((0[1-9]|1[0-2])|[1-9])-((0[1-9]|[1-2][0-9]|3[0-1])|[1-9])$/",$dateString);
+        if($mustHaveLeadingZeroes) {
+            $regex = "/^[0-9]{4}-((0[1-9]|1[0-2]))-((0[1-9]|[1-2][0-9]|3[0-1]))$/";
+        } else {
+            $regex = "/^[0-9]{4}-((0[1-9]|1[0-2])|[1-9])-((0[1-9]|[1-2][0-9]|3[0-1])|[1-9])$/";
+        }
+        return (bool)preg_match($regex,$dateString);
     }
 
 
@@ -203,5 +238,57 @@ class TimeUtil
         } else {
             return $parts[0];
         }
+    }
+
+
+    /**
+     * @param string $flippedDateString
+     * @return \DateTime|null
+     */
+    public static function getDateTimeFromFlippedAndNullCheckedDateString($flippedDateString)
+    {
+        return self::getDateTimeFromNullCheckedDateString(TimeUtil::flipDateStringOrder($flippedDateString));
+    }
+
+
+    /**
+     * @param string $dateString
+     * @return \DateTime|null
+     */
+    public static function getDateTimeFromNullCheckedDateString($dateString)
+    {
+        return $dateString != null ? new \DateTime($dateString) : null;
+    }
+
+
+    /**
+     * Fill the D-M-Y or Y-M-D with leading zeros and flips them in the correct order
+     * into the YYYY-MM-DD format.
+     *
+     * @param $dateString
+     * @return null|string
+     */
+    public static function fillDateStringWithLeadingZeroes($dateString)
+    {
+        if(!is_string($dateString)) { return null; }
+
+        $parts = explode('-', $dateString);
+
+        if(count($parts) != 3) { return null; }
+
+        if(strlen($parts[0]) == 4) {
+            $dateString = str_pad($parts[0],4,'0', STR_PAD_LEFT).'-'
+                         .str_pad($parts[1],2,'0', STR_PAD_LEFT).'-'
+                         .str_pad($parts[2],2,'0', STR_PAD_LEFT);
+
+        } else if(strlen($parts[2]) == 4) {
+            $dateString = str_pad($parts[2],4,'0', STR_PAD_LEFT).'-'
+                         .str_pad($parts[1],2,'0', STR_PAD_LEFT).'-'
+                         .str_pad($parts[0],2,'0', STR_PAD_LEFT);
+        } else {
+            return null;
+        }
+
+        return self::isFormatYYYYMMDD($dateString, true) ? $dateString : null;
     }
 }

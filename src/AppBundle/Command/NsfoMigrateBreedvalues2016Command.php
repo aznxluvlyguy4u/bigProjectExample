@@ -2,8 +2,11 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Component\Utils;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\DeclareTagReplace;
+use AppBundle\Entity\DeclareTagReplaceRepository;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
@@ -20,6 +23,7 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
     const ROWS_IN_SOURCE_FILE = 608983;
     const GENERATION_DATA_STRING = '2016-10-04 00:00:00';
     const IS_PERSIST_ALSO_UNRELIABLE_BREEDVALUE = true;
+    const DEFAULT_OPTION = 0;
 
     /** @var ObjectManager $em */
     private $em;
@@ -27,8 +31,14 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
     /** @var CommandUtil */
     private $cmdUtil;
 
+    /** @var OutputInterface */
+    private $output;
+
     /** @var AnimalRepository */
     private $animalRepository;
+
+    /** @var DeclareTagReplaceRepository */
+    private $declareTagReplaceRepository;
 
     /** @var array */
     private $relani;
@@ -38,6 +48,12 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
 
     /** @var ArrayCollection */
     private $animalIdByUln;
+
+    /** @var array */
+    private $missingUlns;
+
+    /** @var array */
+    private $missingUlnsWithoutReplacementUln;
 
     private $csvParsingOptions = array(
         'finder_in' => 'app/Resources/imports/MixblupBreedValues2016_10_04',
@@ -62,20 +78,49 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
         $this->animalRepository = $this->em->getRepository(Animal::class);
+        $this->declareTagReplaceRepository = $this->em->getRepository(DeclareTagReplace::class);
+        $this->output = $output;
+        $this->missingUlns = [];
+        $this->missingUlnsWithoutReplacementUln = [];
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
-        if($this->cmdUtil->generateConfirmationQuestion('Only check if animals in Rolani.out and Solani.out match? (y/n)')) {
-            $this->checkIfBothFilesContainTheSameAnimals();
-        }
-
+        $output->writeln('Reading relani & solani source files and creating search arrays...');
+        
         //Create searchArrays
         $this->animalIdByUln = $this->animalRepository->getAnimalPrimaryKeysByUlnString(false);
         $this->parseInputFiles();
 
-        //Write to database
-        $this->migrateRecords();
+        $output->writeln('Search arrays complete!');
+
+        $option = $this->cmdUtil->generateMultiLineQuestion([
+            'Choose option: ', "\n",
+            '1: Only check if animals in Rolani.out and Solani.out match', "\n",
+            '2: Migrate records (missing ulns without any new valid replacement uln are skipped)', "\n",
+            '3: Show missing ulns', "\n",
+            'abort (other)', "\n"
+        ], self::DEFAULT_OPTION);
+
+        switch ($option) {
+            case 1:
+                $this->checkIfBothFilesContainTheSameAnimals();
+                break;
+
+            case 2:
+                //Write to database
+                $this->migrateRecords();
+                break;
+
+            case 3:
+                $this->showMissingUlns();
+                break;
+
+            default:
+                $output->writeln('ABORTED');
+                break;
+        }
+        $output->writeln('Done!');
     }
 
 
@@ -160,8 +205,24 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
         $this->cmdUtil->advanceProgressBar(1, 'Splitting Relani.out columns');
         foreach($relaniRows as $relaniRow) {
             $relaniParts = explode(' ', StringUtil::replaceMultipleSpacesByOne($relaniRow)[0]);
-            $animalId = $this->animalIdByUln->get($relaniParts[1]);
-            $this->relani[$animalId] = $relaniParts;
+            $uln = $relaniParts[1];
+            $animalId = $this->animalIdByUln->get($uln);
+            if($animalId != null) {
+                $this->relani[$animalId] = $relaniParts;
+
+            } else {
+                $this->missingUlns[$uln] = $uln;
+
+                $newReplacementUln = $this->declareTagReplaceRepository->getNewReplacementUln($uln);
+                if($newReplacementUln != null) {
+                    $animalId = $this->animalIdByUln->get($newReplacementUln);
+                    if($animalId != null) {
+                        $this->relani[$animalId] = $relaniParts;
+                    }
+                } else {
+                    $this->missingUlnsWithoutReplacementUln[$uln] = $uln;
+                }
+            }
         }
 
         $this->cmdUtil->setProgressBarMessage('Parsing Solani.out');
@@ -170,8 +231,24 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
         $this->cmdUtil->advanceProgressBar(1, 'Splitting Solani.out columns');
         foreach($solaniRows as $solaniRow) {
             $solaniParts = explode(' ', StringUtil::replaceMultipleSpacesByOne($solaniRow)[0]);
-            $animalId = $this->animalIdByUln->get($solaniParts[0]);
-            $this->solani[$animalId] = $solaniParts;
+            $uln = $solaniParts[0];
+            $animalId = $this->animalIdByUln->get($uln);
+            if($animalId != null) {
+                $this->solani[$animalId] = $solaniParts;
+
+            } else {
+                $this->missingUlns[$uln] = $uln;
+
+                $newReplacementUln = $this->declareTagReplaceRepository->getNewReplacementUln($uln);
+                if($newReplacementUln != null) {
+                    $animalId = $this->animalIdByUln->get($newReplacementUln);
+                    if($animalId != null) {
+                        $this->solani[$animalId] = $solaniParts;
+                    }
+                } else {
+                    $this->missingUlnsWithoutReplacementUln[$uln] = $uln;
+                }
+            }
         }
 
         $this->cmdUtil->setProgressBarMessage('Parsing complete!');
@@ -238,5 +315,22 @@ class NsfoMigrateBreedvalues2016Command extends ContainerAwareCommand
             $animalIds[$animalId] = $animalId;
         }
         return $animalIds;
+    }
+
+
+    private function showMissingUlns()
+    {
+        foreach ($this->missingUlns as $oldReplacedUln)
+        {
+            $newReplacementUln = $this->declareTagReplaceRepository->getNewReplacementUln($oldReplacedUln);
+            $newReplacementUln = Utils::fillNullOrEmptyString($newReplacementUln, '');
+            $this->output->writeln($oldReplacedUln.' old | new '.$newReplacementUln);
+        }
+
+        $this->output->writeln('ulns in input files without a replacement uln');
+        foreach ($this->missingUlnsWithoutReplacementUln as $oldReplacedUln)
+        {
+            $this->output->writeln($oldReplacedUln);
+        }
     }
 }

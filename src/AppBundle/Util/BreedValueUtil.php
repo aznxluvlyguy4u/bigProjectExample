@@ -332,9 +332,9 @@ class BreedValueUtil
      */
     public static function getLambMeatIndex($correctedBreedValues, $lambMeatIndexCoefficients)
     {
-        $muscleThicknessAccuracy = Utils::getNullCheckedArrayValue(BreedValueLabel::MUSCLE_THICKNESS_ACCURACY, $correctedBreedValues);
-        $fatAccuracy = Utils::getNullCheckedArrayValue(BreedValueLabel::FAT_ACCURACY, $correctedBreedValues);
-        $growthAccuracy = Utils::getNullCheckedArrayValue(BreedValueLabel::GROWTH_ACCURACY, $correctedBreedValues);
+        $muscleThicknessAccuracy = sqrt(Utils::getNullCheckedArrayValue(BreedValueLabel::MUSCLE_THICKNESS_RELIABILITY, $correctedBreedValues));
+        $fatAccuracy = sqrt(Utils::getNullCheckedArrayValue(BreedValueLabel::FAT_RELIABILITY, $correctedBreedValues));
+        $growthAccuracy = sqrt(Utils::getNullCheckedArrayValue(BreedValueLabel::GROWTH_RELIABILITY, $correctedBreedValues));
 
         //Only calculate the LambMeatIndex if all values are not null
         if(self::areLambMeatIndexInputAccuraciesIncorrect($muscleThicknessAccuracy, $growthAccuracy, $fatAccuracy, $lambMeatIndexCoefficients)) {
@@ -535,15 +535,15 @@ class BreedValueUtil
      */
     private static function areLambMeatIndexInputAccuraciesIncorrect($muscleThicknessAccuracy, $growthAccuracy, $fatAccuracy, $lambMeatIndexCoefficients)
     {
-        $allValuesAreNotNull = NumberUtil::isFloatZero($muscleThicknessAccuracy) || NumberUtil::isFloatZero($fatAccuracy) || NumberUtil::isFloatZero($growthAccuracy) || $lambMeatIndexCoefficients == null;
+        $allValuesAreNotNull = $muscleThicknessAccuracy != null && $fatAccuracy != null && $growthAccuracy != null && $lambMeatIndexCoefficients != null;
         
         //First do a null check
         if($allValuesAreNotNull) {
-            return $muscleThicknessAccuracy >= self::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX
+            return !($muscleThicknessAccuracy >= self::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX
                 && $fatAccuracy  >= self::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX
-                && $lambMeatIndexCoefficients >= self::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX;
+                && $growthAccuracy >= self::MIN_BREED_VALUE_ACCURACIES_FOR_LAMB_MEAT_INDEX);
         } else {
-            return false;
+            return true;
         }
     }
 
@@ -557,10 +557,14 @@ class BreedValueUtil
      */
     private static function areLambMeatIndexInputReliabilitiesIncorrect($muscleThicknessReliability, $growthReliability, $fatReliability, $lambMeatIndexCoefficients)
     {
-         return self::areLambMeatIndexInputAccuraciesIncorrect($muscleThicknessReliability ** 2,
-                                                        $growthReliability ** 2,
-                                                        $fatReliability ** 2,
-                                                        $lambMeatIndexCoefficients);
+        if($muscleThicknessReliability == null || $growthReliability == null || $fatReliability == null || $lambMeatIndexCoefficients == null) {
+            return true;
+        } else {
+            return self::areLambMeatIndexInputAccuraciesIncorrect(pow($muscleThicknessReliability, 2),
+                pow($growthReliability, 2),
+                pow($fatReliability, 2),
+                $lambMeatIndexCoefficients);
+        }
     }
 
 
@@ -572,7 +576,7 @@ class BreedValueUtil
      */
     public static function calculateLambMeatIndexAccuracyCoefficient($lambMeatIndex, $lambMeatIndexGeneticVariance, $decimals = self::DEFAULT_LAMB_MEAT_INDEX_ACCURACY_DECIMALS)
     {
-        return round(($lambMeatIndex ** 2) * $lambMeatIndexGeneticVariance, $decimals);
+        return round((pow($lambMeatIndex, 2)) * $lambMeatIndexGeneticVariance, $decimals);
     }
 
 

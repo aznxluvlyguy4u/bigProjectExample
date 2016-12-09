@@ -45,10 +45,9 @@ class WeightRepository extends MeasurementRepository {
         {
             $results[] = [
                 JsonInputConstant::MEASUREMENT_DATE => Utils::fillNullOrEmptyString($measurementData['measurement_date'], $nullFiller),
-                JsonInputConstant::WEIGHT => Utils::fillNullOrEmptyString($measurementData['weight'], $nullFiller),
+                JsonInputConstant::WEIGHT => floatval($measurementData['weight']),
                 JsonInputConstant::IS_BIRTH_WEIGHT => Utils::fillNullOrEmptyString($measurementData['is_birth_weight'], $nullFiller),
                 JsonInputConstant::IS_REVOKED => Utils::fillNullOrEmptyString($measurementData['is_revoked'], $nullFiller),
-                JsonInputConstant::PERSON_ID =>  Utils::fillNullOrEmptyString($measurementData['person_id'], $nullFiller),
                 JsonInputConstant::FIRST_NAME => Utils::fillNullOrEmptyString($measurementData['first_name'], $nullFiller),
                 JsonInputConstant::LAST_NAME => Utils::fillNullOrEmptyString($measurementData['last_name'], $nullFiller),
             ];
@@ -114,6 +113,47 @@ class WeightRepository extends MeasurementRepository {
 
 
     /**
+     * @param int $animalId
+     * @param string $replacementString
+     * @return array
+     */
+    public function getLatestWeightBySql($animalId = null, $replacementString = null)
+    {
+        $nullResult = [
+            JsonInputConstant::ID => $replacementString,
+            JsonInputConstant::ANIMAL_ID => $replacementString,
+            JsonInputConstant::WEIGHT => $replacementString,
+            JsonInputConstant::IS_BIRTH_WEIGHT => $replacementString,
+            JsonInputConstant::MEASUREMENT_DATE => $replacementString,
+        ];
+
+        if(!is_int($animalId)) { return $nullResult; }
+
+        $sqlBase = "SELECT x.id, x.animal_id, x.weight, x.is_birth_weight, m.measurement_date
+                    FROM weight x
+                      INNER JOIN measurement m ON x.id = m.id
+                      INNER JOIN (
+                                   SELECT animal_id, max(m.measurement_date) as measurement_date
+                                   FROM weight w
+                                     INNER JOIN measurement m ON m.id = w.id
+                                     WHERE w.is_revoked = false
+                                   GROUP BY animal_id) y on y.animal_id = x.animal_id 
+                      WHERE m.measurement_date = y.measurement_date AND x.is_revoked = false ";
+
+        if(is_int($animalId)) {
+            $filter = "AND x.animal_id = " . $animalId;
+            $sql = $sqlBase.$filter;
+            $result = $this->getManager()->getConnection()->query($sql)->fetch();
+        } else {
+            $filter = "";
+            $sql = $sqlBase.$filter;
+            $result = $this->getManager()->getConnection()->query($sql)->fetchAll();
+        }
+        return $result == false ? $nullResult : $result;
+    }
+
+
+    /**
      * @param Animal $animal
      * @param \DateTime $dateTime
      * @return Collection
@@ -163,12 +203,21 @@ class WeightRepository extends MeasurementRepository {
     {
         $em = $this->getManager();
 
+        //SearchArray
+        $sql = "SELECT weight_measurement_id FROM declare_weight";
+        $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+        $weightIdsInDeclareWeight = [];
+        foreach ($results as $result) {
+            $weightId = intval($result['weight_measurement_id']);
+            $weightIdsInDeclareWeight[$weightId] = $weightId;
+        }
+
         $count = 0;
         
         $hasDuplicates = true;
         while($hasDuplicates) {
             $sql = "
-              SELECT MIN(measurement.id) as min_id, COUNT(*), measurement_date, animal_id, weight, is_birth_weight, is_revoked
+              SELECT MIN(measurement.id) as min_id, MAX(measurement.id) as max_id, COUNT(*), measurement_date, animal_id, weight, is_birth_weight, is_revoked
               FROM measurement INNER JOIN weight x ON measurement.id = x.id
               GROUP BY measurement_date, type, x.animal_id, x.weight, x.is_birth_weight, x.is_revoked
               HAVING COUNT(*) > 1";
@@ -176,10 +225,23 @@ class WeightRepository extends MeasurementRepository {
 
             foreach ($results as $result) {
                 $minId = $result['min_id'];
-                $sql = "DELETE FROM weight WHERE id = '".$minId."'";
-                $em->getConnection()->exec($sql);
-                $sql = "DELETE FROM measurement WHERE id = '".$minId."'";
-                $em->getConnection()->exec($sql);
+                $maxId = $result['max_id'];
+
+                $idToDelete = !array_key_exists($minId, $weightIdsInDeclareWeight) ? $minId : (!array_key_exists($maxId, $weightIdsInDeclareWeight) ? $maxId: null);
+
+                //Never delete declared weights
+                if($idToDelete != null) {
+                    $sql = "DELETE FROM weight WHERE id = '".$idToDelete."'";
+                    $em->getConnection()->exec($sql);
+                    $sql = "DELETE FROM measurement WHERE id = '".$idToDelete."'";
+                    $em->getConnection()->exec($sql);
+
+                //if all duplicate weights are declared weights, revoke one of them
+                } else {
+                    $sql = "UPDATE weight SET is_revoked = TRUE WHERE id = '".$maxId."'";
+                    $em->getConnection()->exec($sql);
+                }
+
                 $count++;
             }
             if(count($results) == 0) { $hasDuplicates = false; }

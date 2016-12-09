@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Constant\JsonInputConstant;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Symfony\Component\Validator\Constraints\Collection;
@@ -73,5 +74,60 @@ class LitterRepository extends BaseRepository {
     {
         $sql = "SELECT COUNT(animal.id) FROM animal INNER JOIN litter ON animal.litter_id = litter.id WHERE animal.is_alive = '".$isAlive."' AND animal.litter_id = '".$litterId."'";
         return $this->getManager()->getConnection()->query($sql)->fetch()['count'];
+    }
+
+
+    /**
+     * @param int $animalId
+     * @return int
+     */
+    public function getAggregatedLitterDataOfOffspring($animalId)
+    { 
+        if(!is_int($animalId)) {
+            return [
+                JsonInputConstant::LITTER_COUNT => null,
+                JsonInputConstant::TOTAL_BORN_ALIVE_COUNT => null,
+                JsonInputConstant::TOTAL_STILLBORN_COUNT => null,
+                JsonInputConstant::EARLIEST_LITTER_DATE => null,
+                JsonInputConstant::LATEST_LITTER_DATE => null
+            ];
+        }
+        $sql = "SELECT COUNT(*) as litter_count, SUM(born_alive_count) as total_born_alive_count,
+                    SUM(stillborn_count) as total_stillborn_count, MIN(litter_date) as earliest_litter_date,
+                    MAX(litter_date) as latest_litter_date 
+                FROM litter WHERE status <> 'REVOKED' AND animal_mother_id = ".$animalId." OR animal_father_id = ".$animalId;
+        $result = $this->getManager()->getConnection()->query($sql)->fetch();
+        return $result == false ? null : $result;
+    }
+
+
+    /**
+     * @param $animalId
+     * @return mixed
+     */
+    public function getLitterData($animalId)
+    {
+        if(!is_int($animalId)) { return null; }
+        $sql = "SELECT l.litter_group, (stillborn_count + l.born_alive_count) as size, 
+                CONCAT(stillborn_count + l.born_alive_count, '-ling') as n_ling 
+                FROM animal a
+                  INNER JOIN litter l ON a.litter_id = l.id WHERE a.id = ".$animalId;
+        $result = $this->getManager()->getConnection()->query($sql)->fetch();
+        return $result == false ? null : $result;
+    }
+
+
+    /**
+     * @param $animalId
+     * @return mixed
+     */
+    public function getLitterSize($animalId)
+    {
+        if(!is_int($animalId)) { return null; }
+        $sql = "SELECT (stillborn_count + l.born_alive_count) as size
+                FROM animal a
+                  INNER JOIN litter l ON a.litter_id = l.id WHERE a.id = ".$animalId;
+        $result = $this->getManager()->getConnection()->query($sql)->fetch();
+        return $result == false ? null : $result['size'];
     }
 }

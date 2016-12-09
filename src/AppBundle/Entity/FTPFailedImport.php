@@ -25,6 +25,12 @@ class FTPFailedImport
     protected $id;
 
     /**
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $failedImportId;
+
+    /**
      * @ORM\Column(type="datetime")
      * @Assert\Date
      * @Assert\NotBlank
@@ -51,11 +57,18 @@ class FTPFailedImport
     private $serverName;
 
     /**
+     * @ORM\Column(type="text", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $illness;
+
+    /**
      * FTPFailedImport constructor.
      */
     public function __construct()
     {
         $this->logDate = new \DateTime();
+        $this->failedImportId = uniqid(mt_rand(0,9999999));
     }
 
     /**
@@ -136,5 +149,37 @@ class FTPFailedImport
     public function setServerName($serverName)
     {
         $this->serverName = $serverName;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getIllness()
+    {
+        return $this->illness;
+    }
+
+    /**
+     * @param mixed $illness
+     */
+    public function setIllness($illness)
+    {
+        $this->illness = $illness;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getFailedImportId()
+    {
+        return $this->failedImportId;
+    }
+
+    /**
+     * @param mixed $failedImportId
+     */
+    public function setFailedImportId($failedImportId)
+    {
+        $this->failedImportId = $failedImportId;
     }
 }

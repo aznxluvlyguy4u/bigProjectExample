@@ -35,24 +35,33 @@ class DeclareArrivalResponseRepository extends BaseRepository {
      */
     public function getArrivalsWithLastHistoryResponses(Location $location)
     {
-        $retrievedArrivals = $this->_em->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivals($location);
+        $locationId = $location->getId();
+        if(!is_int($locationId)) { return []; }
 
-        $results = new ArrayCollection();
+        $sql = "SELECT b.request_id, log_date, a.uln_country_code, a.uln_number,
+                  pedigree_country_code, pedigree_number, is_import_animal,
+                  arrival_date, ubn_previous_owner, request_state, 
+                  r.message_number
+                FROM declare_base b
+                  INNER JOIN declare_arrival a ON a.id = b.id
+                  INNER JOIN (
+                    SELECT y.request_id, y.message_number
+                    FROM declare_base_response y
+                      INNER JOIN (
+                                   SELECT request_id, MAX(log_date) as log_date
+                                   FROM declare_base_response
+                                   GROUP BY request_id
+                                 ) z ON z.log_date = y.log_date
+                    )r ON r.request_id = b.request_id
+                WHERE (request_state = '".RequestStateType::OPEN."' OR
+                      request_state = '".RequestStateType::REVOKING."' OR
+                      request_state = '".RequestStateType::REVOKED."' OR
+                      request_state = '".RequestStateType::FINISHED."' OR
+                      request_state = '".RequestStateType::FINISHED_WITH_WARNING."')
+                AND location_id = ".$locationId." ORDER BY b.log_date DESC"
+        ;
 
-        foreach($retrievedArrivals as $arrival) {
-
-            $isHistoryRequestStateType = $arrival->getRequestState() == RequestStateType::OPEN ||
-                                         $arrival->getRequestState() == RequestStateType::REVOKING ||
-                                         $arrival->getRequestState() == RequestStateType::REVOKED ||
-                                         $arrival->getRequestState() == RequestStateType::FINISHED ||
-                                         $arrival->getRequestState() == RequestStateType::FINISHED_WITH_WARNING;
-
-            if($isHistoryRequestStateType) {
-                $results->add(DeclareArrivalResponseOutput::createHistoryResponse($arrival));
-            }
-        }
-
-        return $results;
+        return $this->getManager()->getConnection()->query($sql)->fetchAll();
     }
 
     /**
@@ -61,21 +70,28 @@ class DeclareArrivalResponseRepository extends BaseRepository {
      */
     public function getArrivalsWithLastErrorResponses(Location $location)
     {
-        $retrievedArrivals = $this->_em->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivals($location);
+        $locationId = $location->getId();
+        if(!is_int($locationId)) { return []; }
 
-        $results = array();
-
-        foreach($retrievedArrivals as $arrival) {
-            if($arrival->getRequestState() == RequestStateType::FAILED) {
-
-                $lastResponse = Utils::returnLastResponse($arrival->getResponses());
-                if($lastResponse != false) {
-                    $results[] = DeclareArrivalResponseOutput::createErrorResponse($arrival);
-                }
-            }
-        }
-
-        return $results;
+        $sql = "SELECT b.request_id, log_date, a.uln_country_code, a.uln_number,
+                  pedigree_country_code, pedigree_number, is_import_animal,
+                  arrival_date, ubn_previous_owner, request_state, hide_failed_message as is_removed_by_user,
+                  r.error_code, r.error_message, r.message_number
+                FROM declare_base b
+                  INNER JOIN declare_arrival a ON a.id = b.id
+                  INNER JOIN (
+                    SELECT y.request_id, y.error_code, y.error_message, y.message_number
+                    FROM declare_base_response y
+                      INNER JOIN (
+                                   SELECT request_id, MAX(log_date) as log_date
+                                   FROM declare_base_response
+                                   GROUP BY request_id
+                                 ) z ON z.log_date = y.log_date
+                    )r ON r.request_id = b.request_id
+                WHERE request_state = '".RequestStateType::FAILED."' AND hide_failed_message = FALSE
+                AND location_id = ".$locationId." ORDER BY b.log_date DESC";
+        
+        return $this->getManager()->getConnection()->query($sql)->fetchAll();
     }
 
 

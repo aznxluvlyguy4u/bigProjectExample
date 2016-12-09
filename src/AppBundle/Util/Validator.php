@@ -38,32 +38,37 @@ class Validator
     public static function isNumberOfDecimalsWithinLimit($number, $maxNumberOfDecimals)
     {
         $roundedNumber = round($number,$maxNumberOfDecimals);
-        if($roundedNumber == $number) {
-            return true;
-        } else {
-            return false;
-        }
+        return $roundedNumber == $number;
     }
     
 
     /**
-     * validate if Id is of format: AZ123456789
+     * validate if Id is of format: AZ123456789012
      *
      * @param string $ulnString
+     * @param boolean $includesSpaceBetweenCountryCodeAndNumber
      * @return bool
      */
-    public static function verifyUlnFormat($ulnString)
+    public static function verifyUlnFormat($ulnString, $includesSpaceBetweenCountryCodeAndNumber = false)
     {
-        $countryCodeLength = 2;
-        $numberLength = 12;
-        $ulnLength = $countryCodeLength + $numberLength;
-
-        if(preg_match("/([A-Z]{2})+([0-9]{12})/",$ulnString)
-            && strlen($ulnString) == $ulnLength) {
-            return true;
+        if($includesSpaceBetweenCountryCodeAndNumber) {
+            $ulnLength = 15;
+            $pregMatch = "/([A-Z]{2})+[ ]+([0-9]{12})/";
         } else {
-            return false;
+            $ulnLength = 14;
+            $pregMatch = "/([A-Z]{2})+([0-9]{12})/";
         }
+
+        return preg_match($pregMatch,$ulnString) && strlen($ulnString) == $ulnLength;
+    }
+
+
+    public static function verifyUlnNumberFormat($ulnNumber)
+    {
+        $ulnLength = 12;
+        $pregMatch = "/([0-9]{12})/";
+
+        return preg_match($pregMatch,$ulnNumber) && strlen($ulnNumber) == $ulnLength;
     }
 
 
@@ -74,13 +79,26 @@ class Validator
     public static function verifyPedigreeNumberFormat($pedigreeNumber)
     {
         $numberLengthIncludingDash = 11;
+        return preg_match("/([A-Z0-9]{5}[-][a-zA-Z0-9]{5})/",$pedigreeNumber)
+        && strlen($pedigreeNumber) == $numberLengthIncludingDash;
+    }
 
-        if(preg_match("/([A-Z0-9]{5}[-][A-Z0-9]{5})/",$pedigreeNumber)
-            && strlen($pedigreeNumber) == $numberLengthIncludingDash) {
-            return true;
+
+    /**
+     * @param string $stn
+     * @param boolean $includesSpaceBetweenCountryCodeAndNumber
+     * @return bool
+     */
+    public static function verifyPedigreeCountryCodeAndNumberFormat($stn, $includesSpaceBetweenCountryCodeAndNumber = false)
+    {
+        if($includesSpaceBetweenCountryCodeAndNumber) {
+            $numberLengthIncludingDash = 14;
+            $pregMatch = "/([A-Z]{2}[ ][A-Z0-9]{5}[-][a-zA-Z0-9]{5})/";
         } else {
-            return false;
+            $numberLengthIncludingDash = 13;
+            $pregMatch = "/([A-Z]{2}[A-Z0-9]{5}[-][a-zA-Z0-9]{5})/";
         }
+        return preg_match($pregMatch,$stn) && strlen($stn) == $numberLengthIncludingDash;
     }
 
 
@@ -177,11 +195,7 @@ class Validator
         $ownerOfAnimal = $company->getOwner();
         if($ownerOfAnimal == null) { return $nullInputResult; }
 
-        if($ownerOfAnimal->getId() == $client->getId()) {
-            return true;
-        } else {
-            return false;
-        }
+        return $ownerOfAnimal->getId() == $client->getId();
     }
 
 
@@ -199,11 +213,7 @@ class Validator
         $locationOfAnimal = $animal->getLocation();
         if(!($locationOfAnimal instanceof Location)) { return $nullInputResult; }
 
-        if($locationOfAnimal->getId() == $location->getId()) {
-            return true;
-        } else {
-            return false;
-        }
+        return $locationOfAnimal->getId() == $location->getId();
     }
 
 
@@ -241,16 +251,9 @@ class Validator
             /** @var AnimalRepository $animalRepository */
             $animalRepository = $manager->getRepository(Constant::ANIMAL_REPOSITORY);
             $animal = $animalRepository->findByPedigreeCountryCodeAndNumber($pedigreeCountryCode, $pedigreeNumber);
-
-            if($animal != null) {
-                return true;
-            } else {
-                return false;
-            }
-
-        } else {
-            return $nullResult;
+            return $animal != null;
         }
+        return $nullResult;
     }
 
 
@@ -264,9 +267,7 @@ class Validator
             return true;
         } elseif ($animal instanceof Neuter) {
             $genderValue = $animal->getGender();
-            if ($genderValue === GenderType::MALE || $genderValue === GenderType::M) {
-                return true;
-            }
+            return $genderValue === GenderType::MALE || $genderValue === GenderType::M;
         }
 
         return false;
@@ -484,5 +485,72 @@ class Validator
             }
             return $isUnique;
         }
+    }
+
+
+    /**
+     * @param string|int $ubn
+     * @return bool
+     */
+    public static function hasValidUbnFormat($ubn)
+    {
+        //Verify type, ensure ubn is a string
+        if(is_int($ubn)) { $ubn = (string)$ubn; }
+        else if(is_string($ubn)) {  if(!ctype_digit($ubn)) { return false; }}
+        else { return false; }
+
+        $maxLength = 7;
+        $minLength = 2;
+        $length = strlen($ubn);
+
+        if($length < $minLength || $length > $maxLength) { return false; }
+
+        $ubnReversed = strrev(str_pad($ubn, $maxLength, 0, STR_PAD_LEFT));
+        $ubnDigits = str_split($ubnReversed, 1);
+        $weights = [1, 3, 7, 1, 3, 7, 1];
+
+        $sum = 0;
+        for($i=0; $i < $maxLength; $i++) {
+            $sum += intval($ubnDigits[$i]) * $weights[$i];
+        }
+
+        return $sum%10 == 0;
+    }
+
+
+    /**
+     * Animal should belong to the location,
+     * or it should be an historic animal that was not hidden by the current owner
+     * 
+     * @param ObjectManager $em
+     * @param string $ulnString
+     * @param Location $location
+     * @throws \Doctrine\DBAL\DBALException
+     * @return boolean
+     */
+    public static function validateIfUlnStringBelongsToPublicHistoricAnimal(ObjectManager $em, $ulnString, Location $location)
+    {
+        if(is_string($ulnString) && $location instanceof Location) {
+            if(Validator::verifyUlnFormat($ulnString)) {
+
+                $sql = "SELECT CONCAT(a.uln_country_code, a.uln_number) as uln
+            FROM animal a
+              INNER JOIN location l ON a.location_id = l.id
+            WHERE a.location_id = ".$location->getId()."
+                AND CONCAT(uln_country_code,uln_number) = '".$ulnString."'
+            UNION
+            SELECT CONCAT(a.uln_country_code, a.uln_number) as uln
+            FROM animal_residence r
+              INNER JOIN animal a ON r.animal_id = a.id
+              LEFT JOIN location l ON a.location_id = l.id
+              LEFT JOIN company c ON c.id = l.company_id
+            WHERE r.location_id = ".$location->getId()." AND (c.is_reveal_historic_animals = TRUE OR a.location_id ISNULL)
+                AND CONCAT(uln_country_code,uln_number) = '".$ulnString."'";
+                $results = $em->getConnection()->query($sql)->fetchAll();
+
+                if(count($results) > 0) { return true; }
+            }
+        }
+        return false;
     }
 }

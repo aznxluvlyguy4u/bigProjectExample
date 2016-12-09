@@ -7,10 +7,13 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\Environment;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Country;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Report\InbreedingCoefficientReportData;
+use AppBundle\Report\LivestockReportData;
 use AppBundle\Report\PedigreeCertificates;
 use AppBundle\Report\ReportBase;
 use AppBundle\Util\TwigOutputUtil;
+use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\InbreedingCoefficientInputValidator;
 use AppBundle\Validation\UlnValidator;
 use Aws\S3\S3Client;
@@ -19,6 +22,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Symfony\Component\ExpressionLanguage\Tests\Node\Obj;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
@@ -56,13 +60,22 @@ class ReportAPIController extends APIController {
    * @Method("POST")
    */
   public function getPedigreeCertificates(Request $request) {
-    $client = $this->getAuthenticatedUser($request);
-    $location = $this->getSelectedLocation($request);
+
+    $admin = $this->getAuthenticatedEmployee($request);
+    $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
+    $isAdmin = $adminValidator->getIsAccessGranted();
+
+    $client = null;
+    $location = null;
+    if(!$isAdmin) {
+      $client = $this->getAuthenticatedUser($request);
+      $location = $this->getSelectedLocation($request);
+    }
     $content = $this->getContentAsArray($request);
     $em = $this->getDoctrine()->getManager();
 
     //Validate if given ULNs are correct AND there should at least be one ULN given
-    $ulnValidator = new UlnValidator($em, $content, true, $client, $location);
+    $ulnValidator = new UlnValidator($em, $content, true, null, $location);
     if(!$ulnValidator->getIsUlnSetValid()) {
       return $ulnValidator->createArrivalJsonErrorResponse();
     }
@@ -139,6 +152,61 @@ class ReportAPIController extends APIController {
 
     $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,TwigOutputUtil::pdfPortraitOptions());
     
+    $s3Service = $this->getStorageService();
+    $url = $s3Service->uploadPdf($pdfOutput, $reportResults->getS3Key());
+
+    return new JsonResponse([Constant::RESULT_NAMESPACE => $url], 200);
+  }
+
+
+  /**
+   * Generate livestock pdf report.
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Generate livestock pdf report",
+   *   output = "AppBundle\Entity\Animal"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("/livestock")
+   * @Method("POST")
+   */
+  public function getLiveStockReport(Request $request)
+  {
+    $client = $this->getAuthenticatedUser($request);
+    $location = $this->getSelectedLocation($request);
+    //TODO read options from the content it the Array. Deactivated, so the front-end doesn't even need to send an empty array
+//    $content = $this->getContentAsArray($request);
+    $content = new ArrayCollection(); //Just a placeholder for the array holding the options
+    
+    /** @var ObjectManager $em */
+    $em = $this->getDoctrine()->getManager();
+
+    //TODO add validation for options, when adding the options
+
+    $reportResults = new LivestockReportData($em, $content, $client, $location);
+    $reportData = $reportResults->getData();
+    $reportData[ReportLabel::IMAGES_DIRECTORY] = $this->getImagesDirectory();
+
+    $twigFile = 'Report/livestock_report.html.twig';
+    $html = $this->renderView($twigFile, ['variables' => $reportData]);
+
+    if(self::IS_LOCAL_TESTING) {
+      //Save pdf in local cache
+      return new JsonResponse([Constant::RESULT_NAMESPACE => $this->saveFileLocally($reportResults, $html, TwigOutputUtil::pdfLandscapeOptions())], 200);
+    }
+
+    $pdfOutput = $this->get('knp_snappy.pdf')->getOutputFromHtml($html,TwigOutputUtil::pdfLandscapeOptions());
+
     $s3Service = $this->getStorageService();
     $url = $s3Service->uploadPdf($pdfOutput, $reportResults->getS3Key());
 

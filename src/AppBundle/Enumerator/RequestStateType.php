@@ -24,4 +24,5 @@ class RequestStateType
     const REJECTED = "REJECTED";
     const REVOKED = "REVOKED";
     const REVOKING = "REVOKING";
+    const IMPORTED = "IMPORTED";
 }

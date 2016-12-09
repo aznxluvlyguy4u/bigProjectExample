@@ -170,7 +170,8 @@ class DoctrineUtil
     public static function getRandomUnassignedTag(ObjectManager $em, Location $location)
     {
         $ownerId = $location->getCompany()->getOwner()->getId();
-        $sql = "SELECT * FROM tag t WHERE t.owner_id = ".$ownerId." AND tag_status = 'UNASSIGNED'";
+        $locationId = $location->getId();
+        $sql = "SELECT * FROM tag t WHERE t.owner_id = ".$ownerId." AND t.location_id = ".$locationId." AND tag_status = 'UNASSIGNED'";
         $results = $em->getConnection()->query($sql)->fetchAll();
         return self::getRandomItemFromResults($em, $results, Tag::class);
     }

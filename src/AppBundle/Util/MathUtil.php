@@ -15,7 +15,7 @@ class MathUtil
     {
         $sumOfDifferences = 0;
         foreach ($values as $value) {
-            $sumOfDifferences += ($value - $mean) ** 2;
+            $sumOfDifferences += pow(($value - $mean), 2);
         }
         $variance = $sumOfDifferences / count($values);
 

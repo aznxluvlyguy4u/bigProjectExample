@@ -6,33 +6,22 @@ namespace AppBundle\Component;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\DeclarationDetail;
-use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
-use AppBundle\Entity\DeclareMateRepository;
-use AppBundle\Entity\DeclareNsfoBase;
-use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Mate;
-use AppBundle\Entity\RetrieveAnimals;
-use AppBundle\Entity\RetrieveCountries;
-use AppBundle\Entity\RetrieveTags;
-use AppBundle\Entity\RetrieveAnimalDetails;
-use AppBundle\Entity\RetrieveUbnDetails;
-use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\RequestTypeNonIR;
-use AppBundle\Enumerator\TagStateType;
+use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
-use Symfony\Component\Validator\Constraints\DateTime;
+use Doctrine\Common\Persistence\ObjectManager;
 
 
 /**
@@ -42,365 +31,128 @@ use Symfony\Component\Validator\Constraints\DateTime;
 class Count
 {
     /**
-     * @param Client $client
+     * @param ObjectManager $em
+     * @param Location $location
      * @return ArrayCollection
      */
-    public static function getErrorCountDeclarations(Client $client)
+    public static function getErrorCountDeclarationsPerLocation(ObjectManager $em, Location $location)
     {
         $errorCounts = new ArrayCollection();
-        $errorCounts->set(RequestType::DECLARE_ARRIVAL, Count::getErrorCountArrivalsAndImports($client));
-        $errorCounts->set(RequestType::DECLARE_DEPART, Count::getErrorCountDepartsAndExports($client));
-        $errorCounts->set(RequestType::DECLARE_LOSS, Count::getErrorCountLosses($client));
-        $errorCounts->set(RequestType::DECLARE_BIRTH, Count::getErrorCountBirths($client));
+
+        $locationId = $location->getId();
+        if(!is_int($locationId)) {
+            $defaultErrorCount = 0;
+            $errorCounts->set(RequestType::DECLARE_ARRIVAL, $defaultErrorCount);
+            $errorCounts->set(RequestType::DECLARE_DEPART, $defaultErrorCount);
+            $errorCounts->set(RequestType::DECLARE_LOSS, $defaultErrorCount);
+            $errorCounts->set(RequestType::DECLARE_BIRTH, $defaultErrorCount);
+            $errorCounts->set(RequestTypeNonIR::MATE, $defaultErrorCount);
+            return $errorCounts;
+        }
+
+        $sql = "SELECT COUNT(*), type
+                FROM declare_base b
+                INNER JOIN
+                  declare_arrival x ON b.id = x.id
+                WHERE b.request_state = '".RequestStateType::FAILED."' AND b.hide_failed_message = FALSE AND x.location_id = ".$locationId."
+                GROUP BY type
+                UNION
+                SELECT COUNT(*), type
+                FROM declare_base b
+                  INNER JOIN
+                  declare_import x ON b.id = x.id
+                WHERE b.request_state = '".RequestStateType::FAILED."' AND b.hide_failed_message = FALSE AND x.location_id = ".$locationId."
+                GROUP BY type
+                UNION
+                SELECT COUNT(*), type
+                FROM declare_base b
+                  INNER JOIN
+                  declare_depart x ON b.id = x.id
+                WHERE b.request_state = '".RequestStateType::FAILED."' AND b.hide_failed_message = FALSE AND x.location_id = ".$locationId."
+                GROUP BY type
+                UNION
+                SELECT COUNT(*), type
+                FROM declare_base b
+                  INNER JOIN
+                  declare_export x ON b.id = x.id
+                WHERE b.request_state = '".RequestStateType::FAILED."' AND b.hide_failed_message = FALSE AND x.location_id = ".$locationId."
+                GROUP BY type
+                UNION
+                SELECT COUNT(*), type
+                FROM declare_base b
+                  INNER JOIN
+                  declare_loss x ON b.id = x.id
+                WHERE b.request_state = '".RequestStateType::FAILED."' AND b.hide_failed_message = FALSE AND x.location_id = ".$locationId."
+                GROUP BY type
+                UNION
+                SELECT COUNT(*), type
+                FROM declare_base b
+                  INNER JOIN
+                  declare_birth x ON b.id = x.id
+                WHERE b.request_state = '".RequestStateType::FAILED."' AND b.hide_failed_message = FALSE AND x.location_id = ".$locationId."
+                GROUP BY type
+                UNION
+                SELECT COUNT(*), type
+                FROM declare_base b
+                  INNER JOIN
+                  declare_tags_transfer x ON b.id = x.id
+                WHERE b.request_state = '".RequestStateType::FAILED."' AND b.hide_failed_message = FALSE AND x.location_id = ".$locationId."
+                GROUP BY type
+                UNION
+                SELECT COUNT(*), type
+                FROM mate m
+                  INNER JOIN declare_nsfo_base b ON m.id = b.id
+                WHERE b.request_state = '".RequestStateType::FAILED."' AND b.is_hidden = FALSE AND m.location_id = ".$locationId."
+                GROUP BY type";
+
+        $results = $em->getConnection()->query($sql)->fetchAll();
+
+        $searchArray = [];
+        foreach ($results as $result) {
+            $searchArray[$result['type']] = $result['count'];
+        }
+        
+        $errorCounts->set(RequestType::DECLARE_ARRIVAL, self::getCountFromSearchArray(DeclareArrival::class, $searchArray)
+                                                      + self::getCountFromSearchArray(DeclareImport::class, $searchArray));
+        $errorCounts->set(RequestType::DECLARE_DEPART, self::getCountFromSearchArray(DeclareDepart::class, $searchArray)
+                                                     + self::getCountFromSearchArray(DeclareExport::class, $searchArray));
+        $errorCounts->set(RequestType::DECLARE_LOSS, self::getCountFromSearchArray(DeclareLoss::class, $searchArray));
+        $errorCounts->set(RequestType::DECLARE_BIRTH, self::getCountFromSearchArray(DeclareBirth::class, $searchArray));
+        $errorCounts->set(RequestTypeNonIR::MATE, self::getCountFromSearchArray(Mate::class, $searchArray));
 
         return $errorCounts;
     }
 
-    /**
-     * @param Location $location
-     * @return ArrayCollection
-     */
-    public static function getErrorCountDeclarationsPerLocation(Location $location)
-    {
-        $errorCounts = new ArrayCollection();
-        $errorCounts->set(RequestType::DECLARE_ARRIVAL, Count::getErrorCountArrivalsAndImportsPerLocation($location));
-        $errorCounts->set(RequestType::DECLARE_DEPART, Count::getErrorCountDepartsAndExportsPerLocation($location));
-        $errorCounts->set(RequestType::DECLARE_LOSS, Count::getErrorCountLossesLocation($location));
-        $errorCounts->set(RequestType::DECLARE_BIRTH, Count::getErrorCountBirthsLocation($location));
-        $errorCounts->set(RequestTypeNonIR::MATE, Count::getErrorCountMatingsLocation($location));
-
-        return $errorCounts;
-    }
 
     /**
-     * @param Client $client
+     * @param string $classPath
+     * @param array $searchArray
      * @return int
      */
-    public static function getErrorCountArrivalsAndImports(Client $client)
+    private static function getCountFromSearchArray($classPath, $searchArray)
     {
-        return self::getErrorCountArrivals($client) + self::getErrorCountImports($client);
-    }
+        $key = StringUtil::getEntityName($classPath);
 
-    /**
-     * @param Location $location
-     * @return int
-     */
-    public static function getErrorCountArrivalsAndImportsPerLocation(Location $location)
-    {
-        return self::getErrorCountArrivalsLocation($location) + self::getErrorCountImportsLocation($location);
-    }
-
-    /**
-     * @param Client $client
-     * @return int
-     */
-    public static function getErrorCountDepartsAndExports(Client $client)
-    {
-        return self::getErrorCountDeparts($client) + self::getErrorCountExports($client);
-    }
-
-    /**
-     * @param Location $location
-     * @return int
-     */
-    public static function getErrorCountDepartsAndExportsPerLocation(Location $location)
-    {
-        return self::getErrorCountDepartsLocation($location) + self::getErrorCountExportsLocation($location);
-    }
-
-
-    /**
-     * @param Client $client
-     * @return int
-     */
-    public static function getErrorCountArrivals(Client $client)
-    {
-        $count = 0;
-
-        foreach($client->getCompanies() as $company){
-            foreach($company->getLocations() as $location){
-                self::getErrorCountArrivalsLocation($location);
-            }
+        if(array_key_exists($key, $searchArray)){
+            return $searchArray[$key];
+        } else {
+            return 0;
         }
-
-        return $count;
-    }
-
-    /**
-     * @param Location $location
-     * @return int
-     */
-    public static function getErrorCountArrivalsLocation(Location $location)
-    {
-        $count = 0;
-
-        foreach($location->getArrivals() as $arrival){
-            if(self::countAsErrorResponse($arrival)) {
-                $count++;
-            }
-        }
-
-        return $count;
-    }
-
-    /**
-     * @param Client $client
-     * @return int
-     */
-    public static function getErrorCountImports(Client $client)
-    {
-        $count = 0;
-
-        foreach($client->getCompanies() as $company){
-            foreach($company->getLocations() as $location){
-                self::getErrorCountImportsLocation($location);
-            }
-        }
-
-        return $count;
-    }
-
-    /**
-     * @param Location $location
-     * @return int
-     */
-    public static function getErrorCountImportsLocation(Location $location)
-    {
-        $count = 0;
-
-        foreach($location->getImports() as $import){
-            if(self::countAsErrorResponse($import)) {
-                $count++;
-            }
-        }
-
-        return $count;
-    }
-
-    /**
-     * @param Client $client
-     * @return int
-     */
-    public static function getErrorCountDeparts(Client $client)
-    {
-        $count = 0;
-
-        foreach($client->getCompanies() as $company){
-            foreach($company->getLocations() as $location){
-                self::getErrorCountDepartsLocation($location);
-            }
-        }
-
-        return $count;
-    }
-
-    /**
-     * @param Location $location
-     * @return int
-     */
-    public static function getErrorCountDepartsLocation(Location $location)
-    {
-        $count = 0;
-
-        foreach($location->getDepartures() as $departure){
-            if(self::countAsErrorResponse($departure)) {
-                $count++;
-            }
-        }
-
-        return $count;
-    }
-
-    /**
-     * @param Client $client
-     * @return int
-     */
-    public static function getErrorCountExports(Client $client)
-    {
-        $count = 0;
-
-        foreach($client->getCompanies() as $company){
-            foreach($company->getLocations() as $location){
-                self::getErrorCountExportsLocation($location);
-            }
-        }
-
-        return $count;
-    }
-
-    /**
-     * @param Location $location
-     * @return int
-     */
-    public static function getErrorCountExportsLocation(Location $location)
-    {
-        $count = 0;
-
-        foreach($location->getExports() as $export){
-            if(self::countAsErrorResponse($export)) {
-                $count++;
-            }
-        }
-
-        return $count;
-    }
-
-    /**
-     * @param Client $client
-     * @return int
-     */
-    public static function getErrorCountLosses(Client $client)
-    {
-        $count = 0;
-
-        foreach($client->getCompanies() as $company){
-            foreach($company->getLocations() as $location){
-                self::getErrorCountLossesLocation($location);
-            }
-        }
-
-        return $count;
-    }
-
-    /**
-     * @param Location $location
-     * @return int
-     */
-    public static function getErrorCountLossesLocation(Location $location)
-    {
-        $count = 0;
-
-        foreach($location->getLosses() as $loss){
-            if(self::countAsErrorResponse($loss)) {
-                $count++;
-            }
-        }
-
-        return $count;
-    }
-
-    /**
-     * @param Client $client
-     * @return int
-     */
-    public static function getErrorCountBirths(Client $client)
-    {
-        $count = 0;
-
-        foreach($client->getCompanies() as $company){
-            foreach($company->getLocations() as $location){
-                self::getErrorCountBirthsLocation($location);
-            }
-        }
-
-        return $count;
-    }
-
-    /**
-     * @param Location $location
-     * @return int
-     */
-    public static function getErrorCountBirthsLocation(Location $location)
-    {
-        $count = 0;
-
-        foreach($location->getBirths() as $birth){
-            if(self::countAsErrorResponse($birth)) {
-                $count++;
-            }
-        }
-
-        return $count;
-    }
-
-
-    /**
-     * @param Client $client
-     * @return int
-     */
-    public static function getErrorCountMatings(Client $client)
-    {
-        $count = 0;
-
-        foreach($client->getCompanies() as $company){
-            foreach($company->getLocations() as $location){
-                self::getErrorCountMatingsLocation($location);
-            }
-        }
-
-        return $count;
-    }
-
-    /**
-     * @param Location $location
-     * @return int
-     */
-    public static function getErrorCountMatingsLocation(Location $location)
-    {
-        $count = 0;
-
-        foreach($location->getMatings() as $mate){
-            if(self::countNsfoAsErrorResponse($mate)) {
-                $count++;
-            }
-        }
-
-        return $count;
     }
     
 
     /**
-     * @param Client $client
+     * @param ObjectManager $em
+     * @param int $clientId
+     * @param int $locationId
      * @return int
      */
-    public static function getUnassignedTagsCount(Client $client)
+    public static function getUnassignedTagsCount(ObjectManager $em, $clientId, $locationId)
     {
-        $count = 0;
-
-        foreach($client->getTags() as $tag){
-            if($tag->getTagStatus() == TagStateType::UNASSIGNED) {
-                $count++;
-            }
-        }
-
-        return $count;
-    }
-
-    /**
-     * @param DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|RetrieveAnimalDetails $declaration
-     * @return bool
-     */
-    private static function countAsErrorResponse($declaration)
-    {
-        if($declaration->getRequestState() == RequestStateType::FAILED) {
-
-            $responses = $declaration->getResponses();
-
-            if(sizeof($responses) > 0) {
-                $lastResponse = $responses[sizeof($responses)-1];
-
-                if($lastResponse->getIsRemovedByUser() == false) {
-                    return true;
-                }
-            }
-
-        }
-
-        return false;
-    }
-
-
-    /**
-     * @param Mate|DeclareNsfoBase $declaration
-     * @return bool
-     */
-    private static function countNsfoAsErrorResponse($declaration)
-    {
-        if($declaration->getRequestState() == RequestStateType::FAILED && !$declaration->getIsHidden()) {
-            return true;
-        } else {
-            return false;
-        }
+        if(!is_int($clientId) || !is_int($locationId)) { return 0; }
+        $sql = "SELECT COUNT(*) FROM tag WHERE owner_id = ".$clientId." AND tag.location_id = ".$locationId." AND tag_status = 'UNASSIGNED'";
+        $result = $em->getConnection()->query($sql)->fetch();
+        return $result == false || $result == null ? 0 : $result['count'];
     }
     
 
@@ -411,64 +163,84 @@ class Count
      * - total
      * having an integer value for the amount of animals in that category.
      *
+     * @param ObjectManager $em
      * @param Location $location
-     * @return ArrayCollection
+     * @param boolean $returnArrayWithLowerCaseKeys
+     * @return ArrayCollection|array
      */
-    public static function getLiveStockCountLocation(Location $location)
+    public static function getLiveStockCountLocation(ObjectManager $em, Location $location, $returnArrayWithLowerCaseKeys = false)
     {
-        //Settings
-        $isAlive = true;
-        $isDepartedOption = false;
-        $isExportedOption = false;
+        $locationId = $location->getId();
+        if(!is_int($locationId)) { return 0; }
+        
+        $adultDateOfBirthLimit = Utils::getAdultDateStringOfBirthLimit();
 
-        //Initialize counters
-        $pedigreeAdults = 0;
-        $pedigreeLambs = 0;
-        $nonPedigreeAdults = 0;
-        $nonPedigreeLambs = 0;
+        $sql = "SELECT COUNT(date_of_birth), '".LiveStockType::PEDIGREE_ADULT."' as type FROM animal
+                WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
+                      AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
+                      AND location_id = ".$locationId."
+                AND pedigree_country_code NOTNULL AND animal.pedigree_number NOTNULL
+                AND animal.date_of_birth <= '".$adultDateOfBirthLimit."'
+                UNION
+                SELECT COUNT(date_of_birth), '".LiveStockType::PEDIGREE_LAMB."' as type FROM animal
+                WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
+                      AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
+                      AND location_id = ".$locationId."
+                AND pedigree_country_code NOTNULL AND animal.pedigree_number NOTNULL
+                AND animal.date_of_birth > '".$adultDateOfBirthLimit."'
+                UNION
+                SELECT COUNT(date_of_birth), '".LiveStockType::NON_PEDIGREE_ADULT."' as type FROM animal
+                WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
+                      AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
+                      AND location_id = ".$locationId."
+                      AND (pedigree_country_code ISNULL OR animal.pedigree_number ISNULL)
+                      AND animal.date_of_birth <= '".$adultDateOfBirthLimit."'
+                UNION
+                SELECT COUNT(date_of_birth), '".LiveStockType::NON_PEDIGREE_LAMB."' as type FROM animal
+                WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
+                      AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
+                      AND location_id = ".$locationId."
+                      AND (pedigree_country_code ISNULL OR animal.pedigree_number ISNULL)
+                      AND animal.date_of_birth > '".$adultDateOfBirthLimit."'";
+        $results = $em->getConnection()->query($sql)->fetchAll();
 
-        $adultDateOfBirthLimit = Utils::getAdultDateOfBirthLimit();
-
-        foreach($location->getAnimals() as $animal) {
-
-            $isOwnedAnimal =  Count::includeAnimal($animal, $isAlive, $isExportedOption, $isDepartedOption);
-
-            $isPedigree = $animal->getPedigreeCountryCode() != null
-                && $animal->getPedigreeNumber() != null;
-
-            $dateOfBirth = $animal->getDateOfBirth();
-
-            if($isOwnedAnimal) {
-                if($isPedigree) {
-                    if($dateOfBirth > $adultDateOfBirthLimit) { // is under 1 years old
-                        $pedigreeLambs++;
-                    } else { // is adult
-                        $pedigreeAdults++;
-                    }
-
-                } else { //is non-pedigree
-                    if($dateOfBirth > $adultDateOfBirthLimit) { // is under 1 years old
-                        $nonPedigreeLambs++;
-                    } else { // is adult
-                        $nonPedigreeAdults++;
-                    }
-                }
-            }
+        $searchArray = [];
+        foreach ($results as $result) {
+            $searchArray[$result['type']] = $result['count'];
         }
+
+        $pedigreeAdults = $searchArray[LiveStockType::PEDIGREE_ADULT];
+        $pedigreeLambs = $searchArray[LiveStockType::PEDIGREE_LAMB];
+        $nonPedigreeAdults = $searchArray[LiveStockType::NON_PEDIGREE_ADULT];
+        $nonPedigreeLambs = $searchArray[LiveStockType::NON_PEDIGREE_LAMB];
 
         $pedigreeTotal = $pedigreeAdults + $pedigreeLambs;
         $nonPedigreeTotal = $nonPedigreeAdults + $nonPedigreeLambs;
 
-        $count = new ArrayCollection();
-        $count->set(LiveStockType::PEDIGREE_ADULT, $pedigreeAdults);
-        $count->set(LiveStockType::PEDIGREE_LAMB, $pedigreeLambs);
-        $count->set(LiveStockType::PEDIGREE_TOTAL, $pedigreeTotal);
-        $count->set(LiveStockType::NON_PEDIGREE_ADULT, $nonPedigreeAdults);
-        $count->set(LiveStockType::NON_PEDIGREE_LAMB, $nonPedigreeLambs);
-        $count->set(LiveStockType::NON_PEDIGREE_TOTAL, $nonPedigreeTotal);
-        $count->set(LiveStockType::ADULT, $nonPedigreeAdults + $pedigreeAdults);
-        $count->set(LiveStockType::LAMB, $nonPedigreeLambs + $pedigreeLambs);
-        $count->set(LiveStockType::TOTAL, $nonPedigreeTotal + $pedigreeTotal);
+        if($returnArrayWithLowerCaseKeys) {
+            $count = []; 
+            $count[strtolower(LiveStockType::PEDIGREE_ADULT)] = $pedigreeAdults;
+            $count[strtolower(LiveStockType::PEDIGREE_LAMB)] = $pedigreeLambs;
+            $count[strtolower(LiveStockType::PEDIGREE_TOTAL)] = $pedigreeTotal;
+            $count[strtolower(LiveStockType::NON_PEDIGREE_ADULT)] = $nonPedigreeAdults;
+            $count[strtolower(LiveStockType::NON_PEDIGREE_LAMB)] = $nonPedigreeLambs;
+            $count[strtolower(LiveStockType::NON_PEDIGREE_TOTAL)] = $nonPedigreeTotal;
+            $count[strtolower(LiveStockType::ADULT)] = $nonPedigreeAdults + $pedigreeAdults;
+            $count[strtolower(LiveStockType::LAMB)] = $nonPedigreeLambs + $pedigreeLambs;
+            $count[strtolower(LiveStockType::TOTAL)] = $nonPedigreeTotal + $pedigreeTotal;
+
+        } else {
+            $count = new ArrayCollection();
+            $count->set(LiveStockType::PEDIGREE_ADULT, $pedigreeAdults);
+            $count->set(LiveStockType::PEDIGREE_LAMB, $pedigreeLambs);
+            $count->set(LiveStockType::PEDIGREE_TOTAL, $pedigreeTotal);
+            $count->set(LiveStockType::NON_PEDIGREE_ADULT, $nonPedigreeAdults);
+            $count->set(LiveStockType::NON_PEDIGREE_LAMB, $nonPedigreeLambs);
+            $count->set(LiveStockType::NON_PEDIGREE_TOTAL, $nonPedigreeTotal);
+            $count->set(LiveStockType::ADULT, $nonPedigreeAdults + $pedigreeAdults);
+            $count->set(LiveStockType::LAMB, $nonPedigreeLambs + $pedigreeLambs);
+            $count->set(LiveStockType::TOTAL, $nonPedigreeTotal + $pedigreeTotal);   
+        }
 
         return $count;
     }

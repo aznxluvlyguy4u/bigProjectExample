@@ -82,6 +82,14 @@ abstract class Animal
     protected $ubnOfBirth;
 
     /**
+     * @var Location
+     * @ORM\ManyToOne(targetEntity="Location")
+     * @ORM\JoinColumn(name="location_of_birth_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\Location")
+     */
+    protected $locationOfBirth;
+
+    /**
      * @var DateTime
      *
      * @ORM\Column(type="datetime", nullable=true)
@@ -439,6 +447,20 @@ abstract class Animal
      * @JMS\Type("AppBundle\Entity\BreedCodes")
      */
     protected $breedCodes;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    protected $predicate;
+
+    /**
+     * @var integer
+     * @JMS\Type("integer")
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    protected $predicateScore;
     
     /**
      * @var string
@@ -447,6 +469,23 @@ abstract class Animal
      * @JMS\Groups({"declare"})
      */
     protected $scrapieGenotype;
+
+    /**
+     * The current blindnessFactor
+     *
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    protected $blindnessFactor;
+
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true, options={"default":null})
+     */
+    protected $myoMax;
 
     /**
      * @var Litter
@@ -507,6 +546,13 @@ abstract class Animal
      * @JMS\Type("AppBundle\Entity\BreedValuesSet")
      */
     protected $breedValuesSets;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    protected $nickname;
 
     /**
      * Animal constructor.
@@ -1841,6 +1887,38 @@ abstract class Animal
     }
 
     /**
+     * @return string
+     */
+    public function getPredicate()
+    {
+        return $this->predicate;
+    }
+
+    /**
+     * @param string $predicate
+     */
+    public function setPredicate($predicate)
+    {
+        $this->predicate = $predicate;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPredicateScore()
+    {
+        return $this->predicateScore;
+    }
+
+    /**
+     * @param int $predicateScore
+     */
+    public function setPredicateScore($predicateScore)
+    {
+        $this->predicateScore = $predicateScore;
+    }
+
+    /**
      * Set scrapieGenotype
      *
      * @param string $scrapieGenotype
@@ -1863,6 +1941,38 @@ abstract class Animal
     {
         return $this->scrapieGenotype;
     }
+
+    /**
+     * @return string
+     */
+    public function getBlindnessFactor()
+    {
+        return $this->blindnessFactor;
+    }
+
+    /**
+     * @param string $blindnessFactor
+     */
+    public function setBlindnessFactor($blindnessFactor)
+    {
+        $this->blindnessFactor = $blindnessFactor;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMyoMax()
+    {
+        return $this->myoMax;
+    }
+
+    /**
+     * @param string $myoMax
+     */
+    public function setMyoMax($myoMax)
+    {
+        $this->myoMax = $myoMax;
+    }    
 
     /**
      * Add exteriorMeasurement
@@ -2051,6 +2161,22 @@ abstract class Animal
     }
 
     /**
+     * @return Location
+     */
+    public function getLocationOfBirth()
+    {
+        return $this->locationOfBirth;
+    }
+
+    /**
+     * @param Location $locationOfBirth
+     */
+    public function setLocationOfBirth($locationOfBirth)
+    {
+        $this->locationOfBirth = $locationOfBirth;
+    }
+
+    /**
      * @return PedigreeRegister
      */
     public function getPedigreeRegister()
@@ -2177,6 +2303,23 @@ abstract class Animal
         } else {
             return null;
         }
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getNickname()
+    {
+        return $this->nickname;
+    }
+
+    /**
+     * @param string $nickname
+     */
+    public function setNickname($nickname)
+    {
+        $this->nickname = $nickname;
     }
 
 
@@ -2401,5 +2544,21 @@ abstract class Animal
                 $this->addUlnHistory($item); 
             }
         }
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function isAnimalPublic()
+    {
+        $location = $this->getLocation();
+        if($location != null) {
+            $company = $location->getCompany();
+            if($company != null) {
+                return $company->getIsRevealHistoricAnimals();
+            }
+        }
+        return true;
     }
 }

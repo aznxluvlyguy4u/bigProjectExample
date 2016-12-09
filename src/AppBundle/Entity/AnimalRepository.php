@@ -8,12 +8,17 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\AnimalType;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\LiveStockType;
+use AppBundle\Util\AnimalArrayReader;
+use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class AnimalRepository
@@ -21,6 +26,8 @@ use Doctrine\Common\Collections\Criteria;
  */
 class AnimalRepository extends BaseRepository
 {
+  const BATCH = 1000;
+
   /**
    * @param $Id
    * @return null|Animal|Ram|Ewe|Neuter
@@ -60,10 +67,38 @@ class AnimalRepository extends BaseRepository
    */
   public function findByUlnCountryCodeAndNumber($countryCode, $ulnNumber)
   {
-    $animal = $this->findOneBy(array('ulnCountryCode' => $countryCode, 'ulnNumber' => $ulnNumber));
-
-    return $animal;
+    $animals = $this->findBy(array('ulnCountryCode' => $countryCode, 'ulnNumber' => $ulnNumber));
+    return AnimalArrayReader::prioritizeImportedAnimalFromArray($animals);
   }
+
+
+  /**
+   * @param string $countryCode
+   * @param string $ulnNumber
+   * @return int
+   */
+  public function sqlQueryAnimalIdByUlnCountryCodeAndNumber($countryCode, $ulnNumber)
+  {
+    $sql = "SELECT id, name FROM animal WHERE uln_country_code = '".$countryCode."' AND uln_number = '".$ulnNumber."'";
+    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+    if(count($results) == 1) {
+      return $results[0]['id'];
+
+    } elseif(count($results) == 0) {
+      return null;
+
+    } else {
+      //in case of duplicate uln, use the imported animal
+      foreach ($results as $result) {
+        if($result['name'] != null) {
+          return $result['id'];
+        }
+      }
+      //If none of the animals are imported, just take the first animal
+      return $results[0]['id'];
+    }
+  }
+  
 
   /**
    * @param $animalType
@@ -266,8 +301,8 @@ class AnimalRepository extends BaseRepository
     $sql = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number as work_number,
                    a.date_of_birth, l.ubn, a.is_alive FROM animal a 
                    LEFT JOIN location l ON l.id = a.location_id
-                   WHERE type = 'Ram'".$extraFilter;
-    $animalsData = $this->getManager()->getConnection()->query($sql)->fetchAll();
+                   WHERE type = 'Ram'";
+    $animalsData = $this->getManager()->getConnection()->query($sql.$extraFilter)->fetchAll();
 
     $results = [];
     //Resetting the values in another array to include null checks
@@ -286,7 +321,7 @@ class AnimalRepository extends BaseRepository
     
     return $results;
   }
-  
+
 
   /**
    * @param Location $location
@@ -310,6 +345,110 @@ class AnimalRepository extends BaseRepository
 
     return $animals;
   }
+
+
+  /**
+   * Returns historic animals INCLUDING animals on current location
+   *
+   * @param Location $location
+   * @param string $replacementString
+   * @return array
+   */
+  public function getHistoricLiveStock(Location $location, $replacementString = '')
+  {
+    $results = [];
+
+    // Null check
+    if(!($location instanceof Location)) { return $results; }
+    elseif (!is_int($location->getId())) { return $results; }
+
+    $idCurrentLocation = $location->getId();
+
+    $sqlNormalLivestock = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
+                            a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn, a.id,
+                            true as is_public, true as current_livestock
+                          FROM animal a
+                            INNER JOIN location l ON a.location_id = l.id
+                          WHERE a.is_alive = TRUE AND (a.transfer_state ISNULL OR a.transfer_state <> 'TRANSFERRING') 
+                            AND a.location_id = ".$idCurrentLocation;
+    $retrievedNormalLivestock = $this->getConnection()->query($sqlNormalLivestock)->fetchAll();
+
+    $sqlHistoricAnimals = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
+              a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn, a.id,
+              c.is_reveal_historic_animals as is_public, false as current_livestock
+            FROM animal_residence r
+              INNER JOIN animal a ON r.animal_id = a.id
+              LEFT JOIN location l ON a.location_id = l.id
+              LEFT JOIN company c ON c.id = l.company_id
+            WHERE r.location_id = ".$idCurrentLocation.
+            " AND (a.location_id <> ".$idCurrentLocation." OR a.location_id ISNULL)";
+    $retrievedHistoricAnimals = $this->getConnection()->query($sqlHistoricAnimals)->fetchAll();
+
+    $currentUbn = $location->getUbn();
+    $animalIdsCurrentLivestock = [];
+
+    //It is important to FIRST process the normalLivestock BEFORE the historicAnimals
+    foreach ([$retrievedNormalLivestock, $retrievedHistoricAnimals] as $retrievedAnimalData) {
+      foreach ($retrievedAnimalData as $record) {
+        $isCurrentLivestock = $record['current_livestock'];
+        $animalId = $record['id'];
+
+        if($isCurrentLivestock) {
+          $animalIdsCurrentLivestock[$animalId] = $animalId;
+        } elseif(array_key_exists($animalId, $animalIdsCurrentLivestock)) {
+          continue;
+          /*
+           * This prevents duplicates with currentLivestock,
+           * and prevents overwriting hardcoded is_public = true output for current livestock animals.
+           */
+        }
+
+        $ubnOfAnimal = $record['ubn'];
+        $isAlive = $record['is_alive'];
+        $isHistoricAnimal = $ubnOfAnimal != $currentUbn || !$isAlive;
+        $isPublicInDb = $record['is_public'];
+        $isPublic = $isPublicInDb === true || $isPublicInDb === null ? true : false;
+
+        $results[] = [
+            JsonInputConstant::ULN_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['uln_country_code'], $replacementString),
+            JsonInputConstant::ULN_NUMBER => Utils::fillNullOrEmptyString($record['uln_number'], $replacementString),
+            JsonInputConstant::PEDIGREE_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['pedigree_country_code'], $replacementString),
+            JsonInputConstant::PEDIGREE_NUMBER => Utils::fillNullOrEmptyString($record['pedigree_number'], $replacementString),
+            JsonInputConstant::WORK_NUMBER => Utils::fillNullOrEmptyString($record['animal_order_number'], $replacementString),
+            JsonInputConstant::GENDER => Utils::fillNullOrEmptyString($record['gender'], $replacementString),
+            JsonInputConstant::DATE_OF_BIRTH => Utils::fillNullOrEmptyString($record['date_of_birth'], $replacementString),
+            JsonInputConstant::DATE_OF_DEATH => Utils::fillNullOrEmptyString($record['date_of_death'], $replacementString),
+            JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($isAlive, $replacementString),
+            JsonInputConstant::UBN => Utils::fillNullOrEmptyString($ubnOfAnimal, $replacementString),
+            JsonInputConstant::IS_HISTORIC_ANIMAL => Utils::fillNullOrEmptyString($isHistoricAnimal, $replacementString),
+            JsonInputConstant::IS_PUBLIC => Utils::fillNullOrEmptyString($isPublic, $replacementString),
+        ];
+      }
+    }
+
+    return $results;
+  }
+
+
+  /**
+   * @param int $locationId
+   * @return array
+   */
+  public function getLiveStockBySql($locationId)
+  {
+      $sql = " SELECT DISTINCT a.id, a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number as work_number,
+                      a.gender, a.date_of_birth, a.is_alive, a.is_departed_animal, c.last_weight as weight, c.weight_measurement_date
+              FROM animal a
+              LEFT JOIN animal_cache c ON a.id = c.animal_id
+              WHERE a.is_alive = TRUE AND (a.transfer_state ISNULL OR a.transfer_state <> 'TRANSFERRING') AND a.location_id = ".$locationId;
+
+    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+    $results = NullChecker::replaceNullInNestedArray($results);
+
+    return $results;
+  }
+  
 
   /**
    * @param Client $client
@@ -505,7 +644,7 @@ class AnimalRepository extends BaseRepository
 
     $array = new ArrayCollection();
     foreach ($results as $result) {
-      $array->set($result['name'], $result['id']);
+      $array->set($result['name'], intval($result['id']));
     }
 
     return $array;
@@ -533,12 +672,18 @@ class AnimalRepository extends BaseRepository
    * @param  $measurementDateString
    * @return bool|null
    */
-  public function isDateOfBirth($animalId, $measurementDateString)
+  public function isWithin3DaysAfterDateOfBirth($animalId, $measurementDateString)
   {
     if (TimeUtil::isFormatYYYYMMDD($measurementDateString)) {
       $sql = "SELECT DATE(date_of_birth) as date_of_birth FROM animal WHERE id = " . intval($animalId);
       $result = $this->getManager()->getConnection()->query($sql)->fetch();
-      if ($result['date_of_birth'] == $measurementDateString) {
+      
+      $dateOfBirth = new \DateTime($result['date_of_birth']);
+      $measurementDate = new \DateTime($measurementDateString);
+      $dateOfBirthPlus3Days = clone $dateOfBirth;
+      $dateOfBirthPlus3Days->add(new \DateInterval('P3D'));
+
+      if ($dateOfBirth <= $measurementDate && $measurementDate <= $dateOfBirthPlus3Days) {
         return true;
       } else {
         return false;
@@ -592,14 +737,298 @@ class AnimalRepository extends BaseRepository
     } else {
       $ulnFormat = "uln_country_code,uln_number";
     }
-    $sql = "SELECT CONCAT(".$ulnFormat.") as uln, id FROM animal";
+    $sql = "SELECT CONCAT(".$ulnFormat.") as uln, id, type FROM animal";
     $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
     $array = new ArrayCollection();
     foreach ($results as $result) {
-      $array->set($result['uln'], $result['id']);
+      if($array->containsKey($result['uln'])) {
+        if($result['type'] != 'Neuter') {
+          $array->set($result['uln'], $result['id']);
+        }
+      } else {
+        $array->set($result['uln'], $result['id']);
+      }
     }
 
     return $array;
+  }
+
+
+  /**
+   * @param Animal $animal
+   * @param string $replacementString
+   * @return array
+   */
+  public function getOffspringLogDataBySql($animal, $replacementString)
+  {
+    $results = [];
+
+    if ($animal instanceof Ewe) {
+      $filter = "parent_mother_id = " . $animal->getId();
+    } elseif ($animal instanceof Ram) {
+      $filter = "parent_father_id = " . $animal->getId();
+    } else {
+      return $results;
+    }
+
+    $sql = "SELECT uln_country_code, uln_number, pedigree_country_code, pedigree_number, gender, date_of_birth FROM animal
+            WHERE " . $filter;
+    $retrievedData = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+    foreach ($retrievedData as $record) {
+      $results[] = [
+          JsonInputConstant::ULN_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['uln_country_code'], $replacementString),
+          JsonInputConstant::ULN_NUMBER => Utils::fillNullOrEmptyString($record['uln_number'], $replacementString),
+          JsonInputConstant::PEDIGREE_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['pedigree_country_code'], $replacementString),
+          JsonInputConstant::PEDIGREE_NUMBER => Utils::fillNullOrEmptyString($record['pedigree_number'], $replacementString),
+          JsonInputConstant::GENDER => Utils::fillNullOrEmptyString($record['gender'], $replacementString),
+          JsonInputConstant::DATE_OF_BIRTH => Utils::fillNullOrEmptyString($record['date_of_birth'], $replacementString),
+      ];
+    }
+    return $results;
+  }
+
+
+  /**
+   * @param $animalId
+   * @return int
+   */
+  public function getOffspringCount($animalId)
+  {
+    if(!is_int($animalId)) { return 0; }
+    $sql = "SELECT COUNT(*) FROM animal a WHERE parent_father_id = ".$animalId." OR parent_mother_id = ".$animalId;
+    return $this->getManager()->getConnection()->query($sql)->fetch()['count'];
+  }
+
+
+  /**
+   * @param OutputInterface|null $output
+   * @param CommandUtil|null $cmdUtil
+   */
+  public function deleteTestAnimal(OutputInterface $output = null, CommandUtil $cmdUtil = null)
+  {
+    $sql = "SELECT a.id FROM animal a
+            INNER JOIN breed_values_set b ON a.id = b.animal_id
+            WHERE a.uln_country_code = 'XD'";
+    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+    if(count($results) > 0) {
+
+      if($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt(count($results) + 1, 1, 'Deleting breedValuesSets of testAnimals'); }
+      foreach ($results as $result) {
+        $animalId = intval($result['id']);
+        $sql = "DELETE FROM breed_values_set WHERE animal_id = ".$animalId;
+        $this->getManager()->getConnection()->exec($sql);
+        if($cmdUtil != null) { $cmdUtil->advanceProgressBar(1, 'Deleting breedValuesSets of testAnimals'); }
+      }
+      if($cmdUtil != null) {
+        $cmdUtil->setProgressBarMessage('BreedValuesSets of testAnimals deleted');
+        $cmdUtil->setEndTimeAndPrintFinalOverview();
+      }
+    }
+
+    if($output != null) { $output->writeln('Find all testAnimals...'); }
+    
+    /** @var AnimalRepository $animalRepository */
+    $animalRepository = $this->getManager()->getRepository(Animal::class);
+    $testAnimals = $animalRepository->findBy(['ulnCountryCode' => 'XD']);
+
+    $count = count($testAnimals);
+    if($count == 0) {
+      if($output != null) {
+        $output->writeln('No testAnimals in Database');
+      }
+    } else {
+      $counter = 0;
+      if($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt($count + 1, 1, 'Deleting testAnimals'); }
+      foreach ($testAnimals as $testAnimal) {
+        $this->getManager()->remove($testAnimal);
+        if($cmdUtil != null) {
+          $cmdUtil->advanceProgressBar(1);
+        }
+        $counter++;
+        if($counter%self::BATCH == 0) { $this->getManager()->flush(); }
+      }
+      $this->getManager()->flush();
+      if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
+    }
+  }
+
+
+  /**
+   * @param string $ulnNumber
+   * @param array $usedUlnNumbers
+   * @return null|string
+   */
+  public function bumpUlnNumberWithVerification($ulnNumber, $usedUlnNumbers)
+  {
+      $newUlnNumber = StringUtil::bumpUlnNumber($ulnNumber);
+      if($newUlnNumber == $ulnNumber) { return null; }
+      if(array_key_exists($ulnNumber, $usedUlnNumbers)) { return null; }
+      return $newUlnNumber;
+  }
+
+
+  /**
+   * This information is necessary to show the most up to date information on the PedigreeCertificates
+   *
+   * @return int
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function updateAllLocationOfBirths()
+  {
+    $ubnsUpdated = 0;
+
+    /*
+     * 1. Set current active locations on missing locationOfBirth where possible
+     * 2. Set deactivated locations on missing locationOfBirth where possible
+     */
+    foreach ([TRUE, FALSE] as $isActive) {
+      $sql = "SELECT a.ubn_of_birth, l.id as location_id, l.is_active FROM animal a
+              LEFT JOIN location l ON a.ubn_of_birth = l.ubn
+            WHERE a.location_of_birth_id ISNULL AND l.id NOTNULL AND a.ubn_of_birth NOTNULL AND l.is_active = ".$isActive."
+            GROUP BY ubn_of_birth, l.id, l.is_active";
+      $results = $this->getConnection()->query($sql)->fetchAll();
+
+      foreach ($results as $result) {
+        $ubnOfBirth = $result['ubn_of_birth'];
+        $locationId = $result['location_id'];
+        $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'
+                AND location_of_birth_id <> ".$locationId;
+        $this->getConnection()->exec($sql);
+        $ubnsUpdated++;
+      }
+    }
+
+    /*
+     * 3. Do an extra check to see if any deactivated locations can be replaced by active locations
+     */
+    $sql = "SELECT a.ubn_of_birth, l.id as location_id FROM animal a
+              LEFT JOIN location l ON a.ubn_of_birth = l.ubn
+              LEFT JOIN location n ON n.id = a.location_of_birth_id
+            WHERE a.location_of_birth_id ISNULL AND l.id NOTNULL AND a.ubn_of_birth NOTNULL AND l.is_active = TRUE
+              AND n.is_active = FALSE
+            GROUP BY ubn_of_birth, l.id";
+    $results = $this->getConnection()->query($sql)->fetchAll();
+
+    foreach ($results as $result) {
+      $ubnOfBirth = $result['ubn_of_birth'];
+      $locationId = $result['location_id'];
+      $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'
+              AND location_of_birth_id <> ".$locationId;
+      $this->getConnection()->exec($sql);
+      $ubnsUpdated++;
+    }
+
+    return $ubnsUpdated;
+  }
+
+
+  /**
+   * This information is necessary to show the most up to date information on the PedigreeCertificates
+   *
+   * @param Location $locationOfBirth
+   */
+  public function updateLocationOfBirth($locationOfBirth)
+  {
+    if($locationOfBirth instanceof Location) {
+      $ubn = $locationOfBirth->getUbn();
+      $id = $locationOfBirth->getId();
+      if($locationOfBirth->getIsActive() && ctype_digit($ubn) && is_int($id)) {
+        $sql = "UPDATE animal SET location_of_birth_id = ".$id." WHERE ubn_of_birth = '".$ubn."'";
+        $this->getConnection()->exec($sql);
+      }
+    }
+  }
+
+
+  /**
+   * This information is necessary to show the most up to date information on the PedigreeCertificates
+   *
+   * @param Company $company
+   */
+  public function updateLocationOfBirthByCompany(Company $company)
+  {
+    if($company instanceof Company) {
+      /** @var Location $location */
+      foreach($company->getLocations() as $location) {
+        $this->updateLocationOfBirth($location);
+      }
+    }
+  }
+
+
+  /**
+   * @return int
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function fixMissingAnimalTableExtentions()
+  {
+    $sql = "SELECT a.id, 'Ewe' as type FROM animal a
+            LEFT JOIN ewe e ON a.id = e.id
+            WHERE a.type = 'Ewe' AND e.id ISNULL
+            UNION
+            SELECT a.id, 'Ram' as type FROM animal a
+              LEFT JOIN ram r ON a.id = r.id
+            WHERE a.type = 'Ram' AND r.id ISNULL
+            UNION
+            SELECT a.id, 'Neuter' as type FROM animal a
+              LEFT JOIN neuter n ON a.id = n.id
+            WHERE a.type = 'Neuter' AND n.id ISNULL";
+    $results = $this->getConnection()->query($sql)->fetchAll();
+
+    $totalCount = count($results);
+
+    if($totalCount > 0) {
+
+      $eweAnimalIds = [];
+      $ramAnimalIds = [];
+      $neuterAnimalIds = [];
+      foreach ($results as $result) {
+        $animalId = $result['id'];
+        $type = $result['type'];
+
+        switch ($type) {
+          case 'Ewe': $eweAnimalIds[$animalId] = $animalId; break;
+          case 'Ram': $ramAnimalIds[$animalId] = $animalId; break;
+          case 'Neuter': $neuterAnimalIds[$animalId] = $animalId; break;
+        }
+      }
+      $this->insertAnimalTableExtentions($eweAnimalIds, 'Ewe');
+      $this->insertAnimalTableExtentions($ramAnimalIds, 'Ram');
+      $this->insertAnimalTableExtentions($neuterAnimalIds, 'Neuter');
+    }
+
+    return $totalCount;
+  }
+
+  
+  private function insertAnimalTableExtentions($animalIds, $type)
+  {
+    $batchSize = 1000;
+    $tableName = strtolower($type);
+
+    $counter = 0;
+    $totalCount = count($animalIds);
+    $valuesString = '';
+    $animalIds = array_keys($animalIds);
+    foreach ($animalIds as $animalId) {
+
+      $valuesString = $valuesString."(" . $animalId . ", '".$type."')";
+      $counter++;
+
+      if($counter%$batchSize == 0) {
+        $sql = "INSERT INTO ".$tableName." VALUES ".$valuesString;
+        $this->getConnection()->exec($sql);
+        $valuesString = '';
+
+      } elseif($counter != $totalCount) {
+        $valuesString = $valuesString.',';
+      }
+    }
+    if($valuesString != '') {
+      $sql = "INSERT INTO ".$tableName." VALUES ".$valuesString;
+      $this->getConnection()->exec($sql);
+    }
   }
 }

@@ -9,8 +9,11 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareArrivalRepository;
+use AppBundle\Entity\DeclareArrivalResponseRepository;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareImportResponseRepository;
 use AppBundle\Entity\LocationHealthInspection;
 use AppBundle\Entity\Message;
 use AppBundle\Enumerator\MessageType;
@@ -22,6 +25,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\HealthChecker;
 use AppBundle\Util\LocationHealthUpdater;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\TagValidator;
 use AppBundle\Validation\UbnValidator;
@@ -194,7 +198,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
         if($isImportAnimal) { //DeclareImport
 
             //Validate if ulnNumber matches that of an unassigned Tag in the tag collection of the client
-            $tagValidator = new TagValidator($this->getDoctrine()->getManager(), $client, $content);
+            $tagValidator = new TagValidator($this->getDoctrine()->getManager(), $client, $location, $content);
             if($tagValidator->getIsTagCollectionEmpty() || !$tagValidator->getIsTagValid() || $tagValidator->getIsInputEmpty()) {
                 return $tagValidator->createImportJsonErrorResponse();
             }
@@ -244,7 +248,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
         $this->persist($messageObject);
 
         // Create Message for Receiving Owner
-        if(!$isImportAnimal && !$departLocation) {
+        if(!$isImportAnimal && $departLocation) {
             $uln = $messageObject->getUlnCountryCode() . $messageObject->getUlnNumber();
 
             $message = new Message();
@@ -384,9 +388,11 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
   {
     $location = $this->getSelectedLocation($request);
 
+    /** @var DeclareArrivalResponseRepository $repository */  
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
     $declareArrivals = $repository->getArrivalsWithLastErrorResponses($location);
 
+    /** @var DeclareImportResponseRepository $repository */  
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_RESPONSE_REPOSITORY);
     $declareImports = $repository->getImportsWithLastErrorResponses($location);
 
@@ -421,10 +427,12 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
   public function getArrivalHistory(Request $request)
   {
     $location = $this->getSelectedLocation($request);
-
+      
+    /** @var DeclareArrivalResponseRepository $repository */  
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
     $declareArrivals = $repository->getArrivalsWithLastHistoryResponses($location);
 
+    /** @var DeclareImportResponseRepository $repository */  
     $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_RESPONSE_REPOSITORY);
     $declareImports = $repository->getImportsWithLastHistoryResponses($location);
 
@@ -496,7 +504,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
 
     if($pedigreeNumber != null) {
-      $pedigreeNumber = strtoupper($pedigreeNumber);
+      $pedigreeNumber = StringUtil::capitalizePedigreeNumber($pedigreeNumber);
       $animalArray[JsonInputConstant::PEDIGREE_NUMBER] = $pedigreeNumber;
       $content->set(Constant::ANIMAL_NAMESPACE, $animalArray);
     }

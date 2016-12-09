@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html>
+
+{% block html %}<html lang="nl">{% endblock %}
     <head>
         <meta charset="UTF-8" />
         <title>{% block title %}NSFO Online{% endblock %}</title>
+        {% block bootstrap %}{% endblock %}
         {% block stylesheets %}{% endblock %}
         <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
     </head>

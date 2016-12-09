@@ -9,6 +9,7 @@ use AppBundle\Entity\LocationHealthQueue;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Util\NumberUtil;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -67,15 +68,21 @@ class Utils
     }
     
 
-    public static function getUlnFromString($ulnString)
+    public static function getUlnFromString($ulnString, $hasSpaceBetweenCountryCodeAndNumber = false)
     {
         //Verify format first
-        if(!Validator::verifyUlnFormat($ulnString)) {
+        if(!Validator::verifyUlnFormat($ulnString, $hasSpaceBetweenCountryCodeAndNumber)) {
             return null;
         }
 
-        $countryCode = mb_substr($ulnString, 0, 2, 'utf-8');
-        $ulnNumber = mb_substr($ulnString, 2, strlen($ulnString));
+        if($hasSpaceBetweenCountryCodeAndNumber) {
+            $parts = explode(' ', $ulnString);
+            $countryCode = $parts[0];
+            $ulnNumber = $parts[1];
+        } else {
+            $countryCode = mb_substr($ulnString, 0, 2, 'utf-8');
+            $ulnNumber = mb_substr($ulnString, 2, strlen($ulnString));
+        }
 
         return array(Constant::ULN_COUNTRY_CODE_NAMESPACE => $countryCode, Constant::ULN_NUMBER_NAMESPACE => $ulnNumber);
     }
@@ -109,6 +116,17 @@ class Utils
         $adultAgeLimit = 1; //one year or older
         return self::getDateLimitForAge($adultAgeLimit, $accurateOnTheSecond);
     }
+
+
+    /**
+     * @param bool $accurateOnTheSecond if false it only looks at the day and not the hours, minutes and seconds
+     * @return string
+     */
+    public static function getAdultDateStringOfBirthLimit($accurateOnTheSecond = false)
+    {
+        return self::getAdultDateOfBirthLimit($accurateOnTheSecond)->format('Y-m-d H:i:s');
+    }
+    
 
     /**
      * Generate a random string, using a cryptographically secure
@@ -474,6 +492,23 @@ class Utils
         }
     }
 
+    
+    /**
+     * Replace zeroes with replacement text.
+     *
+     * @param string|null $value
+     * @return string
+     */
+    public static function fillZeroFloat($value, $replacementText = "-")
+    {
+        if(NumberUtil::isFloatZero($value) || $value === null) {
+            return $replacementText;
+        } else {
+            return $value;
+        }
+    }
+    
+
     /**
      * @param string $key
      * @param array $array
@@ -616,7 +651,7 @@ class Utils
      */
     public static function separateLettersAndNumbersOfString($string)
     {
-        return preg_split("/(,?\s+)|((?<=[a-z])(?=\d))|((?<=\d)(?=[a-z]))/i", $string);
+        return is_string($string) ? preg_split("/(,?\s+)|((?<=[a-z])(?=\d))|((?<=\d)(?=[a-z]))/i", $string) : null;
     }
 
 

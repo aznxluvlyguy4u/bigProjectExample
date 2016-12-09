@@ -5,6 +5,7 @@ namespace AppBundle\Validation;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
@@ -14,6 +15,7 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Validator\Constraints\IsNull;
 
 class UlnValidator
 {
@@ -26,11 +28,17 @@ class UlnValidator
     const MISSING_ANIMAL_CODE = 428;
     const MISSING_ANIMAL_MESSAGE = 'ANIMAL IS NOT REGISTERED WITH NSFO';
 
+    const MAX_ANIMALS = 50;
+    const ERROR_MESSAGE_MAX_ANIMALS_EXCEEDED = 'NO MORE THAN 50 ANIMALS CAN BE SELECTED AT A TIME';
+
     /** @var boolean */
     private $isUlnSetValid;
 
     /** @var boolean */
     private $isInputMissing;
+
+    /** @var boolean */
+    private $isAnimalCountWithinLimit;
 
     /** @var boolean */
     private $isInDatabase;
@@ -50,6 +58,12 @@ class UlnValidator
     /** @var ObjectManager */
     private $manager;
 
+    /** @var array */
+    private $ulns;
+
+    /** @var boolean */
+    private $allowAllAnimals;
+
     /**
      * UbnValidator constructor.
      * @param ObjectManager $manager
@@ -62,16 +76,27 @@ class UlnValidator
     {
         $this->manager = $manager;
 
+        $this->ulns = [];
+        $this->allowAllAnimals = false;
         if($client != null) {
             /** @var LocationRepository $locationRepository */
             $locationRepository = $manager->getRepository(Location::class);
             $this->locations = $locationRepository->findAllLocationsOfClient($client);
+            $this->fillUlnSearchArrayOfHistoricAnimalsAllLocations();
+        } elseif ($location != null) {
+            $this->locations = new ArrayCollection();
+            $this->locations->add($location);
+            $this->fillUlnSearchArrayOfHistoricAnimalsAllLocations();
+        } else {
+            //If both client and location are null
+            $this->allowAllAnimals = true;
         }
 
         $animalArray = null;
         $this->isInputMissing = true;
         $this->isUlnSetValid = false;
         $this->isInDatabase = true;
+        $this->isAnimalCountWithinLimit = true;
         $this->numberOfAnimals = 0;
 
         if($multipleAnimals == false) {
@@ -98,14 +123,18 @@ class UlnValidator
 
                     $this->isInputMissing = false;
                     $this->isUlnSetValid = true;
+                    $this->numberOfAnimals = count($animalArrays);
 
-                    foreach ($animalArrays as $animalArray) {
-                        $isUlnValid = $this->validateUlnInput($animalArray, $client, $location);
-
-                        if(!$isUlnValid) {
-                            $this->isUlnSetValid = false;
+                    if($this->numberOfAnimals > self::MAX_ANIMALS) {
+                        $this->isAnimalCountWithinLimit = false;
+                        $this->isUlnSetValid = false;
+                    } else {
+                        foreach ($animalArrays as $animalArray) {
+                            $isUlnValid = $this->validateUlnInput($animalArray, $client, $location);
+                            if(!$isUlnValid) {
+                                $this->isUlnSetValid = false;
+                            }
                         }
-                        $this->numberOfAnimals++;
                     }
                 }
             }
@@ -117,6 +146,32 @@ class UlnValidator
 
     }
 
+
+    private function fillUlnSearchArrayOfHistoricAnimalsAllLocations()
+    {
+        /** @var Location $location */
+        foreach ($this->locations as $location) {
+            $sql = "SELECT CONCAT(a.uln_country_code, a.uln_number) as uln
+            FROM animal a
+              INNER JOIN location l ON a.location_id = l.id
+            WHERE a.location_id = ".$location->getId()."
+            UNION
+            SELECT CONCAT(a.uln_country_code, a.uln_number) as uln
+            FROM animal_residence r
+              INNER JOIN animal a ON r.animal_id = a.id
+              LEFT JOIN location l ON a.location_id = l.id
+              LEFT JOIN company c ON c.id = l.company_id
+            WHERE r.location_id = ".$location->getId()." AND (c.is_reveal_historic_animals = TRUE OR a.location_id ISNULL)";
+            $retrievedAnimalData = $this->manager->getConnection()->query($sql)->fetchAll();
+
+            foreach ($retrievedAnimalData as $animalData) {
+                $uln = $animalData['uln'];
+                $this->ulns[$uln] = $uln;
+            }
+        }
+    }
+
+
     /**
      * @param array $animalArray
      * @param Client $client
@@ -125,12 +180,12 @@ class UlnValidator
      */
     private function validateUlnInput($animalArray, $client, $location)
     {
-        $ulnExists = array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalArray) &&
-            array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalArray);
+        $ulnExists = array_key_exists(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray) &&
+            array_key_exists(JsonInputConstant::ULN_NUMBER, $animalArray);
 
         if ($ulnExists) {
-            $numberToCheck = $animalArray[Constant::ULN_NUMBER_NAMESPACE];
-            $countryCodeToCheck = $animalArray[Constant::ULN_COUNTRY_CODE_NAMESPACE];
+            $numberToCheck = $animalArray[JsonInputConstant::ULN_NUMBER];
+            $countryCodeToCheck = $animalArray[JsonInputConstant::ULN_COUNTRY_CODE];
             $this->ulnCountryCode = $countryCodeToCheck;
             $this->ulnNumber = $numberToCheck;
         } else {
@@ -138,34 +193,37 @@ class UlnValidator
             return false;
         }
 
-        $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq('ulnCountryCode', $countryCodeToCheck))
-            ->andWhere(Criteria::expr()->eq('ulnNumber', $numberToCheck))
-            ->andWhere(Criteria::expr()->eq('location', $location ));
+        if(!is_string($countryCodeToCheck) || !is_string($numberToCheck)) { return false; }
 
-        $animal = $this->manager->getRepository(Animal::class)
-            ->matching($criteria)->first();
+        if($this->allowAllAnimals) {
+            //If all animals are allowed only check if the animal is in the database or not
+            $criteria = Criteria::create()
+                ->where(Criteria::expr()->eq('ulnCountryCode', $countryCodeToCheck))
+                ->andWhere(Criteria::expr()->eq('ulnNumber', $numberToCheck));
 
-        //First verify if animal actually exists
-        if($animal == null) {
-            $this->isInDatabase = false;
-            return false;
-        }
-
-        if($client == null) { //Get any animals regardless of client
-            return true;
-
-        } else { //Get only animals owned by client
-
-            /** @var Location $location */
-            foreach ($this->locations as $location) {
-                /** @var Animal $animal */
-                if($animal->getLocation() == $location) {
-                    return true;
-                }
+        } else {
+            //First check if the animals is a historic animal
+            if(array_key_exists($countryCodeToCheck.$numberToCheck, $this->ulns)) {
+                return true;
             }
 
+            $criteria = Criteria::create()
+                ->where(Criteria::expr()->eq('ulnCountryCode', $countryCodeToCheck))
+                ->andWhere(Criteria::expr()->eq('ulnNumber', $numberToCheck))
+                ->andWhere(Criteria::expr()->eq('location', $location ));
+        }
+
+        $results = $this->manager->getRepository(Animal::class)
+            ->matching($criteria);
+
+        //First verify if animal actually exists
+        if(count($results) == 0) {
+            $this->isInDatabase = false;
             return false;
+
+        } else {
+            //If animal exists, get any animals regardless of client
+            return true;
         }
     }
 
@@ -178,7 +236,10 @@ class UlnValidator
     {
         $uln = null;
 
-        if($this->isUlnSetValid) {
+        if(!$this->isAnimalCountWithinLimit) {
+            $code = self::ERROR_CODE;
+            $message = self::ERROR_MESSAGE_MAX_ANIMALS_EXCEEDED;
+        } else if($this->isUlnSetValid) {
             $code = self::VALID_CODE;
             $message = self::VALID_MESSAGE;
         } else {

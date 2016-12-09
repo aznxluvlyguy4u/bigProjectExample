@@ -57,19 +57,15 @@ class TagRepository extends BaseRepository {
   /**
    * @param Client $client
    * @param string $tagStatus
-   * @return ArrayCollection
+   * @return array
    */
-  public function findTags(Client $client, $tagStatus = TagStateType::UNASSIGNED)
+  public function findTags(Client $client, Location $location, $tagStatus = TagStateType::UNASSIGNED)
   {
-    $tags = new ArrayCollection();
+    if($client == null || $location == null) { return []; }
 
-    foreach($client->getTags() as $tag){
-      if($tag->getTagStatus() == $tagStatus) {
-        $tags->add($tag);
-      }
-    }
-
-    return $tags;
+    $sql = "SELECT tag_status, animal_order_number, order_date, uln_country_code, uln_number 
+            FROM tag WHERE owner_id = ".$client->getId()." AND location_id = ".$location->getId()."  AND tag_status = '".$tagStatus."'";
+    return $this->getManager()->getConnection()->query($sql)->fetchAll();
   }
 
   /**
@@ -101,18 +97,18 @@ class TagRepository extends BaseRepository {
   /**
    * @param Client $client
    * @param string $ulnNumber
+   * @param Location $location
    * @return bool
    */
-  public function isAnUnassignedTag(Client $client, $ulnNumber)
+  public function isAnUnassignedTag(Client $client, Location $location, $ulnNumber)
   {
-    foreach($client->getTags() as $tag){
-      if($tag->getTagStatus() == TagStateType::UNASSIGNED
-      && $tag->getUlnNumber() == $ulnNumber) {
-        return true;
-      }
-    }
+    if($client == null || $location == null || $ulnNumber == null) { return false; }
+    if(!is_int($client->getId()) || !is_int($location->getId()) ) { return false; }
 
-    return false;
+    $tagStatus = TagStateType::UNASSIGNED;
+    $sql = "SELECT COUNT(*)
+            FROM tag WHERE owner_id = ".$client->getId()." AND location_id = ".$location->getId()."  AND tag_status = '".$tagStatus."'  AND uln_number = '".$ulnNumber."'";
+    return $this->getManager()->getConnection()->query($sql)->fetch()['count'] > 0 ? true : false;
   }
 
   /**
@@ -125,5 +121,20 @@ class TagRepository extends BaseRepository {
        return $this->findOneByUln($client, $animal->getUlnCountryCode(), $animal->getUlnNumber());
   }
 
+
+  /**
+   * @param Client $client
+   * @param Location $location
+   * @return int
+   */
+  public function getUnassignedTagCount(Client $client, Location $location) {
+    if($client == null || $location == null) { return 0; }
+    if(!is_int($client->getId()) || !is_int($location->getId()) ) { return false; }
+
+    $tagStatus = TagStateType::UNASSIGNED;
+    $sql = "SELECT COUNT(*)
+            FROM tag WHERE owner_id = ".$client->getId()." AND location_id = ".$location->getId()."  AND tag_status = '".$tagStatus."'";
+    return $this->getManager()->getConnection()->query($sql)->fetch()['count'];
+  }
 
 }

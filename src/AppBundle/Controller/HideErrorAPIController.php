@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\DeclareNsfoBase;
+use AppBundle\Util\StringUtil;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -48,17 +49,13 @@ class HideErrorAPIController extends APIController implements HideErrorAPIContro
     public function updateError(Request $request) {
         $content = $this->getContentAsArray($request);
         $requestId = $content->get("request_id");
+        $isRemovedByUserBoolean = $content['is_removed_by_user'];
 
         if($requestId != null) {
 
-            $responses = $this->getDoctrine()->getRepository(Constant::DECLARE_BASE_RESPONSE_REPOSITORY)->findBy(array("requestId"=>$requestId));
-
-            foreach($responses as $response) {
-                $response->setIsRemovedByUser($content['is_removed_by_user']);
-
-                //No "HideMessage" declaration message is created-and-persisted. A value is just updated in an existing declaration.
-                $this->persist($response);
-            }
+            $sql = "UPDATE declare_base SET hide_failed_message = ".StringUtil::getBooleanAsString($isRemovedByUserBoolean)."
+            WHERE request_id = '".$requestId."'";
+            $this->getDoctrine()->getManager()->getConnection()->exec($sql);
 
             return new JsonResponse(array("code"=>200, "message"=>"saved"), 200);
         }

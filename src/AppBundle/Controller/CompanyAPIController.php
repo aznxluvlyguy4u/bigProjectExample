@@ -4,6 +4,8 @@ namespace AppBundle\Controller;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\CompanyAddress;
@@ -239,6 +241,12 @@ class CompanyAPIController extends APIController
             $password = $this->persistNewPassword($user);
             $this->emailNewPasswordToPerson($user, $password, false, true);
         }
+
+        //Update all LocationOfBirths of Animals, for locations belonging to this company
+        //This information is necessary to show the most up to date information on the PedigreeCertificates
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->getDoctrine()->getRepository(Animal::class);
+        $animalRepository->updateLocationOfBirthByCompany($company);
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
     }
@@ -585,6 +593,11 @@ class CompanyAPIController extends APIController
             $password = $this->persistNewPassword($user);
             $this->emailNewPasswordToPerson($user, $password, false, true);
         }
+
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->getDoctrine()->getRepository(Animal::class);
+        $animalRepository->updateLocationOfBirthByCompany($company);
+
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
     }
 
