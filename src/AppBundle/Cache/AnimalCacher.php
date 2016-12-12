@@ -598,7 +598,7 @@ class AnimalCacher
      * @param int $batchSize
      * @throws \Doctrine\DBAL\DBALException
      */
-    public static function updateAllMismatchedNlingData(ObjectManager $em, CommandUtil $cmdUtil = null,
+    public static function updateAllMismatchedNLingData(ObjectManager $em, CommandUtil $cmdUtil = null,
                                                         OutputInterface $output = null, $batchSize = 10000)
     {
         /** @var Connection $conn */
@@ -649,7 +649,72 @@ class AnimalCacher
                 $toUpdateCount = 0;
             }
 
-            if($cmdUtil != null) { $cmdUtil->advanceProgressBar(1, 'n-ling in cache updated|toUpdate: '.$updatedCount.'|'.$toUpdateCount); }
+            if($cmdUtil != null) { $cmdUtil->advanceProgressBar(1, 'n-ling in cache with litter updated|toUpdate: '.$updatedCount.'|'.$toUpdateCount); }
+        }
+
+        if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
+
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param CommandUtil $cmdUtil
+     * @param OutputInterface $output
+     * @param int $batchSize
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function updateNonZeroNLingInCacheWithoutLitter(ObjectManager $em, CommandUtil $cmdUtil = null,
+                                                        OutputInterface $output = null, $batchSize = 10000)
+    {
+        /** @var Connection $conn */
+        $conn = $em->getConnection();
+
+        $sql = "SELECT a.id as animal_id
+                FROM animal a
+                  LEFT JOIN litter l ON a.litter_id = l.id
+                  INNER JOIN animal_cache c ON c.animal_id = a.id
+                WHERE l.id ISNULL AND c.n_ling <> '0-ling'";
+        $results =  $conn->query($sql)->fetchAll();
+
+        $totalCount = count($results);
+
+        if($totalCount == 0) {
+            if($output != null) { $output->writeln('There is no non-zero n-ling data without litters in the cache!'); }
+            return;
+        }
+
+        $toUpdateCount = 0;
+        $updatedCount = 0;
+        $loopCounter = 0;
+
+        $updateString = '';
+
+        if($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt($totalCount, 1); }
+
+        foreach ($results as $result) {
+            $animalId = $result['animal_id'];
+
+            $updateString = $updateString."('0-ling',".$animalId."),";
+            $toUpdateCount++;
+            $loopCounter++;
+
+            //Update fathers
+            if(($totalCount == $loopCounter //at end of loop
+                    || ($toUpdateCount%$batchSize == 0 && $toUpdateCount != 0) //at end of batch
+                ) && $updateString != '') //but never when there is nothing to update
+            {
+                $updateString = rtrim($updateString, ',');
+                $sql = "UPDATE animal_cache as a SET n_ling = c.n_ling
+				FROM (VALUES ".$updateString.") as c(n_ling, animal_id) WHERE c.animal_id = a.animal_id ";
+                $conn->exec($sql);
+                //Reset batch values
+                $updateString = '';
+                $updatedCount += $toUpdateCount;
+                $toUpdateCount = 0;
+            }
+
+            if($cmdUtil != null) { $cmdUtil->advanceProgressBar(1, 'non-zero n-ling without litter in cache updated|toUpdate: '.$updatedCount.'|'.$toUpdateCount); }
         }
 
         if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }

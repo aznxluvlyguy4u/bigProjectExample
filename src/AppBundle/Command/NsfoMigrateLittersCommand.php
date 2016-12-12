@@ -138,7 +138,8 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                 break;
 
             case 6:
-                AnimalCacher::updateAllMismatchedNlingData($em, $this->cmdUtil, $this->output);
+                AnimalCacher::updateAllMismatchedNLingData($em, $this->cmdUtil, $this->output);
+                AnimalCacher::updateNonZeroNLingInCacheWithoutLitter($em, $this->cmdUtil, $this->output);
                 break;
 
             default:
