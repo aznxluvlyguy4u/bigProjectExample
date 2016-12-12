@@ -107,7 +107,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
-            '1: Generate Litters from source file (incl mother, excl children)', "\n",
+            '1: Generate Litters from source file (incl mother, excl children) and update production cache of mother', "\n",
             '2: Match children with existing litters and set father in litter', "\n",
             '3: Find missing father in animal by searching in litter', "\n",
             '4: Generate all litter group ids (uln_orderedCount)', "\n",
@@ -471,6 +471,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $eweCount = 0;
         $skippedCount = 0;
         $updatedCount = 0;
+        $productionCacheUpdatedCount = 0;
 
         $today = new \DateTime('today');
         $todayString = $today->format('Y-m-d');
@@ -483,6 +484,8 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                 /** @var ArrayCollection $littersDataSet */
                 $littersDataSet = $this->litterSets->get($eweId);
                 $litterDates = $littersDataSet->getKeys();
+
+                $areAnyLittersUpdated = false;
 
                 foreach ($litterDates as $litterDateString) {
                     $children = $littersDataSet->get($litterDateString);
@@ -506,6 +509,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                         $this->conn->exec($sql);
 
                         $litterCount++;
+                        $areAnyLittersUpdated = true;
                     } else {
                         //If it already exists, check if values are equal. Otherwise update
                         $values = $this->litterValuesSearchArray[$eweId.self::SEPARATOR.$litterDateString];
@@ -537,10 +541,16 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                             $this->conn->exec($sql);
 
                             $updatedCount++;
+                            $areAnyLittersUpdated = true;
                         }
                     }
 
-                    $this->cmdUtil->advanceProgressBar(1, 'LitterCount inserted|updated|skipped: '.$litterCount.'|'.$updatedCount.'|'.$skippedCount.' -  EweCount: ' . $eweCount . ' |  last Id: ' . $eweId);
+                    if($areAnyLittersUpdated) {
+                        $isCacheUpdated = AnimalCacher::updateProductionString($this->em, $eweId);
+                        if($isCacheUpdated) { $productionCacheUpdatedCount++; }
+                    }
+
+                    $this->cmdUtil->advanceProgressBar(1, 'LitterCount inserted|updated|skipped: '.$litterCount.'|'.$updatedCount.'|'.$skippedCount.' - Ewe Count|lastId: '.$eweCount.'|'.$eweId.' - ProductionCacheUpdated: '.$productionCacheUpdatedCount);
                 }
                 $eweCount++;
             }

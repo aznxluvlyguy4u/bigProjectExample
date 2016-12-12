@@ -576,6 +576,42 @@ class AnimalCacher
 
 
     /**
+     * Returns true if production string in the animal_cache was updated.
+     *
+     * @param ObjectManager $em
+     * @param int $animalId
+     * @return boolean
+     */
+    public static function updateProductionString(ObjectManager $em, $animalId)
+    {
+        /** @var Connection $conn */
+        $conn = $em->getConnection();
+
+        $sql = "SELECT date_of_birth, gender, c.production FROM animal a
+                  LEFT JOIN animal_cache c ON c.animal_id = a.id
+                WHERE a.id = ".$animalId;
+        $result = $conn->query($sql)->fetch();
+        $gender = $result['gender'];
+        $dateOfBirthString = $result['date_of_birth'];
+        $currentProductionString = $result['production'];
+
+        if($currentProductionString == null) {
+            //No animalCache exists that can be updated
+            return false;
+
+        } else {
+            $productionString = self::generateProductionString($em, $animalId, $gender, $dateOfBirthString);
+            if($currentProductionString != $productionString) {
+                $sql = "UPDATE animal_cache SET production = '".$productionString."' WHERE animal_id = ".$animalId;
+                $conn->exec($sql);
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    /**
      * @param ObjectManager $em
      * @param int $animalId
      * @return string
