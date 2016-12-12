@@ -25,6 +25,8 @@ use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
 use \Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class AnimalCacher
 {
@@ -586,6 +588,72 @@ class AnimalCacher
         //Litter in which animal was born
         $litterSize = $litterRepository->getLitterSize($animalId);
         return DisplayUtil::parseNLingString($litterSize);
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param CommandUtil $cmdUtil
+     * @param OutputInterface $output
+     * @param int $batchSize
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function updateAllMismatchedNlingData(ObjectManager $em, CommandUtil $cmdUtil = null,
+                                                        OutputInterface $output = null, $batchSize = 10000)
+    {
+        /** @var Connection $conn */
+        $conn = $em->getConnection();
+        
+        $sql = "SELECT a.id as animal_id, CONCAT(l.born_alive_count + l.stillborn_count,'-ling') as n_ling_new 
+                FROM animal a
+                    INNER JOIN litter l ON a.litter_id = l.id
+                    INNER JOIN animal_cache c ON c.animal_id = a.id
+                WHERE cast(trim(trailing '-ling' FROM c.n_ling) as INT) <> (l.born_alive_count + l.stillborn_count)";
+        $results =  $conn->query($sql)->fetchAll();
+
+        $totalCount = count($results);
+        
+        if($totalCount == 0) {
+            if($output != null) { $output->writeln('There is no mismatched n-ling data for existing litters in the cache!'); }
+            return;
+        }
+
+        $toUpdateCount = 0;
+        $updatedCount = 0;
+        $loopCounter = 0;
+
+        $updateString = '';
+
+        if($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt($totalCount, 1); }
+
+        foreach ($results as $result) {
+            $animalId = $result['animal_id'];
+            $nLingNew = $result['n_ling_new'];
+
+            $updateString = $updateString."('".$nLingNew."',".$animalId."),";
+            $toUpdateCount++;
+            $loopCounter++;
+
+            //Update fathers
+            if(($totalCount == $loopCounter //at end of loop
+                    || ($toUpdateCount%$batchSize == 0 && $toUpdateCount != 0) //at end of batch
+                ) && $updateString != '') //but never when there is nothing to update
+            {
+                $updateString = rtrim($updateString, ',');
+                $sql = "UPDATE animal_cache as a SET n_ling = c.new_n_ling
+				FROM (VALUES ".$updateString.") as c(new_n_ling, animal_id) WHERE c.animal_id = a.animal_id ";
+                $conn->exec($sql);
+                //Reset batch values
+                $updateString = '';
+                $updatedCount += $toUpdateCount;
+                $toUpdateCount = 0;
+            }
+
+            if($cmdUtil != null) { $cmdUtil->advanceProgressBar(1, 'n-ling in cache updated|toUpdate: '.$updatedCount.'|'.$toUpdateCount); }
+        }
+
+        if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
+
     }
 
 

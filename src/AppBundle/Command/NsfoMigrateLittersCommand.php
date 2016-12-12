@@ -2,6 +2,7 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Cache\AnimalCacher;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\EweRepository;
 use AppBundle\Entity\Litter;
@@ -111,6 +112,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
             '3: Find missing father in animal by searching in litter', "\n",
             '4: Generate all litter group ids (uln_orderedCount)', "\n",
             '5: Check if children in litter matches bornAliveCount value', "\n",
+            '6: Update mismatched n-ling data in cache', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -133,6 +135,10 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
 
             case 5:
                 $this->checkBornAliveCount();
+                break;
+
+            case 6:
+                AnimalCacher::updateAllMismatchedNlingData($em, $this->cmdUtil, $this->output);
                 break;
 
             default:
