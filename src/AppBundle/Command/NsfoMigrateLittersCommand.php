@@ -10,6 +10,7 @@ use AppBundle\Entity\LitterRepository;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -27,6 +28,8 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     const DEFAULT_INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/animal_litters_20161007_1156.csv';
     const OUTPUT_FOLDER_NAME = '/Resources/outputs/migration/';
     const OUTPUT_FILE_NAME = 'updated_litters.csv';
+    const OUTPUT_FILE_NAME_LITTER_DATES = 'strange_litter_dates.csv';
+    const OUTPUT_FILE_NAME_HALF_YEAR_LITTER = 'half_year_litters.csv';
     const BATCH_SIZE = 1000;
     const DEFAULT_MIN_EWE_ID = 1;
     const DEFAULT_OPTION = 0;
@@ -113,6 +116,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
             '4: Generate all litter group ids (uln_orderedCount)', "\n",
             '5: Check if children in litter matches bornAliveCount value', "\n",
             '6: Update mismatched n-ling data in cache', "\n",
+            '7: Printout strange litter dates', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -140,6 +144,10 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
             case 6:
                 AnimalCacher::updateAllMismatchedNLingData($em, $this->cmdUtil, $this->output);
                 AnimalCacher::updateNonZeroNLingInCacheWithoutLitter($em, $this->cmdUtil, $this->output);
+                break;
+
+            case 7:
+                $this->printOutStrangeLitterDates();
                 break;
 
             default:
@@ -441,7 +449,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         }
 
         //Write headers for errors file
-        $this->writeRowToCsv('worp_id;uln;stn;ooi_id;vsm_id;worpdatum;levendgeboren;levendgeboren_oud;doodgeboren;doodgeboren_old;');
+        $this->writeMigrationErrorRowToCsv('worp_id;uln;stn;ooi_id;vsm_id;worpdatum;levendgeboren;levendgeboren_oud;doodgeboren;doodgeboren_old;');
 
         $rowCount = 0;
         $this->litterSets = new ArrayCollection();
@@ -531,7 +539,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                             $vsmId = $values['vsm_id'];
 
                             $row = $id.';'.$uln.';'.$stn.';'.$eweId.';'.$vsmId.';'.$litterDateString.';'.$bornAliveCount.';'.$bornAliveCountInDb.';'.$stillbornCount.';'.$stillbornCountInDb.';';
-                            $this->writeRowToCsv($row);
+                            $this->writeMigrationErrorRowToCsv($row);
                             
                             $sql = "UPDATE litter SET born_alive_count = ".$bornAliveCount.", stillborn_count = ".$stillbornCount."
                                     WHERE id = ".$id;
@@ -677,8 +685,122 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     /**
      * @param $row
      */
-    private function writeRowToCsv($row)
+    private function writeMigrationErrorRowToCsv($row)
     {
         file_put_contents($this->outputFolder.self::OUTPUT_FILE_NAME, $row."\n", FILE_APPEND);
+    }
+
+
+    private function printOutStrangeLitterDates()
+    {
+        $sql = "SELECT a.name as vsm_id, r.animal_mother_id, l.ubn,
+                  CONCAT(uln_country_code, uln_number) as uln, CONCAT(pedigree_country_code, pedigree_number) as stn,
+                  litter_date, litter_group, born_alive_count, stillborn_count, ped.abbreviation FROM litter r
+                INNER JOIN (
+                    SELECT l.animal_mother_id FROM litter l
+                      INNER JOIN (
+                                   SELECT animal_mother_id FROM litter a
+                                   WHERE litter_group NOTNULL
+                                 )y ON y.animal_mother_id = l.animal_mother_id
+                      INNER JOIN (
+                                   SELECT animal_mother_id FROM litter b
+                                   WHERE litter_group ISNULL
+                                 )x ON x.animal_mother_id = l.animal_mother_id
+                    GROUP BY l.animal_mother_id
+                    )z ON z.animal_mother_id = r.animal_mother_id
+                INNER JOIN animal a ON a.id = r.animal_mother_id
+                LEFT JOIN pedigree_register ped ON a.pedigree_register_id = ped.id
+                LEFT JOIN location l ON l.id = a.location_id
+                ORDER BY r.animal_mother_id, r.litter_date";
+        $results = $this->conn->query($sql)->fetchAll();
+
+        $totalCount = count($results);
+        if($totalCount == 0) { $this->output->writeln('No strange litterDates!'); return; }
+
+        $this->cmdUtil->setStartTimeAndPrintIt($totalCount,1, 'creating searchArrays');
+
+        $headerRow = 'uln;stn;stamboek;maandVerschilWorpDatumOudEnNieuw;worpdatumNieuwwCsv;worpdatumOudCsv;levendNieuw;levendOud;doodgebNew;doodgebOud;';
+        file_put_contents($this->outputFolder.self::OUTPUT_FILE_NAME_LITTER_DATES, $headerRow."\n", FILE_APPEND);
+        file_put_contents($this->outputFolder.self::OUTPUT_FILE_NAME_HALF_YEAR_LITTER, $headerRow."\n", FILE_APPEND);
+
+        //Group by ewe
+        $groupedSearchArray = [];
+        foreach ($results as $result) {
+            $eweId = $result['animal_mother_id'];
+
+            $group = [];
+            if(array_key_exists($eweId, $groupedSearchArray)) {
+                $group = $groupedSearchArray[$eweId];
+            }
+
+            $group[] = $result;
+            $groupedSearchArray[$eweId] = $group;
+        }
+
+        $eweIds = array_keys($groupedSearchArray);
+        sort($eweIds);
+
+        $ewesCount = 0;
+        $strangeLitterDateCount = 0;
+        $halfYearLitterCount = 0;
+        foreach ($eweIds as $eweId) {
+            $group = $groupedSearchArray[$eweId];
+
+            $oldLitterDatesAndResults = [];
+            $newLitterDatesAndResults = [];
+
+            foreach ($group as $result) {
+                $litterDate = $result['litter_date'];
+                $litterGroup = $result['litter_group'];
+                if($litterGroup == null) {
+                    $newLitterDatesAndResults[$litterDate] = $result;
+                } else {
+                    $oldLitterDatesAndResults[$litterDate] = $result;
+                }
+            }
+
+            $oldLitterDates = array_keys($oldLitterDatesAndResults);
+            $newLitterDates = array_keys($newLitterDatesAndResults);
+            foreach ($newLitterDates as $newLitterDateString) {
+                foreach ($oldLitterDates as $oldLitterDateString) {
+                    $newLitterDate = new \DateTime($newLitterDateString);
+                    $oldLitterDate = new \DateTime($oldLitterDateString);
+                    $ageInMonths = TimeUtil::getAgeMonths($newLitterDate, $oldLitterDate);
+                    
+                    if($ageInMonths < 6) {
+                        $newResult = $newLitterDatesAndResults[$newLitterDateString];
+                        $oldResult = $oldLitterDatesAndResults[$oldLitterDateString];
+                        $row = $this->parseStrangeLitterDateRow($newResult, $oldResult, $newLitterDateString, $oldLitterDateString, $ageInMonths);
+                        file_put_contents($this->outputFolder.self::OUTPUT_FILE_NAME_LITTER_DATES, $row."\n", FILE_APPEND);
+                        $strangeLitterDateCount++;
+
+                    } elseif($ageInMonths < 8) {
+                        $newResult = $newLitterDatesAndResults[$newLitterDateString];
+                        $oldResult = $oldLitterDatesAndResults[$oldLitterDateString];
+                        $row = $this->parseStrangeLitterDateRow($newResult, $oldResult, $newLitterDateString, $oldLitterDateString, $ageInMonths);
+                        file_put_contents($this->outputFolder.self::OUTPUT_FILE_NAME_HALF_YEAR_LITTER, $row."\n", FILE_APPEND);
+                        $halfYearLitterCount++;
+                    }
+                }
+            }
+            $ewesCount++;
+            $this->cmdUtil->advanceProgressBar(1, 'StrangeLitterDateCount|halfYearLitterCount: '.$strangeLitterDateCount.'|'.$halfYearLitterCount);
+        }
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
+    private function parseStrangeLitterDateRow($newResult, $oldResult, $newLitterDate, $oldLitterDate, $ageInMonths)
+    {
+        $uln = $newResult['uln'];
+        $stn = $newResult['stn'];
+        $abbreviation = $newResult['abbreviation'];
+        $bornAliveCountNew = $newResult['born_alive_count'];
+        $stillbornCountNew = $newResult['stillborn_count'];
+        $bornAliveCountOld = $oldResult['born_alive_count'];
+        $stillbornCountOld = $oldResult['stillborn_count'];
+        $newLitterDate = rtrim($newLitterDate, ' 00:00:00');
+        $oldLitterDate = rtrim($oldLitterDate, ' 00:00:00');
+
+        return $uln.';'.$stn.';'.$abbreviation.';'.$ageInMonths.';'.$newLitterDate.';'.$oldLitterDate.';'.$bornAliveCountNew.';'.$bornAliveCountOld.';'.$stillbornCountNew.';'.$stillbornCountOld.';';
     }
 }
