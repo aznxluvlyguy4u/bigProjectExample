@@ -65,6 +65,9 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     /** @var array */
     private $litterSearchArray;
 
+    /** @var array */
+    private $litterValuesSearchArray;
+
     protected function configure()
     {
         $this
@@ -391,14 +394,23 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $this->animalPrimaryKeysByVsmId = $this->eweRepository->getAnimalPrimaryKeysByVsmId();
 
         $this->litterSearchArray = [];
-        $sql = "SELECT CONCAT(animal_mother_id,'".self::SEPARATOR."',litter_date) as key FROM litter";
+        $this->litterValuesSearchArray = [];
+        $sql = "SELECT CONCAT(animal_mother_id,'".self::SEPARATOR."',litter_date) as key,
+                    id, litter_group, born_alive_count, stillborn_count
+                FROM litter";
         $results = $this->conn->query($sql)->fetchAll();
 
         foreach ($results as $result) {
             $key = $result['key'];
             $this->litterSearchArray[$key] = $key;
+            $values = [
+                'id' => intval($result['id']),
+                'litter_group' => $result['litter_group'],
+                'born_alive_count' => intval($result['born_alive_count']),
+                'stillborn_count' => intval($result['stillborn_count']),
+            ];
+            $this->litterValuesSearchArray[$key] = $values;
         }
-
 
         $rowCount = 0;
         $this->litterSets = new ArrayCollection();
@@ -427,6 +439,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $litterCount = 0;
         $eweCount = 0;
         $skippedCount = 0;
+        $updatedCount = 0;
 
         $today = new \DateTime('today');
         $todayString = $today->format('Y-m-d');
@@ -444,8 +457,8 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                     $children = $littersDataSet->get($litterDateString);
 
                     $litterDate = new \DateTime($litterDateString);
-                    $bornAliveCount = $children[0];
-                    $stillbornCount = $children[1];
+                    $bornAliveCount = intval($children[0]);
+                    $stillbornCount = intval($children[1]);
 
                     //CREATE LITTERS
                     if (!$this->isLitterAlreadyExists($eweId, $litterDateString)) {
@@ -463,10 +476,33 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
 
                         $litterCount++;
                     } else {
-                        $skippedCount++;
+                        //If it already exists, check if values are equal. Otherwise update
+                        $values = $this->litterValuesSearchArray[$eweId.self::SEPARATOR.$litterDateString];
+                        $bornAliveCountInDb = $values['born_alive_count'];
+                        $stillbornCountInDb = $values['stillborn_count'];
+
+                        $valuesAreIdentical = $bornAliveCount == $bornAliveCountInDb && $stillbornCountInDb == $stillbornCountInDb;
+
+                        if($valuesAreIdentical) {
+                            $skippedCount++;
+
+                        } else {
+                            //Fix values
+                            $id = $values['id'];
+                            $litterGroupInDb = $values['litter_group'];
+
+                            $sql = "UPDATE litter SET born_alive_count = ".$bornAliveCount.", stillborn_count = ".$stillbornCount."
+                                    WHERE id = ".$id;
+                            $this->conn->exec($sql);
+
+                            $sql = "UPDATE declare_nsfo_base SET log_date = '".$todayString."' WHERE id = ".$id;
+                            $this->conn->exec($sql);
+
+                            $updatedCount++;
+                        }
                     }
 
-                    $this->cmdUtil->advanceProgressBar(1, 'LitterCount inserted|skipped: '.$litterCount.'|'.$skippedCount.' -  EweCount: ' . $eweCount . ' |  last Id: ' . $eweId);
+                    $this->cmdUtil->advanceProgressBar(1, 'LitterCount inserted|updated|skipped: '.$litterCount.'|'.$updatedCount.'|'.$skippedCount.' -  EweCount: ' . $eweCount . ' |  last Id: ' . $eweId);
                 }
                 $eweCount++;
             }
