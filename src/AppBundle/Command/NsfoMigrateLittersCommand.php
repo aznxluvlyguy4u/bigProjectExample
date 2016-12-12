@@ -408,7 +408,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
 
         $this->litterSearchArray = [];
         $this->litterValuesSearchArray = [];
-        $sql = "SELECT litter_date, animal_mother_id,
+        $sql = "SELECT litter_date, animal_mother_id, name,
                     l.id, litter_group, born_alive_count, stillborn_count,
                     CONCAT(uln_country_code, uln_number) as uln, CONCAT(pedigree_country_code, pedigree_number) as stn
                 FROM litter l INNER JOIN animal a ON l.animal_mother_id = a.id";
@@ -428,12 +428,13 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                 'stn' => $result['stn'],
                 'ewe_id' => $eweId,
                 'litter_date' => $litterDate,
+                'vsm_id' => $result['name'],
             ];
             $this->litterValuesSearchArray[$key] = $values;
         }
 
         //Write headers for errors file
-        $this->writeRowToCsv('worp_id;uln;stn;ooi_id;worpdatum;levendgeboren;levendgeboren_oud;doodgeboren;doodgeboren_old;');
+        $this->writeRowToCsv('worp_id;uln;stn;ooi_id;vsm_id;worpdatum;levendgeboren;levendgeboren_oud;doodgeboren;doodgeboren_old;');
 
         $rowCount = 0;
         $this->litterSets = new ArrayCollection();
@@ -516,8 +517,9 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                             $uln = $values['uln'];
                             $stn = $values['stn'];
                             $eweId = $values['ewe_id'];
+                            $vsmId = $values['vsm_id'];
 
-                            $row = $id.';'.$uln.';'.$stn.';'.$eweId.';'.$litterDateString.';'.$bornAliveCount.';'.$bornAliveCountInDb.';'.$stillbornCount.';'.$stillbornCountInDb.';';
+                            $row = $id.';'.$uln.';'.$stn.';'.$eweId.';'.$vsmId.';'.$litterDateString.';'.$bornAliveCount.';'.$bornAliveCountInDb.';'.$stillbornCount.';'.$stillbornCountInDb.';';
                             $this->writeRowToCsv($row);
                             
                             $sql = "UPDATE litter SET born_alive_count = ".$bornAliveCount.", stillborn_count = ".$stillbornCount."
