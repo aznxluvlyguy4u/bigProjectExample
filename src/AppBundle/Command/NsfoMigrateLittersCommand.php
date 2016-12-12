@@ -22,12 +22,14 @@ use Symfony\Component\Finder\Finder;
 class NsfoMigrateLittersCommand extends ContainerAwareCommand
 {
     const TITLE = 'Migrate litters';
-    const DEFAULT_INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/animal_litters_20160307_1349.csv';
+    const OLD_INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/animal_litters_20160307_1349.csv';
+    const DEFAULT_INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/animal_litters_20161007_1156.csv';
     const BATCH_SIZE = 1000;
     const DEFAULT_MIN_EWE_ID = 1;
     const DEFAULT_OPTION = 0;
 
     const DEFAULT_START_ROW = 0;
+    const SEPARATOR = '__';
 
 
     private $csvParsingOptions = array(
@@ -357,7 +359,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $dateTime = substr($childResult['date_of_birth'], 0, 10);
         $motherId = $childResult['parent_mother_id'];
 
-        return $motherId . '__' . $dateTime;
+        return $motherId . self::SEPARATOR . $dateTime;
     }
 
 
@@ -370,7 +372,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $dateTime = substr($litterResult['litter_date'], 0, 10);
         $motherId = $litterResult['animal_mother_id'];
 
-        return $motherId . '__' . $dateTime;
+        return $motherId . self::SEPARATOR . $dateTime;
     }
 
 
@@ -378,13 +380,25 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     {
         //Input folder input
         $inputFolderPath = $this->cmdUtil->generateQuestion('Please enter input folder path (empty for default path)', self::DEFAULT_INPUT_PATH);
+        $this->output->writeln('Chosen path: '.$inputFolderPath);
         $this->dataWithoutHeader = CommandUtil::getRowsFromCsvFileWithoutHeader($inputFolderPath);
 
         $minEweId = $this->cmdUtil->generateQuestion('Please enter minimum ewe primaryKey (default = 1)', self::DEFAULT_MIN_EWE_ID);
 
         $this->cmdUtil->setStartTimeAndPrintIt(count($this->dataWithoutHeader) * 2, $minEweId);
 
-        $this->animalPrimaryKeysByVsmId = $this->eweRepository->getAnimalPrimaryKeysByVsmId(); //Migrate litters
+        //Create SearchArrays
+        $this->animalPrimaryKeysByVsmId = $this->eweRepository->getAnimalPrimaryKeysByVsmId();
+
+        $this->litterSearchArray = [];
+        $sql = "SELECT CONCAT(animal_mother_id,'".self::SEPARATOR."',litter_date) as key FROM litter";
+        $results = $this->conn->query($sql)->fetchAll();
+
+        foreach ($results as $result) {
+            $key = $result['key'];
+            $this->litterSearchArray[$key] = $key;
+        }
+
 
         $rowCount = 0;
         $this->litterSets = new ArrayCollection();
@@ -407,6 +421,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
             }
         }
         $eweIds = array_diff($eweIds, $removeIds);
+        sort($eweIds);
         $this->cmdUtil->setProgressBarMessage('Ewes to process: ' . sizeof($eweIds) . ' | Creating new litters...');
 
         $litterCount = 0;
@@ -416,8 +431,8 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $today = new \DateTime('today');
         $todayString = $today->format('Y-m-d');
 
-        /** @var LitterRepository $litterRepository */
-        $litterRepository = $this->em->getRepository(Litter::class);
+        //Check for broken half imports and delete them
+        $this->deleteBrokenLitterImport();
 
         foreach ($eweIds as $eweId) {
             if ($this->isEweExists($eweId)) {
@@ -436,9 +451,16 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                     if (!$this->isLitterAlreadyExists($eweId, $litterDateString)) {
 
 //                      Litter data has not been migrated yet, so persist a new litter
-                        $sql = "INSERT INTO litter (id, animal_mother_id, litter_date, stillborn_count, born_alive_count) VALUES (nextval('litter_id_seq'),'" . $eweId . "','" . $todayString . "','" . $litterDateString . "','" . $stillbornCount . "','" . $bornAliveCount . "')";
+                        $sql = "INSERT INTO declare_nsfo_base (id, log_date, request_state, type
+                                ) VALUES (nextval('declare_nsfo_base_id_seq'),'" .$todayString."','IMPORTED','Litter')
+                                RETURNING id";
+                        $id = $this->conn->query($sql)->fetch()['id'];
+
+                        $sql = "INSERT INTO litter (id, animal_mother_id, litter_date, stillborn_count, born_alive_count,
+                                status
+                                ) VALUES ($id,'" .$eweId."','".$litterDateString."','".$stillbornCount."','".$bornAliveCount."','INCOMPLETE')";
                         $this->conn->exec($sql);
-                        
+
                         $litterCount++;
                     } else {
                         $skippedCount++;
@@ -498,7 +520,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         if (count($parts) < 2) {
             return $stringDate;
         } else {
-            return $parts[2] . '-' . $parts[1] . '-' . $parts[0] . ' 00:00:00';
+            return $parts[2] . '-' . str_pad($parts[1], 2, '0', STR_PAD_LEFT) . '-' . str_pad($parts[0], 2, '0', STR_PAD_LEFT) . ' 00:00:00';
         }
     }
 
@@ -527,21 +549,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
      */
     private function isLitterAlreadyExists($eweId, $measurementDateString)
     {
-        if($this->litterSearchArray == null) {
-
-            $sql = "SELECT CONCAT(animal_mother_id,'___',litter_date) as key FROM litter WHERE animal_mother_id = '" . $eweId . "' AND litter_date = '" . $measurementDateString . "'";
-            $results = $this->conn->query($sql)->fetchAll();
-
-            $this->litterSearchArray = [];
-
-            foreach ($results as $result) {
-                $key = $result['key'];
-                $this->litterSearchArray[$key] = $key;
-            }
-        }
-
-        $searchKey = $eweId.'___'.$measurementDateString;
-
+        $searchKey = $eweId.self::SEPARATOR.$measurementDateString;
         return array_key_exists($searchKey, $this->litterSearchArray);
     }
 
@@ -553,5 +561,31 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     {
         $sql = "SELECT COUNT(id) FROM animal WHERE animal.parent_father_id IS NULL";
         return $this->conn->query($sql)->fetch()['count'];
+    }
+
+
+    /**
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function deleteBrokenLitterImport()
+    {
+        $sql = "SELECT COUNT(*) FROM declare_nsfo_base a
+                    LEFT JOIN litter ON a.id = litter.id
+                  WHERE litter.id ISNULL AND type = 'Litter'";
+        $count = $this->conn->query($sql)->fetch()['count'];
+
+        if($count > 0) {
+            $sql = "DELETE FROM declare_nsfo_base
+                WHERE id IN(
+                  SELECT a.id FROM declare_nsfo_base a
+                    LEFT JOIN litter ON a.id = litter.id
+                  WHERE litter.id ISNULL AND type = 'Litter'
+                )";
+            $this->conn->exec($sql);
+            $this->output->writeln($count.' broken litter imports deleted');
+        } else {
+            $this->output->writeln('There are no broken litter imports!');
+        }
+
     }
 }
