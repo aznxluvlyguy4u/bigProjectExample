@@ -24,6 +24,8 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     const TITLE = 'Migrate litters';
     const OLD_INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/animal_litters_20160307_1349.csv';
     const DEFAULT_INPUT_PATH = '/home/data/JVT/projects/NSFO/Migratie/Animal/animal_litters_20161007_1156.csv';
+    const OUTPUT_FOLDER_NAME = '/Resources/outputs/migration/';
+    const OUTPUT_FILE_NAME = 'updated_litters.csv';
     const BATCH_SIZE = 1000;
     const DEFAULT_MIN_EWE_ID = 1;
     const DEFAULT_OPTION = 0;
@@ -34,6 +36,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
 
     private $csvParsingOptions = array(
         'finder_in' => 'app/Resources/imports/',
+        'finder_out' => 'app/Resources/outputs/migration/',
         'finder_name' => 'animal_litters_20160307_1349.csv',
         'ignoreFirstLine' => true
     );
@@ -68,6 +71,12 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     /** @var array */
     private $litterValuesSearchArray;
 
+    /** @var string */
+    private $rootDir;
+
+    /** @var string */
+    private $outputFolder;
+
     protected function configure()
     {
         $this
@@ -82,6 +91,10 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $this->em = $em;
         $this->eweRepository = $this->em->getRepository(Ewe::class);
         $this->output = $output;
+        $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
+        //Initialize outputFolder if null
+        NullChecker::createFolderPathIfNull($this->rootDir.self::OUTPUT_FOLDER_NAME);
+        $this->outputFolder = $this->rootDir.self::OUTPUT_FOLDER_NAME;
 
         $this->conn = $em->getConnection();
 
@@ -395,22 +408,32 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
 
         $this->litterSearchArray = [];
         $this->litterValuesSearchArray = [];
-        $sql = "SELECT CONCAT(animal_mother_id,'".self::SEPARATOR."',litter_date) as key,
-                    id, litter_group, born_alive_count, stillborn_count
-                FROM litter";
+        $sql = "SELECT litter_date, animal_mother_id,
+                    l.id, litter_group, born_alive_count, stillborn_count,
+                    CONCAT(uln_country_code, uln_number) as uln, CONCAT(pedigree_country_code, pedigree_number) as stn
+                FROM litter l INNER JOIN animal a ON l.animal_mother_id = a.id";
         $results = $this->conn->query($sql)->fetchAll();
 
         foreach ($results as $result) {
-            $key = $result['key'];
+            $eweId = $result['animal_mother_id'];
+            $litterDate = $result['litter_date'];
+            $key = $eweId.self::SEPARATOR.$litterDate;
             $this->litterSearchArray[$key] = $key;
             $values = [
                 'id' => intval($result['id']),
                 'litter_group' => $result['litter_group'],
                 'born_alive_count' => intval($result['born_alive_count']),
                 'stillborn_count' => intval($result['stillborn_count']),
+                'uln' => $result['uln'],
+                'stn' => $result['stn'],
+                'ewe_id' => $eweId,
+                'litter_date' => $litterDate,
             ];
             $this->litterValuesSearchArray[$key] = $values;
         }
+
+        //Write headers for errors file
+        $this->writeRowToCsv('worp_id;uln;stn;ooi_id;worpdatum;levendgeboren;levendgeboren_oud;doodgeboren;doodgeboren_old;');
 
         $rowCount = 0;
         $this->litterSets = new ArrayCollection();
@@ -490,7 +513,13 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                             //Fix values
                             $id = $values['id'];
                             $litterGroupInDb = $values['litter_group'];
+                            $uln = $values['uln'];
+                            $stn = $values['stn'];
+                            $eweId = $values['ewe_id'];
 
+                            $row = $id.';'.$uln.';'.$stn.';'.$eweId.';'.$litterDateString.';'.$bornAliveCount.';'.$bornAliveCountInDb.';'.$stillbornCount.';'.$stillbornCountInDb.';';
+                            $this->writeRowToCsv($row);
+                            
                             $sql = "UPDATE litter SET born_alive_count = ".$bornAliveCount.", stillborn_count = ".$stillbornCount."
                                     WHERE id = ".$id;
                             $this->conn->exec($sql);
@@ -623,5 +652,14 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
             $this->output->writeln('There are no broken litter imports!');
         }
 
+    }
+
+
+    /**
+     * @param $row
+     */
+    private function writeRowToCsv($row)
+    {
+        file_put_contents($this->outputFolder.self::OUTPUT_FILE_NAME, $row."\n", FILE_APPEND);
     }
 }
