@@ -75,6 +75,9 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     /** @var array */
     private $litterValuesSearchArray;
 
+    /** @var array */
+    private $littersWithDateWithin4MonthsOfOtherLittersInDatabase;
+
     /** @var string */
     private $rootDir;
 
@@ -421,6 +424,8 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         //Create SearchArrays
         $this->animalPrimaryKeysByVsmId = $this->eweRepository->getAnimalPrimaryKeysByVsmId();
 
+        $this->littersWithDateWithin4MonthsOfOtherLittersInDatabase = $this->getLittersWithDateWithin4MonthsOfOtherLittersInDatabase();
+
         $this->litterSearchArray = [];
         $this->litterValuesSearchArray = [];
         $sql = "SELECT litter_date, animal_mother_id, name,
@@ -479,6 +484,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $eweCount = 0;
         $skippedCount = 0;
         $updatedCount = 0;
+        $incorrectLitterDateCount = 0;
         $productionCacheUpdatedCount = 0;
 
         $today = new \DateTime('today');
@@ -502,10 +508,14 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                     $bornAliveCount = intval($children[0]);
                     $stillbornCount = intval($children[1]);
 
-                    //CREATE LITTERS
-                    if (!$this->isLitterAlreadyExists($eweId, $litterDateString)) {
 
-//                      Litter data has not been migrated yet, so persist a new litter
+                    if($this->isLitterDateWithin4MonthsOfOtherLittersInDatabase($eweId, $litterDateString)) {
+                        $incorrectLitterDateCount++;
+
+                    } elseif (!$this->isLitterAlreadyExists($eweId, $litterDateString)) {
+                        //CREATE LITTERS
+
+                        //Litter data has not been migrated yet, so persist a new litter
                         $sql = "INSERT INTO declare_nsfo_base (id, log_date, request_state, type
                                 ) VALUES (nextval('declare_nsfo_base_id_seq'),'" .$todayString."','IMPORTED','Litter')
                                 RETURNING id";
@@ -558,7 +568,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                         if($isCacheUpdated) { $productionCacheUpdatedCount++; }
                     }
 
-                    $this->cmdUtil->advanceProgressBar(1, 'LitterCount inserted|updated|skipped: '.$litterCount.'|'.$updatedCount.'|'.$skippedCount.' - Ewe Count|lastId: '.$eweCount.'|'.$eweId.' - ProductionCacheUpdated: '.$productionCacheUpdatedCount);
+                    $this->cmdUtil->advanceProgressBar(1, 'LitterCount inserted|updated|skipped|wrong: '.$litterCount.'|'.$updatedCount.'|'.$skippedCount.'|'.$incorrectLitterDateCount.' - Ewe Count|lastId: '.$eweCount.'|'.$eweId.' - ProductionCacheUpdated: '.$productionCacheUpdatedCount);
                 }
                 $eweCount++;
             }
@@ -719,7 +729,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
 
         $this->cmdUtil->setStartTimeAndPrintIt($totalCount,1, 'creating searchArrays');
 
-        $headerRow = 'uln;stn;stamboek;maandVerschilWorpDatumOudEnNieuw;worpdatumNieuwwCsv;worpdatumOudCsv;levendNieuw;levendOud;doodgebNew;doodgebOud;';
+        $headerRow = 'animalId;uln;stn;stamboek;maandVerschilWorpDatumOudEnNieuw;worpdatumNieuwwCsv;worpdatumOudCsv;levendNieuw;levendOud;doodgebNew;doodgebOud;';
         file_put_contents($this->outputFolder.self::OUTPUT_FILE_NAME_LITTER_DATES, $headerRow."\n", FILE_APPEND);
         file_put_contents($this->outputFolder.self::OUTPUT_FILE_NAME_HALF_YEAR_LITTER, $headerRow."\n", FILE_APPEND);
 
@@ -770,14 +780,14 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                     if($ageInMonths < 6) {
                         $newResult = $newLitterDatesAndResults[$newLitterDateString];
                         $oldResult = $oldLitterDatesAndResults[$oldLitterDateString];
-                        $row = $this->parseStrangeLitterDateRow($newResult, $oldResult, $newLitterDateString, $oldLitterDateString, $ageInMonths);
+                        $row = $this->parseStrangeLitterDateRow($eweId, $newResult, $oldResult, $newLitterDateString, $oldLitterDateString, $ageInMonths);
                         file_put_contents($this->outputFolder.self::OUTPUT_FILE_NAME_LITTER_DATES, $row."\n", FILE_APPEND);
                         $strangeLitterDateCount++;
 
                     } elseif($ageInMonths < 8) {
                         $newResult = $newLitterDatesAndResults[$newLitterDateString];
                         $oldResult = $oldLitterDatesAndResults[$oldLitterDateString];
-                        $row = $this->parseStrangeLitterDateRow($newResult, $oldResult, $newLitterDateString, $oldLitterDateString, $ageInMonths);
+                        $row = $this->parseStrangeLitterDateRow($eweId, $newResult, $oldResult, $newLitterDateString, $oldLitterDateString, $ageInMonths);
                         file_put_contents($this->outputFolder.self::OUTPUT_FILE_NAME_HALF_YEAR_LITTER, $row."\n", FILE_APPEND);
                         $halfYearLitterCount++;
                     }
@@ -789,7 +799,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 
-    private function parseStrangeLitterDateRow($newResult, $oldResult, $newLitterDate, $oldLitterDate, $ageInMonths)
+    private function parseStrangeLitterDateRow($eweId, $newResult, $oldResult, $newLitterDate, $oldLitterDate, $ageInMonths)
     {
         $uln = $newResult['uln'];
         $stn = $newResult['stn'];
@@ -801,6 +811,53 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $newLitterDate = rtrim($newLitterDate, ' 00:00:00');
         $oldLitterDate = rtrim($oldLitterDate, ' 00:00:00');
 
-        return $uln.';'.$stn.';'.$abbreviation.';'.$ageInMonths.';'.$newLitterDate.';'.$oldLitterDate.';'.$bornAliveCountNew.';'.$bornAliveCountOld.';'.$stillbornCountNew.';'.$stillbornCountOld.';';
+        return $eweId.';'.$uln.';'.$stn.';'.$abbreviation.';'.$ageInMonths.';'.$newLitterDate.';'.$oldLitterDate.';'.$bornAliveCountNew.';'.$bornAliveCountOld.';'.$stillbornCountNew.';'.$stillbornCountOld.';';
+    }
+
+
+    private function isLitterDateWithin4MonthsOfOtherLittersInDatabase($eweId, $newLitterDate)
+    {
+        $checkString = $eweId.self::SEPARATOR.$newLitterDate;
+        return array_key_exists($checkString, $this->littersWithDateWithin4MonthsOfOtherLittersInDatabase);
+    }
+
+
+    /**
+     * @return array
+     */
+    private function getLittersWithDateWithin4MonthsOfOtherLittersInDatabase()
+    {
+        return [
+            '913--2001-03-01' => '913--2001-03-01',
+            '927--2006-03-21' => '927--2006-03-21',
+            '938--2003-02-03' => '938--2003-02-03',
+            '973--2006-03-02' => '973--2006-03-02',
+            '996--2008-03-15' => '996--2008-03-15',
+            '998--2008-03-12' => '998--2008-03-12',
+            '6597--1993-02-22' => '6597--1993-02-22',
+            '20557--1999-03-29' => '20557--1999-03-29',
+            '20557--2002-01-01' => '20557--2002-01-01',
+            '29539--2000-03-24' => '29539--2000-03-24',
+            '29544--2003-03-19' => '29544--2003-03-19',
+            '29545--2004-04-06' => '29545--2004-04-06',
+            '40724--2002-03-06' => '40724--2002-03-06',
+            '42283--2005-02-28' => '42283--2005-02-28',
+            '93499--2011-03-18' => '93499--2011-03-18',
+            '176259--2016-03-01' => '176259--2016-03-01',
+            '184319--2008-02-28' => '184319--2008-02-28',
+            '186994--2010-01-01' => '186994--2010-01-01',
+            '207574--2014-04-01' => '207574--2014-04-01',
+            '225650--2010-05-14' => '225650--2010-05-14',
+            '239998--2011-03-01' => '239998--2011-03-01',
+            '258456--2012-03-23' => '258456--2012-03-23',
+            '259658--2013-04-03' => '259658--2013-04-03',
+            '331009--1985-03-28' => '331009--1985-03-28',
+            '331009--1987-03-15' => '331009--1987-03-15',
+            '331694--2008-02-28' => '331694--2008-02-28',
+            '348261--2014-04-01' => '348261--2014-04-01',
+            '438395--2015-03-09' => '438395--2015-03-09',
+            '443880--2015-03-01' => '443880--2015-03-01',
+            '461542--2015-01-15' => '461542--2015-01-15',
+        ];
     }
 }
