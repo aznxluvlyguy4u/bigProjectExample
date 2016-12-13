@@ -32,7 +32,8 @@ class AppKernel extends Kernel
             new Nelmio\CorsBundle\NelmioCorsBundle(),
             new Nelmio\ApiDocBundle\NelmioApiDocBundle(),
             new Knp\Bundle\SnappyBundle\KnpSnappyBundle(),
-            new Liuggio\ExcelBundle\LiuggioExcelBundle()
+            new Liuggio\ExcelBundle\LiuggioExcelBundle(),
+            new Ijanki\Bundle\FtpBundle\IjankiFtpBundle(),
         ];
 
         if (in_array($this->getEnvironment(), ['dev', 'test'], true)) {
