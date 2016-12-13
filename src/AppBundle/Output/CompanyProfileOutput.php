@@ -63,7 +63,8 @@ class CompanyProfileOutput extends Output
                             "company_name" => Utils::fillNull($company->getVeterinarianCompanyName()),
                             "telephone_number" => Utils::fillNull($company->getVeterinarianTelephoneNumber()),
                             "email_address" => Utils::fillNull($company->getVeterinarianEmailAddress())
-                        )
+                        ),
+                    "is_reveal_historic_animals" => Utils::fillNull($company->getIsRevealHistoricAnimals())
                 );
 
         return $result;

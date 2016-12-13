@@ -99,6 +99,59 @@ class ExteriorRepository extends MeasurementRepository {
 
 
     /**
+     * NOTE! general_appearence is returned spelling corrected as general_appearance
+     *
+     * @param int $animalId
+     * @param string $replacementString
+     * @return array
+     */
+    public function getLatestExteriorBySql($animalId = null, $replacementString = null)
+    {
+        $nullResult = [
+          JsonInputConstant::ID => $replacementString,
+          JsonInputConstant::ANIMAL_ID => $replacementString,
+          JsonInputConstant::SKULL => $replacementString,
+          JsonInputConstant::MUSCULARITY => $replacementString,
+          JsonInputConstant::PROPORTION => $replacementString,
+          JsonInputConstant::EXTERIOR_TYPE => $replacementString,
+          JsonInputConstant::LEG_WORK => $replacementString,
+          JsonInputConstant::FUR => $replacementString,
+          JsonInputConstant::GENERAL_APPEARANCE => $replacementString,
+          JsonInputConstant::HEIGHT => $replacementString,
+          JsonInputConstant::BREAST_DEPTH => $replacementString,
+          JsonInputConstant::TORSO_LENGTH => $replacementString,
+          JsonInputConstant::MARKINGS => $replacementString,
+          JsonInputConstant::KIND => $replacementString,
+          JsonInputConstant::PROGRESS => $replacementString,
+          JsonInputConstant::MEASUREMENT_DATE => $replacementString,
+        ];
+
+        if(!is_int($animalId)) { return $nullResult; }
+
+        $sqlBase = "SELECT x.id, x.animal_id, x.skull, x.muscularity, x.proportion, x.exterior_type, x.leg_work,
+                      x.fur, x.general_appearence as general_appearance, x.height, x.breast_depth, x.torso_length, x.markings, x.kind, x.progress, m.measurement_date
+                    FROM exterior x
+                      INNER JOIN measurement m ON x.id = m.id
+                      INNER JOIN (
+                                   SELECT animal_id, max(m.measurement_date) as measurement_date
+                                   FROM exterior e
+                                     INNER JOIN measurement m ON m.id = e.id
+                                   GROUP BY animal_id) y on y.animal_id = x.animal_id WHERE m.measurement_date = y.measurement_date ";
+
+        if(is_int($animalId)) {
+            $filter = "AND x.animal_id = " . $animalId;
+            $sql = $sqlBase.$filter;
+            $result = $this->getManager()->getConnection()->query($sql)->fetch();
+        } else {
+            $filter = "";
+            $sql = $sqlBase.$filter;
+            $result = $this->getManager()->getConnection()->query($sql)->fetchAll();
+        }
+        return $result == false ? $nullResult : $result;
+    }
+
+
+    /**
      * @param int $startYear
      * @param int $endYear
      * @return Collection
@@ -159,7 +212,6 @@ class ExteriorRepository extends MeasurementRepository {
 
     /**
      * @param string $mutationsFolder
-     * @param boolean $isPrintDeletedExteriors
      * @return array
      */
     public function fixMeasurements($mutationsFolder = null)

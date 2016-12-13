@@ -61,12 +61,14 @@ class NumberUtil
 
 
     /**
-     * @param $string
-     * @return mixed
+     * @param string $string
+     * @return float
      */
-    public static function replaceCommaByDot($string)
+    public static function fixIncorrectDecimals($string)
     {
-        return str_replace(',','.',$string);
+        $commaReplacedWithDot = str_replace(',','.',$string);
+        $duplicateDecimalsRemoved = preg_replace('/\.\.+/', '.', $commaReplacedWithDot);
+        return floatval($duplicateDecimalsRemoved);
     }
 
 

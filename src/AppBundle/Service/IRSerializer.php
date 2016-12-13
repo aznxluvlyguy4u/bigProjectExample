@@ -11,6 +11,7 @@ use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareImportRepository;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagsTransfer;
@@ -206,6 +207,7 @@ class IRSerializer implements IRSerializerInterface
         if($isEditMessage) {
             $requestId = $declareArrivalContentArray['request_id'];
             $location = $declareArrivalContentArray[Constant::LOCATION_NAMESPACE];
+            /** @var DeclareArrival $declareArrivalRequest */
             $declareArrivalRequest = $this->entityManager->getRepository(Constant::DECLARE_ARRIVAL_REPOSITORY)->getArrivalByRequestId($location, $requestId);
             $requestState = $declareArrivalRequest->getRequestState();
 
@@ -545,6 +547,7 @@ class IRSerializer implements IRSerializerInterface
 
         if($isEditMessage) {
             $requestId = $declareImportContentArray['request_id'];
+            /** @var DeclareImport $declareImportRequest */
             $declareImportRequest = $this->entityManager->getRepository(Constant::DECLARE_IMPORT_REPOSITORY)->getImportByRequestId($client, $requestId);
 
             //Update values here

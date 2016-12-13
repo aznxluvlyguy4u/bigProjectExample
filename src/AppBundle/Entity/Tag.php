@@ -130,6 +130,14 @@ class Tag {
     private $owner;
 
     /**
+     * @var Location
+     * @ORM\ManyToOne(targetEntity="Location", inversedBy="tags", cascade={"persist"})
+     * @ORM\JoinColumn(name="location_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\Location")
+     */
+    private $location;
+
+    /**
      * @var DeclareTagsTransfer
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="DeclareTagsTransfer", cascade={"persist"}, inversedBy="tags")
@@ -421,4 +429,23 @@ class Tag {
     {
         return $this->owner;
     }
+
+    /**
+     * @return Location
+     */
+    public function getLocation()
+    {
+        return $this->location;
+    }
+
+    /**
+     * @param Location $location
+     */
+    public function setLocation($location)
+    {
+        $this->location = $location;
+    }
+
+
+
 }

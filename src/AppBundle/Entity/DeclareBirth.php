@@ -143,9 +143,8 @@ class DeclareBirth extends DeclareBase
     private $dateOfBirth;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 100)
-     * @Assert\NotBlank
      * @JMS\Type("string")
      * @Expose
      */

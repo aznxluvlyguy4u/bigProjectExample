@@ -2,16 +2,22 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Cache\AnimalCacher;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\FormInput\AnimalDetails;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
 use AppBundle\Util\GenderChanger;
+use AppBundle\Validation\AdminValidator;
+use AppBundle\Validation\AnimalDetailsValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -146,13 +152,45 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function getLiveStock(Request $request) {
     $client = $client = $this->getAuthenticatedUser($request);
+    /** @var Location $location */
     $location = $this->getSelectedLocation($request);
-    $animals = $this->getDoctrine()
-        ->getRepository(Constant::ANIMAL_REPOSITORY)->getLiveStock($location);
+    AnimalCacher::cacheAnimalsOfLocationId($this->getDoctrine()->getManager(), $location->getId(), null, true);
+    /** @var AnimalRepository $animalRepository */
+    $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+    $livestockArray = $animalRepository->getLiveStockBySql($location->getId());
 
-    $minimizedOutput = AnimalOutput::createAnimalsArray($animals, $this->getDoctrine()->getManager());
+    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $livestockArray), 200);
+  }
 
-    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
+
+  /**
+   * Retrieve all historic animals that ever resided on this location, dead or alive
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Retrieve all historic animals that ever resided on this location, dead or alive",
+   *   output = "AppBundle\Entity\Animal"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-historic-livestock")
+   * @Method("GET")
+   */
+  public function getHistoricLiveStock(Request $request) {
+    $location = $this->getSelectedLocation($request);
+    /** @var AnimalRepository $repository */
+    $repository = $this->getDoctrine()->getRepository(Animal::class);
+    $historicAnimalsInArray = $repository->getHistoricLiveStock($location);
+
+    return new JsonResponse([Constant::RESULT_NAMESPACE => $historicAnimalsInArray], 200);
   }
 
 
@@ -327,15 +365,24 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function getAnimalDetailsByUln(Request $request, $ulnString) {
 
-    $client = $this->getAuthenticatedUser($request);
-    $animal = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->getAnimalByUlnString($client, $ulnString);
+    $admin = $this->getAuthenticatedEmployee($request);
+    $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
+    $isAdmin = $adminValidator->getIsAccessGranted();
+    $em = $this->getDoctrine()->getManager();
 
-    if($animal == null) {
-      return new JsonResponse(array('code'=>404, "message" => "For this account, no animal was found with uln: " . $ulnString), 404);
+    $location = null;
+    if(!$isAdmin) { $location = $this->getSelectedLocation($request); }
+
+    $animalDetailsValidator = new AnimalDetailsValidator($em, $isAdmin, $location, $ulnString);
+    if(!$animalDetailsValidator->getIsInputValid()) {
+      return $animalDetailsValidator->createJsonResponse();
     }
 
-    $output = AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $animal);
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $output), 200);
+    $animal = $animalDetailsValidator->getAnimal();
+    if($location == null) { $location = $animal->getLocation(); }
+
+    $output = AnimalDetailsOutput::create($em, $animal, $location);
+    return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
   }
 
   /**

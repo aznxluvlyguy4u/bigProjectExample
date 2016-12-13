@@ -2,6 +2,8 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\Tag;
+use AppBundle\Entity\TagRepository;
 use AppBundle\Enumerator\TagStateType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -105,17 +107,19 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
   public function getTags(Request $request)
   {
     $client = $this->getAuthenticatedUser($request);
-    $tagRepository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY);
+    $location = $this->getSelectedLocation($request);
+    /** @var TagRepository $tagRepository */
+    $tagRepository = $this->getDoctrine()->getRepository(Tag::class);
 
     //No explicit filter given, thus find all
     if(!$request->query->has(Constant::STATE_NAMESPACE)) {
       //Only retrieve tags that are either assigned OR unassigned, ignore transferred tags
-      $tags = $tagRepository->findTags($client);
+      $tags = $tagRepository->findTags($client, $location);
     } else { //A state parameter was given, use custom filter to find subset
       $tagStatus = $request->query->get(Constant::STATE_NAMESPACE);
-      $tags = $tagRepository->findTags($client, $tagStatus);
+      $tags = $tagRepository->findTags($client, $location, $tagStatus);
     }
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => $tags), 200);
+    return new JsonResponse([Constant::RESULT_NAMESPACE => $tags], 200);
   }
 }

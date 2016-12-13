@@ -11,6 +11,7 @@
     {% set rowsPerPage = 31 %}
     {% set ewesCount = variables.ewes|length %}
     {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
+    {% set coefficientDecimalAccuracy = 5 %}
 
     {# HEADER #}
 
@@ -70,7 +71,7 @@
             <tr>
                 <td class="tg-yw4l">{{ uln }}</td>
                 <td class="tg-yw4l">{{ ewePedigree }}</td>
-                <td class="tg-lqy6">{{ eweInbreedingCoefficient }}</td>
+                <td class="tg-lqy6">{{ eweInbreedingCoefficient|number_format(coefficientDecimalAccuracy,'.',',') }}</td>
             </tr>
 
         {% set counter = counter + 1 %}

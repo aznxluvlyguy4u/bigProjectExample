@@ -3,8 +3,13 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Component\Utils;
+use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\DeclareTagsTransferRepository;
+use AppBundle\Entity\Tag;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\DeclareReplaceTagsOutput;
+use AppBundle\Output\DeclareTagsTransferResponseOutput;
 use AppBundle\Util\ActionLogWriter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -65,12 +70,15 @@ class TagsReplaceAPIController extends APIController {
 
     //Check if tag replacement is unassigned and in the database, else don't send any TagReplace
     $tagContent = $content->get(Constant::TAG_NAMESPACE);
-    $validation = $this->getDoctrine()->getRepository(Constant::DECLARE_TAGS_TRANSFER_REPOSITORY)->validateTag($client, $tagContent[Constant::ULN_COUNTRY_CODE_NAMESPACE], $tagContent[Constant::ULN_NUMBER_NAMESPACE]);
+    /** @var DeclareTagsTransferRepository $declareTagTransferRepository */
+    $declareTagTransferRepository = $this->getDoctrine()->getRepository(DeclareTagsTransfer::class);
+    $validation = $declareTagTransferRepository->validateTag($client, $location,$tagContent[Constant::ULN_COUNTRY_CODE_NAMESPACE], $tagContent[Constant::ULN_NUMBER_NAMESPACE]);
 
     if($validation == null) {
       $errorMessage =  array(Constant::MESSAGE_NAMESPACE => "TAG IS NOT FOUND", Constant::CODE_NAMESPACE => 428);
       return new JsonResponse($errorMessage, 428);
     } else if($validation[Constant::VALIDITY_NAMESPACE] == false) {
+        /** @var Tag $tag */
         $tag = $validation[Constant::TAG_NAMESPACE];
 
         if($tag != null) {
@@ -128,7 +136,11 @@ class TagsReplaceAPIController extends APIController {
                 INNER JOIN declare_base ON declare_tag_replace.id = declare_base.id
                 LEFT JOIN declare_tag_replace_response ON declare_tag_replace.id = declare_tag_replace_response.declare_tag_replace_request_message_id
                 LEFT JOIN declare_base_response ON declare_tag_replace_response.id = declare_base_response.id
-                WHERE declare_base.request_state <> 'FAILED' AND declare_tag_replace.location_id = '". $location->getId() ."'";
+                WHERE (request_state = '".RequestStateType::OPEN."' OR
+                      request_state = '".RequestStateType::REVOKING."' OR
+                      request_state = '".RequestStateType::REVOKED."' OR
+                      request_state = '".RequestStateType::FINISHED."' OR
+                      request_state = '".RequestStateType::FINISHED_WITH_WARNING."') AND declare_tag_replace.location_id = '". $location->getId() ."'";
         $results = $em->getConnection()->query($sql)->fetchAll();
 
         $results = DeclareReplaceTagsOutput::createHistoryArray($results);
@@ -164,7 +176,7 @@ class TagsReplaceAPIController extends APIController {
                 INNER JOIN declare_base ON declare_tag_replace.id = declare_base.id
                 LEFT JOIN declare_tag_replace_response ON declare_tag_replace.id = declare_tag_replace_response.declare_tag_replace_request_message_id
                 LEFT JOIN declare_base_response ON declare_tag_replace_response.id = declare_base_response.id
-                WHERE declare_base.request_state = 'FAILED' AND declare_tag_replace.location_id = '". $location->getId() ."'";
+                WHERE declare_base.request_state = '".RequestStateType::FAILED."' AND declare_base.hide_failed_message = FALSE AND declare_tag_replace.location_id = '". $location->getId() ."'";
         $results = $em->getConnection()->query($sql)->fetchAll();
 
         $results = DeclareReplaceTagsOutput::createHistoryArray($results);

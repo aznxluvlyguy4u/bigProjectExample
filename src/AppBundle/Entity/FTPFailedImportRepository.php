@@ -2,8 +2,11 @@
 
 namespace AppBundle\Entity;
 
-
-class FTPFailedImportRepository
+/**
+ * Class FTPFailedImportRepository
+ * @package AppBundle\Entity
+ */
+class FTPFailedImportRepository extends BaseRepository
 {
 
 }

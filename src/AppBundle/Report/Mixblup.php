@@ -1019,7 +1019,7 @@ class Mixblup
         if(NullChecker::isNull($animalData['uln_number_a'])) { return null; }
 
         $breedCode = Utils::fillNullOrEmptyString($animalData['breed_code'], self::BREED_CODE_NULL_FILLER);
-        $breedType = Utils::fillNullOrEmptyString(Translation::translateBreedType($animalData['breed_type']), self::BREED_TYPE_NULL_FILLER);
+        $breedType = Utils::fillNullOrEmptyString(Translation::getDutchUcFirst($animalData['breed_type']), self::BREED_TYPE_NULL_FILLER);
 
         $geneDiversity = BreedValueUtil::getHeterosisAndRecombinationBy8Parts($this->em, $animalId, self::HETEROSIS_AND_RECOMBINATION_ROUNDING_ACCURACY);
 

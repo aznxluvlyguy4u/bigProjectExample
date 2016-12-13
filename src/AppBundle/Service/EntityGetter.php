@@ -2,6 +2,7 @@
 
 namespace AppBundle\Service;
 
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -292,6 +293,7 @@ class EntityGetter
     private function retrieveAnimalFromUln(array $animalArray)
     {
         $animal = null;
+        /** @var AnimalRepository $animalRepository */
         $animalRepository = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY);
 
         $ulnNumberExists = array_key_exists(Constant::ULN_NUMBER_NAMESPACE, $animalArray);

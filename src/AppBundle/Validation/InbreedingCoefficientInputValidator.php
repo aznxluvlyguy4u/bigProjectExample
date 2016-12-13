@@ -31,6 +31,9 @@ class InbreedingCoefficientInputValidator extends BaseValidator
     const EWE_FOUND_BUT_NOT_EWE = 'STUD EWE: ANIMAL WAS FOUND FOR GIVEN ULN, BUT WAS NOT AN EWE ENTITY';
     const EWE_NOT_OF_CLIENT     = 'STUD EWE: FOUND EWE DOES NOT BELONG TO CLIENT';
 
+    const MAX_EWES_COUNT = 20; // -1 = no limit, also update error message when updating max count
+    const EWES_COUNT_EXCEEDS_MAX = 'THE AMOUNT OF SELECTED EWES EXCEEDED 20';
+
     /** @var AnimalRepository */
     protected $animalRepository;
 
@@ -68,6 +71,15 @@ class InbreedingCoefficientInputValidator extends BaseValidator
         
         $isRamInputValid = $this->validateRamArray($ramArray);
 
+        $isEwesCountValid = true;
+        if(self::MAX_EWES_COUNT > 0 && count($ewesArray) > self::MAX_EWES_COUNT) {
+            $this->errors[] = self::EWES_COUNT_EXCEEDS_MAX;
+            $isEwesCountValid = false;
+
+            $this->isInputValid = false;
+            return;
+        }
+
         $isEwesInputValid = true;
         foreach ($ewesArray as $eweArray) {
             $isEweInputValid = $this->validateEweArray($eweArray);
@@ -77,7 +89,7 @@ class InbreedingCoefficientInputValidator extends BaseValidator
         }
 
 
-        if($isRamInputValid && $isEwesInputValid) {
+        if($isRamInputValid && $isEwesInputValid && $isEwesCountValid) {
             $this->isInputValid = true;
         } else {
             $this->isInputValid = false;
