@@ -370,7 +370,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                     }
 
                     $foundLittersCount++;
-                    $animalProgressBarMessage = 'LITTER FOUND FOR ANIMAL (id): '.$animalId.' | Found litters: '.$foundLittersCount.' | Missing litters: '.$noLitterFoundCount;
+                    $animalProgressBarMessage = '  LITTER FOUND FOR ANIMAL (id): '.$animalId.' | Found litters: '.$foundLittersCount.' | Missing litters: '.$noLitterFoundCount;
                 } else {
                     $noLitterFoundCount++;
                     $animalProgressBarMessage = 'MISSING LITTER FOR ANIMAL (id): '.$animalId.' | Found litters: '.$foundLittersCount.' | Missing litters: '.$noLitterFoundCount;
