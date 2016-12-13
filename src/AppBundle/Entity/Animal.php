@@ -295,7 +295,8 @@ abstract class Animal
     /**
      * @var string
      * @JMS\Type("string")
-     * @ORM\Column(type="string", nullable=true)
+     * @Assert\NotBlank
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Groups({"declare"})
      */
     protected $ulnNumber;
@@ -303,7 +304,10 @@ abstract class Animal
     /**
      * @var string
      * @JMS\Type("string")
-     * @ORM\Column(type="string", nullable=true)
+     * @Assert\NotBlank
+     * @Assert\Regex("/([A-Z]{2})\b/")
+     * @Assert\Length(max = 2)
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Groups({"declare"})
      */
     protected $ulnCountryCode;
