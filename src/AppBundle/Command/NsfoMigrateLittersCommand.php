@@ -31,6 +31,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     const OUTPUT_FILE_NAME_LITTER_DATES = 'strange_litter_dates.csv';
     const OUTPUT_FILE_NAME_HALF_YEAR_LITTER = 'half_year_litters.csv';
     const BATCH_SIZE = 1000;
+    const UPDATE_BATCH_SIZE = 10000;
     const DEFAULT_MIN_EWE_ID = 1;
     const DEFAULT_OPTION = 0;
 
@@ -129,7 +130,8 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                 break;
 
             case 2:
-                $this->matchChildrenWithExistingLittersAndSetFatherInLitter();
+                $this->matchChildrenWithExistingLittersBySql();
+                $this->setMissingFatherInLitterBySql();
                 break;
 
             case 3:
@@ -316,6 +318,116 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     }
 
 
+    /**
+     * Set missing litterIds based on mother and dateOfBirth
+     *
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function matchChildrenWithExistingLittersBySql()
+    {
+        $sql = "SELECT a.id as animal_id, l.id as litter_id
+                FROM animal a
+                INNER JOIN litter l ON DATE(a.date_of_birth) = DATE(l.litter_date) AND a.parent_mother_id = l.animal_mother_id
+                WHERE a.litter_id ISNULL";
+        $results = $this->conn->query($sql)->fetchAll();
+
+        $totalLitterIdCount = count($results);
+        if($totalLitterIdCount == 0) {
+            $this->output->writeln('No missing litterIds in animals!');
+            return;
+        }
+
+        $litterIdUpdateString = '';
+        $litterIdsToUpdateCount = 0;
+        $litterIdsUpdatedCount = 0;
+        $loopCounter = 0;
+
+        $this->cmdUtil->setStartTimeAndPrintIt($totalLitterIdCount, 1);
+
+        foreach ($results as $result) {
+            $animalId = intval($result['animal_id']);
+            $litterId = intval($result['litter_id']);
+
+            $litterIdUpdateString = $litterIdUpdateString . '(' . $litterId . ',' . $animalId . '),';
+            $litterIdsToUpdateCount++;
+            $loopCounter++;
+
+            //Update fathers
+            if (($totalLitterIdCount == $loopCounter || ($litterIdsToUpdateCount % self::UPDATE_BATCH_SIZE == 0 && $litterIdsToUpdateCount != 0))
+                && $litterIdUpdateString != ''
+            ) {
+                $litterIdUpdateString = rtrim($litterIdUpdateString, ',');
+                $sql = "UPDATE animal as a SET litter_id = c.litter_id
+				FROM (VALUES " . $litterIdUpdateString . ") as c(litter_id, animal_id) WHERE c.animal_id = a.id ";
+                $this->conn->exec($sql);
+                //Reset batch values
+                $litterIdUpdateString = '';
+                $litterIdsUpdatedCount += $litterIdsToUpdateCount;
+                $litterIdsToUpdateCount = 0;
+            }
+            $this->cmdUtil->advanceProgressBar(1, 'LitterIds_in_Animal updated|inBatch: '.$litterIdsUpdatedCount.'|'.$litterIdsToUpdateCount);
+        }
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+        $this->output->writeln('LitterIds in animals set!');
+    }
+
+
+    private function setMissingFatherInLitterBySql()
+    {
+        //Set missing litterIds based on mother and dateOfBirth
+        $sql = "SELECT a.parent_father_id, l.id as litter_id
+                FROM animal a
+                INNER JOIN litter l ON a.litter_id = l.id
+                WHERE l.animal_father_id ISNULL AND a.parent_father_id NOTNULL
+                GROUP BY a.parent_father_id, l.id";
+        $results = $this->conn->query($sql)->fetchAll();
+
+        $totalLitterIdCount = count($results);
+        if($totalLitterIdCount == 0) {
+            $this->output->writeln('All missing fathers in litters have been set!');
+            return;
+        }
+
+        $litterIdUpdateString = '';
+        $litterIdsToUpdateCount = 0;
+        $litterIdsUpdatedCount = 0;
+        $loopCounter = 0;
+
+        $this->cmdUtil->setStartTimeAndPrintIt($totalLitterIdCount, 1);
+
+        foreach ($results as $result) {
+            $fatherId = intval($result['parent_father_id']);
+            $litterId = intval($result['litter_id']);
+
+            $litterIdUpdateString = $litterIdUpdateString . '(' . $litterId . ',' . $fatherId . '),';
+            $litterIdsToUpdateCount++;
+            $loopCounter++;
+
+            //Update fathers
+            if (($totalLitterIdCount == $loopCounter || ($litterIdsToUpdateCount % self::UPDATE_BATCH_SIZE == 0 && $litterIdsToUpdateCount != 0))
+                && $litterIdUpdateString != ''
+            ) {
+                $litterIdUpdateString = rtrim($litterIdUpdateString, ',');
+                $sql = "UPDATE litter as l SET animal_father_id = c.father_id
+				FROM (VALUES " . $litterIdUpdateString . ") as c(litter_id, father_id) WHERE c.litter_id = l.id ";
+                $this->conn->exec($sql);
+                //Reset batch values
+                $litterIdUpdateString = '';
+                $litterIdsUpdatedCount += $litterIdsToUpdateCount;
+                $litterIdsToUpdateCount = 0;
+            }
+            $this->cmdUtil->advanceProgressBar(1, 'Fathers_in_Litters updated|inBatch: '.$litterIdsUpdatedCount.'|'.$litterIdsToUpdateCount);
+        }
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+        $this->output->writeln('Missing fathers in litters set!');
+    }
+
+
+    /**
+     * Old function replaced by new function using better sql queries
+     *
+     * @throws \Doctrine\DBAL\DBALException
+     */
     private function matchChildrenWithExistingLittersAndSetFatherInLitter()
     {
         $sql = "SELECT DATE(date_of_birth) as date_of_birth, id as animal_id, animal.litter_id as animal_litter_id, parent_mother_id, parent_father_id FROM animal";
