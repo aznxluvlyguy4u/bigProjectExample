@@ -15,15 +15,16 @@ class InspectorRepository extends PersonRepository {
      * @param string $firstName
      * @param string $lastName
      * @param bool $isActive
+     * @param string $emailAddress
      * @return bool
      */
-    public function insertNewInspector($firstName, $lastName, $isActive = true)
+    public function insertNewInspector($firstName, $lastName, $isActive = true, $emailAddress = '')
     {
         $type = PersonType::INSPECTOR;
-        
+
         $isInsertSuccessFul = false;
-        $isInsertParentSuccessFul = parent::insertNewPersonParentTable($type, $firstName, $lastName, $isActive);
-        if($isInsertParentSuccessFul) {
+        $id = parent::insertNewPersonParentTable($type, $firstName, $lastName, $isActive, $emailAddress);
+        if(is_int($id) && $id != 0) {
             $sql = "INSERT INTO inspector (id, object_type) VALUES (currval('person_id_seq'),'".$type."')";
             $this->getConnection()->exec($sql);
             $isInsertSuccessFul = true;
@@ -39,7 +40,7 @@ class InspectorRepository extends PersonRepository {
     {
         $sql = "DELETE FROM inspector WHERE id = ".$personId;
         $this->getConnection()->exec($sql);
-        
+
         $sql = "DELETE FROM token WHERE owner_id = ".$personId;
         $this->getConnection()->exec($sql);
         

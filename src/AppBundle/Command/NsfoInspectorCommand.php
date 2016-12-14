@@ -132,8 +132,8 @@ class NsfoInspectorCommand extends ContainerAwareCommand
     {
         $newInspectorCount = 0;
 
-        $newInspectorCount += $this->addMissingInspector('Johan', 'Knaap');
-        $newInspectorCount += $this->addMissingInspector('Ido', 'Altenburg');
+//        $newInspectorCount += $this->addMissingInspector('Johan', 'Knaap');
+//        $newInspectorCount += $this->addMissingInspector('Ido', 'Altenburg');
         $newInspectorCount += $this->addMissingInspector('', 'Niet NSFO');
 
         return $newInspectorCount;
@@ -152,7 +152,7 @@ class NsfoInspectorCommand extends ContainerAwareCommand
     {
         $sql = "SELECT COUNT(*) FROM inspector i
                   INNER JOIN person p ON i.id = p.id
-                WHERE first_name = 'Johan' AND last_name = 'Knaap'";
+                WHERE first_name = '".$firstName."' AND last_name = '".$lastName."'";
         $count = $this->conn->query($sql)->fetch()['count'];
 
         if($count == 0) {
@@ -214,5 +214,11 @@ class NsfoInspectorCommand extends ContainerAwareCommand
             $this->cmdUtil->advanceProgressBar(1, 'Removing duplicate inspectors');
         }
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
+
+    private function authorizeInspectors()
+    {
+
     }
 }
