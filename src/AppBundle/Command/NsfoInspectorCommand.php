@@ -3,10 +3,15 @@
 namespace AppBundle\Command;
 
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Employee;
+use AppBundle\Entity\EmployeeRepository;
 use AppBundle\Entity\Inspector;
 use AppBundle\Entity\InspectorAuthorization;
 use AppBundle\Entity\InspectorAuthorizationRepository;
 use AppBundle\Entity\InspectorRepository;
+use AppBundle\Entity\PedigreeRegister;
+use AppBundle\Entity\PedigreeRegisterRepository;
+use AppBundle\Enumerator\InspectorMeasurementType;
 use AppBundle\Migration\InspectorMigrator;
 use AppBundle\Util\CommandUtil;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -19,6 +24,7 @@ class NsfoInspectorCommand extends ContainerAwareCommand
 {
     const TITLE = 'Inspectors';
     const DEFAULT_OPTION = 0;
+    const ACTION_BY_ADMIN_ID = 2152; //Reinard Everts
 
     /** @var ObjectManager $em */
     private $em;
@@ -29,6 +35,12 @@ class NsfoInspectorCommand extends ContainerAwareCommand
     /** @var InspectorRepository */
     private $inspectorRepository;
 
+    /** @var EmployeeRepository */
+    private $adminRepository;
+
+    /** @var PedigreeRegisterRepository */
+    private $pedigreeRegisterRepository;
+
     /** @var InspectorAuthorizationRepository */
     private $inspectorAuthorizationRepository;
 
@@ -37,6 +49,9 @@ class NsfoInspectorCommand extends ContainerAwareCommand
 
     /** @var OutputInterface */
     private $output;
+    
+    /** @var Employee */
+    private $actionByAdmin;
 
     protected function configure()
     {
@@ -58,6 +73,8 @@ class NsfoInspectorCommand extends ContainerAwareCommand
         $this->output = $output;
 
         $this->inspectorRepository = $em->getRepository(Inspector::class);
+        $this->adminRepository = $em->getRepository(Employee::class);
+        $this->pedigreeRegisterRepository = $em->getRepository(PedigreeRegister::class);
         $this->inspectorAuthorizationRepository = $em->getRepository(InspectorAuthorization::class);
 
 
@@ -66,6 +83,8 @@ class NsfoInspectorCommand extends ContainerAwareCommand
             '1: Fix inspector names', "\n",
             '2: Add missing inspectors', "\n",
             '3: Fix duplicate inspectors', "\n",
+            '3: Fix duplicate inspectors', "\n",
+            '4: Authorize inspectors', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -85,6 +104,12 @@ class NsfoInspectorCommand extends ContainerAwareCommand
 
             case 3:
                 $this->fixDuplicateInspectors();
+                $output->writeln('DONE');
+                break;
+
+            case 4:
+                $this->authorizeInspectorsForExteriorMeasurementsTexelaar();
+                $output->writeln('DONE');
                 break;
 
             default:
@@ -132,8 +157,8 @@ class NsfoInspectorCommand extends ContainerAwareCommand
     {
         $newInspectorCount = 0;
 
-//        $newInspectorCount += $this->addMissingInspector('Johan', 'Knaap');
-//        $newInspectorCount += $this->addMissingInspector('Ido', 'Altenburg');
+        $newInspectorCount += $this->addMissingInspector('Johan', 'Knaap');
+        $newInspectorCount += $this->addMissingInspector('Ido', 'Altenburg');
         $newInspectorCount += $this->addMissingInspector('', 'Niet NSFO');
 
         return $newInspectorCount;
@@ -217,8 +242,72 @@ class NsfoInspectorCommand extends ContainerAwareCommand
     }
 
 
-    private function authorizeInspectors()
+    private function authorizeInspectorsForExteriorMeasurementsTexelaar()
     {
+        $this->actionByAdmin = $this->adminRepository->find(self::ACTION_BY_ADMIN_ID);
 
+        $inspectors = [
+            'Hans' => 'te Mebel',
+            'Marjo' => 'van Bergen',
+            'Wout' => 'Rodenburg',
+            'Johan' => 'Knaap',
+            'Ido' => 'Altenburg',
+            '' => 'Niet NSFO',
+        ];
+
+        $this->cmdUtil->setStartTimeAndPrintIt(count($inspectors) * 2, 1, 'Authorize inspectors for Texelaars');
+
+        $authorizations = 0;
+        $inspectorCount = 0;
+        foreach ($inspectors as $firstName => $lastName) {
+            $authorizations += $this->authorizeInspectorForExteriorMeasurementsTexelaar($firstName, $lastName);
+            $inspectorCount++;
+            $this->cmdUtil->advanceProgressBar(1, 'NewAuthorizations|InspectorsChecked: '.$authorizations.'|'.$inspectorCount);
+        }
+        $this->em->flush();
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
+
+    /**
+     * @param $firstName
+     * @param $lastName
+     * @return int
+     */
+    private function authorizeInspectorForExteriorMeasurementsTexelaar($firstName, $lastName)
+    {
+        $pedigreeRegisterTexelaarNTS = $this->pedigreeRegisterRepository->findOneBy(['abbreviation' => 'NTS']);
+        $pedigreeRegisterTexelaarTSNH = $this->pedigreeRegisterRepository->findOneBy(['abbreviation' => 'TSNH']);
+
+        $count = 0;
+        /** @var Inspector $inspector */
+        $inspector = $this->inspectorRepository->findOneBy(['firstName' => $firstName, 'lastName' => $lastName]);
+        if($inspector != null) {
+            $count += $this->authorizeInspector($inspector, InspectorMeasurementType::EXTERIOR, $pedigreeRegisterTexelaarNTS);
+            $count += $this->authorizeInspector($inspector, InspectorMeasurementType::EXTERIOR, $pedigreeRegisterTexelaarTSNH);
+            return $count;
+        }
+        return $count;
+    }
+
+
+    /**
+     * @param Inspector $inspector
+     * @param string $measurementType
+     * @param PedigreeRegister $pedigreeRegister
+     * @return int
+     */
+    private function authorizeInspector(Inspector $inspector, $measurementType, PedigreeRegister $pedigreeRegister = null)
+    {
+        $inspectorAuthorization = $this->inspectorAuthorizationRepository->findOneBy(
+            ['inspector' => $inspector, 'measurementType' => $measurementType, 'pedigreeRegister' => $pedigreeRegister]);
+
+        if($inspectorAuthorization == null) {
+            $inspectorAuthorization = new InspectorAuthorization(
+                $inspector, $this->actionByAdmin, $measurementType, $pedigreeRegister);
+            $this->em->persist($inspectorAuthorization);
+            return 1;
+        }
+        return 0;
     }
 }

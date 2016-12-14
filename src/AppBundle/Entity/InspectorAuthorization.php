@@ -68,15 +68,13 @@ class InspectorAuthorization
     private $pedigreeRegister;
     
     
-    public function __construct($userAccount, $actionBy, $userActionType, $isCompleted = false, $description = null, $isUserEnvironment = true)
+    public function __construct($inspector, $actionBy = null, $measurementType = null, $pedigreeRegister = null)
     {
         $this->logDate = new \DateTime();
-        $this->isUserEnvironment = $isUserEnvironment;
-        $this->userAccount = $userAccount;
+        $this->inspector = $inspector;
         $this->actionBy = $actionBy;
-        $this->userActionType = $userActionType;
-        $this->isCompleted = $isCompleted;
-        $this->description = $description;
+        $this->measurementType = $measurementType;
+        $this->pedigreeRegister = $pedigreeRegister;
     }
 
     /**
