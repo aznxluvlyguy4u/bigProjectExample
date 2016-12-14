@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Util\TimeUtil;
 
 /**
  * Class DeclareBaseRepository
@@ -88,9 +89,9 @@ class DeclareBaseRepository extends BaseRepository
 
         foreach ($retrievedData as $record) {
             $results[] = [
-              JsonInputConstant::LOG_DATE => Utils::fillNullOrEmptyString($record['log_date'], $replacementString),
-              JsonInputConstant::START_DATE => Utils::fillNullOrEmptyString($record['start_date'], $replacementString),
-              JsonInputConstant::END_DATE => Utils::fillNullOrEmptyString($record['end_date'], $replacementString),
+              JsonInputConstant::LOG_DATE => TimeUtil::getDateTimeFromNullCheckedArrayValue('log_date', $record, $replacementString),
+              JsonInputConstant::START_DATE => TimeUtil::getDateTimeFromNullCheckedArrayValue('start_date', $record, $replacementString),
+              JsonInputConstant::END_DATE => TimeUtil::getDateTimeFromNullCheckedArrayValue('end_date', $record, $replacementString),
               JsonInputConstant::ACTION => Utils::fillNullOrEmptyString($record['action'], $replacementString),
               JsonInputConstant::DATA => Utils::fillNullOrEmptyString($record['data'], $replacementString),
               JsonInputConstant::FIRST_NAME => Utils::fillNullOrEmptyString($record['first_name'], $replacementString),

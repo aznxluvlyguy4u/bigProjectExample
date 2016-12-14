@@ -48,10 +48,8 @@ class ExteriorRepository extends MeasurementRepository {
 
         foreach ($retrievedMeasurementData as $measurementData)
         {
-            $measurementDate = TimeUtil::getDateTimeFromNullCheckedDateString($measurementData['measurement_date']);
-
             $results[] = [
-                JsonInputConstant::MEASUREMENT_DATE => Utils::fillNullOrEmptyString($measurementDate, $nullFiller),
+                JsonInputConstant::MEASUREMENT_DATE => TimeUtil::getDateTimeFromNullCheckedArrayValue('measurement_date', $measurementData, $nullFiller),
                 JsonInputConstant::HEIGHT => Utils::fillNullOrEmptyString($measurementData['height'], $nullFiller),
                 JsonInputConstant::KIND => Utils::fillNullOrEmptyString($measurementData['skull'], $nullFiller),
                 JsonInputConstant::PROGRESS => Utils::fillNullOrEmptyString($measurementData['progress'], $nullFiller),

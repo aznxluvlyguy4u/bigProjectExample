@@ -3,6 +3,9 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Component\Utils;
+use Symfony\Component\Validator\Constraints\DateTime;
+
 class TimeUtil
 {
 
@@ -258,6 +261,19 @@ class TimeUtil
     public static function getDateTimeFromNullCheckedDateString($dateString)
     {
         return $dateString != null ? new \DateTime($dateString) : null;
+    }
+
+
+    /**
+     * @param string|int $keyForDateTimeString
+     * @param array $array
+     * @param string $nullFiller
+     * @return DateTime|string
+     */
+    public static function getDateTimeFromNullCheckedArrayValue($keyForDateTimeString, $array, $nullFiller = null)
+    {
+        $measurementDate = TimeUtil::getDateTimeFromNullCheckedDateString($array[$keyForDateTimeString]);
+        return Utils::fillNullOrEmptyString($measurementDate, $nullFiller);
     }
 
 
