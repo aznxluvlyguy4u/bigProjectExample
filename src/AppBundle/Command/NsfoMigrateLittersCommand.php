@@ -421,7 +421,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
         $continueFromPreviousMigration = $this->cmdUtil->generateConfirmationQuestion('Use eweId of latest litter as minEweId? (y/n)');
         if($continueFromPreviousMigration) {
             $sql = "SELECT animal_mother_id as last_ewe_id FROM litter ORDER BY id DESC LIMIT 1";
-            $minEweId = $this->conn->query($sql)->fetch()['last_ewe_id'];
+            $minEweId = $this->conn->query($sql)->fetch()['last_ewe_id'] - 1;
         } else {
             $minEweId = $this->cmdUtil->generateQuestion('Please enter minimum ewe primaryKey (default = 1)', self::DEFAULT_MIN_EWE_ID);
         }
