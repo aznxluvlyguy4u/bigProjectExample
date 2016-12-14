@@ -38,7 +38,7 @@ class AdminValidator
         $this->accessLevelRequired = $accessLevelRequired;
 
         //Validate user
-        if($admin == null) {
+        if(!($admin instanceof Employee)) {
             $this->isAccessGranted = false;
         } else {
             $this->isAccessGranted = self::checkIsAccessGranted($this->accessLevelRequired, $admin->getAccessLevel());
