@@ -142,5 +142,125 @@ class InspectorMigrator
           JsonInputConstant::LAST_NAME => $newLastName,
         ];
     }
-    
+
+
+    /**
+     * @return array
+     */
+    public function inspectorImportNames()
+    {
+        return [
+            "A. Bakker" => [JsonInputConstant::FIRST_NAME => 'A.',
+                JsonInputConstant::LAST_NAME => 'Bakker',],
+            "Bakker" => [JsonInputConstant::FIRST_NAME => 'A.',
+                JsonInputConstant::LAST_NAME => 'Bakker',],
+            "Bakker a." => [JsonInputConstant::FIRST_NAME => 'A.',
+                JsonInputConstant::LAST_NAME => 'Bakker',],
+            "A. van Zandwijk" => [JsonInputConstant::FIRST_NAME => 'A.',
+                JsonInputConstant::LAST_NAME => 'van Zandwijk',],
+
+            "Bennie Feije" => [JsonInputConstant::FIRST_NAME => 'Bennie',
+                JsonInputConstant::LAST_NAME => 'Feije',],
+            "Feije" => [JsonInputConstant::FIRST_NAME => 'Bennie',
+                JsonInputConstant::LAST_NAME => 'Feije',],
+
+            "Ben Thys" => [JsonInputConstant::FIRST_NAME => 'Ben',
+                JsonInputConstant::LAST_NAME => 'Thys',],
+
+            "C.J.J. van der Pijl" => [JsonInputConstant::FIRST_NAME => 'C.J.J.',
+                JsonInputConstant::LAST_NAME => 'van der Pijl',],
+
+            "C. pauw" => [JsonInputConstant::FIRST_NAME => 'C.',
+                JsonInputConstant::LAST_NAME => 'Pauw',],
+            "C. Pauw" => [JsonInputConstant::FIRST_NAME => 'C.',
+                JsonInputConstant::LAST_NAME => 'Pauw',],
+
+            "D. Reijne" => [JsonInputConstant::FIRST_NAME => 'D.',
+                JsonInputConstant::LAST_NAME => 'Reijne',],
+            "Reijne" => [JsonInputConstant::FIRST_NAME => 'D.',
+                JsonInputConstant::LAST_NAME => 'Reijne',],
+
+            "F.Palmen" => [JsonInputConstant::FIRST_NAME => 'F.',
+                JsonInputConstant::LAST_NAME => 'Palmen',],
+
+            "H. Blok" => [JsonInputConstant::FIRST_NAME => 'H.',
+                JsonInputConstant::LAST_NAME => 'Blok',],
+
+            "H.J.G. te Mebel" => [JsonInputConstant::FIRST_NAME => 'Hans',
+                JsonInputConstant::LAST_NAME => 'te Mebel',],
+            "H.J. Te Mebel" => [JsonInputConstant::FIRST_NAME => 'Hans',
+                JsonInputConstant::LAST_NAME => 'te Mebel',],
+            "H. te Mebel" => [JsonInputConstant::FIRST_NAME => 'Hans',
+                JsonInputConstant::LAST_NAME => 'te Mebel',],
+            "Hans te Mebel" => [JsonInputConstant::FIRST_NAME => 'Hans',
+                JsonInputConstant::LAST_NAME => 'te Mebel',],
+
+            "H. Mulder" => [JsonInputConstant::FIRST_NAME => 'H.',
+                JsonInputConstant::LAST_NAME => 'Mulder',],
+
+            "H. Verheul" => [JsonInputConstant::FIRST_NAME => 'H.',
+                JsonInputConstant::LAST_NAME => 'Verheul',],
+
+            "J.A.M. Schilder" => [JsonInputConstant::FIRST_NAME => 'J.A.M.',
+                JsonInputConstant::LAST_NAME => 'Schilder',],
+
+            "J.D.M. Schreurs" => [JsonInputConstant::FIRST_NAME => 'J.D.M.',
+                JsonInputConstant::LAST_NAME => 'Schreurs',],
+
+            "J.M.J. Vaessen" => [JsonInputConstant::FIRST_NAME => 'J.M.J.',
+                JsonInputConstant::LAST_NAME => 'Vaessen',],
+
+            "J.T. Hooge" => [JsonInputConstant::FIRST_NAME => 'J.T.',
+                JsonInputConstant::LAST_NAME => 'Hooge',],
+
+            "U. Zwaga" => [JsonInputConstant::FIRST_NAME => 'U.',
+                JsonInputConstant::LAST_NAME => 'Zwaga',],
+
+            "J. Worp" => [JsonInputConstant::FIRST_NAME => 'J.',
+                JsonInputConstant::LAST_NAME => 'Worp',],
+
+            "L.F. de Reuver" => [JsonInputConstant::FIRST_NAME => 'L.F.',
+                JsonInputConstant::LAST_NAME => 'Reuver',],
+
+            "M. Mulder" => [JsonInputConstant::FIRST_NAME => 'M.',
+                JsonInputConstant::LAST_NAME => 'Mulder',],
+
+            "M. van Bergen" => [JsonInputConstant::FIRST_NAME => 'Marjo',
+                JsonInputConstant::LAST_NAME => 'van Bergen',],
+            "Bergen" => [JsonInputConstant::FIRST_NAME => 'Marjo',
+                JsonInputConstant::LAST_NAME => 'van Bergen',],
+            "Marjo van Bergen" => [JsonInputConstant::FIRST_NAME => 'Marjo',
+                JsonInputConstant::LAST_NAME => 'van Bergen',],
+
+            "M. van Wijnen" => [JsonInputConstant::FIRST_NAME => 'M.',
+                JsonInputConstant::LAST_NAME => 'van Wijnen',],
+
+            "M.W.P. Nijssen" => [JsonInputConstant::FIRST_NAME => 'M.W.P.',
+                JsonInputConstant::LAST_NAME => 'Nijssen',],
+
+            "R. Kuipers" => [JsonInputConstant::FIRST_NAME => 'R.',
+                JsonInputConstant::LAST_NAME => 'Kuipers',],
+
+            "Rodenburg w" => [JsonInputConstant::FIRST_NAME => 'Wout',
+                JsonInputConstant::LAST_NAME => 'Rodenburg',],
+            "Rodenburg, W." => [JsonInputConstant::FIRST_NAME => 'Wout',
+                JsonInputConstant::LAST_NAME => 'Rodenburg',],
+            "W. Rodenburg" => [JsonInputConstant::FIRST_NAME => 'Wout',
+                JsonInputConstant::LAST_NAME => 'Rodenburg',],
+            "W.S.M. Rodenburg" => [JsonInputConstant::FIRST_NAME => 'Wout',
+                JsonInputConstant::LAST_NAME => 'Rodenburg',],
+
+            "Stijn Thijs" => [JsonInputConstant::FIRST_NAME => 'Stijn',
+                JsonInputConstant::LAST_NAME => 'Thijs',],
+            "Thijs" => [JsonInputConstant::FIRST_NAME => 'Stijn',
+                JsonInputConstant::LAST_NAME => 'Thijs',],
+
+            "Th. reintjes" => [JsonInputConstant::FIRST_NAME => 'Th.',
+                JsonInputConstant::LAST_NAME => 'Reintjes',],
+
+            "Johan Knaap" => [JsonInputConstant::FIRST_NAME => 'Johan',
+                JsonInputConstant::LAST_NAME => 'Knaap',],
+
+        ];
+    }
 }
