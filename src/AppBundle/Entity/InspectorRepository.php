@@ -25,9 +25,25 @@ class InspectorRepository extends PersonRepository {
         $isInsertParentSuccessFul = parent::insertNewPersonParentTable($type, $firstName, $lastName, $isActive);
         if($isInsertParentSuccessFul) {
             $sql = "INSERT INTO inspector (id, object_type) VALUES (currval('person_id_seq'),'".$type."')";
-            $this->getManager()->getConnection()->exec($sql);
+            $this->getConnection()->exec($sql);
             $isInsertSuccessFul = true;
         }
         return $isInsertSuccessFul;
+    }
+
+
+    /**
+     * @param $personId
+     */
+    public function deleteInspector($personId)
+    {
+        $sql = "DELETE FROM inspector WHERE id = ".$personId;
+        $this->getConnection()->exec($sql);
+        
+        $sql = "DELETE FROM token WHERE owner_id = ".$personId;
+        $this->getConnection()->exec($sql);
+        
+        $sql = "DELETE FROM person WHERE type = 'Inspector' AND id = ".$personId;
+        $this->getConnection()->exec($sql);
     }
 }

@@ -35,6 +35,9 @@ class NsfoInspectorCommand extends ContainerAwareCommand
     /** @var CommandUtil */
     private $cmdUtil;
 
+    /** @var OutputInterface */
+    private $output;
+
     protected function configure()
     {
         $this
@@ -52,6 +55,7 @@ class NsfoInspectorCommand extends ContainerAwareCommand
         $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
+        $this->output = $output;
 
         $this->inspectorRepository = $em->getRepository(Inspector::class);
         $this->inspectorAuthorizationRepository = $em->getRepository(InspectorAuthorization::class);
@@ -61,6 +65,7 @@ class NsfoInspectorCommand extends ContainerAwareCommand
             'Choose option: ', "\n",
             '1: Fix inspector names', "\n",
             '2: Add missing inspectors', "\n",
+            '3: Fix duplicate inspectors', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -76,6 +81,10 @@ class NsfoInspectorCommand extends ContainerAwareCommand
                 $count = $this->addMissingInspectors();
                 $result = $count == 0 ? 'No new inspectors added' : $count.' new inspectors added!' ;
                 $output->writeln($result);
+                break;
+
+            case 3:
+                $this->fixDuplicateInspectors();
                 break;
 
             default:
@@ -151,5 +160,59 @@ class NsfoInspectorCommand extends ContainerAwareCommand
             return 1;
         }
         return 0;
+    }
+    
+    
+    private function fixDuplicateInspectors()
+    {
+        $sql = "SELECT x.id, x.first_name, x.last_name FROM person x
+                INNER JOIN (
+                    SELECT p.first_name, p.last_name, p.type FROM inspector i
+                      INNER JOIN person p ON i.id = p.id
+                      WHERE p.type = 'Inspector'
+                    GROUP BY p.first_name, p.last_name, p.type HAVING COUNT(*) > 1
+                    )y ON y.first_name = x.first_name AND y.last_name = x.last_name AND y.type = x.type";
+        $results = $this->conn->query($sql)->fetchAll();
+
+        $groupedSearchArray = [];
+        foreach ($results as $result) {
+            $id = $result['id'];
+            $firstName = $result['first_name'];
+            $lastName = $result['last_name'];
+            $searchKey = $firstName.'__'.$lastName;
+
+            if(array_key_exists($searchKey, $groupedSearchArray)) {
+                $group = $groupedSearchArray[$searchKey];
+            } else {
+                $group = [];
+            }
+
+            $group[] = $result;
+            $groupedSearchArray[$searchKey] = $group;
+        }
+
+        $totalDuplicateCount = count($groupedSearchArray);
+        if($totalDuplicateCount == 0) {
+            $this->output->writeln('No duplicate inspectors!');
+            return;
+        }
+
+        $this->cmdUtil->setStartTimeAndPrintIt($totalDuplicateCount, 1);
+
+        foreach ($groupedSearchArray as $group) {
+            $firstInspectorResult = $group[0];
+            $primaryInspectorId = $firstInspectorResult['id'];
+            foreach ($group as $result) {
+                $secondaryInspectorId = $result['id'];
+                if($primaryInspectorId != $secondaryInspectorId) {
+                    $sql = "UPDATE measurement SET inspector_id = ".$primaryInspectorId." WHERE inspector_id = ".$secondaryInspectorId;
+                    $this->conn->exec($sql);
+
+                    $this->inspectorRepository->deleteInspector($secondaryInspectorId);
+                }
+            }
+            $this->cmdUtil->advanceProgressBar(1, 'Removing duplicate inspectors');
+        }
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 }
