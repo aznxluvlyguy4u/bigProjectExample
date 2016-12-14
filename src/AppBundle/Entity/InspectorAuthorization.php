@@ -63,7 +63,7 @@ class InspectorAuthorization
      * @var PedigreeRegister
      *
      * @ORM\ManyToOne(targetEntity="PedigreeRegister")
-     * @ORM\JoinColumn(name="pedigree_register_by_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="pedigree_register_id", referencedColumnName="id")
      */
     private $pedigreeRegister;
     
