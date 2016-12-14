@@ -7,7 +7,10 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\Inspector;
+use AppBundle\Entity\InspectorAuthorization;
+use AppBundle\Entity\InspectorAuthorizationRepository;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\InspectorMeasurementType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\TimeUtil;
@@ -271,44 +274,17 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      * )
      *
      * @param Request $request the request object
+     * @param string $ulnString
      * @return jsonResponse
-     * @Route("/exteriors/inspectors")
+     * @Route("/{ulnString}/exteriors/inspectors")
      * @Method("GET")
      */
-    public function getAllowedInspectorsForMeasurements(Request $request)
+    public function getAllowedInspectorsForExteriorMeasurements(Request $request, $ulnString)
     {
-        $output = [
-            [
-                'person_id' => '00000000000000000',
-                'first_name' => '',
-                'last_name' => 'Hans te Mebel',
-            ],
-            [
-                'person_id' => '00000000000000000',
-                'first_name' => '',
-                'last_name' => 'Johan Knaap',
-            ],
-            [
-                'person_id' => '00000000000000000',
-                'first_name' => '',
-                'last_name' => 'Marjo van Bergen',
-            ],
-            [
-                'person_id' => '00000000000000000',
-                'first_name' => '',
-                'last_name' => 'Wout Rodenburg',
-            ],
-            [
-                'person_id' => '00000000000000000',
-                'first_name' => '',
-                'last_name' => 'Ido Altenburg',
-            ],
-            [
-                'person_id' => '00000000000000000',
-                'first_name' => '',
-                'last_name' => 'Niet NSFO',
-            ],
-        ];
+        $em = $this->getDoctrine()->getManager();
+        /** @var InspectorAuthorizationRepository $repository */
+        $repository = $em->getRepository(InspectorAuthorization::class);
+        $output = $repository->getAuthorizedInspectorsExteriorByUln($ulnString);
         return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
     }
 
