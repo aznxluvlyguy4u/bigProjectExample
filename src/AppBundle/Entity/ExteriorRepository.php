@@ -43,7 +43,7 @@ class ExteriorRepository extends MeasurementRepository {
                   INNER JOIN exterior x ON x.id = m.id
                   LEFT JOIN person p ON p.id = m.inspector_id
                   INNER JOIN animal a ON a.id = x.animal_id
-                WHERE x.animal_id = ".$animal->getId();
+                WHERE x.animal_id = ".$animal->getId()." ORDER BY measurement_date DESC";
         $retrievedMeasurementData = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
         foreach ($retrievedMeasurementData as $measurementData)
