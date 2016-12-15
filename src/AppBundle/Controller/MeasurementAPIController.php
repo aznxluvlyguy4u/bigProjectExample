@@ -252,15 +252,11 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
         if (!$animalDetailsValidator->getIsInputValid()) {
             return $animalDetailsValidator->createJsonResponse();
         }
+        //Uln has already been validated above
         $animal = $animalDetailsValidator->getAnimal();
 
-        if(!($animal instanceof Animal)) {
-            //TODO return error response
-            dump('ANIMAL MISSING');die;
-        }
-
         $output = MeasurementsUtil::getExteriorKinds($em, $animal);
-        
+
         return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
     }
 
