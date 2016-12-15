@@ -43,7 +43,7 @@ class AnimalDetailsValidator extends BaseValidator
         $this->animal = $repository->findAnimalByUlnString($ulnString);
 
         if($isAdmin) {
-            $this->isInputValid = true;
+            $this->isInputValid = $this->animal != null;
         } else {
             $this->isInputValid = Validator::validateIfUlnStringBelongsToPublicHistoricAnimal($this->em, $ulnString, $location);
             

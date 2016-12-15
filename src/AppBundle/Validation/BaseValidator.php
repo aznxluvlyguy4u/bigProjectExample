@@ -29,11 +29,15 @@ abstract class BaseValidator
     /** @var array */
     protected $errors;
 
+    /** @var ArrayCollection */
+    protected $content;
+
     public function __construct(ObjectManager $manager, ArrayCollection $content)
     {
         $this->manager = $manager;
         $this->isInputValid = false;
         $this->errors = array();
+        $this->content = $content;
     }
 
 

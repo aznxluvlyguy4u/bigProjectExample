@@ -5,6 +5,7 @@ namespace AppBundle\Validation;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Employee;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\PersonRepository;
 use AppBundle\Enumerator\AccessLevelType;
 use Doctrine\Common\Collections\Collection;
@@ -30,7 +31,7 @@ class AdminValidator
 
     /**
      * AdminValidator constructor.
-     * @param Employee $admin
+     * @param Person $admin
      * @param string $accessLevelRequired
      */
     public function __construct($admin, $accessLevelRequired = AccessLevelType::ADMIN)
