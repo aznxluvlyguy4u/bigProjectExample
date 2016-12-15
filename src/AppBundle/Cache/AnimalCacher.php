@@ -249,7 +249,7 @@ class AnimalCacher
         $dutchBreedStatus = Translation::getFirstLetterTranslatedBreedType($breedType);
 
         //Litter Data
-        $production = self::generateProductionString($em, $animalId, $gender, $dateOfBirthString);
+        $production = self::generateProductionStringBySql($em, $animalId);
         $nLing = self::getNLingData($em, $animalId);
 
         //Breed Values
@@ -529,7 +529,7 @@ class AnimalCacher
 
         } else {
             //Production Data
-            $production = self::generateProductionString($em, $animalId, $animal->getGender(), $animal->getDateOfBirthString());
+            $production = self::generateProductionStringBySql($em, $animalId);
 
             //If record already exists, only update the production data
             $record->setLogDate(new \DateTime()); //update logDate
@@ -576,6 +576,105 @@ class AnimalCacher
 
 
     /**
+     * @param ObjectManager $em
+     * @param $animalId
+     * @return string
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function generateProductionStringBySql(ObjectManager $em, $animalId)
+    {
+        /** @var Connection $conn */
+        $conn = $em->getConnection();
+
+        if(!(is_int($animalId) && $animalId != 0)) { return DisplayUtil::EMPTY_PRODUCTION; }
+        
+        $sql = "SELECT DISTINCT (a.id), gender,
+                  EXTRACT(YEAR FROM AGE (MAX(l.litter_date), MAX(a.date_of_birth))) + --get years
+                  ROUND(CAST(EXTRACT(MONTH FROM AGE (MAX(l.litter_date), MAX(a.date_of_birth))) AS DOUBLE PRECISION)/11) --add year if months >= 6
+                    as age_in_nsfo_system,
+                  COUNT(l.id) as litter_count,
+                  SUM(l.born_alive_count) + SUM(l.stillborn_count) as total_born_count,
+                  SUM(l.born_alive_count) as born_alive_count,
+                
+                  EXTRACT(YEAR FROM AGE (MIN(l.litter_date), MAX(a.date_of_birth)))*12 + --get all as months
+                  EXTRACT(MONTH FROM AGE (MIN(l.litter_date), MAX(a.date_of_birth))) <= 18 AND a.gender = 'FEMALE'
+                    as has_one_year_mark
+                
+                FROM animal a
+                  INNER JOIN litter l ON a.id = l.animal_father_id
+                  WHERE date_of_birth NOTNULL AND a.id = ".$animalId."
+                GROUP BY a.id
+                
+                UNION
+                
+                SELECT DISTINCT (a.id), gender,
+                  EXTRACT(YEAR FROM AGE (MAX(l.litter_date), MAX(a.date_of_birth))) + --get years
+                  ROUND(CAST(EXTRACT(MONTH FROM AGE (MAX(l.litter_date), MAX(a.date_of_birth))) AS DOUBLE PRECISION)/11) --add year if months >= 6
+                    as age_in_nsfo_system,
+                  COUNT(l.id) as litter_count,
+                  SUM(l.born_alive_count) + SUM(l.stillborn_count) as total_born_count,
+                  SUM(l.born_alive_count) as born_alive_count,
+                
+                  EXTRACT(YEAR FROM AGE (MIN(l.litter_date), MAX(a.date_of_birth)))*12 + --get all as months
+                  EXTRACT(MONTH FROM AGE (MIN(l.litter_date), MAX(a.date_of_birth))) <= 18 AND a.gender = 'FEMALE'
+                    as has_one_year_mark
+                
+                FROM animal a
+                  INNER JOIN litter l ON a.id = l.animal_mother_id
+                  WHERE date_of_birth NOTNULL AND a.id = ".$animalId."
+                GROUP BY a.id
+                
+                UNION --Below when date of births are null
+                
+                SELECT DISTINCT (a.id), gender,
+                  -1 as age_in_nsfo_system,
+                  COUNT(l.id) as litter_count,
+                  SUM(l.born_alive_count) + SUM(l.stillborn_count) as total_born_count,
+                  SUM(l.born_alive_count) as born_alive_count,
+                
+                  EXTRACT(YEAR FROM AGE (MIN(l.litter_date), MAX(a.date_of_birth)))*12 + --get all as months
+                  EXTRACT(MONTH FROM AGE (MIN(l.litter_date), MAX(a.date_of_birth))) <= 18 AND a.gender = 'FEMALE'
+                                          as has_one_year_mark
+                
+                FROM animal a
+                  INNER JOIN litter l ON a.id = l.animal_father_id
+                WHERE date_of_birth ISNULL AND a.id = ".$animalId."
+                GROUP BY a.id
+                
+                UNION
+                
+                SELECT DISTINCT (a.id), gender,
+                  -1 as age_in_nsfo_system,
+                  COUNT(l.id) as litter_count,
+                  SUM(l.born_alive_count) + SUM(l.stillborn_count) as total_born_count,
+                  SUM(l.born_alive_count) as born_alive_count,
+                
+                  EXTRACT(YEAR FROM AGE (MIN(l.litter_date), MAX(a.date_of_birth)))*12 + --get all as months
+                  EXTRACT(MONTH FROM AGE (MIN(l.litter_date), MAX(a.date_of_birth))) <= 18 AND a.gender = 'FEMALE'
+                                          as has_one_year_mark
+                
+                FROM animal a
+                  INNER JOIN litter l ON a.id = l.animal_mother_id
+                WHERE date_of_birth ISNULL AND a.id = ".$animalId."
+                GROUP BY a.id";
+        $result = $conn->query($sql)->fetch();
+        return self::parseProductionStringFromSqlResult($result);
+    }
+
+
+    private static function parseProductionStringFromSqlResult($result)
+    {
+        $ageInNsfoSystem = intval($result['age_in_nsfo_system']) > 0 ? $result['age_in_nsfo_system'] : '-';
+        $litterCount = $result['litter_count'];
+        $totalBornCount = $result['total_born_count'];
+        $bornAliveCount = $result['born_alive_count'];
+        $oneYearMark = boolval($result['has_one_year_mark']) ? '*' : '';
+
+        return $ageInNsfoSystem.'/'.$litterCount.'/'.$totalBornCount.'/'.$bornAliveCount.$oneYearMark;
+    }
+
+
+    /**
      * Returns true if production string in the animal_cache was updated.
      *
      * @param ObjectManager $em
@@ -600,7 +699,7 @@ class AnimalCacher
             return false;
 
         } else {
-            $productionString = self::generateProductionString($em, $animalId, $gender, $dateOfBirthString);
+            $productionString = self::generateProductionStringBySql($em, $animalId);
             if($currentProductionString != $productionString) {
                 $sql = "UPDATE animal_cache SET production = '".$productionString."' WHERE animal_id = ".$animalId;
                 $conn->exec($sql);
@@ -757,6 +856,35 @@ class AnimalCacher
 
     }
 
+    public static function updateAllMismatchedProductionStrings(ObjectManager $em) {
+        /** @var Connection $conn */
+        $conn = $em->getConnection();
+
+        $sql = "SELECT a.id as animal_id, c.production,
+                  split_part(c.production,'/',1) as age_in_nsfo_system,
+                  split_part(c.production,'/',2) as litter_count,
+                  split_part(c.production,'/',3) as total_born_count,
+                  substring(split_part(c.production,'/',4), 1, length(split_part(c.production,'/',4))-1) as born_alive_count,
+                  true as has_one_year_mark
+                FROM animal a
+                INNER JOIN animal_cache c ON c.animal_id = a.id
+                WHERE right(c.production, 1) = '*'
+                UNION
+                SELECT a.id as animal_id, c.production,
+                  split_part(c.production,'/',1) as age_in_nsfo_system,
+                  split_part(c.production,'/',2) as litter_count,
+                  split_part(c.production,'/',3) as total_born_count,
+                  split_part(c.production,'/',4) as born_alive_count,
+                  false as has_one_year_mark
+                FROM animal a
+                  INNER JOIN animal_cache c ON c.animal_id = a.id
+                WHERE right(c.production, 1) <> '*'";
+        $results = $conn->query($sql)->fetchAll();
+        foreach ($results as $result) {
+            
+        }
+
+    }
 
     /**
      * @param int $animalId
