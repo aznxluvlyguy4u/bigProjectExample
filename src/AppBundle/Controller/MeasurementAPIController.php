@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\Exterior;
 use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\Inspector;
@@ -13,6 +14,7 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\InspectorMeasurementType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\AnimalDetailsValidator;
@@ -236,33 +238,29 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      */
     public function getAllowedExteriorKinds(Request $request, $ulnString)
     {
+        $loggedInUser = $this->getLoggedInUser($request);
+        $adminValidator = new AdminValidator($loggedInUser, AccessLevelType::ADMIN);
+        $isAdmin = $adminValidator->getIsAccessGranted();
+        $em = $this->getDoctrine()->getManager();
 
-        /*
-         * VG voorlopig gekeurd: 5-14 maanden (leeftijd)
-    DD direct definitief (als het nog geen VG heeft): 14-26 maanden (leeftijd)
-    DF definitief (als het al een VG heeft): 14-26 maanden (leeftijd)
-    DO dood voor keuring (kan altijd voor een dier dat dood is)
-    HK herkeuring (moet al een DD of DF of VG hebben)
-    HH herhaalde keuring > 26 maanden (leeftijd) & (moet al een DD of DF hebben)
-         */
+        $location = null;
+        if (!$isAdmin) {
+            $location = $this->getSelectedLocation($request);
+        }
 
-        $output = [
-            [
-                'code' => 'DD',
-            ],
-            [
-                'code' => 'DF',
-            ],
-            [
-                'code' => 'DO',
-            ],
-            [
-                'code' => 'HK',
-            ],
-            [
-                'code' => 'HH',
-            ],
-        ];
+        $animalDetailsValidator = new AnimalDetailsValidator($em, $isAdmin, $location, $ulnString);
+        if (!$animalDetailsValidator->getIsInputValid()) {
+            return $animalDetailsValidator->createJsonResponse();
+        }
+        $animal = $animalDetailsValidator->getAnimal();
+
+        if(!($animal instanceof Animal)) {
+            //TODO return error response
+            dump('ANIMAL MISSING');die;
+        }
+
+        $output = MeasurementsUtil::getExteriorKinds($em, $animal);
+        
         return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
     }
 
