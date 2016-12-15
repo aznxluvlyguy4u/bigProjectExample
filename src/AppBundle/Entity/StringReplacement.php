@@ -37,7 +37,7 @@ class StringReplacement
      * @var string
      *
      * @Assert\NotBlank
-     * @ORM\Column(type="string", nullable=false, unique=true)
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      */
     private $secondaryString;
