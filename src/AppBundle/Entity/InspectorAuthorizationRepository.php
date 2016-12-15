@@ -32,7 +32,7 @@ class InspectorAuthorizationRepository extends PersonRepository {
         $result = $this->getConnection()->query($sql)->fetch();
         $pedigreeRegisterId = Utils::getNullCheckedArrayValue('pedigree_register_id', $result);
 
-        return $this->getAuthorizedInspectors(InspectorMeasurementType::EXTERIOR, [0 => $pedigreeRegisterId]);
+        return $this->getAuthorizedInspectors(InspectorMeasurementType::EXTERIOR, [$pedigreeRegisterId]);
     }
     
     /**
