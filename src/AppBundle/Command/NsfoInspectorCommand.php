@@ -233,6 +233,9 @@ class NsfoInspectorCommand extends ContainerAwareCommand
                     $sql = "UPDATE measurement SET inspector_id = ".$primaryInspectorId." WHERE inspector_id = ".$secondaryInspectorId;
                     $this->conn->exec($sql);
 
+                    $sql = "INSERT INTO string_replacement (id, primary_string, secondary_string, type) VALUES (nextval('string_replacement_id_seq'),'" .$primaryInspectorId. "','" . $secondaryInspectorId . "','Inspector')";
+                    $this->conn->exec($sql);
+
                     $this->inspectorRepository->deleteInspector($secondaryInspectorId);
                 }
             }
