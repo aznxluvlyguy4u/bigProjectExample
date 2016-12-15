@@ -85,9 +85,11 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
 
         $exterior = new Exterior();
 
+        $measurementDate = new \DateTime($content->get(JsonInputConstant::MEASUREMENT_DATE));
+
         $exterior->setActionBy($loggedInUser);
         $exterior->setEditDate(new \DateTime());
-        $exterior->setMeasurementDate($content->get(JsonInputConstant::MEASUREMENT_DATE));
+        $exterior->setMeasurementDate($measurementDate);
         $exterior->setKind($content->get(JsonInputConstant::KIND));
         $exterior->setSkull($content->get(JsonInputConstant::SKULL));
         $exterior->setProgress($content->get(JsonInputConstant::PROGRESS));
@@ -102,6 +104,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
         $exterior->setTorsoLength($content->get(JsonInputConstant::TORSO_LENGTH));
         $exterior->setMarkings($content->get(JsonInputConstant::MARKINGS));
         $exterior->setInspector($inspector);
+        $exterior->setAnimalIdAndDateByAnimalAndDateTime($animal, $measurementDate);
 
         $em->persist($exterior);
         $em->flush();
@@ -187,6 +190,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
         $exterior->setTorsoLength($content->get(JsonInputConstant::TORSO_LENGTH));
         $exterior->setMarkings($content->get(JsonInputConstant::MARKINGS));
         $exterior->setInspector($inspector);
+        $exterior->setAnimalIdAndDateByAnimalAndDateTime($animal, $measurementDate);
 
         $em->persist($exterior);
         $em->flush();

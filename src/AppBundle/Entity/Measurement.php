@@ -196,6 +196,24 @@ abstract class Measurement {
     }
 
     /**
+     * @param Animal $animal
+     * @param \DateTime $measurementDate
+     */
+    public function setAnimalIdAndDateByAnimalAndDateTime(Animal $animal, \DateTime $measurementDate)
+    {
+        $animalIdAndDate = null;
+        if($animal instanceof Animal) {
+            $animalId = $animal->getId();
+            if(is_int($animalId) && $animalId != 0) {
+                $dateTimeString = $measurementDate->format('Y-m-d');
+                $animalIdAndDate = $animalId.'_'.$dateTimeString;
+            }
+        }
+
+        $this->animalIdAndDate = $animalIdAndDate;
+    }
+
+    /**
      * @return Client|Employee
      */
     public function getActionBy()
