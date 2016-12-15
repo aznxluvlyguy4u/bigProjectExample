@@ -16,10 +16,11 @@ class InspectorAuthorizationRepository extends PersonRepository {
 
     /**
      * @param string $ulnString
+     * @param boolean $allowBlankInspector
      * @return array
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function getAuthorizedInspectorsExteriorByUln($ulnString)
+    public function getAuthorizedInspectorsExteriorByUln($ulnString, $allowBlankInspector = true)
     {
         $ulnParts = Utils::getUlnFromString($ulnString);
         if($ulnParts == null) {
@@ -32,16 +33,17 @@ class InspectorAuthorizationRepository extends PersonRepository {
         $result = $this->getConnection()->query($sql)->fetch();
         $pedigreeRegisterId = Utils::getNullCheckedArrayValue('pedigree_register_id', $result);
 
-        return $this->getAuthorizedInspectors(InspectorMeasurementType::EXTERIOR, [$pedigreeRegisterId]);
+        return $this->getAuthorizedInspectors(InspectorMeasurementType::EXTERIOR, [$pedigreeRegisterId], $allowBlankInspector);
     }
     
     /**
      * @param $measurementType
      * @param array $pedigreeRegistersIds
+     * @param boolean $allowBlankInspector
      * @return array
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function getAuthorizedInspectors($measurementType, array $pedigreeRegistersIds = [])
+    public function getAuthorizedInspectors($measurementType, array $pedigreeRegistersIds = [], $allowBlankInspector = true)
     {
         $filterStart = '';
         $filterEnd = '';
@@ -72,6 +74,15 @@ class InspectorAuthorizationRepository extends PersonRepository {
                 JsonInputConstant::LAST_NAME => $inspector['last_name'],  
             ];
         }
+
+        if($allowBlankInspector) {
+            $result[] = [
+                JsonInputConstant::PERSON_ID => 0,
+                JsonInputConstant::FIRST_NAME => '',
+                JsonInputConstant::LAST_NAME => '',
+            ];
+        }
+
         return $result;
     }
 
