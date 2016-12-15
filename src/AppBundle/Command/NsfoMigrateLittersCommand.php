@@ -120,7 +120,8 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
             '4: Generate all litter group ids (uln_orderedCount)', "\n",
             '5: Check if children in litter matches bornAliveCount value', "\n",
             '6: Update mismatched n-ling data in cache', "\n",
-            '7: Printout strange litter dates', "\n",
+            '7: Update mismatched production data in cache', "\n",
+            '8: Printout strange litter dates', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -152,6 +153,10 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                 break;
 
             case 7:
+                AnimalCacher::updateAllMismatchedProductionStrings($em, $this->cmdUtil);
+                break;
+
+            case 8:
                 $this->printOutStrangeLitterDates();
                 break;
 
