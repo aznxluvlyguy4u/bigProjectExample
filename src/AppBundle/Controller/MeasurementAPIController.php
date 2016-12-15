@@ -66,7 +66,8 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
 
         $location = null;
         if (!$isAdmin) {
-            $location = $this->getSelectedLocation($request);
+            return $adminValidator->createJsonErrorResponse();
+            //$location = $this->getSelectedLocation($request);
         }
 
         $animalDetailsValidator = new AnimalDetailsValidator($em, $isAdmin, $location, $ulnString);
@@ -149,7 +150,8 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
 
         $location = null;
         if (!$isAdmin) {
-            $location = $this->getSelectedLocation($request);
+            return $adminValidator->createJsonErrorResponse();
+            //$location = $this->getSelectedLocation($request);
         }
 
         $animalDetailsValidator = new AnimalDetailsValidator($em, $isAdmin, $location, $ulnString);
