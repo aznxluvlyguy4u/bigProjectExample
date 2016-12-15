@@ -175,30 +175,37 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
         /** @var Exterior $exterior */
         $exterior = $repository->findOneBy(['measurementDate' => $measurementDate, 'animal' => $animal]);
 
-        $exterior->setActionBy($loggedInUser);
-        $exterior->setEditDate(new \DateTime());
-        $exterior->setMeasurementDate($measurementDate);
-        $exterior->setKind($content->get(JsonInputConstant::KIND));
-        $exterior->setSkull($content->get(JsonInputConstant::SKULL));
-        $exterior->setProgress($content->get(JsonInputConstant::PROGRESS));
-        $exterior->setMuscularity($content->get(JsonInputConstant::MUSCULARITY));
-        $exterior->setProportion($content->get(JsonInputConstant::PROPORTION));
-        $exterior->setExteriorType($content->get(JsonInputConstant::TYPE));
-        $exterior->setLegWork($content->get(JsonInputConstant::LEG_WORK));
-        $exterior->setFur($content->get(JsonInputConstant::FUR));
-        $exterior->setGeneralAppearence($content->get(JsonInputConstant::GENERAL_APPEARANCE));
-        $exterior->setHeight($content->get(JsonInputConstant::HEIGHT));
-        $exterior->setBreastDepth($content->get(JsonInputConstant::BREAST_DEPTH));
-        $exterior->setTorsoLength($content->get(JsonInputConstant::TORSO_LENGTH));
-        $exterior->setMarkings($content->get(JsonInputConstant::MARKINGS));
-        $exterior->setInspector($inspector);
-        $exterior->setAnimalIdAndDateByAnimalAndDateTime($animal, $measurementDate);
+        if($exterior instanceof Exterior) {
+            $exterior->setActionBy($loggedInUser);
+            $exterior->setEditDate(new \DateTime());
+            $exterior->setMeasurementDate($measurementDate);
+            $exterior->setKind($content->get(JsonInputConstant::KIND));
+            $exterior->setSkull($content->get(JsonInputConstant::SKULL));
+            $exterior->setProgress($content->get(JsonInputConstant::PROGRESS));
+            $exterior->setMuscularity($content->get(JsonInputConstant::MUSCULARITY));
+            $exterior->setProportion($content->get(JsonInputConstant::PROPORTION));
+            $exterior->setExteriorType($content->get(JsonInputConstant::TYPE));
+            $exterior->setLegWork($content->get(JsonInputConstant::LEG_WORK));
+            $exterior->setFur($content->get(JsonInputConstant::FUR));
+            $exterior->setGeneralAppearence($content->get(JsonInputConstant::GENERAL_APPEARANCE));
+            $exterior->setHeight($content->get(JsonInputConstant::HEIGHT));
+            $exterior->setBreastDepth($content->get(JsonInputConstant::BREAST_DEPTH));
+            $exterior->setTorsoLength($content->get(JsonInputConstant::TORSO_LENGTH));
+            $exterior->setMarkings($content->get(JsonInputConstant::MARKINGS));
+            $exterior->setInspector($inspector);
+            $exterior->setAnimalIdAndDateByAnimalAndDateTime($animal, $measurementDate);
 
-        $em->persist($exterior);
-        $em->flush();
+            $em->persist($exterior);
+            $em->flush();
 
-        $output = 'OK';
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+            $output = 'OK';
+            $code = 200;
+        } else {
+            $output = 'Exterior for given date and uln does not exists!';
+            $code = 428;
+        }
+
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $output, Constant::CODE_NAMESPACE => $code], $code);
     }
 
 
