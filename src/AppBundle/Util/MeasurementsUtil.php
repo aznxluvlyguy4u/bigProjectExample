@@ -216,7 +216,7 @@ class MeasurementsUtil
      * @param boolean $filterByAnimalData
      * @return array
      */
-    public static function getExteriorKinds(ObjectManager $em, Animal $animal, $filterByAnimalData = true)
+    public static function getExteriorKindsOutput(ObjectManager $em, Animal $animal, $filterByAnimalData = true)
     {
         $output = [];
 
@@ -286,12 +286,22 @@ class MeasurementsUtil
         
         return $output;
     }
-    
-    
-    public static function getLatestExteriorKind($animalId)
-    {
-        if($animalId == 0 || !is_int($animalId)) { return null; }
-        
-        
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Animal $animal
+     * @param boolean $filterByAnimalData
+     * @return array
+     */
+    public static function getExteriorKinds(ObjectManager $em, Animal $animal, $filterByAnimalData = true) {
+        $output = self::getExteriorKindsOutput($em, $animal, $filterByAnimalData);
+
+        $codes = [];
+        foreach ($output as $item) {
+            $code = $item['code'];
+            $codes[$code] = $code;
+        }
+        return $codes;
     }
 }

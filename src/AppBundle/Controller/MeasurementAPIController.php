@@ -10,6 +10,7 @@ use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\Inspector;
 use AppBundle\Entity\InspectorAuthorization;
 use AppBundle\Entity\InspectorAuthorizationRepository;
+use AppBundle\Entity\InspectorRepository;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\InspectorMeasurementType;
 use AppBundle\Enumerator\RequestStateType;
@@ -18,6 +19,7 @@ use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\AnimalDetailsValidator;
+use AppBundle\Validation\ExteriorValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -32,7 +34,7 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 class MeasurementAPIController extends APIController implements MeasurementAPIControllerInterface
 {
 
-
+    const ALLOW_BLANK_INSPECTOR = false;
 
     /**
      *
@@ -78,42 +80,55 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
         }
         $animal = $animalDetailsValidator->getAnimal();
 
-        //TODO validate content
-        //TODO validate measurementDateString format YYYY-MM-DD AND set time is 0hour
-        //TODO AND VALIDATE IF MEASUREMENT_DATE ALREADY EXISTS !!!
+        $allowedExteriorCodes = MeasurementsUtil::getExteriorKinds($em, $animal);
+
         $content = $this->getContentAsArray($request);
+        $exteriorValidator = new ExteriorValidator($em, $content, $allowedExteriorCodes, $ulnString, self::ALLOW_BLANK_INSPECTOR);
+        if (!$exteriorValidator->getIsInputValid()) {
+            return $exteriorValidator->createJsonResponse();
+        }
+        $inspector = $exteriorValidator->getInspector();
+        $measurementDate = $exteriorValidator->getMeasurementDate();
+
         /** @var ExteriorRepository $repository */
-        $inspectorRepository = $em->getRepository(Inspector::class);
-        $inspector = $inspectorRepository->findOneBy(['personId' => $content->get(JsonInputConstant::INSPECTOR_ID)]);
+        $repository = $em->getRepository(Exterior::class);
+        /** @var Exterior $exterior */
+        $exterior = $repository->findOneBy(['measurementDate' => $measurementDate, 'animal' => $animal]);
+        if($exterior != null) {
+            $output = 'THERE ALREADY EXISTS AN EXTERIOR MEASUREMENT ON THIS DATE';
+            $code = 428;
 
-        $exterior = new Exterior();
+        } else {
+            $exterior = new Exterior();
 
-        $measurementDate = new \DateTime($content->get(JsonInputConstant::MEASUREMENT_DATE));
+            $exterior->setActionBy($loggedInUser);
+            $exterior->setEditDate(new \DateTime());
+            $exterior->setAnimal($animal);
+            $exterior->setMeasurementDate($measurementDate);
+            $exterior->setKind($exteriorValidator->getKind());
+            $exterior->setSkull($exteriorValidator->getSkull());
+            $exterior->setProgress($exteriorValidator->getProgress());
+            $exterior->setMuscularity($exteriorValidator->getMuscularity());
+            $exterior->setProportion($exteriorValidator->getProportion());
+            $exterior->setExteriorType($exteriorValidator->getExteriorType());
+            $exterior->setLegWork($exteriorValidator->getLegWork());
+            $exterior->setFur($exteriorValidator->getFur());
+            $exterior->setGeneralAppearence($exteriorValidator->getGeneralAppearence());
+            $exterior->setHeight($exteriorValidator->getHeight());
+            $exterior->setBreastDepth($exteriorValidator->getBreastDepth());
+            $exterior->setTorsoLength($exteriorValidator->getTorsoLength());
+            $exterior->setMarkings($exteriorValidator->getMarkings());
+            $exterior->setInspector($inspector);
+            $exterior->setAnimalIdAndDateByAnimalAndDateTime($animal, $measurementDate);
 
-        $exterior->setActionBy($loggedInUser);
-        $exterior->setEditDate(new \DateTime());
-        $exterior->setMeasurementDate($measurementDate);
-        $exterior->setKind($content->get(JsonInputConstant::KIND));
-        $exterior->setSkull($content->get(JsonInputConstant::SKULL));
-        $exterior->setProgress($content->get(JsonInputConstant::PROGRESS));
-        $exterior->setMuscularity($content->get(JsonInputConstant::MUSCULARITY));
-        $exterior->setProportion($content->get(JsonInputConstant::PROPORTION));
-        $exterior->setExteriorType($content->get(JsonInputConstant::TYPE));
-        $exterior->setLegWork($content->get(JsonInputConstant::LEG_WORK));
-        $exterior->setFur($content->get(JsonInputConstant::FUR));
-        $exterior->setGeneralAppearence($content->get(JsonInputConstant::GENERAL_APPEARANCE));
-        $exterior->setHeight($content->get(JsonInputConstant::HEIGHT));
-        $exterior->setBreastDepth($content->get(JsonInputConstant::BREAST_DEPTH));
-        $exterior->setTorsoLength($content->get(JsonInputConstant::TORSO_LENGTH));
-        $exterior->setMarkings($content->get(JsonInputConstant::MARKINGS));
-        $exterior->setInspector($inspector);
-        $exterior->setAnimalIdAndDateByAnimalAndDateTime($animal, $measurementDate);
+            $em->persist($exterior);
+            $em->flush();
 
-        $em->persist($exterior);
-        $em->flush();
+            $output = 'OK';
+            $code = 200;
+        }
 
-        $output = 'OK';
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $output, Constant::CODE_NAMESPACE => $code], $code);
     }
 
 
@@ -138,12 +153,12 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      *
      * @param Request $request the request object
      * @param String $ulnString
-     * @param String $measurementDate
+     * @param String $measurementDateString
      * @return jsonResponse
-     * @Route("/{ulnString}/exteriors/{measurementDate}")
+     * @Route("/{ulnString}/exteriors/{measurementDateString}")
      * @Method("PUT")
      */
-    public function editExteriorMeasurement(Request $request, $ulnString, $measurementDate)
+    public function editExteriorMeasurement(Request $request, $ulnString, $measurementDateString)
     {
         $loggedInUser = $this->getLoggedInUser($request);
         $adminValidator = new AdminValidator($loggedInUser, AccessLevelType::ADMIN);
@@ -162,14 +177,15 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
         }
         $animal = $animalDetailsValidator->getAnimal();
 
-        //TODO validate content
-        $content = $this->getContentAsArray($request);
-        /** @var ExteriorRepository $repository */
-        $inspectorRepository = $em->getRepository(Inspector::class);
-        $inspector = $inspectorRepository->findOneBy(['personId' => $content->get(JsonInputConstant::INSPECTOR_ID)]);
+        $allowedExteriorCodes = MeasurementsUtil::getExteriorKinds($em, $animal);
 
-        //TODO validate measurementDateString format YYYY-MM-DD AND set time is 0hour
-        $measurementDate = new \DateTime($measurementDate);
+        $content = $this->getContentAsArray($request);
+        $exteriorValidator = new ExteriorValidator($em, $content, $allowedExteriorCodes, $ulnString, self::ALLOW_BLANK_INSPECTOR, $measurementDateString);
+        if (!$exteriorValidator->getIsInputValid()) {
+            return $exteriorValidator->createJsonResponse();
+        }
+        $inspector = $exteriorValidator->getInspector();
+        $measurementDate = $exteriorValidator->getMeasurementDate();
 
 
         /** @var ExteriorRepository $repository */
@@ -180,20 +196,21 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
         if($exterior instanceof Exterior) {
             $exterior->setActionBy($loggedInUser);
             $exterior->setEditDate(new \DateTime());
+            $exterior->setAnimal($animal);
             $exterior->setMeasurementDate($measurementDate);
-            $exterior->setKind($content->get(JsonInputConstant::KIND));
-            $exterior->setSkull($content->get(JsonInputConstant::SKULL));
-            $exterior->setProgress($content->get(JsonInputConstant::PROGRESS));
-            $exterior->setMuscularity($content->get(JsonInputConstant::MUSCULARITY));
-            $exterior->setProportion($content->get(JsonInputConstant::PROPORTION));
-            $exterior->setExteriorType($content->get(JsonInputConstant::TYPE));
-            $exterior->setLegWork($content->get(JsonInputConstant::LEG_WORK));
-            $exterior->setFur($content->get(JsonInputConstant::FUR));
-            $exterior->setGeneralAppearence($content->get(JsonInputConstant::GENERAL_APPEARANCE));
-            $exterior->setHeight($content->get(JsonInputConstant::HEIGHT));
-            $exterior->setBreastDepth($content->get(JsonInputConstant::BREAST_DEPTH));
-            $exterior->setTorsoLength($content->get(JsonInputConstant::TORSO_LENGTH));
-            $exterior->setMarkings($content->get(JsonInputConstant::MARKINGS));
+            $exterior->setKind($exteriorValidator->getKind());
+            $exterior->setSkull($exteriorValidator->getSkull());
+            $exterior->setProgress($exteriorValidator->getProgress());
+            $exterior->setMuscularity($exteriorValidator->getMuscularity());
+            $exterior->setProportion($exteriorValidator->getProportion());
+            $exterior->setExteriorType($exteriorValidator->getExteriorType());
+            $exterior->setLegWork($exteriorValidator->getLegWork());
+            $exterior->setFur($exteriorValidator->getFur());
+            $exterior->setGeneralAppearence($exteriorValidator->getGeneralAppearence());
+            $exterior->setHeight($exteriorValidator->getHeight());
+            $exterior->setBreastDepth($exteriorValidator->getBreastDepth());
+            $exterior->setTorsoLength($exteriorValidator->getTorsoLength());
+            $exterior->setMarkings($exteriorValidator->getMarkings());
             $exterior->setInspector($inspector);
             $exterior->setAnimalIdAndDateByAnimalAndDateTime($animal, $measurementDate);
 
@@ -255,7 +272,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
         //Uln has already been validated above
         $animal = $animalDetailsValidator->getAnimal();
 
-        $output = MeasurementsUtil::getExteriorKinds($em, $animal);
+        $output = MeasurementsUtil::getExteriorKindsOutput($em, $animal);
 
         return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
     }

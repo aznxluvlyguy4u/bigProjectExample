@@ -16,6 +16,24 @@ class InspectorAuthorizationRepository extends PersonRepository {
 
     /**
      * @param string $ulnString
+     * @param bool $allowBlankInspector
+     * @return array
+     */
+    public function getAuthorizedInspectorIdsExteriorByUln($ulnString, $allowBlankInspector = true)
+    {
+        $output = $this->getAuthorizedInspectorsExteriorByUln($ulnString, $allowBlankInspector);
+
+        $result = [];
+        foreach ($output as $item) {
+            $personId = $item[JsonInputConstant::PERSON_ID];
+            $result[$personId] = $personId;
+        }
+        return $result;
+    }
+
+
+    /**
+     * @param string $ulnString
      * @param boolean $allowBlankInspector
      * @return array
      * @throws \Doctrine\DBAL\DBALException
