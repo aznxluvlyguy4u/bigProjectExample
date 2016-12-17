@@ -1,10 +1,12 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Component\Utils;
 use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Report\PedigreeCertificate;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\SqlUtil;
 
 /**
  * Class BreedValuesSetRepository
@@ -178,5 +180,41 @@ class BreedValuesSetRepository extends BaseRepository {
     {
         $sql = "UPDATE breed_values_set SET lamb_meat_index_ranking = 0";
         $this->getManager()->getConnection()->exec($sql);
+    }
+
+
+    /**
+     * Delete breedValuesSets for given animalIds if they have blank values
+     * 
+     * @param $animalIds
+     */
+    public function deleteBlankSetsByAnimalIdsAndSql($animalIds)
+    {
+        $this->deleteByAnimalIdsAndSql($animalIds, true);
+    }
+    
+    
+    /**
+     * Delete breedValuesSets for given animalIds
+     * 
+     * @param array $animalIds
+     * @param bool $onlyDeleteBlankBreedValuesSets
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function deleteByAnimalIdsAndSql($animalIds, $onlyDeleteBlankBreedValuesSets = false)
+    {
+        $animalIdFilterString = SqlUtil::getFilterStringByIdsArray($animalIds, 'animal_id');
+
+        if($animalIdFilterString != '' && $animalIdFilterString != null) {
+            $blankValuesFilter = '';
+            if($onlyDeleteBlankBreedValuesSets) {
+                $blankValuesFilter = " growth_reliability = 0 AND fat_reliability = 0 AND muscle_thickness_reliability = 0
+            AND growth = 0 AND fat = 0 AND muscle_thickness = 0 AND lamb_meat_index = 0 AND lamb_meat_index_accuracy = 0
+            AND ";
+            }
+
+            $sql = "DELETE FROM breed_values_set WHERE ".$blankValuesFilter.$animalIdFilterString;
+            $this->getConnection()->exec($sql);
+        }
     }
 }
