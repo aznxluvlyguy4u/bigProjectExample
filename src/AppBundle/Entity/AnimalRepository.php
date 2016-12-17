@@ -7,13 +7,10 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\AnimalObjectType;
-use AppBundle\Enumerator\AnimalTransferStatus;
-use AppBundle\Enumerator\AnimalType;
-use AppBundle\Enumerator\GenderType;
-use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -1145,6 +1142,95 @@ class AnimalRepository extends BaseRepository
     }
     if($valuesString != '') {
       $sql = "INSERT INTO ".$tableName." VALUES ".$valuesString;
+      $this->getConnection()->exec($sql);
+    }
+  }
+
+
+  /**
+   * @param OutputInterface|null $output
+   * @return mixed
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function removePedigreeCountryCodeAndNumberIfPedigreeRegisterIsMissing(OutputInterface $output = null)
+  {
+    $sql = "SELECT COUNT(*) FROM animal a WHERE pedigree_number NOTNULL AND pedigree_register_id ISNULL";
+    $count = $this->getConnection()->query($sql)->fetch()['count'];
+
+    if($count == 0) {
+      if($output != null) { $output->writeln('There are no animals with pedigreeNumbers and without a pedigreeRegister'); }
+      return $count;
+    }
+
+    if($output != null) { $output->writeln('Clearing '.$count.' pedigreeNumbers for animals without a pedigreeRegister ...'); }
+    
+    $sql = "UPDATE animal SET pedigree_country_code = NULL, pedigree_number = NULL 
+            WHERE pedigree_register_id ISNULL AND (pedigree_country_code NOTNULL OR pedigree_number NOTNULL)";
+    $this->getConnection()->exec($sql);
+
+    if($output != null) { $output->writeln($count.' pedigreeNumbers cleared for animals without a pedigreeRegister'); }
+
+    return $count;
+  }
+
+
+  /**
+   * @param string $type
+   * @param int|string $animalId
+   * @return boolean
+   */
+  public function deleteAnimalBySql($type, $animalId)
+  {
+    if(!is_string($type) || (!is_int($animalId) && !ctype_digit($animalId))) { return false; }
+    if($type != 'Ewe' && $type != 'Ram' && $type != 'Neuter') { return false; }
+
+    //Deleting breedCodes
+
+    $sql = "SELECT id FROM breed_codes WHERE animal_id = ".$animalId;
+    $breedCodesId = $this->getConnection()->query($sql)->fetch()['id'];
+
+    $sql = "DELETE FROM breed_code WHERE breed_codes_id = ".$breedCodesId;
+    $this->getConnection()->exec($sql);
+
+    $sql = "UPDATE animal SET breed_codes_id = NULL WHERE id = ".$animalId;
+    $this->getConnection()->exec($sql);
+
+    $sql = "DELETE FROM breed_codes WHERE animal_id = ".$animalId;
+    $this->getConnection()->exec($sql);
+
+    //Deleting animal
+
+    $sql = "DELETE FROM ".strtolower($type)." WHERE id = ".$animalId;
+    $this->getConnection()->exec($sql);
+
+    $sql = "DELETE FROM animal WHERE id = ".$animalId;
+    $this->getConnection()->exec($sql);
+
+    return true;
+  }
+
+
+  /**
+   * @param array $animalIds
+   */
+  public function deleteAnimalsById($animalIds)
+  {
+    if(!is_array($animalIds)) { return; }
+    if(count($animalIds) == 0) { return; }
+
+    //Delete blank breedValuesSet
+    /** @var BreedValuesSetRepository $breedValuesSetRepository */
+    $breedValuesSetRepository = $this->getManager()->getRepository(BreedValuesSet::class);
+    $breedValuesSetRepository->deleteBlankSetsByAnimalIdsAndSql($animalIds);
+
+    //DeleteBreedCodes
+    /** @var BreedCodesRepository $breedCodesRepository */
+    $breedCodesRepository = $this->getManager()->getRepository(BreedCodes::class);
+    $breedCodesRepository->deleteByAnimalIds($animalIds);
+
+    $animalIdFilterString = SqlUtil::getFilterStringByIdsArray($animalIds);
+    if($animalIdFilterString != '') {
+      $sql = "DELETE FROM animal WHERE ".$animalIdFilterString;
       $this->getConnection()->exec($sql);
     }
   }
