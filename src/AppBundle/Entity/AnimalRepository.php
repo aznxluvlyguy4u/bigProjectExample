@@ -6,13 +6,10 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\AnimalObjectType;
-use AppBundle\Enumerator\AnimalTransferStatus;
-use AppBundle\Enumerator\AnimalType;
-use AppBundle\Enumerator\GenderType;
-use AppBundle\Enumerator\LiveStockType;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -1119,5 +1116,31 @@ class AnimalRepository extends BaseRepository
     $this->getConnection()->exec($sql);
 
     return true;
+  }
+
+
+  /**
+   * @param array $animalIds
+   */
+  public function deleteAnimalsById($animalIds)
+  {
+    if(!is_array($animalIds)) { return; }
+    if(count($animalIds) == 0) { return; }
+
+    //Delete blank breedValuesSet
+    /** @var BreedValuesSetRepository $breedValuesSetRepository */
+    $breedValuesSetRepository = $this->getManager()->getRepository(BreedValuesSet::class);
+    $breedValuesSetRepository->deleteBlankSetsByAnimalIdsAndSql($animalIds);
+
+    //DeleteBreedCodes
+    /** @var BreedCodesRepository $breedCodesRepository */
+    $breedCodesRepository = $this->getManager()->getRepository(BreedCodes::class);
+    $breedCodesRepository->deleteByAnimalIds($animalIds);
+
+    $animalIdFilterString = SqlUtil::getFilterStringByIdsArray($animalIds);
+    if($animalIdFilterString != '') {
+      $sql = "DELETE FROM animal WHERE ".$animalIdFilterString;
+      $this->getConnection()->exec($sql);
+    }
   }
 }
