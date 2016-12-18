@@ -8,6 +8,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Enumerator\BreedType;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\GenderChanger;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -89,8 +90,7 @@ class DuplicateAnimalsFixer
 
     private function fixDuplicateAnimalsGroupedOnUlnStnVsmIdDateOfBirthDeathAndParents()
     {
-        $sql = $this->createDuplicateSqlQuery(['name', 'date_of_birth', 'uln_number', 'uln_country_code',
-            'pedigree_country_code', 'pedigree_number', 'gender']);
+        $sql = $this->createDuplicateSqlQuery(['name', 'date_of_birth', 'uln_number', 'uln_country_code']);
         $animalsGroupedByUln = $this->findGroupedDuplicateAnimals($sql);
 
         $totalDuplicateSets = count($animalsGroupedByUln);
@@ -109,36 +109,44 @@ class DuplicateAnimalsFixer
             $animal1 = $animalsGroup[0];
             $animal2 = $animalsGroup[1];
 
-            /* Assuming there are only 2 animals per duplicate pair, as checked in the database by sql-query,
-             * Keep the imported animals and transfer the data from the synced animals
-             * At this moment (2016nov2) the synced animals have the latest declare data
-             * (depart & loss) and some measurements (fat, muscle, weight, breed_values_set)
-             */
-
             $vsmIdAnimal1 = $animal1['name'];
             $vsmIdAnimal2 = $animal2['name'];
+
+            $gender1 = $animal1['gender'];
+            $gender2 = $animal2['gender'];
 
             if ($vsmIdAnimal1 != null || $vsmIdAnimal2 != null) {
 
                 /* 1. Identify primary animal */
-                if ($vsmIdAnimal1 != null) {
-                    $primaryAnimal = $animal1;
-                    $secondaryAnimal = $animal2;
+
+                //Default
+                $primaryAnimal = $animal2;
+                $secondaryAnimal = $animal1;
+
+                //No gender fix necessary the gendered animal is set as the primary animal, if it exists
+                if($vsmIdAnimal1 != null && $vsmIdAnimal2 != null) {
+                    if($gender1 != GenderType::NEUTER) {
+                        $primaryAnimal = $animal1;
+                        $secondaryAnimal = $animal2;
+                    }
+
                 } else {
-                    $primaryAnimal = $animal2;
-                    $secondaryAnimal = $animal1;
+                    if ($vsmIdAnimal1 != null) {
+                        $primaryAnimal = $animal1;
+                        $secondaryAnimal = $animal2;
+                    }
                 }
 
                 $primaryAnimalId = $primaryAnimal['id'];
                 $secondaryAnimalId = $secondaryAnimal['id'];
 
-                //No gender fix necessary, because the imported animal is the primaryAnimal
+                /* 2. update gender */
 
-                /* 2. */
+                /* 3. merge values */
                 $this->mergeAnimalIdValuesInTables($primaryAnimalId, $secondaryAnimalId);
                 $this->mergeMissingAnimalValuesIntoPrimaryAnimal($primaryAnimal, $secondaryAnimal);
 
-                /* 3 Remove unnecessary duplicate */
+                /* 4 Remove unnecessary duplicate */
                 $animalsToDeleteById[] = $secondaryAnimalId;
                 $batchCounter++;
 
