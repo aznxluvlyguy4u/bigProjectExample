@@ -2,20 +2,10 @@
 
 namespace AppBundle\Command;
 
-use AppBundle\Entity\Animal;
-use AppBundle\Entity\AnimalRepository;
-use AppBundle\Entity\AnimalResidence;
-use AppBundle\Entity\BreedCodes;
-use AppBundle\Entity\BreedValuesSet;
-use AppBundle\Entity\DeclareDepart;
-use AppBundle\Entity\DeclareLoss;
-use AppBundle\Entity\Weight;
-use AppBundle\Enumerator\GenderType;
-use AppBundle\Migration\BreedCodeReformatter;
+use AppBundle\Migration\DuplicateAnimalsFixer;
 use AppBundle\Migration\DuplicateAnimalsFixerLegacy;
 use AppBundle\Util\CommandUtil;
-use AppBundle\Util\GenderChanger;
-use Doctrine\Common\Collections\ArrayCollection;
+use AppBundle\Util\DoctrineUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
@@ -55,7 +45,7 @@ class NsfoFixDuplicateAnimalsCommand extends ContainerAwareCommand
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
-
+        $output->writeln(DoctrineUtil::getDatabaseHostAndNameString($em));
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             ' ', "\n",
@@ -66,15 +56,23 @@ class NsfoFixDuplicateAnimalsCommand extends ContainerAwareCommand
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
+        
         switch ($option) {
+            
             case 1:
                 //TODO
+                $duplicateAnimalsFixer = new DuplicateAnimalsFixer($em, $output, $this->cmdUtil);
+                $duplicateAnimalsFixer->fixDuplicateAnimalsWithIdenticalVsmIds();
                 $output->writeln('DONE');
                 break;
+            
             case 2:
                 //TODO
+                $duplicateAnimalsFixer = new DuplicateAnimalsFixer($em, $output, $this->cmdUtil);
+                $duplicateAnimalsFixer->fixDuplicateSyncedVsMigratedAnimals();
                 $output->writeln('DONE');
                 break;
+            
             case 3:
                 if(self::ACTIVATE_LEGACY_COMMAND) {
                     $duplicateAnimalsFixerLegacy = new DuplicateAnimalsFixerLegacy($em, $output, $this->cmdUtil);
@@ -84,6 +82,7 @@ class NsfoFixDuplicateAnimalsCommand extends ContainerAwareCommand
                     $output->writeln('This command is deactivated');
                 }
                 break;
+            
             default:
                 $output->writeln('ABORTED');
                 break;
