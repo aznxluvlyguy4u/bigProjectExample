@@ -34,7 +34,7 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 class MeasurementAPIController extends APIController implements MeasurementAPIControllerInterface
 {
 
-    const ALLOW_BLANK_INSPECTOR = false;
+    const ALLOW_BLANK_INSPECTOR = true;
 
     /**
      *
