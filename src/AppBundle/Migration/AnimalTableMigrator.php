@@ -229,6 +229,55 @@ class AnimalTableMigrator extends MigratorBase
 		}
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
+
+	
+	public function fixDeclareTagTransfers()
+	{
+		$sqlFindDuplicateImportedDeclareTagTransfers =
+			"SELECT r.id FROM declare_tag_replace r
+						  INNER JOIN (
+									   SELECT uln_number_to_replace, uln_number_replacement, uln_country_code_replacement, uln_country_code_to_replace,
+										 --return the oldest logDate of duplicate imported tagReplaces, because those are likely the FAILED declares
+										 MIN(log_date) as min_log_date FROM declare_tag_replace z
+										 INNER JOIN declare_base ON declare_base.id = z.id
+									   WHERE declare_base.request_state = 'IMPORTED'
+									   GROUP BY uln_number_to_replace, uln_number_replacement, uln_country_code_replacement, uln_country_code_to_replace HAVING COUNT(*) > 1
+									 )g ON g.uln_number_to_replace = r.uln_number_to_replace AND g.uln_number_replacement = r.uln_number_replacement
+										   AND g.uln_country_code_replacement = r.uln_country_code_replacement AND g.uln_country_code_to_replace = r.uln_country_code_to_replace
+						  INNER JOIN declare_base b ON b.id = r.id AND b.log_date = min_log_date
+						--Filter out the FAILED ones because that is not an error
+						";
+
+
+		$sqlFindDuplicateImportedAndFinishedPairedDeclareTagTransfers =
+			"SELECT r.id FROM declare_tag_replace r
+			  INNER JOIN (
+						   SELECT uln_number_to_replace, uln_number_replacement, uln_country_code_replacement, uln_country_code_to_replace FROM declare_tag_replace z
+							 INNER JOIN declare_base b ON b.id = z.id
+						   --Filter out the FAILED ones because that is not an error
+						   WHERE b.request_state = 'FINISHED' OR b. request_state = 'IMPORTED' OR b.request_state = 'FINISHED_WITH_WARNING'
+						   GROUP BY uln_number_to_replace, uln_number_replacement, uln_country_code_replacement, uln_country_code_to_replace HAVING COUNT(*) > 1
+						 )g ON g.uln_number_to_replace = r.uln_number_to_replace AND g.uln_number_replacement = r.uln_number_replacement
+							   AND g.uln_country_code_replacement = r.uln_country_code_replacement AND g.uln_country_code_to_replace = r.uln_country_code_to_replace
+			INNER JOIN declare_base bb ON bb.id = r.id
+			WHERE bb. request_state = 'IMPORTED'";
+
+		foreach (['IMPORTED' => $sqlFindDuplicateImportedDeclareTagTransfers,
+				  'IMPORTED-FINISHED paired' => $sqlFindDuplicateImportedAndFinishedPairedDeclareTagTransfers]
+				as $key => $sqlFindDuplicate) {
+			$results = $this->conn->query($sqlFindDuplicate)->fetchAll();
+			$DuplicateImportedDeclareTagTransfersCount = count($results);
+			if($DuplicateImportedDeclareTagTransfersCount == 0) {
+				$this->output->writeln('There are no duplicate '.$key.' declareTagTransfers');
+			} else {
+				foreach(['declare_tag_replace', 'declare_base'] as $tableName) {
+					$sql = "DELETE FROM ".$tableName." WHERE id IN ( ".$sqlFindDuplicate." )";
+					$this->conn->exec($sql);
+				}
+				$this->output->writeln($DuplicateImportedDeclareTagTransfersCount.' Duplicate '.$key.' declareTagTransfers deleted!');
+			}
+		}
+	}
 	
 	
 	public function addMissingAnimalsToMigrationTable()

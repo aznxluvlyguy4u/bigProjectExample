@@ -139,7 +139,8 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '23: Fix animal table after animalTable migration', "\n",
             '24: Fix missing ulns by data in declares and migrationTable', "\n",
             '25: Add missing animals to migrationTable', "\n",
-            '26: Fix vsmIds', "\n",
+            '26: Fix duplicateDeclareTagTransfers', "\n",
+            '27: Fix vsmIds', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -270,6 +271,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                 break;
 
             case 26:
+                $result = $this->fixDeclareTagTransfers() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 27:
                 $result = $this->fixVsmIds() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
@@ -358,7 +364,18 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         $animalTableMigrator->fixVsmIds();
         return true;
     }
-    
+
+
+    /**
+     * @return bool
+     */
+    private function fixDeclareTagTransfers()
+    {
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $animalTableMigrator->fixDeclareTagTransfers();
+        return true;
+    }
+
 
     /**
      * @return bool
