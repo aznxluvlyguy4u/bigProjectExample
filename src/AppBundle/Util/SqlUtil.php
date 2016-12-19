@@ -288,4 +288,28 @@ class SqlUtil
         }
         return $groupedResults;
     }
+
+
+    /**
+     * @param string|int $key
+     * @param array $results
+     * @return array
+     */
+    public static function groupSqlResultsGroupedBySingleVariable($key, $results)
+    {
+        $groupedResults = [];
+        if(!is_array($results)) { return $groupedResults; }
+        if(count($results) == 0 || !array_key_exists($key, $results)) { return $groupedResults; }
+        
+        foreach ($results as $result) {
+            if(array_key_exists($key, $groupedResults)) {
+                $group = $groupedResults[$key];
+            } else {
+                $group = [];
+            }
+            $group[] = $result[$key];
+            $groupedResults[$key] = $group;
+        }
+        return $groupedResults;
+    }
 }

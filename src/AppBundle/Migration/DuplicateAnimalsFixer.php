@@ -11,6 +11,8 @@ use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\GenderChanger;
+use AppBundle\Util\NullChecker;
+use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -32,6 +34,7 @@ class DuplicateAnimalsFixer
     const ULN_DATE_OF_BIRTH_FATHER = 'uln_date_of_birth_father';
     const VARIABLE_TYPE = 'variable_type';
     const TABLE_NAME = 'table_name';
+    const ULN = 'uln';
     const BATCH_SIZE = 1000;
 
     /** @var ObjectManager $em */
@@ -76,19 +79,105 @@ class DuplicateAnimalsFixer
 
     public function fixDuplicateAnimalsWithIdenticalVsmIds()
     {
-        $this->fixDuplicateAnimalsGroupedOnUlnStnVsmIdDateOfBirthDeathAndParents();
+        $this->fixDuplicateAnimalsGroupedOnUlnVsmIdDateOfBirth();
     }
 
 
     public function fixDuplicateSyncedVsMigratedAnimals()
     {
-        //TODO
-        $this->output->writeln('STILL TO DO');
+        $this->fixDuplicateAnimalsSyncedAndImportedPairs();
+    }
+
+
+    private function fixDuplicateAnimalsSyncedAndImportedPairs()
+    {
+        $sql = $this->createDuplicateSqlQuery(['uln_country_code', 'uln_number', 'date_of_birth'], false);
+        $animalsGroupedByUln = $this->findGroupedDuplicateAnimals($sql);
+
+        $totalDuplicateSets = count($animalsGroupedByUln);
+        $startMessage = 'Fixing Duplicate Animals of Synced and Imported pairs';
+
+        $this->cmdUtil->setStartTimeAndPrintIt($totalDuplicateSets, 1, $startMessage);
+
+        $animalsToDeleteById = [];
+        $loopCounter = 0;
+        $batchCounter = 0;
+        $skippedCounter = 0;
+        $duplicateAnimalsDeleted = 0;
+        foreach ($animalsGroupedByUln as $animalsGroup) {
+            $loopCounter++;
+
+            $animal1 = $animalsGroup[0];
+            $animal2 = $animalsGroup[1];
+
+            $vsmIdAnimal1 = $animal1['name'];
+            $vsmIdAnimal2 = $animal2['name'];
+
+            $gender1 = $animal1['gender'];
+            $gender2 = $animal2['gender'];
+
+            //Only process if one animal is a synced Animal and the other is an imported Animal
+            if((NullChecker::isNull($vsmIdAnimal1) && NullChecker::isNull($vsmIdAnimal2)) ||
+                ($gender1 <> $gender2 && $gender1 <> GenderType::NEUTER && $gender2 <> GenderType::NEUTER)
+            ) {
+                $skippedCounter++;
+                continue;
+            }
+
+            if ($vsmIdAnimal1 != null || $vsmIdAnimal2 != null) {
+
+                /* 1. Identify primary animal */
+
+                //Default
+                $primaryAnimal = $animal2;
+                $secondaryAnimal = $animal1;
+
+                //No gender fix necessary the gendered animal is set as the primary animal, if it exists
+                if($vsmIdAnimal1 != null && $vsmIdAnimal2 != null) {
+                    if($gender1 != GenderType::NEUTER) {
+                        $primaryAnimal = $animal1;
+                        $secondaryAnimal = $animal2;
+                    }
+
+                } else {
+                    if ($vsmIdAnimal1 != null) {
+                        $primaryAnimal = $animal1;
+                        $secondaryAnimal = $animal2;
+                    }
+                }
+
+                $primaryAnimalId = $primaryAnimal['id'];
+                $secondaryAnimalId = $secondaryAnimal['id'];
+
+                /* 2. update gender */
+
+                /* 3. merge values */
+                $this->mergeAnimalIdValuesInTables($primaryAnimalId, $secondaryAnimalId);
+                $this->mergeMissingAnimalValuesIntoPrimaryAnimal($primaryAnimal, $secondaryAnimal);
+
+                /* 4 Remove unnecessary duplicate */
+                $animalsToDeleteById[] = $secondaryAnimalId;
+                $batchCounter++;
+
+            } else {
+                $skippedCounter++;
+            }
+
+            if($loopCounter == $totalDuplicateSets ||
+                ($batchCounter%self::BATCH_SIZE == 0 && $batchCounter != 0)) {
+                $this->animalRepository->deleteAnimalsById($animalsToDeleteById);
+                $duplicateAnimalsDeleted += $batchCounter;
+                $batchCounter = 0;
+            }
+            $this->cmdUtil->advanceProgressBar(1, 'DuplicateAnimals fixed|inBatch|skipped: '.$duplicateAnimalsDeleted.'|'.$batchCounter.'|'.$skippedCounter);
+        }
+
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
     
 
 
-    private function fixDuplicateAnimalsGroupedOnUlnStnVsmIdDateOfBirthDeathAndParents()
+    private function fixDuplicateAnimalsGroupedOnUlnVsmIdDateOfBirth()
     {
         $sql = $this->createDuplicateSqlQuery(['name', 'date_of_birth', 'uln_number', 'uln_country_code']);
         $animalsGroupedByUln = $this->findGroupedDuplicateAnimals($sql);
@@ -180,20 +269,28 @@ class DuplicateAnimalsFixer
 
         $innerSelectString = '';
         $joinOnString = '';
+        $concatenatedSearchKey = 'CONCAT(';
 
         foreach ($valuesToMatchOn as $columnHeader) {
             $innerSelectString = $innerSelectString.'n.'.$columnHeader.',';
             $joinOnString = $joinOnString.' g.'.$columnHeader.' = a.'.$columnHeader.' AND';
+
+            if($columnHeader == 'date_of_birth') {
+                $concatenatedSearchKey = $concatenatedSearchKey.'DATE(a.'.$columnHeader.'),';
+            } else {
+                $concatenatedSearchKey = $concatenatedSearchKey.'a.'.$columnHeader.',';
+            }
         }
         $innerSelectString = rtrim($innerSelectString, ',');
         $joinOnString = rtrim($joinOnString, ' AND');
+        $concatenatedSearchKey = rtrim($concatenatedSearchKey, ',').')';
 
         $parentUlnFilter = '';
         if($matchUlnOfParents) {
             $parentUlnFilter = ' ,m.uln_country_code,m.uln_number,f.uln_country_code,f.uln_number ';
         }
 
-        $sql = "SELECT CONCAT(a.uln_country_code, a.uln_number, DATE(a.date_of_birth), a.name) as ".self::SEARCH_KEY.", a.*,
+        $sql = "SELECT ".$concatenatedSearchKey." as ".self::SEARCH_KEY.", a.*,
                     CONCAT(mother.uln_country_code, mother.uln_number, mother.date_of_birth) as ".self::ULN_DATE_OF_BIRTH_MOTHER.",
                     CONCAT(father.uln_country_code, father.uln_number, father.date_of_birth) as ".self::ULN_DATE_OF_BIRTH_FATHER."
                 FROM animal a
@@ -319,7 +416,7 @@ class DuplicateAnimalsFixer
      */
     public function mergeMissingAnimalValuesIntoPrimaryAnimal($primaryAnimalResultArray, $secondaryAnimalResultArray)
     {
-        if(!is_array($primaryAnimalResultArray) || !ctype_digit($secondaryAnimalResultArray)) { return; }
+        if(!is_array($primaryAnimalResultArray) || !is_array($secondaryAnimalResultArray)) { return; }
         if(count($primaryAnimalResultArray) == 0 || count($secondaryAnimalResultArray) == 0) { return; }
 
         $primaryAnimalId = Utils::getNullCheckedArrayValue('id', $primaryAnimalResultArray);
@@ -349,7 +446,7 @@ class DuplicateAnimalsFixer
             $valueSecondaryValue = $secondaryAnimalResultArray[$columnHeader];
 
             if($valuePrimaryValue === null && $valueSecondaryValue !== null) {
-                $animalSqlMiddle = $animalSqlMiddle.' '.$columnHeader.' = '.$valueSecondaryValue.',';
+                $animalSqlMiddle = $animalSqlMiddle.' '.$columnHeader." = '".$valueSecondaryValue."',";
             }
         }
 
@@ -365,7 +462,7 @@ class DuplicateAnimalsFixer
             $animalSqlMiddle = $animalSqlMiddle.' is_alive = FALSE,';
             
         } elseif ($dateOfDeath1 == null && $dateOfDeath2 != null) {
-            $animalSqlMiddle = $animalSqlMiddle.' is_alive = FALSE, date_of_death = '.$dateOfDeath2.',';
+            $animalSqlMiddle = $animalSqlMiddle." is_alive = FALSE, date_of_death = '".$dateOfDeath2."',";
             
         } elseif ($isAlive2 == true && $isAlive1 == false && $dateOfDeath1 == null && $dateOfDeath2 == null) {
             $animalSqlMiddle = $animalSqlMiddle.' is_alive = TRUE,';
@@ -388,7 +485,7 @@ class DuplicateAnimalsFixer
 
         if (  ($breedType1 == null && $breedType2 != null) ||
               ($breedType1 == BreedType::UNDETERMINED && $breedType2 != null && $breedType2 != BreedType::UNDETERMINED)  ){
-                $animalSqlMiddle = $animalSqlMiddle.' breed_type = '.$breedType2.',';
+                $animalSqlMiddle = $animalSqlMiddle." breed_type = '".$breedType2."',";
         }
 
 

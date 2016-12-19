@@ -140,7 +140,8 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '24: Fix missing ulns by data in declares and migrationTable', "\n",
             '25: Add missing animals to migrationTable', "\n",
             '26: Fix duplicateDeclareTagTransfers', "\n",
-            '27: Fix vsmIds', "\n",
+            '27: Fix vsmIds part1', "\n",
+            '28: Fix vsmIds part2', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -276,7 +277,12 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                 break;
 
             case 27:
-                $result = $this->fixVsmIds() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->fixVsmIds(1) ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 28:
+                $result = $this->fixVsmIds(2) ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
@@ -353,17 +359,21 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
 
     /**
+     * @param  int $part
      * @return bool
      */
-    private function fixVsmIds()
+    private function fixVsmIds($part = null)
     {
         $data = $this->parseCSV($this->filenames[self::ANIMAL_TABLE]);
         if(count($data) == 0) { return false; }
 
         $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
-        $animalTableMigrator->fixVsmIds();
-        $animalTableMigrator->fixVsmIdsPart2();
-        return true;
+        switch ($part) {
+            case 1:     $animalTableMigrator->fixVsmIds(); break;
+            case 2:     $animalTableMigrator->fixVsmIdsPart2(); break;
+            default:    $animalTableMigrator->fixVsmIds();
+                        $animalTableMigrator->fixVsmIdsPart2(); break;
+        }
     }
 
 
