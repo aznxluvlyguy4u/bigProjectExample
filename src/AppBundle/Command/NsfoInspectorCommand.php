@@ -83,7 +83,6 @@ class NsfoInspectorCommand extends ContainerAwareCommand
             '1: Fix inspector names', "\n",
             '2: Add missing inspectors', "\n",
             '3: Fix duplicate inspectors', "\n",
-            '3: Fix duplicate inspectors', "\n",
             '4: Authorize inspectors', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
