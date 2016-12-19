@@ -362,6 +362,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
         $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
         $animalTableMigrator->fixVsmIds();
+        $animalTableMigrator->fixVsmIdsPart2();
         return true;
     }
 

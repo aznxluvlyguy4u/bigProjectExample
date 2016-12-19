@@ -230,6 +230,83 @@ class AnimalTableMigrator extends MigratorBase
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
 
+
+	public function fixVsmIdsPart2()
+	{
+		$this->output->writeln('Creating searchArrays ...');
+		$recordsByUln = [];
+		foreach ($this->data as $record) {
+			$ulnParts = $this->parseUln($record[3]);
+			$uln = $ulnParts[JsonInputConstant::ULN_COUNTRY_CODE].$ulnParts[JsonInputConstant::ULN_NUMBER];
+			$recordsByUln[$uln] = $record;
+		}
+		
+		$sql = "SELECT a.id, CONCAT(a.uln_country_code,a.uln_number) as uln, a.name
+				FROM animal a
+				  INNER JOIN (
+							   SELECT n.name FROM animal n
+							   GROUP BY n.name HAVING COUNT(*) = 2
+							 )g ON  g.name = a.name";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$vsmIdsNotFound = 0;
+		$correctVsmIds = 0;
+
+		$updateString = '';
+		$count = 0;
+		$inBatchCount = 0;
+		$updatedCount = 0;
+
+		$totalCount = count($results);
+
+		$this->cmdUtil->setStartTimeAndPrintIt($totalCount, 1);
+		foreach ($results as $result) {
+
+			$animalId = intval($result['id']);
+			$uln = $result['uln'];
+			$vsmIdInAnimal = $result['name'];
+			
+			if(array_key_exists($uln, $recordsByUln)) {
+
+				$record = $recordsByUln[$uln];
+				$vsmIdInCsv = strval($record[0]);
+
+				if($vsmIdInCsv != $vsmIdInAnimal && $vsmIdInAnimal != null && $vsmIdInCsv != null && $vsmIdInAnimal != '' && $vsmIdInCsv != '') {
+					$updateString = $updateString."(".$animalId.",'".$vsmIdInCsv."'),";
+					$inBatchCount++;
+				}
+
+				$correctVsmIds++;
+			} else {
+				$vsmIdsNotFound++;
+			}
+
+
+			$count++;
+			if($count == $totalCount || ($inBatchCount%self::UPDATE_BATCH_SIZE == 0 && $count != 0)) {
+
+				$updateString = rtrim($updateString, ',');
+
+				if($updateString != '') {
+					$sql = "UPDATE animal as a SET name = v.vsm_id_in_csv
+						FROM (VALUES ".$updateString."
+							 ) as v(animal_id, vsm_id_in_csv) WHERE a.id = v.animal_id";
+					$this->conn->exec($sql);
+				}
+
+				//Reset batch string and counters
+				$updateString = '';
+				$updatedCount += $inBatchCount;
+				$inBatchCount = 0;
+			} else {
+				$inBatchCount++;
+			}
+
+			$this->cmdUtil->advanceProgressBar(1,'VsmIds notFound|correct||updated|inBatch: '.$vsmIdsNotFound.'|'.$correctVsmIds.'||'.$updatedCount.'|'.$inBatchCount);
+		}
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
+	}
+
 	
 	public function fixDeclareTagTransfers()
 	{
