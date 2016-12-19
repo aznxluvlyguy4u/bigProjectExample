@@ -30,6 +30,7 @@ use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Validator\Constraints\Time;
 
 class AnimalTableMigrator extends MigratorBase
 {
@@ -122,6 +123,117 @@ class AnimalTableMigrator extends MigratorBase
 		$this->vsmIdGroupRepository = $this->em->getRepository(VsmIdGroup::class);
 		$this->animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmId();
 		$this->columnHeaders = $columnHeaders;
+	}
+	
+	
+	public function addMissingAnimalsToMigrationTable()
+	{
+		$sql = "SELECT MAX(id) as max_id FROM animal_migration_table";
+		$maxId = $this->conn->query($sql)->fetch()['max_id'];
+		$this->output->writeln(['','animal_migration_table max id: '.$maxId]);
+		
+		$sql = "SELECT CONCAT(a.uln_country_code, a.uln_number, DATE(a.date_of_birth)) as search_key,
+				  a.date_of_birth, a.uln_country_code, a.uln_number, a.name, a.gender
+				FROM animal a
+				  LEFT JOIN animal_migration_table t
+					ON t.date_of_birth = a.date_of_birth AND t.uln_country_code = a.uln_country_code AND t.uln_number = a.uln_number
+				  INNER JOIN (
+							   SELECT n.name
+							   FROM animal n
+							   GROUP BY n.name HAVING COUNT(*) > 1
+							   -- NOTE THAT DUPLICATES ABOVE 2 PER SET MUST BE CHECKED MANUALLY!
+							 )g ON  g.name = a.name
+				WHERE t.id ISNULL";
+		$results = $this->conn->query($sql)->fetchAll();
+		
+		$totalCount = count($results);
+		if($totalCount == 0) { return; }
+		
+		$animalsMissingFromMigrationTableByUlnAndDateOfBirth = [];
+		foreach ($results as $result) {
+			$animalsMissingFromMigrationTableByUlnAndDateOfBirth[$result['search_key']] = $result;
+		}
+
+
+		$sql = "SELECT name, gender FROM animal WHERE name NOTNULL";
+		$results = $this->conn->query($sql)->fetchAll();
+		$genderInDatabaseByVsmIdSearchArray = [];
+		foreach ($results as $result) {
+			$genderInDatabaseByVsmIdSearchArray[intval($result['name'])] = $result['gender'];
+		}
+
+		$sql = "SELECT id, abbreviation, full_name FROM pedigree_register";
+		$results = $this->conn->query($sql)->fetchAll();
+		$pedigreeRegisterIdByAbbreviationSearchArray = [];
+		foreach ($results as $result) {
+			$pedigreeRegisterIdByAbbreviationSearchArray[$result['abbreviation']] = intval($result['id']);
+		}
+
+		$locationIdByUbnSearchArray = $this->generateLatestLocationSearchArray();
+
+		$animalsSkipped = 0;
+		$animalsAddedToMigrationTable = 0;
+		$this->cmdUtil->setStartTimeAndPrintIt(count($this->data)+1, 1);
+		foreach ($this->data as $record) {
+
+			$uln = StringUtil::getNullAsStringOrWrapInQuotes($record[3]);
+			$ulnParts = $this->parseUln($record[3]);
+
+			$searchKey = $ulnParts[JsonInputConstant::ULN_COUNTRY_CODE].$ulnParts[JsonInputConstant::ULN_NUMBER].TimeUtil::fillDateStringWithLeadingZeroes($record[8]);
+
+			if(array_key_exists($searchKey, $animalsMissingFromMigrationTableByUlnAndDateOfBirth)) {
+
+				$ulnCountryCode = StringUtil::getNullAsStringOrWrapInQuotes($ulnParts[JsonInputConstant::ULN_COUNTRY_CODE]);
+				$ulnNumber = StringUtil::getNullAsStringOrWrapInQuotes($ulnParts[JsonInputConstant::ULN_NUMBER]);
+
+				$vsmId = intval($record[0]);
+				$stnImport = StringUtil::getNullAsStringOrWrapInQuotes($record[1]);
+				$stnParts = $this->parseStn($record[1]);
+				$pedigreeCountryCode = StringUtil::getNullAsStringOrWrapInQuotes($stnParts[JsonInputConstant::PEDIGREE_COUNTRY_CODE]);
+				$pedigreeNumber = StringUtil::getNullAsStringOrWrapInQuotes($stnParts[JsonInputConstant::PEDIGREE_NUMBER]);
+
+				$animalOrderNumber = 'NULL';
+				if($record[2] != null && $record[2] != '') {
+					$animalOrderNumber = StringUtil::getNullAsStringOrWrapInQuotes(StringUtil::padAnimalOrderNumberWithZeroes($record[2]));
+				}
+
+				$nickName = StringUtil::getNullAsStringOrWrapInQuotes(utf8_encode(StringUtil::escapeSingleApostrophes($record[4])));
+				$fatherVsmId = SqlUtil::getNullCheckedValueForSqlQuery($record[5], false);
+				$motherVsmId = SqlUtil::getNullCheckedValueForSqlQuery($record[6], false);
+				$genderInFile = StringUtil::getNullAsStringOrWrapInQuotes($this->parseGender($record[7]));
+				$dateOfBirthString = StringUtil::getNullAsStringOrWrapInQuotes(TimeUtil::fillDateStringWithLeadingZeroes($record[8]));
+				$breedCode = StringUtil::getNullAsStringOrWrapInQuotes($record[9]);
+				$ubnOfBirth = StringUtil::getNullAsStringOrWrapInQuotes($record[10]); //ubnOfBreeder
+				$locationOfBirth = SqlUtil::getSearchArrayCheckedValueForSqlQuery($record[10], $locationIdByUbnSearchArray, false);
+
+				$pedigreeRegister = self::parsePedigreeRegister($record[11]);
+				$pedigreeRegisterFullname = $pedigreeRegister[self::VALUE];
+				$pedigreeRegisterAbbreviation = $pedigreeRegister[self::ABBREVIATION];
+
+				$pedigreeRegisterId = SqlUtil::getSearchArrayCheckedValueForSqlQuery($pedigreeRegisterAbbreviation, $pedigreeRegisterIdByAbbreviationSearchArray, false);
+				$breedType = SqlUtil::getNullCheckedValueForSqlQuery(Translation::getEnglish(strtoupper($record[12])), true);
+				$scrapieGenotype = SqlUtil::getNullCheckedValueForSqlQuery($record[13], true);
+
+				$animalId = StringUtil::getNullAsString($this->findAnimalIdOfVsmId($vsmId, $ulnCountryCode, $ulnNumber));
+				$fatherId = StringUtil::getNullAsString($this->findAnimalIdOfVsmId(intval($record[5]), null, null));
+				$motherId = StringUtil::getNullAsString($this->findAnimalIdOfVsmId(intval($record[6]), null, null));
+
+				$genderInDatabase = SqlUtil::getSearchArrayCheckedValueForSqlQuery($vsmId, $genderInDatabaseByVsmIdSearchArray, true);
+
+
+				$sql = "INSERT INTO animal_migration_table (id, vsm_id, animal_id, uln_origin, stn_origin, uln_country_code, uln_number, animal_order_number,
+							pedigree_country_code, pedigree_number, nick_name, father_vsm_id, father_id, mother_vsm_id, mother_id, gender_in_file,
+							gender_in_database,date_of_birth,breed_code,ubn_of_birth,location_of_birth_id,pedigree_register_id,breed_type,scrapie_genotype
+							)VALUES(nextval('animal_migration_table_id_seq'),".$vsmId.",".$animalId.",".$uln.",".$stnImport.",".$ulnCountryCode.",".$ulnNumber.",".$animalOrderNumber.",".$pedigreeCountryCode.",".$pedigreeNumber.",".$nickName.",".$fatherVsmId.",".$fatherId.",".$motherVsmId.",".$motherId.",".$genderInFile.",".$genderInDatabase.",".$dateOfBirthString.",".$breedCode.",".$ubnOfBirth.",".$locationOfBirth.",".$pedigreeRegisterId.",".$breedType.",".$scrapieGenotype.")";
+				$this->conn->exec($sql);
+				$animalsAddedToMigrationTable++;
+			} else {
+				$animalsSkipped++;
+			}
+			$this->cmdUtil->advanceProgressBar('Animals skipped|found&Added|totalMissing: '.$animalsSkipped.'|'.$animalsAddedToMigrationTable.'|'.$totalCount);
+		}
+		$this->cmdUtil->setProgressBarMessage('Animals skipped|found&Added|totalMissing: '.$animalsSkipped.'|'.$animalsAddedToMigrationTable.'|'.$totalCount);
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
 
 
@@ -242,7 +354,7 @@ class AnimalTableMigrator extends MigratorBase
 			$sql = "INSERT INTO animal_migration_table (id, vsm_id, animal_id, uln_origin, stn_origin, uln_country_code, uln_number, animal_order_number,
 						pedigree_country_code, pedigree_number, nick_name, father_vsm_id, father_id, mother_vsm_id, mother_id, gender_in_file,
 						gender_in_database,date_of_birth,breed_code,ubn_of_birth,location_of_birth_id,pedigree_register_id,breed_type,scrapie_genotype
-						)VALUES(nextval('measurement_id_seq'),".$vsmId.",".$animalId.",".$uln.",".$stnImport.",".$ulnCountryCode.",".$ulnNumber.",".$animalOrderNumber.",".$pedigreeCountryCode.",".$pedigreeNumber.",".$nickName.",".$fatherVsmId.",".$fatherId.",".$motherVsmId.",".$motherId.",".$genderInFile.",".$genderInDatabase.",".$dateOfBirthString.",".$breedCode.",".$ubnOfBirth.",".$locationOfBirth.",".$pedigreeRegisterId.",".$breedType.",".$scrapieGenotype.")";
+						)VALUES(nextval('animal_migration_table_id_seq'),".$vsmId.",".$animalId.",".$uln.",".$stnImport.",".$ulnCountryCode.",".$ulnNumber.",".$animalOrderNumber.",".$pedigreeCountryCode.",".$pedigreeNumber.",".$nickName.",".$fatherVsmId.",".$fatherId.",".$motherVsmId.",".$motherId.",".$genderInFile.",".$genderInDatabase.",".$dateOfBirthString.",".$breedCode.",".$ubnOfBirth.",".$locationOfBirth.",".$pedigreeRegisterId.",".$breedType.",".$scrapieGenotype.")";
 			$this->conn->exec($sql);
 
             $this->cmdUtil->advanceProgressBar(1);

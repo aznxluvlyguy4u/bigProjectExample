@@ -20,6 +20,7 @@ use AppBundle\Migration\TagReplaceMigrator;
 use AppBundle\Migration\UlnByAnimalIdMigrator;
 use AppBundle\Migration\VsmIdGroupMigrator;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
@@ -104,7 +105,9 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         //Setup folders if missing
         $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
         NullChecker::createFolderPathsFromArrayIfNull($this->rootDir, $this->csvParsingOptions);
-        
+
+        $output->writeln([' ', DoctrineUtil::getDatabaseHostAndNameString($em)]);
+
         $option = $this->cmdUtil->generateMultiLineQuestion([
             ' ', "\n",
             'Choose option: ', "\n",
@@ -135,6 +138,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '----------------------------------------------------', "\n",
             '23: Fix animal table after animalTable migration', "\n",
             '24: Fix missing ulns by data in declares and migrationTable', "\n",
+            '25: Add missing animals to migrationTable', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -259,6 +263,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                 $output->writeln($result);
                 break;
 
+            case 25:
+                $result = $this->addMissingAnimalsToMigrationTable() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
             default:
                 $output->writeln('ABORTED');
                 break;
@@ -330,6 +339,20 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         return null;
     }
 
+
+    /**
+     * @return bool
+     */
+    private function addMissingAnimalsToMigrationTable()
+    {
+        $data = $this->parseCSV($this->filenames[self::ANIMAL_TABLE]);
+        if(count($data) == 0) { return false; }
+
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        $animalTableMigrator->addMissingAnimalsToMigrationTable();
+        return true;
+    }
+    
 
     /**
      * @return bool
