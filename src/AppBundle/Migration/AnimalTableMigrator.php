@@ -124,6 +124,111 @@ class AnimalTableMigrator extends MigratorBase
 		$this->animalIdsByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmId();
 		$this->columnHeaders = $columnHeaders;
 	}
+
+
+	public function fixVsmIds()
+	{
+		//SearchArray
+		$sql = "SELECT CONCAT(uln_country_code,uln_number,DATE(date_of_birth)) as search_key, name FROM animal;";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$ulnAndDateOfBirthByVsmIds = [];
+		foreach ($results as $result) {
+			$ulnAndDateOfBirthByVsmIds[$result['search_key']] = $result['name'];
+		}
+
+		$vsmIdsNotFound = 0;
+		$correctVsmIds = 0;
+
+		$updateString = '';
+		$updateStringMother = '';
+		$updateStringFather = '';
+		$count = 0;
+		$inBatchCount = 0;
+		$updatedCount = 0;
+
+		$totalCount = count($this->data);
+
+		$this->cmdUtil->setStartTimeAndPrintIt($totalCount, 1);
+		foreach ($this->data as $record) {
+
+			$uln = StringUtil::getNullAsStringOrWrapInQuotes($record[3]);
+			$ulnParts = $this->parseUln($record[3]);
+
+			$searchKey = $ulnParts[JsonInputConstant::ULN_COUNTRY_CODE].$ulnParts[JsonInputConstant::ULN_NUMBER].TimeUtil::fillDateStringWithLeadingZeroes($record[8]);
+
+			if(array_key_exists($searchKey, $ulnAndDateOfBirthByVsmIds)) {
+
+				$vsmIdInAnimal = intval($ulnAndDateOfBirthByVsmIds[$searchKey]);
+				$vsmIdInCsv = intval($record[0]);
+
+				if($vsmIdInAnimal != $vsmIdInCsv && $vsmIdInAnimal != null && $vsmIdInCsv != null && $vsmIdInAnimal != '' && $vsmIdInCsv != '') {
+					$updateString = $updateString."('".$vsmIdInAnimal."','".$vsmIdInCsv."'),";
+
+					$genderInFile = $this->parseGender($record[7]);
+					if($genderInFile == GenderType::FEMALE) {
+						$updateStringMother = $updateStringMother."('".$vsmIdInAnimal."','".$vsmIdInCsv."'),";
+					} elseif ($genderInFile == GenderType::MALE) {
+						$updateStringFather = $updateStringFather."('".$vsmIdInAnimal."','".$vsmIdInCsv."'),";
+					}
+					$inBatchCount++;
+				}
+
+				$correctVsmIds++;
+			} else {
+				$vsmIdsNotFound++;
+			}
+
+
+			$count++;
+			if($count == $totalCount || ($inBatchCount%self::UPDATE_BATCH_SIZE == 0 && $count != 0)) {
+
+				$updateString = rtrim($updateString, ',');
+				$updateStringMother = rtrim($updateStringMother, ',');
+				$updateStringFather = rtrim($updateStringFather, ',');
+
+				if($updateString != '') {
+					$sql = "UPDATE animal_migration_table as a SET vsm_id = CAST(v.vsm_id_in_csv AS INTEGER)
+						FROM (VALUES ".$updateString."
+							 ) as v(vsm_id_in_animal, vsm_id_in_csv) WHERE a.vsm_id = CAST(v.vsm_id_in_animal AS INTEGER)";
+					$this->conn->exec($sql);
+				}
+
+				if($updateStringMother != '') {
+					$sql = "UPDATE animal_migration_table as a SET mother_vsm_id = CAST(v.vsm_id_in_csv AS INTEGER)
+						FROM (VALUES ".$updateStringMother."
+							 ) as v(vsm_id_in_animal, vsm_id_in_csv) WHERE a.mother_vsm_id = CAST(v.vsm_id_in_animal AS INTEGER)";
+					$this->conn->exec($sql);
+				}
+
+				if($updateStringFather != '') {
+					$sql = "UPDATE animal_migration_table as a SET father_vsm_id = CAST(v.vsm_id_in_csv AS INTEGER)
+						FROM (VALUES ".$updateStringFather."
+							 ) as v(vsm_id_in_animal, vsm_id_in_csv) WHERE a.father_vsm_id = CAST(v.vsm_id_in_animal AS INTEGER)";
+					$this->conn->exec($sql);
+				}
+
+				if($updateString != '') {
+					$sql = "UPDATE animal as a SET name = v.vsm_id_in_csv
+						FROM (VALUES ".$updateString."
+							 ) as v(vsm_id_in_animal, vsm_id_in_csv) WHERE a.name = v.vsm_id_in_animal";
+					$this->conn->exec($sql);
+				}
+
+				//Reset batch string and counters
+				$updateString = '';
+				$updateStringMother = '';
+				$updateStringFather = '';
+				$updatedCount += $inBatchCount;
+				$inBatchCount = 0;
+			} else {
+				$inBatchCount++;
+			}
+
+			$this->cmdUtil->advanceProgressBar(1,'VsmIds notFound|correct||updated|inBatch: '.$vsmIdsNotFound.'|'.$correctVsmIds.'||'.$updatedCount.'|'.$inBatchCount);
+		}
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
+	}
 	
 	
 	public function addMissingAnimalsToMigrationTable()
@@ -230,9 +335,9 @@ class AnimalTableMigrator extends MigratorBase
 			} else {
 				$animalsSkipped++;
 			}
-			$this->cmdUtil->advanceProgressBar('Animals skipped|found&Added|totalMissing: '.$animalsSkipped.'|'.$animalsAddedToMigrationTable.'|'.$totalCount);
+			$this->cmdUtil->advanceProgressBar(1,'Animals skipped|found&Added|totalMissing: '.$animalsSkipped.'|'.$animalsAddedToMigrationTable.'|'.$totalCount);
 		}
-		$this->cmdUtil->setProgressBarMessage('Animals skipped|found&Added|totalMissing: '.$animalsSkipped.'|'.$animalsAddedToMigrationTable.'|'.$totalCount);
+		$this->cmdUtil->setProgressBarMessage(1,'Animals skipped|found&Added|totalMissing: '.$animalsSkipped.'|'.$animalsAddedToMigrationTable.'|'.$totalCount);
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
 
