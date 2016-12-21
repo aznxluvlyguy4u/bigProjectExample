@@ -183,13 +183,13 @@ class AnimalDetailsOutput
             "exterior" =>
                 array(
                     "measurement_date" => Utils::fillNullOrEmptyString($exteriorDate, $replacementString),
-                    "head" => Utils::fillZero($skull, $replacementString),
+                    "skull" => Utils::fillZero($skull, $replacementString),
                     "progress" => Utils::fillZero($progress, $replacementString),
                     "muscularity" => Utils::fillZero($muscularity, $replacementString),
                     "proportion" => Utils::fillZero($proportion, $replacementString),
                     "type" => Utils::fillZero($type, $replacementString),
                     "leg_work" => Utils::fillZero($legWork, $replacementString),
-                    "pelt" => Utils::fillZero($fur, $replacementString),
+                    "fur" => Utils::fillZero($fur, $replacementString),
                     "general_appearance" => Utils::fillZero($generalAppearance, $replacementString),
                     "height" => Utils::fillZero($height, $replacementString),
                     "breast_depth" => Utils::fillZero($breastDepth, $replacementString),
