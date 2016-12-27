@@ -90,6 +90,14 @@ class LocationHealthInspection
     private $totalLeadTime;
 
     /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     */
+    private $requiredAnimalCount;
+
+    /**
      * @var string
      *
      * @ORM\Column(type="string", nullable=true)
@@ -432,5 +440,21 @@ class LocationHealthInspection
     public function addAnimal($animal)
     {
         $this->animals->add($animal);
+    }
+
+    /**
+     * @return int
+     */
+    public function getRequiredAnimalCount()
+    {
+        return $this->requiredAnimalCount;
+    }
+
+    /**
+     * @param int $requiredAnimalCount
+     */
+    public function setRequiredAnimalCount($requiredAnimalCount)
+    {
+        $this->requiredAnimalCount = $requiredAnimalCount;
     }
 }
