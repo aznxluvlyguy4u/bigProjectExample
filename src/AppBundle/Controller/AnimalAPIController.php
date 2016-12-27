@@ -12,6 +12,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\FormInput\AnimalDetails;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
@@ -387,7 +388,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
 
   /**
    *
-   * Update Animal Details for the given ULN. For example NL100029511721
+   * Change the gender of an Animal for a given ULN. For example NL100029511721
    *
    * @ApiDoc(
    *   requirements={
@@ -399,64 +400,56 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Update Animal Details for the given ULN",
+   *   description = "Change the gender of an Animal for a given ULN",
    *   input = "AppBundle\Entity\Animals",
    *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
    * )
    *
    * @param Request $request the request object
-   * @param String $ulnString
    * @return jsonResponse
-   * @Route("-details/{ulnString}")
-   * @Method("PUT")
+   * @Route("-gender")
+   * @Method("POST")
    */
-  public function editAnimalDetailsByUln(Request $request, $ulnString) {
-
-    $client = $this->getAuthenticatedUser($request);
-    $animal = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->getAnimalByUlnString($client, $ulnString);
-
-    if($animal == null) {
-      return new JsonResponse(array('code'=>404, "message" => "For this account, no animal was found with uln: " . $ulnString), 404);
-    }
+  public function changeGenderOfUln(Request $request) {
 
     $em = $this->getDoctrine()->getManager();
+    $client = $this->getAuthenticatedUser($request);
     $content = $this->getContentAsArray($request);
-    $gender = $content->get('gender');
 
-    if($gender) {
-        if(($animal instanceof Ram) && $gender == 'FEMALE'){
-            $genderChanger = new GenderChanger($em);
-            $genderChanger->makeFemale($animal);
-        }
-
-        if(($animal instanceof Neuter) && $gender == 'FEMALE'){
-            $genderChanger = new GenderChanger($em);
-            $genderChanger->makeFemale($animal);
-        }
-
-        if(($animal instanceof Ewe) && $gender == 'MALE'){
-            $genderChanger = new GenderChanger($em);
-            $genderChanger->makeMale($animal);
-        }
-
-        if(($animal instanceof Neuter) && $gender == 'MALE'){
-            $genderChanger = new GenderChanger($em);
-            $genderChanger->makeMale($animal);
-        }
+    $animal = null;
+    
+    if ($content['uln_number']) {
+      $animal = $this->getDoctrine()
+        ->getRepository(Constant::ANIMAL_REPOSITORY)
+        ->getAnimalByUlnString($client, $content);
     }
 
+   
+    if ($animal == null) {
+      return new JsonResponse(array (
+        'code' => 204,
+        "message" => "For this account, no animal was found with uln: " . $content['uln_country_code'] . $content['uln_number']
+      ), 204);
+    }
 
+    if ($content->get('gender')) {
+      $gender = $content->get('gender');
+      $genderChanger = new GenderChanger($em);
 
-//TODO for this phase editing AnimalDetails is deactivated
-      //TODO keep history of changes
+      if($gender == GenderType::FEMALE) {
+          $genderChanger->changeToFemale($animal);
+      } else if($gender == GenderType::MALE) {
+        $genderChanger->changeToMale($animal);
+      }
+    }
+
     //Persist updated changes and return the updated values
-//    $animal = AnimalDetails::update($animal, $content);
+    $animal = AnimalDetails::update($animal, $content);
       $this->getDoctrine()->getManager()->persist($animal);
       $this->getDoctrine()->getManager()->flush();
-
-//      $outputArray = AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $animal);
-
+    $outputArray = AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $animal);
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
   }
-  
+
+
 }
