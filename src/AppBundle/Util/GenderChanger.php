@@ -3,12 +3,15 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\GenderHistoryItem;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
+use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Service\IRSerializer;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 
@@ -26,15 +29,19 @@ class GenderChanger
 
     /** @var Connection */
     private $conn;
+    
+    private $serializer;
 
     /**
      * GenderChanger constructor.
      * @param ObjectManager $manager
+     * @param IRSerializer $serializer
      */
-    public function __construct(ObjectManager $manager)
+    public function __construct(ObjectManager $manager, IRSerializer $serializer)
     {
         $this->manager = $manager;
         $this->conn = $manager->getConnection();
+        $this->serializer = $serializer;
     }
 
     /**
@@ -50,12 +57,11 @@ class GenderChanger
         }
     }
 
-
     /**
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function updateNeuterTypeByGender()
+    private function updateNeuterTypeByGender()
     {
         $sql = "SELECT type, gender, id, name
                 FROM animal
@@ -71,241 +77,99 @@ class GenderChanger
         }
         return count($results);
     }
-    
 
-    /**
-     * @param Animal $animal
-     * @return Ewe|null
-     */
-    public function makeFemale($animal)
-    {
-        if($animal instanceof Ewe) {
+  /**
+   * Changes the gender of a given animal to the given target gender based on
+   * passed Entity type (Neuter, Ewe, Ram).
+   *
+   * If the target entity is the same as the current animal it will not apply changes to the animal
+   * but return the given animal directly.
+   *
+   * @param Animal $animal
+   * @param $targetEntityClass
+   * @return Animal
+   * @throws \Doctrine\DBAL\DBALException
+   */
+    public function changeToGender(Animal $animal, $targetEntityClass) {
+        $targetEntity = $targetEntityClass::getClassName($targetEntityClass);
+
+        //If animal has same (gender) type as target entity, breakout method
+        if($animal instanceof $targetEntity) {
             return $animal;
+        }
 
-        } elseif ($animal instanceof Ram || $animal instanceof Neuter) {
-            
-            $ewe = new Ewe();
-            $ewe->duplicateValuesAndTransferRelationships($animal);
+        $targetDeletionTable = null;
 
-            $previousGender = StringUtil::getGenderFullyWritten($animal->getGender());
-            $newGender = GenderType::FEMALE;
-            $genderHistoryItem = new GenderHistoryItem($previousGender, $newGender);
-            $genderHistoryItem->setAnimal($ewe);
-            $ewe->addGenderHistoryItem($genderHistoryItem);
-
-            $this->manager->persist($ewe);
-            $this->manager->persist($genderHistoryItem);
-            $this->manager->remove($animal);
-            $this->manager->flush();
-            
-            return $ewe;
-
+        if ($animal instanceof Ewe) {
+            $targetDeletionTable = AnimalObjectType::Ewe;
+        } elseif ($animal instanceof Ram) {
+            $targetDeletionTable = AnimalObjectType::Ram;
         } else {
-            return null;
-        }
-    }
-
-
-    /**
-     * @param Animal $animal
-     * @return Ram|null
-     */
-    public function makeMale($animal)
-    {
-        if($animal instanceof Ram) {
-            return $animal;
-
-        } elseif ($animal instanceof Ewe || $animal instanceof Neuter) {
-
-            $ram = new Ram();
-            $ram->duplicateValuesAndTransferRelationships($animal);
-
-            $previousGender = StringUtil::getGenderFullyWritten($animal->getGender());
-            $newGender = GenderType::MALE;
-            $genderHistoryItem = new GenderHistoryItem($previousGender, $newGender);
-            $genderHistoryItem->setAnimal($ram);
-            $ram->addGenderHistoryItem($genderHistoryItem);
-
-            $this->manager->persist($ram);
-            $this->manager->persist($genderHistoryItem);
-            $this->manager->remove($animal);
-            $this->manager->flush();
-            
-            return $ram;
-
-        } else {
-            return null;
-        }
-    }
-
-
-    /**
-     * @param ObjectManager $em
-     * @param int $animalId
-     * @param string $gender
-     */
-    public static function changeGenderOfNeuter(ObjectManager $em, $animalId, $gender)
-    {
-        if(is_int($animalId) && is_string($gender)) {
-            switch ($gender) {
-                case GenderType::MALE:      self::changeNeuterToMaleBySql($em, $animalId);      break;
-                case GenderType::FEMALE:    self::changeNeuterToFemaleBySql($em, $animalId);    break;
-                default: break;
-            }
-        }
-    }
-
-
-    /**
-     * @param ObjectManager $em
-     * @param int $animalId
-     */
-    public static function changeNeuterToFemaleBySql(ObjectManager $em, $animalId)
-    {
-        $sql = "UPDATE animal SET type='Ewe', gender = '".GenderType::FEMALE."' WHERE id = ". $animalId;
-        $em->getConnection()->exec($sql);
-
-        $sql = "SELECT id FROM ewe WHERE id = ". $animalId;
-        $resultEwe = $em->getConnection()->query($sql)->fetch();
-
-        if($resultEwe['id'] == '' || $resultEwe['id'] == null) {
-            $sql = "INSERT INTO ewe VALUES (" . $animalId . ", 'Ewe')";
-            $em->getConnection()->exec($sql);
+            $targetDeletionTable = AnimalObjectType::Neuter;
         }
 
-        $sql = "SELECT id FROM neuter WHERE id = ". $animalId;
-        $resultNeuter = $em->getConnection()->query($sql)->fetch();
+        //Remove relationship from inheritance table
+        $deleteQuery = "DELETE FROM "  .$targetDeletionTable ." WHERE id = " .$animal->getId();
+        $this->conn->exec($deleteQuery);
 
-        if($resultNeuter['id'] != '' || $resultNeuter['id'] != null) {
-            $sql = "DELETE FROM neuter WHERE id = " . $animalId;
-            $em->getConnection()->exec($sql);
-        }
-    }
+        $targetGender = str_replace(Constant::ENTITY_BASE_PATH, "", $targetEntity);
 
-    /**
-     * @param ObjectManager $em
-     * @param int $animalId
-     */
-    public static function changeNeuterToMaleBySql(ObjectManager $em, $animalId)
-    {
-        $sql = "UPDATE animal SET type='Ram', gender = '".GenderType::MALE."' WHERE id = ". $animalId;
-        $em->getConnection()->exec($sql);
+        switch ($targetGender){
+            case AnimalObjectType::Neuter:
+                //Remove relationship from current inheritance table
+                $deleteQuery = "DELETE FROM "  .AnimalObjectType::Neuter ." WHERE id = " .$animal->getId();
+                $this->conn->exec($deleteQuery);
 
-        $sql = "SELECT id FROM ram WHERE id = ". $animalId;
-        $resultRam = $em->getConnection()->query($sql)->fetch();
+                // Create new inheritance in target inheritance table
+                $insertQuery ="INSERT INTO" .AnimalObjectType::Neuter ." (id, object_type) VALUES ( " . $animal->getId() .", 'Neuter')";
+                $this->conn->exec($insertQuery);
 
-        if($resultRam['id'] == '' || $resultRam['id'] == null) {
-            $sql = "INSERT INTO ram VALUES (" . $animalId . ", 'Ram')";
-            $em->getConnection()->exec($sql);
-        }
+                //Update the discriminator type of the animal in parent Animal table
+                $updateQuery = "UPDATE animal SET type = 'Neuter', gender = 'NEUTER' WHERE id = " .$animal->getId();
+                $this->conn->exec($updateQuery);
+                break;
+            case AnimalObjectType::Ewe:
+                //Remove relationship from current inheritance table
+                $deleteQuery = "DELETE FROM "  .AnimalObjectType::Ewe ." WHERE id = " .$animal->getId();
+                $this->conn->exec($deleteQuery);
 
-        $sql = "SELECT id FROM neuter WHERE id = ". $animalId;
-        $resultNeuter = $em->getConnection()->query($sql)->fetch();
+                // Create new inheritance in target inheritance table
+                $insertQuery ="INSERT INTO" .AnimalObjectType::Ewe ." (id, object_type) VALUES ( " . $animal->getId() .", 'Ewe')";
+                $this->conn->exec($insertQuery);
 
-        if($resultNeuter['id'] != '' || $resultNeuter['id'] != null) {
-            $sql = "DELETE FROM neuter WHERE id = " . $animalId;
-            $em->getConnection()->exec($sql);
-        }
-    }
+                //Update the discriminator type of the animal in parent Animal table
+                $updateQuery = "UPDATE animal SET type = 'Ewe', gender = 'EWE' WHERE id = " .$animal->getId();
+                $this->conn->exec($updateQuery);
+                break;
+            case AnimalObjectType::Ram:
+                //Remove relationship from current inheritance table
+                $deleteQuery = "DELETE FROM "  .AnimalObjectType::Ram ." WHERE id = " .$animal->getId();
+                $this->conn->exec($deleteQuery);
 
+                // Create new inheritance in target inheritance table
+                $insertQuery ="INSERT INTO" .AnimalObjectType::Ram ." (id, object_type) VALUES ( " . $animal->getId() .", 'Ram')";
+                $this->conn->exec($insertQuery);
 
-    /**
-     * @param ObjectManager $em
-     * @param int $animalId
-     */
-    public static function changeMaleToFemaleBySql(ObjectManager $em, $animalId)
-    {
-        $sql = "UPDATE animal SET type='Ewe', gender = '".GenderType::FEMALE."' WHERE id = ". $animalId;
-        $em->getConnection()->exec($sql);
-
-        $sql = "SELECT id FROM ewe WHERE id = ". $animalId;
-        $resultEwe = $em->getConnection()->query($sql)->fetch();
-
-        if($resultEwe['id'] == '' || $resultEwe['id'] == null) {
-            $sql = "INSERT INTO ewe VALUES (" . $animalId . ", 'Ewe')";
-            $em->getConnection()->exec($sql);
+                //Update the discriminator type of the animal in parent Animal table
+                $updateQuery = "UPDATE animal SET type = 'Ram', gender = 'RAM' WHERE id = " .$animal->getId();
+                $this->conn->exec($updateQuery);
+                break;
         }
 
-        $sql = "SELECT id FROM ram WHERE id = ". $animalId;
-        $resultNeuter = $em->getConnection()->query($sql)->fetch();
+        //Re-retrieve animal
+        $animal = $this->manager
+          ->getRepository(Constant::ANIMAL_REPOSITORY)
+          ->findOneBy(array ('ulnCountryCode' => $animal->getUlnCountryCode(), 'ulnNumber' => $animal->getUlnNumber()));
 
-        if($resultNeuter['id'] != '' || $resultNeuter['id'] != null) {
-            $sql = "DELETE FROM ram WHERE id = " . $animalId;
-            $em->getConnection()->exec($sql);
-        }
-    }
+        //Add & persist gender change to history
+        $genderHistoryItem = new GenderHistoryItem($animal->getAnimalObjectType(), $targetGender);
+        $genderHistoryItem->setAnimal($animal);
+        $animal->addGenderHistoryItem($genderHistoryItem);
 
+        $this->manager->persist($animal);
+        $this->manager->persist($genderHistoryItem);
+        $this->manager->flush();
 
-    /**
-     * @param ObjectManager $em
-     * @param int $animalId
-     */
-    public static function changeFemaleToMaleBySql(ObjectManager $em, $animalId)
-    {
-        $sql = "UPDATE animal SET type='Ram', gender = '".GenderType::MALE."' WHERE id = ". $animalId;
-        $em->getConnection()->exec($sql);
-
-        $sql = "SELECT id FROM ram WHERE id = ". $animalId;
-        $resultRam = $em->getConnection()->query($sql)->fetch();
-
-        if($resultRam['id'] == '' || $resultRam['id'] == null) {
-            $sql = "INSERT INTO ram VALUES (" . $animalId . ", 'Ram')";
-            $em->getConnection()->exec($sql);
-        }
-
-        $sql = "SELECT id FROM ewe WHERE id = ". $animalId;
-        $resultNeuter = $em->getConnection()->query($sql)->fetch();
-
-        if($resultNeuter['id'] != '' || $resultNeuter['id'] != null) {
-            $sql = "DELETE FROM ewe WHERE id = " . $animalId;
-            $em->getConnection()->exec($sql);
-        }
-    }
-
-
-    /**
-     * @param ObjectManager $em
-     * @param int $animalId
-     * @param string $oldGender
-     * @param string $newGender
-     */
-    public static function changeGenderBySql(ObjectManager $em, $animalId, $oldGender, $newGender) {
-        if($oldGender == GenderType::NEUTER && $newGender == GenderType::FEMALE) {
-            self::changeNeuterToFemaleBySql($em, $animalId);
-        } elseif ($oldGender == GenderType::NEUTER && $newGender == GenderType::MALE) {
-            self::changeNeuterToMaleBySql($em, $animalId);
-        } else if($oldGender == GenderType::MALE && $newGender == GenderType::FEMALE) {
-            self::changeMaleToFemaleBySql($em, $animalId);
-        } else if($oldGender == GenderType::FEMALE && $newGender == GenderType::MALE) {
-            self::changeFemaleToMaleBySql($em, $animalId);
-        }
-    }
-
-
-    /**
-     * @param string $gender
-     * @return string
-     */
-    public static function getClassNameByGender($gender)
-    {
-        switch ($gender)
-        {
-            case GenderType::FEMALE: return 'Ewe';
-            case GenderType::MALE: return 'Ram';
-            case GenderType::NEUTER: return 'Neuter';
-            default: return 'Neuter';
-        }
-    }
-
-
-    public static function getGenderByClassName($type)
-    {
-        switch ($type)
-        {
-            case 'Ewe': return GenderType::FEMALE;
-            case 'Ram': return GenderType::MALE;
-            case 'Neuter': return GenderType::NEUTER;
-            default: return null;
-        }
+        return $animal;
     }
 }
