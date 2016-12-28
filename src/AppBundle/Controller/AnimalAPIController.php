@@ -93,7 +93,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $client = $this->getAuthenticatedUser($request);
 
     $animals = $animalRepository->findOfClientByAnimalTypeAndIsAlive($client, $animalType, $isAlive);
-    $minimizedOutput = AnimalOutput::createAnimalsArray($animals);
+    $minimizedOutput = AnimalOutput::createAnimalsArray($animals, $this->getDoctrine()->getManager());
 
     return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
   }
@@ -125,7 +125,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       ->getRepository(Constant::ANIMAL_REPOSITORY);
     $animal = $repository->findByUlnOrPedigree($uln, true);
 
-    $minimizedOutput = AnimalOutput::createAnimalArray($animal);
+    $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getDoctrine()->getManager());
 
     return new JsonResponse($minimizedOutput, 200);
   }
@@ -411,45 +411,51 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Method("POST")
    */
   public function changeGenderOfUln(Request $request) {
-
     $em = $this->getDoctrine()->getManager();
     $client = $this->getAuthenticatedUser($request);
     $content = $this->getContentAsArray($request);
-
     $animal = null;
     
-    if ($content['uln_number']) {
-      $animal = $this->getDoctrine()
-        ->getRepository(Constant::ANIMAL_REPOSITORY)
-        ->getAnimalByUlnString($client, $content);
+    //Check if mandatory field values are given
+    if(!$content['uln_number'] || !$content['uln_country_code'] || !$content['gender']) {
+      $statusCode = 406;
+      return new JsonResponse(
+        array(
+          'code'=> $statusCode,
+          'message'=> "ULN number, country code is missing or gender is not specified."
+        ), $statusCode
+      );
     }
 
+    //Try retrieving animal
+    $animal = $this->getDoctrine()
+      ->getRepository(Constant::ANIMAL_REPOSITORY)
+      ->findByUlnCountryCodeAndNumber($content['uln_country_code'] , $content['uln_number']);
    
     if ($animal == null) {
+      $statusCode = 204;
       return new JsonResponse(array (
-        'code' => 204,
-        "message" => "For this account, no animal was found with uln: " . $content['uln_country_code'] . $content['uln_number']
-      ), 204);
+        'code' => $statusCode,
+        "message" => "No animal found with ULN: " . $content['uln_country_code'] . $content['uln_number']
+      ), $statusCode);
     }
 
-    if ($content->get('gender')) {
-      $gender = $content->get('gender');
-      $genderChanger = new GenderChanger($em);
+    //Animal was found, change it's gender.
+    $gender = $content->get('gender');
+    $genderChanger = new GenderChanger($em, $this->getSerializer());
 
-      if($gender == GenderType::FEMALE) {
-          $genderChanger->changeToFemale($animal);
-      } else if($gender == GenderType::MALE) {
-        $genderChanger->changeToMale($animal);
-      }
+    switch ($gender) {
+      case GenderType::FEMALE:
+        $animal = $genderChanger->changeToGender($animal, Ewe::class);
+        break;
+      case GenderType::MALE:
+        $animal = $genderChanger->changeToGender($animal, Ram::class);
+        break;
+      case GenderType::NEUTER:
+        $animal = $genderChanger->changeToGender($animal, Neuter::class);
     }
 
-    //Persist updated changes and return the updated values
-    $animal = AnimalDetails::update($animal, $content);
-      $this->getDoctrine()->getManager()->persist($animal);
-      $this->getDoctrine()->getManager()->flush();
-    $outputArray = AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $animal);
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE =>
+      AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $animal, $animal->getLocation())), 200);
   }
-
-
 }
