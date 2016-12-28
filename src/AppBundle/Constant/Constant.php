@@ -157,5 +157,7 @@ class Constant
     const NEW_PASSWORD_MAIL_SUBJECT_HEADER = "Uw nieuwe NSFO Online wachtwoord";
     const NEW_ADMIN_PASSWORD_MAIL_SUBJECT_HEADER = "Uw nieuwe NSFO Online ADMIN wachtwoord";
     const CONTACT_CONFIRMATION_MAIL_SUBJECT_HEADER = 'NSFO Online Contactformulier Confirmatie';
+    
+    const ENTITY_BASE_PATH = "AppBundle\\Entity\\";
 
 }
