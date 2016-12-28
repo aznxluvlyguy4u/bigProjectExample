@@ -98,20 +98,6 @@ class GenderChanger
             return $animal;
         }
 
-        $targetDeletionTable = null;
-
-        if ($animal instanceof Ewe) {
-            $targetDeletionTable = AnimalObjectType::Ewe;
-        } elseif ($animal instanceof Ram) {
-            $targetDeletionTable = AnimalObjectType::Ram;
-        } else {
-            $targetDeletionTable = AnimalObjectType::Neuter;
-        }
-
-        //Remove relationship from inheritance table
-        $deleteQuery = "DELETE FROM "  .$targetDeletionTable ." WHERE id = " .$animal->getId();
-        $this->conn->exec($deleteQuery);
-
         $targetGender = str_replace(Constant::ENTITY_BASE_PATH, "", $targetEntity);
 
         switch ($targetGender){
