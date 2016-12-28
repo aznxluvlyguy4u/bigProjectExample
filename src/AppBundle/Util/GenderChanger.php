@@ -109,19 +109,6 @@ class GenderChanger
                 $this->conn->exec($updateQuery);
                 break;
             case AnimalObjectType::Ewe:
-
-                //Animal was found, do additional checks to see if we allow a gender change
-                if(count($animal->getBirths()) > 0){
-                    $statusCode = 403;
-                    return new JsonResponse(
-                      array(
-                        Constant::RESULT_NAMESPACE => array (
-                          'code' => $statusCode,
-                          "message" => "Changing the gender of an Ewe which has given birth to a Ram is not allowed for ULN: " . $animal->getUln(),
-                        )
-                      ), $statusCode);
-                }
-                
                  //Remove relationship from current inheritance table
                 $deleteQuery = "DELETE FROM "  .AnimalObjectType::Ewe ." WHERE id = " .$animal->getId();
                 $this->conn->exec($deleteQuery);
@@ -135,6 +122,18 @@ class GenderChanger
                 $this->conn->exec($updateQuery);
                 break;
             case AnimalObjectType::Ram:
+                //Animal was found, do additional checks to see if we allow a gender change
+                if(count($animal->getBirths()) > 0){
+                    $statusCode = 403;
+                    return new JsonResponse(
+                      array(
+                        Constant::RESULT_NAMESPACE => array (
+                          'code' => $statusCode,
+                          "message" => "Changing the gender of an Ewe which has given birth to a Ram is not allowed for ULN: " . $animal->getUln(),
+                        )
+                      ), $statusCode);
+                }
+                
                 //Remove relationship from current inheritance table
                 $deleteQuery = "DELETE FROM "  .AnimalObjectType::Ram ." WHERE id = " .$animal->getId();
                 $this->conn->exec($deleteQuery);
