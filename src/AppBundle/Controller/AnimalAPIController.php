@@ -12,6 +12,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\FormInput\AnimalDetails;
 use AppBundle\Output\AnimalDetailsOutput;
@@ -421,8 +422,10 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       $statusCode = 406;
       return new JsonResponse(
         array(
-          'code'=> $statusCode,
-          'message'=> "ULN number, country code is missing or gender is not specified."
+          Constant::RESULT_NAMESPACE => array(
+              'code'=> $statusCode,
+              'message'=> "ULN number, country code is missing or gender is not specified."
+          )
         ), $statusCode
       );
     }
@@ -434,25 +437,35 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    
     if ($animal == null) {
       $statusCode = 204;
-      return new JsonResponse(array (
-        'code' => $statusCode,
-        "message" => "No animal found with ULN: " . $content['uln_country_code'] . $content['uln_number']
+      return new JsonResponse(
+        array(
+          Constant::RESULT_NAMESPACE => array (
+            'code' => $statusCode,
+            "message" => "No animal found with ULN: " . $content['uln_country_code'] . $content['uln_number']
+          )
       ), $statusCode);
     }
-
-    //Animal was found, change it's gender.
+    
+    //Try to change animal gender
     $gender = $content->get('gender');
-    $genderChanger = new GenderChanger($em, $this->getSerializer());
+    $genderChanger = new GenderChanger($em);
+    $result = null;
 
     switch ($gender) {
-      case GenderType::FEMALE:
-        $animal = $genderChanger->changeToGender($animal, Ewe::class);
+      case AnimalObjectType::EWE:
+        $result = $genderChanger->changeToGender($animal, Ewe::class);
         break;
-      case GenderType::MALE:
-        $animal = $genderChanger->changeToGender($animal, Ram::class);
+      case AnimalObjectType::RAM:
+        $result = $genderChanger->changeToGender($animal, Ram::class);
         break;
-      case GenderType::NEUTER:
-        $animal = $genderChanger->changeToGender($animal, Neuter::class);
+      case AnimalObjectType::NEUTER:
+        $result = $genderChanger->changeToGender($animal, Neuter::class);
+        break;
+    }
+
+    //An exception on the request has occured, return json response error message
+    if(!$result instanceof JsonResponse) {
+      return $result;
     }
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE =>

@@ -2,7 +2,6 @@
 
 namespace AppBundle\Util;
 
-
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Ewe;
@@ -10,8 +9,6 @@ use AppBundle\Entity\GenderHistoryItem;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\AnimalObjectType;
-use AppBundle\Enumerator\GenderType;
-use AppBundle\Service\IRSerializer;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 
@@ -21,7 +18,6 @@ use Doctrine\DBAL\Connection;
  */
 class GenderChanger
 {
-
     /**
      * @var ObjectManager
      */
@@ -29,19 +25,15 @@ class GenderChanger
 
     /** @var Connection */
     private $conn;
-    
-    private $serializer;
 
     /**
      * GenderChanger constructor.
      * @param ObjectManager $manager
-     * @param IRSerializer $serializer
      */
-    public function __construct(ObjectManager $manager, IRSerializer $serializer)
+    public function __construct(ObjectManager $manager)
     {
         $this->manager = $manager;
         $this->conn = $manager->getConnection();
-        $this->serializer = $serializer;
     }
 
     /**
@@ -90,7 +82,8 @@ class GenderChanger
    * @return Animal
    * @throws \Doctrine\DBAL\DBALException
    */
-    public function changeToGender(Animal $animal, $targetEntityClass) {
+    public function changeToGender(Animal $animal, $targetEntityClass)
+    {
         $targetEntity = $targetEntityClass::getClassName($targetEntityClass);
 
         //If animal has same (gender) type as target entity, breakout method
