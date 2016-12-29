@@ -28,6 +28,8 @@ class GenderChanger
     /** @var Connection */
     private $connection;
 
+    const MAX_TIME_INTERVAL = 14;
+
     /**
      * GenderChanger constructor.
      * @param ObjectManager $manager
@@ -170,7 +172,6 @@ class GenderChanger
     function validateGenderChangeRequest(Animal $animal, $targetEntity)
     {
         /*
-
             - dekkingen checken*
             - geboorte checken*
             - als het kinderen heeft*
@@ -183,45 +184,76 @@ class GenderChanger
             - vader naar moeder
          */
         $statusCode = 403;
-
-        //TODO allow changes from NEUTER to X gender
-
+        
+        //Check if target entity is of type Neuter, disallow for now
+        if($targetEntity == AnimalObjectType::Neuter && $animal->getGender() != GenderType::NEUTER) {
+            return new JsonResponse(
+              array(
+                Constant::RESULT_NAMESPACE => array (
+                  'code' => $statusCode,
+                  "message" =>  $animal->getUln() . " has a known gender, therefore changing gender to a Neuter is not allowed.",
+                )
+              ), $statusCode);
+        }
+        
         //Check if animal has matings
         if($animal->getLocation()) {
-            if($animal->getLocation()->getMatings()->count() > 0) {
-                return new JsonResponse(
-                  array(
-                    Constant::RESULT_NAMESPACE => array (
-                      'code' => $statusCode,
-                      "message" =>  $animal->getUln() . " has registered matings, therefore changing gender is not allowed.",
-                    )
-                  ), $statusCode);
+            if($animal->getGender() == GenderType::FEMALE){
+                if($animal->getLocation()->getMatings()->count() > 0) {
+                    return new JsonResponse(
+                      array(
+                        Constant::RESULT_NAMESPACE => array (
+                          'code' => $statusCode,
+                          "message" =>  $animal->getUln() . " has registered matings, therefore changing gender is not allowed.",
+                        )
+                      ), $statusCode);
+                }
             }
         }
 
         //Check if animal has registered births
         if ($animal->getBirths()->count() > 0) {
-            return new JsonResponse(
-              array(
-                Constant::RESULT_NAMESPACE => array (
-                  'code' => $statusCode,
-                  "message" =>  $animal->getUln() . " has registered births, therefore changing gender is not allowed.",
-                )
-              ), $statusCode);
+            if($animal->getGender() == GenderType::FEMALE){
+                return new JsonResponse(
+                  array(
+                    Constant::RESULT_NAMESPACE => array (
+                      'code' => $statusCode,
+                      "message" =>  $animal->getUln() . " has registered births, therefore changing gender is not allowed.",
+                    )
+                  ), $statusCode);
+            }
         }
 
         //Check if animal has registered children
         if ($this->hasDirectChildRelationshipCheck($animal)) {
+            if ($animal->getGender() == GenderType::FEMALE || $animal->getGender() == GenderType::MALE) {
+                return new JsonResponse(
+                  array (
+                    Constant::RESULT_NAMESPACE => array (
+                      'code' => $statusCode,
+                      "message" => $animal->getUln() . " has registered children, therefore changing gender is not allowed.",
+                    )
+                  ), $statusCode);
+            }
+        }
 
+        //Check if birth registration is within a time span of MAX_TIME_INTERVAL from now,
+        //then, and only then, an alteration of gender for this animal is allowed
+        $dateInterval = $animal->getDateOfBirth()->diff(new \DateTime());
+
+        if(!$dateInterval->y == 0
+           && !$dateInterval->m == 0
+           && !$dateInterval->days < self::MAX_TIME_INTERVAL) {
             return new JsonResponse(
-              array(
+              array (
                 Constant::RESULT_NAMESPACE => array (
                   'code' => $statusCode,
-                  "message" =>  $animal->getUln() . " has registered childen, therefore changing gender is not allowed.",
+                  "message" => $animal->getUln() . " has a registered birth that is longer then "
+                    .self::MAX_TIME_INTERVAL ." days ago, from now, therefore changing gender is not allowed.",
                 )
               ), $statusCode);
         }
-
+        
         return true;
     }
 }
