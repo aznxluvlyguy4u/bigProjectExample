@@ -2,6 +2,7 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Enumerator\AnimalObjectType;
@@ -89,20 +90,24 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
 
         switch ($newGender) {
             case AnimalObjectType::RAM:
-                $newAnimal = $genderChanger->changeToGender($animal, Ram::class);
+                $result = $genderChanger->changeToGender($animal, Ram::class);
                 break;
             case AnimalObjectType::EWE:
-                $newAnimal = $genderChanger->changeToGender($animal, Ewe::class);
+                $result = $genderChanger->changeToGender($animal, Ewe::class);
                 break;
             case AnimalObjectType::NEUTER:
-                $newAnimal = $genderChanger->changeToGender($animal, Neuter::class);
+                $result = $genderChanger->changeToGender($animal, Neuter::class);
                 break;
             default:
                 $this->output->writeln(self::taskAbortedNamespace);
                 return;
         }
 
-        $this->printAnimalData($newAnimal, '-- Data of Animal after gender change --');
+        if (!$result instanceof JsonResponse) {
+            $this->printAnimalData($result, '-- Data of Animal after gender change --');
+        } else { //Error has been occured, print message
+            $this->output->writeln($result);
+        }
     }
 
     /**

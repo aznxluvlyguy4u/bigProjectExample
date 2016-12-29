@@ -71,6 +71,15 @@ class GenderChanger
 
         switch ($targetGender){
             case AnimalObjectType::Neuter:
+                //Do additional checks to see if we allow a gender change
+                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::NEUTER);
+
+                if ($requestValidation instanceof JsonResponse) {
+                    return $requestValidation;
+                } elseif (!$requestValidation){
+                    return $animal;
+                }
+
                 //Remove relationship from current inheritance table
                 $deleteQuery = "DELETE FROM "  .AnimalObjectType::Neuter ." WHERE id = " .$animal->getId();
                 $this->connection->exec($deleteQuery);
@@ -84,6 +93,15 @@ class GenderChanger
                 $this->connection->exec($updateQuery);
                 break;
             case AnimalObjectType::Ewe:
+                //Do additional checks to see if we allow a gender change
+                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::NEUTER);
+
+                if ($requestValidation instanceof JsonResponse) {
+                    return $requestValidation;
+                } elseif (!$requestValidation){
+                    return $animal;
+                }
+
                  //Remove relationship from current inheritance table
                 $deleteQuery = "DELETE FROM "  .AnimalObjectType::Ewe ." WHERE id = " .$animal->getId();
                 $this->connection->exec($deleteQuery);
@@ -97,36 +115,14 @@ class GenderChanger
                 $this->connection->exec($updateQuery);
                 break;
             case AnimalObjectType::Ram:
+                //Do additional checks to see if we allow a gender change
+                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::NEUTER);
 
-                //Animal was found, do additional checks to see if we allow a gender change
-                if(count($animal->getBirths()) > 0) {
-                    $statusCode = 403;
-                    return new JsonResponse(
-                      array(
-                        Constant::RESULT_NAMESPACE => array (
-                          'code' => $statusCode,
-                          "message" => "Changing the gender of an Ewe which has given birth to a Ram is not allowed for ULN: " . $animal->getUln(),
-                        )
-                      ), $statusCode);
+                if ($requestValidation instanceof JsonResponse) {
+                    return $requestValidation;
+                } elseif (!$requestValidation){
+                    return $animal;
                 }
-
-                /**
-                 *
-
-                 - dekkingen checken
-                 - geboorte checken
-                 - als het kinderen heeft
-
-                 - geboorte melding kind - mannetje maar moet vrouwtje worden en vice versa -
-                   dier staat al op de stal lijst en wordt paardagen na geboorte gender change aangeroepen,
-                    dan moet je de geboorte melding geslacht ook aanpassen.
-
-
-                - moeder naar vader
-                - vader naar moeder
-
-
-                 */
 
                 //Remove relationship from current inheritance table
                 $deleteQuery = "DELETE FROM "  .AnimalObjectType::Ram ." WHERE id = " .$animal->getId();
@@ -157,5 +153,63 @@ class GenderChanger
         $this->manager->flush();
 
         return $animal;
+    }
+
+    /**
+     * A gender change implicates changing history, it will have direct affect on other
+     * parts of the system. For example, if an animal has been initially registered as an Ewe that
+     * has given birth, changing gender of that animal would implicate that the birth could never have occured.
+     * Above and numerous situations could be invalid after altering the gender, and ultimately changing the history.
+     * Therefore additional validations need te be done before allowing the history alteration / gender change.
+     *
+     * @param Animal $animal
+     * @param  $targetEntity
+     * @return mixed JsonResponse|bool
+     */
+    function validateGenderChangeRequest(Animal $animal, $targetEntity)
+    {
+        /*
+
+            - dekkingen checken*
+            - geboorte checken
+            - als het kinderen heeft
+
+            - geboorte melding kind - mannetje maar moet vrouwtje worden en vice versa -
+              dier staat al op de stal lijst en wordt paardagen na geboorte gender change aangeroepen,
+              dan moet je de geboorte melding geslacht ook aanpassen.
+
+            - moeder naar vader
+            - vader naar moeder
+         */
+
+        //Check if animal has matings
+        if($animal->getLocation()) {
+            if($animal->getLocation()->getMatings()->count() > 0) {
+                $statusCode = 403;
+                return new JsonResponse(
+                  array(
+                    Constant::RESULT_NAMESPACE => array (
+                      'code' => $statusCode,
+                      "message" =>  $animal->getUln() . " has registered matings, therefore changing gender is not allowed.",
+                    )
+                  ), $statusCode);
+            }
+        } 
+
+        //Check if animal has a registered birth
+
+
+        if(count($animal->getBirths()) > 0) {
+            $statusCode = 403;
+            return new JsonResponse(
+              array(
+                Constant::RESULT_NAMESPACE => array (
+                  'code' => $statusCode,
+                  "message" => "Changing the gender of an Ewe which has given birth to a Ram is not allowed for ULN: " . $animal->getUln(),
+                )
+              ), $statusCode);
+        }
+
+        return true;
     }
 }
