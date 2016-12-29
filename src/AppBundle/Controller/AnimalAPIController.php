@@ -419,7 +419,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     
     //Check if mandatory field values are given
     if(!$content['uln_number'] || !$content['uln_country_code'] || !$content['gender']) {
-      $statusCode = 406;
+      $statusCode = 400;
       return new JsonResponse(
         array(
           Constant::RESULT_NAMESPACE => array(
