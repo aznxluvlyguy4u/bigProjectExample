@@ -148,7 +148,7 @@ class GenderChanger
           ->findOneBy(array ('ulnCountryCode' => $animal->getUlnCountryCode(), 'ulnNumber' => $animal->getUlnNumber()));
 
         //Add & persist gender change to history
-        $genderHistoryItem = new GenderHistoryItem($animal->getAnimalObjectType(), $targetGender);
+        $genderHistoryItem = new GenderHistoryItem($animal->getObjectType(), $targetGender);
         $genderHistoryItem->setAnimal($animal);
         $animal->addGenderHistoryItem($genderHistoryItem);
 
