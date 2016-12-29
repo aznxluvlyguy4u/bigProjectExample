@@ -9,6 +9,7 @@ use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 use AppBundle\Enumerator\AnimalObjectType;
+use AppBundle\Enumerator\GenderType;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use AppBundle\Component\HttpFoundation\JsonResponse;
@@ -171,8 +172,8 @@ class GenderChanger
         /*
 
             - dekkingen checken*
-            - geboorte checken
-            - als het kinderen heeft
+            - geboorte checken*
+            - als het kinderen heeft*
 
             - geboorte melding kind - mannetje maar moet vrouwtje worden en vice versa -
               dier staat al op de stal lijst en wordt paardagen na geboorte gender change aangeroepen,
@@ -181,11 +182,13 @@ class GenderChanger
             - moeder naar vader
             - vader naar moeder
          */
+        $statusCode = 403;
+
+        //TODO allow changes from NEUTER to X gender
 
         //Check if animal has matings
         if($animal->getLocation()) {
             if($animal->getLocation()->getMatings()->count() > 0) {
-                $statusCode = 403;
                 return new JsonResponse(
                   array(
                     Constant::RESULT_NAMESPACE => array (
@@ -194,18 +197,27 @@ class GenderChanger
                     )
                   ), $statusCode);
             }
-        } 
+        }
 
-        //Check if animal has a registered birth
-
-
-        if(count($animal->getBirths()) > 0) {
-            $statusCode = 403;
+        //Check if animal has registered births
+        if ($animal->getBirths()->count() > 0) {
             return new JsonResponse(
               array(
                 Constant::RESULT_NAMESPACE => array (
                   'code' => $statusCode,
-                  "message" => "Changing the gender of an Ewe which has given birth to a Ram is not allowed for ULN: " . $animal->getUln(),
+                  "message" =>  $animal->getUln() . " has registered births, therefore changing gender is not allowed.",
+                )
+              ), $statusCode);
+        }
+
+        //Check if animal has registered children
+        if ($this->hasDirectChildRelationshipCheck($animal)) {
+
+            return new JsonResponse(
+              array(
+                Constant::RESULT_NAMESPACE => array (
+                  'code' => $statusCode,
+                  "message" =>  $animal->getUln() . " has registered childen, therefore changing gender is not allowed.",
                 )
               ), $statusCode);
         }
