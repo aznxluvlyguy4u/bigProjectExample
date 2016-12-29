@@ -16,7 +16,7 @@ use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
 
-class NsfoEditGenderCommand extends ContainerAwareCommand
+class NsfoGenderChangeCommand extends ContainerAwareCommand
 {
     const TITLE = 'Edit gender of animal';
     const taskAbortedNamespace = 'ABORTED';
@@ -30,7 +30,7 @@ class NsfoEditGenderCommand extends ContainerAwareCommand
     protected function configure()
     {
         $this
-            ->setName('nsfo:edit:gender')
+            ->setName('nsfo:gender:change')
             ->setDescription(self::TITLE)
         ;
     }
