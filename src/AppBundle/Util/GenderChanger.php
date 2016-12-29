@@ -4,10 +4,10 @@ namespace AppBundle\Util;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\Ewe;
 use AppBundle\Entity\GenderHistoryItem;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
+use AppBundle\Entity\Ewe;
 use AppBundle\Enumerator\AnimalObjectType;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -25,7 +25,7 @@ class GenderChanger
     private $manager;
 
     /** @var Connection */
-    private $conn;
+    private $connection;
 
     /**
      * GenderChanger constructor.
@@ -34,41 +34,16 @@ class GenderChanger
     public function __construct(ObjectManager $manager)
     {
         $this->manager = $manager;
-        $this->conn = $manager->getConnection();
+        $this->connection = $manager->getConnection();
     }
 
     /**
      * @param Animal $animal
      * @return bool
      */
-    public function hasDirectChildRelationshipCheck($animal)
+    public function hasDirectChildRelationshipCheck(Animal $animal)
     {
-        if($animal instanceof Ewe || $animal instanceof Ram || $animal instanceof Neuter) {
-            return $animal->getChildren()->count() > 0;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * @return int
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    private function updateNeuterTypeByGender()
-    {
-        $sql = "SELECT type, gender, id, name
-                FROM animal
-                WHERE ((type = 'Ram' AND gender <> 'MALE') OR (type = 'Ewe' AND gender <> 'FEMALE') OR (type = 'Neuter' AND gender <> 'NEUTER')) AND type = 'Neuter'";
-        $results = $this->conn->query($sql)->fetchAll();
-
-        foreach ($results as $result) {
-            $animalId = $result['id'];
-            $newGender = $result['gender'];
-            $type = $result['type'];
-            $oldGender = self::getGenderByClassName($type);
-            self::changeGenderBySql($this->manager, $animalId, $oldGender, $newGender);
-        }
-        return count($results);
+        return $animal->getChildren()->count() > 0 ? true : false;
     }
 
   /**
@@ -79,7 +54,7 @@ class GenderChanger
    * but return the given animal directly.
    *
    * @param Animal $animal
-   * @param $targetEntityClass
+   * @param mixed Ram | Ewe | Neuter $targetEntityClass
    * @return Animal
    * @throws \Doctrine\DBAL\DBALException
    */
@@ -98,32 +73,33 @@ class GenderChanger
             case AnimalObjectType::Neuter:
                 //Remove relationship from current inheritance table
                 $deleteQuery = "DELETE FROM "  .AnimalObjectType::Neuter ." WHERE id = " .$animal->getId();
-                $this->conn->exec($deleteQuery);
+                $this->connection->exec($deleteQuery);
 
                 // Create new inheritance in target inheritance table
                 $insertQuery ="INSERT INTO" .AnimalObjectType::Neuter ." (id, object_type) VALUES ( " . $animal->getId() .", 'Neuter')";
-                $this->conn->exec($insertQuery);
+                $this->connection->exec($insertQuery);
 
                 //Update the discriminator type of the animal in parent Animal table
                 $updateQuery = "UPDATE animal SET type = 'Neuter', gender = 'NEUTER' WHERE id = " .$animal->getId();
-                $this->conn->exec($updateQuery);
+                $this->connection->exec($updateQuery);
                 break;
             case AnimalObjectType::Ewe:
                  //Remove relationship from current inheritance table
                 $deleteQuery = "DELETE FROM "  .AnimalObjectType::Ewe ." WHERE id = " .$animal->getId();
-                $this->conn->exec($deleteQuery);
+                $this->connection->exec($deleteQuery);
 
                 // Create new inheritance in target inheritance table
                 $insertQuery ="INSERT INTO" .AnimalObjectType::Ewe ." (id, object_type) VALUES ( " . $animal->getId() .", 'Ewe')";
-                $this->conn->exec($insertQuery);
+                $this->connection->exec($insertQuery);
 
                 //Update the discriminator type of the animal in parent Animal table
                 $updateQuery = "UPDATE animal SET type = 'Ewe', gender = 'EWE' WHERE id = " .$animal->getId();
-                $this->conn->exec($updateQuery);
+                $this->connection->exec($updateQuery);
                 break;
             case AnimalObjectType::Ram:
+
                 //Animal was found, do additional checks to see if we allow a gender change
-                if(count($animal->getBirths()) > 0){
+                if(count($animal->getBirths()) > 0) {
                     $statusCode = 403;
                     return new JsonResponse(
                       array(
@@ -133,18 +109,36 @@ class GenderChanger
                         )
                       ), $statusCode);
                 }
-                
+
+                /**
+                 *
+
+                 - dekkingen checken
+                 - geboorte checken
+                 - als het kinderen heeft
+
+                 - geboorte melding kind - mannetje maar moet vrouwtje worden en vice versa -
+                   dier staat al op de stal lijst en wordt paardagen na geboorte gender change aangeroepen,
+                    dan moet je de geboorte melding geslacht ook aanpassen.
+
+
+                - moeder naar vader
+                - vader naar moeder
+
+
+                 */
+
                 //Remove relationship from current inheritance table
                 $deleteQuery = "DELETE FROM "  .AnimalObjectType::Ram ." WHERE id = " .$animal->getId();
-                $this->conn->exec($deleteQuery);
+                $this->connection->exec($deleteQuery);
 
                 // Create new inheritance in target inheritance table
                 $insertQuery ="INSERT INTO" .AnimalObjectType::Ram ." (id, object_type) VALUES ( " . $animal->getId() .", 'Ram')";
-                $this->conn->exec($insertQuery);
+                $this->connection->exec($insertQuery);
 
                 //Update the discriminator type of the animal in parent Animal table
                 $updateQuery = "UPDATE animal SET type = 'Ram', gender = 'RAM' WHERE id = " .$animal->getId();
-                $this->conn->exec($updateQuery);
+                $this->connection->exec($updateQuery);
                 break;
         }
 
