@@ -172,14 +172,6 @@ class GenderChanger
     function validateGenderChangeRequest(Animal $animal, $targetEntity)
     {
         /*
-            - dekkingen checken*
-            - geboorte checken*
-            - als het kinderen heeft*
-
-            - geboorte melding kind - mannetje maar moet vrouwtje worden en vice versa -
-              dier staat al op de stal lijst en wordt paardagen na geboorte gender change aangeroepen,
-              dan moet je de geboorte melding geslacht ook aanpassen.
-
             - moeder naar vader
             - vader naar moeder
          */
@@ -195,7 +187,22 @@ class GenderChanger
                 )
               ), $statusCode);
         }
-        
+
+        //check if animal is registered in a mating
+        //Re-retrieve animal
+        $matings = $this->manager
+          ->getRepository(Constant::MATE_REPOSITORY)->getMatingsByStudIds($animal);
+          
+        if ($matings->count() > 0) {
+            return new JsonResponse(
+              array(
+                Constant::RESULT_NAMESPACE => array (
+                  'code' => $statusCode,
+                  "message" =>  $animal->getUln() . " has registered matings, therefore changing gender is not allowed.",
+                )
+              ), $statusCode);
+        }
+
         //Check if animal has matings
         if($animal->getLocation()) {
             if($animal->getGender() == GenderType::FEMALE){

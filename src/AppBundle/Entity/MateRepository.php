@@ -50,7 +50,17 @@ class MateRepository extends BaseRepository {
         return MateOutput::createMatesOverview($matings);
     }
     
+    public function getMatingsByStudIds($studId)
+    {
 
+        //First find Matings without a confirmation
+
+            $criteria = Criteria::create()
+              ->where(Criteria::expr()->eq('studRam', $studId))
+              ->orWhere(Criteria::expr()->eq('studEwe', $studId));
+
+            return self::matching($criteria);
+    }
 
     /**
      * @param Location $location
