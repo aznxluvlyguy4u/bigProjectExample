@@ -138,6 +138,8 @@ class Constant
     const EWE_REPOSITORY = 'AppBundle:Ewe';
     const RAM_REPOSITORY = 'AppBundle:Ram';
     const NEUTER_REPOSITORY = 'AppBundle:Neuter';
+    const MATE_REPOSITORY = 'AppBundle:Mate';
+
 
     const PERSON_REPOSITORY = 'AppBundle:Person';
     const CLIENT_REPOSITORY = 'AppBundle:Client';
