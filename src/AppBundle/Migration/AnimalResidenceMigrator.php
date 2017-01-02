@@ -4,13 +4,17 @@
 namespace AppBundle\Migration;
 
 
+use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationRepository;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Validator\Constraints\Time;
 
 class AnimalResidenceMigrator extends MigratorBase
 {
+
     /** @var array */
     private $animalIdsByVsmIds;
 
@@ -32,15 +36,24 @@ class AnimalResidenceMigrator extends MigratorBase
         $this->resetPrimaryVsmIdsBySecondaryVsmId();
 
         /* TODO
-         * SearchArrays
-         * - LocationIds by ubn, prioritize active locations
          * - animalResidence, current
          */
 
 
         $this->animalIdsByVsmIds = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
 
+        /** @var LocationRepository $locationRepository */
+        $locationRepository = $this->em->getRepository(Location::class);
+        $locationIdsByUbn = $locationRepository->getLocationIdsByUbn();
+
         $newCount = 0;
+        $incompleteRecords = 0;
+        $skippedRecords = 0;
+        $newDeaths = 0;
+        $skippedDeaths = 0;
+
+        $logDateString = TimeUtil::getLogDateString();
+
         foreach ($this->data as $record) {
 
             $vsmId = $record[0];
@@ -49,9 +62,39 @@ class AnimalResidenceMigrator extends MigratorBase
             $primaryUbn = $record[3];
             $secondaryUbn = $record[4];
 
-
+            //First get the correct vsmId before getting the animalId
             if(array_key_exists($vsmId, $this->primaryVsmIdsBySecondaryVsmId)) {
                 $vsmId = $this->primaryVsmIdsBySecondaryVsmId[$vsmId];
+            }
+
+            $animalId = null;
+            if(array_key_exists($vsmId, $this->animalIdsByVsmIds)) {
+                $animalId = $this->animalIdsByVsmIds[$vsmId];
+            }
+
+            //NullCheck
+            if($animalId == null || $primaryUbn = '' || $mutationType = '') {
+                //There are no death records without primaryUbn by the way
+                $incompleteRecords++;
+                $this->cmdUtil->advanceProgressBar(1,
+                    'AnimalResidences incomplete|new|skipped: '.$incompleteRecords.'|'.$newCount.'|'.$skippedRecords.
+                    '  Deaths new|skipped: '.$newDeaths.'|'.$skippedDeaths);
+                continue;
+            }
+
+
+            $primaryLocationId = null;
+            if($primaryUbn != '') {
+                if(array_key_exists($primaryUbn, $locationIdsByUbn)) {
+                    $primaryLocationId = $locationIdsByUbn[$primaryUbn];
+                }
+            }
+
+            $secondaryLocationId = null;
+            if($secondaryUbn != '') {
+                if(array_key_exists($secondaryUbn, $locationIdsByUbn)) {
+                    $secondaryLocationId = $locationIdsByUbn[$secondaryUbn];
+                }
             }
 
             //TODO check if record has already been processed, by checking the animalResidence data
@@ -81,9 +124,10 @@ class AnimalResidenceMigrator extends MigratorBase
                     die;
             }
 
-            $this->cmdUtil->advanceProgressBar(1);
+            $this->cmdUtil->advanceProgressBar(1,
+                'AnimalResidences incomplete|new|skipped: '.$incompleteRecords.'|'.$newCount.'|'.$skippedRecords.
+                '  Deaths new|skipped: '.$newDeaths.'|'.$skippedDeaths);
         }
-        $this->cmdUtil->setProgressBarMessage($newCount.' new records persisted');
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 

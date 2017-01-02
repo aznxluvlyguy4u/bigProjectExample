@@ -87,4 +87,31 @@ class LocationRepository extends BaseRepository
     return $locations;
   }
 
+
+  /**
+   * The location ids are returned by ubn.
+   * Active locations are prioritized
+   *
+   * @return array
+   */
+  public function getLocationIdsByUbn()
+  {
+    $sql = "SELECT ubn, is_active, id FROM location
+            ORDER BY ubn ASC , is_active DESC ";
+    //The active locations are returned first
+    $results = $this->getConnection()->query($sql)->fetchAll();
+
+    $locationIdsByUbn = [];
+
+    foreach ($results as $result) {
+      $ubn = $result['ubn'];
+      $id = $result['id'];
+      
+      if(!array_key_exists($ubn, $locationIdsByUbn)) {
+        $locationIdsByUbn[$ubn] = intval($id);
+      }
+    }
+    
+    return $locationIdsByUbn;
+  }
 }
