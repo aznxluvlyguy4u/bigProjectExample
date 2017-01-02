@@ -31,6 +31,7 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     const OUTPUT_FILE_NAME_LITTER_DATES = 'strange_litter_dates.csv';
     const OUTPUT_FILE_NAME_HALF_YEAR_LITTER = 'half_year_litters.csv';
     const BATCH_SIZE = 1000;
+    const UPDATE_BATCH_SIZE = 10000;
     const DEFAULT_MIN_EWE_ID = 1;
     const DEFAULT_OPTION = 0;
 
@@ -119,7 +120,8 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
             '4: Generate all litter group ids (uln_orderedCount)', "\n",
             '5: Check if children in litter matches bornAliveCount value', "\n",
             '6: Update mismatched n-ling data in cache', "\n",
-            '7: Printout strange litter dates', "\n",
+            '7: Update mismatched production data in cache', "\n",
+            '8: Printout strange litter dates', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -129,11 +131,12 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                 break;
 
             case 2:
-                $this->matchChildrenWithExistingLittersAndSetFatherInLitter();
+                $this->matchChildrenWithExistingLittersBySql();
+                $this->setMissingFatherInLitterBySql();
                 break;
 
             case 3:
-                $this->findMissingFathersForAnimalFromLitter();
+                $this->setMissingFatherInAnimalFromFatherInLitterBySql();
                 break;
 
             case 4:
@@ -150,6 +153,10 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
                 break;
 
             case 7:
+                AnimalCacher::updateAllMismatchedProductionStrings($em, $this->cmdUtil);
+                break;
+
+            case 8:
                 $this->printOutStrangeLitterDates();
                 break;
 
@@ -266,121 +273,158 @@ class NsfoMigrateLittersCommand extends ContainerAwareCommand
     }
 
 
-    private function findMissingFathersForAnimalFromLitter()
+    /**
+     * Set missing litterIds based on mother and dateOfBirth
+     *
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function matchChildrenWithExistingLittersBySql()
     {
-        //Retrieve data from db
-        $totalMissingFathersStart = $this->getMissingFathersCount();
+        $sql = "SELECT a.id as animal_id, l.id as litter_id
+                FROM animal a
+                INNER JOIN litter l ON DATE(a.date_of_birth) = DATE(l.litter_date) AND a.parent_mother_id = l.animal_mother_id
+                WHERE a.litter_id ISNULL";
+        $results = $this->conn->query($sql)->fetchAll();
 
-        $sql = "SELECT id as animal_id, animal.litter_id as animal_litter_id FROM animal WHERE animal.litter_id IS NOT NULL AND animal.parent_father_id IS NULL";
-        $childrenResults = $this->conn->query($sql)->fetchAll();
-
-        $sql = "SELECT animal_father_id, id as litter_id FROM litter WHERE animal_father_id IS NOT NULL";
-        $litterResults = $this->conn->query($sql)->fetchAll();
-
-        $this->cmdUtil->setStartTimeAndPrintIt(count($childrenResults), 1, 'Data retrieved from database. Now finding fathers for children...');
-
-        //Create search arrays
-        $animalSearchArray = new ArrayCollection();
-        $fatherSearchArray = new ArrayCollection();
-
-        foreach ($childrenResults as $childResult) {
-            $animalSearchArray->set($childResult['animal_litter_id'], $childResult['animal_id']);
-        }
-        foreach ($litterResults as $litterResult) {
-            $fatherSearchArray->set($litterResult['litter_id'], $litterResult['animal_father_id']);
+        $totalLitterIdCount = count($results);
+        if($totalLitterIdCount == 0) {
+            $this->output->writeln('No missing litterIds in animals!');
+            return;
         }
 
-        $missingFathersCount = 0;
-        $foundFathersCount = 0;
-        $animalLitterIds = $animalSearchArray->getKeys();
-        foreach ($animalLitterIds as $litterId) {
-            $animalId = $animalSearchArray->get($litterId);
-            $fatherId = $fatherSearchArray->get($litterId);
-            if ($litterId != null && $fatherId != null) {
-                $sql = "UPDATE animal SET parent_father_id = '" . $fatherId . "' WHERE id = '" . $animalId . "'";
+        $litterIdUpdateString = '';
+        $litterIdsToUpdateCount = 0;
+        $litterIdsUpdatedCount = 0;
+        $loopCounter = 0;
+
+        $this->cmdUtil->setStartTimeAndPrintIt($totalLitterIdCount, 1);
+
+        foreach ($results as $result) {
+            $animalId = intval($result['animal_id']);
+            $litterId = intval($result['litter_id']);
+
+            $litterIdUpdateString = $litterIdUpdateString . '(' . $litterId . ',' . $animalId . '),';
+            $litterIdsToUpdateCount++;
+            $loopCounter++;
+
+            //Update fathers
+            if (($totalLitterIdCount == $loopCounter || ($litterIdsToUpdateCount % self::UPDATE_BATCH_SIZE == 0 && $litterIdsToUpdateCount != 0))
+                && $litterIdUpdateString != ''
+            ) {
+                $litterIdUpdateString = rtrim($litterIdUpdateString, ',');
+                $sql = "UPDATE animal as a SET litter_id = c.litter_id
+				FROM (VALUES " . $litterIdUpdateString . ") as c(litter_id, animal_id) WHERE c.animal_id = a.id ";
                 $this->conn->exec($sql);
-
-                $animalProgressBarMessage = 'FATHER FOUND FOR ANIMAL: ' . $animalId;
-            } else {
-                $animalProgressBarMessage = 'NO FATHER FOUND FOR ANIMAL: ' . $animalId;
+                //Reset batch values
+                $litterIdUpdateString = '';
+                $litterIdsUpdatedCount += $litterIdsToUpdateCount;
+                $litterIdsToUpdateCount = 0;
             }
-
-
-            $this->cmdUtil->advanceProgressBar(1, $animalProgressBarMessage .
-                '  | FATHERS FOUND: ' . $foundFathersCount .
-                '  | FATHERS MISSING: ' . $missingFathersCount);
+            $this->cmdUtil->advanceProgressBar(1, 'LitterIds_in_Animal updated|inBatch: '.$litterIdsUpdatedCount.'|'.$litterIdsToUpdateCount);
         }
-        $totalMissingFathersEnd = $this->getMissingFathersCount();
-        $this->cmdUtil->setProgressBarMessage('Total fathers missing, before: ' . $totalMissingFathersStart . ' | after: ' . $totalMissingFathersEnd);
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+        $this->output->writeln('LitterIds in animals set!');
     }
 
 
-    private function matchChildrenWithExistingLittersAndSetFatherInLitter()
+    private function setMissingFatherInLitterBySql()
     {
-        $sql = "SELECT DATE(date_of_birth) as date_of_birth, id as animal_id, animal.litter_id as animal_litter_id, parent_mother_id, parent_father_id FROM animal";
-        $childrenResults = $this->conn->query($sql)->fetchAll();
+        //Set missing litterIds based on mother and dateOfBirth
+        $sql = "SELECT a.parent_father_id, l.id as litter_id
+                FROM animal a
+                INNER JOIN litter l ON a.litter_id = l.id
+                WHERE l.animal_father_id ISNULL AND a.parent_father_id NOTNULL
+                GROUP BY a.parent_father_id, l.id";
+        $results = $this->conn->query($sql)->fetchAll();
 
-        $sql = "SELECT animal_mother_id, DATE(litter.litter_date) as litter_date, id as litter_id FROM litter";
-        $litterResults = $this->conn->query($sql)->fetchAll();
+        $totalLitterIdCount = count($results);
+        if($totalLitterIdCount == 0) {
+            $this->output->writeln('All missing fathers in litters have been set!');
+            return;
+        }
 
-        $this->cmdUtil->setStartTimeAndPrintIt(count($childrenResults), 1, 'Data retrieved from database. Now matching Children with Litters...');
+        $litterIdUpdateString = '';
+        $litterIdsToUpdateCount = 0;
+        $litterIdsUpdatedCount = 0;
+        $loopCounter = 0;
 
-        //Create search arrays
-        $animalSearchArray = new ArrayCollection();
-        $litterSearchArray = new ArrayCollection();
+        $this->cmdUtil->setStartTimeAndPrintIt($totalLitterIdCount, 1);
 
-        foreach ($childrenResults as $childResult) {
-            $motherDateString = $this->createAnimalSearchString($childResult);
-            $childrenArray = $animalSearchArray->get($motherDateString);
-            if($childrenArray == null) {
-                $childrenArray = new ArrayCollection();
+        foreach ($results as $result) {
+            $fatherId = intval($result['parent_father_id']);
+            $litterId = intval($result['litter_id']);
+
+            $litterIdUpdateString = $litterIdUpdateString . '(' . $litterId . ',' . $fatherId . '),';
+            $litterIdsToUpdateCount++;
+            $loopCounter++;
+
+            //Update fathers
+            if (($totalLitterIdCount == $loopCounter || ($litterIdsToUpdateCount % self::UPDATE_BATCH_SIZE == 0 && $litterIdsToUpdateCount != 0))
+                && $litterIdUpdateString != ''
+            ) {
+                $litterIdUpdateString = rtrim($litterIdUpdateString, ',');
+                $sql = "UPDATE litter as l SET animal_father_id = c.father_id
+				FROM (VALUES " . $litterIdUpdateString . ") as c(litter_id, father_id) WHERE c.litter_id = l.id ";
+                $this->conn->exec($sql);
+                //Reset batch values
+                $litterIdUpdateString = '';
+                $litterIdsUpdatedCount += $litterIdsToUpdateCount;
+                $litterIdsToUpdateCount = 0;
             }
-            $childrenArray->add($childResult);
-            $animalSearchArray->set($motherDateString, $childrenArray);
+            $this->cmdUtil->advanceProgressBar(1, 'Fathers_in_Litters updated|inBatch: '.$litterIdsUpdatedCount.'|'.$litterIdsToUpdateCount);
         }
-
-        foreach ($litterResults as $litterResult) {
-            $motherDateString = $this->createLitterSearchString($litterResult);
-            $litterSearchArray->set($motherDateString, $litterResult['litter_id']);
-        }
-
-        //Match arrays: For each child find a matching litter
-        $foundLittersCount = 0;
-        $noLitterFoundCount = 0;
-        $missingFatherCount = 0;
-        $animalMotherDateStrings = $animalSearchArray->getKeys();
-        foreach ($animalMotherDateStrings as $animalMotherDateString) {
-            $litterId = $litterSearchArray->get($animalMotherDateString);
-            $childrenArray = $animalSearchArray->get($animalMotherDateString);
-
-            foreach($childrenArray as $childResult) {
-                $animalId = $childResult['animal_id'];
-                $fatherId = $childResult['parent_father_id'];
-
-                if ($litterId != null) {
-
-                    $sql = "UPDATE animal SET litter_id = '" . $litterId . "' WHERE id = '" . $animalId . "'";
-                    $this->conn->exec($sql);
-
-                    if ($fatherId != null) {
-                        $sql = "UPDATE litter SET animal_father_id = '" . $fatherId . "' WHERE id = '" . $litterId . "'";
-                        $this->conn->exec($sql);
-                        $missingFatherCount++;
-                    }
-
-                    $foundLittersCount++;
-                    $animalProgressBarMessage = '  LITTER FOUND FOR ANIMAL (id): '.$animalId.' | Found litters: '.$foundLittersCount.' | Missing litters: '.$noLitterFoundCount;
-                } else {
-                    $noLitterFoundCount++;
-                    $animalProgressBarMessage = 'MISSING LITTER FOR ANIMAL (id): '.$animalId.' | Found litters: '.$foundLittersCount.' | Missing litters: '.$noLitterFoundCount;
-                }
-                $this->cmdUtil->advanceProgressBar(1, $animalProgressBarMessage);
-            }
-        }
-        $animalProgressBarMessage = $foundLittersCount.'  | LITTERS MISSING: '.$noLitterFoundCount.'  | FATHERS MISSING: '.$missingFatherCount;
-        $this->cmdUtil->setProgressBarMessage($animalProgressBarMessage);
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+        $this->output->writeln('Missing fathers in litters set!');
+    }
+
+
+    private function setMissingFatherInAnimalFromFatherInLitterBySql()
+    {
+        //Set missing litterIds based on mother and dateOfBirth
+        $sql = "SELECT l.animal_father_id, a.id as animal_id
+                FROM animal a
+                  INNER JOIN litter l ON a.litter_id = l.id
+                WHERE a.parent_father_id ISNULL AND l.animal_father_id NOTNULL";
+        $results = $this->conn->query($sql)->fetchAll();
+
+        $totalAnimalIdCount = count($results);
+        if($totalAnimalIdCount == 0) {
+            $this->output->writeln('All missing fathers in animals have been set!');
+            return;
+        }
+
+        $fatherIdUpdateString = '';
+        $fatherIdsToUpdateCount = 0;
+        $fatherIdsUpdatedCount = 0;
+        $loopCounter = 0;
+
+        $this->cmdUtil->setStartTimeAndPrintIt($totalAnimalIdCount, 1);
+
+        foreach ($results as $result) {
+            $fatherId = intval($result['animal_father_id']);
+            $animalId = intval($result['animal_id']);
+
+            $fatherIdUpdateString = $fatherIdUpdateString . '(' . $animalId . ',' . $fatherId . '),';
+            $fatherIdsToUpdateCount++;
+            $loopCounter++;
+
+            //Update fathers
+            if (($totalAnimalIdCount == $loopCounter || ($fatherIdsToUpdateCount % self::UPDATE_BATCH_SIZE == 0 && $fatherIdsToUpdateCount != 0))
+                && $fatherIdUpdateString != ''
+            ) {
+                $fatherIdUpdateString = rtrim($fatherIdUpdateString, ',');
+                $sql = "UPDATE animal as a SET parent_father_id = c.father_id
+				FROM (VALUES " . $fatherIdUpdateString . ") as c(animal_id, father_id) WHERE c.animal_id = a.id ";
+                $this->conn->exec($sql);
+                //Reset batch values
+                $fatherIdUpdateString = '';
+                $fatherIdsUpdatedCount += $fatherIdsToUpdateCount;
+                $fatherIdsToUpdateCount = 0;
+            }
+            $this->cmdUtil->advanceProgressBar(1, 'Fathers_in_Animals updated|inBatch: '.$fatherIdsUpdatedCount.'|'.$fatherIdsToUpdateCount);
+        }
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+        $this->output->writeln('Missing fathers in animals set!');
     }
 
 
