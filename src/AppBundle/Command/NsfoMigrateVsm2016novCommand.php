@@ -6,6 +6,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\VsmIdGroup;
+use AppBundle\Migration\AnimalResidenceMigrator;
 use AppBundle\Migration\AnimalTableMigrator;
 use AppBundle\Migration\BlindnessFactorsMigrator;
 use AppBundle\Migration\BreederNumberMigrator;
@@ -142,6 +143,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '26: Fix duplicateDeclareTagTransfers', "\n",
             '27: Fix vsmIds part1', "\n",
             '28: Fix vsmIds part2', "\n",
+            '29: Migrate animalResidence & dateOfDeath', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -286,6 +288,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                 $output->writeln($result);
                 break;
 
+            case 29:
+                $result = $this->migrateAnimalResidenceAndDateOfDeath() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
             default:
                 $output->writeln('ABORTED');
                 break;
@@ -355,6 +362,20 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         }
 
         return null;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function migrateAnimalResidenceAndDateOfDeath()
+    {
+        $data = $this->parseCSV($this->filenames[self::ANIMAL_RESIDENCE]);
+        if(count($data) == 0) { return false; }
+
+        $animalResidenceMigrator = new AnimalResidenceMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        $animalResidenceMigrator->migrate();
+        return true;
     }
 
 
