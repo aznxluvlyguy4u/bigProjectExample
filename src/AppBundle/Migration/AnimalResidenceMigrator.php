@@ -4,19 +4,46 @@
 namespace AppBundle\Migration;
 
 
-use AppBundle\Entity\Location;
-use AppBundle\Entity\LocationRepository;
+use AppBundle\Entity\AnimalResidence;
+use AppBundle\Entity\AnimalResidenceRepository;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Validator\Constraints\Time;
 
+
+/**
+ * Class AnimalResidenceMigrator
+ *
+ * NOTE!!! (2017-01-02) Currently only the dateOfdeath and isAlive status is migrated/updated on existing animals!
+ *
+ * This is because matching the correct arrival and depart dates / start- and endDates for the animalResidences
+ * needs a lot of work which will probably not be worth it.
+ * Furthermore there is no guarantee that the generated animalResidences will actually be correct.
+ * There is a high risk that the data will become corrupted.
+ *
+ * @ORM\Entity(repositoryClass="AppBundle\Migration")
+ * @package AppBundle\Migration
+ */
 class AnimalResidenceMigrator extends MigratorBase
 {
+    const DEFAULT_ANIMAL_ID = 1;
+    
+    const ANIMAL_ID = 'animal_id';
+    const PRIMARY_LOCATION_ID = 'primary_location_id';
+    const SECONDARY_LOCATION_ID = 'secondary_location_id';
+    const DATE_STRING = 'date_string';
+    const MUTATION_TYPE = 'mutation_type';
+
+    const DEPART = 'Afvoer';
+    const ARRIVAL = 'Aanvoer';
+    const DEATH = 'Dood';
 
     /** @var array */
     private $animalIdsByVsmIds;
+
+    /** @var AnimalResidenceRepository */
+    private $animalResidenceRepository;
 
     /**
      * AnimalResidenceMigrator constructor.
@@ -28,31 +55,33 @@ class AnimalResidenceMigrator extends MigratorBase
     public function __construct(CommandUtil $cmdUtil, ObjectManager $em, OutputInterface $output, array $data)
     {
         parent::__construct($cmdUtil, $em, $output, $data);
+        $this->animalResidenceRepository = $em->getRepository(AnimalResidence::class);
     }
 
     public function migrate()
     {
-        $this->cmdUtil->setStartTimeAndPrintIt(count($this->data), 1);
+        $this->output->writeln(['',
+                                'Generating searchArrays...']);
+
         $this->resetPrimaryVsmIdsBySecondaryVsmId();
-
-        /* TODO
-         * - animalResidence, current
-         */
-
 
         $this->animalIdsByVsmIds = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
 
-        /** @var LocationRepository $locationRepository */
-        $locationRepository = $this->em->getRepository(Location::class);
-        $locationIdsByUbn = $locationRepository->getLocationIdsByUbn();
+        $sql = 'SELECT id FROM animal WHERE date_of_death ISNULL OR is_alive = TRUE';
+        $results = $this->conn->query($sql)->fetchAll();
 
-        $newCount = 0;
+        $animalIdsOfAliveAnimals = [];
+        foreach ($results as $result) {
+            $animalIdsOfAliveAnimals[$result['id']] = $result['id'];
+        }
+
+
+        $this->cmdUtil->setStartTimeAndPrintIt(count($this->data), 1);
+
         $incompleteRecords = 0;
-        $skippedRecords = 0;
         $newDeaths = 0;
         $skippedDeaths = 0;
-
-        $logDateString = TimeUtil::getLogDateString();
+        $notDeath = 0;
 
         foreach ($this->data as $record) {
 
@@ -69,64 +98,42 @@ class AnimalResidenceMigrator extends MigratorBase
 
             $animalId = null;
             if(array_key_exists($vsmId, $this->animalIdsByVsmIds)) {
-                $animalId = $this->animalIdsByVsmIds[$vsmId];
+                $animalId = intval($this->animalIdsByVsmIds[$vsmId]);
             }
 
             //NullCheck
-            if($animalId == null || $primaryUbn = '' || $mutationType = '') {
-                //There are no death records without primaryUbn by the way
+            if($animalId == null || $primaryUbn == '' || $mutationType == '' || $dateString == '' || $dateString == null) {
+                //There are no death records without primaryUbn by the way, so keep the check in case animalResidence migration is added
                 $incompleteRecords++;
                 $this->cmdUtil->advanceProgressBar(1,
-                    'AnimalResidences incomplete|new|skipped: '.$incompleteRecords.'|'.$newCount.'|'.$skippedRecords.
-                    '  Deaths new|skipped: '.$newDeaths.'|'.$skippedDeaths);
+                    'Deaths new|skipped|incomplete|notDeath: '.$newDeaths.'|'.$skippedDeaths.'|'.$incompleteRecords.'|'.$notDeath);
                 continue;
             }
 
 
-            $primaryLocationId = null;
-            if($primaryUbn != '') {
-                if(array_key_exists($primaryUbn, $locationIdsByUbn)) {
-                    $primaryLocationId = $locationIdsByUbn[$primaryUbn];
-                }
-            }
-
-            $secondaryLocationId = null;
-            if($secondaryUbn != '') {
-                if(array_key_exists($secondaryUbn, $locationIdsByUbn)) {
-                    $secondaryLocationId = $locationIdsByUbn[$secondaryUbn];
-                }
-            }
-
-            //TODO check if record has already been processed, by checking the animalResidence data
-
-            //Process by MutationType
-
             switch ($mutationType) {
-                case 'Afvoer':
-                    //TODO create/edit animalResidence record
+
+                case self::DEATH:
+                    if(array_key_exists($animalId, $animalIdsOfAliveAnimals)) {
+                        $sql = "UPDATE animal SET is_alive = FALSE, date_of_death = '".$dateString."' WHERE id = ".$animalId;
+                        $this->conn->exec($sql);
+                        $newDeaths++;
+                        unset($animalIdsOfAliveAnimals[$animalId]);
+                    } else {
+                        $skippedDeaths++;
+                    }
                     break;
 
-                case 'Aanvoer':
-                    //TODO create/edit animalResidence record
-                    break;
-
-                case 'Dood':
-                    //TODO create/edit animalResidence record
-                    //TODO setDateOfDeath and isAlive = false
-                    break;
-
-                case '':
-                    //Do not process records with missing mutationTypes
-                    break;
-
+                case self::ARRIVAL: $notDeath++; break;
+                case self::DEPART:  $notDeath++; break;
+                case '':            $notDeath++; break; //Do not process records with missing mutationTypes
                 default;
                     $this->output->writeln('Write code to process the following mutationType: '.$mutationType);
                     die;
             }
 
             $this->cmdUtil->advanceProgressBar(1,
-                'AnimalResidences incomplete|new|skipped: '.$incompleteRecords.'|'.$newCount.'|'.$skippedRecords.
-                '  Deaths new|skipped: '.$newDeaths.'|'.$skippedDeaths);
+                'Deaths new|skipped|incomplete|notDeath: '.$newDeaths.'|'.$skippedDeaths.'|'.$incompleteRecords.'|'.$notDeath);
         }
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
