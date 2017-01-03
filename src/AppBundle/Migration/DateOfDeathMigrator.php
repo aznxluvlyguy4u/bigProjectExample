@@ -13,7 +13,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 
 /**
- * Class AnimalResidenceMigrator
+ * Class DateOfDeathMigrator
  *
  * NOTE!!! (2017-01-02) Currently only the dateOfdeath and isAlive status is migrated/updated on existing animals!
  *
@@ -25,7 +25,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * @ORM\Entity(repositoryClass="AppBundle\Migration")
  * @package AppBundle\Migration
  */
-class AnimalResidenceMigrator extends MigratorBase
+class DateOfDeathMigrator extends MigratorBase
 {
     const DEFAULT_ANIMAL_ID = 1;
     
