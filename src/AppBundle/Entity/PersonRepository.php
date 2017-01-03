@@ -69,7 +69,9 @@ class PersonRepository extends BaseRepository
   protected function insertNewPersonParentTable($type, $firstName, $lastName, $isActive = true)
   {
     $isInsertSuccessFul = false;
-    if(PersonType::isValidType($type) && NullChecker::isNotNull($firstName) && NullChecker::isNotNull($lastName)) {
+    if(PersonType::isValidType($type) && NullChecker::isNotNull($lastName)) {
+      if($firstName == null) { $firstName = ''; }
+      
       $password = self::DEFAULT_BLANK_PASSWORD;
       $personId = Utils::generatePersonId();
 
