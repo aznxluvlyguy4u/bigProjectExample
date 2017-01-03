@@ -4,6 +4,8 @@ namespace AppBundle\Command;
 
 use AppBundle\Entity\Inspector;
 use AppBundle\Entity\InspectorRepository;
+use AppBundle\Entity\Measurement;
+use AppBundle\Entity\MeasurementRepository;
 use AppBundle\Migration\ExteriorMeasurementsMigrator;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
@@ -62,6 +64,7 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
             'Choose option: ', "\n",
             '1: file 20161007_1156_Stamboekinspectietabel_edited.csv', "\n",
             '2: import version 2016Aug', "\n",
+            '3: update animalIdAndDate values', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
         
@@ -80,6 +83,12 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
                     'finder_name' => 'animal_exterior_measurements_migration_update.csv',
                     'ignoreFirstLine' => true];
                 $this->migrateExteriorMeasurementsCsvFile1();
+                break;
+
+            case 3:
+                /** @var MeasurementRepository $repository */
+                $repository = $this->em->getRepository(Measurement::class);
+                $repository->setAnimalIdAndDateValues($this->cmdUtil);
                 break;
 
             default:
