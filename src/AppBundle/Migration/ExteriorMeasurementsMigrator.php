@@ -8,6 +8,7 @@ use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\AnimalResidenceRepository;
 use AppBundle\Entity\Inspector;
 use AppBundle\Entity\InspectorRepository;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -53,64 +54,67 @@ class ExteriorMeasurementsMigrator extends MigratorBase
         $this->output->writeln('=== Create search arrays ===');
         
         $inspectorIdsInDbByFullName = $this->createNewInspectorsIfMissingAndReturnLatestInspectorIds($this->data);
-        dump($inspectorIdsInDbByFullName);die; //TODO
         $this->animalIdsByVsmIds = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
-        
+        $exteriorCheckStringsByAnimalIdAndDate = $this->getCurrentExteriorMeasurementsSearchArray();
         
         $totalNumberOfRows = sizeof($this->data);
         $this->output->writeln('=== Migrating exteriorMeasurements ===');
         $this->cmdUtil->setStartTimeAndPrintIt($totalNumberOfRows, $startCounter);
 
-        $inspectors = [];
-
-        $counter = 0;
+        $incompleteCount = 0;
+        $newCount = 0;
+        $skippedCount = 0;
         for($i = $startCounter; $i < $totalNumberOfRows; $i++) {
 
-            $line = $this->data[$i];
+            $record = $this->data[$i];
+            
+            $vsmId = $record[0];
+            $measurementDate = TimeUtil::fillDateStringWithLeadingZeroes($record[1]);
+            $animalId = ArrayUtil::get($vsmId, $this->animalIdsByVsmIds);
 
-            //Rows above 14 are empty
+            $kind = $record[2];
+            $skull = $record[3];
+            $progress = $record[4];
+            $muscularity = $record[5];
+            $proportion = $record[6];
+            $exteriorType = $record[7];
+            $legWork = $record[8];
+            $fur = $record[9];
+            $generalAppearance = $record[10];
+            $height = $record[11];
+            $breastDepth = $record[12];
+            $torsoLength = $record[13];
+            $inspectorName = $record[14];
 
-            $vsmId = $line[0];
-            $measurementDate = TimeUtil::fillDateStringWithLeadingZeroes($line[1]);
-            $kind = $line[2];
-            $skull = $line[3];
-            $progress = $line[4];
-            $muscularity = $line[5];
-            $proportion = $line[6];
-            $exteriorType = $line[7];
-            $legWork = $line[8];
-            $fur = $line[9];
-            $generalAppearance = $line[10];
-            $height = $line[11];
-            $breastDepth = $line[12];
-            $torsoLength = $line[13];
-            $inspectorName = $line[14];
 
-            $inspectors[$inspectorName] = $inspectorName;
+            $values = $skull.$muscularity.$proportion.$exteriorType.$legWork.$fur
+                .$generalAppearance.$height.$breastDepth.$torsoLength.$kind.$progress;
+            $areAllValuesEmpty = trim($values) == '';
 
-//            if($line[1] != '' && $line[1] != null) {
-//
-//                $name = $line[0];
-//                $measurementDate = new \DateTime(StringUtil::changeDateFormatStringFromAmericanToISO($line[1]));
-//                $measurementDateStamp = $measurementDate->format('Y-m-d H:i:s');
-//                $measurementDate->add(new \DateInterval('P1D'));
-//                $nextDayStamp = $measurementDate->format('Y-m-d H:i:s');
-//
-//                $kind = $line[2];
-//                $progress = (float) $line[3];
-//                $height = (float) $line[4];
-//
-//                $message = $i; //defaultMessage
-//
-//                //TODO
-//
-//                $this->cmdUtil->advanceProgressBar(1, $message);
-//            }
+            if($measurementDate == null || $measurementDate == '' || $animalId == null || $areAllValuesEmpty) {
+                $incompleteCount++;
+                $this->cmdUtil->advanceProgressBar(1, 'Exteriors new|skipped|incomplete: '.$newCount.'|'.$skippedCount.'|'.$incompleteCount);
+                continue;
+            }
+            
+            $checkStringCsv = $animalId.$measurementDate.$values;
+            $animalIdAndDate = $animalId.'_'.$measurementDate;
 
+            $checkStringInDb = ArrayUtil::get($animalIdAndDate, $exteriorCheckStringsByAnimalIdAndDate);
+            $inspectorId = ArrayUtil::get($inspectorName, $inspectorIdsInDbByFullName);
+
+            if($checkStringInDb == null) {
+                //Record is empty
+
+            } elseif($checkStringInDb != $checkStringCsv) {
+                //Record needs to be updated
+
+            }
+
+            $this->cmdUtil->advanceProgressBar(1, 'Exteriors new|skipped|incomplete: '.$newCount.'|'.$skippedCount.'|'.$incompleteCount);
         }
 
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
-        $this->output->writeln("LINES IMPORTED: " . $counter);
     }
 
 
@@ -194,5 +198,27 @@ class ExteriorMeasurementsMigrator extends MigratorBase
 
         return $inspectorIdsInDbByFullName;
     }
-    
+
+
+    /**
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function getCurrentExteriorMeasurementsSearchArray()
+    {
+        $sql = "SELECT m.inspector_id, DATE(m.measurement_date) as measurement_date, m.animal_id_and_date, x.*,
+                  CONCAT(animal_id, DATE(m.measurement_date), skull, muscularity, proportion, exterior_type, leg_work, fur, general_appearence, height, breast_depth, torso_length, kind, progress) as check_string
+                FROM exterior x
+                INNER JOIN measurement m ON m.id = x.id";
+        $results = $this->conn->query($sql)->fetchAll();
+        
+        $searchArray = [];
+        foreach ($results as $result) {
+            $animalIdAndDate = $result['animal_id_and_date'];
+            $checkString = $result['check_string'];
+            $searchArray[$animalIdAndDate] = $checkString;
+        }
+        
+        return $searchArray;
+    }
 }
