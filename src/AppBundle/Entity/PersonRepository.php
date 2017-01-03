@@ -64,9 +64,10 @@ class PersonRepository extends BaseRepository
    * @param string $firstName
    * @param string $lastName
    * @param bool $isActive
+   * @param string $emailAddress
    * @return bool
    */
-  protected function insertNewPersonParentTable($type, $firstName, $lastName, $isActive = true)
+  protected function insertNewPersonParentTable($type, $firstName, $lastName, $isActive = true, $emailAddress = '')
   {
     $isInsertSuccessFul = false;
     if(PersonType::isValidType($type) && NullChecker::isNotNull($lastName)) {
@@ -77,7 +78,7 @@ class PersonRepository extends BaseRepository
 
       $isActive = StringUtil::getBooleanAsString($isActive);
       
-      $sql = "INSERT INTO person (id, first_name, last_name, type, is_active, password, person_id) VALUES (nextval('person_id_seq'),'" .$firstName. "','" . $lastName . "','".$type."',".$isActive.",'".$password."','".$personId."')";
+      $sql = "INSERT INTO person (id, first_name, last_name, type, is_active, password, person_id, email_address) VALUES (nextval('person_id_seq'),'" .$firstName. "','" . $lastName . "','".$type."',".$isActive.",'".$password."','".$personId."','".$emailAddress."')";
       $this->getManager()->getConnection()->exec($sql);
       $isInsertSuccessFul = true;
     }
