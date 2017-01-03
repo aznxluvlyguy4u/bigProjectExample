@@ -4,6 +4,7 @@ namespace AppBundle\Command;
 
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -42,7 +43,9 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
          * @var ObjectManager $em
          */
         $em = $this->getContainer()->get('doctrine')->getManager();
-        $em->getConnection()->getConfiguration()->setSQLLogger(null);
+        /** @var Connection $conn */
+        $conn = $em->getConnection();
+        $conn->getConfiguration()->setSQLLogger(null);
         $helper = $this->getHelper('question');
         $cmdUtil = new CommandUtil($input, $output, $helper);
         $counter = 0;
@@ -70,12 +73,12 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
                 $message = $i; //defaultMessage
                 if(NullChecker::isNotNull($measurementDate)){
                     $sql = "SELECT exterior.id as id FROM exterior  INNER JOIN measurement ON exterior.id = measurement.id INNER JOIN animal ON exterior.animal_id = animal.id WHERE animal.name = '".$name."' AND measurement.measurement_date BETWEEN '".$measurementDateStamp."' AND '".$nextDayStamp."'";
-                    $result = $em->getConnection()->query($sql)->fetch();
+                    $result = $conn->query($sql)->fetch();
 
                     if ($result) {
                         if($result['id'] != '') {
                             $sql = "UPDATE exterior SET height = '".$height."', progress = '".$progress."', kind = '".$kind."' WHERE exterior.id = '".$result['id']."'";
-                            $em->getConnection()->exec($sql);
+                            $conn->exec($sql);
                             $message = $i . ' +';
                             $counter++;
                         }
