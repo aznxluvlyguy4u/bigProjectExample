@@ -6,26 +6,31 @@ use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 use Doctrine\Common\Persistence\ObjectManager;
-use AppBundle\Constant\Constant;
-use AppBundle\Entity\Animal;
 use AppBundle\Util\CommandUtil;
 
 class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
 {
     const TITLE = 'Migrating Exterior from original data source';
     const DEFAULT_START_ROW = 0;
+    const DEFAULT_OPTION = 0;
 
-    private $csvParsingOptions = array(
-        'finder_in' => 'app/Resources/imports/',
-        'finder_name' => 'animal_exterior_measurements_migration_update.csv',
-        'ignoreFirstLine' => true
-    );
+    private $csvParsingOptions;
+
+    /** @var CommandUtil */
+    private $cmdUtil;
+
+    /** @var OutputInterface */
+    private $output;
+
+    /** @var Connection */
+    private $conn;
+
+    /** @var ObjectManager */
+    private $em;
 
     protected function configure()
     {
@@ -36,24 +41,75 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $csv = $this->parseCSV();
-        $totalNumberOfRows = sizeof($csv);
 
-        /**
-         * @var ObjectManager $em
-         */
-        $em = $this->getContainer()->get('doctrine')->getManager();
+        /** @var ObjectManager $em */
+        $this->em = $this->getContainer()->get('doctrine')->getManager();
         /** @var Connection $conn */
-        $conn = $em->getConnection();
+        $this->conn = $this->em->getConnection();
         $conn->getConfiguration()->setSQLLogger(null);
         $helper = $this->getHelper('question');
-        $cmdUtil = new CommandUtil($input, $output, $helper);
+        $this->cmdUtil = new CommandUtil($input, $output, $helper);
+        $this->output = $output;
+
+        $this->cmdUtil->generateTitle(self::TITLE);
+
+        $option = $this->cmdUtil->generateMultiLineQuestion([
+            ' ', "\n",
+            'Choose option: ', "\n",
+            '1: import version 2016Aug', "\n",
+            '2: file 20161007_1156_Stamboekinspectietabel.csv', "\n",
+            'abort (other)', "\n"
+        ], self::DEFAULT_OPTION);
+        
+        switch ($option) {
+            case 1:
+                $this->csvParsingOptions = [
+                    'finder_in' => 'app/Resources/imports/vsm2016nov',
+                    'finder_name' => '20161007_1156_Stamboekinspectietabel_edited.csv',
+                    'ignoreFirstLine' => true];
+                $this->migrateExteriorMeasurementsCsvFile2();
+                break;
+
+            case 2:
+                $this->csvParsingOptions = [
+                    'finder_in' => 'app/Resources/imports/',
+                    'finder_name' => 'animal_exterior_measurements_migration_update.csv',
+                    'ignoreFirstLine' => true];
+                $this->migrateExteriorMeasurementsCsvFile1();
+                break;
+
+            default:
+                $output->writeln('ABORTED');
+                return;
+        }
+
+        $output->writeln('DONE');
+    }
+
+
+    private function migrateExteriorMeasurementsCsvFile2()
+    {
+        $this->output->writeln('Parsing csv...');
+
+        $csv = $this->parseCSV();
+        $totalNumberOfRows = sizeof($csv);
+        $this->cmdUtil->setStartTimeAndPrintIt($totalNumberOfRows, 1);
+
+        //TODO
+    }
+
+
+    private function migrateExteriorMeasurementsCsvFile1()
+    {
+        $startCounter = $this->cmdUtil->generateQuestion('Please enter start row: ', self::DEFAULT_START_ROW);
+
+        $this->output->writeln('Parsing csv...');
+
+        $csv = $this->parseCSV();
+        $totalNumberOfRows = sizeof($csv);
+        $this->cmdUtil->setStartTimeAndPrintIt($totalNumberOfRows, $startCounter);
+
         $counter = 0;
-
-        $startCounter = $cmdUtil->generateQuestion('Please enter start row: ', self::DEFAULT_START_ROW);
-
-        $cmdUtil->setStartTimeAndPrintIt($totalNumberOfRows, $startCounter);
-
         for($i = $startCounter; $i < $totalNumberOfRows; $i++) {
 
             $line = $csv[$i];
@@ -73,26 +129,27 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
                 $message = $i; //defaultMessage
                 if(NullChecker::isNotNull($measurementDate)){
                     $sql = "SELECT exterior.id as id FROM exterior  INNER JOIN measurement ON exterior.id = measurement.id INNER JOIN animal ON exterior.animal_id = animal.id WHERE animal.name = '".$name."' AND measurement.measurement_date BETWEEN '".$measurementDateStamp."' AND '".$nextDayStamp."'";
-                    $result = $conn->query($sql)->fetch();
+                    $result = $this->conn->query($sql)->fetch();
 
                     if ($result) {
                         if($result['id'] != '') {
                             $sql = "UPDATE exterior SET height = '".$height."', progress = '".$progress."', kind = '".$kind."' WHERE exterior.id = '".$result['id']."'";
-                            $conn->exec($sql);
+                            $this->conn->exec($sql);
                             $message = $i . ' +';
                             $counter++;
                         }
                     }
                 }
 
-                $cmdUtil->advanceProgressBar(1, $message);
+                $this->cmdUtil->advanceProgressBar(1, $message);
             }
 
         }
 
-        $cmdUtil->setEndTimeAndPrintFinalOverview();
-        $output->writeln("LINES IMPORTED: " . $counter);
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+        $this->output->writeln("LINES IMPORTED: " . $counter);
     }
+
 
     private function parseCSV() {
         $ignoreFirstLine = $this->csvParsingOptions['ignoreFirstLine'];
