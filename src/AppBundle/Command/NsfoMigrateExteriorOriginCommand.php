@@ -4,6 +4,7 @@ namespace AppBundle\Command;
 
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
@@ -46,7 +47,7 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
         $this->em = $this->getContainer()->get('doctrine')->getManager();
         /** @var Connection $conn */
         $this->conn = $this->em->getConnection();
-        $conn->getConfiguration()->setSQLLogger(null);
+        $this->conn->getConfiguration()->setSQLLogger(null);
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
         $this->output = $output;
@@ -56,8 +57,8 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
         $option = $this->cmdUtil->generateMultiLineQuestion([
             ' ', "\n",
             'Choose option: ', "\n",
-            '1: import version 2016Aug', "\n",
-            '2: file 20161007_1156_Stamboekinspectietabel.csv', "\n",
+            '1: file 20161007_1156_Stamboekinspectietabel_edited.csv', "\n",
+            '2: import version 2016Aug', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
         
@@ -89,23 +90,77 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
 
     private function migrateExteriorMeasurementsCsvFile2()
     {
+        $startCounter = $this->cmdUtil->generateQuestion('Please enter start row (default = '.self::DEFAULT_START_ROW.')', self::DEFAULT_START_ROW);
+
         $this->output->writeln('Parsing csv...');
 
-        $csv = $this->parseCSV();
+        $csv = $this->parseCSV(';');
         $totalNumberOfRows = sizeof($csv);
-        $this->cmdUtil->setStartTimeAndPrintIt($totalNumberOfRows, 1);
+
+        $this->output->writeln('Create search arrays');
 
         //TODO
+
+
+        $this->cmdUtil->setStartTimeAndPrintIt($totalNumberOfRows, $startCounter);
+
+        $counter = 0;
+        for($i = $startCounter; $i < $totalNumberOfRows; $i++) {
+
+            $line = $csv[$i];
+
+            //Rows above 14 are empty
+
+            $vsmId = $line[0];
+            $measurementDate = TimeUtil::fillDateStringWithLeadingZeroes($line[1]);
+            $kind = $line[2];
+            $skull = $line[3];
+            $progress = $line[4];
+            $muscularity = $line[5];
+            $proportion = $line[6];
+            $exteriorType = $line[7];
+            $legWork = $line[8];
+            $fur = $line[9];
+            $generalAppearance = $line[10];
+            $height = $line[11];
+            $breastDepth = $line[12];
+            $torsoLength = $line[13];
+            $inspectorName = $line[14];
+            
+
+//            if($line[1] != '' && $line[1] != null) {
+//
+//                $name = $line[0];
+//                $measurementDate = new \DateTime(StringUtil::changeDateFormatStringFromAmericanToISO($line[1]));
+//                $measurementDateStamp = $measurementDate->format('Y-m-d H:i:s');
+//                $measurementDate->add(new \DateInterval('P1D'));
+//                $nextDayStamp = $measurementDate->format('Y-m-d H:i:s');
+//
+//                $kind = $line[2];
+//                $progress = (float) $line[3];
+//                $height = (float) $line[4];
+//
+//                $message = $i; //defaultMessage
+//
+//                //TODO
+//
+//                $this->cmdUtil->advanceProgressBar(1, $message);
+//            }
+
+        }
+
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+        $this->output->writeln("LINES IMPORTED: " . $counter);
     }
 
 
     private function migrateExteriorMeasurementsCsvFile1()
     {
-        $startCounter = $this->cmdUtil->generateQuestion('Please enter start row: ', self::DEFAULT_START_ROW);
+        $startCounter = $this->cmdUtil->generateQuestion('Please enter start row (default = '.self::DEFAULT_START_ROW.')', self::DEFAULT_START_ROW);
 
         $this->output->writeln('Parsing csv...');
 
-        $csv = $this->parseCSV();
+        $csv = $this->parseCSV(',');
         $totalNumberOfRows = sizeof($csv);
         $this->cmdUtil->setStartTimeAndPrintIt($totalNumberOfRows, $startCounter);
 
@@ -151,7 +206,7 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
     }
 
 
-    private function parseCSV() {
+    private function parseCSV($separator = ';') {
         $ignoreFirstLine = $this->csvParsingOptions['ignoreFirstLine'];
 
         $finder = new Finder();
@@ -164,7 +219,7 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
         $rows = array();
         if (($handle = fopen($csv->getRealPath(), "r")) !== FALSE) {
             $i = 0;
-            while (($data = fgetcsv($handle, null, ",")) !== FALSE) {
+            while (($data = fgetcsv($handle, null, $separator)) !== FALSE) {
                 $i++;
                 if ($ignoreFirstLine && $i == 1) { continue; }
                 $rows[] = $data;
