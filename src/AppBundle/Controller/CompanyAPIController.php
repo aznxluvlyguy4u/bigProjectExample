@@ -87,7 +87,25 @@ class CompanyAPIController extends APIController
         // TODO VALIDATE CONTENT
 
         // Create Owner
-        $contentOwner = $content->get('owner');
+        $contentUsers = $content->get('users');
+
+        $contentOwner = null;
+        foreach ($contentUsers as $user) {
+            if($user['is_primary_contactperson'] == true) {
+                $contentOwner = $user;
+            }
+        }
+
+        if($contentOwner == null) {
+            return new JsonResponse(
+                array(
+                    Constant::CODE_NAMESPACE => 400,
+                    Constant::MESSAGE_NAMESPACE => 'PRIMARY CONTACT PERSON IS MISSING',
+                ),
+                400
+            );
+        }
+
 
         $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
         $owner = $repository->findOneBy(array('emailAddress' => $contentOwner['email_address'], 'isActive' => true));
@@ -157,6 +175,7 @@ class CompanyAPIController extends APIController
         $company->setOwner($owner);
         $company->setAddress($address);
         $company->setBillingAddress($billingAddress);
+        $company->setIsRevealHistoricAnimals(true);
 
         // Create Location
         $locations = new ArrayCollection();
@@ -203,7 +222,6 @@ class CompanyAPIController extends APIController
         $company->setLocations($locations);
 
         // Create Users
-        $contentUsers = $content->get('users');
         $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
 
         foreach ($contentUsers as $contentUser) {
@@ -220,13 +238,16 @@ class CompanyAPIController extends APIController
                 );
             }
 
-            $user = new Client();
-            $user->setFirstName($contentUser['first_name']);
-            $user->setLastName($contentUser['last_name']);
-            $user->setEmailAddress($contentUser['email_address']);
-            $user->setObjectType('Client');
-            $user->setIsActive(true);
-            $user->setEmployer($company);
+            if($contentUser['is_primary_contactperson'] == false) {
+                $user = new Client();
+                $user->setFirstName($contentUser['first_name']);
+                $user->setLastName($contentUser['last_name']);
+                $user->setEmailAddress($contentUser['email_address']);
+                $user->setObjectType('Client');
+                $user->setIsActive(true);
+                $user->setEmployer($company);
+                $this->getDoctrine()->getManager()->persist($user);
+            }
         }
 
         // Save to Database
