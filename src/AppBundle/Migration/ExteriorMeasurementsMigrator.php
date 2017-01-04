@@ -8,8 +8,10 @@ use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\AnimalResidenceRepository;
 use AppBundle\Entity\Inspector;
 use AppBundle\Entity\InspectorRepository;
+use AppBundle\Enumerator\MeasurementType;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -26,6 +28,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 class ExteriorMeasurementsMigrator extends MigratorBase
 {
     const DEFAULT_START_ROW = 0;
+    const MAX_EXTERIOR_VALUE = 99;
+    const MIN_EXTERIOR_VALUE = 69;
+    const INSERT_BATCH_SIZE = 1000;
 
     /** @var array */
     private $animalIdsByVsmIds;
@@ -48,73 +53,153 @@ class ExteriorMeasurementsMigrator extends MigratorBase
 
     public function migrate()
     {
-        $startCounter = $this->cmdUtil->generateQuestion('Please enter start row (default = '.self::DEFAULT_START_ROW.')', self::DEFAULT_START_ROW);
-        $this->output->writeln([$startCounter.' <- chosen']);
+        $startCounter = $this->cmdUtil->generateQuestion('Please enter start row (default = ' . self::DEFAULT_START_ROW . ')', self::DEFAULT_START_ROW);
+        $this->output->writeln([$startCounter . ' <- chosen']);
 
         $this->output->writeln('=== Create search arrays ===');
-        
+
         $inspectorIdsInDbByFullName = $this->createNewInspectorsIfMissingAndReturnLatestInspectorIds($this->data);
         $this->animalIdsByVsmIds = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
-        $exteriorCheckStringsByAnimalIdAndDate = $this->getCurrentExteriorMeasurementsSearchArray();
-        
+        $exteriorCheckStrings = $this->getCurrentExteriorMeasurementsSearchArray();
+
         $totalNumberOfRows = sizeof($this->data);
         $this->output->writeln('=== Migrating exteriorMeasurements ===');
+        $this->deleteOrphanedMeasurements();
         $this->cmdUtil->setStartTimeAndPrintIt($totalNumberOfRows, $startCounter);
 
         $incompleteCount = 0;
         $newCount = 0;
+        $batchCount = 0;
         $skippedCount = 0;
-        for($i = $startCounter; $i < $totalNumberOfRows; $i++) {
+        $insertMeasurementString = '';
+        $insertExteriorString = '';
+
+
+        $markings = 0;
+        $logDate = TimeUtil::getLogDateString();
+
+        $sql = "SELECT MAX(id) as max_id FROM measurement";
+        $maxMeasurementId = $this->conn->query($sql)->fetch()['max_id'];
+
+        for ($i = $startCounter; $i < $totalNumberOfRows; $i++) {
 
             $record = $this->data[$i];
-            
+
             $vsmId = $record[0];
             $measurementDate = TimeUtil::fillDateStringWithLeadingZeroes($record[1]);
             $animalId = ArrayUtil::get($vsmId, $this->animalIdsByVsmIds);
 
             $kind = $record[2];
-            $skull = $record[3];
-            $progress = $record[4];
-            $muscularity = $record[5];
-            $proportion = $record[6];
-            $exteriorType = $record[7];
-            $legWork = $record[8];
-            $fur = $record[9];
-            $generalAppearance = $record[10];
-            $height = $record[11];
-            $breastDepth = $record[12];
-            $torsoLength = $record[13];
+
+            $skull = self::validateExteriorValue($record[3]);
+            $progress = self::validateExteriorValue($record[4]);
+            $muscularity = self::validateExteriorValue($record[5]);
+            $proportion = self::validateExteriorValue($record[6]);
+            $exteriorType = self::validateExteriorValue($record[7]);
+            $legWork = self::validateExteriorValue($record[8]);
+            $fur = self::validateExteriorValue($record[9]);
+            $generalAppearance = self::validateExteriorValue($record[10]);
+            $height = self::validateExteriorValue($record[11]);
+            $breastDepth = self::validateExteriorValue($record[12]);
+            $torsoLength = self::validateExteriorValue($record[13]);
+
             $inspectorName = $record[14];
 
 
-            $values = $skull.$muscularity.$proportion.$exteriorType.$legWork.$fur
-                .$generalAppearance.$height.$breastDepth.$torsoLength.$kind.$progress;
-            $areAllValuesEmpty = trim($values) == '';
+            $values = $skull . $muscularity . $proportion . $exteriorType . $legWork . $fur
+                . $generalAppearance . $height . $breastDepth . $torsoLength . $kind . $progress;
+            $areAllValuesEmpty = trim($values, '0') == '';
 
-            if($measurementDate == null || $measurementDate == '' || $animalId == null || $areAllValuesEmpty) {
+            if ($measurementDate == null || $measurementDate == '' || $animalId == null || $areAllValuesEmpty) {
                 $incompleteCount++;
-                $this->cmdUtil->advanceProgressBar(1, 'Exteriors new|skipped|incomplete: '.$newCount.'|'.$skippedCount.'|'.$incompleteCount);
+                $this->cmdUtil->advanceProgressBar(1, 'Exteriors new|inBatch|skipped|incomplete: ' . $newCount .'|'.$batchCount. '|' . $skippedCount . '|' . $incompleteCount.' record: '.$i);
                 continue;
             }
-            
-            $checkStringCsv = $animalId.$measurementDate.$values;
-            $animalIdAndDate = $animalId.'_'.$measurementDate;
 
-            $checkStringInDb = ArrayUtil::get($animalIdAndDate, $exteriorCheckStringsByAnimalIdAndDate);
             $inspectorId = ArrayUtil::get($inspectorName, $inspectorIdsInDbByFullName);
+            $animalIdAndDate = $animalId . '_' . $measurementDate;
+            $checkStringCsv = $animalIdAndDate.$values.$inspectorId;
 
-            if($checkStringInDb == null) {
+            if (!array_key_exists($checkStringCsv, $exteriorCheckStrings)) {
                 //Record is empty
+                $maxMeasurementId++;
 
-            } elseif($checkStringInDb != $checkStringCsv) {
-                //Record needs to be updated
+                $insertExteriorString = $insertExteriorString . "(" . $maxMeasurementId . "," . $animalId . ",'" . $skull . "','" .
+                    $muscularity. "','" . $proportion . "','" . $exteriorType . "','" . $legWork . "','" . $fur . "','" .
+                    $generalAppearance . "','" . $height . "','" . $breastDepth . "','" . $torsoLength . "','" .
+                    $markings . "','" . $kind . "','" . $progress . "'),";
 
+                $insertMeasurementString = $insertMeasurementString . "(" . $maxMeasurementId . "," .
+                    SqlUtil::getNullCheckedValueForSqlQuery($inspectorId, false) . ",'" . $logDate . "','" . $measurementDate . "','".MeasurementType::EXTERIOR."','" . $animalIdAndDate . "'),";
+
+                $batchCount++;
+                $exteriorCheckStrings[$checkStringCsv] = $checkStringCsv;
+
+            } else {
+                $skippedCount++;
             }
 
-            $this->cmdUtil->advanceProgressBar(1, 'Exteriors new|skipped|incomplete: '.$newCount.'|'.$skippedCount.'|'.$incompleteCount);
+
+            if($batchCount%self::INSERT_BATCH_SIZE == 0 && $batchCount != 0) {
+                $this->batchInsert($insertMeasurementString, $insertExteriorString);
+
+                //Reset batch values AFTER insert
+                $insertMeasurementString = '';
+                $insertExteriorString = '';
+                $newCount += $batchCount;
+                $batchCount = 0;
+            }
+
+            $this->cmdUtil->advanceProgressBar(1, 'Exteriors new|inBatch|skipped|incomplete: ' . $newCount .'|'.$batchCount. '|' . $skippedCount . '|' . $incompleteCount.' record: '.$i);
         }
 
+        if($batchCount != 0) {
+            $this->batchInsert($insertMeasurementString, $insertExteriorString);
+
+            //Reset batch values AFTER insert
+            $insertMeasurementString = '';
+            $insertExteriorString = '';
+            $batchCount = 0;
+            $newCount += $batchCount;
+            $this->cmdUtil->advanceProgressBar(1, 'Exteriors new|inBatch|skipped|incomplete: ' . $newCount .'|'.$batchCount. '|' . $skippedCount . '|' . $incompleteCount.' record: '.$i);
+        }
+
+
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
+
+    /**
+     * @param string $insertMeasurementString
+     * @param string $insertExteriorString
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function batchInsert($insertMeasurementString, $insertExteriorString)
+    {
+        $insertExteriorString = rtrim($insertExteriorString,',');
+        $insertMeasurementString = rtrim($insertMeasurementString,',');
+
+        $sql = "INSERT INTO measurement (id, inspector_id, log_date, measurement_date, type, animal_id_and_date 
+						)VALUES " . $insertMeasurementString;
+        $this->conn->exec($sql);
+
+        $sql = "INSERT INTO exterior (id, animal_id, skull, muscularity, proportion, exterior_type, leg_work, fur,
+                        general_appearence, height, breast_depth, torso_length, markings, kind, progress
+						)VALUES " . $insertExteriorString;
+        $this->conn->exec($sql);
+    }
+
+
+    /**
+     * @param $exteriorValue
+     * @return float
+     */
+    public static function validateExteriorValue($exteriorValue)
+    {
+        if(self::MIN_EXTERIOR_VALUE <= $exteriorValue && $exteriorValue <= self::MAX_EXTERIOR_VALUE) {
+            return floatval($exteriorValue);
+        }
+        return 0.0;
     }
 
 
@@ -207,7 +292,7 @@ class ExteriorMeasurementsMigrator extends MigratorBase
     private function getCurrentExteriorMeasurementsSearchArray()
     {
         $sql = "SELECT m.inspector_id, DATE(m.measurement_date) as measurement_date, m.animal_id_and_date, x.*,
-                  CONCAT(animal_id, DATE(m.measurement_date), skull, muscularity, proportion, exterior_type, leg_work, fur, general_appearence, height, breast_depth, torso_length, kind, progress) as check_string
+                  CONCAT(animal_id, '_', DATE(m.measurement_date), skull, muscularity, proportion, exterior_type, leg_work, fur, general_appearence, height, breast_depth, torso_length, kind, progress, inspector_id) as check_string
                 FROM exterior x
                 INNER JOIN measurement m ON m.id = x.id";
         $results = $this->conn->query($sql)->fetchAll();
@@ -216,9 +301,33 @@ class ExteriorMeasurementsMigrator extends MigratorBase
         foreach ($results as $result) {
             $animalIdAndDate = $result['animal_id_and_date'];
             $checkString = $result['check_string'];
-            $searchArray[$animalIdAndDate] = $checkString;
+            $searchArray[$checkString] = $checkString;
         }
         
         return $searchArray;
+    }
+
+
+    private function deleteOrphanedMeasurements()
+    {
+        $sql = "SELECT m.id FROM measurement m
+                LEFT JOIN exterior x ON m.id = x.id
+                WHERE m.type = 'Exterior' AND x.id ISNULL";
+        $results = $this->conn->query($sql)->fetchAll();
+
+        if(count($results) == 0) {
+            $this->output->writeln('There are no deleted orphans measurement records!');
+            return;
+        }
+
+        $filter = '';
+        foreach ($results as $result) {
+            $id = $result['id'];
+            $filter = $filter.' id = '.$id;
+        }
+
+        $sql = "DELETE FROM measurement WHERE ".$filter;
+        $this->conn->exec($sql);
+        $this->output->writeln(count($results).' orphaned measurements deleted!');
     }
 }
