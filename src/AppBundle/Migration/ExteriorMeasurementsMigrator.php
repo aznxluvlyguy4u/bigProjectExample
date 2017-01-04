@@ -159,8 +159,8 @@ class ExteriorMeasurementsMigrator extends MigratorBase
             //Reset batch values AFTER insert
             $insertMeasurementString = '';
             $insertExteriorString = '';
-            $batchCount = 0;
             $newCount += $batchCount;
+            $batchCount = 0;
             $this->cmdUtil->advanceProgressBar(1, 'Exteriors new|inBatch|skipped|incomplete: ' . $newCount .'|'.$batchCount. '|' . $skippedCount . '|' . $incompleteCount.' record: '.$i);
         }
 
