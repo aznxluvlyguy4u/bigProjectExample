@@ -231,12 +231,12 @@ class ExteriorMeasurementsMigrator extends MigratorBase
             }
         }
 
+        /** @var InspectorRepository $repository */
+        $repository = $this->em->getRepository(Inspector::class);
+
         $missingInspectorCount = count($inspectors);
         if($missingInspectorCount > 0) {
             $this->output->writeln($missingInspectorCount.' inspectors are new and are going to be created now...');
-
-            /** @var InspectorRepository $repository */
-            $repository = $this->em->getRepository(Inspector::class);
 
             $failedInsertCount = 0;
             foreach ($inspectors as $inspectorName) {
@@ -260,6 +260,8 @@ class ExteriorMeasurementsMigrator extends MigratorBase
         } else {
             $this->output->writeln('There are no missing inspectors');
         }
+
+        $repository->fixMissingInspectorTableRecords();
 
         return $inspectorIdsInDbByFullName;
     }

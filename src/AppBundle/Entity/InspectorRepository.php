@@ -30,4 +30,22 @@ class InspectorRepository extends PersonRepository {
         }
         return $isInsertSuccessFul;
     }
+    
+    
+    public function fixMissingInspectorTableRecords()
+    {
+        $sql = "SELECT p.id FROM person p
+                  LEFT JOIN inspector i ON p.id = i.id
+                WHERE p.type = 'Inspector' AND i.id ISNULL";
+        $results = $this->getConnection()->query($sql)->fetchAll();
+        
+        if(count($results) == 0) { return; }
+        
+        foreach ($results as $result) {
+            $id = $result['id'];
+            
+            $sql = "INSERT INTO inspector (id, object_type) VALUES (".$id.",'Inspector') ";
+            $this->getConnection()->exec($sql);
+        }
+    }
 }
