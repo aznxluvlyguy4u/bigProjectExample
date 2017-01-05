@@ -380,8 +380,7 @@ class AnimalRepository extends BaseRepository
               INNER JOINq animal a ON r.animal_id = a.id
               LEFT JOIN location l ON a.location_id = l.id
               LEFT JOIN company c ON c.id = l.company_id
-            WHERE r.location_id = ".$idCurrentLocation.
-            " AND (a.location_id <> ".$idCurrentLocation." OR a.location_id ISNULL)";
+            WHERE r.location_id = ".$idCurrentLocation;
     $retrievedHistoricAnimals = $this->getConnection()->query($sqlHistoricAnimals)->fetchAll();
 
     $currentUbn = $location->getUbn();
