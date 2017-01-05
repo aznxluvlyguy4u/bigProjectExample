@@ -377,7 +377,7 @@ class AnimalRepository extends BaseRepository
               a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn, a.id,
               c.is_reveal_historic_animals as is_public, false as current_livestock
             FROM animal_residence r
-              INNER JOINq animal a ON r.animal_id = a.id
+              INNER JOIN animal a ON r.animal_id = a.id
               LEFT JOIN location l ON a.location_id = l.id
               LEFT JOIN company c ON c.id = l.company_id
             WHERE r.location_id = ".$idCurrentLocation;
