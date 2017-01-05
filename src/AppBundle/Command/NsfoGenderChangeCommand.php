@@ -2,23 +2,25 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use AppBundle\Entity\Neuter;
+use AppBundle\Entity\Ram;
+use AppBundle\Entity\Ewe;
 
-class NsfoEditGenderCommand extends ContainerAwareCommand
+class NsfoGenderChangeCommand extends ContainerAwareCommand
 {
     const TITLE = 'Edit gender of animal';
-    const MALE = 'MALE';
-    const FEMALE = 'FEMALE';
+    const taskAbortedNamespace = 'ABORTED';
 
     /** @var OutputInterface */
     private $output;
@@ -29,7 +31,7 @@ class NsfoEditGenderCommand extends ContainerAwareCommand
     protected function configure()
     {
         $this
-            ->setName('nsfo:edit:gender')
+            ->setName('nsfo:gender:change')
             ->setDescription(self::TITLE)
         ;
     }
@@ -57,54 +59,78 @@ class NsfoEditGenderCommand extends ContainerAwareCommand
         } else {
             $animal = $animalRepository->find($id);
         }
-        if(!($animal instanceof Animal)) { $this->printNoAnimalFoundMessage($id); return; }
+
+        if(!($animal instanceof Animal)) {
+            $this->printNoAnimalFoundMessage($id);
+
+            return;
+        }
 
         $this->printAnimalData($animal);
-
         $newGender = $this->askForNewGender();
-        if($newGender == null) { $this->output->writeln('ABORTED'); return; }
+
+        if($newGender == null) {
+            $this->output->writeln(self::taskAbortedNamespace);
+
+            return;
+        }
 
         $genderChanger = new GenderChanger($em);
+
         if($genderChanger->hasDirectChildRelationshipCheck($animal)){
-            if(!$this->cmdUtil->generateConfirmationQuestion('Animal has children. Changing gender will unset all children. ARE YOU SURE YOU WISH TO CONTINUE? (y/n)')){
-                $this->output->writeln('ABORTED'); return;
+            if(!$this->cmdUtil->generateConfirmationQuestion(
+              'Animal has children. Changing gender wil alter history, which is currently not allowed, aborting.')){
+                $this->output->writeln(self::taskAbortedNamespace); return;
             }
         }
 
         if(!$this->cmdUtil->generateConfirmationQuestion('Change gender from '.$animal->getGender().' to '.$newGender.'? (y/n)')){
-            $this->output->writeln('ABORTED'); return;
+            $this->output->writeln(self::taskAbortedNamespace); return;
         }
 
-
-        if($newGender == self::MALE) {
-            $newAnimal = $genderChanger->makeMale($animal);
-        } elseif($newGender == self::FEMALE) {
-            $newAnimal = $genderChanger->makeFemale($animal);
-        } else {
-            $this->output->writeln('ABORTED'); return;
+        switch ($newGender) {
+            case AnimalObjectType::RAM:
+                $result = $genderChanger->changeToGender($animal, Ram::class);
+                break;
+            case AnimalObjectType::EWE:
+                $result = $genderChanger->changeToGender($animal, Ewe::class);
+                break;
+            case AnimalObjectType::NEUTER:
+                $result = $genderChanger->changeToGender($animal, Neuter::class);
+                break;
+            default:
+                $this->output->writeln(self::taskAbortedNamespace);
+                return;
         }
-        $this->printAnimalData($newAnimal, '-- Data of Animal after gender change --');
+
+        if (!$result instanceof JsonResponse) {
+            $this->printAnimalData($result, '-- Data of Animal after gender change --');
+        } else { //Error has been occured, print message
+            $this->output->writeln($result);
+        }
     }
-
 
     /**
      * @return null|string
      */
     private function askForNewGender()
     {
-        $newGenderInput = $this->cmdUtil->generateQuestion('Choose new gender, choose: MALE or FEMALE (exit = abort)', 0);
+        $newGenderInput = $this->cmdUtil->generateQuestion('Choose new gender, choose: RAM (r), EWE (e), NEUTER (n). Quit (q)', 0);
+        $newGender = null;
 
-        if(strtoupper(substr($newGenderInput, 0, 1)) == 'M') {
-            $newGender = self::MALE;
-            $this->output->writeln('New gender choice: '.$newGender);
-        } elseif (strtoupper(substr($newGenderInput, 0, 1)) == 'V' || strtoupper(substr($newGenderInput, 0, 1)) == 'F') {
-            $newGender = self::FEMALE;
-            $this->output->writeln('New gender choice: '.$newGender);
-        } elseif (strtoupper($newGenderInput) == 'EXIT') {
+        if(strtolower(substr($newGenderInput, 0, 1)) == 'r') {
+            $newGender = AnimalObjectType::RAM;
+            $this->output->writeln('New gender will be: '.$newGender);
+        } elseif (strtolower(substr($newGenderInput, 0, 1)) == 'e') {
+            $newGender = AnimalObjectType::EWE;
+            $this->output->writeln('New gender will be: '.$newGender);
+        } elseif (strtolower(substr($newGenderInput, 0, 1)) == 'n') {
+            $newGender = AnimalObjectType::NEUTER;
+            $this->output->writeln('New gender will be: '.$newGender);
+        } elseif (strtolower($newGenderInput) == 'q') {
             return null;
         } else {
-            $this->output->writeln('NO GENDER INSERTED');
-            $newGender = null;
+            $this->output->writeln('NO GENDER given');
         }
 
         if($this->cmdUtil->generateConfirmationQuestion('Is this new gender correct? (y/n)')) {
