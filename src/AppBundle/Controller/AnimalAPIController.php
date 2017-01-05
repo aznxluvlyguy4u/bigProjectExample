@@ -412,7 +412,6 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function changeGenderOfUln(Request $request) {
     $em = $this->getDoctrine()->getManager();
-    $client = $this->getAuthenticatedUser($request);
     $content = $this->getContentAsArray($request);
     $animal = null;
     
@@ -467,7 +466,8 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       return $result;
     }
 
+   
     return new JsonResponse(array(Constant::RESULT_NAMESPACE =>
-      AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $animal, $animal->getLocation())), 200);
+      AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $result, $result->getLocation())), 200);
   }
 }

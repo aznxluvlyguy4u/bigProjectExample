@@ -79,8 +79,6 @@ class GenderChanger
 
                 if ($requestValidation instanceof JsonResponse) {
                     return $requestValidation;
-                } elseif (!$requestValidation){
-                    return $animal;
                 }
 
                 //Remove relationship from current inheritance table
@@ -101,8 +99,6 @@ class GenderChanger
 
                 if ($requestValidation instanceof JsonResponse) {
                     return $requestValidation;
-                } elseif (!$requestValidation){
-                    return $animal;
                 }
 
                  //Remove relationship from current inheritance table
@@ -123,8 +119,6 @@ class GenderChanger
 
                 if ($requestValidation instanceof JsonResponse) {
                     return $requestValidation;
-                } elseif (!$requestValidation){
-                    return $animal;
                 }
 
                 //Remove relationship from current inheritance table
@@ -240,6 +234,6 @@ class GenderChanger
               ), $statusCode);
         }
         
-        return true;
+        return $animal;
     }
 }
