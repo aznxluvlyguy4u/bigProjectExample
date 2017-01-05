@@ -167,14 +167,15 @@ class GenderChanger
     function validateGenderChangeRequest($animal, $targetEntity)
     {
         $statusCode = 403;
-        
+
         //Check if target entity is of type Neuter, disallow for now
         if($targetEntity == AnimalObjectType::Neuter && $animal->getGender() != GenderType::NEUTER) {
             return new JsonResponse(
               array(
                 Constant::RESULT_NAMESPACE => array (
                   'code' => $statusCode,
-                  "message" =>  $animal->getUln() . " has a known gender, therefore changing gender to a Neuter is not allowed.",
+//                  "message" =>  $animal->getUln() . " has a known gender, therefore changing gender to a Neuter is not allowed.",
+                  "message" =>  $animal->getUln() . " heeft reeds een bekend geslacht, zodoende is het niet geoorloofd om het geslacht van het dier te wijzigen.",
                 )
               ), $statusCode);
         }
@@ -188,7 +189,8 @@ class GenderChanger
               array(
                 Constant::RESULT_NAMESPACE => array (
                   'code' => $statusCode,
-                  "message" =>  $animal->getUln() . " has registered matings, therefore changing gender is not allowed.",
+//                  "message" =>  $animal->getUln() . " has registered matings, therefore changing gender is not allowed.",
+                  "message" =>  $animal->getUln() . " heeft geregistreerde dekkingsmeldingen, zodoende is het niet geoorloofd om het geslacht van het dier te wijzigen.",
                 )
               ), $statusCode);
         }
@@ -201,7 +203,8 @@ class GenderChanger
                   array(
                     Constant::RESULT_NAMESPACE => array (
                       'code' => $statusCode,
-                      "message" =>  $animal->getUln() . " is part of a registered litter, therefore changing gender is not allowed.",
+//                      "message" =>  $animal->getUln() . " is part of a registered litter, therefore changing gender is not allowed.",
+                      "message" =>  $animal->getUln() . " heeft geregistreerde worpen, zodoende is het niet geoorloofd om het geslacht van het dier te wijzigen.",
                     )
                   ), $statusCode);
             }
@@ -214,7 +217,8 @@ class GenderChanger
                   array (
                     Constant::RESULT_NAMESPACE => array (
                       'code' => $statusCode,
-                      "message" => $animal->getUln() . " has registered children, therefore changing gender is not allowed.",
+//                      "message" => $animal->getUln() . " has registered children, therefore changing gender is not allowed.",
+                      "message" =>  $animal->getUln() . " heeft geregistreerde kinderen, zodoende is het niet geoorloofd om het geslacht van het dier te wijzigen.",
                     )
                   ), $statusCode);
             }
@@ -229,8 +233,10 @@ class GenderChanger
               array (
                 Constant::RESULT_NAMESPACE => array (
                   'code' => $statusCode,
-                  "message" => $animal->getUln() . " has a registered birth that is longer then "
-                    .self::MAX_MONTH_INTERVAL ." months ago, from now, therefore changing gender is not allowed.",
+//                  "message" => $animal->getUln() . " has a registered birth that is longer then "
+//                    .self::MAX_MONTH_INTERVAL ." months ago, from now, therefore changing gender is not allowed.",
+                  "message" => $animal->getUln() . " heeft een geregistreerde geboortedatum dat langer dan "
+                    .self::MAX_MONTH_INTERVAL ." maanden geleden is, zodoende is het niet geoorloofd om het geslacht van het dier te wijzigen.",
                 )
               ), $statusCode);
         }
