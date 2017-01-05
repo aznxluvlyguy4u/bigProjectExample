@@ -194,14 +194,17 @@ class GenderChanger
         }
 
         //Check if animal is part of a registered litter
-        if ($animal->getLitters()->count() > 0) {
-            return new JsonResponse(
-              array(
-                Constant::RESULT_NAMESPACE => array (
-                  'code' => $statusCode,
-                  "message" =>  $animal->getUln() . " is part of a registered litter, therefore changing gender is not allowed.",
-                )
-              ), $statusCode);
+
+        if($animal->getObjectType() != AnimalObjectType::Neuter) {
+            if ($animal->getLitters()->count() > 0) {
+                return new JsonResponse(
+                  array(
+                    Constant::RESULT_NAMESPACE => array (
+                      'code' => $statusCode,
+                      "message" =>  $animal->getUln() . " is part of a registered litter, therefore changing gender is not allowed.",
+                    )
+                  ), $statusCode);
+            }
         }
 
         //Check if animal has registered children
