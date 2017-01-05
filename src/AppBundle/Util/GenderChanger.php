@@ -160,11 +160,11 @@ class GenderChanger
      * Above and numerous situations could be invalid after altering the gender, and ultimately changing the history.
      * Therefore additional validations need te be done before allowing the history alteration / gender change.
      *
-     * @param Animal $animal
+     * @param Ram | Ewe | Neuter $animal
      * @param  $targetEntity
      * @return mixed JsonResponse|bool
      */
-    function validateGenderChangeRequest(Animal $animal, $targetEntity)
+    function validateGenderChangeRequest($animal, $targetEntity)
     {
         $statusCode = 403;
         
@@ -193,10 +193,8 @@ class GenderChanger
               ), $statusCode);
         }
 
-
         //Check if animal is part of a registered litter
-        if ($animal->getLitter()) {
-
+        if ($animal->getLitters()->count() > 0) {
             return new JsonResponse(
               array(
                 Constant::RESULT_NAMESPACE => array (
@@ -218,7 +216,6 @@ class GenderChanger
                   ), $statusCode);
             }
         }
-
 
         //Check if birth registration is within a time span of MAX_TIME_INTERVAL from now,
         //then, and only then, an alteration of gender for this animal is allowed
