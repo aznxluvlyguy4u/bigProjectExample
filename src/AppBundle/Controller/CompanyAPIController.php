@@ -308,21 +308,15 @@ class CompanyAPIController extends APIController
         // Update Owner
         $contentOwner = $content->get('owner');
 
+        $emailAddressOwner = $contentOwner['email_address'];
         $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
-        $owner = $repository->findOneBy(array('emailAddress' => $contentOwner['email_address'], 'isActive' => true));
+        $owner = $repository->findOneBy(array('emailAddress' => $emailAddressOwner, 'isActive' => true));
 
         if(isset($contentOwner['person_id'])) {
             $contentPersonId = $contentOwner['person_id'];
 
             if($owner && $owner->getPersonId() != $contentPersonId) {
-                return new JsonResponse(
-                    array(
-                        Constant::CODE_NAMESPACE => 400,
-                        Constant::MESSAGE_NAMESPACE => 'THIS EMAIL IS ALREADY REGISTERED FOR ANOTHER USER. EMAIL HAS TO BE UNIQUE.',
-                        'data' => $contentOwner['email_address']
-                    ),
-                    400
-                );
+                return CompanyValidator::emailAddressIsInUseErrorMessage($emailAddressOwner);
             }
 
             $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
@@ -336,14 +330,7 @@ class CompanyAPIController extends APIController
             $this->getDoctrine()->getManager()->flush();
         } else {
             if($owner) {
-                return new JsonResponse(
-                    array(
-                        Constant::CODE_NAMESPACE => 400,
-                        Constant::MESSAGE_NAMESPACE => 'THIS EMAIL IS ALREADY REGISTERED FOR ANOTHER USER. EMAIL HAS TO BE UNIQUE.',
-                        'data' => $contentOwner['email_address']
-                    ),
-                    400
-                );
+                return CompanyValidator::emailAddressIsInUseErrorMessage($emailAddressOwner);
             }
 
             $owner = $company->getOwner();
@@ -533,20 +520,14 @@ class CompanyAPIController extends APIController
         $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
 
         foreach($contentUsers as $contentUser) {
-            $user = $repository->findOneBy(array('emailAddress' => $contentUser['email_address'], 'isActive' => true));
+            $emailAddressUser = $contentUser['email_address'];
+            $user = $repository->findOneBy(array('emailAddress' => $emailAddressUser, 'isActive' => true));
 
             if(isset($contentUser['person_id'])) {
                 $contentPersonId = $contentUser['person_id'];
 
                 if($user && $user->getPersonId() != $contentPersonId) {
-                    return new JsonResponse(
-                        array(
-                            Constant::CODE_NAMESPACE => 400,
-                            Constant::MESSAGE_NAMESPACE => 'THIS EMAIL IS ALREADY REGISTERED FOR ANOTHER USER. EMAIL HAS TO BE UNIQUE.',
-                            'data' => $contentUser['email_address']
-                        ),
-                        400
-                    );
+                    return CompanyValidator::emailAddressIsInUseErrorMessage($emailAddressUser);
                 }
 
                 $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
@@ -560,14 +541,7 @@ class CompanyAPIController extends APIController
                 $this->getDoctrine()->getManager()->flush();
             } else {
                 if($user) {
-                    return new JsonResponse(
-                        array(
-                            Constant::CODE_NAMESPACE => 400,
-                            Constant::MESSAGE_NAMESPACE => 'THIS EMAIL IS ALREADY REGISTERED FOR ANOTHER USER. EMAIL HAS TO BE UNIQUE.',
-                            'data' => $contentUser['email_address']
-                        ),
-                        400
-                    );
+                    return CompanyValidator::emailAddressIsInUseErrorMessage($emailAddressUser);
                 }
 
                 $user = new Client();
