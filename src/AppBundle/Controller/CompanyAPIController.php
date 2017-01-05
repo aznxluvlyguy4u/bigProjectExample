@@ -17,7 +17,9 @@ use AppBundle\Output\CompanyNoteOutput;
 use AppBundle\Output\CompanyOutput;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Validation\AdminValidator;
+use AppBundle\Validation\CompanyValidator;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -87,41 +89,20 @@ class CompanyAPIController extends APIController
 
         // Validate content
         $content = $this->getContentAsArray($request);
+        /** @var ObjectManager $em */
+        $em = $this->getDoctrine()->getManager();
+
         // TODO VALIDATE CONTENT
+        $companyValidator = new CompanyValidator($em, $content);
+        if(!$companyValidator->getIsInputValid()) { return $companyValidator->createJsonResponse(); }
 
         // Create Owner
         $contentUsers = $content->get('users');
+        $contentOwner = $content->get('owner');
 
-        $contentOwner = null;
-        foreach ($contentUsers as $user) {
-            if($user['primary_contactperson'] == true) {
-                $contentOwner = $user;
-            }
-        }
-
-        if($contentOwner == null) {
-            return new JsonResponse(
-                array(
-                    Constant::CODE_NAMESPACE => 400,
-                    Constant::MESSAGE_NAMESPACE => 'PRIMARY CONTACT PERSON IS MISSING',
-                ),
-                400
-            );
-        }
-
-
-        $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
-        $owner = $repository->findOneBy(array('emailAddress' => $contentOwner['email_address'], 'isActive' => true));
-
-        if($owner) {
-            return new JsonResponse(
-                array(
-                    Constant::CODE_NAMESPACE => 400,
-                    Constant::MESSAGE_NAMESPACE => 'THIS EMAIL IS ALREADY REGISTERED FOR ANOTHER USER. EMAIL HAS TO BE UNIQUE.',
-                    'data' => $contentOwner['email_address']
-                ),
-                400
-            );
+        $emailAddressOwner = $contentOwner['email_address'];
+        if(CompanyValidator::doesClientAlreadyExist($em, $emailAddressOwner)) {
+            return CompanyValidator::emailAddressIsInUseErrorMessage($emailAddressOwner);
         }
 
         $owner = new Client();
@@ -225,27 +206,18 @@ class CompanyAPIController extends APIController
         $company->setLocations($locations);
 
         // Create Users
-        $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
-
         foreach ($contentUsers as $contentUser) {
-            $user = $repository->findOneBy(array('emailAddress' => $contentUser['email_address'], 'isActive' => true));
 
-            if($user) {
-                return new JsonResponse(
-                    array(
-                        Constant::CODE_NAMESPACE => 400,
-                        Constant::MESSAGE_NAMESPACE => 'THIS EMAIL IS ALREADY REGISTERED FOR ANOTHER USER. EMAIL HAS TO BE UNIQUE.',
-                        'data' => $contentUser['email_address']
-                    ),
-                    400
-                );
+            $emailAddressUser = $contentUser['email_address'];
+            if(CompanyValidator::doesClientAlreadyExist($em, $emailAddressUser)) {
+                return CompanyValidator::emailAddressIsInUseErrorMessage($emailAddressUser);
             }
 
             if($contentUser['primary_contactperson'] == false) {
                 $user = new Client();
                 $user->setFirstName($contentUser['first_name']);
                 $user->setLastName($contentUser['last_name']);
-                $user->setEmailAddress($contentUser['email_address']);
+                $user->setEmailAddress($emailAddressUser);
                 $user->setObjectType('Client');
                 $user->setIsActive(true);
                 $user->setEmployer($company);
