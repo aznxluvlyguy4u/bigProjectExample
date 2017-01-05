@@ -42,5 +42,5 @@ interface AnimalAPIControllerInterface
    * @param $ulnString
    * @return jsonResponse
    */
-  function editAnimalDetailsByUln(Request $request, $ulnString);
+  function changeGenderOfUln(Request $request);
 }
