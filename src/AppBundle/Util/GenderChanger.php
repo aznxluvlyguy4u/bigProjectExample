@@ -92,12 +92,12 @@ class GenderChanger
                 $this->connection->exec($insertQuery);
 
                 //Update the discriminator type of the animal in parent Animal table
-                $updateQuery = "UPDATE animal SET type = 'Neuter', gender '" . GenderType::NEUTER . "' WHERE id = " .$animal->getId();
+                $updateQuery = "UPDATE animal SET type = 'Neuter', gender = '" . GenderType::NEUTER . "' WHERE id = " .$animal->getId();
                 $this->connection->exec($updateQuery);
                 break;
             case AnimalObjectType::Ewe:
                 //Do additional checks to see if we allow a gender change
-                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::NEUTER);
+                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::EWE);
 
                 if ($requestValidation instanceof JsonResponse) {
                     return $requestValidation;
@@ -114,12 +114,12 @@ class GenderChanger
                 $this->connection->exec($insertQuery);
 
                 //Update the discriminator type of the animal in parent Animal table
-                $updateQuery = "UPDATE animal SET type = 'Ewe', gender '" . GenderType::FEMALE . "' WHERE id = " .$animal->getId();
+                $updateQuery = "UPDATE animal SET type = 'Ewe', gender = '" . GenderType::FEMALE . "' WHERE id = " .$animal->getId();
                 $this->connection->exec($updateQuery);
                 break;
             case AnimalObjectType::Ram:
                 //Do additional checks to see if we allow a gender change
-                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::NEUTER);
+                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::RAM);
 
                 if ($requestValidation instanceof JsonResponse) {
                     return $requestValidation;
