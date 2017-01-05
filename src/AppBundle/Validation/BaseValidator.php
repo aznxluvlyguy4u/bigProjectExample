@@ -29,7 +29,10 @@ abstract class BaseValidator
     /** @var array */
     protected $errors;
 
-    public function __construct(ObjectManager $manager, ArrayCollection $content)
+    /** @var ArrayCollection */
+    protected $content;
+
+    public function __construct(ObjectManager $manager, ArrayCollection $arrayCollection)
     {
         $this->manager = $manager;
         $this->isInputValid = false;
