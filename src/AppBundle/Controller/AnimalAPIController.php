@@ -463,7 +463,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     }
 
     //An exception on the request has occured, return json response error message
-    if(!$result instanceof JsonResponse) {
+    if($result instanceof JsonResponse) {
       return $result;
     }
 
