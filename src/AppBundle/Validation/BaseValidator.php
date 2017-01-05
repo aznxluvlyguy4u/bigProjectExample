@@ -37,6 +37,7 @@ abstract class BaseValidator
         $this->manager = $manager;
         $this->isInputValid = false;
         $this->errors = array();
+        $this->content = $arrayCollection;
     }
 
 
