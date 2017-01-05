@@ -447,16 +447,20 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     //Try to change animal gender
     $gender = $content->get('gender');
     $genderChanger = new GenderChanger($em);
+    $targetGender = null;
     $result = null;
 
     switch ($gender) {
       case AnimalObjectType::EWE:
+        $targetGender = "FEMALE";
         $result = $genderChanger->changeToGender($animal, Ewe::class);
         break;
       case AnimalObjectType::RAM:
+        $targetGender = "MALE";
         $result = $genderChanger->changeToGender($animal, Ram::class);
         break;
       case AnimalObjectType::NEUTER:
+        $targetGender = "NEUTER";
         $result = $genderChanger->changeToGender($animal, Neuter::class);
         break;
     }
@@ -466,8 +470,11 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       return $result;
     }
 
-   
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE =>
-      AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $result, $result->getLocation())), 200);
+    //FIXME Temporarily workaround, for returning the reflected gender change, it is persisted, though the updated fields is not returned.
+    $result->setGender($targetGender);
+
+    $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getDoctrine()->getManager());
+
+    return new JsonResponse($minimizedOutput, 200);
   }
 }
