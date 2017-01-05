@@ -57,7 +57,7 @@ class GenderChanger
    * but return the given animal directly.
    *
    * @param Animal $animal
-   * @param mixed Ram | Ewe | Neuter $targetEntityClass
+   * @param Ram | Ewe | Neuter $targetEntityClass
    * @return Animal
    * @throws \Doctrine\DBAL\DBALException
    */
@@ -92,7 +92,7 @@ class GenderChanger
                 $this->connection->exec($insertQuery);
 
                 //Update the discriminator type of the animal in parent Animal table
-                $updateQuery = "UPDATE animal SET type = 'Neuter', gender = 'NEUTER' WHERE id = " .$animal->getId();
+                $updateQuery = "UPDATE animal SET type = 'Neuter', gender '" . GenderType::NEUTER . "' WHERE id = " .$animal->getId();
                 $this->connection->exec($updateQuery);
                 break;
             case AnimalObjectType::Ewe:
@@ -114,7 +114,7 @@ class GenderChanger
                 $this->connection->exec($insertQuery);
 
                 //Update the discriminator type of the animal in parent Animal table
-                $updateQuery = "UPDATE animal SET type = 'Ewe', gender = 'EWE' WHERE id = " .$animal->getId();
+                $updateQuery = "UPDATE animal SET type = 'Ewe', gender '" . GenderType::FEMALE . "' WHERE id = " .$animal->getId();
                 $this->connection->exec($updateQuery);
                 break;
             case AnimalObjectType::Ram:
@@ -136,7 +136,7 @@ class GenderChanger
                 $this->connection->exec($insertQuery);
 
                 //Update the discriminator type of the animal in parent Animal table
-                $updateQuery = "UPDATE animal SET type = 'Ram', gender = 'RAM' WHERE id = " .$animal->getId();
+                $updateQuery = "UPDATE animal SET type = 'Ram',  gender = '" . GenderType::MALE . "' WHERE id = " .$animal->getId();
                 $this->connection->exec($updateQuery);
                 break;
         }
@@ -185,7 +185,6 @@ class GenderChanger
         }
 
         //check if animal is registered in a mating
-        //Re-retrieve animal
         $matings = $this->manager
           ->getRepository(Constant::MATE_REPOSITORY)->getMatingsByStudIds($animal);
           
@@ -199,32 +198,17 @@ class GenderChanger
               ), $statusCode);
         }
 
-        //Check if animal has matings
-        if($animal->getLocation()) {
-            if($animal->getGender() == GenderType::FEMALE){
-                if($animal->getLocation()->getMatings()->count() > 0) {
-                    return new JsonResponse(
-                      array(
-                        Constant::RESULT_NAMESPACE => array (
-                          'code' => $statusCode,
-                          "message" =>  $animal->getUln() . " has registered matings, therefore changing gender is not allowed.",
-                        )
-                      ), $statusCode);
-                }
-            }
-        }
 
-        //Check if animal has registered births
-        if ($animal->getBirths()->count() > 0) {
-            if($animal->getGender() == GenderType::FEMALE){
-                return new JsonResponse(
-                  array(
-                    Constant::RESULT_NAMESPACE => array (
-                      'code' => $statusCode,
-                      "message" =>  $animal->getUln() . " has registered births, therefore changing gender is not allowed.",
-                    )
-                  ), $statusCode);
-            }
+        //Check if animal is part of a registered litter
+        if ($animal->getLitter()) {
+
+            return new JsonResponse(
+              array(
+                Constant::RESULT_NAMESPACE => array (
+                  'code' => $statusCode,
+                  "message" =>  $animal->getUln() . " is part of a registered litter, therefore changing gender is not allowed.",
+                )
+              ), $statusCode);
         }
 
         //Check if animal has registered children
@@ -239,6 +223,7 @@ class GenderChanger
                   ), $statusCode);
             }
         }
+
 
         //Check if birth registration is within a time span of MAX_TIME_INTERVAL from now,
         //then, and only then, an alteration of gender for this animal is allowed
