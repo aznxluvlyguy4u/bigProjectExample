@@ -28,7 +28,7 @@ class GenderChanger
     /** @var Connection */
     private $connection;
 
-    const MAX_TIME_INTERVAL = 14;
+    const MAX_MONTH_INTERVAL = 6;
 
     /**
      * GenderChanger constructor.
@@ -171,10 +171,6 @@ class GenderChanger
      */
     function validateGenderChangeRequest(Animal $animal, $targetEntity)
     {
-        /*
-            - moeder naar vader
-            - vader naar moeder
-         */
         $statusCode = 403;
         
         //Check if target entity is of type Neuter, disallow for now
@@ -248,15 +244,13 @@ class GenderChanger
         //then, and only then, an alteration of gender for this animal is allowed
         $dateInterval = $animal->getDateOfBirth()->diff(new \DateTime());
 
-        if(!$dateInterval->y == 0
-           && !$dateInterval->m == 0
-           && !$dateInterval->days < self::MAX_TIME_INTERVAL) {
+        if($dateInterval->y > 0 || $dateInterval->m >= self::MAX_MONTH_INTERVAL) {
             return new JsonResponse(
               array (
                 Constant::RESULT_NAMESPACE => array (
                   'code' => $statusCode,
                   "message" => $animal->getUln() . " has a registered birth that is longer then "
-                    .self::MAX_TIME_INTERVAL ." days ago, from now, therefore changing gender is not allowed.",
+                    .self::MAX_MONTH_INTERVAL ." months ago, from now, therefore changing gender is not allowed.",
                 )
               ), $statusCode);
         }

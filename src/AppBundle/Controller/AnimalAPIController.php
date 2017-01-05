@@ -224,8 +224,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
 
     return new JsonResponse(array (Constant::RESULT_NAMESPACE => $ramsArray), 200);
   }
-
-
+  
   /**
    * Create a RetrieveAnimal request
    *
