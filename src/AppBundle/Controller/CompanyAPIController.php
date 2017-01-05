@@ -15,6 +15,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Output\CompanyNoteOutput;
 use AppBundle\Output\CompanyOutput;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,6 +29,8 @@ use Doctrine\ORM\Query;
  */
 class CompanyAPIController extends APIController
 {
+    const DEFAULT_COUNTRY = '';
+
     /**
      * @param Request $request the request object
      *
@@ -142,7 +145,7 @@ class CompanyAPIController extends APIController
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
         $address->setState($contentAddress['state']);
-        $address->setCountry('');
+        $address->setCountry(ArrayUtil::get('country', $contentAddress, self::DEFAULT_COUNTRY));
 
         // Create Billing Address
         $contentBillingAddress = $content->get('billing_address');
@@ -157,7 +160,7 @@ class CompanyAPIController extends APIController
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
         $billingAddress->setState($contentBillingAddress['state']);
-        $billingAddress->setCountry('');
+        $billingAddress->setCountry(ArrayUtil::get('country', $contentBillingAddress, self::DEFAULT_COUNTRY));
 
         // Create Company
         $company = new Company();
@@ -209,7 +212,7 @@ class CompanyAPIController extends APIController
             $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
             $locationAddress->setCity($contentLocationAddress['city']);
             $locationAddress->setState($contentLocationAddress['state']);
-            $locationAddress->setCountry('');
+            $locationAddress->setCountry(ArrayUtil::get('country', $contentLocationAddress, self::DEFAULT_COUNTRY));
 
             $location = new Location();
             $location->setUbn($contentLocation['ubn']);
@@ -401,7 +404,7 @@ class CompanyAPIController extends APIController
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
         $address->setState($contentAddress['state']);
-        $address->setCountry('');
+        $address->setCountry(ArrayUtil::get('country', $contentAddress, self::DEFAULT_COUNTRY));
 
         // Update Billing Address
         $billingAddress = $company->getBillingAddress();
@@ -419,7 +422,7 @@ class CompanyAPIController extends APIController
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
         $billingAddress->setState($contentBillingAddress['state']);
-        $billingAddress->setCountry('');
+        $billingAddress->setCountry(ArrayUtil::get('country', $contentBillingAddress, self::DEFAULT_COUNTRY));
 
         // Update Company
         $company->setCompanyName($content->get('company_name'));
@@ -492,7 +495,7 @@ class CompanyAPIController extends APIController
                 $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
                 $locationAddress->setCity($contentLocationAddress['city']);
                 $locationAddress->setState($contentLocationAddress['state']);
-                $locationAddress->setCountry('');
+                $locationAddress->setCountry(ArrayUtil::get('country', $contentLocationAddress, self::DEFAULT_COUNTRY));
 
                 $this->getDoctrine()->getManager()->persist($location);
                 $this->getDoctrine()->getManager()->flush();
@@ -520,7 +523,7 @@ class CompanyAPIController extends APIController
                 $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
                 $locationAddress->setCity($contentLocationAddress['city']);
                 $locationAddress->setState($contentLocationAddress['state']);
-                $locationAddress->setCountry('');
+                $locationAddress->setCountry(ArrayUtil::get('country', $contentLocationAddress, self::DEFAULT_COUNTRY));
 
                 $location = new Location();
                 $location->setUbn($contentLocation['ubn']);
