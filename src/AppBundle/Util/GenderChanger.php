@@ -132,7 +132,7 @@ class GenderChanger
                 $this->connection->exec($deleteQuery);
 
                 // Create new inheritance in target inheritance table
-                $insertQuery ="INSERT INTO" .AnimalObjectType::Ram ." (id, object_type) VALUES ( " . $animal->getId() .", 'Ram')";
+                $insertQuery ="INSERT INTO " .AnimalObjectType::Ram ." (id, object_type) VALUES ( " . $animal->getId() .", 'Ram')";
                 $this->connection->exec($insertQuery);
 
                 //Update the discriminator type of the animal in parent Animal table
