@@ -94,7 +94,7 @@ class CompanyAPIController extends APIController
 
         $contentOwner = null;
         foreach ($contentUsers as $user) {
-            if($user['is_primary_contactperson'] == true) {
+            if($user['primary_contactperson'] == true) {
                 $contentOwner = $user;
             }
         }
@@ -241,7 +241,7 @@ class CompanyAPIController extends APIController
                 );
             }
 
-            if($contentUser['is_primary_contactperson'] == false) {
+            if($contentUser['primary_contactperson'] == false) {
                 $user = new Client();
                 $user->setFirstName($contentUser['first_name']);
                 $user->setLastName($contentUser['last_name']);
@@ -332,7 +332,7 @@ class CompanyAPIController extends APIController
          * @var Company $company
          * @var Client $owner
          */
-
+        
         // Update Owner
         $contentOwner = $content->get('owner');
 
