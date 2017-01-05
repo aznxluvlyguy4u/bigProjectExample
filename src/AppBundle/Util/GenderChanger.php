@@ -56,14 +56,15 @@ class GenderChanger
    * If the target entity is the same as the current animal it will not apply changes to the animal
    * but return the given animal directly.
    *
-   * @param Animal $animal
+   * @param Ram | Ewe | Neuter $animal
    * @param Ram | Ewe | Neuter $targetEntityClass
    * @return Animal
    * @throws \Doctrine\DBAL\DBALException
    */
-    public function changeToGender(Animal $animal, $targetEntityClass)
+    public function changeToGender($animal, $targetEntityClass)
     {
         $targetEntity = $targetEntityClass::getClassName($targetEntityClass);
+        $sourceEntity = $animal->getObjectType();
 
         //If animal has same (gender) type as target entity, breakout method
         if($animal instanceof $targetEntity) {
@@ -82,7 +83,7 @@ class GenderChanger
                 }
 
                 //Remove relationship from current inheritance table
-                $deleteQuery = "DELETE FROM "  .AnimalObjectType::Neuter ." WHERE id = " .$animal->getId();
+                $deleteQuery = "DELETE FROM "  .$sourceEntity ." WHERE id = " .$animal->getId();
                 $this->connection->exec($deleteQuery);
 
                 // Create new inheritance in target inheritance table
@@ -102,7 +103,7 @@ class GenderChanger
                 }
 
                  //Remove relationship from current inheritance table
-                $deleteQuery = "DELETE FROM "  .AnimalObjectType::Ewe ." WHERE id = " .$animal->getId();
+                $deleteQuery = "DELETE FROM "  .$sourceEntity ." WHERE id = " .$animal->getId();
                 $this->connection->exec($deleteQuery);
 
                 // Create new inheritance in target inheritance table
@@ -122,7 +123,7 @@ class GenderChanger
                 }
 
                 //Remove relationship from current inheritance table
-                $deleteQuery = "DELETE FROM "  .AnimalObjectType::Ram ." WHERE id = " .$animal->getId();
+                $deleteQuery = "DELETE FROM "  .$sourceEntity ." WHERE id = " .$animal->getId();
                 $this->connection->exec($deleteQuery);
 
                 // Create new inheritance in target inheritance table
