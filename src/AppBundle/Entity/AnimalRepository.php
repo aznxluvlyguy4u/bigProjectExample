@@ -899,7 +899,7 @@ class AnimalRepository extends BaseRepository
           $ubnOfBirth = $result['ubn_of_birth'];
           $locationId = $result['location_id'];
           $sql = "UPDATE animal SET location_of_birth_id = ".$locationId." WHERE ubn_of_birth = '".$ubnOfBirth."'
-                AND location_of_birth_id <> ".$locationId;
+                AND (location_of_birth_id <> ".$locationId." OR location_of_birth_id ISNULL)";
           $this->getConnection()->exec($sql);
           $ubnsUpdated++;
 

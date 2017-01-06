@@ -3,6 +3,8 @@
 namespace AppBundle\Command;
 
 use AppBundle\Cache\AnimalCacher;
+use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -24,6 +26,9 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
     /** @var CommandUtil */
     private $cmdUtil;
 
+    /** @var AnimalRepository */
+    private $animalRepository;
+
     protected function configure()
     {
         $this
@@ -39,6 +44,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
         $this->em = $em;
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
+        $this->animalRepository = $em->getRepository(Animal::class);
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
@@ -50,6 +56,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '6: Generate all AnimalCache records for animal and ascendants (3gen) for given locationId', "\n",
             '7: Regenerate all AnimalCache records for animal and ascendants (3gen) for given locationId', "\n",
             '8: Delete duplicate records', "\n",
+            '9: Update location_of_birth_id for all animals and locations', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -97,6 +104,11 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
 
             case 8:
                 AnimalCacher::deleteDuplicateAnimalCacheRecords($em, $this->cmdUtil);
+                $output->writeln('DONE!');
+                break;
+
+            case 9:
+                $this->animalRepository->updateAllLocationOfBirths($this->cmdUtil);
                 $output->writeln('DONE!');
                 break;
 
