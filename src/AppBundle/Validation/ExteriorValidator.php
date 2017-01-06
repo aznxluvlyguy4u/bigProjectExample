@@ -17,8 +17,8 @@ use Doctrine\Common\Persistence\ObjectManager;
 
 class ExteriorValidator extends BaseValidator
 {
-    const MIN_EXTERIOR_VALUE = 69;
-    const MAX_EXTERIOR_VALUE = 99;
+    const DEFAULT_MIN_EXTERIOR_VALUE = 69;
+    const DEFAULT_MAX_EXTERIOR_VALUE = 99;
 
     /** @var string */
     private $measurementDateString;
@@ -157,7 +157,7 @@ class ExteriorValidator extends BaseValidator
 
     private function validateExteriorKind()
     {
-        $code = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::KIND, $this->content);
+        $code = $this->content->get(JsonInputConstant::KIND);
         if(array_key_exists($code, $this->allowedExteriorCodes)) {
             $this->kind = strval($code);
             $isValidValue = true;
@@ -177,15 +177,15 @@ class ExteriorValidator extends BaseValidator
      */
     private function validateExteriorNumberValue($keyOfExteriorValue)
     {
-        $value = Utils::getNullCheckedArrayCollectionValue($keyOfExteriorValue, $this->content);
-        if($value == 0 || (self::MIN_EXTERIOR_VALUE <= intval($value) && intval($value) <= self::MAX_EXTERIOR_VALUE)) {
+        $value = $this->content->get($keyOfExteriorValue);
+        if(self::validateNumberValue($keyOfExteriorValue, $value)) {
             $value = floatval($value);
             $isValidValue = true;
 
         } else {
             $value = 0.0;
             $isValidValue = false;
-            $this->errors[] = $keyOfExteriorValue. ' VALUE MUST BE 69 <= X <= 99. OR FOR AN EMPTY VALUE IS MUST BE AN EMPTY STRING OR 0.';
+            $this->errors[] = $keyOfExteriorValue. ' VALUE MUST BE '.$minValue.' <= X <= '.$maxValue.'. OR FOR AN EMPTY VALUE IS MUST BE AN EMPTY STRING OR 0.';
         }
 
         switch ($keyOfExteriorValue) {
@@ -205,6 +205,52 @@ class ExteriorValidator extends BaseValidator
         }
 
         return $isValidValue;
+    }
+
+
+    /**
+     * @param string $keyOfExteriorValue
+     * @param float|int $value
+     * @return bool
+     */
+    public static function validateNumberValue($keyOfExteriorValue, $value)
+    {
+        $minValues = [
+            JsonInputConstant::SKULL        => self::DEFAULT_MIN_EXTERIOR_VALUE,
+            JsonInputConstant::PROGRESS     => self::DEFAULT_MIN_EXTERIOR_VALUE,
+            JsonInputConstant::MUSCULARITY  => self::DEFAULT_MIN_EXTERIOR_VALUE,
+            JsonInputConstant::PROPORTION   => self::DEFAULT_MIN_EXTERIOR_VALUE,
+            JsonInputConstant::TYPE         => self::DEFAULT_MIN_EXTERIOR_VALUE,
+            JsonInputConstant::LEG_WORK     => self::DEFAULT_MIN_EXTERIOR_VALUE,
+            JsonInputConstant::FUR          => self::DEFAULT_MIN_EXTERIOR_VALUE,
+            JsonInputConstant::GENERAL_APPEARANCE => self::DEFAULT_MIN_EXTERIOR_VALUE,
+            JsonInputConstant::HEIGHT       => 0,
+            JsonInputConstant::BREAST_DEPTH => 0,
+            JsonInputConstant::TORSO_LENGTH => 0,
+            JsonInputConstant::MARKINGS     => self::DEFAULT_MIN_EXTERIOR_VALUE,
+        ];
+
+
+        $maxValues = [
+            JsonInputConstant::SKULL        => self::DEFAULT_MAX_EXTERIOR_VALUE,
+            JsonInputConstant::PROGRESS     => self::DEFAULT_MAX_EXTERIOR_VALUE,
+            JsonInputConstant::MUSCULARITY  => self::DEFAULT_MAX_EXTERIOR_VALUE,
+            JsonInputConstant::PROPORTION   => self::DEFAULT_MAX_EXTERIOR_VALUE,
+            JsonInputConstant::TYPE         => self::DEFAULT_MAX_EXTERIOR_VALUE,
+            JsonInputConstant::LEG_WORK     => self::DEFAULT_MAX_EXTERIOR_VALUE,
+            JsonInputConstant::FUR          => self::DEFAULT_MAX_EXTERIOR_VALUE,
+            JsonInputConstant::GENERAL_APPEARANCE => self::DEFAULT_MAX_EXTERIOR_VALUE,
+            JsonInputConstant::HEIGHT       => self::DEFAULT_MAX_EXTERIOR_VALUE,
+            JsonInputConstant::BREAST_DEPTH => self::DEFAULT_MAX_EXTERIOR_VALUE,
+            JsonInputConstant::TORSO_LENGTH => self::DEFAULT_MAX_EXTERIOR_VALUE,
+            JsonInputConstant::MARKINGS     => self::DEFAULT_MAX_EXTERIOR_VALUE,
+        ];
+
+        $minValue = $minValues[$keyOfExteriorValue];
+        $maxValue = $maxValues[$keyOfExteriorValue];
+
+        //Value must be empty (=0) or must be between the allowed min and max values
+        return $value == 0 || ($minValue <= intval($value) && intval($value) <= $maxValue);
     }
 
 
