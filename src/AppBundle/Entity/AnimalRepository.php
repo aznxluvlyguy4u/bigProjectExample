@@ -441,7 +441,7 @@ class AnimalRepository extends BaseRepository
               LEFT JOIN animal_cache c ON a.id = c.animal_id
               WHERE a.is_alive = TRUE AND (a.transfer_state ISNULL OR a.transfer_state <> 'TRANSFERRING') AND a.location_id = ".$locationId;
 
-    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+    $results = $this->getConnection()->query($sql)->fetchAll();
 
     $results = NullChecker::replaceNullInNestedArray($results);
 
