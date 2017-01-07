@@ -229,6 +229,12 @@ class GenderChanger
         $dateInterval = $animal->getDateOfBirth()->diff(new \DateTime());
 
         if($dateInterval->y > 0 || $dateInterval->m >= self::MAX_MONTH_INTERVAL) {
+            //Allow gender change for animals beyond MAX_TIME_INTERVAL
+            // if current gender is of type NEUTER
+            if($animal instanceof Neuter) {
+               return $animal;
+            }
+
             return new JsonResponse(
               array (
                 Constant::RESULT_NAMESPACE => array (
