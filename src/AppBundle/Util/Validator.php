@@ -24,6 +24,7 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 
@@ -52,14 +53,12 @@ class Validator
     public static function verifyUlnFormat($ulnString, $includesSpaceBetweenCountryCodeAndNumber = false)
     {
         if($includesSpaceBetweenCountryCodeAndNumber) {
-            $ulnLength = 15;
-            $pregMatch = "/([A-Z]{2})+[ ]+([0-9]{12})/";
+            $pregMatch = "/([A-Z]{2})+[ ]+([0-9]{8,12})/";
         } else {
-            $ulnLength = 14;
-            $pregMatch = "/([A-Z]{2})+([0-9]{12})/";
+            $pregMatch = "/([A-Z]{2})+([0-9]{8,12})/";
         }
 
-        return preg_match($pregMatch,$ulnString) && strlen($ulnString) == $ulnLength;
+        return preg_match($pregMatch,$ulnString);
     }
 
 
@@ -523,34 +522,37 @@ class Validator
      * or it should be an historic animal that was not hidden by the current owner
      * 
      * @param ObjectManager $em
-     * @param string $ulnString
+     * @param Animal $animal
      * @param Location $location
      * @throws \Doctrine\DBAL\DBALException
      * @return boolean
      */
-    public static function validateIfUlnStringBelongsToPublicHistoricAnimal(ObjectManager $em, $ulnString, Location $location)
+    public static function validateIfUlnStringBelongsToPublicHistoricAnimal(ObjectManager $em, Animal $animal, Location $location)
     {
-        if(is_string($ulnString) && $location instanceof Location) {
-            if(Validator::verifyUlnFormat($ulnString)) {
+        if($animal == null) { return false; }
 
-                $sql = "SELECT CONCAT(a.uln_country_code, a.uln_number) as uln
-            FROM animal a
-              INNER JOIN location l ON a.location_id = l.id
-            WHERE a.location_id = ".$location->getId()."
-                AND CONCAT(uln_country_code,uln_number) = '".$ulnString."'
-            UNION
-            SELECT CONCAT(a.uln_country_code, a.uln_number) as uln
-            FROM animal_residence r
-              INNER JOIN animal a ON r.animal_id = a.id
-              LEFT JOIN location l ON a.location_id = l.id
-              LEFT JOIN company c ON c.id = l.company_id
-            WHERE r.location_id = ".$location->getId()." AND (c.is_reveal_historic_animals = TRUE OR a.location_id ISNULL)
-                AND CONCAT(uln_country_code,uln_number) = '".$ulnString."'";
-                $results = $em->getConnection()->query($sql)->fetchAll();
+        //1. Always show animals on own location/ubn
+        if($animal->getLocation()->getId() == $location->getId()) { return true; }
 
-                if(count($results) > 0) { return true; }
+        //2. Else only show Animal if it is an historic animals and if owner ubnOfBirth allows it
+        $locationOfBirth = $animal->getLocationOfBirth();
+
+        $isAnimalRevealed = true;
+        if($locationOfBirth) {
+            $company = $locationOfBirth->getCompany();
+            if($company) {
+                $isAnimalRevealed = $company->getIsRevealHistoricAnimals();
             }
         }
+
+        if(!$isAnimalRevealed) { return false; }
+
+        $sql = "SELECT COUNT(*) FROM animal_residence
+                WHERE animal_id = ".$animal->getId()." AND location_id = ".$location->getId();
+        $count = $em->getConnection()->query($sql)->fetch()['count'];
+
+        if($count > 0) { return true; }
+
         return false;
     }
 }
