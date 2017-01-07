@@ -15,8 +15,11 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Output\CompanyNoteOutput;
 use AppBundle\Output\CompanyOutput;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Validation\AdminValidator;
+use AppBundle\Validation\CompanyValidator;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -28,6 +31,8 @@ use Doctrine\ORM\Query;
  */
 class CompanyAPIController extends APIController
 {
+    const DEFAULT_COUNTRY = '';
+
     /**
      * @param Request $request the request object
      *
@@ -84,23 +89,20 @@ class CompanyAPIController extends APIController
 
         // Validate content
         $content = $this->getContentAsArray($request);
+        /** @var ObjectManager $em */
+        $em = $this->getDoctrine()->getManager();
+
         // TODO VALIDATE CONTENT
+        $companyValidator = new CompanyValidator($em, $content);
+        if(!$companyValidator->getIsInputValid()) { return $companyValidator->createJsonResponse(); }
 
         // Create Owner
+        $contentUsers = $content->get('users');
         $contentOwner = $content->get('owner');
 
-        $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
-        $owner = $repository->findOneBy(array('emailAddress' => $contentOwner['email_address'], 'isActive' => true));
-
-        if($owner) {
-            return new JsonResponse(
-                array(
-                    Constant::CODE_NAMESPACE => 400,
-                    Constant::MESSAGE_NAMESPACE => 'THIS EMAIL IS ALREADY REGISTERED FOR ANOTHER USER. EMAIL HAS TO BE UNIQUE.',
-                    'data' => $contentOwner['email_address']
-                ),
-                400
-            );
+        $emailAddressOwner = $contentOwner['email_address'];
+        if(CompanyValidator::doesClientAlreadyExist($em, $emailAddressOwner)) {
+            return CompanyValidator::emailAddressIsInUseErrorMessage($emailAddressOwner);
         }
 
         $owner = new Client();
@@ -124,7 +126,7 @@ class CompanyAPIController extends APIController
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
         $address->setState($contentAddress['state']);
-        $address->setCountry('');
+        $address->setCountry(ArrayUtil::get('country', $contentAddress, self::DEFAULT_COUNTRY));
 
         // Create Billing Address
         $contentBillingAddress = $content->get('billing_address');
@@ -139,7 +141,7 @@ class CompanyAPIController extends APIController
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
         $billingAddress->setState($contentBillingAddress['state']);
-        $billingAddress->setCountry('');
+        $billingAddress->setCountry(ArrayUtil::get('country', $contentBillingAddress, self::DEFAULT_COUNTRY));
 
         // Create Company
         $company = new Company();
@@ -157,6 +159,7 @@ class CompanyAPIController extends APIController
         $company->setOwner($owner);
         $company->setAddress($address);
         $company->setBillingAddress($billingAddress);
+        $company->setIsRevealHistoricAnimals(true);
 
         // Create Location
         $locations = new ArrayCollection();
@@ -190,7 +193,7 @@ class CompanyAPIController extends APIController
             $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
             $locationAddress->setCity($contentLocationAddress['city']);
             $locationAddress->setState($contentLocationAddress['state']);
-            $locationAddress->setCountry('');
+            $locationAddress->setCountry(ArrayUtil::get('country', $contentLocationAddress, self::DEFAULT_COUNTRY));
 
             $location = new Location();
             $location->setUbn($contentLocation['ubn']);
@@ -203,30 +206,23 @@ class CompanyAPIController extends APIController
         $company->setLocations($locations);
 
         // Create Users
-        $contentUsers = $content->get('users');
-        $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
-
         foreach ($contentUsers as $contentUser) {
-            $user = $repository->findOneBy(array('emailAddress' => $contentUser['email_address'], 'isActive' => true));
 
-            if($user) {
-                return new JsonResponse(
-                    array(
-                        Constant::CODE_NAMESPACE => 400,
-                        Constant::MESSAGE_NAMESPACE => 'THIS EMAIL IS ALREADY REGISTERED FOR ANOTHER USER. EMAIL HAS TO BE UNIQUE.',
-                        'data' => $contentUser['email_address']
-                    ),
-                    400
-                );
+            $emailAddressUser = $contentUser['email_address'];
+            if(CompanyValidator::doesClientAlreadyExist($em, $emailAddressUser)) {
+                return CompanyValidator::emailAddressIsInUseErrorMessage($emailAddressUser);
             }
 
-            $user = new Client();
-            $user->setFirstName($contentUser['first_name']);
-            $user->setLastName($contentUser['last_name']);
-            $user->setEmailAddress($contentUser['email_address']);
-            $user->setObjectType('Client');
-            $user->setIsActive(true);
-            $user->setEmployer($company);
+            if($contentUser['primary_contactperson'] == false) {
+                $user = new Client();
+                $user->setFirstName($contentUser['first_name']);
+                $user->setLastName($contentUser['last_name']);
+                $user->setEmailAddress($emailAddressUser);
+                $user->setObjectType('Client');
+                $user->setIsActive(true);
+                $user->setEmployer($company);
+                $this->getDoctrine()->getManager()->persist($user);
+            }
         }
 
         // Save to Database
@@ -308,25 +304,19 @@ class CompanyAPIController extends APIController
          * @var Company $company
          * @var Client $owner
          */
-
+        
         // Update Owner
         $contentOwner = $content->get('owner');
 
+        $emailAddressOwner = $contentOwner['email_address'];
         $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
-        $owner = $repository->findOneBy(array('emailAddress' => $contentOwner['email_address'], 'isActive' => true));
+        $owner = $repository->findOneBy(array('emailAddress' => $emailAddressOwner, 'isActive' => true));
 
         if(isset($contentOwner['person_id'])) {
             $contentPersonId = $contentOwner['person_id'];
 
             if($owner && $owner->getPersonId() != $contentPersonId) {
-                return new JsonResponse(
-                    array(
-                        Constant::CODE_NAMESPACE => 400,
-                        Constant::MESSAGE_NAMESPACE => 'THIS EMAIL IS ALREADY REGISTERED FOR ANOTHER USER. EMAIL HAS TO BE UNIQUE.',
-                        'data' => $contentOwner['email_address']
-                    ),
-                    400
-                );
+                return CompanyValidator::emailAddressIsInUseErrorMessage($emailAddressOwner);
             }
 
             $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
@@ -340,14 +330,7 @@ class CompanyAPIController extends APIController
             $this->getDoctrine()->getManager()->flush();
         } else {
             if($owner) {
-                return new JsonResponse(
-                    array(
-                        Constant::CODE_NAMESPACE => 400,
-                        Constant::MESSAGE_NAMESPACE => 'THIS EMAIL IS ALREADY REGISTERED FOR ANOTHER USER. EMAIL HAS TO BE UNIQUE.',
-                        'data' => $contentOwner['email_address']
-                    ),
-                    400
-                );
+                return CompanyValidator::emailAddressIsInUseErrorMessage($emailAddressOwner);
             }
 
             $owner = $company->getOwner();
@@ -380,7 +363,7 @@ class CompanyAPIController extends APIController
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
         $address->setState($contentAddress['state']);
-        $address->setCountry('');
+        $address->setCountry(ArrayUtil::get('country', $contentAddress, self::DEFAULT_COUNTRY));
 
         // Update Billing Address
         $billingAddress = $company->getBillingAddress();
@@ -398,7 +381,7 @@ class CompanyAPIController extends APIController
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
         $billingAddress->setState($contentBillingAddress['state']);
-        $billingAddress->setCountry('');
+        $billingAddress->setCountry(ArrayUtil::get('country', $contentBillingAddress, self::DEFAULT_COUNTRY));
 
         // Update Company
         $company->setCompanyName($content->get('company_name'));
@@ -471,7 +454,7 @@ class CompanyAPIController extends APIController
                 $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
                 $locationAddress->setCity($contentLocationAddress['city']);
                 $locationAddress->setState($contentLocationAddress['state']);
-                $locationAddress->setCountry('');
+                $locationAddress->setCountry(ArrayUtil::get('country', $contentLocationAddress, self::DEFAULT_COUNTRY));
 
                 $this->getDoctrine()->getManager()->persist($location);
                 $this->getDoctrine()->getManager()->flush();
@@ -499,7 +482,7 @@ class CompanyAPIController extends APIController
                 $locationAddress->setPostalCode($contentLocationAddress['postal_code']);
                 $locationAddress->setCity($contentLocationAddress['city']);
                 $locationAddress->setState($contentLocationAddress['state']);
-                $locationAddress->setCountry('');
+                $locationAddress->setCountry(ArrayUtil::get('country', $contentLocationAddress, self::DEFAULT_COUNTRY));
 
                 $location = new Location();
                 $location->setUbn($contentLocation['ubn']);
@@ -537,20 +520,14 @@ class CompanyAPIController extends APIController
         $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
 
         foreach($contentUsers as $contentUser) {
-            $user = $repository->findOneBy(array('emailAddress' => $contentUser['email_address'], 'isActive' => true));
+            $emailAddressUser = $contentUser['email_address'];
+            $user = $repository->findOneBy(array('emailAddress' => $emailAddressUser, 'isActive' => true));
 
             if(isset($contentUser['person_id'])) {
                 $contentPersonId = $contentUser['person_id'];
 
                 if($user && $user->getPersonId() != $contentPersonId) {
-                    return new JsonResponse(
-                        array(
-                            Constant::CODE_NAMESPACE => 400,
-                            Constant::MESSAGE_NAMESPACE => 'THIS EMAIL IS ALREADY REGISTERED FOR ANOTHER USER. EMAIL HAS TO BE UNIQUE.',
-                            'data' => $contentUser['email_address']
-                        ),
-                        400
-                    );
+                    return CompanyValidator::emailAddressIsInUseErrorMessage($emailAddressUser);
                 }
 
                 $repository = $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY);
@@ -564,14 +541,7 @@ class CompanyAPIController extends APIController
                 $this->getDoctrine()->getManager()->flush();
             } else {
                 if($user) {
-                    return new JsonResponse(
-                        array(
-                            Constant::CODE_NAMESPACE => 400,
-                            Constant::MESSAGE_NAMESPACE => 'THIS EMAIL IS ALREADY REGISTERED FOR ANOTHER USER. EMAIL HAS TO BE UNIQUE.',
-                            'data' => $contentUser['email_address']
-                        ),
-                        400
-                    );
+                    return CompanyValidator::emailAddressIsInUseErrorMessage($emailAddressUser);
                 }
 
                 $user = new Client();
