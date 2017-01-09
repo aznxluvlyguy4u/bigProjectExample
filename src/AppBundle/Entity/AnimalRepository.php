@@ -380,8 +380,7 @@ class AnimalRepository extends BaseRepository
               INNER JOIN animal a ON r.animal_id = a.id
               LEFT JOIN location l ON a.location_id = l.id
               LEFT JOIN company c ON c.id = l.company_id
-            WHERE r.location_id = ".$idCurrentLocation.
-            " AND (a.location_id <> ".$idCurrentLocation." OR a.location_id ISNULL)";
+            WHERE r.location_id = ".$idCurrentLocation;
     $retrievedHistoricAnimals = $this->getConnection()->query($sqlHistoricAnimals)->fetchAll();
 
     $currentUbn = $location->getUbn();
@@ -442,7 +441,7 @@ class AnimalRepository extends BaseRepository
               LEFT JOIN animal_cache c ON a.id = c.animal_id
               WHERE a.is_alive = TRUE AND (a.transfer_state ISNULL OR a.transfer_state <> 'TRANSFERRING') AND a.location_id = ".$locationId;
 
-    $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
+    $results = $this->getConnection()->query($sql)->fetchAll();
 
     $results = NullChecker::replaceNullInNestedArray($results);
 
@@ -455,31 +454,54 @@ class AnimalRepository extends BaseRepository
    * @param string $ulnString
    * @return null|Animal
    */
-  public function getAnimalByUlnString(Client $client, $ulnString)
+  public function getAnimalByUlnString(Client $client, $uln)
   {
-    $uln = Utils::getUlnFromString($ulnString);
+    $ulnCountryCode = null;
+    $ulnNumber = null;
 
-    if ($uln == null) { //invalid input for $ulnString
+    if(!$uln instanceof ArrayCollection) {
+      $uln = Utils::getUlnFromString($uln);
+    }
+
+    $ulnCountryCode = $uln[Constant::ULN_COUNTRY_CODE_NAMESPACE];
+    $ulnNumber = $uln[Constant::ULN_NUMBER_NAMESPACE];
+
+    if(!$ulnCountryCode && !$ulnNumber) {
       return null;
     }
+
+    $locationIds = array();
 
     foreach ($client->getCompanies() as $company) {
       /** @var Location $location */
       foreach ($company->getLocations() as $location) {
-        foreach ($location->getAnimals() as $animal) {
 
-          $showAnimal = $animal->getUlnCountryCode() == $uln[Constant::ULN_COUNTRY_CODE_NAMESPACE]
-              && $animal->getUlnNumber() == $uln[Constant::ULN_NUMBER_NAMESPACE];
-
-          if ($showAnimal) {
-            return $animal;
-          }
-
-        }
+        $locationIds[] = $location->getLocationId();
       }
     }
 
-    return null;
+    $sql = "SELECT a.id, 
+                   a.uln_country_code, 
+                   a.uln_number, 
+                   a.pedigree_country_code, 
+                   a.pedigree_number, 
+                   a.animal_order_number as work_number,
+                   a.gender, 
+                   a.date_of_birth, 
+                   a.is_alive, 
+                   a.is_departed_animal, 
+                   c.last_weight as weight, 
+                   c.weight_measurement_date      
+              FROM animal a
+              LEFT JOIN animal_cache c 
+              ON a.id = c.animal_id
+              WHERE a.is_alive = TRUE 
+              AND (a.transfer_state ISNULL) 
+              AND a.uln_number = '".$ulnNumber."'";
+
+    $result = $this->getManager()->getConnection()->query($sql)->fetchAll();
+
+    return $result;
   }
 
 
@@ -545,8 +567,7 @@ class AnimalRepository extends BaseRepository
       $criteria = Criteria::create()
           ->where(Criteria::expr()->gte('id', $startId))
           ->andWhere(Criteria::expr()->lte('id', $endId))
-          ->orderBy(['id' => Criteria::ASC])
-      ;
+          ->orderBy(['id' => Criteria::ASC]);
 
       return $this->getManager()->getRepository(Animal::class)
                   ->matching($criteria);

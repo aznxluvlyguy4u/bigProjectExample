@@ -534,5 +534,7 @@ class Ram extends Animal
         return $this->parentNeuter;
     }
 
-
+    public static function getClassName() {
+        return get_called_class();
+    }
 }
