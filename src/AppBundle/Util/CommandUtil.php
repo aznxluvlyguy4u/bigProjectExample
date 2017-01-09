@@ -81,7 +81,7 @@ class CommandUtil
     {
         return $this->generateMultiLineQuestion([  ' ',
             $question,
-            ':   '], $defaultAnswer);
+            ':   '], $defaultAnswer, $isCleanupString);
     }
 
 
