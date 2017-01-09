@@ -1141,11 +1141,22 @@ class AnimalRepository extends BaseRepository
 
 
   /**
-   * @param array $animalIds
+   * @param array|int $animalIds
    */
   public function deleteAnimalsById($animalIds)
   {
-    if(!is_array($animalIds)) { return; }
+    if(!is_array($animalIds)) {
+
+      if(ctype_digit($animalIds)) {
+        $animalIds = intval($animalIds);
+      }
+
+      if(is_int($animalIds)) {
+        $animalIds = [$animalIds];
+      } else {
+        return; 
+      }
+    }
     if(count($animalIds) == 0) { return; }
 
     //Delete blank breedValuesSet
@@ -1160,6 +1171,7 @@ class AnimalRepository extends BaseRepository
 
     $animalIdFilterString = SqlUtil::getFilterStringByIdsArray($animalIds);
     if($animalIdFilterString != '') {
+      //Note that the child record in the ram/ewe/neuter table will automatically be deleted as well.
       $sql = "DELETE FROM animal WHERE ".$animalIdFilterString;
       $this->getConnection()->exec($sql);
     }

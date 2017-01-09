@@ -89,6 +89,44 @@ class DuplicateAnimalsFixer
     }
 
 
+    public function mergeAnimalPairByIds($primaryAnimalId, $secondaryAnimalId)
+    {
+        if(!is_int($primaryAnimalId) || !is_int($secondaryAnimalId)) {
+            return false;
+        }
+
+        /* 1. Retrieve animalData */
+        $sql = "SELECT * FROM animal WHERE id = ".$primaryAnimalId." OR id = ".$secondaryAnimalId;
+        $results = $this->conn->query($sql)->fetchAll();
+
+        //Only continue if animals actually exist for both animalIds
+        if(count($results) != 2) { return false; }
+
+        $primaryAnimalResultArray = null;
+        $secondaryAnimalResultArray = null;
+        foreach ($results as $result) {
+            $id = intval($result['id']);
+            switch ($id) {
+                case $primaryAnimalId: $primaryAnimalResultArray = $result; break;
+                case $secondaryAnimalId: $secondaryAnimalResultArray = $result; break;
+                default: break;
+            }
+        }
+
+        //Only continue if animals actually exist for both animalIds
+        if($primaryAnimalResultArray == null || $secondaryAnimalResultArray == null) { return false; }
+
+        /* 2. merge values */
+        $this->mergeAnimalIdValuesInTables($primaryAnimalId, $secondaryAnimalId);
+        $this->mergeMissingAnimalValuesIntoPrimaryAnimal($primaryAnimalResultArray, $secondaryAnimalResultArray);
+
+        /* 3 Remove unnecessary duplicate */
+        $this->animalRepository->deleteAnimalsById($secondaryAnimalId);
+        
+        return true;
+    }
+
+
     private function fixDuplicateAnimalsSyncedAndImportedPairs()
     {
         $sql = $this->createDuplicateSqlQuery(['uln_country_code', 'uln_number', 'date_of_birth'], false);
