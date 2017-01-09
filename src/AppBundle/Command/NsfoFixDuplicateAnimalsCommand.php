@@ -53,6 +53,7 @@ class NsfoFixDuplicateAnimalsCommand extends ContainerAwareCommand
             '1: Fix duplicate animals, near identical including duplicate vsmId', "\n",
             '2: Fix duplicate animals, synced I&R vs migrated animals', "\n",
             '3: Fix duplicate animals (legacy)', "\n",
+            '4: Merge two animals by primaryKeys', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -80,6 +81,12 @@ class NsfoFixDuplicateAnimalsCommand extends ContainerAwareCommand
                 } else {
                     $output->writeln('This command is deactivated');
                 }
+                break;
+
+            case 4:
+                $duplicateAnimalsFixer = new DuplicateAnimalsFixer($em, $output, $this->cmdUtil);
+                $duplicateAnimalsFixer->mergeAnimalPairs();
+                $output->writeln('DONE');
                 break;
             
             default:

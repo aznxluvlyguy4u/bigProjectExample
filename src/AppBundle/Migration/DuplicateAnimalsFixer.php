@@ -7,6 +7,8 @@ namespace AppBundle\Migration;
 use AppBundle\Component\Utils;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\Measurement;
+use AppBundle\Entity\MeasurementRepository;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\CommandUtil;
@@ -89,14 +91,55 @@ class DuplicateAnimalsFixer
     }
 
 
+    /**
+     * @return bool
+     */
+    public function mergeAnimalPairs()
+    {
+        do {
+            $primaryAnimalId = intval($this->cmdUtil->generateQuestion('Insert animalId of (primary) animal to keep', 0));
+        } while ($primaryAnimalId == 0);
+
+        do {
+            $secondaryAnimalId = intval($this->cmdUtil->generateQuestion('Insert animalId of (secondary) animal to delete', 0));
+        } while ($secondaryAnimalId == 0 || $primaryAnimalId == $secondaryAnimalId);
+
+        $this->displayAnimalValues([$primaryAnimalId, $secondaryAnimalId]);
+
+        $continue = $this->cmdUtil->generateConfirmationQuestion(['Your choice, '.
+            'primaryAnimalId: '.$primaryAnimalId, '  secondaryAnimalId: '.$secondaryAnimalId, '. Is this correct? (y/n)']);
+
+        if($continue) {
+            $isMergeSuccessFul = $this->mergeAnimalPairByIds($primaryAnimalId, $secondaryAnimalId);
+            if($isMergeSuccessFul) { $printOutText = 'MERGE SUCCESSFUL'; } else { $printOutText = 'MERGE FAILED'; }
+            $this->output->writeln($printOutText);
+            return true;
+        }
+        $this->output->writeln('MERGE ABORTED');
+        return false;
+    }
+
+
+    /**
+     * @param int $primaryAnimalId
+     * @param int $secondaryAnimalId
+     * @return bool
+     * @throws \Doctrine\DBAL\DBALException
+     */
     public function mergeAnimalPairByIds($primaryAnimalId, $secondaryAnimalId)
     {
-        if(!is_int($primaryAnimalId) || !is_int($secondaryAnimalId)) {
+        if(!is_int($primaryAnimalId) || !is_int($secondaryAnimalId) || intval($primaryAnimalId) == intval($secondaryAnimalId)) {
             return false;
         }
 
         /* 1. Retrieve animalData */
-        $sql = "SELECT * FROM animal WHERE id = ".$primaryAnimalId." OR id = ".$secondaryAnimalId;
+        $sql = "SELECT a.*,
+                    CONCAT(mother.uln_country_code, mother.uln_number, mother.date_of_birth) as ".self::ULN_DATE_OF_BIRTH_MOTHER.",
+                    CONCAT(father.uln_country_code, father.uln_number, father.date_of_birth) as ".self::ULN_DATE_OF_BIRTH_FATHER.
+                " FROM animal a
+                LEFT JOIN animal mother ON mother.id = a.parent_mother_id
+                LEFT JOIN animal father ON father.id = a.parent_father_id
+                    WHERE a.id = ".$primaryAnimalId." OR a.id = ".$secondaryAnimalId;
         $results = $this->conn->query($sql)->fetchAll();
 
         //Only continue if animals actually exist for both animalIds
@@ -117,13 +160,16 @@ class DuplicateAnimalsFixer
         if($primaryAnimalResultArray == null || $secondaryAnimalResultArray == null) { return false; }
 
         /* 2. merge values */
-        $this->mergeAnimalIdValuesInTables($primaryAnimalId, $secondaryAnimalId);
-        $this->mergeMissingAnimalValuesIntoPrimaryAnimal($primaryAnimalResultArray, $secondaryAnimalResultArray);
+        $isAnimalIdMergeSuccessFul = $this->mergeAnimalIdValuesInTables($primaryAnimalId, $secondaryAnimalId);
+        $isAnimalValueMergeSuccessFul = $this->mergeMissingAnimalValuesIntoPrimaryAnimal($primaryAnimalResultArray, $secondaryAnimalResultArray);
 
         /* 3 Remove unnecessary duplicate */
-        $this->animalRepository->deleteAnimalsById($secondaryAnimalId);
+        if($isAnimalIdMergeSuccessFul && $isAnimalValueMergeSuccessFul) {
+            $this->animalRepository->deleteAnimalsById($secondaryAnimalId);
+            return true;
+        }
         
-        return true;
+        return false;
     }
 
 
@@ -376,12 +422,13 @@ class DuplicateAnimalsFixer
      * @param int $primaryAnimalId
      * @param int $secondaryAnimalId
      * @throws \Doctrine\DBAL\DBALException
+     * @return boolean
      *
      */
     public function mergeAnimalIdValuesInTables($primaryAnimalId, $secondaryAnimalId)
     {
-        if(!is_int($primaryAnimalId) || !ctype_digit($primaryAnimalId) ||
-            !is_int($secondaryAnimalId) || !ctype_digit($secondaryAnimalId)) { return; }
+        if((!is_int($primaryAnimalId) && !ctype_digit($primaryAnimalId)) ||
+            (!is_int($secondaryAnimalId) && !ctype_digit($secondaryAnimalId))) { return false; }
 
         //Check in which tables have the secondaryAnimalId
         $tableNamesByVariableType = [
@@ -427,6 +474,8 @@ class DuplicateAnimalsFixer
 
         $secondaryAnimalIsInAnyTable = count($results) != 0;
 
+        $anyMeasurementsUpdated = false;
+
         $sqlUpdateQueries = [];
         if($secondaryAnimalIsInAnyTable) {
             foreach ($results as $result) {
@@ -438,6 +487,11 @@ class DuplicateAnimalsFixer
                     $sql = "UPDATE ".$tableName." SET ".$variableType." = ".$primaryAnimalId." WHERE ".$variableType." = ".$secondaryAnimalId;
                     $sqlUpdateQueries[$uniqueUpdateKey] = $sql;
                 }
+
+                if($tableName == 'exterior' || $tableName == 'body_fat' || $tableName == 'weight'
+                    || $tableName == 'muscle_thickness' || $tableName == 'tail_length') {
+                    $anyMeasurementsUpdated = true;
+                }
             }
         }
 
@@ -445,25 +499,33 @@ class DuplicateAnimalsFixer
         foreach ($sqlUpdateQueries as $sqlUpdateQuery) {
             $this->conn->exec($sqlUpdateQuery);
         }
+
+        if($anyMeasurementsUpdated) {
+            /** @var MeasurementRepository $measurementsRepository */
+            $measurementsRepository = $this->em->getRepository(Measurement::class);
+            $measurementsRepository->setAnimalIdAndDateValues();
+        }
+        return true;
     }
 
 
     /**
      * @param array $primaryAnimalResultArray
      * @param array $secondaryAnimalResultArray
+     * @return boolean
      */
     public function mergeMissingAnimalValuesIntoPrimaryAnimal($primaryAnimalResultArray, $secondaryAnimalResultArray)
     {
-        if(!is_array($primaryAnimalResultArray) || !is_array($secondaryAnimalResultArray)) { return; }
-        if(count($primaryAnimalResultArray) == 0 || count($secondaryAnimalResultArray) == 0) { return; }
+        if(!is_array($primaryAnimalResultArray) || !is_array($secondaryAnimalResultArray)) { return false; }
+        if(count($primaryAnimalResultArray) == 0 || count($secondaryAnimalResultArray) == 0) { return false; }
 
         $primaryAnimalId = Utils::getNullCheckedArrayValue('id', $primaryAnimalResultArray);
         $secondaryAnimalId = Utils::getNullCheckedArrayValue('id', $secondaryAnimalResultArray);
 
-        if($primaryAnimalId == null || $secondaryAnimalId == null) { return; }
+        if($primaryAnimalId == null || $secondaryAnimalId == null) { return false; }
 
-        if(!is_int($primaryAnimalId) || !ctype_digit($primaryAnimalId) ||
-            !is_int($secondaryAnimalId) || !ctype_digit($secondaryAnimalId)) { return; }
+        if((!is_int($primaryAnimalId) && !ctype_digit($primaryAnimalId)) ||
+            (!is_int($secondaryAnimalId) && !ctype_digit($secondaryAnimalId))) { return false; }
 
         $animalSqlBeginning = 'UPDATE animal SET ';
         $animalSqlMiddle = '';
@@ -547,6 +609,7 @@ class DuplicateAnimalsFixer
             $this->conn->exec($animalSqlBeginning.rtrim($animalSqlMiddle,',').$animalSqlEnd);
         }
 
+        return true;
     }
 
 
@@ -559,4 +622,39 @@ class DuplicateAnimalsFixer
         //TODO update gender AND type
     }
 
+
+
+    private function displayAnimalValues($animalIds)
+    {
+        if(is_int($animalIds) || ctype_digit($animalIds)) {
+            $animalIdFilterString = ' a.id = '.$animalIds;
+        } elseif (is_array($animalIds)) {
+            $animalIdFilterString = SqlUtil::getFilterStringByIdsArray($animalIds, 'a.id');
+        } else {
+            return;
+        }
+
+        $sql = "SELECT a.*, l.ubn, r.abbreviation as pedigree FROM animal a
+                LEFT JOIN location l ON l.id = a.location_id 
+                LEFT JOIN pedigree_register r ON r.id = a.pedigree_register_id
+                WHERE ".$animalIdFilterString;
+        $results = $this->conn->query($sql)->fetchAll();
+
+        foreach ($results as $result) {
+            $animalId = $result['id'];
+            $ubn = $result['ubn'];
+            $uln = $result['uln_country_code'].' '.$result['uln_number'];
+            $stn = $result['pedigree_country_code'].' '.$result['pedigree_number'];
+            $type = $result['type'];
+            $dateOfBirth = $result['date_of_birth'];
+            $vsmId = $result['name'];
+            $breedType = $result['breed_type'];
+            $breedCode = $result['breed_code'];
+            $scrapieGenoType = $result['scrapie_genotype'];
+            $pedigree = $result['pedigree'];
+
+            $this->output->writeln('animalId: '.$animalId.' | '.$uln.' | '.$stn.' | '.$type.' | '.$dateOfBirth.' | '.$vsmId.' | '.$breedType.' | '.
+                $breedCode.' | '.$scrapieGenoType.' | '.$pedigree.' | '.$ubn);
+        }
+    }
 }
