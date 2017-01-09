@@ -22,7 +22,7 @@ class Neuter extends Animal
      * @ORM\OneToMany(targetEntity="Animal", mappedBy="parentNeuter")
      * @JMS\Type("AppBundle\Entity\Neuter")
      */
-    protected $children;
+    private $children;
 
     /**
      * @var string
@@ -462,4 +462,7 @@ class Neuter extends Animal
         return $this->parentNeuter;
     }
 
+    public static function getClassName() {
+        return get_called_class();
+    }
 }

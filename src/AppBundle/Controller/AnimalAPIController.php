@@ -12,6 +12,8 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\AnimalObjectType;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\FormInput\AnimalDetails;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
@@ -92,7 +94,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $client = $this->getAuthenticatedUser($request);
 
     $animals = $animalRepository->findOfClientByAnimalTypeAndIsAlive($client, $animalType, $isAlive);
-    $minimizedOutput = AnimalOutput::createAnimalsArray($animals);
+    $minimizedOutput = AnimalOutput::createAnimalsArray($animals, $this->getDoctrine()->getManager());
 
     return new JsonResponse(array (Constant::RESULT_NAMESPACE => $minimizedOutput), 200);
   }
@@ -124,7 +126,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       ->getRepository(Constant::ANIMAL_REPOSITORY);
     $animal = $repository->findByUlnOrPedigree($uln, true);
 
-    $minimizedOutput = AnimalOutput::createAnimalArray($animal);
+    $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getDoctrine()->getManager());
 
     return new JsonResponse($minimizedOutput, 200);
   }
@@ -222,8 +224,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
 
     return new JsonResponse(array (Constant::RESULT_NAMESPACE => $ramsArray), 200);
   }
-
-
+  
   /**
    * Create a RetrieveAnimal request
    *
@@ -387,7 +388,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
 
   /**
    *
-   * Update Animal Details for the given ULN. For example NL100029511721
+   * Change the gender of an Animal for a given ULN. For example NL100029511721
    *
    * @ApiDoc(
    *   requirements={
@@ -399,64 +400,81 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Update Animal Details for the given ULN",
+   *   description = "Change the gender of an Animal for a given ULN",
    *   input = "AppBundle\Entity\Animals",
    *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
    * )
    *
    * @param Request $request the request object
-   * @param String $ulnString
    * @return jsonResponse
-   * @Route("-details/{ulnString}")
-   * @Method("PUT")
+   * @Route("-gender")
+   * @Method("POST")
    */
-  public function editAnimalDetailsByUln(Request $request, $ulnString) {
-
-    $client = $this->getAuthenticatedUser($request);
-    $animal = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->getAnimalByUlnString($client, $ulnString);
-
-    if($animal == null) {
-      return new JsonResponse(array('code'=>404, "message" => "For this account, no animal was found with uln: " . $ulnString), 404);
-    }
-
+  public function changeGenderOfUln(Request $request) {
     $em = $this->getDoctrine()->getManager();
     $content = $this->getContentAsArray($request);
-    $gender = $content->get('gender');
-
-    if($gender) {
-        if(($animal instanceof Ram) && $gender == 'FEMALE'){
-            $genderChanger = new GenderChanger($em);
-            $genderChanger->makeFemale($animal);
-        }
-
-        if(($animal instanceof Neuter) && $gender == 'FEMALE'){
-            $genderChanger = new GenderChanger($em);
-            $genderChanger->makeFemale($animal);
-        }
-
-        if(($animal instanceof Ewe) && $gender == 'MALE'){
-            $genderChanger = new GenderChanger($em);
-            $genderChanger->makeMale($animal);
-        }
-
-        if(($animal instanceof Neuter) && $gender == 'MALE'){
-            $genderChanger = new GenderChanger($em);
-            $genderChanger->makeMale($animal);
-        }
+    $animal = null;
+    
+    //Check if mandatory field values are given
+    if(!$content['uln_number'] || !$content['uln_country_code'] || !$content['gender']) {
+      $statusCode = 400;
+      return new JsonResponse(
+        array(
+          Constant::RESULT_NAMESPACE => array(
+              'code'=> $statusCode,
+              'message'=> "ULN number, country code is missing or gender is not specified."
+          )
+        ), $statusCode
+      );
     }
 
+    //Try retrieving animal
+    $animal = $this->getDoctrine()
+      ->getRepository(Constant::ANIMAL_REPOSITORY)
+      ->findByUlnCountryCodeAndNumber($content['uln_country_code'] , $content['uln_number']);
+   
+    if ($animal == null) {
+      $statusCode = 204;
+      return new JsonResponse(
+        array(
+          Constant::RESULT_NAMESPACE => array (
+            'code' => $statusCode,
+            "message" => "No animal found with ULN: " . $content['uln_country_code'] . $content['uln_number']
+          )
+      ), $statusCode);
+    }
+    
+    //Try to change animal gender
+    $gender = $content->get('gender');
+    $genderChanger = new GenderChanger($em);
+    $targetGender = null;
+    $result = null;
 
+    switch ($gender) {
+      case AnimalObjectType::EWE:
+        $targetGender = "FEMALE";
+        $result = $genderChanger->changeToGender($animal, Ewe::class);
+        break;
+      case AnimalObjectType::RAM:
+        $targetGender = "MALE";
+        $result = $genderChanger->changeToGender($animal, Ram::class);
+        break;
+      case AnimalObjectType::NEUTER:
+        $targetGender = "NEUTER";
+        $result = $genderChanger->changeToGender($animal, Neuter::class);
+        break;
+    }
 
-//TODO for this phase editing AnimalDetails is deactivated
-      //TODO keep history of changes
-    //Persist updated changes and return the updated values
-//    $animal = AnimalDetails::update($animal, $content);
-      $this->getDoctrine()->getManager()->persist($animal);
-      $this->getDoctrine()->getManager()->flush();
+    //An exception on the request has occured, return json response error message
+    if($result instanceof JsonResponse) {
+      return $result;
+    }
 
-//      $outputArray = AnimalDetailsOutput::create($this->getDoctrine()->getManager(), $animal);
+    //FIXME Temporarily workaround, for returning the reflected gender change, it is persisted, though the updated fields is not returned.
+    $result->setGender($targetGender);
 
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
+    $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getDoctrine()->getManager());
+
+    return new JsonResponse($minimizedOutput, 200);
   }
-  
 }
