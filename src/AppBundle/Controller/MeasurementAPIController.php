@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Cache\AnimalCacher;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
@@ -124,6 +125,9 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             $em->persist($exterior);
             $em->flush();
 
+            //Update exterior values in animalCache AFTER persisting exterior
+            AnimalCacher::cacheExteriorByAnimal($em, $animal);
+
             $output = 'OK';
             $code = 200;
         }
@@ -216,6 +220,9 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
 
             $em->persist($exterior);
             $em->flush();
+
+            //Update exterior values in animalCache AFTER persisting exterior
+            AnimalCacher::cacheExteriorByAnimal($em, $animal);
 
             $output = 'OK';
             $code = 200;
