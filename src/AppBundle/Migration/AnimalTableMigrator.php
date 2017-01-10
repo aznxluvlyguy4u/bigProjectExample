@@ -497,9 +497,6 @@ class AnimalTableMigrator extends MigratorBase
 
 	public function importAnimalTableCsvFileIntoDatabase()
 	{
-
-		//TODO Regender animals to Ewe/Ram before setting parents-children
-
         //Search Arrays
         $sql = "SELECT vsm_id FROM animal_migration_table";
         $results = $this->conn->query($sql)->fetchAll();
@@ -3628,5 +3625,13 @@ class AnimalTableMigrator extends MigratorBase
 			$this->cmdUtil->advanceProgressBar(1,'Deleting identical animals');
 		}
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
+	}
+
+
+	public function importExtraAnimalTableIntoDatabase()
+	{
+		foreach ($this->data as $record) {
+			//TODO
+		}
 	}
 }

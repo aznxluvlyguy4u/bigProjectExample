@@ -43,6 +43,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     const ANIMAL_RESIDENCE = 'animal_residence';
     const PERFORMANCE_MEASUREMENTS = 'performance_measurements';
     const ANIMAL_TABLE = 'animal_table';
+    const EXTRA_ANIMAL_TABLE = 'extra_animal_table';
     const BLINDNESS_FACTOR = 'blindness_factor';
     const MYO_MAX = 'myo_max';
     const TAG_REPLACES = 'tag_replaces';
@@ -101,6 +102,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             self::PREDICATES => '20161019_0854_DierPredikaat_NSFO-correct.csv',
             self::SUBSCRIPTIONS => 'lidmaatschappen_voor_2010.txt',
             self::CF_TOON_VERHOEVEN => 'Overzicht_UK-dieren_CF_ToonVerhoeven.csv',
+            self::EXTRA_ANIMAL_TABLE => '20161219_Lijst_onbekendstamboek_statusVolbloed_gesorteerdRasbalk_edited.csv',
         );
 
         //Setup folders if missing
@@ -144,6 +146,8 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '27: Fix vsmIds part1', "\n",
             '28: Fix vsmIds part2', "\n",
             '29: Migrate dateOfDeath & isAlive status', "\n",
+            '----------------------------------------------------', "\n",
+            '30: Import Extra animalTable', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -290,6 +294,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
             case 29:
                 $result = $this->migrateDateOfDeathAndIsAliveStatus() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 30:
+                $result = $this->importExtraAnimalTableIntoDatabase() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
@@ -570,6 +579,20 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
         $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
         $animalTableMigrator->importAnimalTableCsvFileIntoDatabase();
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function importExtraAnimalTableIntoDatabase()
+    {
+        $data = $this->parseCSV($this->filenames[self::EXTRA_ANIMAL_TABLE]);
+        if(count($data) == 0) { return false; }
+
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        $animalTableMigrator->importExtraAnimalTableIntoDatabase();
         return true;
     }
 
