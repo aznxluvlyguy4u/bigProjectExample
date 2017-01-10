@@ -99,13 +99,12 @@ class AnimalCacher
             $animalId = intval($result['animal_id']);
             $cachedAnimalIds[$animalId] = $animalId;
         }
-        
 
         if($cmdUtil instanceof CommandUtil) {
             $cmdUtil->setStartTimeAndPrintIt(count($animalCacherInputData) + 1, 1, 'Generating animal cache records');
             foreach ($animalCacherInputData as $record) {
                 $animalId = $record['animal_id'];
-                if(!array_key_exists($animalId, $cachedAnimalIds)) { //Double checks for duplicates
+                if(!array_key_exists($animalId, $cachedAnimalIds) || !$ignoreAnimalsWithAnExistingCache) { //Double checks for duplicates
                     self::cacheById($em, $animalId, $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
                 }
                 if($count++%self::FLUSH_BATCH_SIZE == 0) { $em->flush(); }
@@ -115,7 +114,7 @@ class AnimalCacher
         } else {
             foreach ($animalCacherInputData as $record) {
                 $animalId = $record['animal_id'];
-                if(!array_key_exists($animalId, $cachedAnimalIds)) { //Double checks for duplicates
+                if(!array_key_exists($animalId, $cachedAnimalIds) || !$ignoreAnimalsWithAnExistingCache) { //Double checks for duplicates
                     self::cacheById($em, $record['animal_id'], $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $record['animal_cache_id'] != null, $flushPerRecord);
                 }
                 if($count++%self::FLUSH_BATCH_SIZE == 0) { $em->flush(); }
