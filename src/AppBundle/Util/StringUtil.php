@@ -205,19 +205,6 @@ class StringUtil
 
 
     /**
-     * Change string with dateFormat of MM/DD/YYYY to YYYY-MM-DD
-     *
-     * @param string $americanDate
-     * @return string
-     */
-    public static function changeDateFormatStringFromAmericanToISO($americanDate)
-    {
-        $dateParts = explode('/', $americanDate);
-        return $dateParts[2].'-'.$dateParts[0].'-'.$dateParts[1];
-    }
-
-
-    /**
      * @param $haystack
      * @param $needle
      * @return bool

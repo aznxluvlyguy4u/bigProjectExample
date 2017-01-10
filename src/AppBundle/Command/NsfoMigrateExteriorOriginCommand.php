@@ -130,7 +130,7 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
             if($line[1] != '' && $line[1] != null) {
 
                 $name = $line[0];
-                $measurementDate = new \DateTime(StringUtil::changeDateFormatStringFromAmericanToISO($line[1]));
+                $measurementDate = new \DateTime(TimeUtil::changeDateFormatStringFromAmericanToISO($line[1]));
                 $measurementDateStamp = $measurementDate->format('Y-m-d H:i:s');
                 $measurementDate->add(new \DateInterval('P1D'));
                 $nextDayStamp = $measurementDate->format('Y-m-d H:i:s');

@@ -291,4 +291,19 @@ class TimeUtil
 
         return self::isFormatYYYYMMDD($dateString, true) ? $dateString : null;
     }
+
+
+    /**
+     * Change string with dateFormat of MM/DD/YYYY to YYYY-MM-DD
+     *
+     * @param string $americanDate
+     * @return string
+     */
+    public static function changeDateFormatStringFromAmericanToISO($americanDate)
+    {
+        $dateParts = explode('/', $americanDate);
+        return str_pad($dateParts[2],4,'0', STR_PAD_LEFT).'-'
+        .str_pad($dateParts[0],2,'0', STR_PAD_LEFT).'-'
+        .str_pad($dateParts[1],2,'0', STR_PAD_LEFT);
+    }
 }
