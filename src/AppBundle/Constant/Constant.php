@@ -146,6 +146,7 @@ class Constant
     const EMPLOYEE_REPOSITORY = 'AppBundle:Employee';
 
     const COUNTRY_REPOSITORY = 'AppBundle:Country';
+    const COLLAR_REPOSITORY = 'AppBundle:Collar';
     const COMPANY_REPOSITORY = 'AppBundle:Company';
     const LOCATION_REPOSITORY = 'AppBundle:Location';
 
