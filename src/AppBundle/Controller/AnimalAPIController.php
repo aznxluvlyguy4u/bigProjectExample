@@ -356,7 +356,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *   },
    *   resource = true,
    *   description = "Update animal details",
-   *   input = "AppBundle\Entity\Animal",
+   *   input = "AppBundle\Entity\RetrieveAnimals",
    *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
    * )
    * @param Request $request the request object
@@ -367,17 +367,20 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   function updateAnimalDetails(Request $request, $ulnString) {
     //Get content to array
     $content = $this->getContentAsArray($request);
-    $client = $this->getAuthenticatedUser($request);
     $em = $this->getDoctrine()->getManager();
-    $animal = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY)->getAnimalByUlnString($client, $ulnString);
+    $repository = $this->getDoctrine()
+      ->getRepository(Constant::ANIMAL_REPOSITORY);
+
+
+    $animal = $repository->findOneBy(array ("ulnCountryCode" => $content['result']['uln_country_code'], "ulnNumber" => $content['result']['uln_number']));
 
     if($animal == null) {
       return new JsonResponse(array('code'=> 204,
                                     "message" => "For this account, no animal was found with uln: " . $content['uln_country_code'] . $content['uln_number']), 204);
     }
 
-    //Persist only collar update
-    $collar = $content['collar'];
+    $collar = $content->get('result')['collar'];
+
     $animal->setCollarNumber($collar['number']);
     $animal->setCollarColor($collar['color']);
     $em->persist($animal);
@@ -387,9 +390,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
 
     return new JsonResponse($output, 200);
   }
-
-
-
+  
   /**
    * Get Animal Details by ULN. For example NL100029511721
    *
