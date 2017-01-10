@@ -371,26 +371,26 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $repository = $this->getDoctrine()
       ->getRepository(Constant::ANIMAL_REPOSITORY);
 
-
-    $animal = $repository->findOneBy(array ("ulnCountryCode" => $content['result']['uln_country_code'], "ulnNumber" => $content['result']['uln_number']));
+    $animal = $repository->findOneBy(array ("ulnCountryCode" => substr($ulnString, 0, 2), "ulnNumber" => substr($ulnString, 2)));
 
     if($animal == null) {
       return new JsonResponse(array('code'=> 204,
                                     "message" => "For this account, no animal was found with uln: " . $content['uln_country_code'] . $content['uln_number']), 204);
     }
 
-    $collar = $content->get('result')['collar'];
-
-    $animal->setCollarNumber($collar['number']);
-    $animal->setCollarColor($collar['color']);
-    $em->persist($animal);
-    $em->flush();
+    if(array_key_exists("collar", $content->toArray())) {
+      $collar = $content['collar'];
+      $animal->setCollarNumber($collar['number']);
+      $animal->setCollarColor($collar['color']);
+      $em->persist($animal);
+      $em->flush();
+    }
 
     $output = AnimalDetailsOutput::create($em, $animal, $animal->getLocation());
 
     return new JsonResponse($output, 200);
   }
-  
+
   /**
    * Get Animal Details by ULN. For example NL100029511721
    *
