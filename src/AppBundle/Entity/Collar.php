@@ -60,6 +60,6 @@ class Collar
     $this->name = $name;
   }
 
-  
+
 
 }
