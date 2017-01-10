@@ -11,6 +11,7 @@ use AppBundle\Entity\Measurement;
 use AppBundle\Entity\MeasurementRepository;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\NullChecker;
@@ -612,6 +613,55 @@ class DuplicateAnimalsFixer
         return true;
     }
 
+
+    /**
+     * @return bool
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function fixDuplicateDueToTagReplaceError()
+    {
+        $sql = "SELECT old.type as old_type, new.type as new_type, old.id as old_id, new.id as new_id, r.id as tag_replace_id,
+                  replace_date, old.name as vsm_id_old, new.name as vsm_id_new, uln_number_to_replace, uln_number_replacement, uln_country_code_replacement
+                FROM declare_tag_replace r
+                  INNER JOIN animal old ON old.uln_number = uln_number_to_replace AND old.uln_country_code = uln_country_code_to_replace
+                  INNER JOIN animal new ON new.uln_number = uln_number_replacement AND new.uln_country_code = uln_country_code_replacement
+                  INNER JOIN declare_base b ON b.id = r.id
+                WHERE old.id NOTNULL AND new.id NOTNULL AND old.date_of_birth = new.date_of_birth
+                      AND (b.request_state = '".RequestStateType::FINISHED."' 
+                        OR b.request_state = '".RequestStateType::FINISHED_WITH_WARNING."')
+                      AND new.type = 'Neuter' AND new.name ISNULL
+                ORDER BY replace_date";
+        $results = $this->conn->query($sql)->fetchAll();
+        
+        $totalCount = count($results);
+        if($totalCount == 0) {
+            $this->output->writeln('There are no duplicate animals due to tagReplace errors!');
+            return true;
+        }
+
+        $unSuccessFulMergeCount = 0;
+        $this->cmdUtil->setStartTimeAndPrintIt($totalCount, 1);
+        foreach ($results as $result) {
+            //Use the old animal with the correct gender as the primaryId so no gender change is necessary
+            $primaryAnimalId = $result['old_id'];
+            $secondaryAnimalId = $result['new_id'];
+
+            //Update the old uln to the new one in the old/imported animal first,
+            //so the new uln is not overwritten during the merge
+            $newUlnCountryCode = $result['uln_country_code_replacement'];
+            $newUlnNumber = $result['uln_number_replacement'];
+            $sql = "UPDATE animal SET uln_country_code = '".$newUlnCountryCode."', uln_number = '".$newUlnNumber."' WHERE id = ".$primaryAnimalId;
+            $this->conn->exec($sql);
+
+            $isSuccessFul = $this->mergeAnimalPairByIds($primaryAnimalId, $secondaryAnimalId);
+            if(!$isSuccessFul) { $unSuccessFulMergeCount++; }
+            $this->cmdUtil->advanceProgressBar(1, 'Failed merges: '.$unSuccessFulMergeCount);
+        }
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+
+        return $unSuccessFulMergeCount == 0 ? true : false;
+    }
+    
 
     /**
      * @param array $primaryAnimalResultArray
