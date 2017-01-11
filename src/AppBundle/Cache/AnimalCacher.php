@@ -8,6 +8,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalCache;
 use AppBundle\Entity\AnimalCacheRepository;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BreedValuesSet;
 use AppBundle\Entity\BreedValuesSetRepository;
 use AppBundle\Entity\Ewe;
@@ -25,6 +26,7 @@ use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
+use Doctrine\Common\Collections\Criteria;
 use \Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -590,6 +592,74 @@ class AnimalCacher
             }
         }
 
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param string $logDateString
+     * @param CommandUtil|null $cmdUtil
+     * @return bool
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function cacheExteriorsEqualOrOlderThanLogDate(ObjectManager $em, $logDateString, CommandUtil $cmdUtil = null)
+    {
+        if($logDateString == null && $cmdUtil != null) {
+            do {
+                $logDateString = $cmdUtil->generateQuestion('Insert logDate with format YYYY-MM-DD (default = today)', TimeUtil::getTimeStampToday());
+            } while (!TimeUtil::isFormatYYYYMMDD($logDateString));
+
+        } elseif(!TimeUtil::isFormatYYYYMMDD($logDateString)) {
+            if($cmdUtil != null) { $cmdUtil->writeln('LogDate format it incorrect. It should be YYYY-MM-DD'); }
+            return false;
+        }
+
+        /** @var Connection $conn */
+        $conn = $em->getConnection();
+
+        $sql = "SELECT x.animal_id FROM exterior x
+                  INNER JOIN measurement m ON m.id = x.id
+                WHERE DATE(log_date) >= '".$logDateString."'
+                GROUP BY x.animal_id
+                ORDER BY x.animal_id ASC";
+        $results = $conn->query($sql)->fetchAll();
+
+        $totalCount = count($results);
+        if($totalCount == 0) {
+            if($cmdUtil != null) { $cmdUtil->writeln('No exteriorMeasurements exist after given logDate '.$logDateString); }
+            return true;
+        }
+
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $em->getRepository(Animal::class);
+
+        $animalsNotFoundCount = 0;
+        $animalIdsIncorrectCount = 0;
+        $exteriorsCheckedCount = 0;
+        if($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt($totalCount, 1); }
+        foreach ($results as $result) {
+            $animalId = $result['animal_id'];
+            $animal = null;
+
+            if(ctype_digit($animalId) || is_int($animalId)) {
+                /** @var Animal $animal */
+                $animal = $animalRepository->find($animalId);
+            } else {
+                $animalIdsIncorrectCount++;
+            }
+
+            if($animal != null) {
+                self::cacheExteriorByAnimal($em, $animal, $flush = true);
+                $exteriorsCheckedCount++;
+            } else {
+                $animalsNotFoundCount++;
+            }
+
+            if($cmdUtil != null) { $cmdUtil->advanceProgressBar(1, 'Updating AnimalCache Exterior values: '.$exteriorsCheckedCount
+            .' | incorrect animalIds: '.$animalIdsIncorrectCount. ' | animals not found: '.$animalsNotFoundCount); }
+        }
+        if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
+        return true;
     }
 
 

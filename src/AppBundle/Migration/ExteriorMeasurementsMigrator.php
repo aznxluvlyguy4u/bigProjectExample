@@ -4,6 +4,7 @@
 namespace AppBundle\Migration;
 
 
+use AppBundle\Cache\AnimalCacher;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\AnimalResidenceRepository;
 use AppBundle\Entity\Inspector;
@@ -166,6 +167,9 @@ class ExteriorMeasurementsMigrator extends MigratorBase
 
 
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+
+        //Update values in cache so that the imported values are actually shown in the pedigreeReports
+        AnimalCacher::cacheExteriorsEqualOrOlderThanLogDate($this->em, $logDate, $this->cmdUtil);
     }
 
 

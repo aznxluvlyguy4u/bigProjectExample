@@ -57,6 +57,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '7: Regenerate all AnimalCache records for animal and ascendants (3gen) for given locationId', "\n",
             '8: Delete duplicate records', "\n",
             '9: Update location_of_birth_id for all animals and locations', "\n",
+            '10: Update AnimalCache exterior values for all exteriors >= given logDate', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -109,6 +110,11 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
 
             case 9:
                 $this->animalRepository->updateAllLocationOfBirths($this->cmdUtil);
+                $output->writeln('DONE!');
+                break;
+
+            case 10:
+                AnimalCacher::cacheExteriorsEqualOrOlderThanLogDate($em, null, $this->cmdUtil);
                 $output->writeln('DONE!');
                 break;
 
