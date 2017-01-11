@@ -58,10 +58,11 @@ class GenderChanger
    *
    * @param Ram | Ewe | Neuter $animal
    * @param Ram | Ewe | Neuter $targetEntityClass
+   * @param boolean $validateMaxTimeInterval
    * @return Animal
    * @throws \Doctrine\DBAL\DBALException
    */
-    public function changeToGender($animal, $targetEntityClass)
+    public function changeToGender($animal, $targetEntityClass, $validateMaxTimeInterval = true)
     {
         $targetEntity = $targetEntityClass::getClassName($targetEntityClass);
         $sourceEntity = $animal->getObjectType();
@@ -76,7 +77,7 @@ class GenderChanger
         switch ($targetGender){
             case AnimalObjectType::Neuter:
                 //Do additional checks to see if we allow a gender change
-                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::NEUTER);
+                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::NEUTER, $validateMaxTimeInterval);
 
                 if ($requestValidation instanceof JsonResponse) {
                     return $requestValidation;
@@ -96,7 +97,7 @@ class GenderChanger
                 break;
             case AnimalObjectType::Ewe:
                 //Do additional checks to see if we allow a gender change
-                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::EWE);
+                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::EWE, $validateMaxTimeInterval);
 
                 if ($requestValidation instanceof JsonResponse) {
                     return $requestValidation;
@@ -116,7 +117,7 @@ class GenderChanger
                 break;
             case AnimalObjectType::Ram:
                 //Do additional checks to see if we allow a gender change
-                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::RAM);
+                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::RAM, $validateMaxTimeInterval);
 
                 if ($requestValidation instanceof JsonResponse) {
                     return $requestValidation;
@@ -162,9 +163,10 @@ class GenderChanger
      *
      * @param Ram | Ewe | Neuter $animal
      * @param  $targetEntity
+     * @param  boolean $validateMaxTimeInterval
      * @return mixed JsonResponse|bool
      */
-    function validateGenderChangeRequest($animal, $targetEntity)
+    function validateGenderChangeRequest($animal, $targetEntity, $validateMaxTimeInterval = true)
     {
         $statusCode = 403;
 
@@ -224,27 +226,29 @@ class GenderChanger
             }
         }
 
-        //Check if birth registration is within a time span of MAX_TIME_INTERVAL from now,
-        //then, and only then, an alteration of gender for this animal is allowed
-        $dateInterval = $animal->getDateOfBirth()->diff(new \DateTime());
+        if($validateMaxTimeInterval) {
+            //Check if birth registration is within a time span of MAX_TIME_INTERVAL from now,
+            //then, and only then, an alteration of gender for this animal is allowed
+            $dateInterval = $animal->getDateOfBirth()->diff(new \DateTime());
 
-        if($dateInterval->y > 0 || $dateInterval->m >= self::MAX_MONTH_INTERVAL) {
-            //Allow gender change for animals beyond MAX_TIME_INTERVAL
-            // if current gender is of type NEUTER
-            if($animal instanceof Neuter) {
-               return $animal;
-            }
+            if($dateInterval->y > 0 || $dateInterval->m >= self::MAX_MONTH_INTERVAL) {
+                //Allow gender change for animals beyond MAX_TIME_INTERVAL
+                // if current gender is of type NEUTER
+                if($animal instanceof Neuter) {
+                    return $animal;
+                }
 
-            return new JsonResponse(
-              array (
-                Constant::RESULT_NAMESPACE => array (
-                  'code' => $statusCode,
+                return new JsonResponse(
+                    array (
+                        Constant::RESULT_NAMESPACE => array (
+                            'code' => $statusCode,
 //                  "message" => $animal->getUln() . " has a registered birth that is longer then "
 //                    .self::MAX_MONTH_INTERVAL ." months ago, from now, therefore changing gender is not allowed.",
-                  "message" => $animal->getUln() . " heeft een geregistreerde geboortedatum dat langer dan "
-                    .self::MAX_MONTH_INTERVAL ." maanden geleden is, zodoende is het niet geoorloofd om het geslacht van het dier te wijzigen.",
-                )
-              ), $statusCode);
+                            "message" => $animal->getUln() . " heeft een geregistreerde geboortedatum dat langer dan "
+                                .self::MAX_MONTH_INTERVAL ." maanden geleden is, zodoende is het niet geoorloofd om het geslacht van het dier te wijzigen.",
+                        )
+                    ), $statusCode);
+            }
         }
         
         return $animal;
