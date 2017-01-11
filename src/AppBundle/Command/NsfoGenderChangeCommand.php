@@ -21,6 +21,7 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
 {
     const TITLE = 'Edit gender of animal';
     const taskAbortedNamespace = 'ABORTED';
+    const VALIDATE_MAX_TIME_INTERVAL = false;
 
     /** @var OutputInterface */
     private $output;
@@ -90,13 +91,13 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
 
         switch ($newGender) {
             case AnimalObjectType::RAM:
-                $result = $genderChanger->changeToGender($animal, Ram::class);
+                $result = $genderChanger->changeToGender($animal, Ram::class, self::VALIDATE_MAX_TIME_INTERVAL);
                 break;
             case AnimalObjectType::EWE:
-                $result = $genderChanger->changeToGender($animal, Ewe::class);
+                $result = $genderChanger->changeToGender($animal, Ewe::class, self::VALIDATE_MAX_TIME_INTERVAL);
                 break;
             case AnimalObjectType::NEUTER:
-                $result = $genderChanger->changeToGender($animal, Neuter::class);
+                $result = $genderChanger->changeToGender($animal, Neuter::class, self::VALIDATE_MAX_TIME_INTERVAL);
                 break;
             default:
                 $this->output->writeln(self::taskAbortedNamespace);
