@@ -52,10 +52,9 @@ class InspectorAuthorization
     private $actionBy;
 
     /**
-     * @var Person
-     *
-     * @ORM\Column(type="string")
-     * @ORM\JoinColumn(name="measurement_type", referencedColumnName="id")
+     * @var string
+     * @ORM\Column(type="string", nullable=false)
+     * @JMS\Type("string")
      */
     private $measurementType;
     
@@ -136,7 +135,7 @@ class InspectorAuthorization
     }
 
     /**
-     * @return Person
+     * @return string
      */
     public function getMeasurementType()
     {
@@ -144,7 +143,7 @@ class InspectorAuthorization
     }
 
     /**
-     * @param Person $measurementType
+     * @param string $measurementType
      */
     public function setMeasurementType($measurementType)
     {
