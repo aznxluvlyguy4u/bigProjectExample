@@ -65,17 +65,22 @@ class InspectorAuthorization
      * @ORM\JoinColumn(name="pedigree_register_id", referencedColumnName="id")
      */
     private $pedigreeRegister;
-    
-    
-    public function __construct($userAccount, $actionBy, $userActionType, $isCompleted = false, $description = null, $isUserEnvironment = true)
+
+
+    /**
+     * InspectorAuthorization constructor.
+     * @param Inspector $inspector
+     * @param Person $actionBy
+     * @param string $measurementType
+     * @param PedigreeRegister $pedigreeRegister
+     */
+    public function __construct($inspector, $actionBy, $measurementType, $pedigreeRegister)
     {
         $this->logDate = new \DateTime();
-        $this->isUserEnvironment = $isUserEnvironment;
-        $this->userAccount = $userAccount;
+        $this->inspector = $inspector;
         $this->actionBy = $actionBy;
-        $this->userActionType = $userActionType;
-        $this->isCompleted = $isCompleted;
-        $this->description = $description;
+        $this->measurementType = $measurementType;
+        $this->pedigreeRegister = $pedigreeRegister;
     }
 
     /**
