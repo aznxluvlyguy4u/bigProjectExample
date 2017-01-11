@@ -19,6 +19,7 @@ use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Enumerator\ColumnType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\Specie;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\GenderChanger;
@@ -3630,8 +3631,87 @@ class AnimalTableMigrator extends MigratorBase
 
 	public function importExtraAnimalTableIntoDatabase()
 	{
+		$locationIdByUbnSearchArray = $this->generateLatestLocationSearchArray();
+
+		//TODO include searchArrays
+
+		$loopCount = 0;
 		foreach ($this->data as $record) {
-			//TODO
+			$loopCount++;
+
+			$vsmId = intval($record[0]);
+
+			$stnImport = StringUtil::getNullAsStringOrWrapInQuotes($record[1]);
+			$stnParts = $this->parseStn($record[1]);
+			$pedigreeCountryCode = StringUtil::getNullAsStringOrWrapInQuotes($stnParts[JsonInputConstant::PEDIGREE_COUNTRY_CODE]);
+			$pedigreeNumber = StringUtil::getNullAsStringOrWrapInQuotes($stnParts[JsonInputConstant::PEDIGREE_NUMBER]);
+
+			$uln = StringUtil::getNullAsStringOrWrapInQuotes($record[3]);
+			$ulnParts = $this->parseUln($record[3]);
+
+			$ulnCountryCode = StringUtil::getNullAsStringOrWrapInQuotes($ulnParts[JsonInputConstant::ULN_COUNTRY_CODE]);
+			$ulnNumber = StringUtil::getNullAsStringOrWrapInQuotes($ulnParts[JsonInputConstant::ULN_NUMBER]);
+
+			$animalOrderNumber = 'NULL';
+			if($ulnParts[JsonInputConstant::ULN_NUMBER] != null) {
+				$newAnimalOrderNumber = StringUtil::getNullAsStringOrWrapInQuotes(StringUtil::getLast5CharactersFromString($ulnNumber));
+			}
+
+			$nickName = StringUtil::getNullAsStringOrWrapInQuotes(utf8_encode(StringUtil::escapeSingleApostrophes($record[4])));
+			$fatherVsmId = SqlUtil::getNullCheckedValueForSqlQuery($record[5], false);
+			$motherVsmId = SqlUtil::getNullCheckedValueForSqlQuery($record[6], false);
+			$genderInFile = StringUtil::getNullAsStringOrWrapInQuotes($this->parseGender($record[7]));
+			$dateOfBirthString = StringUtil::getNullAsStringOrWrapInQuotes($record[8]); //All dateOfBirths in the csv already have leading zeroes
+			$breedCode = StringUtil::getNullAsStringOrWrapInQuotes($record[9]);
+			$ubnOfBirth = StringUtil::getNullAsStringOrWrapInQuotes($record[10]); //ubnOfBreeder
+			$locationOfBirth = SqlUtil::getSearchArrayCheckedValueForSqlQuery($record[10], $locationIdByUbnSearchArray, false);
+
+			$breedType = SqlUtil::getNullCheckedValueForSqlQuery(Translation::getEnglish(strtoupper($record[11])), true);
+			$scrapieGenotype = SqlUtil::getNullCheckedValueForSqlQuery($record[12], true);
+			$pedigreeRegisterAbbreviation = $this->getPedigreeRegisterAbbreviation($record[13], false);
+			$note = $record[14];
+
+			$searchKey = $ulnCountryCode.$ulnNumber.$dateOfBirthString;
+
 		}
+	}
+
+
+	/**
+	 * @param $pedigreeInCsv
+	 * @param bool $wrapInQuotesForSql
+	 * @return string
+	 */
+	public function getPedigreeRegisterAbbreviation($pedigreeInCsv, $wrapInQuotesForSql = true)
+	{
+		if($pedigreeInCsv == '') { return 'NULL'; }
+
+		$pedigreeRegisterTranslations = [
+			"Bleu du Maine" => "BdM",
+			"Clun Forest" => "CF",
+			"NFS" => "NFS",
+			"NH" => "NH",
+			"Noord Hollander" => "NH",
+			"NTS" => "NTS",
+			"Ruischaap" => "RUI",
+			"Soay" => "Soay",
+			"TSNH" => "TSNH",
+
+			//TODO pedigreeRegisters below still have to be included into the database
+			"Blauwe Texelaar" => "Blauwe Texelaar",
+			"Blessum" => "Blessum", //TODO "Stamboek is geen lid van NSFO", moet dit ook worden geregistreerd?
+			"Dassenkop" => "Dassenkop",
+			"Hampshire Down" => "Hampshire Down",
+			"Kerry Hill" => "Kerry Hill",
+			"NTS?" => "NTS?", //TODO How to process this?
+			"Reyland" => "Reyland",
+			"TES" => "TES",
+		];
+
+		if(!array_key_exists($pedigreeInCsv, $pedigreeRegisterTranslations)) { return 'NULL'; }
+
+		$abbreviation = strtr($pedigreeInCsv, $pedigreeRegisterTranslations);
+
+		return $wrapInQuotesForSql ? SqlUtil::getNullCheckedValueForSqlQuery($abbreviation, true) : $abbreviation;
 	}
 }
