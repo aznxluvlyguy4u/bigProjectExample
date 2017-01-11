@@ -539,7 +539,7 @@ class DuplicateAnimalsFixer
             'parent_father_id', 'parent_mother_id', 'location_id', 'pedigree_country_code', 'pedigree_number', 'name',
             'date_of_birth', 'transfer_state', 'uln_country_code', 'uln_number', 'animal_order_number', 'is_import_animal',
             'is_export_animal', 'is_departed_animal', 'animal_country_origin', 'pedigree_register_id', 'ubn_of_birth', 'location_of_birth_id', 'scrapie_genotype', 'predicate', 'predicate_score', 'nickname', 'blindness_factor',
-            'myo_max', 'mixblup_block'
+            'myo_max', 'mixblup_block', 'collar_color', 'collar_number'
         ];
 
         foreach ($columnHeaders as $columnHeader) {
