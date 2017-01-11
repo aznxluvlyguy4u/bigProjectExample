@@ -32,6 +32,13 @@ class PedigreeRegister
     private $abbreviation;
 
     /**
+     * @var PedigreeCode
+     * @ORM\ManyToOne(targetEntity="PedigreeCode", cascade={"persist"})
+     * @ORM\JoinColumn(name="pedigree_code_id", referencedColumnName="id")
+     */
+    private $pedigreeCode;
+
+    /**
      * @var string
      *
      * @ORM\Column(type="string")
@@ -263,6 +270,22 @@ class PedigreeRegister
     public function setSpecie($specie)
     {
         $this->specie = $specie;
+    }
+
+    /**
+     * @return PedigreeCode
+     */
+    public function getPedigreeCode()
+    {
+        return $this->pedigreeCode;
+    }
+
+    /**
+     * @param PedigreeCode $pedigreeCode
+     */
+    public function setPedigreeCode($pedigreeCode)
+    {
+        $this->pedigreeCode = $pedigreeCode;
     }
 
 
