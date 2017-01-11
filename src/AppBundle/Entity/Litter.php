@@ -50,7 +50,6 @@ class Litter extends DeclareNsfoBase
      */
     private $litterGroup;
 
-
     /**
      * @var integer
      *
@@ -58,7 +57,6 @@ class Litter extends DeclareNsfoBase
      * @JMS\Type("integer")
      */
     private $stillbornCount;
-
 
     /**
      * @var integer
@@ -87,6 +85,14 @@ class Litter extends DeclareNsfoBase
     private $children;
 
     /**
+     * @var ArrayCollection
+     * 
+     * @ORM\OneToMany(targetEntity="Stillborn", mappedBy="litter", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Stillborn")
+     */
+    private $stillborns;
+
+    /**
      * @ORM\Column(type="string", options={"default": "INCOMPLETE"})
      * @JMS\Type("string")
      */
@@ -100,6 +106,7 @@ class Litter extends DeclareNsfoBase
         parent::__construct();
 
         $this->children = new ArrayCollection();
+        $this->stillborns = new ArrayCollection();
         $this->logDate = new \DateTime();
         $this->stillbornCount = 0;
         $this->bornAliveCount = 0;
@@ -349,5 +356,39 @@ class Litter extends DeclareNsfoBase
     public function setStatus($status)
     {
         $this->status = $status;
+    }
+
+    /**
+     * Add Stillborn
+     *
+     * @param Stillborn $stillborn
+     *
+     * @return Litter
+     */
+    public function addStillborn(Stillborn $stillborn)
+    {
+        $this->stillborns[] = $stillborn;
+
+        return $this;
+    }
+
+    /**
+     * Remove Stillborn
+     *
+     * @param Animal $child
+     */
+    public function removeStillborn(Stillborn $stillborn)
+    {
+        $this->stillborns->removeElement($stillborn);
+    }
+
+    /**
+     * Get Stillborns
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getStillborns()
+    {
+        return $this->stillborns;
     }
 }
