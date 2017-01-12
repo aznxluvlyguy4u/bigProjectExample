@@ -107,6 +107,10 @@ class LocationHealthInspectionAPIController extends APIController
                   location_health_inspection.total_lead_time,
                   location_health_inspection.next_action,
                   location_health_inspection.status,
+                  location_health_inspection.roadmap,
+                  location_health_inspection.certification_status,
+                  location_health_inspection.order_number,
+                  location_health_inspection.required_animal_count,
                   location.ubn,
                   person.last_name,
                   person.first_name
