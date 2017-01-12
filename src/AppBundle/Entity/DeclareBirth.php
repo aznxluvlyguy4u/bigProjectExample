@@ -152,7 +152,7 @@ class DeclareBirth extends DeclareBase
     /**
      * @var integer
      *
-     * @ORM\Column(type="integer", nullable=true)
+     * @ORM\Column(type="integer", options={"default":0})
      * @JMS\Type("integer")
      * @Expose
      */
@@ -161,7 +161,7 @@ class DeclareBirth extends DeclareBase
     /**
      * @var float
      *
-     * @ORM\Column(type="float", nullable=true)
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Expose
      */
@@ -170,7 +170,7 @@ class DeclareBirth extends DeclareBase
     /**
      * @var float
      *
-     * @ORM\Column(type="float", nullable=true)
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Expose
      */
