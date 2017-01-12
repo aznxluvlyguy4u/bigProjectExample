@@ -27,7 +27,6 @@ class DeclareBirth extends DeclareBase
      */
     private $animal;
 
-
     /**
      * @ORM\Column(type="string")
      * @Assert\NotBlank
@@ -179,7 +178,7 @@ class DeclareBirth extends DeclareBase
 
     /**
      * @Assert\NotBlank
-     * @ORM\ManyToOne(targetEntity="Litter")
+     * @ORM\ManyToOne(targetEntity="Litter", inversedBy="declareBirths")
      * @JMS\Type("AppBundle\Entity\Litter")
      */
     private $litter;
