@@ -93,6 +93,13 @@ class Litter extends DeclareNsfoBase
     private $stillborns;
 
     /**
+     * @var ArrayCollection
+     * @JMS\Type("AppBundle\Entity\DeclareBirth")
+     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="litter")
+     */
+    private $declareBirths;
+
+    /**
      * @ORM\Column(type="string", options={"default": "INCOMPLETE"})
      * @JMS\Type("string")
      */
@@ -110,6 +117,7 @@ class Litter extends DeclareNsfoBase
         $this->logDate = new \DateTime();
         $this->stillbornCount = 0;
         $this->bornAliveCount = 0;
+        $this->declareBirths = new ArrayCollection();
     }
 
     /**
@@ -390,5 +398,39 @@ class Litter extends DeclareNsfoBase
     public function getStillborns()
     {
         return $this->stillborns;
+    }
+
+    /**
+     * Add declareBirth
+     *
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     *
+     * @return Animal
+     */
+    public function addDeclareBirth(\AppBundle\Entity\DeclareBirth $declareBirth)
+    {
+        $this->declareBirths[] = $declareBirth;
+
+        return $this;
+    }
+
+    /**
+     * Remove declareBirth
+     *
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     */
+    public function removeDeclareBirth(\AppBundle\Entity\DeclareBirth $declareBirth)
+    {
+        $this->declareBirths->removeElement($declareBirth);
+    }
+
+    /**
+     * Get declareBirths
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getDeclareBirths()
+    {
+        return $this->declareBirths;
     }
 }
