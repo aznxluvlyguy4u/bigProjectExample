@@ -153,8 +153,10 @@ class DeclareBirthResponseOutput extends Output
     {
         $res = array();
 
+        dump($declarations); die();
         foreach ($declarations as $declaration) {
             $res[] = array(
+                "id" => $declaration['id'],
                 "log_date" => Utils::fillNull($declaration['log_date']),
                 "date_of_birth" => Utils::fillNull($declaration['date_of_birth']),
                 "mother_uln_country_code" => Utils::fillNull($declaration['mother_uln_country_code']),
@@ -167,7 +169,6 @@ class DeclareBirthResponseOutput extends Output
                 "is_pseudo_pregnancy" => Utils::fillNull($declaration['is_pseudo_pregnancy']),
                 "status" => Utils::fillNull($declaration['status']),
                 "request_state" => Utils::fillNull($declaration['request_state']),
-                "message_number" => Utils::fillNull($declaration['message_id'])
             );
         }
 

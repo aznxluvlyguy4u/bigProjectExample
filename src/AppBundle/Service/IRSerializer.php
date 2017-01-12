@@ -528,6 +528,9 @@ class IRSerializer implements IRSerializerInterface
                 $declareBirthRequest->setIsPseudoPregnancy($isPseudoPregnancy);
                 $declareBirthRequest->setHasLambar($hasLambar);
                 $declareBirthRequest->setLitter($litter);
+                $declareBirthRequest->setLitterSize($litterSize);
+                $declareBirthRequest->setBirthWeight($birthWeightValue);
+                $declareBirthRequest->setBirthTailLength($tailLengthValue);
 
                 if($father) {
                     $declareBirthRequest->setUlnFather($father->getUlnNumber());
@@ -574,6 +577,8 @@ class IRSerializer implements IRSerializerInterface
 
                 $declareBirthRequests[] = $declareBirthRequest;
                 $litter->addDeclareBirth($declareBirthRequest);
+
+                $this->entityManager->persist($declareBirthRequest);
             }
         }
 

@@ -132,11 +132,11 @@ class DeclareBirth extends DeclareBase
      * 2016-04-01T22:00:48.131Z
      *
      * @var DateTime
-     *
+     *DateTime<’format’>
      * @ORM\Column(type="datetime")
      * @Assert\Date
      * @Assert\NotBlank
-     * @JMS\Type("DateTime")
+     * @JMS\Type("DateTime<'Y-m-d TH:i:s'>")
      * @Expose
      */
     private $dateOfBirth;
@@ -741,6 +741,10 @@ class DeclareBirth extends DeclareBase
     public function setLitter($litter)
     {
         $this->litter = $litter;
+    }
+
+    public static function getClassName() {
+        return get_called_class();
     }
 
 }
