@@ -281,9 +281,10 @@ class IRSerializer implements IRSerializerInterface
         $isAborted = false;
         $isPseudoPregnancy = false;
         $childrenContent = [];
-        $declareBirthRequest = null;
         $litterSize = 0;
         $stillbornCount = 0;
+        $statusCode = 403;
+        $declareBirthRequests = [];
         
         if(key_exists('date_of_birth', $declareBirthContentArray->toArray())) {
             $dateOfBirth = new \DateTime($declareBirthContentArray["date_of_birth"]);
@@ -309,8 +310,6 @@ class IRSerializer implements IRSerializerInterface
             $father = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
               ->getAnimalByUlnOrPedigree($declareBirthContentArray["father"]);
 
-            $statusCode = 204;
-
             if(!$father) {
                 return new JsonResponse(
                   array(
@@ -325,8 +324,6 @@ class IRSerializer implements IRSerializerInterface
         if(key_exists('mother', $declareBirthContentArray->toArray())) {
             $mother = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
               ->getAnimalByUlnOrPedigree($declareBirthContentArray["mother"]);
-
-            $statusCode = 204;
 
             if(!$mother) {
                 return new JsonResponse(
@@ -363,9 +360,8 @@ class IRSerializer implements IRSerializerInterface
 
         foreach ($childrenContent as $child) {
 
-            $tagToDelete = null;
+            $tagToReserve = null;
             $childAnimalToCreate = null;
-            $tag = null;
             $surrogate = null;
             $gender = null;
             $birthProgress = null;
@@ -373,7 +369,8 @@ class IRSerializer implements IRSerializerInterface
             $tailLengthValue = null;
             $birthWeightValue = null;
             $isAlive = null;
-
+            $declareBirthRequest = null;
+            
             if(key_exists('gender', $child)) {
                 $gender = $child['gender'];
             }
@@ -409,40 +406,36 @@ class IRSerializer implements IRSerializerInterface
 
                 $this->entityManager->persist($stillborn);
             } else if($isAlive) {
-
-                //Create I&R Declare Birth request
+                //Create I&R Declare Birth request per child
                 $declareBirthRequest = new DeclareBirth();
 
                 //Find assigned tag
                 if(key_exists('uln_country_code', $child) && key_exists('uln_number', $child)) {
-                    $tag = $this->entityManager->getRepository(Constant::TAG_REPOSITORY)
+                    $tagToReserve = $this->entityManager->getRepository(Constant::TAG_REPOSITORY)
                       ->findByUlnNumberAndCountryCode($child['uln_country_code'],$child['uln_number']);
 
-                    $statusCode = 204;
-
-                    if(!$tag) {
+                    if(!$tagToReserve) {
                         return new JsonResponse(
                           array(
                             Constant::RESULT_NAMESPACE => array (
                               'code' => $statusCode,
-                              "message" => "Opgegeven vrije oormerk / ULN: " . $child['uln_country_code'] .$child['uln_number'] ." is niet gevonden.",
+                              "message" => "Opgegeven vrije oormerk voor kind: " . $child['uln_country_code'] .$child['uln_number'] ." is niet gevonden.",
                             )
                           ), $statusCode);
                     }
 
-                    //Assign tag details, delete tag
-                    if($tag) {
-                        $declareBirthRequest->setUlnCountryCode($tag->getUlnCountryCode());
-                        $declareBirthRequest->setUlnNumber($tag->getUlnNumber());
-                        $this->entityManager->getRepository(Constant::TAG_REPOSITORY)->remove($tag);
+                    //Assign tag details, reserve tag
+                    if($tagToReserve) {
+                        $declareBirthRequest->setUlnCountryCode($tagToReserve->getUlnCountryCode());
+                        $declareBirthRequest->setUlnNumber($tagToReserve->getUlnNumber());
+                        $tagToReserve->setTagStatus(TagStateType::RESERVED);
+                        $this->entityManager->getRepository(Constant::TAG_REPOSITORY)->persist($tagToReserve);
                     }
                 }
 
                 if(key_exists('surrogate', $declareBirthContentArray->toArray())) {
                     $surrogate = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
                       ->getAnimalByUlnOrPedigree($declareBirthContentArray["surrogate"]);
-
-                    $statusCode = 204;
 
                     if(!$surrogate) {
                         return new JsonResponse(
@@ -471,42 +464,47 @@ class IRSerializer implements IRSerializerInterface
                 //Set child details
                 $child->setLitter($litter);
                 $child->setLocation($location);
-                $child->setParentMother($mother);
-                $child->setParentFather($father);
                 $child->setDateOfBirth($dateOfBirth);
                 $child->setBirthProgress($birthProgress);
                 $child->setIsAlive(true);
-                $child->setUlnCountryCode($tag->getUlnCountryCode());
-                $child->setUlnNumber($tag->getUlnNumber());
-                $child->setAnimalOrderNumber($tag->getAnimalOrderNumber());
+                $child->setUlnCountryCode($tagToReserve->getUlnCountryCode());
+                $child->setUlnNumber($tagToReserve->getUlnNumber());
+                $child->setAnimalOrderNumber($tagToReserve->getAnimalOrderNumber());
                 $child->setLocation($location);
                 $child->setLocationOfBirth($location);
                 $child->setUbnOfBirth($location->getUbn());
                 $child->setLambar($hasLambar);
+                
+                //TODO - set pedigree details based on father / mother / location pedigree membership
 
+                $declareBirthRequest->setDateOfBirth($dateOfBirth);
                 $declareBirthRequest->setAnimal($child);
                 $declareBirthRequest->setGender($gender);
                 $declareBirthRequest->setLocation($location);
                 $declareBirthRequest->setIsAborted($isAborted);
                 $declareBirthRequest->setIsPseudoPregnancy($isPseudoPregnancy);
                 $declareBirthRequest->setHasLambar($hasLambar);
+                $declareBirthRequest->setLitter($litter);
 
                 if($father) {
                     $declareBirthRequest->setUlnFather($father->getUlnNumber());
                     $declareBirthRequest->setUlnCountryCodeFather($father->getUlnCountryCode());
                     $father->setLitter($litter);
+                    $child->setParentFather($father);
                 }
 
                 if($mother) {
                     $declareBirthRequest->setUlnMother($mother->getUlnNumber());
                     $declareBirthRequest->setUlnCountryCodeMother($mother->getUlnCountryCode());
                     $mother->setLitter($litter);
+                    $child->setParentMother($mother);
                 }
 
                 if($surrogate) {
                     $declareBirthRequest->setUlnSurrogate($surrogate->getUlnNumber());
                     $declareBirthRequest->setUlnCountryCodeSurrogate(($surrogate->getUlnCountryCode()));
                     $surrogate->setLitter($litter);
+                    $child->setSurrogate($surrogate);
                 }
 
                 // Weight
@@ -527,6 +525,9 @@ class IRSerializer implements IRSerializerInterface
                 $this->entityManager->persist($child);
                 $this->entityManager->persist($weight);
                 $this->entityManager->persist($tailLength);
+
+                $declareBirthRequests[] = $declareBirthRequest;
+                $litter->addDeclareBirth($declareBirthRequest);
             }
         }
         
@@ -534,7 +535,7 @@ class IRSerializer implements IRSerializerInterface
         $this->entityManager->persist($litter);
         $this->entityManager->flush();
 
-        return $declareBirthRequest;
+        return $declareBirthRequests;
     }
 
     /**
