@@ -559,6 +559,20 @@ abstract class Animal
     protected $nickname;
 
     /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    protected $collarColor;
+
+    /**
+     * @var string
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    protected $collarNumber;
+
+    /**
      * Animal constructor.
      */
     public function __construct() {
@@ -2564,5 +2578,33 @@ abstract class Animal
             }
         }
         return true;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCollarColor() {
+        return $this->collarColor;
+    }
+
+    /**
+     * @param string $collarColor
+     */
+    public function setCollarColor($collarColor) {
+        $this->collarColor = $collarColor;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCollarNumber() {
+        return $this->collarNumber;
+    }
+
+    /**
+     * @param string $collarNumber
+     */
+    public function setCollarNumber($collarNumber) {
+        $this->collarNumber = $collarNumber;
     }
 }
