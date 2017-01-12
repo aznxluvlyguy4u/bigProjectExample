@@ -9,11 +9,11 @@ use JMS\Serializer\Annotation as JMS;
 /**
  * This class is used to store replacementStrings from the dataImports in the database.
  * 
- * Class StringReplacement
+ * Class DataImportStringReplacement
  * @package AppBundle\Entity
- * @ORM\Entity(repositoryClass="AppBundle\Entity\StringReplacementRepository")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\DataImportStringReplacementRepository")
  */
-class StringReplacement
+class DataImportStringReplacement
 {
     /**
      * @var integer
