@@ -3,7 +3,7 @@
 namespace AppBundle\Enumerator;
 
 /**
- * Class AnimalType
+ * Class MeasurementType
  * @package AppBundle\Enumerator
  */
 class MeasurementType

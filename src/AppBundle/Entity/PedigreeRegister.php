@@ -32,6 +32,13 @@ class PedigreeRegister
     private $abbreviation;
 
     /**
+     * @var PedigreeCode
+     * @ORM\ManyToOne(targetEntity="PedigreeCode", cascade={"persist"})
+     * @ORM\JoinColumn(name="pedigree_code_id", referencedColumnName="id")
+     */
+    private $pedigreeCode;
+
+    /**
      * @var string
      *
      * @ORM\Column(type="string")
@@ -100,16 +107,24 @@ class PedigreeRegister
      */
     private $specie;
 
+    /**
+     * @ORM\Column(type="boolean", nullable=false, options={"default":true})
+     * @Assert\NotBlank
+     * @JMS\Type("boolean")
+     */
+    private $isRegisteredWithNsfo;
 
     /**
      * PedigreeRegister constructor.
      * @param string $abbreviation
      * @param string $fullName
+     * @param boolean $isRegisteredWithNsfo
      */
-    public function __construct($abbreviation = null, $fullName = null)
+    public function __construct($abbreviation = null, $fullName = null, $isRegisteredWithNsfo)
     {
         $this->abbreviation = $abbreviation;
         $this->fullName = $fullName;
+        $this->isRegisteredWithNsfo = $isRegisteredWithNsfo;
     }
 
 
@@ -263,6 +278,38 @@ class PedigreeRegister
     public function setSpecie($specie)
     {
         $this->specie = $specie;
+    }
+
+    /**
+     * @return PedigreeCode
+     */
+    public function getPedigreeCode()
+    {
+        return $this->pedigreeCode;
+    }
+
+    /**
+     * @param PedigreeCode $pedigreeCode
+     */
+    public function setPedigreeCode($pedigreeCode)
+    {
+        $this->pedigreeCode = $pedigreeCode;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getIsRegisteredWithNsfo()
+    {
+        return $this->isRegisteredWithNsfo;
+    }
+
+    /**
+     * @param boolean $isRegisteredWithNsfo
+     */
+    public function setIsRegisteredWithNsfo($isRegisteredWithNsfo)
+    {
+        $this->isRegisteredWithNsfo = $isRegisteredWithNsfo;
     }
 
 
