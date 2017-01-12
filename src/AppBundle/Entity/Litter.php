@@ -95,7 +95,7 @@ class Litter extends DeclareNsfoBase
     /**
      * @var ArrayCollection
      * @JMS\Type("AppBundle\Entity\DeclareBirth")
-     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="litter")
+     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="litter", cascade={"persist"})
      */
     private $declareBirths;
 
