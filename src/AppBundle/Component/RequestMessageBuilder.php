@@ -125,12 +125,18 @@ class RequestMessageBuilder
                 if($isEditMessage) { return $declareArrivalRequest; }
                 return $this->arrivalMessageBuilder->buildMessage($declareArrivalRequest, $person, $loggedInUser, $location);
             case RequestType::DECLARE_BIRTH_ENTITY:
-                $declareBirthRequest = $this->irSerializer->parseDeclareBirth($contentArray, $person, $loggedInUser, $location, $isEditMessage);
+                $declareBirthRequests = $this->irSerializer->parseDeclareBirth($contentArray, $person, $loggedInUser, $location, $isEditMessage);
                
-                if($declareBirthRequest instanceof JsonResponse) {
-                    return $declareBirthRequest;
+                if($declareBirthRequests instanceof JsonResponse) {
+                    return $declareBirthRequests;
                 }
-                return $this->birthMessageBuilder->buildMessage($declareBirthRequest, $person, $loggedInUser, $location);
+
+                $result = [];
+
+                foreach ($declareBirthRequests as $declareBirthRequest) {
+                    $result[] = $this->birthMessageBuilder->buildMessage($declareBirthRequest, $person, $loggedInUser, $location);
+                }
+                return $result;
             case RequestType::DECLARE_DEPART_ENTITY:
                 $declareDepartRequest = $this->irSerializer->parseDeclareDepart($contentArray, $person, $isEditMessage);
                 return $this->departMessageBuilder->buildMessage($declareDepartRequest, $person, $loggedInUser, $location);

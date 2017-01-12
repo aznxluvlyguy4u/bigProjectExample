@@ -111,7 +111,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $loggedInUser = $this->getLoggedInUser($request);
         $location = $this->getSelectedLocation($request);
 
-        $requestMessage = $this->getRequestMessageBuilder()
+        $requestMessages = $this->getRequestMessageBuilder()
           ->build(RequestType::DECLARE_BIRTH_ENTITY,
                   $content,
                   $client,
@@ -119,12 +119,23 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                   $location,
                   false);
 
+        $result = [];
+
         //An exception has occured, return response message
-        if($requestMessage instanceof JsonResponse) {
-            return $requestMessage;
+        if($requestMessages instanceof JsonResponse) {
+            return $requestMessages;
+        } 
+
+        //Creating request succeeded, send to Queue
+        foreach ($requestMessages as $requestMessage) {
+            //First persist requestmessage, before sending it to the queue
+            $this->persist($requestMessage);
+
+            //Send it to the queue and persist/update any changed state to the database
+            $result[] = $this->sendMessageObjectToQueue($requestMessage);
         }
-        
-        return new JsonResponse([Constant::RESULT_NAMESPACE => 'ok'], 200);
+
+        return new JsonResponse($result, 200);
     }
 
     /**
