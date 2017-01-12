@@ -101,8 +101,10 @@ class DeclareBirthResponseOutput extends Output
 
 
                 /** @var TailLength $tailLength */
-                $tailLength = $child->getTailLengthMeasurements()->first();
-                $childTemp['tail_length'] = $tailLength->getLength();
+                if($child->getTailLengthMeasurements()->count() > 0) {
+                    $tailLength = $child->getTailLengthMeasurements()->first();
+                    $childTemp['tail_length'] = $tailLength->getLength();
+                }
 
                 $childTemp['is_successful'] = true;
 
