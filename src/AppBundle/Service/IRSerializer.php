@@ -6,6 +6,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -31,6 +32,7 @@ use AppBundle\Entity\RetrieveAnimalDetails;
 use AppBundle\Entity\Stillborn;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
+use AppBundle\Enumerator\ActionType;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Ram;
@@ -409,6 +411,37 @@ class IRSerializer implements IRSerializerInterface
                 //Create I&R Declare Birth request per child
                 $declareBirthRequest = new DeclareBirth();
 
+                //Generate new requestId
+
+                if($declareBirthRequest->getRequestId()== null) {
+                    $requestId = MessageBuilderBase::getNewRequestId();
+                    //Add general data to content
+                    $declareBirthRequest->setRequestId($requestId);
+                }
+
+                if($declareBirthRequest->getAction() == null) {
+                    $declareBirthRequest->setAction(ActionType::V_MUTATE);
+                }
+
+                $declareBirthRequest->setLogDate(new \DateTime());
+                $declareBirthRequest->setRequestState(RequestStateType::OPEN);
+
+                if($declareBirthRequest->getRecoveryIndicator() == null) {
+                    $declareBirthRequest->setRecoveryIndicator(RecoveryIndicatorType::N);
+                }
+
+                $relationNumberKeeper = null;
+
+                if($client instanceof Client) {
+                    $relationNumberKeeper = $loggedInUser->getRelationNumberKeeper();
+                }
+
+                $declareBirthRequest->setRelationNumberKeeper($relationNumberKeeper);
+
+                if($loggedInUser instanceof Person) {
+                    $declareBirthRequest->setActionBy($loggedInUser);
+                }
+
                 //Find assigned tag
                 if(key_exists('uln_country_code', $child) && key_exists('uln_number', $child)) {
                     $tagToReserve = $this->entityManager->getRepository(Constant::TAG_REPOSITORY)
@@ -474,7 +507,17 @@ class IRSerializer implements IRSerializerInterface
                 $child->setLocationOfBirth($location);
                 $child->setUbnOfBirth($location->getUbn());
                 $child->setLambar($hasLambar);
-                
+
+                //Create new residence
+                $animalResidence = new AnimalResidence();
+                $animalResidence->setAnimal($child);
+                $animalResidence->setCountry($tagToReserve->getUlnCountryCode());
+                $animalResidence->setIsPending(false);
+                $animalResidence->setLocation($location);
+                $animalResidence->setStartDate($dateOfBirth);
+
+                $child->addAnimalResidenceHistory($animalResidence);
+
                 //TODO - set pedigree details based on father / mother / location pedigree membership
 
                 $declareBirthRequest->setDateOfBirth($dateOfBirth);
@@ -522,7 +565,10 @@ class IRSerializer implements IRSerializerInterface
                 $tailLength->setLength($tailLengthValue);
                 $child->addTailLengthMeasurement($tailLength);
 
+
                 $this->entityManager->persist($child);
+                $this->entityManager->persist($litter);
+
                 $this->entityManager->persist($weight);
                 $this->entityManager->persist($tailLength);
 
@@ -530,7 +576,7 @@ class IRSerializer implements IRSerializerInterface
                 $litter->addDeclareBirth($declareBirthRequest);
             }
         }
-        
+
         // Persist Litter
         $this->entityManager->persist($litter);
         $this->entityManager->flush();
