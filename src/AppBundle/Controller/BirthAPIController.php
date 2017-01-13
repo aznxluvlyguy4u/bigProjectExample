@@ -168,9 +168,6 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
               ), $statusCode);
         }
 
-        /** Get Litter
-         * @var Litter $litter
-         */
         $litterId = $content['id'];
         $repository = $this->getDoctrine()->getRepository(Litter::class);
         $litter = $repository->findOneBy(array ('id'=> $litterId));
@@ -184,7 +181,6 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                 )
               ), $statusCode);
         }
-
 
         //Create revoke request for every declareBirth request
         if($litter->getDeclareBirths()->count() > 0) {
@@ -206,11 +202,10 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         //Remove still born childs
         foreach ($litter->getStillborns() as $stillborn) {
-            //Remove stillborn animal
             $manager->remove($stillborn);
         }
 
-        //Remove alive animal childs
+        //Remove alive child animal
         foreach ($litter->getChildren() as $child) {
 
             //Remove animal residence
@@ -231,19 +226,27 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                 $manager->remove($tailLength);
             }
 
-            //Restore tag
-            $tagToRestore = new Tag();
-            $tagToRestore->setLocation($location);
-            $tagToRestore->setOrderDate(new \DateTime());
-            $tagToRestore->setOwner($client);
-            $tagToRestore->setTagStatus(TagStateType::UNASSIGNED);
-            $tagToRestore->setUlnCountryCode($child->getUlnCountryCode());
-            $tagToRestore->setUlnNumber($child->getUlnNumber());
-            $tagToRestore->setAnimalOrderNumber($child->getAnimalOrderNumber());
+            //Restore tag if it does not exist
+            $tagToRestore = null;
+            $tagToRestore = $manager->getRepository(Tag::class)
+                    ->findByUlnNumberAndCountryCode($child->getUlnCountryCode,$child->getUllNumber());
+
+            if($tagToRestore){
+                $tagToRestore->setTagStatus(TagStateType::UNASSIGNED);
+            } else  {
+                $tagToRestore = new Tag();
+                $tagToRestore->setLocation($location);
+                $tagToRestore->setOrderDate(new \DateTime());
+                $tagToRestore->setOwner($client);
+                $tagToRestore->setTagStatus(TagStateType::UNASSIGNED);
+                $tagToRestore->setUlnCountryCode($child->getUlnCountryCode());
+                $tagToRestore->setUlnNumber($child->getUlnNumber());
+                $tagToRestore->setAnimalOrderNumber($child->getAnimalOrderNumber());
+            }
+
             $manager->persist($tagToRestore);
-            
+
             //Remove child from parents
-            
             if($child->getParentFather()) {
                 $child->getParentFather()->removeChild($child);
                 $manager->persist($child->getParentFather());
