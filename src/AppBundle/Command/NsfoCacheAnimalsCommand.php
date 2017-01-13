@@ -5,9 +5,11 @@ namespace AppBundle\Command;
 use AppBundle\Cache\AnimalCacher;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -19,9 +21,13 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
     const TITLE = 'Generate cache for animals';
     const DEFAULT_OPTION = 0;
     const DEFAULT_LOCATION_ID = 262;
+    const DEFAULT_UBN = 1674459;
 
     /** @var ObjectManager $em */
     private $em;
+
+    /** @var Connection $conn */
+    private $conn;
 
     /** @var CommandUtil */
     private $cmdUtil;
@@ -42,6 +48,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
         /** @var ObjectManager $em */
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
+        $this->conn = $em->getConnection();
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
         $this->animalRepository = $em->getRepository(Animal::class);
@@ -58,6 +65,8 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '8: Delete duplicate records', "\n",
             '9: Update location_of_birth_id for all animals and locations', "\n",
             '10: Update AnimalCache exterior values for all exteriors >= given logDate', "\n",
+            '--------------------------------------------------------------------------', "\n",
+            '20: Get locationId from UBN', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -118,10 +127,35 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 $output->writeln('DONE!');
                 break;
 
+
+            case 20:
+                $this->printLocationIdFromGivenUbn();
+                $output->writeln('DONE!');
+                break;
+
             default:
                 $output->writeln('ABORTED');
                 break;
         }
+    }
+    
+    
+    private function printLocationIdFromGivenUbn()
+    {
+        do {
+            $ubn = $this->cmdUtil->generateQuestion('Insert UBN (default = '.self::DEFAULT_UBN.')', self::DEFAULT_UBN);
+        } while (!ctype_digit($ubn) && !is_int($ubn));
+
+        $result = $this->conn->query("SELECT id, is_active FROM location WHERE ubn = '".$ubn."' ORDER BY is_active DESC LIMIT 1")->fetch();
+        
+
+        if($result) {
+            $isActiveText = ArrayUtil::get('is_active', $result) ? 'ACTIVE' : 'NOT ACTIVE';
+            $this->cmdUtil->writeln('locationId: ' . ArrayUtil::get('id', $result) .' ('. $isActiveText.')');
+        } else {
+            $this->cmdUtil->writeln('NO LOCATION');
+        }
+
     }
 
 }
