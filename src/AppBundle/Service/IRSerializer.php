@@ -2,10 +2,12 @@
 
 namespace AppBundle\Service;
 
+use AppBundle\Cache\AnimalCacher;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\AnimalCache;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
@@ -360,6 +362,7 @@ class IRSerializer implements IRSerializerInterface
         $litter->setBornAliveCount($litterSize-$stillbornCount);
         $litter->setStillbornCount($stillbornCount);
 
+        $children = [];
         foreach ($childrenContent as $child) {
 
             $tagToReserve = null;
@@ -594,6 +597,7 @@ class IRSerializer implements IRSerializerInterface
                 $litter->addDeclareBirth($declareBirthRequest);
 
                 $this->entityManager->persist($declareBirthRequest);
+                $children[] = $child;
             }
         }
 
@@ -601,6 +605,22 @@ class IRSerializer implements IRSerializerInterface
         $this->entityManager->persist($litter);
         $this->entityManager->flush();
 
+        /** @var Animal $child */
+        foreach ($children as $child) {
+            if($child->getIsAlive()) {
+                AnimalCacher::cacheByAnimal($this->entityManager, $child);
+            }
+        }
+        
+        if($mother) {
+            AnimalCacher::cacheByAnimal($this->entityManager, $mother);
+        }
+
+        if($father) {
+            AnimalCacher::cacheByAnimal($this->entityManager, $father);
+        }
+        
+        
         return $declareBirthRequests;
     }
 

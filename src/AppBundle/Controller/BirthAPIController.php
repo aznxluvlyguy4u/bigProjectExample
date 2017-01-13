@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalCache;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareBirthResponse;
 use AppBundle\Entity\DeclareNsfoBase;
@@ -204,6 +205,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         }
 
         //Remove alive child animal
+        /** @var Animal $child */
         foreach ($litter->getChildren() as $child) {
 
             //Remove animal residence
@@ -258,6 +260,10 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             foreach ($breedValues as $breedValue) {
                 $manager->remove($breedValue);
             }
+
+            //Remove animalCache
+            $animalCache = $manager->getRepository(AnimalCache::class)->findOneBy(['animalId' => $child->getId()]);
+            $manager->remove($animalCache);
 
             $manager->flush();
 
