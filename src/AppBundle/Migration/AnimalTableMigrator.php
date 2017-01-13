@@ -3696,18 +3696,17 @@ class AnimalTableMigrator extends MigratorBase
 			"NH" => "NH",
 			"Noord Hollander" => "NH",
 			"NTS" => "NTS",
+			"NTS?" => "NTS", //These three animals are NTS
 			"Ruischaap" => "RUI",
 			"Soay" => "Soay",
 			"TSNH" => "TSNH",
-
-			//TODO pedigreeRegisters below still have to be included into the database
-			"Blauwe Texelaar" => "Blauwe Texelaar",
-			"Blessum" => "Blessum", //TODO "Stamboek is geen lid van NSFO", moet dit ook worden geregistreerd?
-			"Dassenkop" => "Dassenkop",
-			"Hampshire Down" => "Hampshire Down",
-			"Kerry Hill" => "Kerry Hill",
-			"NTS?" => "NTS?", //TODO How to process this?
-			"Reyland" => "Reyland",
+			//The following pedigreeRegisters are not registered with NSFO and should not be displayed on the pedigreeCertificates
+			"Blauwe Texelaar" => "BT",
+			"Blessum" => "BL",
+			"Dassenkop" => "DK",
+			"Hampshire Down" => "HD",
+			"Kerry Hill" => "KE",
+			"Reyland" => "RY",
 			"TES" => "TES",
 		];
 
