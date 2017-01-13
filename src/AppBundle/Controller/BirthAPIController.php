@@ -155,9 +155,9 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $statusCode = 428;
         $litterId = null;
 
-        if(!key_exists('litter_id', $content->toArray())) {
+        if (!key_exists('litter_id', $content->toArray())) {
             return new JsonResponse(
-              array(
+              array (
                 Constant::RESULT_NAMESPACE => array (
                   'code' => $statusCode,
                   "message" => "Mandatory Litter Id not given.",
@@ -167,11 +167,11 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         $litterId = $content['litter_id'];
         $repository = $this->getDoctrine()->getRepository(Litter::class);
-        $litter = $repository->findOneBy(array ('id'=> $litterId));
+        $litter = $repository->findOneBy(array ('id' => $litterId));
 
-        if(!$litter) {
+        if (!$litter) {
             return new JsonResponse(
-              array(
+              array (
                 Constant::RESULT_NAMESPACE => array (
                   'code' => $statusCode,
                   "message" => "No litter was not found.",
@@ -180,11 +180,12 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         }
 
         //Create revoke request for every declareBirth request
-        if($litter->getDeclareBirths()->count() > 0) {
+        if ($litter->getDeclareBirths()->count() > 0) {
             foreach ($litter->getDeclareBirths() as $declareBirth) {
-                $declareBirthResponse = $this->getEntityGetter()->getResponseDeclarationByMessageId($declareBirth->getMessageId());
+                $declareBirthResponse = $this->getEntityGetter()
+                  ->getResponseDeclarationByMessageId($declareBirth->getMessageId());
 
-                if($declareBirthResponse) {
+                if ($declareBirthResponse) {
                     $message = new ArrayCollection();
                     $message->set(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE, $declareBirthResponse->getMessageNumber());
 
@@ -210,7 +211,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             foreach ($residenceHistory as $residence) {
                 $manager->remove($residence);
             }
-            
+
             //Remove weights
             $weights = $child->getWeightMeasurements();
             foreach ($weights as $weight) {
@@ -223,14 +224,52 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                 $manager->remove($tailLength);
             }
 
+            //Remove bodyfats
+            $bodyFats = $child->getBodyFatMeasurements();
+            foreach ($bodyFats as $bodyFat) {
+                $manager->remove($bodyFat);
+            }
+
+            //Remove exteriors
+            $exteriors = $child->getExteriorMeasurements();
+            foreach ($exteriors as $exterior) {
+                $manager->remove($exterior);
+            }
+
+            //Remove muscleThickness
+            $muscleThicknesses = $child->getMuscleThicknessMeasurements();
+            foreach ($muscleThicknesses as $muscleThickness) {
+                $manager->remove($muscleThickness);
+            }
+
+            //Remove breedCodes
+            if ($child->getBreedCodes()) {
+                $breedCodes = $child->getBreedCodes();
+
+                foreach ($breedCodes->getCodes() as $codes) {
+                    $manager->remove($codes);
+                }
+                $child->setBreedCodes(null);
+                $manager->remove($breedCodes);
+            }
+
+            //Remove breedset values
+            $breedValues = $child->getBreedValuesSets();
+            foreach ($breedValues as $breedValue) {
+                $manager->remove($breedValue);
+            }
+
+            $manager->flush();
+
             //Restore tag if it does not exist
             $tagToRestore = null;
-            $tagToRestore = $manager->getRepository(Tag::getClassName())->findByUlnNumberAndCountryCode($child->getUlnCountryCode(), $child->getUlnNumber());
+            $tagToRestore = $manager->getRepository(Tag::getClassName())
+              ->findByUlnNumberAndCountryCode($child->getUlnCountryCode(), $child->getUlnNumber());
 
-
-            if($tagToRestore){
+            if ($tagToRestore) {
                 $tagToRestore->setTagStatus(TagStateType::UNASSIGNED);
-            } else  {
+            }
+            else {
                 $tagToRestore = new Tag();
                 $tagToRestore->setLocation($location);
                 $tagToRestore->setOrderDate(new \DateTime());
@@ -244,22 +283,52 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             $manager->persist($tagToRestore);
 
             //Remove child from location
-            if($location->getAnimals()->contains($child)) {
+            if ($location->getAnimals()->contains($child)) {
                 $location->getAnimals()->removeElement($child);
                 $manager->persist($location);
+            }
+
+            $child->setLitter(null);
+            $manager->persist($child);
+            $manager->flush();
+
+            $litter->removeChild($child);
+            $litter->getChildren()->removeElement($child);
+            $declareBirths = $litter->getDeclareBirths();
+
+            foreach ($declareBirths as $declareBirth) {
+
+                if ($declareBirth->getAnimal() != null) {
+                    if ($declareBirth->getAnimal()->getUlnNumber() == $child->getUlnNumber()) {
+                        $declareBirthResponses = $declareBirth->getResponses();
+                        foreach ($declareBirthResponses as $declareBirthResponse) {
+                            if($declareBirthResponse->getAnimal() != null) {
+                                if ($declareBirthResponse->getAnimal()->getUlnNumber() == $child->getUlnNumber()) {
+                                    $declareBirthResponse->setAnimal(null);
+                                    $manager->persist($declareBirthResponse);
+
+                                }
+                            }
+                        }
+                        //Remove child animal
+                        $declareBirth->setAnimal(null);
+                        $manager->persist($declareBirth);
+                    }
+                }
             }
 
             //Remove child animal
             $manager->remove($child);
         }
-        
+
+
         $manager->flush();
 
 
         //Re-retrieve litter, check count
         $litter = $repository->findOneBy(array ('id'=> $litterId));
 
-        if($litter->getChildren()->count() == 0 && $litter->getStillborns()->count() == 0) {
+        if($litter->getChildren()->count() ) {
             $litter->setStatus('REVOKED');
             $litter->setRequestState(RequestStateType::REVOKED);
             $litter->setRevokeDate(new \DateTime());
