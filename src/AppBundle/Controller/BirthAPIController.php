@@ -301,6 +301,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                 if ($declareBirth->getAnimal() != null) {
                     if ($declareBirth->getAnimal()->getUlnNumber() == $child->getUlnNumber()) {
                         $declareBirthResponses = $declareBirth->getResponses();
+                        $declareBirth->setRequestState(RequestStateType::REVOKED);
+
                         foreach ($declareBirthResponses as $declareBirthResponse) {
                             if($declareBirthResponse->getAnimal() != null) {
                                 if ($declareBirthResponse->getAnimal()->getUlnNumber() == $child->getUlnNumber()) {
@@ -321,14 +323,12 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             $manager->remove($child);
         }
 
-
         $manager->flush();
-
 
         //Re-retrieve litter, check count
         $litter = $repository->findOneBy(array ('id'=> $litterId));
 
-        if($litter->getChildren()->count() ) {
+        if($litter->getChildren()->count() == 0) {
             $litter->setStatus('REVOKED');
             $litter->setRequestState(RequestStateType::REVOKED);
             $litter->setRevokeDate(new \DateTime());
