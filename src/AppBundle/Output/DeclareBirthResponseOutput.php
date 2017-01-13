@@ -153,10 +153,9 @@ class DeclareBirthResponseOutput extends Output
     {
         $res = array();
 
-        dump($declarations); die();
         foreach ($declarations as $declaration) {
             $res[] = array(
-                "id" => $declaration['id'],
+                "litter_id" => $declaration['id'],
                 "log_date" => Utils::fillNull($declaration['log_date']),
                 "date_of_birth" => Utils::fillNull($declaration['date_of_birth']),
                 "mother_uln_country_code" => Utils::fillNull($declaration['mother_uln_country_code']),
