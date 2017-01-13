@@ -206,19 +206,6 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         //Remove still born childs
         foreach ($litter->getStillborns() as $stillborn) {
-
-            //Remove weights
-            $weights = $stillborn->getWeightMeasurements();
-            foreach ($weights as $weight) {
-                $manager->remove($weight);
-            }
-
-            //Remove tail lengths
-            $tailLengths = $stillborn->getTailLengthMeasurements();
-            foreach ($tailLengths as $tailLength) {
-                $manager->remove($tailLength);
-            }
-
             //Remove stillborn animal
             $manager->remove($stillborn);
         }
@@ -254,10 +241,37 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             $tagToRestore->setUlnNumber($child->getUlnNumber());
             $tagToRestore->setAnimalOrderNumber($child->getAnimalOrderNumber());
             $manager->persist($tagToRestore);
+            
+            //Remove child from parents
+            
+            if($child->getParentFather()) {
+                $child->getParentFather()->removeChild($child);
+                $manager->persist($child->getParentFather());
+            }
 
+            if($child->getParentMother()) {
+                $child->getParentMother()->removeChild($child);
+                $manager->persist($child->getParentMother());
+            }
+
+            if($child->getParentNeuter()) {
+                $child->getParentNeuter()->removeChild($child);
+                $manager->persist($child->getParentNeuter());
+            }
+            
+            if($child->getSurrogate()) {
+                $child->getSurrogate()->removeSurrogateChild($child);
+                $manager->persist($child->getSurrogate());
+            }
+            
+            //Remove child from location
+            $location->getAnimals()->remove($child);
+            $manager->persist($location);
+            
             //Remove child animal
             $manager->remove($child);
         }
+        
         $manager->flush();
 
         //Re-retrieve litter, check count

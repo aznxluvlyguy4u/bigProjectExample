@@ -515,7 +515,6 @@ class IRSerializer implements IRSerializerInterface
                 $animalResidence->setIsPending(false);
                 $animalResidence->setLocation($location);
                 $animalResidence->setStartDate($dateOfBirth);
-
                 $child->addAnimalResidenceHistory($animalResidence);
 
                 //TODO - set pedigree details based on father / mother / location pedigree membership
@@ -536,6 +535,7 @@ class IRSerializer implements IRSerializerInterface
                     $declareBirthRequest->setUlnFather($father->getUlnNumber());
                     $declareBirthRequest->setUlnCountryCodeFather($father->getUlnCountryCode());
                     $father->setLitter($litter);
+                    $father->addChild($child);
                     $child->setParentFather($father);
                 }
 
@@ -543,6 +543,7 @@ class IRSerializer implements IRSerializerInterface
                     $declareBirthRequest->setUlnMother($mother->getUlnNumber());
                     $declareBirthRequest->setUlnCountryCodeMother($mother->getUlnCountryCode());
                     $mother->setLitter($litter);
+                    $mother->addChild($child);
                     $child->setParentMother($mother);
                 }
 
@@ -550,6 +551,7 @@ class IRSerializer implements IRSerializerInterface
                     $declareBirthRequest->setUlnSurrogate($surrogate->getUlnNumber());
                     $declareBirthRequest->setUlnCountryCodeSurrogate(($surrogate->getUlnCountryCode()));
                     $surrogate->setLitter($litter);
+                    $surrogate->addChild($child);
                     $child->setSurrogate($surrogate);
                 }
 
@@ -568,12 +570,25 @@ class IRSerializer implements IRSerializerInterface
                 $tailLength->setLength($tailLengthValue);
                 $child->addTailLengthMeasurement($tailLength);
 
+                $location->getAnimals()->add($child);
 
                 $this->entityManager->persist($child);
+                $this->entityManager->persist($location);
                 $this->entityManager->persist($litter);
-
                 $this->entityManager->persist($weight);
                 $this->entityManager->persist($tailLength);
+                
+                if($father){
+                    $this->entityManager->persist($father);
+                }
+                
+                if($mother) {
+                    $this->entityManager->persist($mother);
+                }
+                
+                if($surrogate) {
+                    $this->entityManager->persist($surrogate);
+                }
 
                 $declareBirthRequests[] = $declareBirthRequest;
                 $litter->addDeclareBirth($declareBirthRequest);
