@@ -38,23 +38,20 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 {
     /**
      * @param Request $request the request object
-     * @param String $messageNumber
+     * @param String $litterId
      * @return JsonResponse
-     * @Route("/{messageNumber}")
+     * @Route("/{litterId}")
      * @Method("GET")
      */
-    public function getBirth(Request $request, $messageNumber)
+    public function getBirth(Request $request, $litterId)
     {
         $this->getAuthenticatedUser($request);
         $location = $this->getSelectedLocation($request);
 
         $repository = $this->getDoctrine()->getRepository(Litter::class);
-        $litter = $repository->findOneBy(['messageId' => $messageNumber, 'ubn' => $location->getUbn()]);
+        $litter = $repository->findOneBy(['id' => $litterId, 'ubn' => $location->getUbn()]);
 
-        $repository = $this->getDoctrine()->getRepository(DeclareBirth::class);
-        $declarations = $repository->findOneBy(['litter' => $litter]);
-
-        $result = DeclareBirthResponseOutput::createBirth($litter, $declarations);
+        $result = DeclareBirthResponseOutput::createBirth($litter, $litter->getDeclareBirths());
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
@@ -158,17 +155,17 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $statusCode = 428;
         $litterId = null;
 
-        if(!key_exists('id', $content->toArray())) {
+        if(!key_exists('litter_id', $content->toArray())) {
             return new JsonResponse(
               array(
                 Constant::RESULT_NAMESPACE => array (
                   'code' => $statusCode,
-                  "message" => "Mandatory DeclareBirth Id not given.",
+                  "message" => "Mandatory Litter Id not given.",
                 )
               ), $statusCode);
         }
 
-        $litterId = $content['id'];
+        $litterId = $content['litter_id'];
         $repository = $this->getDoctrine()->getRepository(Litter::class);
         $litter = $repository->findOneBy(array ('id'=> $litterId));
 
@@ -228,8 +225,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
             //Restore tag if it does not exist
             $tagToRestore = null;
-            $tagToRestore = $manager->getRepository(Tag::class)
-                    ->findByUlnNumberAndCountryCode($child->getUlnCountryCode,$child->getUllNumber());
+            $tagToRestore = $manager->getRepository(Tag::getClassName())->findByUlnNumberAndCountryCode($child->getUlnCountryCode(), $child->getUlnNumber());
+
 
             if($tagToRestore){
                 $tagToRestore->setTagStatus(TagStateType::UNASSIGNED);
@@ -246,36 +243,18 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
             $manager->persist($tagToRestore);
 
-            //Remove child from parents
-            if($child->getParentFather()) {
-                $child->getParentFather()->removeChild($child);
-                $manager->persist($child->getParentFather());
-            }
-
-            if($child->getParentMother()) {
-                $child->getParentMother()->removeChild($child);
-                $manager->persist($child->getParentMother());
-            }
-
-            if($child->getParentNeuter()) {
-                $child->getParentNeuter()->removeChild($child);
-                $manager->persist($child->getParentNeuter());
-            }
-            
-            if($child->getSurrogate()) {
-                $child->getSurrogate()->removeSurrogateChild($child);
-                $manager->persist($child->getSurrogate());
-            }
-            
             //Remove child from location
-            $location->getAnimals()->remove($child);
-            $manager->persist($location);
-            
+            if($location->getAnimals()->contains($child)) {
+                $location->getAnimals()->removeElement($child);
+                $manager->persist($location);
+            }
+
             //Remove child animal
             $manager->remove($child);
         }
         
         $manager->flush();
+
 
         //Re-retrieve litter, check count
         $litter = $repository->findOneBy(array ('id'=> $litterId));
@@ -289,7 +268,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             $manager->persist($litter);
             $manager->flush();
 
-            return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
+            return new JsonResponse(array(Constant::RESULT_NAMESPACE => $litter), 200);
         }
 
         return new JsonResponse(
