@@ -312,4 +312,27 @@ class SqlUtil
         }
         return $groupedResults;
     }
+
+
+    /**
+     * @param string|int $key1
+     * @param string|int $key2
+     * @param array $results
+     * @return array
+     */
+    public static function groupSqlResultsOfKey1ByKey2($key1, $key2, $results)
+    {
+        $groupedResults = [];
+        if(!is_array($results)) { return $groupedResults; }
+        if(count($results) == 0) { return $groupedResults; }
+        if(!array_key_exists($key1, $results[0]) || !array_key_exists($key2, $results[0])) { return $groupedResults; }
+
+        foreach ($results as $result) {
+            $value1 = $result[$key1];
+            $value2 = $result[$key2];
+
+            $groupedResults[$value2] = $value1;
+        }
+        return $groupedResults;
+    }
 }
