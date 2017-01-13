@@ -3638,6 +3638,12 @@ class AnimalTableMigrator extends MigratorBase
 		$results = $this->conn->query($sql)->fetchAll();
 		$pedigreeRegisterIdByAbbreviation = SqlUtil::groupSqlResultsOfKey1ByKey2('id', 'abbreviation', $results);
 
+        $animalPrimaryKeysByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
+
+        $sql = "SELECT id, gender FROM animal";
+        $results = $this->conn->query($sql)->fetchAll();
+        $genderInDbByAnimalId = SqlUtil::groupSqlResultsOfKey1ByKey2('gender', 'id', $results);
+
 		$loopCount = 0;
 		foreach ($this->data as $record) {
 			$loopCount++;
@@ -3672,10 +3678,23 @@ class AnimalTableMigrator extends MigratorBase
 			$breedType = SqlUtil::getNullCheckedValueForSqlQuery(Translation::getEnglish(strtoupper($record[11])), true);
 			$scrapieGenotype = SqlUtil::getNullCheckedValueForSqlQuery($record[12], true);
 			$pedigreeRegisterAbbreviation = $this->getPedigreeRegisterAbbreviation($record[13], false);
+            $pedigreeRegisterId = SqlUtil::getNullCheckedValueForSqlQuery(ArrayUtil::get($pedigreeRegisterAbbreviation,$pedigreeRegisterIdByAbbreviation), false);
 			$note = $record[14];
 
 			$searchKey = $ulnCountryCode.$ulnNumber.$dateOfBirthString;
 
+            $animalId = ArrayUtil::get($vsmId, $animalPrimaryKeysByVsmId);
+            $genderInDb = ArrayUtil::get($animalId, $genderInDbByAnimalId);
+
+            /*  Note!
+                There are some genders in the the import file that are NEUTER but are FEMALE or MALE in the Database.
+                Those are the only mismatched genders. So take the gender in the database as leading.
+
+                In the csv there are some animals which have a stn and are missing a pedigreeRegister.
+                And some animals without a valid pedigreeNumber but with a pedigreeRegister.
+            */
+
+            
 		}
 	}
 
