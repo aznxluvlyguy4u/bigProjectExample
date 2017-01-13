@@ -3632,8 +3632,11 @@ class AnimalTableMigrator extends MigratorBase
 	public function importExtraAnimalTableIntoDatabase()
 	{
 		$locationIdByUbnSearchArray = $this->generateLatestLocationSearchArray();
+		
 
-		//TODO include searchArrays
+		$sql = "SELECT abbreviation, id FROM pedigree_register";
+		$results = $this->conn->query($sql)->fetchAll();
+		$pedigreeRegisterIdByAbbreviation = SqlUtil::groupSqlResultsOfKey1ByKey2('id', 'abbreviation', $results);
 
 		$loopCount = 0;
 		foreach ($this->data as $record) {
