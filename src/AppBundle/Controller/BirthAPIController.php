@@ -51,6 +51,18 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $repository = $this->getDoctrine()->getRepository(Litter::class);
         $litter = $repository->findOneBy(['id' => $litterId, 'ubn' => $location->getUbn()]);
 
+        $ulnFather = $litter->getAnimalFather()->getUlnNumber();
+        $ulnMother = $litter->getAnimalMother()->getUlnNumber();
+
+        //FIXME Temporarily hack, remove parents from children collection
+        foreach ($litter->getChildren() as $child) {
+            $ulnChild = $child->getUlnNumber();
+
+            if(strcmp($ulnChild,$ulnFather) == 0 || strcmp($ulnChild,$ulnMother) == 0 ){
+                $litter->getChildren()->removeElement($child);
+            }
+        }
+
         $result = DeclareBirthResponseOutput::createBirth($litter, $litter->getDeclareBirths());
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
