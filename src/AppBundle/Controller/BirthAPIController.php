@@ -51,15 +51,23 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $repository = $this->getDoctrine()->getRepository(Litter::class);
         $litter = $repository->findOneBy(['id' => $litterId, 'ubn' => $location->getUbn()]);
 
-        $ulnFather = $litter->getAnimalFather()->getUlnNumber();
-        $ulnMother = $litter->getAnimalMother()->getUlnNumber();
+        $father = $litter->getAnimalFather();
+        $mother = $litter->getAnimalMother();
 
         //FIXME Temporarily hack, remove parents from children collection
         foreach ($litter->getChildren() as $child) {
             $ulnChild = $child->getUlnNumber();
 
-            if(strcmp($ulnChild,$ulnFather) == 0 || strcmp($ulnChild,$ulnMother) == 0 ){
-                $litter->getChildren()->removeElement($child);
+            if($father && $mother) {
+                if(strcmp($ulnChild,$father->getUlnNumber()) == 0 || strcmp($ulnChild,$mother->getUlnNumber()) == 0 ){
+                    $litter->getChildren()->removeElement($child);
+                }
+            } else if($mother) {
+                if(strcmp($ulnChild,$mother->getUlnNumber()) == 0 ){
+                    $litter->getChildren()->removeElement($child);
+                }
+            } else {
+                return new JsonResponse(array (Constant::RESULT_NAMESPACE => 'ULN of father or mother is not found'), 428);
             }
         }
 
@@ -280,8 +288,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
             if ($tagToRestore) {
                 $tagToRestore->setTagStatus(TagStateType::UNASSIGNED);
-            }
-            else {
+            } else {
                 $tagToRestore = new Tag();
                 $tagToRestore->setLocation($location);
                 $tagToRestore->setOrderDate(new \DateTime());
@@ -300,12 +307,17 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                 $manager->persist($location);
             }
 
-            $child->setLitter(null);
-            $manager->persist($child);
-            $manager->flush();
 
+            $child->getChildren()->removeElement($child);
+
+            $child->getLitter()->removeChild($child);
+            $child->setLitter(null);
             $litter->removeChild($child);
-            $litter->getChildren()->removeElement($child);
+
+            $manager->persist($child);
+            $manager->persist($litter);
+            $manager->flush();
+            
             $declareBirths = $litter->getDeclareBirths();
 
             foreach ($declareBirths as $declareBirth) {
