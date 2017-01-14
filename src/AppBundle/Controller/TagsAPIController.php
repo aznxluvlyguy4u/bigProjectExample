@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Entity\Tag;
 use AppBundle\Entity\TagRepository;
 use AppBundle\Enumerator\TagStateType;
+use AppBundle\Util\Validator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -49,7 +50,8 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
     $tagRepository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY);
 
     //validate if Id is of format: AZ123456789
-    $isValidUlnFormat = $tagRepository->verifyUlnFormat($Id);
+    $isValidUlnFormat = Validator::verifyUlnFormat($Id);
+    
     if(!$isValidUlnFormat){
       return new JsonResponse(
           array("errorCode" => 428,
