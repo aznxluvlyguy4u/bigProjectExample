@@ -51,8 +51,11 @@ class DoctrineUtil
         $connection = $em->getConnection();
         $databaseName = $connection->getDatabase();
         $host = $connection->getHost();
+        $driverName = $connection->getDriver()->getName();
+        $port = $connection->getPort();
+        $username = $connection->getUsername();
 
-        return 'Database: '.$databaseName.' on host '.$host;
+        return 'Database: '.$databaseName.' on host:port '.$host.':'.$port.' | username: '.$username.' | driverName: '.$driverName;
     }
 
 
