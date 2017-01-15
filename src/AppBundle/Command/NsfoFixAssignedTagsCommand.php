@@ -101,47 +101,4 @@ class NsfoFixAssignedTagsCommand extends ContainerAwareCommand {
     $this->output->writeln('Update done for '.$totalTagsToUpdateCount.' tags.');
   }
 
-
-
-  protected function fixAlreadyAssignedTags(OutputInterface $output) {
-
-    $tagStatus = TagStateType::UNASSIGNED;
-
-    $sql = "SELECT tag_status, animal_order_number, order_date, uln_country_code, uln_number 
-            FROM tag WHERE tag_status = '".$tagStatus."'";
-    $tags = $this->conn->query($sql)->fetchAll();
-
-    $counter = 0;
-    foreach ($tags as $tag) {
-      $counter++;
-      $uln = $tag['uln_number'];
-      $sql = "SELECT id FROM animal WHERE uln_number = " ."'$uln'";
-
-      $animal = $this->conn->query($sql)->fetchAll();
-
-      if(!$animal) {
-        $output->writeln($counter .' Free Tag: ' .$uln);
-      } else if($animal){
-
-        $output->writeln($counter .'ULN already exists: ' .$uln);
-
-        $tagRepo = $this->em->getRepository(Tag::class);
-        $tagObj = $tagRepo->findOneBy(['ulnNumber' => $uln]);
-
-        if($tagObj) {
-          $tagObj->setTagStatus(TagStateType::ASSIGNED);
-          $this->em->persist($tagObj);
-        }
-
-        if($counter % 1000 == 0) {
-          $output->writeln('flush');
-          $this->em->flush();
-        }
-      }
-    }
-
-    $this->em->flush();
-    $output->writeln('done');
-  }
-
 }
