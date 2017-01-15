@@ -498,7 +498,6 @@ class IRSerializer implements IRSerializerInterface
                 }
 
                 //Set child details
-                $child->setLitter($litter);
                 $child->setLocation($location);
                 $child->setDateOfBirth($dateOfBirth);
                 $child->setBirthProgress($birthProgress);
@@ -510,6 +509,7 @@ class IRSerializer implements IRSerializerInterface
                 $child->setLocationOfBirth($location);
                 $child->setUbnOfBirth($location->getUbn());
                 $child->setLambar($hasLambar);
+                $child->setLitter($litter);
 
                 //Create new residence
                 $animalResidence = new AnimalResidence();
@@ -521,6 +521,8 @@ class IRSerializer implements IRSerializerInterface
                 $child->addAnimalResidenceHistory($animalResidence);
 
                 //TODO - set pedigree details based on father / mother / location pedigree membership
+
+                $litter->addChild($child);
 
                 $declareBirthRequest->setDateOfBirth($dateOfBirth);
                 $declareBirthRequest->setAnimal($child);
@@ -537,24 +539,21 @@ class IRSerializer implements IRSerializerInterface
                 if($father) {
                     $declareBirthRequest->setUlnFather($father->getUlnNumber());
                     $declareBirthRequest->setUlnCountryCodeFather($father->getUlnCountryCode());
-                    $father->setLitter($litter);
-                    $father->addChild($child);
+                    //$father->setLitter($litter);
                     $child->setParentFather($father);
                 }
 
                 if($mother) {
                     $declareBirthRequest->setUlnMother($mother->getUlnNumber());
                     $declareBirthRequest->setUlnCountryCodeMother($mother->getUlnCountryCode());
-                    $mother->setLitter($litter);
-                    $mother->addChild($child);
+                    //$mother->setLitter($litter);
                     $child->setParentMother($mother);
                 }
 
                 if($surrogate) {
                     $declareBirthRequest->setUlnSurrogate($surrogate->getUlnNumber());
                     $declareBirthRequest->setUlnCountryCodeSurrogate(($surrogate->getUlnCountryCode()));
-                    $surrogate->setLitter($litter);
-                    $surrogate->addChild($child);
+                    //$surrogate->setLitter($litter);
                     $child->setSurrogate($surrogate);
                 }
 
@@ -611,7 +610,7 @@ class IRSerializer implements IRSerializerInterface
                 AnimalCacher::cacheByAnimal($this->entityManager, $child);
             }
         }
-        
+
         if($mother) {
             AnimalCacher::cacheByAnimal($this->entityManager, $mother);
         }

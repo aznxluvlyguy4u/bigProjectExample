@@ -51,28 +51,11 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         $repository = $this->getDoctrine()->getRepository(Litter::class);
         $litter = $repository->findOneBy(['id' => $litterId, 'ubn' => $location->getUbn()]);
-
-        $father = $litter->getAnimalFather();
-        $mother = $litter->getAnimalMother();
-
-        //FIXME Temporarily hack, remove parents from children collection
-        foreach ($litter->getChildren() as $child) {
-            $ulnChild = $child->getUlnNumber();
-
-            if($father && $mother) {
-                if(strcmp($ulnChild,$father->getUlnNumber()) == 0 || strcmp($ulnChild,$mother->getUlnNumber()) == 0 ){
-                    $litter->getChildren()->removeElement($child);
-                }
-            } else if($mother) {
-                if(strcmp($ulnChild,$mother->getUlnNumber()) == 0 ){
-                    $litter->getChildren()->removeElement($child);
-                }
-            } else {
-                return new JsonResponse(array (Constant::RESULT_NAMESPACE => 'ULN of father or mother is not found'), 428);
-            }
-        }
-
         $result = DeclareBirthResponseOutput::createBirth($litter, $litter->getDeclareBirths());
+        
+        if($result instanceof JsonResponse) {
+            return $result;
+        }
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
@@ -207,14 +190,16 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                   ->getResponseDeclarationByMessageId($declareBirth->getMessageId());
 
                 if ($declareBirthResponse) {
-                    $message = new ArrayCollection();
-                    $message->set(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE, $declareBirthResponse->getMessageNumber());
+                    if($declareBirthResponse->getMessageNumber() != null) {
+                        $message = new ArrayCollection();
+                        $message->set(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE, $declareBirthResponse->getMessageNumber());
 
-                    $revokeDeclarationObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $message, $client, $loggedInUser, $location);
-                    $this->persist($revokeDeclarationObject);
-                    $this->persistRevokingRequestState($revokeDeclarationObject->getMessageNumber());
+                        $revokeDeclarationObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $message, $client, $loggedInUser, $location);
+                        $this->persist($revokeDeclarationObject);
+                        $this->persistRevokingRequestState($revokeDeclarationObject->getMessageNumber());
 
-                    $this->sendMessageObjectToQueue($revokeDeclarationObject);
+                        $this->sendMessageObjectToQueue($revokeDeclarationObject);
+                    }
                 }
             }
         }
@@ -312,20 +297,17 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                 $location->getAnimals()->removeElement($child);
                 $manager->persist($location);
             }
-
-
-            $child->getChildren()->removeElement($child);
-
-            $child->getLitter()->removeChild($child);
-            $child->setLitter(null);
+            
             $litter->removeChild($child);
+            $manager->persist($litter);
+            $manager->flush();
+            
             $child->setParentFather(null);
             $child->setParentMother(null);
             $child->setParentNeuter(null);
             $child->setSurrogate(null);
 
             $manager->persist($child);
-            $manager->persist($litter);
             $manager->flush();
             
             $declareBirths = $litter->getDeclareBirths();
