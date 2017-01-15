@@ -287,7 +287,7 @@ class IRSerializer implements IRSerializerInterface
         $childrenContent = [];
         $litterSize = 0;
         $stillbornCount = 0;
-        $statusCode = 403;
+        $statusCode = 428;
         $declareBirthRequests = [];
         
         if(key_exists('date_of_birth', $declareBirthContentArray->toArray())) {
@@ -462,6 +462,18 @@ class IRSerializer implements IRSerializerInterface
 
                     //Assign tag details, reserve tag
                     if($tagToReserve) {
+                        $animal = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
+                          ->getAnimalByUlnOrPedigree(array ('uln_country_code' => $tagToReserve->getUlnCountryCode(), 
+                                                            'uln_number'=>$tagToReserve->getUlnNumber()));
+                        if($animal) {
+                            return new JsonResponse(
+                              array(
+                                Constant::RESULT_NAMESPACE => array (
+                                  'code' => $statusCode,
+                                  "message" => "Opgegeven vrije oormerk voor kind is reeds toegewezen aan een bestaande dier met ULN" . $child['uln_country_code'] .$child['uln_number'],
+                                )
+                              ), $statusCode);
+                        }
                         $declareBirthRequest->setUlnCountryCode($tagToReserve->getUlnCountryCode());
                         $declareBirthRequest->setUlnNumber($tagToReserve->getUlnNumber());
                         $tagToReserve->setTagStatus(TagStateType::RESERVED);
