@@ -89,7 +89,7 @@ class NsfoFixAssignedTagsCommand extends ContainerAwareCommand {
           $this->em->persist($tagObj);
         }
 
-        if($counter % 1000) {
+        if($counter % 1000 == 0) {
           $output->writeln('flush');
           $this->em->flush();
         }
