@@ -183,35 +183,20 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
               ), $statusCode);
         }
 
-        //Create revoke request for every declareBirth request
-        if ($litter->getDeclareBirths()->count() > 0) {
-            foreach ($litter->getDeclareBirths() as $declareBirth) {
-                $declareBirthResponse = $this->getEntityGetter()
-                  ->getResponseDeclarationByMessageId($declareBirth->getMessageId());
-
-                if ($declareBirthResponse) {
-                    if($declareBirthResponse->getMessageNumber() != null) {
-                        $message = new ArrayCollection();
-                        $message->set(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE, $declareBirthResponse->getMessageNumber());
-
-                        $revokeDeclarationObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $message, $client, $loggedInUser, $location);
-                        $this->persist($revokeDeclarationObject);
-                        $this->persistRevokingRequestState($revokeDeclarationObject->getMessageNumber());
-
-                        $this->sendMessageObjectToQueue($revokeDeclarationObject);
-                    }
-                }
-            }
-        }
+        $childrenToRemove = [];
+        $stillbornsToRemove = [];
 
         //Remove still born childs
         foreach ($litter->getStillborns() as $stillborn) {
             $manager->remove($stillborn);
+            $stillbornsToRemove[] = $stillborn;
         }
 
         //Remove alive child animal
         /** @var Animal $child */
         foreach ($litter->getChildren() as $child) {
+
+            $childrenToRemove[] = $child;
 
             //Remove animal residence
             $residenceHistory = $child->getAnimalResidenceHistory();
@@ -269,7 +254,6 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             //Remove animalCache
             $animalCache = $manager->getRepository(AnimalCache::class)->findOneBy(['animalId' => $child->getId()]);
             $manager->remove($animalCache);
-
             $manager->flush();
 
             //Restore tag if it does not exist
@@ -291,17 +275,18 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             }
 
             $manager->persist($tagToRestore);
+            $manager->flush();
 
             //Remove child from location
             if ($location->getAnimals()->contains($child)) {
                 $location->getAnimals()->removeElement($child);
                 $manager->persist($location);
             }
-            
+
             $litter->removeChild($child);
             $manager->persist($litter);
             $manager->flush();
-            
+
             $child->setParentFather(null);
             $child->setParentMother(null);
             $child->setParentNeuter(null);
@@ -309,11 +294,10 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
             $manager->persist($child);
             $manager->flush();
-            
+
             $declareBirths = $litter->getDeclareBirths();
 
             foreach ($declareBirths as $declareBirth) {
-
                 if ($declareBirth->getAnimal() != null) {
                     if ($declareBirth->getAnimal()->getUlnNumber() == $child->getUlnNumber()) {
                         $declareBirthResponses = $declareBirth->getResponses();
@@ -344,8 +328,29 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         //Re-retrieve litter, check count
         $litter = $repository->findOneBy(array ('id'=> $litterId));
 
-        if($litter->getChildren()->count() == 0) {
-            $litter->setStatus('REVOKED');
+        $succeeded = true;
+
+        foreach ($childrenToRemove as $child) {
+            if($litter->getChildren()->contains($child)) {
+               $succeeded = false;
+                break;
+            }
+        }
+
+        if($succeeded) {
+            foreach ($stillbornsToRemove as $child) {
+                if($litter->getStillborns()->contains($child)) {
+                    $succeeded = false;
+                    break;
+                }
+            }
+        }
+
+        $childrenToRemove = null;
+        $stillbornsToRemove = null;
+
+        if($succeeded) {
+            $litter->setStatus(RequestStateType::REVOKED);
             $litter->setRequestState(RequestStateType::REVOKED);
             $litter->setRevokeDate(new \DateTime());
             $litter->setRevokedBy($loggedInUser);
@@ -353,14 +358,35 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             $manager->persist($litter);
             $manager->flush();
 
-            return new JsonResponse(array(Constant::RESULT_NAMESPACE => $litter), 200);
+            $revokeMessages = [];
+            //Create revoke request for every declareBirth request
+            if ($litter->getDeclareBirths()->count() > 0) {
+                foreach ($litter->getDeclareBirths() as $declareBirth) {
+                    $declareBirthResponse = $this->getEntityGetter()
+                      ->getResponseDeclarationByMessageId($declareBirth->getMessageId());
+
+                    if ($declareBirthResponse) {
+                        if($declareBirthResponse->getMessageNumber() != null) {
+                            $message = new ArrayCollection();
+                            $message->set(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE, $declareBirthResponse->getMessageNumber());
+                            $revokeDeclarationObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $message, $client, $loggedInUser, $location);
+                            $this->persist($revokeDeclarationObject);
+                            $this->persistRevokingRequestState($revokeDeclarationObject->getMessageNumber());
+                            $this->sendMessageObjectToQueue($revokeDeclarationObject);
+                            $revokeMessages[] = $revokeDeclarationObject;
+                        }
+                    }
+                }
+            }
+
+            return new JsonResponse(array(Constant::RESULT_NAMESPACE => $revokeMessages), 200);
         }
 
         return new JsonResponse(
           array(
             Constant::RESULT_NAMESPACE => array (
               'code' => $statusCode,
-              "message" => "Failed to revoke and remove all child animals ",
+              "message" => "Failed to revoke and remove all child and stillborn animals ",
             )
           ), $statusCode);
     }
