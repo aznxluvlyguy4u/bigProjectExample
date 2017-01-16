@@ -313,6 +313,13 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
     public function getAllowedInspectorsForExteriorMeasurements(Request $request, $ulnString)
     {
         $em = $this->getDoctrine()->getManager();
+
+        $admin = $this->getAuthenticatedEmployee($request);
+        $adminValidator = new AdminValidator($admin, AccessLevelType::SUPER_ADMIN);
+        if(!$adminValidator->getIsAccessGranted()) { //validate if user is at least a SUPER_ADMIN
+            return $adminValidator->createJsonErrorResponse();
+        }
+
         /** @var InspectorAuthorizationRepository $repository */
         $repository = $em->getRepository(InspectorAuthorization::class);
         $output = $repository->getAuthorizedInspectorsExteriorByUln($ulnString);
