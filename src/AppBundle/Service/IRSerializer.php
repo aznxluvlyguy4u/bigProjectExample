@@ -436,7 +436,7 @@ class IRSerializer implements IRSerializerInterface
                 $relationNumberKeeper = null;
 
                 if($client instanceof Client) {
-                    $relationNumberKeeper = $loggedInUser->getRelationNumberKeeper();
+                    $relationNumberKeeper = $client->getRelationNumberKeeper();
                 }
 
                 $declareBirthRequest->setRelationNumberKeeper($relationNumberKeeper);
