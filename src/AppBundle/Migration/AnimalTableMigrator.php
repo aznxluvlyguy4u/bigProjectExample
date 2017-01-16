@@ -15,13 +15,11 @@ use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagReplaceRepository;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\VsmIdGroup;
-use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Enumerator\ColumnType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\Specie;
 use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\CommandUtil;
-use AppBundle\Util\GenderChanger;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
@@ -518,7 +516,7 @@ class AnimalTableMigrator extends MigratorBase
 				$pedigreeCountryCode = $result['pedigree_country_code'];
 				$pedigreeNumber = $result['pedigree_number'];
 				$nickName = $result['nick_name'];
-				$type = GenderChanger::getClassNameByGender($gender);
+				$type = GenderChangerForMigrationOnly::getClassNameByGender($gender);
 
 				/*
 				 * Get animalId from vsmId to make sure the gender is correct
@@ -621,8 +619,8 @@ class AnimalTableMigrator extends MigratorBase
 						//Update gender
 						$oldType = $oldValues['type'];
 						$typeChanged =  $type != $oldType;
-						if($typeChanged && $oldType == GenderChanger::getClassNameByGender(GenderType::NEUTER)) {
-							GenderChanger::changeGenderOfNeuter($this->em, $animalId, $gender);
+						if($typeChanged && $oldType == GenderChangerForMigrationOnly::getClassNameByGender(GenderType::NEUTER)) {
+							GenderChangerForMigrationOnly::changeGenderOfNeuter($this->em, $animalId, $gender);
 						}
 						
 						//Update searchArrays
@@ -982,7 +980,7 @@ class AnimalTableMigrator extends MigratorBase
 					}
 
 					if($updateGender) {
-						GenderChanger::changeGenderBySql($this->em, $animalId, $genderInAnimalTable, $genderInFile);
+						GenderChangerForMigrationOnly::changeGenderBySql($this->em, $animalId, $genderInAnimalTable, $genderInFile);
 						$gendersUpdated++;
 					}
 
@@ -2523,14 +2521,14 @@ class AnimalTableMigrator extends MigratorBase
 
 			$animalIdsFemale = array_keys($animalIdsOfNeutersToFemale);
 			foreach ($animalIdsFemale as $animalId) {
-				GenderChanger::changeNeuterToFemaleBySql($this->em, $animalId);
+				GenderChangerForMigrationOnly::changeNeuterToFemaleBySql($this->em, $animalId);
 				$this->cmdUtil->advanceProgressBar(1, 'id|gender : ' . $animalId . '|' . GenderType::FEMALE);
 				$count++;
 			}
 
 			$animalIdsMale = array_keys($animalIdsOfNeutersToMale);
 			foreach ($animalIdsMale as $animalId) {
-				GenderChanger::changeNeuterToMaleBySql($this->em, $animalId);
+				GenderChangerForMigrationOnly::changeNeuterToMaleBySql($this->em, $animalId);
 				$this->cmdUtil->advanceProgressBar(1, 'id|gender : ' . $animalId . '|' . GenderType::MALE);
 				$count++;
 			}
