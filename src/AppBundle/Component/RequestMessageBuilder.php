@@ -2,8 +2,8 @@
 
 namespace AppBundle\Component;
 
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
-
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
@@ -106,7 +106,7 @@ class RequestMessageBuilder
      * @param Person|Client $loggedInUser
      * @param Location $location
      * @param boolean $isEditMessage
-     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|DeclareTagReplace
+     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|DeclareTagReplace|JsonResponse
      * @throws \Exception
      */
     public function build($messageClassNameSpace, ArrayCollection $contentArray, $person, $loggedInUser, $location, $isEditMessage)
@@ -125,8 +125,18 @@ class RequestMessageBuilder
                 if($isEditMessage) { return $declareArrivalRequest; }
                 return $this->arrivalMessageBuilder->buildMessage($declareArrivalRequest, $person, $loggedInUser, $location);
             case RequestType::DECLARE_BIRTH_ENTITY:
-                $declareBirthRequest = $this->irSerializer->parseDeclareBirth($contentArray, $person, $isEditMessage);
-                return $this->birthMessageBuilder->buildMessage($declareBirthRequest, $person, $loggedInUser, $location);
+                $declareBirthRequests = $this->irSerializer->parseDeclareBirth($contentArray, $person, $loggedInUser, $location, $isEditMessage);
+               
+                if($declareBirthRequests instanceof JsonResponse) {
+                    return $declareBirthRequests;
+                }
+
+                $result = [];
+
+                foreach ($declareBirthRequests as $declareBirthRequest) {
+                    $result[] = $this->birthMessageBuilder->buildMessage($declareBirthRequest, $person, $loggedInUser, $location);
+                }
+                return $result;
             case RequestType::DECLARE_DEPART_ENTITY:
                 $declareDepartRequest = $this->irSerializer->parseDeclareDepart($contentArray, $person, $isEditMessage);
                 return $this->departMessageBuilder->buildMessage($declareDepartRequest, $person, $loggedInUser, $location);

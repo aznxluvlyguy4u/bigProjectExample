@@ -1,11 +1,11 @@
 <?php
 
 namespace AppBundle\Entity;
+
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\InspectorMeasurementType;
-use AppBundle\Util\TimeUtil;
 
 /**
  * Class InspectorAuthorizationRepository

@@ -138,12 +138,15 @@ class Constant
     const EWE_REPOSITORY = 'AppBundle:Ewe';
     const RAM_REPOSITORY = 'AppBundle:Ram';
     const NEUTER_REPOSITORY = 'AppBundle:Neuter';
+    const MATE_REPOSITORY = 'AppBundle:Mate';
+
 
     const PERSON_REPOSITORY = 'AppBundle:Person';
     const CLIENT_REPOSITORY = 'AppBundle:Client';
     const EMPLOYEE_REPOSITORY = 'AppBundle:Employee';
 
     const COUNTRY_REPOSITORY = 'AppBundle:Country';
+    const COLLAR_REPOSITORY = 'AppBundle:Collar';
     const COMPANY_REPOSITORY = 'AppBundle:Company';
     const LOCATION_REPOSITORY = 'AppBundle:Location';
 
@@ -157,5 +160,7 @@ class Constant
     const NEW_PASSWORD_MAIL_SUBJECT_HEADER = "Uw nieuwe NSFO Online wachtwoord";
     const NEW_ADMIN_PASSWORD_MAIL_SUBJECT_HEADER = "Uw nieuwe NSFO Online ADMIN wachtwoord";
     const CONTACT_CONFIRMATION_MAIL_SUBJECT_HEADER = 'NSFO Online Contactformulier Confirmatie';
+    
+    const ENTITY_BASE_PATH = "AppBundle\\Entity\\";
 
 }

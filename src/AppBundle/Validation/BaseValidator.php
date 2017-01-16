@@ -4,7 +4,6 @@ namespace AppBundle\Validation;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Entity\AnimalRepository;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;

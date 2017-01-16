@@ -292,6 +292,15 @@ class AnimalMigrationTable
     private $deletedMotherVsmId;
 
     /**
+     * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    private $logDate;
+
+    /**
      * AnimalMigrationTable constructor.
      */
     public function __construct()
@@ -906,5 +915,22 @@ class AnimalMigrationTable
         $this->deletedMotherVsmId = $deletedMotherVsmId;
     }
 
+    /**
+     * @return \DateTime
+     */
+    public function getLogDate()
+    {
+        return $this->logDate;
+    }
 
+    /**
+     * @param \DateTime $logDate
+     */
+    public function setLogDate($logDate)
+    {
+        $this->logDate = $logDate;
+    }
+
+
+    
 }

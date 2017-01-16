@@ -13,7 +13,6 @@ use AppBundle\Entity\Ram;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\DBAL\Connection;
 
 class AnimalDetailsValidator extends BaseValidator
 {
@@ -38,22 +37,27 @@ class AnimalDetailsValidator extends BaseValidator
 
         $this->isInputValid = false;
 
-        /** @var AnimalRepository $repository */
-        $repository = $this->em->getRepository(Animal::class);
-        $this->animal = $repository->findAnimalByUlnString($ulnString);
-
-        if($isAdmin) {
-            $this->isInputValid = $this->animal != null;
-        } else {
-            $this->isInputValid = Validator::validateIfUlnStringBelongsToPublicHistoricAnimal($this->em, $ulnString, $location);
+        if(Validator::verifyUlnFormat($ulnString)) {
             
-            if($this->isInputValid == false) {
-                $this->errors[] = "Animal does not belong to this ubn, or is not a Historic Animal that was made public";
+            /** @var AnimalRepository $repository */
+            $repository = $this->em->getRepository(Animal::class);
+            $this->animal = $repository->findAnimalByUlnString($ulnString);
 
-                if($this->animal == null) {
-                    $this->errors[] = "Animal does not exist in our world :(";
-                } elseif(!$this->animal->isAnimalPublic()){
-                    $this->errors[] = "The current owner has not made this animal public";
+            if($this->animal) {
+                if($isAdmin) {
+                    $this->isInputValid = true;
+                } else {
+                    $this->isInputValid = Validator::validateIfUlnStringBelongsToPublicHistoricAnimal($em, $this->animal, $location);
+
+                    if($this->isInputValid == false) {
+                        $this->errors[] = "Animal does not belong to this ubn, or is not a Historic Animal that was made public";
+
+                        if($this->animal == null) {
+                            $this->errors[] = "Animal does not exist in our world :(";
+                        } elseif(!$this->animal->isAnimalPublic()){
+                            $this->errors[] = "The current owner has not made this animal public";
+                        }
+                    }
                 }
             }
         }
