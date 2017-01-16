@@ -515,6 +515,32 @@ class AnimalRepository extends BaseRepository
     return $this->findByUlnCountryCodeAndNumber($uln[Constant::ULN_COUNTRY_CODE_NAMESPACE], $uln[Constant::ULN_NUMBER_NAMESPACE] );
   }
 
+
+  public function getAnimalByUlnOrPedigree($content)
+  {
+    $result = null;
+
+    if(key_exists('uln_country_code', $content) && key_exists('uln_number', $content)) {
+      if ($content['uln_country_code'] != '' && $content['uln_number'] != '') {
+        $result = $this->findOneBy([
+          'ulnCountryCode' => $content['uln_country_code'],
+          'ulnNumber' => $content['uln_number'],
+          'isAlive' => true
+        ]);
+      }
+
+    } elseif (key_exists('pedigree_country_code', $content) && key_exists('pedigree_number', $content)) {
+      if ($content['pedigree_country_code'] != '' && $content['pedigree_number'] != '') {
+        $result = $this->findOneBy([
+          'pedigreeCountryCode' => $content['pedigree_country_code'],
+          'pedigreeNumber' => $content['pedigree_number'],
+          'isAlive' => true
+        ]);
+      }
+    }
+
+    return $result;
+  }
   /**
    * @param string $pedigreeCountryCode
    * @param string $pedigreeNumber

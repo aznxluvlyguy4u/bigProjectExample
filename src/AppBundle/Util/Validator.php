@@ -532,7 +532,13 @@ class Validator
         if($animal == null) { return false; }
 
         //1. Always show animals on own location/ubn
-        if($animal->getLocation()->getId() == $location->getId()) { return true; }
+
+        if($animal->getLocation()) {
+            if($animal->getLocation()->getId() == $location->getId()) { return true; }
+        } else {
+            return false;
+        }
+
 
         //2. Else only show Animal if it is an historic animals and if owner ubnOfBirth allows it
         $locationOfBirth = $animal->getLocationOfBirth();
