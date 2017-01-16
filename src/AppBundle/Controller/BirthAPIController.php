@@ -272,8 +272,11 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
             //Remove animalCache
             $animalCache = $manager->getRepository(AnimalCache::class)->findOneBy(['animalId' => $child->getId()]);
-            $manager->remove($animalCache);
-            $manager->flush();
+
+            if($animalCache){
+                $manager->remove($animalCache);
+                $manager->flush();
+            }
 
             //Restore tag if it does not exist
             $tagToRestore = null;
