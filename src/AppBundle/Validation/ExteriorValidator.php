@@ -96,7 +96,7 @@ class ExteriorValidator extends BaseValidator
 
         /** @var InspectorAuthorizationRepository $repository */
         $repository = $em->getRepository(InspectorAuthorization::class);
-        $this->authorizedInspectorIds = $repository->getAuthorizedInspectorIdsExteriorByUln($ulnString, $allowBlankInspector);
+        $this->authorizedInspectorIds = $repository->getAuthorizedInspectorIdsExteriorByUln($ulnString);
 
         $this->inspector = null;
         $this->isInputValid = $this->validateContentArray();
@@ -210,16 +210,22 @@ class ExteriorValidator extends BaseValidator
 
     private function validateInspectorId()
     {
-        $inspectorId = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::INSPECTOR_ID, $this->content);
+        $inspectorNotNull = $this->content->containsKey(JsonInputConstant::INSPECTOR_ID);
+        $isInspectorBlank = !$inspectorNotNull;
 
-        $inspector = null;
-        if($inspectorId != 0) {
-            /** @var InspectorRepository $repository */
-            $inspectorRepository = $this->manager->getRepository(Inspector::class);
-            $inspector = $inspectorRepository->findOneBy(['personId' => $inspectorId]);
+        if($isInspectorBlank && $this->allowBlankInspector) {
+            /*
+             * If the inspector is supposed to be blank, then the api should receive a content without an "inspector_id" key.
+             * If the "inspector_id" key exists then it is mandatory for for the value to be a valid inspectorId.
+             */
+            return true;
         }
 
-        if($this->allowBlankInspector) { return true; }
+        $inspectorId = $this->content->get(JsonInputConstant::INSPECTOR_ID);
+
+        /** @var InspectorRepository $repository */
+        $inspectorRepository = $this->manager->getRepository(Inspector::class);
+        $inspector = $inspectorRepository->findOneBy(['personId' => $inspectorId]);
 
         if($inspector == null) {
             $this->errors[] = 'INSPECTOR DOES NOT EXIST';

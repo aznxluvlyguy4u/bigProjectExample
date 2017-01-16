@@ -16,12 +16,11 @@ class InspectorAuthorizationRepository extends PersonRepository {
 
     /**
      * @param string $ulnString
-     * @param bool $allowBlankInspector
      * @return array
      */
-    public function getAuthorizedInspectorIdsExteriorByUln($ulnString, $allowBlankInspector = true)
+    public function getAuthorizedInspectorIdsExteriorByUln($ulnString)
     {
-        $output = $this->getAuthorizedInspectorsExteriorByUln($ulnString, $allowBlankInspector);
+        $output = $this->getAuthorizedInspectorsExteriorByUln($ulnString);
 
         $result = [];
         foreach ($output as $item) {
@@ -34,11 +33,10 @@ class InspectorAuthorizationRepository extends PersonRepository {
 
     /**
      * @param string $ulnString
-     * @param boolean $allowBlankInspector
      * @return array
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function getAuthorizedInspectorsExteriorByUln($ulnString, $allowBlankInspector = true)
+    public function getAuthorizedInspectorsExteriorByUln($ulnString)
     {
         $ulnParts = Utils::getUlnFromString($ulnString);
         if($ulnParts == null) {
@@ -51,17 +49,16 @@ class InspectorAuthorizationRepository extends PersonRepository {
         $result = $this->getConnection()->query($sql)->fetch();
         $pedigreeRegisterId = Utils::getNullCheckedArrayValue('pedigree_register_id', $result);
 
-        return $this->getAuthorizedInspectors(InspectorMeasurementType::EXTERIOR, [$pedigreeRegisterId], $allowBlankInspector);
+        return $this->getAuthorizedInspectors(InspectorMeasurementType::EXTERIOR, [$pedigreeRegisterId]);
     }
     
     /**
      * @param $measurementType
      * @param array $pedigreeRegistersIds
-     * @param boolean $allowBlankInspector
      * @return array
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function getAuthorizedInspectors($measurementType, array $pedigreeRegistersIds = [], $allowBlankInspector = true)
+    public function getAuthorizedInspectors($measurementType, array $pedigreeRegistersIds = [])
     {
         $filterStart = '';
         $filterEnd = '';
@@ -90,14 +87,6 @@ class InspectorAuthorizationRepository extends PersonRepository {
                 JsonInputConstant::PERSON_ID => $inspector['person_id'],  
                 JsonInputConstant::FIRST_NAME => $inspector['first_name'],  
                 JsonInputConstant::LAST_NAME => $inspector['last_name'],  
-            ];
-        }
-
-        if($allowBlankInspector) {
-            $result[] = [
-                JsonInputConstant::PERSON_ID => 0,
-                JsonInputConstant::FIRST_NAME => '',
-                JsonInputConstant::LAST_NAME => '',
             ];
         }
 
