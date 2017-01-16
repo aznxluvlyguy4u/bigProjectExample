@@ -349,7 +349,12 @@ class IRSerializer implements IRSerializerInterface
         $litter->setLitterDate($dateOfBirth);
         $litter->setIsAbortion($isAborted);
         $litter->setIsPseudoPregnancy($isPseudoPregnancy);
-        $litter->setStatus('INCOMPLETE');
+
+        if ($isAborted || $isPseudoPregnancy) {
+            $litter->setStatus('COMPLETED');
+        } else {
+            $litter->setStatus('INCOMPLETE');
+        }
         $litter->setRequestState(RequestStateType::OPEN);
         $litter->setActionBy($loggedInUser);
         $litter->setRelationNumberKeeper($location->getCompany()->getOwner()->getRelationNumberKeeper());

@@ -17,6 +17,7 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Stillborn;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
+use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\Collection;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
@@ -28,9 +29,8 @@ class DeclareBirthResponseOutput extends Output
      * @param Collection $declarations
      * @return array
      */
-    public static function createBirth($litter, $declarations)
-    {
-        $res = array();
+    public static function createBirth($litter, $declarations) {
+        $res = array ();
 
         // GENERAL
         $res["log_date"] = Utils::fillNull($litter->getLogDate());
@@ -40,7 +40,12 @@ class DeclareBirthResponseOutput extends Output
         $res["is_abortion"] = Utils::fillNull($litter->getAbortion());
         $res["is_pseudo_pregnancy"] = Utils::fillNull($litter->getPseudoPregnancy());
         $res["status"] = Utils::fillNull($litter->getStatus());
-        $res["request_state"] = Utils::fillNull($litter->getRequestState());
+
+        if ($res["is_abortion"] || $res["is_pseudo_pregnancy"]) {
+            $res["request_state"] = RequestStateType::FINISHED;
+        } else {
+            $res["request_state"] = Utils::fillNull($litter->getRequestState());
+        }
 
         // MOTHER
         $mother = $litter->getAnimalMother();
@@ -167,20 +172,27 @@ class DeclareBirthResponseOutput extends Output
         $res = array();
 
         foreach ($declarations as $declaration) {
+
+            if($declaration['is_abortion'] == true ||  $declaration['is_pseudo_pregnancy'] == true) {
+                $requestState = RequestStateType::FINISHED;
+            } else {
+                $requestState = Utils::fillNull($declaration['request_state']);
+            }
+
             $res[] = array(
-                "litter_id" => $declaration['id'],
-                "log_date" => Utils::fillNull($declaration['log_date']),
-                "date_of_birth" => Utils::fillNull($declaration['date_of_birth']),
-                "mother_uln_country_code" => Utils::fillNull($declaration['mother_uln_country_code']),
-                "mother_uln_number" => Utils::fillNull($declaration['mother_uln_number']),
-                "father_uln_country_code" => Utils::fillNull($declaration['father_uln_country_code']),
-                "father_uln_number" => Utils::fillNull($declaration['father_uln_number']),
-                "stillborn_count" => Utils::fillNull($declaration['stillborn_count']),
-                "born_alive_count" => Utils::fillNull($declaration['born_alive_count']),
-                "is_abortion" => Utils::fillNull($declaration['is_abortion']),
-                "is_pseudo_pregnancy" => Utils::fillNull($declaration['is_pseudo_pregnancy']),
-                "status" => Utils::fillNull($declaration['status']),
-                "request_state" => Utils::fillNull($declaration['request_state']),
+              "litter_id" => $declaration['id'],
+              "log_date" => Utils::fillNull($declaration['log_date']),
+              "date_of_birth" => Utils::fillNull($declaration['date_of_birth']),
+              "mother_uln_country_code" => Utils::fillNull($declaration['mother_uln_country_code']),
+              "mother_uln_number" => Utils::fillNull($declaration['mother_uln_number']),
+              "father_uln_country_code" => Utils::fillNull($declaration['father_uln_country_code']),
+              "father_uln_number" => Utils::fillNull($declaration['father_uln_number']),
+              "stillborn_count" => Utils::fillNull($declaration['stillborn_count']),
+              "born_alive_count" => Utils::fillNull($declaration['born_alive_count']),
+              "is_abortion" => Utils::fillNull($declaration['is_abortion']),
+              "is_pseudo_pregnancy" => Utils::fillNull($declaration['is_pseudo_pregnancy']),
+              "status" => Utils::fillNull($declaration['status']),
+              "request_state" => $requestState,
             );
         }
 
