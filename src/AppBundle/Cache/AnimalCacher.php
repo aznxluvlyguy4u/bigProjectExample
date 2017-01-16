@@ -232,6 +232,7 @@ class AnimalCacher
 
     /**
      * @param ObjectManager $em
+<<<<<<< HEAD
      * @param CommandUtil $cmdUtil
      * @param int $locationId
      */
@@ -377,7 +378,22 @@ class AnimalCacher
             .",".$generalAppearance.",".$height.",".$breastDepth.",".$torsoLength.",".$markings.",".$exteriorMeasurementDateString.")";
     }
 
-    
+    /**
+     * @param ObjectManager $em
+     * @param Animal $animal
+     * @param bool $flush
+     */
+    public static function cacheByAnimal(ObjectManager $em, Animal $animal, $flush = true) {
+        /** @var GeneticBaseRepository $geneticBaseRepository */
+        $geneticBaseRepository = $em->getRepository(GeneticBase::class);
+        $breedValuesYear = $geneticBaseRepository->getLatestYear();
+        $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
+
+        $animalId = $animal->getId();
+        if($animalId != null) {
+            self::cacheById($em, $animalId, $animal->getGender(), $animal->getDateOfBirthString(), $animal->getBreedType(), $breedValuesYear, $geneticBases, false, $flush);
+        }
+    }
 
     /**
      * @param ObjectManager $em
@@ -443,6 +459,7 @@ class AnimalCacher
         $markings = $exteriorData[JsonInputConstant::MARKINGS];
         $exteriorMeasurementDateString = $exteriorData[JsonInputConstant::MEASUREMENT_DATE];
         $exteriorExists = $exteriorMeasurementDateString != null;
+        $exteriorMeasurementDate = new \DateTime($exteriorMeasurementDateString);
         
         //TODO Still blank at the moment
         $breedValueLitterSize = null;
@@ -491,20 +508,29 @@ class AnimalCacher
             $record->setWeightMeasurementDateByDateString($weightMeasurementDateString);
         }
         if($exteriorExists) {
-            $record->setKind($kind);
-            $record->setSkull($skull);
-            $record->setMuscularity($muscularity);
-            $record->setProportion($proportion);
-            $record->setProgress($progress);
-            $record->setExteriorType($exteriorType);
-            $record->setLegWork($legWork);
-            $record->setFur($fur);
-            $record->setGeneralAppearance($generalAppearance);
-            $record->setHeight($height);
-            $record->setBreastDepth($breastDepth);
-            $record->setTorsoLength($torsoLength);
-            $record->setMarkings($markings);
-            $record->setExteriorMeasurementDateByDateString($exteriorMeasurementDateString);
+            if($record->getKind() != $kind || $record->getSkull() != $skull || $record->getMuscularity() != $muscularity
+                || $record->getProportion() != $proportion || $record->getProgress() !=  $progress
+                || $record->getExteriorType() != $exteriorType || $record->getLegWork() != $legWork
+                || $record->getFur() != $fur || $record->getGeneralAppearance() != $generalAppearance
+                || $record->getHeight() != $height || $record->getBreastDepth() != $breastDepth
+                || $record->getTorsoLength() != $torsoLength || $record->getMarkings() != $markings
+                || $record->getExteriorMeasurementDate() != $exteriorMeasurementDate) {
+
+                $record->setKind($kind);
+                $record->setSkull($skull);
+                $record->setMuscularity($muscularity);
+                $record->setProportion($proportion);
+                $record->setProgress($progress);
+                $record->setExteriorType($exteriorType);
+                $record->setLegWork($legWork);
+                $record->setFur($fur);
+                $record->setGeneralAppearance($generalAppearance);
+                $record->setHeight($height);
+                $record->setBreastDepth($breastDepth);
+                $record->setTorsoLength($torsoLength);
+                $record->setMarkings($markings);
+                $record->setExteriorMeasurementDate($exteriorMeasurementDate);
+            }
         }
 
         $em->persist($record);
@@ -560,13 +586,7 @@ class AnimalCacher
 
         if($record == null) {
             //If no record exists yet, create a new complete one. Not just the weight data.
-
-            /** @var GeneticBaseRepository $geneticBaseRepository */
-            $geneticBaseRepository = $em->getRepository(GeneticBase::class);
-            $breedValuesYear = $geneticBaseRepository->getLatestYear();
-            $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
-
-            self::cacheById($em, $animalId, $animal->getGender(), $animal->getDateOfBirthString(), $animal->getBreedType(), $breedValuesYear, $geneticBases, false, $flush);
+            self::cacheByAnimal($em, $animal, $flush);
 
         } else {
             //Weight Data
@@ -627,14 +647,8 @@ class AnimalCacher
         $record = $repository->findOneBy(['animalId' => $animalId]);
 
         if($record == null) {
-            //If no record exists yet, create a new complete one. Not just the weight data.
-
-            /** @var GeneticBaseRepository $geneticBaseRepository */
-            $geneticBaseRepository = $em->getRepository(GeneticBase::class);
-            $breedValuesYear = $geneticBaseRepository->getLatestYear();
-            $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
-
-            self::cacheById($em, $animalId, $animal->getGender(), $animal->getDateOfBirthString(), $animal->getBreedType(), $breedValuesYear, $geneticBases, false, $flush);
+            //If no record exists yet, create a new complete one. Not just the litter data.
+            self::cacheByAnimal($em, $animal, $flush);
 
         } else {
             //Litter Data
@@ -656,6 +670,80 @@ class AnimalCacher
      * @param Animal $animal
      * @param boolean $flush
      */
+    public static function cacheExteriorByAnimal(ObjectManager $em, Animal $animal, $flush = true)
+    {
+        $animalId = $animal->getId();
+        /** @var AnimalCacheRepository $repository */
+        $repository = $em->getRepository(AnimalCache::class);
+        /** @var AnimalCache $record */
+        $record = $repository->findOneBy(['animalId' => $animalId]);
+
+        if($record == null) {
+
+            //If no record exists yet, create a new complete one. Not just the exterior data.
+            self::cacheByAnimal($em, $animal, $flush);
+
+        } else {
+            //Exterior Data
+            /** @var ExteriorRepository $exteriorRepository */
+            $exteriorRepository = $em->getRepository(Exterior::class);
+
+            $exterior = $exteriorRepository->getLatestExterior($animal);
+            $exteriorExists = $exterior->getId() != null;
+
+            if($exteriorExists) {
+                $kind = $exterior->getKind();
+                $skull = $exterior->getSkull();
+                $muscularity = $exterior->getMuscularity();
+                $proportion = $exterior->getProportion();
+                $progress = $exterior->getProgress();
+                $exteriorType = $exterior->getExteriorType();
+                $legWork = $exterior->getLegWork();
+                $fur = $exterior->getFur();
+                $generalAppearance = $exterior->getGeneralAppearence();
+                $height = $exterior->getHeight();
+                $breastDepth = $exterior->getBreastDepth();
+                $torsoLength = $exterior->getTorsoLength();
+                $markings = $exterior->getMarkings();
+                $exteriorMeasurementDate = $exterior->getMeasurementDate();
+
+                if($record->getKind() != $kind || $record->getSkull() != $skull || $record->getMuscularity() != $muscularity
+                    || $record->getProportion() != $proportion || $record->getProgress() !=  $progress
+                    || $record->getExteriorType() != $exteriorType || $record->getLegWork() != $legWork
+                    || $record->getFur() != $fur || $record->getGeneralAppearance() != $generalAppearance
+                    || $record->getHeight() != $height || $record->getBreastDepth() != $breastDepth
+                    || $record->getTorsoLength() != $torsoLength || $record->getMarkings() != $markings
+                    || $record->getExteriorMeasurementDate() != $exteriorMeasurementDate) {
+
+                    $record->setKind($kind);
+                    $record->setSkull($skull);
+                    $record->setMuscularity($muscularity);
+                    $record->setProportion($proportion);
+                    $record->setProgress($progress);
+                    $record->setExteriorType($exteriorType);
+                    $record->setLegWork($legWork);
+                    $record->setFur($fur);
+                    $record->setGeneralAppearance($generalAppearance);
+                    $record->setHeight($height);
+                    $record->setBreastDepth($breastDepth);
+                    $record->setTorsoLength($torsoLength);
+                    $record->setMarkings($markings);
+                    $record->setExteriorMeasurementDate($exteriorMeasurementDate);
+
+                    $em->persist($record);
+                    if($flush) { $em->flush(); }
+                }
+            }
+        }
+
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Animal $animal
+     * @param boolean $flush
+     */
     private static function cacheProductionByAnimal(ObjectManager $em, Animal $animal, $flush = true)
     {
         $animalId = $animal->getId();
@@ -666,14 +754,8 @@ class AnimalCacher
         $record = $repository->findOneBy(['animalId' => $animalId]);
 
         if($record == null) {
-            //If no record exists yet, create a new complete one. Not just the weight data.
-
-            /** @var GeneticBaseRepository $geneticBaseRepository */
-            $geneticBaseRepository = $em->getRepository(GeneticBase::class);
-            $breedValuesYear = $geneticBaseRepository->getLatestYear();
-            $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
-
-            self::cacheById($em, $animalId, $animal->getGender(), $animal->getDateOfBirthString(), $animal->getBreedType(), $breedValuesYear, $geneticBases, false, $flush);
+            //If no record exists yet, create a new complete one. Not just the production data.
+            self::cacheByAnimal($em, $animal, $flush);
 
         } else {
             //Production Data

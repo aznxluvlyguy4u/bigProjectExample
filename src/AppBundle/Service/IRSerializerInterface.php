@@ -15,11 +15,12 @@ use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\RetrieveAnimalDetails;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RetrieveTags;
-use AppBundle\Entity\RetrieveUBNDetails;
+use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Entity\RevokeDeclaration;
 use Doctrine\Common\Collections\ArrayCollection;
 
@@ -56,7 +57,7 @@ interface IRSerializerInterface
      * @param boolean $isEditMessage
      * @return DeclareBirth
      */
-    function parseDeclareBirth(ArrayCollection $contentArray, Client $client, $isEditMessage);
+    function parseDeclareBirth(ArrayCollection $declareBirthContentArray, Client $client, Person $loggedInUser, Location $location, $isEditMessage);
 
     /**
      * @param ArrayCollection $contentArray

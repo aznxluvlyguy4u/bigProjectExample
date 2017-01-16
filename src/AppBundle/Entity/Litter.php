@@ -50,7 +50,6 @@ class Litter extends DeclareNsfoBase
      */
     private $litterGroup;
 
-
     /**
      * @var integer
      *
@@ -58,7 +57,6 @@ class Litter extends DeclareNsfoBase
      * @JMS\Type("integer")
      */
     private $stillbornCount;
-
 
     /**
      * @var integer
@@ -87,6 +85,21 @@ class Litter extends DeclareNsfoBase
     private $children;
 
     /**
+     * @var ArrayCollection
+     * 
+     * @ORM\OneToMany(targetEntity="Stillborn", mappedBy="litter", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Stillborn")
+     */
+    private $stillborns;
+
+    /**
+     * @var ArrayCollection
+     * @JMS\Type("AppBundle\Entity\DeclareBirth")
+     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="litter", cascade={"persist"})
+     */
+    private $declareBirths;
+
+    /**
      * @ORM\Column(type="string", options={"default": "INCOMPLETE"})
      * @JMS\Type("string")
      */
@@ -100,9 +113,11 @@ class Litter extends DeclareNsfoBase
         parent::__construct();
 
         $this->children = new ArrayCollection();
+        $this->stillborns = new ArrayCollection();
         $this->logDate = new \DateTime();
         $this->stillbornCount = 0;
         $this->bornAliveCount = 0;
+        $this->declareBirths = new ArrayCollection();
     }
 
     /**
@@ -349,5 +364,73 @@ class Litter extends DeclareNsfoBase
     public function setStatus($status)
     {
         $this->status = $status;
+    }
+
+    /**
+     * Add Stillborn
+     *
+     * @param Stillborn $stillborn
+     *
+     * @return Litter
+     */
+    public function addStillborn(Stillborn $stillborn)
+    {
+        $this->stillborns[] = $stillborn;
+
+        return $this;
+    }
+
+    /**
+     * Remove Stillborn
+     *
+     * @param Animal $child
+     */
+    public function removeStillborn(Stillborn $stillborn)
+    {
+        $this->stillborns->removeElement($stillborn);
+    }
+
+    /**
+     * Get Stillborns
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getStillborns()
+    {
+        return $this->stillborns;
+    }
+
+    /**
+     * Add declareBirth
+     *
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     *
+     * @return Animal
+     */
+    public function addDeclareBirth(\AppBundle\Entity\DeclareBirth $declareBirth)
+    {
+        $this->declareBirths[] = $declareBirth;
+
+        return $this;
+    }
+
+    /**
+     * Remove declareBirth
+     *
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     */
+    public function removeDeclareBirth(\AppBundle\Entity\DeclareBirth $declareBirth)
+    {
+        $this->declareBirths->removeElement($declareBirth);
+    }
+
+    /**
+     * Get declareBirths
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getDeclareBirths()
+    {
+        return $this->declareBirths;
     }
 }

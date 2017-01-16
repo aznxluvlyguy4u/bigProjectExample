@@ -446,6 +446,8 @@ class Tag {
         $this->location = $location;
     }
 
-
+    public static function getClassName() {
+        return get_called_class();
+    }
 
 }
