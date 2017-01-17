@@ -6,6 +6,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\InspectorMeasurementType;
+use AppBundle\Util\ArrayUtil;
 
 /**
  * Class InspectorAuthorizationRepository
@@ -47,7 +48,11 @@ class InspectorAuthorizationRepository extends PersonRepository {
 
         $sql = "SELECT pedigree_register_id FROM animal WHERE uln_country_code = '".$ulnCountryCode."' AND uln_number = '".$ulnNumber."'";
         $result = $this->getConnection()->query($sql)->fetch();
-        $pedigreeRegisterId = Utils::getNullCheckedArrayValue('pedigree_register_id', $result);
+
+        $pedigreeRegisterId = null;
+        if($result) {
+            $pedigreeRegisterId = ArrayUtil::get('pedigree_register_id', $result);
+        }
 
         return $this->getAuthorizedInspectors(InspectorMeasurementType::EXTERIOR, [$pedigreeRegisterId]);
     }
@@ -69,17 +74,23 @@ class InspectorAuthorizationRepository extends PersonRepository {
         }
 
         foreach ($pedigreeRegistersIds as $pedigreeRegistersId) {
-            $filterMiddle = $filterMiddle.'pedigree_register_id = '.$pedigreeRegistersId.' OR ';
+            if(ctype_digit($pedigreeRegistersId) || is_int($pedigreeRegistersId)) {
+                $filterMiddle = $filterMiddle.'pedigree_register_id = '.$pedigreeRegistersId.' OR ';
+            }
         }
-        $filterMiddle = rtrim($filterMiddle, ' OR ');
-        $filter = $filterStart.$filterMiddle.$filterEnd;
 
-        $sql = "SELECT p.person_id, p.first_name, p.last_name
+        $inspectors = [];
+        if($filterMiddle != '') {
+            $filterMiddle = rtrim($filterMiddle, ' OR ');
+            $filter = $filterStart.$filterMiddle.$filterEnd;
+
+            $sql = "SELECT p.person_id, p.first_name, p.last_name
                 FROM inspector_authorization a
                   INNER JOIN person p ON p.id = a.inspector_id
                 WHERE measurement_type = '".$measurementType."' ".$filter."
                 GROUP BY first_name, last_name, person_id";
-        $inspectors = $this->getConnection()->query($sql)->fetchAll();
+            $inspectors = $this->getConnection()->query($sql)->fetchAll();
+        }
 
         $result = [];
         foreach ($inspectors as $inspector) {
