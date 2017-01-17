@@ -156,6 +156,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '30: Import Extra animalTable', "\n",
             '----------------------------------------------------', "\n",
             '40: Fill missing ulnNumbers in AnimalMigrationTable', "\n",
+            '41: Fix animalIds in AnimalMigrationTable (likely incorrect due to duplicate fix)', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -312,6 +313,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
             case 40:
                 AnimalMigrationTableFixer::fillEmptyUlnsByGivenUlnLength($this->cmdUtil, $this->conn);
+                $output->writeln('DONE');
+                break;
+
+            case 41:
+                AnimalMigrationTableFixer::updateAnimalIdsInMigrationTable($this->cmdUtil, $this->conn);
                 $output->writeln('DONE');
                 break;
 
