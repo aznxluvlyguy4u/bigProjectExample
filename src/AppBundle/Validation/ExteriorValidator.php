@@ -6,12 +6,16 @@ namespace AppBundle\Validation;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Inspector;
 use AppBundle\Entity\InspectorAuthorization;
 use AppBundle\Entity\InspectorAuthorizationRepository;
 use AppBundle\Entity\InspectorRepository;
+use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\Person;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 
@@ -20,6 +24,7 @@ class ExteriorValidator extends BaseValidator
     const DEFAULT_MIN_EXTERIOR_VALUE = 69;
     const DEFAULT_MAX_EXTERIOR_VALUE = 99;
     const ALLOW_BLANK_KIND = true;
+    const ALLOW_ANIMALS_WITHOUT_A_PEDIGREE_REGISTER = false;
 
     /** @var string */
     private $measurementDateString;
@@ -94,6 +99,25 @@ class ExteriorValidator extends BaseValidator
         $this->allowBlankInspector = $allowBlankInspector;
 
         parent::__construct($em, $content);
+
+        //Validate Animal data
+        $animal = null;
+        if($ulnString) {
+            /** @var AnimalRepository $animalRepository */
+            $animalRepository = $em->getRepository(Animal::class);
+            $animal = $animalRepository->findAnimalByUlnString($ulnString);
+
+            if($animal == null) {
+                $this->errors[] = 'No animal found for given uln';
+                return;
+            }
+        }
+
+        if($animal->getPedigreeRegister() == null && self::ALLOW_ANIMALS_WITHOUT_A_PEDIGREE_REGISTER) {
+            $this->errors[] = 'The animal is not part of a pedigreeRegister';
+            return;
+        }
+
 
         /** @var InspectorAuthorizationRepository $repository */
         $repository = $em->getRepository(InspectorAuthorization::class);
@@ -182,13 +206,21 @@ class ExteriorValidator extends BaseValidator
     private function validateExteriorNumberValue($keyOfExteriorValue)
     {
         $value = $this->content->get($keyOfExteriorValue);
-        if(self::validateNumberValue($keyOfExteriorValue, $value)) {
+
+        //First convert comma to dot
+        $value = strtr($value, [',' => '.']);
+        strpos('.', $value);
+
+        if($this->validateNumberValue($keyOfExteriorValue, $value)) {
             $value = floatval($value);
             $isValidValue = true;
 
         } else {
             $value = 0.0;
             $isValidValue = false;
+            $minValue = self::getMinValues()[$keyOfExteriorValue];
+            $maxValue = self::getMaxValues()[$keyOfExteriorValue];
+            self::getMaxValues()[$keyOfExteriorValue];
             $this->errors[] = $keyOfExteriorValue. ' VALUE MUST BE '.$minValue.' <= X <= '.$maxValue.'. OR FOR AN EMPTY VALUE IS MUST BE AN EMPTY STRING OR 0.';
         }
 
@@ -217,9 +249,37 @@ class ExteriorValidator extends BaseValidator
      * @param float|int $value
      * @return bool
      */
-    public static function validateNumberValue($keyOfExteriorValue, $value)
+    public function validateNumberValue($keyOfExteriorValue, $value)
     {
-        $minValues = [
+        $minValues = static::getMinValues();
+        $maxValues = static::getMaxValues();
+
+        $minValue = $minValues[$keyOfExteriorValue];
+        $maxValue = $maxValues[$keyOfExteriorValue];
+
+
+        //Can only contain one comma or one dot
+        if(substr_count($value,'.') > 1) {
+            $this->errors[] = 'The value for '.$keyOfExteriorValue.' may not contain more than one decimal point';
+            return false;
+        }
+
+        if(!Validator::isStringFloatFormat($value)) {
+            $this->errors[] = 'The value for '.$keyOfExteriorValue.' must be in the format of a float';
+            return false;
+        }
+
+        //Value must be empty (=0) or must be between the allowed min and max values
+        return $value == 0 || ($minValue <= intval($value) && intval($value) <= $maxValue);
+    }
+
+
+    /**
+     * @return array
+     */
+    public static function getMinValues()
+    {
+        return [
             JsonInputConstant::SKULL        => self::DEFAULT_MIN_EXTERIOR_VALUE,
             JsonInputConstant::PROGRESS     => self::DEFAULT_MIN_EXTERIOR_VALUE,
             JsonInputConstant::MUSCULARITY  => self::DEFAULT_MIN_EXTERIOR_VALUE,
@@ -233,9 +293,15 @@ class ExteriorValidator extends BaseValidator
             JsonInputConstant::TORSO_LENGTH => 0,
             JsonInputConstant::MARKINGS     => self::DEFAULT_MIN_EXTERIOR_VALUE,
         ];
+    }
 
 
-        $maxValues = [
+    /**
+     * @return array
+     */
+    public static function getMaxValues()
+    {
+        return [
             JsonInputConstant::SKULL        => self::DEFAULT_MAX_EXTERIOR_VALUE,
             JsonInputConstant::PROGRESS     => self::DEFAULT_MAX_EXTERIOR_VALUE,
             JsonInputConstant::MUSCULARITY  => self::DEFAULT_MAX_EXTERIOR_VALUE,
@@ -249,12 +315,6 @@ class ExteriorValidator extends BaseValidator
             JsonInputConstant::TORSO_LENGTH => self::DEFAULT_MAX_EXTERIOR_VALUE,
             JsonInputConstant::MARKINGS     => self::DEFAULT_MAX_EXTERIOR_VALUE,
         ];
-
-        $minValue = $minValues[$keyOfExteriorValue];
-        $maxValue = $maxValues[$keyOfExteriorValue];
-
-        //Value must be empty (=0) or must be between the allowed min and max values
-        return $value == 0 || ($minValue <= intval($value) && intval($value) <= $maxValue);
     }
 
 
