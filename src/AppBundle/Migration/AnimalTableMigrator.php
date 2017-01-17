@@ -3732,4 +3732,106 @@ class AnimalTableMigrator extends MigratorBase
 
 		return $wrapInQuotesForSql ? SqlUtil::getNullCheckedValueForSqlQuery($abbreviation, true) : $abbreviation;
 	}
+
+
+	/**
+	 * @throws \Doctrine\DBAL\DBALException
+	 */
+	public function fillEmptyUlnsByGivenUlnLength()
+	{
+		//Settings
+		$minUlnNumberLengthDefault = 8;
+		$dateOfBirthBeforeDate = '2010-01-01'; //Format YYYY-MM-DD, Date before standardized ulnNumbers with 12 length
+		
+		do{
+			$isInputValid = false;
+			$minUlnNumberLength = $this->cmdUtil->generateQuestion('Insert minimum ulnNumberLength (>=5, default = '.$minUlnNumberLengthDefault.')', $minUlnNumberLengthDefault);
+
+			if(ctype_digit($minUlnNumberLength) || is_int($minUlnNumberLength)) {
+				if(intval($minUlnNumberLength) >= 5) {
+					$isInputValid = true;
+				} else {
+					$this->output->writeln('Integer must be at least 5 digits');
+				}
+				
+			} else {
+				$this->output->writeln('Input must be an integer');
+			}
+		} while(!$isInputValid);
+
+
+		$dateOfBirthFilter = " AND date_of_birth < '".$dateOfBirthBeforeDate."' ";
+		$dateFilterText = 'EXCLUDE';
+		$alsoProcessAnimalsBornAfterFilterDate = $this->cmdUtil->generateConfirmationQuestion('Also process animals born after and on '.$dateOfBirthBeforeDate.'? (y/n, default = no)');
+		if($alsoProcessAnimalsBornAfterFilterDate){
+			$dateOfBirthFilter = '';
+			$dateFilterText = 'INCLUDE';
+		};
+
+		
+		$sql = "SELECT SUBSTR(uln_origin, 1,2) as uln_country_code, SUBSTR(uln_origin, 4) as uln_number, date_of_birth
+				FROM animal_migration_table
+				WHERE uln_number ISNULL
+					  --For ulnOrigins with a separation space
+					  AND SUBSTR(uln_origin, 1,2) ~ '^[A-Z]' --First 2 chars must be only capital letters
+					  AND SUBSTR(uln_origin, 3,1) = ' '
+					  AND SUBSTR(uln_origin, 4) ~ '^(-)?[0-9]+$' -- Last chars must be only digits
+					  AND LENGTH(SUBSTR(uln_origin, 4)) >= ".$minUlnNumberLength." -- The ulnNumber must be at least this long
+			          ".$dateOfBirthFilter."
+				UNION
+				SELECT SUBSTR(uln_origin, 1,2) as uln_country_code, SUBSTR(uln_origin, 3) as uln_number, date_of_birth
+				FROM animal_migration_table
+				WHERE uln_number ISNULL
+					  --For ulnOrigins without a separation space
+					  AND SUBSTR(uln_origin, 1,2) ~ '^[A-Z]' --First 2 chars must be only capital letters
+					  AND SUBSTR(uln_origin, 3,1) <> ' '
+					  AND SUBSTR(uln_origin, 3) ~ '^(-)?[0-9]+$' -- Last chars must be only digits
+					  AND LENGTH(SUBSTR(uln_origin, 4)) >= ".$minUlnNumberLength." -- The ulnNumber must be at least this long
+					  ".$dateOfBirthFilter;
+		$results = $this->conn->query($sql)->fetchAll();
+		
+		$totalCount = count($results);
+		if($totalCount == 0) {
+			$this->output->writeln('There are no valid ulnOrigins without an extracted ulnCountryCode and ulnNumber in the AnimalMigrationTable for the given ulnNumber length of '.$minUlnNumberLength);
+			return;
+		} else {
+			$this->output->writeln($totalCount.' animals found');
+		}
+
+
+		if(!$this->cmdUtil->generateConfirmationQuestion('You chose a minimum ulnNumber length of '.$minUlnNumberLength.' and to '.$dateFilterText.' animals born on or after '.$dateOfBirthBeforeDate.'. Is this correct? (y/n, default = no)')){
+			$this->output->writeln('ABORTED');
+			return;
+		};
+
+
+
+		$this->output->writeln('Updating  '.$totalCount.' empty ulns...');
+
+		//Update AnimalMigrationTable
+		$sql = "UPDATE animal_migration_table SET uln_country_code = SUBSTR(uln_origin, 1,2), uln_number = SUBSTR(uln_origin, 4)
+				WHERE uln_number ISNULL
+					  --For ulnOrigins with a separation space
+					  AND SUBSTR(uln_origin, 1,2) ~ '^[A-Z]' --First 2 chars must be only capital letters
+					  AND SUBSTR(uln_origin, 3,1) = ' '
+					  AND SUBSTR(uln_origin, 4) ~ '^(-)?[0-9]+$' -- Last chars must be only digits
+					  AND LENGTH(SUBSTR(uln_origin, 4)) >= ".$minUlnNumberLength." -- The ulnNumber must be at least this long
+					  ".$dateOfBirthFilter;
+		$this->conn->exec($sql);
+
+		//Update AnimalMigrationTable
+		$sql = "UPDATE animal_migration_table SET uln_country_code = SUBSTR(uln_origin, 1,2), uln_number = SUBSTR(uln_origin, 3)
+				WHERE uln_number ISNULL
+					  --For ulnOrigins without a separation space
+					  AND SUBSTR(uln_origin, 1,2) ~ '^[A-Z]' --First 2 chars must be only capital letters
+					  AND SUBSTR(uln_origin, 3,1) <> ' '
+					  AND SUBSTR(uln_origin, 3) ~ '^(-)?[0-9]+$' -- Last chars must be only digits
+					  AND LENGTH(SUBSTR(uln_origin, 4)) >= ".$minUlnNumberLength." -- The ulnNumber must be at least this long
+					  ".$dateOfBirthFilter;
+		$this->conn->exec($sql);
+
+		$this->output->writeln($totalCount. ' records in animalMigrationTable updated!');
+	}
+	
+	
 }

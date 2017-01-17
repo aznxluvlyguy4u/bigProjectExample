@@ -148,6 +148,8 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '29: Migrate dateOfDeath & isAlive status', "\n",
             '----------------------------------------------------', "\n",
             '30: Import Extra animalTable', "\n",
+            '----------------------------------------------------', "\n",
+            '40: Fill missing ulnNumbers in AnimalMigrationTable', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -300,6 +302,12 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             case 30:
                 $result = $this->importExtraAnimalTableIntoDatabase() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
+                break;
+
+            case 40:
+                $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+                $animalTableMigrator->fillEmptyUlnsByGivenUlnLength();
+                $output->writeln('DONE');
                 break;
 
             default:
