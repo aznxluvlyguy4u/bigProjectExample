@@ -14,6 +14,7 @@ use AppBundle\Entity\PedigreeRegisterRepository;
 use AppBundle\Enumerator\InspectorMeasurementType;
 use AppBundle\Migration\InspectorMigrator;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\DoctrineUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
@@ -77,6 +78,8 @@ class NsfoInspectorCommand extends ContainerAwareCommand
         $this->pedigreeRegisterRepository = $em->getRepository(PedigreeRegister::class);
         $this->inspectorAuthorizationRepository = $em->getRepository(InspectorAuthorization::class);
 
+        $this->cmdUtil->printTitle(self::TITLE);
+        $this->output->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
