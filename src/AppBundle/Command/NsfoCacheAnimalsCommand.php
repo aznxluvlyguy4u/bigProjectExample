@@ -72,13 +72,13 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
 
         switch ($option) {
             case 1:
-                AnimalCacher::cacheAllAnimals($em, $this->cmdUtil);
+                AnimalCacher::cacheAnimalsBySqlInsert($em, $this->cmdUtil);
                 $output->writeln('DONE!');
                 break;
 
             case 2:
                 $locationId = intval($this->cmdUtil->generateQuestion('insert locationId (default = '.self::DEFAULT_LOCATION_ID.')', self::DEFAULT_LOCATION_ID));
-                AnimalCacher::cacheAnimalsOfLocationId($em, $locationId, $this->cmdUtil);
+                AnimalCacher::cacheAnimalsBySqlInsert($em, $this->cmdUtil, $locationId);
                 $output->writeln('DONE!');
                 break;
 

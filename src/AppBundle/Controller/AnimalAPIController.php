@@ -156,7 +156,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $client = $client = $this->getAuthenticatedUser($request);
     /** @var Location $location */
     $location = $this->getSelectedLocation($request);
-    AnimalCacher::cacheAnimalsOfLocationId($this->getDoctrine()->getManager(), $location->getId(), null, true);
+    AnimalCacher::cacheAnimalsBySqlInsert($this->getDoctrine()->getManager(), null, $location->getId());
     /** @var AnimalRepository $animalRepository */
     $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
     $livestockArray = $animalRepository->getLiveStockBySql($location->getId());
