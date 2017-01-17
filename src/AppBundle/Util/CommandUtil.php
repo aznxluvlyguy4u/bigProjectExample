@@ -213,6 +213,15 @@ class CommandUtil
 
 
     /**
+     * @param $heading
+     */
+    public function printTitle($heading)
+    {
+        $this->outputInterface->writeln(self::generateTitle($heading));
+    }
+    
+
+    /**
      * @param string $heading
      * @return array
      */
