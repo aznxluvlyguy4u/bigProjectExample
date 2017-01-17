@@ -6,6 +6,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\VsmIdGroup;
+use AppBundle\Migration\AnimalMigrationTableFixer;
 use AppBundle\Migration\DateOfDeathMigrator;
 use AppBundle\Migration\AnimalTableMigrator;
 use AppBundle\Migration\BlindnessFactorsMigrator;
@@ -24,6 +25,7 @@ use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -64,6 +66,9 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     /** @var ObjectManager $em */
     private $em;
 
+    /** @var Connection $conn */
+    private $conn;
+
     /** @var CommandUtil */
     private $cmdUtil;
 
@@ -86,6 +91,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
         /** @var ObjectManager $em */
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
+        $this->conn = $this->em->getConnection();
         $this->output = $output;
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
@@ -305,8 +311,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                 break;
 
             case 40:
-                $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
-                $animalTableMigrator->fillEmptyUlnsByGivenUlnLength();
+                AnimalMigrationTableFixer::fillEmptyUlnsByGivenUlnLength($this->cmdUtil, $this->conn);
                 $output->writeln('DONE');
                 break;
 
