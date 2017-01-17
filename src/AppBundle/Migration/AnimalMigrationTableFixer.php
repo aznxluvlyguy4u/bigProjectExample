@@ -158,4 +158,32 @@ class AnimalMigrationTableFixer
         }        
         
     }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     * @param Connection $conn
+     */
+    public static function updateGenderInDatabaseInMigrationTable(CommandUtil $cmdUtil, Connection $conn)
+    {
+        $cmdUtil->writeln('Update incorrect genderInDatabase values in AnimalMigrationTable...');
+
+        $sqlFindIncorrectGenders = "SELECT a.gender, m.id AS migration_table_id FROM animal_migration_table m
+                                    INNER JOIN animal a ON a.name = CAST (m.vsm_id AS TEXT)
+                                  WHERE m.gender_in_database <> a.gender OR gender_in_database ISNULL ";
+        $count = $conn->query($sqlFindIncorrectGenders)->rowCount();
+
+        if($count) {
+            $cmdUtil->writeln('Updating '.$count.' incorrect genderInDatabase values in AnimalMigrationTable...');
+            $sqlUpdateIncorrectGenders = "UPDATE animal_migration_table as t SET gender_in_database = v.gender
+                                    FROM
+                                      (".$sqlFindIncorrectGenders."
+                                    ) as v(gender, migration_table_id) WHERE t.id = v.migration_table_id";
+            $conn->exec($sqlUpdateIncorrectGenders);
+            $cmdUtil->writeln('Done!');
+        } else {
+            $cmdUtil->writeln('No incorrect genderInDatabase values in AnimalMigrationTable!');
+        }
+
+    }
 }

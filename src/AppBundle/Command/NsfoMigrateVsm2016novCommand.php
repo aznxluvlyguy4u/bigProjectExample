@@ -157,6 +157,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '----------------------------------------------------', "\n",
             '40: Fill missing ulnNumbers in AnimalMigrationTable', "\n",
             '41: Fix animalIds in AnimalMigrationTable (likely incorrect due to duplicate fix)', "\n",
+            '42: Fix genderInDatabase values in AnimalMigrationTable (likely incorrect due to genderChange)', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -318,6 +319,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
             case 41:
                 AnimalMigrationTableFixer::updateAnimalIdsInMigrationTable($this->cmdUtil, $this->conn);
+                $output->writeln('DONE');
+                break;
+
+            case 42:
+                AnimalMigrationTableFixer::updateGenderInDatabaseInMigrationTable($this->cmdUtil, $this->conn);
                 $output->writeln('DONE');
                 break;
 
