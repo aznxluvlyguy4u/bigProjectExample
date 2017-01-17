@@ -5,11 +5,14 @@ namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class PedigreeRegister
  * @ORM\Entity(repositoryClass="AppBundle\Entity\PedigreeRegisterRepository")
  * @package AppBundle\Entity
+ * @ExclusionPolicy("all")
  */
 class PedigreeRegister
 {
@@ -19,6 +22,7 @@ class PedigreeRegister
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
+     * @Expose
      */
     private $id;
 
@@ -28,6 +32,7 @@ class PedigreeRegister
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @Expose
      */
     private $abbreviation;
 
@@ -35,6 +40,7 @@ class PedigreeRegister
      * @var PedigreeCode
      * @ORM\ManyToOne(targetEntity="PedigreeCode", cascade={"persist"})
      * @ORM\JoinColumn(name="pedigree_code_id", referencedColumnName="id")
+     * @Expose
      */
     private $pedigreeCode;
 
@@ -44,6 +50,7 @@ class PedigreeRegister
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @Expose
      */
     private $fullName;
 
@@ -104,6 +111,7 @@ class PedigreeRegister
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @Expose
      */
     private $specie;
 
@@ -111,6 +119,7 @@ class PedigreeRegister
      * @ORM\Column(type="boolean", nullable=false, options={"default":true})
      * @Assert\NotBlank
      * @JMS\Type("boolean")
+     * @Expose
      */
     private $isRegisteredWithNsfo;
 
