@@ -66,6 +66,8 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '9: Update location_of_birth_id for all animals and locations', "\n",
             '10: Update AnimalCache exterior values for all exteriors >= given logDate', "\n",
             '--------------------------------------------------------------------------', "\n",
+            '11: Update AnimalCache of one Animal by animalId', "\n",
+            '--------------------------------------------------------------------------', "\n",
             '20: Get locationId from UBN', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
@@ -128,6 +130,12 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 break;
 
 
+            case 11:
+                $this->cacheOneAnimalById();
+                $output->writeln('DONE!');
+                break;
+
+
             case 20:
                 $this->printLocationIdFromGivenUbn();
                 $output->writeln('DONE!');
@@ -156,6 +164,30 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             $this->cmdUtil->writeln('NO LOCATION');
         }
 
+    }
+
+
+    private function cacheOneAnimalById()
+    {
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->em->getRepository(Animal::class);
+
+        do {
+            $animal = null;
+            $animalId = $this->cmdUtil->generateQuestion('Insert animalId', null);
+
+            if(ctype_digit($animalId) || is_int($animalId)) {
+                /** @var Animal $animal */
+                $animal = $animalRepository->find($animalId);
+
+                if($animal == null) { $this->cmdUtil->writeln('No animal found for given id: '.$animalId); }
+            } else {
+                $this->cmdUtil->writeln('AnimalId '.$animalId.' is incorrect. It must be an integer.');
+            }
+
+        } while ($animal == null);
+
+        AnimalCacher::cacheByAnimal($this->em, $animal);
     }
 
 }
