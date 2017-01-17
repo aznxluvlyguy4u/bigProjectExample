@@ -7,6 +7,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -29,6 +30,9 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
     /** @var CommandUtil */
     private $cmdUtil;
 
+    /** @var ObjectManager */
+    private $em;
+
     protected function configure()
     {
         $this
@@ -48,18 +52,13 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
+
+        $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
         
         $id = $this->cmdUtil->generateQuestion('Insert id or uln of animal for which the gender needs to be changed', null);
         if($id === null) { $this->printNoAnimalFoundMessage($id); return;}
 
-        /** @var AnimalRepository $animalRepository */
-        $animalRepository = $em->getRepository(Animal::class);
-
-        if(StringUtil::isStringContains($id, 'NL')) {
-            $animal = $animalRepository->findAnimalByUlnString($id);
-        } else {
-            $animal = $animalRepository->find($id);
-        }
+        $animal = $this->findAnimalByIdOrUln($id);
 
         if(!($animal instanceof Animal)) {
             $this->printNoAnimalFoundMessage($id);
@@ -67,7 +66,7 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
             return;
         }
 
-        $this->printAnimalData($animal);
+        DoctrineUtil::printAnimalData($output, $animal, '-- Data of Animal after gender change --');
         $newGender = $this->askForNewGender();
 
         if($newGender == null) {
@@ -105,7 +104,9 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
         }
 
         if (!$result instanceof JsonResponse) {
-            $this->printAnimalData($result, '-- Data of Animal after gender change --');
+            $em->clear();
+            $animal = $this->findAnimalByIdOrUln($id);
+            DoctrineUtil::printAnimalData($output, $animal, '-- Data of Animal after gender change --');
         } else { //Error has been occured, print message
             $this->output->writeln($result);
         }
@@ -146,26 +147,20 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
         $this->output->writeln('no animal found for input: '.$id);
     }
 
-    private function printAnimalData(Animal $animal, $header = '-- Following animal found --')
-    {
-        if($animal->getIsAlive() === true) {
-            $isAliveString = 'true';
-        } elseif($animal->getIsAlive() === false) {
-            $isAliveString = 'false';
-        } else {
-            $isAliveString = 'null';
-        }
 
-        $this->output->writeln([  $header,
-            'id: '.$animal->getId(),
-            'uln: '.$animal->getUln(),
-            'pedigree: '.$animal->getPedigreeCountryCode().$animal->getPedigreeNumber(),
-            'aiind/vsmId: '.$animal->getName(),
-            'gender: '.$animal->getGender(),
-            'isAlive: '.$isAliveString,
-            'dateOfBirth: '.$animal->getDateOfBirthString(),
-            'dateOfDeath: '.$animal->getDateOfDeathString(),
-            'current ubn: '.$animal->getUbn(),
-        ]);
+    /**
+     * @param string|int $id
+     * @return Animal|Ewe|Neuter|Ram|null
+     */
+    private function findAnimalByIdOrUln($id)
+    {
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->em->getRepository(Animal::class);
+
+        if(StringUtil::isStringContains($id, 'NL')) {
+            return $animalRepository->findAnimalByUlnString($id);
+        } else {
+            return $animalRepository->find($id);
+        }
     }
 }

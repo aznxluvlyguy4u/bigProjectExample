@@ -13,6 +13,7 @@ use AppBundle\Entity\Tag;
 use AppBundle\Entity\Token;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class DoctrineUtil
 {
@@ -206,5 +207,40 @@ class DoctrineUtil
             }
         }
         return null;
+    }
+
+
+    /**
+     * @param CommandUtil|OutputInterface $cmdUtilOrOutputInterface
+     * @param Animal $animal
+     * @param string $header
+     */
+    public static function printAnimalData($cmdUtilOrOutputInterface, Animal $animal, $header = '-- Following animal found --')
+    {
+        if(!($cmdUtilOrOutputInterface instanceof CommandUtil || $cmdUtilOrOutputInterface instanceof OutputInterface)) {
+            return;
+        }
+
+        if($animal == null) { $cmdUtilOrOutputInterface->writeln('Animal is empty'); return; }
+
+        if($animal->getIsAlive() === true) {
+            $isAliveString = 'true';
+        } elseif($animal->getIsAlive() === false) {
+            $isAliveString = 'false';
+        } else {
+            $isAliveString = 'null';
+        }
+
+        $cmdUtilOrOutputInterface->writeln([  $header,
+            'id: '.$animal->getId(),
+            'uln: '.$animal->getUln(),
+            'pedigree: '.$animal->getPedigreeCountryCode().$animal->getPedigreeNumber(),
+            'aiind/vsmId: '.$animal->getName(),
+            'gender: '.$animal->getGender(),
+            'isAlive: '.$isAliveString,
+            'dateOfBirth: '.$animal->getDateOfBirthString(),
+            'dateOfDeath: '.$animal->getDateOfDeathString(),
+            'current ubn: '.$animal->getUbn(),
+        ]);
     }
 }
