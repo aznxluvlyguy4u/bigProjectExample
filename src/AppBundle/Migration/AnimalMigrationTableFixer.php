@@ -186,4 +186,36 @@ class AnimalMigrationTableFixer
         }
 
     }
+
+
+    /**
+     * @param CommandUtil $cmdUtil
+     * @param Connection $conn
+     */
+    public static function updateParentIdsInMigrationTable(CommandUtil $cmdUtil, Connection $conn)
+    {
+        foreach (['father', 'mother'] as $parentType) {
+            $cmdUtil->writeln('Update incorrect '.$parentType.'_id values in AnimalMigrationTable...');
+
+            $sqlFindIncorrectParentIds = "SELECT a.id AS ".$parentType."_id, m.id AS migration_table_id FROM animal_migration_table m
+                                        INNER JOIN animal a ON a.name = CAST (m.".$parentType."_vsm_id AS TEXT)
+                                      WHERE m.".$parentType."_id ISNULL OR m.".$parentType."_id <> a.id";
+            $count = $conn->query($sqlFindIncorrectParentIds)->rowCount();
+
+            if($count) {
+                $cmdUtil->writeln('Updating '.$count.' incorrect '.$parentType.'_id values in AnimalMigrationTable...');
+                $sqlUpdateIncorrectParentIds = "UPDATE animal_migration_table as t SET ".$parentType."_id = v.parent_id
+                                    FROM
+                                      (".$sqlFindIncorrectParentIds."
+                                    ) as v(parent_id, migration_table_id) WHERE t.id = v.migration_table_id";
+                $conn->exec($sqlUpdateIncorrectParentIds);
+                $cmdUtil->writeln('Done!');
+            } else {
+                $cmdUtil->writeln('No incorrect '.$parentType.'_id values in AnimalMigrationTable!');
+            }
+        }
+        
+
+
+    }
 }
