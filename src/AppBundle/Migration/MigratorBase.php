@@ -106,4 +106,12 @@ class MigratorBase
     {
         $this->primaryVsmIdsBySecondaryVsmId = $this->vsmIdGroupRepository->getPrimaryVsmIdsBySecondaryVsmId();
     }
+
+
+    /**
+     * @return VsmIdGroupRepository
+     */
+    public function getVsmIdGroupRepository() {
+        return $this->vsmIdGroupRepository;
+    }
 }
