@@ -19,6 +19,7 @@ class ExteriorValidator extends BaseValidator
 {
     const DEFAULT_MIN_EXTERIOR_VALUE = 69;
     const DEFAULT_MAX_EXTERIOR_VALUE = 99;
+    const ALLOW_BLANK_KIND = true;
 
     /** @var string */
     private $measurementDateString;
@@ -158,14 +159,17 @@ class ExteriorValidator extends BaseValidator
     private function validateExteriorKind()
     {
         $code = $this->content->get(JsonInputConstant::KIND);
-        if(array_key_exists($code, $this->allowedExteriorCodes)) {
+        if(array_key_exists($code, $this->allowedExteriorCodes) || //must be a valid exteriorKindCode OR
+            (!$this->content->containsKey(JsonInputConstant::KIND) && self::ALLOW_BLANK_KIND) // must be blank IF that is allowed
+        ) {
             $this->kind = strval($code);
             $isValidValue = true;
 
         } else {
             $this->kind = null;
             $isValidValue = false;
-            $this->errors[] = "KIND VALUE MUST BE '".implode("' OR '", $this->allowedExteriorCodes)."'";
+            $allowBlankErrorText = self::ALLOW_BLANK_KIND ? ' OR MUST BE BLANK' : '';
+            $this->errors[] = "KIND VALUE MUST BE '".implode("' OR '", $this->allowedExteriorCodes)."'".$allowBlankErrorText;
         }
         return $isValidValue;
     }
