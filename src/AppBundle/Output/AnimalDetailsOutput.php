@@ -67,40 +67,6 @@ class AnimalDetailsOutput
             $litterSize = $litter->getSize();
         }
 
-        $exteriors = $animal->getExteriorMeasurements();
-        if (sizeof($exteriors) == 0) {
-            $exteriorDate = '';
-            $skull = 0.00;
-            $progress = 0.00;
-            $muscularity = 0.00;
-            $proportion = 0.00;
-            $type = 0.00;
-            $legWork = 0.00;
-            $fur = 0.00;
-            $generalAppearance = 0.00;
-            $height = 0.00;
-            $breastDepth = 0.00;
-            $torsoLength = 0.00;
-            $markings = 0.00;
-            $kind = '';
-        } else {
-            /** @var Exterior $exterior */
-            $exterior = $em->getRepository(Exterior::class)->getLatestExterior($animal);
-            $exteriorDate = $exterior->getMeasurementDate();
-            $skull = $exterior->getSkull();
-            $progress = $exterior->getProgress();
-            $muscularity = $exterior->getMuscularity();
-            $proportion = $exterior->getProportion();
-            $type = $exterior->getExteriorType();
-            $legWork = $exterior->getLegWork();
-            $fur = $exterior->getFur();
-            $generalAppearance = $exterior->getGeneralAppearence();
-            $height = $exterior->getHeight();
-            $breastDepth = $exterior->getBreastDepth();
-            $torsoLength = $exterior->getTorsoLength();
-            $markings = $exterior->getMarkings();
-            $kind = $exterior->getKind();
-        }
 
         $bodyFats = $animal->getBodyFatMeasurements();
         if (sizeof($bodyFats) == 0) {
@@ -181,23 +147,6 @@ class AnimalDetailsOutput
             "predicate" => Utils::fillNullOrEmptyString("", $replacementString),
             "breed_status" => Utils::fillNullOrEmptyString($animal->getBreedType(), $replacementString),
             JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($animal->getIsAlive(), $replacementString),
-            "exterior" =>
-                array(
-                    "measurement_date" => Utils::fillNullOrEmptyString($exteriorDate, $replacementString),
-                    "skull" => Utils::fillZero($skull, $replacementString),
-                    "progress" => Utils::fillZero($progress, $replacementString),
-                    "muscularity" => Utils::fillZero($muscularity, $replacementString),
-                    "proportion" => Utils::fillZero($proportion, $replacementString),
-                    "type" => Utils::fillZero($type, $replacementString),
-                    "leg_work" => Utils::fillZero($legWork, $replacementString),
-                    "fur" => Utils::fillZero($fur, $replacementString),
-                    "general_appearance" => Utils::fillZero($generalAppearance, $replacementString),
-                    "height" => Utils::fillZero($height, $replacementString),
-                    "breast_depth" => Utils::fillZero($breastDepth, $replacementString),
-                    "torso_length" => Utils::fillZero($torsoLength, $replacementString),
-                    "markings" => Utils::fillZero($markings, $replacementString),
-                    "kind" => Utils::fillZero($kind, $replacementString)
-                ),
             "measurement" =>
                 array(
                     "measurement_date" => Utils::fillNullOrEmptyString($bodyFat['date'], $replacementString),
