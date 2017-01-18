@@ -598,7 +598,7 @@ class DuplicateAnimalsFixer
         $breedCodesSetId2 = $secondaryAnimalResultArray['breed_codes_id'];
 
         if($breedCodeString1 == null && $breedCodeString2 != null) {
-            $animalSqlMiddle = $animalSqlMiddle.' breed_code = '.$breedCodeString2.',';
+            $animalSqlMiddle = $animalSqlMiddle." breed_code = '".$breedCodeString2."',";
             if($breedCodesSetId1 == null && $breedCodesSetId2 != null) {
                 $animalSqlMiddle = $animalSqlMiddle.' breed_codes_id = '.$breedCodesSetId2.',';
                 $sql = "UPDATE breed_codes SET animal_id = ".$primaryAnimalId." WHERE id = ".$breedCodesSetId2;
