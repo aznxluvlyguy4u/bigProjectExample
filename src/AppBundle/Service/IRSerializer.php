@@ -323,6 +323,17 @@ class IRSerializer implements IRSerializerInterface
                     )
                   ), $statusCode);
             }
+
+            //Additional gender check
+            if($father['gender'] != GenderType::MALE) {
+                return new JsonResponse(
+                  array(
+                    Constant::RESULT_NAMESPACE => array (
+                      'code' => $statusCode,
+                      "message" => "Opgegeven vader: " . $father['uln_country_code'] . $father['uln_number'] ." is gevonden, echter is het geslacht van het gevonden dier, niet van het type: RAM.",
+                    )
+                  ), $statusCode);
+            }
         }
 
         if(key_exists('mother', $declareBirthContentArray->toArray())) {
@@ -335,6 +346,18 @@ class IRSerializer implements IRSerializerInterface
                     Constant::RESULT_NAMESPACE => array (
                       'code' => $statusCode,
                       "message" => "Opgegeven moeder kan niet gevonden worden.",
+                    )
+                  ), $statusCode);
+            }
+
+
+            //Additional Gender check
+            if($mother['gender'] != GenderType::FEMALE) {
+                return new JsonResponse(
+                  array(
+                    Constant::RESULT_NAMESPACE => array (
+                      'code' => $statusCode,
+                      "message" => "Opgegeven moeder: " . $mother['uln_country_code'] . $mother['uln_number'] ." is gevonden, echter is het geslacht van het gevonden dier, niet van het type: OOI.",
                     )
                   ), $statusCode);
             }
@@ -496,6 +519,16 @@ class IRSerializer implements IRSerializerInterface
                             Constant::RESULT_NAMESPACE => array (
                               'code' => $statusCode,
                               "message" => "Opgegeven pleegmoeder kan niet gevonden worden.",
+                            )
+                          ), $statusCode);
+                    }
+
+                    if($surrogate['gender'] != GenderType::FEMALE) {
+                        return new JsonResponse(
+                          array(
+                            Constant::RESULT_NAMESPACE => array (
+                              'code' => $statusCode,
+                              "message" => "Opgegeven surrogaat: " .$surrogate['uln_country_code'] .$surrogate['uln_number'] ." is gevonden, echter is het geslacht van het gevonden dier, niet van het type: OOI.",
                             )
                           ), $statusCode);
                     }
