@@ -325,7 +325,7 @@ class IRSerializer implements IRSerializerInterface
             }
 
             //Additional gender check
-            if($father['gender'] != GenderType::MALE) {
+            if($father->getGender() != GenderType::MALE) {
                 return new JsonResponse(
                   array(
                     Constant::RESULT_NAMESPACE => array (
@@ -352,7 +352,7 @@ class IRSerializer implements IRSerializerInterface
 
 
             //Additional Gender check
-            if($mother['gender'] != GenderType::FEMALE) {
+            if($mother->getGender() != GenderType::FEMALE) {
                 return new JsonResponse(
                   array(
                     Constant::RESULT_NAMESPACE => array (
@@ -523,7 +523,7 @@ class IRSerializer implements IRSerializerInterface
                           ), $statusCode);
                     }
 
-                    if($surrogate['gender'] != GenderType::FEMALE) {
+                    if($surrogate->getGender() != GenderType::FEMALE) {
                         return new JsonResponse(
                           array(
                             Constant::RESULT_NAMESPACE => array (
