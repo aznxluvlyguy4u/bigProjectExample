@@ -117,32 +117,11 @@ class AnimalMigrationTableFixer
      */
     public static function updateAnimalIdsInMigrationTable(CommandUtil $cmdUtil, Connection $conn)
     {
-        $cmdUtil->writeln('Finding missing animalIds in AnimalMigrationTable...');
-        
-        $sqlFindBlankAnimalIds = "SELECT a.id AS animal_id, m.id AS migration_table_id FROM animal_migration_table m
-                                    LEFT JOIN animal a ON a.name = CAST (m.vsm_id AS TEXT)
-                                  WHERE m.animal_id ISNULL AND a.id NOTNULL";
-        $count = $conn->query($sqlFindBlankAnimalIds)->rowCount();
-
-        if($count) {
-            $cmdUtil->writeln('Filling '.$count.' missing animalIds in AnimalMigrationTable...');
-            $sqlFillBlankAnimalIds = "UPDATE animal_migration_table as t SET animal_id = v.animal_id
-                                    FROM
-                                      (".$sqlFindBlankAnimalIds."
-                                    ) as v(animal_id, migration_table_id) WHERE t.id = v.migration_table_id";
-            $conn->exec($sqlFillBlankAnimalIds);
-            $cmdUtil->writeln('Done!');
-        } else {
-            $cmdUtil->writeln('No missing animalIds in AnimalMigrationTable!');
-        }
-
-
-
         $cmdUtil->writeln('Finding incorrect animalIds in AnimalMigrationTable...');
 
         $sqlFindIncorrectAnimalIds = "SELECT a.id AS animal_id, m.id AS migration_table_id FROM animal_migration_table m
                                     LEFT JOIN animal a ON a.name = CAST (m.vsm_id AS TEXT)
-                                  WHERE m.animal_id <> a.id";
+                                  WHERE m.animal_id <> a.id OR (m.animal_id ISNULL AND a.id NOTNULL)";
         $count = $conn->query($sqlFindIncorrectAnimalIds)->rowCount();
 
         if($count) {
