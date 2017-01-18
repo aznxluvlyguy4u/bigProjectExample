@@ -178,7 +178,8 @@ class AnimalMigrationTableFixer
 
             $sqlFindIncorrectParentIds = "SELECT a.id AS ".$parentType."_id, m.id AS migration_table_id FROM animal_migration_table m
                                         INNER JOIN animal a ON a.name = CAST (m.".$parentType."_vsm_id AS TEXT)
-                                      WHERE m.".$parentType."_id ISNULL OR m.".$parentType."_id <> a.id";
+                                        LEFT JOIN vsm_id_group vs ON vs.secondary_vsm_id = CAST (m.".$parentType."_vsm_id AS TEXT)
+                                      WHERE (m.".$parentType."_id ISNULL OR m.".$parentType."_id <> a.id) AND vs.id ISNULL";
             $count = $conn->query($sqlFindIncorrectParentIds)->rowCount();
 
             if($count) {
@@ -194,7 +195,16 @@ class AnimalMigrationTableFixer
             }
         }
         
+        //TODO Update parentIds for the following situations...
+        /*
+         * SELECT a.id AS father_id FROM animal_migration_table m
+  INNER JOIN animal a ON a.name = CAST (m.father_vsm_id AS TEXT)
+WHERE (m.father_id ISNULL OR m.father_id <> a.id)
 
+SELECT a.id AS mother_id FROM animal_migration_table m
+  INNER JOIN animal a ON a.name = CAST (m.mother_vsm_id AS TEXT)
+WHERE (m.mother_id ISNULL OR m.mother_id <> a.id)
+         */
 
     }
 }
