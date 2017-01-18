@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Cache\AnimalCacher;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Employee;
@@ -30,6 +31,7 @@ use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use AppBundle\Enumerator\RequestType;
+
 
 /**
  * @Route("/api/v1/animals")
@@ -153,17 +155,15 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Method("GET")
    */
   public function getLiveStock(Request $request) {
-    $client = $client = $this->getAuthenticatedUser($request);
-    /** @var Location $location */
     $location = $this->getSelectedLocation($request);
-    AnimalCacher::cacheAnimalsBySqlInsert($this->getDoctrine()->getManager(), null, $location->getId());
-    /** @var AnimalRepository $animalRepository */
     $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-    $livestockArray = $animalRepository->getLiveStockBySql($location->getId());
+    /**
+     * var ArrayCollection
+     */
+    $livestock = $animalRepository->getLiveStock($location);
 
-    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $livestockArray), 200);
+    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $livestock), 200);
   }
-
 
   /**
    * Retrieve all historic animals that ever resided on this location, dead or alive
