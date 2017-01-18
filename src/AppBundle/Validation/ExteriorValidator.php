@@ -21,7 +21,9 @@ use AppBundle\Entity\Person;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 
 class ExteriorValidator extends BaseValidator
 {
@@ -96,6 +98,9 @@ class ExteriorValidator extends BaseValidator
     /** @var ObjectManager */
     private $em;
 
+    /** @var Connection */
+    private $conn;
+
     /** @var Animal */
     private $animal;
 
@@ -115,6 +120,7 @@ class ExteriorValidator extends BaseValidator
         $this->allowBlankInspector = $allowBlankInspector;
         $this->isEdit = $measurementDateString != null;
         $this->em = $em;
+        $this->conn = $em->getConnection();
 
         parent::__construct($em, $content);
 
@@ -167,12 +173,9 @@ class ExteriorValidator extends BaseValidator
                     $newMeasurementDate = new \DateTime($newMeasurementDateString);
 
                     //Check for duplicate dates only if the date is actually changed
-                    if($newMeasurementDate != $this->measurementDate) {
-                        /** @var ExteriorRepository $exteriorRepository */
-                        $exteriorRepository = $this->em->getRepository(Exterior::class);
-                        $exteriors = $exteriorRepository->findBy(['animal' => $this->animal, 'measurementDate' => $newMeasurementDate]);
+                    if(TimeUtil::isDateTimesOnTheSameDay($newMeasurementDate, $this->measurementDate)) {
 
-                        if(count($exteriors) > 0) {
+                        if($this->doesExteriorMeasurementAlreadyExistOnDate($newMeasurementDate)) {
                             $this->errors[] = 'There already exists another exterior for this animal on the given date. Choose another date';
                             $this->isInputValid = false;
                             return false;
@@ -195,7 +198,15 @@ class ExteriorValidator extends BaseValidator
             $measurementDateString = Utils::getNullCheckedArrayValue(0, explode('T', $measurementDateTimeString));
             $isDateStringValid = TimeUtil::isFormatYYYYMMDD($measurementDateString);
             if($isDateStringValid) {
-                $this->measurementDate = new \DateTime($measurementDateString);
+                $measurementDate = new \DateTime($measurementDateString);
+
+                if($this->doesExteriorMeasurementAlreadyExistOnDate($measurementDate)) {
+                    $this->errors[] = 'There already exists another exterior for this animal on the given date. Choose another date';
+                    $this->isInputValid = false;
+                    return false;
+                }
+
+                $this->measurementDate = $measurementDate;
             }
         }
 
@@ -226,6 +237,26 @@ class ExteriorValidator extends BaseValidator
         if(!$isValidInspectorIdInput) { $validityCheck = false; }
 
         return $validityCheck;
+    }
+
+
+    /**
+     * @param \DateTime $measurementDate
+     * @return bool
+     */
+    private function doesExteriorMeasurementAlreadyExistOnDate(\DateTime $measurementDate, $defaultResponse = true)
+    {
+        if($this->animal instanceof Animal) {
+            $animalId = $this->animal->getId();
+
+            $sql = "SELECT x.id FROM exterior x
+                      INNER JOIN measurement m ON x.id = m.id
+                    WHERE animal_id = ".$animalId." AND DATE(m.measurement_date) = DATE('".TimeUtil::getTimeStampForSql($measurementDate)."')";
+            $count = $this->conn->query($sql)->rowCount();
+
+            return $count > 0;
+        }
+        return $defaultResponse;
     }
 
 
