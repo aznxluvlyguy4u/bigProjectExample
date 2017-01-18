@@ -67,12 +67,25 @@ class AnimalDetailsOutput
             $litterSize = $litter->getSize();
         }
 
+        /** @var BodyFatRepository $bodyFatRepository */
+        $bodyFatRepository = $em->getRepository(BodyFat::class);
+        /** @var ExteriorRepository $exteriorRepository */
+        $exteriorRepository = $em->getRepository(Exterior::class);
+        /** @var WeightRepository $weightRepository */
+        $weightRepository = $em->getRepository(Weight::class);
+        /** @var MuscleThicknessRepository $muscleThicknessRepository */
+        $muscleThicknessRepository = $em->getRepository(MuscleThickness::class);
+        /** @var TailLengthRepository $tailLengthRepository */
+        $tailLengthRepository = $em->getRepository(TailLength::class);
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $em->getRepository(Animal::class);
+
 
         $bodyFats = $animal->getBodyFatMeasurements();
         if (sizeof($bodyFats) == 0) {
             $bodyFat = 0.00;
         } else {
-            $bodyFat = $em->getRepository(BodyFat::class)->getLatestBodyFat($animal);
+            $bodyFat = $bodyFatRepository->getLatestBodyFat($animal);
         }
 
         $weights = $animal->getWeightMeasurements();
@@ -80,22 +93,22 @@ class AnimalDetailsOutput
             $weight = 0.00;
             $birthWeight = 0.00;
         } else {
-            $weight = $em->getRepository(Weight::class)->getLatestWeight($animal, false);
-            $birthWeight = $em->getRepository(Weight::class)->getLatestBirthWeight($animal);
+            $weight = $weightRepository->getLatestWeight($animal, false);
+            $birthWeight = $weightRepository->getLatestBirthWeight($animal);
         }
 
         $muscleThicknesses = $animal->getMuscleThicknessMeasurements();
         if (sizeof($muscleThicknesses) == 0) {
             $muscleThickness = 0.00;
         } else {
-            $muscleThickness = $em->getRepository(MuscleThickness::class)->getLatestMuscleThickness($animal);
+            $muscleThickness = $muscleThicknessRepository->getLatestMuscleThickness($animal);
         }
 
         $tailLengths = $animal->getTailLengthMeasurements();
         if (sizeof($tailLengths) == 0) {
             $tailLength = 0.00;
         } else {
-            $tailLength = $em->getRepository(TailLength::class)->getLatestTailLength($animal);
+            $tailLength = $tailLengthRepository->getLatestTailLength($animal);
         }
 
         $breeder = $animal->getBreeder();
@@ -110,19 +123,6 @@ class AnimalDetailsOutput
             $breederEmailAddress = $replacementString; //TODO replace with real value
             $breederTelephoneNumber = $replacementString; //TODO replace with real value
         }
-
-        /** @var BodyFatRepository $bodyFatRepository */
-        $bodyFatRepository = $em->getRepository(BodyFat::class);
-        /** @var ExteriorRepository $exteriorRepository */
-        $exteriorRepository = $em->getRepository(Exterior::class);
-        /** @var WeightRepository $weightRepository */
-        $weightRepository = $em->getRepository(Weight::class);
-        /** @var MuscleThicknessRepository $muscleThicknessRepository */
-        $muscleThicknessRepository = $em->getRepository(MuscleThickness::class);
-        /** @var TailLengthRepository $tailLengthRepository */
-        $tailLengthRepository = $em->getRepository(TailLength::class);
-        /** @var AnimalRepository $animalRepository */
-        $animalRepository = $em->getRepository(Animal::class);
 
         $result = array(
             Constant::ULN_COUNTRY_CODE_NAMESPACE => Utils::fillNullOrEmptyString($animal->getUlnCountryCode(), $replacementString),
