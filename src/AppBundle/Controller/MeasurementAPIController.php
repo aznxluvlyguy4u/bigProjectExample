@@ -189,19 +189,19 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             return $exteriorValidator->createJsonResponse();
         }
         $inspector = $exteriorValidator->getInspector();
-        $measurementDate = $exteriorValidator->getMeasurementDate();
+        $currentMeasurementDate = $exteriorValidator->getMeasurementDate();
 
 
         /** @var ExteriorRepository $repository */
         $repository = $em->getRepository(Exterior::class);
         /** @var Exterior $exterior */
-        $exterior = $repository->findOneBy(['measurementDate' => $measurementDate, 'animal' => $animal]);
+        $exterior = $repository->findOneBy(['measurementDate' => $currentMeasurementDate, 'animal' => $animal]);
 
         if($exterior instanceof Exterior) {
             $exterior->setActionBy($loggedInUser);
             $exterior->setEditDate(new \DateTime());
             $exterior->setAnimal($animal);
-            $exterior->setMeasurementDate($measurementDate);
+            $exterior->setMeasurementDate($exteriorValidator->getNewMeasurementDate());
             $exterior->setKind($exteriorValidator->getKind());
             $exterior->setSkull($exteriorValidator->getSkull());
             $exterior->setProgress($exteriorValidator->getProgress());
@@ -216,7 +216,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             $exterior->setTorsoLength($exteriorValidator->getTorsoLength());
             $exterior->setMarkings($exteriorValidator->getMarkings());
             $exterior->setInspector($inspector);
-            $exterior->setAnimalIdAndDateByAnimalAndDateTime($animal, $measurementDate);
+            $exterior->setAnimalIdAndDateByAnimalAndDateTime($animal, $currentMeasurementDate);
 
             $em->persist($exterior);
             $em->flush();

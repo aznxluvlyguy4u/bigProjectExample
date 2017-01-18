@@ -74,6 +74,9 @@ class ExteriorValidator extends BaseValidator
     /** @var \DateTime */
     private $measurementDate;
 
+    /** @var \DateTime */
+    private $newMeasurementDate;
+
     /** @var array */
     private $allowedExteriorCodes;
 
@@ -82,6 +85,9 @@ class ExteriorValidator extends BaseValidator
 
     /** @var boolean */
     private $allowBlankInspector;
+
+    /** @var boolean */
+    private $isEdit;
 
     /**
      * ExteriorValidator constructor.
@@ -97,6 +103,7 @@ class ExteriorValidator extends BaseValidator
         $this->measurementDateString = $measurementDateString;
         $this->allowedExteriorCodes = $allowedExteriorCodes;
         $this->allowBlankInspector = $allowBlankInspector;
+        $this->isEdit = $measurementDateString != null;
 
         parent::__construct($em, $content);
 
@@ -139,7 +146,22 @@ class ExteriorValidator extends BaseValidator
             $isDateStringValid = TimeUtil::isFormatYYYYMMDD($this->measurementDateString);
             if($isDateStringValid) {
                 $this->measurementDate = new \DateTime($this->measurementDateString);
+
+                $newMeasurementDateTimeString = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MEASUREMENT_DATE, $this->content);
+                //Only use date part of dateTime
+                $newMeasurementDateString = Utils::getNullCheckedArrayValue(0, explode('T', $newMeasurementDateTimeString));
+                $isNewDateStringValid = TimeUtil::isFormatYYYYMMDD($newMeasurementDateString);
+                if($isNewDateStringValid) {
+                    $this->newMeasurementDate = new \DateTime($newMeasurementDateString);
+                }  else {
+                    $this->errors[] = 'Given newMeasurementDate in body does not have a valid format. It must have the following format YYYY-MM-DD';
+                    $this->isInputValid = false;
+                }
+            } else {
+                $this->errors[] = 'Given measurementDate in url does not have a valid format. It must have the following format YYYY-MM-DD';
+                $this->isInputValid = false;
             }
+
         } else {
             $measurementDateTimeString = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::MEASUREMENT_DATE, $this->content);
             //Only use date part of dateTime
@@ -470,5 +492,13 @@ class ExteriorValidator extends BaseValidator
         return $this->measurementDate;
     }
 
+    /**
+     * @return \DateTime
+     */
+    public function getNewMeasurementDate()
+    {
+        return $this->newMeasurementDate;
+    }
 
+   
 }
