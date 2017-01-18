@@ -111,17 +111,22 @@ class AnimalDetailsOutput
             $tailLength = $tailLengthRepository->getLatestTailLength($animal);
         }
 
-        $breeder = $animal->getBreeder();
-        if ($breeder == null) {
-            $breederName = $replacementString;
-            $breederUbn = $replacementString;
-            $breederEmailAddress = $replacementString;
-            $breederTelephoneNumber = $replacementString;
-        } else {
-            $breederName = $replacementString; //TODO replace with real value
-            $breederUbn = $replacementString; //TODO replace with real value
-            $breederEmailAddress = $replacementString; //TODO replace with real value
-            $breederTelephoneNumber = $replacementString; //TODO replace with real value
+
+        $breederUbn = $replacementString;
+        $locationOfBirth = $animal->getLocationOfBirth();
+        if($locationOfBirth != null) {
+            $breederUbn = $locationOfBirth->getUbn();
+        }
+
+
+        $breederName = $replacementString;
+        $breederEmailAddress = $replacementString;
+        $breederTelephoneNumber = $replacementString;
+        $breeder = $locationOfBirth->getOwner();
+        if ($breeder != null) {
+            $breederName = Utils::fillNullOrEmptyString($breeder->getFullName(), $replacementString);
+            $breederEmailAddress = Utils::fillNullOrEmptyString($breeder->getEmailAddress(), $replacementString);
+            $breederTelephoneNumber = Utils::fillNullOrEmptyString($breeder->getCellphoneNumber(), $replacementString);
         }
 
         $result = array(

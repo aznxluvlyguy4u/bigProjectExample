@@ -152,6 +152,7 @@ class Location
   
 
   /**
+   * @var Company
    * @Assert\NotBlank
    * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"}, fetch="EAGER")
    * @JMS\Type("AppBundle\Entity\Company")
@@ -944,4 +945,11 @@ class Location
     }
 
 
+    public function getOwner()
+    {
+        if($this->company != null) {
+            return $this->getCompany()->getOwner();
+        }
+        return null;
+    }
 }
