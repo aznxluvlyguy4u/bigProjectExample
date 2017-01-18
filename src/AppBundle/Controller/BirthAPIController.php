@@ -2,20 +2,24 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Cache\AnimalCacher;
 use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalCache;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareBirthResponse;
 use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Litter;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Tag;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
@@ -411,5 +415,59 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
               "message" => "Failed to revoke and remove all child and stillborn animals ",
             )
           ), $statusCode);
+    }
+
+    /**
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/{uln}/candidate-fathers")
+     * @Method("GET")
+     */
+    public function getCandidateFathers(Request $request, $uln) {
+        $client = $client = $this->getAuthenticatedUser($request);
+        /** @var Location $location */
+        $location = $this->getSelectedLocation($request);
+        AnimalCacher::cacheAnimalsBySqlInsert($this->getDoctrine()->getManager(), null, $location->getId());
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+        $livestockArray = $animalRepository->getLiveStockBySql($location->getId());
+
+        $result = [];
+
+        foreach ($livestockArray as $item) {
+          if ($item['gender'] == GenderType::MALE) {
+             $result[] = $item;
+          }
+        }
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+    }
+
+    /**
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/{uln}/candidate-surrogates")
+     * @Method("GET")
+     */
+    public function getCandidateSurrogates(Request $request, $uln) {
+        $client = $client = $this->getAuthenticatedUser($request);
+        /** @var Location $location */
+        $location = $this->getSelectedLocation($request);
+        AnimalCacher::cacheAnimalsBySqlInsert($this->getDoctrine()->getManager(), null, $location->getId());
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+        $livestockArray = $animalRepository->getLiveStockBySql($location->getId());
+
+        $result = [];
+
+        foreach ($livestockArray as $item) {
+            if ($item['gender'] == GenderType::FEMALE) {
+                if($item['uln_number'] != substr($uln, 2)) {
+                    $result[] = $item;
+                }
+            }
+        }
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
 }
