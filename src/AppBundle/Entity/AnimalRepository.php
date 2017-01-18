@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+
 use AppBundle\Component\Count;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
@@ -19,6 +20,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Symfony\Component\Console\Output\OutputInterface;
+
+
 
 /**
  * Class AnimalRepository
@@ -332,18 +335,39 @@ class AnimalRepository extends BaseRepository
    */
   public function getLiveStock(Location $location, $isAlive = true, $isDeparted = false, $isExported = false)
   {
-    $animals = array();
+    $em = $this->getEntityManager();
+    $queryBuilder = $em->createQueryBuilder();
+    $queryBuilder
+      ->select('animal')
+      ->from ('AppBundle:Animal', 'animal')
+      ->where('animal.location = :locationId')
+      ->andWhere('animal.isAlive = :isAlive')
+      ->setParameter('locationId', $location->getId())
+      ->setParameter('isAlive', true);
 
-    foreach ($location->getAnimals() as $animal) {
+    $query = $queryBuilder->getQuery();
+    $query->useResultCache(true, 3600, 'livestock');
+    $animals = $query->getResult();
+    $livestock = [];
 
-      $showAnimal = Count::includeAnimal($animal, $isAlive, $isExported, $isDeparted);
-
-      if ($showAnimal) {
-        $animals[] = $animal;
-      }
+    foreach ($animals as $animal) {
+      $livestock[] = [
+        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+        JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+        JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+        JsonInputConstant::GENDER =>  $animal->getGender(),
+        JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+        JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+        JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+        JsonInputConstant::UBN => $location->getUbn(),
+        JsonInputConstant::IS_HISTORIC_ANIMAL => $animal->getLocation()->getUbn() != $location->getUbn() || !$animal->getIsAlive(),
+        JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+      ];
     }
 
-    return $animals;
+    return $livestock;
   }
 
 
