@@ -150,6 +150,7 @@ class JsonInputConstant
     const MEASUREMENT_DATE = 'measurement_date';
     const IS_EMPTY_MEASUREMENT = 'is_empty_measurement';
     const MEASUREMENT_ROW = 'measurement_row';
+    const INSPECTOR = 'inspector';
     const INSPECTOR_ID = 'inspector_id';
     const INSPECTOR_FIRST_NAME = 'inspector_first_name';
     const INSPECTOR_LAST_NAME = 'inspector_last_name';

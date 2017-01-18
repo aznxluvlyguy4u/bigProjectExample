@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\NumberUtil;
 use AppBundle\Util\TimeUtil;
@@ -46,9 +47,10 @@ class ExteriorRepository extends MeasurementRepository {
                 WHERE x.animal_id = ".$animal->getId()." ORDER BY measurement_date DESC";
         $retrievedMeasurementData = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
+        $count = 0;
         foreach ($retrievedMeasurementData as $measurementData)
         {
-            $results[] = [
+            $results[$count] = [
                 JsonInputConstant::MEASUREMENT_DATE => TimeUtil::getDateTimeFromNullCheckedArrayValue('measurement_date', $measurementData, $nullFiller),
                 JsonInputConstant::HEIGHT => Utils::fillNullOrEmptyString($measurementData['height'], $nullFiller),
                 JsonInputConstant::KIND => Utils::fillNullOrEmptyString($measurementData['kind'], $nullFiller),
@@ -63,10 +65,19 @@ class ExteriorRepository extends MeasurementRepository {
                 JsonInputConstant::BREAST_DEPTH => Utils::fillNullOrEmptyString($measurementData['breast_depth'], $nullFiller),
                 JsonInputConstant::TORSO_LENGTH => Utils::fillNullOrEmptyString($measurementData['torso_length'], $nullFiller),
                 JsonInputConstant::MARKINGS => Utils::fillNullOrEmptyString($measurementData['markings'], $nullFiller),
-                JsonInputConstant::INSPECTOR_ID => Utils::fillNullOrEmptyString($measurementData['person_id'], $nullFiller),
-                JsonInputConstant::INSPECTOR_FIRST_NAME => Utils::fillNullOrEmptyString($measurementData['first_name'], $nullFiller),
-                JsonInputConstant::INSPECTOR_LAST_NAME => Utils::fillNullOrEmptyString($measurementData['last_name'], $nullFiller),
             ];
+
+            //Only include inspector key if it exists
+            $personId = $measurementData['person_id'];
+            if($personId != null && $personId != '') {
+                $results[$count][JsonInputConstant::INSPECTOR] = [
+                    JsonInputConstant::ID => $personId,
+                    JsonInputConstant::FIRST_NAME => Utils::fillNullOrEmptyString($measurementData['first_name'], $nullFiller),
+                    JsonInputConstant::LAST_NAME => Utils::fillNullOrEmptyString($measurementData['last_name'], $nullFiller),
+                ];
+            }
+
+            $count++;
         }
         return $results;
     }
