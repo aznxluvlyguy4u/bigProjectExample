@@ -8,10 +8,14 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\Exterior;
+use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\Inspector;
 use AppBundle\Entity\InspectorAuthorization;
 use AppBundle\Entity\InspectorAuthorizationRepository;
 use AppBundle\Entity\InspectorRepository;
+use AppBundle\Entity\Measurement;
+use AppBundle\Entity\MeasurementRepository;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\Person;
 use AppBundle\Util\TimeUtil;
@@ -89,6 +93,12 @@ class ExteriorValidator extends BaseValidator
     /** @var boolean */
     private $isEdit;
 
+    /** @var ObjectManager */
+    private $em;
+
+    /** @var Animal */
+    private $animal;
+
     /**
      * ExteriorValidator constructor.
      * @param ObjectManager $em
@@ -104,6 +114,7 @@ class ExteriorValidator extends BaseValidator
         $this->allowedExteriorCodes = $allowedExteriorCodes;
         $this->allowBlankInspector = $allowBlankInspector;
         $this->isEdit = $measurementDateString != null;
+        $this->em = $em;
 
         parent::__construct($em, $content);
 
@@ -119,6 +130,7 @@ class ExteriorValidator extends BaseValidator
                 return;
             }
         }
+        $this->animal = $animal;
 
         if($animal->getPedigreeRegister() == null && self::ALLOW_ANIMALS_WITHOUT_A_PEDIGREE_REGISTER) {
             $this->errors[] = 'The animal is not part of a pedigreeRegister';
@@ -152,7 +164,22 @@ class ExteriorValidator extends BaseValidator
                 $newMeasurementDateString = Utils::getNullCheckedArrayValue(0, explode('T', $newMeasurementDateTimeString));
                 $isNewDateStringValid = TimeUtil::isFormatYYYYMMDD($newMeasurementDateString);
                 if($isNewDateStringValid) {
-                    $this->newMeasurementDate = new \DateTime($newMeasurementDateString);
+                    $newMeasurementDate = new \DateTime($newMeasurementDateString);
+
+                    //Check for duplicate dates only if the date is actually changed
+                    if($newMeasurementDate != $this->measurementDate) {
+                        /** @var ExteriorRepository $exteriorRepository */
+                        $exteriorRepository = $this->em->getRepository(Exterior::class);
+                        $exteriors = $exteriorRepository->findBy(['animal' => $this->animal, 'measurementDate' => $newMeasurementDate]);
+
+                        if(count($exteriors) > 0) {
+                            $this->errors[] = 'There already exists another exterior for this animal on the given date. Choose another date';
+                            $this->isInputValid = false;
+                            return false;
+                        }
+                    }
+
+                    $this->newMeasurementDate = $newMeasurementDate;
                 }  else {
                     $this->errors[] = 'Given newMeasurementDate in body does not have a valid format. It must have the following format YYYY-MM-DD';
                     $this->isInputValid = false;
@@ -498,6 +525,14 @@ class ExteriorValidator extends BaseValidator
     public function getNewMeasurementDate()
     {
         return $this->newMeasurementDate;
+    }
+
+    /**
+     * @return Animal
+     */
+    public function getAnimal()
+    {
+        return $this->animal;
     }
 
    
