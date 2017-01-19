@@ -517,48 +517,4 @@ class Validator
     }
 
 
-    /**
-     * Animal should belong to the location,
-     * or it should be an historic animal that was not hidden by the current owner
-     * 
-     * @param ObjectManager $em
-     * @param Animal $animal
-     * @param Location $location
-     * @throws \Doctrine\DBAL\DBALException
-     * @return boolean
-     */
-    public static function validateIfUlnStringBelongsToPublicHistoricAnimal(ObjectManager $em, Animal $animal, Location $location)
-    {
-        if($animal == null) { return false; }
-
-        //1. Always show animals on own location/ubn
-
-        if($animal->getLocation()) {
-            if($animal->getLocation()->getId() == $location->getId()) { return true; }
-        } else {
-            return false;
-        }
-
-
-        //2. Else only show Animal if it is an historic animals and if owner ubnOfBirth allows it
-        $locationOfBirth = $animal->getLocationOfBirth();
-
-        $isAnimalRevealed = true;
-        if($locationOfBirth) {
-            $company = $locationOfBirth->getCompany();
-            if($company) {
-                $isAnimalRevealed = $company->getIsRevealHistoricAnimals();
-            }
-        }
-
-        if(!$isAnimalRevealed) { return false; }
-
-        $sql = "SELECT COUNT(*) FROM animal_residence
-                WHERE animal_id = ".$animal->getId()." AND location_id = ".$location->getId();
-        $count = $em->getConnection()->query($sql)->fetch()['count'];
-
-        if($count > 0) { return true; }
-
-        return false;
-    }
 }

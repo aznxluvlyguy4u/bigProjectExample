@@ -6,6 +6,8 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -2579,6 +2581,66 @@ abstract class Animal
         }
         return true;
     }
+
+
+    /**
+     * Returns true is the animals should be included in the historicLivestock for the given location.
+     *
+     * @param ObjectManager $em
+     * @param Location $locationOfUser
+     * @return bool
+     */
+    public function isAnimalPublicForLocation(ObjectManager $em, Location $locationOfUser)
+    {
+        //1. Always show animals on own location/ubn
+
+        if($this->getLocation()) {
+            if($this->getLocation()->getId() == $locationOfUser->getId()) { return true; }
+        }
+
+        if($this->locationOfBirth) {
+
+            //2. Always allow breeder to see his own animals!
+            if($locationOfUser->getId() == $this->locationOfBirth->getId()) {
+                return true;
+            }
+
+            $company = $this->locationOfBirth->getCompany();
+            if($company) {
+
+                //3. Always allow, if location was deactivated
+                if(!$company->isActive()){
+                    return true;
+
+                //4. Else only show Animal if it is an historic animals and if owner ubnOfBirth allows it
+                } else {
+                    return $company->getIsRevealHistoricAnimals();
+                }
+            }
+        }
+
+        //5. If no locationOfBirth is registered, show if animal has animal has ever been on the location of the user.
+
+        /** @var EntityManager $em */
+        $queryBuilder = $em->createQueryBuilder();
+        $queryBuilder
+        ->select('COUNT(animalResidence.id)')
+        ->from ('AppBundle:AnimalResidence', 'animalResidence')
+        ->where('animalResidence.location = :locationId')
+        ->andWhere('animalResidence.animal = :animalId')
+        ->setParameter('locationId', $locationOfUser->getId())
+        ->setParameter('animalId', $this->getId());
+
+        $query = $queryBuilder->getQuery();
+        //TODO use redis, for example: $query->useResultCache(true, 3600, 'animalPublicForLocation');
+        $count = $query->getResult()[0][1];
+
+        if($count > 0) { return true; }
+
+        return false;
+    }
+
+
 
     /**
      * @return string
