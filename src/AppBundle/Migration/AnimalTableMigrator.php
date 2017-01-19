@@ -41,6 +41,7 @@ class AnimalTableMigrator extends MigratorBase
 	const FILENAME_INCORRECT_ULNS = 'incorrect_ulns.csv';
 	const FILENAME_INCORRECT_GENDERS = 'incorrect_genders.csv';
 	const FILENAME_CSV_EXPORT = 'animal_migration_table.csv';
+	const FILENAME_ANIMALS_NOT_FOUND_FILLING_PEDIGREE_REGISTERS = 'dieren_niet_gevonden_voor_vullen_stamboeken_2016dec19.csv';
 
 	const TABLE_NAME_IN_SNAKE_CASE = 'animal_migration_table';
 	
@@ -3626,62 +3627,152 @@ class AnimalTableMigrator extends MigratorBase
 	}
 
 
-	public function importExtraAnimalTableIntoDatabase()
+	public function importMissingPedigreeRegisters20161219()
 	{
-		$locationIdByUbnSearchArray = $this->generateLatestLocationSearchArray();
-		
+		$this->cmdUtil->printTitle('Import missing pedigreeRegisters as found by Marjo 2016-12-19');
+
+		$includeNonNsfoPedigreeRegisters = $this->cmdUtil->generateConfirmationQuestion('Include pedigreeRegisters not managed by NSFO (y/n, default = no)');
+
+		if($includeNonNsfoPedigreeRegisters) {
+			$includeNonNsfoPedigreeRegisters = $this->cmdUtil->generateConfirmationQuestion('Are you sure you wish to include them? (y/n, default = no)');
+		}
+
+		$this->cmdUtil->writeln('Choice: '.($includeNonNsfoPedigreeRegisters ? 'INCLUDE' : 'EXCLUDE').' non-NSFO PedigreeRegisters');
+
+
+		$sql = "SELECT pedigree_register_id, id, name, DATE(date_of_birth) as date_of_birth,
+						CONCAT(uln_country_code,uln_number) as uln
+				FROM animal WHERE name NOTNULL ";
+		$results = $this->conn->query($sql)->fetchAll();
+		$pedigreeRegisterIdByAnimalId = SqlUtil::groupSqlResultsOfKey1ByKey2('pedigree_register_id', 'id', $results);
+		$dateOfBirthStringByAnimalId = SqlUtil::groupSqlResultsOfKey1ByKey2('date_of_birth', 'id', $results);
+		$animalIdByUln = SqlUtil::groupSqlResultsOfKey1ByKey2('id', 'uln', $results);
 
 		$sql = "SELECT abbreviation, id FROM pedigree_register";
 		$results = $this->conn->query($sql)->fetchAll();
 		$pedigreeRegisterIdByAbbreviation = SqlUtil::groupSqlResultsOfKey1ByKey2('id', 'abbreviation', $results);
 
         $animalPrimaryKeysByVsmId = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
+		$this->animalRepository;
 
-        $sql = "SELECT id, gender FROM animal";
-        $results = $this->conn->query($sql)->fetchAll();
-        $genderInDbByAnimalId = SqlUtil::groupSqlResultsOfKey1ByKey2('gender', 'id', $results);
+		$newestUlnByOldUln = $this->declareTagReplaceRepository->getNewReplacementUlnSearchArray();
+
+		$sql = "SELECT primary_vsm_id, secondary_vsm_id FROM vsm_id_group ";
+		$results = $this->conn->query($sql)->fetchAll();
+		$primaryVsmIdBySecondaryVsmId = SqlUtil::groupSqlResultsOfKey1ByKey2('primary_vsm_id', 'secondary_vsm_id', $results);
+		$secondaryVsmIdByPrimaryVsmId = SqlUtil::groupSqlResultsOfKey1ByKey2('secondary_vsm_id', 'primary_vsm_id', $results);
+
 
 		$loopCount = 0;
+		$skippedCount = 0;
+		$notFoundCount = 0;
+		$updatedCount = 0;
+
+		$this->cmdUtil->setStartTimeAndPrintIt(count($this->data), 1);
 		foreach ($this->data as $record) {
 			$loopCount++;
 
 			$vsmId = intval($record[0]);
+			$animalId = ArrayUtil::get($vsmId, $animalPrimaryKeysByVsmId);
 
-			$stnImport = StringUtil::getNullAsStringOrWrapInQuotes($record[1]);
-			$stnParts = $this->parseStn($record[1]);
-			$pedigreeCountryCode = StringUtil::getNullAsStringOrWrapInQuotes($stnParts[JsonInputConstant::PEDIGREE_COUNTRY_CODE]);
-			$pedigreeNumber = StringUtil::getNullAsStringOrWrapInQuotes($stnParts[JsonInputConstant::PEDIGREE_NUMBER]);
+			$pedigreeRegisterIdInDb = ArrayUtil::get($animalId, $pedigreeRegisterIdByAnimalId);
 
-			$uln = StringUtil::getNullAsStringOrWrapInQuotes($record[3]);
-			$ulnParts = $this->parseUln($record[3]);
+			$pedigreeRegisterAbbreviation = $this->getPedigreeRegisterAbbreviation($record[13], $includeNonNsfoPedigreeRegisters, false);
+			$pedigreeRegisterId = ArrayUtil::get($pedigreeRegisterAbbreviation,$pedigreeRegisterIdByAbbreviation);
 
-			$ulnCountryCode = StringUtil::getNullAsStringOrWrapInQuotes($ulnParts[JsonInputConstant::ULN_COUNTRY_CODE]);
-			$ulnNumber = StringUtil::getNullAsStringOrWrapInQuotes($ulnParts[JsonInputConstant::ULN_NUMBER]);
-
-			$animalOrderNumber = 'NULL';
-			if($ulnParts[JsonInputConstant::ULN_NUMBER] != null) {
-				$newAnimalOrderNumber = StringUtil::getNullAsStringOrWrapInQuotes(StringUtil::getLast5CharactersFromString($ulnNumber));
+			if($pedigreeRegisterId == $pedigreeRegisterIdInDb) {
+				$skippedCount++;
+				$this->cmdUtil->advanceProgressBar(1, 'Skipped|Updated|Missing: '.$skippedCount.'|'.$updatedCount.'|'.$notFoundCount);
+				continue;
 			}
 
-			$nickName = StringUtil::getNullAsStringOrWrapInQuotes(utf8_encode(StringUtil::escapeSingleApostrophes($record[4])));
-			$fatherVsmId = SqlUtil::getNullCheckedValueForSqlQuery($record[5], false);
-			$motherVsmId = SqlUtil::getNullCheckedValueForSqlQuery($record[6], false);
-			$genderInFile = StringUtil::getNullAsStringOrWrapInQuotes($this->parseGender($record[7]));
-			$dateOfBirthString = StringUtil::getNullAsStringOrWrapInQuotes($record[8]); //All dateOfBirths in the csv already have leading zeroes
-			$breedCode = StringUtil::getNullAsStringOrWrapInQuotes($record[9]);
-			$ubnOfBirth = StringUtil::getNullAsStringOrWrapInQuotes($record[10]); //ubnOfBreeder
-			$locationOfBirth = SqlUtil::getSearchArrayCheckedValueForSqlQuery($record[10], $locationIdByUbnSearchArray, false);
+			$dateOfBirthStringInCsv = $record[8]; //All dateOfBirths in the csv already have leading zeroes
+			if($dateOfBirthStringInCsv == '') { $dateOfBirthStringInCsv = null; }
 
-			$breedType = SqlUtil::getNullCheckedValueForSqlQuery(Translation::getEnglish(strtoupper($record[11])), true);
-			$scrapieGenotype = SqlUtil::getNullCheckedValueForSqlQuery($record[12], true);
-			$pedigreeRegisterAbbreviation = $this->getPedigreeRegisterAbbreviation($record[13], false);
-            $pedigreeRegisterId = SqlUtil::getNullCheckedValueForSqlQuery(ArrayUtil::get($pedigreeRegisterAbbreviation,$pedigreeRegisterIdByAbbreviation), false);
-			$note = $record[14];
+			//Get animalId by primary- of secondaryVsmIds in vsmGroup table
+			if($animalId == null) {
 
-			$searchKey = $ulnCountryCode.$ulnNumber.$dateOfBirthString;
+				$primaryVsmId = ArrayUtil::get($vsmId, $primaryVsmIdBySecondaryVsmId);
 
-            $animalId = ArrayUtil::get($vsmId, $animalPrimaryKeysByVsmId);
-            $genderInDb = ArrayUtil::get($animalId, $genderInDbByAnimalId);
+				if($primaryVsmId != null) {
+
+					$animalId = ArrayUtil::get($primaryVsmId, $animalPrimaryKeysByVsmId);
+
+				} else {
+					$secondaryVsmId = ArrayUtil::get($vsmId, $secondaryVsmIdByPrimaryVsmId);
+
+					if($secondaryVsmId != null) {
+						$animalId = ArrayUtil::get($secondaryVsmId, $animalPrimaryKeysByVsmId);
+					}
+				}
+			}
+
+			$ulnCountryCode = null;
+			$ulnNumber = null;
+			$newestUln = null;
+
+			//In animalId is still null, find by uln
+			if($animalId == null) {
+				$ulnParts = $this->parseUln($record[3]);
+				$ulnCountryCode = $ulnParts[JsonInputConstant::ULN_COUNTRY_CODE];
+				$ulnNumber = $ulnParts[JsonInputConstant::ULN_NUMBER];
+
+				//Get newest uln
+				if(is_string($ulnCountryCode) && is_string($ulnNumber) ) {
+					$newestUlnParts = ArrayUtil::get($ulnCountryCode.$ulnNumber, $newestUlnByOldUln);
+					if(is_array($ulnParts)) {
+						$newestUln = Utils::getNullCheckedArrayValue(Constant::ULN_COUNTRY_CODE_NAMESPACE, $ulnParts).
+									 Utils::getNullCheckedArrayValue(Constant::ULN_NUMBER_NAMESPACE, $ulnParts);
+
+						$animalId = ArrayUtil::get($newestUln, $animalIdByUln);
+					}
+				}
+			}
+
+
+			if($animalId == null) {
+				file_put_contents($this->outputFolder.'/'.self::FILENAME_ANIMALS_NOT_FOUND_FILLING_PEDIGREE_REGISTERS,
+					implode(';',$record).';MISSING;'."\n", FILE_APPEND);
+				$notFoundCount++;
+
+			} else {
+
+				$dateOfBirthStringInDb = ArrayUtil::get($animalId, $dateOfBirthStringByAnimalId);
+				if($dateOfBirthStringInDb != $dateOfBirthStringInCsv) {
+
+					$notFoundCount++;
+					file_put_contents($this->outputFolder.'/'.self::FILENAME_ANIMALS_NOT_FOUND_FILLING_PEDIGREE_REGISTERS,
+						implode(';',$record).';GebDatumAnders;'.$animalId."\n", FILE_APPEND);
+				} else {
+					$sql = "UPDATE animal SET pedigree_register_id = ".$pedigreeRegisterId." WHERE id = ".$animalId;
+					$this->conn->exec($sql);
+					$updatedCount++;
+				}
+			}
+
+
+			$this->cmdUtil->advanceProgressBar(1, 'Skipped|Updated|Missing: '.$skippedCount.'|'.$updatedCount.'|'.$notFoundCount);
+
+
+
+			/* Unused columns */
+
+//			$animalOrderNumber = 'NULL';
+//			if($ulnParts[JsonInputConstant::ULN_NUMBER] != null) {
+//				$newAnimalOrderNumber = StringUtil::getNullAsStringOrWrapInQuotes(StringUtil::getLast5CharactersFromString($ulnNumber));
+//			}
+//
+//			$nickName = StringUtil::getNullAsStringOrWrapInQuotes(utf8_encode(StringUtil::escapeSingleApostrophes($record[4])));
+//			$fatherVsmId = SqlUtil::getNullCheckedValueForSqlQuery($record[5], false);
+//			$motherVsmId = SqlUtil::getNullCheckedValueForSqlQuery($record[6], false);
+//			$genderInFile = StringUtil::getNullAsStringOrWrapInQuotes($this->parseGender($record[7]));
+//
+//			$breedCode = StringUtil::getNullAsStringOrWrapInQuotes($record[9]);
+//			$ubnOfBirth = StringUtil::getNullAsStringOrWrapInQuotes($record[10]); //ubnOfBreeder
+//
+//			$breedType = SqlUtil::getNullCheckedValueForSqlQuery(Translation::getEnglish(strtoupper($record[11])), true);
+//			$scrapieGenotype = SqlUtil::getNullCheckedValueForSqlQuery($record[12], true);
+//			$note = $record[14];
 
             /*  Note!
                 There are some genders in the the import file that are NEUTER but are FEMALE or MALE in the Database.
@@ -3691,46 +3782,77 @@ class AnimalTableMigrator extends MigratorBase
                 And some animals without a valid pedigreeNumber but with a pedigreeRegister.
             */
 
-            
+
 		}
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
 	}
 
 
 	/**
 	 * @param $pedigreeInCsv
+	 * @param bool $includeNonNsfoPedigreeRegisters
 	 * @param bool $wrapInQuotesForSql
 	 * @return string
 	 */
-	public function getPedigreeRegisterAbbreviation($pedigreeInCsv, $wrapInQuotesForSql = true)
+	public function getPedigreeRegisterAbbreviation($pedigreeInCsv, $includeNonNsfoPedigreeRegisters, $wrapInQuotesForSql = true)
 	{
 		if($pedigreeInCsv == '') { return 'NULL'; }
 
-		$pedigreeRegisterTranslations = [
-			"Bleu du Maine" => "BdM",
-			"Clun Forest" => "CF",
-			"NFS" => "NFS",
-			"NH" => "NH",
-			"Noord Hollander" => "NH",
-			"NTS" => "NTS",
-			"NTS?" => "NTS", //These three animals are NTS
-			"Ruischaap" => "RUI",
-			"Soay" => "Soay",
-			"TSNH" => "TSNH",
-			//The following pedigreeRegisters are not registered with NSFO and should not be displayed on the pedigreeCertificates
-			"Blauwe Texelaar" => "BT",
-			"Blessum" => "BL",
-			"Dassenkop" => "DK",
-			"Hampshire Down" => "HD",
-			"Kerry Hill" => "KE",
-			"Reyland" => "RY",
-			"TES" => "TES",
-		];
+		$pedigreeRegisterTranslations = $this->getPedigreeRegisterTranslations($includeNonNsfoPedigreeRegisters);
 
 		if(!array_key_exists($pedigreeInCsv, $pedigreeRegisterTranslations)) { return 'NULL'; }
 
 		$abbreviation = strtr($pedigreeInCsv, $pedigreeRegisterTranslations);
 
 		return $wrapInQuotesForSql ? SqlUtil::getNullCheckedValueForSqlQuery($abbreviation, true) : $abbreviation;
+	}
+
+
+	/**
+	 * @param boolean $includeNonNsfoPedigreeRegisters
+	 * @return array
+	 */
+	private function getPedigreeRegisterTranslations($includeNonNsfoPedigreeRegisters)
+	{
+		if($includeNonNsfoPedigreeRegisters) {
+
+			return [
+				"Bleu du Maine" => "BdM",
+				"Clun Forest" => "CF",
+				"NFS" => "NFS",
+				"NH" => "NH",
+				"Noord Hollander" => "NH",
+				"NTS" => "NTS",
+				"NTS?" => "NTS", //These three animals are NTS
+				"Ruischaap" => "RUI",
+				"Soay" => "Soay",
+				"TSNH" => "TSNH",
+				//The following pedigreeRegisters are not registered with NSFO and should not be displayed on the pedigreeCertificates
+				"Blauwe Texelaar" => "BT",
+				"Blessum" => "BL",
+				"Dassenkop" => "DK",
+				"Hampshire Down" => "HD",
+				"Kerry Hill" => "KE",
+				"Reyland" => "RY",
+				"TES" => "TES",
+			];
+
+		} else {
+
+			return [
+				"Bleu du Maine" => "BdM",
+				"Clun Forest" => "CF",
+				"NFS" => "NFS",
+				"NH" => "NH",
+				"Noord Hollander" => "NH",
+				"NTS" => "NTS",
+				"NTS?" => "NTS", //These three animals are NTS
+				"Ruischaap" => "RUI",
+				"Soay" => "Soay",
+				"TSNH" => "TSNH",
+			];
+
+		}
 	}
 	
 	

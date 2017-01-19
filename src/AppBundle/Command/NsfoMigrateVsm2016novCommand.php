@@ -153,7 +153,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '28: Fix vsmIds part2', "\n",
             '29: Migrate dateOfDeath & isAlive status', "\n",
             '----------------------------------------------------', "\n",
-            '30: Import Extra animalTable', "\n",
+            '30: Import missing pedigreeRegisters from '.$this->filenames[self::EXTRA_ANIMAL_TABLE], "\n",
             '----------------------------------------------------', "\n",
             '40: Fill missing ulnNumbers in AnimalMigrationTable', "\n",
             '41: Fix animalIds in AnimalMigrationTable (likely incorrect due to duplicate fix)', "\n",
@@ -309,7 +309,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                 break;
 
             case 30:
-                $result = $this->importExtraAnimalTableIntoDatabase() ? 'DONE' : 'NO DATA!' ;
+                $result = $this->importMissingPedigreeRegisters20161219() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
                 break;
 
@@ -617,13 +617,13 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     /**
      * @return bool
      */
-    private function importExtraAnimalTableIntoDatabase()
+    private function importMissingPedigreeRegisters20161219()
     {
         $data = $this->parseCSV($this->filenames[self::EXTRA_ANIMAL_TABLE]);
         if(count($data) == 0) { return false; }
 
         $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
-        $animalTableMigrator->importExtraAnimalTableIntoDatabase();
+        $animalTableMigrator->importMissingPedigreeRegisters20161219();
         return true;
     }
 
