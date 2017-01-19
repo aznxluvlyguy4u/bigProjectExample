@@ -517,4 +517,65 @@ class Validator
     }
 
 
+    /**
+     * Returns true is the animals should be included in the historicLivestock for the given location.
+     *
+     * @param ObjectManager $em
+     * @param Animal $animal
+     * @param Location $locationOfUser
+     * @return bool
+     */
+    public static function isAnimalPublicForLocation(ObjectManager $em, Animal $animal, Location $locationOfUser)
+    {
+        if($animal instanceof Animal) { return false; }
+
+        //1. Always show animals on own location/ubn
+
+        if($animal->getLocation()) {
+            if($animal->getLocation()->getId() == $locationOfUser->getId()) { return true; }
+        }
+
+        $locationOfBirth = $animal->getLocationOfBirth();
+        if($locationOfBirth) {
+
+            //2. Always allow breeder to see his own animals!
+            if($locationOfUser->getId() == $locationOfBirth->getId()) {
+                return true;
+            }
+
+            $company = $locationOfBirth->getCompany();
+            if($company) {
+
+                //3. Always allow, if location was deactivated
+                if(!$company->isActive()){
+                    return true;
+
+                    //4. Else only show Animal if it is an historic animals and if owner ubnOfBirth allows it
+                } else {
+                    return $company->getIsRevealHistoricAnimals();
+                }
+            }
+        }
+
+        //5. If no locationOfBirth is registered, show if animal has animal has ever been on the location of the user.
+
+        /** @var \Doctrine\ORM\EntityManager $em */
+        $queryBuilder = $em->createQueryBuilder();
+        $queryBuilder
+            ->select('COUNT(animalResidence.id)')
+            ->from ('AppBundle:AnimalResidence', 'animalResidence')
+            ->where('animalResidence.location = :locationId')
+            ->andWhere('animalResidence.animal = :animalId')
+            ->setParameter('locationId', $locationOfUser->getId())
+            ->setParameter('animalId', $animal->getId());
+
+        $query = $queryBuilder->getQuery();
+        //TODO use redis, for example: $query->useResultCache(true, 3600, 'animalPublicForLocation');
+        $count = $query->getResult()[0][1];
+
+        if($count > 0) { return true; }
+
+        return false;
+    }
+
 }
