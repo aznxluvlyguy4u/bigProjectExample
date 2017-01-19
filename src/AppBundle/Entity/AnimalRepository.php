@@ -392,23 +392,26 @@ class AnimalRepository extends BaseRepository
     $retrievedHistoricAnimalsBornNotOnOwnUbn = $this->getConnection()->query($sqlHistoricAnimalsBornNotOnOwnUbn)->fetchAll();
 
     $currentUbn = $location->getUbn();
-    $animalIdsCurrentLivestock = [];
+    $animalIdsAlreadyChecked = [];
 
     //It is important to FIRST process the normalLivestock BEFORE the historicAnimals
-    foreach ([$retrievedNormalLivestock, $retrievedHistoricAnimalsBornOnOwnUbnOrOnDeactivatedUbn, $retrievedHistoricAnimalsBornNotOnOwnUbn] as $retrievedAnimalData) {
+    //And the HistoricAnimalsBornOnOwnUbnOrOnDeactivatedUbn MUST be processed BEFORE HistoricAnimalsBornNotOnOwnUbn
+    foreach ([$retrievedNormalLivestock,
+              $retrievedHistoricAnimalsBornOnOwnUbnOrOnDeactivatedUbn,
+              $retrievedHistoricAnimalsBornNotOnOwnUbn]
+             as $retrievedAnimalData) {
       foreach ($retrievedAnimalData as $record) {
         $isCurrentLivestock = $record['current_livestock'];
         $animalId = $record['id'];
 
-        if($isCurrentLivestock) {
-          $animalIdsCurrentLivestock[$animalId] = $animalId;
-        } elseif(array_key_exists($animalId, $animalIdsCurrentLivestock)) {
-          continue;
+        if(array_key_exists($animalId, $animalIdsAlreadyChecked)) {
           /*
            * This prevents duplicates with currentLivestock,
            * and prevents overwriting hardcoded is_public = true output for current livestock animals.
            */
+          continue;
         }
+        $animalIdsAlreadyChecked[$animalId] = $animalId;
 
         $ubnOfAnimal = $record['ubn'];
         $isAlive = $record['is_alive'];
