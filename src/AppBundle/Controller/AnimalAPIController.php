@@ -156,13 +156,30 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function getLiveStock(Request $request) {
     $location = $this->getSelectedLocation($request);
+    /** @var  $animalRepository */
     $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-    /**
-     * var ArrayCollection
-     */
     $livestock = $animalRepository->getLiveStock($location);
+    $livestockAnimals = [];
 
-    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $livestock), 200);
+    /** @var Animal $animal */
+    foreach ($livestock as $animal) {
+      $livestockAnimals[] = [
+        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+        JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+        JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+        JsonInputConstant::GENDER =>  $animal->getGender(),
+        JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+        JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+        JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+        JsonInputConstant::UBN => $location->getUbn(),
+        JsonInputConstant::IS_HISTORIC_ANIMAL => $animal->getLocation()->getUbn() != $location->getUbn() || !$animal->getIsAlive(),
+        JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+      ];
+    }
+
+    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $livestockAnimals), 200);
   }
 
   /**

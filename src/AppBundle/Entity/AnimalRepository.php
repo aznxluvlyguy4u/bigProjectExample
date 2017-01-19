@@ -19,9 +19,9 @@ use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\Common\Cache\RedisCache;
 use Symfony\Component\Console\Output\OutputInterface;
-
-
+use Snc\RedisBundle\Client\Phpredis\Client as PredisClient;
 
 /**
  * Class AnimalRepository
@@ -333,8 +333,12 @@ class AnimalRepository extends BaseRepository
    * @param bool $isExported
    * @return array
    */
-  public function getLiveStock(Location $location, $isAlive = true, $isDeparted = false, $isExported = false)
-  {
+  public function getLiveStock(Location $location,
+                               $isAlive = true,
+                               $isDeparted = false,
+                               $isExported = false) {
+    $cache_lifetime = 3600;
+
     $em = $this->getEntityManager();
     $queryBuilder = $em->createQueryBuilder();
     $queryBuilder
@@ -342,34 +346,18 @@ class AnimalRepository extends BaseRepository
       ->from ('AppBundle:Animal', 'animal')
       ->where('animal.location = :locationId')
       ->andWhere('animal.isAlive = :isAlive')
+      ->andWhere('animal.isDepartedAnimal = :isDeparted')
+      ->andWhere('animal.isExportAnimal = :isExported')
       ->setParameter('locationId', $location->getId())
-      ->setParameter('isAlive', true);
+      ->setParameter('isAlive', $isAlive)
+      ->setParameter('isDeparted', $isDeparted)
+      ->setParameter('isExported', $isExported);
 
     $query = $queryBuilder->getQuery();
-    $query->useResultCache(true, 3600, 'livestock');
-    $animals = $query->getResult();
-    $livestock = [];
+    $query->useResultCache(true, $cache_lifetime, 'livestock');
 
-    foreach ($animals as $animal) {
-      $livestock[] = [
-        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-        JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-        JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-        JsonInputConstant::GENDER =>  $animal->getGender(),
-        JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-        JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-        JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-        JsonInputConstant::UBN => $location->getUbn(),
-        JsonInputConstant::IS_HISTORIC_ANIMAL => $animal->getLocation()->getUbn() != $location->getUbn() || !$animal->getIsAlive(),
-        JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-      ];
-    }
-
-    return $livestock;
+    return $query->getResult();
   }
-
 
   /**
    * Returns historic animals INCLUDING animals on current location
