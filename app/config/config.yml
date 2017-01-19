@@ -82,11 +82,11 @@ snc_redis:
         default:
             type: predis
             alias: default
-            dsn: redis://localhost
+            dsn: "redis://%redis_host%"
         doctrine:
             type: predis
             alias: doctrine
-            dsn: redis://localhost
+            dsn: "redis://%redis_host%"
     # configure doctrine caching
     doctrine:
         metadata_cache:
