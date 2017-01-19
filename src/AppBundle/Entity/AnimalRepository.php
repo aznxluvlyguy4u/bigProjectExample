@@ -350,6 +350,7 @@ class AnimalRepository extends BaseRepository
     $animals = $query->getResult();
     $livestock = [];
 
+    /** @var Animal $animal */
     foreach ($animals as $animal) {
       $livestock[] = [
         JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
@@ -363,7 +364,7 @@ class AnimalRepository extends BaseRepository
         JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
         JsonInputConstant::UBN => $location->getUbn(),
         JsonInputConstant::IS_HISTORIC_ANIMAL => $animal->getLocation()->getUbn() != $location->getUbn() || !$animal->getIsAlive(),
-        JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+        JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublicForLocation($em, $location),
       ];
     }
 
