@@ -299,7 +299,8 @@ class SqlUtil
     {
         $groupedResults = [];
         if(!is_array($results)) { return $groupedResults; }
-        if(count($results) == 0 || !array_key_exists($key, $results)) { return $groupedResults; }
+        if(count($results) == 0) { return $groupedResults; }
+        if(!array_key_exists($key, $results[0])) { return $groupedResults; }
         
         foreach ($results as $result) {
             if(array_key_exists($key, $groupedResults)) {
