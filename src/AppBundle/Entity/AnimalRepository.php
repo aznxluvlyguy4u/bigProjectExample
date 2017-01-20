@@ -393,7 +393,7 @@ class AnimalRepository extends BaseRepository
               LEFT JOIN location l ON a.location_of_birth_id = l.id
               LEFT JOIN company c ON c.id = l.company_id
             WHERE (r.location_id = ".$idCurrentLocation." AND a.location_of_birth_id = ".$idCurrentLocation.") 
-              OR (r.location_id <> ".$idCurrentLocation." AND (c.is_active = false OR c.id ISNULL))";
+              OR (r.location_id = ".$idCurrentLocation." AND a.location_of_birth_id <> ".$idCurrentLocation." AND (c.is_active = false OR c.id ISNULL))";
     $retrievedHistoricAnimalsBornOnOwnUbnOrOnDeactivatedUbn = $this->getConnection()->query($sqlHistoricAnimalsBornOnOwnUbnOrOnDeactivatedUbn)->fetchAll();
 
     $sqlHistoricAnimalsBornNotOnOwnUbn = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
