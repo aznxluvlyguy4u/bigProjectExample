@@ -24,6 +24,7 @@ use AppBundle\Entity\WeightRepository;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DisplayUtil;
+use AppBundle\Util\PedigreeUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
@@ -94,14 +95,7 @@ class AnimalCacher
 
         $count = 0;
 
-        //Get ids of already cached animals
-        $sql = "SELECT animal_id FROM animal_cache";
-        $results = $em->getConnection()->query($sql)->fetchAll();
-        $cachedAnimalIds = [];
-        foreach ($results as $result) {
-            $animalId = intval($result['animal_id']);
-            $cachedAnimalIds[$animalId] = $animalId;
-        }
+        $cachedAnimalIds = self::getAnimalIdsOfAlreadyCachedAnimals($em->getConnection());
 
         if($cmdUtil instanceof CommandUtil) {
             $cmdUtil->setStartTimeAndPrintIt(count($animalCacherInputData) + 1, 1, 'Generating animal cache records');
@@ -162,14 +156,7 @@ class AnimalCacher
 
         $flushPerRecord = false;
 
-        //Get ids of already cached animals
-        $sql = "SELECT animal_id FROM animal_cache";
-        $results = $em->getConnection()->query($sql)->fetchAll();
-        $cachedAnimalIds = [];
-        foreach ($results as $result) {
-            $animalId = intval($result['animal_id']);
-            $cachedAnimalIds[$animalId] = $animalId;
-        }
+        $cachedAnimalIds = self::getAnimalIdsOfAlreadyCachedAnimals($em->getConnection());
 
         /** @var GeneticBaseRepository $geneticBaseRepository */
         $geneticBaseRepository = $em->getRepository(GeneticBase::class);
@@ -253,6 +240,138 @@ class AnimalCacher
 
 
     /**
+     * @param Connection $conn
+     * @param boolean $sortAnimalIds
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function getAnimalIdsOfAlreadyCachedAnimals(Connection $conn, $sortAnimalIds = false)
+    {
+        $sql = "SELECT animal_id FROM animal_cache";
+        $results = $conn->query($sql)->fetchAll();
+        return SqlUtil::getSingleValueGroupedSqlResults('animal_id', $results, true, $sortAnimalIds);
+    }
+
+
+    /**
+     * @param CommandUtil|OutputInterface $commandUtilOrOutputInterface
+     * @param int $count
+     */
+    public static function printEmptyAnimalCacheRecords($commandUtilOrOutputInterface, $count)
+    {
+        $message = $count == 0 ? 'There are no missing animal_cache records!' : 'There are '.$count.' missing animal_cache records';
+        $commandUtilOrOutputInterface->writeln($message);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function getMissingAnimalCacheCount(Connection $conn)
+    {
+        $sql = "SELECT COUNT(*) FROM animal a LEFT JOIN animal_cache c ON c.animal_id = a.id WHERE c.id ISNULL";
+        return intval($conn->query($sql)->fetch()['count']);
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param CommandUtil|null $cmdUtil
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function cacheAllAnimalsByLocationGroupsIncludingAscendants(ObjectManager $em, CommandUtil $cmdUtil = null)
+    {
+        $sortAlreadyCachedAnimalIds = true;
+        
+        $defaultMinLocationId = 0;
+        do {
+            $minLocationId = $cmdUtil->generateQuestion('Select min locationId (must be an integer, default = '.$defaultMinLocationId.')', $defaultMinLocationId);
+        } while (!ctype_digit($minLocationId) && !is_int($minLocationId));
+        $cmdUtil->writeln('Choice min locationId: '.$minLocationId);
+
+        /** @var Connection $conn */
+        $conn = $em->getConnection();
+        
+        $sql = "SELECT id FROM location WHERE is_active = TRUE AND id >= ".$minLocationId;
+        $results = $conn->query($sql)->fetchAll();
+        $locationIds = SqlUtil::getSingleValueGroupedSqlResults('id', $results, true, true);
+
+        $totalLocationCount = count($locationIds);
+        if($totalLocationCount == 0) {
+            $cmdUtil->writeln('No locations where found with ids greater or equal to '.$minLocationId);
+            return;
+        }
+
+        $missingAnimalCacheCount = self::getMissingAnimalCacheCount($conn);
+        self::printEmptyAnimalCacheRecords($cmdUtil, $missingAnimalCacheCount);
+        if($missingAnimalCacheCount == 0) { return; }
+
+
+        /** @var GeneticBaseRepository $geneticBaseRepository */
+        $geneticBaseRepository = $em->getRepository(GeneticBase::class);
+        $breedValuesYear = $geneticBaseRepository->getLatestYear();
+        $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
+
+        /** @var AnimalCacheRepository $animalCacheRepository */
+        $animalCacheRepository = $em->getRepository(AnimalCache::class);
+
+        $processedAnimalsCount = 0;
+        $locationCount = 0;
+
+        $cmdUtil->setStartTimeAndPrintIt($missingAnimalCacheCount, 1, 'Generating animal cache records ordered by locations ...');
+        foreach ($locationIds as $locationId) {
+
+            $locationCount++;
+            $animalCacherInputData = $animalCacheRepository->getAnimalCacherInputDataForAnimalAndAscendantsByLocationId(true, null, $locationId);
+
+            $totalCount = count($animalCacherInputData);
+            if($totalCount == 0) {
+                continue;
+            }
+
+            //Recheck already cached animals at the start of each loop to prevent overlap!
+            $cachedAnimalIds = self::getAnimalIdsOfAlreadyCachedAnimals($conn, $sortAlreadyCachedAnimalIds);
+            $maxAnimalCacheId = SqlUtil::getMaxId($conn, 'animal_cache');
+
+            $insertString = '';
+
+            $loopCount = 0;
+            $animalBatchCount = 0;
+
+            foreach ($animalCacherInputData as $record) {
+                $loopCount++;
+                $animalId = $record['animal_id'];
+                if (!array_key_exists($animalId, $cachedAnimalIds)) { //Double checks for duplicates
+                    $insertString = $insertString . self::getCacheByIdInsertString($em, $animalId, $record['gender'], $record['date_of_birth'], $record['breed_type'], $breedValuesYear, $geneticBases, $maxAnimalCacheId) . ',';
+                    $maxAnimalCacheId++;
+                    $animalBatchCount++;
+                }
+
+                if ($loopCount == $totalCount || ($animalBatchCount % self::FLUSH_BATCH_SIZE == 0 && $loopCount != 0)) {
+                    self::insertByBatch($conn, $insertString);
+                    $insertString = '';
+                    $processedAnimalsCount += $animalBatchCount;
+                    $animalBatchCount = 0;
+                }
+
+                $cmdUtil->advanceProgressBar(1, 'Locations processed: '.$locationCount.'/'.$totalLocationCount.'(currentId: '.$locationId.')  New inserted animalCache inBatch|processed: ' . $animalBatchCount . '|' . $processedAnimalsCount);
+            }
+
+            //DuplicateCheck after each loop
+            self::deleteDuplicateAnimalCacheRecords($em);
+
+            //Force garbage collection
+            $animalCacherInputData = null;
+            gc_collect_cycles();
+        }
+        $cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
+
+
+    /**
      * @param ObjectManager $em
      * @param CommandUtil $cmdUtil
      * @param int $locationId
@@ -274,14 +393,7 @@ class AnimalCacher
         $breedValuesYear = $geneticBaseRepository->getLatestYear();
         $geneticBases = $geneticBaseRepository->getNullCheckedGeneticBases($breedValuesYear);
 
-        //Get ids of already cached animals
-        $sql = "SELECT animal_id FROM animal_cache";
-        $results = $conn->query($sql)->fetchAll();
-        $cachedAnimalIds = [];
-        foreach ($results as $result) {
-            $animalId = intval($result['animal_id']);
-            $cachedAnimalIds[$animalId] = $animalId;
-        }
+        $cachedAnimalIds = self::getAnimalIdsOfAlreadyCachedAnimals($conn);
         
 
         $insertString = '';

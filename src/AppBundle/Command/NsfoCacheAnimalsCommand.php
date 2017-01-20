@@ -67,6 +67,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '10: Update AnimalCache exterior values for all exteriors >= given logDate', "\n",
             '--------------------------------------------------------------------------', "\n",
             '11: Update AnimalCache of one Animal by animalId', "\n",
+            '12: Generate new AnimalCache records for all animals, batched by location and ascendants', "\n",
             '--------------------------------------------------------------------------', "\n",
             '20: Get locationId from UBN', "\n",
             'abort (other)', "\n"
@@ -135,6 +136,11 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 $output->writeln('DONE!');
                 break;
 
+            case 12:
+                AnimalCacher::cacheAllAnimalsByLocationGroupsIncludingAscendants($em, $this->cmdUtil);
+                $output->writeln('DONE!');
+                break;
+            
 
             case 20:
                 $this->printLocationIdFromGivenUbn();

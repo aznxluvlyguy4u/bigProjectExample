@@ -316,6 +316,40 @@ class SqlUtil
 
 
     /**
+     * @param string|int $key
+     * @param array $results
+     * @param bool $isIntVal
+     * @param bool $sortResults
+     * @return array
+     */
+    public static function getSingleValueGroupedSqlResults($key, $results, $isIntVal = false, $sortResults = false)
+    {
+        $listOfValues = [];
+        if(!is_array($results)) { return $listOfValues; }
+        if(count($results) == 0) { return $listOfValues; }
+        if(!array_key_exists($key, $results[0])) { return $listOfValues; }
+
+        if($isIntVal) {
+            foreach ($results as $result) {
+                $value = intval($result[$key]);
+                $listOfValues[$value] = $value;
+            }
+        } else {
+            foreach ($results as $result) {
+                $value = $result[$key];
+                $listOfValues[$value] = $value;
+            }
+        }
+
+        if($sortResults) {
+            ksort($listOfValues);
+        }
+
+        return $listOfValues;
+    }
+
+
+    /**
      * @param string|int $key1
      * @param string|int $key2
      * @param array $results
@@ -335,5 +369,18 @@ class SqlUtil
             $groupedResults[$value2] = $value1;
         }
         return $groupedResults;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param string $tableName
+     * @return mixed
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function getMaxId(Connection $conn, $tableName)
+    {
+        $sql = "SELECT MAX(id) FROM ".$tableName;
+        return $conn->query($sql)->fetch()['max'];
     }
 }

@@ -84,4 +84,27 @@ class AnimalCacheRepository extends BaseRepository {
 
         return $this->getAnimalCacherInputData($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $filter);
     }
+
+
+    /**
+     * @param bool $ignoreAnimalsWithAnExistingCache
+     * @param null $ignoreCacheBeforeDateString
+     * @param int $locationId
+     * @return array
+     */
+    public function getAnimalCacherInputDataForAnimalAndAscendantsByLocationId($ignoreAnimalsWithAnExistingCache = true, $ignoreCacheBeforeDateString = null, $locationId) {
+
+        $animalIds = PedigreeUtil::findAnimalAndAscendantsOfLocationIdByJoinedSql($this->getConnection(), $locationId);
+
+        if(count($animalIds) == 0) { return []; }
+
+        $filter = " WHERE";
+        foreach ($animalIds as $animalId) {
+            $filter = $filter.' animal.id = '.$animalId.' OR ';
+        }
+        $filter = rtrim($filter, 'OR ');
+        $animalIds = null;
+
+        return $this->getAnimalCacherInputData($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $filter);
+    }
 }
