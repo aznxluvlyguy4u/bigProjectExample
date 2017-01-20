@@ -527,7 +527,7 @@ class Validator
      */
     public static function isAnimalPublicForLocation(ObjectManager $em, Animal $animal, Location $locationOfUser)
     {
-        if($animal instanceof Animal) { return false; }
+        if(!($animal instanceof Animal) || !($locationOfUser instanceof Location)) { return false; }
 
         //1. Always show animals on own location/ubn
 
