@@ -370,7 +370,18 @@ class AnimalRepository extends BaseRepository
                             AND a.location_id = ".$idCurrentLocation;
     $retrievedNormalLivestock = $this->getConnection()->query($sqlNormalLivestock)->fetchAll();
 
-    $sqlHistoricAnimals = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
+    $sqlHistoricAnimalsBornOnOwnUbnOrOnDeactivatedUbn = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
+              a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn, a.id,
+              true as is_public, false as current_livestock
+            FROM animal_residence r
+              INNER JOIN animal a ON r.animal_id = a.id
+              LEFT JOIN location l ON a.location_of_birth_id = l.id
+              LEFT JOIN company c ON c.id = l.company_id
+            WHERE (r.location_id = ".$idCurrentLocation." AND a.location_of_birth_id = ".$idCurrentLocation.") 
+              OR (r.location_id = ".$idCurrentLocation." AND a.location_of_birth_id <> ".$idCurrentLocation." AND (c.is_active = false OR c.id ISNULL))";
+    $retrievedHistoricAnimalsBornOnOwnUbnOrOnDeactivatedUbn = $this->getConnection()->query($sqlHistoricAnimalsBornOnOwnUbnOrOnDeactivatedUbn)->fetchAll();
+
+    $sqlHistoricAnimalsBornNotOnOwnUbn = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
               a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn, a.id,
               c.is_reveal_historic_animals as is_public, false as current_livestock
             FROM animal_residence r
@@ -378,13 +389,13 @@ class AnimalRepository extends BaseRepository
               LEFT JOIN location l ON a.location_id = l.id
               LEFT JOIN company c ON c.id = l.company_id
             WHERE r.location_id = ".$idCurrentLocation;
-    $retrievedHistoricAnimals = $this->getConnection()->query($sqlHistoricAnimals)->fetchAll();
+    $retrievedHistoricAnimalsBornNotOnOwnUbn = $this->getConnection()->query($sqlHistoricAnimalsBornNotOnOwnUbn)->fetchAll();
 
     $currentUbn = $location->getUbn();
     $animalIdsCurrentLivestock = [];
 
     //It is important to FIRST process the normalLivestock BEFORE the historicAnimals
-    foreach ([$retrievedNormalLivestock, $retrievedHistoricAnimals] as $retrievedAnimalData) {
+    foreach ([$retrievedNormalLivestock, $retrievedHistoricAnimalsBornOnOwnUbnOrOnDeactivatedUbn, $retrievedHistoricAnimalsBornNotOnOwnUbn] as $retrievedAnimalData) {
       foreach ($retrievedAnimalData as $record) {
         $isCurrentLivestock = $record['current_livestock'];
         $animalId = $record['id'];
