@@ -346,10 +346,10 @@ class APIController extends Controller implements APIControllerInterface
    */
   protected function sendTaskToQueue($message) {
     $jsonMessage = $this->getSerializer()->serializeToJSON($message);
-    
+
     //Send  message to Queue
     $sendToQresult = $this->getQueueService()
-      ->send(1, $jsonMessage, $message->getType(),'int_nsfo_local');
+      ->sendToInternalQueue(1, $jsonMessage, $message->getType());
 
     //If send to Queue, failed, it needs to be resend, set state to failed
     if ($sendToQresult['statusCode'] != '200') {
