@@ -19,6 +19,7 @@ use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\Message;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
@@ -338,6 +339,24 @@ class APIController extends Controller implements APIControllerInterface
    */
   protected function sendEditMessageObjectToQueue($messageObject) {
     return $this->sendMessageObjectToQueue($messageObject, true);
+  }
+
+  /**
+   * @param Message $message
+   */
+  protected function sendTaskToQueue($message) {
+    $jsonMessage = $this->getSerializer()->serializeToJSON($message);
+    
+    //Send  message to Queue
+    $sendToQresult = $this->getQueueService()
+      ->send(1, $jsonMessage, $message->getType(),'int_nsfo_local');
+
+    //If send to Queue, failed, it needs to be resend, set state to failed
+    if ($sendToQresult['statusCode'] != '200') {
+      return false;
+    }
+
+    return true;
   }
 
   /**

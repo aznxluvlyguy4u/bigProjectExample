@@ -10,11 +10,13 @@ use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Message;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\MessageType;
 use AppBundle\FormInput\AnimalDetails;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
@@ -543,4 +545,28 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
 
     return new JsonResponse($minimizedOutput, 200);
   }
+
+  /**
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-certificates")
+   * @Method("POST")
+   */
+  public function generatePedigreeCertificates(Request $request) {
+    $message = new Message();
+    $message->setType(MessageType::GENERATE_PEDIGREE_CERTIFICATES);
+    $result = $this->sendTaskToQueue($message);
+
+    if($result != true) {
+      return new JsonResponse(array(Constant::RESULT_NAMESPACE =>
+          array('error_code' => 428,
+                'error_message' => 'Failed to send task to queue'
+          )), 428);
+    }
+
+    return new JsonResponse(array(Constant::RESULT_NAMESPACE =>
+      array('message' => 'OK')
+    ), 200);
+  }
+
 }

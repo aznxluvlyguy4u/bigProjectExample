@@ -337,7 +337,8 @@ class AnimalRepository extends BaseRepository
                                $isAlive = true,
                                $isDeparted = false,
                                $isExported = false) {
-    $cache_lifetime = 3600;
+    $cacheId = 'GET_LIVESTOCK_' ;
+    $cacheId = $cacheId . $location->getId(); //. sha1($location->getId());
 
     $em = $this->getEntityManager();
     $queryBuilder = $em->createQueryBuilder();
@@ -354,7 +355,9 @@ class AnimalRepository extends BaseRepository
       ->setParameter('isExported', $isExported);
 
     $query = $queryBuilder->getQuery();
-    $query->useResultCache(true, $cache_lifetime, 'livestock');
+    $query->useQueryCache(true);
+    $query->setCacheable(true);
+    $query->useResultCache(true, Constant::CACHE_LIVESTOCK_SPAN, $cacheId);
 
     return $query->getResult();
   }
@@ -369,73 +372,75 @@ class AnimalRepository extends BaseRepository
   public function getHistoricLiveStock(Location $location, $replacementString = '')
   {
     $results = [];
-
-    // Null check
-    if(!($location instanceof Location)) { return $results; }
-    elseif (!is_int($location->getId())) { return $results; }
-
-    $idCurrentLocation = $location->getId();
-
-    $sqlNormalLivestock = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
-                            a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn, a.id,
-                            true as is_public, true as current_livestock
-                          FROM animal a
-                            INNER JOIN location l ON a.location_id = l.id
-                          WHERE a.is_alive = TRUE AND (a.transfer_state ISNULL OR a.transfer_state <> 'TRANSFERRING') 
-                            AND a.location_id = ".$idCurrentLocation;
-    $retrievedNormalLivestock = $this->getConnection()->query($sqlNormalLivestock)->fetchAll();
-
-    $sqlHistoricAnimals = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
-              a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn, a.id,
-              c.is_reveal_historic_animals as is_public, false as current_livestock
-            FROM animal_residence r
-              INNER JOIN animal a ON r.animal_id = a.id
-              LEFT JOIN location l ON a.location_id = l.id
-              LEFT JOIN company c ON c.id = l.company_id
-            WHERE r.location_id = ".$idCurrentLocation;
-    $retrievedHistoricAnimals = $this->getConnection()->query($sqlHistoricAnimals)->fetchAll();
-
-    $currentUbn = $location->getUbn();
-    $animalIdsCurrentLivestock = [];
-
-    //It is important to FIRST process the normalLivestock BEFORE the historicAnimals
-    foreach ([$retrievedNormalLivestock, $retrievedHistoricAnimals] as $retrievedAnimalData) {
-      foreach ($retrievedAnimalData as $record) {
-        $isCurrentLivestock = $record['current_livestock'];
-        $animalId = $record['id'];
-
-        if($isCurrentLivestock) {
-          $animalIdsCurrentLivestock[$animalId] = $animalId;
-        } elseif(array_key_exists($animalId, $animalIdsCurrentLivestock)) {
-          continue;
-          /*
-           * This prevents duplicates with currentLivestock,
-           * and prevents overwriting hardcoded is_public = true output for current livestock animals.
-           */
-        }
-
-        $ubnOfAnimal = $record['ubn'];
-        $isAlive = $record['is_alive'];
-        $isHistoricAnimal = $ubnOfAnimal != $currentUbn || !$isAlive;
-        $isPublicInDb = $record['is_public'];
-        $isPublic = $isPublicInDb === true || $isPublicInDb === null ? true : false;
-
-        $results[] = [
-            JsonInputConstant::ULN_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['uln_country_code'], $replacementString),
-            JsonInputConstant::ULN_NUMBER => Utils::fillNullOrEmptyString($record['uln_number'], $replacementString),
-            JsonInputConstant::PEDIGREE_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['pedigree_country_code'], $replacementString),
-            JsonInputConstant::PEDIGREE_NUMBER => Utils::fillNullOrEmptyString($record['pedigree_number'], $replacementString),
-            JsonInputConstant::WORK_NUMBER => Utils::fillNullOrEmptyString($record['animal_order_number'], $replacementString),
-            JsonInputConstant::GENDER => Utils::fillNullOrEmptyString($record['gender'], $replacementString),
-            JsonInputConstant::DATE_OF_BIRTH => Utils::fillNullOrEmptyString($record['date_of_birth'], $replacementString),
-            JsonInputConstant::DATE_OF_DEATH => Utils::fillNullOrEmptyString($record['date_of_death'], $replacementString),
-            JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($isAlive, $replacementString),
-            JsonInputConstant::UBN => Utils::fillNullOrEmptyString($ubnOfAnimal, $replacementString),
-            JsonInputConstant::IS_HISTORIC_ANIMAL => Utils::fillNullOrEmptyString($isHistoricAnimal, $replacementString),
-            JsonInputConstant::IS_PUBLIC => Utils::fillNullOrEmptyString($isPublic, $replacementString),
-        ];
-      }
-    }
+//
+//    // Null check
+//    if(!($location instanceof Location)) { return $results; }
+//    elseif (!is_int($location->getId())) { return $results; }
+//
+//    $idCurrentLocation = $location->getId();
+//
+//    $sqlNormalLivestock = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
+//                            a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn, a.id,
+//                            true as is_public, true as current_livestock
+//                          FROM animal a
+//                            INNER JOIN location l ON a.location_id = l.id
+//                          WHERE a.is_alive = TRUE AND (a.transfer_state ISNULL OR a.transfer_state <> 'TRANSFERRING')
+//                            AND a.location_id = ".$idCurrentLocation;
+//    $retrievedNormalLivestock = $this->getConnection()->query($sqlNormalLivestock)->fetchAll();
+//
+//    $sqlHistoricAnimals = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
+//              a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn, a.id,
+//              c.is_reveal_historic_animals as is_public, false as current_livestock
+//            FROM animal_residence r
+//              INNER JOIN animal a ON r.animal_id = a.id
+//              LEFT JOIN location l ON a.location_id = l.id
+//              LEFT JOIN company c ON c.id = l.company_id
+//            WHERE r.location_id = ".$idCurrentLocation;
+//    $retrievedHistoricAnimals = $this->getConnection()->query($sqlHistoricAnimals)->fetchAll();
+//
+//    $currentUbn = $location->getUbn();
+//    $animalIdsCurrentLivestock = [];
+//
+//    //It is important to FIRST process the normalLivestock BEFORE the historicAnimals
+//    foreach ([$retrievedNormalLivestock, $retrievedHistoricAnimals] as $retrievedAnimalData) {
+//      foreach ($retrievedAnimalData as $record) {
+//        $isCurrentLivestock = $record['current_livestock'];
+//        $animalId = $record['id'];
+//
+//        if($isCurrentLivestock) {
+//          $animalIdsCurrentLivestock[$animalId] = $animalId;
+//        } elseif(array_key_exists($animalId, $animalIdsCurrentLivestock)) {
+//          continue;
+//          /*
+//           * This prevents duplicates with currentLivestock,
+//           * and prevents overwriting hardcoded is_public = true output for current livestock animals.
+//           */
+//        }
+//
+//        $ubnOfAnimal = $record['ubn'];
+//        $isAlive = $record['is_alive'];
+//        $isHistoricAnimal = $ubnOfAnimal != $currentUbn || !$isAlive;
+//        $isPublicInDb = $record['is_public'];
+//        $isPublic = $isPublicInDb === true || $isPublicInDb === null ? true : false;
+//
+//        $results[] = [
+//            JsonInputConstant::ULN_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['uln_country_code'], $replacementString),
+//            JsonInputConstant::ULN_NUMBER => Utils::fillNullOrEmptyString($record['uln_number'], $replacementString),
+//            JsonInputConstant::PEDIGREE_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['pedigree_country_code'], $replacementString),
+//            JsonInputConstant::PEDIGREE_NUMBER => Utils::fillNullOrEmptyString($record['pedigree_number'], $replacementString),
+//            JsonInputConstant::WORK_NUMBER => Utils::fillNullOrEmptyString($record['animal_order_number'], $replacementString),
+//            JsonInputConstant::GENDER => Utils::fillNullOrEmptyString($record['gender'], $replacementString),
+//            JsonInputConstant::DATE_OF_BIRTH => Utils::fillNullOrEmptyString($record['date_of_birth'], $replacementString),
+//            JsonInputConstant::DATE_OF_DEATH => Utils::fillNullOrEmptyString($record['date_of_death'], $replacementString),
+//            JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($isAlive, $replacementString),
+//            JsonInputConstant::UBN => Utils::fillNullOrEmptyString($ubnOfAnimal, $replacementString),
+//            JsonInputConstant::IS_HISTORIC_ANIMAL => Utils::fillNullOrEmptyString($isHistoricAnimal, $replacementString),
+//            JsonInputConstant::IS_PUBLIC => Utils::fillNullOrEmptyString($isPublic, $replacementString),
+//        ];
+//      }
+//    }
+//
+    $results = [];
 
     return $results;
   }

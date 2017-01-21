@@ -162,5 +162,7 @@ class Constant
     const CONTACT_CONFIRMATION_MAIL_SUBJECT_HEADER = 'NSFO Online Contactformulier Confirmatie';
     
     const ENTITY_BASE_PATH = "AppBundle\\Entity\\";
-
+    
+    const CACHE_DEFAULT_SPAN = 3600;
+    const CACHE_LIVESTOCK_SPAN = 3600;
 }
