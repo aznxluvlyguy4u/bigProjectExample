@@ -657,16 +657,16 @@ class IRSerializer implements IRSerializerInterface
         /** @var Animal $child */
         foreach ($children as $child) {
             if($child->getIsAlive()) {
-                AnimalCacher::cacheByAnimal($this->entityManager, $child);
+               // AnimalCacher::cacheByAnimal($this->entityManager, $child);
             }
         }
 
         if($mother) {
-            AnimalCacher::cacheByAnimal($this->entityManager, $mother);
+            //AnimalCacher::cacheByAnimal($this->entityManager, $mother);
         }
 
         if($father) {
-            AnimalCacher::cacheByAnimal($this->entityManager, $father);
+            //AnimalCacher::cacheByAnimal($this->entityManager, $father);
         }
         
         
