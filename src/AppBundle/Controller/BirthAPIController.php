@@ -456,11 +456,10 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         /** @var Ewe $mother */
         $mother = $animalRepository->findOneBy(array('ulnCountryCode'=>$motherUlnCountryCode, 'ulnNumber' => $motherUlnNumber));
+        $result = [];
 
         if($mother) {
             $fathers = $mateRepository->getMatingFathersOfMother($location , $mother);
-
-            $result = [];
 
             /** @var Animal $animal */
             foreach ($fathers as $animal) {
