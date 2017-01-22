@@ -34,4 +34,69 @@ class DeclareBirthRepository extends BaseRepository {
 
     return $this->getRequestByRequestId($births, $requestId);
   }
+
+  /**
+   * @param Location $location
+   * @param Ewe $mother
+   * @return array
+   */
+  public function getCandidateFathers(Location $location, Ewe $mother) {
+    $em = $this->getEntityManager();
+    $queryBuilder = $em->createQueryBuilder();
+
+    $queryBuilder
+      ->select('mate')
+      ->from ('AppBundle:Mate', 'mate')
+      ->where($queryBuilder->expr()->andX(
+        $queryBuilder->expr()->andX(
+          $queryBuilder->expr()->eq('mate.location', $location->getId()),
+          $queryBuilder->expr()->eq('mate.isOverwrittenVersion', 'false'),
+          $queryBuilder->expr()->eq('mate.studEwe', $mother->getId()),
+          $queryBuilder->expr()->orX(
+            $queryBuilder->expr()->isNull('mate.isApprovedByThirdParty'),
+            $queryBuilder->expr()->eq('mate.isApprovedByThirdParty', 'true')
+          )
+        )
+      ));
+
+    $query = $queryBuilder->getQuery();
+    $result = $query->getResult();
+    $candidateFathers = [];
+
+    /** @var Mate $mating */
+    foreach ($result as $mating) {
+      $candidateFathers[] = $mating->getStudRam();
+    }
+
+    return $candidateFathers;
+  }
+
+  /**
+   * @param Location $location
+   * @param Ewe $mother
+   * @return array
+   */
+  public function getCandidateSurrogateMothers(Location $location, Ewe $mother) {
+    $em = $this->getEntityManager();
+    $livestockEwesQueryBuilder = $em->createQueryBuilder();
+
+    $livestockEwesQueryBuilder
+      ->select('animal')
+      ->from ('AppBundle:Animal', 'animal')
+      ->where($livestockEwesQueryBuilder->expr()->andX(
+        $livestockEwesQueryBuilder->expr()->andX(
+          $livestockEwesQueryBuilder->expr()->eq('animal.isAlive', 'true'),
+          $livestockEwesQueryBuilder->expr()->eq('animal.gender', "'FEMALE'"),
+          $livestockEwesQueryBuilder->expr()->neq('animal.id', $mother->getId()),
+          $livestockEwesQueryBuilder->expr()->orX(
+            $livestockEwesQueryBuilder->expr()->isNull('animal.transferState'),
+            $livestockEwesQueryBuilder->expr()->neq('animal.transferState', "'TRANSFERRING'")
+          )),
+        $livestockEwesQueryBuilder->expr()->eq('animal.location', $location->getId())
+      ));
+    
+    $query = $livestockEwesQueryBuilder->getQuery();
+    
+    return $query->getResult();
+  }
 }

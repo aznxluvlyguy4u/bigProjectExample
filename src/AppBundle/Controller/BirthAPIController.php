@@ -10,6 +10,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalCache;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareBirthRepository;
 use AppBundle\Entity\DeclareBirthResponse;
 use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\Ewe;
@@ -438,47 +439,55 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      * @Method("GET")
      */
     public function getCandidateFathers(Request $request, $uln) {
-        $client = $this->getAuthenticatedUser($request);
+        /** @var Location $location */
+        $location = $this->getSelectedLocation($request);
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+        /** @var DeclareBirthRepository $declareBirthRepository */
+        $declareBirthRepository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
+        /** @var Ewe $mother */
+        $mother = null;
         $motherUlnCountryCode = null;
         $motherUlnNumber = null;
 
         if($uln) {
             $motherUlnCountryCode = mb_substr($uln, 0, 2);
             $motherUlnNumber = substr($uln, 2);
+            $mother = $animalRepository->findOneBy(array('ulnCountryCode'=>$motherUlnCountryCode, 'ulnNumber' => $motherUlnNumber));
         }
 
-        /** @var Location $location */
-        $location = $this->getSelectedLocation($request);
-        /** @var AnimalRepository $animalRepository */
-        $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-        /** @var MateRepository $mateRepository */
-        $mateRepository = $this->getDoctrine()->getRepository(Constant::MATE_REPOSITORY);
+        if(!$mother) {
+            $statusCode = 428;
+            return new JsonResponse(
+              array(
+                Constant::RESULT_NAMESPACE => array(
+                  'code'=> $statusCode,
+                  'message'=> "Moeder met opgegeven ULN: " .$motherUlnCountryCode . $motherUlnNumber ." is niet gevonden."
+                )
+              ), $statusCode
+            );
+        }
 
-        /** @var Ewe $mother */
-        $mother = $animalRepository->findOneBy(array('ulnCountryCode'=>$motherUlnCountryCode, 'ulnNumber' => $motherUlnNumber));
         $result = [];
+        $candidateFathers = $declareBirthRepository->getCandidateFathers($location , $mother);
 
-        if($mother) {
-            $fathers = $mateRepository->getMatingFathersOfMother($location , $mother);
+        /** @var Animal $animal */
+        foreach ($candidateFathers as $animal) {
 
-            /** @var Animal $animal */
-            foreach ($fathers as $animal) {
-
-                $result[] = [
-                  JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-                  JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-                  JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-                  JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-                  JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-                  JsonInputConstant::GENDER =>  $animal->getGender(),
-                  JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-                  JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-                  JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-                  JsonInputConstant::UBN => $location->getUbn(),
-                  JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-                  JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-                ];
-            }
+            $result[] = [
+              JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+              JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+              JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+              JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+              JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+              JsonInputConstant::GENDER =>  $animal->getGender(),
+              JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+              JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+              JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+              JsonInputConstant::UBN => $location->getUbn(),
+              JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+              JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+            ];
         }
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
@@ -490,23 +499,55 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      * @Route("/{uln}/candidate-surrogates")
      * @Method("GET")
      */
-    public function getCandidateSurrogates(Request $request, $uln) {
-        $client = $client = $this->getAuthenticatedUser($request);
+    public function getCandidateSurrogateMothers(Request $request, $uln) {
         /** @var Location $location */
         $location = $this->getSelectedLocation($request);
-        //AnimalCacher::cacheAnimalsBySqlInsert($this->getDoctrine()->getManager(), null, $location->getId());
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-        $livestockArray = $animalRepository->getLiveStock($location);
+        /** @var DeclareBirthRepository $declareBirthRepository */
+        $declareBirthRepository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
+        /** @var Ewe $mother */
+        $mother = null;
+        $motherUlnCountryCode = null;
+        $motherUlnNumber = null;
+
+        if($uln) {
+            $motherUlnCountryCode = mb_substr($uln, 0, 2);
+            $motherUlnNumber = substr($uln, 2);
+            $mother = $animalRepository->findOneBy(array ('ulnCountryCode' => $motherUlnCountryCode, 'ulnNumber' => $motherUlnNumber));
+        }
+
+        if(!$mother) {
+            $statusCode = 428;
+            return new JsonResponse(
+              array(
+                Constant::RESULT_NAMESPACE => array(
+                  'code'=> $statusCode,
+                  'message'=> "Moeder met opgegeven ULN: " .$motherUlnCountryCode . $motherUlnNumber ." is niet gevonden."
+                )
+              ), $statusCode
+            );
+        }
 
         $result = [];
+        $surrogateMotherCandidates = $declareBirthRepository->getCandidateSurrogateMothers($location , $mother);
 
-        foreach ($livestockArray as $item) {
-            if ($item['gender'] == GenderType::FEMALE) {
-                if($item['uln_number'] != substr($uln, 2)) {
-                    $result[] = $item;
-                }
-            }
+        /** @var Animal $animal */
+        foreach ($surrogateMotherCandidates as $animal) {
+            $result[] = [
+              JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+              JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+              JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+              JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+              JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+              JsonInputConstant::GENDER =>  $animal->getGender(),
+              JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+              JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+              JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+              JsonInputConstant::UBN => $location->getUbn(),
+              JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+              JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+            ];
         }
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
