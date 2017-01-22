@@ -83,6 +83,20 @@ class APIController extends Controller implements APIControllerInterface
   /** @var \AppBundle\Service\EntityGetter */
   private $animalLocationHistoryService;
 
+  /** @var  \Redis  */
+  private $redisClient;
+
+  /**
+   * @return \Redis
+   */
+  protected function getRedisClient() {
+    if($this->redisClient == null){
+      $this->redisClient = $this->get('snc_redis.sncredis');
+    }
+
+    return $this->redisClient;
+  }
+
   /**
    * @return \AppBundle\Service\EntityGetter
    */
