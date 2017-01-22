@@ -134,7 +134,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   }
 
   /**
-   * Retrieve all alive on-location animals belonging to this Client: De Stallijst
+   * Retrieve all alive, on-location, animals belonging to the given UBN.
    *
    * @ApiDoc(
    *   requirements={
@@ -146,7 +146,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = " Retrieve all alive on-location animals belonging to this Client",
+   *   description = " Retrieve all alive, on-location, animals belonging to the given UBN",
    *   output = "AppBundle\Entity\Animal"
    * )
    * @param Request $request the request object
@@ -183,7 +183,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   }
 
   /**
-   * Retrieve all historic animals that ever resided on this location, dead or alive
+   * Retrieve all historic animals,dead or alive, that ever resided on the given UBN.
    *
    * @ApiDoc(
    *   requirements={
@@ -195,7 +195,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve all historic animals that ever resided on this location, dead or alive",
+   *   description = "Retrieve all historic animals,dead or alive, that ever resided on the given UBN",
    *   output = "AppBundle\Entity\Animal"
    * )
    * @param Request $request the request object
