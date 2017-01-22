@@ -529,7 +529,10 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             );
         }
 
+        $suggestedCandidatesResult = [];
+        $otherCandidatesResult = [];
         $result = [];
+
         $surrogateMotherCandidates = $declareBirthRepository->getCandidateSurrogateMothers($location , $mother);
 
         $now = new \DateTime();
@@ -539,10 +542,25 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
             //Check if surrogate mother candidate has given birth to childeren within the last 6 months
             if($animal->getChildren()->count() == 0) {
+                $otherCandidatesResult[] = [
+                  JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                  JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                  JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                  JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+                  JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+                  JsonInputConstant::GENDER =>  $animal->getGender(),
+                  JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+                  JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+                  JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+                  JsonInputConstant::UBN => $location->getUbn(),
+                  JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                  JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+                ];
                 continue;
             }
 
             $childeren = $animal->getChildren();
+            $addToOtherCandidates = true;
 
             /** @var Animal $child */
             foreach ($childeren as $child) {
@@ -550,7 +568,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
                 //Add as a true candidate surrogate to list
                 if($dateInterval->y == 0 && $dateInterval->m <= 6) {
-                    $result[] = [
+                    $suggestedCandidatesResult[] = [
                       JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
                       JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
                       JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
@@ -564,9 +582,33 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                       JsonInputConstant::IS_HISTORIC_ANIMAL => false,
                       JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
                     ];
+                    $addToOtherCandidates = false;
+                    break;
                 }
             }
+
+            if (!$addToOtherCandidates) {
+                continue;
+            }
+
+            $otherCandidatesResult[] = [
+              JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+              JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+              JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+              JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+              JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+              JsonInputConstant::GENDER =>  $animal->getGender(),
+              JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+              JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+              JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+              JsonInputConstant::UBN => $location->getUbn(),
+              JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+              JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+            ];
         }
+
+        $result['suggested_candidate_surrogates'] = $suggestedCandidatesResult;
+        $result['other_candidate_surrogates'] = $otherCandidatesResult;
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
