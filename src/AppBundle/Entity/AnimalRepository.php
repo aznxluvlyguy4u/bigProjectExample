@@ -20,6 +20,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Cache\RedisCache;
+use Doctrine\ORM\Query\Expr\Join;
 use Symfony\Component\Console\Output\OutputInterface;
 use Snc\RedisBundle\Client\Phpredis\Client as PredisClient;
 
@@ -336,25 +337,37 @@ class AnimalRepository extends BaseRepository
   public function getLiveStock(Location $location,
                                $isAlive = true,
                                $isDeparted = false,
-                               $isExported = false) {
-    $cache_lifetime = 3600;
+                               $isExported = false)
+  {
+    $cacheId = 'GET_LIVESTOCK_' ;
+    $cacheId = $cacheId . $location->getId(); //. sha1($location->getId());
+
+    $isAlive = $isAlive ? 'true' : 'false';
+
+    //unused
+    $isDeparted = $isDeparted ? 'true' : 'false';
+    $isExported = $isExported ? 'true' : 'false';
 
     $em = $this->getEntityManager();
     $queryBuilder = $em->createQueryBuilder();
     $queryBuilder
       ->select('animal')
       ->from ('AppBundle:Animal', 'animal')
-      ->where('animal.location = :locationId')
-      ->andWhere('animal.isAlive = :isAlive')
-      ->andWhere('animal.isDepartedAnimal = :isDeparted')
-      ->andWhere('animal.isExportAnimal = :isExported')
-      ->setParameter('locationId', $location->getId())
-      ->setParameter('isAlive', $isAlive)
-      ->setParameter('isDeparted', $isDeparted)
-      ->setParameter('isExported', $isExported);
-
+      ->where($queryBuilder->expr()->andX(
+          $queryBuilder->expr()->andX(
+            $queryBuilder->expr()->eq('animal.isAlive', $isAlive),
+            $queryBuilder->expr()->orX(
+              $queryBuilder->expr()->isNull('animal.transferState'),
+              $queryBuilder->expr()->neq('animal.transferState', "'TRANSFERRING'")
+            )
+          ),
+          $queryBuilder->expr()->eq('animal.location', $location->getId())
+        )
+      );
     $query = $queryBuilder->getQuery();
-    $query->useResultCache(true, $cache_lifetime, 'livestock');
+    $query->useQueryCache(true);
+    $query->setCacheable(true);
+    $query->useResultCache(true, Constant::CACHE_LIVESTOCK_SPAN, $cacheId);
 
     return $query->getResult();
   }
@@ -368,92 +381,68 @@ class AnimalRepository extends BaseRepository
    */
   public function getHistoricLiveStock(Location $location, $replacementString = '')
   {
-    $results = [];
-
     // Null check
-    if(!($location instanceof Location)) { return $results; }
-    elseif (!is_int($location->getId())) { return $results; }
-
-    $idCurrentLocation = $location->getId();
-
-    $sqlNormalLivestock = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
-                            a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn, a.id,
-                            true as is_public, true as current_livestock
-                          FROM animal a
-                            INNER JOIN location l ON a.location_id = l.id
-                          WHERE a.is_alive = TRUE AND (a.transfer_state ISNULL OR a.transfer_state <> 'TRANSFERRING') 
-                            AND a.location_id = ".$idCurrentLocation;
-    $retrievedNormalLivestock = $this->getConnection()->query($sqlNormalLivestock)->fetchAll();
-
-    $sqlHistoricAnimalsBornOnOwnUbnOrOnDeactivatedUbn = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
-              a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn, a.id,
-              true as is_public, false as current_livestock
-            FROM animal_residence r
-              INNER JOIN animal a ON r.animal_id = a.id
-              LEFT JOIN location l ON a.location_of_birth_id = l.id
-              LEFT JOIN company c ON c.id = l.company_id
-            WHERE (r.location_id = ".$idCurrentLocation." AND a.location_of_birth_id = ".$idCurrentLocation.") 
-              OR (r.location_id = ".$idCurrentLocation." AND a.location_of_birth_id <> ".$idCurrentLocation." AND (c.is_active = false OR c.id ISNULL))";
-    $retrievedHistoricAnimalsBornOnOwnUbnOrOnDeactivatedUbn = $this->getConnection()->query($sqlHistoricAnimalsBornOnOwnUbnOrOnDeactivatedUbn)->fetchAll();
-
-    $sqlHistoricAnimalsBornNotOnOwnUbn = "SELECT a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number,
-              a.gender, a.date_of_birth, a.is_alive, a.date_of_death, l.ubn, a.id,
-              c.is_reveal_historic_animals as is_public, false as current_livestock
-            FROM animal_residence r
-              INNER JOIN animal a ON r.animal_id = a.id
-              LEFT JOIN location l ON a.location_id = l.id
-              LEFT JOIN company c ON c.id = l.company_id
-            WHERE r.location_id = ".$idCurrentLocation;
-    $retrievedHistoricAnimalsBornNotOnOwnUbn = $this->getConnection()->query($sqlHistoricAnimalsBornNotOnOwnUbn)->fetchAll();
-
-    $currentUbn = $location->getUbn();
-    $animalIdsAlreadyChecked = [];
-
-    //It is important to FIRST process the normalLivestock BEFORE the historicAnimals
-    //And the HistoricAnimalsBornOnOwnUbnOrOnDeactivatedUbn MUST be processed BEFORE HistoricAnimalsBornNotOnOwnUbn
-    foreach ([$retrievedNormalLivestock,
-              $retrievedHistoricAnimalsBornOnOwnUbnOrOnDeactivatedUbn,
-              $retrievedHistoricAnimalsBornNotOnOwnUbn]
-             as $retrievedAnimalData) {
-      foreach ($retrievedAnimalData as $record) {
-        $isCurrentLivestock = $record['current_livestock'];
-        $animalId = $record['id'];
-
-        if(array_key_exists($animalId, $animalIdsAlreadyChecked)) {
-          /*
-           * This prevents duplicates with currentLivestock,
-           * and prevents overwriting hardcoded is_public = true output for current livestock animals.
-           */
-          continue;
-        }
-        $animalIdsAlreadyChecked[$animalId] = $animalId;
-
-        $ubnOfAnimal = $record['ubn'];
-        $isAlive = $record['is_alive'];
-        $isHistoricAnimal = $ubnOfAnimal != $currentUbn || !$isAlive;
-        $isPublicInDb = $record['is_public'];
-        $isPublic = $isPublicInDb === true || $isPublicInDb === null ? true : false;
-
-        $results[] = [
-            JsonInputConstant::ULN_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['uln_country_code'], $replacementString),
-            JsonInputConstant::ULN_NUMBER => Utils::fillNullOrEmptyString($record['uln_number'], $replacementString),
-            JsonInputConstant::PEDIGREE_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['pedigree_country_code'], $replacementString),
-            JsonInputConstant::PEDIGREE_NUMBER => Utils::fillNullOrEmptyString($record['pedigree_number'], $replacementString),
-            JsonInputConstant::WORK_NUMBER => Utils::fillNullOrEmptyString($record['animal_order_number'], $replacementString),
-            JsonInputConstant::GENDER => Utils::fillNullOrEmptyString($record['gender'], $replacementString),
-            JsonInputConstant::DATE_OF_BIRTH => Utils::fillNullOrEmptyString($record['date_of_birth'], $replacementString),
-            JsonInputConstant::DATE_OF_DEATH => Utils::fillNullOrEmptyString($record['date_of_death'], $replacementString),
-            JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($isAlive, $replacementString),
-            JsonInputConstant::UBN => Utils::fillNullOrEmptyString($ubnOfAnimal, $replacementString),
-            JsonInputConstant::IS_HISTORIC_ANIMAL => Utils::fillNullOrEmptyString($isHistoricAnimal, $replacementString),
-            JsonInputConstant::IS_PUBLIC => Utils::fillNullOrEmptyString($isPublic, $replacementString),
-        ];
-      }
+    if(!($location instanceof Location)) {
+      return [];
+    } elseif (!is_int($location->getId())) {
+      return [];
     }
 
-    return $results;
-  }
+    $cacheId = 'GET_HISTORIC_LIVESTOCK_' ;
+    $cacheId = $cacheId . $location->getId(); //. sha1($location->getId());
+    $idCurrentLocation = $location->getId();
+    $em = $this->getEntityManager();
 
+    //Create currentLiveStock Query to use as subselect
+    $livestockAnimalQueryBuilder = $em->createQueryBuilder();
+    $livestockAnimalQueryBuilder
+      ->select('animal')
+      ->from ('AppBundle:Animal', 'animal')
+      ->where($livestockAnimalQueryBuilder->expr()->andX(
+        $livestockAnimalQueryBuilder->expr()->andX(
+          $livestockAnimalQueryBuilder->expr()->eq('animal.isAlive','true'),
+          $livestockAnimalQueryBuilder->expr()->orX(
+            $livestockAnimalQueryBuilder->expr()->isNull('animal.transferState'),
+            $livestockAnimalQueryBuilder->expr()->neq('animal.transferState', "'TRANSFERRING'")
+          )
+        ),
+        $livestockAnimalQueryBuilder->expr()->eq('animal.location', $location->getId())
+      ));
+    $livestockAnimalQuery = $livestockAnimalQueryBuilder->getQuery();
+    $livestockAnimalQuery->useQueryCache(true);
+    $livestockAnimalQuery->setCacheable(true);
+    $livestockAnimalQuery->useResultCache(true, Constant::CACHE_LIVESTOCK_SPAN, $cacheId);
+
+    //Create historicLivestock Query and use currentLivestock Query
+    // as Subselect to get only Historic Livestock Animals
+    $historicAnimalsQueryBuilder = $em->createQueryBuilder();
+    $historicAnimalsQueryBuilder
+      ->select('a,r')
+      ->from('AppBundle:AnimalResidence', 'r')
+      ->innerJoin('r.animal', 'a', Join::WITH, $historicAnimalsQueryBuilder->expr()->eq('r.animal', 'a.id'))
+      ->leftJoin('r.location', 'l', Join::WITH, $historicAnimalsQueryBuilder->expr()->eq('a.location', 'l.id'))
+      ->leftJoin('l.company', 'c', Join::WITH, $historicAnimalsQueryBuilder->expr()->eq('l.company', 'c.id'))
+      ->where($historicAnimalsQueryBuilder->expr()->andX(
+        $historicAnimalsQueryBuilder->expr()->eq('r.location', $idCurrentLocation),
+        $historicAnimalsQueryBuilder->expr()->notIn('r.animal', $livestockAnimalQueryBuilder->getDQL())
+      ));
+    $query = $historicAnimalsQueryBuilder->getQuery();
+    $query->useQueryCache(true);
+    $query->setCacheable(true);
+    $query->useResultCache(true, Constant::CACHE_HISTORIC_LIVESTOCK_SPAN, $cacheId);
+
+    //Returns a list of AnimalResidences
+    $retrievedHistoricAnimalResidences = $query->getResult();
+    $historicLivestock = [];
+
+    //Grab the animals on returned residences
+    /** @var AnimalResidence $historicAnimalResidence */
+    foreach ($retrievedHistoricAnimalResidences as $historicAnimalResidence) {
+      $historicLivestock[] = $historicAnimalResidence->getAnimal();
+    }
+
+    return $historicLivestock;
+  }
 
   /**
    * @param int $locationId
