@@ -17,6 +17,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Tag;
+use AppBundle\Entity\TagRepository;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\GenderType;
@@ -279,17 +280,20 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             }
 
             //Remove animalCache
-            $animalCache = $manager->getRepository(AnimalCache::class)->findOneBy(['animalId' => $child->getId()]);
+            //$animalCache = $manager->getRepository(AnimalCache::class)->findOneBy(['animalId' => $child->getId()]);
 
-            if($animalCache){
-                $manager->remove($animalCache);
-                $manager->flush();
-            }
+//            if($animalCache){
+//                $manager->remove($animalCache);
+//                $manager->flush();
+//            }
 
             //Restore tag if it does not exist
+            /** @var Tag $tagToRestore */
             $tagToRestore = null;
-            $tagToRestore = $manager->getRepository(Tag::getClassName())
-              ->findByUlnNumberAndCountryCode($child->getUlnCountryCode(), $child->getUlnNumber());
+
+            /** @var TagRepository $tagRepository */
+            $tagRepository = $manager->getRepository(Tag::getClassName());
+            $tagToRestore = $tagRepository->findByUlnNumberAndCountryCode($child->getUlnCountryCode(), $child->getUlnNumber());
 
             if ($tagToRestore) {
                 $tagToRestore->setTagStatus(TagStateType::UNASSIGNED);
@@ -333,6 +337,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                         $declareBirthResponses = $declareBirth->getResponses();
                         $declareBirth->setRequestState(RequestStateType::REVOKED);
 
+                        /** @var DeclareBirthResponse $declareBirthResponse */
                         foreach ($declareBirthResponses as $declareBirthResponse) {
                             if($declareBirthResponse->getAnimal() != null) {
                                 if ($declareBirthResponse->getAnimal()->getUlnNumber() == $child->getUlnNumber()) {
@@ -434,7 +439,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $client = $client = $this->getAuthenticatedUser($request);
         /** @var Location $location */
         $location = $this->getSelectedLocation($request);
-        AnimalCacher::cacheAnimalsBySqlInsert($this->getDoctrine()->getManager(), null, $location->getId());
+        //AnimalCacher::cacheAnimalsBySqlInsert($this->getDoctrine()->getManager(), null, $location->getId());
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
         $livestockArray = $animalRepository->getLiveStockBySql($location->getId());
@@ -460,7 +465,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $client = $client = $this->getAuthenticatedUser($request);
         /** @var Location $location */
         $location = $this->getSelectedLocation($request);
-        AnimalCacher::cacheAnimalsBySqlInsert($this->getDoctrine()->getManager(), null, $location->getId());
+        //AnimalCacher::cacheAnimalsBySqlInsert($this->getDoctrine()->getManager(), null, $location->getId());
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
         $livestockArray = $animalRepository->getLiveStockBySql($location->getId());
