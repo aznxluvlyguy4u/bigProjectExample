@@ -36,7 +36,9 @@ class DeclareBirthRepository extends BaseRepository {
   }
 
   /**
-   * Get candidate fathers based on matings done in within 170 days from now.
+   * Get a list of suggested candidate fathers based on matings done in within 170 days from now
+   * and all other Rams on current location.
+   * 
    * @param Location $location
    * @param Ewe $mother
    * @return array
@@ -82,6 +84,9 @@ class DeclareBirthRepository extends BaseRepository {
   }
 
   /**
+   * Get a list of suggested candidate surrogates based on births done in within 6 months from now
+   * and all other Ewes on current location.
+   * 
    * @param Location $location
    * @param Ewe $mother
    * @return array

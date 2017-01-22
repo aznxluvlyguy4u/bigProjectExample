@@ -433,6 +433,9 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     }
 
     /**
+     * Get a list of suggested candidate fathers based on matings done in within 170 days from now
+     * and all other Rams on current location.
+     *
      * @param Request $request the request object
      * @return JsonResponse
      * @Route("/{uln}/candidate-fathers")
@@ -523,6 +526,9 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     }
 
     /**
+     * Get a list of suggested candidate surrogates based on births done in within 6 months from now
+     * and all other Ewes on current location.
+     *
      * @param Request $request the request object
      * @return JsonResponse
      * @Route("/{uln}/candidate-surrogates")
