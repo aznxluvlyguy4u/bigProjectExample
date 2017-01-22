@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Cache\AnimalCacher;
 use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalCache;
 use AppBundle\Entity\AnimalRepository;
@@ -14,6 +15,7 @@ use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Litter;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\MateRepository;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Tag;
@@ -436,20 +438,48 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      * @Method("GET")
      */
     public function getCandidateFathers(Request $request, $uln) {
-        $client = $client = $this->getAuthenticatedUser($request);
+        $client = $this->getAuthenticatedUser($request);
+        $motherUlnCountryCode = null;
+        $motherUlnNumber = null;
+
+        if($uln) {
+            $motherUlnCountryCode = mb_substr($uln, 0, 2);
+            $motherUlnNumber = substr($uln, 2);
+        }
+
         /** @var Location $location */
         $location = $this->getSelectedLocation($request);
-        //AnimalCacher::cacheAnimalsBySqlInsert($this->getDoctrine()->getManager(), null, $location->getId());
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-        $livestockArray = $animalRepository->getLiveStock($location);
+        /** @var MateRepository $mateRepository */
+        $mateRepository = $this->getDoctrine()->getRepository(Constant::MATE_REPOSITORY);
 
-        $result = [];
+        /** @var Ewe $mother */
+        $mother = $animalRepository->findOneBy(array('ulnCountryCode'=>$motherUlnCountryCode, 'ulnNumber' => $motherUlnNumber));
 
-        foreach ($livestockArray as $item) {
-          if ($item['gender'] == GenderType::MALE) {
-             $result[] = $item;
-          }
+        if($mother) {
+            $fathers = $mateRepository->getMatingFathersOfMother($location , $mother);
+
+            $result = [];
+
+            /** @var Animal $animal */
+            foreach ($fathers as $animal) {
+
+                $result[] = [
+                  JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                  JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                  JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                  JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+                  JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+                  JsonInputConstant::GENDER =>  $animal->getGender(),
+                  JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+                  JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+                  JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+                  JsonInputConstant::UBN => $location->getUbn(),
+                  JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                  JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+                ];
+            }
         }
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
