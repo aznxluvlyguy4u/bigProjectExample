@@ -396,7 +396,6 @@ class AnimalRepository extends BaseRepository
     $query->setCacheable(true);
     $query->useResultCache(true, Constant::CACHE_LIVESTOCK_SPAN, $cacheId);
 
-    dump($query->getResult()); die();
     return $query->getResult();
   }
 
@@ -499,8 +498,6 @@ class AnimalRepository extends BaseRepository
     foreach ($retrievedHistoricAnimalResidences as $historicAnimalResidence) {
       $historicLivestock[] = $historicAnimalResidence->getAnimal();
     }
-
-    dump($historicLivestock); die();
 
     return $historicLivestock;
   }
