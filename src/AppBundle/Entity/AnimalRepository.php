@@ -334,6 +334,7 @@ class AnimalRepository extends BaseRepository
    * @param bool $isAlive
    * @param bool $isDeparted
    * @param bool $isExported
+   * @param Ram | Ewe | Neuter $queryOnlyOnAnimalGenderType
    * @return array
    */
   public function getLiveStock(Location $location,
@@ -404,7 +405,7 @@ class AnimalRepository extends BaseRepository
    * Returns historic animals EXCLUDING animals on current location
    *
    * @param Location $location
-   * @param Ram | Ewe $filterOnGender
+   * @param Ram | Ewe | Neuter $queryOnlyOnAnimalGenderType
    * @return array
    */
   public function getHistoricLiveStock(Location $location, $queryOnlyOnAnimalGenderType = null)
