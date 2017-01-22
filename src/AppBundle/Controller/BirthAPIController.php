@@ -470,11 +470,15 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         $result = [];
         $candidateFathers = $declareBirthRepository->getCandidateFathers($location , $mother);
+        $otherCandidateFathers = $animalRepository->getLiveStock($location, true, false, false, Ram::class);
+        $filteredOtherCandidateFathers = [];
+        $suggestedCandidateFathers = [];
+        $suggestedCandidateFatherIds = [];
 
         /** @var Animal $animal */
         foreach ($candidateFathers as $animal) {
-
-            $result[] = [
+            $suggestedCandidateFatherIds['id'] = $animal->getId();
+            $suggestedCandidateFathers[] = [
               JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
               JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
               JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
@@ -489,6 +493,31 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
               JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
             ];
         }
+
+        /** @var Animal $animal */
+        foreach ($otherCandidateFathers as $animal) {
+            if(!array_key_exists($animal->getId(), $suggestedCandidateFatherIds)) {
+                $filteredOtherCandidateFathers[] = [
+                  JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                  JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                  JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                  JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+                  JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+                  JsonInputConstant::GENDER =>  $animal->getGender(),
+                  JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+                  JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+                  JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+                  JsonInputConstant::UBN => $location->getUbn(),
+                  JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                  JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+                ];
+            }
+        }
+
+        $filteredOtherCandidateFathersIds = null;
+
+        $result['suggested_candidate_fathers'] = $suggestedCandidateFathers;
+        $result['other_candidate_fathers'] = $filteredOtherCandidateFathers;
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
