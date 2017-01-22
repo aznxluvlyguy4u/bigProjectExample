@@ -373,7 +373,7 @@ class AnimalRepository extends BaseRepository
   }
 
   /**
-   * Returns historic animals INCLUDING animals on current location
+   * Returns historic animals EXCLUDING animals on current location
    *
    * @param Location $location
    * @param string $replacementString
