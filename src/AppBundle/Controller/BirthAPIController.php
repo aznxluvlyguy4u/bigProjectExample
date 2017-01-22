@@ -532,22 +532,40 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $result = [];
         $surrogateMotherCandidates = $declareBirthRepository->getCandidateSurrogateMothers($location , $mother);
 
-        /** @var Animal $animal */
+        $now = new \DateTime();
+
+        /** @var Ewe $animal */
         foreach ($surrogateMotherCandidates as $animal) {
-            $result[] = [
-              JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-              JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-              JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-              JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-              JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-              JsonInputConstant::GENDER =>  $animal->getGender(),
-              JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-              JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-              JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-              JsonInputConstant::UBN => $location->getUbn(),
-              JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-              JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-            ];
+
+            //Check if surrogate mother candidate has given birth to childeren within the last 6 months
+            if($animal->getChildren()->count() == 0) {
+                continue;
+            }
+
+            $childeren = $animal->getChildren();
+
+            /** @var Animal $child */
+            foreach ($childeren as $child) {
+                $dateInterval = $child->getDateOfBirth()->diff($now);
+
+                //Add as a true candidate surrogate to list
+                if($dateInterval->y == 0 && $dateInterval->m <= 6) {
+                    $result[] = [
+                      JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                      JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                      JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                      JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+                      JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+                      JsonInputConstant::GENDER =>  $animal->getGender(),
+                      JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+                      JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+                      JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+                      JsonInputConstant::UBN => $location->getUbn(),
+                      JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                      JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+                    ];
+                }
+            }
         }
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
