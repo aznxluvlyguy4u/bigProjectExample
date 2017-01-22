@@ -36,6 +36,7 @@ class DeclareBirthRepository extends BaseRepository {
   }
 
   /**
+   * Get candidate fathers based on matings done in within 170 days from now.
    * @param Location $location
    * @param Ewe $mother
    * @return array
@@ -57,15 +58,24 @@ class DeclareBirthRepository extends BaseRepository {
             $queryBuilder->expr()->eq('mate.isApprovedByThirdParty', 'true')
           )
         )
-      ));
+      ))
+    ;
 
     $query = $queryBuilder->getQuery();
     $result = $query->getResult();
     $candidateFathers = [];
 
+    $now = new \DateTime();
+
     /** @var Mate $mating */
     foreach ($result as $mating) {
-      $candidateFathers[] = $mating->getStudRam();
+
+      //Check if mating is within the accepted interval of 170 days from now
+      $dateInterval = $mating->getEndDate()->diff($now);
+
+      if($dateInterval->y == 0 && $dateInterval->m <= 170) {
+        $candidateFathers[] = $mating->getStudRam();
+      }
     }
 
     return $candidateFathers;
