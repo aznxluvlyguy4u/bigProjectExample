@@ -174,7 +174,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
         JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
         JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
         JsonInputConstant::UBN => $location->getUbn(),
-        JsonInputConstant::IS_HISTORIC_ANIMAL => $animal->getLocation()->getUbn() != $location->getUbn() || !$animal->getIsAlive(),
+        JsonInputConstant::IS_HISTORIC_ANIMAL => false,
         JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
       ];
     }
@@ -207,9 +207,28 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $location = $this->getSelectedLocation($request);
     /** @var AnimalRepository $repository */
     $repository = $this->getDoctrine()->getRepository(Animal::class);
-    $historicAnimalsInArray = $repository->getHistoricLiveStock($location);
+    $historicLivestock = $repository->getHistoricLiveStock($location);
+    $historicLivestockAnimals = [];
 
-    return new JsonResponse([Constant::RESULT_NAMESPACE => $historicAnimalsInArray], 200);
+    /** @var Animal $animal */
+    foreach ($historicLivestock as $animal) {
+      $historicLivestockAnimals[] = [
+        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+        JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+        JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+        JsonInputConstant::GENDER =>  $animal->getGender(),
+        JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+        JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+        JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+        JsonInputConstant::UBN => $location->getUbn(),
+        JsonInputConstant::IS_HISTORIC_ANIMAL => true,
+        JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+      ];
+    }
+
+    return new JsonResponse([Constant::RESULT_NAMESPACE => $historicLivestockAnimals], 200);
   }
 
 
