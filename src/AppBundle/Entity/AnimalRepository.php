@@ -31,6 +31,8 @@ use Snc\RedisBundle\Client\Phpredis\Client as PredisClient;
 class AnimalRepository extends BaseRepository
 {
   const BATCH = 1000;
+  const LIVESTOCK_CACHE_ID = 'GET_LIVESTOCK_';
+  const HISTORIC_LIVESTOCK_CACHE_ID = 'GET_HISTORIC_LIVESTOCK_';
 
   /**
    * @param $Id
@@ -339,11 +341,8 @@ class AnimalRepository extends BaseRepository
                                $isDeparted = false,
                                $isExported = false)
   {
-    $cacheId = 'GET_LIVESTOCK_' ;
-    $cacheId = $cacheId . $location->getId(); //. sha1($location->getId());
-
+    $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID . $location->getId(); //. sha1($location->getId());
     $isAlive = $isAlive ? 'true' : 'false';
-
     //unused
     $isDeparted = $isDeparted ? 'true' : 'false';
     $isExported = $isExported ? 'true' : 'false';
@@ -388,7 +387,7 @@ class AnimalRepository extends BaseRepository
       return [];
     }
 
-    $cacheId = 'GET_HISTORIC_LIVESTOCK_' ;
+    $cacheId = AnimalRepository::HISTORIC_LIVESTOCK_CACHE_ID ;
     $cacheId = $cacheId . $location->getId(); //. sha1($location->getId());
     $idCurrentLocation = $location->getId();
     $em = $this->getEntityManager();
@@ -411,7 +410,7 @@ class AnimalRepository extends BaseRepository
     $livestockAnimalQuery = $livestockAnimalQueryBuilder->getQuery();
     $livestockAnimalQuery->useQueryCache(true);
     $livestockAnimalQuery->setCacheable(true);
-    $livestockAnimalQuery->useResultCache(true, Constant::CACHE_LIVESTOCK_SPAN, $cacheId);
+    $livestockAnimalQuery->useResultCache(true, Constant::CACHE_LIVESTOCK_SPAN, AnimalRepository::LIVESTOCK_CACHE_ID .$location->getId());
 
     //Create historicLivestock Query and use currentLivestock Query
     // as Subselect to get only Historic Livestock Animals
