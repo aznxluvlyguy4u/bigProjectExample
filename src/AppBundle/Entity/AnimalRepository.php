@@ -339,7 +339,8 @@ class AnimalRepository extends BaseRepository
   public function getLiveStock(Location $location,
                                $isAlive = true,
                                $isDeparted = false,
-                               $isExported = false)
+                               $isExported = false,
+                               $queryOnlyOnAnimalGenderType = null)
   {
     $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID . $location->getId(); //. sha1($location->getId());
     $isAlive = $isAlive ? 'true' : 'false';
@@ -348,37 +349,65 @@ class AnimalRepository extends BaseRepository
     $isExported = $isExported ? 'true' : 'false';
 
     $em = $this->getEntityManager();
-    $queryBuilder = $em->createQueryBuilder();
-    $queryBuilder
+    $livestockAnimalsQueryBuilder = $em->createQueryBuilder();
+
+    //Base case, get animals of all gender types for livestock
+    $livestockAnimalsGenderExpression = $livestockAnimalsQueryBuilder->expr()->orX(
+      $livestockAnimalsQueryBuilder->expr()->eq('animal.gender', "'MALE'"),
+      $livestockAnimalsQueryBuilder->expr()->eq('animal.gender', "'FEMALE'"),
+      $livestockAnimalsQueryBuilder->expr()->eq('animal.gender', "'NEUTER'")
+    );
+
+    //A filter was given to filter livestock on a given gender type
+    if($queryOnlyOnAnimalGenderType) {
+      switch ($queryOnlyOnAnimalGenderType) {
+        case Ewe::getClassName():
+          $livestockAnimalsGenderExpression = $livestockAnimalsQueryBuilder->expr()->eq('animal.gender', "'FEMALE'");
+          break;
+        case Ram::getClassName():
+          $livestockAnimalsGenderExpression = $livestockAnimalsQueryBuilder->expr()->eq('animal.gender', "'MALE'");
+          break;
+        case Neuter::getClassName():
+          $livestockAnimalsGenderExpression = $livestockAnimalsQueryBuilder->expr()->eq('animal.gender', "'NEUTER'");
+          break;
+        default:
+          break;
+      }
+    }
+
+    $livestockAnimalsQueryBuilder
       ->select('animal')
       ->from ('AppBundle:Animal', 'animal')
-      ->where($queryBuilder->expr()->andX(
-          $queryBuilder->expr()->andX(
-            $queryBuilder->expr()->eq('animal.isAlive', $isAlive),
-            $queryBuilder->expr()->orX(
-              $queryBuilder->expr()->isNull('animal.transferState'),
-              $queryBuilder->expr()->neq('animal.transferState', "'TRANSFERRING'")
-            )
-          ),
-          $queryBuilder->expr()->eq('animal.location', $location->getId())
-        )
-      );
-    $query = $queryBuilder->getQuery();
+      ->where($livestockAnimalsQueryBuilder->expr()->andX(
+        $livestockAnimalsQueryBuilder->expr()->andX(
+          $livestockAnimalsQueryBuilder->expr()->eq('animal.isAlive', $isAlive),
+          $livestockAnimalsGenderExpression, //apply gender filter
+          $livestockAnimalsQueryBuilder->expr()->orX(
+            $livestockAnimalsQueryBuilder->expr()->isNull('animal.transferState'),
+            $livestockAnimalsQueryBuilder->expr()->neq('animal.transferState', "'TRANSFERRING'")
+          )),
+        $livestockAnimalsQueryBuilder->expr()->eq('animal.location', $location->getId())
+        ));
+
+    $query = $livestockAnimalsQueryBuilder->getQuery();
+
     $query->useQueryCache(true);
     $query->setCacheable(true);
     $query->useResultCache(true, Constant::CACHE_LIVESTOCK_SPAN, $cacheId);
 
+    dump($query->getResult()); die();
     return $query->getResult();
   }
 
   /**
+   * /**
    * Returns historic animals EXCLUDING animals on current location
    *
    * @param Location $location
-   * @param string $replacementString
+   * @param Ram | Ewe $filterOnGender
    * @return array
    */
-  public function getHistoricLiveStock(Location $location, $replacementString = '')
+  public function getHistoricLiveStock(Location $location, $queryOnlyOnAnimalGenderType = null)
   {
     // Null check
     if(!($location instanceof Location)) {
@@ -413,19 +442,49 @@ class AnimalRepository extends BaseRepository
     $livestockAnimalQuery->useResultCache(true, Constant::CACHE_LIVESTOCK_SPAN, AnimalRepository::LIVESTOCK_CACHE_ID .$location->getId());
 
     //Create historicLivestock Query and use currentLivestock Query
-    // as Subselect to get only Historic Livestock Animals
+    //as Subselect to get only Historic Livestock Animals
     $historicAnimalsQueryBuilder = $em->createQueryBuilder();
-    $historicAnimalsQueryBuilder
-      ->select('a,r')
-      ->from('AppBundle:AnimalResidence', 'r')
-      ->innerJoin('r.animal', 'a', Join::WITH, $historicAnimalsQueryBuilder->expr()->eq('r.animal', 'a.id'))
-      ->leftJoin('r.location', 'l', Join::WITH, $historicAnimalsQueryBuilder->expr()->eq('a.location', 'l.id'))
-      ->leftJoin('l.company', 'c', Join::WITH, $historicAnimalsQueryBuilder->expr()->eq('l.company', 'c.id'))
-      ->where($historicAnimalsQueryBuilder->expr()->andX(
-        $historicAnimalsQueryBuilder->expr()->eq('r.location', $idCurrentLocation),
-        $historicAnimalsQueryBuilder->expr()->notIn('r.animal', $livestockAnimalQueryBuilder->getDQL())
-      ));
-    $query = $historicAnimalsQueryBuilder->getQuery();
+
+    $genderFilterExpression = null;
+
+    //Base case, get animals of all gender types for historic livestock
+    $historicAnimalsGenderExpression = $historicAnimalsQueryBuilder->expr()->orX(
+      $historicAnimalsQueryBuilder->expr()->eq('a.gender', "'MALE'"),
+      $historicAnimalsQueryBuilder->expr()->eq('a.gender', "'FEMALE'"),
+      $historicAnimalsQueryBuilder->expr()->eq('a.gender', "'NEUTER'")
+    );
+
+    //A filter was given to filter historic livestock on a given gender type
+    if($queryOnlyOnAnimalGenderType) {
+      switch ($queryOnlyOnAnimalGenderType) {
+        case Ewe::getClassName():
+          $historicAnimalsGenderExpression = $historicAnimalsQueryBuilder->expr()->eq('r.animal.gender', "'FEMALE'");
+          break;
+        case Ram::getClassName():
+          $historicAnimalsGenderExpression = $historicAnimalsQueryBuilder->expr()->eq('r.animal.gender', "'MALE'");
+          break;
+        case Neuter::getClassName():
+          $historicAnimalsGenderExpression = $historicAnimalsQueryBuilder->expr()->eq('r.animal.gender', "'NEUTER'");
+          break;
+        default:
+          break;
+      }
+    }
+
+    $historicAnimalsQuery =
+      $historicAnimalsQueryBuilder
+        ->select('a,r')
+        ->from('AppBundle:AnimalResidence', 'r')
+        ->innerJoin('r.animal', 'a', Join::WITH, $historicAnimalsQueryBuilder->expr()->eq('r.animal', 'a.id'))
+        ->leftJoin('r.location', 'l', Join::WITH, $historicAnimalsQueryBuilder->expr()->eq('a.location', 'l.id'))
+        ->leftJoin('l.company', 'c', Join::WITH, $historicAnimalsQueryBuilder->expr()->eq('l.company', 'c.id'))
+        ->where($historicAnimalsQueryBuilder->expr()->andX(
+          $historicAnimalsQueryBuilder->expr()->eq('r.location', $idCurrentLocation),
+          $historicAnimalsQueryBuilder->expr()->notIn('r.animal', $livestockAnimalQueryBuilder->getDQL()),
+          $historicAnimalsGenderExpression //apply gender filter
+        ));
+
+    $query = $historicAnimalsQuery->getQuery();
     $query->useQueryCache(true);
     $query->setCacheable(true);
     $query->useResultCache(true, Constant::CACHE_HISTORIC_LIVESTOCK_SPAN, $cacheId);
@@ -439,6 +498,8 @@ class AnimalRepository extends BaseRepository
     foreach ($retrievedHistoricAnimalResidences as $historicAnimalResidence) {
       $historicLivestock[] = $historicAnimalResidence->getAnimal();
     }
+
+    dump($historicLivestock); die();
 
     return $historicLivestock;
   }
