@@ -445,26 +445,6 @@ class AnimalRepository extends BaseRepository
   }
 
   /**
-   * @param int $locationId
-   * @return array
-   */
-  public function getLiveStockBySql($locationId)
-  {
-      $sql = " SELECT DISTINCT a.id, a.uln_country_code, a.uln_number, a.pedigree_country_code, a.pedigree_number, a.animal_order_number as work_number,
-                      a.gender, a.date_of_birth, a.is_alive, a.is_departed_animal, c.last_weight as weight, c.weight_measurement_date
-              FROM animal a
-              LEFT JOIN animal_cache c ON a.id = c.animal_id
-              WHERE a.is_alive = TRUE AND (a.transfer_state ISNULL OR a.transfer_state <> 'TRANSFERRING') AND a.location_id = ".$locationId;
-
-    $results = $this->getConnection()->query($sql)->fetchAll();
-
-    $results = NullChecker::replaceNullInNestedArray($results);
-
-    return $results;
-  }
-  
-
-  /**
    * @param Client $client
    * @param string $ulnString
    * @return null|Animal

@@ -435,7 +435,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         //AnimalCacher::cacheAnimalsBySqlInsert($this->getDoctrine()->getManager(), null, $location->getId());
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-        $livestockArray = $animalRepository->getLiveStockBySql($location->getId());
+        $livestockArray = $animalRepository->getLiveStock($location);
 
         $result = [];
 
@@ -461,7 +461,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         //AnimalCacher::cacheAnimalsBySqlInsert($this->getDoctrine()->getManager(), null, $location->getId());
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-        $livestockArray = $animalRepository->getLiveStockBySql($location->getId());
+        $livestockArray = $animalRepository->getLiveStock($location);
 
         $result = [];
 
