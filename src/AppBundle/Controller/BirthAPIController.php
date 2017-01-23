@@ -282,6 +282,12 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                 $manager->remove($breedValue);
             }
 
+            //Remove gender change history items
+            $genderHistories = $child->getGenderHistory();
+            foreach ($genderHistories as $genderHistory) {
+                $manager->remove($genderHistory);
+            }
+
             //Remove animalCache
             //$animalCache = $manager->getRepository(AnimalCache::class)->findOneBy(['animalId' => $child->getId()]);
 
