@@ -173,7 +173,7 @@ class ExteriorValidator extends BaseValidator
                     $newMeasurementDate = new \DateTime($newMeasurementDateString);
 
                     //Check for duplicate dates only if the date is actually changed
-                    if(TimeUtil::isDateTimesOnTheSameDay($newMeasurementDate, $this->measurementDate)) {
+                    if(TimeUtil::isDateTimesOnTheSameDay($newMeasurementDate, $this->measurementDate) && !$this->isEdit) {
 
                         if($this->doesExteriorMeasurementAlreadyExistOnDate($newMeasurementDate)) {
                             $this->errors[] = 'There already exists another exterior for this animal on the given date. Choose another date';
