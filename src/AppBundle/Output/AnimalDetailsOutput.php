@@ -112,21 +112,21 @@ class AnimalDetailsOutput
         }
 
 
+        $breeder = null;
         $breederUbn = $replacementString;
-        $locationOfBirth = $animal->getLocationOfBirth();
-        if($locationOfBirth != null) {
-            $breederUbn = $locationOfBirth->getUbn();
-        }
-
-
         $breederName = $replacementString;
         $breederEmailAddress = $replacementString;
         $breederTelephoneNumber = $replacementString;
-        $breeder = $locationOfBirth->getOwner();
-        if ($breeder != null) {
-            $breederName = Utils::fillNullOrEmptyString($breeder->getFullName(), $replacementString);
-            $breederEmailAddress = Utils::fillNullOrEmptyString($breeder->getEmailAddress(), $replacementString);
-            $breederTelephoneNumber = Utils::fillNullOrEmptyString($breeder->getCellphoneNumber(), $replacementString);
+        $locationOfBirth = $animal->getLocationOfBirth();
+        if($locationOfBirth != null) {
+            $breederUbn = $locationOfBirth->getUbn();
+
+            $breeder = $locationOfBirth->getOwner();
+            if ($breeder != null) {
+                $breederName = Utils::fillNullOrEmptyString($breeder->getFullName(), $replacementString);
+                $breederEmailAddress = Utils::fillNullOrEmptyString($breeder->getEmailAddress(), $replacementString);
+                $breederTelephoneNumber = Utils::fillNullOrEmptyString($breeder->getCellphoneNumber(), $replacementString);
+            }
         }
 
         $result = array(
