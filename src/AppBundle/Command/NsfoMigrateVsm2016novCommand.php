@@ -6,6 +6,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\VsmIdGroup;
+use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Migration\AnimalMigrationTableFixer;
 use AppBundle\Migration\DateOfDeathMigrator;
 use AppBundle\Migration\AnimalTableMigrator;
@@ -159,6 +160,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '41: Fix animalIds in AnimalMigrationTable (likely incorrect due to duplicate fix)', "\n",
             '42: Fix genderInDatabase values in AnimalMigrationTable (likely incorrect due to genderChange)', "\n",
             '43: Fix parentId values in AnimalMigrationTable', "\n",
+            '44: Fix inverted primary and secondary vsmIds in the vsmIdGroup table', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -330,6 +332,13 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
 
             case 43:
                 AnimalMigrationTableFixer::updateParentIdsInMigrationTable($this->cmdUtil, $this->conn);
+                $output->writeln('DONE');
+                break;
+
+            case 44:
+                /** @var VsmIdGroupRepository $vsmIdGroupRepository */
+                $vsmIdGroupRepository = $this->em->getRepository(VsmIdGroup::class);
+                $vsmIdGroupRepository->fixSwappedPrimaryAndSecondaryVsmId($this->cmdUtil);
                 $output->writeln('DONE');
                 break;
 
