@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
@@ -75,7 +76,7 @@ class DeclareBirthRepository extends BaseRepository {
       //Check if mating is within the accepted interval of 170 days from now
       $dateInterval = $mating->getEndDate()->diff($now);
 
-      if($dateInterval->y == 0 && $dateInterval->m <= 170) {
+      if(TimeUtil::getAgeInDays($now, $mating->getEndDate()) <= 170){
         $candidateFathers[] = $mating->getStudRam();
       }
     }
