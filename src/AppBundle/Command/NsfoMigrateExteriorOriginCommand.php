@@ -63,8 +63,9 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
             ' ', "\n",
             'Choose option: ', "\n",
             '1: file 20161007_1156_Stamboekinspectietabel_edited.csv', "\n",
-            '2: import version 2016Aug', "\n",
-            '3: update animalIdAndDate values', "\n",
+            '2: Update height, breastDepth & torsolength from 20161007_1156_Stamboekinspectietabel_edited.csv', "\n",
+            '3: import version 2016Aug', "\n",
+            '4: update animalIdAndDate values', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
         
@@ -79,13 +80,21 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
 
             case 2:
                 $this->csvParsingOptions = [
+                    'finder_in' => 'app/Resources/imports/vsm2016nov',
+                    'finder_name' => '20161007_1156_Stamboekinspectietabel_edited.csv',
+                    'ignoreFirstLine' => true];
+                $this->updateHeightDepthLength();
+                break;
+
+            case 3:
+                $this->csvParsingOptions = [
                     'finder_in' => 'app/Resources/imports/',
                     'finder_name' => 'animal_exterior_measurements_migration_update.csv',
                     'ignoreFirstLine' => true];
                 $this->migrateExteriorMeasurementsCsvFile1();
                 break;
 
-            case 3:
+            case 4:
                 /** @var MeasurementRepository $repository */
                 $repository = $this->em->getRepository(Measurement::class);
                 $repository->setAnimalIdAndDateValues($this->cmdUtil);
@@ -108,6 +117,18 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
 
         $exteriorMeasurementsMigrator = new ExteriorMeasurementsMigrator($this->cmdUtil, $this->em, $this->output, $data);
         $exteriorMeasurementsMigrator->migrate();
+        return true;
+    }
+
+
+    private function updateHeightDepthLength()
+    {
+        $this->output->writeln(['Parsing csv...']);
+        $data = $this->parseCSV(';');
+        if(count($data) == 0) { return false; }
+
+        $exteriorMeasurementsMigrator = new ExteriorMeasurementsMigrator($this->cmdUtil, $this->em, $this->output, $data);
+        $exteriorMeasurementsMigrator->updateHeightDepthLength();
         return true;
     }
 
