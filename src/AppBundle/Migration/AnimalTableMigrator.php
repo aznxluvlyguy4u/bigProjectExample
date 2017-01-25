@@ -15,6 +15,7 @@ use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagReplaceRepository;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\VsmIdGroup;
+use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Enumerator\ColumnType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\Specie;
@@ -101,6 +102,12 @@ class AnimalTableMigrator extends MigratorBase
 	
 	/** @var array */
 	private $genderByAnimalId;
+
+	/** @var array */
+	private $currentlyUsedUlns;
+
+	/** @var array */
+	private $historicUsedUlns;
 
 	/** @var array */
 	private $primaryVsmIdsForSecondaryIds;
@@ -3397,15 +3404,19 @@ class AnimalTableMigrator extends MigratorBase
 
 	private function resetAnimalIdVsmLocationAndGenderSearchArrays()
 	{
-		$sql = "SELECT id, name, uln_country_code, uln_number, animal_order_number, pedigree_country_code, pedigree_number,
-				  nickname, parent_father_id, parent_mother_id, date_of_birth, breed_code, ubn_of_birth, gender,
-				  location_of_birth_id, pedigree_register_id, breed_type, scrapie_genotype, location_id, type
+		$this->cmdUtil->writeln(['','Retrieving animal data from database to create the searchArrays - '.TimeUtil::getTimeStampNow()]);
+
+		$sql = "SELECT id, name, CONCAT(uln_country_code, uln_number) as uln, gender, location_id
 				FROM animal";
 		$results = $this->conn->query($sql)->fetchAll();
+
+		$this->cmdUtil->writeln(['',count($results).' Animals retrieved. Now creating the searchArrays - '.TimeUtil::getTimeStampNow()]);
+
 		$this->animalsByAnimalId = [];
 		$this->animalIdsOnLocation = [];
 		$this->animalIdByVsmId = [];
 		$this->genderByAnimalId = [];
+		$this->currentlyUsedUlns = [];
 		foreach($results as $result) {
 			$animalId = $result['id'];
 			$vsmId = $result['name'];
@@ -3425,7 +3436,41 @@ class AnimalTableMigrator extends MigratorBase
 			if($animalId != null) {
 				$this->genderByAnimalId[$animalId] = $gender;
 			}
+
+			$uln = trim($result['uln']);
+			if($uln != '') {
+				$this->currentlyUsedUlns[$uln] = $uln;
+			}
 		}
+		ksort($this->currentlyUsedUlns);
+
+		$this->cmdUtil->writeln(['','Creating searchArray for historicUlns - '.TimeUtil::getTimeStampNow(), '']);
+		
+		$sql = "SELECT CONCAT(uln_country_code_to_replace, uln_number_to_replace) as old_uln,
+ 					CONCAT(uln_country_code_replacement, uln_number_replacement) as new_uln
+ 				FROM declare_tag_replace r
+					INNER JOIN declare_base b ON r.id = b.id
+				WHERE (request_state = 'FINISHED_WITH_WARNING' OR request_state = 'FINISHED' OR request_state = 'IMPORTED')";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$this->historicUsedUlns = [];
+		foreach ($results as $result) {
+			$oldUln = $result['old_uln'];
+			$newUln = $result['new_uln'];
+			if(!array_key_exists($oldUln, $this->currentlyUsedUlns)) {
+				$this->historicUsedUlns[$oldUln] = $oldUln;
+			}
+
+			if(!array_key_exists($newUln, $this->currentlyUsedUlns)) {
+				$this->historicUsedUlns[$newUln] = $newUln;
+			}
+		}
+		ksort($this->historicUsedUlns);
+
+		$this->cmdUtil->writeln(['','Class searchArrays reset! - '.TimeUtil::getTimeStampNow(), '']);
+
+		$sql = null;
+		$results = null;
 	}
 
 
@@ -3856,4 +3901,72 @@ class AnimalTableMigrator extends MigratorBase
 	}
 	
 	
+	public function migrateV2()
+	{
+		$this->cmdUtil->printTitle('Migrating AnimalTable data into animal table *V2*');
+
+		$this->cmdUtil->writeln(['Fixing tables before migration...', '']);
+		
+		$migrateParents = true;
+		$updateLocationIdsOfBirth = true;
+		$clearPedigreeCountryCodesAndNumbersWithoutPedigreeRegisters = true;
+
+		//AnimalIds might have been changed due to duplicateFixes
+		AnimalMigrationTableFixer::updateAnimalIdsInMigrationTable($this->cmdUtil, $this->conn);
+		AnimalMigrationTableFixer::updateGenderInDatabaseInMigrationTable($this->cmdUtil, $this->conn);
+		AnimalMigrationTableFixer::updateParentIdsInMigrationTable($this->cmdUtil, $this->conn);
+
+		//VsmIds might have been altered due to duplicateFixes
+		/** @var VsmIdGroupRepository $vsmIdGroupRepository */
+		$vsmIdGroupRepository = $this->em->getRepository(VsmIdGroup::class);
+		$vsmIdGroupRepository->fixSwappedPrimaryAndSecondaryVsmId($this->cmdUtil);
+
+		/*
+		 * NOTE!!!!
+		 * If EWE don't import children as father
+		 * If RAM don't import children as mother
+		 *
+		 * VsmIds for duplicate animals are found in the vsm_id_group table
+		 */
+
+		$this->cmdUtil->writeln(['','Creating searchArrays...', '']);
+
+		$this->cmdUtil->setStartTimeAndPrintIt(9,1,'Retrieving data ...');
+
+		//SearchArrays
+		$this->cmdUtil->advanceProgressBar(1, 'Retrieving data and generating newestUlnByOldUln searchArray ...');
+		$newestUlnByOldUln = $this->declareTagReplaceRepository->getNewReplacementUlnSearchArray();
+
+		$this->cmdUtil->advanceProgressBar(1, 'Retrieving data and generating primaryVsmIdsBySecondaryVsmId searchArrays ...');
+		$this->primaryVsmIdsForSecondaryIds = $this->getVsmIdGroupRepository()->getPrimaryVsmIdsBySecondaryVsmId();
+
+		$this->cmdUtil->advanceProgressBar(1, 'Retrieving data and generating animalData searchArrays ...');
+		$this->resetAnimalIdVsmLocationAndGenderSearchArrays();
+
+		$this->cmdUtil->advanceProgressBar(1, 'Retrieving animalMigration data ...');
+
+		/* Only process animals which:
+            - are not imported yet, meaning those that have no animalId in the animalMigrationTable, and
+            - who do not have
+        */
+
+		//Only process animals where genders match will those in the database
+		$sql = "SELECT a.id, a.vsm_id, a.animal_id, a.uln_country_code, a.uln_number, a.animal_order_number, a.pedigree_country_code,
+				  a.pedigree_number, a.nick_name, a.father_vsm_id, a.father_id, a.mother_vsm_id, a.mother_id, a.gender_in_file,
+				  a.date_of_birth, a.breed_code, a.ubn_of_birth, a.location_of_birth_id, a.pedigree_register_id, a.breed_type, a.scrapie_genotype
+				FROM animal_migration_table a
+				WHERE a.animal_id ISNULL AND a.uln_number NOTNULL AND a.uln_country_code NOTNULL
+				ORDER BY date_of_birth";
+		$results = $this->conn->query($sql)->fetchAll();
+
+		$this->cmdUtil->setProgressBarMessage('Fixing possible missing ewe/ram/neuter table records');
+		$missingTableExtentions = $this->animalRepository->fixMissingAnimalTableExtentions();
+		$this->cmdUtil->setProgressBarMessage($missingTableExtentions.' missing ewe/ram/neuter table records added');
+
+		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
+
+		$this->output->writeln('Retrieved data and created searchArrays');
+
+		//TODO migrate data
+	}
 }

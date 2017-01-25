@@ -161,6 +161,9 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '42: Fix genderInDatabase values in AnimalMigrationTable (likely incorrect due to genderChange)', "\n",
             '43: Fix parentId values in AnimalMigrationTable', "\n",
             '44: Fix inverted primary and secondary vsmIds in the vsmIdGroup table', "\n",
+            '----------------------------------------------------', "\n",
+            '45: Migrate AnimalTable data V2', "\n",
+            '----------------------------------------------------', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -340,6 +343,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                 $vsmIdGroupRepository = $this->em->getRepository(VsmIdGroup::class);
                 $vsmIdGroupRepository->fixSwappedPrimaryAndSecondaryVsmId($this->cmdUtil);
                 $output->writeln('DONE');
+                break;
+
+            case 45:
+                $result = $this->migrateAnimalTableV2() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
                 break;
 
             default:
@@ -724,6 +732,18 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     {
         $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
         $animalTableMigrator->migrate();
+
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function migrateAnimalTableV2()
+    {
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $animalTableMigrator->migrateV2();
 
         return true;
     }
