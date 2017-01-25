@@ -7,6 +7,7 @@ use AppBundle\Entity\InspectorRepository;
 use AppBundle\Entity\Measurement;
 use AppBundle\Entity\MeasurementRepository;
 use AppBundle\Migration\ExteriorMeasurementsMigrator;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
@@ -58,6 +59,8 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
         $this->output = $output;
 
         $this->cmdUtil->generateTitle(self::TITLE);
+
+        $this->cmdUtil->writeln(DoctrineUtil::getDatabaseHostAndNameString($this->em));
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             ' ', "\n",
