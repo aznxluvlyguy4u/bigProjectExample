@@ -61,8 +61,7 @@ class DeclareBirthRepository extends BaseRepository {
             $queryBuilder->expr()->eq('mate.isApprovedByThirdParty', 'true')
           )
         )
-      ))
-    ;
+      ));
 
     $query = $queryBuilder->getQuery();
     $result = $query->getResult();
@@ -70,16 +69,23 @@ class DeclareBirthRepository extends BaseRepository {
 
     $now = new \DateTime();
 
+    $fatherIds = [];
+
     /** @var Mate $mating */
     foreach ($result as $mating) {
 
-      //Check if mating is within the accepted interval of 170 days from now
-      $dateInterval = $mating->getEndDate()->diff($now);
+      if(array_key_exists($mating->getStudRam()->getId(), $fatherIds)) {
+        continue;
+      }
+      $fatherIds[$mating->getStudRam()->getId()] = $mating->getStudRam()->getId();
 
+      //Check if mating is within the accepted interval of 170 days from now
       if(TimeUtil::getAgeInDays($now, $mating->getEndDate()) <= 170){
         $candidateFathers[] = $mating->getStudRam();
       }
     }
+
+    $fatherIds = null;
 
     return $candidateFathers;
   }
