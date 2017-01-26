@@ -15,6 +15,7 @@ use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -1017,10 +1018,10 @@ class AnimalRepository extends BaseRepository
 
 
   /**
+   * @param Connection $conn
    * @return int
-   * @throws \Doctrine\DBAL\DBALException
    */
-  public function fixMissingAnimalTableExtentions()
+  public static function fixMissingAnimalTableExtentions(Connection $conn)
   {
     $sql = "SELECT a.id, 'Ewe' as type FROM animal a
             LEFT JOIN ewe e ON a.id = e.id
@@ -1033,7 +1034,7 @@ class AnimalRepository extends BaseRepository
             SELECT a.id, 'Neuter' as type FROM animal a
               LEFT JOIN neuter n ON a.id = n.id
             WHERE a.type = 'Neuter' AND n.id ISNULL";
-    $results = $this->getConnection()->query($sql)->fetchAll();
+    $results = $conn->query($sql)->fetchAll();
 
     $totalCount = count($results);
 
@@ -1052,16 +1053,21 @@ class AnimalRepository extends BaseRepository
           case 'Neuter': $neuterAnimalIds[$animalId] = $animalId; break;
         }
       }
-      $this->insertAnimalTableExtentions($eweAnimalIds, 'Ewe');
-      $this->insertAnimalTableExtentions($ramAnimalIds, 'Ram');
-      $this->insertAnimalTableExtentions($neuterAnimalIds, 'Neuter');
+      self::insertAnimalTableExtentions($conn, $eweAnimalIds, 'Ewe');
+      self::insertAnimalTableExtentions($conn, $ramAnimalIds, 'Ram');
+      self::insertAnimalTableExtentions($conn, $neuterAnimalIds, 'Neuter');
     }
 
     return $totalCount;
   }
 
-  
-  private function insertAnimalTableExtentions($animalIds, $type)
+
+  /**
+   * @param Connection $conn
+   * @param array $animalIds
+   * @param string $type
+   */
+  private static function insertAnimalTableExtentions(Connection $conn, $animalIds, $type)
   {
     $batchSize = 1000;
     $tableName = strtolower($type);
@@ -1077,7 +1083,7 @@ class AnimalRepository extends BaseRepository
 
       if($counter%$batchSize == 0) {
         $sql = "INSERT INTO ".$tableName." VALUES ".$valuesString;
-        $this->getConnection()->exec($sql);
+        $conn->exec($sql);
         $valuesString = '';
 
       } elseif($counter != $totalCount) {
@@ -1086,7 +1092,7 @@ class AnimalRepository extends BaseRepository
     }
     if($valuesString != '') {
       $sql = "INSERT INTO ".$tableName." VALUES ".$valuesString;
-      $this->getConnection()->exec($sql);
+      $conn->exec($sql);
     }
   }
 

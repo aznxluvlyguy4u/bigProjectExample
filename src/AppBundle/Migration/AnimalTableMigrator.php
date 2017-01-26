@@ -9,6 +9,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\AnimalMigrationTable;
 use AppBundle\Entity\AnimalMigrationTableRepository;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BreederNumber;
 use AppBundle\Entity\BreederNumberRepository;
 use AppBundle\Entity\DeclareTagReplace;
@@ -803,7 +804,7 @@ class AnimalTableMigrator extends MigratorBase
 			$results = $this->conn->query($sql)->fetchAll();
 
 			$this->cmdUtil->setProgressBarMessage('Fixing possible missing ewe/ram/neuter table records');
-			$missingTableExtentions = $this->animalRepository->fixMissingAnimalTableExtentions();
+			$missingTableExtentions = AnimalRepository::fixMissingAnimalTableExtentions($this->conn);
 			$this->cmdUtil->setProgressBarMessage($missingTableExtentions.' missing ewe/ram/neuter table records added');
 			
 			$this->cmdUtil->setEndTimeAndPrintFinalOverview();
@@ -1097,7 +1098,7 @@ class AnimalTableMigrator extends MigratorBase
 		$this->conn->exec($sql);
 
 		//Add new records in ewe/ram/neuter tables
-		$this->animalRepository->fixMissingAnimalTableExtentions();
+		AnimalRepository::fixMissingAnimalTableExtentions($this->conn);
 	}
 
 
@@ -1117,7 +1118,7 @@ class AnimalTableMigrator extends MigratorBase
 		$this->conn->exec($sql);
 
 		//Add new records in ewe/ram/neuter tables
-		$this->animalRepository->fixMissingAnimalTableExtentions();
+		AnimalRepository::fixMissingAnimalTableExtentions($this->conn);
 
 		//Check records that are updated
 		$updateString = '';
@@ -3979,7 +3980,7 @@ class AnimalTableMigrator extends MigratorBase
 		$results = $this->conn->query($sql)->fetchAll();
 
 		$this->cmdUtil->setProgressBarMessage('Fixing possible missing ewe/ram/neuter table records');
-		$missingTableExtentions = $this->animalRepository->fixMissingAnimalTableExtentions();
+		$missingTableExtentions = AnimalRepository::fixMissingAnimalTableExtentions($this->conn);
 		$this->cmdUtil->setProgressBarMessage($missingTableExtentions.' missing ewe/ram/neuter table records added');
 
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
@@ -4222,7 +4223,7 @@ class AnimalTableMigrator extends MigratorBase
 		$results = $this->conn->query($sql)->fetchAll();
 
 		$this->cmdUtil->setProgressBarMessage('Fixing possible missing ewe/ram/neuter table records');
-		$missingTableExtentions = $this->animalRepository->fixMissingAnimalTableExtentions();
+		$missingTableExtentions = AnimalRepository::fixMissingAnimalTableExtentions($this->conn);
 		$this->cmdUtil->setProgressBarMessage($missingTableExtentions.' missing ewe/ram/neuter table records added');
 
 		$this->cmdUtil->setEndTimeAndPrintFinalOverview();
