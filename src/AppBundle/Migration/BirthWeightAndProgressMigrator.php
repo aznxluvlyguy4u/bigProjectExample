@@ -89,11 +89,12 @@ class BirthWeightAndProgressMigrator extends MigratorBase
         
         $birthProgressUpdateString = '';
 
-        $batchSize = 1000;
-        $counter = 0;
+        $entityBatchSize = 100;
+        $sqlBatchSize = 1000;
+        $entityCounter = 0;
+        $sqlCounter = 0;
         $logDate = new \DateTime();
         foreach ($this->data as $record) {
-            $counter++;
 
             $vsmId = $record[0];
 
@@ -150,7 +151,8 @@ class BirthWeightAndProgressMigrator extends MigratorBase
                     $this->em->persist($tailLength);
 
                     $birthTailLengthAnimalIds[$animalId] = $animalId;
-                    $newTailLengthCount++;   
+                    $newTailLengthCount++;
+                    $entityCounter++;
                 }
             }
 
@@ -167,6 +169,7 @@ class BirthWeightAndProgressMigrator extends MigratorBase
                 $this->em->persist($weight);
                 $birthWeightsAnimalIds[$animalId] = $animalId;
                 $newBirthWeightsCount++;
+                $entityCounter++;
             }
 
             //Update animal with birthProgress value
@@ -175,17 +178,33 @@ class BirthWeightAndProgressMigrator extends MigratorBase
                     $birthProgressUpdateString = $birthProgressUpdateString."(".$animalId.",'".$birthProgress."'),";
                     $birthProgressByAnimalId[$animalId] = $birthProgress;
                     $newProgressCount++;
+                    $sqlCounter++;
                 }
             }
 
 
-            if($counter%$batchSize == 0) { $this->em->flush(); }
+            if($entityCounter%$entityBatchSize == 0) { $this->em->flush(); }
+            if($sqlCounter%$sqlBatchSize == 0) {
+                $this->batchUpdate($birthProgressUpdateString);
+                $birthProgressUpdateString = '';
+            }
 
             $this->cmdUtil->advanceProgressBar(1,
                 'Animals missing: '.$animalsMissingCount.'  New birth weight|progress|tailLength: '.$newBirthWeightsCount.'|'.$newProgressCount.'|'.$newTailLengthCount);
         }
         $this->em->flush();
+        $this->batchUpdate($birthProgressUpdateString);
 
+        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
+
+    /**
+     * @param string $birthProgressUpdateString
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function batchUpdate($birthProgressUpdateString)
+    {
         if($birthProgressUpdateString != '') {
             $birthProgressUpdateString = rtrim($birthProgressUpdateString, ',');
             $sql = "UPDATE animal SET birth_progress = v.birth_progress
@@ -193,8 +212,6 @@ class BirthWeightAndProgressMigrator extends MigratorBase
                     ) AS v(animal_id, birth_progress) WHERE animal.id = v.animal_id";
             $this->conn->exec($sql);
         }
-
-        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 
 
