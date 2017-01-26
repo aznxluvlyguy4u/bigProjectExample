@@ -4369,25 +4369,6 @@ class AnimalTableMigrator extends MigratorBase
 
 
 
-
-	public function migrateParentsV2()
-	{
-		//TODO RECHECK
-
-		//Double check the data again
-		$this->resetAnimalIdVsmLocationAndGenderSearchArrays();
-		$this->migrateParents();
-
-		$this->setMissingFathersOnAnimal();
-		$this->setMissingFathersOnLitters();
-
-		//AnimalIds might have been changed due to duplicateFixes
-		AnimalMigrationTableFixer::updateAnimalIdsInMigrationTable($this->cmdUtil, $this->conn);
-		AnimalMigrationTableFixer::updateGenderInDatabaseInMigrationTable($this->cmdUtil, $this->conn);
-		AnimalMigrationTableFixer::updateParentIdsInMigrationTable($this->cmdUtil, $this->conn);
-	}
-
-
 	/**
 	 * @param Connection $conn
 	 * @param CommandUtil $cmdUtil
