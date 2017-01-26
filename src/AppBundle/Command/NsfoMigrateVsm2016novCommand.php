@@ -155,6 +155,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '29: Migrate dateOfDeath & isAlive status', "\n",
             '----------------------------------------------------', "\n",
             '30: Import missing pedigreeRegisters from '.$this->filenames[self::EXTRA_ANIMAL_TABLE], "\n",
+            '39: Fill missing british ulnNumbers in AnimalMigrationTable', "\n",
             '----------------------------------------------------', "\n",
             '40: Fill missing ulnNumbers in AnimalMigrationTable', "\n",
             '41: Fix animalIds in AnimalMigrationTable (likely incorrect due to duplicate fix)', "\n",
@@ -319,6 +320,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             case 30:
                 $result = $this->importMissingPedigreeRegisters20161219() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
+                break;
+
+            case 39:
+                AnimalMigrationTableFixer::fillEmptyBritishUlns($this->cmdUtil, $this->conn);
+                $output->writeln('DONE');
                 break;
 
             case 40:
