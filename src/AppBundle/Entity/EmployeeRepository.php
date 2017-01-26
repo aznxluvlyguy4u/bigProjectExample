@@ -11,6 +11,7 @@ class EmployeeRepository extends BaseRepository {
      */
     public function findActiveOneByEmailAddress($emailAddress)
     {
+        $emailAddress = trim(strtolower($emailAddress));
         /** @var EmployeeRepository $employeeRepository */
         $employeeRepository = $this->getManager()->getRepository(Employee::class);
         return $employeeRepository->findOneBy(["emailAddress"=>$emailAddress, "isActive" => TRUE]);

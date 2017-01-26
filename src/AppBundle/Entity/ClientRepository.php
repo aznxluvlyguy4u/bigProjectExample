@@ -20,7 +20,7 @@ class ClientRepository extends BaseRepository {
         return $this->getByRelationNumberKeeper($messageObject->getRelationNumberKeeper());
     }
 
-    
+
     public function getByUbn($ubn)
     {
         $repository = $this->getManager()->getRepository(Constant::LOCATION_REPOSITORY);
@@ -51,6 +51,7 @@ class ClientRepository extends BaseRepository {
      */
     public function findActiveOneByEmailAddress($emailAddress)
     {
+        $emailAddress = trim(strtolower($emailAddress));
         /** @var ClientRepository $clientRepository */
         $clientRepository = $this->getManager()->getRepository(Client::class);
         return $clientRepository->findOneBy(["emailAddress"=>$emailAddress, "isActive" => TRUE]);
