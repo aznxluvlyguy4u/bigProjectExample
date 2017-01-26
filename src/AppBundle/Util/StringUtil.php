@@ -391,7 +391,7 @@ class StringUtil
 
         $dateString = '';
         if($date) {
-            $dateString = $animal->getDateOfBirth()->format('YYYY-MM-DD');    
+            $dateString = $animal->getDateOfBirth()->format('Y-m-d');
         }
         
         return $animal->getId().'_'.$dateString;
