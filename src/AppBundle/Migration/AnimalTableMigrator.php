@@ -1087,9 +1087,9 @@ class AnimalTableMigrator extends MigratorBase
 		$updateString = rtrim($updateString,',');
 
 		$sql = "UPDATE animal SET name = v.vsm_id, pedigree_country_code = v.pedigree_country_code, pedigree_number = v.pedigree_number,
-				nickname = v.nick_name, parent_father_id = v.father_id, parent_mother_id = v.mother_id, gender = v.gender, type = v.type,
+				nickname = v.nick_name, parent_father_id = CAST(v.father_id AS INTEGER), parent_mother_id = CAST(v.mother_id AS INTEGER), gender = v.gender, type = v.type,
 				 breed_code = v.breed_code, ubn_of_birth = v.ubn_of_birth, 
-				 location_of_birth_id = v.location_of_birth, pedigree_register_id = v.pedigree_register_id, breed_type = v.breed_type,
+				 location_of_birth_id = CAST(v.location_of_birth AS INTEGER), pedigree_register_id = CAST(v.pedigree_register_id AS INTEGER), breed_type = v.breed_type,
 				 scrapie_genotype = v.scrapie_genotype
 				FROM (VALUES ".$updateString.") AS v(animal_id, vsm_id, pedigree_country_code, pedigree_number, nick_name,
 				father_id, mother_id, gender, type, breed_code, ubn_of_birth, location_of_birth, pedigree_register_id,
