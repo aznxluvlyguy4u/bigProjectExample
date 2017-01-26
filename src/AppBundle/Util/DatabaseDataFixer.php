@@ -5,6 +5,8 @@ namespace AppBundle\Util;
 
 
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class DatabaseDataFixer
 {
@@ -31,28 +33,23 @@ class DatabaseDataFixer
 
 
     /**
-     * @param ObjectManager $em
-     * @param CommandUtil|null $cmdUtil
+     * @param Connection $conn
+     * @param CommandUtil|OutputInterface $cmdUtilOrOutputInterface
      */
-    public static function fixIncongruentAnimalOrderNumbers(ObjectManager $em, CommandUtil $cmdUtil = null)
+    public static function fixIncongruentAnimalOrderNumbers(Connection $conn, $cmdUtilOrOutputInterface = null)
     {
-        $sql = "SELECT id, uln_number, animal_order_number FROM animal";
-        $results = $em->getConnection()->query($sql)->fetchAll();
+        $sql = "WITH rows AS (
+                  UPDATE animal SET animal_order_number = SUBSTRING(uln_number, LENGTH(uln_number) - 4)
+                    WHERE animal_order_number <> SUBSTRING(uln_number, LENGTH(uln_number) - 4)
+                  RETURNING 1
+                )
+                SELECT COUNT(*) AS count FROM rows";
+        $count = $conn->query($sql)->fetch()['count'];
 
-        if($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt(count($results)+1, 1); }
-
-        foreach ($results as $result) {
-            $id = $result['id'];
-            $uln = $result['uln_number'];
-            $animalOrderNumber = $result['animal_order_number'];
-            $ulnMin = StringUtil::getUlnWithoutOrderNumber($uln, $animalOrderNumber);
-
-            if($ulnMin.$animalOrderNumber != $uln) {
-                self::saveLast5UlnCharsAsAnimalOrderNumber($em, $id, $uln);
-                if($cmdUtil != null) { $cmdUtil->advanceProgressBar(1); }
-            }
+        if($cmdUtilOrOutputInterface != null) {
+            $message = $count == 0 ? 'All animalOrderNumbers were already correct!' : $count . ' animalOrderNumbers fixed!';
+            $cmdUtilOrOutputInterface->writeln($message);
         }
-        if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
     }
 
 

@@ -5,6 +5,7 @@ namespace AppBundle\Command;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -25,6 +26,9 @@ class NsfoFixDbCommand extends ContainerAwareCommand
     /** @var ObjectManager */
     private $em;
     
+    /** @var Connection */
+    private $conn;
+    
     protected function configure()
     {
         $this
@@ -40,6 +44,7 @@ class NsfoFixDbCommand extends ContainerAwareCommand
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
         $this->output = $output;
+        $this->conn = $this->em->getConnection();
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
@@ -58,7 +63,7 @@ class NsfoFixDbCommand extends ContainerAwareCommand
                 break;
 
             case 2:
-                DatabaseDataFixer::fixIncongruentAnimalOrderNumbers($this->em, $this->cmdUtil);
+                DatabaseDataFixer::fixIncongruentAnimalOrderNumbers($this->conn, $this->cmdUtil);
                 $output->writeln('Done!');
                 break;
 
