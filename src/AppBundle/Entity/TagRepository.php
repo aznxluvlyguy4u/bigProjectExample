@@ -65,7 +65,9 @@ class TagRepository extends BaseRepository {
 
     $sql = "SELECT tag_status, animal_order_number, order_date, uln_country_code, uln_number 
             FROM tag WHERE owner_id = ".$client->getId()." AND location_id = ".$location->getId()."  AND tag_status = '".$tagStatus."'";
-    return $this->getManager()->getConnection()->query($sql)->fetchAll();
+    $tags = $this->getManager()->getConnection()->query($sql)->fetchAll();
+    
+    return $tags;
   }
 
   /**

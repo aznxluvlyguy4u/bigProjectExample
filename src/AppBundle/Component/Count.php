@@ -176,32 +176,40 @@ class Count
         $adultDateOfBirthLimit = Utils::getAdultDateStringOfBirthLimit();
 
         $sql = "SELECT COUNT(date_of_birth), '".LiveStockType::PEDIGREE_ADULT."' as type FROM animal
+                    LEFT JOIN pedigree_register r ON animal.pedigree_register_id = r.id
                 WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
-                      AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
-                      AND location_id = ".$locationId."
-                AND pedigree_country_code NOTNULL AND animal.pedigree_number NOTNULL
-                AND animal.date_of_birth <= '".$adultDateOfBirthLimit."'
+                    AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
+                    AND location_id = ".$locationId."
+                    AND pedigree_country_code NOTNULL AND animal.pedigree_number NOTNULL
+                    AND animal.date_of_birth <= '".$adultDateOfBirthLimit."'
+                    AND r.is_registered_with_nsfo = TRUE  
                 UNION
                 SELECT COUNT(date_of_birth), '".LiveStockType::PEDIGREE_LAMB."' as type FROM animal
+                    LEFT JOIN pedigree_register r ON animal.pedigree_register_id = r.id
                 WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
-                      AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
-                      AND location_id = ".$locationId."
-                AND pedigree_country_code NOTNULL AND animal.pedigree_number NOTNULL
-                AND animal.date_of_birth > '".$adultDateOfBirthLimit."'
+                    AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
+                    AND location_id = ".$locationId."
+                    AND pedigree_country_code NOTNULL AND animal.pedigree_number NOTNULL
+                    AND animal.date_of_birth > '".$adultDateOfBirthLimit."'
+                    AND r.is_registered_with_nsfo = TRUE
                 UNION
                 SELECT COUNT(date_of_birth), '".LiveStockType::NON_PEDIGREE_ADULT."' as type FROM animal
+                    LEFT JOIN pedigree_register r ON animal.pedigree_register_id = r.id
                 WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
-                      AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
-                      AND location_id = ".$locationId."
-                      AND (pedigree_country_code ISNULL OR animal.pedigree_number ISNULL)
-                      AND animal.date_of_birth <= '".$adultDateOfBirthLimit."'
+                    AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
+                    AND location_id = ".$locationId."
+                    AND (pedigree_country_code ISNULL OR animal.pedigree_number ISNULL)
+                    AND animal.date_of_birth <= '".$adultDateOfBirthLimit."'
+                    AND (r.is_registered_with_nsfo = FALSE OR r.is_registered_with_nsfo ISNULL)
                 UNION
                 SELECT COUNT(date_of_birth), '".LiveStockType::NON_PEDIGREE_LAMB."' as type FROM animal
+                    LEFT JOIN pedigree_register r ON animal.pedigree_register_id = r.id
                 WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
-                      AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
-                      AND location_id = ".$locationId."
-                      AND (pedigree_country_code ISNULL OR animal.pedigree_number ISNULL)
-                      AND animal.date_of_birth > '".$adultDateOfBirthLimit."'";
+                    AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
+                    AND location_id = ".$locationId."
+                    AND (pedigree_country_code ISNULL OR animal.pedigree_number ISNULL)
+                    AND animal.date_of_birth > '".$adultDateOfBirthLimit."'
+                    AND (r.is_registered_with_nsfo = FALSE OR r.is_registered_with_nsfo ISNULL)";
         $results = $em->getConnection()->query($sql)->fetchAll();
 
         $searchArray = [];
@@ -279,8 +287,15 @@ class Count
 
                     $isOwnedAnimal = Count::includeAnimal($animal, $isAlive, $isExportedOption, $isDepartedOption);
 
-                    $isPedigree = $animal->getPedigreeCountryCode() != null
-                        && $animal->getPedigreeNumber() != null;
+                    //A pedigree animal must be part of a pedigreeRegister registered with NSFO and must have a pedigree number
+                    $isPedigree = false;
+                    $pedigreeRegister = $animal->getPedigreeRegister();
+                    if($pedigreeRegister) {
+                        if($pedigreeRegister->getIsRegisteredWithNsfo()) {
+                            $isPedigree = $animal->getPedigreeCountryCode() != null
+                                && $animal->getPedigreeNumber() != null;
+                        }
+                    }
 
                     $dateOfBirth = $animal->getDateOfBirth();
 

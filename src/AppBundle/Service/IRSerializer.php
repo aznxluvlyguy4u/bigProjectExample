@@ -2,8 +2,13 @@
 
 namespace AppBundle\Service;
 
+use AppBundle\Cache\AnimalCacher;
+use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\AnimalCache;
+use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
@@ -17,12 +22,19 @@ use AppBundle\Entity\DeclareTagReplace;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Litter;
+use AppBundle\Entity\Location;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RetrieveUbnDetails;
 use AppBundle\Entity\RetrieveCountries;
 use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveAnimalDetails;
+use AppBundle\Entity\Stillborn;
+use AppBundle\Entity\TailLength;
+use AppBundle\Entity\Weight;
+use AppBundle\Enumerator\ActionType;
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Ram;
@@ -103,9 +115,9 @@ class IRSerializer implements IRSerializerInterface
      * @param $messageClassNameSpace
      * @return array|\JMS\Serializer\scalar|mixed|object|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|DeclareTagReplace
      */
-    public function deserializeToObject($json, $messageClassNameSpace)
+    public function deserializeToObject($json, $messageClassNameSpace, $basePath = "AppBundle\\Entity\\")
     {
-        $messageClassPathNameSpace = "AppBundle\\Entity\\" . $messageClassNameSpace;
+        $messageClassPathNameSpace = $basePath . $messageClassNameSpace;
 
         $messageObject = $this->serializer->deserialize($json, $messageClassPathNameSpace, Constant::jsonNamespace);
 
@@ -261,50 +273,371 @@ class IRSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclareBirth(ArrayCollection $declareBirthContentArray, Client $client, $isEditMessage)
+    function parseDeclareBirth(ArrayCollection $declareBirthContentArray,
+                               Client $client,
+                               Person $loggedInUser,
+                               Location $location,
+                               $isEditMessage)
     {
-        /** @var Animal $animal */
-        $declareBirthRequest = null;
-        $declareBirthContentArray["type"] = RequestType::DECLARE_BIRTH_ENTITY;
-        $animal = $declareBirthContentArray['animal'];
-
-        $declareBirthRequest = new DeclareBirth();
-        $declareBirthRequest->setUlnCountryCode($animal->getUlnCountryCode());
-        $declareBirthRequest->setUlnNumber($animal->getUlnNumber());
-        $declareBirthRequest->setUlnCountryCodeMother($animal->getParentMother()->getUlnCountryCode());
-        $declareBirthRequest->setUlnMother($animal->getParentMother()->getUlnNumber());
-        $declareBirthRequest->setDateOfBirth($animal->getDateOfBirth());
-        $declareBirthRequest->setHasLambar($animal->getLambar());
-        $declareBirthRequest->setLitter($animal->getLitter());
-        $declareBirthRequest->setBirthType($declareBirthContentArray['birth_type']);
-        $declareBirthRequest->setLocation($declareBirthContentArray['location']);
-        $declareBirthRequest->setLitterSize($declareBirthContentArray['litter_size']);
-        $declareBirthRequest->setBirthWeight($declareBirthContentArray['birth_weight']);
-        $declareBirthRequest->setBirthTailLength($declareBirthContentArray['tail_length']);
-
-        if($animal->getParentFather() != null) {
-            $declareBirthRequest->setUlnCountryCodeFather($animal->getParentFather()->getUlnCountryCode());
-            $declareBirthRequest->setUlnFather($animal->getParentFather()->getUlnNumber());
+        $father = null;
+        $mother = null;
+        $dateOfBirth = null;
+        $isAborted = false;
+        $isPseudoPregnancy = false;
+        $childrenContent = [];
+        $litterSize = 0;
+        $stillbornCount = 0;
+        $statusCode = 428;
+        $declareBirthRequests = [];
+        
+        if(key_exists('date_of_birth', $declareBirthContentArray->toArray())) {
+            $dateOfBirth = new \DateTime($declareBirthContentArray["date_of_birth"]);
         }
 
-        if($declareBirthContentArray['nurture_type'] == 'SURROGATE') {
-            $declareBirthRequest->setUlnCountryCodeSurrogate($animal->getSurrogate()->getUlnCountryCode());
-            $declareBirthRequest->setUlnSurrogate($animal->getSurrogate()->getUlnNumber());
+        if(key_exists('is_aborted', $declareBirthContentArray->toArray())) {
+            $isAborted = $declareBirthContentArray["is_aborted"];
         }
 
-        if($animal instanceof Ram) {
-            $declareBirthRequest->setGender('MALE');
+        if(key_exists('is_pseudo_pregnancy', $declareBirthContentArray->toArray())) {
+            $isPseudoPregnancy = $declareBirthContentArray["is_pseudo_pregnancy"];
         }
 
-        if($animal instanceof Ewe) {
-            $declareBirthRequest->setGender('FEMALE');
+        if(key_exists('litter_size', $declareBirthContentArray->toArray())) {
+            $litterSize = $declareBirthContentArray["litter_size"];
         }
 
-        if($animal instanceof Neuter) {
-            $declareBirthRequest->setGender('NEUTER');
+        if(key_exists('stillborn_count', $declareBirthContentArray->toArray())) {
+            $stillbornCount = $declareBirthContentArray["stillborn_count"];
         }
 
-        return $declareBirthRequest;
+        if(key_exists('father', $declareBirthContentArray->toArray())) {
+            $father = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
+              ->getAnimalByUlnOrPedigree($declareBirthContentArray["father"]);
+
+            if(!$father) {
+                return new JsonResponse(
+                  array(
+                    Constant::RESULT_NAMESPACE => array (
+                      'code' => $statusCode,
+                      "message" => "Opgegeven vader kan niet gevonden worden.",
+                    )
+                  ), $statusCode);
+            }
+        }
+
+        if(key_exists('mother', $declareBirthContentArray->toArray())) {
+            $mother = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
+              ->getAnimalByUlnOrPedigree($declareBirthContentArray["mother"]);
+
+            if(!$mother) {
+                return new JsonResponse(
+                  array(
+                    Constant::RESULT_NAMESPACE => array (
+                      'code' => $statusCode,
+                      "message" => "Opgegeven moeder kan niet gevonden worden.",
+                    )
+                  ), $statusCode);
+            }
+        }
+
+        if(key_exists('children', $declareBirthContentArray->toArray())) {
+            $childrenContent = $declareBirthContentArray["children"];
+        }
+
+        //Create Litter
+        $litter = new Litter();
+        $litter->setLitterDate($dateOfBirth);
+        $litter->setIsAbortion($isAborted);
+        $litter->setIsPseudoPregnancy($isPseudoPregnancy);
+
+        if ($isAborted || $isPseudoPregnancy) {
+            $litter->setStatus('COMPLETED');
+        } else {
+            $litter->setStatus('INCOMPLETE');
+        }
+        $litter->setRequestState(RequestStateType::OPEN);
+        $litter->setActionBy($loggedInUser);
+        $litter->setRelationNumberKeeper($location->getCompany()->getOwner()->getRelationNumberKeeper());
+        $litter->setUbn($location->getUbn());
+        $litter->setIsHidden(false);
+        $litter->setIsOverwrittenVersion(false);
+        $litter->setMessageId(MessageBuilderBase::getNewRequestId());
+        $litter->setAnimalMother($mother);
+        $litter->setAnimalFather($father);
+        $litter->setBornAliveCount($litterSize-$stillbornCount);
+        $litter->setStillbornCount($stillbornCount);
+
+        $children = [];
+        foreach ($childrenContent as $child) {
+
+            $tagToReserve = null;
+            $childAnimalToCreate = null;
+            $surrogate = null;
+            $gender = null;
+            $birthProgress = null;
+            $hasLambar = false;
+            $tailLengthValue = null;
+            $birthWeightValue = null;
+            $isAlive = null;
+            $declareBirthRequest = null;
+            
+            if(key_exists('gender', $child)) {
+                $gender = $child['gender'];
+            }
+
+            if(key_exists('birth_progress', $child)) {
+                $birthProgress = $child["birth_progress"];
+            }
+
+            if(key_exists('has_lambar', $child)) {
+                $hasLambar = $child['has_lambar'];
+            }
+
+            if(key_exists('tail_length', $child)) {
+                $tailLengthValue = $child['tail_length'];
+            }
+
+            if(key_exists('birth_weight', $child)) {
+                $birthWeightValue = $child['birth_weight'];
+            }
+
+            if(key_exists('is_alive', $child)) {
+                $isAlive = $child['is_alive'];
+            }
+
+            if(!$isAlive) { // Stillborn
+                $stillborn = new Stillborn();
+                $stillborn->setBirthProgress($birthProgress);
+                $stillborn->setGender($gender);
+                $stillborn->setLitter($litter);
+                $stillborn->setTailLength($tailLengthValue);
+                $stillborn->setWeight($birthWeightValue);
+                $litter->addStillborn($stillborn);
+
+                $this->entityManager->persist($stillborn);
+            } else if($isAlive) {
+                //Create I&R Declare Birth request per child
+                $declareBirthRequest = new DeclareBirth();
+
+                //Generate new requestId
+
+                if($declareBirthRequest->getRequestId()== null) {
+                    $requestId = MessageBuilderBase::getNewRequestId();
+                    //Add general data to content
+                    $declareBirthRequest->setRequestId($requestId);
+                }
+
+                if($declareBirthRequest->getAction() == null) {
+                    $declareBirthRequest->setAction(ActionType::V_MUTATE);
+                }
+
+                $declareBirthRequest->setLogDate(new \DateTime());
+                $declareBirthRequest->setRequestState(RequestStateType::OPEN);
+
+                if($declareBirthRequest->getRecoveryIndicator() == null) {
+                    $declareBirthRequest->setRecoveryIndicator(RecoveryIndicatorType::N);
+                }
+
+                $relationNumberKeeper = null;
+
+                if($client instanceof Client) {
+                    $relationNumberKeeper = $client->getRelationNumberKeeper();
+                }
+
+                $declareBirthRequest->setRelationNumberKeeper($relationNumberKeeper);
+
+                if($loggedInUser instanceof Person) {
+                    $declareBirthRequest->setActionBy($loggedInUser);
+                }
+
+                //Find assigned tag
+                if(key_exists('uln_country_code', $child) && key_exists('uln_number', $child)) {
+                    $tagToReserve = $this->entityManager->getRepository(Constant::TAG_REPOSITORY)
+                      ->findByUlnNumberAndCountryCode($child['uln_country_code'],$child['uln_number']);
+
+                    if(!$tagToReserve) {
+                        return new JsonResponse(
+                          array(
+                            Constant::RESULT_NAMESPACE => array (
+                              'code' => $statusCode,
+                              "message" => "Opgegeven vrije oormerk voor kind: " . $child['uln_country_code'] .$child['uln_number'] ." is niet gevonden.",
+                            )
+                          ), $statusCode);
+                    }
+
+                    //Assign tag details, reserve tag
+                    if($tagToReserve) {
+                        $animal = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
+                          ->getAnimalByUlnOrPedigree(array ('uln_country_code' => $tagToReserve->getUlnCountryCode(), 
+                                                            'uln_number'=>$tagToReserve->getUlnNumber()));
+                        if($animal) {
+                            return new JsonResponse(
+                              array(
+                                Constant::RESULT_NAMESPACE => array (
+                                  'code' => $statusCode,
+                                  "message" => "Opgegeven vrije oormerk voor kind is reeds toegewezen aan een bestaande dier met ULN" . $child['uln_country_code'] .$child['uln_number'],
+                                )
+                              ), $statusCode);
+                        }
+                        $declareBirthRequest->setUlnCountryCode($tagToReserve->getUlnCountryCode());
+                        $declareBirthRequest->setUlnNumber($tagToReserve->getUlnNumber());
+                        $tagToReserve->setTagStatus(TagStateType::RESERVED);
+                        $this->entityManager->getRepository(Constant::TAG_REPOSITORY)->persist($tagToReserve);
+                    }
+                }
+
+                if(key_exists('surrogate', $declareBirthContentArray->toArray())) {
+                    $surrogate = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
+                      ->getAnimalByUlnOrPedigree($declareBirthContentArray["surrogate"]);
+
+                    if(!$surrogate) {
+                        return new JsonResponse(
+                          array(
+                            Constant::RESULT_NAMESPACE => array (
+                              'code' => $statusCode,
+                              "message" => "Opgegeven pleegmoeder kan niet gevonden worden.",
+                            )
+                          ), $statusCode);
+                    }
+                }
+
+                //Create child animal
+                switch ($gender) {
+                    case GenderType::MALE:
+                        $child = new Ram();
+                        break;
+                    case GenderType::FEMALE:
+                        $child = new Ewe();
+                        break;
+                    case GenderType::NEUTER:
+                        $child = new Neuter();
+                        break;
+                }
+
+                //Set child details
+                $child->setLocation($location);
+                $child->setDateOfBirth($dateOfBirth);
+                $child->setBirthProgress($birthProgress);
+                $child->setIsAlive(true);
+                $child->setUlnCountryCode($tagToReserve->getUlnCountryCode());
+                $child->setUlnNumber($tagToReserve->getUlnNumber());
+                $child->setAnimalOrderNumber($tagToReserve->getAnimalOrderNumber());
+                $child->setLocation($location);
+                $child->setLocationOfBirth($location);
+                $child->setUbnOfBirth($location->getUbn());
+                $child->setLambar($hasLambar);
+                $child->setLitter($litter);
+
+                //Create new residence
+                $animalResidence = new AnimalResidence();
+                $animalResidence->setAnimal($child);
+                $animalResidence->setCountry($tagToReserve->getUlnCountryCode());
+                $animalResidence->setIsPending(false);
+                $animalResidence->setLocation($location);
+                $animalResidence->setStartDate($dateOfBirth);
+                $child->addAnimalResidenceHistory($animalResidence);
+
+                //TODO - set pedigree details based on father / mother / location pedigree membership
+
+                $litter->addChild($child);
+
+                $declareBirthRequest->setDateOfBirth($dateOfBirth);
+                $declareBirthRequest->setAnimal($child);
+                $declareBirthRequest->setGender($gender);
+                $declareBirthRequest->setLocation($location);
+                $declareBirthRequest->setIsAborted($isAborted);
+                $declareBirthRequest->setIsPseudoPregnancy($isPseudoPregnancy);
+                $declareBirthRequest->setHasLambar($hasLambar);
+                $declareBirthRequest->setLitter($litter);
+                $declareBirthRequest->setLitterSize($litterSize);
+                $declareBirthRequest->setBirthWeight($birthWeightValue);
+                $declareBirthRequest->setBirthTailLength($tailLengthValue);
+
+                if($father) {
+                    $declareBirthRequest->setUlnFather($father->getUlnNumber());
+                    $declareBirthRequest->setUlnCountryCodeFather($father->getUlnCountryCode());
+                    //$father->setLitter($litter);
+                    $child->setParentFather($father);
+                }
+
+                if($mother) {
+                    $declareBirthRequest->setUlnMother($mother->getUlnNumber());
+                    $declareBirthRequest->setUlnCountryCodeMother($mother->getUlnCountryCode());
+                    //$mother->setLitter($litter);
+                    $child->setParentMother($mother);
+                }
+
+                if($surrogate) {
+                    $declareBirthRequest->setUlnSurrogate($surrogate->getUlnNumber());
+                    $declareBirthRequest->setUlnCountryCodeSurrogate(($surrogate->getUlnCountryCode()));
+                    //$surrogate->setLitter($litter);
+                    $child->setSurrogate($surrogate);
+                }
+
+                // Weight
+                $weight = new Weight();
+                $weight->setMeasurementDate($dateOfBirth);
+                $weight->setAnimal($child);
+                $weight->setIsBirthWeight(true);
+                $weight->setWeight($birthWeightValue);
+                $child->addWeightMeasurement($weight);
+
+                // Tail Length
+                $tailLength = new TailLength();
+                $tailLength->setMeasurementDate($dateOfBirth);
+                $tailLength->setAnimal($child);
+                $tailLength->setLength($tailLengthValue);
+                $child->addTailLengthMeasurement($tailLength);
+
+                $location->getAnimals()->add($child);
+
+                $this->entityManager->persist($child);
+                $this->entityManager->persist($location);
+                $this->entityManager->persist($litter);
+                $this->entityManager->persist($weight);
+                $this->entityManager->persist($tailLength);
+                
+                if($father){
+                    $this->entityManager->persist($father);
+                }
+                
+                if($mother) {
+                    $this->entityManager->persist($mother);
+                }
+                
+                if($surrogate) {
+                    $this->entityManager->persist($surrogate);
+                }
+
+                $declareBirthRequests[] = $declareBirthRequest;
+                $litter->addDeclareBirth($declareBirthRequest);
+
+                $this->entityManager->persist($declareBirthRequest);
+                $children[] = $child;
+            }
+        }
+
+        // Persist Litter
+        $this->entityManager->persist($litter);
+        $this->entityManager->flush();
+
+        /** @var Animal $child */
+        foreach ($children as $child) {
+            if($child->getIsAlive()) {
+                AnimalCacher::cacheByAnimal($this->entityManager, $child);
+            }
+        }
+
+        if($mother) {
+            AnimalCacher::cacheByAnimal($this->entityManager, $mother);
+        }
+
+        if($father) {
+            AnimalCacher::cacheByAnimal($this->entityManager, $father);
+        }
+        
+        
+        return $declareBirthRequests;
     }
 
     /**
