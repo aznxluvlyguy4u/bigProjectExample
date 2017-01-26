@@ -14,6 +14,7 @@ use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\SqlUtil;
@@ -171,6 +172,9 @@ class DuplicateAnimalsFixer
             return true;
         }
         
+        /* 4 Double check animalOrderNumbers */
+        DatabaseDataFixer::fixIncongruentAnimalOrderNumbers($this->conn, null);
+        
         return false;
     }
 
@@ -258,6 +262,9 @@ class DuplicateAnimalsFixer
             $this->cmdUtil->advanceProgressBar(1, 'DuplicateAnimals fixed|inBatch|skipped: '.$duplicateAnimalsDeleted.'|'.$batchCounter.'|'.$skippedCounter);
         }
 
+        /* 5 Double check animalOrderNumbers */
+        DatabaseDataFixer::fixIncongruentAnimalOrderNumbers($this->conn, null);
+
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
     
@@ -337,6 +344,9 @@ class DuplicateAnimalsFixer
             }
             $this->cmdUtil->advanceProgressBar(1, 'DuplicateAnimals fixed|inBatch|skipped: '.$duplicateAnimalsDeleted.'|'.$batchCounter.'|'.$skippedCounter);
         }
+
+        /* 5 Double check animalOrderNumbers */
+        DatabaseDataFixer::fixIncongruentAnimalOrderNumbers($this->conn, null);
 
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
