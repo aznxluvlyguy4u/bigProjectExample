@@ -366,6 +366,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             case 48:
                 AnimalTableMigrator::setParentsFromMigrationTableBySql($this->conn, $this->cmdUtil);
                 $output->writeln('DONE');
+                break;
 
             default:
                 $output->writeln('ABORTED');
