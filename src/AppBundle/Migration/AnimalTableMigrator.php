@@ -4381,8 +4381,9 @@ class AnimalTableMigrator extends MigratorBase
 			$conn->exec('CREATE INDEX animal_parent_father_id_index ON public.animal (parent_father_id)');
 			$conn->exec('CREATE INDEX animal_parent_mother_id_index ON public.animal (parent_mother_id)');
 			$cmdUtil->writeln(['AnimalIds and parentIds indexes created in AnimalMigrationTable...','']);
+		} else {
+			$cmdUtil->writeln('*skipped*');
 		}
-		$cmdUtil->writeln('*skipped*');
 
 
 		$setParentIndexesInAnimalMigrationTable = $cmdUtil->generateConfirmationQuestion('Set Indexes on animal_id, father_id and mother_id in animal_migration_table? (y/n, default = no)');
@@ -4391,9 +4392,9 @@ class AnimalTableMigrator extends MigratorBase
 			$conn->exec('CREATE INDEX animal_migration_table_father_id_index ON public.animal_migration_table (father_id)');
 			$conn->exec('CREATE INDEX animal_migration_table_mother_id_index ON public.animal_migration_table (mother_id)');
 			$cmdUtil->writeln(['Indexes set on animal_id, father_id and mother_id in animal_migration_table','']);
+		} else {
+			$cmdUtil->writeln('*skipped*');
 		}
-		$cmdUtil->writeln('*skipped*');
-
 
 		$cmdUtil->writeln(['Updating animalIds and parentIds in AnimalMigrationTable...','']);
 		//AnimalIds might have been changed due to duplicateFixes
