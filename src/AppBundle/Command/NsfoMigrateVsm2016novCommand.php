@@ -163,6 +163,8 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '44: Fix inverted primary and secondary vsmIds in the vsmIdGroup table', "\n",
             '----------------------------------------------------', "\n",
             '45: Migrate AnimalTable data V2', "\n",
+            '46: Migrate AnimalTable data: UPDATE Synced Animals', "\n",
+            '47: Fix missing pedigreeNumbers', "\n",
             '----------------------------------------------------', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
@@ -348,6 +350,16 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             case 45:
                 $result = $this->migrateAnimalTableV2() ? 'DONE' : 'NO DATA!' ;
                 $output->writeln($result);
+                break;
+
+            case 46:
+                $result = $this->updateSyncedAnimals() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
+            case 47:
+                AnimalTableMigrator::fillMissingPedigreeNumbers($this->conn) ;
+                $output->writeln('DONE');
                 break;
 
             default:
@@ -744,6 +756,18 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     {
         $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
         $animalTableMigrator->migrateV2();
+
+        return true;
+    }
+
+
+    /**
+     * @return bool
+     */
+    private function updateSyncedAnimals()
+    {
+        $animalTableMigrator = new AnimalTableMigrator($this->cmdUtil, $this->em, $this->output, [], $this->rootDir);
+        $animalTableMigrator->updateSyncedAnimals();
 
         return true;
     }
