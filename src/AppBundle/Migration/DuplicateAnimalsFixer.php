@@ -9,6 +9,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Measurement;
 use AppBundle\Entity\MeasurementRepository;
+use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
@@ -609,6 +610,10 @@ class DuplicateAnimalsFixer
         if($animalSqlMiddle != '') {
             $this->conn->exec($animalSqlBeginning.rtrim($animalSqlMiddle,',').$animalSqlEnd);
         }
+
+        $primaryVsmId = $primaryAnimalResultArray['name'];
+        $secondaryVsmId = $secondaryAnimalResultArray['name'];
+        VsmIdGroupRepository::saveVsmIdGroup($this->conn, $primaryVsmId, $secondaryVsmId);
 
         return true;
     }

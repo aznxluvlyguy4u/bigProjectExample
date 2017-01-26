@@ -3,7 +3,9 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\NullChecker;
 use AppBundle\Util\SqlUtil;
+use Doctrine\DBAL\Connection;
 
 class VsmIdGroupRepository extends BaseRepository {
 
@@ -98,6 +100,44 @@ class VsmIdGroupRepository extends BaseRepository {
             if($cmdUtil != null) { $cmdUtil->advanceProgressBar(1, 'Updated|Deleted: '.$updatedCount.'|'.$deletedCount); }
         }
         if($cmdUtil != null) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param string|int $primaryVsmId
+     * @param string|int $secondaryVsmId
+     * @throws \Doctrine\DBAL\DBALException
+     * @return  boolean
+     */
+    public static function saveVsmIdGroup(Connection $conn, $primaryVsmId, $secondaryVsmId)
+    {
+        if( (!is_int($primaryVsmId) && !is_string($primaryVsmId))
+            || (!is_int($secondaryVsmId) && !is_string($secondaryVsmId)))
+        {
+            if (NullChecker::isNull($primaryVsmId) || NullChecker::isNull($secondaryVsmId)) {
+                return false;
+            }
+        }
+        
+        $sql = "SELECT id, primary_vsm_id FROM vsm_id_group WHERE id = '".$secondaryVsmId."'";
+        $result = $conn->query($sql)->fetch();
+
+        if($result != null) {
+            $id = $result['id'];
+            $currentPrimaryVsmId = $result['primary_vsm_id'];
+
+            if($primaryVsmId != $currentPrimaryVsmId) {
+                $sql = "UPDATE vsm_id_group SET primary_vsm_id = '".$primaryVsmId."' WHERE id = ".$id;
+                $conn->exec($sql);
+            }
+            //Else do nothing
+        } else {
+            $sql = "INSERT INTO vsm_id_group (id, primary_vsm_id, secondary_vsm_id) VALUES (nextval('vsm_id_group_id_seq'), '".$primaryVsmId."', '".$secondaryVsmId."')";
+            $conn->exec($sql);
+        }
+
+        return true;
     }
 
 }
