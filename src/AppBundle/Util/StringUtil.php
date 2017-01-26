@@ -5,6 +5,7 @@ namespace AppBundle\Util;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Animal;
 use AppBundle\Enumerator\GenderType;
 
 class StringUtil
@@ -375,5 +376,34 @@ class StringUtil
         $ubn = ltrim(substr(trim($ulnNumber), 0, -5), '0');
 
         return Validator::hasValidUbnFormat($ubn) ? $ubn : null;
+    }
+
+
+    /**
+     * @param Animal $animal
+     * @param \DateTime $date
+     * @param bool $mustHaveDateOfBirth
+     * @return null|string
+     */
+    public static function getAnimalIdAndDateString(Animal $animal, \DateTime $date, $mustHaveDateOfBirth = true)
+    {
+        if($animal == null || ($mustHaveDateOfBirth && $date == null)) { return null; }
+
+        $dateString = '';
+        if($date) {
+            $dateString = $animal->getDateOfBirth()->format('YYYY-MM-DD');    
+        }
+        
+        return $animal->getId().'_'.$dateString;
+    }
+
+
+    /**
+     * @param $string
+     * @return string
+     */
+    public static function replaceCommasWithDots($string)
+    {
+        return strtr($string, [',' => '.'] );
     }
 }

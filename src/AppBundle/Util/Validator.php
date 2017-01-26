@@ -52,7 +52,7 @@ class Validator
         if($string == null || $string == '') { return false; }
 
         //First convert comma decimals to point decimals
-        $string = strtr($string, [',' => '.'] );
+        $string = StringUtil::replaceCommasWithDots($string);
 
         $decimalCount = substr_count($string, '.');
         if($decimalCount > 1) {
