@@ -20,14 +20,7 @@ class ClientRepository extends BaseRepository {
         return $this->getByRelationNumberKeeper($messageObject->getRelationNumberKeeper());
     }
 
-    public function getByEmail($email)
-    {
-        $repository = $this->getManager()->getRepository(Constant::CLIENT_REPOSITORY);
-        $client = $repository->findOneBy(array("emailAddress" => $email));
-
-        return $client;
-    }
-
+    
     public function getByUbn($ubn)
     {
         $repository = $this->getManager()->getRepository(Constant::LOCATION_REPOSITORY);
@@ -49,5 +42,17 @@ class ClientRepository extends BaseRepository {
     public function getClientsWithoutAPassword()
     {
         return $this->findBy(array("password" => MigrationSetting::EMPTY_PASSWORD_INDICATOR));
+    }
+
+
+    /**
+     * @param string $emailAddress
+     * @return null|Client
+     */
+    public function findActiveOneByEmailAddress($emailAddress)
+    {
+        /** @var ClientRepository $clientRepository */
+        $clientRepository = $this->getManager()->getRepository(Client::class);
+        return $clientRepository->findOneBy(["emailAddress"=>$emailAddress, "isActive" => TRUE]);
     }
 }
