@@ -4386,4 +4386,59 @@ class AnimalTableMigrator extends MigratorBase
 		AnimalMigrationTableFixer::updateGenderInDatabaseInMigrationTable($this->cmdUtil, $this->conn);
 		AnimalMigrationTableFixer::updateParentIdsInMigrationTable($this->cmdUtil, $this->conn);
 	}
+
+
+	/**
+	 * @param Connection $conn
+	 * @param CommandUtil $cmdUtil
+	 * @throws \Doctrine\DBAL\DBALException
+	 */
+	public static function setParentsFromMigrationTableBySql(Connection $conn, CommandUtil $cmdUtil)
+	{
+		$setParentIndexesInAnimal = $cmdUtil->generateConfirmationQuestion('Set Indexes on parent_father_id and parent_mother_id in animal table? (y/n, default = no)');
+		if($setParentIndexesInAnimal) {
+			$conn->exec('CREATE INDEX animal_parent_father_id_index ON public.animal (parent_father_id)');
+			$conn->exec('CREATE INDEX animal_parent_mother_id_index ON public.animal (parent_mother_id)');
+			$cmdUtil->writeln(['AnimalIds and parentIds indexes created in AnimalMigrationTable...','']);
+		}
+		$cmdUtil->writeln('*skipped*');
+
+
+		$setParentIndexesInAnimalMigrationTable = $cmdUtil->generateConfirmationQuestion('Set Indexes on animal_id, father_id and mother_id in animal_migration_table? (y/n, default = no)');
+		if($setParentIndexesInAnimalMigrationTable) {
+			$conn->exec('CREATE INDEX animal_migration_table_animal_id_index ON public.animal_migration_table (animal_id)');
+			$conn->exec('CREATE INDEX animal_migration_table_father_id_index ON public.animal_migration_table (father_id)');
+			$conn->exec('CREATE INDEX animal_migration_table_mother_id_index ON public.animal_migration_table (mother_id)');
+			$cmdUtil->writeln(['Indexes set on animal_id, father_id and mother_id in animal_migration_table','']);
+		}
+		$cmdUtil->writeln('*skipped*');
+
+
+		$cmdUtil->writeln(['Updating animalIds and parentIds in AnimalMigrationTable...','']);
+		//AnimalIds might have been changed due to duplicateFixes
+		AnimalMigrationTableFixer::updateAnimalIdsInMigrationTable($cmdUtil, $conn);
+		AnimalMigrationTableFixer::updateGenderInDatabaseInMigrationTable($cmdUtil, $conn);
+		AnimalMigrationTableFixer::updateParentIdsInMigrationTable($cmdUtil, $conn);
+
+		AnimalRepository::fixMissingAnimalTableExtentions($conn);
+		
+		foreach (['father' => 'ram', 'mother' => 'ewe'] as $parent => $type) {
+			$cmdUtil->writeln(['Update missing parent_'.$parent.'_ids in animal','']);
+			$updatedMothersCount = $conn->query('WITH rows AS (
+					UPDATE animal
+					SET parent_'.$parent.'_id = am.'.$parent.'_id
+					FROM animal_migration_table AS am
+					WHERE am.animal_id IS NOT NULL
+						  AND (animal.parent_'.$parent.'_id IS NULL)
+						  AND (am.'.$parent.'_id IS NOT NULL)
+						  AND animal.id = am.animal_id
+						  AND ( am.'.$parent.'_id IN (SELECT id FROM '.$type.') )
+					RETURNING 1
+					)
+					SELECT COUNT(*) AS count FROM rows')->fetch()['count'];
+			$resultMessage = $updatedMothersCount == 0 ? 'No parent_'.$parent.'_ids missing!': $updatedMothersCount.' parent_'.$parent.'_ids update!';
+			$cmdUtil->writeln([$resultMessage]);
+		}
+		
+	}
 }

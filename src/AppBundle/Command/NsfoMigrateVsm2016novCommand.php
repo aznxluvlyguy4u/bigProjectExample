@@ -165,6 +165,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '45: Migrate AnimalTable data V2', "\n",
             '46: Migrate AnimalTable data: UPDATE Synced Animals', "\n",
             '47: Fix missing pedigreeNumbers', "\n",
+            '48: Set missing parents on animal', "\n",
             '----------------------------------------------------', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
@@ -361,6 +362,10 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                 AnimalTableMigrator::fillMissingPedigreeNumbers($this->conn) ;
                 $output->writeln('DONE');
                 break;
+
+            case 48:
+                AnimalTableMigrator::setParentsFromMigrationTableBySql($this->conn, $this->cmdUtil);
+                $output->writeln('DONE');
 
             default:
                 $output->writeln('ABORTED');
