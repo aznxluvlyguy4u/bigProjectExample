@@ -8,6 +8,7 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\VsmIdGroup;
 use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Migration\AnimalMigrationTableFixer;
+use AppBundle\Migration\BirthWeightAndProgressMigrator;
 use AppBundle\Migration\DateOfDeathMigrator;
 use AppBundle\Migration\AnimalTableMigrator;
 use AppBundle\Migration\BlindnessFactorsMigrator;
@@ -155,6 +156,7 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
             '29: Migrate dateOfDeath & isAlive status', "\n",
             '----------------------------------------------------', "\n",
             '30: Import missing pedigreeRegisters from '.$this->filenames[self::EXTRA_ANIMAL_TABLE], "\n",
+            '31: Migrate BirthWeights into weight and birthProgress into animal', "\n",
             '39: Fill missing british ulnNumbers in AnimalMigrationTable', "\n",
             '----------------------------------------------------', "\n",
             '40: Fill missing ulnNumbers in AnimalMigrationTable', "\n",
@@ -322,6 +324,11 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
                 $output->writeln($result);
                 break;
 
+            case 31:
+                $result = $this->importBirthWeightsAndProgress() ? 'DONE' : 'NO DATA!' ;
+                $output->writeln($result);
+                break;
+
             case 39:
                 AnimalMigrationTableFixer::fillEmptyBritishUlns($this->cmdUtil, $this->conn);
                 $output->writeln('DONE');
@@ -446,6 +453,22 @@ class NsfoMigrateVsm2016novCommand extends ContainerAwareCommand
     }
 
 
+
+    /**
+     * @return bool
+     */
+    private function importBirthWeightsAndProgress()
+    {
+        $data = $this->parseCSV($this->filenames[self::BIRTH]);
+        if(count($data) == 0) { return false; }
+
+        $dateOfDeathMigrator = new BirthWeightAndProgressMigrator($this->cmdUtil, $this->em, $this->output, $data, $this->rootDir);
+        $dateOfDeathMigrator->migrate();
+        return true;
+    }
+    
+    
+    
     /**
      * @return bool
      */
