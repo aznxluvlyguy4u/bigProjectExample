@@ -6,6 +6,7 @@ namespace AppBundle\Migration;
 
 use AppBundle\Cache\AnimalCacher;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\AnimalResidenceRepository;
 use AppBundle\Entity\Inspector;
@@ -591,5 +592,74 @@ class ExteriorMeasurementsMigrator extends MigratorBase
                 $cmdUtilOrOutput->writeln($message);
             }
         }
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param CommandUtil $cmdUtil
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function cacheAnimalWithZeroHeightBreastDepthTorsoLength(ObjectManager $em, CommandUtil $cmdUtil)
+    {
+        /** @var Connection $conn */
+        $conn = $em->getConnection();
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $em->getRepository(Animal::class);
+
+        $sql = "WITH rows AS (
+                  UPDATE animal_cache
+                  SET breast_depth = latest_breast_depth, torso_length = latest_torso_length, height = latest_height
+                  FROM (
+                          SELECT c.id as cache_id, x.breast_depth as latest_breast_depth, x.torso_length as latest_torso_length, x.height as latest_height
+                          FROM exterior x
+                          INNER JOIN measurement m ON x.id = m.id
+                          INNER JOIN (
+                          SELECT animal_id, MAX(measurement_date) as max_measurement_date FROM exterior
+                          INNER JOIN measurement ON exterior.id = measurement.id
+                          GROUP BY animal_id
+                          )g ON g.animal_id = x.animal_id AND m.measurement_date = g.max_measurement_date
+                          LEFT JOIN animal_cache c ON c.animal_id = x.animal_id
+                          WHERE (x.breast_depth <> c.breast_depth OR c.torso_length <> x.torso_length OR c.height <> x.height) AND c.id NOTNULL
+                       ) AS v(id, latest_breast_depth, latest_torso_length, latest_height)
+                  WHERE animal_cache.id = v.id
+                  RETURNING 1
+                )
+                SELECT COUNT(*) AS count FROM rows;";
+        $count = $conn->query($sql)->fetch()['count'];
+
+        if($cmdUtil) {
+            $message = $count == 0 ? 'No out of date breastDepth, torsoLength or height by sql update check!' : $count.' cache records updated';
+            $cmdUtil->writeln($message);
+        }
+        
+        $sql = "SELECT DISTINCT(x.animal_id) as animal_id
+                FROM exterior x
+                  INNER JOIN measurement m ON x.id = m.id
+                  INNER JOIN (
+                               SELECT animal_id, MAX(measurement_date) as max_measurement_date FROM exterior
+                                 INNER JOIN measurement ON exterior.id = measurement.id
+                               GROUP BY animal_id
+                             )g ON g.animal_id = x.animal_id AND m.measurement_date = g.max_measurement_date
+                  LEFT JOIN animal_cache c ON c.animal_id = x.animal_id
+                WHERE (x.breast_depth <> c.breast_depth OR c.torso_length <> x.torso_length OR c.height <> x.height) AND c.id NOTNULL";
+        $results = $conn->query($sql)->fetchAll();
+        $animalIds = SqlUtil::getSingleValueGroupedSqlResults('animal_id', $results, true, true);
+
+        $cmdUtil->setStartTimeAndPrintIt(count($animalIds), 1);
+        $counter = 0;
+        foreach ($animalIds as $animalId) {
+            $counter++;
+            /** @var Animal $animal */
+            $animal = $animalRepository->find($animalId);
+            AnimalCacher::cacheExteriorByAnimal($em, $animal, false);
+
+            if($counter%100 == 0) {
+                $em->flush();
+            }
+            $cmdUtil->advanceProgressBar(1, ' animal_cache exterior values updated');
+        }
+        $em->flush();
+        $cmdUtil->setEndTimeAndPrintFinalOverview();
     }
 }
