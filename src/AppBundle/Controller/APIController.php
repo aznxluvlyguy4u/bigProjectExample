@@ -8,6 +8,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\DeclarationDetail;
@@ -1008,5 +1009,23 @@ class APIController extends Controller implements APIControllerInterface
     ;
 
     $this->get('mailer')->send($message);
+  }
+
+  /**
+   * Clears the redis cache for the Livestock of a given location , to reflect changes of animals on Livestock.
+   *
+   * @param Location $location
+   * @param Animal | Ewe | Ram | Neuter $animal
+   */
+  protected function clearLivestockCacheForLocation(Location $location = null, $animal = null) {
+    if($location) {
+      $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID .$location->getId();
+      $this->getRedisClient()->del('[' .$cacheId .'][1]');
+    } else if($animal->getLocation()) {
+      /** @var Location $location */
+      $location = $animal->getLocation();
+      $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID .$location->getId();
+      $this->getRedisClient()->del('[' .$cacheId .'][1]');
+    }
   }
 }
