@@ -76,22 +76,7 @@ class NsfoTestCommand extends ContainerAwareCommand
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
-        $sql = "SELECT uln_country_code, uln_number FROM animal WHERE location_id = 262 AND gender = 'FEMALE'";
-        $results = $this->conn->query($sql)->fetchAll();
-
-        $string = '';
-        foreach ($results as $result) {
-            $string = $string.'{ "uln_country_code": "'.$result['uln_country_code'].'", "uln_number": "'.$result['uln_number'].'"},';
-
-        }
-
-        $output->writeln(['',
-            '=== Print Something ===',
-            'Result 1: ',
-            'Result 2: ',
-            $string,
-            '']);
-
+        
     }
 
 
