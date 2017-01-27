@@ -422,6 +422,11 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       $em->flush();
     }
 
+    $location = $this->getSelectedLocation($request);
+
+    //Clear cache for this location, to reflect changes on the livestock
+    $this->clearLivestockCacheForLocation($location);
+    
     $output = AnimalDetailsOutput::create($em, $animal, $animal->getLocation());
 
     return new JsonResponse($output, 200);
@@ -558,6 +563,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     //FIXME Temporarily workaround, for returning the reflected gender change, it is persisted, though the updated fields is not returned.
     $result->setGender($targetGender);
 
+    //Clear cache for this location, to reflect changes on the livestock
+    $this->clearLivestockCacheForLocation($this->getSelectedLocation($request), $animal);
+    
     $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getDoctrine()->getManager());
 
     return new JsonResponse($minimizedOutput, 200);
