@@ -69,6 +69,7 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
             '2: Update height, breastDepth & torsolength from 20161007_1156_Stamboekinspectietabel_edited.csv', "\n",
             '3: import version 2016Aug', "\n",
             '4: update animalIdAndDate values', "\n",
+            '5: Delete exact duplicates', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
         
@@ -101,6 +102,11 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
                 /** @var MeasurementRepository $repository */
                 $repository = $this->em->getRepository(Measurement::class);
                 $repository->setAnimalIdAndDateValues($this->cmdUtil);
+                break;
+
+            case 5:
+                /** @var MeasurementRepository $repository */
+                ExteriorMeasurementsMigrator::deleteExactDuplicates($this->conn, $this->cmdUtil);
                 break;
 
             default:

@@ -16,6 +16,7 @@ use AppBundle\Util\CommandUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Output\OutputInterface;
 
 
@@ -509,5 +510,48 @@ class ExteriorMeasurementsMigrator extends MigratorBase
         $sql = "DELETE FROM measurement WHERE ".$filter;
         $this->conn->exec($sql);
         $this->output->writeln(count($results).' orphaned measurements deleted!');
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil|OutputInterface $cmdUtilOrOutput
+     */
+    public static function deleteExactDuplicates(Connection $conn, $cmdUtilOrOutput)
+    {
+        $sql = "WITH rows AS (
+                  DELETE FROM exterior
+                  WHERE id IN (
+                    (
+                      SELECT MAX(x.id) AS max_id
+                      FROM exterior x
+                        INNER JOIN measurement m ON m.id = x.id
+                      GROUP BY animal_id_and_date, animal_id, skull, muscularity, proportion, exterior_type, leg_work, fur,
+                        general_appearence, markings, kind, progress, measurement_date, inspector_id,
+                        height, torso_length, breast_depth
+                      HAVING COUNT(*) > 1
+                    )
+                  )
+                  RETURNING 1
+                )
+                SELECT COUNT(*) AS count FROM rows;";
+        $count = $conn->query($sql)->fetch()['count'];
+
+        if($count == 0) {
+            if($cmdUtilOrOutput) { $cmdUtilOrOutput->writeln('There were no exact exterior duplicates found!'); }
+            return;
+        }
+
+
+        $sql = "WITH rows AS (
+                DELETE FROM measurement WHERE id IN (
+                  SELECT m.id FROM measurement m LEFT JOIN exterior x ON x.id = m.id
+                  WHERE x.id ISNULL AND m.type = 'Exterior'
+                )RETURNING 1
+                )
+                SELECT COUNT(*) AS count FROM rows;";
+        $count = $conn->query($sql)->fetch()['count'];
+
+        if($cmdUtilOrOutput) { $cmdUtilOrOutput->writeln($count.' duplicate exterior records deleted!'); }
     }
 }
