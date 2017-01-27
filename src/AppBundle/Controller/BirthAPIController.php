@@ -148,8 +148,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         }
 
         //Clear cache for this location, to reflect changes on the livestock
-        $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID .$location->getId();
-        $this->getRedisClient()->del('[' .$cacheId .'][1]');
+        $this->clearLivestockCacheForLocation($location);
 
         return new JsonResponse($result, 200);
     }
@@ -422,9 +421,9 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                     }
                 }
             }
+            
             //Clear cache for this location, to reflect changes on the livestock
-            $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID .$location->getId();
-            $this->getRedisClient()->del('[' .$cacheId .'][1]');
+            $this->clearLivestockCacheForLocation($location);
 
             return new JsonResponse(array(Constant::RESULT_NAMESPACE => $revokeMessages), 200);
         }
