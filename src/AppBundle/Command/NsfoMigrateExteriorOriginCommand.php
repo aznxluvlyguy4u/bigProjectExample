@@ -70,6 +70,7 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
             '3: import version 2016Aug', "\n",
             '4: update animalIdAndDate values', "\n",
             '5: Delete exact duplicates', "\n",
+            '6: Fill missing values in breastDepth, torsoLength and Height. Then delete exact duplicates', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
         
@@ -105,7 +106,11 @@ class NsfoMigrateExteriorOriginCommand extends ContainerAwareCommand
                 break;
 
             case 5:
-                /** @var MeasurementRepository $repository */
+                ExteriorMeasurementsMigrator::deleteExactDuplicates($this->conn, $this->cmdUtil);
+                break;
+
+            case 6:
+                ExteriorMeasurementsMigrator::fillZeroHeightBreastDepthAndTorsoLengthFromDuplicates($this->conn, $this->cmdUtil);
                 ExteriorMeasurementsMigrator::deleteExactDuplicates($this->conn, $this->cmdUtil);
                 break;
 

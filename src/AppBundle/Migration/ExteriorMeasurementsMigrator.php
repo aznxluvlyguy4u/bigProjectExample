@@ -554,4 +554,42 @@ class ExteriorMeasurementsMigrator extends MigratorBase
 
         if($cmdUtilOrOutput) { $cmdUtilOrOutput->writeln($count.' duplicate exterior records deleted!'); }
     }
+
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil|OutputInterface $cmdUtilOrOutput
+     */
+    public static function fillZeroHeightBreastDepthAndTorsoLengthFromDuplicates(Connection $conn, $cmdUtilOrOutput)
+    {
+        foreach (['breast_depth', 'height', 'torso_length'] as $columnName) {
+            $sql = "WITH rows AS (
+                  UPDATE exterior
+                  SET ".$columnName." = v.".$columnName."
+                  FROM (
+                         SELECT z.id, max_".$columnName."
+                         FROM exterior z
+                           INNER JOIN measurement n ON z.id = n.id
+                           INNER JOIN (
+                                        SELECT animal_id_and_date, max(".$columnName.") AS max_".$columnName."
+                                        FROM exterior x
+                                          INNER JOIN measurement m ON m.id = x.id
+                                        GROUP BY animal_id_and_date, animal_id, skull, muscularity, proportion, exterior_type, leg_work,
+                                          fur, general_appearence, markings, kind, progress, measurement_date, inspector_id
+                                        HAVING COUNT(*) > 1
+                                      ) g ON g.animal_id_and_date = n.animal_id_and_date
+                         WHERE z.".$columnName." = 0
+                       ) AS v(id, ".$columnName.")
+                  WHERE exterior.id = v.id AND v.".$columnName." > 0
+                  RETURNING 1
+                )
+                SELECT COUNT(*) AS count FROM rows";
+            $count = $conn->query($sql)->fetch()['count'];
+
+            if($cmdUtilOrOutput) {
+                $message = $count == 0 ? 'For *'.$columnName.'* there were NO EMPTY VALUES!' : 'For '.$columnName.' '.$count.' zero values were filled!';
+                $cmdUtilOrOutput->writeln($message);
+            }
+        }
+    }
 }
