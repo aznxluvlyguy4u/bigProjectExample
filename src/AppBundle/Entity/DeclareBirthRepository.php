@@ -13,7 +13,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 class DeclareBirthRepository extends BaseRepository {
 
   // the accepted interval of 145 with an offset of PLUS and MINUS 12 days
-  const MATING_CANDIDATE_START_OFFSET = 132;
+  const MATING_CANDIDATE_START_OFFSET = 133;
   const MATING_CANDIDATE_END_OFFSET = 157;
 
   /**
@@ -48,7 +48,7 @@ class DeclareBirthRepository extends BaseRepository {
    * @param Ewe $mother
    * @return array
    */
-  public function getCandidateFathers(Location $location, Ewe $mother) {
+  public function getCandidateFathers(Location $location, Ewe $mother, \DateTime $dateOfbirth) {
     $em = $this->getEntityManager();
     $queryBuilder = $em->createQueryBuilder();
 
@@ -71,8 +71,6 @@ class DeclareBirthRepository extends BaseRepository {
     $result = $query->getResult();
     $candidateFathers = [];
 
-    $now = new \DateTime();
-
     $fatherIds = [];
 
     /** @var Mate $mating */
@@ -81,19 +79,32 @@ class DeclareBirthRepository extends BaseRepository {
       if(array_key_exists($mating->getStudRam()->getId(), $fatherIds)) {
         continue;
       }
+
       $fatherIds[$mating->getStudRam()->getId()] = $mating->getStudRam()->getId();
 
-      //Check if mating is within the accepted interval of 145 with an offset of PLUS and MINUS 12 days,
-      //thus an interval between 132 and 157 days (inclusive)
-      $timeIntervalInDaysFromNow = TimeUtil::getAgeInDays($now, $mating->getEndDate());
+      //Check if mating is within the accepted interval of 145 with an offset of PLUS 12 days PLUS an offset of mating days,
+      //157 days (inclusive) + the mating period interval.
 
-      if($timeIntervalInDaysFromNow >= self::MATING_CANDIDATE_START_OFFSET
-        && $timeIntervalInDaysFromNow <= self::MATING_CANDIDATE_END_OFFSET) {
+      //Get matingPeriod in days
+      $timeIntervalInDays = TimeUtil::getAgeInDays($mating->getStartDate(), $mating->getEndDate());
+
+      //Add difference between dateOfBirth and mating period
+      $timeIntervalInDays += TimeUtil::getAgeInDays($mating->getStartDate(), $dateOfbirth);
+
+      //Add interval days to mating startDate to compute final date of father suggestion
+      $timeIntervalFromMating = clone $mating->getStartDate();
+      $timeIntervalFromMating->modify("+" .(string)$timeIntervalInDays ." days");
+
+      //Compare if final father suggestion date is before now
+      $now = new \DateTime();
+      $intervalToShowCandidate = TimeUtil::getDaysBetween($timeIntervalFromMating , $now);
+
+      // if interval is negative, it has surpassed current date, thus don't show father candidate
+      if(!$intervalToShowCandidate < 0 ) {
         $candidateFathers[] = $mating->getStudRam();
       }
-
     }
-
+    
     $fatherIds = null;
 
     return $candidateFathers;
