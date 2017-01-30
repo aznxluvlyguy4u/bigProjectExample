@@ -12,6 +12,10 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class DeclareBirthRepository extends BaseRepository {
 
+  // the accepted interval of 145 with an offset of PLUS and MINUS 12 days
+  const MATING_CANDIDATE_START_OFFSET = 132;
+  const MATING_CANDIDATE_END_OFFSET = 157;
+
   /**
    * @param Location $location
    * @param string $state
@@ -79,10 +83,15 @@ class DeclareBirthRepository extends BaseRepository {
       }
       $fatherIds[$mating->getStudRam()->getId()] = $mating->getStudRam()->getId();
 
-      //Check if mating is within the accepted interval of 170 days from now
-      if(TimeUtil::getAgeInDays($now, $mating->getEndDate()) <= 170){
+      //Check if mating is within the accepted interval of 145 with an offset of PLUS and MINUS 12 days,
+      //thus an interval between 132 and 157 days (inclusive)
+      $timeIntervalInDaysFromNow = TimeUtil::getAgeInDays($now, $mating->getEndDate());
+
+      if($timeIntervalInDaysFromNow >= self::MATING_CANDIDATE_START_OFFSET
+        && $timeIntervalInDaysFromNow <= self::MATING_CANDIDATE_START_OFFSET) {
         $candidateFathers[] = $mating->getStudRam();
       }
+
     }
 
     $fatherIds = null;
