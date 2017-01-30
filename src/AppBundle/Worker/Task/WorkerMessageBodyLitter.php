@@ -23,7 +23,7 @@ class WorkerMessageBodyLitter extends WorkerMessageBody
      * @var int
      * @JMS\Type("integer")
      */
-    private $father;
+    private $fatherId;
 
     /**
      * @var array
@@ -60,17 +60,17 @@ class WorkerMessageBodyLitter extends WorkerMessageBody
     /**
      * @return int
      */
-    public function getFather()
+    public function getFatherId()
     {
-        return $this->father;
+        return $this->fatherId;
     }
 
     /**
-     * @param int $father
+     * @param int $fatherId
      */
-    public function setFather($father)
+    public function setFatherId($fatherId)
     {
-        $this->father = $father;
+        $this->fatherId = $fatherId;
     }
 
     /**
