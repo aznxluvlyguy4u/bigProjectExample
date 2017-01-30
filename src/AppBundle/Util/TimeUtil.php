@@ -99,6 +99,20 @@ class TimeUtil
     }
 
 
+    public static function getDaysBetween(\DateTime $dt1, \DateTime $dt2){
+        if(!$dt1 || !$dt2){
+            return false;
+        }
+        $dt1->setTime(0,0,0);
+        $dt2->setTime(0,0,0);
+
+        // DateInterval
+        $dti = $dt1->diff($dt2);
+
+        // nb: ->days always positive
+        return $dti->days * ( $dti->invert ? -1 : 1);   
+    }
+    
     /**
      * @param \DateTime $dateOfBirth
      * @param \DateTime $latestLitterDate
