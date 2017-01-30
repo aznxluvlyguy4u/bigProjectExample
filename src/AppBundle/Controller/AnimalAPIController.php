@@ -17,6 +17,7 @@ use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\MessageType;
+use AppBundle\Enumerator\WorkerTaskType;
 use AppBundle\FormInput\AnimalDetails;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
@@ -554,7 +555,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function generatePedigreeCertificates(Request $request) {
     $message = new Message();
-    $message->setType(MessageType::GENERATE_PEDIGREE_CERTIFICATES);
+    $message->setType(WorkerTaskType::GENERATE_RESULT_TABLE_RECORDS);
     $result = $this->sendTaskToQueue($message);
 
     if($result != true) {
