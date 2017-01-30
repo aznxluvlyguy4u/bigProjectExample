@@ -43,6 +43,8 @@ use AppBundle\Service\EntityGetter;
 use AppBundle\Util\Finder;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\HeaderValidation;
+use AppBundle\Worker\Task\WorkerMessageBody;
+use AppBundle\Worker\Task\WorkerMessageBodyBase;
 use ClassesWithParents\E;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Query;
@@ -342,21 +344,18 @@ class APIController extends Controller implements APIControllerInterface
   }
 
   /**
-   * @param Message $message
+   * @param WorkerMessageBodyBase $workerMessageBody
+   * @return bool
    */
-  protected function sendTaskToQueue($message) {
-    $jsonMessage = $this->getSerializer()->serializeToJSON($message);
+  protected function sendTaskToQueue(WorkerMessageBodyBase $workerMessageBody) {
+    $jsonMessage = $this->getSerializer()->serializeToJSON($workerMessageBody);
 
     //Send  message to Queue
     $sendToQresult = $this->getQueueService()
-      ->sendToInternalQueue(1, $jsonMessage, $message->getType());
+      ->sendToInternalQueue(1, $jsonMessage, $workerMessageBody->getTaskType());
 
     //If send to Queue, failed, it needs to be resend, set state to failed
-    if ($sendToQresult['statusCode'] != '200') {
-      return false;
-    }
-
-    return true;
+    return $sendToQresult['statusCode'] == '200';
   }
 
   /**
