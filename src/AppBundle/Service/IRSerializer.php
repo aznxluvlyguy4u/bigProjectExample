@@ -51,6 +51,7 @@ use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use JMS\Serializer\SerializationContext;
+use Symfony\Component\DependencyInjection\Tests\A;
 
 /**
  * Class IRSerializer.
@@ -351,6 +352,7 @@ class IRSerializer implements IRSerializerInterface
         }
 
         if(key_exists('mother', $declareBirthContentArray->toArray())) {
+            /** @var Animal $mother */
             $mother = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
               ->getAnimalByUlnOrPedigree($declareBirthContentArray["mother"]);
 
@@ -374,6 +376,28 @@ class IRSerializer implements IRSerializerInterface
                       "message" => "Opgegeven moeder met ULN: " . $mother['uln_country_code'] . $mother['uln_number'] ." is gevonden, echter is het geslacht, niet van het type: OOI.",
                     )
                   ), $statusCode);
+            }
+
+            //If the mother already has given birth within the last 5,5 months (167 days, rounded),
+            //disallow birth registration
+            $maxDaysLitterInterval = 167;
+
+            /** @var DeclareBirth $birth */
+            foreach ($mother->getBirths() as $birth) {
+                $dateInterval = TimeUtil::getAgeInDays($birth->getDateOfBirth(), $dateOfBirth);
+                
+                if($dateInterval <= $maxDaysLitterInterval) {
+                    return new JsonResponse(
+                      array(
+                        Constant::RESULT_NAMESPACE => array (
+                          'code' => $statusCode,
+                          "message" => "Opgegeven moeder met ULN: "
+                            . $mother['uln_country_code']
+                            . $mother['uln_number']
+                            ." heeft in de afgelopen 5,5 maanden reeds geworpen, zodoende is het niet geoorloofd om een geboortemelding met dit dier te doen.",
+                        )
+                      ), $statusCode);
+                }
             }
         }
 
