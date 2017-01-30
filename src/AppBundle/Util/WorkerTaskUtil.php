@@ -22,7 +22,7 @@ class WorkerTaskUtil
 
         /** @var DeclareBirth $firstBirth */
         $firstBirth = $birthRequestMessages[0];
-        self::createResultTableMessageBodyByLitter($firstBirth->getLitter());
+        return self::createResultTableMessageBodyByLitter($firstBirth->getLitter());
     }
 
 
