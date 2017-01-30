@@ -32,6 +32,7 @@ use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveAnimalDetails;
 use AppBundle\Entity\Stillborn;
+use AppBundle\Entity\Tag;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\ActionType;
@@ -303,7 +304,7 @@ class IRSerializer implements IRSerializerInterface
                   array(
                     Constant::RESULT_NAMESPACE => array (
                       'code' => $statusCode,
-                      "message" => "Een geboortemelding mag niet in de toekomst liggen.",
+                      "message" => "Een geboorte mag niet in de toekomst liggen.",
                     )
                   ), $statusCode);
             }
@@ -327,6 +328,7 @@ class IRSerializer implements IRSerializerInterface
         }
 
         if(key_exists('father', $declareBirthContentArray->toArray())) {
+            /** @var Animal $father */
             $father = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
               ->getAnimalByUlnOrPedigree($declareBirthContentArray["father"]);
 
@@ -395,7 +397,7 @@ class IRSerializer implements IRSerializerInterface
                           "message" => "Opgegeven moeder met ULN: "
                             . $mother['uln_country_code']
                             . $mother['uln_number']
-                            ." heeft in de afgelopen 5,5 maanden reeds geworpen, zodoende is het niet geoorloofd om een geboortemelding met dit dier te doen.",
+                            ." heeft in de afgelopen 5,5 maanden reeds geworpen, zodoende is het niet geoorloofd om een geboortemelding te doen voor opgegeven moeder.",
                         )
                       ), $statusCode);
                 }
@@ -539,6 +541,7 @@ class IRSerializer implements IRSerializerInterface
 
                 //Find assigned tag
                 if(key_exists('uln_country_code', $child) && key_exists('uln_number', $child)) {
+                    /** @var Tag $tagToReserve */
                     $tagToReserve = $this->entityManager->getRepository(Constant::TAG_REPOSITORY)
                       ->findByUlnNumberAndCountryCode($child['uln_country_code'],$child['uln_number']);
 
@@ -569,6 +572,16 @@ class IRSerializer implements IRSerializerInterface
                                   "message" => "Opgegeven vrije oormerk: " .$uln ." voor het lam, is reeds toegewezen aan een bestaand dier met ULN: " . $uln,
                                 )
                               ), $statusCode);
+                        }else if ($tagToReserve->getLocation()){
+                            if($tagToReserve->getLocation()->getId() != $location->getId()) {
+                                return new JsonResponse(
+                                  array(
+                                    Constant::RESULT_NAMESPACE => array (
+                                      'code' => $statusCode,
+                                      "message" => "Opgegeven oormerk: " .$tagToReserve->getUlnCountryCode()  .$tagToReserve->getUlnNumber() ." is niet geregistreerd voor dit UBN: " .$location->getUbn(),
+                                    )
+                                  ), $statusCode);
+                            }
                         }
                         $declareBirthRequest->setUlnCountryCode($tagToReserve->getUlnCountryCode());
                         $declareBirthRequest->setUlnNumber($tagToReserve->getUlnNumber());
