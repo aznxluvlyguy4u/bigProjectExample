@@ -444,9 +444,16 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      * @param Request $request the request object
      * @return JsonResponse
      * @Route("/{uln}/candidate-fathers")
-     * @Method("GET")
+     * @Method("POST")
      */
     public function getCandidateFathers(Request $request, $uln) {
+        $content = $this->getContentAsArray($request);
+        $dateOfBirth = new \DateTime();
+
+        if(key_exists('date_of_birth', $content->toArray())) {
+            $dateOfBirth = new \DateTime($content["date_of_birth"]);
+        }
+
         /** @var Location $location */
         $location = $this->getSelectedLocation($request);
         /** @var AnimalRepository $animalRepository */
@@ -477,7 +484,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         }
 
         $result = [];
-        $candidateFathers = $declareBirthRepository->getCandidateFathers($location , $mother);
+        $candidateFathers = $declareBirthRepository->getCandidateFathers($location , $mother, $dateOfBirth);
         $otherCandidateFathers = $animalRepository->getLiveStock($location, true, false, false, Ram::class);
         $filteredOtherCandidateFathers = [];
         $suggestedCandidateFathers = [];
