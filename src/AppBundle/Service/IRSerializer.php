@@ -330,7 +330,7 @@ class IRSerializer implements IRSerializerInterface
                   array(
                     Constant::RESULT_NAMESPACE => array (
                       'code' => $statusCode,
-                      "message" => "Opgegeven vader: " . $father['uln_country_code'] . $father['uln_number'] ." is gevonden, echter is het geslacht van het gevonden dier, niet van het type: RAM.",
+                      "message" => "Opgegeven vader met ULN: " . $father['uln_country_code'] . $father['uln_number'] ." is gevonden, echter is het geslacht, niet van het type: RAM.",
                     )
                   ), $statusCode);
             }
@@ -357,7 +357,7 @@ class IRSerializer implements IRSerializerInterface
                   array(
                     Constant::RESULT_NAMESPACE => array (
                       'code' => $statusCode,
-                      "message" => "Opgegeven moeder: " . $mother['uln_country_code'] . $mother['uln_number'] ." is gevonden, echter is het geslacht van het gevonden dier, niet van het type: OOI.",
+                      "message" => "Opgegeven moeder met ULN: " . $mother['uln_country_code'] . $mother['uln_number'] ." is gevonden, echter is het geslacht, niet van het type: OOI.",
                     )
                   ), $statusCode);
             }
@@ -479,11 +479,13 @@ class IRSerializer implements IRSerializerInterface
                       ->findByUlnNumberAndCountryCode($child['uln_country_code'],$child['uln_number']);
 
                     if(!$tagToReserve) {
+                        $uln = $child['uln_country_code'] .$child['uln_number'];
+
                         return new JsonResponse(
                           array(
                             Constant::RESULT_NAMESPACE => array (
                               'code' => $statusCode,
-                              "message" => "Opgegeven vrije oormerk voor kind: " . $child['uln_country_code'] .$child['uln_number'] ." is niet gevonden.",
+                              "message" => "Opgegeven vrije oormerk: " .$uln ." voor het lam, is niet gevonden.",
                             )
                           ), $statusCode);
                     }
@@ -494,11 +496,13 @@ class IRSerializer implements IRSerializerInterface
                           ->getAnimalByUlnOrPedigree(array ('uln_country_code' => $tagToReserve->getUlnCountryCode(), 
                                                             'uln_number'=>$tagToReserve->getUlnNumber()));
                         if($animal) {
+                            $uln = $child['uln_country_code'] .$child['uln_number'];
+
                             return new JsonResponse(
                               array(
                                 Constant::RESULT_NAMESPACE => array (
                                   'code' => $statusCode,
-                                  "message" => "Opgegeven vrije oormerk voor kind is reeds toegewezen aan een bestaande dier met ULN" . $child['uln_country_code'] .$child['uln_number'],
+                                  "message" => "Opgegeven vrije oormerk: " .$uln ." voor het lam, is reeds toegewezen aan een bestaand dier met ULN: " . $uln,
                                 )
                               ), $statusCode);
                         }
@@ -528,7 +532,7 @@ class IRSerializer implements IRSerializerInterface
                           array(
                             Constant::RESULT_NAMESPACE => array (
                               'code' => $statusCode,
-                              "message" => "Opgegeven surrogaat: " .$surrogate['uln_country_code'] .$surrogate['uln_number'] ." is gevonden, echter is het geslacht van het gevonden dier, niet van het type: OOI.",
+                              "message" => "Opgegeven pleegmoeder met ULN: " . $surrogate['uln_country_code'] . $surrogate['uln_number'] ." is gevonden, echter is het geslacht, niet van het type: OOI.",
                             )
                           ), $statusCode);
                     }
