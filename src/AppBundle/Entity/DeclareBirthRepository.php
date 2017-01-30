@@ -41,7 +41,7 @@ class DeclareBirthRepository extends BaseRepository {
   }
 
   /**
-   * Get a list of suggested candidate fathers based on matings done in within 170 days from now
+   * Get a list of suggested candidate fathers based on matings done in within 145 + (-12 & +12) days, from now
    * and all other Rams on current location.
    * 
    * @param Location $location
