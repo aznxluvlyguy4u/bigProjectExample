@@ -295,6 +295,7 @@ class IRSerializer implements IRSerializerInterface
         if(key_exists('date_of_birth', $declareBirthContentArray->toArray())) {
             $dateOfBirth = new \DateTime($declareBirthContentArray["date_of_birth"]);
 
+            //Disallow birth registrations in the future
             $timeIntervalInDaysFromNow = TimeUtil::getAgeInDays(new \DateTime(), $dateOfBirth);
 
             if($timeIntervalInDaysFromNow > 0) {
@@ -409,12 +410,12 @@ class IRSerializer implements IRSerializerInterface
             $maxLitterSize = 7;
 
             if($mother) {
-                if(sizeof($childrenContent) > $maxLitterSize) {
+                if($litterSize > $maxLitterSize) {
                     return new JsonResponse(
                       array(
                         Constant::RESULT_NAMESPACE => array (
                           'code' => $statusCode,
-                          "message" => "De opgegeven worpgrootte overschrijdt het maximum van " . $maxLitterSize ." lammeren",
+                          "message" => "De opgegeven worpgrootte overschrijdt het maximum van " . $maxLitterSize ." (dode & levende) lammeren",
                         )
                       ), $statusCode);
                 }
