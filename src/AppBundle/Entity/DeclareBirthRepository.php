@@ -88,7 +88,7 @@ class DeclareBirthRepository extends BaseRepository {
       $timeIntervalInDaysFromNow = TimeUtil::getAgeInDays($now, $mating->getEndDate());
 
       if($timeIntervalInDaysFromNow >= self::MATING_CANDIDATE_START_OFFSET
-        && $timeIntervalInDaysFromNow <= self::MATING_CANDIDATE_START_OFFSET) {
+        && $timeIntervalInDaysFromNow <= self::MATING_CANDIDATE_END_OFFSET) {
         $candidateFathers[] = $mating->getStudRam();
       }
 
