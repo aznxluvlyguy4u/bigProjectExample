@@ -346,9 +346,9 @@ class APIController extends Controller implements APIControllerInterface
    * @param WorkerMessageBody $workerMessageBody
    * @return bool
    */
-  protected function sendTaskToQueue(WorkerMessageBody $workerMessageBody) {
+  protected function sendTaskToQueue($workerMessageBody) {
     if($workerMessageBody == null) { return false; }
-    
+
     $jsonMessage = $this->getSerializer()->serializeToJSON($workerMessageBody);
 
     //Send  message to Queue
