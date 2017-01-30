@@ -25,6 +25,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\DeclareBirthResponseOutput;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\WorkerTaskUtil;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Tools\Export\ExportException;
@@ -142,6 +143,9 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             //Send it to the queue and persist/update any changed state to the database
             $result[] = $this->sendMessageObjectToQueue($requestMessage);
         }
+
+        //Send workerTask to update resultTable records of parents and children
+        $this->sendTaskToQueue(WorkerTaskUtil::createResultTableMessageBodyByBirthRequests($requestMessages));
 
         return new JsonResponse($result, 200);
     }
@@ -352,6 +356,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $manager->flush();
 
         //Re-retrieve litter, check count
+        /** @var Litter $litter */
         $litter = $repository->findOneBy(array ('id'=> $litterId));
 
         $succeeded = true;
@@ -404,6 +409,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                     }
                 }
             }
+            //Send workerTask to update productionValues of parents
+            $this->sendTaskToQueue(WorkerTaskUtil::createResultTableMessageBodyByLitter($litter));
 
             return new JsonResponse(array(Constant::RESULT_NAMESPACE => $revokeMessages), 200);
         }
