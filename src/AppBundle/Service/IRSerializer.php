@@ -403,6 +403,22 @@ class IRSerializer implements IRSerializerInterface
 
         if(key_exists('children', $declareBirthContentArray->toArray())) {
             $childrenContent = $declareBirthContentArray["children"];
+
+            //Disallow birth registration for litterSize bigger then 7 if a mother is given and found.
+            //If no mother is given, allow arbitrary litter size.
+            $maxLitterSize = 7;
+
+            if($mother) {
+                if(sizeof($childrenContent) > $maxLitterSize) {
+                    return new JsonResponse(
+                      array(
+                        Constant::RESULT_NAMESPACE => array (
+                          'code' => $statusCode,
+                          "message" => "De opgegeven worpgrootte overschrijdt het maximum van " . $maxLitterSize ." lammeren",
+                        )
+                      ), $statusCode);
+                }
+            }
         }
 
         //Create Litter
