@@ -38,7 +38,7 @@ class WorkerMessageBodyLitter extends WorkerMessageBody
     {
         parent::__construct();
         $this->setTaskType(WorkerTaskType::GENERATE_RESULT_TABLE_RECORDS);
-        $this->setTaskType(WorkerLevelType::LITTER);
+        $this->setLevelType(WorkerLevelType::LITTER);
     }
 
     /**
