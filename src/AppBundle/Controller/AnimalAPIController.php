@@ -547,27 +547,4 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     return new JsonResponse($minimizedOutput, 200);
   }
 
-  /**
-   * @param Request $request the request object
-   * @return JsonResponse
-   * @Route("-certificates")
-   * @Method("POST")
-   */
-  public function generatePedigreeCertificates(Request $request) {
-    $message = new Message();
-    $message->setType(WorkerTaskType::GENERATE_RESULT_TABLE_RECORDS);
-    $result = $this->sendTaskToQueue($message);
-
-    if($result != true) {
-      return new JsonResponse(array(Constant::RESULT_NAMESPACE =>
-          array('error_code' => 428,
-                'error_message' => 'Failed to send task to queue'
-          )), 428);
-    }
-
-    return new JsonResponse(array(Constant::RESULT_NAMESPACE =>
-      array('message' => 'OK')
-    ), 200);
-  }
-
 }
