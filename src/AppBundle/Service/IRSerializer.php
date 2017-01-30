@@ -47,6 +47,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use JMS\Serializer\SerializationContext;
@@ -292,6 +293,19 @@ class IRSerializer implements IRSerializerInterface
         
         if(key_exists('date_of_birth', $declareBirthContentArray->toArray())) {
             $dateOfBirth = new \DateTime($declareBirthContentArray["date_of_birth"]);
+
+            $timeIntervalInDaysFromNow = TimeUtil::getAgeInDays(new \DateTime(), $dateOfBirth);
+
+            if($timeIntervalInDaysFromNow > 0) {
+                return new JsonResponse(
+                  array(
+                    Constant::RESULT_NAMESPACE => array (
+                      'code' => $statusCode,
+                      "message" => "Een geboortemelding mag niet in de toekomst liggen.",
+                    )
+                  ), $statusCode);
+            }
+
         }
 
         if(key_exists('is_aborted', $declareBirthContentArray->toArray())) {
@@ -422,6 +436,15 @@ class IRSerializer implements IRSerializerInterface
 
             if(key_exists('birth_weight', $child)) {
                 $birthWeightValue = $child['birth_weight'];
+                if($birthWeightValue > 9.9) {
+                    return new JsonResponse(
+                      array(
+                        Constant::RESULT_NAMESPACE => array (
+                          'code' => $statusCode,
+                          "message" => "Een lam met een geboortegewicht groter dan 9,9 kilogram, is niet geoorloofd.",
+                        )
+                      ), $statusCode);
+                }
             }
 
             if(key_exists('is_alive', $child)) {
