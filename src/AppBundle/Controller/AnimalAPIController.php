@@ -153,7 +153,6 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Method("GET")
    */
   public function getLiveStock(Request $request) {
-    $client = $client = $this->getAuthenticatedUser($request);
     /** @var Location $location */
     $location = $this->getSelectedLocation($request);
     AnimalCacher::cacheAnimalsOfLocationId($this->getDoctrine()->getManager(), $location->getId(), null, true);
