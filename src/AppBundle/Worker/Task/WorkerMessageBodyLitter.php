@@ -2,15 +2,16 @@
 
 namespace AppBundle\Worker\Task;
 
+use AppBundle\Enumerator\WorkerLevelType;
 use AppBundle\Enumerator\WorkerTaskType;
 use JMS\Serializer\Annotation as JMS;
 
 /**
- * Class WorkerMessageBodyBirth
+ * Class WorkerMessageBodyLitter
  *
  * @package AppBundle\Worker\Task
  */
-class WorkerMessageBodyBirth extends WorkerMessageBodyBase
+class WorkerMessageBodyLitter extends WorkerMessageBody
 {
     /**
      * @var int
@@ -37,6 +38,7 @@ class WorkerMessageBodyBirth extends WorkerMessageBodyBase
     {
         parent::__construct();
         $this->setTaskType(WorkerTaskType::GENERATE_RESULT_TABLE_RECORDS);
+        $this->setTaskType(WorkerLevelType::LITTER);
     }
 
     /**

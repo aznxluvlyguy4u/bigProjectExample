@@ -44,7 +44,6 @@ use AppBundle\Util\Finder;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Worker\Task\WorkerMessageBody;
-use AppBundle\Worker\Task\WorkerMessageBodyBase;
 use ClassesWithParents\E;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Query;
@@ -344,10 +343,10 @@ class APIController extends Controller implements APIControllerInterface
   }
 
   /**
-   * @param WorkerMessageBodyBase $workerMessageBody
+   * @param WorkerMessageBody $workerMessageBody
    * @return bool
    */
-  protected function sendTaskToQueue(WorkerMessageBodyBase $workerMessageBody) {
+  protected function sendTaskToQueue(WorkerMessageBody $workerMessageBody) {
     $jsonMessage = $this->getSerializer()->serializeToJSON($workerMessageBody);
 
     //Send  message to Queue
