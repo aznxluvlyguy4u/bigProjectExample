@@ -82,22 +82,53 @@ class DeclareBirthRepository extends BaseRepository {
 
       $fatherIds[$mating->getStudRam()->getId()] = $mating->getStudRam()->getId();
 
-      //Check if mating is within the accepted interval of 145 with an offset of PLUS 12 days PLUS an offset of mating days,
-      //157 days (inclusive) + the mating period interval.
+      /**
+       * Registered mating:
+       *
+       * start: 01-10-2016
+       * eind: 15-11-2016
+       *
+       * reserveDays = 24 (2x 12 days => lowerbound - 12 | upperbound + 12)
+       *
+       * matingDays = (matingEnd - matingStart) + reserveDays
+       * = (15-11-2016 - 01-10-2016) + reserveDays
+       * = 46 + 24
+       * = 70 days
+       *
+       * pregnancyDays = 145
+       *
+       * lowerboundPregnancyDays = pregnancyDays - 12
+       * = 145 - 12
+       * = 133 days
+       *
+       * upperboundPregnancyDays = pregnancyDays + 12
+       * = 145 + 12
+       * = 157 days // not used
+       *
+       * enddatePotentialFatherhood = ((matingStart + lowerboundPregnancyDays) = litterDate) + matingDays
+       * = (1-10-2016 + 133 days) + 70 days
+       * = 11-02-2017 + 70 days
+       * = 22-04-2017
+       *
+       * Thus the enddate of a potential father:
+       *  22-04-2017 (inclusive) (for the dutchies: tot en MET)
+       */
+      $matingDaysOffset = 12;
+      $pregnancyDays = 145;
 
       //Get matingPeriod in days
-      $timeIntervalInDays = TimeUtil::getAgeInDays($mating->getStartDate(), $mating->getEndDate());
+      $matingDays = TimeUtil::getAgeInDays($mating->getStartDate(), $mating->getEndDate());
+      $matingDays += $matingDaysOffset * 2;
 
-      //Add difference between dateOfBirth and mating period
-      $timeIntervalInDays += TimeUtil::getAgeInDays($mating->getStartDate(), $dateOfbirth);
+      $lowerboundPregnancyDays = $pregnancyDays - $matingDaysOffset;
 
-      //Add interval days to mating startDate to compute final date of father suggestion
-      $timeIntervalFromMating = clone $mating->getStartDate();
-      $timeIntervalFromMating->modify("+" .(string)$timeIntervalInDays ." days");
+      $enddatePotentialFatherhood = clone $mating->getStartDate();
+      $enddatePotentialFatherhood->modify("+" .(string)$lowerboundPregnancyDays ." days");
+      $enddatePotentialFatherhood->modify("+" .(string)$matingDays ." days");
 
       //Compare if final father suggestion date is before now
       $now = new \DateTime();
-      $intervalToShowCandidate = TimeUtil::getDaysBetween($timeIntervalFromMating , $now);
+      $intervalToShowCandidate = TimeUtil::getDaysBetween($enddatePotentialFatherhood , $now);
 
       // if interval is negative, it has surpassed current date, thus don't show father candidate
       if(!$intervalToShowCandidate < 0 ) {
