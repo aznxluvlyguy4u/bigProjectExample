@@ -131,7 +131,7 @@ class DeclareBirthRepository extends BaseRepository {
       $intervalToShowCandidate = TimeUtil::getDaysBetween($enddatePotentialFatherhood , $now);
 
       // if interval is negative, it has surpassed current date, thus don't show father candidate
-      if(!$intervalToShowCandidate < 0 ) {
+      if(!($intervalToShowCandidate < 0) ) {
         $candidateFathers[] = $mating->getStudRam();
       }
     }
