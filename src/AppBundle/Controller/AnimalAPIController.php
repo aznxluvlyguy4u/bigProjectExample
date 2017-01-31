@@ -158,6 +158,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Method("GET")
    */
   public function getLiveStock(Request $request) {
+    /** @var Location $location */
     $location = $this->getSelectedLocation($request);
     /** @var  $animalRepository */
     $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
