@@ -417,7 +417,7 @@ class IRSerializer implements IRSerializerInterface
                       array(
                         Constant::RESULT_NAMESPACE => array (
                           'code' => $statusCode,
-                          "message" => "De opgegeven worpgrootte overschrijdt het maximum van " . $maxLitterSize ." (dode & levende) lammeren",
+                          "message" => "De opgegeven worpgrootte overschrijdt het maximum van " . $maxLitterSize ." lammeren",
                         )
                       ), $statusCode);
                 }
