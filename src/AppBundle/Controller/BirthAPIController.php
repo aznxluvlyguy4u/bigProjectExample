@@ -29,6 +29,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\DeclareBirthResponseOutput;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\TimeUtil;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Tools\Export\ExportException;
@@ -108,7 +109,6 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
 
-    
     /**
     * Create a new DeclareBirth request
     * @param Request $request the request object
@@ -582,7 +582,9 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         $surrogateMotherCandidates = $declareBirthRepository->getCandidateSurrogateMothers($location , $mother);
 
-        $now = new \DateTime();
+        $offsetDays = 7;
+        $minimumDaysIntervalFromNowAndBirth = 167;
+        $offsetDateFromNow = (new \DateTime())->modify('-' .$offsetDays .'days');
 
         /** @var Ewe $animal */
         foreach ($surrogateMotherCandidates as $animal) {
@@ -611,26 +613,27 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
             /** @var Animal $child */
             foreach ($childeren as $child) {
-                $dateInterval = $child->getDateOfBirth()->diff($now);
+                if($child->getDateOfBirth()) {
+                    //Add as a true candidate surrogate to list
+                    if(TimeUtil::getDaysBetween($child->getDateOfBirth(), $offsetDateFromNow) > $minimumDaysIntervalFromNowAndBirth) {
+                        $suggestedCandidatesResult[] = [
+                          JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                          JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                          JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                          JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+                          JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+                          JsonInputConstant::GENDER =>  $animal->getGender(),
+                          JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+                          JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+                          JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+                          JsonInputConstant::UBN => $location->getUbn(),
+                          JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                          JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+                        ];
+                        $addToOtherCandidates = false;
+                        break;
+                    }
 
-                //Add as a true candidate surrogate to list
-                if($dateInterval->y == 0 && $dateInterval->m <= 6) {
-                    $suggestedCandidatesResult[] = [
-                      JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-                      JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-                      JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-                      JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-                      JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-                      JsonInputConstant::GENDER =>  $animal->getGender(),
-                      JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-                      JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-                      JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-                      JsonInputConstant::UBN => $location->getUbn(),
-                      JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-                      JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-                    ];
-                    $addToOtherCandidates = false;
-                    break;
                 }
             }
 
@@ -653,6 +656,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
               JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
             ];
         }
+
 
         $result['suggested_candidate_surrogates'] = $suggestedCandidatesResult;
         $result['other_candidate_surrogates'] = $otherCandidatesResult;
