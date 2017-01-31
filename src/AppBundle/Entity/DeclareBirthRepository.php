@@ -61,7 +61,7 @@ class DeclareBirthRepository extends BaseRepository {
           $queryBuilder->expr()->eq('mate.location', $location->getId()),
           $queryBuilder->expr()->eq('mate.isOverwrittenVersion', 'false'),
           $queryBuilder->expr()->eq('mate.studEwe', $mother->getId()),
-          $queryBuilder->expr()->eq('mate.requestState', RequestStateType::FINISHED),
+          $queryBuilder->expr()->eq('mate.requestState', "'FINISHED'"),
           $queryBuilder->expr()->orX(
             $queryBuilder->expr()->isNull('mate.isApprovedByThirdParty'),
             $queryBuilder->expr()->eq('mate.isApprovedByThirdParty', 'true')
