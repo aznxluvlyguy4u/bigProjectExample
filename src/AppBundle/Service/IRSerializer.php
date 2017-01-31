@@ -348,7 +348,7 @@ class IRSerializer implements IRSerializerInterface
                   array(
                     Constant::RESULT_NAMESPACE => array (
                       'code' => $statusCode,
-                      "message" => "Opgegeven vader met ULN: " . $father['uln_country_code'] . $father['uln_number'] ." is gevonden, echter is het geslacht, niet van het type: RAM.",
+                      "message" => "Opgegeven vader met ULN: " . $father->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: RAM.",
                     )
                   ), $statusCode);
             }
@@ -376,7 +376,7 @@ class IRSerializer implements IRSerializerInterface
                   array(
                     Constant::RESULT_NAMESPACE => array (
                       'code' => $statusCode,
-                      "message" => "Opgegeven moeder met ULN: " . $mother['uln_country_code'] . $mother['uln_number'] ." is gevonden, echter is het geslacht, niet van het type: OOI.",
+                      "message" => "Opgegeven moeder met ULN: " . $mother->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: OOI.",
                     )
                   ), $statusCode);
             }
@@ -387,17 +387,17 @@ class IRSerializer implements IRSerializerInterface
 
             /** @var DeclareBirth $birth */
             foreach ($mother->getBirths() as $birth) {
-                $dateInterval = TimeUtil::getAgeInDays($birth->getDateOfBirth(), $dateOfBirth);
-                
+                $dateInterval = TimeUtil::getDaysBetween($birth->getDateOfBirth(), $dateOfBirth);
+
+                dump($dateInterval);
                 if($dateInterval <= $maxDaysLitterInterval) {
                     return new JsonResponse(
                       array(
                         Constant::RESULT_NAMESPACE => array (
                           'code' => $statusCode,
                           "message" => "Opgegeven moeder met ULN: "
-                            . $mother['uln_country_code']
-                            . $mother['uln_number']
-                            ." heeft in de afgelopen 5,5 maanden reeds geworpen, zodoende is het niet geoorloofd om een geboortemelding te doen voor opgegeven moeder.",
+                            . $mother->getUlnNumber()
+                            ." heeft in de afgelopen 5,5 maanden reeds geworpen, zodoende is het niet geoorloofd om een geboortemelding te doen voor de opgegeven moeder.",
                         )
                       ), $statusCode);
                 }
@@ -591,6 +591,7 @@ class IRSerializer implements IRSerializerInterface
                 }
 
                 if(key_exists('surrogate', $declareBirthContentArray->toArray())) {
+                    /** @var Animal $surrogate */
                     $surrogate = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
                       ->getAnimalByUlnOrPedigree($declareBirthContentArray["surrogate"]);
 
@@ -609,7 +610,7 @@ class IRSerializer implements IRSerializerInterface
                           array(
                             Constant::RESULT_NAMESPACE => array (
                               'code' => $statusCode,
-                              "message" => "Opgegeven pleegmoeder met ULN: " . $surrogate['uln_country_code'] . $surrogate['uln_number'] ." is gevonden, echter is het geslacht, niet van het type: OOI.",
+                              "message" => "Opgegeven pleegmoeder met ULN: " .$surrogate->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: OOI.",
                             )
                           ), $statusCode);
                     }
