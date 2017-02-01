@@ -128,16 +128,15 @@ class DeclareBirthRepository extends BaseRepository {
       $enddatePotentialFatherhood->modify("+" .(string)$lowerboundPregnancyDays ." days");
       $enddatePotentialFatherhood->modify("+" .(string)$matingDays ." days");
 
-      //Compare if final father suggestion date is before now
-      $now = new \DateTime();
-      $intervalToShowCandidate = TimeUtil::getDaysBetween($enddatePotentialFatherhood , $now);
+      //Compare if final father suggestion date is before dateOfBirth
+      $intervalToShowCandidate = TimeUtil::getDaysBetween($dateOfbirth , $enddatePotentialFatherhood);
 
       // if interval is negative, it has surpassed current date, thus don't show father candidate
-      if(!($intervalToShowCandidate < 0) ) {
+      if($intervalToShowCandidate >= 0 ) {
         $candidateFathers[] = $mating->getStudRam();
       }
     }
-    
+
     $fatherIds = null;
 
     return $candidateFathers;
