@@ -686,13 +686,6 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $location = $this->getSelectedLocation($request);
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-        /** @var DeclareBirthRepository $declareBirthRepository */
-        $declareBirthRepository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
-        /** @var Ewe $mother */
-        $mother = null;
-        $motherUlnCountryCode = null;
-        $motherUlnNumber = null;
-
 
         $suggestedCandidatesResult = [];
         $otherCandidatesResult = [];
@@ -700,13 +693,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         $motherCandidates = $animalRepository->getLiveStock($location , true, false, false, Ewe::class);
 
-        $offsetDays = 7;
-        $minimumDaysIntervalFromNowAndBirth = 169;
-        $offsetDateFromNow = (new \DateTime())->modify('-' .$offsetDays .'days');
-
         /** @var Ewe $animal */
         foreach ($motherCandidates as $animal) {
-
             //Check if mother candidate has registered matings within the last 169 (145 + 24) days
             if($animal->getMatings()->count() == 0) {
                 $otherCandidatesResult[] = [
@@ -784,6 +772,4 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
-
-
 }
