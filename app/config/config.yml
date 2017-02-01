@@ -88,6 +88,8 @@ snc_redis:
                   - "%redis_host%"
              options:
                   replication: false
+                  connection_timeout: 10
+                  read_write_timeout: 30
     # configure predis session
     session:
         client: sncredis
