@@ -119,21 +119,21 @@ class AnimalCache
 
     /**
      * @var string
-     * @ORM\Column(type="string", options={"default":null}, nullable=true)
+     * @ORM\Column(type="string", options={"default":"-/-"}, nullable=true)
      * @JMS\Type("string")
      */
     private $breedValueGrowth;
 
     /**
      * @var string
-     * @ORM\Column(type="string", options={"default":null}, nullable=true)
+     * @ORM\Column(type="string", options={"default":"-/-"}, nullable=true)
      * @JMS\Type("string")
      */
     private $breedValueMuscleThickness;
 
     /**
      * @var string
-     * @ORM\Column(type="string", options={"default":null}, nullable=true)
+     * @ORM\Column(type="string", options={"default":"-/-"}, nullable=true)
      * @JMS\Type("string")
      */
     private $breedValueFat;
@@ -141,7 +141,7 @@ class AnimalCache
 
     /**
      * @var string
-     * @ORM\Column(type="string", options={"default":null}, nullable=true)
+     * @ORM\Column(type="string", options={"default":"-/-"}, nullable=true)
      * @JMS\Type("string")
      */
     private $lambMeatIndex;
