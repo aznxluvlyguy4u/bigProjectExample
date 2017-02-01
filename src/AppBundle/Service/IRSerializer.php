@@ -389,7 +389,6 @@ class IRSerializer implements IRSerializerInterface
             foreach ($mother->getBirths() as $birth) {
                 $dateInterval = TimeUtil::getDaysBetween($birth->getDateOfBirth(), $dateOfBirth);
 
-                dump($dateInterval);
                 if($dateInterval <= $maxDaysLitterInterval) {
                     return new JsonResponse(
                       array(
