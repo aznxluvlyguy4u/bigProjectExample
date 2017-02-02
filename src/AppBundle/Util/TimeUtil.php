@@ -131,7 +131,7 @@ class TimeUtil
      * @return bool
      */
     public static function isDateBetweenDates( $date, $startDate, $endDate) {
-        return $date > $startDate && $date < $endDate;
+        return $date >= $startDate && $date <= $endDate;
     }
     
     /**
