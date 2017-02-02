@@ -3,6 +3,8 @@
 namespace AppBundle\Util;
 
 
+use Symfony\Component\Validator\Constraints\DateTime;
+
 class TimeUtil
 {
 
@@ -98,7 +100,14 @@ class TimeUtil
         return $dateInterval->days;
     }
 
-
+    /**
+     * Get the date count between two dates, positive range means $dt2 is still ahead, 
+     * negative ranges means $dt2 date has surpassed $dt1.
+     * 
+     * @param \DateTime $dt1
+     * @param \DateTime $dt2
+     * @return bool|mixed
+     */
     public static function getDaysBetween(\DateTime $dt1, \DateTime $dt2){
         if(!$dt1 || !$dt2){
             return false;
@@ -111,6 +120,18 @@ class TimeUtil
 
         // nb: ->days always positive
         return $dti->days * ( $dti->invert ? -1 : 1);   
+    }
+
+    /**
+     * Check if a given date is in between a given date range, returns true if it is 
+     * in the date range.
+     * @param  $date
+     * @param  $startDate
+     * @param  $endDate
+     * @return bool
+     */
+    public static function isDateBetweenDates( $date, $startDate, $endDate) {
+        return $date > $startDate && $date < $endDate;
     }
     
     /**

@@ -6,6 +6,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
  * Class DeclareBirthRepository
@@ -128,11 +129,14 @@ class DeclareBirthRepository extends BaseRepository {
       $enddatePotentialFatherhood->modify("+" .(string)$lowerboundPregnancyDays ." days");
       $enddatePotentialFatherhood->modify("+" .(string)$matingDays ." days");
 
-      //Compare if final father suggestion date is before dateOfBirth
-      $intervalToShowCandidate = TimeUtil::getDaysBetween($dateOfbirth , $enddatePotentialFatherhood);
+      //Compare if final father suggestion date is before dateOfBirth lower- & upperbound
+      $expectedBirthDateLowerbound = clone $mating->getStartDate();
+      $expectedBirthDateLowerbound->modify("1" .(string)$lowerboundPregnancyDays ." days");
 
-      // if interval is negative, it has surpassed current date, thus don't show father candidate
-      if($intervalToShowCandidate >= 0 ) {
+      $expectedBirthDateUpperbound = clone $mating->getStartDate();
+      $expectedBirthDateUpperbound->modify("+" .(string)$lowerboundPregnancyDays ." days");
+
+      if(TimeUtil::isDateBetweenDates($dateOfbirth, $expectedBirthDateLowerbound,$expectedBirthDateUpperbound)) {
         $candidateFathers[] = $mating->getStudRam();
       }
     }
