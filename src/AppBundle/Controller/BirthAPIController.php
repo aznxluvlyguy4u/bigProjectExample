@@ -767,8 +767,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         }
 
 
-        $result['suggested_candidate_surrogates'] = $suggestedCandidatesResult;
-        $result['other_candidate_surrogates'] = $otherCandidatesResult;
+        $result['suggested_candidate_mothers'] = $suggestedCandidatesResult;
+        $result['other_candidate_mothers'] = $otherCandidatesResult;
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
