@@ -27,6 +27,7 @@ use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
 use \Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class AnimalCacher
 {
@@ -846,5 +847,199 @@ class AnimalCacher
             $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX],
             $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY],
             self::EMPTY_INDEX_VALUE);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil|OutputInterface $cmdUtilOrOutput
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function batchUpdateAllIncongruentProductionValues(Connection $conn, $cmdUtilOrOutput = null)
+    {
+        $sql = "WITH rows AS (
+                  UPDATE animal_cache
+                  SET
+                    production_age             = v.production_age,
+                    litter_count               = v.litter_count,
+                    total_offspring_count      = v.total_born_count,
+                    born_alive_offspring_count = v.born_alive_count,
+                    gave_birth_as_one_year_old = v.gave_birth_as_one_year_old
+                  FROM (
+                         SELECT DISTINCT
+                           (a.id)                                           AS animal_id,
+                           MAX(c.id)                                        AS animal_cache_id,
+                           EXTRACT(YEAR FROM AGE(MAX(l.litter_date), MAX(a.date_of_birth))) + --get years
+                           ROUND(CAST(EXTRACT(MONTH FROM AGE(MAX(l.litter_date), MAX(a.date_of_birth))) AS DOUBLE PRECISION) /
+                                 11) --add year if months >= 6
+                                                                            AS age_in_nsfo_system,
+                           COUNT(l.id)                                      AS litter_count,
+                           SUM(l.born_alive_count) + SUM(l.stillborn_count) AS total_born_count,
+                           SUM(l.born_alive_count)                          AS born_alive_count,
+                           FALSE                                            AS has_one_year_mark,
+                           --fathers never get a one-year-mark
+                           (
+                             MAX(c.production_age) <> EXTRACT(YEAR FROM AGE(MAX(l.litter_date), MAX(a.date_of_birth))) + --get years
+                                                      ROUND(CAST(EXTRACT(MONTH FROM AGE(MAX(l.litter_date), MAX(a.date_of_birth))) AS
+                                                                 DOUBLE PRECISION) / 11) --add year if months >= 6
+                             OR MAX(c.litter_count) <> COUNT(l.id)
+                             OR MAX(c.total_offspring_count) <> SUM(l.born_alive_count) + SUM(l.stillborn_count)
+                             OR MAX(c.born_alive_offspring_count) <> SUM(l.born_alive_count)
+                             OR BOOL_AND(c.gave_birth_as_one_year_old) <> FALSE
+                             OR MAX(c.production_age) ISNULL OR MAX(c.litter_count) ISNULL OR MAX(c.total_offspring_count) ISNULL OR
+                             MAX(c.born_alive_offspring_count) ISNULL
+                           )                                                AS update_production
+                
+                         FROM animal a
+                           INNER JOIN litter l ON a.id = l.animal_father_id
+                           INNER JOIN animal_cache c ON c.animal_id = a.id
+                         WHERE date_of_birth NOTNULL
+                         GROUP BY a.id
+                
+                         UNION
+                
+                         SELECT DISTINCT
+                           (a.id)                                           AS animal_id,
+                           MAX(c.id)                                        AS animal_cache_id,
+                           EXTRACT(YEAR FROM AGE(MAX(l.litter_date), MAX(a.date_of_birth))) + --get years
+                           ROUND(CAST(EXTRACT(MONTH FROM AGE(MAX(l.litter_date), MAX(a.date_of_birth))) AS DOUBLE PRECISION) /
+                                 11) --add year if months >= 6
+                                                                            AS age_in_nsfo_system,
+                           COUNT(l.id)                                      AS litter_count,
+                           SUM(l.born_alive_count) + SUM(l.stillborn_count) AS total_born_count,
+                           SUM(l.born_alive_count)                          AS born_alive_count,
+                
+                           EXTRACT(YEAR FROM AGE(MIN(l.litter_date), MAX(a.date_of_birth))) * 12 + --get all as months
+                           EXTRACT(MONTH FROM AGE(MIN(l.litter_date), MAX(a.date_of_birth))) <= 18 AND a.gender = 'FEMALE'
+                                                                            AS has_one_year_mark,
+                           (
+                             MAX(c.production_age) <> EXTRACT(YEAR FROM AGE(MAX(l.litter_date), MAX(a.date_of_birth))) + --get years
+                                                      ROUND(CAST(EXTRACT(MONTH FROM AGE(MAX(l.litter_date), MAX(a.date_of_birth))) AS
+                                                                 DOUBLE PRECISION) / 11) --add year if months >= 6
+                             OR MAX(c.litter_count) <> COUNT(l.id)
+                             OR MAX(c.total_offspring_count) <> SUM(l.born_alive_count) + SUM(l.stillborn_count)
+                             OR MAX(c.born_alive_offspring_count) <> SUM(l.born_alive_count)
+                             OR BOOL_AND(c.gave_birth_as_one_year_old) <>
+                                (EXTRACT(YEAR FROM AGE(MIN(l.litter_date), MAX(a.date_of_birth))) * 12 + --get all as months
+                                 EXTRACT(MONTH FROM AGE(MIN(l.litter_date), MAX(a.date_of_birth))) <= 18 AND a.gender = 'FEMALE')
+                             OR MAX(c.production_age) ISNULL OR MAX(c.litter_count) ISNULL OR MAX(c.total_offspring_count) ISNULL OR
+                             MAX(c.born_alive_offspring_count) ISNULL
+                           )                                                AS update_production
+                
+                         FROM animal a
+                           INNER JOIN litter l ON a.id = l.animal_mother_id
+                           INNER JOIN animal_cache c ON c.animal_id = a.id
+                         WHERE date_of_birth NOTNULL
+                         GROUP BY a.id
+                         UNION --Below when date of births are null
+                
+                         SELECT DISTINCT
+                           (a.id)                                           AS animal_id,
+                           MAX(c.id)                                        AS animal_cache_id,
+                           0                                                AS age_in_nsfo_system,
+                           COUNT(l.id)                                      AS litter_count,
+                           SUM(l.born_alive_count) + SUM(l.stillborn_count) AS total_born_count,
+                           SUM(l.born_alive_count)                          AS born_alive_count,
+                           FALSE                                            AS has_one_year_mark,
+                           --fathers never get a one-year-mark
+                           (
+                             MAX(c.production_age) <> 0
+                             OR MAX(c.litter_count) <> COUNT(l.id)
+                             OR MAX(c.total_offspring_count) <> SUM(l.born_alive_count) + SUM(l.stillborn_count)
+                             OR MAX(c.born_alive_offspring_count) <> SUM(l.born_alive_count)
+                             OR BOOL_AND(c.gave_birth_as_one_year_old) <> FALSE
+                             OR MAX(c.production_age) ISNULL OR MAX(c.litter_count) ISNULL OR MAX(c.total_offspring_count) ISNULL OR
+                             MAX(c.born_alive_offspring_count) ISNULL
+                           )                                                AS update_production
+                
+                         FROM animal a
+                           INNER JOIN litter l ON a.id = l.animal_father_id
+                           INNER JOIN animal_cache c ON c.animal_id = a.id
+                         WHERE date_of_birth ISNULL
+                         GROUP BY a.id
+                
+                         UNION
+                
+                         SELECT DISTINCT
+                           (a.id)                                           AS animal_id,
+                           MAX(c.id)                                        AS animal_cache_id,
+                           0                                                AS age_in_nsfo_system,
+                           COUNT(l.id)                                      AS litter_count,
+                           SUM(l.born_alive_count) + SUM(l.stillborn_count) AS total_born_count,
+                           SUM(l.born_alive_count)                          AS born_alive_count,
+                           FALSE                                            AS has_one_year_mark,
+                           --dateOfBirth missing, cannot calculate this value
+                           (
+                             MAX(c.production_age) <> 0
+                             OR MAX(c.litter_count) <> COUNT(l.id)
+                             OR MAX(c.total_offspring_count) <> SUM(l.born_alive_count) + SUM(l.stillborn_count)
+                             OR MAX(c.born_alive_offspring_count) <> SUM(l.born_alive_count)
+                             OR BOOL_AND(c.gave_birth_as_one_year_old) <> FALSE
+                             OR MAX(c.production_age) ISNULL OR MAX(c.litter_count) ISNULL OR MAX(c.total_offspring_count) ISNULL OR
+                             MAX(c.born_alive_offspring_count) ISNULL
+                           )                                                AS update_production
+                
+                         FROM animal a
+                           INNER JOIN litter l ON a.id = l.animal_mother_id
+                           INNER JOIN animal_cache c ON c.animal_id = a.id
+                         WHERE date_of_birth ISNULL
+                         GROUP BY a.id
+                       ) AS v(animal_id, animal_cache_id, production_age, litter_count, total_born_count, born_alive_count, gave_birth_as_one_year_old, update_production)
+                  WHERE v.update_production = TRUE AND animal_cache.id = v.animal_cache_id
+                  RETURNING 1
+                )
+                SELECT COUNT(*) AS count FROM rows";
+        $updateCount = $conn->query($sql)->fetch()['count'];
+        if($cmdUtilOrOutput) { $cmdUtilOrOutput->writeln($updateCount.' production values updated'); }
+        return $updateCount;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil|OutputInterface $cmdUtilOrOutput
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function batchUpdateAllIncongruentNLingValues(Connection $conn, $cmdUtilOrOutput)
+    {
+        $sql = "WITH rows AS (
+                  UPDATE animal_cache
+                SET n_ling = v.new_n_ling
+                FROM (
+                       -- nLing, litter still linked and not revoked
+                       SELECT c.id as cache_id, c.n_ling as current_n_ling, CONCAT(l.born_alive_count + l.stillborn_count,'-ling') as new_n_ling,
+                         (c.n_ling <> CONCAT(l.born_alive_count + l.stillborn_count,'-ling') OR c.n_ling ISNULL ) as update_n_ling
+                       FROM animal a
+                         INNER JOIN litter l ON a.litter_id = l.id
+                         INNER JOIN animal_cache c ON c.animal_id = a.id
+                       WHERE (l.status <> 'REVOKED' AND l.animal_mother_id NOTNULL)
+                             AND (c.n_ling <> CONCAT(l.born_alive_count + l.stillborn_count,'-ling') OR c.n_ling ISNULL )
+                       UNION
+                       -- nLing, litter still linked but revoked or mother not set
+                       SELECT c.id as cache_id, c.n_ling as current_n_ling, '0-ling' as new_n_ling,
+                         (c.n_ling <> '0-ling' OR c.n_ling ISNULL ) as update_n_ling
+                       FROM animal a
+                         INNER JOIN litter l ON a.litter_id = l.id
+                         INNER JOIN animal_cache c ON c.animal_id = a.id
+                       WHERE (l.status = 'REVOKED' OR l.animal_mother_id ISNULL) --If mother ISNULL the offspringCounts <> nLing
+                             AND (c.n_ling <> '0-ling'  OR c.n_ling ISNULL ) --the default value for unknown nLings should be '0-ling'
+                       UNION
+                       -- nLing, litter not linked anymore
+                       SELECT c.id as cache_id, c.n_ling as current_n_ling, '0-ling' as new_n_ling,
+                         (c.n_ling <> '0-ling' OR c.n_ling ISNULL ) as update_n_ling
+                       FROM animal a
+                         LEFT JOIN litter l ON a.litter_id = l.id
+                         INNER JOIN animal_cache c ON c.animal_id = a.id
+                       WHERE l.id ISNULL
+                             AND (c.n_ling <> '0-ling'  OR c.n_ling ISNULL ) --the default value for unknown nLings should be '0-ling'
+                     ) AS v(cache_id, current_n_ling, new_n_ling, update_n_ling) WHERE animal_cache.id = v.cache_id AND v.update_n_ling = TRUE
+                  RETURNING 1
+                )
+                SELECT COUNT(*) AS count FROM rows";
+        $updateCount = $conn->query($sql)->fetch()['count'];
+        if($cmdUtilOrOutput) { $cmdUtilOrOutput->writeln($updateCount.' n-ling values updated'); }
+        return $updateCount;
     }
 }

@@ -6,6 +6,7 @@ use AppBundle\Cache\AnimalCacher;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -20,6 +21,9 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
 
     /** @var ObjectManager $em */
     private $em;
+
+    /** @var Connection */
+    private $conn;
 
     /** @var CommandUtil */
     private $cmdUtil;
@@ -37,6 +41,8 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
         /** @var ObjectManager $em */
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
+        /** @var Connection conn */
+        $this->conn = $em->getConnection();
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
 
@@ -50,6 +56,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '6: Generate all AnimalCache records for animal and ascendants (3gen) for given locationId', "\n",
             '7: Regenerate all AnimalCache records for animal and ascendants (3gen) for given locationId', "\n",
             '8: Delete duplicate records', "\n",
+            '9: BatchUpdate all separated production values and n-ling values', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -98,6 +105,11 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             case 8:
                 AnimalCacher::deleteDuplicateAnimalCacheRecords($em, $this->cmdUtil);
                 $output->writeln('DONE!');
+                break;
+
+            case 9:
+                AnimalCacher::batchUpdateAllIncongruentProductionValues($this->conn, $this->cmdUtil);
+                AnimalCacher::batchUpdateAllIncongruentNLingValues($this->conn, $this->cmdUtil);
                 break;
 
             default:
