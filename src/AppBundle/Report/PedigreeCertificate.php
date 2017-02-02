@@ -414,19 +414,19 @@ class PedigreeCertificate
                 $this->data[ReportLabel::ANIMALS][$key][ReportLabel::FATHER_ID] = null;
             }
 
+            //ProductionValues
+            $productionAge = intval($animalCache['production_age']);
+            $litterCount = intval($animalCache['litter_count']);
+            $totalOffSpringCount = intval($animalCache['total_offspring_count']);
+            $bornAliveOffspringCount = intval($animalCache['born_alive_offspring_count']);
+            $addProductionAsterisk = boolval($animalCache['gave_birth_as_one_year_old']);
+            $production = DisplayUtil::parseProductionStringFromGivenParts($productionAge, $litterCount, $totalOffSpringCount, $bornAliveOffspringCount, $addProductionAsterisk);
 
             $nLing = $animalCache['n_ling'];
             $nLingPart = explode('-', $nLing);
             $litterSize = 0;
             if(count($nLingPart) > 0) {
                 $litterSize = intval($nLingPart[0]);
-            }
-            
-            $production = $animalCache[JsonInputConstant::PRODUCTION];
-            $productionPart = explode('/', $production);
-            $litterCount = 0;
-            if(count($productionPart) > 4) {
-                $litterCount = intval($productionPart[1]);
             }
 
             $breederName = self::GENERAL_NULL_FILLER;
