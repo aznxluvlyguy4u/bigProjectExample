@@ -131,12 +131,12 @@ class DeclareBirthRepository extends BaseRepository {
 
       //Compare if final father suggestion date is before dateOfBirth lower- & upperbound
       $expectedBirthDateLowerbound = clone $mating->getStartDate();
-      $expectedBirthDateLowerbound->modify("1" .(string)$lowerboundPregnancyDays ." days");
+      $expectedBirthDateLowerbound->modify("-" .(string)$lowerboundPregnancyDays ." days");
 
       $expectedBirthDateUpperbound = clone $mating->getStartDate();
       $expectedBirthDateUpperbound->modify("+" .(string)$lowerboundPregnancyDays ." days");
 
-      if(TimeUtil::isDateBetweenDates($dateOfbirth, $expectedBirthDateLowerbound,$expectedBirthDateUpperbound)) {
+      if(TimeUtil::isDateBetweenDates($dateOfbirth, $expectedBirthDateLowerbound, $expectedBirthDateUpperbound)) {
         $candidateFathers[] = $mating->getStudRam();
       }
     }
