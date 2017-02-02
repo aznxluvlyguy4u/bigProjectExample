@@ -297,7 +297,7 @@ class IRSerializer implements IRSerializerInterface
             $dateOfBirth = new \DateTime($declareBirthContentArray["date_of_birth"]);
 
             //Disallow birth registrations in the future
-            $timeIntervalInDaysFromNow = TimeUtil::getAgeInDays(new \DateTime(), $dateOfBirth);
+            $timeIntervalInDaysFromNow = TimeUtil::getDaysBetween(new \DateTime(), $dateOfBirth);
 
             if($timeIntervalInDaysFromNow > 0) {
                 return new JsonResponse(
@@ -308,7 +308,6 @@ class IRSerializer implements IRSerializerInterface
                     )
                   ), $statusCode);
             }
-
         }
 
         if(key_exists('is_aborted', $declareBirthContentArray->toArray())) {
