@@ -131,25 +131,17 @@ class DeclareBirthRepository extends BaseRepository {
 
       //Get matingPeriod in days
       $matingDays = TimeUtil::getAgeInDays($mating->getStartDate(), $mating->getEndDate());
-      $matingDays += $matingDaysOffset * 2;
 
       $lowerboundPregnancyDays = $pregnancyDays - $matingDaysOffset;
-      $beginDatePotentialFather = clone  $mating->getStartDate();
-      $beginDatePotentialFather->modify("+" .(string)$lowerboundPregnancyDays ." days");
-      $beginDatePotentialFather->modify("+" .(string)$matingDays ." days");
-
       $upperboundPregnancyDays = $pregnancyDays + $matingDaysOffset;
-      $endDatePotentialFather = clone $mating->getStartDate();
-      $endDatePotentialFather->modify("+" .(string)$upperboundPregnancyDays ." days");
-      $endDatePotentialFather->modify("+" .(string)$matingDays ." days");
 
       //Compare if final father suggestion date is before dateOfBirth lower- & upperbound
       $expectedBirthDateLowerbound = clone $mating->getStartDate();
       $expectedBirthDateLowerbound->modify("+" .(string)$lowerboundPregnancyDays ." days");
 
-      $expectedBirthDateUpperbound = clone $mating->getStartDate();
+      $expectedBirthDateUpperbound = clone $mating->getEndDate();
       $expectedBirthDateUpperbound->modify("+" .(string)$upperboundPregnancyDays ." days");
-
+      
       //Get the date difference between the computed dateOfBirth and the actual given dateOfBirth
       //Check if it is betweeen date interval of given upperBound and lowerBound
       if(TimeUtil::isDateBetweenDates($dateOfbirth, $expectedBirthDateLowerbound, $expectedBirthDateUpperbound)) {
