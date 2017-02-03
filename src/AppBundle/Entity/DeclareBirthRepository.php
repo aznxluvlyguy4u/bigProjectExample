@@ -86,19 +86,18 @@ class DeclareBirthRepository extends BaseRepository {
       $fatherIds[$mating->getStudRam()->getId()] = $mating->getStudRam()->getId();
 
       /**
+       * Computing candidate fathers based on registered matings for a given Ewe:
+       *
        * Registered mating:
+       * startDate: 01-10-2016 (inclusive)
+       * eindDate: 15-11-2016 (inclusive)(for the dutchies: TOT EN MET)
        *
-       * start: 01-10-2016
-       * eind: 15-11-2016
        *
-       * reserveDays = 24 (2x 12 days => lowerbound - 12 | upperbound + 12)
+       * matingDaysIntervalInDay = (matingEnd - matingStart)
+       * = (15-11-2016 - 01-10-2016)
+       * = 46 days
        *
-       * matingDays = (matingEnd - matingStart) + reserveDays
-       * = (15-11-2016 - 01-10-2016) + reserveDays
-       * = 46 + 24
-       * = 70 days
-       *
-       * pregnancyDays = 145
+       * pregnancyDays (system default) = 145
        *
        * lowerboundPregnancyDays = pregnancyDays - 12
        * = 145 - 12
@@ -106,15 +105,26 @@ class DeclareBirthRepository extends BaseRepository {
        *
        * upperboundPregnancyDays = pregnancyDays + 12
        * = 145 + 12
-       * = 157 days // not used
+       * = 157 days
+       *
+       * computedLitterDate = (matingStart + pregnancyDays)
+       *
+       * beginDatePotentialFather = ((matingStart + lowerboundPregnancyDays) = computedLitterDate)
+       * = (1-10-2016 + 133 days)
+       * = 11-02-2017
        *
        * enddatePotentialFatherhood = ((matingStart + lowerboundPregnancyDays) = litterDate) + matingDays
-       * = (1-10-2016 + 133 days) + 70 days
-       * = 11-02-2017 + 70 days
+       * = (15-11-2016 + 157 days)
        * = 22-04-2017
        *
-       * Thus the enddate of a potential father:
-       *  22-04-2017 (inclusive) (for the dutchies: tot en MET)
+       * The computed begindate and enddate of a father for a given Ewe is, thus:
+       *
+       * beginDate: 11-02-2017 (inclusive)
+       * endDate:   22-04-2017 (inclusive) (for the dutchies: TOT EN MET)
+       *
+       * if an actual birthdate is not in between (inclusive of boundaries) the beginDate and endDate, the candidate
+       * father should not be a suggested father.
+       *
        */
       $matingDaysOffset = 12;
       $pregnancyDays = 145;
@@ -124,18 +134,24 @@ class DeclareBirthRepository extends BaseRepository {
       $matingDays += $matingDaysOffset * 2;
 
       $lowerboundPregnancyDays = $pregnancyDays - $matingDaysOffset;
+      $beginDatePotentialFather = clone  $mating->getStartDate();
+      $beginDatePotentialFather->modify("+" .(string)$lowerboundPregnancyDays ." days");
+      $beginDatePotentialFather->modify("+" .(string)$matingDays ." days");
 
-      $enddatePotentialFatherhood = clone $mating->getStartDate();
-      $enddatePotentialFatherhood->modify("+" .(string)$lowerboundPregnancyDays ." days");
-      $enddatePotentialFatherhood->modify("+" .(string)$matingDays ." days");
+      $upperboundPregnancyDays = $pregnancyDays + $matingDaysOffset;
+      $endDatePotentialFather = clone $mating->getStartDate();
+      $endDatePotentialFather->modify("+" .(string)$upperboundPregnancyDays ." days");
+      $endDatePotentialFather->modify("+" .(string)$matingDays ." days");
 
       //Compare if final father suggestion date is before dateOfBirth lower- & upperbound
       $expectedBirthDateLowerbound = clone $mating->getStartDate();
-      $expectedBirthDateLowerbound->modify("-" .(string)$lowerboundPregnancyDays ." days");
+      $expectedBirthDateLowerbound->modify("+" .(string)$lowerboundPregnancyDays ." days");
 
       $expectedBirthDateUpperbound = clone $mating->getStartDate();
-      $expectedBirthDateUpperbound->modify("+" .(string)$lowerboundPregnancyDays ." days");
+      $expectedBirthDateUpperbound->modify("+" .(string)$upperboundPregnancyDays ." days");
 
+      //Get the date difference between the computed dateOfBirth and the actual given dateOfBirth
+      //Check if it is betweeen date interval of given upperBound and lowerBound
       if(TimeUtil::isDateBetweenDates($dateOfbirth, $expectedBirthDateLowerbound, $expectedBirthDateUpperbound)) {
         $candidateFathers[] = $mating->getStudRam();
       }
