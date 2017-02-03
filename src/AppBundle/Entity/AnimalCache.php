@@ -35,7 +35,7 @@ class AnimalCache
 
     /**
      * @var integer
-     * @ORM\Column(type="integer", nullable=false)
+     * @ORM\Column(type="integer", nullable=false, unique = true)
      * @Assert\NotBlank
      * @JMS\Type("integer")
      */
