@@ -91,6 +91,14 @@ abstract class Measurement {
     protected $editDate;
 
     /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", options={"default":true})
+     * @JMS\Type("boolean")
+     */
+    protected $isActive;
+
+    /**
     * Measurement constructor.
     */
     public function __construct() {
@@ -230,5 +238,24 @@ abstract class Measurement {
     {
         return $this->editDate;
     }
+
+    /**
+     * @return boolean
+     */
+    public function isIsActive()
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param boolean $isActive
+     */
+    public function setIsActive($isActive)
+    {
+        $this->isActive = $isActive;
+    }
+
+
+
 
 }
