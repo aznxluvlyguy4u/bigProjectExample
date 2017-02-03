@@ -10,6 +10,7 @@ use \DateTime;
 
 /**
  * Class AnimalCache
+ * @ORM\Table(name="animal_cache",indexes={@ORM\Index(name="animal_result_table_idx", columns={"animal_id"})})
  * @ORM\Entity(repositoryClass="AppBundle\Entity\AnimalCacheRepository")
  * @package AppBundle\Entity
  */
