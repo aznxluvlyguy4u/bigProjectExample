@@ -13,6 +13,7 @@ use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareBirthRepository;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
@@ -24,6 +25,7 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Litter;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Mate;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RetrieveUbnDetails;
@@ -50,6 +52,7 @@ use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\DependencyInjection\Tests\A;
@@ -327,7 +330,7 @@ class IRSerializer implements IRSerializerInterface
         }
 
         if(key_exists('father', $declareBirthContentArray->toArray())) {
-            /** @var Animal $father */
+            /** @var  $father */
             $father = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
               ->getAnimalByUlnOrPedigree($declareBirthContentArray["father"]);
 
@@ -354,7 +357,7 @@ class IRSerializer implements IRSerializerInterface
         }
 
         if(key_exists('mother', $declareBirthContentArray->toArray())) {
-            /** @var Animal $mother */
+            /** @var  $mother */
             $mother = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
               ->getAnimalByUlnOrPedigree($declareBirthContentArray["mother"]);
 
@@ -384,9 +387,15 @@ class IRSerializer implements IRSerializerInterface
             //disallow birth registration
             $maxDaysLitterInterval = 167;
 
-            /** @var DeclareBirth $birth */
-            foreach ($mother->getBirths() as $birth) {
-                $dateInterval = TimeUtil::getDaysBetween($dateOfBirth, $birth->getDateOfBirth());
+            /** @var DeclareBirthRepository $declareBirthRepository */
+            $declareBirthRepository = $this->entityManager->getRepository(DeclareBirth::getClassName());
+
+            $children = $declareBirthRepository->getChildrenOfEwe($mother);
+
+
+            /** @var Animal $child */
+            foreach ($children as $child) {
+                $dateInterval = TimeUtil::getDaysBetween($child->getDateOfBirth(), $dateOfBirth);
 
                 if($dateInterval <= $maxDaysLitterInterval) {
                     return new JsonResponse(
@@ -671,6 +680,7 @@ class IRSerializer implements IRSerializerInterface
                     $declareBirthRequest->setUlnCountryCodeFather($father->getUlnCountryCode());
                     //$father->setLitter($litter);
                     $child->setParentFather($father);
+//                    $father->getChildren()->add($child);
                 }
 
                 if($mother) {
@@ -678,6 +688,7 @@ class IRSerializer implements IRSerializerInterface
                     $declareBirthRequest->setUlnCountryCodeMother($mother->getUlnCountryCode());
                     //$mother->setLitter($litter);
                     $child->setParentMother($mother);
+//                    $mother->getChildren()->add($child);
                 }
 
                 if($surrogate) {
@@ -685,6 +696,8 @@ class IRSerializer implements IRSerializerInterface
                     $declareBirthRequest->setUlnCountryCodeSurrogate(($surrogate->getUlnCountryCode()));
                     //$surrogate->setLitter($litter);
                     $child->setSurrogate($surrogate);
+
+//                    $surrogate->getChildren()->add($child);
                 }
 
                 // Weight
