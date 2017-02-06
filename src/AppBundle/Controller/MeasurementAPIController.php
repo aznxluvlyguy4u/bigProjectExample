@@ -237,6 +237,65 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
 
     /**
      *
+     * Deactivate an exterior measurement for a specific ULN and measurementDate. For example NL100029511721 and 2016-12-05
+     *
+     * @ApiDoc(
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Deactivate an exterior measurement for a specific ULN and measurementDate",
+     *   input = "AppBundle\Entity\Exterior",
+     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     * )
+     *
+     * @param Request $request the request object
+     * @param String $ulnString
+     * @param String $measurementDateString
+     * @return jsonResponse
+     * @Route("/{ulnString}/exteriors/{measurementDateString}")
+     * @Method("DELETE")
+     */
+    public function deactivateExteriorMeasurement(Request $request, $ulnString, $measurementDateString)
+    {
+        $loggedInUser = $this->getLoggedInUser($request);
+        $adminValidationResults = AdminValidator::validate($loggedInUser, AccessLevelType::ADMIN);
+        $isAdmin = $adminValidationResults->isValid();
+        $em = $this->getDoctrine()->getManager();
+
+        $location = null;
+        if (!$isAdmin) {
+            return $adminValidationResults->getJsonResponse();
+        }
+
+        $animalDetailsValidator = new AnimalDetailsValidator($em, $isAdmin, $location, $ulnString);
+        if (!$animalDetailsValidator->getIsInputValid()) {
+            return $animalDetailsValidator->createJsonResponse();
+        }
+        $animal = $animalDetailsValidator->getAnimal();
+
+        $validationResults = ExteriorValidator::validateDeactivation($em, $animal, $measurementDateString);
+        if($validationResults->isValid()) {
+            /** @var Exterior $exterior */
+            $exterior = $validationResults->getValidResultObject();
+            $exterior->setIsActive(false);
+            $exterior->setDeleteDate(new \DateTime());
+            $exterior->setDeletedBy($loggedInUser);
+            $em->persist($exterior);
+            $em->flush();
+        }
+
+        return $validationResults->getJsonResponse();
+    }
+
+
+    /**
+     *
      * Return the allowed exterior measurement kinds for a specific ULN and measurementDate. For example NL100029511721 and 2016-12-05
      *
      * @ApiDoc(
