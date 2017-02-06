@@ -684,6 +684,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         
         /** @var Location $location */
         $location = $this->getSelectedLocation($request);
+
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
 
@@ -693,10 +694,49 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         $motherCandidates = $animalRepository->getLiveStock($location , true, false, false, Ewe::class);
 
+        $result['suggested_candidate_mothers'] = $suggestedCandidatesResult;
+        $result['other_candidate_mothers'] = $otherCandidatesResult;
+
+        //Animal has no registered matings, thus it is not a true candidate
         /** @var Ewe $animal */
         foreach ($motherCandidates as $animal) {
-            //Check if mother candidate has registered matings within the last 169 (145 + 24) days
-            if($animal->getMatings()->count() == 0) {
+            if($animal->getMatings()->count() == 0 ) {
+                $otherCandidatesResult[] = [
+                  JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                  JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                  JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                  JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+                  JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+                  JsonInputConstant::GENDER =>  $animal->getGender(),
+                  JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+                  JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+                  JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+                  JsonInputConstant::UBN => $location->getUbn(),
+                  JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                  JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+                ];
+                continue;
+            }
+
+            $addToOtherCandidates = true;
+            $checkAnimalForMatings = true;
+            $pregnancyDays = 145;
+            $minimumDaysBetweenBirths = 167;
+
+            $children = $animal->getChildren();
+
+            /** @var Animal $child */
+            foreach($children as $child) {
+                $daysbetweenCurrentBirthAndPreviousBirths = TimeUtil::getDaysBetween($child->getDateOfBirth(), $dateOfBirth);
+
+                if(!($daysbetweenCurrentBirthAndPreviousBirths < $minimumDaysBetweenBirths)) {
+                    $checkAnimalForMatings = false;
+                    break;
+                }
+            }
+
+            //animal has given birth within the last 167 days, thus it is not a true candidate
+            if(!$checkAnimalForMatings) {
                 $otherCandidatesResult[] = [
                   JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
                   JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
@@ -715,18 +755,18 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             }
 
             $matings = $animal->getMatings();
-            $addToOtherCandidates = true;
-
-            $pregnancyDays = 145;
 
             /** @var Mate $mating */
             foreach ($matings as $mating) {
                 $daysBetweenMatingAndBirth = TimeUtil::getDaysBetween($mating->getStartDate(), $dateOfBirth);
 
+                //Check if mating and date of birth is within range of 133 up to (including) 157 days
+                //and the request state of the mating is finished
                 if($daysBetweenMatingAndBirth >= ($pregnancyDays - 12)
-                   && $daysBetweenMatingAndBirth <= ($pregnancyDays + 12) ){
+                   && $daysBetweenMatingAndBirth <= ($pregnancyDays + 12)
+                   && $mating->getRequestState() == RequestStateType::FINISHED) {
 
-                    //Add as a true candidate surrogate to list
+                        //Add as a true candidate surrogate to list
                         $suggestedCandidatesResult[] = [
                           JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
                           JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
@@ -743,7 +783,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                         ];
                         $addToOtherCandidates = false;
                         break;
-                    }
+                }
             }
 
             if (!$addToOtherCandidates) {
@@ -764,8 +804,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
               JsonInputConstant::IS_HISTORIC_ANIMAL => false,
               JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
             ];
-        }
 
+        }
 
         $result['suggested_candidate_mothers'] = $suggestedCandidatesResult;
         $result['other_candidate_mothers'] = $otherCandidatesResult;
