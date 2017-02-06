@@ -66,7 +66,7 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
             return;
         }
 
-        DoctrineUtil::printAnimalData($output, $animal, '-- Data of Animal after gender change --');
+        DoctrineUtil::printAnimalData($output, $animal, '-- Data of Animal before gender change --');
         $newGender = $this->askForNewGender();
 
         if($newGender == null) {
