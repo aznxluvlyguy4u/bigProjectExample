@@ -120,6 +120,7 @@ abstract class Measurement {
     */
     public function __construct() {
       $this->logDate = new \DateTime();
+      $this->isActive = true;
     }
 
     /**
