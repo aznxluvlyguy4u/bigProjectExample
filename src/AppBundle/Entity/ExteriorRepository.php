@@ -30,21 +30,26 @@ class ExteriorRepository extends MeasurementRepository {
 
     /**
      * @param Animal $animal
+     * @param string $nullFiller
+     * @param bool $ignoreDeleted
      * @return array
      */
-    public function getAllOfAnimalBySql(Animal $animal, $nullFiller = '')
+    public function getAllOfAnimalBySql(Animal $animal, $nullFiller = '', $ignoreDeleted = true)
     {
         $results = [];
         //null check
         if(!($animal instanceof Animal)) { return $results; }
         elseif(!is_int($animal->getId())){ return $results; }
+        
+        $deletedFilterString = '';
+        if($ignoreDeleted) { $deletedFilterString = ' AND m.is_active = TRUE '; }
 
         $sql = "SELECT m.id as id, measurement_date, x.*, p.person_id, p.first_name, p.last_name
                 FROM measurement m
                   INNER JOIN exterior x ON x.id = m.id
                   LEFT JOIN person p ON p.id = m.inspector_id
                   INNER JOIN animal a ON a.id = x.animal_id
-                WHERE x.animal_id = ".$animal->getId()." ORDER BY measurement_date DESC";
+                WHERE x.animal_id = ".$animal->getId().$deletedFilterString." ORDER BY measurement_date DESC";
         $retrievedMeasurementData = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
         $count = 0;
