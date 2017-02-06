@@ -4,8 +4,10 @@ namespace AppBundle\Command;
 
 use AppBundle\Cache\AnimalCacher;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -24,6 +26,9 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
     /** @var CommandUtil */
     private $cmdUtil;
 
+    /** @var Connection */
+    private $conn;
+
     protected function configure()
     {
         $this
@@ -37,8 +42,11 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
         /** @var ObjectManager $em */
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
+        $this->conn = $em->getConnection();
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
+
+        $output->writeln(['',DoctrineUtil::getDatabaseHostAndNameString($em),'']);
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
@@ -50,6 +58,8 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '6: Generate all AnimalCache records for animal and ascendants (3gen) for given locationId', "\n",
             '7: Regenerate all AnimalCache records for animal and ascendants (3gen) for given locationId', "\n",
             '8: Delete duplicate records', "\n",
+            '--- Sql Batch Queries ---', "\n",
+            '9: Delete duplicate records', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -98,6 +108,21 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             case 8:
                 AnimalCacher::deleteDuplicateAnimalCacheRecords($em, $this->cmdUtil);
                 $output->writeln('DONE!');
+                break;
+
+            case 9:
+                $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update exterior cache values of all animals? (y/n, default = no)');
+                if($updateAll) {
+                    $output->writeln('Updating all records...');
+                    $updateCount = AnimalCacher::updateAllExteriors($this->conn);
+                } else {
+                    do{
+                        $animalId = $this->cmdUtil->generateQuestion('Insert one animalId (default = 0)', 0);
+                    } while (!ctype_digit($animalId) && !is_int($animalId));
+
+                    $updateCount = AnimalCacher::updateExteriors($this->conn, [$animalId]);
+                }
+                $output->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
                 break;
 
             default:
