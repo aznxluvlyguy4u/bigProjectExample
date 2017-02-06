@@ -714,6 +714,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                   JsonInputConstant::UBN => $location->getUbn(),
                   JsonInputConstant::IS_HISTORIC_ANIMAL => false,
                   JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+                  JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
                 ];
                 continue;
             }
@@ -755,6 +756,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                   JsonInputConstant::UBN => $location->getUbn(),
                   JsonInputConstant::IS_HISTORIC_ANIMAL => false,
                   JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+                  JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
                 ];
                 continue;
             }
@@ -785,6 +787,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                           JsonInputConstant::UBN => $location->getUbn(),
                           JsonInputConstant::IS_HISTORIC_ANIMAL => false,
                           JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+                          JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
                         ];
                         $addToOtherCandidates = false;
                         break;
@@ -808,6 +811,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
               JsonInputConstant::UBN => $location->getUbn(),
               JsonInputConstant::IS_HISTORIC_ANIMAL => false,
               JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+              JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
             ];
 
         }
