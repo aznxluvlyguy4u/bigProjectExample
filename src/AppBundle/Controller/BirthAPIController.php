@@ -812,8 +812,6 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         }
 
-//        die();
-
         $result['suggested_candidate_mothers'] = $suggestedCandidatesResult;
         $result['other_candidate_mothers'] = $otherCandidatesResult;
 
