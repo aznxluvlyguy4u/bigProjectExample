@@ -8,6 +8,7 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\PersonRepository;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\JsonFormat\ValidationResults;
 use Doctrine\Common\Collections\Collection;
 use AppBundle\Constant\Constant;
 use \Symfony\Component\HttpFoundation\JsonResponse;
@@ -95,5 +96,29 @@ class AdminValidator
         }
 
         return $isAccessGranted;
+    }
+
+
+    /**
+     * @param $admin
+     * @param $accessLevelRequired
+     * @return ValidationResults
+     */
+    public static function validate($admin, $accessLevelRequired)
+    {
+        $validationResults = new ValidationResults(false);
+
+        //Validate user
+        if(!($admin instanceof Employee)) {
+            $validationResults->setIsValid(false);
+        } else {
+            $validationResults->setIsValid(self::checkIsAccessGranted($accessLevelRequired, $admin->getAccessLevel()));
+        }
+
+        if(!$validationResults->isValid()) {
+            $validationResults->addError('UNAUTHORIZED');
+        }
+
+        return $validationResults;
     }
 }
