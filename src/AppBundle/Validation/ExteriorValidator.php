@@ -18,6 +18,7 @@ use AppBundle\Entity\Measurement;
 use AppBundle\Entity\MeasurementRepository;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\Person;
+use AppBundle\JsonFormat\ValidationResults;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -566,5 +567,55 @@ class ExteriorValidator extends BaseValidator
         return $this->animal;
     }
 
-   
+
+    /**
+     * @param ObjectManager $em
+     * @param Animal $animal
+     * @param $measurementDateString
+     * @return ValidationResults
+     */
+    public static function validateDeactivation(ObjectManager $em, $animal, $measurementDateString)
+    {
+        $validationResults = new ValidationResults(true);
+
+        if(!($animal instanceof Animal)) {
+            $validationResults->addError('Er is geen correct dier meegegeven');
+            $validationResults->setIsValid(false);
+            $animal = null;
+        }
+
+        $isDateStringValid = TimeUtil::isFormatYYYYMMDD($measurementDateString);
+        if(!$isDateStringValid) {
+            $validationResults->addError('Het format van de datum is onjuist. Het moet dit format hebben JJJJ-MM-DD');
+            $validationResults->setIsValid(false);
+            $measurementDate = null;
+        } else {
+            $measurementDate = new \DateTime($measurementDateString);
+        }
+
+        if(!$validationResults->isValid()) {
+            return $validationResults;
+        }
+        //Only continue if other inputs were valid
+
+        $exterior = null;
+        if($animal != null && $measurementDate != null) {
+            /** @var ExteriorRepository $exteriorRepository */
+            $exteriorRepository = $em->getRepository(Exterior::class);
+            /** @var Exterior $exterior */
+            $exterior = $exteriorRepository->findOneBy(['measurementDate' => $measurementDate, 'animal' => $animal, 'isActive' => true]);
+
+            if($exterior != null) {
+                $validationResults->setIsValid(true);
+                $validationResults->setValidResultObject($exterior);
+                return $validationResults;
+            } else {
+                $validationResults->setIsValid(false);
+                $validationResults->addError('Geen actief exterieur meting gevonden voor gegeven uln en datum');
+            }
+        }
+
+        $validationResults->setIsValid(false);
+        return $validationResults;
+    }
 }
