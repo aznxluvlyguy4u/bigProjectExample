@@ -190,39 +190,24 @@ class DeclareBirthRepository extends BaseRepository {
 
 
   /**
-   * Return a list of litters belonging to a given ewe
-   * @param Location $location
-   * @param Ewe $mother
+   * Return a list of children belonging to a given mother
+   * @param Animal $mother
    * @return array
    */
-  public function getLittersForEwe(Location $location, Animal $mother) {
+  public function getChildrenOfEwe(Animal $mother) {
 
     $em = $this->getEntityManager();
-    $queryBuilder = $em->createQueryBuilder();
+    $livestockEwesQueryBuilder = $em->createQueryBuilder();
 
-    $queryBuilder
-      ->select('mate')
-      ->from('AppBundle:Mate', 'mate')
-      ->where($queryBuilder->expr()->andX(
-        $queryBuilder->expr()->andX(
-          $queryBuilder->expr()->eq('mate.location', $location->getId()),
-          $queryBuilder->expr()->eq('mate.isOverwrittenVersion', 'false'),
-          $queryBuilder->expr()->eq('mate.studEwe', $mother->getId()),
-          $queryBuilder->expr()->orX(
-            $queryBuilder->expr()->neq('mate.requestState', "'OPEN'"),
-            $queryBuilder->expr()->neq('mate.requestState', "'FINISHED'"),
-            $queryBuilder->expr()->neq('mate.requestState', "'FINISHED_WITH_WARNING'")
-          ),
-          $queryBuilder->expr()->orX(
-            $queryBuilder->expr()->isNull('mate.isApprovedByThirdParty'),
-            $queryBuilder->expr()->eq('mate.isApprovedByThirdParty', 'true')
-          )
-        )
-      ));
+    $livestockEwesQueryBuilder
+      ->select('animal')
+      ->from('AppBundle:Animal', 'animal')
+      ->where(
+        $livestockEwesQueryBuilder->expr()->eq('animal.parentMother', $mother->getId())
+      );
 
-    $query = $queryBuilder->getQuery();
-    $result = $query->getResult();
+    $query = $livestockEwesQueryBuilder->getQuery();
 
-    return $result;
+    return $query->getResult();
   }
 }
