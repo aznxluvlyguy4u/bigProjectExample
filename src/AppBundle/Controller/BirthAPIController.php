@@ -723,13 +723,18 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             $pregnancyDays = 145;
             $minimumDaysBetweenBirths = 167;
 
-            $children = $animal->getChildren();
 
+
+            /** @var DeclareBirthRepository $declareBirthRepository */
+            $declareBirthRepository = $this->getDoctrine()->getRepository(DeclareBirth::getClassName());
+            $children = $declareBirthRepository->getChildrenOfEwe($animal);
+
+            //Check if Mother has children that are born in the last 5,5 months if so, it is not a true candidate
             /** @var Animal $child */
-            foreach($children as $child) {
+            foreach ($children as $child) {
                 $daysbetweenCurrentBirthAndPreviousBirths = TimeUtil::getDaysBetween($child->getDateOfBirth(), $dateOfBirth);
 
-                if(!($daysbetweenCurrentBirthAndPreviousBirths < $minimumDaysBetweenBirths)) {
+                if(!($daysbetweenCurrentBirthAndPreviousBirths >= $minimumDaysBetweenBirths)) {
                     $checkAnimalForMatings = false;
                     break;
                 }
@@ -806,6 +811,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             ];
 
         }
+
+//        die();
 
         $result['suggested_candidate_mothers'] = $suggestedCandidatesResult;
         $result['other_candidate_mothers'] = $otherCandidatesResult;
