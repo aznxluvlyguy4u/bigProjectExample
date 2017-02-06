@@ -23,8 +23,7 @@ class DeclareBirthRepository extends BaseRepository {
    * @param string $state
    * @return ArrayCollection
    */
-  public function getBirths(Location $location, $state = null)
-  {
+  public function getBirths(Location $location, $state = null) {
     $retrievedBirths = $location->getBirths();
 
     return $this->getRequests($retrievedBirths, $state);
@@ -35,8 +34,7 @@ class DeclareBirthRepository extends BaseRepository {
    * @param string $requestId
    * @return DeclareBirth|null
    */
-  public function getBirthByRequestId(Location $location, $requestId)
-  {
+  public function getBirthByRequestId(Location $location, $requestId) {
     $births = $this->getBirths($location);
 
     return $this->getRequestByRequestId($births, $requestId);
@@ -45,7 +43,7 @@ class DeclareBirthRepository extends BaseRepository {
   /**
    * Get a list of suggested candidate fathers based on matings done in within 145 + (-12 & +12) days, from now
    * and all other Rams on current location.
-   * 
+   *
    * @param Location $location
    * @param Ewe $mother
    * @return array
@@ -56,7 +54,7 @@ class DeclareBirthRepository extends BaseRepository {
 
     $queryBuilder
       ->select('mate')
-      ->from ('AppBundle:Mate', 'mate')
+      ->from('AppBundle:Mate', 'mate')
       ->where($queryBuilder->expr()->andX(
         $queryBuilder->expr()->andX(
           $queryBuilder->expr()->eq('mate.location', $location->getId()),
@@ -79,11 +77,12 @@ class DeclareBirthRepository extends BaseRepository {
     /** @var Mate $mating */
     foreach ($result as $mating) {
 
-      if(array_key_exists($mating->getStudRam()->getId(), $fatherIds)) {
+      if (array_key_exists($mating->getStudRam()->getId(), $fatherIds)) {
         continue;
       }
 
-      $fatherIds[$mating->getStudRam()->getId()] = $mating->getStudRam()->getId();
+      $fatherIds[$mating->getStudRam()->getId()] = $mating->getStudRam()
+        ->getId();
 
       /**
        * Computing candidate fathers based on registered matings for a given Ewe:
@@ -137,14 +136,14 @@ class DeclareBirthRepository extends BaseRepository {
 
       //Compare if final father suggestion date is before dateOfBirth lower- & upperbound
       $expectedBirthDateLowerbound = clone $mating->getStartDate();
-      $expectedBirthDateLowerbound->modify("+" .(string)$lowerboundPregnancyDays ." days");
+      $expectedBirthDateLowerbound->modify("+" . (string) $lowerboundPregnancyDays . " days");
 
       $expectedBirthDateUpperbound = clone $mating->getEndDate();
-      $expectedBirthDateUpperbound->modify("+" .(string)$upperboundPregnancyDays ." days");
-      
+      $expectedBirthDateUpperbound->modify("+" . (string) $upperboundPregnancyDays . " days");
+
       //Get the date difference between the computed dateOfBirth and the actual given dateOfBirth
       //Check if it is betweeen date interval of given upperBound and lowerBound
-      if(TimeUtil::isDateBetweenDates($dateOfbirth, $expectedBirthDateLowerbound, $expectedBirthDateUpperbound)) {
+      if (TimeUtil::isDateBetweenDates($dateOfbirth, $expectedBirthDateLowerbound, $expectedBirthDateUpperbound)) {
         $candidateFathers[] = $mating->getStudRam();
       }
     }
@@ -157,7 +156,7 @@ class DeclareBirthRepository extends BaseRepository {
   /**
    * Get a list of suggested candidate surrogates based on births done in within 6 months from now
    * and all other Ewes on current location.
-   * 
+   *
    * @param Location $location
    * @param Ewe $mother
    * @return array
@@ -168,21 +167,62 @@ class DeclareBirthRepository extends BaseRepository {
 
     $livestockEwesQueryBuilder
       ->select('animal')
-      ->from ('AppBundle:Animal', 'animal')
+      ->from('AppBundle:Animal', 'animal')
       ->where($livestockEwesQueryBuilder->expr()->andX(
         $livestockEwesQueryBuilder->expr()->andX(
           $livestockEwesQueryBuilder->expr()->eq('animal.isAlive', 'true'),
           $livestockEwesQueryBuilder->expr()->eq('animal.gender', "'FEMALE'"),
-          $livestockEwesQueryBuilder->expr()->neq('animal.id', $mother->getId()),
+          $livestockEwesQueryBuilder->expr()
+            ->neq('animal.id', $mother->getId()),
           $livestockEwesQueryBuilder->expr()->orX(
             $livestockEwesQueryBuilder->expr()->isNull('animal.transferState'),
-            $livestockEwesQueryBuilder->expr()->neq('animal.transferState', "'TRANSFERRING'")
+            $livestockEwesQueryBuilder->expr()
+              ->neq('animal.transferState', "'TRANSFERRING'")
           )),
-        $livestockEwesQueryBuilder->expr()->eq('animal.location', $location->getId())
+        $livestockEwesQueryBuilder->expr()
+          ->eq('animal.location', $location->getId())
       ));
-    
+
     $query = $livestockEwesQueryBuilder->getQuery();
-    
+
     return $query->getResult();
+  }
+
+
+  /**
+   * Return a list of litters belonging to a given ewe
+   * @param Location $location
+   * @param Ewe $mother
+   * @return array
+   */
+  public function getLittersForEwe(Location $location, Animal $mother) {
+
+    $em = $this->getEntityManager();
+    $queryBuilder = $em->createQueryBuilder();
+
+    $queryBuilder
+      ->select('mate')
+      ->from('AppBundle:Mate', 'mate')
+      ->where($queryBuilder->expr()->andX(
+        $queryBuilder->expr()->andX(
+          $queryBuilder->expr()->eq('mate.location', $location->getId()),
+          $queryBuilder->expr()->eq('mate.isOverwrittenVersion', 'false'),
+          $queryBuilder->expr()->eq('mate.studEwe', $mother->getId()),
+          $queryBuilder->expr()->orX(
+            $queryBuilder->expr()->neq('mate.requestState', "'OPEN'"),
+            $queryBuilder->expr()->neq('mate.requestState', "'FINISHED'"),
+            $queryBuilder->expr()->neq('mate.requestState', "'FINISHED_WITH_WARNING'")
+          ),
+          $queryBuilder->expr()->orX(
+            $queryBuilder->expr()->isNull('mate.isApprovedByThirdParty'),
+            $queryBuilder->expr()->eq('mate.isApprovedByThirdParty', 'true')
+          )
+        )
+      ));
+
+    $query = $queryBuilder->getQuery();
+    $result = $query->getResult();
+
+    return $result;
   }
 }
