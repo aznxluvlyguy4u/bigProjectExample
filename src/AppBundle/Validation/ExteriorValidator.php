@@ -251,7 +251,7 @@ class ExteriorValidator extends BaseValidator
 
             $sql = "SELECT x.id FROM exterior x
                       INNER JOIN measurement m ON x.id = m.id
-                    WHERE animal_id = ".$animalId." AND DATE(m.measurement_date) = DATE('".TimeUtil::getTimeStampForSql($measurementDate)."')";
+                    WHERE m.is_active = TRUE AND animal_id = ".$animalId." AND DATE(m.measurement_date) = DATE('".TimeUtil::getTimeStampForSql($measurementDate)."')";
             $count = $this->conn->query($sql)->rowCount();
 
             return $count > 0;

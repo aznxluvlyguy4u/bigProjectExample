@@ -94,7 +94,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
         /** @var ExteriorRepository $repository */
         $repository = $em->getRepository(Exterior::class);
         /** @var Exterior $exterior */
-        $exterior = $repository->findOneBy(['measurementDate' => $measurementDate, 'animal' => $animal]);
+        $exterior = $repository->findOneBy(['measurementDate' => $measurementDate, 'animal' => $animal, 'isActive' => true]);
         if($exterior != null) {
             $output = 'THERE ALREADY EXISTS AN EXTERIOR MEASUREMENT ON THIS DATE';
             $code = 428;
@@ -195,7 +195,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
         /** @var ExteriorRepository $repository */
         $repository = $em->getRepository(Exterior::class);
         /** @var Exterior $exterior */
-        $exterior = $repository->findOneBy(['measurementDate' => $currentMeasurementDate, 'animal' => $animal]);
+        $exterior = $repository->findOneBy(['measurementDate' => $currentMeasurementDate, 'animal' => $animal, 'isActive' => true]);
 
         if($exterior instanceof Exterior) {
             $exterior->setActionBy($loggedInUser);
