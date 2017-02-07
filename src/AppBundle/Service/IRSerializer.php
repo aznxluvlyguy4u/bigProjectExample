@@ -482,6 +482,10 @@ class IRSerializer implements IRSerializerInterface
 
             if(key_exists('tail_length', $child)) {
                 $tailLengthValue = $child['tail_length'];
+
+                if ($tailLengthValue == 0) {
+                    $tailLengthValue = null;
+                }
             }
 
             if(key_exists('birth_weight', $child)) {
@@ -494,6 +498,10 @@ class IRSerializer implements IRSerializerInterface
                           "message" => "Een lam met een geboortegewicht groter dan 9,9 kilogram, is niet geoorloofd.",
                         )
                       ), $statusCode);
+                }
+
+                if ($birthWeightValue == 0) {
+                    $birthWeightValue = null;
                 }
             }
 
@@ -710,27 +718,31 @@ class IRSerializer implements IRSerializerInterface
                 }
 
                 // Weight
-                $weight = new Weight();
-                $weight->setMeasurementDate($dateOfBirth);
-                $weight->setAnimal($child);
-                $weight->setIsBirthWeight(true);
-                $weight->setWeight($birthWeightValue);
-                $child->addWeightMeasurement($weight);
+                if($birthWeightValue != null) {
+                    $weight = new Weight();
+                    $weight->setMeasurementDate($dateOfBirth);
+                    $weight->setAnimal($child);
+                    $weight->setIsBirthWeight(true);
+                    $weight->setWeight($birthWeightValue);
+                    $child->addWeightMeasurement($weight);
+                    $this->entityManager->persist($weight);
+                }
 
                 // Tail Length
-                $tailLength = new TailLength();
-                $tailLength->setMeasurementDate($dateOfBirth);
-                $tailLength->setAnimal($child);
-                $tailLength->setLength($tailLengthValue);
-                $child->addTailLengthMeasurement($tailLength);
+                if($tailLengthValue != null) {
+                    $tailLength = new TailLength();
+                    $tailLength->setMeasurementDate($dateOfBirth);
+                    $tailLength->setAnimal($child);
+                    $tailLength->setLength($tailLengthValue);
+                    $child->addTailLengthMeasurement($tailLength);
+                    $this->entityManager->persist($tailLength);
+                }
 
                 $location->getAnimals()->add($child);
 
                 $this->entityManager->persist($child);
                 $this->entityManager->persist($location);
                 $this->entityManager->persist($litter);
-                $this->entityManager->persist($weight);
-                $this->entityManager->persist($tailLength);
                 
                 if($father){
                     $this->entityManager->persist($father);
