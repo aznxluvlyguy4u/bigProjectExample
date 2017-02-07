@@ -31,6 +31,7 @@ use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\DeclareBirthResponseOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Validator;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Tools\Export\ExportException;
@@ -64,7 +65,12 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         $repository = $this->getDoctrine()->getRepository(Litter::class);
         $litter = $repository->findOneBy(['id' => $litterId, 'ubn' => $location->getUbn()]);
-        $result = DeclareBirthResponseOutput::createBirth($litter, $litter->getDeclareBirths());
+
+        if($litter instanceof Litter) {
+            $result = DeclareBirthResponseOutput::createBirth($litter, $litter->getDeclareBirths());
+        } else {
+            $result = Validator::createJsonResponse('Geen worp gevonden voor gegeven worpId en ubn', 428);
+        }
         
         if($result instanceof JsonResponse) {
             return $result;
