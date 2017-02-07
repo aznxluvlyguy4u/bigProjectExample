@@ -18,6 +18,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\AnimalDetailsValidator;
 use AppBundle\Validation\ExteriorValidator;
@@ -128,7 +129,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             //Update exterior values in animalCache AFTER persisting exterior
             AnimalCacher::cacheExteriorByAnimal($em, $animal);
 
-            $output = 'OK';
+            $output = $exterior;
             $code = 200;
         }
 
@@ -224,7 +225,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             //Update exterior values in animalCache AFTER persisting exterior
             AnimalCacher::cacheExteriorByAnimal($em, $animal);
 
-            $output = 'OK';
+            $output = $exterior;
             $code = 200;
         } else {
             $output = 'Exterior for given date and uln does not exists!';
@@ -280,17 +281,19 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
         $animal = $animalDetailsValidator->getAnimal();
 
         $validationResults = ExteriorValidator::validateDeactivation($em, $animal, $measurementDateString);
-        if($validationResults->isValid()) {
-            /** @var Exterior $exterior */
-            $exterior = $validationResults->getValidResultObject();
-            $exterior->setIsActive(false);
-            $exterior->setDeleteDate(new \DateTime());
-            $exterior->setDeletedBy($loggedInUser);
-            $em->persist($exterior);
-            $em->flush();
+        if(!$validationResults->isValid()) {
+            return $validationResults->getJsonResponse();
         }
 
-        return $validationResults->getJsonResponse();
+        /** @var Exterior $exterior */
+        $exterior = $validationResults->getValidResultObject();
+        $exterior->setIsActive(false);
+        $exterior->setDeleteDate(new \DateTime());
+        $exterior->setDeletedBy($loggedInUser);
+        $em->persist($exterior);
+        $em->flush();
+
+        return Validator::createJsonResponse($exterior, 200);
     }
 
 
