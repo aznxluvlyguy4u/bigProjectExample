@@ -873,24 +873,28 @@ class APIController extends Controller implements APIControllerInterface
    */
   public function getSelectedLocation(Request $request)
   {
-
     $client = $this->getAuthenticatedUser($request);
-    $headerValidation = new HeaderValidation($this->getDoctrine()->getManager(), $request, $client);
+    $headerValidation = null;
 
-    if($headerValidation->isInputValid()) {
-      return $headerValidation->getLocation();
+    if($client) {
+      $headerValidation = new HeaderValidation($this->getDoctrine()->getManager(), $request, $client);
+    }
 
-    } else {
-
-      $locations = Finder::findLocationsOfClient($client);
-      if($locations->count() > 0) {
-        //pick the first available Location as default
-        return $locations->get(0);
-
+    if($headerValidation) {
+      if($headerValidation->isInputValid()) {
+        return $headerValidation->getLocation();
       } else {
-        return null;
+        $locations = Finder::findLocationsOfClient($client);
+        if($locations->count() > 0) {
+          //pick the first available Location as default
+          return $locations->get(0);
+        } else {
+          return null;
+        }
       }
     }
+
+    return null;
   }
 
   /**
