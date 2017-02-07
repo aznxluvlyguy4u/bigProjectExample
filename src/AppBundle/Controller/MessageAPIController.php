@@ -26,6 +26,10 @@ class MessageAPIController extends APIController
         $location = $this->getSelectedLocation($request);
         $em = $this->getDoctrine()->getManager();
 
+        if (!$client || !$location) {
+            return new JsonResponse(array(Constant::RESULT_NAMESPACE => []), 200);
+        }
+        
         $sql = "SELECT
                   receiver.last_name AS receiver_last_name,
                   receiver.first_name AS receiver_last_name,

@@ -13,6 +13,7 @@ use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareBirthRepository;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
@@ -24,6 +25,7 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Litter;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Mate;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\RetrieveTags;
 use AppBundle\Entity\RetrieveUbnDetails;
@@ -32,6 +34,7 @@ use AppBundle\Entity\RevokeDeclaration;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveAnimalDetails;
 use AppBundle\Entity\Stillborn;
+use AppBundle\Entity\Tag;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\ActionType;
@@ -47,9 +50,12 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
 use JMS\Serializer\SerializationContext;
+use Symfony\Component\DependencyInjection\Tests\A;
 
 /**
  * Class IRSerializer.
@@ -292,6 +298,19 @@ class IRSerializer implements IRSerializerInterface
         
         if(key_exists('date_of_birth', $declareBirthContentArray->toArray())) {
             $dateOfBirth = new \DateTime($declareBirthContentArray["date_of_birth"]);
+
+            //Disallow birth registrations in the future
+            $timeIntervalInDaysFromNow = TimeUtil::getDaysBetween(new \DateTime(), $dateOfBirth);
+
+            if($timeIntervalInDaysFromNow > 0) {
+                return new JsonResponse(
+                  array(
+                    Constant::RESULT_NAMESPACE => array (
+                      'code' => $statusCode,
+                      "message" => "Een geboorte mag niet in de toekomst liggen.",
+                    )
+                  ), $statusCode);
+            }
         }
 
         if(key_exists('is_aborted', $declareBirthContentArray->toArray())) {
@@ -311,6 +330,7 @@ class IRSerializer implements IRSerializerInterface
         }
 
         if(key_exists('father', $declareBirthContentArray->toArray())) {
+            /** @var  $father */
             $father = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
               ->getAnimalByUlnOrPedigree($declareBirthContentArray["father"]);
 
@@ -330,13 +350,14 @@ class IRSerializer implements IRSerializerInterface
                   array(
                     Constant::RESULT_NAMESPACE => array (
                       'code' => $statusCode,
-                      "message" => "Opgegeven vader: " . $father['uln_country_code'] . $father['uln_number'] ." is gevonden, echter is het geslacht van het gevonden dier, niet van het type: RAM.",
+                      "message" => "Opgegeven vader met ULN: " . $father->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: RAM.",
                     )
                   ), $statusCode);
             }
         }
 
         if(key_exists('mother', $declareBirthContentArray->toArray())) {
+            /** @var  $mother */
             $mother = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
               ->getAnimalByUlnOrPedigree($declareBirthContentArray["mother"]);
 
@@ -357,14 +378,57 @@ class IRSerializer implements IRSerializerInterface
                   array(
                     Constant::RESULT_NAMESPACE => array (
                       'code' => $statusCode,
-                      "message" => "Opgegeven moeder: " . $mother['uln_country_code'] . $mother['uln_number'] ." is gevonden, echter is het geslacht van het gevonden dier, niet van het type: OOI.",
+                      "message" => "Opgegeven moeder met ULN: " . $mother->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: OOI.",
                     )
                   ), $statusCode);
+            }
+
+            //If the mother already has given birth within the last 5,5 months (167 days, rounded),
+            //disallow birth registration
+            $maxDaysLitterInterval = 167;
+
+            /** @var DeclareBirthRepository $declareBirthRepository */
+            $declareBirthRepository = $this->entityManager->getRepository(DeclareBirth::getClassName());
+
+            $children = $declareBirthRepository->getChildrenOfEwe($mother);
+
+
+            /** @var Animal $child */
+            foreach ($children as $child) {
+                $dateInterval = TimeUtil::getDaysBetween($child->getDateOfBirth(), $dateOfBirth);
+
+                if($dateInterval <= $maxDaysLitterInterval) {
+                    return new JsonResponse(
+                      array(
+                        Constant::RESULT_NAMESPACE => array (
+                          'code' => $statusCode,
+                          "message" => "Opgegeven moeder met ULN: "
+                            . $mother->getUlnNumber()
+                            ." heeft in de afgelopen 5,5 maanden reeds geworpen, zodoende is het niet geoorloofd om een geboortemelding te doen voor de opgegeven moeder.",
+                        )
+                      ), $statusCode);
+                }
             }
         }
 
         if(key_exists('children', $declareBirthContentArray->toArray())) {
             $childrenContent = $declareBirthContentArray["children"];
+
+            //Disallow birth registration for litterSize bigger then 7 if a mother is given and found.
+            //If no mother is given, allow arbitrary litter size.
+            $maxLitterSize = 7;
+
+            if($mother) {
+                if($litterSize > $maxLitterSize) {
+                    return new JsonResponse(
+                      array(
+                        Constant::RESULT_NAMESPACE => array (
+                          'code' => $statusCode,
+                          "message" => "De opgegeven worpgrootte overschrijdt het maximum van " . $maxLitterSize ." lammeren",
+                        )
+                      ), $statusCode);
+                }
+            }
         }
 
         //Create Litter
@@ -418,10 +482,27 @@ class IRSerializer implements IRSerializerInterface
 
             if(key_exists('tail_length', $child)) {
                 $tailLengthValue = $child['tail_length'];
+
+                if ($tailLengthValue == 0) {
+                    $tailLengthValue = null;
+                }
             }
 
             if(key_exists('birth_weight', $child)) {
                 $birthWeightValue = $child['birth_weight'];
+                if($birthWeightValue > 9.9) {
+                    return new JsonResponse(
+                      array(
+                        Constant::RESULT_NAMESPACE => array (
+                          'code' => $statusCode,
+                          "message" => "Een lam met een geboortegewicht groter dan 9,9 kilogram, is niet geoorloofd.",
+                        )
+                      ), $statusCode);
+                }
+
+                if ($birthWeightValue == 0) {
+                    $birthWeightValue = null;
+                }
             }
 
             if(key_exists('is_alive', $child)) {
@@ -475,15 +556,18 @@ class IRSerializer implements IRSerializerInterface
 
                 //Find assigned tag
                 if(key_exists('uln_country_code', $child) && key_exists('uln_number', $child)) {
+                    /** @var Tag $tagToReserve */
                     $tagToReserve = $this->entityManager->getRepository(Constant::TAG_REPOSITORY)
                       ->findByUlnNumberAndCountryCode($child['uln_country_code'],$child['uln_number']);
 
                     if(!$tagToReserve) {
+                        $uln = $child['uln_country_code'] .$child['uln_number'];
+
                         return new JsonResponse(
                           array(
                             Constant::RESULT_NAMESPACE => array (
                               'code' => $statusCode,
-                              "message" => "Opgegeven vrije oormerk voor kind: " . $child['uln_country_code'] .$child['uln_number'] ." is niet gevonden.",
+                              "message" => "Opgegeven vrije oormerk: " .$uln ." voor het lam, is niet gevonden.",
                             )
                           ), $statusCode);
                     }
@@ -494,13 +578,25 @@ class IRSerializer implements IRSerializerInterface
                           ->getAnimalByUlnOrPedigree(array ('uln_country_code' => $tagToReserve->getUlnCountryCode(), 
                                                             'uln_number'=>$tagToReserve->getUlnNumber()));
                         if($animal) {
+                            $uln = $child['uln_country_code'] .$child['uln_number'];
+
                             return new JsonResponse(
                               array(
                                 Constant::RESULT_NAMESPACE => array (
                                   'code' => $statusCode,
-                                  "message" => "Opgegeven vrije oormerk voor kind is reeds toegewezen aan een bestaande dier met ULN" . $child['uln_country_code'] .$child['uln_number'],
+                                  "message" => "Opgegeven vrije oormerk: " .$uln ." voor het lam, is reeds toegewezen aan een bestaand dier met ULN: " . $uln,
                                 )
                               ), $statusCode);
+                        }else if ($tagToReserve->getLocation()){
+                            if($tagToReserve->getLocation()->getId() != $location->getId()) {
+                                return new JsonResponse(
+                                  array(
+                                    Constant::RESULT_NAMESPACE => array (
+                                      'code' => $statusCode,
+                                      "message" => "Opgegeven oormerk: " .$tagToReserve->getUlnCountryCode()  .$tagToReserve->getUlnNumber() ." is niet geregistreerd voor dit UBN: " .$location->getUbn(),
+                                    )
+                                  ), $statusCode);
+                            }
                         }
                         $declareBirthRequest->setUlnCountryCode($tagToReserve->getUlnCountryCode());
                         $declareBirthRequest->setUlnNumber($tagToReserve->getUlnNumber());
@@ -510,6 +606,7 @@ class IRSerializer implements IRSerializerInterface
                 }
 
                 if(key_exists('surrogate', $declareBirthContentArray->toArray())) {
+                    /** @var Animal $surrogate */
                     $surrogate = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
                       ->getAnimalByUlnOrPedigree($declareBirthContentArray["surrogate"]);
 
@@ -528,7 +625,7 @@ class IRSerializer implements IRSerializerInterface
                           array(
                             Constant::RESULT_NAMESPACE => array (
                               'code' => $statusCode,
-                              "message" => "Opgegeven surrogaat: " .$surrogate['uln_country_code'] .$surrogate['uln_number'] ." is gevonden, echter is het geslacht van het gevonden dier, niet van het type: OOI.",
+                              "message" => "Opgegeven pleegmoeder met ULN: " .$surrogate->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: OOI.",
                             )
                           ), $statusCode);
                     }
@@ -561,6 +658,15 @@ class IRSerializer implements IRSerializerInterface
                 $child->setLambar($hasLambar);
                 $child->setLitter($litter);
 
+                //TODO fixme
+                //Add adhoc logic - if mother is of type Clun Forest, set child to same breed
+                if($mother) {
+                    if ($mother->getBreedCode() == 'CF100') {
+                        $child->setBreed('PURE_BRED');
+                        $child->setBreedCode('CF100');
+                    }
+                }
+
                 //Create new residence
                 $animalResidence = new AnimalResidence();
                 $animalResidence->setAnimal($child);
@@ -591,6 +697,7 @@ class IRSerializer implements IRSerializerInterface
                     $declareBirthRequest->setUlnCountryCodeFather($father->getUlnCountryCode());
                     //$father->setLitter($litter);
                     $child->setParentFather($father);
+//                    $father->getChildren()->add($child);
                 }
 
                 if($mother) {
@@ -598,6 +705,7 @@ class IRSerializer implements IRSerializerInterface
                     $declareBirthRequest->setUlnCountryCodeMother($mother->getUlnCountryCode());
                     //$mother->setLitter($litter);
                     $child->setParentMother($mother);
+//                    $mother->getChildren()->add($child);
                 }
 
                 if($surrogate) {
@@ -605,30 +713,36 @@ class IRSerializer implements IRSerializerInterface
                     $declareBirthRequest->setUlnCountryCodeSurrogate(($surrogate->getUlnCountryCode()));
                     //$surrogate->setLitter($litter);
                     $child->setSurrogate($surrogate);
+
+//                    $surrogate->getChildren()->add($child);
                 }
 
                 // Weight
-                $weight = new Weight();
-                $weight->setMeasurementDate($dateOfBirth);
-                $weight->setAnimal($child);
-                $weight->setIsBirthWeight(true);
-                $weight->setWeight($birthWeightValue);
-                $child->addWeightMeasurement($weight);
+                if($birthWeightValue != null) {
+                    $weight = new Weight();
+                    $weight->setMeasurementDate($dateOfBirth);
+                    $weight->setAnimal($child);
+                    $weight->setIsBirthWeight(true);
+                    $weight->setWeight($birthWeightValue);
+                    $child->addWeightMeasurement($weight);
+                    $this->entityManager->persist($weight);
+                }
 
                 // Tail Length
-                $tailLength = new TailLength();
-                $tailLength->setMeasurementDate($dateOfBirth);
-                $tailLength->setAnimal($child);
-                $tailLength->setLength($tailLengthValue);
-                $child->addTailLengthMeasurement($tailLength);
+                if($tailLengthValue != null) {
+                    $tailLength = new TailLength();
+                    $tailLength->setMeasurementDate($dateOfBirth);
+                    $tailLength->setAnimal($child);
+                    $tailLength->setLength($tailLengthValue);
+                    $child->addTailLengthMeasurement($tailLength);
+                    $this->entityManager->persist($tailLength);
+                }
 
                 $location->getAnimals()->add($child);
 
                 $this->entityManager->persist($child);
                 $this->entityManager->persist($location);
                 $this->entityManager->persist($litter);
-                $this->entityManager->persist($weight);
-                $this->entityManager->persist($tailLength);
                 
                 if($father){
                     $this->entityManager->persist($father);

@@ -137,7 +137,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   }
 
   /**
-   * Retrieve all alive on-location animals belonging to this Client: De Stallijst
+   * Retrieve all alive, on-location, animals belonging to the given UBN.
    *
    * @ApiDoc(
    *   requirements={
@@ -149,7 +149,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = " Retrieve all alive on-location animals belonging to this Client",
+   *   description = " Retrieve all alive, on-location, animals belonging to the given UBN",
    *   output = "AppBundle\Entity\Animal"
    * )
    * @param Request $request the request object
@@ -178,7 +178,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
         JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
         JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
         JsonInputConstant::UBN => $location->getUbn(),
-        JsonInputConstant::IS_HISTORIC_ANIMAL => $animal->getLocation()->getUbn() != $location->getUbn() || !$animal->getIsAlive(),
+        JsonInputConstant::IS_HISTORIC_ANIMAL => false,
         JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
       ];
     }
@@ -187,7 +187,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   }
 
   /**
-   * Retrieve all historic animals that ever resided on this location, dead or alive
+   * Retrieve all historic animals,dead or alive, that ever resided on the given UBN.
    *
    * @ApiDoc(
    *   requirements={
@@ -199,7 +199,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve all historic animals that ever resided on this location, dead or alive",
+   *   description = "Retrieve all historic animals,dead or alive, that ever resided on the given UBN",
    *   output = "AppBundle\Entity\Animal"
    * )
    * @param Request $request the request object
@@ -211,9 +211,28 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $location = $this->getSelectedLocation($request);
     /** @var AnimalRepository $repository */
     $repository = $this->getDoctrine()->getRepository(Animal::class);
-    $historicAnimalsInArray = $repository->getHistoricLiveStock($location);
+    $historicLivestock = $repository->getHistoricLiveStock($location);
+    $historicLivestockAnimals = [];
 
-    return new JsonResponse([Constant::RESULT_NAMESPACE => $historicAnimalsInArray], 200);
+    /** @var Animal $animal */
+    foreach ($historicLivestock as $animal) {
+      $historicLivestockAnimals[] = [
+        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+        JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+        JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+        JsonInputConstant::GENDER =>  $animal->getGender(),
+        JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+        JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+        JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+        JsonInputConstant::UBN => $location->getUbn(),
+        JsonInputConstant::IS_HISTORIC_ANIMAL => true,
+        JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+      ];
+    }
+
+    return new JsonResponse([Constant::RESULT_NAMESPACE => $historicLivestockAnimals], 200);
   }
 
 
@@ -407,6 +426,11 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       $em->flush();
     }
 
+    $location = $this->getSelectedLocation($request);
+
+    //Clear cache for this location, to reflect changes on the livestock
+    $this->clearLivestockCacheForLocation($location);
+    
     $output = AnimalDetailsOutput::create($em, $animal, $animal->getLocation());
 
     return new JsonResponse($output, 200);
@@ -543,6 +567,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     //FIXME Temporarily workaround, for returning the reflected gender change, it is persisted, though the updated fields is not returned.
     $result->setGender($targetGender);
 
+    //Clear cache for this location, to reflect changes on the livestock
+    $this->clearLivestockCacheForLocation($this->getSelectedLocation($request), $animal);
+    
     $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getDoctrine()->getManager());
 
     return new JsonResponse($minimizedOutput, 200);

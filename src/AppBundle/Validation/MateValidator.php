@@ -302,6 +302,8 @@ class MateValidator extends DeclareNsfoBaseValidator
 
         $startDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::START_DATE, $content);
         $endDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::END_DATE, $content);
+        $startDate->setTime(0,0,0);
+        $endDate->setTime(0,0,0);
         $ki = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::KI, $content);
         $pmsg = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::PMSG, $content);
 

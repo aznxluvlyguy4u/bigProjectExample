@@ -290,7 +290,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
 //      $entityManager = $this->getDoctrine()->getManager()->getRepository(Constant::DECLARE_EXPORT_REPOSITORY);
 //      $messageObject = $entityManager->updateDeclareExportMessage($declareExportUpdate, $location, $Id);
-dump($declareExportUpdate);die;
+
       if($messageObject == null) {
         return new JsonResponse(array("message"=>"No DeclareExport found with request_id: " . $Id), 204);
       }

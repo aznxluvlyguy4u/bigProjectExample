@@ -1,3 +1,4 @@
+
 imports:
     - { resource: parameters.yml }
     - { resource: security.yml }
@@ -58,7 +59,8 @@ doctrine:
         metadata_cache_driver: redis
         # enable query caching
         query_cache_driver: redis
-
+        # enable resultset caching
+        result_cache_driver: redis
 services:
     twig.extension.stringloader:
         class: Twig_Extension_StringLoader
@@ -79,26 +81,31 @@ swiftmailer:
 snc_redis:
     # configure predis as client
     clients:
-        default:
-            type: predis
-            alias: default
-            dsn: "redis://%redis_host%"
-        doctrine:
-            type: predis
-            alias: doctrine
-            dsn: "redis://%redis_host%"
+        sncredis:
+             type: predis
+             alias: sncredis
+             dsn:
+                  - "%redis_host%"
+             options:
+                  replication: false
+                  connection_timeout: 10
+                  read_write_timeout: 30
+    # configure predis session
+    session:
+        client: sncredis
+        prefix: "nsfo:api"
+        ttl: 31536000
     # configure doctrine caching
     doctrine:
         metadata_cache:
-            client: doctrine
-            entity_manager: default
-            document_manager: default
+            client: sncredis
+            entity_manager: [default, cached]
         result_cache:
-            client: doctrine
-            entity_manager: [default]
+            client: sncredis
+            entity_manager: [default, cached]
         query_cache:
-            client: doctrine
-            entity_manager: default
+            client: sncredis
+            entity_manager: [default, cached]
 
 # Nelmio CORS bundle
 nelmio_cors:
