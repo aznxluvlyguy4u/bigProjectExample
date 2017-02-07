@@ -47,7 +47,7 @@ class AnimalDetailsValidator extends BaseValidator
                 if($isAdmin) {
                     $this->isInputValid = true;
                 } else {
-                    $this->isInputValid = Validator::validateIfUlnStringBelongsToPublicHistoricAnimal($em, $this->animal, $location);
+                    $this->isInputValid = Validator::isAnimalPublicForLocation($this->em, $this->animal, $location);
 
                     if($this->isInputValid == false) {
                         $this->errors[] = "Animal does not belong to this ubn, or is not a Historic Animal that was made public";

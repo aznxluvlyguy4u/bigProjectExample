@@ -7,8 +7,8 @@ parameters:
     database_name:     symfony
     database_user:     root
     database_password: ~
-    # You should uncomment this if you want use pdo_sqlite
-    # database_path: "%kernel.root_dir%/data.db3"
+
+    redis_host:        redis://localhost
 
     mailer_transport:  smtp
     mailer_host:       127.0.0.1
@@ -33,3 +33,4 @@ parameters:
     aws_s3_region: ~
     aws_s3_version: ~
     aws_s3_bucket: ~
+

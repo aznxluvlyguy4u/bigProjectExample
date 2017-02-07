@@ -101,7 +101,40 @@ class TimeUtil
         return $dateInterval->days;
     }
 
+    /**
+     * Get the date count between two dates, positive range means $dt2 is still ahead, 
+     * negative ranges means $dt2 date has surpassed $dt1.
+     * 
+     * @param \DateTime $dt1
+     * @param \DateTime $dt2
+     * @return bool|mixed
+     */
+    public static function getDaysBetween(\DateTime $dt1, \DateTime $dt2){
+        if(!$dt1 || !$dt2){
+            return false;
+        }
+        $dt1->setTime(0,0,0);
+        $dt2->setTime(0,0,0);
 
+        // DateInterval
+        $dti = $dt1->diff($dt2);
+
+        // nb: ->days always positive
+        return $dti->days * ( $dti->invert ? -1 : 1);   
+    }
+
+    /**
+     * Check if a given date is in between a given date range, returns true if it is 
+     * in the date range.
+     * @param  $date
+     * @param  $startDate
+     * @param  $endDate
+     * @return bool
+     */
+    public static function isDateBetweenDates( $date, $startDate, $endDate) {
+        return $date >= $startDate && $date <= $endDate;
+    }
+    
     /**
      * @param \DateTime $dateOfBirth
      * @param \DateTime $latestLitterDate

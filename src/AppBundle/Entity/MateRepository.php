@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Output\MateOutput;
 use AppBundle\Util\Validator;
@@ -16,6 +17,43 @@ class MateRepository extends BaseRepository {
 
     /**
      * @param Location $location
+     * @param Ewe $mother
+     * @return Collection
+     */
+    public function getMatingFathersOfMother($location, $mother) {
+        $em = $this->getEntityManager();
+        $queryBuilder = $em->createQueryBuilder();
+
+        $queryBuilder
+          ->select('mate')
+          ->from ('AppBundle:Mate', 'mate')
+          ->where($queryBuilder->expr()->andX(
+            $queryBuilder->expr()->andX(
+              $queryBuilder->expr()->eq('mate.location', $location->getId()),
+              $queryBuilder->expr()->eq('mate.isOverwrittenVersion', 'false'),
+              $queryBuilder->expr()->eq('mate.studEwe', $mother->getId()),
+              $queryBuilder->expr()->orX(
+                $queryBuilder->expr()->isNull('mate.isApprovedByThirdParty'),
+                $queryBuilder->expr()->eq('mate.isApprovedByThirdParty', 'true')
+              )
+            )
+          ));
+
+        $query = $queryBuilder->getQuery();
+        $result = $query->getResult();
+        $fathers = [];
+
+        /** @var Mate $mating */
+        foreach ($result as $mating) {
+            $fathers[] = $mating->getStudRam();
+        }
+        
+        return $fathers;
+    }
+    
+    /**
+     * @param Location $location
+     * @param Ewe $mother
      * @return Collection
      */
     public function getMatingsHistory($location)

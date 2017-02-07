@@ -28,7 +28,7 @@ abstract class Person implements UserInterface
   /**
    * @ORM\Column(type="integer")
    * @ORM\Id
-   * @ORM\GeneratedValue(strategy="AUTO")
+   * @ORM\GeneratedValue(strategy="IDENTITY")
    * @Expose
    */
   protected $id;
