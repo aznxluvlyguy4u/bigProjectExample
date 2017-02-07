@@ -603,10 +603,10 @@ class IRSerializer implements IRSerializerInterface
                     }
                 }
 
-                if(key_exists('surrogate', $declareBirthContentArray->toArray())) {
+                if(array_key_exists('surrogate_mother', $child)) {
                     /** @var Animal $surrogate */
                     $surrogate = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
-                      ->getAnimalByUlnOrPedigree($declareBirthContentArray["surrogate"]);
+                      ->getAnimalByUlnOrPedigree($child['surrogate_mother']);
 
                     if(!$surrogate) {
                         return new JsonResponse(
