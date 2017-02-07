@@ -47,6 +47,9 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
  */
 class BirthAPIController extends APIController implements BirthAPIControllerInterface
 {
+    const SHOW_OTHER_CANDIDATE_MOTHERS = false;
+    const SHOW_OTHER_SURROGATE_MOTHERS = false;
+
     /**
      * @param Request $request the request object
      * @param String $litterId
@@ -592,20 +595,22 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
             //Check if surrogate mother candidate has given birth to childeren within the last 6 months
             if($animal->getChildren()->count() == 0) {
-                $otherCandidatesResult[] = [
-                  JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-                  JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-                  JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-                  JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-                  JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-                  JsonInputConstant::GENDER =>  $animal->getGender(),
-                  JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-                  JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-                  JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-                  JsonInputConstant::UBN => $location->getUbn(),
-                  JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-                  JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-                ];
+                if(self::SHOW_OTHER_SURROGATE_MOTHERS) {
+                    $otherCandidatesResult[] = [
+                        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                        JsonInputConstant::PEDIGREE_NUMBER => $animal->getPedigreeNumber(),
+                        JsonInputConstant::WORK_NUMBER => $animal->getAnimalOrderNumber(),
+                        JsonInputConstant::GENDER => $animal->getGender(),
+                        JsonInputConstant::DATE_OF_BIRTH => $animal->getDateOfBirth(),
+                        JsonInputConstant::DATE_OF_DEATH => $animal->getDateOfDeath(),
+                        JsonInputConstant::IS_ALIVE => $animal->getIsAlive(),
+                        JsonInputConstant::UBN => $location->getUbn(),
+                        JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                        JsonInputConstant::IS_PUBLIC => $animal->isAnimalPublic(),
+                    ];
+                }
                 continue;
             }
 
@@ -642,20 +647,22 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                 continue;
             }
 
-            $otherCandidatesResult[] = [
-              JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-              JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-              JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-              JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-              JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-              JsonInputConstant::GENDER =>  $animal->getGender(),
-              JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-              JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-              JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-              JsonInputConstant::UBN => $location->getUbn(),
-              JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-              JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-            ];
+            if(self::SHOW_OTHER_SURROGATE_MOTHERS) {
+                $otherCandidatesResult[] = [
+                    JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                    JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                    JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                    JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+                    JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+                    JsonInputConstant::GENDER =>  $animal->getGender(),
+                    JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+                    JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+                    JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+                    JsonInputConstant::UBN => $location->getUbn(),
+                    JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                    JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+                ];
+            }
         }
 
 
@@ -681,7 +688,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         if(key_exists('date_of_birth', $content->toArray())) {
             $dateOfBirth = new \DateTime($content["date_of_birth"]);
         }
-        
+
         /** @var Location $location */
         $location = $this->getSelectedLocation($request);
 
@@ -701,21 +708,23 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         /** @var Ewe $animal */
         foreach ($motherCandidates as $animal) {
             if($animal->getMatings()->count() == 0 ) {
-                $otherCandidatesResult[] = [
-                  JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-                  JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-                  JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-                  JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-                  JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-                  JsonInputConstant::GENDER =>  $animal->getGender(),
-                  JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-                  JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-                  JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-                  JsonInputConstant::UBN => $location->getUbn(),
-                  JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-                  JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-                  JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
-                ];
+                if(self::SHOW_OTHER_CANDIDATE_MOTHERS) {
+                    $otherCandidatesResult[] = [
+                        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                        JsonInputConstant::PEDIGREE_NUMBER => $animal->getPedigreeNumber(),
+                        JsonInputConstant::WORK_NUMBER => $animal->getAnimalOrderNumber(),
+                        JsonInputConstant::GENDER => $animal->getGender(),
+                        JsonInputConstant::DATE_OF_BIRTH => $animal->getDateOfBirth(),
+                        JsonInputConstant::DATE_OF_DEATH => $animal->getDateOfDeath(),
+                        JsonInputConstant::IS_ALIVE => $animal->getIsAlive(),
+                        JsonInputConstant::UBN => $location->getUbn(),
+                        JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                        JsonInputConstant::IS_PUBLIC => $animal->isAnimalPublic(),
+                        JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
+                    ];
+                }
                 continue;
             }
 
@@ -743,21 +752,23 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
             //animal has given birth within the last 167 days, thus it is not a true candidate
             if(!$checkAnimalForMatings) {
-                $otherCandidatesResult[] = [
-                  JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-                  JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-                  JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-                  JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-                  JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-                  JsonInputConstant::GENDER =>  $animal->getGender(),
-                  JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-                  JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-                  JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-                  JsonInputConstant::UBN => $location->getUbn(),
-                  JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-                  JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-                  JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
-                ];
+                if(self::SHOW_OTHER_CANDIDATE_MOTHERS) {
+                    $otherCandidatesResult[] = [
+                        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                        JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+                        JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+                        JsonInputConstant::GENDER =>  $animal->getGender(),
+                        JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+                        JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+                        JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+                        JsonInputConstant::UBN => $location->getUbn(),
+                        JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                        JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+                        JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
+                    ];
+                }
                 continue;
             }
 
@@ -798,21 +809,23 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                 continue;
             }
 
-            $otherCandidatesResult[] = [
-              JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-              JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-              JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-              JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-              JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-              JsonInputConstant::GENDER =>  $animal->getGender(),
-              JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-              JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-              JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-              JsonInputConstant::UBN => $location->getUbn(),
-              JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-              JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-              JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
-            ];
+            if(self::SHOW_OTHER_CANDIDATE_MOTHERS) {
+                $otherCandidatesResult[] = [
+                    JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                    JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                    JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                    JsonInputConstant::PEDIGREE_NUMBER => $animal->getPedigreeNumber(),
+                    JsonInputConstant::WORK_NUMBER => $animal->getAnimalOrderNumber(),
+                    JsonInputConstant::GENDER => $animal->getGender(),
+                    JsonInputConstant::DATE_OF_BIRTH => $animal->getDateOfBirth(),
+                    JsonInputConstant::DATE_OF_DEATH => $animal->getDateOfDeath(),
+                    JsonInputConstant::IS_ALIVE => $animal->getIsAlive(),
+                    JsonInputConstant::UBN => $location->getUbn(),
+                    JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                    JsonInputConstant::IS_PUBLIC => $animal->isAnimalPublic(),
+                    JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
+                ];
+            }
 
         }
 
