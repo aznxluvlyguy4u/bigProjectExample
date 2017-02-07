@@ -821,4 +821,17 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
+
+    /**
+     * TODO delete me from both Front-end and API
+     * Temporarily endpoint to let catch errors.
+     *
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("-errors")
+     * @Method("GET")
+     */
+    public function getBirthErrors(Request $request) {
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => []), 200);
+    }
 }
