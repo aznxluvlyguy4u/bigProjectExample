@@ -463,10 +463,14 @@ class IRSerializer implements IRSerializerInterface
             $gender = null;
             $birthProgress = null;
             $hasLambar = false;
-            $tailLengthValue = null;
-            $birthWeightValue = null;
             $isAlive = null;
             $declareBirthRequest = null;
+
+            //tailLength & birthWeight are not nullable in DeclareWeight
+            $tailLengthEmptyValue = 0;
+            $birthWeightEmptyValue = 0;
+            $tailLengthValue = $tailLengthEmptyValue;
+            $birthWeightValue = $birthWeightEmptyValue;
             
             if(key_exists('gender', $child)) {
                 $gender = $child['gender'];
@@ -483,9 +487,6 @@ class IRSerializer implements IRSerializerInterface
             if(key_exists('tail_length', $child)) {
                 $tailLengthValue = $child['tail_length'];
 
-                if ($tailLengthValue == 0) {
-                    $tailLengthValue = null;
-                }
             }
 
             if(key_exists('birth_weight', $child)) {
@@ -500,9 +501,6 @@ class IRSerializer implements IRSerializerInterface
                       ), $statusCode);
                 }
 
-                if ($birthWeightValue == 0) {
-                    $birthWeightValue = null;
-                }
             }
 
             if(key_exists('is_alive', $child)) {
@@ -605,10 +603,10 @@ class IRSerializer implements IRSerializerInterface
                     }
                 }
 
-                if(key_exists('surrogate', $declareBirthContentArray->toArray())) {
+                if(array_key_exists('surrogate_mother', $child)) {
                     /** @var Animal $surrogate */
                     $surrogate = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
-                      ->getAnimalByUlnOrPedigree($declareBirthContentArray["surrogate"]);
+                      ->getAnimalByUlnOrPedigree($child['surrogate_mother']);
 
                     if(!$surrogate) {
                         return new JsonResponse(
@@ -718,7 +716,7 @@ class IRSerializer implements IRSerializerInterface
                 }
 
                 // Weight
-                if($birthWeightValue != null) {
+                if($birthWeightValue != $birthWeightEmptyValue) {
                     $weight = new Weight();
                     $weight->setMeasurementDate($dateOfBirth);
                     $weight->setAnimal($child);
@@ -729,7 +727,7 @@ class IRSerializer implements IRSerializerInterface
                 }
 
                 // Tail Length
-                if($tailLengthValue != null) {
+                if($tailLengthValue != $tailLengthEmptyValue) {
                     $tailLength = new TailLength();
                     $tailLength->setMeasurementDate($dateOfBirth);
                     $tailLength->setAnimal($child);
