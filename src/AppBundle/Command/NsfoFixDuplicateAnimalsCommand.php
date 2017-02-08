@@ -54,7 +54,8 @@ class NsfoFixDuplicateAnimalsCommand extends ContainerAwareCommand
             '2: Fix duplicate animals, synced I&R vs migrated animals', "\n",
             '3: Fix duplicate animals (legacy)', "\n",
             '4: Merge two animals by primaryKeys', "\n",
-            '5: Fix duplicate animals due to tagReplace error', "\n",
+            '5: Merge two animals where one is missing leading zeroes', "\n",
+            '6: Fix duplicate animals due to tagReplace error', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -91,6 +92,12 @@ class NsfoFixDuplicateAnimalsCommand extends ContainerAwareCommand
                 break;
 
             case 5:
+                $duplicateAnimalsFixer = new DuplicateAnimalsFixer($em, $output, $this->cmdUtil);
+                $duplicateAnimalsFixer->mergeImportedAnimalsMissingLeadingZeroes();
+                $output->writeln('DONE');
+                break;
+
+            case 6:
                 $duplicateAnimalsFixer = new DuplicateAnimalsFixer($em, $output, $this->cmdUtil);
                 $duplicateAnimalsFixer->fixDuplicateDueToTagReplaceError();
                 $output->writeln('DONE');

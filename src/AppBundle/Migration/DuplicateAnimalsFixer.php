@@ -5,6 +5,7 @@ namespace AppBundle\Migration;
 
 
 use AppBundle\Component\Utils;
+use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Measurement;
@@ -13,6 +14,7 @@ use AppBundle\Entity\VsmIdGroupRepository;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\GenderChanger;
@@ -121,6 +123,78 @@ class DuplicateAnimalsFixer
         $this->output->writeln('MERGE ABORTED');
         return false;
     }
+
+
+    /**
+     * @return bool
+     */
+    public function mergeImportedAnimalsMissingLeadingZeroes()
+    {
+        $ulnCountryCode = null;
+        $ulnNumber = null;
+
+        do {
+            $ulnString = $this->cmdUtil->generateQuestion('Insert uln', null);
+            $ulnString = str_replace(' ', '', $ulnString);
+
+            $uln = $ulnString != null ? Utils::getUlnFromString($ulnString) : null;
+
+            if($uln != null) {
+                $ulnCountryCode = ArrayUtil::get(Constant::ULN_COUNTRY_CODE_NAMESPACE, $uln);
+                $ulnNumber = ArrayUtil::get(Constant::ULN_NUMBER_NAMESPACE, $uln);
+            }
+
+        } while ($ulnCountryCode == null || $ulnNumber == null);
+
+        $ulnNumberWithLeadingZeroes = str_pad($ulnNumber, 12, '0', STR_PAD_LEFT);
+
+        $sql = "SELECT id FROM animal WHERE uln_country_code = '".$ulnCountryCode."' 
+        AND (uln_number = '".$ulnNumber."' OR uln_number = '".$ulnNumberWithLeadingZeroes."')
+        ORDER BY name";
+        $results = $this->conn->query($sql)->fetchAll();
+
+        $count = count($results);
+
+        if($count == 0) {
+            $this->cmdUtil->writeln('This animal was not found! '.$ulnCountryCode.$ulnNumber);
+            return false;
+        } elseif($count == 1) {
+            $this->cmdUtil->writeln('There are no duplicate animals for this animal! '.$ulnCountryCode.$ulnNumber);
+            return false;
+        } elseif($count > 2) {
+            $this->cmdUtil->writeln('There where more than 2 animals found ('.$count
+                .' in total) fix this manually or using another command');
+        }
+
+        $animalIds = SqlUtil::getSingleValueGroupedSqlResults('id', $results);
+
+        $primaryAnimalId = array_shift($animalIds);
+        $secondaryAnimalId = array_shift($animalIds);
+
+        $this->displayAnimalValues([$primaryAnimalId, $secondaryAnimalId]);
+
+        $continue = $this->cmdUtil->generateConfirmationQuestion(['Your choice, '.
+            'primaryAnimalId: '.$primaryAnimalId, '  secondaryAnimalId: '.$secondaryAnimalId, ' but the ULN used will be of the secondaryAnimalId. Is this correct? (y/n)']);
+
+        if($continue) {
+
+            //Update uln of primary animal BEFORE merging other values!
+            $sql = "UPDATE animal SET uln_number = (
+                SELECT uln_number FROM animal WHERE id = ".$secondaryAnimalId."
+            ), animal_order_number = (
+                SELECT animal_order_number FROM animal WHERE id = ".$secondaryAnimalId."
+            ) WHERE id = ".$primaryAnimalId;
+            $this->conn->exec($sql);
+
+            $isMergeSuccessFul = $this->mergeAnimalPairByIds($primaryAnimalId, $secondaryAnimalId);
+            if($isMergeSuccessFul) { $printOutText = 'MERGE SUCCESSFUL'; } else { $printOutText = 'MERGE FAILED'; }
+            $this->output->writeln($printOutText);
+            return true;
+        }
+        $this->output->writeln('MERGE ABORTED');
+        return false;
+    }
+
 
 
     /**
