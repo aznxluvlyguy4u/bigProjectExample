@@ -494,7 +494,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         }
 
         $result = [];
-        $candidateFathers = $declareBirthRepository->getCandidateFathers($location , $mother, $dateOfBirth);
+        $candidateFathers = $declareBirthRepository->getCandidateFathers($mother, $dateOfBirth);
         $otherCandidateFathers = $animalRepository->getLiveStock($location, true, false, false, Ram::class);
         $filteredOtherCandidateFathers = [];
         $suggestedCandidateFathers = [];
