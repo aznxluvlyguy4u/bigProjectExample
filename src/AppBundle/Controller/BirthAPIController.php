@@ -548,13 +548,13 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     }
 
     /**
-     * Get a list of suggested candidate surrogates based on births done in within 6 months from now
+     * Get a list of suggested candidate surrogates based on births done in within 5,5 months from given date of birth
      * and all other Ewes on current location.
      *
      * @param Request $request the request object
      * @return JsonResponse
      * @Route("/{uln}/candidate-surrogates")
-     * @Method("GET")
+     * @Method("POST")
      */
     public function getCandidateSurrogateMothers(Request $request, $uln) {
         /** @var Location $location */
@@ -586,6 +586,13 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             );
         }
 
+        $content = $this->getContentAsArray($request);
+        if($content->containsKey('date_of_birth')) {
+            $dateOfBirth = new \DateTime($content->get('date_of_birth'));
+        } else {
+            $dateOfBirth = new \DateTime();
+        }
+
         $suggestedCandidatesResult = [];
         $otherCandidatesResult = [];
         $result = [];
@@ -594,7 +601,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         $offsetDays = 7;
         $minimumDaysIntervalFromNowAndBirth = 167;
-        $offsetDateFromNow = (new \DateTime())->modify('-' .$offsetDays .'days');
+        $offsetDateFromNow = $dateOfBirth->modify('-' .$offsetDays .'days');
 
         /** @var Ewe $animal */
         foreach ($surrogateMotherCandidates as $animal) {
