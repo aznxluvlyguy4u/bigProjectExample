@@ -55,12 +55,18 @@ class NsfoFixDbCommand extends ContainerAwareCommand
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
             '1: Fix incongruent animalOrderNumbers', "\n",
+            '2: Fix incongruent genders vs Ewe/Ram/Neuter records', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
             case 1:
                 DatabaseDataFixer::fixIncongruentAnimalOrderNumbers($this->conn, $this->cmdUtil);
+                $output->writeln('Done!');
+                break;
+
+            case 2:
+                DatabaseDataFixer::fixGenderTables($this->conn, $this->cmdUtil);
                 $output->writeln('Done!');
                 break;
 
