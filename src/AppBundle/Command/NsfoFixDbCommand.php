@@ -4,6 +4,7 @@ namespace AppBundle\Command;
 
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
+use AppBundle\Util\DoctrineUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
@@ -49,6 +50,8 @@ class NsfoFixDbCommand extends ContainerAwareCommand
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
+        $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($this->em),'']);
+        
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
             '1: Fix incongruent animalOrderNumbers', "\n",
