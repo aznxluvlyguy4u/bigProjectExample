@@ -115,9 +115,19 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 break;
 
             case 9:
-                $productionValuesUpdated = AnimalCacher::updateProductionValues($this->conn);
+                $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update production and n-ling cache values of all animals? (y/n, default = no)');
+                if($updateAll) {
+                    $output->writeln('Updating all records...');
+                    $productionValuesUpdated = AnimalCacher::updateAllProductionValues($this->conn);
+                    $nLingValuesUpdated = AnimalCacher::updateAllNLingValues($this->conn);
+                } else {
+                    do{
+                        $animalId = $this->cmdUtil->generateQuestion('Insert one animalId (default = 0)', 0);
+                    } while (!ctype_digit($animalId) && !is_int($animalId));
+                    $productionValuesUpdated = AnimalCacher::updateProductionValues($this->conn, [$animalId]);
+                    $nLingValuesUpdated = AnimalCacher::updateNLingValues($this->conn, [$animalId]);
+                }
                 $this->cmdUtil->writeln($productionValuesUpdated.' production values updated');
-                $nLingValuesUpdated = AnimalCacher::updateNLingValues($this->conn);
                 $this->cmdUtil->writeln($nLingValuesUpdated.' n-ling values updated');
                 break;
 

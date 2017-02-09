@@ -962,10 +962,35 @@ class AnimalCacher
     /**
      * @param Connection $conn
      * @return int
+     */
+    public static function updateAllProductionValues(Connection $conn)
+    {
+        return self::updateProductionValues($conn, '');
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param array $animalIds
+     * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    public static function updateProductionValues(Connection $conn)
+    public static function updateProductionValues(Connection $conn, $animalIds)
     {
+        $updateCount = 0;
+
+        $animalIdFilterString = "";
+        if(is_array($animalIds)) {
+            if(count($animalIds) == 0) {
+                return $updateCount;
+            }
+            else {
+                $animalIdFilterString = " AND (".SqlUtil::getFilterStringByIdsArray($animalIds,'a.id').") ";
+            }
+        } elseif($animalIds != null) {
+            return $updateCount;
+        }
+
         $sql = "WITH rows AS (
                   UPDATE animal_cache
                   SET
@@ -1002,7 +1027,7 @@ class AnimalCacher
                          FROM animal a
                            INNER JOIN litter l ON a.id = l.animal_father_id
                            INNER JOIN animal_cache c ON c.animal_id = a.id
-                         WHERE date_of_birth NOTNULL AND l.status <> '".RequestStateType::REVOKED."'
+                         WHERE date_of_birth NOTNULL AND l.status <> '".RequestStateType::REVOKED."' ".$animalIdFilterString."
                          GROUP BY a.id
                 
                          UNION
@@ -1038,7 +1063,7 @@ class AnimalCacher
                          FROM animal a
                            INNER JOIN litter l ON a.id = l.animal_mother_id
                            INNER JOIN animal_cache c ON c.animal_id = a.id
-                         WHERE date_of_birth NOTNULL AND l.status <> '".RequestStateType::REVOKED."'
+                         WHERE date_of_birth NOTNULL AND l.status <> '".RequestStateType::REVOKED."' ".$animalIdFilterString."
                          GROUP BY a.id
                          UNION --Below when date of births are null
                 
@@ -1064,7 +1089,7 @@ class AnimalCacher
                          FROM animal a
                            INNER JOIN litter l ON a.id = l.animal_father_id
                            INNER JOIN animal_cache c ON c.animal_id = a.id
-                         WHERE date_of_birth ISNULL AND l.status <> '".RequestStateType::REVOKED."'
+                         WHERE date_of_birth ISNULL AND l.status <> '".RequestStateType::REVOKED."' ".$animalIdFilterString."
                          GROUP BY a.id
                 
                          UNION
@@ -1091,7 +1116,7 @@ class AnimalCacher
                          FROM animal a
                            INNER JOIN litter l ON a.id = l.animal_mother_id
                            INNER JOIN animal_cache c ON c.animal_id = a.id
-                         WHERE date_of_birth ISNULL AND l.status <> '".RequestStateType::REVOKED."'
+                         WHERE date_of_birth ISNULL AND l.status <> '".RequestStateType::REVOKED."' ".$animalIdFilterString."
                          GROUP BY a.id
                        ) AS v(animal_id, animal_cache_id, production_age, litter_count, total_born_count, born_alive_count, gave_birth_as_one_year_old, update_production)
                   WHERE v.update_production = TRUE AND animal_cache.id = v.animal_cache_id
@@ -1106,10 +1131,35 @@ class AnimalCacher
     /**
      * @param Connection $conn
      * @return int
+     */
+    public static function updateAllNLingValues(Connection $conn)
+    {
+        return self::updateNLingValues($conn, '');
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param array $animalIds
+     * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    public static function updateNLingValues(Connection $conn)
+    public static function updateNLingValues(Connection $conn, $animalIds)
     {
+        $updateCount = 0;
+
+        $animalIdFilterString = "";
+        if(is_array($animalIds)) {
+            if(count($animalIds) == 0) {
+                return $updateCount;
+            }
+            else {
+                $animalIdFilterString = " AND (".SqlUtil::getFilterStringByIdsArray($animalIds,'a.id').") ";
+            }
+        } elseif($animalIds != null) {
+            return $updateCount;
+        }
+
         $sql = "WITH rows AS (
                   UPDATE animal_cache
                 SET n_ling = v.new_n_ling
@@ -1122,6 +1172,7 @@ class AnimalCacher
                          INNER JOIN animal_cache c ON c.animal_id = a.id
                        WHERE (l.status <> 'REVOKED' AND l.animal_mother_id NOTNULL)
                              AND (c.n_ling <> CONCAT(l.born_alive_count + l.stillborn_count,'-ling') OR c.n_ling ISNULL )
+                             ".$animalIdFilterString."
                        UNION
                        -- nLing, litter still linked but revoked or mother not set
                        SELECT c.id as cache_id, c.n_ling as current_n_ling, '0-ling' as new_n_ling,
@@ -1131,6 +1182,7 @@ class AnimalCacher
                          INNER JOIN animal_cache c ON c.animal_id = a.id
                        WHERE (l.status = 'REVOKED' OR l.animal_mother_id ISNULL) --If mother ISNULL the offspringCounts <> nLing
                              AND (c.n_ling <> '0-ling'  OR c.n_ling ISNULL ) --the default value for unknown nLings should be '0-ling'
+                             ".$animalIdFilterString."
                        UNION
                        -- nLing, litter not linked anymore
                        SELECT c.id as cache_id, c.n_ling as current_n_ling, '0-ling' as new_n_ling,
@@ -1140,6 +1192,7 @@ class AnimalCacher
                          INNER JOIN animal_cache c ON c.animal_id = a.id
                        WHERE l.id ISNULL
                              AND (c.n_ling <> '0-ling'  OR c.n_ling ISNULL ) --the default value for unknown nLings should be '0-ling'
+                             ".$animalIdFilterString."
                      ) AS v(cache_id, current_n_ling, new_n_ling, update_n_ling) WHERE animal_cache.id = v.cache_id AND v.update_n_ling = TRUE
                   RETURNING 1
                 )
