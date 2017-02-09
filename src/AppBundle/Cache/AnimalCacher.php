@@ -961,11 +961,10 @@ class AnimalCacher
 
     /**
      * @param Connection $conn
-     * @param CommandUtil|OutputInterface $cmdUtilOrOutput
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    public static function batchUpdateAllIncongruentProductionValues(Connection $conn, $cmdUtilOrOutput = null)
+    public static function updateProductionValues(Connection $conn)
     {
         $sql = "WITH rows AS (
                   UPDATE animal_cache
@@ -1100,18 +1099,16 @@ class AnimalCacher
                 )
                 SELECT COUNT(*) AS count FROM rows";
         $updateCount = $conn->query($sql)->fetch()['count'];
-        if($cmdUtilOrOutput) { $cmdUtilOrOutput->writeln($updateCount.' production values updated'); }
         return $updateCount;
     }
 
 
     /**
      * @param Connection $conn
-     * @param CommandUtil|OutputInterface $cmdUtilOrOutput
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    public static function batchUpdateAllIncongruentNLingValues(Connection $conn, $cmdUtilOrOutput)
+    public static function updateNLingValues(Connection $conn)
     {
         $sql = "WITH rows AS (
                   UPDATE animal_cache
@@ -1148,7 +1145,6 @@ class AnimalCacher
                 )
                 SELECT COUNT(*) AS count FROM rows";
         $updateCount = $conn->query($sql)->fetch()['count'];
-        if($cmdUtilOrOutput) { $cmdUtilOrOutput->writeln($updateCount.' n-ling values updated'); }
         return $updateCount;
     }
 }

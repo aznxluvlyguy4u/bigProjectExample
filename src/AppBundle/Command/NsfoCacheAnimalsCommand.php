@@ -115,8 +115,10 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 break;
 
             case 9:
-                AnimalCacher::batchUpdateAllIncongruentProductionValues($this->conn, $this->cmdUtil);
-                AnimalCacher::batchUpdateAllIncongruentNLingValues($this->conn, $this->cmdUtil);
+                $productionValuesUpdated = AnimalCacher::updateProductionValues($this->conn);
+                $this->cmdUtil->writeln($productionValuesUpdated.' production values updated');
+                $nLingValuesUpdated = AnimalCacher::updateNLingValues($this->conn);
+                $this->cmdUtil->writeln($nLingValuesUpdated.' n-ling values updated');
                 break;
 
             case 10:
