@@ -42,13 +42,12 @@ class DeclareBirthRepository extends BaseRepository {
 
   /**
    * Get a list of suggested candidate fathers based on matings done in within 145 + (-12 & +12) days, from now
-   * and all other Rams on current location.
+   * and all other Rams.
    *
-   * @param Location $location
    * @param Ewe $mother
    * @return array
    */
-  public function getCandidateFathers(Location $location, Ewe $mother, \DateTime $dateOfbirth) {
+  public function getCandidateFathers(Ewe $mother, \DateTime $dateOfbirth) {
     $em = $this->getEntityManager();
     $queryBuilder = $em->createQueryBuilder();
 
@@ -57,7 +56,6 @@ class DeclareBirthRepository extends BaseRepository {
       ->from('AppBundle:Mate', 'mate')
       ->where($queryBuilder->expr()->andX(
         $queryBuilder->expr()->andX(
-          $queryBuilder->expr()->eq('mate.location', $location->getId()),
           $queryBuilder->expr()->eq('mate.isOverwrittenVersion', 'false'),
           $queryBuilder->expr()->eq('mate.studEwe', $mother->getId()),
           $queryBuilder->expr()->eq('mate.requestState', "'FINISHED'"),

@@ -1041,14 +1041,18 @@ class APIController extends Controller implements APIControllerInterface
    * @param Animal | Ewe | Ram | Neuter $animal
    */
   protected function clearLivestockCacheForLocation(Location $location = null, $animal = null) {
-    if($location) {
-      $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID .$location->getId();
-      $this->getRedisClient()->del('[' .$cacheId .'][1]');
-    } else if($animal->getLocation()) {
+    if(!$location) {
       /** @var Location $location */
       $location = $animal->getLocation();
+    }
+    
+    if($location) {
       $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID .$location->getId();
-      $this->getRedisClient()->del('[' .$cacheId .'][1]');
+      
+      $lastIndex = 10;
+      for($i = 1; $i <= $lastIndex; $i++) {
+        $this->getRedisClient()->del('[' .$cacheId .']['.$i.']');
+      }
     }
   }
 }
