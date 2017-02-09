@@ -31,6 +31,7 @@ use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\DeclareBirthResponseOutput;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Validator;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Tools\Export\ExportException;
@@ -64,7 +65,12 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         $repository = $this->getDoctrine()->getRepository(Litter::class);
         $litter = $repository->findOneBy(['id' => $litterId, 'ubn' => $location->getUbn()]);
-        $result = DeclareBirthResponseOutput::createBirth($litter, $litter->getDeclareBirths());
+
+        if($litter instanceof Litter) {
+            $result = DeclareBirthResponseOutput::createBirth($litter, $litter->getDeclareBirths());
+        } else {
+            $result = Validator::createJsonResponse('Geen worp gevonden voor gegeven worpId en ubn', 428);
+        }
         
         if($result instanceof JsonResponse) {
             return $result;
@@ -488,7 +494,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         }
 
         $result = [];
-        $candidateFathers = $declareBirthRepository->getCandidateFathers($location , $mother, $dateOfBirth);
+        $candidateFathers = $declareBirthRepository->getCandidateFathers($mother, $dateOfBirth);
         $otherCandidateFathers = $animalRepository->getLiveStock($location, true, false, false, Ram::class);
         $filteredOtherCandidateFathers = [];
         $suggestedCandidateFathers = [];
@@ -542,13 +548,13 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     }
 
     /**
-     * Get a list of suggested candidate surrogates based on births done in within 6 months from now
+     * Get a list of suggested candidate surrogates based on births done in within 5,5 months from given date of birth
      * and all other Ewes on current location.
      *
      * @param Request $request the request object
      * @return JsonResponse
      * @Route("/{uln}/candidate-surrogates")
-     * @Method("GET")
+     * @Method("POST")
      */
     public function getCandidateSurrogateMothers(Request $request, $uln) {
         /** @var Location $location */
@@ -580,6 +586,13 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             );
         }
 
+        $content = $this->getContentAsArray($request);
+        if($content->containsKey('date_of_birth')) {
+            $dateOfBirth = new \DateTime($content->get('date_of_birth'));
+        } else {
+            $dateOfBirth = new \DateTime();
+        }
+
         $suggestedCandidatesResult = [];
         $otherCandidatesResult = [];
         $result = [];
@@ -588,7 +601,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         $offsetDays = 7;
         $minimumDaysIntervalFromNowAndBirth = 167;
-        $offsetDateFromNow = (new \DateTime())->modify('-' .$offsetDays .'days');
+        $offsetDateFromNow = $dateOfBirth->modify('-' .$offsetDays .'days');
 
         /** @var Ewe $animal */
         foreach ($surrogateMotherCandidates as $animal) {
@@ -704,6 +717,10 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $result['suggested_candidate_mothers'] = $suggestedCandidatesResult;
         $result['other_candidate_mothers'] = $otherCandidatesResult;
 
+        $pregnancyDays = 145;
+        $minimumDaysBetweenBirths = 167;
+        $matingDaysOffset = 12;
+
         //Animal has no registered matings, thus it is not a true candidate
         /** @var Ewe $animal */
         foreach ($motherCandidates as $animal) {
@@ -730,10 +747,6 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
             $addToOtherCandidates = true;
             $checkAnimalForMatings = true;
-            $pregnancyDays = 145;
-            $minimumDaysBetweenBirths = 167;
-
-
 
             /** @var DeclareBirthRepository $declareBirthRepository */
             $declareBirthRepository = $this->getDoctrine()->getRepository(DeclareBirth::getClassName());
@@ -776,32 +789,39 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
             /** @var Mate $mating */
             foreach ($matings as $mating) {
-                $daysBetweenMatingAndBirth = TimeUtil::getDaysBetween($mating->getStartDate(), $dateOfBirth);
+                $lowerboundPregnancyDays = $pregnancyDays - $matingDaysOffset;
+                $upperboundPregnancyDays = $pregnancyDays + $matingDaysOffset;
 
-                //Check if mating and date of birth is within range of 133 up to (including) 157 days
-                //and the request state of the mating is finished
-                if($daysBetweenMatingAndBirth >= ($pregnancyDays - 12)
-                   && $daysBetweenMatingAndBirth <= ($pregnancyDays + 12)
-                   && $mating->getRequestState() == RequestStateType::FINISHED) {
+                //Compare if final father suggestion date is before dateOfBirth lower- & upperbound
+                $expectedBirthDateLowerbound = clone $mating->getStartDate();
+                $expectedBirthDateLowerbound->modify("+" . (string) $lowerboundPregnancyDays . " days");
 
-                        //Add as a true candidate surrogate to list
-                        $suggestedCandidatesResult[] = [
-                          JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
-                          JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
-                          JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
-                          JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
-                          JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
-                          JsonInputConstant::GENDER =>  $animal->getGender(),
-                          JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
-                          JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
-                          JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
-                          JsonInputConstant::UBN => $location->getUbn(),
-                          JsonInputConstant::IS_HISTORIC_ANIMAL => false,
-                          JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
-                          JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
-                        ];
-                        $addToOtherCandidates = false;
-                        break;
+                $expectedBirthDateUpperbound = clone $mating->getEndDate();
+                $expectedBirthDateUpperbound->modify("+" . (string) $upperboundPregnancyDays . " days");
+
+                //Get the date difference between the computed dateOfBirth and the actual given dateOfBirth
+                //Check if it is betweeen date interval of given upperBound and lowerBound
+                if (TimeUtil::isDateBetweenDates($dateOfBirth, $expectedBirthDateLowerbound, $expectedBirthDateUpperbound)) {
+                    $candidateFathers[] = $mating->getStudRam();
+
+                    //Add as a true candidate surrogate to list
+                    $suggestedCandidatesResult[] = [
+                        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                        JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+                        JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+                        JsonInputConstant::GENDER =>  $animal->getGender(),
+                        JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+                        JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+                        JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+                        JsonInputConstant::UBN => $location->getUbn(),
+                        JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                        JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+                        JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
+                    ];
+                    $addToOtherCandidates = false;
+                    break;
                 }
             }
 
