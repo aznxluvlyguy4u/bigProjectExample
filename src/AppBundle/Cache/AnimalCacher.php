@@ -20,9 +20,11 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DisplayUtil;
+use AppBundle\Util\ProductionUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
@@ -308,7 +310,7 @@ class AnimalCacher
     {
         $insertString = rtrim($insertString, ',');
         $sql = "INSERT INTO animal_cache (id, log_date, animal_id, dutch_breed_status,
-						  n_ling, production, breed_value_growth, breed_value_muscle_thickness, 
+						  n_ling, production_age, litter_count, total_offspring_count, born_alive_offspring_count, gave_birth_as_one_year_old, breed_value_growth, breed_value_muscle_thickness, 
 						  breed_value_fat, lamb_meat_index, lamb_meat_index_without_accuracy, last_weight, weight_measurement_date, kind, skull, muscularity, proportion, progress,
 						  exterior_type, leg_work, fur, general_appearance, height, breast_depth,
 						  torso_length, markings, exterior_measurement_date						  
@@ -324,8 +326,13 @@ class AnimalCacher
         $dutchBreedStatus = SqlUtil::getNullCheckedValueForSqlQuery(Translation::getFirstLetterTranslatedBreedType($breedType),true);
 
         //Litter Data
-        $production = SqlUtil::getNullCheckedValueForSqlQuery(self::generateProductionString($em, $animalId, $gender, $dateOfBirthString),true);
+        $productionString = SqlUtil::getNullCheckedValueForSqlQuery(self::generateProductionString($em, $animalId, $gender, $dateOfBirthString),true);
         $nLing = SqlUtil::getNullCheckedValueForSqlQuery(self::getNLingData($em, $animalId),true);
+        $productionAge = SqlUtil::getNullCheckedValueForSqlQuery(ProductionUtil::getProductionAgeFromProductionString($productionString),false);
+        $litterCount = SqlUtil::getNullCheckedValueForSqlQuery(ProductionUtil::getLitterCountFromProductionString($productionString),false);
+        $totalOffspring = SqlUtil::getNullCheckedValueForSqlQuery(ProductionUtil::getTotalOffspringCountFromProductionString($productionString),false);
+        $totalBornOffspring = SqlUtil::getNullCheckedValueForSqlQuery(ProductionUtil::getBornAliveCountFromProductionString($productionString),false);
+        $hasOneYearMark = SqlUtil::getNullCheckedValueForSqlQuery(ProductionUtil::hasOneYearMark($productionString),false);
 
         //Breed Values
         $breedValuesArray = self::getUnformattedBreedValues($em, $animalId, $breedValuesYear, $geneticBases);
@@ -374,7 +381,8 @@ class AnimalCacher
         $maxAnimalCacheId++;
 
         return "(".$maxAnimalCacheId.",'".$logDate."',".$animalId.",".$dutchBreedStatus
-            .",".$nLing.",".$production.",".$breedValueGrowth.",".$breedValueMuscleThickness
+            .",".$nLing.",".$productionAge.",".$litterCount.",".$totalOffspring.",".$totalBornOffspring.",".$hasOneYearMark
+            .",".$breedValueGrowth.",".$breedValueMuscleThickness
             .",".$breedValueFat.",".$lambMeatIndex.",".$lambMeatIndexWithoutAccuracy.",".$weight.",".$weightMeasurementDateString
             .",".$kind.",".$skull.",".$muscularity.",".$proportion.",".$progress.",".$exteriorType.",".$legWork.",".$fur
             .",".$generalAppearance.",".$height.",".$breastDepth.",".$torsoLength.",".$markings.",".$exteriorMeasurementDateString.")";
@@ -415,8 +423,13 @@ class AnimalCacher
         $dutchBreedStatus = Translation::getFirstLetterTranslatedBreedType($breedType);
 
         //Litter Data
-        $production = self::generateProductionString($em, $animalId, $gender, $dateOfBirthString);
         $nLing = self::getNLingData($em, $animalId);
+        $productionString = self::generateProductionString($em, $animalId, $gender, $dateOfBirthString);
+        $productionAge = ProductionUtil::getProductionAgeFromProductionString($productionString);
+        $litterCount = ProductionUtil::getLitterCountFromProductionString($productionString);
+        $totalOffspring = ProductionUtil::getTotalOffspringCountFromProductionString($productionString);
+        $totalBornOffspring = ProductionUtil::getBornAliveCountFromProductionString($productionString);
+        $hasOneYearMark = ProductionUtil::hasOneYearMark($productionString);
 
         //Breed Values
         $breedValuesArray = self::getUnformattedBreedValues($em, $animalId, $breedValuesYear, $geneticBases);
@@ -494,11 +507,16 @@ class AnimalCacher
             }
         }
 
+        $record->setProductionAge($productionAge);
+        $record->setLitterCount($litterCount);
+        $record->setTotalOffspringCount($totalOffspring);
+        $record->setBornAliveOffspringCount($totalBornOffspring);
+        $record->setGaveBirthAsOneYearOld($hasOneYearMark);
+
         $record->setAnimalId($animalId);
         $record->setDutchBreedStatus($dutchBreedStatus);
         $record->setPredicate($predicate);
         $record->setNLing($nLing);
-        $record->setProduction($production);
         $record->setBreedValueLitterSize($breedValueLitterSize);
         $record->setBreedValueGrowth($breedValueGrowth);
         $record->setBreedValueMuscleThickness($breedValueMuscleThickness);
@@ -871,11 +889,20 @@ class AnimalCacher
 
         } else {
             //Production Data
-            $production = self::generateProductionString($em, $animalId, $animal->getGender(), $animal->getDateOfBirthString());
+            $productionString = self::generateProductionString($em, $animalId, $animal->getGender(), $animal->getDateOfBirthString());
+            $productionAge = ProductionUtil::getProductionAgeFromProductionString($productionString);
+            $litterCount = ProductionUtil::getLitterCountFromProductionString($productionString);
+            $totalOffspring = ProductionUtil::getTotalOffspringCountFromProductionString($productionString);
+            $totalBornOffspring = ProductionUtil::getBornAliveCountFromProductionString($productionString);
+            $hasOneYearMark = ProductionUtil::hasOneYearMark($productionString);
+            $record->setProductionAge($productionAge);
+            $record->setLitterCount($litterCount);
+            $record->setTotalOffspringCount($totalOffspring);
+            $record->setBornAliveOffspringCount($totalBornOffspring);
+            $record->setGaveBirthAsOneYearOld($hasOneYearMark);
 
             //If record already exists, only update the production data
             $record->setLogDate(new \DateTime()); //update logDate
-            $record->setProduction($production);
 
             $em->persist($record);
             if($flush) { $em->flush(); }
