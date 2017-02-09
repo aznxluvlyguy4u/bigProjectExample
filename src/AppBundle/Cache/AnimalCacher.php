@@ -26,6 +26,7 @@ use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DisplayUtil;
 use AppBundle\Util\ProductionUtil;
 use AppBundle\Util\SqlUtil;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
 use \Doctrine\Common\Persistence\ObjectManager;
@@ -332,7 +333,7 @@ class AnimalCacher
         $litterCount = SqlUtil::getNullCheckedValueForSqlQuery(ProductionUtil::getLitterCountFromProductionString($productionString),false);
         $totalOffspring = SqlUtil::getNullCheckedValueForSqlQuery(ProductionUtil::getTotalOffspringCountFromProductionString($productionString),false);
         $totalBornOffspring = SqlUtil::getNullCheckedValueForSqlQuery(ProductionUtil::getBornAliveCountFromProductionString($productionString),false);
-        $hasOneYearMark = SqlUtil::getNullCheckedValueForSqlQuery(ProductionUtil::hasOneYearMark($productionString),false);
+        $hasOneYearMark = StringUtil::getBooleanAsString(ProductionUtil::hasOneYearMark($productionString), 'FALSE');
 
         //Breed Values
         $breedValuesArray = self::getUnformattedBreedValues($em, $animalId, $breedValuesYear, $geneticBases);
