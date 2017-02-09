@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Cache\AnimalCacher;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Employee;
@@ -30,6 +31,7 @@ use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use AppBundle\Enumerator\RequestType;
+
 
 /**
  * @Route("/api/v1/animals")
@@ -132,7 +134,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   }
 
   /**
-   * Retrieve all alive on-location animals belonging to this Client: De Stallijst
+   * Retrieve all alive, on-location, animals belonging to the given UBN.
    *
    * @ApiDoc(
    *   requirements={
@@ -144,7 +146,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = " Retrieve all alive on-location animals belonging to this Client",
+   *   description = " Retrieve all alive, on-location, animals belonging to the given UBN",
    *   output = "AppBundle\Entity\Animal"
    * )
    * @param Request $request the request object
@@ -153,20 +155,36 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Method("GET")
    */
   public function getLiveStock(Request $request) {
-    $client = $client = $this->getAuthenticatedUser($request);
     /** @var Location $location */
     $location = $this->getSelectedLocation($request);
-    AnimalCacher::cacheAnimalsBySqlInsert($this->getDoctrine()->getManager(), null, $location->getId());
-    /** @var AnimalRepository $animalRepository */
+    /** @var  $animalRepository */
     $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
-    $livestockArray = $animalRepository->getLiveStockBySql($location->getId());
+    $livestock = $animalRepository->getLiveStock($location);
+    $livestockAnimals = [];
 
-    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $livestockArray), 200);
+    /** @var Animal $animal */
+    foreach ($livestock as $animal) {
+      $livestockAnimals[] = [
+        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+        JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+        JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+        JsonInputConstant::GENDER =>  $animal->getGender(),
+        JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+        JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+        JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+        JsonInputConstant::UBN => $location->getUbn(),
+        JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+        JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+      ];
+    }
+
+    return new JsonResponse(array (Constant::RESULT_NAMESPACE => $livestockAnimals), 200);
   }
 
-
   /**
-   * Retrieve all historic animals that ever resided on this location, dead or alive
+   * Retrieve all historic animals,dead or alive, that ever resided on the given UBN.
    *
    * @ApiDoc(
    *   requirements={
@@ -178,7 +196,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve all historic animals that ever resided on this location, dead or alive",
+   *   description = "Retrieve all historic animals,dead or alive, that ever resided on the given UBN",
    *   output = "AppBundle\Entity\Animal"
    * )
    * @param Request $request the request object
@@ -190,9 +208,28 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $location = $this->getSelectedLocation($request);
     /** @var AnimalRepository $repository */
     $repository = $this->getDoctrine()->getRepository(Animal::class);
-    $historicAnimalsInArray = $repository->getHistoricLiveStock($location);
+    $historicLivestock = $repository->getHistoricLiveStock($location);
+    $historicLivestockAnimals = [];
 
-    return new JsonResponse([Constant::RESULT_NAMESPACE => $historicAnimalsInArray], 200);
+    /** @var Animal $animal */
+    foreach ($historicLivestock as $animal) {
+      $historicLivestockAnimals[] = [
+        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+        JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+        JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+        JsonInputConstant::GENDER =>  $animal->getGender(),
+        JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+        JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+        JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+        JsonInputConstant::UBN => $location->getUbn(),
+        JsonInputConstant::IS_HISTORIC_ANIMAL => true,
+        JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+      ];
+    }
+
+    return new JsonResponse([Constant::RESULT_NAMESPACE => $historicLivestockAnimals], 200);
   }
 
 
@@ -386,6 +423,11 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       $em->flush();
     }
 
+    $location = $this->getSelectedLocation($request);
+
+    //Clear cache for this location, to reflect changes on the livestock
+    $this->clearLivestockCacheForLocation($location);
+    
     $output = AnimalDetailsOutput::create($em, $animal, $animal->getLocation());
 
     return new JsonResponse($output, 200);
@@ -522,6 +564,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     //FIXME Temporarily workaround, for returning the reflected gender change, it is persisted, though the updated fields is not returned.
     $result->setGender($targetGender);
 
+    //Clear cache for this location, to reflect changes on the livestock
+    $this->clearLivestockCacheForLocation($this->getSelectedLocation($request), $animal);
+    
     $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getDoctrine()->getManager());
 
     return new JsonResponse($minimizedOutput, 200);

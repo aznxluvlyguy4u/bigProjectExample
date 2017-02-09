@@ -2,23 +2,36 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Cache\AnimalCacher;
 use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalCache;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\DeclareBirth;
+use AppBundle\Entity\DeclareBirthRepository;
 use AppBundle\Entity\DeclareBirthResponse;
 use AppBundle\Entity\DeclareNsfoBase;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Litter;
+use AppBundle\Entity\Location;
+use AppBundle\Entity\Mate;
+use AppBundle\Entity\MateRepository;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
+use AppBundle\Entity\Tag;
+use AppBundle\Entity\TagRepository;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
+use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\DeclareBirthResponseOutput;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Validator;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Tools\Export\ExportException;
@@ -35,25 +48,33 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
  */
 class BirthAPIController extends APIController implements BirthAPIControllerInterface
 {
+    const SHOW_OTHER_CANDIDATE_MOTHERS = false;
+    const SHOW_OTHER_SURROGATE_MOTHERS = false;
+
     /**
      * @param Request $request the request object
-     * @param String $messageNumber
+     * @param String $litterId
      * @return JsonResponse
-     * @Route("/{messageNumber}")
+     * @Route("/{litterId}")
      * @Method("GET")
      */
-    public function geBirth(Request $request, $messageNumber)
+    public function getBirth(Request $request, $litterId)
     {
         $this->getAuthenticatedUser($request);
         $location = $this->getSelectedLocation($request);
 
         $repository = $this->getDoctrine()->getRepository(Litter::class);
-        $litter = $repository->findOneBy(['messageId' => $messageNumber, 'ubn' => $location->getUbn()]);
+        $litter = $repository->findOneBy(['id' => $litterId, 'ubn' => $location->getUbn()]);
 
-        $repository = $this->getDoctrine()->getRepository(DeclareBirth::class);
-        $declarations = $repository->findOneBy(['litter' => $litter]);
-
-        $result = DeclareBirthResponseOutput::createBirth($litter, $declarations);
+        if($litter instanceof Litter) {
+            $result = DeclareBirthResponseOutput::createBirth($litter, $litter->getDeclareBirths());
+        } else {
+            $result = Validator::createJsonResponse('Geen worp gevonden voor gegeven worpId en ubn', 428);
+        }
+        
+        if($result instanceof JsonResponse) {
+            return $result;
+        }
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
@@ -71,6 +92,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         $em = $this->getDoctrine()->getManager();
         $sql = "SELECT 
+                    declare_nsfo_base.id AS id,
                     declare_nsfo_base.log_date AS log_date,
                     declare_nsfo_base.message_id AS message_id,
                     declare_nsfo_base.request_state AS request_state,
@@ -91,145 +113,10 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                 WHERE (request_state <> '".RequestStateType::IMPORTED."' OR request_state <> '".RequestStateType::FAILED."') AND declare_nsfo_base.ubn = '" . $location->getUbn() ."'";
 
         $birthDeclarations = $em->getConnection()->query($sql)->fetchAll();
+
         $result = DeclareBirthResponseOutput::createHistoryResponse($birthDeclarations);
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
-    }
-
-    /**
-     * Create a new DeclareBirth request
-     * @param Request $request the request object
-     * @return JsonResponse
-     * @Route("/false-birth")
-     * @Method("POST")
-     */
-    public function createFalseBirth(Request $request) {
-        $manager = $this->getDoctrine()->getManager();
-        $client = $this->getAuthenticatedUser($request);
-        $loggedInUser = $this->getLoggedInUser($request);
-
-        $location = $this->getSelectedLocation($request);
-        $content = $this->getContentAsArray($request);
-        $company = $location->getCompany();
-
-        // Litter
-        $litter = new Litter();
-        $litter->setLitterDate(new \DateTime($content['date_of_birth']));
-        $litter->setIsAbortion($content['is_aborted']);
-        $litter->setIsPseudoPregnancy($content['is_pseudo_pregnancy']);
-        $litter->setStillbornCount(0);
-        $litter->setBornAliveCount(0);
-        $litter->setStatus('COMPLETE');
-
-        $litter->setRequestState(RequestStateType::FINISHED);
-        $litter->setActionBy($loggedInUser);
-        $litter->setRelationNumberKeeper($company->getOwner()->getRelationNumberKeeper());
-        $litter->setUbn($location->getUbn());
-        $litter->setIsHidden(false);
-        $litter->setIsOverwrittenVersion(false);
-        $litter->setMessageId(MessageBuilderBase::getNewRequestId());
-
-        // Mother
-        /** @var Ewe $mother */
-        $repository = $this->getDoctrine()->getRepository(Constant::EWE_REPOSITORY);
-        $contentMother = $content['mother'];
-
-        if(key_exists('uln_country_code', $contentMother) && key_exists('uln_number', $contentMother)) {
-            if ($contentMother['uln_country_code'] != '' && $contentMother['uln_number'] != '') {
-                $mother = $repository->findOneBy([
-                    'ulnCountryCode' => $contentMother['uln_country_code'],
-                    'ulnNumber' => $contentMother['uln_number'],
-                    'isAlive' => true
-                ]);
-
-                if ($mother == null) {
-                    return new JsonResponse([
-                        Constant::CODE_NAMESPACE => 428,
-                        Constant::MESSAGE_NAMESPACE => 'THE ULN OF THE MOTHER IS NOT FOUND'
-                    ], 428);
-                }
-            }
-        }
-
-        $motherCompany = $mother->getLocation()->getCompany();
-        if($company != $motherCompany) {
-            return new JsonResponse([
-                Constant::CODE_NAMESPACE => 428,
-                Constant::MESSAGE_NAMESPACE => 'THE MOTHER IS NOT IN YOUR LIVESTOCK'
-            ], 428);
-        }
-
-        /** @var Litter $litter */
-        foreach($mother->getLitters() as $motherLitter) {
-            $litterDate = $motherLitter->getLitterDate()->format('Y-m-d');
-            $contentDate = (new \DateTime($content['date_of_birth']))->format('Y-m-d');
-
-            if(($litterDate == $contentDate) && ($motherLitter->getStatus() == 'COMPLETED' || $motherLitter->getStatus() == 'OPEN')) {
-                return new JsonResponse([
-                    Constant::CODE_NAMESPACE => 428,
-                    Constant::MESSAGE_NAMESPACE => 'THE MOTHER ALREADY HAS A LITTER REGISTERED ON THIS DATE'
-                ], 428);
-            }
-        }
-
-        $litter->setAnimalMother($mother);
-
-        // Father
-        $repository = $this->getDoctrine()->getRepository(Constant::RAM_REPOSITORY);
-        $contentFather = $content['father'];
-
-        $father = null;
-
-        if(key_exists('pedigree_country_code', $contentFather) && key_exists('pedigree_number', $contentFather)) {
-            if($contentFather['pedigree_country_code'] != '' && $contentFather['pedigree_number'] != '') {
-                $father = $repository->findOneBy([
-                    'pedigreeCountryCode' => $contentFather['pedigree_country_code'],
-                    'pedigreeNumber' => $contentFather['pedigree_number'],
-                    'isAlive' => true
-                ]);
-
-                if($father == null) {
-                    return new JsonResponse([
-                        Constant::CODE_NAMESPACE => 428,
-                        Constant::MESSAGE_NAMESPACE => 'THE PEDIGREE OF THE FATHER IS NOT FOUND'
-                    ], 428);
-                }
-
-                $litter->setAnimalFather($father);
-            }
-        }
-
-        if(key_exists('uln_country_code', $contentFather) && key_exists('uln_number', $contentFather)) {
-            if ($contentFather['uln_country_code'] != '' && $contentFather['uln_number'] != '') {
-                $father = $repository->findOneBy([
-                    'ulnCountryCode' => $contentFather['uln_country_code'],
-                    'ulnNumber' => $contentFather['uln_number'],
-                    'isAlive' => true
-                ]);
-
-                if ($father == null) {
-                    return new JsonResponse([
-                        Constant::CODE_NAMESPACE => 428,
-                        Constant::MESSAGE_NAMESPACE => 'THE ULN OF THE FATHER IS NOT FOUND'
-                    ], 428);
-                }
-
-                $litter->setAnimalFather($father);
-            }
-        }
-
-        // Persist Litter
-        $this->getDoctrine()->getManager()->persist($litter);
-        $this->getDoctrine()->getManager()->flush();
-
-        // Action Log
-        // DON'T PUT IN ABOVE OTHER CODE.. IT WILL MESS UP PERSIST SEQUENCE
-        $log = ActionLogWriter::createFalseBirth($manager, $client, $loggedInUser, $mother);
-
-        // Complete Action Log
-        ActionLogWriter::completeActionLog($manager, $log);
-
-        return new JsonResponse([Constant::RESULT_NAMESPACE => 'ok'], 200);
     }
 
     /**
@@ -239,281 +126,41 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     * @Route("")
     * @Method("POST")
     */
-    public function createBirth(Request $request) {
-        $manager = $this->getDoctrine()->getManager();
-
-        $location = $this->getSelectedLocation($request);
+    public function createBirth(Request $request)
+    {
         $content = $this->getContentAsArray($request);
         $client = $this->getAuthenticatedUser($request);
         $loggedInUser = $this->getLoggedInUser($request);
+        $location = $this->getSelectedLocation($request);
 
-        // Company
-        $company = $location->getCompany();
+        $requestMessages = $this->getRequestMessageBuilder()
+          ->build(RequestType::DECLARE_BIRTH_ENTITY,
+                  $content,
+                  $client,
+                  $loggedInUser,
+                  $location,
+                  false);
 
-        // Litter
-        $litter = new Litter();
-        $litter->setLitterDate(new \DateTime($content['date_of_birth']));
-        $litter->setIsAbortion($content['is_aborted']);
-        $litter->setIsPseudoPregnancy($content['is_pseudo_pregnancy']);
-        $litter->setStatus('INCOMPLETE');
+        $result = [];
 
-        $litter->setRequestState(RequestStateType::OPEN);
-        $litter->setActionBy($loggedInUser);
-        $litter->setRelationNumberKeeper($company->getOwner()->getRelationNumberKeeper());
-        $litter->setUbn($location->getUbn());
-        $litter->setIsHidden(false);
-        $litter->setIsOverwrittenVersion(false);
-        $litter->setMessageId(MessageBuilderBase::getNewRequestId());
+        //An exception has occured, return response message
+        if($requestMessages instanceof JsonResponse) {
+            return $requestMessages;
+        } 
 
-        // Mother
-        /** @var Ewe $mother */
-        $repository = $this->getDoctrine()->getRepository(Constant::EWE_REPOSITORY);
-        $contentMother = $content['mother'];
+        //Creating request succeeded, send to Queue
+        foreach ($requestMessages as $requestMessage) {
+            //First persist requestmessage, before sending it to the queue
+            $this->persist($requestMessage);
 
-        if(key_exists('uln_country_code', $contentMother) && key_exists('uln_number', $contentMother)) {
-            if ($contentMother['uln_country_code'] != '' && $contentMother['uln_number'] != '') {
-                $mother = $repository->findOneBy([
-                    'ulnCountryCode' => $contentMother['uln_country_code'],
-                    'ulnNumber' => $contentMother['uln_number'],
-                    'isAlive' => true
-                ]);
-
-                if ($mother == null) {
-                    return new JsonResponse([
-                        Constant::CODE_NAMESPACE => 428,
-                        Constant::MESSAGE_NAMESPACE => 'THE ULN OF THE MOTHER IS NOT FOUND'
-                    ], 428);
-                }
-            }
+            //Send it to the queue and persist/update any changed state to the database
+            $result[] = $this->sendMessageObjectToQueue($requestMessage);
         }
 
-        $motherCompany = $mother->getLocation()->getCompany();
-        if($company != $motherCompany) {
-            return new JsonResponse([
-                Constant::CODE_NAMESPACE => 428,
-                Constant::MESSAGE_NAMESPACE => 'THE MOTHER IS NOT IN YOUR LIVESTOCK'
-            ], 428);
-        }
+        //Clear cache for this location, to reflect changes on the livestock
+        $this->clearLivestockCacheForLocation($location);
 
-        /** @var Litter $motherLitter */
-        foreach($mother->getLitters() as $motherLitter) {
-            $litterDate = $motherLitter->getLitterDate()->format('Y-m-d');
-            $contentDate = (new \DateTime($content['date_of_birth']))->format('Y-m-d');
-
-            if(($litterDate == $contentDate) && ($motherLitter->getStatus() == 'COMPLETED' || $motherLitter->getStatus() == 'OPEN')) {
-                return new JsonResponse([
-                    Constant::CODE_NAMESPACE => 428,
-                    Constant::MESSAGE_NAMESPACE => 'THE MOTHER ALREADY HAS A LITTER REGISTERED ON THIS DATE'
-                ], 428);
-            }
-        }
-
-        $litter->setAnimalMother($mother);
-
-        // Father
-        $repository = $this->getDoctrine()->getRepository(Constant::RAM_REPOSITORY);
-        $contentFather = $content['father'];
-
-        $father = null;
-
-        if(key_exists('pedigree_country_code', $contentFather) && key_exists('pedigree_number', $contentFather)) {
-            if($contentFather['pedigree_country_code'] != '' && $contentFather['pedigree_number'] != '') {
-                $father = $repository->findOneBy([
-                    'pedigreeCountryCode' => $contentFather['pedigree_country_code'],
-                    'pedigreeNumber' => $contentFather['pedigree_number'],
-                    'isAlive' => true
-                ]);
-
-                if($father == null) {
-                    return new JsonResponse([
-                        Constant::CODE_NAMESPACE => 428,
-                        Constant::MESSAGE_NAMESPACE => 'THE PEDIGREE OF THE FATHER IS NOT FOUND'
-                    ], 428);
-                }
-
-                $litter->setAnimalFather($father);
-            }
-        }
-
-        if(key_exists('uln_country_code', $contentFather) && key_exists('uln_number', $contentFather)) {
-            if ($contentFather['uln_country_code'] != '' && $contentFather['uln_number'] != '') {
-                $father = $repository->findOneBy([
-                    'ulnCountryCode' => $contentFather['uln_country_code'],
-                    'ulnNumber' => $contentFather['uln_number'],
-                    'isAlive' => true
-                ]);
-
-                if ($father == null) {
-                    return new JsonResponse([
-                        Constant::CODE_NAMESPACE => 428,
-                        Constant::MESSAGE_NAMESPACE => 'THE ULN OF THE FATHER IS NOT FOUND'
-                    ], 428);
-                }
-
-                $litter->setAnimalFather($father);
-            }
-        }
-
-        // Persist Litter
-        $this->getDoctrine()->getManager()->persist($litter);
-
-        // Children
-        $repository = $this->getDoctrine()->getRepository(Constant::TAG_REPOSITORY);
-        $contentChildren = $content['children'];
-
-        $isAliveCounter = 0;
-        foreach($contentChildren as $contentChild) {
-
-            // Child
-            $contentGender = $contentChild['gender'];
-
-            $child = new Neuter();
-            if($contentGender == 'MALE') {
-                $child = new Ram();
-
-            }
-
-            if($contentGender == 'FEMALE') {
-                $child = new Ewe();
-            }
-
-            if($father != null) {
-                $child->setParentFather($father);
-            }
-
-            $child->setLitter($litter);
-            $child->setLocation($location);
-            $child->setParentMother($mother);
-            $child->setDateOfBirth(new \DateTime($content['date_of_birth']));
-            $child->setBirthProgress($contentChild['birth_progress']);
-            $child->setIsAlive(false);
-
-            if($contentChild['birth_weight'] < 0 || $contentChild['birth_weight'] > 10) {
-                return new JsonResponse([
-                    Constant::CODE_NAMESPACE => 428,
-                    Constant::MESSAGE_NAMESPACE => 'THE WEIGHT HAS TO BE BETWEEN 0 AND 10',
-                    "data" => $contentChild['uln_country_code'] ." ". $contentChild['uln_number']
-                ], 428);
-            }
-
-            if($contentChild['tail_length'] < 0 || $contentChild['tail_length'] > 10) {
-                return new JsonResponse([
-                    Constant::CODE_NAMESPACE => 428,
-                    Constant::MESSAGE_NAMESPACE => 'THE TAIL LENGTH HAS TO BE BETWEEN 0 AND 30',
-                    "data" => $contentChild['uln_country_code'] ." ". $contentChild['uln_number']
-                ], 428);
-            }
-
-
-            if($contentChild['is_alive']) {
-                $child->setIsAlive(true);
-
-                // Tag
-                $tag = $repository->findOneBy([
-                    'ulnCountryCode' => $contentChild['uln_country_code'],
-                    'ulnNumber' => $contentChild['uln_number'],
-                    'tagStatus' => 'UNASSIGNED',
-                    'owner' => $company->getOwner(),
-                    'location' => $location
-                ]);
-
-                if($tag == null) {
-                    return new JsonResponse([
-                        Constant::CODE_NAMESPACE => 428,
-                        Constant::MESSAGE_NAMESPACE => 'YOU DO NOT OWN THIS UNASSIGNED TAG',
-                        "data" => $contentChild['uln_country_code'] ." ". $contentChild['uln_number']
-                    ], 428);
-                }
-
-                $tag->setTagStatus(TagStateType::ASSIGNING);
-                $child->setUlnNumber($tag->getUlnNumber());
-                $child->setUlnCountryCode($tag->getUlnCountryCode());
-                $child->setAnimalOrderNumber($tag->getAnimalOrderNumber());
-                $this->persist($tag);
-
-                // Surrogate
-                if($contentChild['nurture_type'] == 'SURROGATE') {
-                    $repository = $this->getDoctrine()->getRepository(Constant::EWE_REPOSITORY);
-                    $contentSurrogate = $contentChild['surrogate_mother'];
-                    $surrogate = $repository->findOneBy([
-                        'ulnCountryCode' => $contentSurrogate['uln_country_code'],
-                        'ulnNumber' => $contentSurrogate['uln_number'],
-                        'isAlive' => true
-                    ]);
-
-                    if($surrogate == null) {
-                        return new JsonResponse([
-                            Constant::CODE_NAMESPACE => 428,
-                            Constant::MESSAGE_NAMESPACE => 'THE SURROGATE IS NOT IN YOUR LIVESTOCK'
-                        ], 428);
-                    }
-                    $child->setSurrogate($surrogate);
-                }
-
-                // Lambar
-                $child->setLambar(($contentChild['nurture_type'] == 'LAMBAR'));
-
-                $animalDetails = new ArrayCollection();
-                $animalDetails['animal'] = $child;
-                $animalDetails['location'] = $location;
-                $animalDetails['nurture_type'] = $contentChild['nurture_type'];
-                $animalDetails['birth_type'] = $contentChild['birth_progress'];
-                $animalDetails['birth_weight'] = $contentChild['birth_weight'];
-                $animalDetails['tail_length'] = $contentChild['tail_length'];
-                $animalDetails['litter_size'] = sizeof($contentChildren);
-
-                // Persist Message
-                $messageObject = $this->buildMessageObject(RequestType::DECLARE_BIRTH_ENTITY, $animalDetails, $client, $loggedInUser, $location);
-                $this->sendMessageObjectToQueue($messageObject);
-                $this->persist($messageObject);
-
-                // Counter
-                $isAliveCounter += 1;
-            }
-
-            if(!($child->getIsAlive())) {
-
-                // Weight
-                $weight = new Weight();
-                $weight->setMeasurementDate(new \DateTime($content['date_of_birth']));
-                $weight->setAnimal($child);
-                $weight->setIsBirthWeight(true);
-                $weight->setWeight($contentChild['birth_weight']);
-                $this->getDoctrine()->getManager()->persist($weight);
-
-                // Tail Length
-                $tailLength = new TailLength();
-                $tailLength->setMeasurementDate(new \DateTime($content['date_of_birth']));
-                $tailLength->setAnimal($child);
-                $tailLength->setLength($contentChild['tail_length']);
-                $this->getDoctrine()->getManager()->persist($tailLength);
-
-                // Persist Child & Add to litter
-                $litter->addChild($child);
-                $this->getDoctrine()->getManager()->persist($child);
-            }
-        }
-
-        // Update & Persist Litter
-        $litter->setBornAliveCount($isAliveCounter);
-        $litter->setStillbornCount(sizeof($contentChildren)-$isAliveCounter);
-
-        if($isAliveCounter == 0) {
-            $litter->setStatus('COMPLETE');
-            $litter->setRequestState(RequestStateType::FINISHED);
-        }
-
-        $this->getDoctrine()->getManager()->persist($litter);
-        $this->getDoctrine()->getManager()->flush();
-
-        // Action Log
-        // DON'T PUT IN ABOVE OTHER CODE.. IT WILL MESS UP PERSIST SEQUENCE
-        $log = ActionLogWriter::createBirth($manager, $client, $loggedInUser, $mother);
-
-        // Complete Action Log
-        ActionLogWriter::completeActionLog($manager, $log);
-
-        return new JsonResponse([Constant::RESULT_NAMESPACE => 'ok'], 200);
+        return new JsonResponse($result, 200);
     }
 
     /**
@@ -530,69 +177,694 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $content = $this->getContentAsArray($request);
         $client = $this->getAuthenticatedUser($request);
         $loggedInUser = $this->getLoggedInUser($request);
+        $statusCode = 428;
+        $litterId = null;
 
-        //Validate if there is a message_number.
-        $validation = $this->hasMessageNumber($content);
-        if(!$validation['isValid']) {
-            return new JsonResponse($validation[Constant::MESSAGE_NAMESPACE], $validation[Constant::CODE_NAMESPACE]);
+        if (!key_exists('litter_id', $content->toArray())) {
+            return new JsonResponse(
+              array (
+                Constant::RESULT_NAMESPACE => array (
+                  'code' => $statusCode,
+                  "message" => "Mandatory Litter Id not given.",
+                )
+              ), $statusCode);
         }
 
-        /** Get Litter
-         * @var Litter $litter
-         */
+        $litterId = $content['litter_id'];
         $repository = $this->getDoctrine()->getRepository(Litter::class);
-        $litter = $repository->findOneByMessageId($content['message_number']);
+        $litter = $repository->findOneBy(array ('id' => $litterId));
 
+        if (!$litter) {
+            return new JsonResponse(
+              array (
+                Constant::RESULT_NAMESPACE => array (
+                  'code' => $statusCode,
+                  "message" => "No litter was not found.",
+                )
+              ), $statusCode);
+        }
+
+        $childrenToRemove = [];
+        $stillbornsToRemove = [];
+        $maxMonthInterval = 1;
+
+        //Check if birth registration is within a time span of maxMonthInterval from now,
+        //then, and only then, the revoke and thus deletion of child animal is allowed
+        foreach ($litter->getChildren() as $child) {
+            $dateInterval = $child->getDateOfBirth()->diff(new \DateTime());
+
+            if($dateInterval->y > 0 || $dateInterval->m >= $maxMonthInterval) {
+                return new JsonResponse(
+                  array (
+                    Constant::RESULT_NAMESPACE => array (
+                      'code' => $statusCode,
+                      "message" => $child->getUlnCountryCode() .$child->getUlnNumber() . " heeft een geregistreerde geboortedatum dat langer dan "
+                        .$maxMonthInterval ." maand geleden is, zodoende is het niet geoorloofd om de melding in te trekken en daarmee de geboorte van het dier ongedaan te maken.",
+                    )
+                  ), $statusCode);
+            }
+        }
+
+        //Add check to see if revoke is allowed within MAX_TIME_INTERVAL
+        //Remove still born childs
+        foreach ($litter->getStillborns() as $stillborn) {
+            $manager->remove($stillborn);
+            $stillbornsToRemove[] = $stillborn;
+        }
+
+        //Remove alive child animal
+        /** @var Animal $child */
         foreach ($litter->getChildren() as $child) {
 
-            /** @var Animal $child */
-            if(!$child->getIsAlive()) {
+            $childrenToRemove[] = $child;
 
-                $weights = $child->getWeightMeasurements();
-                foreach ($weights as $weight) {
-                    $manager->remove($weight);
-                }
-
-                $tailLengths = $child->getTailLengthMeasurements();
-                foreach ($tailLengths as $tailLength) {
-                    $manager->remove($tailLength);
-                }
-
-                $manager->remove($child);
+            //Remove animal residence
+            $residenceHistory = $child->getAnimalResidenceHistory();
+            foreach ($residenceHistory as $residence) {
+                $manager->remove($residence);
             }
 
-            if($child->getIsAlive()) {
-                $repository = $this->getDoctrine()->getRepository(DeclareBirthResponse::class);
-                $responses = $repository->findByAnimal($child);
+            //Remove weights
+            $weights = $child->getWeightMeasurements();
+            foreach ($weights as $weight) {
+                $manager->remove($weight);
+            }
 
-                foreach ($responses as $response) {
-                    $message = new ArrayCollection();
-                    $message->set('message_number', $response->getMessageNumber());
+            //Remove tail lengths
+            $tailLengths = $child->getTailLengthMeasurements();
+            foreach ($tailLengths as $tailLength) {
+                $manager->remove($tailLength);
+            }
 
-                    $revokeDeclarationObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $message, $client, $loggedInUser, $location);
+            //Remove bodyfats
+            $bodyFats = $child->getBodyFatMeasurements();
+            foreach ($bodyFats as $bodyFat) {
+                $manager->remove($bodyFat);
+            }
 
-                    $this->persist($revokeDeclarationObject);
-                    $this->persistRevokingRequestState($revokeDeclarationObject->getMessageNumber());
+            //Remove exteriors
+            $exteriors = $child->getExteriorMeasurements();
+            foreach ($exteriors as $exterior) {
+                $manager->remove($exterior);
+            }
 
-                    $this->sendMessageObjectToQueue($revokeDeclarationObject);
+            //Remove muscleThickness
+            $muscleThicknesses = $child->getMuscleThicknessMeasurements();
+            foreach ($muscleThicknesses as $muscleThickness) {
+                $manager->remove($muscleThickness);
+            }
+
+            //Remove breedCodes
+            if ($child->getBreedCodes()) {
+                $breedCodes = $child->getBreedCodes();
+
+                foreach ($breedCodes->getCodes() as $codes) {
+                    $manager->remove($codes);
+                }
+                $child->setBreedCodes(null);
+                $manager->remove($breedCodes);
+            }
+
+            //Remove breedset values
+            $breedValues = $child->getBreedValuesSets();
+            foreach ($breedValues as $breedValue) {
+                $manager->remove($breedValue);
+            }
+
+            //Remove gender change history items
+            $genderHistories = $child->getGenderHistory();
+            foreach ($genderHistories as $genderHistory) {
+                $manager->remove($genderHistory);
+            }
+
+            //Remove animalCache
+            //$animalCache = $manager->getRepository(AnimalCache::class)->findOneBy(['animalId' => $child->getId()]);
+
+//            if($animalCache){
+//                $manager->remove($animalCache);
+//                $manager->flush();
+//            }
+
+            //Restore tag if it does not exist
+            /** @var Tag $tagToRestore */
+            $tagToRestore = null;
+
+            /** @var TagRepository $tagRepository */
+            $tagRepository = $manager->getRepository(Tag::getClassName());
+            $tagToRestore = $tagRepository->findByUlnNumberAndCountryCode($child->getUlnCountryCode(), $child->getUlnNumber());
+
+            if ($tagToRestore) {
+                $tagToRestore->setTagStatus(TagStateType::UNASSIGNED);
+            } else {
+                $tagToRestore = new Tag();
+                $tagToRestore->setLocation($location);
+                $tagToRestore->setOrderDate(new \DateTime());
+                $tagToRestore->setOwner($client);
+                $tagToRestore->setTagStatus(TagStateType::UNASSIGNED);
+                $tagToRestore->setUlnCountryCode($child->getUlnCountryCode());
+                $tagToRestore->setUlnNumber($child->getUlnNumber());
+                $tagToRestore->setAnimalOrderNumber($child->getAnimalOrderNumber());
+            }
+
+            $manager->persist($tagToRestore);
+            $manager->flush();
+
+            //Remove child from location
+            if ($location->getAnimals()->contains($child)) {
+                $location->getAnimals()->removeElement($child);
+                $manager->persist($location);
+            }
+
+            $litter->removeChild($child);
+            $manager->persist($litter);
+            $manager->flush();
+
+            $child->setParentFather(null);
+            $child->setParentMother(null);
+            $child->setParentNeuter(null);
+            $child->setSurrogate(null);
+
+            $manager->persist($child);
+            $manager->flush();
+
+            $declareBirths = $litter->getDeclareBirths();
+
+            foreach ($declareBirths as $declareBirth) {
+                if ($declareBirth->getAnimal() != null) {
+                    if ($declareBirth->getAnimal()->getUlnNumber() == $child->getUlnNumber()) {
+                        $declareBirthResponses = $declareBirth->getResponses();
+                        $declareBirth->setRequestState(RequestStateType::REVOKED);
+
+                        /** @var DeclareBirthResponse $declareBirthResponse */
+                        foreach ($declareBirthResponses as $declareBirthResponse) {
+                            if($declareBirthResponse->getAnimal() != null) {
+                                if ($declareBirthResponse->getAnimal()->getUlnNumber() == $child->getUlnNumber()) {
+                                    $declareBirthResponse->setAnimal(null);
+                                    $manager->persist($declareBirthResponse);
+
+                                }
+                            }
+                        }
+                        //Remove child animal
+                        $declareBirth->setAnimal(null);
+                        $manager->persist($declareBirth);
+                    }
+                }
+            }
+
+            //Remove child animal
+            $manager->remove($child);
+        }
+
+        $manager->flush();
+
+        //Re-retrieve litter, check count
+        $litter = $repository->findOneBy(array ('id'=> $litterId));
+
+        $succeeded = true;
+
+        foreach ($childrenToRemove as $child) {
+            if($litter->getChildren()->contains($child)) {
+               $succeeded = false;
+                break;
+            }
+        }
+
+        if($succeeded) {
+            foreach ($stillbornsToRemove as $child) {
+                if($litter->getStillborns()->contains($child)) {
+                    $succeeded = false;
+                    break;
                 }
             }
         }
-        $manager->flush();
 
-        if(sizeof($litter->getChildren()) == 0) {
-            $litter->setStatus('REVOKED');
+        $childrenToRemove = null;
+        $stillbornsToRemove = null;
+
+        if($succeeded) {
+            $litter->setStatus(RequestStateType::REVOKED);
             $litter->setRequestState(RequestStateType::REVOKED);
-            $litter->setRevokeDate(new \DateTime('now'));
+            $litter->setRevokeDate(new \DateTime());
             $litter->setRevokedBy($loggedInUser);
 
             $manager->persist($litter);
             $manager->flush();
 
-            return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
+            $revokeMessages = [];
+            //Create revoke request for every declareBirth request
+            if ($litter->getDeclareBirths()->count() > 0) {
+                foreach ($litter->getDeclareBirths() as $declareBirth) {
+                    $declareBirthResponse = $this->getEntityGetter()
+                      ->getResponseDeclarationByMessageId($declareBirth->getMessageId());
+
+                    if ($declareBirthResponse) {
+                        if($declareBirthResponse->getMessageNumber() != null) {
+                            $message = new ArrayCollection();
+                            $message->set(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE, $declareBirthResponse->getMessageNumber());
+                            $revokeDeclarationObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $message, $client, $loggedInUser, $location);
+                            $this->persist($revokeDeclarationObject);
+                            $this->persistRevokingRequestState($revokeDeclarationObject->getMessageNumber());
+                            $this->sendMessageObjectToQueue($revokeDeclarationObject);
+                            $revokeMessages[] = $revokeDeclarationObject;
+                        }
+                    }
+                }
+            }
+            
+            //Clear cache for this location, to reflect changes on the livestock
+            $this->clearLivestockCacheForLocation($location);
+
+            return new JsonResponse(array(Constant::RESULT_NAMESPACE => $revokeMessages), 200);
+        }
+
+        return new JsonResponse(
+          array(
+            Constant::RESULT_NAMESPACE => array (
+              'code' => $statusCode,
+              "message" => "Failed to revoke and remove all child and stillborn animals ",
+            )
+          ), $statusCode);
+    }
+
+    /**
+     * Get a list of suggested candidate fathers based on matings done in within 145 + (-12 & +12) days, from now
+     * and all other Rams on current location.
+     *
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/{uln}/candidate-fathers")
+     * @Method("POST")
+     */
+    public function getCandidateFathers(Request $request, $uln) {
+        $content = $this->getContentAsArray($request);
+        $dateOfBirth = new \DateTime();
+
+        if(key_exists('date_of_birth', $content->toArray())) {
+            $dateOfBirth = new \DateTime($content["date_of_birth"]);
+        }
+
+        /** @var Location $location */
+        $location = $this->getSelectedLocation($request);
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+        /** @var DeclareBirthRepository $declareBirthRepository */
+        $declareBirthRepository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
+        /** @var Ewe $mother */
+        $mother = null;
+        $motherUlnCountryCode = null;
+        $motherUlnNumber = null;
+
+        if($uln) {
+            $motherUlnCountryCode = mb_substr($uln, 0, 2);
+            $motherUlnNumber = substr($uln, 2);
+            $mother = $animalRepository->findOneBy(array('ulnCountryCode'=>$motherUlnCountryCode, 'ulnNumber' => $motherUlnNumber));
+        }
+
+        if(!$mother) {
+            $statusCode = 428;
+            return new JsonResponse(
+              array(
+                Constant::RESULT_NAMESPACE => array(
+                  'code'=> $statusCode,
+                  'message'=> "Moeder met opgegeven ULN: " .$motherUlnCountryCode . $motherUlnNumber ." is niet gevonden."
+                )
+              ), $statusCode
+            );
+        }
+
+        $result = [];
+        $candidateFathers = $declareBirthRepository->getCandidateFathers($mother, $dateOfBirth);
+        $otherCandidateFathers = $animalRepository->getLiveStock($location, true, false, false, Ram::class);
+        $filteredOtherCandidateFathers = [];
+        $suggestedCandidateFathers = [];
+        $suggestedCandidateFatherIds = [];
+
+        /** @var Animal $animal */
+        foreach ($candidateFathers as $animal) {
+            $suggestedCandidateFatherIds['id'] = $animal->getId();
+            $suggestedCandidateFathers[] = [
+              JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+              JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+              JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+              JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+              JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+              JsonInputConstant::GENDER =>  $animal->getGender(),
+              JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+              JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+              JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+              JsonInputConstant::UBN => $location->getUbn(),
+              JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+              JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+            ];
+        }
+
+        /** @var Animal $animal */
+        foreach ($otherCandidateFathers as $animal) {
+            if(!array_key_exists($animal->getId(), $suggestedCandidateFatherIds)) {
+                $filteredOtherCandidateFathers[] = [
+                  JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                  JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                  JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                  JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+                  JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+                  JsonInputConstant::GENDER =>  $animal->getGender(),
+                  JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+                  JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+                  JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+                  JsonInputConstant::UBN => $location->getUbn(),
+                  JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                  JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+                ];
+            }
+        }
+
+        $filteredOtherCandidateFathersIds = null;
+
+        $result['suggested_candidate_fathers'] = $suggestedCandidateFathers;
+        $result['other_candidate_fathers'] = $filteredOtherCandidateFathers;
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+    }
+
+    /**
+     * Get a list of suggested candidate surrogates based on births done in within 5,5 months from given date of birth
+     * and all other Ewes on current location.
+     *
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/{uln}/candidate-surrogates")
+     * @Method("POST")
+     */
+    public function getCandidateSurrogateMothers(Request $request, $uln) {
+        /** @var Location $location */
+        $location = $this->getSelectedLocation($request);
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+        /** @var DeclareBirthRepository $declareBirthRepository */
+        $declareBirthRepository = $this->getDoctrine()->getRepository(Constant::DECLARE_BIRTH_REPOSITORY);
+        /** @var Ewe $mother */
+        $mother = null;
+        $motherUlnCountryCode = null;
+        $motherUlnNumber = null;
+
+        if($uln) {
+            $motherUlnCountryCode = mb_substr($uln, 0, 2);
+            $motherUlnNumber = substr($uln, 2);
+            $mother = $animalRepository->findOneBy(array ('ulnCountryCode' => $motherUlnCountryCode, 'ulnNumber' => $motherUlnNumber));
+        }
+
+        if(!$mother) {
+            $statusCode = 428;
+            return new JsonResponse(
+              array(
+                Constant::RESULT_NAMESPACE => array(
+                  'code'=> $statusCode,
+                  'message'=> "Moeder met opgegeven ULN: " .$motherUlnCountryCode . $motherUlnNumber ." is niet gevonden."
+                )
+              ), $statusCode
+            );
+        }
+
+        $content = $this->getContentAsArray($request);
+        if($content->containsKey('date_of_birth')) {
+            $dateOfBirth = new \DateTime($content->get('date_of_birth'));
+        } else {
+            $dateOfBirth = new \DateTime();
+        }
+
+        $suggestedCandidatesResult = [];
+        $otherCandidatesResult = [];
+        $result = [];
+
+        $surrogateMotherCandidates = $declareBirthRepository->getCandidateSurrogateMothers($location , $mother);
+
+        $offsetDays = 7;
+        $minimumDaysIntervalFromNowAndBirth = 167;
+        $offsetDateFromNow = $dateOfBirth->modify('-' .$offsetDays .'days');
+
+        /** @var Ewe $animal */
+        foreach ($surrogateMotherCandidates as $animal) {
+
+            //Check if surrogate mother candidate has given birth to childeren within the last 6 months
+            if($animal->getChildren()->count() == 0) {
+                if(self::SHOW_OTHER_SURROGATE_MOTHERS) {
+                    $otherCandidatesResult[] = [
+                        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                        JsonInputConstant::PEDIGREE_NUMBER => $animal->getPedigreeNumber(),
+                        JsonInputConstant::WORK_NUMBER => $animal->getAnimalOrderNumber(),
+                        JsonInputConstant::GENDER => $animal->getGender(),
+                        JsonInputConstant::DATE_OF_BIRTH => $animal->getDateOfBirth(),
+                        JsonInputConstant::DATE_OF_DEATH => $animal->getDateOfDeath(),
+                        JsonInputConstant::IS_ALIVE => $animal->getIsAlive(),
+                        JsonInputConstant::UBN => $location->getUbn(),
+                        JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                        JsonInputConstant::IS_PUBLIC => $animal->isAnimalPublic(),
+                    ];
+                }
+                continue;
+            }
+
+            $childeren = $animal->getChildren();
+            $addToOtherCandidates = true;
+
+            /** @var Animal $child */
+            foreach ($childeren as $child) {
+                if($child->getDateOfBirth()) {
+                    //Add as a true candidate surrogate to list
+                    if(TimeUtil::getDaysBetween($child->getDateOfBirth(), $offsetDateFromNow) > $minimumDaysIntervalFromNowAndBirth) {
+                        $suggestedCandidatesResult[] = [
+                          JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                          JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                          JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                          JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+                          JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+                          JsonInputConstant::GENDER =>  $animal->getGender(),
+                          JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+                          JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+                          JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+                          JsonInputConstant::UBN => $location->getUbn(),
+                          JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                          JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+                        ];
+                        $addToOtherCandidates = false;
+                        break;
+                    }
+
+                }
+            }
+
+            if (!$addToOtherCandidates) {
+                continue;
+            }
+
+            if(self::SHOW_OTHER_SURROGATE_MOTHERS) {
+                $otherCandidatesResult[] = [
+                    JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                    JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                    JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                    JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+                    JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+                    JsonInputConstant::GENDER =>  $animal->getGender(),
+                    JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+                    JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+                    JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+                    JsonInputConstant::UBN => $location->getUbn(),
+                    JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                    JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+                ];
+            }
         }
 
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
+        $result['suggested_candidate_surrogates'] = $suggestedCandidatesResult;
+        $result['other_candidate_surrogates'] = $otherCandidatesResult;
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+    }
+
+    /**
+     * Get a list of suggested mothers based on matings done in within 145 days
+     * and all other Ewes on current location.
+     *
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/candidate-mothers")
+     * @Method("POST")
+     */
+    public function getCandidateMothers(Request $request) {
+        $content = $this->getContentAsArray($request);
+        $dateOfBirth = new \DateTime();
+
+        if(key_exists('date_of_birth', $content->toArray())) {
+            $dateOfBirth = new \DateTime($content["date_of_birth"]);
+        }
+
+        /** @var Location $location */
+        $location = $this->getSelectedLocation($request);
+
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
+
+        $suggestedCandidatesResult = [];
+        $otherCandidatesResult = [];
+        $result = [];
+
+        $motherCandidates = $animalRepository->getLiveStock($location , true, false, false, Ewe::class);
+
+        $result['suggested_candidate_mothers'] = $suggestedCandidatesResult;
+        $result['other_candidate_mothers'] = $otherCandidatesResult;
+
+        $pregnancyDays = 145;
+        $minimumDaysBetweenBirths = 167;
+        $matingDaysOffset = 12;
+
+        //Animal has no registered matings, thus it is not a true candidate
+        /** @var Ewe $animal */
+        foreach ($motherCandidates as $animal) {
+            if($animal->getMatings()->count() == 0 ) {
+                if(self::SHOW_OTHER_CANDIDATE_MOTHERS) {
+                    $otherCandidatesResult[] = [
+                        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                        JsonInputConstant::PEDIGREE_NUMBER => $animal->getPedigreeNumber(),
+                        JsonInputConstant::WORK_NUMBER => $animal->getAnimalOrderNumber(),
+                        JsonInputConstant::GENDER => $animal->getGender(),
+                        JsonInputConstant::DATE_OF_BIRTH => $animal->getDateOfBirth(),
+                        JsonInputConstant::DATE_OF_DEATH => $animal->getDateOfDeath(),
+                        JsonInputConstant::IS_ALIVE => $animal->getIsAlive(),
+                        JsonInputConstant::UBN => $location->getUbn(),
+                        JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                        JsonInputConstant::IS_PUBLIC => $animal->isAnimalPublic(),
+                        JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
+                    ];
+                }
+                continue;
+            }
+
+            $addToOtherCandidates = true;
+            $checkAnimalForMatings = true;
+
+            /** @var DeclareBirthRepository $declareBirthRepository */
+            $declareBirthRepository = $this->getDoctrine()->getRepository(DeclareBirth::getClassName());
+            $children = $declareBirthRepository->getChildrenOfEwe($animal);
+
+            //Check if Mother has children that are born in the last 5,5 months if so, it is not a true candidate
+            /** @var Animal $child */
+            foreach ($children as $child) {
+                $daysbetweenCurrentBirthAndPreviousBirths = TimeUtil::getDaysBetween($child->getDateOfBirth(), $dateOfBirth);
+
+                if(!($daysbetweenCurrentBirthAndPreviousBirths >= $minimumDaysBetweenBirths)) {
+                    $checkAnimalForMatings = false;
+                    break;
+                }
+            }
+
+            //animal has given birth within the last 167 days, thus it is not a true candidate
+            if(!$checkAnimalForMatings) {
+                if(self::SHOW_OTHER_CANDIDATE_MOTHERS) {
+                    $otherCandidatesResult[] = [
+                        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                        JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+                        JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+                        JsonInputConstant::GENDER =>  $animal->getGender(),
+                        JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+                        JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+                        JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+                        JsonInputConstant::UBN => $location->getUbn(),
+                        JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                        JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+                        JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
+                    ];
+                }
+                continue;
+            }
+
+            $matings = $animal->getMatings();
+
+            /** @var Mate $mating */
+            foreach ($matings as $mating) {
+                $lowerboundPregnancyDays = $pregnancyDays - $matingDaysOffset;
+                $upperboundPregnancyDays = $pregnancyDays + $matingDaysOffset;
+
+                //Compare if final father suggestion date is before dateOfBirth lower- & upperbound
+                $expectedBirthDateLowerbound = clone $mating->getStartDate();
+                $expectedBirthDateLowerbound->modify("+" . (string) $lowerboundPregnancyDays . " days");
+
+                $expectedBirthDateUpperbound = clone $mating->getEndDate();
+                $expectedBirthDateUpperbound->modify("+" . (string) $upperboundPregnancyDays . " days");
+
+                //Get the date difference between the computed dateOfBirth and the actual given dateOfBirth
+                //Check if it is betweeen date interval of given upperBound and lowerBound
+                if (TimeUtil::isDateBetweenDates($dateOfBirth, $expectedBirthDateLowerbound, $expectedBirthDateUpperbound)) {
+                    $candidateFathers[] = $mating->getStudRam();
+
+                    //Add as a true candidate surrogate to list
+                    $suggestedCandidatesResult[] = [
+                        JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                        JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                        JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                        JsonInputConstant::PEDIGREE_NUMBER =>  $animal->getPedigreeNumber(),
+                        JsonInputConstant::WORK_NUMBER =>  $animal->getAnimalOrderNumber(),
+                        JsonInputConstant::GENDER =>  $animal->getGender(),
+                        JsonInputConstant::DATE_OF_BIRTH =>  $animal->getDateOfBirth(),
+                        JsonInputConstant::DATE_OF_DEATH =>  $animal->getDateOfDeath(),
+                        JsonInputConstant::IS_ALIVE =>  $animal->getIsAlive(),
+                        JsonInputConstant::UBN => $location->getUbn(),
+                        JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                        JsonInputConstant::IS_PUBLIC =>  $animal->isAnimalPublic(),
+                        JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
+                    ];
+                    $addToOtherCandidates = false;
+                    break;
+                }
+            }
+
+            if (!$addToOtherCandidates) {
+                continue;
+            }
+
+            if(self::SHOW_OTHER_CANDIDATE_MOTHERS) {
+                $otherCandidatesResult[] = [
+                    JsonInputConstant::ULN_COUNTRY_CODE => $animal->getUlnCountryCode(),
+                    JsonInputConstant::ULN_NUMBER => $animal->getUlnNumber(),
+                    JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
+                    JsonInputConstant::PEDIGREE_NUMBER => $animal->getPedigreeNumber(),
+                    JsonInputConstant::WORK_NUMBER => $animal->getAnimalOrderNumber(),
+                    JsonInputConstant::GENDER => $animal->getGender(),
+                    JsonInputConstant::DATE_OF_BIRTH => $animal->getDateOfBirth(),
+                    JsonInputConstant::DATE_OF_DEATH => $animal->getDateOfDeath(),
+                    JsonInputConstant::IS_ALIVE => $animal->getIsAlive(),
+                    JsonInputConstant::UBN => $location->getUbn(),
+                    JsonInputConstant::IS_HISTORIC_ANIMAL => false,
+                    JsonInputConstant::IS_PUBLIC => $animal->isAnimalPublic(),
+                    JsonInputConstant::BREED_CODE => $animal->getBreedCode(),
+                ];
+            }
+
+        }
+
+        $result['suggested_candidate_mothers'] = $suggestedCandidatesResult;
+        $result['other_candidate_mothers'] = $otherCandidatesResult;
+
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+    }
+
+    /**
+     * TODO delete me from both Front-end and API
+     * Temporarily endpoint to let catch errors.
+     *
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("-errors")
+     * @Method("GET")
+     */
+    public function getBirthErrors(Request $request) {
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => []), 200);
     }
 }

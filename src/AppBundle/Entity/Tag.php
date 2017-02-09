@@ -23,7 +23,7 @@ class Tag {
      *
      * @ORM\Id
      * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
+     * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $id;
 
@@ -446,6 +446,8 @@ class Tag {
         $this->location = $location;
     }
 
-
+    public static function getClassName() {
+        return get_called_class();
+    }
 
 }
