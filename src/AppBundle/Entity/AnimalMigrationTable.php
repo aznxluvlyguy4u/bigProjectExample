@@ -20,7 +20,7 @@ class AnimalMigrationTable
      *
      * @ORM\Id
      * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
+     * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $id;
 
@@ -290,6 +290,15 @@ class AnimalMigrationTable
      * @JMS\Type("integer")
      */
     private $deletedMotherVsmId;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    private $logDate;
 
     /**
      * AnimalMigrationTable constructor.
@@ -906,5 +915,22 @@ class AnimalMigrationTable
         $this->deletedMotherVsmId = $deletedMotherVsmId;
     }
 
+    /**
+     * @return \DateTime
+     */
+    public function getLogDate()
+    {
+        return $this->logDate;
+    }
 
+    /**
+     * @param \DateTime $logDate
+     */
+    public function setLogDate($logDate)
+    {
+        $this->logDate = $logDate;
+    }
+
+
+    
 }

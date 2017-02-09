@@ -23,7 +23,7 @@ class LocationHealthInspection
      *
      * @ORM\Id
      * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
+     * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Exclude
      */
     protected $id;
@@ -90,12 +90,36 @@ class LocationHealthInspection
     private $totalLeadTime;
 
     /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     */
+    private $requiredAnimalCount;
+
+    /**
      * @var string
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      */
     private $nextAction;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $roadmap;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $certificationStatus;
 
     /**
      * @var ArrayCollection
@@ -105,6 +129,18 @@ class LocationHealthInspection
      * @JMS\Type("array")
      */
     private $directions;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\ManyToMany(targetEntity="Animal")
+     * @ORM\JoinTable(name="location_health_inspection_animal",
+     *     joinColumns={@ORM\JoinColumn(name="location_health_inspection_id", referencedColumnName="id")},
+     *     inverseJoinColumns={@ORM\JoinColumn(name="animal_id", referencedColumnName="id")}
+     * )
+     * @JMS\Type("array")
+     */
+    private $animals;
 
     /**
      * @var ArrayCollection
@@ -131,6 +167,7 @@ class LocationHealthInspection
         $this->setInspectionId(Utils::generateTokenCode());
         $this->directions = new ArrayCollection();
         $this->results = new ArrayCollection();
+        $this->animals = new ArrayCollection();
     }
 
     /**
@@ -347,5 +384,77 @@ class LocationHealthInspection
     public function setOrderNumber($orderNumber)
     {
         $this->orderNumber = $orderNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRoadmap()
+    {
+        return $this->roadmap;
+    }
+
+    /**
+     * @param string $roadmap
+     */
+    public function setRoadmap($roadmap)
+    {
+        $this->roadmap = $roadmap;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCertificationStatus()
+    {
+        return $this->certificationStatus;
+    }
+
+    /**
+     * @param string $certificationStatus
+     */
+    public function setCertificationStatus($certificationStatus)
+    {
+        $this->certificationStatus = $certificationStatus;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getAnimals()
+    {
+        return $this->animals;
+    }
+
+    /**
+     * @param ArrayCollection $animals
+     */
+    public function setAnimals($animals)
+    {
+        $this->animals = $animals;
+    }
+
+    /**
+     * @param Animal $animal
+     */
+    public function addAnimal($animal)
+    {
+        $this->animals->add($animal);
+    }
+
+    /**
+     * @return int
+     */
+    public function getRequiredAnimalCount()
+    {
+        return $this->requiredAnimalCount;
+    }
+
+    /**
+     * @param int $requiredAnimalCount
+     */
+    public function setRequiredAnimalCount($requiredAnimalCount)
+    {
+        $this->requiredAnimalCount = $requiredAnimalCount;
     }
 }

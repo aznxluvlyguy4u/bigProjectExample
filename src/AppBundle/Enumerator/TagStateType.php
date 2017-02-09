@@ -20,4 +20,5 @@ class TagStateType {
   const TRANSFERRED_TO_NEW_OWNER = "TRANSFERRED";
   const REPLACING = "REPLACING";
   const REPLACED = "REPLACED";
+  const RESERVED = "RESERVED";
 }

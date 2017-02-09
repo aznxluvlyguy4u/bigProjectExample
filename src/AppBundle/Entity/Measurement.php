@@ -33,7 +33,7 @@ abstract class Measurement {
      *
      * @ORM\Column(type="integer")
      * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
+     * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     protected $id;
 
@@ -72,6 +72,23 @@ abstract class Measurement {
      * @JMS\Type("AppBundle\Entity\Inspector")
      */
     protected $inspector;
+
+    /**
+     * @var Person
+     *
+     * @ORM\ManyToOne(targetEntity="Person")
+     * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
+     */
+    protected $actionBy;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    protected $editDate;
 
     /**
     * Measurement constructor.
@@ -178,6 +195,40 @@ abstract class Measurement {
         $this->animalIdAndDate = $animalIdAndDate;
     }
 
+    /**
+     * @return Client|Employee
+     */
+    public function getActionBy()
+    {
+        return $this->actionBy;
+    }
 
+    /**
+     * @param Person $actionBy
+     */
+    public function setActionBy($actionBy)
+    {
+        $this->actionBy = $actionBy;
+    }
+
+    /**
+     * Set editDate
+     *
+     * @param \DateTime $editDate
+     */
+    public function setEditDate($editDate)
+    {
+        $this->editDate = $editDate;
+    }
+
+    /**
+     * Get editDate
+     *
+     * @return \DateTime
+     */
+    public function getEditDate()
+    {
+        return $this->editDate;
+    }
 
 }

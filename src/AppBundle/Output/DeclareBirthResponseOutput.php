@@ -14,9 +14,12 @@ use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Litter;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
+use AppBundle\Entity\Stillborn;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
+use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\Collection;
+use AppBundle\Component\HttpFoundation\JsonResponse;
 
 class DeclareBirthResponseOutput extends Output
 {
@@ -26,9 +29,8 @@ class DeclareBirthResponseOutput extends Output
      * @param Collection $declarations
      * @return array
      */
-    public static function createBirth($litter, $declarations)
-    {
-        $res = array();
+    public static function createBirth($litter, $declarations) {
+        $res = array ();
 
         // GENERAL
         $res["log_date"] = Utils::fillNull($litter->getLogDate());
@@ -38,7 +40,12 @@ class DeclareBirthResponseOutput extends Output
         $res["is_abortion"] = Utils::fillNull($litter->getAbortion());
         $res["is_pseudo_pregnancy"] = Utils::fillNull($litter->getPseudoPregnancy());
         $res["status"] = Utils::fillNull($litter->getStatus());
-        $res["request_state"] = Utils::fillNull($litter->getRequestState());
+
+        if ($res["is_abortion"] || $res["is_pseudo_pregnancy"]) {
+            $res["request_state"] = RequestStateType::FINISHED;
+        } else {
+            $res["request_state"] = Utils::fillNull($litter->getRequestState());
+        }
 
         // MOTHER
         $mother = $litter->getAnimalMother();
@@ -58,85 +65,98 @@ class DeclareBirthResponseOutput extends Output
         // CHILDREN
         $children = $litter->getChildren();
         $childrenTemp = array();
-        if(sizeof($children) > 0) {
-            foreach ($children as $child) {
-                $childTemp = array();
+        $stillborns = $litter->getStillborns();
 
-                /** @var Animal $child */
-                $childTemp['is_alive'] = $child->getIsAlive();
-                $childTemp['uln_country_code'] = $child->getUlnCountryCode();
-                $childTemp['uln_number'] = $child->getUlnNumber();
+        //Add stillborn to children collection
+        foreach ($stillborns as $stillborn) {
+            $childTemp = array();
+            $childTemp['is_alive'] = false;
+            $childTemp['gender'] = $stillborn->getGender();
+            $childTemp['birth_progress'] = Utils::fillNull($stillborn->getBirthProgress());
+            $childTemp['birth_weight'] = Utils::fillNull($stillborn->getWeight());
+            $childTemp['tail_length'] = Utils::fillNull($stillborn->getTailLength());
+            $childTemp['is_successful'] = true;
+            $childrenTemp[] = $childTemp;
+        }
 
-                if ($child instanceof Ewe) {
-                    $childTemp['gender'] = "FEMALE";
+        //Add born children
+        foreach ($children as $child) {
+            $childTemp = array();
+
+            /** @var Animal $child */
+            $childTemp['is_alive'] = $child->getIsAlive();
+            $childTemp['uln_country_code'] = $child->getUlnCountryCode();
+            $childTemp['uln_number'] = $child->getUlnNumber();
+
+            if ($child instanceof Ewe) {
+                $childTemp['gender'] = "FEMALE";
+            }
+
+            if ($child instanceof Ram) {
+                $childTemp['gender'] = "MALE";
+            }
+
+            if ($child instanceof Neuter) {
+                $childTemp['gender'] = "NEUTER";
+            }
+
+            $childTemp['birth_progress'] = $child->getBirthProgress();
+            $childTemp['lambar'] = $child->getLambar();
+
+            $surrogate = $child->getSurrogate();
+            if ($surrogate != null) {
+                $childTemp["surrogate_uln_country_code"] = $surrogate->getUlnCountryCode();
+                $childTemp["surrogate_uln_number"] = $surrogate->getUlnNumber();
+            } else {
+                $childTemp["surrogate_uln_country_code"] = "";
+                $childTemp["surrogate_uln_number"] = "";
+            }
+
+            $weights = $child->getWeightMeasurements();
+            foreach ($weights as $weight) {
+                /** @var Weight $weight */
+                if ($weight->isIsBirthWeight()) {
+                    $childTemp['birth_weight'] = $weight->getWeight();
                 }
+            }
 
-                if ($child instanceof Ram) {
-                    $childTemp['gender'] = "MALE";
-                }
-
-                if ($child instanceof Neuter) {
-                    $childTemp['gender'] = "NEUTER";
-                }
-
-                $childTemp['birth_progress'] = $child->getBirthProgress();
-                $childTemp['lambar'] = $child->getLambar();
-
-                $surrogate = $child->getSurrogate();
-                if ($surrogate != null) {
-                    $childTemp["surrogate_uln_country_code"] = $surrogate->getUlnCountryCode();
-                    $childTemp["surrogate_uln_number"] = $surrogate->getUlnNumber();
-                } else {
-                    $childTemp["surrogate_uln_country_code"] = "";
-                    $childTemp["surrogate_uln_number"] = "";
-                }
-
-                $weights = $child->getWeightMeasurements();
-                foreach ($weights as $weight) {
-                    /** @var Weight $weight */
-                    if ($weight->isIsBirthWeight()) {
-                        $childTemp['birth_weight'] = $weight->getWeight();
-                    }
-                }
-
-
-                /** @var TailLength $tailLength */
+            /** @var TailLength $tailLength */
+            if($child->getTailLengthMeasurements()->count() > 0) {
                 $tailLength = $child->getTailLengthMeasurements()->first();
                 $childTemp['tail_length'] = $tailLength->getLength();
-
-                $childTemp['is_successful'] = true;
-
-                $childrenTemp[] = $childTemp;
             }
+
+            $childTemp['is_successful'] = true;
+            $childrenTemp[] = $childTemp;
         }
 
-        /** @var DeclareBirth $declaration */
-        if(sizeof($declarations) > 0) {
-            foreach ($declarations as $declaration) {
-
-                /** @var DeclareBirthResponse $response */
-                $response = $declaration->getResponses()->last();
-                if($response != null) {
-                    $failedChild = array();
-                    $failedChild['uln_country_code'] = $declaration->getUlnCountryCode();
-                    $failedChild['uln_number'] = $declaration->getUlnNumber();
-                    $failedChild['gender'] = $declaration->getGender();
-                    $failedChild['birth_weight'] = $declaration->getBirthWeight();
-                    $failedChild['tail_length'] = $declaration->getBirthTailLength();
-                    $failedChild['birth_progress'] = $declaration->getBirthType();
-                    $failedChild['lambar'] = $declaration->getHasLambar();
-                    $failedChild['surrogate_uln_country_code'] = $declaration->getUlnCountryCodeSurrogate();
-                    $failedChild['surrogate_uln_number'] = $declaration->getUlnSurrogate();
-
-                    $failedChild['is_successful'] = ($response->getSuccessIndicator() == 'J');
-                    $failedChild['error_kind'] = $response->getErrorKindIndicator();
-                    $failedChild['error_code'] = $response->getErrorCode();
-                    $failedChild['error_message'] = $response->getErrorMessage();
-
-                    $childrenTemp[] = $failedChild;
-                }
-            }
-        }
+//        /** @var DeclareBirth $declaration */
+//        if(sizeof($declarations) > 0) {
+//            foreach ($declarations as $declaration) {
+//
+//                /** @var DeclareBirthResponse $response */
+//                $response = $declaration->getResponses()->last();
+//                if($response != null) {
+//                    $failedChild = array();
+//                    $failedChild['uln_country_code'] = $declaration->getUlnCountryCode();
+//                    $failedChild['uln_number'] = $declaration->getUlnNumber();
+//                    $failedChild['gender'] = $declaration->getGender();
+//                    $failedChild['birth_weight'] = $declaration->getBirthWeight();
+//                    $failedChild['tail_length'] = $declaration->getBirthTailLength();
+//                    $failedChild['birth_progress'] = $declaration->getBirthType();
+//                    $failedChild['lambar'] = $declaration->getHasLambar();
+//                    $failedChild['surrogate_uln_country_code'] = $declaration->getUlnCountryCodeSurrogate();
+//                    $failedChild['surrogate_uln_number'] = $declaration->getUlnSurrogate();
+//
+//                    $failedChild['is_successful'] = ($response->getSuccessIndicator() == 'J');
+//                    $failedChild['error_kind'] = $response->getErrorKindIndicator();
+//                    $failedChild['error_code'] = $response->getErrorCode();
+//                    $failedChild['error_message'] = $response->getErrorMessage();
+//
+//                    $childrenTemp[] = $failedChild;
+//                }
+//            }
+//        }
 
         $res["children"] = $childrenTemp;
 
@@ -152,20 +172,27 @@ class DeclareBirthResponseOutput extends Output
         $res = array();
 
         foreach ($declarations as $declaration) {
+
+            if($declaration['is_abortion'] == true ||  $declaration['is_pseudo_pregnancy'] == true) {
+                $requestState = RequestStateType::FINISHED;
+            } else {
+                $requestState = Utils::fillNull($declaration['request_state']);
+            }
+
             $res[] = array(
-                "log_date" => Utils::fillNull($declaration['log_date']),
-                "date_of_birth" => Utils::fillNull($declaration['date_of_birth']),
-                "mother_uln_country_code" => Utils::fillNull($declaration['mother_uln_country_code']),
-                "mother_uln_number" => Utils::fillNull($declaration['mother_uln_number']),
-                "father_uln_country_code" => Utils::fillNull($declaration['father_uln_country_code']),
-                "father_uln_number" => Utils::fillNull($declaration['father_uln_number']),
-                "stillborn_count" => Utils::fillNull($declaration['stillborn_count']),
-                "born_alive_count" => Utils::fillNull($declaration['born_alive_count']),
-                "is_abortion" => Utils::fillNull($declaration['is_abortion']),
-                "is_pseudo_pregnancy" => Utils::fillNull($declaration['is_pseudo_pregnancy']),
-                "status" => Utils::fillNull($declaration['status']),
-                "request_state" => Utils::fillNull($declaration['request_state']),
-                "message_number" => Utils::fillNull($declaration['message_id'])
+              "litter_id" => $declaration['id'],
+              "log_date" => Utils::fillNull($declaration['log_date']),
+              "date_of_birth" => Utils::fillNull($declaration['date_of_birth']),
+              "mother_uln_country_code" => Utils::fillNull($declaration['mother_uln_country_code']),
+              "mother_uln_number" => Utils::fillNull($declaration['mother_uln_number']),
+              "father_uln_country_code" => Utils::fillNull($declaration['father_uln_country_code']),
+              "father_uln_number" => Utils::fillNull($declaration['father_uln_number']),
+              "stillborn_count" => Utils::fillNull($declaration['stillborn_count']),
+              "born_alive_count" => Utils::fillNull($declaration['born_alive_count']),
+              "is_abortion" => Utils::fillNull($declaration['is_abortion']),
+              "is_pseudo_pregnancy" => Utils::fillNull($declaration['is_pseudo_pregnancy']),
+              "status" => Utils::fillNull($declaration['status']),
+              "request_state" => $requestState,
             );
         }
 

@@ -146,6 +146,7 @@ class Constant
     const EMPLOYEE_REPOSITORY = 'AppBundle:Employee';
 
     const COUNTRY_REPOSITORY = 'AppBundle:Country';
+    const COLLAR_REPOSITORY = 'AppBundle:Collar';
     const COMPANY_REPOSITORY = 'AppBundle:Company';
     const LOCATION_REPOSITORY = 'AppBundle:Location';
 
@@ -162,4 +163,8 @@ class Constant
     
     const ENTITY_BASE_PATH = "AppBundle\\Entity\\";
 
+    const CACHE_DEFAULT_TIME_SPAN = 3600;
+    const CACHE_LIVESTOCK_TIME_SPAN = 3600;
+    const CACHE_HISTORIC_LIVESTOCK_TIME_SPAN = 3600;
+    const CACHE_CANDIDATE_FATHERS_TIME_SPAN = 3600;
 }

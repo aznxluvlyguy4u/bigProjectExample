@@ -27,7 +27,6 @@ class DeclareBirth extends DeclareBase
      */
     private $animal;
 
-
     /**
      * @ORM\Column(type="string")
      * @Assert\NotBlank
@@ -133,11 +132,11 @@ class DeclareBirth extends DeclareBase
      * 2016-04-01T22:00:48.131Z
      *
      * @var DateTime
-     *
+     *DateTime<’format’>
      * @ORM\Column(type="datetime")
      * @Assert\Date
      * @Assert\NotBlank
-     * @JMS\Type("DateTime")
+     * @JMS\Type("DateTime<'Y-m-d TH:i:s'>")
      * @Expose
      */
     private $dateOfBirth;
@@ -153,7 +152,7 @@ class DeclareBirth extends DeclareBase
     /**
      * @var integer
      *
-     * @ORM\Column(type="integer", nullable=true)
+     * @ORM\Column(type="integer", options={"default":0})
      * @JMS\Type("integer")
      * @Expose
      */
@@ -162,7 +161,7 @@ class DeclareBirth extends DeclareBase
     /**
      * @var float
      *
-     * @ORM\Column(type="float", nullable=true)
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Expose
      */
@@ -171,7 +170,7 @@ class DeclareBirth extends DeclareBase
     /**
      * @var float
      *
-     * @ORM\Column(type="float", nullable=true)
+     * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Expose
      */
@@ -179,7 +178,7 @@ class DeclareBirth extends DeclareBase
 
     /**
      * @Assert\NotBlank
-     * @ORM\ManyToOne(targetEntity="Litter")
+     * @ORM\ManyToOne(targetEntity="Litter", inversedBy="declareBirths")
      * @JMS\Type("AppBundle\Entity\Litter")
      */
     private $litter;
@@ -742,6 +741,10 @@ class DeclareBirth extends DeclareBase
     public function setLitter($litter)
     {
         $this->litter = $litter;
+    }
+
+    public static function getClassName() {
+        return get_called_class();
     }
 
 }

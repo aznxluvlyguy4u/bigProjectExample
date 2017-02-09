@@ -1,3 +1,4 @@
+
 imports:
     - { resource: parameters.yml }
     - { resource: security.yml }
@@ -47,18 +48,19 @@ doctrine:
         user:     "%database_user%"
         password: "%database_password%"
         charset:  UTF8
-        # if using pdo_sqlite as your database driver:
-        #   1. add the path in parameters.yml
-        #     e.g. database_path: "%kernel.root_dir%/data/data.db3"
-        #   2. Uncomment database_path in parameters.yml.dist
-        #   3. Uncomment next line:
-        #     path:     "%database_path%"
+        # Disable SQL logging, this fixes the PHP memory leaks on the production server
+        logging: false
 
     orm:
         auto_generate_proxy_classes: "%kernel.debug%"
         naming_strategy: doctrine.orm.naming_strategy.underscore
         auto_mapping: true
-
+        # enable metadata caching
+        metadata_cache_driver: redis
+        # enable query caching
+        query_cache_driver: redis
+        # enable resultset caching
+        result_cache_driver: redis
 services:
     twig.extension.stringloader:
         class: Twig_Extension_StringLoader
@@ -77,22 +79,33 @@ swiftmailer:
 
 # Redis Configuration
 snc_redis:
+    # configure predis as client
     clients:
-        default:
-            type: predis
-            alias: default
-            dsn: redis://localhost
-            logging: %kernel.debug%
-    doctrine: ~
-#        result_cache:
-#            client: default
-#            entity_manager: [default]
-#        query_cache:
-#            client: default
-#            entity_manager: default
-#        second_level_cache:
-#            client: default
-#            entity_manager: default
+        sncredis:
+             type: predis
+             alias: sncredis
+             dsn:
+                  - "%redis_host%"
+             options:
+                  replication: false
+                  connection_timeout: 10
+                  read_write_timeout: 30
+    # configure predis session
+    session:
+        client: sncredis
+        prefix: "nsfo:api"
+        ttl: 31536000
+    # configure doctrine caching
+    doctrine:
+        metadata_cache:
+            client: sncredis
+            entity_manager: [default, cached]
+        result_cache:
+            client: sncredis
+            entity_manager: [default, cached]
+        query_cache:
+            client: sncredis
+            entity_manager: [default, cached]
 
 # Nelmio CORS bundle
 nelmio_cors:
