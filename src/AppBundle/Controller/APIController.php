@@ -8,6 +8,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\ClientRepository;
 use AppBundle\Entity\Employee;
@@ -83,6 +84,20 @@ class APIController extends Controller implements APIControllerInterface
 
   /** @var \AppBundle\Service\EntityGetter */
   private $animalLocationHistoryService;
+
+  /** @var  \Redis  */
+  private $redisClient;
+
+  /**
+   * @return \Redis
+   */
+  protected function getRedisClient() {
+    if($this->redisClient == null){
+      $this->redisClient = $this->get('snc_redis.sncredis');
+    }
+
+    return $this->redisClient;
+  }
 
   /**
    * @return \AppBundle\Service\EntityGetter
@@ -861,24 +876,28 @@ class APIController extends Controller implements APIControllerInterface
    */
   public function getSelectedLocation(Request $request)
   {
-
     $client = $this->getAuthenticatedUser($request);
-    $headerValidation = new HeaderValidation($this->getDoctrine()->getManager(), $request, $client);
+    $headerValidation = null;
 
-    if($headerValidation->isInputValid()) {
-      return $headerValidation->getLocation();
+    if($client) {
+      $headerValidation = new HeaderValidation($this->getDoctrine()->getManager(), $request, $client);
+    }
 
-    } else {
-
-      $locations = Finder::findLocationsOfClient($client);
-      if($locations->count() > 0) {
-        //pick the first available Location as default
-        return $locations->get(0);
-
+    if($headerValidation) {
+      if($headerValidation->isInputValid()) {
+        return $headerValidation->getLocation();
       } else {
-        return null;
+        $locations = Finder::findLocationsOfClient($client);
+        if($locations->count() > 0) {
+          //pick the first available Location as default
+          return $locations->get(0);
+        } else {
+          return null;
+        }
       }
     }
+
+    return null;
   }
 
   /**
@@ -997,5 +1016,27 @@ class APIController extends Controller implements APIControllerInterface
     ;
 
     $this->get('mailer')->send($message);
+  }
+
+  /**
+   * Clears the redis cache for the Livestock of a given location , to reflect changes of animals on Livestock.
+   *
+   * @param Location $location
+   * @param Animal | Ewe | Ram | Neuter $animal
+   */
+  protected function clearLivestockCacheForLocation(Location $location = null, $animal = null) {
+    if(!$location) {
+      /** @var Location $location */
+      $location = $animal->getLocation();
+    }
+    
+    if($location) {
+      $cacheId = AnimalRepository::LIVESTOCK_CACHE_ID .$location->getId();
+      
+      $lastIndex = 10;
+      for($i = 1; $i <= $lastIndex; $i++) {
+        $this->getRedisClient()->del('[' .$cacheId .']['.$i.']');
+      }
+    }
   }
 }

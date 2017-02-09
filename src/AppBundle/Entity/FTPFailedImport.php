@@ -19,7 +19,7 @@ class FTPFailedImport
      *
      * @ORM\Id
      * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
+     * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Exclude
      */
     protected $id;

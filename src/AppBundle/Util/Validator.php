@@ -518,47 +518,64 @@ class Validator
 
 
     /**
-     * Animal should belong to the location,
-     * or it should be an historic animal that was not hidden by the current owner
-     * 
+     * Returns true is the animals should be included in the historicLivestock for the given location.
+     *
      * @param ObjectManager $em
      * @param Animal $animal
-     * @param Location $location
-     * @throws \Doctrine\DBAL\DBALException
-     * @return boolean
+     * @param Location $locationOfUser
+     * @return bool
      */
-    public static function validateIfUlnStringBelongsToPublicHistoricAnimal(ObjectManager $em, Animal $animal, Location $location)
+    public static function isAnimalPublicForLocation(ObjectManager $em, Animal $animal, Location $locationOfUser)
     {
-        if($animal == null) { return false; }
+        if(!($animal instanceof Animal) || !($locationOfUser instanceof Location)) { return false; }
 
         //1. Always show animals on own location/ubn
 
         if($animal->getLocation()) {
-            if($animal->getLocation()->getId() == $location->getId()) { return true; }
-        } else {
-            return false;
+            if($animal->getLocation()->getId() == $locationOfUser->getId()) { return true; }
         }
 
-
-        //2. Else only show Animal if it is an historic animals and if owner ubnOfBirth allows it
         $locationOfBirth = $animal->getLocationOfBirth();
-
-        $isAnimalRevealed = true;
         if($locationOfBirth) {
+
+            //2. Always allow breeder to see his own animals!
+            if($locationOfUser->getId() == $locationOfBirth->getId()) {
+                return true;
+            }
+
             $company = $locationOfBirth->getCompany();
             if($company) {
-                $isAnimalRevealed = $company->getIsRevealHistoricAnimals();
+
+                //3. Always allow, if location was deactivated
+                if(!$company->isActive()){
+                    return true;
+
+                    //4. Else only show Animal if it is an historic animals and if owner ubnOfBirth allows it
+                } else {
+                    return $company->getIsRevealHistoricAnimals();
+                }
             }
         }
 
-        if(!$isAnimalRevealed) { return false; }
+        //5. If no locationOfBirth is registered, show if animal has animal has ever been on the location of the user.
 
-        $sql = "SELECT COUNT(*) FROM animal_residence
-                WHERE animal_id = ".$animal->getId()." AND location_id = ".$location->getId();
-        $count = $em->getConnection()->query($sql)->fetch()['count'];
+        /** @var \Doctrine\ORM\EntityManager $em */
+        $queryBuilder = $em->createQueryBuilder();
+        $queryBuilder
+            ->select('COUNT(animalResidence.id)')
+            ->from ('AppBundle:AnimalResidence', 'animalResidence')
+            ->where('animalResidence.location = :locationId')
+            ->andWhere('animalResidence.animal = :animalId')
+            ->setParameter('locationId', $locationOfUser->getId())
+            ->setParameter('animalId', $animal->getId());
+
+        $query = $queryBuilder->getQuery();
+        //TODO use redis, for example: $query->useResultCache(true, 3600, 'animalPublicForLocation');
+        $count = $query->getResult()[0][1];
 
         if($count > 0) { return true; }
 
         return false;
     }
+
 }

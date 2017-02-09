@@ -17,7 +17,7 @@ class BreedValueCoefficient {
     *
     * @ORM\Id
     * @ORM\Column(type="integer")
-    * @ORM\GeneratedValue(strategy="AUTO")
+    * @ORM\GeneratedValue(strategy="IDENTITY")
     */
     private $id;
     
