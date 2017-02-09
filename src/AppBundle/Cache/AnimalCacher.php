@@ -742,7 +742,8 @@ class AnimalCacher
                   markings = v.markings,
                   kind = v.kind,
                   progress = v.progress,
-                  exterior_measurement_date = v.measurement_date
+                  exterior_measurement_date = v.measurement_date,
+                  log_date = '".TimeUtil::getTimeStampNow()."'
                 FROM (
                   SELECT x.animal_id, x.skull, x.muscularity, x.proportion, x.exterior_type, x.leg_work, x.fur, x.general_appearence,
                     x.height, x.breast_depth, x.torso_length, x.markings, x.kind, x.progress, m.measurement_date
@@ -818,7 +819,8 @@ class AnimalCacher
         $sql = "WITH rows AS (
                   UPDATE animal_cache SET
                     last_weight = v.last_weight,
-                    weight_measurement_date = v.weight_measurement_date
+                    weight_measurement_date = v.weight_measurement_date,
+                    log_date = '".TimeUtil::getTimeStampNow()."'
                   FROM (
                          SELECT w.animal_id, w.weight, m.measurement_date
                          FROM weight w
@@ -998,7 +1000,8 @@ class AnimalCacher
                     litter_count               = v.litter_count,
                     total_offspring_count      = v.total_born_count,
                     born_alive_offspring_count = v.born_alive_count,
-                    gave_birth_as_one_year_old = v.gave_birth_as_one_year_old
+                    gave_birth_as_one_year_old = v.gave_birth_as_one_year_old,
+                    log_date = '".TimeUtil::getTimeStampNow()."'
                   FROM (
                          SELECT DISTINCT
                            (a.id)                                           AS animal_id,
@@ -1162,7 +1165,8 @@ class AnimalCacher
 
         $sql = "WITH rows AS (
                   UPDATE animal_cache
-                SET n_ling = v.new_n_ling
+                SET n_ling = v.new_n_ling,
+                    log_date = '".TimeUtil::getTimeStampNow()."'
                 FROM (
                        -- nLing, litter still linked and not revoked
                        SELECT c.id as cache_id, c.n_ling as current_n_ling, CONCAT(l.born_alive_count + l.stillborn_count,'-ling') as new_n_ling,
