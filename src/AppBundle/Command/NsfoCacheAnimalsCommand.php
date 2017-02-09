@@ -63,6 +63,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '--- Sql Batch Queries ---', "\n",
             '9: BatchUpdate all incongruent production values and n-ling values', "\n",
             '10: BatchUpdate all Incongruent exterior values', "\n",
+            '11: BatchUpdate all Incongruent weight values', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -129,6 +130,21 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                     } while (!ctype_digit($animalId) && !is_int($animalId));
 
                     $updateCount = AnimalCacher::updateExteriors($this->conn, [$animalId]);
+                }
+                $output->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
+                break;
+
+            case 11:
+                $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update weight cache values of all animals? (y/n, default = no)');
+                if($updateAll) {
+                    $output->writeln('Updating all records...');
+                    $updateCount = AnimalCacher::updateAllWeights($this->conn);
+                } else {
+                    do{
+                        $animalId = $this->cmdUtil->generateQuestion('Insert one animalId (default = 0)', 0);
+                    } while (!ctype_digit($animalId) && !is_int($animalId));
+
+                    $updateCount = AnimalCacher::updateWeights($this->conn, [$animalId]);
                 }
                 $output->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
                 break;

@@ -784,6 +784,71 @@ class AnimalCacher
 
 
     /**
+     * @param Connection $conn
+     * @return int
+     */
+    public static function updateAllWeights(Connection $conn){
+        return self::updateWeights($conn, null);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param $animalIds
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function updateWeights(Connection $conn, $animalIds)
+    {
+        $updateCount = 0;
+
+        $animalIdFilterString = "";
+        if(is_array($animalIds)) {
+            if(count($animalIds) == 0) {
+                return $updateCount;
+            }
+            else {
+                $animalIdFilterString = " AND (".SqlUtil::getFilterStringByIdsArray($animalIds,'ww.animal_id').")";
+            }
+        } elseif($animalIds != null) {
+            return $updateCount;
+        }
+
+        $sql = "WITH rows AS (
+                  UPDATE animal_cache SET
+                    last_weight = v.last_weight,
+                    weight_measurement_date = v.weight_measurement_date
+                  FROM (
+                         SELECT w.animal_id, w.weight, m.measurement_date
+                         FROM weight w
+                           INNER JOIN measurement m ON w.id = m.id
+                           INNER JOIN (
+                                        SELECT animal_id, MAX(measurement_date) as max_measurement_date,
+                                          MAX(log_date) as max_log_date
+                                        FROM weight ww
+                                          INNER JOIN measurement mm ON ww.id = mm.id
+                                          --Remove is_revoked if column data is moved to is_active and variable is removed
+                                        WHERE ww.is_revoked = FALSE".$animalIdFilterString." --AND mm.is_active = TRUE
+                                        GROUP BY animal_id
+                       ) AS last ON last.animal_id = w.animal_id AND m.measurement_date = last.max_measurement_date
+                           AND m.log_date = last.max_log_date
+                  INNER JOIN animal_cache c ON c.animal_id = w.animal_id
+                  INNER JOIN animal a ON w.animal_id = a.id
+                  WHERE (
+                  c.last_weight ISNULL OR c.last_weight <> w.weight OR
+                  c.weight_measurement_date ISNULL OR c.weight_measurement_date <> m.measurement_date
+                  )
+                  -- AND a.location_id = 00000 < filter location_id here when necessary
+                ) AS v(animal_id, last_weight, weight_measurement_date) WHERE animal_cache.animal_id = v.animal_id
+                RETURNING 1
+                )
+                SELECT COUNT(*) AS count FROM rows;";
+        $updateCount = $conn->query($sql)->fetch()['count'];
+        return $updateCount;
+    }
+
+
+    /**
      * @param ObjectManager $em
      * @param Animal $animal
      * @param boolean $flush
