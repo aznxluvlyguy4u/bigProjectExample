@@ -66,13 +66,6 @@ class AnimalCache
     private $nLing;
 
     /**
-     * @var string
-     * @ORM\Column(type="string", options={"default":"-/-/-/-"}, nullable=true)
-     * @JMS\Type("string")
-     */
-    private $production;
-
-    /**
      * @var integer
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Type("integer")
@@ -370,22 +363,6 @@ class AnimalCache
     public function setNLing($nLing)
     {
         $this->nLing = $nLing;
-    }
-
-    /**
-     * @return string
-     */
-    public function getProduction()
-    {
-        return $this->production;
-    }
-
-    /**
-     * @param string $production
-     */
-    public function setProduction($production)
-    {
-        $this->production = $production;
     }
 
     /**
