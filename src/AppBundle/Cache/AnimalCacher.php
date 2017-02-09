@@ -19,6 +19,7 @@ use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DisplayUtil;
@@ -1002,7 +1003,7 @@ class AnimalCacher
                          FROM animal a
                            INNER JOIN litter l ON a.id = l.animal_father_id
                            INNER JOIN animal_cache c ON c.animal_id = a.id
-                         WHERE date_of_birth NOTNULL
+                         WHERE date_of_birth NOTNULL AND l.status <> '".RequestStateType::REVOKED."'
                          GROUP BY a.id
                 
                          UNION
@@ -1038,7 +1039,7 @@ class AnimalCacher
                          FROM animal a
                            INNER JOIN litter l ON a.id = l.animal_mother_id
                            INNER JOIN animal_cache c ON c.animal_id = a.id
-                         WHERE date_of_birth NOTNULL
+                         WHERE date_of_birth NOTNULL AND l.status <> '".RequestStateType::REVOKED."'
                          GROUP BY a.id
                          UNION --Below when date of births are null
                 
@@ -1064,7 +1065,7 @@ class AnimalCacher
                          FROM animal a
                            INNER JOIN litter l ON a.id = l.animal_father_id
                            INNER JOIN animal_cache c ON c.animal_id = a.id
-                         WHERE date_of_birth ISNULL
+                         WHERE date_of_birth ISNULL AND l.status <> '".RequestStateType::REVOKED."'
                          GROUP BY a.id
                 
                          UNION
@@ -1091,7 +1092,7 @@ class AnimalCacher
                          FROM animal a
                            INNER JOIN litter l ON a.id = l.animal_mother_id
                            INNER JOIN animal_cache c ON c.animal_id = a.id
-                         WHERE date_of_birth ISNULL
+                         WHERE date_of_birth ISNULL AND l.status <> '".RequestStateType::REVOKED."'
                          GROUP BY a.id
                        ) AS v(animal_id, animal_cache_id, production_age, litter_count, total_born_count, born_alive_count, gave_birth_as_one_year_old, update_production)
                   WHERE v.update_production = TRUE AND animal_cache.id = v.animal_cache_id
