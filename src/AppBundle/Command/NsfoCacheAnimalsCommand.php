@@ -7,6 +7,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -52,6 +53,10 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
         $this->animalRepository = $em->getRepository(Animal::class);
+
+        $this->cmdUtil->printTitle('AnimalCache / ResultTable');
+
+        $this->cmdUtil->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
