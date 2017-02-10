@@ -213,10 +213,30 @@ class MeasurementsUtil
     /**
      * @param ObjectManager $em
      * @param Animal $animal
+     * @param string $currentKind
      * @param boolean $filterByAnimalData
      * @return array
      */
-    public static function getExteriorKindsOutput(ObjectManager $em, Animal $animal, $filterByAnimalData = true)
+    public static function getExteriorKinds(ObjectManager $em, Animal $animal, $currentKind = null, $filterByAnimalData = true) {
+        $output = self::getExteriorKindsOutput($em, $animal, $currentKind, $filterByAnimalData);
+
+        $codes = [];
+        foreach ($output as $item) {
+            $code = $item['code'];
+            $codes[$code] = $code;
+        }
+        return $codes;
+    }
+    
+    
+    /**
+     * @param ObjectManager $em
+     * @param Animal $animal
+     * @param string $currentKind
+     * @param boolean $filterByAnimalData
+     * @return array
+     */
+    public static function getExteriorKindsOutput(ObjectManager $em, Animal $animal, $currentKind = null, $filterByAnimalData = true)
     {
         $output = [];
 
@@ -249,7 +269,7 @@ class MeasurementsUtil
                 $isLatestKind = false;
             }
         }
-        
+
         $vgExists = array_key_exists(ExteriorKind::VG_, $kinds);
         $ddExists = array_key_exists(ExteriorKind::DD_, $kinds);
         $dfExists = array_key_exists(ExteriorKind::DF_, $kinds);
@@ -262,46 +282,40 @@ class MeasurementsUtil
         $ageIsBetween14and26months = 14 <= $ageInMonths && $ageInMonths <= 26;
         $ageIsAtLeast26months = 26 <= $ageInMonths;
 
+        $kindsForOutput = [];
         if($ageIsBetween5and14months) {
-            $output[] = ['code' => ExteriorKind::VG_];
+            $kindsForOutput[] = ExteriorKind::VG_;
 
         } elseif($ageIsBetween14and26months) {
             if($vgExists) {
-                $output[] = ['code' => ExteriorKind::DF_];
+                $kindsForOutput[] = ExteriorKind::DF_;
             } else {
-                $output[] = ['code' => ExteriorKind::DD_];
+                $kindsForOutput[] = ExteriorKind::DD_;
             }
 
         } elseif($ageIsAtLeast26months && ($ddExists || $dfExists
             || $hkExists || $hhExists //adding $hkExists && $hhExists in case of incomplete exterior data
             )) {
-            $output[] = ['code' => ExteriorKind::HH_];
+            $kindsForOutput[] = ExteriorKind::HH_;
         }
 
-        if(!$animal->getIsAlive()) { $output[] = ['code' => ExteriorKind::DO_]; }
+        if(!$animal->getIsAlive()) { $kindsForOutput[] = ExteriorKind::DO_; }
 
         if($ddExists || $dfExists || $vgExists
             || $hkExists || $hhExists //adding $hkExists && $hhExists in case of incomplete exterior data
-        ) { $output[] = ['code' => ExteriorKind::HK_]; }
+        ) { $kindsForOutput[] = ExteriorKind::HK_; }
+
         
+        if($currentKind != null && !in_array($currentKind, $kindsForOutput)) {
+            $kindsForOutput[] = $currentKind;
+        }
+
+        foreach ($kindsForOutput as $kind) {
+            $output[] = ['code' => $kind];
+        }
+
         return $output;
     }
 
 
-    /**
-     * @param ObjectManager $em
-     * @param Animal $animal
-     * @param boolean $filterByAnimalData
-     * @return array
-     */
-    public static function getExteriorKinds(ObjectManager $em, Animal $animal, $filterByAnimalData = true) {
-        $output = self::getExteriorKindsOutput($em, $animal, $filterByAnimalData);
-
-        $codes = [];
-        foreach ($output as $item) {
-            $code = $item['code'];
-            $codes[$code] = $code;
-        }
-        return $codes;
-    }
 }

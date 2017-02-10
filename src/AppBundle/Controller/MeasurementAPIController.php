@@ -209,54 +209,56 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
 
             /* Edit the Exterior measurement */
 
-            $allowedExteriorCodes = MeasurementsUtil::getExteriorKinds($em, $animal);
+            /** @var ExteriorRepository $repository */
+            $repository = $em->getRepository(Exterior::class);
+
+            $currentMeasurementDate = new \DateTime($measurementDateString);
+            /** @var Exterior $exterior */
+            $exterior = $repository->findOneBy(['measurementDate' => $currentMeasurementDate, 'animal' => $animal, 'isActive' => true]);
+
+            if(!($exterior instanceof Exterior)) {
+                $output = 'Exterior for given date and uln does not exists!';
+                return Validator::createJsonResponse($output, 428);
+            }
+
+            $currentKind = $exterior->getKind();
+
+            $allowedExteriorCodes = MeasurementsUtil::getExteriorKinds($em, $animal, $currentKind);
 
             $exteriorValidator = new ExteriorValidator($em, $content, $allowedExteriorCodes, $ulnString, self::ALLOW_BLANK_INSPECTOR, $measurementDateString);
             if (!$exteriorValidator->getIsInputValid()) {
                 return $exteriorValidator->createJsonResponse();
             }
             $inspector = $exteriorValidator->getInspector();
-            $currentMeasurementDate = $exteriorValidator->getMeasurementDate();
 
+            $exterior->setActionBy($loggedInUser);
+            $exterior->setEditDate(new \DateTime());
+            $exterior->setAnimal($animal);
+            $exterior->setMeasurementDate($exteriorValidator->getNewMeasurementDate());
+            $exterior->setKind($exteriorValidator->getKind());
+            $exterior->setSkull($exteriorValidator->getSkull());
+            $exterior->setProgress($exteriorValidator->getProgress());
+            $exterior->setMuscularity($exteriorValidator->getMuscularity());
+            $exterior->setProportion($exteriorValidator->getProportion());
+            $exterior->setExteriorType($exteriorValidator->getExteriorType());
+            $exterior->setLegWork($exteriorValidator->getLegWork());
+            $exterior->setFur($exteriorValidator->getFur());
+            $exterior->setGeneralAppearence($exteriorValidator->getGeneralAppearence());
+            $exterior->setHeight($exteriorValidator->getHeight());
+            $exterior->setBreastDepth($exteriorValidator->getBreastDepth());
+            $exterior->setTorsoLength($exteriorValidator->getTorsoLength());
+            $exterior->setMarkings($exteriorValidator->getMarkings());
+            $exterior->setInspector($inspector);
+            $exterior->setAnimalIdAndDateByAnimalAndDateTime($animal, $currentMeasurementDate);
 
-            /** @var ExteriorRepository $repository */
-            $repository = $em->getRepository(Exterior::class);
-            /** @var Exterior $exterior */
-            $exterior = $repository->findOneBy(['measurementDate' => $currentMeasurementDate, 'animal' => $animal, 'isActive' => true]);
+            $em->persist($exterior);
+            $em->flush();
 
-            if($exterior instanceof Exterior) {
-                $exterior->setActionBy($loggedInUser);
-                $exterior->setEditDate(new \DateTime());
-                $exterior->setAnimal($animal);
-                $exterior->setMeasurementDate($exteriorValidator->getNewMeasurementDate());
-                $exterior->setKind($exteriorValidator->getKind());
-                $exterior->setSkull($exteriorValidator->getSkull());
-                $exterior->setProgress($exteriorValidator->getProgress());
-                $exterior->setMuscularity($exteriorValidator->getMuscularity());
-                $exterior->setProportion($exteriorValidator->getProportion());
-                $exterior->setExteriorType($exteriorValidator->getExteriorType());
-                $exterior->setLegWork($exteriorValidator->getLegWork());
-                $exterior->setFur($exteriorValidator->getFur());
-                $exterior->setGeneralAppearence($exteriorValidator->getGeneralAppearence());
-                $exterior->setHeight($exteriorValidator->getHeight());
-                $exterior->setBreastDepth($exteriorValidator->getBreastDepth());
-                $exterior->setTorsoLength($exteriorValidator->getTorsoLength());
-                $exterior->setMarkings($exteriorValidator->getMarkings());
-                $exterior->setInspector($inspector);
-                $exterior->setAnimalIdAndDateByAnimalAndDateTime($animal, $currentMeasurementDate);
+            //Update exterior values in animalCache AFTER persisting exterior
+            AnimalCacher::cacheExteriorByAnimal($em, $animal);
 
-                $em->persist($exterior);
-                $em->flush();
-
-                //Update exterior values in animalCache AFTER persisting exterior
-                AnimalCacher::cacheExteriorByAnimal($em, $animal);
-
-                $output = $this->getDecodedJson($exterior, self::MEASUREMENT_JMS_GROUP);
-                $code = 200;
-            } else {
-                $output = 'Exterior for given date and uln does not exists!';
-                $code = 428;
-            }
+            $output = $this->getDecodedJson($exterior, self::MEASUREMENT_JMS_GROUP);
+            $code = 200;
 
         }
 
@@ -311,6 +313,71 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
         $output = MeasurementsUtil::getExteriorKindsOutput($em, $animal);
 
         return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+    }
+
+
+    /**
+     *
+     * Return the allowed exterior measurement kinds for Edits for a specific ULN and measurementDate. For example NL100029511721 and 2016-12-05.
+     * For edits the current kind is also allowed.
+     *
+     * @ApiDoc(
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Update an exterior measurement for Edits for a specific ULN and measurementDate",
+     *   input = "AppBundle\Entity\Exterior",
+     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     * )
+     *
+     * @param Request $request the request object
+     * @param String $ulnString
+     * @param String $measurementDateString
+     * @return jsonResponse
+     * @Route("/{ulnString}/exteriors/kinds/{measurementDateString}")
+     * @Method("GET")
+     */
+    public function getAllowedExteriorKindsForEdit(Request $request, $ulnString, $measurementDateString)
+    {
+        $loggedInUser = $this->getLoggedInUser($request);
+        $adminValidator = new AdminValidator($loggedInUser, AccessLevelType::ADMIN);
+        $isAdmin = $adminValidator->getIsAccessGranted();
+        $em = $this->getDoctrine()->getManager();
+
+        $location = null;
+        if (!$isAdmin) {
+            $location = $this->getSelectedLocation($request);
+        }
+
+        $animalDetailsValidator = new AnimalDetailsValidator($em, $isAdmin, $location, $ulnString);
+        if (!$animalDetailsValidator->getIsInputValid()) {
+            return $animalDetailsValidator->createJsonResponse();
+        }
+        //Uln has already been validated above
+        $animal = $animalDetailsValidator->getAnimal();
+
+        $measurementDate = new \DateTime($measurementDateString);
+
+        /** @var ExteriorRepository $repository */
+        $repository = $em->getRepository(Exterior::class);
+        /** @var Exterior $exterior */
+        $exterior = $repository->findOneBy(['measurementDate' => $measurementDate, 'animal' => $animal, 'isActive' => true]);
+
+        if($exterior == null) {
+            $output = 'Exterior for given date and uln does not exists!';
+            return Validator::createJsonResponse($output, 428);
+        }
+
+        $currentKind = $exterior->getKind();
+        $output = MeasurementsUtil::getExteriorKindsOutput($em, $animal, $currentKind);
+
+        return Validator::createJsonResponse($output, 200);
     }
 
 
