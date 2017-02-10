@@ -19,6 +19,7 @@ class Exterior extends Measurement {
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 2)
      * @JMS\Type("string")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      */
     private $kind;
 
@@ -28,6 +29,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $skull;
@@ -37,6 +39,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $muscularity;
@@ -46,6 +49,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $proportion;
@@ -55,6 +59,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      */
     private $progress;
 
@@ -63,6 +68,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $exteriorType;
@@ -72,6 +78,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $legWork;
@@ -81,6 +88,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $fur;
@@ -90,6 +98,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $generalAppearence;
@@ -99,6 +108,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $height;
@@ -108,6 +118,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $breastDepth;
@@ -117,6 +128,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $torsoLength;
@@ -126,6 +138,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $markings;
@@ -133,6 +146,7 @@ class Exterior extends Measurement {
     /**
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="exteriorMeasurements")
      * @JMS\Type("AppBundle\Entity\Animal")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      */
     private $animal;
 
