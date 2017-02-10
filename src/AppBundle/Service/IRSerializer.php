@@ -437,7 +437,7 @@ class IRSerializer implements IRSerializerInterface
         $litter->setIsAbortion($isAborted);
         $litter->setIsPseudoPregnancy($isPseudoPregnancy);
 
-        if ($isAborted || $isPseudoPregnancy) {
+        if ($isAborted || $isPseudoPregnancy || $litterSize == $stillbornCount) {
             $litter->setStatus('COMPLETED');
         } else {
             $litter->setStatus('INCOMPLETE');
