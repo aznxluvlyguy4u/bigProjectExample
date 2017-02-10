@@ -37,6 +37,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
 {
 
     const ALLOW_BLANK_INSPECTOR = true;
+    const MEASUREMENT_JMS_GROUP = 'USER_MEASUREMENT';
 
     /**
      *
@@ -129,7 +130,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             //Update exterior values in animalCache AFTER persisting exterior
             AnimalCacher::cacheExteriorByAnimal($em, $animal);
 
-            $output = $exterior;
+            $output = $this->getDecodedJson($exterior, self::MEASUREMENT_JMS_GROUP);
             $code = 200;
         }
 
@@ -225,7 +226,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             //Update exterior values in animalCache AFTER persisting exterior
             AnimalCacher::cacheExteriorByAnimal($em, $animal);
 
-            $output = $exterior;
+            $output = $this->getDecodedJson($exterior, self::MEASUREMENT_JMS_GROUP);
             $code = 200;
         } else {
             $output = 'Exterior for given date and uln does not exists!';
@@ -293,7 +294,8 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
         $em->persist($exterior);
         $em->flush();
 
-        return Validator::createJsonResponse($exterior, 200);
+        $output = $this->getDecodedJson($exterior, self::MEASUREMENT_JMS_GROUP);
+        return Validator::createJsonResponse($output, 200);
     }
 
 

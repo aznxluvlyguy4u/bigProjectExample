@@ -122,6 +122,19 @@ class APIController extends Controller implements APIControllerInterface
     return $this->serializer;
   }
 
+
+  /**
+   * @param $object
+   * @param $type
+   * @return mixed|array
+   */
+  public function getDecodedJson($object, $type)
+  {
+    $jsonMessage = $this->getSerializer()->serializeToJSON($object, $type);
+    return json_decode($jsonMessage, true);
+  }
+  
+
   /**
    * @return RequestMessageBuilder
    */

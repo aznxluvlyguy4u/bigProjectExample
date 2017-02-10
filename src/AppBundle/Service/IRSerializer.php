@@ -114,6 +114,8 @@ class IRSerializer implements IRSerializerInterface
         if($type == 'DEFAULT') {
             return $this->serializer->serialize($object, Constant::jsonNamespace, SerializationContext::create()->setGroups(array('Default')));
         }
+
+        return $this->serializer->serialize($object, Constant::jsonNamespace, SerializationContext::create()->setGroups(array($type)));
     }
 
     /**
