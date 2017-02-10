@@ -140,7 +140,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
 
     /**
      *
-     * Update an exterior measurement for a specific ULN and measurementDate. For example NL100029511721 and 2016-12-05
+     * Update or Deactivate an exterior measurement for a specific ULN and measurementDate. For example NL100029511721 and 2016-12-05
      *
      * @ApiDoc(
      *   requirements={
@@ -152,7 +152,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      *     }
      *   },
      *   resource = true,
-     *   description = "Update an exterior measurement for a specific ULN and measurementDate",
+     *   description = "Update or Deactivate an exterior measurement for a specific ULN and measurementDate",
      *   input = "AppBundle\Entity\Exterior",
      *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
      * )
@@ -183,119 +183,84 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
         }
         $animal = $animalDetailsValidator->getAnimal();
 
-        $allowedExteriorCodes = MeasurementsUtil::getExteriorKinds($em, $animal);
-
         $content = $this->getContentAsArray($request);
-        $exteriorValidator = new ExteriorValidator($em, $content, $allowedExteriorCodes, $ulnString, self::ALLOW_BLANK_INSPECTOR, $measurementDateString);
-        if (!$exteriorValidator->getIsInputValid()) {
-            return $exteriorValidator->createJsonResponse();
-        }
-        $inspector = $exteriorValidator->getInspector();
-        $currentMeasurementDate = $exteriorValidator->getMeasurementDate();
 
+        if($content->get('is_active') === false) {
 
-        /** @var ExteriorRepository $repository */
-        $repository = $em->getRepository(Exterior::class);
-        /** @var Exterior $exterior */
-        $exterior = $repository->findOneBy(['measurementDate' => $currentMeasurementDate, 'animal' => $animal, 'isActive' => true]);
+            /* Deactivate the Exterior measurement without updating any other values */
 
-        if($exterior instanceof Exterior) {
-            $exterior->setActionBy($loggedInUser);
-            $exterior->setEditDate(new \DateTime());
-            $exterior->setAnimal($animal);
-            $exterior->setMeasurementDate($exteriorValidator->getNewMeasurementDate());
-            $exterior->setKind($exteriorValidator->getKind());
-            $exterior->setSkull($exteriorValidator->getSkull());
-            $exterior->setProgress($exteriorValidator->getProgress());
-            $exterior->setMuscularity($exteriorValidator->getMuscularity());
-            $exterior->setProportion($exteriorValidator->getProportion());
-            $exterior->setExteriorType($exteriorValidator->getExteriorType());
-            $exterior->setLegWork($exteriorValidator->getLegWork());
-            $exterior->setFur($exteriorValidator->getFur());
-            $exterior->setGeneralAppearence($exteriorValidator->getGeneralAppearence());
-            $exterior->setHeight($exteriorValidator->getHeight());
-            $exterior->setBreastDepth($exteriorValidator->getBreastDepth());
-            $exterior->setTorsoLength($exteriorValidator->getTorsoLength());
-            $exterior->setMarkings($exteriorValidator->getMarkings());
-            $exterior->setInspector($inspector);
-            $exterior->setAnimalIdAndDateByAnimalAndDateTime($animal, $currentMeasurementDate);
+            $validationResults = ExteriorValidator::validateDeactivation($em, $animal, $measurementDateString);
+            if(!$validationResults->isValid()) {
+                return $validationResults->getJsonResponse();
+            }
 
+            /** @var Exterior $exterior */
+            $exterior = $validationResults->getValidResultObject();
+            $exterior->setIsActive(false);
+            $exterior->setDeleteDate(new \DateTime());
+            $exterior->setDeletedBy($loggedInUser);
             $em->persist($exterior);
             $em->flush();
 
-            //Update exterior values in animalCache AFTER persisting exterior
-            AnimalCacher::cacheExteriorByAnimal($em, $animal);
-
             $output = $this->getDecodedJson($exterior, self::MEASUREMENT_JMS_GROUP);
             $code = 200;
+
         } else {
-            $output = 'Exterior for given date and uln does not exists!';
-            $code = 428;
+
+            /* Edit the Exterior measurement */
+
+            $allowedExteriorCodes = MeasurementsUtil::getExteriorKinds($em, $animal);
+
+            $exteriorValidator = new ExteriorValidator($em, $content, $allowedExteriorCodes, $ulnString, self::ALLOW_BLANK_INSPECTOR, $measurementDateString);
+            if (!$exteriorValidator->getIsInputValid()) {
+                return $exteriorValidator->createJsonResponse();
+            }
+            $inspector = $exteriorValidator->getInspector();
+            $currentMeasurementDate = $exteriorValidator->getMeasurementDate();
+
+
+            /** @var ExteriorRepository $repository */
+            $repository = $em->getRepository(Exterior::class);
+            /** @var Exterior $exterior */
+            $exterior = $repository->findOneBy(['measurementDate' => $currentMeasurementDate, 'animal' => $animal, 'isActive' => true]);
+
+            if($exterior instanceof Exterior) {
+                $exterior->setActionBy($loggedInUser);
+                $exterior->setEditDate(new \DateTime());
+                $exterior->setAnimal($animal);
+                $exterior->setMeasurementDate($exteriorValidator->getNewMeasurementDate());
+                $exterior->setKind($exteriorValidator->getKind());
+                $exterior->setSkull($exteriorValidator->getSkull());
+                $exterior->setProgress($exteriorValidator->getProgress());
+                $exterior->setMuscularity($exteriorValidator->getMuscularity());
+                $exterior->setProportion($exteriorValidator->getProportion());
+                $exterior->setExteriorType($exteriorValidator->getExteriorType());
+                $exterior->setLegWork($exteriorValidator->getLegWork());
+                $exterior->setFur($exteriorValidator->getFur());
+                $exterior->setGeneralAppearence($exteriorValidator->getGeneralAppearence());
+                $exterior->setHeight($exteriorValidator->getHeight());
+                $exterior->setBreastDepth($exteriorValidator->getBreastDepth());
+                $exterior->setTorsoLength($exteriorValidator->getTorsoLength());
+                $exterior->setMarkings($exteriorValidator->getMarkings());
+                $exterior->setInspector($inspector);
+                $exterior->setAnimalIdAndDateByAnimalAndDateTime($animal, $currentMeasurementDate);
+
+                $em->persist($exterior);
+                $em->flush();
+
+                //Update exterior values in animalCache AFTER persisting exterior
+                AnimalCacher::cacheExteriorByAnimal($em, $animal);
+
+                $output = $this->getDecodedJson($exterior, self::MEASUREMENT_JMS_GROUP);
+                $code = 200;
+            } else {
+                $output = 'Exterior for given date and uln does not exists!';
+                $code = 428;
+            }
+
         }
 
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $output, Constant::CODE_NAMESPACE => $code], $code);
-    }
-
-
-    /**
-     *
-     * Deactivate an exterior measurement for a specific ULN and measurementDate. For example NL100029511721 and 2016-12-05
-     *
-     * @ApiDoc(
-     *   requirements={
-     *     {
-     *       "name"="AccessToken",
-     *       "dataType"="string",
-     *       "requirement"="",
-     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-     *     }
-     *   },
-     *   resource = true,
-     *   description = "Deactivate an exterior measurement for a specific ULN and measurementDate",
-     *   input = "AppBundle\Entity\Exterior",
-     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
-     * )
-     *
-     * @param Request $request the request object
-     * @param String $ulnString
-     * @param String $measurementDateString
-     * @return jsonResponse
-     * @Route("/{ulnString}/exteriors/{measurementDateString}")
-     * @Method("DELETE")
-     */
-    public function deactivateExteriorMeasurement(Request $request, $ulnString, $measurementDateString)
-    {
-        $loggedInUser = $this->getLoggedInUser($request);
-        $adminValidationResults = AdminValidator::validate($loggedInUser, AccessLevelType::ADMIN);
-        $isAdmin = $adminValidationResults->isValid();
-        $em = $this->getDoctrine()->getManager();
-
-        $location = null;
-        if (!$isAdmin) {
-            return $adminValidationResults->getJsonResponse();
-        }
-
-        $animalDetailsValidator = new AnimalDetailsValidator($em, $isAdmin, $location, $ulnString);
-        if (!$animalDetailsValidator->getIsInputValid()) {
-            return $animalDetailsValidator->createJsonResponse();
-        }
-        $animal = $animalDetailsValidator->getAnimal();
-
-        $validationResults = ExteriorValidator::validateDeactivation($em, $animal, $measurementDateString);
-        if(!$validationResults->isValid()) {
-            return $validationResults->getJsonResponse();
-        }
-
-        /** @var Exterior $exterior */
-        $exterior = $validationResults->getValidResultObject();
-        $exterior->setIsActive(false);
-        $exterior->setDeleteDate(new \DateTime());
-        $exterior->setDeletedBy($loggedInUser);
-        $em->persist($exterior);
-        $em->flush();
-
-        $output = $this->getDecodedJson($exterior, self::MEASUREMENT_JMS_GROUP);
-        return Validator::createJsonResponse($output, 200);
+        return Validator::createJsonResponse($output, $code);
     }
 
 
