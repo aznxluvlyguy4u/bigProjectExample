@@ -10,6 +10,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\ClientRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
@@ -796,11 +797,13 @@ class APIController extends Controller implements APIControllerInterface
   }
 
   /**
-   * @param $email
+   * @param $emailAddress
    * @return Client
    */
-  public function getClientByEmail($email) {
-    return $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY)->getByEmail($email);
+  public function getActiveClientByEmail($emailAddress) {
+    /** @var ClientRepository $clientRepository */
+    $clientRepository = $this->getDoctrine()->getRepository(Client::class);
+    return $clientRepository->findActiveOneByEmailAddress($emailAddress);
   }
 
   /**
