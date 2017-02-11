@@ -35,12 +35,22 @@ class AWSQueueService
   /**
    * @var SqsClient
    */
-  private $queueService;
+  private $externalQueueService;
+
+  /**
+   * @var SqsClient
+   */
+  private $internalQueueService;
 
   /**
    * @var string
    */
-  protected $queueURL;
+  protected $externalQueueURL;
+
+  /**
+   * @var string
+   */
+  protected $internalQueueURL;
 
   /**
    * @var Credentials
@@ -51,6 +61,12 @@ class AWSQueueService
    * @var array
    */
   private $queueIds;
+
+  /** @var string */
+  private $externalQueueId;
+
+  /** @var string */
+  private $internalQueueId;
 
   /**
    * ArrivalAPIService constructor, initialize SQS config
@@ -80,22 +96,28 @@ class AWSQueueService
      */
     switch($currentEnvironment) {
       case Environment::PROD:
-        $queueId = $queueIds[0]; // set 0 for deployment to production, set 1 for deployement to staging!
+        $this->externalQueueId = $queueIds[0];
+        $this->internalQueueId = str_replace("ext","int", $queueIds[0]);
         break;
       case Environment::STAGE:
-        $queueId = $queueIds[1];
+        $this->externalQueueId  = $queueIds[1];
+        $this->internalQueueId = str_replace("ext","int", $queueIds[1]);
         break;
       case Environment::DEV:
-        $queueId = $queueIds[2];
+        $this->externalQueueId  = $queueIds[2];
+        $this->internalQueueId = str_replace("ext","int", $queueIds[2]);
         break;
       case Environment::TEST:
-        $queueId = $queueIds[3];
+        $this->externalQueueId = $queueIds[3];
+        $this->internalQueueId = str_replace("ext","int", $queueIds[3]);
         break;
       case Environment::LOCAL:
-        $queueId = $queueIds[4];
+        $this->externalQueueId  = $queueIds[4];
+        $this->internalQueueId = str_replace("ext","int", $queueIds[4]);
         break;
       default; //dev
-        $queueId = $queueIds[2];
+        $this->externalQueueId = $queueIds[2];
+        $this->internalQueueId = str_replace("ext","int", $queueIds[2]);
         break;
     }
 
@@ -105,10 +127,17 @@ class AWSQueueService
       'credentials' => $this->awsCredentials
     );
 
-    $this->queueService = new SqsClient($sqsConfig);
-    
-    $result = $this->queueService->createQueue(array('QueueName' => $queueId));
-    $this->queueURL = $result->get('QueueUrl');
+    $sqsClient = new SqsClient($sqsConfig);
+    $this->externalQueueService = $sqsClient;
+    $this->internalQueueService = $sqsClient;
+
+    //Setup external Queue URL
+    $result = $this->externalQueueService->createQueue(array('QueueName' => $this->externalQueueId));
+    $this->externalQueueURL = $result->get('QueueUrl');
+
+    //Setup internal Queue URL
+    $result = $this->internalQueueService->createQueue(array('QueueName' => $this->internalQueueId));
+    $this->internalQueueURL = $result->get('QueueUrl');
   }
 
   /**
@@ -125,8 +154,36 @@ class AWSQueueService
       return null;
     }
 
-    $response = $this->queueService->sendMessage(array (
-      'QueueUrl' => $this->queueURL,
+    $response = $this->externalQueueService->sendMessage(array (
+      'QueueUrl' => $this->externalQueueURL,
+      'MessageBody' => $messageBody,
+      'MessageAttributes' => [
+        'TaskType' => [
+          'StringValue' => $requestType,
+          'DataType' => 'String',
+        ],
+      ],
+    ));
+
+    return $this->responseHandler($response);
+  }
+
+  /**
+   * Send a request message to given Queue.
+   *
+   * @param string $requestId
+   * @param string $messageBody
+   * @param string $requestType
+   * @return array|null
+   */
+  public function sendToInternalQueue($requestId, $messageBody, $requestType)
+  {
+    if($requestId == null && $messageBody == null){
+      return null;
+    }
+
+    $response = $this->internalQueueService->sendMessage(array (
+      'QueueUrl' => $this->internalQueueURL,
       'MessageBody' => $messageBody,
       'MessageAttributes' => [
         'TaskType' => [
@@ -144,8 +201,8 @@ class AWSQueueService
    */
   public function getNextMessage()
   {
-    $result = $this->queueService->receiveMessage(array(
-      'QueueUrl' => $this->queueURL
+    $result = $this->externalQueueService->receiveMessage(array(
+      'QueueUrl' => $this->externalQueueURL
     ));
 
     return $result;
@@ -156,7 +213,7 @@ class AWSQueueService
    */
   public function getQueueService()
   {
-    return $this->queueService;
+    return $this->externalQueueService;
   }
 
   /**

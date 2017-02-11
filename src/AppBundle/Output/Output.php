@@ -109,6 +109,26 @@ abstract class Output
      */
     public static function createStandardJsonErrorResponse($message = 'INVALID INPUT', $code = 428)
     {
+        return self::createStandardJsonResponse($message, $code);
+    }
+
+
+    /**
+     * @return JsonResponse
+     */
+    public static function createStandardJsonSuccessResponse()
+    {
+        return self::createStandardJsonResponse('OK', 200);
+    }
+    
+    
+    /**
+     * @param string $message
+     * @param int $code
+     * @return JsonResponse
+     */
+    public static function createStandardJsonResponse($message, $code)
+    {
         $result = [
             Constant::MESSAGE_NAMESPACE => $message,
             Constant::CODE_NAMESPACE => $code

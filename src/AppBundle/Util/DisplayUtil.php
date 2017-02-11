@@ -11,6 +11,8 @@ class DisplayUtil
 {
     const EMPTY_PRODUCTION = '-/-/-/-';
     const MIN_PREDICATE_SCORE_FOR_DISPLAY = 13;
+    const ONE_YEAR_MARK = '*';
+    const MISSING_AGE_SIGN = '-';
 
     /**
      *
@@ -41,16 +43,37 @@ class DisplayUtil
         $oneYearMark = '';
         if($gender == GenderType::FEMALE || $gender == GenderType::V) {
             if(TimeUtil::isGaveBirthAsOneYearOld($dateOfBirth, $earliestLitterDate)){
-                $oneYearMark = '*';
+                $oneYearMark = self::ONE_YEAR_MARK;
             }
         }
 
         $ageInTheNsfoSystem = TimeUtil::ageInSystemForProductionValue($dateOfBirth, $latestLitterDate);
         if($ageInTheNsfoSystem == null) {
-            $ageInTheNsfoSystem = '-';
+            $ageInTheNsfoSystem = self::MISSING_AGE_SIGN;
         }
 
         return $ageInTheNsfoSystem.'/'.$litterCount.'/'.$totalBornCount.'/'.$bornAliveCount.$oneYearMark;
+    }
+
+
+    /**
+     * @param $ageInTheNsfoSystem
+     * @param $litterCount
+     * @param $totalOffspringCount
+     * @param $bornAliveOffspringCount
+     * @param $addProductionAsterisk
+     * @return string
+     */
+    public static function parseProductionStringFromGivenParts($ageInTheNsfoSystem, $litterCount, $totalOffspringCount, $bornAliveOffspringCount, $addProductionAsterisk)
+    {
+        if($litterCount == null || $totalOffspringCount == null || $litterCount == 0 || $totalOffspringCount == 0) { return self::EMPTY_PRODUCTION; }
+
+        $oneYearMark = $addProductionAsterisk ? self::ONE_YEAR_MARK : '';
+        if($ageInTheNsfoSystem == null || $ageInTheNsfoSystem == 0) {
+            $ageInTheNsfoSystem = self::MISSING_AGE_SIGN;
+        }
+
+        return $ageInTheNsfoSystem.'/'.$litterCount.'/'.intval($totalOffspringCount).'/'.intval($bornAliveOffspringCount).$oneYearMark;
     }
 
 

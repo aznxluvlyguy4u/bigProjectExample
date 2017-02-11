@@ -49,6 +49,8 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
         /** @var ObjectManager $em */
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
+
+        /** @var Connection conn */
         $this->conn = $em->getConnection();
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
@@ -60,6 +62,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
+            '--- All & By Location ---', "\n",
             '1: Generate new AnimalCache records for all animals that do not have one yet', "\n",
             '2: Generate new AnimalCache records only for given locationId', "\n",
             '3: Regenerate all AnimalCache records for all animals', "\n",
@@ -70,11 +73,16 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '8: Delete duplicate records', "\n",
             '9: Update location_of_birth_id for all animals and locations', "\n",
             '10: Update AnimalCache exterior values for all exteriors >= given logDate', "\n",
-            '--------------------------------------------------------------------------', "\n",
+            '--- Location Focused ---', "\n",
             '11: Update AnimalCache of one Animal by animalId', "\n",
             '12: Generate new AnimalCache records for all animals, batched by location and ascendants', "\n",
-            '--------------------------------------------------------------------------', "\n",
-            '20: Get locationId from UBN', "\n",
+            '--- Sql Batch Queries ---', "\n",
+            '20: BatchUpdate all incongruent production values and n-ling values', "\n",
+            '21: BatchUpdate all Incongruent exterior values', "\n",
+            '22: BatchUpdate all Incongruent weight values', "\n",
+            '', "\n",
+            '--- Helper Commands ---', "\n",
+            '99: Get locationId from UBN', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -148,6 +156,56 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             
 
             case 20:
+                $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update production and n-ling cache values of all animals? (y/n, default = no)');
+                if($updateAll) {
+                    $output->writeln('Updating all records...');
+                    $productionValuesUpdated = AnimalCacher::updateAllProductionValues($this->conn);
+                    $nLingValuesUpdated = AnimalCacher::updateAllNLingValues($this->conn);
+                } else {
+                    do{
+                        $animalId = $this->cmdUtil->generateQuestion('Insert one animalId (default = 0)', 0);
+                    } while (!ctype_digit($animalId) && !is_int($animalId));
+                    $productionValuesUpdated = AnimalCacher::updateProductionValues($this->conn, [$animalId]);
+                    $nLingValuesUpdated = AnimalCacher::updateNLingValues($this->conn, [$animalId]);
+                }
+                $this->cmdUtil->writeln($productionValuesUpdated.' production values updated');
+                $this->cmdUtil->writeln($nLingValuesUpdated.' n-ling values updated');
+                break;
+
+
+            case 21:
+                $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update exterior cache values of all animals? (y/n, default = no)');
+                if($updateAll) {
+                    $output->writeln('Updating all records...');
+                    $updateCount = AnimalCacher::updateAllExteriors($this->conn);
+                } else {
+                    do{
+                        $animalId = $this->cmdUtil->generateQuestion('Insert one animalId (default = 0)', 0);
+                    } while (!ctype_digit($animalId) && !is_int($animalId));
+
+                    $updateCount = AnimalCacher::updateExteriors($this->conn, [$animalId]);
+                }
+                $output->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
+                break;
+
+
+            case 22:
+                $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update weight cache values of all animals? (y/n, default = no)');
+                if($updateAll) {
+                    $output->writeln('Updating all records...');
+                    $updateCount = AnimalCacher::updateAllWeights($this->conn);
+                } else {
+                    do{
+                        $animalId = $this->cmdUtil->generateQuestion('Insert one animalId (default = 0)', 0);
+                    } while (!ctype_digit($animalId) && !is_int($animalId));
+
+                    $updateCount = AnimalCacher::updateWeights($this->conn, [$animalId]);
+                }
+                $output->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
+                break;
+
+
+            case 99:
                 $this->printLocationIdFromGivenUbn();
                 $output->writeln('DONE!');
                 break;
