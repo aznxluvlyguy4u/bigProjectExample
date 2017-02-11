@@ -10,6 +10,7 @@ use \DateTime;
 
 /**
  * Class AnimalCache
+ * @ORM\Table(name="animal_cache",indexes={@ORM\Index(name="animal_result_table_idx", columns={"animal_id"})})
  * @ORM\Entity(repositoryClass="AppBundle\Entity\AnimalCacheRepository")
  * @package AppBundle\Entity
  */
@@ -35,7 +36,7 @@ class AnimalCache
 
     /**
      * @var integer
-     * @ORM\Column(type="integer", nullable=false)
+     * @ORM\Column(type="integer", nullable=false, unique = true)
      * @Assert\NotBlank
      * @JMS\Type("integer")
      */
@@ -65,11 +66,40 @@ class AnimalCache
     private $nLing;
 
     /**
-     * @var string
-     * @ORM\Column(type="string", options={"default":"-/-/-/-"}, nullable=true)
-     * @JMS\Type("string")
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
      */
-    private $production;
+    private $productionAge;
+
+    /**
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     */
+    private $litterCount;
+
+    /**
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     */
+    private $totalOffspringCount;
+
+    /**
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true)
+     * @JMS\Type("integer")
+     */
+    private $bornAliveOffspringCount;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @Assert\NotBlank
+     * @JMS\Type("boolean")
+     */
+    private $gaveBirthAsOneYearOld;
 
 
     /* Latest BreedValue Data */
@@ -83,21 +113,21 @@ class AnimalCache
 
     /**
      * @var string
-     * @ORM\Column(type="string", options={"default":null}, nullable=true)
+     * @ORM\Column(type="string", options={"default":"-/-"}, nullable=true)
      * @JMS\Type("string")
      */
     private $breedValueGrowth;
 
     /**
      * @var string
-     * @ORM\Column(type="string", options={"default":null}, nullable=true)
+     * @ORM\Column(type="string", options={"default":"-/-"}, nullable=true)
      * @JMS\Type("string")
      */
     private $breedValueMuscleThickness;
 
     /**
      * @var string
-     * @ORM\Column(type="string", options={"default":null}, nullable=true)
+     * @ORM\Column(type="string", options={"default":"-/-"}, nullable=true)
      * @JMS\Type("string")
      */
     private $breedValueFat;
@@ -105,7 +135,7 @@ class AnimalCache
 
     /**
      * @var string
-     * @ORM\Column(type="string", options={"default":null}, nullable=true)
+     * @ORM\Column(type="string", options={"default":"-/-"}, nullable=true)
      * @JMS\Type("string")
      */
     private $lambMeatIndex;
@@ -333,22 +363,6 @@ class AnimalCache
     public function setNLing($nLing)
     {
         $this->nLing = $nLing;
-    }
-
-    /**
-     * @return string
-     */
-    public function getProduction()
-    {
-        return $this->production;
-    }
-
-    /**
-     * @param string $production
-     */
-    public function setProduction($production)
-    {
-        $this->production = $production;
     }
 
     /**
@@ -718,5 +732,87 @@ class AnimalCache
     {
         $this->exteriorMeasurementDate = new \DateTime($exteriorMeasurementDateString);
     }
+
+    /**
+     * @return int
+     */
+    public function getProductionAge()
+    {
+        return $this->productionAge;
+    }
+
+    /**
+     * @param int $productionAge
+     */
+    public function setProductionAge($productionAge)
+    {
+        $this->productionAge = $productionAge;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLitterCount()
+    {
+        return $this->litterCount;
+    }
+
+    /**
+     * @param int $litterCount
+     */
+    public function setLitterCount($litterCount)
+    {
+        $this->litterCount = $litterCount;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTotalOffspringCount()
+    {
+        return $this->totalOffspringCount;
+    }
+
+    /**
+     * @param int $totalOffspringCount
+     */
+    public function setTotalOffspringCount($totalOffspringCount)
+    {
+        $this->totalOffspringCount = $totalOffspringCount;
+    }
+
+    /**
+     * @return int
+     */
+    public function getBornAliveOffspringCount()
+    {
+        return $this->bornAliveOffspringCount;
+    }
+
+    /**
+     * @param int $bornAliveOffspringCount
+     */
+    public function setBornAliveOffspringCount($bornAliveOffspringCount)
+    {
+        $this->bornAliveOffspringCount = $bornAliveOffspringCount;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isGaveBirthAsOneYearOld()
+    {
+        return $this->gaveBirthAsOneYearOld;
+    }
+
+    /**
+     * @param boolean $gaveBirthAsOneYearOld
+     */
+    public function setGaveBirthAsOneYearOld($gaveBirthAsOneYearOld)
+    {
+        $this->gaveBirthAsOneYearOld = $gaveBirthAsOneYearOld;
+    }
+
+
     
 }
