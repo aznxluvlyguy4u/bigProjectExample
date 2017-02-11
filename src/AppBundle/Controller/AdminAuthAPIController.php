@@ -6,6 +6,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\EmployeeRepository;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Migration\ClientMigration;
@@ -61,7 +62,10 @@ class AdminAuthAPIController extends APIController {
     if($emailAddress != null && $password != null) {
       $encoder = $this->get('security.password_encoder');
       $emailAddress = strtolower($emailAddress);
-      $admin = $this->getDoctrine()->getRepository(Employee::class)->findOneBy(array("emailAddress"=>$emailAddress));
+
+      /** @var EmployeeRepository $employeeRepository */
+      $employeeRepository = $this->getDoctrine()->getRepository(Employee::class);
+      $admin = $employeeRepository->findActiveOneByEmailAddress($emailAddress);
       if($admin == null) {
         return new JsonResponse(array("errorCode" => 401, "errorMessage"=>"Unauthorized"), 401);
       }
@@ -112,8 +116,9 @@ class AdminAuthAPIController extends APIController {
     $em = $this->getDoctrine()->getManager();
     $emailAddress = strtolower($content->get('email_address'));
 
-    /** @var Employee $admin */
-    $admin = $em->getRepository(Employee::class)->findOneByEmailAddress($emailAddress);
+    /** @var EmployeeRepository $employeeRepository */
+    $employeeRepository = $this->getDoctrine()->getRepository(Employee::class);
+    $admin = $employeeRepository->findActiveOneByEmailAddress($emailAddress);
     $log = ActionLogWriter::adminPasswordReset($em, $admin, $emailAddress);
 
     //Verify if email is correct
