@@ -11,6 +11,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class SqlUtil
 {
+    const OR_FILTER = ' OR ';
     const NULL = 'NULL';
     const DATE_FORMAT = 'Y-m-d H:i:s';
 
@@ -224,5 +225,67 @@ class SqlUtil
             $cmdUtil->advanceProgressBar(1, $message.$newCount.'|'.$skippedCount);
         }
         $cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
+
+    /**
+     * @param array $idsArray
+     * @param string $prefix
+     * @return string
+     */
+    public static function getFilterStringByIdsArray($idsArray, $prefix = 'id')
+    {
+        $idFilterString = '';
+        if(!is_array($idsArray)) { return $idFilterString; }
+        if(count($idsArray) == 0) { return $idFilterString; }
+        
+        foreach ($idsArray as $id) {
+            if(is_int($id) || ctype_digit($id)) {
+                $idFilterString = $idFilterString.' '.$prefix.' = '.$id.self::OR_FILTER;
+            }
+        }
+        return rtrim($idFilterString, self::OR_FILTER);
+    }
+
+
+    /**
+     * @param array $results
+     * @return array
+     */
+    public static function getColumnHeadersFromSqlResults($results)
+    {
+        $variables = [];
+        if(!is_array($results)) { return $variables; }
+        if(count($results) == 0) { return $variables; }
+
+        return array_keys($results[0]);
+    }
+
+
+    /**
+     * @param array $results
+     * @return array
+     */
+    public static function groupSqlResultsByVariable($results)
+    {
+        $groupedResults = [];
+        if(!is_array($results)) { return $groupedResults; }
+        if(count($results) == 0) { return $groupedResults; }
+        
+        $columnHeaders = self::getColumnHeadersFromSqlResults($results);
+        
+        foreach ($results as $result) {
+            foreach ($columnHeaders as $columnHeader) {
+                
+                if(array_key_exists($columnHeader, $groupedResults)) {
+                    $group = $groupedResults[$columnHeader];
+                } else {
+                    $group = [];
+                }
+                $group[] = $result[$columnHeader];
+                $groupedResults[$columnHeader] = $group;                                
+            }
+        }
+        return $groupedResults;
     }
 }

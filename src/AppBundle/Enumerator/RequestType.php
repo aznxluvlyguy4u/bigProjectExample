@@ -101,7 +101,7 @@ class RequestType
 
             case RequestType::RETRIEVE_UBN_DETAILS_ENTITY:
                 return RequestType::RETRIEVE_UBN_DETAILS;
-
+            
             default:
                 return null;
         }

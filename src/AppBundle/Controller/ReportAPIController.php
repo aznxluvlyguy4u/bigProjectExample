@@ -8,6 +8,8 @@ use AppBundle\Constant\Environment;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Country;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\WorkerTaskType;
+use AppBundle\Output\Output;
 use AppBundle\Report\InbreedingCoefficientReportData;
 use AppBundle\Report\LivestockReportData;
 use AppBundle\Report\PedigreeCertificates;
@@ -16,6 +18,7 @@ use AppBundle\Util\TwigOutputUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\InbreedingCoefficientInputValidator;
 use AppBundle\Validation\UlnValidator;
+use AppBundle\Worker\Task\WorkerMessageBody;
 use Aws\S3\S3Client;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -225,6 +228,26 @@ class ReportAPIController extends APIController {
 
   }
 
+
+  /**
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-result-table")
+   * @Method("POST")
+   */
+  public function generateResultTable(Request $request) {
+    $workerMessageBody = new WorkerMessageBody();
+    $workerMessageBody->setTaskType(WorkerTaskType::GENERATE_RESULT_TABLE_RECORDS);
+    $result = $this->sendTaskToQueue($workerMessageBody);
+
+    if(!$result) {
+      return Output::createStandardJsonErrorResponse('Failed to send task to queue', 428);
+    }
+
+    return Output::createStandardJsonSuccessResponse();
+  }
+  
+  
 
   /**
    * @param ReportBase $report

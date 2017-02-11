@@ -91,10 +91,36 @@ abstract class Measurement {
     protected $editDate;
 
     /**
+     * @var Person
+     *
+     * @ORM\ManyToOne(targetEntity="Person")
+     * @ORM\JoinColumn(name="deleted_by_id", referencedColumnName="id")
+     */
+    protected $deletedBy;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    protected $deleteDate;
+
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", options={"default":true})
+     * @JMS\Type("boolean")
+     */
+    protected $isActive;
+
+    /**
     * Measurement constructor.
     */
     public function __construct() {
       $this->logDate = new \DateTime();
+      $this->setIsActive(true);
     }
 
     /**
@@ -230,5 +256,56 @@ abstract class Measurement {
     {
         return $this->editDate;
     }
+
+    /**
+     * @return Person
+     */
+    public function getDeletedBy()
+    {
+        return $this->deletedBy;
+    }
+
+    /**
+     * @param Person $deletedBy
+     */
+    public function setDeletedBy($deletedBy)
+    {
+        $this->deletedBy = $deletedBy;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getDeleteDate()
+    {
+        return $this->deleteDate;
+    }
+
+    /**
+     * @param \DateTime $deleteDate
+     */
+    public function setDeleteDate($deleteDate)
+    {
+        $this->deleteDate = $deleteDate;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isIsActive()
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param boolean $isActive
+     */
+    public function setIsActive($isActive)
+    {
+        $this->isActive = $isActive;
+    }
+
+
+
 
 }

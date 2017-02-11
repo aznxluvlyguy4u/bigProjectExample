@@ -213,6 +213,15 @@ class CommandUtil
 
 
     /**
+     * @param string $text
+     */
+    public function writeln($text)
+    {
+        $this->outputInterface->writeln($text);
+    }
+
+
+    /**
      * @param string $heading
      * @return array
      */
