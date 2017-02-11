@@ -30,6 +30,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\DeclareBirthResponseOutput;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\WorkerTaskUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use DateTime;
@@ -157,8 +158,13 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             $result[] = $this->sendMessageObjectToQueue($requestMessage);
         }
 
+
+        //Send workerTask to update resultTable records of parents and children
+        $this->sendTaskToQueue(WorkerTaskUtil::createResultTableMessageBodyByBirthRequests($requestMessages));
+
         //Clear cache for this location, to reflect changes on the livestock
         $this->clearLivestockCacheForLocation($location);
+
 
         return new JsonResponse($result, 200);
     }
@@ -379,6 +385,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $manager->flush();
 
         //Re-retrieve litter, check count
+        /** @var Litter $litter */
         $litter = $repository->findOneBy(array ('id'=> $litterId));
 
         $succeeded = true;
@@ -431,6 +438,9 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                     }
                 }
             }
+
+            //Send workerTask to update productionValues of parents
+            $this->sendTaskToQueue(WorkerTaskUtil::createResultTableMessageBodyByLitter($litter));
             
             //Clear cache for this location, to reflect changes on the livestock
             $this->clearLivestockCacheForLocation($location);
@@ -466,6 +476,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         /** @var Location $location */
         $location = $this->getSelectedLocation($request);
+
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
         /** @var DeclareBirthRepository $declareBirthRepository */
@@ -559,6 +570,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     public function getCandidateSurrogateMothers(Request $request, $uln) {
         /** @var Location $location */
         $location = $this->getSelectedLocation($request);
+
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
         /** @var DeclareBirthRepository $declareBirthRepository */

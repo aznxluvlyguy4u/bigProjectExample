@@ -11,11 +11,14 @@ use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Message;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\MessageType;
+use AppBundle\Enumerator\WorkerTaskType;
 use AppBundle\FormInput\AnimalDetails;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
@@ -567,4 +570,5 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
 
     return new JsonResponse($minimizedOutput, 200);
   }
+
 }
