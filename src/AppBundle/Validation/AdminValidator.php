@@ -101,18 +101,26 @@ class AdminValidator
     /**
      * @param $admin
      * @param $accessLevelRequired
+     * @return boolean
+     */
+    public static function isAdmin($admin, $accessLevelRequired)
+    {
+        if($admin instanceof Employee) {
+            return self::checkIsAccessGranted($accessLevelRequired, $admin->getAccessLevel());
+        }
+
+        return false;
+    }
+    
+    
+    /**
+     * @param $admin
+     * @param $accessLevelRequired
      * @return ValidationResults
      */
     public static function validate($admin, $accessLevelRequired)
     {
-        $validationResults = new ValidationResults(false);
-
-        //Validate user
-        if(!($admin instanceof Employee)) {
-            $validationResults->setIsValid(false);
-        } else {
-            $validationResults->setIsValid(self::checkIsAccessGranted($accessLevelRequired, $admin->getAccessLevel()));
-        }
+        $validationResults = new ValidationResults(self::isAdmin($admin, $accessLevelRequired));
 
         if(!$validationResults->isValid()) {
             $validationResults->addError('UNAUTHORIZED');
