@@ -231,8 +231,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                   ), $statusCode);
             }
         }
-
-        //Add check to see if revoke is allowed within MAX_TIME_INTERVAL
+        
         //Remove still born childs
         foreach ($litter->getStillborns() as $stillborn) {
             $manager->remove($stillborn);
