@@ -8,6 +8,7 @@ use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\AnimalCache;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
@@ -35,6 +36,7 @@ use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveAnimalDetails;
 use AppBundle\Entity\Stillborn;
 use AppBundle\Entity\Tag;
+use AppBundle\Entity\TagRepository;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\ActionType;
@@ -50,7 +52,9 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -295,6 +299,11 @@ class IRSerializer implements IRSerializerInterface
         $stillbornCount = 0;
         $statusCode = 428;
         $declareBirthRequests = [];
+
+        /** @var TagRepository $tagRepository */
+        $tagRepository = $this->entityManager->getRepository(Tag::class);
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->entityManager->getRepository(Animal::class);
         
         if(key_exists('date_of_birth', $declareBirthContentArray->toArray())) {
             $dateOfBirth = new \DateTime($declareBirthContentArray["date_of_birth"]);
@@ -431,6 +440,58 @@ class IRSerializer implements IRSerializerInterface
             }
         }
 
+
+        //Validate tags
+
+        //First group ulns and check for duplicate ulns
+        $usedTagUlns = [];
+        foreach ($childrenContent as $childArray) {
+            $isAlive = ArrayUtil::get('is_alive', $childArray);
+            if ($isAlive) {
+                if (key_exists('uln_country_code', $childArray) && key_exists('uln_number', $childArray)) {
+                    $ulnCountryCode = $childArray['uln_country_code'];
+                    $ulnNumber = $childArray['uln_number'];
+                    $uln = $ulnCountryCode.$ulnNumber;
+                    if(key_exists($uln, $usedTagUlns[])) {
+                        return Validator::createJsonResponse('Oormerk '.$uln.' werd aan meer dan 1 kind toegekend.', $statusCode);
+                    }
+                    $usedTagUlns[$uln] = [
+                        JsonInputConstant::ULN_COUNTRY_CODE => $ulnCountryCode,
+                        JsonInputConstant::ULN_NUMBER => $ulnNumber,
+                    ];
+                }
+            }
+        }
+
+        //Check if tags are in database and UNASSIGNED
+        $tags = [];
+        foreach ($usedTagUlns as $ulnArray) {
+            $ulnCountryCode = $ulnArray[JsonInputConstant::ULN_COUNTRY_CODE];
+            $ulnNumber = $ulnArray[JsonInputConstant::ULN_NUMBER];
+            $uln = $ulnCountryCode.$ulnNumber;
+            
+            /** @var Tag $tagToReserve */
+            $tagToReserve = $tagRepository->findUnassignedTagByUlnNumberAndCountryCode($ulnCountryCode, $ulnNumber);
+
+            if (!$tagToReserve) {
+                //Tag does not exist in the database
+                return Validator::createJsonResponse("Opgegeven vrije oormerk: " . $uln . " voor het lam, is niet gevonden.", $statusCode);
+                
+            } else {
+                $animal = $animalRepository->findByUlnCountryCodeAndNumber($ulnCountryCode, $ulnNumber);
+                if ($animal) {
+                    return Validator::createJsonResponse("Opgegeven vrije oormerk: " . $uln . " voor het lam, is reeds toegewezen aan een bestaand dier met ULN: " . $uln, $statusCode);
+                } else if ($tagToReserve->getLocation()) {
+                    if ($tagToReserve->getLocation()->getId() == $location->getId()) {
+                        $tags[$uln] = $tagToReserve;
+                        break;
+                    }
+                }
+                return Validator::createJsonResponse("Opgegeven oormerk: " . $uln . " is niet geregistreerd voor dit UBN: " . $location->getUbn(), $statusCode);
+            }
+        }
+
+
         //Create Litter
         $litter = new Litter();
         $litter->setLitterDate($dateOfBirth);
@@ -552,55 +613,23 @@ class IRSerializer implements IRSerializerInterface
                     $declareBirthRequest->setActionBy($loggedInUser);
                 }
 
-                //Find assigned tag
+                //Assign tag
                 if(key_exists('uln_country_code', $child) && key_exists('uln_number', $child)) {
-                    /** @var Tag $tagToReserve */
-                    $tagToReserve = $this->entityManager->getRepository(Constant::TAG_REPOSITORY)
-                      ->findByUlnNumberAndCountryCode($child['uln_country_code'],$child['uln_number']);
+                    $ulnCountryCode = $child['uln_country_code'];
+                    $ulnNumber = $child['uln_number'];
+                    $uln = $ulnCountryCode.$ulnNumber;
+                    //This tag has already been validated in the beginning of this function
+                    $tagToReserve = ArrayUtil::get($uln, $tags);
 
                     if(!$tagToReserve) {
-                        $uln = $child['uln_country_code'] .$child['uln_number'];
-
-                        return new JsonResponse(
-                          array(
-                            Constant::RESULT_NAMESPACE => array (
-                              'code' => $statusCode,
-                              "message" => "Opgegeven vrije oormerk: " .$uln ." voor het lam, is niet gevonden.",
-                            )
-                          ), $statusCode);
+                        return Validator::createJsonResponse("Opgegeven vrije oormerk: " .$uln ." voor het lam, is niet gevonden.", $statusCode);
                     }
 
                     //Assign tag details, reserve tag
-                    if($tagToReserve) {
-                        $animal = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
-                          ->getAnimalByUlnOrPedigree(array ('uln_country_code' => $tagToReserve->getUlnCountryCode(), 
-                                                            'uln_number'=>$tagToReserve->getUlnNumber()));
-                        if($animal) {
-                            $uln = $child['uln_country_code'] .$child['uln_number'];
-
-                            return new JsonResponse(
-                              array(
-                                Constant::RESULT_NAMESPACE => array (
-                                  'code' => $statusCode,
-                                  "message" => "Opgegeven vrije oormerk: " .$uln ." voor het lam, is reeds toegewezen aan een bestaand dier met ULN: " . $uln,
-                                )
-                              ), $statusCode);
-                        }else if ($tagToReserve->getLocation()){
-                            if($tagToReserve->getLocation()->getId() != $location->getId()) {
-                                return new JsonResponse(
-                                  array(
-                                    Constant::RESULT_NAMESPACE => array (
-                                      'code' => $statusCode,
-                                      "message" => "Opgegeven oormerk: " .$tagToReserve->getUlnCountryCode()  .$tagToReserve->getUlnNumber() ." is niet geregistreerd voor dit UBN: " .$location->getUbn(),
-                                    )
-                                  ), $statusCode);
-                            }
-                        }
-                        $declareBirthRequest->setUlnCountryCode($tagToReserve->getUlnCountryCode());
-                        $declareBirthRequest->setUlnNumber($tagToReserve->getUlnNumber());
-                        $tagToReserve->setTagStatus(TagStateType::RESERVED);
-                        $this->entityManager->getRepository(Constant::TAG_REPOSITORY)->persist($tagToReserve);
-                    }
+                    $declareBirthRequest->setUlnCountryCode($tagToReserve->getUlnCountryCode());
+                    $declareBirthRequest->setUlnNumber($tagToReserve->getUlnNumber());
+                    $tagToReserve->setTagStatus(TagStateType::RESERVED);
+                    $tagRepository->persist($tagToReserve);
                 }
 
                 if(array_key_exists('surrogate_mother', $child)) {
