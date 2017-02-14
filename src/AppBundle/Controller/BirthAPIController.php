@@ -446,7 +446,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             }
 
             //Send workerTask to update productionValues of parents
-            $this->sendTaskToQueue(WorkerTaskUtil::createResultTableMessageBodyByLitter($litter));
+            $this->sendTaskToQueue(WorkerTaskUtil::createResultTableMessageBodyForBirthRevoke($litter));
             
             //Clear cache for this location, to reflect changes on the livestock
             $this->clearLivestockCacheForLocation($location);
