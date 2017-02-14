@@ -198,6 +198,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         $litterId = $content['litter_id'];
         $repository = $this->getDoctrine()->getRepository(Litter::class);
+        /** @var Litter $litter */
         $litter = $repository->findOneBy(array ('id' => $litterId));
 
         if (!$litter) {
@@ -375,7 +376,13 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             $manager->remove($child);
         }
 
+        //Send workerTask to update productionValues of parents
+        $this->sendTaskToQueue(WorkerTaskUtil::createResultTableMessageBodyForBirthRevoke($litter));
+
         $manager->flush();
+
+        //Clear cache for this location, to reflect changes on the livestock.
+        $this->clearLivestockCacheForLocation($location);
 
         //Re-retrieve litter, check count
         /** @var Litter $litter */
@@ -436,12 +443,6 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                     }
                 }
             }
-
-            //Send workerTask to update productionValues of parents
-            $this->sendTaskToQueue(WorkerTaskUtil::createResultTableMessageBodyForBirthRevoke($litter));
-            
-            //Clear cache for this location, to reflect changes on the livestock
-            $this->clearLivestockCacheForLocation($location);
 
             //Create response
             $statusCode = 200;
