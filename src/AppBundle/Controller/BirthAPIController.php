@@ -239,6 +239,9 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             $stillbornsToRemove[] = $stillborn;
         }
 
+        //Send workerTask to update productionValues of parents
+        $this->sendTaskToQueue(WorkerTaskUtil::createResultTableMessageBodyForBirthRevoke($litter));
+
         //Remove alive child animal
         /** @var Animal $child */
         foreach ($litter->getChildren() as $child) {
@@ -375,9 +378,6 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             //Remove child animal
             $manager->remove($child);
         }
-
-        //Send workerTask to update productionValues of parents
-        $this->sendTaskToQueue(WorkerTaskUtil::createResultTableMessageBodyForBirthRevoke($litter));
 
         $manager->flush();
 
