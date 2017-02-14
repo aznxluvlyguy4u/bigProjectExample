@@ -451,20 +451,26 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             //Clear cache for this location, to reflect changes on the livestock
             $this->clearLivestockCacheForLocation($location);
 
-            
             //Create response
             $statusCode = 200;
             $message = 'OK';
-            if(count($revokeMessages) == 0) {
+
+            $missingMessageNumbers = $declareBirthResponseCount - $declareBirthResponseMessageNumberCount;
+            if($missingMessageNumbers > 0) {
+                $message = $missingMessageNumbers.' responses are missing a messageNumber';
+                $statusCode = 428;
+            }
+
+            $missingMessages = $declareBirthCount-$declareBirthResponseCount;
+            if ($declareBirthCount > $declareBirthResponseCount && $declareBirthCount > 0) {
+                $startOfMessage = $statusCode == 428 ? $message.' and ' : '';
+                $message = $startOfMessage.$declareBirthCount.' declareBirths found for the litter are missing '.$missingMessages.' responses';
+                $statusCode = 428;
+            }
+
+            if($declareBirthCount == 0) {
                 $message = 'The litter does not contain any declareBirths';
                 $statusCode = 428;
-            } elseif ($declareBirthCount > $declareBirthResponseCount) {
-                $statusCode = 428;
-                $message = 'The '.$declareBirthCount.' declareBirths found for the litter are missing '.$declareBirthCount-$declareBirthResponseCount.' responses';
-                $missingMessageNumbers = $declareBirthResponseCount - $declareBirthResponseMessageNumberCount;
-                if($missingMessageNumbers > 0) {
-                    $message = $message.', of which '.$missingMessageNumbers.' responses are missing a messageNumber';
-                }
             }
 
             return new JsonResponse(array(Constant::RESULT_NAMESPACE => [
