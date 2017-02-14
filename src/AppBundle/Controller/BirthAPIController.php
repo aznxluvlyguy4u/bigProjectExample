@@ -421,7 +421,6 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             $revokeMessages = [];
             $declareBirthCount = 0;
             $declareBirthResponseCount = 0;
-            $declareBirthResponseMessageNumberCount = 0;
             //Create revoke request for every declareBirth request
             if ($litter->getDeclareBirths()->count() > 0) {
                 foreach ($litter->getDeclareBirths() as $declareBirth) {
@@ -431,8 +430,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
                     if ($declareBirthResponse) {
                         $declareBirthResponseCount++;
+                        //Only successful responses contain messageNumbers and can be revoked
                         if($declareBirthResponse->getMessageNumber() != null) {
-                            $declareBirthResponseMessageNumberCount++;
                             $message = new ArrayCollection();
                             $message->set(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE, $declareBirthResponse->getMessageNumber());
                             $revokeDeclarationObject = $this->buildMessageObject(RequestType::REVOKE_DECLARATION_ENTITY, $message, $client, $loggedInUser, $location);
@@ -451,20 +450,17 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             //Clear cache for this location, to reflect changes on the livestock
             $this->clearLivestockCacheForLocation($location);
 
-            
             //Create response
             $statusCode = 200;
             $message = 'OK';
-            if(count($revokeMessages) == 0) {
+
+            $missingMessages = $declareBirthCount-$declareBirthResponseCount;
+            if ($declareBirthCount > $declareBirthResponseCount) {
+                $message = 'There are '.$declareBirthCount.' declareBirths found for the litter, which are missing '.$missingMessages.' responses';
+                $statusCode = 428;
+            } elseif($declareBirthCount == 0) {
                 $message = 'The litter does not contain any declareBirths';
                 $statusCode = 428;
-            } elseif ($declareBirthCount > $declareBirthResponseCount) {
-                $statusCode = 428;
-                $message = 'The '.$declareBirthCount.' declareBirths found for the litter are missing '.$declareBirthCount-$declareBirthResponseCount.' responses';
-                $missingMessageNumbers = $declareBirthResponseCount - $declareBirthResponseMessageNumberCount;
-                if($missingMessageNumbers > 0) {
-                    $message = $message.', of which '.$missingMessageNumbers.' responses are missing a messageNumber';
-                }
             }
 
             return new JsonResponse(array(Constant::RESULT_NAMESPACE => [
