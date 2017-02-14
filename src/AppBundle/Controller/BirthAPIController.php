@@ -302,15 +302,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             foreach ($genderHistories as $genderHistory) {
                 $manager->remove($genderHistory);
             }
-
-            //Remove animalCache
-            //$animalCache = $manager->getRepository(AnimalCache::class)->findOneBy(['animalId' => $child->getId()]);
-
-//            if($animalCache){
-//                $manager->remove($animalCache);
-//                $manager->flush();
-//            }
-
+            
+            
             //Restore tag if it does not exist
             /** @var Tag $tagToRestore */
             $tagToRestore = null;

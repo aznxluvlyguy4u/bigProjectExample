@@ -685,15 +685,6 @@ class IRSerializer implements IRSerializerInterface
                 $child->setLambar($hasLambar);
                 $child->setLitter($litter);
 
-//                //TODO fixme
-//                //Add adhoc logic - if mother is of type Clun Forest, set child to same breed
-//                if($mother) {
-//                    if ($mother->getBreedCode() == 'CF100') {
-//                        $child->setBreed('PURE_BRED');
-//                        $child->setBreedCode('CF100');
-//                    }
-//                }
-
                 //Create new residence
                 $animalResidence = new AnimalResidence();
                 $animalResidence->setAnimal($child);
@@ -794,22 +785,6 @@ class IRSerializer implements IRSerializerInterface
         // Persist Litter
         $this->entityManager->persist($litter);
         $this->entityManager->flush();
-
-        /** @var Animal $child */
-        foreach ($children as $child) {
-            if($child->getIsAlive()) {
-               // AnimalCacher::cacheByAnimal($this->entityManager, $child);
-            }
-        }
-
-        if($mother) {
-            //AnimalCacher::cacheByAnimal($this->entityManager, $mother);
-        }
-
-        if($father) {
-            //AnimalCacher::cacheByAnimal($this->entityManager, $father);
-        }
-        
         
         return $declareBirthRequests;
     }
