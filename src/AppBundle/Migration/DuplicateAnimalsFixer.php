@@ -541,9 +541,11 @@ class DuplicateAnimalsFixer
             [ self::TABLE_NAME => 'breed_values_set',       self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'ulns_history',           self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'blindness_factor',       self::VARIABLE_TYPE => 'animal_id' ],
-            [ self::TABLE_NAME => 'animal_cache',           self::VARIABLE_TYPE => 'animal_id' ],
             [ self::TABLE_NAME => 'predicate',              self::VARIABLE_TYPE => 'animal_id' ],
         ];
+
+        $sql = "DELETE FROM animal_cache WHERE animal_id = ".$secondaryAnimalId;
+        $this->conn->exec($sql);
 
         $sql = '';
         $counter = 0;
