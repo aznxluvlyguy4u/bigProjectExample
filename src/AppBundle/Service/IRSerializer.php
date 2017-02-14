@@ -452,7 +452,7 @@ class IRSerializer implements IRSerializerInterface
                     $ulnCountryCode = $childArray['uln_country_code'];
                     $ulnNumber = $childArray['uln_number'];
                     $uln = $ulnCountryCode.$ulnNumber;
-                    if(key_exists($uln, $usedTagUlns[])) {
+                    if(key_exists($uln, $usedTagUlns)) {
                         return Validator::createJsonResponse('Oormerk '.$uln.' werd aan meer dan 1 kind toegekend.', $statusCode);
                     }
                     $usedTagUlns[$uln] = [
