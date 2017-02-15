@@ -174,4 +174,18 @@ class InvoiceRuleTemplate
     {
         $this->category = $category;
     }
+
+
+    /**
+     * TODO Find a better way to clone values (excluding the id) than using custom getters and setters
+     * @param InvoiceRuleTemplate $invoiceRuleTemplate
+     */
+    public function copyValues(InvoiceRuleTemplate $invoiceRuleTemplate)
+    {
+        $this->setCategory($invoiceRuleTemplate->getCategory());
+        $this->setDescription($invoiceRuleTemplate->getDescription());
+        $this->setPriceExclVat($invoiceRuleTemplate->getPriceExclVat());
+        $this->setSortOrder($invoiceRuleTemplate->getSortOrder());
+        $this->setVatPercentageRate($invoiceRuleTemplate->getVatPercentageRate());
+    }
 }
