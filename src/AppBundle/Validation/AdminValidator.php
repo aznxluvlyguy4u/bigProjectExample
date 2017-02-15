@@ -121,6 +121,7 @@ class AdminValidator
     public static function validate($admin, $accessLevelRequired)
     {
         $validationResults = new ValidationResults(self::isAdmin($admin, $accessLevelRequired));
+        $validationResults->setErrorCode(self::ERROR_CODE);
 
         if(!$validationResults->isValid()) {
             $validationResults->addError('UNAUTHORIZED');
