@@ -56,6 +56,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\DependencyInjection\Tests\A;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 /**
  * Class IRSerializer.
@@ -93,12 +94,16 @@ class IRSerializer implements IRSerializerInterface
      * @var \AppBundle\Service\EntityGetter
      */
     private $entityGetter;
+    
+    /** @var ObjectNormalizer */
+    private $objectNormalizer;
 
     public function __construct($serializer, $entityManager, $entityGetter)
     {
         $this->serializer = $serializer;
         $this->entityManager = $entityManager;
         $this->entityGetter = $entityGetter;
+        $this->objectNormalizer = new ObjectNormalizer();
     }
 
     /**
@@ -143,6 +148,19 @@ class IRSerializer implements IRSerializerInterface
 
         return $array;
     }
+
+
+    /**
+     * @param Collection $content
+     * @param $messageClassNameSpace
+     * @return array|\JMS\Serializer\scalar|mixed|object
+     */
+    public function denormalizeToObject(Collection $content, $messageClassNameSpace)
+    {
+        $object = $this->objectNormalizer->denormalize($content->toArray(), $messageClassNameSpace);
+        return $object;
+    }
+
 
     /**
      * @param Animal $retrievedAnimal
