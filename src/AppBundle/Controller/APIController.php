@@ -49,6 +49,7 @@ use AppBundle\Utilities\RequestUtil;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Worker\Task\WorkerMessageBody;
 use ClassesWithParents\E;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\LazyCriteriaCollection;
 use Doctrine\ORM\Query;
@@ -168,6 +169,17 @@ class APIController extends Controller implements APIControllerInterface
   {
     $jsonMessage = $this->getSerializer()->serializeToJSON($object, $type, $enableMaxDepthChecks);
     return json_decode($jsonMessage, true);
+  }
+  
+
+  /**
+   * @param Collection $content
+   * @param $type
+   * @return array|\JMS\Serializer\scalar|mixed|object
+   */
+  public function getObjectFromContent(Collection $content, $type)
+  {
+    return $this->getSerializer()->denormalizeToObject($content, $type);
   }
   
 
