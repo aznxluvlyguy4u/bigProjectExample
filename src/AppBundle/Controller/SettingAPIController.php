@@ -34,19 +34,11 @@ class SettingAPIController extends APIController implements SettingAPIController
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
         if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
 
-        $sql = "SELECT
-                  invoice_rule_template.id,
-                  invoice_rule_template.description,
-                  invoice_rule_template.vat_percentage_rate,
-                  invoice_rule_template.price_excl_vat,
-                  invoice_rule_template.sort_order,
-                  invoice_rule_template.category
-                FROM
-                  invoice_rule_template";
+        $repository = $this->getDoctrine()->getRepository(InvoiceRuleTemplate::class);
+        $ruleTemplates = $repository->findAll();
+        $output = $this->getDecodedJson($ruleTemplates, self::INVOICE_JMS_GROUP);
 
-        $results = $this->getDoctrine()->getConnection()->query($sql)->fetchAll();
-
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $results], 200);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
     }
 
     /**
