@@ -447,8 +447,11 @@ class IRSerializer implements IRSerializerInterface
             }
         }
 
+        //tailLength & birthWeight are not nullable in DeclareWeight
+        $tailLengthEmptyValue = 0;
+        $birthWeightEmptyValue = 0;
 
-        //Validate Surrogate Mothers
+        //Validate Surrogate Mothers and BirthWeight
         $surrogateMothersByUln = [];
         foreach ($childrenContent as $childArray) {
             $surrogate = null;
@@ -465,6 +468,13 @@ class IRSerializer implements IRSerializerInterface
                 }
 
                 $surrogateMothersByUln[$surrogate->getUln()] = $surrogate;
+            }
+
+
+            $birthWeightValue = ArrayUtil::get('tail_length', $childArray, $birthWeightEmptyValue);
+
+            if($birthWeightValue > 9.9) {
+                return Validator::createJsonResponse("Een lam met een geboortegewicht groter dan 9,9 kilogram, is niet geoorloofd.", $statusCode);
             }
         }
 
@@ -500,20 +510,12 @@ class IRSerializer implements IRSerializerInterface
             $childAnimalToCreate = null;
             $declareBirthRequest = null;
 
-            //tailLength & birthWeight are not nullable in DeclareWeight
-            $tailLengthEmptyValue = 0;
-            $birthWeightEmptyValue = 0;
-
             //                        key      array   null replacement
             $gender = ArrayUtil::get('gender', $child, null);
             $birthProgress = ArrayUtil::get('birth_progress', $child, null);
             $hasLambar = ArrayUtil::get('has_lambar', $child, false);
             $tailLengthValue = ArrayUtil::get('tail_length', $child, $tailLengthEmptyValue);
             $birthWeightValue = ArrayUtil::get('tail_length', $child, $birthWeightEmptyValue);
-
-            if($birthWeightValue > 9.9) {
-                return Validator::createJsonResponse("Een lam met een geboortegewicht groter dan 9,9 kilogram, is niet geoorloofd.", $statusCode);
-            }
 
             $isAlive = ArrayUtil::get('is_alive', $child, null);
 
