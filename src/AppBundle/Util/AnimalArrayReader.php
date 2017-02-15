@@ -143,4 +143,20 @@ class AnimalArrayReader
         return $lowestId;
     }
 
+
+    /**
+     * @param $array
+     * @param null $nullReplacement
+     * @return null|string
+     */
+    public static function getUlnFromArray($array, $nullReplacement = null)
+    {
+        $ulnCountryCode = ArrayUtil::get(JsonInputConstant::ULN_COUNTRY_CODE, $array);
+        $ulnNumber = ArrayUtil::get(JsonInputConstant::ULN_NUMBER,$array);
+        
+        if($ulnCountryCode != null && $ulnNumber != null) {
+            return $ulnCountryCode.$ulnNumber;
+        }
+        return $nullReplacement;
+    }
 }

@@ -52,6 +52,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
+use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
@@ -447,6 +448,27 @@ class IRSerializer implements IRSerializerInterface
         }
 
 
+        //Validate Surrogate Mothers
+        $surrogateMothersByUln = [];
+        foreach ($childrenContent as $childArray) {
+            $surrogate = null;
+            if(array_key_exists('surrogate_mother', $childArray)) {
+                /** @var Animal $surrogate */
+                $surrogate = $animalRepository->getAnimalByUlnOrPedigree($childArray['surrogate_mother']);
+
+                if(!$surrogate) {
+                    return Validator::createJsonResponse("Opgegeven pleegmoeder kan niet gevonden worden.", $statusCode);
+                }
+
+                if($surrogate->getGender() != GenderType::FEMALE) {
+                    return Validator::createJsonResponse("Opgegeven pleegmoeder met ULN: " .$surrogate->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: OOI.", $statusCode);
+                }
+
+                $surrogateMothersByUln[$surrogate->getUln()] = $surrogate;
+            }
+        }
+
+
         //Create Litter
         $litter = new Litter();
         $litter->setLitterDate($dateOfBirth);
@@ -476,7 +498,6 @@ class IRSerializer implements IRSerializerInterface
 
             $tagToReserve = null;
             $childAnimalToCreate = null;
-            $surrogate = null;
             $declareBirthRequest = null;
 
             //tailLength & birthWeight are not nullable in DeclareWeight
@@ -560,16 +581,13 @@ class IRSerializer implements IRSerializerInterface
                     $tagRepository->persist($tagToReserve);
                 }
 
+                $surrogate = null;
+                //All surrogates have been validate before processing any births
                 if(array_key_exists('surrogate_mother', $child)) {
+                    $ulnSurrogate = AnimalArrayReader::getUlnFromArray($child['surrogate_mother']);
                     /** @var Animal $surrogate */
-                    $surrogate = $animalRepository->getAnimalByUlnOrPedigree($child['surrogate_mother']);
-
-                    if(!$surrogate) {
-                        return Validator::createJsonResponse("Opgegeven pleegmoeder kan niet gevonden worden.", $statusCode);
-                    }
-
-                    if($surrogate->getGender() != GenderType::FEMALE) {
-                        return Validator::createJsonResponse("Opgegeven pleegmoeder met ULN: " .$surrogate->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: OOI.", $statusCode);
+                    if($ulnSurrogate != null) {
+                        $surrogate = ArrayUtil::get($ulnSurrogate, $surrogateMothersByUln);
                     }
                 }
 
