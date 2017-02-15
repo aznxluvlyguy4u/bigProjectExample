@@ -75,27 +75,18 @@ class SettingAPIController extends APIController implements SettingAPIController
 
         $content = $this->getContentAsArray($request);
 
+        /** @var InvoiceRuleTemplate $updatedRuleTemplate */
+        $updatedRuleTemplate = $this->getObjectFromContent($content, InvoiceRuleTemplate::class);
+
         $repository = $this->getDoctrine()->getRepository(InvoiceRuleTemplate::class);
-        $ruleTemplate = $repository->find($content->get('id'));
+        /** @var InvoiceRuleTemplate $currentRuleTemplate */
+        $currentRuleTemplate = $repository->find($updatedRuleTemplate->getId());
+        if(!$currentRuleTemplate) { return Validator::createJsonResponse('THE INVOICE RULE TEMPLATE IS NOT FOUND.', 428); }
 
-        if(!$ruleTemplate) { return Validator::createJsonResponse('THE INVOICE RULE TEMPLATE IS NOT FOUND.', 428); }
+        $currentRuleTemplate->copyValues($updatedRuleTemplate);
+        $this->persistAndFlush($currentRuleTemplate);
 
-        $description = $content->get('description');
-        $vatPercentageRate = $content->get('vat_percentage_rate');
-        $priceExclVat = $content->get('price_excl_vat');
-        $sortOrder = $content->get('sort_order');
-        $category = $content->get('category');
-
-        $ruleTemplate->setDescription($description);
-        $ruleTemplate->setVatPercentageRate($vatPercentageRate);
-        $ruleTemplate->setPriceExclVat($priceExclVat);
-        $ruleTemplate->setSortOrder($sortOrder);
-        $ruleTemplate->setCategory($category);
-
-        $this->getDoctrine()->getManager()->persist($ruleTemplate);
-        $this->getDoctrine()->getManager()->flush();
-
-        $output = $this->getDecodedJson($ruleTemplate, self::INVOICE_JMS_GROUP);
+        $output = $this->getDecodedJson($updatedRuleTemplate, self::INVOICE_JMS_GROUP);
         return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
     }
 
