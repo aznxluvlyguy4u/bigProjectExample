@@ -211,6 +211,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
               ), $statusCode);
         }
 
+        $litterClone = clone $litter;
         $childrenToRemove = [];
         $stillbornsToRemove = [];
         $maxMonthInterval = 1;
@@ -374,6 +375,9 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         }
 
         $manager->flush();
+
+        //Send workerTask to update productionValues of parents
+        $this->sendTaskToQueue(WorkerTaskUtil::createResultTableMessageBodyForBirthRevoke($litterClone));
 
         //Clear cache for this location, to reflect changes on the livestock.
         $this->clearLivestockCacheForLocation($location);
