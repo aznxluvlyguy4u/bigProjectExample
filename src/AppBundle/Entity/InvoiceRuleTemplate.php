@@ -17,6 +17,7 @@ class InvoiceRuleTemplate
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
+     * @JMS\Type("integer")
      * @JMS\Groups({"INVOICE"})
      */
     protected $id;
@@ -79,11 +80,19 @@ class InvoiceRuleTemplate
     }
 
     /**
-     * @return mixed
+     * @return int
      */
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @param int $id
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
     }
 
     /**
