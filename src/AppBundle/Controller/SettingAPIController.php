@@ -54,22 +54,8 @@ class SettingAPIController extends APIController implements SettingAPIController
 
         $content = $this->getContentAsArray($request);
 
-        // Create Owner
-        $description = $content->get('description');
-        $vatPercentageRate = floatval($content->get('vat_percentage_rate'));
-        $priceExclVat =  floatval($content->get('price_excl_vat'));
-        $sortOrder =  intval($content->get('sort_order'));
-        $category = $content->get('category');
-
-        $ruleTemplate = new InvoiceRuleTemplate();
-        $ruleTemplate->setDescription($description);
-        $ruleTemplate->setVatPercentageRate($vatPercentageRate);
-        $ruleTemplate->setPriceExclVat($priceExclVat);
-        $ruleTemplate->setSortOrder($sortOrder);
-        $ruleTemplate->setCategory($category);
-
-        $this->getDoctrine()->getManager()->persist($ruleTemplate);
-        $this->getDoctrine()->getManager()->flush();
+        $ruleTemplate = $this->getObjectFromContent($content, InvoiceRuleTemplate::class);
+        $this->persistAndFlush($ruleTemplate);
 
         $output = $this->getDecodedJson($ruleTemplate, self::INVOICE_JMS_GROUP);
         return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
