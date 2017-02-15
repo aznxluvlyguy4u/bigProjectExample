@@ -38,6 +38,7 @@ abstract class Person implements UserInterface
    *
    * @ORM\Column(type="string", unique=true, nullable=true)
    * @JMS\Type("string")
+   * @JMS\Groups({"INVOICE"})
    * @Expose
    */
   protected $personId;
@@ -48,6 +49,7 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
+   * @JMS\Groups({"INVOICE"})
    * @Expose
    */
   protected $firstName;
@@ -58,6 +60,7 @@ abstract class Person implements UserInterface
    * @ORM\Column(type="string")
    * @Assert\NotBlank
    * @JMS\Type("string")
+   * @JMS\Groups({"INVOICE"})
    * @Expose
    */
   protected $lastName;
@@ -85,6 +88,7 @@ abstract class Person implements UserInterface
      *
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
+     * @JMS\Groups({"INVOICE"})
      * @Expose
      */
   private $isActive;

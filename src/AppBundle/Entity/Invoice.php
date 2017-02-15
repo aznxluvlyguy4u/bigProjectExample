@@ -19,6 +19,7 @@ class Invoice {
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Groups({"INVOICE"})
      */
     protected $id;
 
@@ -28,6 +29,7 @@ class Invoice {
      * @ORM\Column(type="string",  unique=true)
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"INVOICE"})
      */
     private $invoiceNumber;
 
@@ -37,6 +39,7 @@ class Invoice {
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
+     * @JMS\Groups({"INVOICE"})
      */
     private $invoiceDate;
 
@@ -46,6 +49,7 @@ class Invoice {
      * @ORM\Column(type="string", options={"default": "UNPAID"})
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"INVOICE"})
      */
     private $status;
 
@@ -54,6 +58,7 @@ class Invoice {
      *
      * @ORM\Column(type="string")
      * @JMS\Type("string")
+     * @JMS\Groups({"INVOICE"})
      */
     private $documentUrl;
 
@@ -62,6 +67,7 @@ class Invoice {
      *
      * @ORM\OneToMany(targetEntity="InvoiceRule", mappedBy="invoice")
      * @JMS\Type("array")
+     * @JMS\Groups({"INVOICE"})
      */
     private $invoiceRules;
 
@@ -70,6 +76,7 @@ class Invoice {
      *
      * @ORM\ManyToOne(targetEntity="Company", inversedBy="invoices", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Company")
+     * @JMS\Groups({"INVOICE"})
      */
     private $company;
 

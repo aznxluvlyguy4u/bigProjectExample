@@ -31,6 +31,7 @@ class Company
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({"INVOICE"})
      */
     private $companyId;
 
@@ -39,6 +40,7 @@ class Company
     *
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
+    * @JMS\Groups({"INVOICE"})
     */
     private $debtorNumber;
 
@@ -47,6 +49,7 @@ class Company
     *
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
+    * @JMS\Groups({"INVOICE"})
     */
     private $companyName;
 
@@ -55,6 +58,7 @@ class Company
     *
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
+    * @JMS\Groups({"INVOICE"})
     */
     private $vatNumber;
 
@@ -63,6 +67,7 @@ class Company
     *
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
+    * @JMS\Groups({"INVOICE"}) 
     */
     private $chamberOfCommerceNumber;
 
@@ -71,6 +76,7 @@ class Company
     *
     * @ORM\Column(type="string", nullable=true)
     * @JMS\Type("string")
+    * @JMS\Groups({"INVOICE"})
     */
     private $companyRelationNumber;
 
@@ -79,6 +85,7 @@ class Company
     *
     * @ORM\OneToMany(targetEntity="Location", mappedBy="company", cascade={"persist"}, fetch="EAGER")
     * @JMS\Type("AppBundle\Entity\Location")
+    * @JMS\Groups({"INVOICE"}) 
     */
     private $locations;
 
@@ -88,6 +95,7 @@ class Company
     * @Assert\NotBlank
     * @ORM\ManyToOne(targetEntity="Client", inversedBy="companies", cascade={"persist"})
     * @JMS\Type("AppBundle\Entity\Client")
+    * @JMS\Groups({"INVOICE"}) 
     */
     protected $owner;
 

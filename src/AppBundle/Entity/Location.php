@@ -36,6 +36,7 @@ class Location
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({"INVOICE"})
      * @Expose
      */
     private $locationId;
@@ -47,6 +48,7 @@ class Location
    * @Assert\NotBlank
    * @Assert\Length(max = 12)
    * @JMS\Type("string")
+   * @JMS\Groups({"INVOICE"})
    * @Expose
    */
   protected $ubn;
@@ -219,6 +221,7 @@ class Location
      *
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
+     * @JMS\Groups({"INVOICE"})
      * @Expose
      */
     private $isActive;
