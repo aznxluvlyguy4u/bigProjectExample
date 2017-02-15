@@ -112,7 +112,13 @@ class LivestockReportData extends ReportBase
                   a.predicate_score as a_predicate_score, m.predicate_score as m_predicate_score, f.predicate_score as f_predicate_score,
                   ac.muscularity as a_muscularity, mc.muscularity as m_muscularity, fc.muscularity as f_muscularity,
                   ac.general_appearance as a_general_appearance, mc.general_appearance as m_general_appearance, fc.general_appearance as f_general_appearance,
-                  ac.production as a_production, mc.production as m_production, fc.production as f_production,
+                  
+                  ac.production_age as a_production_age, mc.production_age as m_production_age, fc.production_age as f_production_age,
+                  ac.litter_count as a_litter_count, mc.litter_count as m_litter_count, fc.litter_count as f_litter_count,
+                  ac.total_offspring_count as a_total_offspring_count, mc.total_offspring_count as m_total_offspring_count, fc.total_offspring_count as f_total_offspring_count,
+                  ac.born_alive_offspring_count as a_born_alive_offspring_count, mc.born_alive_offspring_count as m_born_alive_offspring_count, fc.born_alive_offspring_count as f_born_alive_offspring_count,
+                  ac.gave_birth_as_one_year_old as a_gave_birth_as_one_year_old, mc.gave_birth_as_one_year_old as m_gave_birth_as_one_year_old, fc.gave_birth_as_one_year_old as f_gave_birth_as_one_year_old,
+                  
                   ac.breed_value_litter_size as a_breed_value_litter_size, mc.breed_value_litter_size as m_breed_value_litter_size, fc.breed_value_litter_size as f_breed_value_litter_size,
                   ac.breed_value_growth as a_breed_value_growth, mc.breed_value_growth as m_breed_value_growth, fc.breed_value_growth as f_breed_value_growth,
                   ac.breed_value_muscle_thickness as a_breed_value_muscle_thickness, mc.breed_value_muscle_thickness as m_breed_value_muscle_thickness, fc.breed_value_muscle_thickness as f_breed_value_muscle_thickness,
@@ -145,6 +151,10 @@ class LivestockReportData extends ReportBase
             $results[$key]['f_n_ling'] = str_replace('-ling', '', $results[$key]['f_n_ling']);
             $results[$key]['m_n_ling'] = str_replace('-ling', '', $results[$key]['m_n_ling']);
 
+            $results[$key]['a_production'] = $this->getProduction($results, $key, 'a');
+            $results[$key]['m_production'] = $this->getProduction($results, $key, 'm');
+            $results[$key]['f_production'] = $this->getProduction($results, $key, 'f');
+
             if(self::SHOW_PREDICATE_IN_REPORT) {
                 $results[$key]['a_predicate'] = DisplayUtil::parsePredicateString($results[$key]['a_predicate_value'], $results[$key]['a_predicate_score']);
                 $results[$key]['f_predicate'] = DisplayUtil::parsePredicateString($results[$key]['f_predicate_value'], $results[$key]['f_predicate_score']);
@@ -157,6 +167,23 @@ class LivestockReportData extends ReportBase
         }
         
         return $results;
+    }
+
+
+    /**
+     * @param array $results
+     * @param int $key
+     * @param string $animalPrefix
+     * @return string
+     */
+    private function getProduction($results, $key, $animalPrefix)
+    {
+        $productionAge = intval($results[$key][$animalPrefix.'_production_age']);
+        $litterCount = intval($results[$key][$animalPrefix.'_litter_count']);
+        $totalOffSpringCount = intval($results[$key][$animalPrefix.'_total_offspring_count']);
+        $bornAliveOffspringCount = intval($results[$key][$animalPrefix.'_born_alive_offspring_count']);
+        $addProductionAsterisk = boolval($results[$key][$animalPrefix.'_gave_birth_as_one_year_old']);
+        return DisplayUtil::parseProductionStringFromGivenParts($productionAge, $litterCount, $totalOffSpringCount, $bornAliveOffspringCount, $addProductionAsterisk);
     }
 
 

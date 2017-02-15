@@ -19,14 +19,19 @@ use AppBundle\Entity\LitterRepository;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
+use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DisplayUtil;
+use AppBundle\Util\ProductionUtil;
 use AppBundle\Util\SqlUtil;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
 use \Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class AnimalCacher
 {
@@ -306,7 +311,7 @@ class AnimalCacher
     {
         $insertString = rtrim($insertString, ',');
         $sql = "INSERT INTO animal_cache (id, log_date, animal_id, dutch_breed_status,
-						  n_ling, production, breed_value_growth, breed_value_muscle_thickness, 
+						  n_ling, production_age, litter_count, total_offspring_count, born_alive_offspring_count, gave_birth_as_one_year_old, breed_value_growth, breed_value_muscle_thickness, 
 						  breed_value_fat, lamb_meat_index, lamb_meat_index_without_accuracy, last_weight, weight_measurement_date, kind, skull, muscularity, proportion, progress,
 						  exterior_type, leg_work, fur, general_appearance, height, breast_depth,
 						  torso_length, markings, exterior_measurement_date						  
@@ -322,8 +327,13 @@ class AnimalCacher
         $dutchBreedStatus = SqlUtil::getNullCheckedValueForSqlQuery(Translation::getFirstLetterTranslatedBreedType($breedType),true);
 
         //Litter Data
-        $production = SqlUtil::getNullCheckedValueForSqlQuery(self::generateProductionString($em, $animalId, $gender, $dateOfBirthString),true);
+        $productionString = SqlUtil::getNullCheckedValueForSqlQuery(self::generateProductionString($em, $animalId, $gender, $dateOfBirthString),true);
         $nLing = SqlUtil::getNullCheckedValueForSqlQuery(self::getNLingData($em, $animalId),true);
+        $productionAge = SqlUtil::getNullCheckedValueForSqlQuery(ProductionUtil::getProductionAgeFromProductionString($productionString),false);
+        $litterCount = SqlUtil::getNullCheckedValueForSqlQuery(ProductionUtil::getLitterCountFromProductionString($productionString),false);
+        $totalOffspring = SqlUtil::getNullCheckedValueForSqlQuery(ProductionUtil::getTotalOffspringCountFromProductionString($productionString),false);
+        $totalBornOffspring = SqlUtil::getNullCheckedValueForSqlQuery(ProductionUtil::getBornAliveCountFromProductionString($productionString),false);
+        $hasOneYearMark = StringUtil::getBooleanAsString(ProductionUtil::hasOneYearMark($productionString), 'FALSE');
 
         //Breed Values
         $breedValuesArray = self::getUnformattedBreedValues($em, $animalId, $breedValuesYear, $geneticBases);
@@ -372,7 +382,8 @@ class AnimalCacher
         $maxAnimalCacheId++;
 
         return "(".$maxAnimalCacheId.",'".$logDate."',".$animalId.",".$dutchBreedStatus
-            .",".$nLing.",".$production.",".$breedValueGrowth.",".$breedValueMuscleThickness
+            .",".$nLing.",".$productionAge.",".$litterCount.",".$totalOffspring.",".$totalBornOffspring.",".$hasOneYearMark
+            .",".$breedValueGrowth.",".$breedValueMuscleThickness
             .",".$breedValueFat.",".$lambMeatIndex.",".$lambMeatIndexWithoutAccuracy.",".$weight.",".$weightMeasurementDateString
             .",".$kind.",".$skull.",".$muscularity.",".$proportion.",".$progress.",".$exteriorType.",".$legWork.",".$fur
             .",".$generalAppearance.",".$height.",".$breastDepth.",".$torsoLength.",".$markings.",".$exteriorMeasurementDateString.")";
@@ -413,8 +424,13 @@ class AnimalCacher
         $dutchBreedStatus = Translation::getFirstLetterTranslatedBreedType($breedType);
 
         //Litter Data
-        $production = self::generateProductionString($em, $animalId, $gender, $dateOfBirthString);
         $nLing = self::getNLingData($em, $animalId);
+        $productionString = self::generateProductionString($em, $animalId, $gender, $dateOfBirthString);
+        $productionAge = ProductionUtil::getProductionAgeFromProductionString($productionString);
+        $litterCount = ProductionUtil::getLitterCountFromProductionString($productionString);
+        $totalOffspring = ProductionUtil::getTotalOffspringCountFromProductionString($productionString);
+        $totalBornOffspring = ProductionUtil::getBornAliveCountFromProductionString($productionString);
+        $hasOneYearMark = ProductionUtil::hasOneYearMark($productionString);
 
         //Breed Values
         $breedValuesArray = self::getUnformattedBreedValues($em, $animalId, $breedValuesYear, $geneticBases);
@@ -492,11 +508,16 @@ class AnimalCacher
             }
         }
 
+        $record->setProductionAge($productionAge);
+        $record->setLitterCount($litterCount);
+        $record->setTotalOffspringCount($totalOffspring);
+        $record->setBornAliveOffspringCount($totalBornOffspring);
+        $record->setGaveBirthAsOneYearOld($hasOneYearMark);
+
         $record->setAnimalId($animalId);
         $record->setDutchBreedStatus($dutchBreedStatus);
         $record->setPredicate($predicate);
         $record->setNLing($nLing);
-        $record->setProduction($production);
         $record->setBreedValueLitterSize($breedValueLitterSize);
         $record->setBreedValueGrowth($breedValueGrowth);
         $record->setBreedValueMuscleThickness($breedValueMuscleThickness);
@@ -684,58 +705,168 @@ class AnimalCacher
             self::cacheByAnimal($em, $animal, $flush);
 
         } else {
-            //Exterior Data
-            /** @var ExteriorRepository $exteriorRepository */
-            $exteriorRepository = $em->getRepository(Exterior::class);
-
-            $exterior = $exteriorRepository->getLatestExterior($animal);
-            $exteriorExists = $exterior->getId() != null;
-
-            if($exteriorExists) {
-                $kind = $exterior->getKind();
-                $skull = $exterior->getSkull();
-                $muscularity = $exterior->getMuscularity();
-                $proportion = $exterior->getProportion();
-                $progress = $exterior->getProgress();
-                $exteriorType = $exterior->getExteriorType();
-                $legWork = $exterior->getLegWork();
-                $fur = $exterior->getFur();
-                $generalAppearance = $exterior->getGeneralAppearence();
-                $height = $exterior->getHeight();
-                $breastDepth = $exterior->getBreastDepth();
-                $torsoLength = $exterior->getTorsoLength();
-                $markings = $exterior->getMarkings();
-                $exteriorMeasurementDate = $exterior->getMeasurementDate();
-
-                if($record->getKind() != $kind || $record->getSkull() != $skull || $record->getMuscularity() != $muscularity
-                    || $record->getProportion() != $proportion || $record->getProgress() !=  $progress
-                    || $record->getExteriorType() != $exteriorType || $record->getLegWork() != $legWork
-                    || $record->getFur() != $fur || $record->getGeneralAppearance() != $generalAppearance
-                    || $record->getHeight() != $height || $record->getBreastDepth() != $breastDepth
-                    || $record->getTorsoLength() != $torsoLength || $record->getMarkings() != $markings
-                    || $record->getExteriorMeasurementDate() != $exteriorMeasurementDate) {
-
-                    $record->setKind($kind);
-                    $record->setSkull($skull);
-                    $record->setMuscularity($muscularity);
-                    $record->setProportion($proportion);
-                    $record->setProgress($progress);
-                    $record->setExteriorType($exteriorType);
-                    $record->setLegWork($legWork);
-                    $record->setFur($fur);
-                    $record->setGeneralAppearance($generalAppearance);
-                    $record->setHeight($height);
-                    $record->setBreastDepth($breastDepth);
-                    $record->setTorsoLength($torsoLength);
-                    $record->setMarkings($markings);
-                    $record->setExteriorMeasurementDate($exteriorMeasurementDate);
-
-                    $em->persist($record);
-                    if($flush) { $em->flush(); }
-                }
-            }
+            AnimalCacher::updateExteriors($em->getConnection(), [$animalId]);
         }
 
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     */
+    public static function updateAllExteriors(Connection $conn){
+        return self::updateExteriors($conn, null);
+    }
+
+
+    /**
+     * $animalIds == null: all exterior values in animalCache are updated
+     * $animalIds count == 0; nothing is updated
+     * $animalIds count > 0: only given animalIds are updated
+     *
+     * @param Connection $conn
+     * @param array $animalIds
+     * @return int
+     */
+    public static function updateExteriors(Connection $conn, $animalIds)
+    {
+        $updateCount = 0;
+        
+        $animalIdFilterString = "";
+        if(is_array($animalIds)) {
+            if(count($animalIds) == 0) {
+                return $updateCount;
+            }
+            else {
+                $animalIdFilterString = " AND (".SqlUtil::getFilterStringByIdsArray($animalIds,'xx.animal_id').")";
+            }
+        } elseif($animalIds != null) {
+            return $updateCount;
+        }
+
+
+        $sql = "WITH rows AS (
+                UPDATE animal_cache SET
+                  skull = v.skull,
+                  muscularity = v.muscularity,
+                  proportion = v.proportion,
+                  exterior_type = v.exterior_type,
+                  leg_work = v.leg_work,
+                  fur = v.fur,
+                  general_appearance = v.general_appearence,
+                  height = v.height,
+                  breast_depth = v.breast_depth,
+                  torso_length = v.torso_length,
+                  markings = v.markings,
+                  kind = v.kind,
+                  progress = v.progress,
+                  exterior_measurement_date = v.measurement_date,
+                  log_date = '".TimeUtil::getTimeStampNow()."'
+                FROM (
+                  SELECT x.animal_id, x.skull, x.muscularity, x.proportion, x.exterior_type, x.leg_work, x.fur, x.general_appearence,
+                    x.height, x.breast_depth, x.torso_length, x.markings, x.kind, x.progress, m.measurement_date
+                  FROM exterior x
+                  INNER JOIN measurement m ON x.id = m.id
+                  INNER JOIN (
+                    SELECT animal_id, MAX(measurement_date) as max_measurement_date
+                    FROM exterior xx
+                      INNER JOIN measurement mm ON xx.id = mm.id
+                      WHERE mm.is_active = TRUE".$animalIdFilterString."
+                    GROUP BY animal_id
+                  ) AS last ON last.animal_id = x.animal_id AND m.measurement_date = last.max_measurement_date
+                  INNER JOIN animal_cache c ON c.animal_id = x.animal_id
+                  INNER JOIN animal a ON x.animal_id = a.id
+                  WHERE (
+                    c.skull ISNULL OR c.skull <> x.skull OR
+                    c.muscularity ISNULL OR c.muscularity <> x.muscularity OR
+                    c.proportion ISNULL OR c.proportion <> x.proportion OR
+                    c.exterior_type ISNULL OR c.exterior_type <> x.exterior_type OR
+                    c.leg_work ISNULL OR c.leg_work <> x.leg_work OR
+                    c.fur ISNULL OR c.fur <> x.fur OR
+                    c.general_appearance ISNULL OR c.general_appearance <> x.general_appearence OR
+                    c.height ISNULL OR c.height <> x.height OR
+                    c.breast_depth ISNULL OR c.breast_depth <> x.breast_depth OR
+                    c.torso_length ISNULL OR c.torso_length <> x.torso_length OR
+                    c.markings ISNULL OR c.markings <> x.markings OR
+                    c.kind <> x.kind OR (c.kind ISNULL AND x.kind NOTNULL) OR
+                    c.progress ISNULL OR c.progress <> x.progress OR
+                    c.exterior_measurement_date ISNULL OR c.exterior_measurement_date <> m.measurement_date
+                  )
+                       -- AND a.location_id = 00000 < filter location_id here when necessary
+                ) AS v(animal_id, skull, muscularity, proportion, exterior_type, leg_work, fur, general_appearence,
+                height, breast_depth, torso_length, markings, kind, progress, measurement_date) WHERE animal_cache.animal_id = v.animal_id
+                  RETURNING 1
+                )
+                SELECT COUNT(*) AS count FROM rows;";
+        $updateCount = $conn->query($sql)->fetch()['count'];
+        return $updateCount;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     */
+    public static function updateAllWeights(Connection $conn){
+        return self::updateWeights($conn, null);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param $animalIds
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function updateWeights(Connection $conn, $animalIds)
+    {
+        $updateCount = 0;
+
+        $animalIdFilterString = "";
+        if(is_array($animalIds)) {
+            if(count($animalIds) == 0) {
+                return $updateCount;
+            }
+            else {
+                $animalIdFilterString = " AND (".SqlUtil::getFilterStringByIdsArray($animalIds,'ww.animal_id').")";
+            }
+        } elseif($animalIds != null) {
+            return $updateCount;
+        }
+
+        $sql = "WITH rows AS (
+                  UPDATE animal_cache SET
+                    last_weight = v.last_weight,
+                    weight_measurement_date = v.weight_measurement_date,
+                    log_date = '".TimeUtil::getTimeStampNow()."'
+                  FROM (
+                         SELECT w.animal_id, w.weight, m.measurement_date
+                         FROM weight w
+                           INNER JOIN measurement m ON w.id = m.id
+                           INNER JOIN (
+                                        SELECT animal_id, MAX(measurement_date) as max_measurement_date,
+                                          MAX(log_date) as max_log_date
+                                        FROM weight ww
+                                          INNER JOIN measurement mm ON ww.id = mm.id
+                                          --Remove is_revoked if column data is moved to is_active and variable is removed
+                                        WHERE ww.is_revoked = FALSE".$animalIdFilterString." --AND mm.is_active = TRUE
+                                        GROUP BY animal_id
+                       ) AS last ON last.animal_id = w.animal_id AND m.measurement_date = last.max_measurement_date
+                           AND m.log_date = last.max_log_date
+                  INNER JOIN animal_cache c ON c.animal_id = w.animal_id
+                  INNER JOIN animal a ON w.animal_id = a.id
+                  WHERE (
+                  c.last_weight ISNULL OR c.last_weight <> w.weight OR
+                  c.weight_measurement_date ISNULL OR c.weight_measurement_date <> m.measurement_date
+                  )
+                  -- AND a.location_id = 00000 < filter location_id here when necessary
+                ) AS v(animal_id, last_weight, weight_measurement_date) WHERE animal_cache.animal_id = v.animal_id
+                RETURNING 1
+                )
+                SELECT COUNT(*) AS count FROM rows;";
+        $updateCount = $conn->query($sql)->fetch()['count'];
+        return $updateCount;
     }
 
 
@@ -759,11 +890,20 @@ class AnimalCacher
 
         } else {
             //Production Data
-            $production = self::generateProductionString($em, $animalId, $animal->getGender(), $animal->getDateOfBirthString());
+            $productionString = self::generateProductionString($em, $animalId, $animal->getGender(), $animal->getDateOfBirthString());
+            $productionAge = ProductionUtil::getProductionAgeFromProductionString($productionString);
+            $litterCount = ProductionUtil::getLitterCountFromProductionString($productionString);
+            $totalOffspring = ProductionUtil::getTotalOffspringCountFromProductionString($productionString);
+            $totalBornOffspring = ProductionUtil::getBornAliveCountFromProductionString($productionString);
+            $hasOneYearMark = ProductionUtil::hasOneYearMark($productionString);
+            $record->setProductionAge($productionAge);
+            $record->setLitterCount($litterCount);
+            $record->setTotalOffspringCount($totalOffspring);
+            $record->setBornAliveOffspringCount($totalBornOffspring);
+            $record->setGaveBirthAsOneYearOld($hasOneYearMark);
 
             //If record already exists, only update the production data
             $record->setLogDate(new \DateTime()); //update logDate
-            $record->setProduction($production);
 
             $em->persist($record);
             if($flush) { $em->flush(); }
@@ -846,5 +986,250 @@ class AnimalCacher
             $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX],
             $breedValuesArray[BreedValueLabel::LAMB_MEAT_INDEX_ACCURACY],
             self::EMPTY_INDEX_VALUE);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     */
+    public static function updateAllProductionValues(Connection $conn)
+    {
+        return self::updateProductionValues($conn, '');
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param array $animalIds
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function updateProductionValues(Connection $conn, $animalIds)
+    {
+        $updateCount = 0;
+
+        $animalIdFilterString = "";
+        if(is_array($animalIds)) {
+            if(count($animalIds) == 0) {
+                return $updateCount;
+            }
+            else {
+                $animalIdFilterString = " AND (".SqlUtil::getFilterStringByIdsArray($animalIds,'a.id').") ";
+            }
+        } elseif($animalIds != null) {
+            return $updateCount;
+        }
+
+        $sql = "WITH rows AS (
+                  UPDATE animal_cache
+                  SET
+                    production_age             = v.production_age,
+                    litter_count               = v.litter_count,
+                    total_offspring_count      = v.total_born_count,
+                    born_alive_offspring_count = v.born_alive_count,
+                    gave_birth_as_one_year_old = v.gave_birth_as_one_year_old,
+                    log_date = '".TimeUtil::getTimeStampNow()."'
+                  FROM (
+                         SELECT DISTINCT
+                           (a.id)                                           AS animal_id,
+                           MAX(c.id)                                        AS animal_cache_id,
+                           EXTRACT(YEAR FROM AGE(MAX(l.litter_date), MAX(a.date_of_birth))) + --get years
+                           ROUND(CAST(EXTRACT(MONTH FROM AGE(MAX(l.litter_date), MAX(a.date_of_birth))) AS DOUBLE PRECISION) /
+                                 11) --add year if months >= 6
+                                                                            AS age_in_nsfo_system,
+                           COUNT(l.id)                                      AS litter_count,
+                           SUM(l.born_alive_count) + SUM(l.stillborn_count) AS total_born_count,
+                           SUM(l.born_alive_count)                          AS born_alive_count,
+                           FALSE                                            AS has_one_year_mark,
+                           --fathers never get a one-year-mark
+                           (
+                             MAX(c.production_age) <> EXTRACT(YEAR FROM AGE(MAX(l.litter_date), MAX(a.date_of_birth))) + --get years
+                                                      ROUND(CAST(EXTRACT(MONTH FROM AGE(MAX(l.litter_date), MAX(a.date_of_birth))) AS
+                                                                 DOUBLE PRECISION) / 11) --add year if months >= 6
+                             OR MAX(c.litter_count) <> COUNT(l.id)
+                             OR MAX(c.total_offspring_count) <> SUM(l.born_alive_count) + SUM(l.stillborn_count)
+                             OR MAX(c.born_alive_offspring_count) <> SUM(l.born_alive_count)
+                             OR BOOL_AND(c.gave_birth_as_one_year_old) <> FALSE
+                             OR MAX(c.production_age) ISNULL OR MAX(c.litter_count) ISNULL OR MAX(c.total_offspring_count) ISNULL OR
+                             MAX(c.born_alive_offspring_count) ISNULL
+                           )                                                AS update_production
+                
+                         FROM animal a
+                           INNER JOIN litter l ON a.id = l.animal_father_id
+                           INNER JOIN animal_cache c ON c.animal_id = a.id
+                         WHERE date_of_birth NOTNULL AND l.status <> '".RequestStateType::REVOKED."' ".$animalIdFilterString."
+                         GROUP BY a.id
+                
+                         UNION
+                
+                         SELECT DISTINCT
+                           (a.id)                                           AS animal_id,
+                           MAX(c.id)                                        AS animal_cache_id,
+                           EXTRACT(YEAR FROM AGE(MAX(l.litter_date), MAX(a.date_of_birth))) + --get years
+                           ROUND(CAST(EXTRACT(MONTH FROM AGE(MAX(l.litter_date), MAX(a.date_of_birth))) AS DOUBLE PRECISION) /
+                                 11) --add year if months >= 6
+                                                                            AS age_in_nsfo_system,
+                           COUNT(l.id)                                      AS litter_count,
+                           SUM(l.born_alive_count) + SUM(l.stillborn_count) AS total_born_count,
+                           SUM(l.born_alive_count)                          AS born_alive_count,
+                
+                           EXTRACT(YEAR FROM AGE(MIN(l.litter_date), MAX(a.date_of_birth))) * 12 + --get all as months
+                           EXTRACT(MONTH FROM AGE(MIN(l.litter_date), MAX(a.date_of_birth))) <= 18 AND a.gender = 'FEMALE'
+                                                                            AS has_one_year_mark,
+                           (
+                             MAX(c.production_age) <> EXTRACT(YEAR FROM AGE(MAX(l.litter_date), MAX(a.date_of_birth))) + --get years
+                                                      ROUND(CAST(EXTRACT(MONTH FROM AGE(MAX(l.litter_date), MAX(a.date_of_birth))) AS
+                                                                 DOUBLE PRECISION) / 11) --add year if months >= 6
+                             OR MAX(c.litter_count) <> COUNT(l.id)
+                             OR MAX(c.total_offspring_count) <> SUM(l.born_alive_count) + SUM(l.stillborn_count)
+                             OR MAX(c.born_alive_offspring_count) <> SUM(l.born_alive_count)
+                             OR BOOL_AND(c.gave_birth_as_one_year_old) <>
+                                (EXTRACT(YEAR FROM AGE(MIN(l.litter_date), MAX(a.date_of_birth))) * 12 + --get all as months
+                                 EXTRACT(MONTH FROM AGE(MIN(l.litter_date), MAX(a.date_of_birth))) <= 18 AND a.gender = 'FEMALE')
+                             OR MAX(c.production_age) ISNULL OR MAX(c.litter_count) ISNULL OR MAX(c.total_offspring_count) ISNULL OR
+                             MAX(c.born_alive_offspring_count) ISNULL
+                           )                                                AS update_production
+                
+                         FROM animal a
+                           INNER JOIN litter l ON a.id = l.animal_mother_id
+                           INNER JOIN animal_cache c ON c.animal_id = a.id
+                         WHERE date_of_birth NOTNULL AND l.status <> '".RequestStateType::REVOKED."' ".$animalIdFilterString."
+                         GROUP BY a.id
+                         UNION --Below when date of births are null
+                
+                         SELECT DISTINCT
+                           (a.id)                                           AS animal_id,
+                           MAX(c.id)                                        AS animal_cache_id,
+                           0                                                AS age_in_nsfo_system,
+                           COUNT(l.id)                                      AS litter_count,
+                           SUM(l.born_alive_count) + SUM(l.stillborn_count) AS total_born_count,
+                           SUM(l.born_alive_count)                          AS born_alive_count,
+                           FALSE                                            AS has_one_year_mark,
+                           --fathers never get a one-year-mark
+                           (
+                             MAX(c.production_age) <> 0
+                             OR MAX(c.litter_count) <> COUNT(l.id)
+                             OR MAX(c.total_offspring_count) <> SUM(l.born_alive_count) + SUM(l.stillborn_count)
+                             OR MAX(c.born_alive_offspring_count) <> SUM(l.born_alive_count)
+                             OR BOOL_AND(c.gave_birth_as_one_year_old) <> FALSE
+                             OR MAX(c.production_age) ISNULL OR MAX(c.litter_count) ISNULL OR MAX(c.total_offspring_count) ISNULL OR
+                             MAX(c.born_alive_offspring_count) ISNULL
+                           )                                                AS update_production
+                
+                         FROM animal a
+                           INNER JOIN litter l ON a.id = l.animal_father_id
+                           INNER JOIN animal_cache c ON c.animal_id = a.id
+                         WHERE date_of_birth ISNULL AND l.status <> '".RequestStateType::REVOKED."' ".$animalIdFilterString."
+                         GROUP BY a.id
+                
+                         UNION
+                
+                         SELECT DISTINCT
+                           (a.id)                                           AS animal_id,
+                           MAX(c.id)                                        AS animal_cache_id,
+                           0                                                AS age_in_nsfo_system,
+                           COUNT(l.id)                                      AS litter_count,
+                           SUM(l.born_alive_count) + SUM(l.stillborn_count) AS total_born_count,
+                           SUM(l.born_alive_count)                          AS born_alive_count,
+                           FALSE                                            AS has_one_year_mark,
+                           --dateOfBirth missing, cannot calculate this value
+                           (
+                             MAX(c.production_age) <> 0
+                             OR MAX(c.litter_count) <> COUNT(l.id)
+                             OR MAX(c.total_offspring_count) <> SUM(l.born_alive_count) + SUM(l.stillborn_count)
+                             OR MAX(c.born_alive_offspring_count) <> SUM(l.born_alive_count)
+                             OR BOOL_AND(c.gave_birth_as_one_year_old) <> FALSE
+                             OR MAX(c.production_age) ISNULL OR MAX(c.litter_count) ISNULL OR MAX(c.total_offspring_count) ISNULL OR
+                             MAX(c.born_alive_offspring_count) ISNULL
+                           )                                                AS update_production
+                
+                         FROM animal a
+                           INNER JOIN litter l ON a.id = l.animal_mother_id
+                           INNER JOIN animal_cache c ON c.animal_id = a.id
+                         WHERE date_of_birth ISNULL AND l.status <> '".RequestStateType::REVOKED."' ".$animalIdFilterString."
+                         GROUP BY a.id
+                       ) AS v(animal_id, animal_cache_id, production_age, litter_count, total_born_count, born_alive_count, gave_birth_as_one_year_old, update_production)
+                  WHERE v.update_production = TRUE AND animal_cache.id = v.animal_cache_id
+                  RETURNING 1
+                )
+                SELECT COUNT(*) AS count FROM rows";
+        $updateCount = $conn->query($sql)->fetch()['count'];
+        return $updateCount;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     */
+    public static function updateAllNLingValues(Connection $conn)
+    {
+        return self::updateNLingValues($conn, '');
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param array $animalIds
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function updateNLingValues(Connection $conn, $animalIds)
+    {
+        $updateCount = 0;
+
+        $animalIdFilterString = "";
+        if(is_array($animalIds)) {
+            if(count($animalIds) == 0) {
+                return $updateCount;
+            }
+            else {
+                $animalIdFilterString = " AND (".SqlUtil::getFilterStringByIdsArray($animalIds,'a.id').") ";
+            }
+        } elseif($animalIds != null) {
+            return $updateCount;
+        }
+
+        $sql = "WITH rows AS (
+                  UPDATE animal_cache
+                SET n_ling = v.new_n_ling,
+                    log_date = '".TimeUtil::getTimeStampNow()."'
+                FROM (
+                       -- nLing, litter still linked and not revoked
+                       SELECT c.id as cache_id, c.n_ling as current_n_ling, CONCAT(l.born_alive_count + l.stillborn_count,'-ling') as new_n_ling,
+                         (c.n_ling <> CONCAT(l.born_alive_count + l.stillborn_count,'-ling') OR c.n_ling ISNULL ) as update_n_ling
+                       FROM animal a
+                         INNER JOIN litter l ON a.litter_id = l.id
+                         INNER JOIN animal_cache c ON c.animal_id = a.id
+                       WHERE (l.status <> 'REVOKED' AND l.animal_mother_id NOTNULL)
+                             AND (c.n_ling <> CONCAT(l.born_alive_count + l.stillborn_count,'-ling') OR c.n_ling ISNULL )
+                             ".$animalIdFilterString."
+                       UNION
+                       -- nLing, litter still linked but revoked or mother not set
+                       SELECT c.id as cache_id, c.n_ling as current_n_ling, '0-ling' as new_n_ling,
+                         (c.n_ling <> '0-ling' OR c.n_ling ISNULL ) as update_n_ling
+                       FROM animal a
+                         INNER JOIN litter l ON a.litter_id = l.id
+                         INNER JOIN animal_cache c ON c.animal_id = a.id
+                       WHERE (l.status = 'REVOKED' OR l.animal_mother_id ISNULL) --If mother ISNULL the offspringCounts <> nLing
+                             AND (c.n_ling <> '0-ling'  OR c.n_ling ISNULL ) --the default value for unknown nLings should be '0-ling'
+                             ".$animalIdFilterString."
+                       UNION
+                       -- nLing, litter not linked anymore
+                       SELECT c.id as cache_id, c.n_ling as current_n_ling, '0-ling' as new_n_ling,
+                         (c.n_ling <> '0-ling' OR c.n_ling ISNULL ) as update_n_ling
+                       FROM animal a
+                         LEFT JOIN litter l ON a.litter_id = l.id
+                         INNER JOIN animal_cache c ON c.animal_id = a.id
+                       WHERE l.id ISNULL
+                             AND (c.n_ling <> '0-ling'  OR c.n_ling ISNULL ) --the default value for unknown nLings should be '0-ling'
+                             ".$animalIdFilterString."
+                     ) AS v(cache_id, current_n_ling, new_n_ling, update_n_ling) WHERE animal_cache.id = v.cache_id AND v.update_n_ling = TRUE
+                  RETURNING 1
+                )
+                SELECT COUNT(*) AS count FROM rows";
+        $updateCount = $conn->query($sql)->fetch()['count'];
+        return $updateCount;
     }
 }

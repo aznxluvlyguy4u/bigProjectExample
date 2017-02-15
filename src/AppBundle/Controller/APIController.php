@@ -10,6 +10,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\ClientRepository;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
@@ -20,6 +21,7 @@ use AppBundle\Entity\DeclareExport;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\DeclareLoss;
 use AppBundle\Entity\DeclareTagsTransfer;
+use AppBundle\Entity\Message;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveCountries;
@@ -43,6 +45,7 @@ use AppBundle\Service\EntityGetter;
 use AppBundle\Util\Finder;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\HeaderValidation;
+use AppBundle\Worker\Task\WorkerMessageBody;
 use ClassesWithParents\E;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Query;
@@ -353,6 +356,23 @@ class APIController extends Controller implements APIControllerInterface
    */
   protected function sendEditMessageObjectToQueue($messageObject) {
     return $this->sendMessageObjectToQueue($messageObject, true);
+  }
+
+  /**
+   * @param WorkerMessageBody $workerMessageBody
+   * @return bool
+   */
+  protected function sendTaskToQueue($workerMessageBody) {
+    if($workerMessageBody == null) { return false; }
+
+    $jsonMessage = $this->getSerializer()->serializeToJSON($workerMessageBody);
+
+    //Send  message to Queue
+    $sendToQresult = $this->getQueueService()
+      ->sendToInternalQueue(1, $jsonMessage, $workerMessageBody->getTaskType());
+
+    //If send to Queue, failed, it needs to be resend, set state to failed
+    return $sendToQresult['statusCode'] == '200';
   }
 
   /**
@@ -783,11 +803,13 @@ class APIController extends Controller implements APIControllerInterface
   }
 
   /**
-   * @param $email
+   * @param $emailAddress
    * @return Client
    */
-  public function getClientByEmail($email) {
-    return $this->getDoctrine()->getRepository(Constant::CLIENT_REPOSITORY)->getByEmail($email);
+  public function getActiveClientByEmail($emailAddress) {
+    /** @var ClientRepository $clientRepository */
+    $clientRepository = $this->getDoctrine()->getRepository(Client::class);
+    return $clientRepository->findActiveOneByEmailAddress($emailAddress);
   }
 
   /**
