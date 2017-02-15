@@ -28,11 +28,8 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function getInvoiceRuleTemplate(Request $request)
     {
-        $admin = $this->getAuthenticatedEmployee($request);
-        $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-            return $adminValidator->createJsonErrorResponse();
-        }
+        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
+        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
 
         $em = $this->getDoctrine()->getManager();
 
@@ -59,11 +56,8 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function createInvoiceRuleTemplate(Request $request)
     {
-        $admin = $this->getAuthenticatedEmployee($request);
-        $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-            return $adminValidator->createJsonErrorResponse();
-        }
+        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
+        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
 
         $content = $this->getContentAsArray($request);
 
@@ -96,11 +90,8 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function changeInvoiceRuleTemplate(Request $request)
     {
-        $admin = $this->getAuthenticatedEmployee($request);
-        $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-            return $adminValidator->createJsonErrorResponse();
-        }
+        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
+        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
 
         $content = $this->getContentAsArray($request);
 
@@ -143,11 +134,8 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function deleteInvoiceRuleTemplate(Request $request, $id)
     {
-        $admin = $this->getAuthenticatedEmployee($request);
-        $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-            return $adminValidator->createJsonErrorResponse();
-        }
+        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
+        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
 
         $repository = $this->getDoctrine()->getRepository(InvoiceRuleTemplate::class);
         $ruleTemplate = $repository->findOneBy(array('id' => $id));
@@ -174,11 +162,8 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function editReasonsOfLoss(Request $request)
     {
-        $admin = $this->getAuthenticatedEmployee($request);
-        $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-            return $adminValidator->createJsonErrorResponse();
-        }
+        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
+        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
 
         // TODO: Implement editReasonOfLoss() method.
         $outputArray = array();
@@ -196,11 +181,8 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function editReasonsOfDepart(Request $request)
     {
-        $admin = $this->getAuthenticatedEmployee($request);
-        $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-            return $adminValidator->createJsonErrorResponse();
-        }
+        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
+        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
 
         // TODO: Implement editReasonOfDepart() method.
         $outputArray = array();
@@ -218,11 +200,8 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function editTreatmentOptions(Request $request)
     {
-        $admin = $this->getAuthenticatedEmployee($request);
-        $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-            return $adminValidator->createJsonErrorResponse();
-        }
+        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
+        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
 
         // TODO: Implement editTreatmentOptions() method.
         $outputArray = array();
@@ -240,11 +219,8 @@ class SettingAPIController extends APIController implements SettingAPIController
      */
     public function editContactFormOptions(Request $request)
     {
-        $admin = $this->getAuthenticatedEmployee($request);
-        $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-        if (!$adminValidator->getIsAccessGranted()) { //validate if user is at least an ADMIN
-            return $adminValidator->createJsonErrorResponse();
-        }
+        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
+        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
 
         // TODO: Implement editContactFormOptions() method.
         $outputArray = array();
