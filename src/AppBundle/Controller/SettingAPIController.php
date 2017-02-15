@@ -21,6 +21,8 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
  */
 class SettingAPIController extends APIController implements SettingAPIControllerInterface
 {
+    const INVOICE_JMS_GROUP = 'INVOICE';
+
     /**
      * @Route("/invoice-rules")
      * @param Request $request
@@ -77,7 +79,8 @@ class SettingAPIController extends APIController implements SettingAPIController
         $this->getDoctrine()->getManager()->persist($ruleTemplate);
         $this->getDoctrine()->getManager()->flush();
 
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $ruleTemplate], 200);
+        $output = $this->getDecodedJson($ruleTemplate, self::INVOICE_JMS_GROUP);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
     }
 
 
@@ -114,7 +117,8 @@ class SettingAPIController extends APIController implements SettingAPIController
         $this->getDoctrine()->getManager()->persist($ruleTemplate);
         $this->getDoctrine()->getManager()->flush();
 
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $ruleTemplate], 200);
+        $output = $this->getDecodedJson($ruleTemplate, self::INVOICE_JMS_GROUP);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
     }
 
     /**
@@ -136,7 +140,8 @@ class SettingAPIController extends APIController implements SettingAPIController
         $this->getDoctrine()->getManager()->remove($ruleTemplate);
         $this->getDoctrine()->getManager()->flush();
 
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $ruleTemplate], 200);
+        $output = $this->getDecodedJson($ruleTemplate, self::INVOICE_JMS_GROUP);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
     }
 
 
