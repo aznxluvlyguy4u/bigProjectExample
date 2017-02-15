@@ -36,7 +36,7 @@ class InvoiceRuleTemplate
      *
      * @ORM\Column(type="float")
      * @Assert\NotBlank
-     * @JMS\Type("integer")
+     * @JMS\Type("float")
      * @JMS\Groups({"INVOICE"})
      */
     private $vatPercentageRate;
@@ -46,7 +46,7 @@ class InvoiceRuleTemplate
      *
      * @ORM\Column(type="float")
      * @Assert\NotBlank
-     * @JMS\Type("integer")
+     * @JMS\Type("float")
      * @JMS\Groups({"INVOICE"})
      */
     private $priceExclVat;
