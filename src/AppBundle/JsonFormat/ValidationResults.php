@@ -22,6 +22,9 @@ class ValidationResults
     /** @var object */
     private $validResultObject;
 
+    /** @var int */
+    private $errorCode;
+
     /**
      * ValidationResults constructor.
      * @param bool $isValid
@@ -30,6 +33,7 @@ class ValidationResults
     {
         $this->isValid = $isValid;
         $this->errors = [];
+        $this->errorCode = self::ERROR_CODE;
     }
 
     /**
@@ -89,6 +93,22 @@ class ValidationResults
     }
 
     /**
+     * @return int
+     */
+    public function getErrorCode()
+    {
+        return $this->errorCode;
+    }
+
+    /**
+     * @param int $errorCode
+     */
+    public function setErrorCode($errorCode)
+    {
+        $this->errorCode = $errorCode;
+    }
+
+    /**
      * @return \AppBundle\Component\HttpFoundation\JsonResponse
      */
     public function getJsonResponse()
@@ -96,7 +116,7 @@ class ValidationResults
         if($this->isValid()){
             return Validator::createJsonResponse(self::VALID_MESSAGE, self::VALID_CODE);
         } else {
-            return Validator::createJsonResponse(self::ERROR_MESSAGE, self::ERROR_CODE, $this->errors);
+            return Validator::createJsonResponse(self::ERROR_MESSAGE, $this->errorCode, $this->errors);
         }
     }
 }
