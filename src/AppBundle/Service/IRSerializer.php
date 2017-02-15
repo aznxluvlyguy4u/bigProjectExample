@@ -340,8 +340,7 @@ class IRSerializer implements IRSerializerInterface
 
         if(key_exists('father', $declareBirthContentArray->toArray())) {
             /** @var  $father */
-            $father = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
-              ->getAnimalByUlnOrPedigree($declareBirthContentArray["father"]);
+            $father = $animalRepository->getAnimalByUlnOrPedigree($declareBirthContentArray["father"]);
 
             if(!$father) {
                 return new JsonResponse(
@@ -367,8 +366,7 @@ class IRSerializer implements IRSerializerInterface
 
         if(key_exists('mother', $declareBirthContentArray->toArray())) {
             /** @var  $mother */
-            $mother = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
-              ->getAnimalByUlnOrPedigree($declareBirthContentArray["mother"]);
+            $mother = $animalRepository->getAnimalByUlnOrPedigree($declareBirthContentArray["mother"]);
 
             if(!$mother) {
                 return new JsonResponse(
@@ -634,8 +632,7 @@ class IRSerializer implements IRSerializerInterface
 
                 if(array_key_exists('surrogate_mother', $child)) {
                     /** @var Animal $surrogate */
-                    $surrogate = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
-                      ->getAnimalByUlnOrPedigree($child['surrogate_mother']);
+                    $surrogate = $animalRepository->getAnimalByUlnOrPedigree($child['surrogate_mother']);
 
                     if(!$surrogate) {
                         return new JsonResponse(
