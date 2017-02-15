@@ -6,6 +6,7 @@ namespace AppBundle\Controller;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\InvoiceRuleTemplate;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -31,8 +32,6 @@ class SettingAPIController extends APIController implements SettingAPIController
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
         if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
 
-        $em = $this->getDoctrine()->getManager();
-
         $sql = "SELECT
                   invoice_rule_template.id,
                   invoice_rule_template.description,
@@ -43,9 +42,9 @@ class SettingAPIController extends APIController implements SettingAPIController
                 FROM
                   invoice_rule_template";
 
-        $results = $em->getConnection()->query($sql)->fetchAll();
+        $results = $this->getDoctrine()->getConnection()->query($sql)->fetchAll();
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $results), 200);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $results], 200);
     }
 
     /**
@@ -78,7 +77,7 @@ class SettingAPIController extends APIController implements SettingAPIController
         $this->getDoctrine()->getManager()->persist($ruleTemplate);
         $this->getDoctrine()->getManager()->flush();
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $ruleTemplate), 200);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $ruleTemplate], 200);
     }
 
 
@@ -96,17 +95,9 @@ class SettingAPIController extends APIController implements SettingAPIController
         $content = $this->getContentAsArray($request);
 
         $repository = $this->getDoctrine()->getRepository(InvoiceRuleTemplate::class);
-        $ruleTemplate = $repository->findOneBy(array('id' => $content->get('id')));
+        $ruleTemplate = $repository->find($content->get('id'));
 
-        if(!$ruleTemplate) {
-            return new JsonResponse(
-                array(
-                    Constant::CODE_NAMESPACE => 400,
-                    Constant::MESSAGE_NAMESPACE => 'THE INVOICE RULE TEMPLATE IS NOT FOUND.'
-                ),
-                400
-            );
-        }
+        if(!$ruleTemplate) { return Validator::createJsonResponse('THE INVOICE RULE TEMPLATE IS NOT FOUND.', 428); }
 
         $description = $content->get('description');
         $vatPercentageRate = $content->get('vat_percentage_rate');
@@ -123,7 +114,7 @@ class SettingAPIController extends APIController implements SettingAPIController
         $this->getDoctrine()->getManager()->persist($ruleTemplate);
         $this->getDoctrine()->getManager()->flush();
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $ruleTemplate), 200);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $ruleTemplate], 200);
     }
 
     /**
@@ -138,12 +129,14 @@ class SettingAPIController extends APIController implements SettingAPIController
         if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
 
         $repository = $this->getDoctrine()->getRepository(InvoiceRuleTemplate::class);
-        $ruleTemplate = $repository->findOneBy(array('id' => $id));
+        $ruleTemplate = $repository->find($id);
+
+        if(!$ruleTemplate) { return Validator::createJsonResponse('THE INVOICE RULE TEMPLATE IS NOT FOUND.', 428); }
 
         $this->getDoctrine()->getManager()->remove($ruleTemplate);
         $this->getDoctrine()->getManager()->flush();
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => 'ok'), 200);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $ruleTemplate], 200);
     }
 
 
