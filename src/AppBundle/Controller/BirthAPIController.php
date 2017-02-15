@@ -782,11 +782,13 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             //Check if Mother has children that are born in the last 5,5 months if so, it is not a true candidate
             /** @var Animal $child */
             foreach ($children as $child) {
-                $daysbetweenCurrentBirthAndPreviousBirths = TimeUtil::getDaysBetween($child->getDateOfBirth(), $dateOfBirth);
+                if($child->getDateOfBirth()) {
+                    $daysbetweenCurrentBirthAndPreviousBirths = TimeUtil::getDaysBetween($child->getDateOfBirth(), $dateOfBirth);
 
-                if(!($daysbetweenCurrentBirthAndPreviousBirths >= $minimumDaysBetweenBirths)) {
-                    $checkAnimalForMatings = false;
-                    break;
+                    if(!($daysbetweenCurrentBirthAndPreviousBirths >= $minimumDaysBetweenBirths)) {
+                        $checkAnimalForMatings = false;
+                        break;
+                    }
                 }
             }
 
