@@ -15,6 +15,21 @@ class SqlUtil
     const NULL = 'NULL';
     const DATE_FORMAT = 'Y-m-d H:i:s';
 
+
+    /**
+     * @param Connection $conn
+     * @param $tableName
+     * @param int $bumpSize
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function bumpPrimaryKeySeq(Connection $conn, $tableName, $bumpSize = 1)
+    {
+        $tableName = strtolower($tableName);
+        $sql = "SELECT setval('".$tableName."_id_seq', (SELECT MAX(id) FROM ".$tableName.")+".$bumpSize.")";
+        $conn->exec($sql);
+    }
+
+
     /**
      * @param mixed $value
      * @param boolean $includeQuotes

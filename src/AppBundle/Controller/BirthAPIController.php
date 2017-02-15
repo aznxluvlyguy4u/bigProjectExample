@@ -305,8 +305,10 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             foreach ($genderHistories as $genderHistory) {
                 $manager->remove($genderHistory);
             }
-            
-            
+
+            //Flush the removes separately
+            $manager->flush();
+
             //Restore tag if it does not exist
             /** @var Tag $tagToRestore */
             $tagToRestore = null;
@@ -317,19 +319,12 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
             if ($tagToRestore) {
                 $tagToRestore->setTagStatus(TagStateType::UNASSIGNED);
+                $manager->persist($tagToRestore);
+                $manager->flush();
             } else {
-                $tagToRestore = new Tag();
-                $tagToRestore->setLocation($location);
-                $tagToRestore->setOrderDate(new \DateTime());
-                $tagToRestore->setOwner($client);
-                $tagToRestore->setTagStatus(TagStateType::UNASSIGNED);
-                $tagToRestore->setUlnCountryCode($child->getUlnCountryCode());
-                $tagToRestore->setUlnNumber($child->getUlnNumber());
-                $tagToRestore->setAnimalOrderNumber($child->getAnimalOrderNumber());
+                $tagToRestore = $tagRepository->restoreTagWithPrimaryKeyCheck($manager, $location, $client, $child->getUlnCountryCode(), $child->getUlnNumber());
+                if($tagToRestore instanceof JsonResponse) { return $tagToRestore; }
             }
-
-            $manager->persist($tagToRestore);
-            $manager->flush();
 
             //Remove child from location
             if ($location->getAnimals()->contains($child)) {
