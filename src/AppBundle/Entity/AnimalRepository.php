@@ -592,7 +592,6 @@ class AnimalRepository extends BaseRepository
         $result = $this->findOneBy([
           'ulnCountryCode' => $content['uln_country_code'],
           'ulnNumber' => $content['uln_number'],
-          'isAlive' => true
         ]);
       }
 
@@ -601,7 +600,6 @@ class AnimalRepository extends BaseRepository
         $result = $this->findOneBy([
           'pedigreeCountryCode' => $content['pedigree_country_code'],
           'pedigreeNumber' => $content['pedigree_number'],
-          'isAlive' => true
         ]);
       }
     }
