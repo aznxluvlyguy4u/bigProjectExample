@@ -312,13 +312,7 @@ class IRSerializer implements IRSerializerInterface
             $timeIntervalInDaysFromNow = TimeUtil::getDaysBetween(new \DateTime(), $dateOfBirth);
 
             if($timeIntervalInDaysFromNow > 0) {
-                return new JsonResponse(
-                  array(
-                    Constant::RESULT_NAMESPACE => array (
-                      'code' => $statusCode,
-                      "message" => "Een geboorte mag niet in de toekomst liggen.",
-                    )
-                  ), $statusCode);
+                return Validator::createJsonResponse("Een geboorte mag niet in de toekomst liggen.", $statusCode);
             }
         }
 
@@ -343,24 +337,12 @@ class IRSerializer implements IRSerializerInterface
             $father = $animalRepository->getAnimalByUlnOrPedigree($declareBirthContentArray["father"]);
 
             if(!$father) {
-                return new JsonResponse(
-                  array(
-                    Constant::RESULT_NAMESPACE => array (
-                      'code' => $statusCode,
-                      "message" => "Opgegeven vader kan niet gevonden worden.",
-                    )
-                  ), $statusCode);
+                return Validator::createJsonResponse("Opgegeven vader kan niet gevonden worden.", $statusCode);
             }
 
             //Additional gender check
             if($father->getGender() != GenderType::MALE) {
-                return new JsonResponse(
-                  array(
-                    Constant::RESULT_NAMESPACE => array (
-                      'code' => $statusCode,
-                      "message" => "Opgegeven vader met ULN: " . $father->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: RAM.",
-                    )
-                  ), $statusCode);
+                return Validator::createJsonResponse("Opgegeven vader met ULN: " . $father->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: RAM.", $statusCode);
             }
         }
 
@@ -369,25 +351,12 @@ class IRSerializer implements IRSerializerInterface
             $mother = $animalRepository->getAnimalByUlnOrPedigree($declareBirthContentArray["mother"]);
 
             if(!$mother) {
-                return new JsonResponse(
-                  array(
-                    Constant::RESULT_NAMESPACE => array (
-                      'code' => $statusCode,
-                      "message" => "Opgegeven moeder kan niet gevonden worden.",
-                    )
-                  ), $statusCode);
+                return Validator::createJsonResponse("Opgegeven moeder kan niet gevonden worden.", $statusCode);
             }
-
 
             //Additional Gender check
             if($mother->getGender() != GenderType::FEMALE) {
-                return new JsonResponse(
-                  array(
-                    Constant::RESULT_NAMESPACE => array (
-                      'code' => $statusCode,
-                      "message" => "Opgegeven moeder met ULN: " . $mother->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: OOI.",
-                    )
-                  ), $statusCode);
+                return Validator::createJsonResponse("Opgegeven moeder met ULN: " . $mother->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: OOI.", $statusCode);
             }
 
             //If the mother already has given birth within the last 5,5 months (167 days, rounded),
@@ -405,15 +374,9 @@ class IRSerializer implements IRSerializerInterface
                 $dateInterval = TimeUtil::getDaysBetween($child->getDateOfBirth(), $dateOfBirth);
 
                 if($dateInterval <= $maxDaysLitterInterval) {
-                    return new JsonResponse(
-                      array(
-                        Constant::RESULT_NAMESPACE => array (
-                          'code' => $statusCode,
-                          "message" => "Opgegeven moeder met ULN: "
-                            . $mother->getUlnNumber()
-                            ." heeft in de afgelopen 5,5 maanden reeds geworpen, zodoende is het niet geoorloofd om een geboortemelding te doen voor de opgegeven moeder.",
-                        )
-                      ), $statusCode);
+                    return Validator::createJsonResponse("Opgegeven moeder met ULN: "
+                        . $mother->getUlnNumber()
+                        ." heeft in de afgelopen 5,5 maanden reeds geworpen, zodoende is het niet geoorloofd om een geboortemelding te doen voor de opgegeven moeder.", $statusCode);
                 }
             }
         }
@@ -427,13 +390,7 @@ class IRSerializer implements IRSerializerInterface
 
             if($mother) {
                 if($litterSize > $maxLitterSize) {
-                    return new JsonResponse(
-                      array(
-                        Constant::RESULT_NAMESPACE => array (
-                          'code' => $statusCode,
-                          "message" => "De opgegeven worpgrootte overschrijdt het maximum van " . $maxLitterSize ." lammeren",
-                        )
-                      ), $statusCode);
+                    return Validator::createJsonResponse("De opgegeven worpgrootte overschrijdt het maximum van " . $maxLitterSize ." lammeren", $statusCode);
                 }
             }
         }
@@ -514,57 +471,30 @@ class IRSerializer implements IRSerializerInterface
         $litter->setStillbornCount($stillbornCount);
 
         $children = [];
+        /** @var array $child */
         foreach ($childrenContent as $child) {
 
             $tagToReserve = null;
             $childAnimalToCreate = null;
             $surrogate = null;
-            $gender = null;
-            $birthProgress = null;
-            $hasLambar = false;
-            $isAlive = null;
             $declareBirthRequest = null;
 
             //tailLength & birthWeight are not nullable in DeclareWeight
             $tailLengthEmptyValue = 0;
             $birthWeightEmptyValue = 0;
-            $tailLengthValue = $tailLengthEmptyValue;
-            $birthWeightValue = $birthWeightEmptyValue;
-            
-            if(key_exists('gender', $child)) {
-                $gender = $child['gender'];
+
+            //                        key      array   null replacement
+            $gender = ArrayUtil::get('gender', $child, null);
+            $birthProgress = ArrayUtil::get('birth_progress', $child, null);
+            $hasLambar = ArrayUtil::get('has_lambar', $child, false);
+            $tailLengthValue = ArrayUtil::get('tail_length', $child, $tailLengthEmptyValue);
+            $birthWeightValue = ArrayUtil::get('tail_length', $child, $birthWeightEmptyValue);
+
+            if($birthWeightValue > 9.9) {
+                return Validator::createJsonResponse("Een lam met een geboortegewicht groter dan 9,9 kilogram, is niet geoorloofd.", $statusCode);
             }
 
-            if(key_exists('birth_progress', $child)) {
-                $birthProgress = $child["birth_progress"];
-            }
-
-            if(key_exists('has_lambar', $child)) {
-                $hasLambar = $child['has_lambar'];
-            }
-
-            if(key_exists('tail_length', $child)) {
-                $tailLengthValue = $child['tail_length'];
-
-            }
-
-            if(key_exists('birth_weight', $child)) {
-                $birthWeightValue = $child['birth_weight'];
-                if($birthWeightValue > 9.9) {
-                    return new JsonResponse(
-                      array(
-                        Constant::RESULT_NAMESPACE => array (
-                          'code' => $statusCode,
-                          "message" => "Een lam met een geboortegewicht groter dan 9,9 kilogram, is niet geoorloofd.",
-                        )
-                      ), $statusCode);
-                }
-
-            }
-
-            if(key_exists('is_alive', $child)) {
-                $isAlive = $child['is_alive'];
-            }
+            $isAlive = ArrayUtil::get('is_alive', $child, null);
 
             if(!$isAlive) { // Stillborn
                 $stillborn = new Stillborn();
@@ -635,35 +565,26 @@ class IRSerializer implements IRSerializerInterface
                     $surrogate = $animalRepository->getAnimalByUlnOrPedigree($child['surrogate_mother']);
 
                     if(!$surrogate) {
-                        return new JsonResponse(
-                          array(
-                            Constant::RESULT_NAMESPACE => array (
-                              'code' => $statusCode,
-                              "message" => "Opgegeven pleegmoeder kan niet gevonden worden.",
-                            )
-                          ), $statusCode);
+                        return Validator::createJsonResponse("Opgegeven pleegmoeder kan niet gevonden worden.", $statusCode);
                     }
 
                     if($surrogate->getGender() != GenderType::FEMALE) {
-                        return new JsonResponse(
-                          array(
-                            Constant::RESULT_NAMESPACE => array (
-                              'code' => $statusCode,
-                              "message" => "Opgegeven pleegmoeder met ULN: " .$surrogate->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: OOI.",
-                            )
-                          ), $statusCode);
+                        return Validator::createJsonResponse("Opgegeven pleegmoeder met ULN: " .$surrogate->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: OOI.", $statusCode);
                     }
                 }
 
                 //Create child animal
                 switch ($gender) {
                     case GenderType::MALE:
+                        /** @var Ram $child */
                         $child = new Ram();
                         break;
                     case GenderType::FEMALE:
+                        /** @var Ewe $child */
                         $child = new Ewe();
                         break;
                     case GenderType::NEUTER:
+                        /** @var Neuter $child */
                         $child = new Neuter();
                         break;
                 }
