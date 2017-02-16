@@ -20,12 +20,25 @@ use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Finder\Finder;
 
 class NsfoInspectorCommand extends ContainerAwareCommand
 {
     const TITLE = 'Inspectors';
     const DEFAULT_OPTION = 0;
     const ACTION_BY_ADMIN_ID = 2152; //Reinard Everts
+
+    CONST NAME_CORRECTIONS = 'finder_name_corrections';
+    CONST NEW_NAMES = 'finder_name_new';
+
+    private $csvParsingOptions = array(
+        'finder_in' => 'app/Resources/imports/',
+        'finder_out' => 'app/Resources/outputs/',
+        'finder_name_corrections' => 'inspector_name_corrections.csv',
+        'finder_name_new' => 'inspector_new_names.csv',
+        'ignoreFirstLine' => true
+    );
+
 
     /** @var ObjectManager $em */
     private $em;
@@ -124,34 +137,8 @@ class NsfoInspectorCommand extends ContainerAwareCommand
 
     private function fixInspectorNames()
     {
-        $sql = "SELECT i.id, last_name FROM inspector i
-                  INNER JOIN person p ON i.id = p.id
-                  WHERE first_name ISNULL OR first_name = '' OR first_name = ' '
-                ORDER BY last_name, first_name ASC ";
-        $results = $this->conn->query($sql)->fetchAll();
-
-        $totalCount = count($results);
-        if($totalCount == 0) { return 0; }
-
-        $updateCount = 0;
-
-        foreach ($results as $result) {
-            $id = $result['id'];
-            $lastName = $result['last_name'];
-
-            $convertedNameArray = InspectorMigrator::convertImportedInspectorName($lastName);
-            $newFirstName = $convertedNameArray[JsonInputConstant::FIRST_NAME];
-            $newLastName = $convertedNameArray[JsonInputConstant::LAST_NAME];
-
-            if($newLastName != null && $newFirstName != null) {
-                $sql = "UPDATE person SET first_name = '".$newFirstName."', last_name = '".$newLastName."'
-                        WHERE id = ".$id;
-                $this->conn->exec($sql);
-                $updateCount++;
-            }
-        }
-
-        return $updateCount;
+        $csv = $this->parseCSV(self::NAME_CORRECTIONS);
+        return InspectorMigrator::fixInspectorNames($this->conn, $csv);
     }
 
 
@@ -314,5 +301,35 @@ class NsfoInspectorCommand extends ContainerAwareCommand
             return 1;
         }
         return 0;
+    }
+
+
+    /**
+     * @param string $fileKey
+     * @return array
+     */
+    private function parseCSV($fileKey) {
+        $ignoreFirstLine = $this->csvParsingOptions['ignoreFirstLine'];
+
+        $finder = new Finder();
+        $finder->files()
+            ->in($this->csvParsingOptions['finder_in'])
+            ->name($this->csvParsingOptions[$fileKey])
+        ;
+        foreach ($finder as $file) { $csv = $file; }
+
+        $rows = array();
+        if (($handle = fopen($csv->getRealPath(), "r")) !== FALSE) {
+            $i = 0;
+            while (($data = fgetcsv($handle, null, ";")) !== FALSE) {
+                $i++;
+                if ($ignoreFirstLine && $i == 1) { continue; }
+                $rows[] = $data;
+                gc_collect_cycles();
+            }
+            fclose($handle);
+        }
+
+        return $rows;
     }
 }
