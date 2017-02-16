@@ -15,7 +15,11 @@ use \DateTime;
 /**
  * Class Animal
  *
- * @ORM\Table(name="animal",indexes={@ORM\Index(name="uln_idx", columns={"name", "uln_country_code", "uln_number"})})
+ * @ORM\Table(name="animal",indexes={
+ *     @ORM\Index(name="uln_idx", columns={"name", "uln_country_code", "uln_number"}),
+ *     @ORM\Index(name="parents_idx", columns={"parent_mother_id", "parent_father_id"}),
+ *     @ORM\Index(name="animal_location_idx", columns={"location_id"})
+ * })
  * @ORM\Entity(repositoryClass="AppBundle\Entity\AnimalRepository")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
