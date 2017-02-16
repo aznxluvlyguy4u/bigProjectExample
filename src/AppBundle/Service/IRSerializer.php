@@ -474,6 +474,10 @@ class IRSerializer implements IRSerializerInterface
                     return Validator::createJsonResponse("Opgegeven pleegmoeder met ULN: " .$surrogate->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: OOI.", $statusCode);
                 }
 
+                if($surrogate->getId() == $mother->getId()) {
+                    return Validator::createJsonResponse("Opgegeven pleegmoeder mag niet gelijk zijn aan de opgegeven moeder", $statusCode);
+                }
+
                 $surrogateMothersByUln[$surrogate->getUln()] = $surrogate;
             }
 
