@@ -192,4 +192,56 @@ class TagRepository extends BaseRepository {
       return Validator::createJsonResponse($exception, 428);
     }
   }
+
+
+  /**
+   * @param array $tags
+   * @return bool
+   */
+  public function unassignTags(array $tags)
+  {
+    $tagIdsToUnassign = [];
+    $incorrectTagCount = 0;
+    foreach ($tags as $key => $tag) {
+      if($tag instanceof Tag) {
+        if($tag->getTagStatus() != TagStateType::UNASSIGNED && $tag->getId() != null) {
+          $tagIdsToUnassign[] = $tag->getId();
+          continue;
+        }
+      }
+      $incorrectTagCount++;
+    }
+    if(count($tagIdsToUnassign) > 0) {
+      return $this->unassignTagsById($tagIdsToUnassign);
+    }
+    return $incorrectTagCount == 0;
+  }
+  
+
+  /**
+   * @param array $tagIds
+   * @return bool
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function unassignTagsById(array $tagIds)
+  {
+    if(count($tagIds) == 0) { return true; }
+
+    $incorrectIdCount = 0;
+    foreach ($tagIds as $key => $tagId) {
+      if(!ctype_digit($tagId) && !is_int($tagId)) {
+        $incorrectIdCount++;
+        unset($tagIds[$key]);
+        continue;
+      }
+    }
+
+    $filterString = SqlUtil::getFilterStringByIdsArray($tagIds);
+    if($filterString != '') {
+      $sql = "UPDATE tag SET tag_status = '".TagStateType::UNASSIGNED."' WHERE ".$filterString;
+      $this->getConnection()->exec($sql);
+    }
+
+    return $incorrectIdCount == 0;
+  }
 }
