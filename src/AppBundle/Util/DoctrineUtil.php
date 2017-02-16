@@ -207,4 +207,75 @@ class DoctrineUtil
         }
         return null;
     }
+
+
+    /**
+     * @param Connection $conn
+     * @param array $tableNamesToUpdate
+     * @return bool
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function updateTableSequence(Connection $conn, array $tableNamesToUpdate)
+    {
+        if(count($tableNamesToUpdate) == 0) { return false; }
+
+        $tableNamesInDb = self::getTableNames($conn);
+        $sequenceNames = self::getSequenceNames($conn);
+
+        $incorrectTableNamesOrSequenceNameCount = 0;
+        $sequenceUpdatedCount = 0;
+        foreach ($tableNamesToUpdate as $tableToUpdate) {
+            $tableToUpdate = strtolower($tableToUpdate);
+
+            if(!in_array($tableToUpdate, $tableNamesInDb)) {
+                $incorrectTableNamesOrSequenceNameCount++;
+                continue;
+            }
+            
+            if(!in_array($tableToUpdate.'_id_seq', $sequenceNames)) {
+                $incorrectTableNamesOrSequenceNameCount++;
+                continue;
+            }
+
+            $sql = "SELECT MAX(id) - (
+                      SELECT last_value FROM ".$tableToUpdate."_id_seq
+                    ) as max_id_difference FROM ".$tableToUpdate;
+            $maxIdDifference = $conn->query($sql)->fetch()['max_id_difference'];
+
+            if($maxIdDifference > 0) {
+                SqlUtil::bumpPrimaryKeySeq($conn, $tableToUpdate, $maxIdDifference);
+                $sequenceUpdatedCount++;
+            }
+        }
+
+        return $incorrectTableNamesOrSequenceNameCount == 0;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function getTableNames(Connection $conn)
+    {
+        $sql = "SELECT tablename FROM pg_catalog.pg_tables
+                WHERE tablename NOT LIKE 'pg_%' AND tablename NOT LIKE 'sql_%'
+                ORDER BY tablename";
+        $results = $conn->query($sql)->fetchAll();
+        return SqlUtil::groupSqlResultsGroupedBySingleVariable('tablename', $results)['tablename'];
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function getSequenceNames(Connection $conn)
+    {
+        $sql = "SELECT relname FROM pg_class WHERE relkind = 'S'";
+        $results = $conn->query($sql)->fetchAll();
+        return SqlUtil::groupSqlResultsGroupedBySingleVariable('relname', $results)['relname'];
+    }
 }
