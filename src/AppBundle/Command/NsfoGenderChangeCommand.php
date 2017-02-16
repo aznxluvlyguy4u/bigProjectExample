@@ -11,6 +11,7 @@ use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -22,7 +23,6 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
 {
     const TITLE = 'Edit gender of animal';
     const taskAbortedNamespace = 'ABORTED';
-    const VALIDATE_MAX_TIME_INTERVAL = false;
 
     /** @var OutputInterface */
     private $output;
@@ -32,6 +32,9 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
 
     /** @var ObjectManager */
     private $em;
+
+    /** @var Connection */
+    private $conn;
 
     protected function configure()
     {
@@ -46,6 +49,7 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
         /** @var ObjectManager $em */
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
+        $this->conn = $em->getConnection();
         $this->output = $output;
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
@@ -54,7 +58,20 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
 
         $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
-        
+
+        $developer = null;
+        do {
+            $lastName = null;
+            $chooseDeveloperByLastName = $this->cmdUtil->generateConfirmationQuestion('Choose developer by lastName? (y/n, default = n = just use first developer in database)');
+            if($chooseDeveloperByLastName) {
+                DoctrineUtil::printDeveloperLastNamesInDatabase($this->conn, $output);
+                $lastName = $this->cmdUtil->generateQuestion('Insert lastName of developer', null);
+                $lastName = strval($lastName);
+            }
+            $developer = DoctrineUtil::getDeveloper($em, $lastName);
+        } while ($developer == null);
+        $this->cmdUtil->writeln(['','Chosen developer: '.$developer->getLastName(),'']);
+
         $id = $this->cmdUtil->generateQuestion('Insert id or uln of animal for which the gender needs to be changed', null);
         if($id === null) { $this->printNoAnimalFoundMessage($id); return;}
 
@@ -90,13 +107,13 @@ class NsfoGenderChangeCommand extends ContainerAwareCommand
 
         switch ($newGender) {
             case AnimalObjectType::RAM:
-                $result = $genderChanger->changeToGender($animal, Ram::class, self::VALIDATE_MAX_TIME_INTERVAL);
+                $result = $genderChanger->changeToGender($animal, Ram::class, $developer);
                 break;
             case AnimalObjectType::EWE:
-                $result = $genderChanger->changeToGender($animal, Ewe::class, self::VALIDATE_MAX_TIME_INTERVAL);
+                $result = $genderChanger->changeToGender($animal, Ewe::class, $developer);
                 break;
             case AnimalObjectType::NEUTER:
-                $result = $genderChanger->changeToGender($animal, Neuter::class, self::VALIDATE_MAX_TIME_INTERVAL);
+                $result = $genderChanger->changeToGender($animal, Neuter::class, $developer);
                 break;
             default:
                 $this->output->writeln(self::taskAbortedNamespace);
