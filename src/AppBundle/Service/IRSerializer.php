@@ -54,11 +54,13 @@ use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\DependencyInjection\Tests\A;
 
@@ -99,11 +101,15 @@ class IRSerializer implements IRSerializerInterface
      */
     private $entityGetter;
 
+    /** @var Connection */
+    private $conn;
+
     public function __construct($serializer, $entityManager, $entityGetter)
     {
         $this->serializer = $serializer;
         $this->entityManager = $entityManager;
         $this->entityGetter = $entityGetter;
+        $this->conn = $entityManager->getConnection();
     }
 
     /**
@@ -478,6 +484,11 @@ class IRSerializer implements IRSerializerInterface
             }
         }
 
+        /*
+         * Before creating any birth related entities check their sequences and update them if they are incorrect
+         * to prevent a UniqueConstraintViolationException
+         */
+        DoctrineUtil::updateTableSequence($this->conn, ['animal', 'animal_residence', 'tag', 'litter', 'declare_base']);
 
         //Create Litter
         $litter = new Litter();
