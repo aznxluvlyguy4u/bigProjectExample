@@ -5,10 +5,19 @@ namespace AppBundle\Migration;
 
 
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Employee;
+use AppBundle\Entity\EmployeeRepository;
+use AppBundle\Entity\Inspector;
+use AppBundle\Entity\InspectorAuthorization;
+use AppBundle\Entity\InspectorAuthorizationRepository;
 use AppBundle\Entity\InspectorRepository;
+use AppBundle\Entity\PedigreeRegister;
+use AppBundle\Entity\PedigreeRegisterRepository;
+use AppBundle\Enumerator\InspectorMeasurementType;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\SqlUtil;
+use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 
 class InspectorMigrator
@@ -182,5 +191,94 @@ class InspectorMigrator
             $cmdUtil->advanceProgressBar(1, 'Removing duplicate inspectors');
         }
         $cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param array $csv
+     * @param $admin
+     * @param CommandUtil $cmdUtil
+     */
+    public static function authorizeInspectorsForExteriorMeasurementsTexelaar(ObjectManager $em, CommandUtil $cmdUtil, array $csv, $admin)
+    {
+        if(is_int($admin)) {
+            /** @var EmployeeRepository $employeeRepository */
+            $employeeRepository = $em->getRepository(Employee::class);
+
+            /** @var Employee $admin */
+            $admin = $employeeRepository->find($admin);
+        }
+
+        $cmdUtil->setStartTimeAndPrintIt(count($csv) * 2, 1, 'Authorize inspectors for Texelaars');
+
+        $authorizations = 0;
+        $inspectorCount = 0;
+        foreach ($csv as $row) {
+            $firstName = $row[0];
+            $lastName = $row[1];
+
+            $authorizations += self::authorizeInspectorForExteriorMeasurementsTexelaar($em, $admin, $firstName, $lastName);
+            $inspectorCount++;
+            $cmdUtil->advanceProgressBar(1, 'NewAuthorizations|InspectorsChecked: '.$authorizations.'|'.$inspectorCount);
+        }
+        $em->flush();
+        $cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Employee $admin
+     * @param string $firstName
+     * @param string $lastName
+     * @return int
+     */
+    private static function authorizeInspectorForExteriorMeasurementsTexelaar(ObjectManager $em, Employee $admin, $firstName, $lastName)
+    {
+        /** @var PedigreeRegisterRepository $inspectorAuthorizationRepository */
+        $pedigreeRegisterRepository = $em->getRepository(PedigreeRegister::class);
+
+        $pedigreeRegisterTexelaarNTS = $pedigreeRegisterRepository->findOneBy(['abbreviation' => 'NTS']);
+        $pedigreeRegisterTexelaarTSNH = $pedigreeRegisterRepository->findOneBy(['abbreviation' => 'TSNH']);
+
+        /** @var InspectorRepository $inspectorRepository */
+        $inspectorRepository = $em->getRepository(Inspector::class);
+
+        $count = 0;
+        /** @var Inspector $inspector */
+        $inspector = $inspectorRepository->findOneBy(['firstName' => $firstName, 'lastName' => $lastName]);
+        if($inspector != null) {
+            $count += self::authorizeInspector($em, $admin, $inspector, InspectorMeasurementType::EXTERIOR, $pedigreeRegisterTexelaarNTS);
+            $count += self::authorizeInspector($em, $admin, $inspector, InspectorMeasurementType::EXTERIOR, $pedigreeRegisterTexelaarTSNH);
+            return $count;
+        }
+        return $count;
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Employee $admin
+     * @param Inspector $inspector
+     * @param string $measurementType
+     * @param PedigreeRegister $pedigreeRegister
+     * @return int
+     */
+    private static function authorizeInspector(ObjectManager $em, Employee $admin, Inspector $inspector, $measurementType, PedigreeRegister $pedigreeRegister = null)
+    {
+        /** @var InspectorAuthorizationRepository $inspectorAuthorizationRepository */
+        $inspectorAuthorizationRepository = $em->getRepository(InspectorAuthorization::class);
+
+        $inspectorAuthorization = $inspectorAuthorizationRepository->findOneBy(
+            ['inspector' => $inspector, 'measurementType' => $measurementType, 'pedigreeRegister' => $pedigreeRegister]);
+
+        if($inspectorAuthorization == null) {
+            $inspectorAuthorization = new InspectorAuthorization(
+                $inspector, $admin, $measurementType, $pedigreeRegister);
+            $em->persist($inspectorAuthorization);
+            return 1;
+        }
+        return 0;
     }
 }

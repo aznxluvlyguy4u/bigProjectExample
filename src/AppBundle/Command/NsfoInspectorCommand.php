@@ -11,6 +11,7 @@ use AppBundle\Entity\InspectorAuthorizationRepository;
 use AppBundle\Entity\InspectorRepository;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\PedigreeRegisterRepository;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\InspectorMeasurementType;
 use AppBundle\Migration\InspectorMigrator;
 use AppBundle\Util\CommandUtil;
@@ -26,16 +27,17 @@ class NsfoInspectorCommand extends ContainerAwareCommand
 {
     const TITLE = 'Inspectors';
     const DEFAULT_OPTION = 0;
-    const ACTION_BY_ADMIN_ID = 2152; //Reinard Everts
 
     CONST NAME_CORRECTIONS = 'finder_name_corrections';
     CONST NEW_NAMES = 'finder_name_new';
+    CONST AUTHORIZE_TEXELAAR = 'finder_authorize_texelaar';
 
     private $csvParsingOptions = array(
         'finder_in' => 'app/Resources/imports/',
         'finder_out' => 'app/Resources/outputs/',
         'finder_name_corrections' => 'inspector_name_corrections.csv',
         'finder_name_new' => 'inspector_new_names.csv',
+        'finder_authorize_texelaar' => 'authorize_inspectors_texelaar.csv',
         'ignoreFirstLine' => true
     );
 
@@ -49,24 +51,12 @@ class NsfoInspectorCommand extends ContainerAwareCommand
     /** @var InspectorRepository */
     private $inspectorRepository;
 
-    /** @var EmployeeRepository */
-    private $adminRepository;
-
-    /** @var PedigreeRegisterRepository */
-    private $pedigreeRegisterRepository;
-
-    /** @var InspectorAuthorizationRepository */
-    private $inspectorAuthorizationRepository;
-
     /** @var CommandUtil */
     private $cmdUtil;
 
     /** @var OutputInterface */
     private $output;
     
-    /** @var Employee */
-    private $actionByAdmin;
-
     protected function configure()
     {
         $this
@@ -87,9 +77,6 @@ class NsfoInspectorCommand extends ContainerAwareCommand
         $this->output = $output;
 
         $this->inspectorRepository = $em->getRepository(Inspector::class);
-        $this->adminRepository = $em->getRepository(Employee::class);
-        $this->pedigreeRegisterRepository = $em->getRepository(PedigreeRegister::class);
-        $this->inspectorAuthorizationRepository = $em->getRepository(InspectorAuthorization::class);
 
         $this->cmdUtil->printTitle(self::TITLE);
         $this->output->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
@@ -157,73 +144,10 @@ class NsfoInspectorCommand extends ContainerAwareCommand
 
     private function authorizeInspectorsForExteriorMeasurementsTexelaar()
     {
-        $this->actionByAdmin = $this->adminRepository->find(self::ACTION_BY_ADMIN_ID);
-
-        $inspectors = [
-            'Hans' => 'te Mebel',
-            'Marjo' => 'van Bergen',
-            'Wout' => 'Rodenburg',
-            'Johan' => 'Knaap',
-            'Ido' => 'Altenburg',
-            '' => 'Niet NSFO',
-        ];
-
-        $this->cmdUtil->setStartTimeAndPrintIt(count($inspectors) * 2, 1, 'Authorize inspectors for Texelaars');
-
-        $authorizations = 0;
-        $inspectorCount = 0;
-        foreach ($inspectors as $firstName => $lastName) {
-            $authorizations += $this->authorizeInspectorForExteriorMeasurementsTexelaar($firstName, $lastName);
-            $inspectorCount++;
-            $this->cmdUtil->advanceProgressBar(1, 'NewAuthorizations|InspectorsChecked: '.$authorizations.'|'.$inspectorCount);
-        }
-        $this->em->flush();
-        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+        $csv = $this->parseCSV(self::AUTHORIZE_TEXELAAR);
+        $admin = $this->cmdUtil->questionForAdminChoice($this->em, AccessLevelType::SUPER_ADMIN, false);
+        InspectorMigrator::authorizeInspectorsForExteriorMeasurementsTexelaar($this->em, $this->cmdUtil, $csv, $admin);
     }
-
-
-    /**
-     * @param $firstName
-     * @param $lastName
-     * @return int
-     */
-    private function authorizeInspectorForExteriorMeasurementsTexelaar($firstName, $lastName)
-    {
-        $pedigreeRegisterTexelaarNTS = $this->pedigreeRegisterRepository->findOneBy(['abbreviation' => 'NTS']);
-        $pedigreeRegisterTexelaarTSNH = $this->pedigreeRegisterRepository->findOneBy(['abbreviation' => 'TSNH']);
-
-        $count = 0;
-        /** @var Inspector $inspector */
-        $inspector = $this->inspectorRepository->findOneBy(['firstName' => $firstName, 'lastName' => $lastName]);
-        if($inspector != null) {
-            $count += $this->authorizeInspector($inspector, InspectorMeasurementType::EXTERIOR, $pedigreeRegisterTexelaarNTS);
-            $count += $this->authorizeInspector($inspector, InspectorMeasurementType::EXTERIOR, $pedigreeRegisterTexelaarTSNH);
-            return $count;
-        }
-        return $count;
-    }
-
-
-    /**
-     * @param Inspector $inspector
-     * @param string $measurementType
-     * @param PedigreeRegister $pedigreeRegister
-     * @return int
-     */
-    private function authorizeInspector(Inspector $inspector, $measurementType, PedigreeRegister $pedigreeRegister = null)
-    {
-        $inspectorAuthorization = $this->inspectorAuthorizationRepository->findOneBy(
-            ['inspector' => $inspector, 'measurementType' => $measurementType, 'pedigreeRegister' => $pedigreeRegister]);
-
-        if($inspectorAuthorization == null) {
-            $inspectorAuthorization = new InspectorAuthorization(
-                $inspector, $this->actionByAdmin, $measurementType, $pedigreeRegister);
-            $this->em->persist($inspectorAuthorization);
-            return 1;
-        }
-        return 0;
-    }
-
 
     /**
      * @param string $fileKey
