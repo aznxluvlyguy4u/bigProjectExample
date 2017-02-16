@@ -44,6 +44,50 @@ class DoctrineUtil
 
     /**
      * @param ObjectManager $em
+     * @param $lastName
+     * @return Employee
+     */
+    public static function getDeveloper(ObjectManager $em, $lastName = null)
+    {
+        $employeeRepository = $em->getRepository(Employee::class);
+        $criteria = [];
+        if(is_string($lastName)) {
+            $criteria = ['lastName' => $lastName];
+        }
+
+        $developers = $employeeRepository->findBy($criteria, ['id' => 'ASC'], 1);
+        if(count($developers) == 1) {
+            return $developers[0];
+        }
+        return null;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil|OutputInterface $cmdUtilOrOutput
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function printDeveloperLastNamesInDatabase(Connection $conn, $cmdUtilOrOutput)
+    {
+        $sql = "SELECT last_name FROM person p
+                INNER JOIN employee e ON e.id = p.id
+                WHERE e.access_level = 'DEVELOPER'";
+        $results = $conn->query($sql)->fetchAll();
+
+        if(count($results) == 0) {
+            $cmdUtilOrOutput->writeln('There are no developers in this database');
+        }
+
+        $cmdUtilOrOutput->writeln('Developer lastNames in the database:');
+        foreach ($results as $result) {
+            $cmdUtilOrOutput->writeln($result['last_name']);
+        }
+    }
+
+
+    /**
+     * @param ObjectManager $em
      * @return string
      */
     public static function getDatabaseHostAndNameString(ObjectManager $em)
