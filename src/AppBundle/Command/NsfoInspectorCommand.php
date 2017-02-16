@@ -151,58 +151,7 @@ class NsfoInspectorCommand extends ContainerAwareCommand
     
     private function fixDuplicateInspectors()
     {
-        $sql = "SELECT x.id, x.first_name, x.last_name FROM person x
-                INNER JOIN (
-                    SELECT p.first_name, p.last_name, p.type FROM inspector i
-                      INNER JOIN person p ON i.id = p.id
-                      WHERE p.type = 'Inspector'
-                    GROUP BY p.first_name, p.last_name, p.type HAVING COUNT(*) > 1
-                    )y ON y.first_name = x.first_name AND y.last_name = x.last_name AND y.type = x.type";
-        $results = $this->conn->query($sql)->fetchAll();
-
-        $groupedSearchArray = [];
-        foreach ($results as $result) {
-            $id = $result['id'];
-            $firstName = $result['first_name'];
-            $lastName = $result['last_name'];
-            $searchKey = $firstName.'__'.$lastName;
-
-            if(array_key_exists($searchKey, $groupedSearchArray)) {
-                $group = $groupedSearchArray[$searchKey];
-            } else {
-                $group = [];
-            }
-
-            $group[] = $result;
-            $groupedSearchArray[$searchKey] = $group;
-        }
-
-        $totalDuplicateCount = count($groupedSearchArray);
-        if($totalDuplicateCount == 0) {
-            $this->output->writeln('No duplicate inspectors!');
-            return;
-        }
-
-        $this->cmdUtil->setStartTimeAndPrintIt($totalDuplicateCount, 1);
-
-        foreach ($groupedSearchArray as $group) {
-            $firstInspectorResult = $group[0];
-            $primaryInspectorId = $firstInspectorResult['id'];
-            foreach ($group as $result) {
-                $secondaryInspectorId = $result['id'];
-                if($primaryInspectorId != $secondaryInspectorId) {
-                    $sql = "UPDATE measurement SET inspector_id = ".$primaryInspectorId." WHERE inspector_id = ".$secondaryInspectorId;
-                    $this->conn->exec($sql);
-
-                    $sql = "INSERT INTO data_import_string_replacement (id, primary_string, secondary_string, type) VALUES (nextval('data_import_string_replacement_id_seq'),'" .$primaryInspectorId. "','" . $secondaryInspectorId . "','Inspector')";
-                    $this->conn->exec($sql);
-
-                    $this->inspectorRepository->deleteInspector($secondaryInspectorId);
-                }
-            }
-            $this->cmdUtil->advanceProgressBar(1, 'Removing duplicate inspectors');
-        }
-        $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+        InspectorMigrator::fixDuplicateInspectors($this->conn, $this->cmdUtil, $this->inspectorRepository);
     }
 
 
