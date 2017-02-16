@@ -2,17 +2,9 @@
 
 namespace AppBundle\Command;
 
-use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Entity\Employee;
-use AppBundle\Entity\EmployeeRepository;
 use AppBundle\Entity\Inspector;
-use AppBundle\Entity\InspectorAuthorization;
-use AppBundle\Entity\InspectorAuthorizationRepository;
 use AppBundle\Entity\InspectorRepository;
-use AppBundle\Entity\PedigreeRegister;
-use AppBundle\Entity\PedigreeRegisterRepository;
 use AppBundle\Enumerator\AccessLevelType;
-use AppBundle\Enumerator\InspectorMeasurementType;
 use AppBundle\Migration\InspectorMigrator;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
@@ -53,9 +45,6 @@ class NsfoInspectorCommand extends ContainerAwareCommand
 
     /** @var CommandUtil */
     private $cmdUtil;
-
-    /** @var OutputInterface */
-    private $output;
     
     protected function configure()
     {
@@ -71,15 +60,13 @@ class NsfoInspectorCommand extends ContainerAwareCommand
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
         $this->conn = $em->getConnection();
-        $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
-        $this->output = $output;
 
         $this->inspectorRepository = $em->getRepository(Inspector::class);
 
         $this->cmdUtil->printTitle(self::TITLE);
-        $this->output->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
+        $this->cmdUtil->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
@@ -93,24 +80,28 @@ class NsfoInspectorCommand extends ContainerAwareCommand
         switch ($option) {
 
             case 1:
-                $count = $this->fixInspectorNames();
+                $csv = $this->parseCSV(self::NAME_CORRECTIONS);
+                $count = InspectorMigrator::fixInspectorNames($this->conn, $csv);
                 $result = $count == 0 ? 'No inspectors names updated' : $count.' inspector names updated!' ;
                 $output->writeln($result);
                 break;
 
             case 2:
-                $count = $this->addMissingInspectors();
+                $csv = $this->parseCSV(self::NEW_NAMES);
+                $count = InspectorMigrator::addMissingInspectors($this->conn, $this->inspectorRepository, $csv);
                 $result = $count == 0 ? 'No new inspectors added' : $count.' new inspectors added!' ;
                 $output->writeln($result);
                 break;
 
             case 3:
-                $this->fixDuplicateInspectors();
+                InspectorMigrator::fixDuplicateInspectors($this->conn, $this->cmdUtil, $this->inspectorRepository);
                 $output->writeln('DONE');
                 break;
 
             case 4:
-                $this->authorizeInspectorsForExteriorMeasurementsTexelaar();
+                $csv = $this->parseCSV(self::AUTHORIZE_TEXELAAR);
+                $admin = $this->cmdUtil->questionForAdminChoice($this->em, AccessLevelType::SUPER_ADMIN, false);
+                InspectorMigrator::authorizeInspectorsForExteriorMeasurementsTexelaar($this->em, $this->cmdUtil, $csv, $admin);
                 $output->writeln('DONE');
                 break;
 
@@ -121,33 +112,6 @@ class NsfoInspectorCommand extends ContainerAwareCommand
 
     }
 
-
-    private function fixInspectorNames()
-    {
-        $csv = $this->parseCSV(self::NAME_CORRECTIONS);
-        return InspectorMigrator::fixInspectorNames($this->conn, $csv);
-    }
-
-
-    private function addMissingInspectors()
-    {
-        $csv = $this->parseCSV(self::NEW_NAMES);
-        return InspectorMigrator::addMissingInspectors($this->conn, $this->inspectorRepository, $csv);
-    }
-    
-    
-    private function fixDuplicateInspectors()
-    {
-        InspectorMigrator::fixDuplicateInspectors($this->conn, $this->cmdUtil, $this->inspectorRepository);
-    }
-
-
-    private function authorizeInspectorsForExteriorMeasurementsTexelaar()
-    {
-        $csv = $this->parseCSV(self::AUTHORIZE_TEXELAAR);
-        $admin = $this->cmdUtil->questionForAdminChoice($this->em, AccessLevelType::SUPER_ADMIN, false);
-        InspectorMigrator::authorizeInspectorsForExteriorMeasurementsTexelaar($this->em, $this->cmdUtil, $csv, $admin);
-    }
 
     /**
      * @param string $fileKey

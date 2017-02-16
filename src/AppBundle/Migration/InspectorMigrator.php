@@ -16,7 +16,6 @@ use AppBundle\Entity\PedigreeRegisterRepository;
 use AppBundle\Enumerator\InspectorMeasurementType;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
-use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 
