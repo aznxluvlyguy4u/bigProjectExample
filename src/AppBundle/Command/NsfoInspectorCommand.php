@@ -144,36 +144,8 @@ class NsfoInspectorCommand extends ContainerAwareCommand
 
     private function addMissingInspectors()
     {
-        $newInspectorCount = 0;
-
-        $newInspectorCount += $this->addMissingInspector('Johan', 'Knaap');
-        $newInspectorCount += $this->addMissingInspector('Ido', 'Altenburg');
-        $newInspectorCount += $this->addMissingInspector('', 'Niet NSFO');
-
-        return $newInspectorCount;
-    }
-
-
-    /**
-     * Return number of new inspectors added.
-     *
-     * @param string $firstName
-     * @param string $lastName
-     * @return int
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    private function addMissingInspector($firstName, $lastName)
-    {
-        $sql = "SELECT COUNT(*) FROM inspector i
-                  INNER JOIN person p ON i.id = p.id
-                WHERE first_name = '".$firstName."' AND last_name = '".$lastName."'";
-        $count = $this->conn->query($sql)->fetch()['count'];
-
-        if($count == 0) {
-            $this->inspectorRepository->insertNewInspector($firstName, $lastName);
-            return 1;
-        }
-        return 0;
+        $csv = $this->parseCSV(self::NEW_NAMES);
+        return InspectorMigrator::addMissingInspectors($this->conn, $this->inspectorRepository, $csv);
     }
     
     

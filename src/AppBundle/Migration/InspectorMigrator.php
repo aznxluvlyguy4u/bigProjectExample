@@ -5,6 +5,7 @@ namespace AppBundle\Migration;
 
 
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\InspectorRepository;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\SqlUtil;
 use Doctrine\DBAL\Connection;
@@ -73,5 +74,49 @@ class InspectorMigrator
             ];
         }
         return $searchArray;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param InspectorRepository $inspectorRepository
+     * @param $csv
+     * @return int
+     */
+    public static function addMissingInspectors(Connection $conn, $inspectorRepository, $csv)
+    {
+        $newInspectorCount = 0;
+
+        foreach ($csv as $row) {
+            $firstName = $row[0];
+            $lastName = $row[1];
+            $newInspectorCount += self::addMissingInspector($conn, $inspectorRepository, $firstName, $lastName);
+        }
+
+        return $newInspectorCount;
+    }
+
+
+    /**
+     * Return number of new inspectors added.
+     * @param Connection $conn
+     * @param InspectorRepository $inspectorRepository
+     * @param string $firstName
+     * @param string $lastName
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private static function addMissingInspector(Connection $conn, $inspectorRepository, $firstName, $lastName)
+    {
+        $sql = "SELECT COUNT(*) FROM inspector i
+                  INNER JOIN person p ON i.id = p.id
+                WHERE first_name = '".$firstName."' AND last_name = '".$lastName."'";
+        $count = $conn->query($sql)->fetch()['count'];
+
+        if($count == 0) {
+            $inspectorRepository->insertNewInspector($firstName, $lastName);
+            return 1;
+        }
+        return 0;
     }
 }
