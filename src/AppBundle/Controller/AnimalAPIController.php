@@ -551,15 +551,15 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     switch ($gender) {
       case AnimalObjectType::EWE:
         $targetGender = "FEMALE";
-        $result = $genderChanger->changeToGender($animal, Ewe::class);
+        $result = $genderChanger->changeToGender($animal, Ewe::class, $this->getUser());
         break;
       case AnimalObjectType::RAM:
         $targetGender = "MALE";
-        $result = $genderChanger->changeToGender($animal, Ram::class);
+        $result = $genderChanger->changeToGender($animal, Ram::class, $this->getUser());
         break;
       case AnimalObjectType::NEUTER:
         $targetGender = "NEUTER";
-        $result = $genderChanger->changeToGender($animal, Neuter::class);
+        $result = $genderChanger->changeToGender($animal, Neuter::class, $this->getUser());
         break;
     }
 
