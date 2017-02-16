@@ -61,6 +61,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\DependencyInjection\Tests\A;
 
@@ -733,7 +734,17 @@ class IRSerializer implements IRSerializerInterface
 
         // Persist Litter
         $this->entityManager->persist($litter);
-        $this->entityManager->flush();
+
+        try {
+            $this->entityManager->flush();
+        } catch (UniqueConstraintViolationException $exception) {
+            //Reset tags to UNASSIGNED
+            $areAllTagsReset = $tagRepository->unassignTags($tags);
+            $tagMessage = $areAllTagsReset ? 'All tagStatusses are reverted to UNASSIGNED' : 'Some tags still have the RESERVED tagStatus';
+            $exceptionMessage = 'Create Birth IRSerializer: UniqueConstraintViolationException, message: '.$exception->getMessage();
+
+            return Validator::createJsonResponse($tagMessage.' | '.$exceptionMessage, $statusCode);
+        }
         
         return $declareBirthRequests;
     }
