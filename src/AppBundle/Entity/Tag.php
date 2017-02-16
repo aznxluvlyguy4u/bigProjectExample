@@ -12,6 +12,7 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class Tag
+ * @ORM\Table(name="tag",indexes={@ORM\Index(name="tag_idx", columns={"location_id", "tag_status"})})
  * @ORM\Entity(repositoryClass="AppBundle\Entity\TagRepository")
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
