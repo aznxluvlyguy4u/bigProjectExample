@@ -482,7 +482,7 @@ class IRSerializer implements IRSerializerInterface
             }
 
 
-            $birthWeightValue = ArrayUtil::get('tail_length', $childArray, $birthWeightEmptyValue);
+            $birthWeightValue = ArrayUtil::get('birth_weight', $childArray, $birthWeightEmptyValue);
 
             if($birthWeightValue > 9.9) {
                 return Validator::createJsonResponse("Een lam met een geboortegewicht groter dan 9,9 kilogram, is niet geoorloofd.", $statusCode);
@@ -531,7 +531,7 @@ class IRSerializer implements IRSerializerInterface
             $birthProgress = ArrayUtil::get('birth_progress', $child, null);
             $hasLambar = ArrayUtil::get('has_lambar', $child, false);
             $tailLengthValue = ArrayUtil::get('tail_length', $child, $tailLengthEmptyValue);
-            $birthWeightValue = ArrayUtil::get('tail_length', $child, $birthWeightEmptyValue);
+            $birthWeightValue = ArrayUtil::get('birth_weight', $child, $birthWeightEmptyValue);
 
             $isAlive = ArrayUtil::get('is_alive', $child, null);
 
