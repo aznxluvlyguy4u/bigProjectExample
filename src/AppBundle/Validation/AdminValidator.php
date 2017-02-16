@@ -7,6 +7,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\PersonRepository;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\JsonFormat\ValidationResults;
 use Doctrine\Common\Collections\Collection;
 use AppBundle\Constant\Constant;
 use \Symfony\Component\HttpFoundation\JsonResponse;
@@ -94,5 +95,38 @@ class AdminValidator
         }
 
         return $isAccessGranted;
+    }
+
+
+    /**
+     * @param $admin
+     * @param $accessLevelRequired
+     * @return boolean
+     */
+    public static function isAdmin($admin, $accessLevelRequired)
+    {
+        if($admin instanceof Employee) {
+            return self::checkIsAccessGranted($accessLevelRequired, $admin->getAccessLevel());
+        }
+
+        return false;
+    }
+    
+    
+    /**
+     * @param $admin
+     * @param $accessLevelRequired
+     * @return ValidationResults
+     */
+    public static function validate($admin, $accessLevelRequired)
+    {
+        $validationResults = new ValidationResults(self::isAdmin($admin, $accessLevelRequired));
+        $validationResults->setErrorCode(self::ERROR_CODE);
+
+        if(!$validationResults->isValid()) {
+            $validationResults->addError('UNAUTHORIZED');
+        }
+
+        return $validationResults;
     }
 }

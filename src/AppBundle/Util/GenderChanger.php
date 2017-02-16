@@ -6,10 +6,13 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\GenderHistoryItem;
 use AppBundle\Entity\Neuter;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use AppBundle\Component\HttpFoundation\JsonResponse;
@@ -58,11 +61,11 @@ class GenderChanger
    *
    * @param Ram | Ewe | Neuter $animal
    * @param Ram | Ewe | Neuter $targetEntityClass
-   * @param boolean $validateMaxTimeInterval
+   * @param Person $user
    * @return Animal
    * @throws \Doctrine\DBAL\DBALException
    */
-    public function changeToGender($animal, $targetEntityClass, $validateMaxTimeInterval = true)
+    public function changeToGender($animal, $targetEntityClass, $user = null)
     {
         $targetEntity = $targetEntityClass::getClassName($targetEntityClass);
         $sourceEntity = $animal->getObjectType();
@@ -77,7 +80,7 @@ class GenderChanger
         switch ($targetGender){
             case AnimalObjectType::Neuter:
                 //Do additional checks to see if we allow a gender change
-                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::NEUTER, $validateMaxTimeInterval);
+                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::NEUTER, $user);
 
                 if ($requestValidation instanceof JsonResponse) {
                     return $requestValidation;
@@ -97,7 +100,7 @@ class GenderChanger
                 break;
             case AnimalObjectType::Ewe:
                 //Do additional checks to see if we allow a gender change
-                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::EWE, $validateMaxTimeInterval);
+                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::EWE, $user);
 
                 if ($requestValidation instanceof JsonResponse) {
                     return $requestValidation;
@@ -117,7 +120,7 @@ class GenderChanger
                 break;
             case AnimalObjectType::Ram:
                 //Do additional checks to see if we allow a gender change
-                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::RAM, $validateMaxTimeInterval);
+                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::RAM, $user);
 
                 if ($requestValidation instanceof JsonResponse) {
                     return $requestValidation;
@@ -163,10 +166,10 @@ class GenderChanger
      *
      * @param Ram | Ewe | Neuter $animal
      * @param  $targetEntity
-     * @param  boolean $validateMaxTimeInterval
+     * @param Person $user
      * @return mixed JsonResponse|bool
      */
-    function validateGenderChangeRequest($animal, $targetEntity, $validateMaxTimeInterval = true)
+    function validateGenderChangeRequest($animal, $targetEntity, $user = null)
     {
         $statusCode = 403;
 
@@ -226,31 +229,39 @@ class GenderChanger
             }
         }
 
-        if($validateMaxTimeInterval) {
-            //Check if birth registration is within a time span of MAX_TIME_INTERVAL from now,
-            //then, and only then, an alteration of gender for this animal is allowed
-            $dateInterval = $animal->getDateOfBirth()->diff(new \DateTime());
+        //Check if birth registration is within a time span of MAX_TIME_INTERVAL from now,
+        //then, and only then, an alteration of gender for this animal is allowed
+        $dateInterval = $animal->getDateOfBirth()->diff(new \DateTime());
 
-            if($dateInterval->y > 0 || $dateInterval->m >= self::MAX_MONTH_INTERVAL) {
-                //Allow gender change for animals beyond MAX_TIME_INTERVAL
-                // if current gender is of type NEUTER
-                if($animal instanceof Neuter) {
+        if($dateInterval->y > 0 || $dateInterval->m >= self::MAX_MONTH_INTERVAL) {
+            //Allow gender change for animals beyond MAX_TIME_INTERVAL
+            // if current gender is of type NEUTER
+            if($animal instanceof Neuter) {
+                return $animal;
+            }
+
+            //Allow gender change for animals beyond MAX_TIME_INTERVAL
+            // if user is an admin with a high enough accessLevel
+            if($user instanceof Person) {
+                //For backwards PHP compatibility (versions below 5.6.0 not supporting Constant expressions)
+                //the AccessLevelType::ADMIN is not set in a separate constant of this class.
+                if(AdminValidator::isAdmin($user, AccessLevelType::ADMIN)) {
                     return $animal;
                 }
+            }
 
-                return new JsonResponse(
-                    array (
-                        Constant::RESULT_NAMESPACE => array (
-                            'code' => $statusCode,
+            return new JsonResponse(
+                array (
+                    Constant::RESULT_NAMESPACE => array (
+                        'code' => $statusCode,
 //                  "message" => $animal->getUln() . " has a registered birth that is longer then "
 //                    .self::MAX_MONTH_INTERVAL ." months ago, from now, therefore changing gender is not allowed.",
-                            "message" => $animal->getUln() . " heeft een geregistreerde geboortedatum dat langer dan "
-                                .self::MAX_MONTH_INTERVAL ." maanden geleden is, zodoende is het niet geoorloofd om het geslacht van het dier te wijzigen.",
-                        )
-                    ), $statusCode);
-            }
+                        "message" => $animal->getUln() . " heeft een geregistreerde geboortedatum dat langer dan "
+                            .self::MAX_MONTH_INTERVAL ." maanden geleden is, zodoende is het niet geoorloofd om het geslacht van het dier te wijzigen. Dit moet worden goedgekeurd door een administrator.",
+                    )
+                ), $statusCode);
         }
-        
+
         return $animal;
     }
 }
