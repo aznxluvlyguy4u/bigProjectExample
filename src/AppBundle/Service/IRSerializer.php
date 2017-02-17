@@ -8,6 +8,7 @@ use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\AnimalCache;
+use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\AnimalResidence;
 use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
@@ -35,6 +36,7 @@ use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\RetrieveAnimalDetails;
 use AppBundle\Entity\Stillborn;
 use AppBundle\Entity\Tag;
+use AppBundle\Entity\TagRepository;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
 use AppBundle\Enumerator\ActionType;
@@ -50,10 +52,16 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TagType;
+use AppBundle\Util\AnimalArrayReader;
+use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\TimeUtil;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\DependencyInjection\Tests\A;
 
@@ -94,11 +102,15 @@ class IRSerializer implements IRSerializerInterface
      */
     private $entityGetter;
 
+    /** @var Connection */
+    private $conn;
+
     public function __construct($serializer, $entityManager, $entityGetter)
     {
         $this->serializer = $serializer;
         $this->entityManager = $entityManager;
         $this->entityGetter = $entityGetter;
+        $this->conn = $entityManager->getConnection();
     }
 
     /**
@@ -295,6 +307,11 @@ class IRSerializer implements IRSerializerInterface
         $stillbornCount = 0;
         $statusCode = 428;
         $declareBirthRequests = [];
+
+        /** @var TagRepository $tagRepository */
+        $tagRepository = $this->entityManager->getRepository(Tag::class);
+        /** @var AnimalRepository $animalRepository */
+        $animalRepository = $this->entityManager->getRepository(Animal::class);
         
         if(key_exists('date_of_birth', $declareBirthContentArray->toArray())) {
             $dateOfBirth = new \DateTime($declareBirthContentArray["date_of_birth"]);
@@ -303,13 +320,7 @@ class IRSerializer implements IRSerializerInterface
             $timeIntervalInDaysFromNow = TimeUtil::getDaysBetween(new \DateTime(), $dateOfBirth);
 
             if($timeIntervalInDaysFromNow > 0) {
-                return new JsonResponse(
-                  array(
-                    Constant::RESULT_NAMESPACE => array (
-                      'code' => $statusCode,
-                      "message" => "Een geboorte mag niet in de toekomst liggen.",
-                    )
-                  ), $statusCode);
+                return Validator::createJsonResponse("Een geboorte mag niet in de toekomst liggen.", $statusCode);
             }
         }
 
@@ -331,56 +342,29 @@ class IRSerializer implements IRSerializerInterface
 
         if(key_exists('father', $declareBirthContentArray->toArray())) {
             /** @var  $father */
-            $father = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
-              ->getAnimalByUlnOrPedigree($declareBirthContentArray["father"]);
+            $father = $animalRepository->getAnimalByUlnOrPedigree($declareBirthContentArray["father"]);
 
             if(!$father) {
-                return new JsonResponse(
-                  array(
-                    Constant::RESULT_NAMESPACE => array (
-                      'code' => $statusCode,
-                      "message" => "Opgegeven vader kan niet gevonden worden.",
-                    )
-                  ), $statusCode);
+                return Validator::createJsonResponse("Opgegeven vader kan niet gevonden worden.", $statusCode);
             }
 
             //Additional gender check
             if($father->getGender() != GenderType::MALE) {
-                return new JsonResponse(
-                  array(
-                    Constant::RESULT_NAMESPACE => array (
-                      'code' => $statusCode,
-                      "message" => "Opgegeven vader met ULN: " . $father->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: RAM.",
-                    )
-                  ), $statusCode);
+                return Validator::createJsonResponse("Opgegeven vader met ULN: " . $father->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: RAM.", $statusCode);
             }
         }
 
         if(key_exists('mother', $declareBirthContentArray->toArray())) {
             /** @var  $mother */
-            $mother = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
-              ->getAnimalByUlnOrPedigree($declareBirthContentArray["mother"]);
+            $mother = $animalRepository->getAnimalByUlnOrPedigree($declareBirthContentArray["mother"]);
 
             if(!$mother) {
-                return new JsonResponse(
-                  array(
-                    Constant::RESULT_NAMESPACE => array (
-                      'code' => $statusCode,
-                      "message" => "Opgegeven moeder kan niet gevonden worden.",
-                    )
-                  ), $statusCode);
+                return Validator::createJsonResponse("Opgegeven moeder kan niet gevonden worden.", $statusCode);
             }
-
 
             //Additional Gender check
             if($mother->getGender() != GenderType::FEMALE) {
-                return new JsonResponse(
-                  array(
-                    Constant::RESULT_NAMESPACE => array (
-                      'code' => $statusCode,
-                      "message" => "Opgegeven moeder met ULN: " . $mother->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: OOI.",
-                    )
-                  ), $statusCode);
+                return Validator::createJsonResponse("Opgegeven moeder met ULN: " . $mother->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: OOI.", $statusCode);
             }
 
             //If the mother already has given birth within the last 5,5 months (167 days, rounded),
@@ -398,15 +382,9 @@ class IRSerializer implements IRSerializerInterface
                 $dateInterval = TimeUtil::getDaysBetween($child->getDateOfBirth(), $dateOfBirth);
 
                 if($dateInterval <= $maxDaysLitterInterval) {
-                    return new JsonResponse(
-                      array(
-                        Constant::RESULT_NAMESPACE => array (
-                          'code' => $statusCode,
-                          "message" => "Opgegeven moeder met ULN: "
-                            . $mother->getUlnNumber()
-                            ." heeft in de afgelopen 5,5 maanden reeds geworpen, zodoende is het niet geoorloofd om een geboortemelding te doen voor de opgegeven moeder.",
-                        )
-                      ), $statusCode);
+                    return Validator::createJsonResponse("Opgegeven moeder met ULN: "
+                        . $mother->getUlnNumber()
+                        ." heeft in de afgelopen 5,5 maanden reeds geworpen, zodoende is het niet geoorloofd om een geboortemelding te doen voor de opgegeven moeder.", $statusCode);
                 }
             }
         }
@@ -420,16 +398,102 @@ class IRSerializer implements IRSerializerInterface
 
             if($mother) {
                 if($litterSize > $maxLitterSize) {
-                    return new JsonResponse(
-                      array(
-                        Constant::RESULT_NAMESPACE => array (
-                          'code' => $statusCode,
-                          "message" => "De opgegeven worpgrootte overschrijdt het maximum van " . $maxLitterSize ." lammeren",
-                        )
-                      ), $statusCode);
+                    return Validator::createJsonResponse("De opgegeven worpgrootte overschrijdt het maximum van " . $maxLitterSize ." lammeren", $statusCode);
                 }
             }
         }
+
+
+        //Validate tags
+
+        //First group ulns and check for duplicate ulns
+        $usedTagUlns = [];
+        foreach ($childrenContent as $childArray) {
+            $isAlive = ArrayUtil::get('is_alive', $childArray);
+            if ($isAlive) {
+                if (key_exists('uln_country_code', $childArray) && key_exists('uln_number', $childArray)) {
+                    $ulnCountryCode = $childArray['uln_country_code'];
+                    $ulnNumber = $childArray['uln_number'];
+                    $uln = $ulnCountryCode.$ulnNumber;
+                    if(key_exists($uln, $usedTagUlns)) {
+                        return Validator::createJsonResponse('Oormerk '.$uln.' werd aan meer dan 1 kind toegekend.', $statusCode);
+                    }
+                    $usedTagUlns[$uln] = [
+                        JsonInputConstant::ULN_COUNTRY_CODE => $ulnCountryCode,
+                        JsonInputConstant::ULN_NUMBER => $ulnNumber,
+                    ];
+                }
+            }
+        }
+
+        //Check if tags are in database and UNASSIGNED
+        $tags = [];
+        foreach ($usedTagUlns as $ulnArray) {
+            $ulnCountryCode = $ulnArray[JsonInputConstant::ULN_COUNTRY_CODE];
+            $ulnNumber = $ulnArray[JsonInputConstant::ULN_NUMBER];
+            $uln = $ulnCountryCode.$ulnNumber;
+            
+            /** @var Tag $tagToReserve */
+            $tagToReserve = $tagRepository->findUnassignedTagByUlnNumberAndCountryCode($ulnCountryCode, $ulnNumber);
+
+            if (!$tagToReserve) {
+                //Tag does not exist in the database
+                return Validator::createJsonResponse("Opgegeven vrije oormerk: " . $uln . " voor het lam, is niet gevonden.", $statusCode);
+                
+            } else {
+                $animal = $animalRepository->findByUlnCountryCodeAndNumber($ulnCountryCode, $ulnNumber);
+                if ($animal) {
+                    return Validator::createJsonResponse("Opgegeven vrije oormerk: " . $uln . " voor het lam, is reeds toegewezen aan een bestaand dier met ULN: " . $uln, $statusCode);
+                } else if ($tagToReserve->getLocation()) {
+                    if ($tagToReserve->getLocation()->getId() == $location->getId()) {
+                        $tags[$uln] = $tagToReserve;
+                        break;
+                    }
+                }
+                return Validator::createJsonResponse("Opgegeven oormerk: " . $uln . " is niet geregistreerd voor dit UBN: " . $location->getUbn(), $statusCode);
+            }
+        }
+
+        //tailLength & birthWeight are not nullable in DeclareWeight
+        $tailLengthEmptyValue = 0;
+        $birthWeightEmptyValue = 0;
+
+        //Validate Surrogate Mothers and BirthWeight
+        $surrogateMothersByUln = [];
+        foreach ($childrenContent as $childArray) {
+            $surrogate = null;
+            if(array_key_exists('surrogate_mother', $childArray)) {
+                /** @var Animal $surrogate */
+                $surrogate = $animalRepository->getAnimalByUlnOrPedigree($childArray['surrogate_mother']);
+
+                if(!$surrogate) {
+                    return Validator::createJsonResponse("Opgegeven pleegmoeder kan niet gevonden worden.", $statusCode);
+                }
+
+                if($surrogate->getGender() != GenderType::FEMALE) {
+                    return Validator::createJsonResponse("Opgegeven pleegmoeder met ULN: " .$surrogate->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: OOI.", $statusCode);
+                }
+
+                if($surrogate->getId() == $mother->getId()) {
+                    return Validator::createJsonResponse("Opgegeven pleegmoeder mag niet gelijk zijn aan de opgegeven moeder", $statusCode);
+                }
+
+                $surrogateMothersByUln[$surrogate->getUln()] = $surrogate;
+            }
+
+
+            $birthWeightValue = ArrayUtil::get('birth_weight', $childArray, $birthWeightEmptyValue);
+
+            if($birthWeightValue > 9.9) {
+                return Validator::createJsonResponse("Een lam met een geboortegewicht groter dan 9,9 kilogram, is niet geoorloofd.", $statusCode);
+            }
+        }
+
+        /*
+         * Before creating any birth related entities check their sequences and update them if they are incorrect
+         * to prevent a UniqueConstraintViolationException
+         */
+        DoctrineUtil::updateTableSequence($this->conn, ['animal', 'animal_residence', 'tag', 'litter', 'declare_base']);
 
         //Create Litter
         $litter = new Litter();
@@ -455,57 +519,21 @@ class IRSerializer implements IRSerializerInterface
         $litter->setStillbornCount($stillbornCount);
 
         $children = [];
+        /** @var array $child */
         foreach ($childrenContent as $child) {
 
             $tagToReserve = null;
             $childAnimalToCreate = null;
-            $surrogate = null;
-            $gender = null;
-            $birthProgress = null;
-            $hasLambar = false;
-            $isAlive = null;
             $declareBirthRequest = null;
 
-            //tailLength & birthWeight are not nullable in DeclareWeight
-            $tailLengthEmptyValue = 0;
-            $birthWeightEmptyValue = 0;
-            $tailLengthValue = $tailLengthEmptyValue;
-            $birthWeightValue = $birthWeightEmptyValue;
-            
-            if(key_exists('gender', $child)) {
-                $gender = $child['gender'];
-            }
+            //                        key      array   null replacement
+            $gender = ArrayUtil::get('gender', $child, null);
+            $birthProgress = ArrayUtil::get('birth_progress', $child, null);
+            $hasLambar = ArrayUtil::get('has_lambar', $child, false);
+            $tailLengthValue = ArrayUtil::get('tail_length', $child, $tailLengthEmptyValue);
+            $birthWeightValue = ArrayUtil::get('birth_weight', $child, $birthWeightEmptyValue);
 
-            if(key_exists('birth_progress', $child)) {
-                $birthProgress = $child["birth_progress"];
-            }
-
-            if(key_exists('has_lambar', $child)) {
-                $hasLambar = $child['has_lambar'];
-            }
-
-            if(key_exists('tail_length', $child)) {
-                $tailLengthValue = $child['tail_length'];
-
-            }
-
-            if(key_exists('birth_weight', $child)) {
-                $birthWeightValue = $child['birth_weight'];
-                if($birthWeightValue > 9.9) {
-                    return new JsonResponse(
-                      array(
-                        Constant::RESULT_NAMESPACE => array (
-                          'code' => $statusCode,
-                          "message" => "Een lam met een geboortegewicht groter dan 9,9 kilogram, is niet geoorloofd.",
-                        )
-                      ), $statusCode);
-                }
-
-            }
-
-            if(key_exists('is_alive', $child)) {
-                $isAlive = $child['is_alive'];
-            }
+            $isAlive = ArrayUtil::get('is_alive', $child, null);
 
             if(!$isAlive) { // Stillborn
                 $stillborn = new Stillborn();
@@ -552,92 +580,47 @@ class IRSerializer implements IRSerializerInterface
                     $declareBirthRequest->setActionBy($loggedInUser);
                 }
 
-                //Find assigned tag
+                //Assign tag
                 if(key_exists('uln_country_code', $child) && key_exists('uln_number', $child)) {
-                    /** @var Tag $tagToReserve */
-                    $tagToReserve = $this->entityManager->getRepository(Constant::TAG_REPOSITORY)
-                      ->findByUlnNumberAndCountryCode($child['uln_country_code'],$child['uln_number']);
+                    $ulnCountryCode = $child['uln_country_code'];
+                    $ulnNumber = $child['uln_number'];
+                    $uln = $ulnCountryCode.$ulnNumber;
+                    //This tag has already been validated in the beginning of this function
+                    $tagToReserve = ArrayUtil::get($uln, $tags);
 
                     if(!$tagToReserve) {
-                        $uln = $child['uln_country_code'] .$child['uln_number'];
-
-                        return new JsonResponse(
-                          array(
-                            Constant::RESULT_NAMESPACE => array (
-                              'code' => $statusCode,
-                              "message" => "Opgegeven vrije oormerk: " .$uln ." voor het lam, is niet gevonden.",
-                            )
-                          ), $statusCode);
+                        return Validator::createJsonResponse("Opgegeven vrije oormerk: " .$uln ." voor het lam, is niet gevonden.", $statusCode);
                     }
 
                     //Assign tag details, reserve tag
-                    if($tagToReserve) {
-                        $animal = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
-                          ->getAnimalByUlnOrPedigree(array ('uln_country_code' => $tagToReserve->getUlnCountryCode(), 
-                                                            'uln_number'=>$tagToReserve->getUlnNumber()));
-                        if($animal) {
-                            $uln = $child['uln_country_code'] .$child['uln_number'];
-
-                            return new JsonResponse(
-                              array(
-                                Constant::RESULT_NAMESPACE => array (
-                                  'code' => $statusCode,
-                                  "message" => "Opgegeven vrije oormerk: " .$uln ." voor het lam, is reeds toegewezen aan een bestaand dier met ULN: " . $uln,
-                                )
-                              ), $statusCode);
-                        }else if ($tagToReserve->getLocation()){
-                            if($tagToReserve->getLocation()->getId() != $location->getId()) {
-                                return new JsonResponse(
-                                  array(
-                                    Constant::RESULT_NAMESPACE => array (
-                                      'code' => $statusCode,
-                                      "message" => "Opgegeven oormerk: " .$tagToReserve->getUlnCountryCode()  .$tagToReserve->getUlnNumber() ." is niet geregistreerd voor dit UBN: " .$location->getUbn(),
-                                    )
-                                  ), $statusCode);
-                            }
-                        }
-                        $declareBirthRequest->setUlnCountryCode($tagToReserve->getUlnCountryCode());
-                        $declareBirthRequest->setUlnNumber($tagToReserve->getUlnNumber());
-                        $tagToReserve->setTagStatus(TagStateType::RESERVED);
-                        $this->entityManager->getRepository(Constant::TAG_REPOSITORY)->persist($tagToReserve);
-                    }
+                    $declareBirthRequest->setUlnCountryCode($tagToReserve->getUlnCountryCode());
+                    $declareBirthRequest->setUlnNumber($tagToReserve->getUlnNumber());
+                    $tagToReserve->setTagStatus(TagStateType::RESERVED);
+                    $tagRepository->persist($tagToReserve);
                 }
 
+                $surrogate = null;
+                //All surrogates have been validate before processing any births
                 if(array_key_exists('surrogate_mother', $child)) {
+                    $ulnSurrogate = AnimalArrayReader::getUlnFromArray($child['surrogate_mother']);
                     /** @var Animal $surrogate */
-                    $surrogate = $this->entityManager->getRepository(Constant::ANIMAL_REPOSITORY)
-                      ->getAnimalByUlnOrPedigree($child['surrogate_mother']);
-
-                    if(!$surrogate) {
-                        return new JsonResponse(
-                          array(
-                            Constant::RESULT_NAMESPACE => array (
-                              'code' => $statusCode,
-                              "message" => "Opgegeven pleegmoeder kan niet gevonden worden.",
-                            )
-                          ), $statusCode);
-                    }
-
-                    if($surrogate->getGender() != GenderType::FEMALE) {
-                        return new JsonResponse(
-                          array(
-                            Constant::RESULT_NAMESPACE => array (
-                              'code' => $statusCode,
-                              "message" => "Opgegeven pleegmoeder met ULN: " .$surrogate->getUlnNumber() ." is gevonden, echter is het geslacht, niet van het type: OOI.",
-                            )
-                          ), $statusCode);
+                    if($ulnSurrogate != null) {
+                        $surrogate = ArrayUtil::get($ulnSurrogate, $surrogateMothersByUln);
                     }
                 }
 
                 //Create child animal
                 switch ($gender) {
                     case GenderType::MALE:
+                        /** @var Ram $child */
                         $child = new Ram();
                         break;
                     case GenderType::FEMALE:
+                        /** @var Ewe $child */
                         $child = new Ewe();
                         break;
                     case GenderType::NEUTER:
+                        /** @var Neuter $child */
                         $child = new Neuter();
                         break;
                 }
@@ -655,15 +638,6 @@ class IRSerializer implements IRSerializerInterface
                 $child->setUbnOfBirth($location->getUbn());
                 $child->setLambar($hasLambar);
                 $child->setLitter($litter);
-
-//                //TODO fixme
-//                //Add adhoc logic - if mother is of type Clun Forest, set child to same breed
-//                if($mother) {
-//                    if ($mother->getBreedCode() == 'CF100') {
-//                        $child->setBreed('PURE_BRED');
-//                        $child->setBreedCode('CF100');
-//                    }
-//                }
 
                 //Create new residence
                 $animalResidence = new AnimalResidence();
@@ -764,23 +738,17 @@ class IRSerializer implements IRSerializerInterface
 
         // Persist Litter
         $this->entityManager->persist($litter);
-        $this->entityManager->flush();
 
-        /** @var Animal $child */
-        foreach ($children as $child) {
-            if($child->getIsAlive()) {
-               // AnimalCacher::cacheByAnimal($this->entityManager, $child);
-            }
-        }
+        try {
+            $this->entityManager->flush();
+        } catch (UniqueConstraintViolationException $exception) {
+            //Reset tags to UNASSIGNED
+            $areAllTagsReset = $tagRepository->unassignTags($tags);
+            $tagMessage = $areAllTagsReset ? 'All tagStatusses are reverted to UNASSIGNED' : 'Some tags still have the RESERVED tagStatus';
+            $exceptionMessage = 'Create Birth IRSerializer: UniqueConstraintViolationException, message: '.$exception->getMessage();
 
-        if($mother) {
-            //AnimalCacher::cacheByAnimal($this->entityManager, $mother);
+            return Validator::createJsonResponse($tagMessage.' | '.$exceptionMessage, $statusCode);
         }
-
-        if($father) {
-            //AnimalCacher::cacheByAnimal($this->entityManager, $father);
-        }
-        
         
         return $declareBirthRequests;
     }
