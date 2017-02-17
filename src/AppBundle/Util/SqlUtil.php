@@ -19,13 +19,12 @@ class SqlUtil
     /**
      * @param Connection $conn
      * @param $tableName
-     * @param int $bumpSize
      * @throws \Doctrine\DBAL\DBALException
      */
-    public static function bumpPrimaryKeySeq(Connection $conn, $tableName, $bumpSize = 1)
+    public static function bumpPrimaryKeySeq(Connection $conn, $tableName)
     {
         $tableName = strtolower($tableName);
-        $sql = "SELECT setval('".$tableName."_id_seq', (SELECT MAX(id) FROM ".$tableName.")+".$bumpSize.")";
+        $sql = "SELECT setval('".$tableName."_id_seq', (SELECT MAX(id) FROM ".$tableName.")+1)";
         $conn->exec($sql);
     }
 

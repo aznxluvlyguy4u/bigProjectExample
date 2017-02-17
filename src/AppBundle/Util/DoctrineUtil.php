@@ -243,7 +243,7 @@ class DoctrineUtil
             $maxIdDifference = $conn->query($sql)->fetch()['max_id_difference'];
 
             if($maxIdDifference > 0) {
-                SqlUtil::bumpPrimaryKeySeq($conn, $tableToUpdate, $maxIdDifference);
+                SqlUtil::bumpPrimaryKeySeq($conn, $tableToUpdate);
                 $sequenceUpdatedCount++;
             }
         }
