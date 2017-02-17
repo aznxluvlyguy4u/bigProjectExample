@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
 use AppBundle\Output\MenuBarOutput;
+use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -42,6 +43,7 @@ class ComponentAPIController extends APIController {
    */
     public function getMenuBar(Request $request) {
         $client = $this->getAuthenticatedUser($request);
+        if($client == null) { return Validator::createJsonResponse('Client cannot be null', 428); }
         $outputArray = MenuBarOutput::create($client);
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);

@@ -23,6 +23,7 @@ use AppBundle\FormInput\AnimalDetails;
 use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
 use AppBundle\Util\GenderChanger;
+use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\AnimalDetailsValidator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -295,6 +296,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       $client = $this->getAuthenticatedUser($request);
       $loggedInUser = $this->getLoggedInUser($request);
       $location = $this->getSelectedLocation($request);
+
+      if($client == null) { return Validator::createJsonResponse('Client cannot be null', 428); }
+      if($location == null) { return Validator::createJsonResponse('Location cannot be null', 428); }
 
       //Convert the array into an object and add the mandatory values retrieved from the database
       $messageObject = $this->buildMessageObject(RequestType::RETRIEVE_ANIMALS_ENTITY, $content, $client, $loggedInUser, $location);
