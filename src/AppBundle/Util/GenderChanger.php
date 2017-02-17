@@ -6,10 +6,13 @@ use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\GenderHistoryItem;
 use AppBundle\Entity\Neuter;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Ewe;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use AppBundle\Component\HttpFoundation\JsonResponse;
@@ -58,10 +61,11 @@ class GenderChanger
    *
    * @param Ram | Ewe | Neuter $animal
    * @param Ram | Ewe | Neuter $targetEntityClass
+   * @param Person $user
    * @return Animal
    * @throws \Doctrine\DBAL\DBALException
    */
-    public function changeToGender($animal, $targetEntityClass)
+    public function changeToGender($animal, $targetEntityClass, $user = null)
     {
         $targetEntity = $targetEntityClass::getClassName($targetEntityClass);
         $sourceEntity = $animal->getObjectType();
@@ -76,7 +80,7 @@ class GenderChanger
         switch ($targetGender){
             case AnimalObjectType::Neuter:
                 //Do additional checks to see if we allow a gender change
-                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::NEUTER);
+                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::NEUTER, $user);
 
                 if ($requestValidation instanceof JsonResponse) {
                     return $requestValidation;
@@ -96,7 +100,7 @@ class GenderChanger
                 break;
             case AnimalObjectType::Ewe:
                 //Do additional checks to see if we allow a gender change
-                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::EWE);
+                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::EWE, $user);
 
                 if ($requestValidation instanceof JsonResponse) {
                     return $requestValidation;
@@ -116,7 +120,7 @@ class GenderChanger
                 break;
             case AnimalObjectType::Ram:
                 //Do additional checks to see if we allow a gender change
-                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::RAM);
+                $requestValidation = $this->validateGenderChangeRequest($animal, AnimalObjectType::RAM, $user);
 
                 if ($requestValidation instanceof JsonResponse) {
                     return $requestValidation;
@@ -162,9 +166,10 @@ class GenderChanger
      *
      * @param Ram | Ewe | Neuter $animal
      * @param  $targetEntity
+     * @param Person $user
      * @return mixed JsonResponse|bool
      */
-    function validateGenderChangeRequest($animal, $targetEntity)
+    function validateGenderChangeRequest($animal, $targetEntity, $user = null)
     {
         $statusCode = 403;
 
@@ -235,6 +240,16 @@ class GenderChanger
                return $animal;
             }
 
+            //Allow gender change for animals beyond MAX_TIME_INTERVAL
+            // if user is an admin with a high enough accessLevel
+            if($user instanceof Person) {
+                //For backwards PHP compatibility (versions below 5.6.0 not supporting Constant expressions)
+                //the AccessLevelType::ADMIN is not set in a separate constant of this class.
+                if(AdminValidator::isAdmin($user, AccessLevelType::ADMIN)) {
+                    return $animal;
+                }
+            }
+
             return new JsonResponse(
               array (
                 Constant::RESULT_NAMESPACE => array (
@@ -242,7 +257,7 @@ class GenderChanger
 //                  "message" => $animal->getUln() . " has a registered birth that is longer then "
 //                    .self::MAX_MONTH_INTERVAL ." months ago, from now, therefore changing gender is not allowed.",
                   "message" => $animal->getUln() . " heeft een geregistreerde geboortedatum dat langer dan "
-                    .self::MAX_MONTH_INTERVAL ." maanden geleden is, zodoende is het niet geoorloofd om het geslacht van het dier te wijzigen.",
+                    .self::MAX_MONTH_INTERVAL ." maanden geleden is, zodoende is het niet geoorloofd om het geslacht van het dier te wijzigen. Dit moet worden goedgekeurd door een administrator.",
                 )
               ), $statusCode);
         }
