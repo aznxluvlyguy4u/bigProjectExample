@@ -7,10 +7,25 @@ namespace AppBundle\Util;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\Litter;
+use AppBundle\Enumerator\WorkerTaskScope;
 use AppBundle\Worker\Task\WorkerMessageBodyLitter;
 
 class WorkerTaskUtil
 {
+    /**
+     * @param Litter $litter
+     * @return WorkerMessageBodyLitter|null
+     */
+    public static function createResultTableMessageBodyForBirthRevoke(Litter $litter)
+    {
+        $messageBody = self::createResultTableMessageBodyByLitter($litter);
+        if($messageBody) {
+            $messageBody->setScope(WorkerTaskScope::BIRTH_REVOKE);
+        }
+        return $messageBody;
+    }
+    
+    
     /**
      * @param $birthRequestMessages
      * @return WorkerMessageBodyLitter
@@ -22,10 +37,18 @@ class WorkerTaskUtil
 
         /** @var DeclareBirth $firstBirth */
         $firstBirth = $birthRequestMessages[0];
-        return self::createResultTableMessageBodyByLitter($firstBirth->getLitter());
+        $messageBody = self::createResultTableMessageBodyByLitter($firstBirth->getLitter());
+        if($messageBody) {
+            $messageBody->setScope(WorkerTaskScope::BIRTH);
+        }
+        return $messageBody;
     }
 
 
+    /**
+     * @param Litter $litter
+     * @return WorkerMessageBodyLitter|null
+     */
     public static function createResultTableMessageBodyByLitter(Litter $litter)
     {
         $fatherId = null;

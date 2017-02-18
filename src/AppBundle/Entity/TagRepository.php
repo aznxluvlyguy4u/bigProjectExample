@@ -5,9 +5,13 @@ namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\TagStateType;
-use AppBundle\Validation\Validator;
+use AppBundle\Util\SqlUtil;
+use AppBundle\Util\StringUtil;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
-use Symfony\Component\Form\ClickableInterface;
+use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Symfony\Component\ExpressionLanguage\Tests\Node\Obj;
 
 class TagRepository extends BaseRepository {
 
@@ -53,6 +57,18 @@ class TagRepository extends BaseRepository {
   {
     return $this->findOneBy(array('ulnCountryCode'=>$ulnCountryCode, 'ulnNumber'=>$ulnNumber));
   }
+
+
+  /**
+   * @param $ulnCountryCode
+   * @param $ulnNumber
+   * @return Tag
+   */
+  public function findUnassignedTagByUlnNumberAndCountryCode($ulnCountryCode, $ulnNumber)
+  {
+    return $this->findOneBy(array('ulnCountryCode'=>$ulnCountryCode, 'ulnNumber'=>$ulnNumber, 'tagStatus' => TagStateType::UNASSIGNED));
+  }
+
 
   /**
    * @param Client $client
@@ -139,4 +155,93 @@ class TagRepository extends BaseRepository {
     return $this->getManager()->getConnection()->query($sql)->fetch()['count'];
   }
 
+
+  /**
+   * @param ObjectManager $manager
+   * @param Location $location
+   * @param Client $client
+   * @param $ulnCountryCode
+   * @param $ulnNumber
+   * @param int $loopCount
+   * @param int $maxRetries
+   * @return \AppBundle\Component\HttpFoundation\JsonResponse|Tag
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function restoreTagWithPrimaryKeyCheck(ObjectManager $manager, Location $location, Client $client, $ulnCountryCode, $ulnNumber, $loopCount = 1, $maxRetries = 20)
+  {
+    try {
+      $tagToRestore = new Tag();
+      $tagToRestore->setLocation($location);
+      $tagToRestore->setOrderDate(new \DateTime());
+      $tagToRestore->setOwner($client);
+      $tagToRestore->setTagStatus(TagStateType::UNASSIGNED);
+      $tagToRestore->setUlnCountryCode($ulnCountryCode);
+      $tagToRestore->setUlnNumber($ulnNumber);
+      $tagToRestore->setAnimalOrderNumber(StringUtil::getLast5CharactersFromString($ulnNumber));
+      $manager->persist($tagToRestore);
+      $manager->flush();
+      return $tagToRestore;
+
+    } catch (UniqueConstraintViolationException $exception) {
+      SqlUtil::bumpPrimaryKeySeq($this->getConnection(), 'tag');
+
+      if($loopCount <= $maxRetries) {
+        $this->restoreTagWithPrimaryKeyCheck($manager, $location, $client, $ulnCountryCode, $ulnNumber, $loopCount++, $maxRetries);
+      }
+
+      return Validator::createJsonResponse($exception, 428);
+    }
+  }
+
+
+  /**
+   * @param array $tags
+   * @return bool
+   */
+  public function unassignTags(array $tags)
+  {
+    $tagIdsToUnassign = [];
+    $incorrectTagCount = 0;
+    foreach ($tags as $key => $tag) {
+      if($tag instanceof Tag) {
+        if($tag->getTagStatus() != TagStateType::UNASSIGNED && $tag->getId() != null) {
+          $tagIdsToUnassign[] = $tag->getId();
+          continue;
+        }
+      }
+      $incorrectTagCount++;
+    }
+    if(count($tagIdsToUnassign) > 0) {
+      return $this->unassignTagsById($tagIdsToUnassign);
+    }
+    return $incorrectTagCount == 0;
+  }
+  
+
+  /**
+   * @param array $tagIds
+   * @return bool
+   * @throws \Doctrine\DBAL\DBALException
+   */
+  public function unassignTagsById(array $tagIds)
+  {
+    if(count($tagIds) == 0) { return true; }
+
+    $incorrectIdCount = 0;
+    foreach ($tagIds as $key => $tagId) {
+      if(!ctype_digit($tagId) && !is_int($tagId)) {
+        $incorrectIdCount++;
+        unset($tagIds[$key]);
+        continue;
+      }
+    }
+
+    $filterString = SqlUtil::getFilterStringByIdsArray($tagIds);
+    if($filterString != '') {
+      $sql = "UPDATE tag SET tag_status = '".TagStateType::UNASSIGNED."' WHERE ".$filterString;
+      $this->getConnection()->exec($sql);
+    }
+
+    return $incorrectIdCount == 0;
+  }
 }
