@@ -11,6 +11,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Output\CompanyProfileOutput;
 use AppBundle\Output\DashboardOutput;
 use AppBundle\Output\LoginOutput;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -34,6 +35,9 @@ class DashboardAPIController extends APIController {
     $client = $this->getAuthenticatedUser($request);
     $location = $this->getSelectedLocation($request);
 
+    if($client == null) { return Validator::createJsonResponse('Client cannot be null', 428); }
+    if($location == null) { return Validator::createJsonResponse('Location cannot be null', 428); }
+    
     $errorMessageForDateIsNull = "";
     
     /** @var DeclareBaseRepository $declareBaseRepository */

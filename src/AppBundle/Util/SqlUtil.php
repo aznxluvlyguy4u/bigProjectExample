@@ -15,6 +15,20 @@ class SqlUtil
     const NULL = 'NULL';
     const DATE_FORMAT = 'Y-m-d H:i:s';
 
+
+    /**
+     * @param Connection $conn
+     * @param $tableName
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function bumpPrimaryKeySeq(Connection $conn, $tableName)
+    {
+        $tableName = strtolower($tableName);
+        $sql = "SELECT setval('".$tableName."_id_seq', (SELECT MAX(id) FROM ".$tableName.")+1)";
+        $conn->exec($sql);
+    }
+
+
     /**
      * @param mixed $value
      * @param boolean $includeQuotes
@@ -285,6 +299,31 @@ class SqlUtil
                 $group[] = $result[$columnHeader];
                 $groupedResults[$columnHeader] = $group;                                
             }
+        }
+        return $groupedResults;
+    }
+
+
+    /**
+     * @param string|int $key
+     * @param array $results
+     * @return array
+     */
+    public static function groupSqlResultsGroupedBySingleVariable($key, $results)
+    {
+        $groupedResults = [];
+        if(!is_array($results)) { return $groupedResults; }
+        if(count($results) == 0) { return $groupedResults; }
+        if(!array_key_exists($key, $results[0])) { return $groupedResults; }
+
+        foreach ($results as $result) {
+            if(array_key_exists($key, $groupedResults)) {
+                $group = $groupedResults[$key];
+            } else {
+                $group = [];
+            }
+            $group[] = $result[$key];
+            $groupedResults[$key] = $group;
         }
         return $groupedResults;
     }

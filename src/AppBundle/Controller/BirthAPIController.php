@@ -198,6 +198,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         $litterId = $content['litter_id'];
         $repository = $this->getDoctrine()->getRepository(Litter::class);
+        /** @var Litter $litter */
         $litter = $repository->findOneBy(array ('id' => $litterId));
 
         if (!$litter) {
@@ -210,6 +211,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
               ), $statusCode);
         }
 
+        $litterClone = clone $litter;
         $childrenToRemove = [];
         $stillbornsToRemove = [];
         $maxMonthInterval = 1;
@@ -230,13 +232,15 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                   ), $statusCode);
             }
         }
-
-        //Add check to see if revoke is allowed within MAX_TIME_INTERVAL
+        
         //Remove still born childs
         foreach ($litter->getStillborns() as $stillborn) {
             $manager->remove($stillborn);
             $stillbornsToRemove[] = $stillborn;
         }
+
+        //Send workerTask to update productionValues of parents
+        $this->sendTaskToQueue(WorkerTaskUtil::createResultTableMessageBodyForBirthRevoke($litter));
 
         //Remove alive child animal
         /** @var Animal $child */
@@ -303,13 +307,8 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                 $manager->remove($genderHistory);
             }
 
-            //Remove animalCache
-            //$animalCache = $manager->getRepository(AnimalCache::class)->findOneBy(['animalId' => $child->getId()]);
-
-//            if($animalCache){
-//                $manager->remove($animalCache);
-//                $manager->flush();
-//            }
+            //Flush the removes separately
+            $manager->flush();
 
             //Restore tag if it does not exist
             /** @var Tag $tagToRestore */
@@ -321,19 +320,12 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
             if ($tagToRestore) {
                 $tagToRestore->setTagStatus(TagStateType::UNASSIGNED);
+                $manager->persist($tagToRestore);
+                $manager->flush();
             } else {
-                $tagToRestore = new Tag();
-                $tagToRestore->setLocation($location);
-                $tagToRestore->setOrderDate(new \DateTime());
-                $tagToRestore->setOwner($client);
-                $tagToRestore->setTagStatus(TagStateType::UNASSIGNED);
-                $tagToRestore->setUlnCountryCode($child->getUlnCountryCode());
-                $tagToRestore->setUlnNumber($child->getUlnNumber());
-                $tagToRestore->setAnimalOrderNumber($child->getAnimalOrderNumber());
+                $tagToRestore = $tagRepository->restoreTagWithPrimaryKeyCheck($manager, $location, $client, $child->getUlnCountryCode(), $child->getUlnNumber());
+                if($tagToRestore instanceof JsonResponse) { return $tagToRestore; }
             }
-
-            $manager->persist($tagToRestore);
-            $manager->flush();
 
             //Remove child from location
             if ($location->getAnimals()->contains($child)) {
@@ -384,6 +376,12 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
 
         $manager->flush();
 
+        //Send workerTask to update productionValues of parents
+        $this->sendTaskToQueue(WorkerTaskUtil::createResultTableMessageBodyForBirthRevoke($litterClone));
+
+        //Clear cache for this location, to reflect changes on the livestock.
+        $this->clearLivestockCacheForLocation($location);
+
         //Re-retrieve litter, check count
         /** @var Litter $litter */
         $litter = $repository->findOneBy(array ('id'=> $litterId));
@@ -419,13 +417,18 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             $manager->flush();
 
             $revokeMessages = [];
+            $declareBirthCount = 0;
+            $declareBirthResponseCount = 0;
             //Create revoke request for every declareBirth request
             if ($litter->getDeclareBirths()->count() > 0) {
                 foreach ($litter->getDeclareBirths() as $declareBirth) {
+                    $declareBirthCount++;
                     $declareBirthResponse = $this->getEntityGetter()
                       ->getResponseDeclarationByMessageId($declareBirth->getMessageId());
 
                     if ($declareBirthResponse) {
+                        $declareBirthResponseCount++;
+                        //Only successful responses contain messageNumbers and can be revoked
                         if($declareBirthResponse->getMessageNumber() != null) {
                             $message = new ArrayCollection();
                             $message->set(Constant::MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE, $declareBirthResponse->getMessageNumber());
@@ -439,13 +442,24 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
                 }
             }
 
-            //Send workerTask to update productionValues of parents
-            $this->sendTaskToQueue(WorkerTaskUtil::createResultTableMessageBodyByLitter($litter));
-            
-            //Clear cache for this location, to reflect changes on the livestock
-            $this->clearLivestockCacheForLocation($location);
+            //Create response
+            $statusCode = 200;
+            $message = 'OK';
 
-            return new JsonResponse(array(Constant::RESULT_NAMESPACE => $revokeMessages), 200);
+            $missingMessages = $declareBirthCount-$declareBirthResponseCount;
+            if ($declareBirthCount > $declareBirthResponseCount) {
+                $message = 'There are '.$declareBirthCount.' declareBirths found for the litter, which are missing '.$missingMessages.' responses';
+                $statusCode = 428;
+            } elseif($declareBirthCount == 0) {
+                $message = 'The litter does not contain any declareBirths';
+                $statusCode = 428;
+            }
+
+            return new JsonResponse(array(Constant::RESULT_NAMESPACE => [
+                'code' => $statusCode,
+                'revokes' => $revokeMessages,
+                'message' => $message,
+            ]), $statusCode);
         }
 
         return new JsonResponse(
@@ -767,11 +781,13 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             //Check if Mother has children that are born in the last 5,5 months if so, it is not a true candidate
             /** @var Animal $child */
             foreach ($children as $child) {
-                $daysbetweenCurrentBirthAndPreviousBirths = TimeUtil::getDaysBetween($child->getDateOfBirth(), $dateOfBirth);
+                if($child->getDateOfBirth()) {
+                    $daysbetweenCurrentBirthAndPreviousBirths = TimeUtil::getDaysBetween($child->getDateOfBirth(), $dateOfBirth);
 
-                if(!($daysbetweenCurrentBirthAndPreviousBirths >= $minimumDaysBetweenBirths)) {
-                    $checkAnimalForMatings = false;
-                    break;
+                    if(!($daysbetweenCurrentBirthAndPreviousBirths >= $minimumDaysBetweenBirths)) {
+                        $checkAnimalForMatings = false;
+                        break;
+                    }
                 }
             }
 

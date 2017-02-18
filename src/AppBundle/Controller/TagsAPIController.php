@@ -55,7 +55,7 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
     if(!$isValidUlnFormat){
       return new JsonResponse(
           array("errorCode" => 428,
-              "errorMessage" => "Given tagId format is invalid, supply tagId in the following format: AZ123456789"), 200);
+              "errorMessage" => "Given tagId format is invalid, supply tagId in the following format: AZ123456789"), 428);
     }
 
     $client = $this->getAuthenticatedUser($request);
@@ -64,7 +64,7 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
     if($tag == null) {
       return new JsonResponse(
           array("errorCode" => 400,
-              "errorMessage" => "No tag found"), 200);
+              "errorMessage" => "No tag found"), 400);
     } else {
       return new JsonResponse($tag, 200);
     }

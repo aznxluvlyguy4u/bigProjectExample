@@ -14,6 +14,7 @@ use JMS\Serializer\Annotation\Expose;
 
 /**
  * Class AnimalResidence
+ * @ORM\Table(name="animal_residence",indexes={@ORM\Index(name="residence_idx", columns={"location_id", "animal_id"})})
  * @ORM\Entity(repositoryClass="AppBundle\Entity\AnimalResidenceRepository")
  * @package AppBundle\Entity
  * @ExclusionPolicy("all")
