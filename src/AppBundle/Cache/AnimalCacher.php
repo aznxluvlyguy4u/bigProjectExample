@@ -1149,6 +1149,77 @@ class AnimalCacher
                            INNER JOIN animal_cache c ON c.animal_id = a.id
                          WHERE date_of_birth ISNULL AND l.status <> '".RequestStateType::REVOKED."' ".$animalIdFilterString."
                          GROUP BY a.id
+                         
+                         UNION
+
+                         SELECT
+                           a.id    AS animal_id,
+                           g.animal_cache_id AS animal_cache_id,
+                           NULL      AS age_in_nsfo_system,
+                           NULL      AS litter_count,
+                           NULL      AS total_born_count,
+                           NULL      AS born_alive_count,
+                           FALSE     AS has_one_year_mark,
+                           TRUE      AS update_production
+                         FROM animal a
+                           INNER JOIN animal_cache c ON c.animal_id = a.id
+                           INNER JOIN (
+                                        SELECT DISTINCT
+                                          (a.id)    AS animal_id,
+                                          MAX(c.id) AS animal_cache_id,
+                                          COUNT(animal_father_id) = 0
+                                          AND (
+                                            MAX(c.production_age) NOTNULL OR
+                                            MAX(c.litter_count) NOTNULL OR
+                                            MAX(c.total_offspring_count) NOTNULL OR
+                                            MAX(c.born_alive_offspring_count) NOTNULL OR
+                                            BOOL_AND(c.gave_birth_as_one_year_old) = TRUE
+                                          ) AS update_production
+                                        FROM animal a
+                                          INNER JOIN animal_cache c ON c.animal_id = a.id
+                                          LEFT JOIN
+                                          ( SELECT * FROM litter WHERE status <> '".RequestStateType::REVOKED."'
+                                          )l ON l.animal_father_id = a.id
+                                        WHERE a.type = 'Ram' ".$animalIdFilterString."
+                                        GROUP BY a.id
+                                      )g ON g.animal_id = a.id
+                         WHERE g.update_production = TRUE
+                
+                         UNION
+                
+                         SELECT
+                           a.id    AS animal_id,
+                           g.animal_cache_id AS animal_cache_id,
+                           NULL      AS age_in_nsfo_system,
+                           NULL      AS litter_count,
+                           NULL      AS total_born_count,
+                           NULL      AS born_alive_count,
+                           FALSE     AS has_one_year_mark,
+                           TRUE      AS update_production
+                         FROM animal a
+                           INNER JOIN animal_cache c ON c.animal_id = a.id
+                           INNER JOIN (
+                                        SELECT DISTINCT
+                                          (a.id)    AS animal_id,
+                                          MAX(c.id) AS animal_cache_id,
+                                          COUNT(animal_mother_id) = 0
+                                          AND (
+                                            MAX(c.production_age) NOTNULL OR
+                                            MAX(c.litter_count) NOTNULL OR
+                                            MAX(c.total_offspring_count) NOTNULL OR
+                                            MAX(c.born_alive_offspring_count) NOTNULL OR
+                                            BOOL_AND(c.gave_birth_as_one_year_old) = TRUE
+                                          ) AS update_production
+                                        FROM animal a
+                                          INNER JOIN animal_cache c ON c.animal_id = a.id
+                                          LEFT JOIN
+                                          ( SELECT * FROM litter WHERE status <> '".RequestStateType::REVOKED."'
+                                          )l ON l.animal_mother_id = a.id
+                                        WHERE a.type = 'Ewe' ".$animalIdFilterString."
+                                        GROUP BY a.id
+                                      )g ON g.animal_id = a.id
+                         WHERE g.update_production = TRUE
+                         
                        ) AS v(animal_id, animal_cache_id, production_age, litter_count, total_born_count, born_alive_count, gave_birth_as_one_year_old, update_production)
                   WHERE v.update_production = TRUE AND animal_cache.id = v.animal_cache_id
                   RETURNING 1

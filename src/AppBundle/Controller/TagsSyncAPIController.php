@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Util\Validator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -126,6 +127,9 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
     $client = $this->getAuthenticatedUser($request);
     $loggedInUser = $this->getLoggedInUser($request);
     $location = $this->getSelectedLocation($request);
+
+    if($client == null) { return Validator::createJsonResponse('Client cannot be null', 428); }
+    if($location == null) { return Validator::createJsonResponse('Location cannot be null', 428); }
 
     //Convert the array into an object and add the mandatory values retrieved from the database
     $retrieveEartagsRequest = $this->buildMessageObject(RequestType::RETRIEVE_TAGS_ENTITY, $content, $client, $loggedInUser, $location);

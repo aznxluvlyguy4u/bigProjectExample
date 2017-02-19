@@ -15,6 +15,10 @@ class WorkerTaskScope
     const N_LING = 'N_LING';
     const PRODUCTION = 'PRODUCTION';
 
+    //DeclareBirth
+    const BIRTH = 'BIRTH';
+    const BIRTH_REVOKE = 'BIRTH_REVOKE';
+
     //Measurements
     const EXTERIOR = 'EXTERIOR';
     const WEIGHT = 'WEIGHT';
