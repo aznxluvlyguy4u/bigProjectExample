@@ -449,7 +449,7 @@ class IRSerializer implements IRSerializerInterface
                 } else if ($tagToReserve->getLocation()) {
                     if ($tagToReserve->getLocation()->getId() == $location->getId()) {
                         $tags[$uln] = $tagToReserve;
-                        break;
+                        continue;
                     }
                 }
                 return Validator::createJsonResponse("Opgegeven oormerk: " . $uln . " is niet geregistreerd voor dit UBN: " . $location->getUbn(), $statusCode);
@@ -591,6 +591,7 @@ class IRSerializer implements IRSerializerInterface
                     $tagToReserve = ArrayUtil::get($uln, $tags);
 
                     if(!$tagToReserve) {
+                        $tagRepository->unassignTags($tags);
                         return Validator::createJsonResponse("Opgegeven vrije oormerk: " .$uln ." voor het lam, is niet gevonden.", $statusCode);
                     }
 
