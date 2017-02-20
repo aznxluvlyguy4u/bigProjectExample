@@ -174,6 +174,13 @@ class ExteriorValidator extends BaseValidator
                 if($isNewDateStringValid) {
                     $newMeasurementDate = new \DateTime($newMeasurementDateString);
 
+                    //MeasurementDate cannot be in the future
+                    if(TimeUtil::isDateInFuture($newMeasurementDate)) {
+                        $this->errors[] = 'The measurementDate cannot be in the future';
+                        $this->isInputValid = false;
+                        return false;
+                    }
+                    
                     //Check for duplicate dates only if the date is actually changed
                     if(TimeUtil::isDateTimesOnTheSameDay($newMeasurementDate, $this->measurementDate) && !$this->isEdit) {
 
