@@ -101,7 +101,7 @@ class Exterior extends Measurement {
      * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
-    private $generalAppearence;
+    private $generalAppearance;
 
     /**
      * @var float
@@ -157,7 +157,7 @@ class Exterior extends Measurement {
       $this->exteriorType = 0.00;
       $this->legWork = 0.00;
       $this->fur = 0.00;
-      $this->generalAppearence = 0.00;
+      $this->generalAppearance = 0.00;
       $this->height = 0.00;
       $this->breastDepth = 0.00;
       $this->torsoLength = 0.00;
@@ -189,7 +189,7 @@ class Exterior extends Measurement {
         $this->exteriorType > $minLimit ||
         $this->legWork > $minLimit ||
         $this->fur > $minLimit ||
-        $this->generalAppearence > $minLimit ||
+        $this->generalAppearance > $minLimit ||
         $this->height > $minLimit ||
         $this->breastDepth > $minLimit ||
         $this->torsoLength > $minLimit ||
@@ -350,27 +350,27 @@ class Exterior extends Measurement {
     }
 
     /**
-     * Set generalAppearence
+     * Set generalAppearance
      *
-     * @param float $generalAppearence
+     * @param float $generalAppearance
      *
      * @return Exterior
      */
-    public function setGeneralAppearence($generalAppearence)
+    public function setGeneralAppearance($generalAppearance)
     {
-        $this->generalAppearence = $generalAppearence;
+        $this->generalAppearance = $generalAppearance;
 
         return $this;
     }
 
     /**
-     * Get generalAppearence
+     * Get generalAppearance
      *
      * @return float
      */
-    public function getGeneralAppearence()
+    public function getGeneralAppearance()
     {
-        return $this->generalAppearence;
+        return $this->generalAppearance;
     }
 
     /**
