@@ -19,6 +19,7 @@ use AppBundle\Entity\MeasurementRepository;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\Person;
 use AppBundle\JsonFormat\ValidationResults;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -401,8 +402,13 @@ class ExteriorValidator extends BaseValidator
 
     private function validateInspectorId()
     {
-        $inspectorNotNull = $this->content->containsKey(JsonInputConstant::INSPECTOR_ID);
-        $isInspectorBlank = !$inspectorNotNull;
+        $inspectorId = null;
+        $inspector = $this->content->get(JsonInputConstant::INSPECTOR);
+        if($inspector) {
+            $inspectorId = ArrayUtil::get(JsonInputConstant::PERSON_ID, $inspector);
+        }
+
+        $isInspectorBlank = $inspectorId == null;
 
         if($isInspectorBlank && $this->allowBlankInspector) {
             /*
@@ -411,8 +417,6 @@ class ExteriorValidator extends BaseValidator
              */
             return true;
         }
-
-        $inspectorId = $this->content->get(JsonInputConstant::INSPECTOR_ID);
 
         /** @var InspectorRepository $repository */
         $inspectorRepository = $this->manager->getRepository(Inspector::class);
