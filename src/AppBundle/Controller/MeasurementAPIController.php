@@ -377,7 +377,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
         $currentKind = $exterior->getKind();
         $output = MeasurementsUtil::getExteriorKindsOutput($em, $animal, $currentKind);
 
-        return Validator::createJsonResponse($output, 200);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
     }
 
 
