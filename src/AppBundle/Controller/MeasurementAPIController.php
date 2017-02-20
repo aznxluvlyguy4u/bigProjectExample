@@ -134,7 +134,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             $code = 200;
         }
 
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $output, Constant::CODE_NAMESPACE => $code], $code);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], $code);
     }
 
 
@@ -262,7 +262,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
 
         }
 
-        return Validator::createJsonResponse($output, $code);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], $code);
     }
 
 
