@@ -82,7 +82,6 @@ abstract class Measurement {
      *
      * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="action_by_id", referencedColumnName="id")
-     * @JMS\Groups({"USER_MEASUREMENT"})
      */
     protected $actionBy;
 

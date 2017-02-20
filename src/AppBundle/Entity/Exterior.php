@@ -146,7 +146,6 @@ class Exterior extends Measurement {
     /**
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="exteriorMeasurements")
      * @JMS\Type("AppBundle\Entity\Animal")
-     * @JMS\Groups({"USER_MEASUREMENT"})
      */
     private $animal;
 
