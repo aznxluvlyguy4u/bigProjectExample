@@ -116,7 +116,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             $exterior->setExteriorType($exteriorValidator->getExteriorType());
             $exterior->setLegWork($exteriorValidator->getLegWork());
             $exterior->setFur($exteriorValidator->getFur());
-            $exterior->setGeneralAppearence($exteriorValidator->getGeneralAppearence());
+            $exterior->setGeneralAppearance($exteriorValidator->getGeneralAppearance());
             $exterior->setHeight($exteriorValidator->getHeight());
             $exterior->setBreastDepth($exteriorValidator->getBreastDepth());
             $exterior->setTorsoLength($exteriorValidator->getTorsoLength());
@@ -243,7 +243,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             $exterior->setExteriorType($exteriorValidator->getExteriorType());
             $exterior->setLegWork($exteriorValidator->getLegWork());
             $exterior->setFur($exteriorValidator->getFur());
-            $exterior->setGeneralAppearence($exteriorValidator->getGeneralAppearence());
+            $exterior->setGeneralAppearance($exteriorValidator->getGeneralAppearance());
             $exterior->setHeight($exteriorValidator->getHeight());
             $exterior->setBreastDepth($exteriorValidator->getBreastDepth());
             $exterior->setTorsoLength($exteriorValidator->getTorsoLength());

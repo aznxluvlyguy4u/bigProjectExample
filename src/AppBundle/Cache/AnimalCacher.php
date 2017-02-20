@@ -752,7 +752,7 @@ class AnimalCacher
                   exterior_type = v.exterior_type,
                   leg_work = v.leg_work,
                   fur = v.fur,
-                  general_appearance = v.general_appearence,
+                  general_appearance = v.general_appearance,
                   height = v.height,
                   breast_depth = v.breast_depth,
                   torso_length = v.torso_length,
@@ -762,7 +762,7 @@ class AnimalCacher
                   exterior_measurement_date = v.measurement_date,
                   log_date = '".TimeUtil::getTimeStampNow()."'
                 FROM (
-                  SELECT x.animal_id, x.skull, x.muscularity, x.proportion, x.exterior_type, x.leg_work, x.fur, x.general_appearence,
+                  SELECT x.animal_id, x.skull, x.muscularity, x.proportion, x.exterior_type, x.leg_work, x.fur, x.general_appearance,
                     x.height, x.breast_depth, x.torso_length, x.markings, x.kind, x.progress, m.measurement_date
                   FROM exterior x
                   INNER JOIN measurement m ON x.id = m.id
@@ -782,7 +782,7 @@ class AnimalCacher
                     c.exterior_type ISNULL OR c.exterior_type <> x.exterior_type OR
                     c.leg_work ISNULL OR c.leg_work <> x.leg_work OR
                     c.fur ISNULL OR c.fur <> x.fur OR
-                    c.general_appearance ISNULL OR c.general_appearance <> x.general_appearence OR
+                    c.general_appearance ISNULL OR c.general_appearance <> x.general_appearance OR
                     c.height ISNULL OR c.height <> x.height OR
                     c.breast_depth ISNULL OR c.breast_depth <> x.breast_depth OR
                     c.torso_length ISNULL OR c.torso_length <> x.torso_length OR
@@ -792,7 +792,7 @@ class AnimalCacher
                     c.exterior_measurement_date ISNULL OR c.exterior_measurement_date <> m.measurement_date
                   )
                        -- AND a.location_id = 00000 < filter location_id here when necessary
-                ) AS v(animal_id, skull, muscularity, proportion, exterior_type, leg_work, fur, general_appearence,
+                ) AS v(animal_id, skull, muscularity, proportion, exterior_type, leg_work, fur, general_appearance,
                 height, breast_depth, torso_length, markings, kind, progress, measurement_date) WHERE animal_cache.animal_id = v.animal_id
                   RETURNING 1
                 )
