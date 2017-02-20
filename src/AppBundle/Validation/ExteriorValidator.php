@@ -312,10 +312,10 @@ class ExteriorValidator extends BaseValidator
             case JsonInputConstant::PROGRESS:       $this->progress = $value; break;
             case JsonInputConstant::MUSCULARITY:    $this->muscularity = $value; break;
             case JsonInputConstant::PROPORTION:     $this->proportion = $value; break;
-            case JsonInputConstant::TYPE:           $this->exteriorType = $value; break;
+            case JsonInputConstant::EXTERIOR_TYPE:  $this->exteriorType = $value; break;
             case JsonInputConstant::LEG_WORK:       $this->legWork = $value; break;
             case JsonInputConstant::FUR:            $this->fur = $value; break;
-            case JsonInputConstant::GENERAL_APPEARANCE: $this->generalAppearence = $value; break;
+            case JsonInputConstant::GENERAL_APPEARENCE:     $this->generalAppearence = $value; break;
             case JsonInputConstant::HEIGHT:         $this->height = $value; break;
             case JsonInputConstant::BREAST_DEPTH:   $this->breastDepth = $value; break;
             case JsonInputConstant::TORSO_LENGTH:   $this->torsoLength = $value; break;
