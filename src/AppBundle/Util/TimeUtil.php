@@ -26,6 +26,16 @@ class TimeUtil
 
     /**
      * @param \DateTime $dateTime
+     * @return bool
+     */
+    public static function isDateInFuture(\DateTime $dateTime) {
+        $timeIntervalInDaysFromNow = TimeUtil::getDaysBetween(new \DateTime(), $dateTime);
+        return $timeIntervalInDaysFromNow > 0;
+    }
+
+
+    /**
+     * @param \DateTime $dateTime
      * @return \DateTime
      */
     public static function getDayOfDateTime(\DateTime $dateTime)
