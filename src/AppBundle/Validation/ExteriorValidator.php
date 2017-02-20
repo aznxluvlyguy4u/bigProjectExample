@@ -65,7 +65,7 @@ class ExteriorValidator extends BaseValidator
     private $fur;
 
     /** @var float */
-    private $generalAppearence;
+    private $generalAppearance;
 
     /** @var float */
     private $height;
@@ -223,7 +223,7 @@ class ExteriorValidator extends BaseValidator
             JsonInputConstant::EXTERIOR_TYPE,
             JsonInputConstant::LEG_WORK,
             JsonInputConstant::FUR,
-            JsonInputConstant::GENERAL_APPEARENCE,
+            JsonInputConstant::GENERAL_APPEARANCE,
             JsonInputConstant::HEIGHT,
             JsonInputConstant::BREAST_DEPTH,
             JsonInputConstant::TORSO_LENGTH,
@@ -314,7 +314,7 @@ class ExteriorValidator extends BaseValidator
             case JsonInputConstant::EXTERIOR_TYPE:  $this->exteriorType = $value; break;
             case JsonInputConstant::LEG_WORK:       $this->legWork = $value; break;
             case JsonInputConstant::FUR:            $this->fur = $value; break;
-            case JsonInputConstant::GENERAL_APPEARENCE:     $this->generalAppearence = $value; break;
+            case JsonInputConstant::GENERAL_APPEARANCE:     $this->generalAppearance = $value; break;
             case JsonInputConstant::HEIGHT:         $this->height = $value; break;
             case JsonInputConstant::BREAST_DEPTH:   $this->breastDepth = $value; break;
             case JsonInputConstant::TORSO_LENGTH:   $this->torsoLength = $value; break;
@@ -368,7 +368,7 @@ class ExteriorValidator extends BaseValidator
             JsonInputConstant::EXTERIOR_TYPE    => self::DEFAULT_MIN_EXTERIOR_VALUE,
             JsonInputConstant::LEG_WORK     => self::DEFAULT_MIN_EXTERIOR_VALUE,
             JsonInputConstant::FUR          => self::DEFAULT_MIN_EXTERIOR_VALUE,
-            JsonInputConstant::GENERAL_APPEARENCE => self::DEFAULT_MIN_EXTERIOR_VALUE,
+            JsonInputConstant::GENERAL_APPEARANCE => self::DEFAULT_MIN_EXTERIOR_VALUE,
             JsonInputConstant::HEIGHT       => 0,
             JsonInputConstant::BREAST_DEPTH => 0,
             JsonInputConstant::TORSO_LENGTH => 0,
@@ -390,7 +390,7 @@ class ExteriorValidator extends BaseValidator
             JsonInputConstant::EXTERIOR_TYPE    => self::DEFAULT_MAX_EXTERIOR_VALUE,
             JsonInputConstant::LEG_WORK     => self::DEFAULT_MAX_EXTERIOR_VALUE,
             JsonInputConstant::FUR          => self::DEFAULT_MAX_EXTERIOR_VALUE,
-            JsonInputConstant::GENERAL_APPEARENCE => self::DEFAULT_MAX_EXTERIOR_VALUE,
+            JsonInputConstant::GENERAL_APPEARANCE => self::DEFAULT_MAX_EXTERIOR_VALUE,
             JsonInputConstant::HEIGHT       => self::DEFAULT_MAX_EXTERIOR_VALUE,
             JsonInputConstant::BREAST_DEPTH => self::DEFAULT_MAX_EXTERIOR_VALUE,
             JsonInputConstant::TORSO_LENGTH => self::DEFAULT_MAX_EXTERIOR_VALUE,
@@ -509,9 +509,9 @@ class ExteriorValidator extends BaseValidator
     /**
      * @return float
      */
-    public function getGeneralAppearence()
+    public function getGeneralAppearance()
     {
-        return $this->generalAppearence;
+        return $this->generalAppearance;
     }
 
     /**

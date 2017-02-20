@@ -66,7 +66,7 @@ class ExteriorRepository extends MeasurementRepository {
                 JsonInputConstant::EXTERIOR_TYPE => Utils::fillNullOrEmptyString($measurementData['exterior_type'], $nullFiller),
                 JsonInputConstant::LEG_WORK => Utils::fillNullOrEmptyString($measurementData['leg_work'], $nullFiller),
                 JsonInputConstant::FUR => Utils::fillNullOrEmptyString($measurementData['fur'], $nullFiller),
-                JsonInputConstant::GENERAL_APPEARENCE => Utils::fillNullOrEmptyString($measurementData['general_appearence'], $nullFiller),
+                JsonInputConstant::GENERAL_APPEARANCE => Utils::fillNullOrEmptyString($measurementData['general_appearance'], $nullFiller),
                 JsonInputConstant::BREAST_DEPTH => Utils::fillNullOrEmptyString($measurementData['breast_depth'], $nullFiller),
                 JsonInputConstant::TORSO_LENGTH => Utils::fillNullOrEmptyString($measurementData['torso_length'], $nullFiller),
                 JsonInputConstant::MARKINGS => Utils::fillNullOrEmptyString($measurementData['markings'], $nullFiller),
@@ -115,7 +115,7 @@ class ExteriorRepository extends MeasurementRepository {
 
 
     /**
-     * NOTE! general_appearence is returned spelling corrected as general_appearance
+     * NOTE! general_appearance is returned spelling corrected as general_appearance
      *
      * @param int $animalId
      * @param string $replacementString
@@ -145,7 +145,7 @@ class ExteriorRepository extends MeasurementRepository {
         if(!is_int($animalId)) { return $nullResult; }
 
         $sqlBase = "SELECT x.id, x.animal_id, x.skull, x.muscularity, x.proportion, x.exterior_type, x.leg_work,
-                      x.fur, x.general_appearence as general_appearance, x.height, x.breast_depth, x.torso_length, x.markings, x.kind, x.progress, m.measurement_date
+                      x.fur, x.general_appearance as general_appearance, x.height, x.breast_depth, x.torso_length, x.markings, x.kind, x.progress, m.measurement_date
                     FROM exterior x
                       INNER JOIN measurement m ON x.id = m.id
                       INNER JOIN (
@@ -207,7 +207,7 @@ class ExteriorRepository extends MeasurementRepository {
             $sql = "
               SELECT MIN(measurement.id) as min_id
               FROM measurement INNER JOIN exterior x ON measurement.id = x.id 
-              GROUP BY measurement_date, type, x.animal_id, x.kind, x.skull, x.muscularity, x.progress, x.proportion, x.exterior_type, x.leg_work, x.fur, x.general_appearence, x.height, x.breast_depth, x.torso_length, x.markings 
+              GROUP BY measurement_date, type, x.animal_id, x.kind, x.skull, x.muscularity, x.progress, x.proportion, x.exterior_type, x.leg_work, x.fur, x.general_appearance, x.height, x.breast_depth, x.torso_length, x.markings 
               HAVING COUNT(*) > 1";
             $results = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
@@ -482,7 +482,7 @@ class ExteriorRepository extends MeasurementRepository {
                                SELECT m.animal_id_and_date
                                FROM measurement m
                                  INNER JOIN exterior x ON m.id = x.id
-                               GROUP BY m.animal_id_and_date, type, x.animal_id, x.skull, x.muscularity, x.proportion, x.exterior_type, x.leg_work, x.fur, x.general_appearence, x.breast_depth, x.torso_length, x.markings
+                               GROUP BY m.animal_id_and_date, type, x.animal_id, x.skull, x.muscularity, x.proportion, x.exterior_type, x.leg_work, x.fur, x.general_appearance, x.breast_depth, x.torso_length, x.markings
                                HAVING (COUNT(*) > 1)
                              ) t on t.animal_id_and_date = n.animal_id_and_date
                   INNER JOIN exterior z ON z.id = n.id
@@ -519,7 +519,7 @@ class ExteriorRepository extends MeasurementRepository {
     {
         if($isForExportFile) {
             $selectOutput = "CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn, a.name as AIIND, DATE(n.measurement_date) as meetdatum, DATE(a.date_of_birth) as geboortedatum,
-       z.kind as EXT_KIND, z.progress as ONT, z.skull as KOP, muscularity as SPIER, proportion as EVE, exterior_type as TYPE, leg_work as BEEN, fur as VACHT, general_appearence as ALG, height as HOOGTE, breast_depth as BORST_DIEPTE, torso_length as TORSO_LENGTE, markings as KENMERKEN, i.last_name as inspector";
+       z.kind as EXT_KIND, z.progress as ONT, z.skull as KOP, muscularity as SPIER, proportion as EVE, exterior_type as TYPE, leg_work as BEEN, fur as VACHT, general_appearance as ALG, height as HOOGTE, breast_depth as BORST_DIEPTE, torso_length as TORSO_LENGTE, markings as KENMERKEN, i.last_name as inspector";
         } else {
             $selectOutput = "n.id as measurement_id, a.id as animal_id, n.animal_id_and_date, inspector_id,
                       DATE(n.measurement_date) as measurement_date, CONCAT(a.uln_country_code, a.uln_number) as uln, 
@@ -635,7 +635,7 @@ class ExteriorRepository extends MeasurementRepository {
             $exterior1['exterior_type'] == $exterior2['exterior_type'] &&
             $exterior1['leg_work'] == $exterior2['leg_work'] &&
             $exterior1['fur'] == $exterior2['fur'] &&
-            $exterior1['general_appearence'] == $exterior2['general_appearence'] &&
+            $exterior1['general_appearance'] == $exterior2['general_appearance'] &&
             $exterior1['breast_depth'] == $exterior2['breast_depth'] &&
             $exterior1['torso_length'] == $exterior2['torso_length'] &&
             $exterior1['markings'] == $exterior2['markings'];
@@ -666,7 +666,7 @@ class ExteriorRepository extends MeasurementRepository {
             $exteriorArrayToDelete['exterior_type'] == $exteriorToKeep['exterior_type'] &&
             $exteriorArrayToDelete['leg_work'] == $exteriorToKeep['leg_work'] &&
             $exteriorArrayToDelete['fur'] == $exteriorToKeep['fur'] &&
-            $exteriorArrayToDelete['general_appearence'] == $exteriorToKeep['general_appearence'];
+            $exteriorArrayToDelete['general_appearance'] == $exteriorToKeep['general_appearance'];
 
 
         if(NullChecker::isNotNull($exteriorToKeep['kind'])) {
