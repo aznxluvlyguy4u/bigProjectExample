@@ -76,7 +76,7 @@ class ExteriorRepository extends MeasurementRepository {
             $personId = $measurementData['person_id'];
             if($personId != null && $personId != '') {
                 $results[$count][JsonInputConstant::INSPECTOR] = [
-                    JsonInputConstant::ID => $personId,
+                    JsonInputConstant::PERSON_ID => $personId,
                     JsonInputConstant::FIRST_NAME => Utils::fillNullOrEmptyString($measurementData['first_name'], $nullFiller),
                     JsonInputConstant::LAST_NAME => Utils::fillNullOrEmptyString($measurementData['last_name'], $nullFiller),
                 ];
