@@ -310,6 +310,7 @@ class MeasurementsUtil
             $kindsForOutput[] = $currentKind;
         }
 
+        sort($kindsForOutput);
         foreach ($kindsForOutput as $kind) {
             $output[] = ['code' => $kind];
         }
