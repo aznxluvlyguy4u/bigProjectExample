@@ -238,6 +238,18 @@ class MeasurementsUtil
      */
     public static function getExteriorKindsOutput(ObjectManager $em, Animal $animal, $currentKind = null, $filterByAnimalData = true)
     {
+        //TODO filter kinds based on previous ACTIVE exteriors AND age on measurementDate. For now just return all exteriorKinds
+        $kindsForOutput = ExteriorKind::getAll();
+
+        sort($kindsForOutput);
+        foreach ($kindsForOutput as $kind) {
+            $output[] = ['code' => $kind];
+        }
+
+        return $output;
+
+        /* */
+
         $output = [];
 
         if(!$filterByAnimalData) {
