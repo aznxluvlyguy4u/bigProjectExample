@@ -175,7 +175,7 @@ class Count
         
         $adultDateOfBirthLimit = Utils::getAdultDateStringOfBirthLimit();
 
-        $sql = "SELECT COUNT(date_of_birth), '".LiveStockType::PEDIGREE_ADULT."' as type FROM animal
+        $sql = "SELECT COUNT(animal.id), '".LiveStockType::PEDIGREE_ADULT."' as type FROM animal
                     LEFT JOIN pedigree_register r ON animal.pedigree_register_id = r.id
                 WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
                     AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
@@ -184,32 +184,30 @@ class Count
                     AND animal.date_of_birth <= '".$adultDateOfBirthLimit."'
                     AND r.is_registered_with_nsfo = TRUE  
                 UNION
-                SELECT COUNT(date_of_birth), '".LiveStockType::PEDIGREE_LAMB."' as type FROM animal
+                SELECT COUNT(animal.id), '".LiveStockType::PEDIGREE_TOTAL."' as type FROM animal
                     LEFT JOIN pedigree_register r ON animal.pedigree_register_id = r.id
                 WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
                     AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
                     AND location_id = ".$locationId."
                     AND pedigree_country_code NOTNULL AND animal.pedigree_number NOTNULL
-                    AND animal.date_of_birth > '".$adultDateOfBirthLimit."'
                     AND r.is_registered_with_nsfo = TRUE
                 UNION
-                SELECT COUNT(date_of_birth), '".LiveStockType::NON_PEDIGREE_ADULT."' as type FROM animal
+                SELECT COUNT(animal.id), '".LiveStockType::NON_PEDIGREE_ADULT."' as type FROM animal
                     LEFT JOIN pedigree_register r ON animal.pedigree_register_id = r.id
                 WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
                     AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
                     AND location_id = ".$locationId."
-                    AND (pedigree_country_code ISNULL OR animal.pedigree_number ISNULL)
+                    AND ((pedigree_country_code ISNULL OR animal.pedigree_number ISNULL) OR
+                         (r.is_registered_with_nsfo = FALSE OR r.is_registered_with_nsfo ISNULL))
                     AND animal.date_of_birth <= '".$adultDateOfBirthLimit."'
-                    AND (r.is_registered_with_nsfo = FALSE OR r.is_registered_with_nsfo ISNULL)
                 UNION
-                SELECT COUNT(date_of_birth), '".LiveStockType::NON_PEDIGREE_LAMB."' as type FROM animal
+                SELECT COUNT(animal.id), '".LiveStockType::NON_PEDIGREE_TOTAL."' as type FROM animal
                     LEFT JOIN pedigree_register r ON animal.pedigree_register_id = r.id
                 WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
                     AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
                     AND location_id = ".$locationId."
-                    AND (pedigree_country_code ISNULL OR animal.pedigree_number ISNULL)
-                    AND animal.date_of_birth > '".$adultDateOfBirthLimit."'
-                    AND (r.is_registered_with_nsfo = FALSE OR r.is_registered_with_nsfo ISNULL)";
+                    AND ((pedigree_country_code ISNULL OR animal.pedigree_number ISNULL) OR
+                         (r.is_registered_with_nsfo = FALSE OR r.is_registered_with_nsfo ISNULL))";
         $results = $em->getConnection()->query($sql)->fetchAll();
 
         $searchArray = [];
@@ -218,12 +216,12 @@ class Count
         }
 
         $pedigreeAdults = $searchArray[LiveStockType::PEDIGREE_ADULT];
-        $pedigreeLambs = $searchArray[LiveStockType::PEDIGREE_LAMB];
-        $nonPedigreeAdults = $searchArray[LiveStockType::NON_PEDIGREE_ADULT];
-        $nonPedigreeLambs = $searchArray[LiveStockType::NON_PEDIGREE_LAMB];
+        $pedigreeTotal = $searchArray[LiveStockType::PEDIGREE_TOTAL];
+        $pedigreeLambs = $pedigreeTotal - $pedigreeAdults;
 
-        $pedigreeTotal = $pedigreeAdults + $pedigreeLambs;
-        $nonPedigreeTotal = $nonPedigreeAdults + $nonPedigreeLambs;
+        $nonPedigreeAdults = $searchArray[LiveStockType::NON_PEDIGREE_ADULT];
+        $nonPedigreeTotal = $searchArray[LiveStockType::NON_PEDIGREE_TOTAL];
+        $nonPedigreeLambs = $nonPedigreeTotal - $nonPedigreeAdults;
 
         if($returnArrayWithLowerCaseKeys) {
             $count = []; 
