@@ -245,13 +245,21 @@ class MeasurementsUtil
             return $output;
         }
 
+        $animalId = null;
+        if($animal) {
+            $animalId = $animal->getId();
+            if(!is_int($animalId)) {
+                return $output;
+            }
+        }
+
         /** @var Connection $conn */
         $conn = $em->getConnection();
 
         //Create Kind searchArray
         $sql = "SELECT kind FROM measurement m
                     INNER JOIN exterior x ON x.id = m.id
-                    WHERE animal_id = 109
+                    WHERE animal_id = ".$animalId."
                 ORDER BY measurement_date DESC";
         $results = $conn->query($sql)->fetchAll();
 
