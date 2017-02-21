@@ -259,7 +259,7 @@ class MeasurementsUtil
         //Create Kind searchArray
         $sql = "SELECT kind FROM measurement m
                     INNER JOIN exterior x ON x.id = m.id
-                    WHERE animal_id = ".$animalId."
+                    WHERE animal_id = ".$animalId." AND m.is_active = TRUE
                 ORDER BY measurement_date DESC";
         $results = $conn->query($sql)->fetchAll();
 
