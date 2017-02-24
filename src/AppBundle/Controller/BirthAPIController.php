@@ -214,14 +214,14 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $litterClone = clone $litter;
         $childrenToRemove = [];
         $stillbornsToRemove = [];
-        $maxMonthInterval = 1;
+        $maxMonthInterval = 6;
 
         //Check if birth registration is within a time span of maxMonthInterval from now,
         //then, and only then, the revoke and thus deletion of child animal is allowed
         foreach ($litter->getChildren() as $child) {
             $dateInterval = $child->getDateOfBirth()->diff(new \DateTime());
 
-            if($dateInterval->y > 0 || $dateInterval->m >= $maxMonthInterval) {
+            if($dateInterval->y > 0 || $dateInterval->m > $maxMonthInterval) {
                 return new JsonResponse(
                   array (
                     Constant::RESULT_NAMESPACE => array (
