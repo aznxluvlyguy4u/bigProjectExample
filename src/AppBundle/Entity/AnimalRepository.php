@@ -898,7 +898,7 @@ class AnimalRepository extends BaseRepository
           JsonInputConstant::PEDIGREE_COUNTRY_CODE => Utils::fillNullOrEmptyString($record['pedigree_country_code'], $replacementString),
           JsonInputConstant::PEDIGREE_NUMBER => Utils::fillNullOrEmptyString($record['pedigree_number'], $replacementString),
           JsonInputConstant::GENDER => Utils::fillNullOrEmptyString($record['gender'], $replacementString),
-          JsonInputConstant::DATE_OF_BIRTH => Utils::fillNullOrEmptyString($record['date_of_birth'], $replacementString),
+          JsonInputConstant::DATE_OF_BIRTH => TimeUtil::getDateTimeFromNullCheckedArrayValue('date_of_birth', $record, $replacementString),
       ];
     }
     return $results;

@@ -49,8 +49,6 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
         /** @var ObjectManager $em */
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
-
-        /** @var Connection conn */
         $this->conn = $em->getConnection();
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);

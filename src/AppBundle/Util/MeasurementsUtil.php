@@ -4,10 +4,14 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Constant\MeasurementConstant;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\Weight;
+use AppBundle\Enumerator\ExteriorKind;
 use AppBundle\Enumerator\MeasurementType;
 use AppBundle\Enumerator\WeightType;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
+use Symfony\Component\Validator\Constraints\Time;
 
 class MeasurementsUtil
 {
@@ -204,4 +208,135 @@ class MeasurementsUtil
                 return false;
         }
     }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Animal $animal
+     * @param string $currentKind
+     * @param boolean $filterByAnimalData
+     * @return array
+     */
+    public static function getExteriorKinds(ObjectManager $em, Animal $animal, $currentKind = null, $filterByAnimalData = true) {
+        $output = self::getExteriorKindsOutput($em, $animal, $currentKind, $filterByAnimalData);
+
+        $codes = [];
+        foreach ($output as $item) {
+            $code = $item['code'];
+            $codes[$code] = $code;
+        }
+        return $codes;
+    }
+    
+    
+    /**
+     * @param ObjectManager $em
+     * @param Animal $animal
+     * @param string $currentKind
+     * @param boolean $filterByAnimalData
+     * @return array
+     */
+    public static function getExteriorKindsOutput(ObjectManager $em, Animal $animal, $currentKind = null, $filterByAnimalData = true)
+    {
+        //TODO filter kinds based on previous ACTIVE exteriors AND age on measurementDate. For now just return all exteriorKinds
+        $kindsForOutput = ExteriorKind::getAll();
+
+        sort($kindsForOutput);
+        foreach ($kindsForOutput as $kind) {
+            $output[] = ['code' => $kind];
+        }
+
+        return $output;
+
+        /* */
+
+        $output = [];
+
+        if(!$filterByAnimalData) {
+            foreach (ExteriorKind::getAll() as $kind) { $output[] = ['code' => $kind]; }
+            return $output;
+        }
+
+        $animalId = null;
+        if($animal) {
+            $animalId = $animal->getId();
+            if(!is_int($animalId)) {
+                return $output;
+            }
+        }
+
+        /** @var Connection $conn */
+        $conn = $em->getConnection();
+
+        //Create Kind searchArray
+        $sql = "SELECT kind FROM measurement m
+                    INNER JOIN exterior x ON x.id = m.id
+                    WHERE animal_id = ".$animalId." AND m.is_active = TRUE
+                ORDER BY measurement_date DESC";
+        $results = $conn->query($sql)->fetchAll();
+
+        $latestKind = null;
+        $kinds = [];
+        $isLatestKind = true;
+        foreach ($results as $result) {            
+            $kind = $result['kind'];
+            if(NullChecker::isNull($kind)) { $kind = null; }
+            
+            $kinds[$kind] = $kind;
+            
+            if($isLatestKind) {
+                $latestKind = $kind;
+                $isLatestKind = false;
+            }
+        }
+
+        $vgExists = array_key_exists(ExteriorKind::VG_, $kinds);
+        $ddExists = array_key_exists(ExteriorKind::DD_, $kinds);
+        $dfExists = array_key_exists(ExteriorKind::DF_, $kinds);
+        $hkExists = array_key_exists(ExteriorKind::HK_, $kinds);
+        $hhExists = array_key_exists(ExteriorKind::HH_, $kinds);
+
+
+        $ageInMonths = TimeUtil::getAgeMonths($animal->getDateOfBirth(), $animal->getDateOfDeath());
+        $ageIsBetween5and14months = 4 <= $ageInMonths && $ageInMonths <= 14;
+        $ageIsBetween14and26months = 14 <= $ageInMonths && $ageInMonths <= 26;
+        $ageIsAtLeast26months = 26 <= $ageInMonths;
+
+        $kindsForOutput = [];
+        if($ageIsBetween5and14months) {
+            $kindsForOutput[] = ExteriorKind::VG_;
+
+        } elseif($ageIsBetween14and26months) {
+            if($vgExists) {
+                $kindsForOutput[] = ExteriorKind::DF_;
+            } else {
+                $kindsForOutput[] = ExteriorKind::DD_;
+            }
+
+        } elseif($ageIsAtLeast26months && ($ddExists || $dfExists
+            || $hkExists || $hhExists //adding $hkExists && $hhExists in case of incomplete exterior data
+            )) {
+            $kindsForOutput[] = ExteriorKind::HH_;
+        }
+
+        if(!$animal->getIsAlive()) { $kindsForOutput[] = ExteriorKind::DO_; }
+
+        if($ddExists || $dfExists || $vgExists
+            || $hkExists || $hhExists //adding $hkExists && $hhExists in case of incomplete exterior data
+        ) { $kindsForOutput[] = ExteriorKind::HK_; }
+
+        
+        if($currentKind != null && !in_array($currentKind, $kindsForOutput)) {
+            $kindsForOutput[] = $currentKind;
+        }
+
+        sort($kindsForOutput);
+        foreach ($kindsForOutput as $kind) {
+            $output[] = ['code' => $kind];
+        }
+
+        return $output;
+    }
+
+
 }

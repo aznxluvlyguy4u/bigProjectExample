@@ -83,7 +83,7 @@ class NsfoMigrateExteriorCommand extends ContainerAwareCommand
                     $conn->exec($sql);
                 }
 
-                $sql = "INSERT INTO exterior (id, animal_id, skull, muscularity, proportion, exterior_type, leg_work, fur, general_appearence, height, breast_depth, torso_length, markings) VALUES (currval('measurement_id_seq'),'".$result['id']."','".$skull."','".$muscularity."','".$proportion."','".$exterior."','".$leg."','".$fur."','".$general."','".$height."','".$breast."','".$torso."','".$markings."')";
+                $sql = "INSERT INTO exterior (id, animal_id, skull, muscularity, proportion, exterior_type, leg_work, fur, general_appearance, height, breast_depth, torso_length, markings) VALUES (currval('measurement_id_seq'),'".$result['id']."','".$skull."','".$muscularity."','".$proportion."','".$exterior."','".$leg."','".$fur."','".$general."','".$height."','".$breast."','".$torso."','".$markings."')";
                 $conn->exec($sql);
             }
         }

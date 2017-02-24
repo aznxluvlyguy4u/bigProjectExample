@@ -188,7 +188,7 @@ class ExteriorMeasurementsMigrator extends MigratorBase
         $this->animalIdsByVsmIds = $this->animalRepository->getAnimalPrimaryKeysByVsmIdArray();
 
         $sql = "SELECT m.id, m.inspector_id, DATE(m.measurement_date) as measurement_date, m.animal_id_and_date, x.*,
-                  CONCAT(animal_id, '_', DATE(m.measurement_date), skull, muscularity, proportion, exterior_type, leg_work, fur, general_appearence, kind, progress, inspector_id) as check_string, CONCAT(height, breast_depth, torso_length) as hbt_check_string
+                  CONCAT(animal_id, '_', DATE(m.measurement_date), skull, muscularity, proportion, exterior_type, leg_work, fur, general_appearance, kind, progress, inspector_id) as check_string, CONCAT(height, breast_depth, torso_length) as hbt_check_string
                 FROM exterior x
                 INNER JOIN measurement m ON m.id = x.id";
         $results = $this->conn->query($sql)->fetchAll();
@@ -351,7 +351,7 @@ class ExteriorMeasurementsMigrator extends MigratorBase
         $this->conn->exec($sql);
 
         $sql = "INSERT INTO exterior (id, animal_id, skull, muscularity, proportion, exterior_type, leg_work, fur,
-                        general_appearence, height, breast_depth, torso_length, markings, kind, progress
+                        general_appearance, height, breast_depth, torso_length, markings, kind, progress
 						)VALUES " . $insertExteriorString;
         $this->conn->exec($sql);
     }
@@ -474,7 +474,7 @@ class ExteriorMeasurementsMigrator extends MigratorBase
     private function getCurrentExteriorMeasurementsSearchArray()
     {
         $sql = "SELECT m.inspector_id, DATE(m.measurement_date) as measurement_date, m.animal_id_and_date, x.*,
-                  CONCAT(animal_id, '_', DATE(m.measurement_date), skull, muscularity, proportion, exterior_type, leg_work, fur, general_appearence, height, breast_depth, torso_length, kind, progress, inspector_id) as check_string
+                  CONCAT(animal_id, '_', DATE(m.measurement_date), skull, muscularity, proportion, exterior_type, leg_work, fur, general_appearance, height, breast_depth, torso_length, kind, progress, inspector_id) as check_string
                 FROM exterior x
                 INNER JOIN measurement m ON m.id = x.id";
         $results = $this->conn->query($sql)->fetchAll();
@@ -528,7 +528,7 @@ class ExteriorMeasurementsMigrator extends MigratorBase
                       FROM exterior x
                         INNER JOIN measurement m ON m.id = x.id
                       GROUP BY animal_id_and_date, animal_id, skull, muscularity, proportion, exterior_type, leg_work, fur,
-                        general_appearence, markings, kind, progress, measurement_date, inspector_id,
+                        general_appearance, markings, kind, progress, measurement_date, inspector_id,
                         height, torso_length, breast_depth
                       HAVING COUNT(*) > 1
                     )
@@ -576,7 +576,7 @@ class ExteriorMeasurementsMigrator extends MigratorBase
                                         FROM exterior x
                                           INNER JOIN measurement m ON m.id = x.id
                                         GROUP BY animal_id_and_date, animal_id, skull, muscularity, proportion, exterior_type, leg_work,
-                                          fur, general_appearence, markings, kind, progress, measurement_date, inspector_id
+                                          fur, general_appearance, markings, kind, progress, measurement_date, inspector_id
                                         HAVING COUNT(*) > 1
                                       ) g ON g.animal_id_and_date = n.animal_id_and_date
                          WHERE z.".$columnName." = 0
