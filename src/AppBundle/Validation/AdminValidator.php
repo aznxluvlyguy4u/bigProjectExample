@@ -5,6 +5,7 @@ namespace AppBundle\Validation;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Employee;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\PersonRepository;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\JsonFormat\ValidationResults;
@@ -31,7 +32,7 @@ class AdminValidator
 
     /**
      * AdminValidator constructor.
-     * @param Employee $admin
+     * @param Person $admin
      * @param string $accessLevelRequired
      */
     public function __construct($admin, $accessLevelRequired = AccessLevelType::ADMIN)
@@ -39,7 +40,7 @@ class AdminValidator
         $this->accessLevelRequired = $accessLevelRequired;
 
         //Validate user
-        if($admin == null) {
+        if(!($admin instanceof Employee)) {
             $this->isAccessGranted = false;
         } else {
             $this->isAccessGranted = self::checkIsAccessGranted($this->accessLevelRequired, $admin->getAccessLevel());

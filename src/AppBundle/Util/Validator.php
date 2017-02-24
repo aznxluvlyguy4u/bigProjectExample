@@ -578,4 +578,13 @@ class Validator
         return false;
     }
 
+
+    /**
+     * @param string $value
+     * @return bool
+     */
+    public static function isStringFloatFormat($value)
+    {
+        return strval(floatval($value)) === $value;
+    }
 }

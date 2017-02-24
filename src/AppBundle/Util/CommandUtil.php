@@ -5,10 +5,14 @@ namespace AppBundle\Util;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\Employee;
+use AppBundle\Entity\EmployeeRepository;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Report\Mixblup;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
@@ -213,6 +217,15 @@ class CommandUtil
 
 
     /**
+     * @param $heading
+     */
+    public function printTitle($heading)
+    {
+        $this->outputInterface->writeln(self::generateTitle($heading));
+    }
+
+
+    /**
      * @param string $text
      */
     public function writeln($text)
@@ -297,5 +310,53 @@ class CommandUtil
         array_shift($data); //remove first row
 
         return $data;
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param string $minimumAccessLevel
+     * @param boolean $includeDevelopers
+     * @return Employee
+     */
+    public function questionForAdminChoice(ObjectManager $em, $minimumAccessLevel, $includeDevelopers)
+    {
+        /** @var EmployeeRepository $employeeRepository */
+        $employeeRepository = $em->getRepository(Employee::class);
+        $employees = $employeeRepository->findByMinimumAccessLevel($minimumAccessLevel, $includeDevelopers);
+
+        $clude = $includeDevelopers ? 'including' : 'excluding';
+        if(count($employees) == 0) {
+            $this->writeln('There are no '.$minimumAccessLevel.' of higher in the database (
+            '.$clude.' DEVELOPERS). Create one first');
+        }
+
+        $employeeSelectionArray = [];
+        $i = 1;
+
+        $this->writeln($minimumAccessLevel.'s or higher in the database '.$clude.' DEVELOPERS');
+        /** @var Employee $employee */
+        foreach ($employees as $employee) {
+            $this->writeln($i.' : '.$employee->getFullName());
+            $employeeSelectionArray[$i] = $employee;
+            $i++;
+        }
+
+        $lastCount = count($employeeSelectionArray);
+        $defaultAdmin = $employeeSelectionArray[$lastCount];
+
+        do{
+            do {
+                $choice = $this->generateQuestion('Choose your Admin. Insert their number: (default = '
+                    .$defaultAdmin->getFullName().')', $lastCount);
+            } while (!key_exists($choice, $employeeSelectionArray));
+
+            $employee = $employeeSelectionArray[$choice];
+            $this->writeln('You chose: '.$employee->getFullName());
+
+            $continue = !$this->generateConfirmationQuestion('Is this correct? (y/n, default = no)');
+        } while ($continue);
+
+        return $employee;
     }
 }

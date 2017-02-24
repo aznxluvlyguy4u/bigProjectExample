@@ -4,7 +4,6 @@ namespace AppBundle\Validation;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Entity\AnimalRepository;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -32,12 +31,12 @@ abstract class BaseValidator
     /** @var ArrayCollection */
     protected $content;
 
-    public function __construct(ObjectManager $manager, ArrayCollection $arrayCollection)
+    public function __construct(ObjectManager $manager, ArrayCollection $content)
     {
         $this->manager = $manager;
         $this->isInputValid = false;
         $this->errors = array();
-        $this->content = $arrayCollection;
+        $this->content = $content;
     }
 
 
