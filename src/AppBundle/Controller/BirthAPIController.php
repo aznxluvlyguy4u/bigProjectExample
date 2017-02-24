@@ -64,17 +64,21 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $this->getAuthenticatedUser($request);
         $location = $this->getSelectedLocation($request);
 
+        if(!$location) {
+          return Validator::createJsonResponse('UBN kan niet gevonden worden', 428);
+        }
+
         $repository = $this->getDoctrine()->getRepository(Litter::class);
         $litter = $repository->findOneBy(['id' => $litterId, 'ubn' => $location->getUbn()]);
 
         if($litter instanceof Litter) {
-            $result = DeclareBirthResponseOutput::createBirth($litter, $litter->getDeclareBirths());
+          $result = DeclareBirthResponseOutput::createBirth($litter, $litter->getDeclareBirths());
         } else {
             $result = Validator::createJsonResponse('Geen worp gevonden voor gegeven worpId en ubn', 428);
         }
-        
+
         if($result instanceof JsonResponse) {
-            return $result;
+          return $result;
         }
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
