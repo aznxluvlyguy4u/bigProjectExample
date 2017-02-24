@@ -9,6 +9,7 @@ use AppBundle\Enumerator\MeasurementType;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\NumberUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 
@@ -44,7 +45,7 @@ class BodyFatRepository extends MeasurementRepository {
         foreach ($retrievedMeasurementData as $measurementData)
         {
             $results[] = [
-                JsonInputConstant::MEASUREMENT_DATE => Utils::fillNullOrEmptyString($measurementData['measurement_date'], $nullFiller),
+                JsonInputConstant::MEASUREMENT_DATE => TimeUtil::getDateTimeFromNullCheckedArrayValue('measurement_date', $measurementData, $nullFiller),
                 JsonInputConstant::FAT1 => Utils::fillNullOrEmptyString($measurementData['fat1'], $nullFiller),
                 JsonInputConstant::FAT2 => Utils::fillNullOrEmptyString($measurementData['fat2'], $nullFiller),
                 JsonInputConstant::FAT3 => Utils::fillNullOrEmptyString($measurementData['fat3'], $nullFiller),

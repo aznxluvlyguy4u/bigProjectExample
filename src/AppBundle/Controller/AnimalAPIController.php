@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Cache\AnimalCacher;
+use AppBundle\Component\AnimalDetailsUpdater;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
@@ -415,6 +416,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     $repository = $this->getDoctrine()
       ->getRepository(Constant::ANIMAL_REPOSITORY);
 
+    /** @var Animal $animal */
     $animal = $repository->findOneBy(array ("ulnCountryCode" => substr($ulnString, 0, 2), "ulnNumber" => substr($ulnString, 2)));
 
     if($animal == null) {
@@ -422,13 +424,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
                                     "message" => "For this account, no animal was found with uln: " . $content['uln_country_code'] . $content['uln_number']), 204);
     }
 
-    if(array_key_exists("collar", $content->toArray())) {
-      $collar = $content['collar'];
-      $animal->setCollarNumber($collar['number']);
-      $animal->setCollarColor($collar['color']);
-      $em->persist($animal);
-      $em->flush();
-    }
+    AnimalDetailsUpdater::update($em, $animal, $content);
 
     $location = $this->getSelectedLocation($request);
 

@@ -19,6 +19,7 @@ class Exterior extends Measurement {
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 2)
      * @JMS\Type("string")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      */
     private $kind;
 
@@ -28,6 +29,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $skull;
@@ -37,6 +39,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $muscularity;
@@ -46,6 +49,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $proportion;
@@ -55,6 +59,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      */
     private $progress;
 
@@ -63,6 +68,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $exteriorType;
@@ -72,6 +78,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $legWork;
@@ -81,6 +88,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $fur;
@@ -90,15 +98,17 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
-    private $generalAppearence;
+    private $generalAppearance;
 
     /**
      * @var float
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $height;
@@ -108,6 +118,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $breastDepth;
@@ -117,6 +128,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $torsoLength;
@@ -126,6 +138,7 @@ class Exterior extends Measurement {
      *
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
+     * @JMS\Groups({"USER_MEASUREMENT"})
      * @Assert\NotBlank
      */
     private $markings;
@@ -144,7 +157,7 @@ class Exterior extends Measurement {
       $this->exteriorType = 0.00;
       $this->legWork = 0.00;
       $this->fur = 0.00;
-      $this->generalAppearence = 0.00;
+      $this->generalAppearance = 0.00;
       $this->height = 0.00;
       $this->breastDepth = 0.00;
       $this->torsoLength = 0.00;
@@ -176,7 +189,7 @@ class Exterior extends Measurement {
         $this->exteriorType > $minLimit ||
         $this->legWork > $minLimit ||
         $this->fur > $minLimit ||
-        $this->generalAppearence > $minLimit ||
+        $this->generalAppearance > $minLimit ||
         $this->height > $minLimit ||
         $this->breastDepth > $minLimit ||
         $this->torsoLength > $minLimit ||
@@ -337,27 +350,27 @@ class Exterior extends Measurement {
     }
 
     /**
-     * Set generalAppearence
+     * Set generalAppearance
      *
-     * @param float $generalAppearence
+     * @param float $generalAppearance
      *
      * @return Exterior
      */
-    public function setGeneralAppearence($generalAppearence)
+    public function setGeneralAppearance($generalAppearance)
     {
-        $this->generalAppearence = $generalAppearence;
+        $this->generalAppearance = $generalAppearance;
 
         return $this;
     }
 
     /**
-     * Get generalAppearence
+     * Get generalAppearance
      *
      * @return float
      */
-    public function getGeneralAppearence()
+    public function getGeneralAppearance()
     {
-        return $this->generalAppearence;
+        return $this->generalAppearance;
     }
 
     /**

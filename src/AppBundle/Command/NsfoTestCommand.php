@@ -8,6 +8,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationRepository;
 use AppBundle\Util\CommandUtil;
 
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -75,6 +76,7 @@ class NsfoTestCommand extends ContainerAwareCommand
         
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
+        $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
 
         $sql = "SELECT uln_country_code, uln_number FROM animal WHERE location_id = 262 AND gender = 'FEMALE'";
         $results = $this->conn->query($sql)->fetchAll();

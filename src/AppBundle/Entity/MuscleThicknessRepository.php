@@ -7,6 +7,7 @@ use AppBundle\Constant\MeasurementConstant;
 use AppBundle\Enumerator\MeasurementType;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\Criteria;
 
 /**
@@ -38,7 +39,7 @@ class MuscleThicknessRepository extends MeasurementRepository {
         foreach ($retrievedMeasurementData as $measurementData)
         {
             $results[] = [
-                JsonInputConstant::MEASUREMENT_DATE => Utils::fillNullOrEmptyString($measurementData['measurement_date'], $nullFiller),
+                JsonInputConstant::MEASUREMENT_DATE => TimeUtil::getDateTimeFromNullCheckedArrayValue('measurement_date', $measurementData, $nullFiller),
                 JsonInputConstant::MUSCLE_THICKNESS => Utils::fillNullOrEmptyString($measurementData['muscle_thickness'], $nullFiller),
                 JsonInputConstant::PERSON_ID =>  Utils::fillNullOrEmptyString($measurementData['person_id'], $nullFiller),
                 JsonInputConstant::FIRST_NAME => Utils::fillNullOrEmptyString($measurementData['first_name'], $nullFiller),
