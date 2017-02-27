@@ -65,6 +65,7 @@ class WeightRepository extends MeasurementRepository {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('animal', $animal))
             ->andWhere(Criteria::expr()->eq('isRevoked', false))
+            ->andWhere(Criteria::expr()->eq('isActive', true))
             ->orderBy(['measurementDate' => Criteria::DESC, 'logDate' => Criteria::DESC])
             ->setMaxResults(1);
 
