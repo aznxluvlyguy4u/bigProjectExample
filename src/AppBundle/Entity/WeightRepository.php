@@ -38,7 +38,7 @@ class WeightRepository extends MeasurementRepository {
                   INNER JOIN weight t ON t.id = m.id
                   LEFT JOIN person p ON p.id = m.inspector_id
                   INNER JOIN animal a ON a.id = t.animal_id
-                WHERE t.animal_id = ".$animal->getId();
+                WHERE m.is_active = TRUE AND t.is_revoked = FALSE AND t.animal_id = ".$animal->getId();
         $retrievedMeasurementData = $this->getManager()->getConnection()->query($sql)->fetchAll();
 
         foreach ($retrievedMeasurementData as $measurementData)
@@ -65,6 +65,7 @@ class WeightRepository extends MeasurementRepository {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('animal', $animal))
             ->andWhere(Criteria::expr()->eq('isRevoked', false))
+            ->andWhere(Criteria::expr()->eq('isActive', true))
             ->orderBy(['measurementDate' => Criteria::DESC, 'logDate' => Criteria::DESC])
             ->setMaxResults(1);
 
