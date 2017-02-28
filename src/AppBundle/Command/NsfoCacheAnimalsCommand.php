@@ -23,11 +23,11 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
     /** @var ObjectManager $em */
     private $em;
 
-    /** @var Connection */
-    private $conn;
-
     /** @var CommandUtil */
     private $cmdUtil;
+
+    /** @var Connection */
+    private $conn;
 
     protected function configure()
     {
@@ -42,8 +42,6 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
         /** @var ObjectManager $em */
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
-
-        /** @var Connection conn */
         $this->conn = $em->getConnection();
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
@@ -61,9 +59,9 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '7: Regenerate all AnimalCache records for animal and ascendants (3gen) for given locationId', "\n",
             '8: Delete duplicate records', "\n",
             '--- Sql Batch Queries ---', "\n",
-            '9: BatchUpdate all incongruent production values and n-ling values', "\n",
-            '10: BatchUpdate all Incongruent exterior values', "\n",
-            '11: BatchUpdate all Incongruent weight values', "\n",
+            '20: BatchUpdate all incongruent production values and n-ling values', "\n",
+            '21: BatchUpdate all Incongruent exterior values', "\n",
+            '22: BatchUpdate all Incongruent weight values', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -131,6 +129,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 $this->cmdUtil->writeln($nLingValuesUpdated.' n-ling values updated');
                 break;
 
+            
             case 10:
                 $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update exterior cache values of all animals? (y/n, default = no)');
                 if($updateAll) {
@@ -146,6 +145,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 $output->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
                 break;
 
+
             case 11:
                 $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update weight cache values of all animals? (y/n, default = no)');
                 if($updateAll) {
@@ -160,6 +160,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 }
                 $output->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
                 break;
+
 
             default:
                 $output->writeln('ABORTED');

@@ -64,17 +64,21 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $this->getAuthenticatedUser($request);
         $location = $this->getSelectedLocation($request);
 
+        if(!$location) {
+          return Validator::createJsonResponse('UBN kan niet gevonden worden', 428);
+        }
+
         $repository = $this->getDoctrine()->getRepository(Litter::class);
         $litter = $repository->findOneBy(['id' => $litterId, 'ubn' => $location->getUbn()]);
 
         if($litter instanceof Litter) {
-            $result = DeclareBirthResponseOutput::createBirth($litter, $litter->getDeclareBirths());
+          $result = DeclareBirthResponseOutput::createBirth($litter, $litter->getDeclareBirths());
         } else {
             $result = Validator::createJsonResponse('Geen worp gevonden voor gegeven worpId en ubn', 428);
         }
-        
+
         if($result instanceof JsonResponse) {
-            return $result;
+          return $result;
         }
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
@@ -214,14 +218,14 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $litterClone = clone $litter;
         $childrenToRemove = [];
         $stillbornsToRemove = [];
-        $maxMonthInterval = 1;
+        $maxMonthInterval = 6;
 
         //Check if birth registration is within a time span of maxMonthInterval from now,
         //then, and only then, the revoke and thus deletion of child animal is allowed
         foreach ($litter->getChildren() as $child) {
             $dateInterval = $child->getDateOfBirth()->diff(new \DateTime());
 
-            if($dateInterval->y > 0 || $dateInterval->m >= $maxMonthInterval) {
+            if($dateInterval->y > 0 || $dateInterval->m > $maxMonthInterval) {
                 return new JsonResponse(
                   array (
                     Constant::RESULT_NAMESPACE => array (

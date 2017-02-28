@@ -67,84 +67,6 @@ class AnimalDetailsOutput
             $litterSize = $litter->getSize();
         }
 
-        $exteriors = $animal->getExteriorMeasurements();
-        if (sizeof($exteriors) == 0) {
-            $exteriorDate = '';
-            $skull = 0.00;
-            $progress = 0.00;
-            $muscularity = 0.00;
-            $proportion = 0.00;
-            $type = 0.00;
-            $legWork = 0.00;
-            $fur = 0.00;
-            $generalAppearance = 0.00;
-            $height = 0.00;
-            $breastDepth = 0.00;
-            $torsoLength = 0.00;
-            $markings = 0.00;
-            $kind = '';
-        } else {
-            /** @var Exterior $exterior */
-            $exterior = $em->getRepository(Exterior::class)->getLatestExterior($animal);
-            $exteriorDate = $exterior->getMeasurementDate();
-            $skull = $exterior->getSkull();
-            $progress = $exterior->getProgress();
-            $muscularity = $exterior->getMuscularity();
-            $proportion = $exterior->getProportion();
-            $type = $exterior->getExteriorType();
-            $legWork = $exterior->getLegWork();
-            $fur = $exterior->getFur();
-            $generalAppearance = $exterior->getGeneralAppearence();
-            $height = $exterior->getHeight();
-            $breastDepth = $exterior->getBreastDepth();
-            $torsoLength = $exterior->getTorsoLength();
-            $markings = $exterior->getMarkings();
-            $kind = $exterior->getKind();
-        }
-
-        $bodyFats = $animal->getBodyFatMeasurements();
-        if (sizeof($bodyFats) == 0) {
-            $bodyFat = 0.00;
-        } else {
-            $bodyFat = $em->getRepository(BodyFat::class)->getLatestBodyFat($animal);
-        }
-
-        $weights = $animal->getWeightMeasurements();
-        if (sizeof($weights) == 0) {
-            $weight = 0.00;
-            $birthWeight = 0.00;
-        } else {
-            $weight = $em->getRepository(Weight::class)->getLatestWeight($animal, false);
-            $birthWeight = $em->getRepository(Weight::class)->getLatestBirthWeight($animal);
-        }
-
-        $muscleThicknesses = $animal->getMuscleThicknessMeasurements();
-        if (sizeof($muscleThicknesses) == 0) {
-            $muscleThickness = 0.00;
-        } else {
-            $muscleThickness = $em->getRepository(MuscleThickness::class)->getLatestMuscleThickness($animal);
-        }
-
-        $tailLengths = $animal->getTailLengthMeasurements();
-        if (sizeof($tailLengths) == 0) {
-            $tailLength = 0.00;
-        } else {
-            $tailLength = $em->getRepository(TailLength::class)->getLatestTailLength($animal);
-        }
-
-        $breeder = $animal->getBreeder();
-        if ($breeder == null) {
-            $breederName = $replacementString;
-            $breederUbn = $replacementString;
-            $breederEmailAddress = $replacementString;
-            $breederTelephoneNumber = $replacementString;
-        } else {
-            $breederName = $replacementString; //TODO replace with real value
-            $breederUbn = $replacementString; //TODO replace with real value
-            $breederEmailAddress = $replacementString; //TODO replace with real value
-            $breederTelephoneNumber = $replacementString; //TODO replace with real value
-        }
-
         /** @var BodyFatRepository $bodyFatRepository */
         $bodyFatRepository = $em->getRepository(BodyFat::class);
         /** @var ExteriorRepository $exteriorRepository */
@@ -157,6 +79,55 @@ class AnimalDetailsOutput
         $tailLengthRepository = $em->getRepository(TailLength::class);
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $em->getRepository(Animal::class);
+
+
+        $bodyFats = $animal->getBodyFatMeasurements();
+        if (sizeof($bodyFats) == 0) {
+            $bodyFat = 0.00;
+        } else {
+            $bodyFat = $bodyFatRepository->getLatestBodyFat($animal);
+        }
+
+        $weights = $animal->getWeightMeasurements();
+        if (sizeof($weights) == 0) {
+            $weight = 0.00;
+            $birthWeight = 0.00;
+        } else {
+            $weight = $weightRepository->getLatestWeight($animal, false);
+            $birthWeight = $weightRepository->getLatestBirthWeight($animal);
+        }
+
+        $muscleThicknesses = $animal->getMuscleThicknessMeasurements();
+        if (sizeof($muscleThicknesses) == 0) {
+            $muscleThickness = 0.00;
+        } else {
+            $muscleThickness = $muscleThicknessRepository->getLatestMuscleThickness($animal);
+        }
+
+        $tailLengths = $animal->getTailLengthMeasurements();
+        if (sizeof($tailLengths) == 0) {
+            $tailLength = 0.00;
+        } else {
+            $tailLength = $tailLengthRepository->getLatestTailLength($animal);
+        }
+
+
+        $breeder = null;
+        $breederUbn = $replacementString;
+        $breederName = $replacementString;
+        $breederEmailAddress = $replacementString;
+        $breederTelephoneNumber = $replacementString;
+        $locationOfBirth = $animal->getLocationOfBirth();
+        if($locationOfBirth != null) {
+            $breederUbn = $locationOfBirth->getUbn();
+
+            $breeder = $locationOfBirth->getOwner();
+            if ($breeder != null) {
+                $breederName = Utils::fillNullOrEmptyString($breeder->getFullName(), $replacementString);
+                $breederEmailAddress = Utils::fillNullOrEmptyString($breeder->getEmailAddress(), $replacementString);
+                $breederTelephoneNumber = Utils::fillNullOrEmptyString($breeder->getCellphoneNumber(), $replacementString);
+            }
+        }
 
         $result = array(
             Constant::ULN_COUNTRY_CODE_NAMESPACE => Utils::fillNullOrEmptyString($animal->getUlnCountryCode(), $replacementString),
@@ -181,23 +152,6 @@ class AnimalDetailsOutput
             "predicate" => Utils::fillNullOrEmptyString("", $replacementString),
             "breed_status" => Utils::fillNullOrEmptyString($animal->getBreedType(), $replacementString),
             JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($animal->getIsAlive(), $replacementString),
-            "exterior" =>
-                array(
-                    "measurement_date" => Utils::fillNullOrEmptyString($exteriorDate, $replacementString),
-                    "head" => Utils::fillZero($skull, $replacementString),
-                    "progress" => Utils::fillZero($progress, $replacementString),
-                    "muscularity" => Utils::fillZero($muscularity, $replacementString),
-                    "proportion" => Utils::fillZero($proportion, $replacementString),
-                    "type" => Utils::fillZero($type, $replacementString),
-                    "leg_work" => Utils::fillZero($legWork, $replacementString),
-                    "pelt" => Utils::fillZero($fur, $replacementString),
-                    "general_appearance" => Utils::fillZero($generalAppearance, $replacementString),
-                    "height" => Utils::fillZero($height, $replacementString),
-                    "breast_depth" => Utils::fillZero($breastDepth, $replacementString),
-                    "torso_length" => Utils::fillZero($torsoLength, $replacementString),
-                    "markings" => Utils::fillZero($markings, $replacementString),
-                    "kind" => Utils::fillZero($kind, $replacementString)
-                ),
             "measurement" =>
                 array(
                     "measurement_date" => Utils::fillNullOrEmptyString($bodyFat['date'], $replacementString),

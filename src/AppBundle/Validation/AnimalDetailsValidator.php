@@ -13,7 +13,6 @@ use AppBundle\Entity\Ram;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\DBAL\Connection;
 
 class AnimalDetailsValidator extends BaseValidator
 {
@@ -60,11 +59,8 @@ class AnimalDetailsValidator extends BaseValidator
                         }
                     }
                 }
-
             }
         }
-
-
     }
 
     /**

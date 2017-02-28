@@ -337,9 +337,7 @@ class IRSerializer implements IRSerializerInterface
             $dateOfBirth = new \DateTime($declareBirthContentArray["date_of_birth"]);
 
             //Disallow birth registrations in the future
-            $timeIntervalInDaysFromNow = TimeUtil::getDaysBetween(new \DateTime(), $dateOfBirth);
-
-            if($timeIntervalInDaysFromNow > 0) {
+            if(TimeUtil::isDateInFuture($dateOfBirth)) {
                 return Validator::createJsonResponse("Een geboorte mag niet in de toekomst liggen.", $statusCode);
             }
         }

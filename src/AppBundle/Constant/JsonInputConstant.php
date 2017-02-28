@@ -150,7 +150,10 @@ class JsonInputConstant
     const MEASUREMENT_DATE = 'measurement_date';
     const IS_EMPTY_MEASUREMENT = 'is_empty_measurement';
     const MEASUREMENT_ROW = 'measurement_row';
+    const INSPECTOR = 'inspector';
     const INSPECTOR_ID = 'inspector_id';
+    const INSPECTOR_FIRST_NAME = 'inspector_first_name';
+    const INSPECTOR_LAST_NAME = 'inspector_last_name';
 
     //Weight measurements
     const WEIGHT_MEASUREMENTS = 'weight_measurements';
@@ -179,6 +182,7 @@ class JsonInputConstant
     const TORSO_LENGTH = 'torso_length';
     const MARKINGS = 'markings';
     const EXTERIOR_MEASUREMENT_DATE = 'exterior_measurement_date';
+    const TYPE = 'type';
 
     //MuscleThickness
     const MUSCLE_THICKNESS = 'muscle_thickness';

@@ -933,7 +933,7 @@ class Mixblup
             $exteriorType = $measurement->getExteriorType();
             $legWork = $measurement->getLegWork();
             $fur = $measurement->getFur();
-            $generalAppearance = $measurement->getGeneralAppearence();
+            $generalAppearance = $measurement->getGeneralAppearance();
             $height = $measurement->getHeight();
             $torsoLength = $measurement->getTorsoLength();
             $breastDepth = $measurement->getBreastDepth();
