@@ -202,6 +202,9 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
             $em->persist($exterior);
             $em->flush();
 
+            //Update exterior values in animalCache AFTER persisting exterior
+            AnimalCacher::cacheExteriorByAnimal($em, $animal);
+
             $output = $this->getDecodedJson($exterior, self::MEASUREMENT_JMS_GROUP);
             $code = 200;
 
