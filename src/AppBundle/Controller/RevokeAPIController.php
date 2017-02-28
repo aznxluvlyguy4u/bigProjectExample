@@ -149,6 +149,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
         if($declareNsfoBase instanceof DeclareWeight) {
             if($declareNsfoBase->getWeightMeasurement() != null) {
                 $declareNsfoBase->getWeightMeasurement()->setIsRevoked(true);
+                $declareNsfoBase->getWeightMeasurement()->setIsActive(false);
             }
         }
 
