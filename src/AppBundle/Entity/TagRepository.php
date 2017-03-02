@@ -69,7 +69,7 @@ class TagRepository extends BaseRepository {
     return $this->findOneBy(array('ulnCountryCode'=>$ulnCountryCode,
                                   'ulnNumber'=>$ulnNumber,
                                   'tagStatus' => TagStateType::UNASSIGNED,
-                                  'locationId' => $locationId));
+                                  'location' => $locationId));
   }
 
 

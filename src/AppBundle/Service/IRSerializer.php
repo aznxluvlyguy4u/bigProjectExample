@@ -434,7 +434,7 @@ class IRSerializer implements IRSerializerInterface
             $uln = $ulnCountryCode.$ulnNumber;
             
             /** @var Tag $tagToReserve */
-            $tagToReserve = $tagRepository->findUnassignedTagByUlnNumberAndCountryCode($ulnCountryCode, $ulnNumber, $location->getLocationId());
+            $tagToReserve = $tagRepository->findUnassignedTagByUlnNumberAndCountryCode($ulnCountryCode, $ulnNumber, $location->getId());
 
             if (!$tagToReserve) {
                 //Tag does not exist in the database
