@@ -64,9 +64,12 @@ class TagRepository extends BaseRepository {
    * @param $ulnNumber
    * @return Tag
    */
-  public function findUnassignedTagByUlnNumberAndCountryCode($ulnCountryCode, $ulnNumber)
+  public function findUnassignedTagByUlnNumberAndCountryCode($ulnCountryCode, $ulnNumber, $locationId = null)
   {
-    return $this->findOneBy(array('ulnCountryCode'=>$ulnCountryCode, 'ulnNumber'=>$ulnNumber, 'tagStatus' => TagStateType::UNASSIGNED));
+    return $this->findOneBy(array('ulnCountryCode'=>$ulnCountryCode,
+                                  'ulnNumber'=>$ulnNumber,
+                                  'tagStatus' => TagStateType::UNASSIGNED,
+                                  'locationId' => $locationId));
   }
 
 
