@@ -25,6 +25,9 @@ use AppBundle\Enumerator\PredicateTypeDutch;
  */
 class Translation
 {
+    const NL_RAM = 'Ram';
+    const NL_EWE = 'Ooi';
+    const NL_NEUTER = 'Onbekend';
 
     /**
      * @param string $breedType
@@ -50,13 +53,15 @@ class Translation
      * @param string $neuterString
      * @return string
      */
-    public static function getGenderInDutch($genderEnglish, $neuterString = 'Onbekend')
+    public static function getGenderInDutch($genderEnglish, $neuterString = null)
     {
+        $neuterString = $neuterString == null ? self::NL_NEUTER : $neuterString;
+
         /* variables translated to Dutch */
         if($genderEnglish == 'Ram' || $genderEnglish == GenderType::MALE || $genderEnglish == GenderType::M) {
-            $genderDutch = 'Ram';
+            $genderDutch = self::NL_RAM;
         } elseif ($genderEnglish == 'Ewe' || $genderEnglish == GenderType::FEMALE || $genderEnglish == GenderType::V) {
-            $genderDutch = 'Ooi';
+            $genderDutch = self::NL_EWE;
         } else {
             $genderDutch = $neuterString;
         }
