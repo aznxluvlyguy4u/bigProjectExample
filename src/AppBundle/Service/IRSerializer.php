@@ -114,20 +114,23 @@ class IRSerializer implements IRSerializerInterface
     }
 
     /**
+     * @param $type array|string
      * @param $object
      * @return mixed|string
      */
-    public function serializeToJSON($object, $type = 'DEFAULT')
+    public function serializeToJSON($object, $type)
     {
-        if($type == 'DECLARE') {
-            return $this->serializer->serialize($object, Constant::jsonNamespace, SerializationContext::create()->setGroups(array('declare')));
+        if($type == '' || $type == null)
+        {
+            return $this->serializer->serialize($object, Constant::jsonNamespace);
         }
 
-        if($type == 'DEFAULT') {
-            return $this->serializer->serialize($object, Constant::jsonNamespace, SerializationContext::create()->setGroups(array('Default')));
+        if(is_string($type))
+        {
+            $type = [$type];
         }
 
-        return $this->serializer->serialize($object, Constant::jsonNamespace, SerializationContext::create()->setGroups(array($type)));
+        return $this->serializer->serialize($object, Constant::jsonNamespace, SerializationContext::create()->setGroups($type));
     }
 
     /**
