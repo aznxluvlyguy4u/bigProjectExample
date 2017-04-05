@@ -355,7 +355,6 @@ class IRSerializer implements IRSerializerInterface
         }
 
         if(key_exists('mother', $declareBirthContentArray->toArray())) {
-            /** @var  $mother */
             $mother = $animalRepository->getAnimalByUlnOrPedigree($declareBirthContentArray["mother"]);
 
             if(!$mother) {
@@ -370,21 +369,18 @@ class IRSerializer implements IRSerializerInterface
             //If the mother already has given birth within the last 5,5 months (167 days, rounded),
             //disallow birth registration
             $maxDaysLitterInterval = 167;
+            $litters = $mother->getLitters();
 
-            /** @var DeclareBirthRepository $declareBirthRepository */
-            $declareBirthRepository = $this->entityManager->getRepository(DeclareBirth::getClassName());
+              /** @var Litter $litter */
+            foreach ($litters as $litter) {
+                if($litter->getStatus() != 'REVOKED') {
+                  $dateInterval = TimeUtil::getDaysBetween($litter->getLitterDate(), $dateOfBirth);
 
-            $children = $declareBirthRepository->getChildrenOfEwe($mother);
-
-
-            /** @var Animal $child */
-            foreach ($children as $child) {
-                $dateInterval = TimeUtil::getDaysBetween($child->getDateOfBirth(), $dateOfBirth);
-
-                if($dateInterval <= $maxDaysLitterInterval) {
+                  if($dateInterval <= $maxDaysLitterInterval) {
                     return Validator::createJsonResponse("Opgegeven moeder met ULN: "
-                        . $mother->getUlnNumber()
-                        ." heeft in de afgelopen 5,5 maanden reeds geworpen, zodoende is het niet geoorloofd om een geboortemelding te doen voor de opgegeven moeder.", $statusCode);
+                      . $mother->getUlnNumber()
+                      ." heeft in de afgelopen 5,5 maanden reeds geworpen, zodoende is het niet geoorloofd om een geboortemelding te doen voor de opgegeven moeder.", $statusCode);
+                  }
                 }
             }
         }
