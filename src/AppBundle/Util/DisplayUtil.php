@@ -41,7 +41,7 @@ class DisplayUtil
 
         //By default there is no oneYearMark
         $oneYearMark = '';
-        if($gender == GenderType::FEMALE || $gender == GenderType::V) {
+        if($gender == GenderType::FEMALE || $gender == GenderType::V || $gender == Translation::NL_EWE) {
             if(TimeUtil::isGaveBirthAsOneYearOld($dateOfBirth, $earliestLitterDate)){
                 $oneYearMark = self::ONE_YEAR_MARK;
             }
