@@ -90,6 +90,9 @@ class APIController extends Controller implements APIControllerInterface
   /** @var  \Redis  */
   private $redisClient;
 
+  /** @var  \Doctrine\Common\Persistence\ObjectManager */
+  private $manager;
+
   /**
    * @return \Redis
    */
@@ -125,6 +128,12 @@ class APIController extends Controller implements APIControllerInterface
     return $this->serializer;
   }
 
+    protected function getManager() {
+        if($this->manager == null){
+            $this->manager = $this->getDoctrine()->getManager();
+        }
+        return $this->manager;
+    }
 
   /**
    * @param $object
