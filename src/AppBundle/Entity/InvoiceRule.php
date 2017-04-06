@@ -17,6 +17,7 @@ class InvoiceRule {
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Groups({"INVOICE_RULE"})
      */
     protected $id;
 
@@ -26,6 +27,7 @@ class InvoiceRule {
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
+     * @JMS\Groups({"INVOICE_RULE"})
      */
     private $description;
 
@@ -35,6 +37,7 @@ class InvoiceRule {
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
      * @JMS\Type("integer")
+     * @JMS\Groups({"INVOICE_RULE"})
      */
     private $vatPercentageRate;
 
@@ -44,6 +47,7 @@ class InvoiceRule {
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
      * @JMS\Type("integer")
+     * @JMS\Groups({"INVOICE_RULE"})
      */
     private $priceExclVat;
 
@@ -52,6 +56,7 @@ class InvoiceRule {
      *
      * @ORM\ManyToOne(targetEntity="Invoice", inversedBy="invoiceRules", cascade={"persist"})
      * @JMS\Type("array")
+     * @JMS\Groups({"INVOICE_RULE"})
      */
     private $invoice;
 

@@ -18,7 +18,7 @@ class InvoiceRuleTemplate
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
      * @JMS\Type("integer")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
      */
     protected $id;
 
@@ -28,7 +28,7 @@ class InvoiceRuleTemplate
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
      */
     private $description;
 
@@ -38,7 +38,7 @@ class InvoiceRuleTemplate
      * @ORM\Column(type="float")
      * @Assert\NotBlank
      * @JMS\Type("float")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
      */
     private $vatPercentageRate;
 
@@ -48,7 +48,7 @@ class InvoiceRuleTemplate
      * @ORM\Column(type="float")
      * @Assert\NotBlank
      * @JMS\Type("float")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
      */
     private $priceExclVat;
 
@@ -58,7 +58,7 @@ class InvoiceRuleTemplate
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
      * @JMS\Type("integer")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
      */
     private $sortOrder;
 
@@ -68,7 +68,7 @@ class InvoiceRuleTemplate
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"INVOICE"})
+     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
      */
     private $category;
 

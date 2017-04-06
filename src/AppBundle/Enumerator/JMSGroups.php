@@ -1,15 +1,10 @@
 <?php
-/**
- * Created by IntelliJ IDEA.
- * User: werner
- * Date: 6-4-17
- * Time: 11:14
- */
 
-namespace AppBundle\Entity;
+namespace AppBundle\Enumerator;
 
 
 class JMSGroups
 {
-    const INVOICE_RULE_TEMPLATE = 'INVOICE';
+    const INVOICE_RULE = 'INVOICE_RULE';
+    const INVOICE_RULE_TEMPLATE = 'INVOICE_RULE_TEMPLATE';
 }
