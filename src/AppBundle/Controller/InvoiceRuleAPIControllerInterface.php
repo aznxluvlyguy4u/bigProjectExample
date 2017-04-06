@@ -15,10 +15,10 @@ use Symfony\Component\HttpFoundation\Request;
 
 interface InvoiceRuleAPIControllerInterface
 {
-    function getInvoiceRules();
-    function updateInvoiceRule(Request $request, InvoiceRule $invoiceRule);
+    function getInvoiceRules(Request $request);
+    function updateInvoiceRule(Request $request);
     function createInvoiceRule(Request $request);
-    function deleteInvoiceRule(InvoiceRule $invoiceRule);
+    function deleteInvoiceRule(Request $request, InvoiceRule $invoiceRule);
     function linkInvoiceRuleToInvoice(InvoiceRule $invoiceRule, Invoice $invoice);
 
 }
