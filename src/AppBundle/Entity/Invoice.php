@@ -80,6 +80,15 @@ class Invoice {
      */
     private $company;
 
+
+    /**
+     * @var bool
+     * @ORM\Column(name="is_deleted", type="boolean")
+     * @JMS\Type("boolean")
+     * @JMS\Groups({"INVOICE"})
+     */
+    private $isDeleted;
+
     /**
      * Invoice constructor.
      */
@@ -181,5 +190,30 @@ class Invoice {
     public function setCompany($company)
     {
         $this->company = $company;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDeleted()
+    {
+        return $this->isDeleted;
+    }
+
+    /**
+     * @param bool $isDeleted
+     */
+    public function setIsDeleted($isDeleted)
+    {
+        $this->isDeleted = $isDeleted;
+    }
+
+    public function copyValues(Invoice $invoice){
+        $this->setCompany($invoice->getCompany());
+        $this->setDocumentUrl($invoice->getDocumentUrl());
+        $this->setInvoiceDate($invoice->getInvoiceDate());
+        $this->setInvoiceNumber($invoice->getInvoiceNumber());
+        $this->setInvoiceRules($invoice->getInvoiceRules());
+        $this->setStatus($invoice->getStatus());
     }
 }
