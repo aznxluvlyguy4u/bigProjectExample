@@ -9,6 +9,7 @@
 namespace AppBundle\Controller;
 
 
+use AppBundle\Entity\Invoice;
 use Symfony\Component\HttpFoundation\Request;
 
 interface InvoiceAPIControllerInterface
@@ -16,6 +17,6 @@ interface InvoiceAPIControllerInterface
     function getInvoices();
     function getInvoicesBy(Request $request);
     function createInvoice(Request $request);
-    function updateInvoice(Request $request, $id);
-    function deleteInvoice(Request $request, $id);
+    function updateInvoice(Request $request, Invoice $id);
+    function deleteInvoice(Request $request, Invoice $id);
 }
