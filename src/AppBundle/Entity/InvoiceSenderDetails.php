@@ -249,5 +249,16 @@ class InvoiceSenderDetails
         $this->isDeleted = $isDeleted;
     }
 
+    public function copyValues(InvoiceSenderDetails $invoiceSenderDetails){
+        $this->setBtwNumber($invoiceSenderDetails->getBtwNumber());
+        $this->setIban($invoiceSenderDetails->getIban());
+        $this->setKvkNumber($invoiceSenderDetails->getKvkNumber());
+        $this->setPaymentDeadlineInDays($invoiceSenderDetails->getPaymentDeadlineInDays());
+        $this->setPostalCode($invoiceSenderDetails->getPostalCode());
+        $this->setStreetName($invoiceSenderDetails->getStreetName());
+        $this->setStreetNumber($invoiceSenderDetails->getStreetNumber());
+        $this->setStreetNumberSuffix($invoiceSenderDetails->getStreetNumberSuffix());
+    }
+
 
 }
