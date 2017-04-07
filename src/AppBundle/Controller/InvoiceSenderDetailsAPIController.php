@@ -9,29 +9,76 @@
 namespace AppBundle\Controller;
 
 
+use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Constant\Constant;
 use AppBundle\Entity\InvoiceSenderDetails;
+use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Validation\AdminValidator;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
 
 class InvoiceSenderDetailsAPIController extends APIController implements InvoiceSenderDetailsAPIControllerInterface
 {
+    /**
+     * @return JsonResponse
+     * @Route("")
+     * @Method("GET")
+     */
     public function getInvoiceSenderDetails()
     {
-        // TODO: Implement getInvoiceSenderDetails() method.
+        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
+        if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
+        $em = $this->getManager();
+        $details = $em->getRepository(InvoiceSenderDetails::class)->findAll();
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $details), 200);
     }
 
+    /**
+     * @param Request $request
+     * @return mixed
+     * @Method("POST")
+     * @Route("")
+     */
     public function createInvoiceSenderDetails(Request $request)
     {
-        // TODO: Implement createInvoiceSenderDetails() method.
+        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
+        if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
+        $content = $this->getContentAsArray($request);
+        $invoiceSenderDetails = $this->getObjectFromContent($content, InvoiceSenderDetails::class);
+        $this->persistAndFlush($invoiceSenderDetails);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoiceSenderDetails), 200);
     }
 
-    public function updateInvoiceSenderDetails(Request $request)
+    /**
+     * @param Request $request
+     * @return mixed
+     * @Method("PUT")
+     * @Route("/{invoiceSenderDetails}")
+     */
+    public function updateInvoiceSenderDetails(Request $request, InvoiceSenderDetails $invoiceSenderDetails)
     {
-        // TODO: Implement updateInvoiceSenderDetails() method.
+        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
+        if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
+        $content = $this->getContentAsArray($request);
+        $temporaryInvoiceSenderDetails = $this->getObjectFromContent($content, InvoiceSenderDetails::class);
+        $invoiceSenderDetails->copyValues($temporaryInvoiceSenderDetails);
+        $this->persistAndFlush($invoiceSenderDetails);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoiceSenderDetails), 200);
     }
 
+    /**
+     * @param InvoiceSenderDetails $invoiceSenderDetails
+     * @return mixed
+     * @Method("DELETE")
+     * @Route("{invoiceSenderDetails}")
+     */
     public function deleteInvoiceSenderDetails(InvoiceSenderDetails $invoiceSenderDetails)
     {
-        // TODO: Implement deleteInvoiceSenderDetails() method.
+        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
+        if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
+        $invoiceSenderDetails->setIsDeleted(true);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoiceSenderDetails), 200);
     }
 
 }
