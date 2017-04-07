@@ -9,7 +9,7 @@
 namespace AppBundle\Entity;
 
 
-class InvoiceSenderDetailsRepository
+class InvoiceSenderDetailsRepository extends BaseRepository
 {
 
 }
