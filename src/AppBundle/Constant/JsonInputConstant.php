@@ -20,6 +20,8 @@ class JsonInputConstant
     const RAM = 'ram';
     const EWE = 'ewe';
     const EWES = 'ewes';
+    const CHILDREN = 'children';
+    const LITTERS = 'litters';
     const ULN_COUNTRY_CODE = 'uln_country_code';
     const ULN_NUMBER = 'uln_number';
     const PEDIGREE_COUNTRY_CODE = 'pedigree_country_code';
@@ -42,6 +44,7 @@ class JsonInputConstant
     const BREEDER_NUMBER = 'breeder_number';
     const ANIMAL_TYPE = 'animal_type';
     const NICKNAME = 'nickname';
+    const ANIMAL_RESIDENCE_HISTORY = 'animal_residence_history';
 
     //Request & Response
     const ERROR_CODE = 'error_code';
