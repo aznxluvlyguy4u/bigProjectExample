@@ -10,6 +10,7 @@ class JsonInputConstant
     //Admins
     const ADMINS = 'admins';
     const ACCESS_LEVEL = 'access_level';
+    const IS_ADMIN_ENV = 'is_admin_env';
 
     //Animal
     const WORK_NUMBER = 'work_number';
