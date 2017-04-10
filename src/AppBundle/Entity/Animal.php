@@ -547,6 +547,7 @@ abstract class Animal
      * @var PedigreeRegister
      * @ORM\ManyToOne(targetEntity="PedigreeRegister", cascade={"persist"})
      * @ORM\JoinColumn(name="pedigree_register_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\PedigreeRegister")
      * @JMS\Groups({"DECLARE","USER_MEASUREMENT","ANIMAL_DETAILS"})
      */
     protected $pedigreeRegister;
