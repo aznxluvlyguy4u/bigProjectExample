@@ -184,13 +184,14 @@ class IRSerializer implements IRSerializerInterface
 
 
     /**
-     * @param Collection $content
+     * @param Collection|array $content
      * @param $messageClassNameSpace
      * @return array|\JMS\Serializer\scalar|mixed|object
      */
-    public function denormalizeToObject(Collection $content, $messageClassNameSpace)
+    public function denormalizeToObject($content, $messageClassNameSpace)
     {
-        $object = $this->objectNormalizer->denormalize($content->toArray(), $messageClassNameSpace);
+        if($content instanceof Collection) { $content = $content->toArray(); }
+        $object = $this->objectNormalizer->denormalize($content, $messageClassNameSpace);
         return $object;
     }
 
