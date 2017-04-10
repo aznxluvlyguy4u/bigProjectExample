@@ -405,6 +405,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
    * )
    * @param Request $request the request object
+   * @param string $ulnString
    * @return JsonResponse
    * @Route("-details/{ulnString}")
    * @Method("PUT")
@@ -412,26 +413,45 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   function updateAnimalDetails(Request $request, $ulnString) {
     //Get content to array
     $content = $this->getContentAsArray($request);
-    $em = $this->getDoctrine()->getManager();
-    $repository = $this->getDoctrine()
-      ->getRepository(Constant::ANIMAL_REPOSITORY);
+    /** @var AnimalRepository $repository */
+    $repository = $this->getDoctrine()->getRepository(Animal::class);
+    $animal = $repository->findAnimalByUlnString($ulnString);
 
-    /** @var Animal $animal */
-    $animal = $repository->findOneBy(array ("ulnCountryCode" => substr($ulnString, 0, 2), "ulnNumber" => substr($ulnString, 2)));
+    $isAdminEnv = $content->get(JsonInputConstant::IS_ADMIN_ENV);
 
     if($animal == null) {
-      return new JsonResponse(array('code'=> 204,
-                                    "message" => "For this account, no animal was found with uln: " . $content['uln_country_code'] . $content['uln_number']), 204);
+      if($this->getUser() instanceof Employee) {
+        $errorMessage = "No animal was found with uln: ".$ulnString;
+      } else {
+        //For regular users, hide the fact that the animal does not exist in the database at all.
+        $errorMessage = "For this account, no animal was found with uln: ".$ulnString;
+      }
+      return Validator::createJsonResponse($errorMessage, 404);
     }
 
-    AnimalDetailsUpdater::update($em, $animal, $content);
+    if($isAdminEnv) {
+      //Animal Edit from ADMIN environment
+      //TODO implement update logic
+      AnimalDetailsUpdater::updateAsAdmin($this->getManager(), $animal, $content);
 
-    $location = $this->getSelectedLocation($request);
+      $location = $this->getSelectedLocation($request);
+      //Clear cache for this location, to reflect changes on the livestock
+      $this->clearLivestockCacheForLocation($location);
 
-    //Clear cache for this location, to reflect changes on the livestock
-    $this->clearLivestockCacheForLocation($location);
-    
-    $output = AnimalDetailsOutput::create($em, $animal, $animal->getLocation());
+      //TODO USE JMS Serializer here
+      $output = null;
+
+    } else {
+      //Animal Edit from USER environment
+      AnimalDetailsUpdater::update($this->getManager(), $animal, $content);
+
+      $location = $this->getSelectedLocation($request);
+      //Clear cache for this location, to reflect changes on the livestock
+      $this->clearLivestockCacheForLocation($location);
+
+      $output = AnimalDetailsOutput::create($this->getManager(), $animal, $animal->getLocation());
+
+    }
 
     return new JsonResponse($output, 200);
   }

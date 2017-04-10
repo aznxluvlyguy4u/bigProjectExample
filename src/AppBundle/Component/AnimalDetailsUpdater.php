@@ -49,4 +49,18 @@ class AnimalDetailsUpdater
 
         return $animal;
     }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Animal $animal
+     * @param Collection $content
+     * @return Animal
+     */
+    public static function updateAsAdmin(ObjectManager $em, $animal, Collection $content)
+    {
+        //TODO
+        
+        return $animal;
+    }
 }
