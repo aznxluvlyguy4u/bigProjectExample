@@ -62,6 +62,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Doctrine\ORM\EntityManager;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\DependencyInjection\Tests\A;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -116,6 +117,14 @@ class IRSerializer implements IRSerializerInterface
         $this->entityGetter = $entityGetter;
         $this->conn = $entityManager->getConnection();
         $this->objectNormalizer = new ObjectNormalizer();
+    }
+
+    /**
+     * @return ObjectManager|EntityManager
+     */
+    public function getManager()
+    {
+        return $this->entityManager;
     }
 
     /**
