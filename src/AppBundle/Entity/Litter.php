@@ -25,6 +25,7 @@ class Litter extends DeclareNsfoBase
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({"ANIMAL_DETAILS", "BASIC"})
      */
     private $litterDate;
 
@@ -32,6 +33,8 @@ class Litter extends DeclareNsfoBase
      * @ORM\ManyToOne(targetEntity="Ram", inversedBy="litters")
      * @ORM\JoinColumn(name="animal_father_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Ram")
+     * @JMS\Groups({"ANIMAL_DETAILS", "BASIC"})
+     * @JMS\MaxDepth(depth=1)
      */
     private $animalFather;
 
@@ -39,6 +42,8 @@ class Litter extends DeclareNsfoBase
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="litters")
      * @ORM\JoinColumn(name="animal_mother_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Ewe")
+     * @JMS\Groups({"ANIMAL_DETAILS", "BASIC"})
+     * @JMS\MaxDepth(depth=1)
      */
     private $animalMother;
 
@@ -55,6 +60,7 @@ class Litter extends DeclareNsfoBase
      *
      * @ORM\Column(type="integer", options={"default":0})
      * @JMS\Type("integer")
+     * @JMS\Groups({"ANIMAL_DETAILS", "BASIC"})
      */
     private $stillbornCount;
 
@@ -63,18 +69,21 @@ class Litter extends DeclareNsfoBase
      *
      * @ORM\Column(type="integer", options={"default":0})
      * @JMS\Type("integer")
+     * @JMS\Groups({"ANIMAL_DETAILS", "BASIC"})
      */
     private $bornAliveCount;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
+     * @JMS\Groups({"ANIMAL_DETAILS", "BASIC"})
      */
     private $isAbortion;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
+     * @JMS\Groups({"ANIMAL_DETAILS", "BASIC"})
      */
     private $isPseudoPregnancy;
 
@@ -102,8 +111,23 @@ class Litter extends DeclareNsfoBase
     /**
      * @ORM\Column(type="string", options={"default": "INCOMPLETE"})
      * @JMS\Type("string")
+     * @JMS\Groups({"ANIMAL_DETAILS", "BASIC"})
      */
     private $status;
+
+    /**
+     * Get size
+     *
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("n_ling")
+     * @JMS\Groups({"ANIMAL_DETAILS", "BASIC"})
+     *
+     * @return integer
+     */
+    public function getSize()
+    {
+        return $this->stillbornCount + $this->bornAliveCount;
+    }
 
     /**
      * Litter constructor.
@@ -176,16 +200,6 @@ class Litter extends DeclareNsfoBase
     public function getLitterDate()
     {
         return $this->litterDate;
-    }
-
-    /**
-     * Get size
-     *
-     * @return integer
-     */
-    public function getSize()
-    {
-        return $this->stillbornCount + $this->bornAliveCount;
     }
 
     /**
