@@ -1,10 +1,9 @@
 <?php
 
 
-namespace AppBundle\Utilities;
+namespace AppBundle\Util;
 
 
-use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
