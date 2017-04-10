@@ -45,7 +45,7 @@ use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Util\Finder;
 use AppBundle\Util\Validator;
-use AppBundle\Utilities\RequestUtil;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Worker\Task\WorkerMessageBody;
 use ClassesWithParents\E;
