@@ -33,8 +33,8 @@ class Litter extends DeclareNsfoBase
      * @ORM\ManyToOne(targetEntity="Ram", inversedBy="litters")
      * @ORM\JoinColumn(name="animal_father_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Ram")
-     * @JMS\Groups({"ANIMAL_DETAILS", "BASIC"})
-     * @JMS\MaxDepth(depth=1)
+     * @JMS\Groups({"ANIMAL_DETAILS", "PARENTS"})
+     * @JMS\MaxDepth(depth=2)
      */
     private $animalFather;
 
@@ -42,8 +42,8 @@ class Litter extends DeclareNsfoBase
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="litters")
      * @ORM\JoinColumn(name="animal_mother_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Ewe")
-     * @JMS\Groups({"ANIMAL_DETAILS", "BASIC"})
-     * @JMS\MaxDepth(depth=1)
+     * @JMS\Groups({"ANIMAL_DETAILS", "PARENTS"})
+     * @JMS\MaxDepth(depth=2)
      */
     private $animalMother;
 

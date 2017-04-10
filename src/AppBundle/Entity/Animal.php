@@ -129,7 +129,7 @@ abstract class Animal
      * @ORM\ManyToOne(targetEntity="Ram", inversedBy="children", cascade={"persist"})
      * @ORM\JoinColumn(name="parent_father_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\Animal")
-     * @JMS\Groups({"ANIMAL_DETAILS"})
+     * @JMS\Groups({"PARENTS"})
      * @JMS\MaxDepth(depth=1)
      */
     protected $parentFather;
@@ -140,7 +140,7 @@ abstract class Animal
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="children", cascade={"persist"})
      * @ORM\JoinColumn(name="parent_mother_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\Animal")
-     * @JMS\Groups({"ANIMAL_DETAILS"})
+     * @JMS\Groups({"PARENTS"})
      * @JMS\MaxDepth(depth=1)
      */
     protected $parentMother;
@@ -173,7 +173,7 @@ abstract class Animal
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="surrogateChildren", cascade={"persist"})
      * @ORM\JoinColumn(name="surrogate_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\Animal")
-     * @JMS\Groups({"ANIMAL_DETAILS"})
+     * @JMS\Groups({"PARENTS"})
      * @JMS\MaxDepth(depth=1)
      */
     protected $surrogate;

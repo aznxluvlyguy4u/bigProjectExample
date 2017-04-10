@@ -1108,11 +1108,11 @@ class APIController extends Controller implements APIControllerInterface
   {
     $decodedLitters = [];
     if($animal instanceof Ram || $animal instanceof Ewe) {
-      $decodedLitters = $this->getDecodedJson($animal->getLitters(), [JmsGroup::BASIC]);
+      $decodedLitters = $this->getDecodedJson($animal->getLitters(), [JmsGroup::BASIC, JmsGroup::PARENTS]);
     }
 
     return [
-        JsonInputConstant::ANIMAL => $this->getDecodedJson($animal, [JmsGroup::ANIMAL_DETAILS]),
+        JsonInputConstant::ANIMAL => $this->getDecodedJson($animal, [JmsGroup::ANIMAL_DETAILS, JmsGroup::PARENTS]),
         JsonInputConstant::CHILDREN => $this->getDecodedJson($animal->getChildren(), [JmsGroup::BASIC]),
         JsonInputConstant::ANIMAL_RESIDENCE_HISTORY => $this->getDecodedJson($animal->getAnimalResidenceHistory(), [JmsGroup::BASIC]),
         JsonInputConstant::LITTERS => $decodedLitters,
