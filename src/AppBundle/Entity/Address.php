@@ -14,6 +14,12 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * @ORM\DiscriminatorMap({"CompanyAddress" = "CompanyAddress", "BillingAddress" = "BillingAddress", "LocationAddress" = "LocationAddress"})
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *                        "CompanyAddress" : "AppBundle\Entity\CompanyAddress",
+ *                        "BillingAddress" : "AppBundle\Entity\BillingAddress",
+ *                       "LocationAddress" : "AppBundle\Entity\LocationAddress"},
+ *     groups = {"BASIC"})
+ * 
  * @package AppBundle\Entity
  */
 abstract class Address {

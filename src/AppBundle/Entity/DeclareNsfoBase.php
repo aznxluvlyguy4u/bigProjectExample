@@ -25,6 +25,12 @@ use JMS\Serializer\Annotation\Expose;
  *      "Litter" = "Litter"
  *   }
  * )
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *                        "Mate" : "AppBundle\Entity\Mate",
+ *                        "DeclareWeight" : "AppBundle\Entity\DeclareWeight",
+ *                        "Litter" : "AppBundle\Entity\Litter"},
+ *     groups = {"BASIC"})
+ *
  * @package AppBundle\Entity\DeclareNsfoBase
  */
 abstract class DeclareNsfoBase
