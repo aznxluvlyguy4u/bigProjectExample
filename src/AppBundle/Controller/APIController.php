@@ -44,6 +44,7 @@ use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Util\Finder;
 use AppBundle\Util\Validator;
+use AppBundle\Utilities\RequestUtil;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Worker\Task\WorkerMessageBody;
 use ClassesWithParents\E;
@@ -233,13 +234,7 @@ class APIController extends Controller implements APIControllerInterface
    */
   protected function getContentAsArray(Request $request)
   {
-    $content = $request->getContent();
-
-    if(empty($content)){
-      throw new BadRequestHttpException("Content is empty");
-    }
-
-    return new ArrayCollection(json_decode($content, true));
+    return RequestUtil::getContentAsArray($request);
   }
 
   /**
