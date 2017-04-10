@@ -129,11 +129,12 @@ class APIController extends Controller implements APIControllerInterface
   /**
    * @param $object
    * @param $type
+   * @param boolean $enableMaxDepthChecks
    * @return mixed|array
    */
-  public function getDecodedJson($object, $type)
+  public function getDecodedJson($object, $type, $enableMaxDepthChecks = true)
   {
-    $jsonMessage = $this->getSerializer()->serializeToJSON($object, $type);
+    $jsonMessage = $this->getSerializer()->serializeToJSON($object, $type, $enableMaxDepthChecks);
     return json_decode($jsonMessage, true);
   }
   

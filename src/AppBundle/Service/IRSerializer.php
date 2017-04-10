@@ -156,11 +156,13 @@ class IRSerializer implements IRSerializerInterface
 
     /**
      * @param $object
+     * @param $type array|string The JMS Groups
+     * @param $enableMaxDepthChecks boolean
      * @return array
      */
-    public function normalizeToArray($object)
+    public function normalizeToArray($object, $type = null, $enableMaxDepthChecks = true)
     {
-        $json = $this->serializeToJSON($object);
+        $json = $this->serializeToJSON($object, $type, $enableMaxDepthChecks);
         $array = json_decode($json, true);
 
         return $array;
