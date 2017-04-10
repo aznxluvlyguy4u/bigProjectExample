@@ -19,6 +19,7 @@ class JsonInputConstant
     const ANIMAL_ID = 'animal_id';
     const RAM = 'ram';
     const EWE = 'ewe';
+    const NEUTER = 'neuter';
     const EWES = 'ewes';
     const CHILDREN = 'children';
     const LITTERS = 'litters';
