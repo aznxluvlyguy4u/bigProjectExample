@@ -36,6 +36,7 @@ use AppBundle\Entity\Ram;
 use AppBundle\Entity\Token;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\AnimalType;
+use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
@@ -1096,5 +1097,25 @@ class APIController extends Controller implements APIControllerInterface
         $this->getRedisClient()->del('[' .$cacheId .']['.$i.']');
       }
     }
+  }
+
+
+  /**
+   * @param Animal|Ram|Ewe|Neuter $animal
+   * @return array
+   */
+  protected function getDecodedJsonForAnimalDetailsOutputFromAdminEnvironment($animal)
+  {
+    $decodedLitters = [];
+    if($animal instanceof Ram || $animal instanceof Ewe) {
+      $decodedLitters = $this->getDecodedJson($animal->getLitters(), [JmsGroup::BASIC]);
+    }
+
+    return [
+        JsonInputConstant::ANIMAL => $this->getDecodedJson($animal, [JmsGroup::ANIMAL_DETAILS]),
+        JsonInputConstant::CHILDREN => $this->getDecodedJson($animal->getChildren(), [JmsGroup::BASIC]),
+        JsonInputConstant::ANIMAL_RESIDENCE_HISTORY => $this->getDecodedJson($animal->getAnimalResidenceHistory(), [JmsGroup::BASIC]),
+        JsonInputConstant::LITTERS => $decodedLitters,
+    ];
   }
 }

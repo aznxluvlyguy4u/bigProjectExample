@@ -17,6 +17,7 @@ use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\MessageType;
 use AppBundle\Enumerator\WorkerTaskType;
 use AppBundle\FormInput\AnimalDetails;
@@ -24,6 +25,7 @@ use AppBundle\Output\AnimalDetailsOutput;
 use AppBundle\Output\AnimalOutput;
 use AppBundle\Util\GenderChanger;
 use AppBundle\Util\Validator;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\AnimalDetailsValidator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -438,8 +440,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       //Clear cache for this location, to reflect changes on the livestock
       $this->clearLivestockCacheForLocation($location);
 
-      //TODO USE JMS Serializer here
-      $output = null;
+      $output = $this->getDecodedJsonForAnimalDetailsOutputFromAdminEnvironment($animal);
 
     } else {
       //Animal Edit from USER environment
@@ -479,24 +480,38 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * @Method("GET")
    */
   public function getAnimalDetailsByUln(Request $request, $ulnString) {
+    $isAdminEnvironment = RequestUtil::getBooleanQuery($request, JsonInputConstant::IS_ADMIN_ENV);
 
-    $admin = $this->getAuthenticatedEmployee($request);
-    $adminValidator = new AdminValidator($admin, AccessLevelType::ADMIN);
-    $isAdmin = $adminValidator->getIsAccessGranted();
-    $em = $this->getDoctrine()->getManager();
+    if($isAdminEnvironment) {
+      /** @var AnimalRepository $repository */
+      $repository = $this->getDoctrine()->getRepository(Animal::class);
+      $animal = $repository->findAnimalByUlnString($ulnString);
 
-    $location = null;
-    if(!$isAdmin) { $location = $this->getSelectedLocation($request); }
+      if($animal == null) {
+        return Validator::createJsonResponse("No animal was found with uln: ".$ulnString, 404);
+      }
 
-    $animalDetailsValidator = new AnimalDetailsValidator($em, $isAdmin, $location, $ulnString);
-    if(!$animalDetailsValidator->getIsInputValid()) {
-      return $animalDetailsValidator->createJsonResponse();
+      $output = $this->getDecodedJsonForAnimalDetailsOutputFromAdminEnvironment($animal);
+
+    } else {
+
+      $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
+      $isAdmin = $validationResult->isValid();
+
+      $location = null;
+      if(!$isAdmin) { $location = $this->getSelectedLocation($request); }
+
+      $animalDetailsValidator = new AnimalDetailsValidator($this->getManager(), $isAdmin, $location, $ulnString);
+      if(!$animalDetailsValidator->getIsInputValid()) {
+        return $animalDetailsValidator->createJsonResponse();
+      }
+
+      $animal = $animalDetailsValidator->getAnimal();
+      if($location == null) { $location = $animal->getLocation(); }
+
+      $output = AnimalDetailsOutput::create($this->getManager(), $animal, $location);
     }
 
-    $animal = $animalDetailsValidator->getAnimal();
-    if($location == null) { $location = $animal->getLocation(); }
-
-    $output = AnimalDetailsOutput::create($em, $animal, $location);
     return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
   }
 
