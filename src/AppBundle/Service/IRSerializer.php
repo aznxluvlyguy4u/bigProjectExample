@@ -114,23 +114,30 @@ class IRSerializer implements IRSerializerInterface
     }
 
     /**
-     * @param $type array|string
      * @param $object
+     * @param $type array|string
+     * @param $enableMaxDepthChecks boolean
      * @return mixed|string
      */
-    public function serializeToJSON($object, $type)
+    public function serializeToJSON($object, $type, $enableMaxDepthChecks = true)
     {
-        if($type == '' || $type == null)
-        {
-            return $this->serializer->serialize($object, Constant::jsonNamespace);
+        if($type == '' || $type == null) {
+            if($enableMaxDepthChecks) {
+                $serializationContext = SerializationContext::create()->enableMaxDepthChecks();
+            } else {
+                $serializationContext = null;
+            }
+
+        } else {
+            $type = is_string($type) ? [$type] : $type;
+            if($enableMaxDepthChecks) {
+                $serializationContext = SerializationContext::create()->setGroups($type)->enableMaxDepthChecks();
+            } else {
+                $serializationContext = SerializationContext::create()->setGroups($type);
+            }
         }
 
-        if(is_string($type))
-        {
-            $type = [$type];
-        }
-
-        return $this->serializer->serialize($object, Constant::jsonNamespace, SerializationContext::create()->setGroups($type));
+        return $this->serializer->serialize($object, Constant::jsonNamespace, $serializationContext);
     }
 
     /**
