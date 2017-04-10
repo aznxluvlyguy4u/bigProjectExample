@@ -256,20 +256,56 @@ class TimeUtil
 
 
     /**
-     * DateString format should be YYYY-MM-DD, where MM and DD can also be one digit in length 
-     * 
+     * Regex for YYYY-MM-DD, where MM and DD can also be one digit in length
+     *
+     * @param bool $mustHaveLeadingZeroes
+     * @return string
+     */
+    public static function getYYYYMMDDRegex($mustHaveLeadingZeroes = false)
+    {
+        if($mustHaveLeadingZeroes) {
+            return "/^[0-9]{4}-((0[1-9]|1[0-2]))-((0[1-9]|[1-2][0-9]|3[0-1]))$/";
+        }
+        return "/^[0-9]{4}-((0[1-9]|1[0-2])|[1-9])-((0[1-9]|[1-2][0-9]|3[0-1])|[1-9])$/";
+    }
+
+    /**
+     * DateString format should be YYYY-MM-DD, where MM and DD can also be one digit in length
+     *
      * @param string $dateString
      * @param boolean $mustHaveLeadingZeroes
      * @return bool
      */
     public static function isFormatYYYYMMDD($dateString, $mustHaveLeadingZeroes = false)
     {
+        return (bool)preg_match(self::getYYYYMMDDRegex($mustHaveLeadingZeroes),$dateString);
+    }
+
+
+    /**
+     * Regex for DD-MM-YYYY, where MM and DD can also be one digit in length
+     *
+     * @param bool $mustHaveLeadingZeroes
+     * @return string
+     */
+    public static function getDDMMYYYYRegex($mustHaveLeadingZeroes = false)
+    {
         if($mustHaveLeadingZeroes) {
-            $regex = "/^[0-9]{4}-((0[1-9]|1[0-2]))-((0[1-9]|[1-2][0-9]|3[0-1]))$/";
-        } else {
-            $regex = "/^[0-9]{4}-((0[1-9]|1[0-2])|[1-9])-((0[1-9]|[1-2][0-9]|3[0-1])|[1-9])$/";
+            return "/^((0[1-9]|[1-2][0-9]|3[0-1]))-((0[1-9]|1[0-2]))-[0-9]{4}$/";
         }
-        return (bool)preg_match($regex,$dateString);
+        return "/^((0[1-9]|[1-2][0-9]|3[0-1])|[1-9])-((0[1-9]|1[0-2])|[1-9])-[0-9]{4}$/";
+    }
+
+    /**
+     * DateString format should be DD-MM-YYYY, where MM and DD can also be one digit in length
+     *
+     * @param string $dateString
+     * @param boolean $mustHaveLeadingZeroes
+     * @return bool
+     */
+    public static function isFormatDDMMYYYY($dateString, $mustHaveLeadingZeroes = false)
+    {
+        return (bool)preg_match(self::getDDMMYYYYRegex($mustHaveLeadingZeroes),$dateString);
     }
 
 
