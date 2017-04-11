@@ -489,6 +489,21 @@ class ActionLogWriter
 
     /**
      * @param ObjectManager $om
+     * @param Employee $admin
+     * @param string $description
+     * @return ActionLog
+     */
+    public static function updateAnimalDetailsAdminEnvironment(ObjectManager $om, $admin, $description)
+    {
+        $log = new ActionLog($admin, $admin, UserActionType::ADMIN_ANIMAL_EDIT, true, $description, false);
+        $om->persist($log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param ObjectManager $om
      * @param ActionLog $log
      * @return ActionLog
      */

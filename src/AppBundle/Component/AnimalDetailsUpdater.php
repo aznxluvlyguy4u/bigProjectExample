@@ -6,15 +6,18 @@ namespace AppBundle\Component;
 
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationRepository;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\PedigreeRegisterRepository;
+use AppBundle\Entity\Person;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Service\IRSerializer;
+use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
@@ -68,9 +71,10 @@ class AnimalDetailsUpdater
      * @param IRSerializer $serializer
      * @param Animal $animal
      * @param Collection $content
+     * @param Employee $user
      * @return Animal
      */
-    public static function updateAsAdmin(IRSerializer $serializer, $animal, Collection $content)
+    public static function updateAsAdmin(IRSerializer $serializer, $animal, Collection $content, $user)
     {
         $updateString = '';
 
@@ -281,9 +285,11 @@ class AnimalDetailsUpdater
 
         $updateString = rtrim($updateString, ', ');
 
-
-        $em->persist($animal);
-        $em->flush();
+        if(trim($updateString) != '') {
+            $log = ActionLogWriter::updateAnimalDetailsAdminEnvironment($em, $user, $updateString);
+            $em->persist($animal);
+            $em->flush();
+        }
 
         return $animal;
     }

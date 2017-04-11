@@ -437,7 +437,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
       
       //Animal Edit from ADMIN environment
-      AnimalDetailsUpdater::updateAsAdmin($this->getSerializer(), $animal, $content);
+      AnimalDetailsUpdater::updateAsAdmin($this->getSerializer(), $animal, $content, $this->getUser());
 
       $location = $this->getSelectedLocation($request);
       //Clear cache for this location, to reflect changes on the livestock
