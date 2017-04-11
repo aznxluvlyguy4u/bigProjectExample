@@ -56,6 +56,7 @@ class JsonInputConstant
     const RECOVERY_INDICATOR = 'recovery_indicator';
     const ACTION_BY = 'action_by';
     const IS_REMOVED_BY_USER = 'is_removed_by_user';
+    const IS_DUTCH = 'is_dutch';
 
     //Arrival & Import
     const IS_IMPORT_ANIMAL = 'is_import_animal';

@@ -16,6 +16,7 @@ use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\AnimalObjectType;
+use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\MessageType;
@@ -513,6 +514,38 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
 
     return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
   }
+
+
+  /**
+   * Get BreedTypes
+   *
+   * @ApiDoc(
+   *   requirements={
+   *     {
+   *       "name"="AccessToken",
+   *       "dataType"="string",
+   *       "requirement"="",
+   *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+   *     }
+   *   },
+   *   resource = true,
+   *   description = "Get BreedTypes",
+   *   output = "AppBundle\Entity\Animal"
+   * )
+   * @param Request $request the request object
+   * @return JsonResponse
+   * @Route("-breed-types")
+   * @Method("GET")
+   */
+  public function getBreedTypes(Request $request) {
+    if(RequestUtil::getBooleanQuery($request, JsonInputConstant::IS_DUTCH)) {
+      $output = BreedType::getAllInDutch();
+    } else {
+      $output = BreedType::getAll();
+    }
+    return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+  }
+
 
   /**
    *
