@@ -215,4 +215,7 @@ class JsonInputConstant
     const BREED_VALUE_FAT = "breed_value_fat";
     const LAMB_MEAT_INDEX = "lamb_meat_index";
     const LAMB_MEAT_INDEX_WITHOUT_ACCURACY = "lamb_meat_index_without_accuracy";
+
+    //PedigreeRegisters
+    const INCLUDE_NON_NSFO_REGISTERS = "include_non_nsfo_registers";
 }
