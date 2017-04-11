@@ -122,6 +122,7 @@ class JsonInputConstant
 
     //Locations
     const LOCATION = 'location';
+    const LOCATION_OF_BIRTH = 'location_of_birth';
     const PROVINCES = 'provinces';
     const CODES = 'codes';
 

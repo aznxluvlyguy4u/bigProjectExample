@@ -433,8 +433,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
 
     if($isAdminEnv) {
       //Animal Edit from ADMIN environment
-      //TODO implement update logic
-      AnimalDetailsUpdater::updateAsAdmin($this->getManager(), $animal, $content);
+      AnimalDetailsUpdater::updateAsAdmin($this->getSerializer(), $animal, $content);
 
       $location = $this->getSelectedLocation($request);
       //Clear cache for this location, to reflect changes on the livestock
