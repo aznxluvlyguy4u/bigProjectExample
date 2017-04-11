@@ -439,9 +439,10 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       //Animal Edit from ADMIN environment
       AnimalDetailsUpdater::updateAsAdmin($this->getSerializer(), $animal, $content, $this->getUser());
 
-      $location = $this->getSelectedLocation($request);
-      //Clear cache for this location, to reflect changes on the livestock
-      $this->clearLivestockCacheForLocation($location);
+      if($animal->getLocation()) {
+        //Clear cache for this location, to reflect changes on the livestock
+        $this->clearLivestockCacheForLocation($animal->getLocation());
+      }
 
       $output = $this->getDecodedJsonForAnimalDetailsOutputFromAdminEnvironment($animal);
 
@@ -449,9 +450,10 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
       //Animal Edit from USER environment
       AnimalDetailsUpdater::update($this->getManager(), $animal, $content);
 
-      $location = $this->getSelectedLocation($request);
-      //Clear cache for this location, to reflect changes on the livestock
-      $this->clearLivestockCacheForLocation($location);
+      if($animal->getLocation()) {
+        //Clear cache for this location, to reflect changes on the livestock
+        $this->clearLivestockCacheForLocation($animal->getLocation());
+      }
 
       $output = AnimalDetailsOutput::create($this->getManager(), $animal, $animal->getLocation());
 
