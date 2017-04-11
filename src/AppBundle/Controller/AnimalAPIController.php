@@ -433,6 +433,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     }
 
     if($isAdminEnv) {
+      $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::SUPER_ADMIN);
+      if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
+      
       //Animal Edit from ADMIN environment
       AnimalDetailsUpdater::updateAsAdmin($this->getSerializer(), $animal, $content);
 
