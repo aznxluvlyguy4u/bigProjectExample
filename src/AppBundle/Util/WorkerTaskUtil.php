@@ -68,6 +68,7 @@ class WorkerTaskUtil
             $motherId = $mother->getId();
         }
 
+
         $children = $litter->getChildren();
         foreach ($children as $child) {
             if($child instanceof Animal) {
@@ -90,7 +91,7 @@ class WorkerTaskUtil
      */
     public static function createLitterResultTableBody($motherId, $fatherId, array $childrenIds)
     {
-        if(!is_int($motherId) && !is_int($fatherId) && count($childrenIds) == 0) { return null; }
+        if(!is_int($motherId) && !is_int($fatherId)) { return null; }
 
         $messageBody = new WorkerMessageBodyLitter();
         $messageBody->setFatherId($fatherId);
