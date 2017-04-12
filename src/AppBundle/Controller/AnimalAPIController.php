@@ -165,6 +165,8 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
   public function getLiveStock(Request $request) {
     /** @var Location $location */
     $location = $this->getSelectedLocation($request);
+    if($location == null) { return Validator::createJsonResponse('Location cannot be null', 428); }
+
     /** @var  $animalRepository */
     $animalRepository = $this->getDoctrine()->getRepository(Constant::ANIMAL_REPOSITORY);
     $livestock = $animalRepository->getLiveStock($location);
@@ -214,6 +216,8 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function getHistoricLiveStock(Request $request) {
     $location = $this->getSelectedLocation($request);
+    if($location == null) { return Validator::createJsonResponse('Location cannot be null', 428); }
+
     /** @var AnimalRepository $repository */
     $repository = $this->getDoctrine()->getRepository(Animal::class);
     $historicLivestock = $repository->getHistoricLiveStock($location);
@@ -340,6 +344,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function createRetrieveAnimalsForAllLocations(Request $request) {
     {
+      $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::SUPER_ADMIN);
+      if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
+
       $loggedInUser = $this->getLoggedInUser($request);
       
       //Any logged in user can sync all animals
