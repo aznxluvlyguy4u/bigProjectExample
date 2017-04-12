@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Output\MenuBarOutput;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
@@ -56,14 +57,10 @@ class ComponentAPIController extends APIController {
     * @Method("GET")
     */
     public function getAdminMenuBar(Request $request) {
-        $admin = $this->getAuthenticatedEmployee($request);
-        $adminValidator = new AdminValidator($admin);
+        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::SUPER_ADMIN);
+        if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
 
-        if (!$adminValidator->getIsAccessGranted()) {
-
-        }
-
-        $outputArray = MenuBarOutput::createAdmin($admin);
+        $outputArray = MenuBarOutput::createAdmin($this->getUser());
 
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $outputArray), 200);
     }
