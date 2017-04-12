@@ -57,7 +57,7 @@ class ComponentAPIController extends APIController {
     * @Method("GET")
     */
     public function getAdminMenuBar(Request $request) {
-        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::SUPER_ADMIN);
+        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
         if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
 
         $outputArray = MenuBarOutput::createAdmin($this->getUser());
