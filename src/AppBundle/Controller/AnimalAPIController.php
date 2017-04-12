@@ -337,6 +337,9 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    */
   public function createRetrieveAnimalsForAllLocations(Request $request) {
     {
+      $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::SUPER_ADMIN);
+      if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
+
       $loggedInUser = $this->getLoggedInUser($request);
       
       //Any logged in user can sync all animals
