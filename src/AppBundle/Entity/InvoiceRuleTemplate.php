@@ -73,6 +73,14 @@ class InvoiceRuleTemplate
     private $category;
 
     /**
+     * @var string
+     * @ORM\Column(type="string", name="type")
+     * @JMS\Type("string")
+     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
+     */
+    private $type;
+
+    /**
      * InvoiceRuleTemplate constructor.
      */
     public function __construct()
@@ -175,6 +183,21 @@ class InvoiceRuleTemplate
         $this->category = $category;
     }
 
+    /**
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * @param string $type
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+    }
 
     /**
      * TODO Find a better way to clone values (excluding the id) than using custom getters and setters
