@@ -25,7 +25,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 /**
  * Class InvoiceRuleTemplateAPIController
  * @package AppBundle\Controller
- * @Route("/api/v1/invoice-rule-templates")
+ * @Route("/api/v1/invoice_rule_templates")
  */
 class InvoiceRuleTemplateAPIController extends APIController implements InvoiceRuleTemplateAPIControllerInterface
 {
