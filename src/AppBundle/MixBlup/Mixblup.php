@@ -17,6 +17,7 @@ use AppBundle\Enumerator\BreedCodeType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\WeightType;
 use AppBundle\Migration\BreedCodeReformatter;
+use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\MeasurementsUtil;
@@ -149,12 +150,6 @@ class Mixblup
     private $pedigreeFilePath;
 
     /** @var string */
-    private $instructionsFileName;
-
-    /** @var string */
-    private $dataFileName;
-
-    /** @var string */
     private $dataFilePathTestAttributes;
 
     /** @var string */
@@ -162,9 +157,6 @@ class Mixblup
 
     /** @var string */
     private $dataFilePathFertilityAttributes;
-
-    /** @var string */
-    private $pedigreeFileName;
 
     /** @var int */
     private $firstMeasurementYear;
@@ -195,16 +187,13 @@ class Mixblup
      * Mixblup constructor.
      * @param ObjectManager $em
      * @param string $outputFolderPath
-     * @param string $instructionsFileName
-     * @param string $dataFileName
-     * @param string $pedigreeFileName
      * @param int $firstMeasurementYear
      * @param int $lastMeasurementYear
      * @param CommandUtil $cmdUtil
      * @param array $animals
      * @param OutputInterface $output
      */
-    public function __construct(ObjectManager $em, $outputFolderPath, $instructionsFileName, $dataFileName, $pedigreeFileName, $firstMeasurementYear, $lastMeasurementYear, $cmdUtil, $animals = null, $output)
+    public function __construct(ObjectManager $em, $outputFolderPath, $firstMeasurementYear, $lastMeasurementYear, $cmdUtil, $animals = null, $output)
     {
         $this->em = $em;
         $this->animalRowBases = new ArrayCollection();
@@ -228,9 +217,9 @@ class Mixblup
             $this->animals = $animals;
         }
 
-        $this->dataFileName = $dataFileName;
-        $this->pedigreeFileName = $pedigreeFileName;
-        $this->instructionsFileName = $instructionsFileName;
+        $dataFileName = MixBlupSetting::DATA_FILENAME;
+        $pedigreeFileName = MixBlupSetting::PEDIGREE_FILENAME;
+        $instructionsFileName = MixBlupSetting::INSTRUCTIONS_FILENAME;
 
         if(substr($outputFolderPath, -1) != '/') {
             $this->dataFilePath = $outputFolderPath.'/'.$dataFileName.'.txt';
@@ -325,7 +314,7 @@ class Mixblup
     {
         return [
             'TITEL   schapen fokwaarde berekening groei, spierdikte en vetbedekking',
-            ' DATAFILE  '.$this->dataFileName.'_'.self::TEST_ATTRIBUTES.'.txt',
+            ' DATAFILE  '.MixBlupSetting::DATA_FILENAME.'_'.self::TEST_ATTRIBUTES.'.txt',
             ' animal     A !missing '.self::ULN_NULL_FILLER.' #uln',  //uln
             ' gender     A !missing '.self::GENDER_NULL_FILLER,  //ram/ooi/N_B
             ' jaarUbn    A !missing '.self::YEAR_UBN_NULL_FILLER.' #jaar en ubn van geboorte', //year and ubn of birth
@@ -356,7 +345,7 @@ class Mixblup
             ' staartlg   T !missing '.self::TAIL_LENGTH_NULL_FILLER.' #staartlengte', //tailLength
             ' block I !BLOCK', //NOTE it is an integer here
             ' ',
-            'PEDFILE   '.$this->pedigreeFileName,
+            'PEDFILE   '.MixBlupSetting::PEDIGREE_FILENAME,
             ' animal    A !missing '.self::ULN_NULL_FILLER.' #uln',
             ' sire      A !missing '.self::ULN_NULL_FILLER.' #uln van vader',
             ' dam       A !missing '.self::ULN_NULL_FILLER.' #uln van moeder',
@@ -381,7 +370,7 @@ class Mixblup
     {
         return [
             'TITEL   schapen fokwaarde berekening exterieur',
-            ' DATAFILE  '.$this->dataFileName.'_'.self::EXTERIOR_ATTRIBUTES.'.txt',
+            ' DATAFILE  '.MixBlupSetting::DATA_FILENAME.'_'.self::EXTERIOR_ATTRIBUTES.'.txt',
             ' animal     A !missing '.self::ULN_NULL_FILLER.' #uln',  //uln
             ' gender     A !missing '.self::GENDER_NULL_FILLER.' #sekse van dier',  //ram/ooi/0
             ' jaarUbn    A !missing '.self::YEAR_UBN_NULL_FILLER.' #jaar en ubn van geboorte', //year and ubn of birth
@@ -408,7 +397,7 @@ class Mixblup
             ' KEN T !missing '.self::EXTERIOR_NULL_FILLER.' #kenmerken', //markings
             ' block I !BLOCK', //NOTE it is an integer here
             ' ',
-            'PEDFILE   '.$this->pedigreeFileName,
+            'PEDFILE   '.MixBlupSetting::PEDIGREE_FILENAME,
             ' animal    A !missing '.self::ULN_NULL_FILLER.' #uln',
             ' sire      A !missing '.self::ULN_NULL_FILLER.' #uln van vader',
             ' dam       A !missing '.self::ULN_NULL_FILLER.' #uln van moeder',
@@ -434,7 +423,7 @@ class Mixblup
     {
         return [
             'TITEL   schapen fokwaarde berekening vruchtbaarheid',
-            ' DATAFILE  '.$this->dataFileName.'_'.self::FERTILITY.'.txt',
+            ' DATAFILE  '.MixBlupSetting::DATA_FILENAME.'_'.self::FERTILITY.'.txt',
             ' animal     A !missing '.self::ULN_NULL_FILLER.' #uln',  //uln
             ' pariteit   A !missing '.self::DATE_OF_BIRTH_NULL_FILLER.' #Leeftijd ooi bij werpen in hele jaren',  //ram/ooi/0
             ' jaarUbn    A !missing '.self::YEAR_UBN_NULL_FILLER.' #jaar en ubn van geboorte', //year and ubn of birth
@@ -460,7 +449,7 @@ class Mixblup
             ' Gebvrlp    I !missing '.self::BIRTH_PROCESS_NULL_FILLER.' #zonder=0, licht=1, normaal=2, zwaar=3, keizersnee=4',
             ' block I !BLOCK', //NOTE it is an integer here
             ' ',
-            'PEDFILE   '.$this->pedigreeFileName,
+            'PEDFILE   '.MixBlupSetting::PEDIGREE_FILENAME,
             ' animal    A !missing '.self::ULN_NULL_FILLER.' #uln',
             ' sire      A !missing '.self::ULN_NULL_FILLER.' #uln van vader',
             ' dam       A !missing '.self::ULN_NULL_FILLER.' #uln van moeder',

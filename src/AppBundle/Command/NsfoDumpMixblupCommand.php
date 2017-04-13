@@ -4,6 +4,7 @@ namespace AppBundle\Command;
 
 use AppBundle\Migration\MeasurementsFixer;
 use AppBundle\MixBlup\Mixblup;
+use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;
@@ -15,11 +16,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 class NsfoDumpMixblupCommand extends ContainerAwareCommand
 {
     const TITLE = 'Generate NSFO MiXBLUP files';
-    const DATA_FILENAME = 'databestand';
-    const PEDIGREE_FILENAME = 'afstamming';
-    const INSTRUCTIONS_FILENAME = 'mixblup_instructions';
-    const DEFAULT_OUTPUT_FOLDER_PATH = '/Resources/outputs/mixblup';
-    const DEFAULT_MUTATIONS_FOLDER_PATH = '/Resources/mutations';
     const DEFAULT_OPTION = 0;
 
     /* To get all the measurements set both years to null */
@@ -40,6 +36,9 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
     /** @var string */
     private $mutationsFolder;
+    
+    /** @var string */
+    private $rootDir;
 
     
     protected function configure()
@@ -57,11 +56,12 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
         $this->output = $output;
-
+        $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
+        
         /* Setup folders */
-        $this->outputFolder = $this->getContainer()->get('kernel')->getRootDir().self::DEFAULT_OUTPUT_FOLDER_PATH;
+        $this->outputFolder = $this->rootDir.MixBlupSetting::OUTPUT_FOLDER_PATH;
         NullChecker::createFolderPathIfNull($this->outputFolder);
-        $this->mutationsFolder = $this->getContainer()->get('kernel')->getRootDir().self::DEFAULT_MUTATIONS_FOLDER_PATH;
+        $this->mutationsFolder = $this->rootDir.MixBlupSetting::MUTATIONS_FOLDER_PATH;
         NullChecker::createFolderPathIfNull($this->mutationsFolder);
 
 
@@ -215,7 +215,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         $this->cmdUtil->setStartTimeAndPrintIt();
 
         $this->output->writeln([' ', 'Preparing data... ']);
-        $mixBlup = new Mixblup($this->em, $outputFolderPath, self::INSTRUCTIONS_FILENAME, self::DATA_FILENAME, self::PEDIGREE_FILENAME, self::START_YEAR_MEASUREMENT, self::END_YEAR_MEASUREMENTS, $this->cmdUtil, null, $this->output);
+        $mixBlup = new Mixblup($this->em, $outputFolderPath, self::START_YEAR_MEASUREMENT, self::END_YEAR_MEASUREMENTS, $this->cmdUtil, null, $this->output);
         $this->cmdUtil->printElapsedTime('Time to prepare data');
 
         $mixBlup->validateMeasurementData();
