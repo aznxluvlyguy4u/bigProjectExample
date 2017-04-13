@@ -14,67 +14,43 @@ use Doctrine\DBAL\Connection;
 use Symfony\Component\Validator\Constraints\Time;
 
 class MeasurementsUtil
-{
-    const MUSCLE_THICKNESS_TABLE_NAME = 'muscle_thickness';
-    const WEIGHT_TABLE_NAME = 'weight';
-    const TAIL_LENGTH_TABLE_NAME = 'tail_length';
-    const EXTERIOR_TABLE_NAME = 'exterior';
-    const BODY_FAT_TABLE_NAME = 'body_fat';
-
-
+{    
     /**
-     * @param ObjectManager $em
-     * @return int
-     */
-    public static function getEmptyAnimalIdAndDateCount(ObjectManager $em)
-    {
-        $sql = "SELECT COUNT(*) FROM measurement WHERE (animal_id_and_date ISNULL OR animal_id_and_date = '') AND type <> 'Fat1' AND type <> 'Fat2' AND type <>'Fat3'";
-        $result = $em->getConnection()->query($sql)->fetch()['count'];
-        return $result;
-    }
-    
-    
-    /**
-     * @param ObjectManager $em
+     * @param Connection $conn
      * @param bool $isRegenerateFilledValues
      * @return int
      */
-    public static function generateAnimalIdAndDateValues(ObjectManager $em, $isRegenerateFilledValues = false) {
-
-        $count  = self::generateAnimalIdAndDateValuesForType($em, self::BODY_FAT_TABLE_NAME, $isRegenerateFilledValues);
-        $count += self::generateAnimalIdAndDateValuesForType($em, self::MUSCLE_THICKNESS_TABLE_NAME, $isRegenerateFilledValues);
-        $count += self::generateAnimalIdAndDateValuesForType($em, self::WEIGHT_TABLE_NAME, $isRegenerateFilledValues);
-        $count += self::generateAnimalIdAndDateValuesForType($em, self::TAIL_LENGTH_TABLE_NAME, $isRegenerateFilledValues);
-        $count += self::generateAnimalIdAndDateValuesForType($em, self::EXTERIOR_TABLE_NAME, $isRegenerateFilledValues);
-
-        return $count;
-    }
-
-    /**
-     * @param ObjectManager $em
-     * @param $tableName
-     * @param bool $isRegenerateFilledValues
-     * @return int
-     */
-    private static function generateAnimalIdAndDateValuesForType(ObjectManager $em, $tableName, $isRegenerateFilledValues = false)
+    public static function generateAnimalIdAndDateValues(Connection $conn, $isRegenerateFilledValues = false)
     {
-        if($isRegenerateFilledValues) {
-            $sqlFilter = '';
-        } else {
-            $sqlFilter = "WHERE m.animal_id_and_date ISNULL OR m.animal_id_and_date = ''";
+        $sqlFilter = $isRegenerateFilledValues ? '' : "WHERE m.animal_id_and_date ISNULL OR m.animal_id_and_date = ''";
+
+        $tableNames = ['muscle_thickness', 'weight', 'tail_length', 'exterior', 'body_fat'];
+
+        $sqlSelect = '';
+        foreach ($tableNames as $key => $tableName) {
+            $sqlSelect = $sqlSelect
+                ."SELECT m.id, CONCAT(t.animal_id,'_',DATE(measurement_date))
+                    FROM measurement m
+                        INNER JOIN ".$tableName." t ON m.id = t.id 
+                        ".$sqlFilter;
+
+            if($key < count($tableNames) - 1) {
+                $sqlSelect = $sqlSelect."
+                 
+                 UNION ";
+            }
         }
 
-        $sql = "SELECT m.id, CONCAT(t.animal_id,'_',DATE(measurement_date)) as code FROM measurement m INNER JOIN ".$tableName." t ON m.id = t.id ".$sqlFilter."";
-        $results = $em->getConnection()->query($sql)->fetchAll();
+        $sql = "WITH rows AS (
+                UPDATE measurement as mm SET animal_id_and_date = v.animal_id_and_date
+                FROM (
+                    $sqlSelect
+                ) as v(measurement_id, animal_id_and_date) WHERE mm.id = v.measurement_id
+                RETURNING 1
+                )
+                SELECT COUNT(*) AS count FROM rows";
 
-        foreach ($results as $result) {
-            $id = intval($result['id']);
-            $code = $result['code'];
-            $sql = "UPDATE measurement SET animal_id_and_date = '".$code."' WHERE id = ".$id;
-            $em->getConnection()->exec($sql);
-        }
-        
-        return count($results);
+        return $results = $conn->query($sql)->fetch()['count'];
     }
 
 

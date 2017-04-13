@@ -6,9 +6,11 @@ use AppBundle\Migration\MeasurementsFixer;
 use AppBundle\MixBlup\Mixblup;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -30,6 +32,9 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
     /** @var ObjectManager */
     private $em;
+
+    /** @var Connection */
+    private $conn;
 
     /** @var string */
     private $outputFolder;
@@ -57,6 +62,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
         $this->output = $output;
         $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
+        $this->conn = $this->em->getConnection();
         
         /* Setup folders */
         $this->outputFolder = $this->rootDir.MixBlupSetting::OUTPUT_FOLDER_PATH;
@@ -67,6 +73,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
+        $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($this->em),'']);
 
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
@@ -120,7 +127,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         if($this->cmdUtil->generateConfirmationQuestion('Are you sure you clear ALL MixblupBlock values? (y/n)')) {
             //Non-Export Ewes and Neuters with ubn of birth
             $sql = "UPDATE animal SET mixblup_block = NULL";
-            $this->em->getConnection()->exec($sql);
+            $this->conn->exec($sql);
         }
     }
     
@@ -137,30 +144,30 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
         //Export Animals
         $sql = "SELECT animal.id, country.id as country_id FROM animal INNER JOIN country ON uln_country_code = country.code WHERE mixblup_block IS NULL AND uln_country_code IS NOT NULL AND uln_country_code <> 'NL' AND ".$typeSelection;
-        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $results = $this->conn->query($sql)->fetchAll();
 
         foreach ($results as $result) {
             $blockValue = $result['country_id']*10;
             $sql = "UPDATE animal SET mixblup_block = '".$blockValue."' WHERE id = ".$result['id'];
-            $this->em->getConnection()->exec($sql);
+            $this->conn->exec($sql);
         }
 
         //Non-Export Animals with ubn of birth
         $sql = "UPDATE animal SET mixblup_block = CAST(ubn_of_birth AS INT) WHERE mixblup_block IS NULL AND animal.ubn_of_birth IS NOT NULL AND animal.ubn_of_birth <> '' AND ".$typeSelection;
-        $this->em->getConnection()->exec($sql);
+        $this->conn->exec($sql);
 
         //If no ubn of birth is available, then take the ubn of the current location
         $sql = "SELECT a.id as id, l.ubn as ubn FROM animal a INNER JOIN location l ON (l.id = a.location_id) WHERE a.mixblup_block IS NULL AND a.location_id IS NOT NULL AND ".$typeSelection;
-        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $results = $this->conn->query($sql)->fetchAll();
 
         foreach ($results as $result) {
             $blockValue = str_replace(' ','', $result['ubn']); //remove spaces
             $sql = "UPDATE animal SET mixblup_block = '".$blockValue."' WHERE id = ".$result['id'];
-            $this->em->getConnection()->exec($sql);
+            $this->conn->exec($sql);
         }
 
         $sql = "UPDATE animal SET mixblup_block = '2' WHERE mixblup_block IS NULL AND ".$typeSelection;
-        $this->em->getConnection()->exec($sql);
+        $this->conn->exec($sql);
     }
 
 
@@ -184,12 +191,12 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
 
         //First mark the (stud) rams with children on more than 5 ubns
         $sql = "SELECT parent_father_id as id, COUNT(DISTINCT(ubn_of_birth)) FROM animal WHERE parent_father_id IS NOT NULL GROUP BY parent_father_id";
-        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $results = $this->conn->query($sql)->fetchAll();
         // STUD RAMS
         foreach ($results as $result) {
             if($result['count'] >= $studRamUbnMinimum) {
                 $sql = "UPDATE animal SET mixblup_block = '".$studRamLabel."' WHERE id = '".$result['id']."'";
-                $this->em->getConnection()->exec($sql);
+                $this->conn->exec($sql);
             }
         }
 
@@ -271,7 +278,7 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
     {
         $isRegenerateOldValues = $this->cmdUtil->generateConfirmationQuestion('Also regenerate filled values? (y/n): ');
         $this->cmdUtil->setStartTimeAndPrintIt();
-        $count = MeasurementsUtil::generateAnimalIdAndDateValues($this->em, $isRegenerateOldValues);
+        $count = MeasurementsUtil::generateAnimalIdAndDateValues($this->conn, $isRegenerateOldValues);
         $this->output->writeln('Values generated: '.$count);
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
     }
