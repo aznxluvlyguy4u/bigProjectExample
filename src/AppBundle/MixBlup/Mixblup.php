@@ -1,6 +1,6 @@
 <?php
 
-namespace AppBundle\Report;
+namespace AppBundle\MixBlup;
 
 
 use AppBundle\Component\Utils;

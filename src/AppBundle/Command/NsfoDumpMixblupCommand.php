@@ -3,7 +3,7 @@
 namespace AppBundle\Command;
 
 use AppBundle\Migration\MeasurementsFixer;
-use AppBundle\Report\Mixblup;
+use AppBundle\MixBlup\Mixblup;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;
