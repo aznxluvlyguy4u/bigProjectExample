@@ -38,46 +38,25 @@ class InvoiceSenderDetails
     private $iban;
 
     /**
-     * @var int
-     * @ORM\Column(type="integer", name="kvk_number")
+     * @var string
+     * @ORM\Column(type="string", name="chamber_of_commerce_number")
      * @JMS\Groups({"INVOICE_SENDER_DETAILS"})
      */
-    private $kvkNumber;
+    private $chamberOfCommerceNumber;
 
     /**
      * @var string
-     * @ORM\Column(type="string", name="btw_number")
+     * @ORM\Column(type="string", name="vat_number")
      * @JMS\Groups({"INVOICE_SENDER_DETAILS"})
      */
-    private $btwNumber;
+    private $vatNumber;
 
     /**
-     * @var string
-     * @ORM\Column(type="string", name="street_name")
+     * @var Address
+     * @ORM\OneToOne(targetEntity="Address", cascade={"persist"})
      * @JMS\Groups({"INVOICE_SENDER_DETAILS"})
      */
-    private $streetName;
-
-    /**
-     * @var integer
-     * @ORM\Column(type="integer", name="street_number")
-     * @JMS\Groups({"INVOICE_SENDER_DETAILS"})
-     */
-    private $streetNumber;
-
-    /**
-     * @var string
-     * @ORM\Column(type="string", name="street_number_suffix")
-     * @JMS\Groups({"INVOICE_SENDER_DETAILS"})
-     */
-    private $streetNumberSuffix;
-
-    /**
-     * @var string
-     * @ORM\Column(type="string", name="postal_code")
-     * @JMS\Groups({"INVOICE_SENDER_DETAILS"})
-     */
-    private $postalCode;
+    private $address;
 
     /**
      * @var int
@@ -124,97 +103,41 @@ class InvoiceSenderDetails
     /**
      * @return int
      */
-    public function getKvkNumber()
+    public function getChamberOfCommerceNumber()
     {
-        return $this->kvkNumber;
+        return $this->chamberOfCommerceNumber;
     }
 
     /**
-     * @param int $kvkNumber
+     * @param int $chamberOfCommerceNumber
      */
-    public function setKvkNumber($kvkNumber)
+    public function setChamberOfCommerceNumber($chamberOfCommerceNumber)
     {
-        $this->kvkNumber = $kvkNumber;
-    }
-
-    /**
-     * @return string
-     */
-    public function getBtwNumber()
-    {
-        return $this->btwNumber;
-    }
-
-    /**
-     * @param string $btwNumber
-     */
-    public function setBtwNumber($btwNumber)
-    {
-        $this->btwNumber = $btwNumber;
+        $this->chamberOfCommerceNumber = $chamberOfCommerceNumber;
     }
 
     /**
      * @return string
      */
-    public function getStreetName()
+    public function getvatNumber()
     {
-        return $this->streetName;
+        return $this->vatNumber;
     }
 
     /**
-     * @param string $streetName
+     * @param string $vatNumber
      */
-    public function setStreetName($streetName)
+    public function setVatNumber($vatNumber)
     {
-        $this->streetName = $streetName;
+        $this->vatNumber = $vatNumber;
     }
 
-    /**
-     * @return int
-     */
-    public function getStreetNumber()
-    {
-        return $this->streetNumber;
+    public function getAddress(){
+        return $this->address;
     }
 
-    /**
-     * @param int $streetNumber
-     */
-    public function setStreetNumber($streetNumber)
-    {
-        $this->streetNumber = $streetNumber;
-    }
-
-    /**
-     * @return string
-     */
-    public function getStreetNumberSuffix()
-    {
-        return $this->streetNumberSuffix;
-    }
-
-    /**
-     * @param string $streetNumberSuffix
-     */
-    public function setStreetNumberSuffix($streetNumberSuffix)
-    {
-        $this->streetNumberSuffix = $streetNumberSuffix;
-    }
-
-    /**
-     * @return string
-     */
-    public function getPostalCode()
-    {
-        return $this->postalCode;
-    }
-
-    /**
-     * @param string $postalCode
-     */
-    public function setPostalCode($postalCode)
-    {
-        $this->postalCode = $postalCode;
+    public function setAddress($address){
+        $this->address = $address;
     }
 
     /**
@@ -250,14 +173,11 @@ class InvoiceSenderDetails
     }
 
     public function copyValues(InvoiceSenderDetails $invoiceSenderDetails){
-        $this->setBtwNumber($invoiceSenderDetails->getBtwNumber());
+        $this->setVatNumber($invoiceSenderDetails->getvatNumber());
         $this->setIban($invoiceSenderDetails->getIban());
-        $this->setKvkNumber($invoiceSenderDetails->getKvkNumber());
+        $this->setChamberOfCommerceNumber($invoiceSenderDetails->getChamberOfCommerceNumber());
         $this->setPaymentDeadlineInDays($invoiceSenderDetails->getPaymentDeadlineInDays());
-        $this->setPostalCode($invoiceSenderDetails->getPostalCode());
-        $this->setStreetName($invoiceSenderDetails->getStreetName());
-        $this->setStreetNumber($invoiceSenderDetails->getStreetNumber());
-        $this->setStreetNumberSuffix($invoiceSenderDetails->getStreetNumberSuffix());
+        $this->setAddress($invoiceSenderDetails->getAddress());
     }
 
 
