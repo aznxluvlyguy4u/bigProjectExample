@@ -26,6 +26,7 @@ use AppBundle\Util\Translation;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class Mixblup
@@ -182,6 +183,9 @@ class Mixblup
     /** @var OutputInterface */
     private $output;
 
+    /** @var Connection */
+    private $conn;
+
 
     /**
      * Mixblup constructor.
@@ -196,6 +200,7 @@ class Mixblup
     public function __construct(ObjectManager $em, $outputFolderPath, $firstMeasurementYear, $lastMeasurementYear, $cmdUtil, $animals = null, $output)
     {
         $this->em = $em;
+        $this->conn = $em->getConnection();
         $this->animalRowBases = new ArrayCollection();
         $this->testAttributes = new ArrayCollection();
         $this->measurementCodes = array();
@@ -258,7 +263,7 @@ class Mixblup
         if($this->animals == null) {
 
             $sql = "SELECT CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(f.uln_country_code, f.uln_number) as uln_father, CONCAT(m.uln_country_code, m.uln_number) as uln_mother, a.breed_code, a.gender, a.date_of_birth, a.mixblup_block as block FROM animal a LEFT JOIN animal f ON a.parent_father_id = f.id LEFT JOIN animal m ON a.parent_mother_id = m.id INNER JOIN (SELECT MAX(id) as id FROM animal GROUP BY uln_country_code, uln_number) b ON a.id = b.id;";
-            $this->animals = $this->em->getConnection()->query($sql)->fetchAll();
+            $this->animals = $this->conn->query($sql)->fetchAll();
         }
         return $this->animals;
     }
@@ -276,7 +281,7 @@ class Mixblup
             $sql = "SELECT DISTINCT(animal_id_and_date) as code FROM measurement m WHERE measurement_date BETWEEN '".$startDate."' AND '".$endDate."' AND (type = 'BodyFat' OR type = 'Weight' OR type = 'MuscleThickness' OR type = 'TailLength')";
         }
 
-        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $results = $this->conn->query($sql)->fetchAll();
 
         foreach($results as $result) {
             $code = $result['code'];
@@ -656,7 +661,7 @@ class Mixblup
         $sql = "SELECT t.muscle_thickness FROM measurement m
                   INNER JOIN muscle_thickness t ON m.id = t.id
                 WHERE m.animal_id_and_date = '".$animalIdAndDate."'";
-        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $results = $this->conn->query($sql)->fetchAll();
         $foundMuscleThicknessValue = $this->getMeasurementFromSqlResults($results, $isSkipConflictingMeasurements, 'muscle_thickness');
 
         if(MeasurementsUtil::isValidMuscleThicknessValue($foundMuscleThicknessValue, $hasValid20WeeksWeightMeasurement)){
@@ -685,7 +690,7 @@ class Mixblup
         $sql = "SELECT t.length FROM measurement m
                   INNER JOIN tail_length t ON m.id = t.id
                 WHERE m.animal_id_and_date = '".$animalIdAndDate."'";
-        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $results = $this->conn->query($sql)->fetchAll();
         $tailLengthValue = $this->getMeasurementFromSqlResults($results, $isSkipConflictingMeasurements, 'length');
         $isEmptyMeasurement = NullChecker::numberIsNull($tailLengthValue);
         $tailLengthValue = Utils::fillZero($tailLengthValue, self::TAIL_LENGTH_NULL_FILLER);
@@ -715,7 +720,7 @@ class Mixblup
                   LEFT JOIN fat3 ON body_fat.fat3_id = fat3.id
                 ) b ON m.id = b.body_fat_id
                 WHERE m.animal_id_and_date = '".$animalIdAndDate."'";
-        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $results = $this->conn->query($sql)->fetchAll();
 
         $isGetFirstValues = false;
         if(count($results) > 1) {
@@ -793,7 +798,7 @@ class Mixblup
         $isMuscleThicknessEmpty = $muscleThicknessRowData[JsonInputConstant::IS_EMPTY_MEASUREMENT];
         $isTailLengthEmpty = $tailLengthRowData[JsonInputConstant::IS_EMPTY_MEASUREMENT];
 
-        $block = self::getMixblupBlockByAnimalId($this->em, $animalId);
+        $block = self::getMixblupBlockByAnimalId($this->conn, $animalId);
 
         //Test values might all be empty if all measurements were contradicting duplicates
         $isMeasurementDateMissing = NullChecker::isNull($measurementDateString);
@@ -832,7 +837,7 @@ class Mixblup
         $sql = "SELECT w.weight, w.is_birth_weight FROM measurement m
                   INNER JOIN weight w ON m.id = w.id
                 WHERE m.animal_id_and_date = '".$animalIdAndDateOfMeasurement."' AND w.is_revoked <> TRUE";
-        $results = $this->em->getConnection()->query($sql)->fetchAll();
+        $results = $this->conn->query($sql)->fetchAll();
 
         $isGetFirstValues = false;
         if(count($results) > 1) {
@@ -997,7 +1002,7 @@ class Mixblup
                         LEFT JOIN animal m ON a.parent_mother_id = m.id
                         LEFT JOIN litter l ON a.litter_id = l.id
                     WHERE a.id = '".$animalId."'";
-        $animalData = $this->em->getConnection()->query($sql)->fetch();
+        $animalData = $this->conn->query($sql)->fetch();
 
         $animalUln = self::formatUlnByValue($animalData['uln_country_code_a'], $animalData['uln_number_a'], self::ULN_NULL_FILLER);
         $fatherUln = self::formatUlnByValue($animalData['uln_country_code_f'], $animalData['uln_number_f'], self::ULN_NULL_FILLER);
@@ -1351,7 +1356,7 @@ class Mixblup
             $sql = "SELECT * FROM breed_codes b
                   INNER JOIN breed_code ON b.id = breed_code.breed_codes_id
                 WHERE b.id = ".$breed_codes_id;
-            $breedCodeSet = $this->em->getConnection()->query($sql)->fetchAll();
+            $breedCodeSet = $this->conn->query($sql)->fetchAll();
         } else {
             $breedCodeSet = null;
         }
@@ -1629,14 +1634,14 @@ class Mixblup
 
 
     /**
-     * @param ObjectManager $em
+     * @param Connection $conn
      * @param $animalId
      * @return int
      */
-    public static function getMixblupBlockByAnimalId(ObjectManager $em, $animalId)
+    public static function getMixblupBlockByAnimalId(Connection $conn, $animalId)
     {
         $sql = "SELECT mixblup_block FROM animal WHERE id = ".$animalId;
-        return $em->getConnection()->query($sql)->fetch()['mixblup_block'];
+        return $conn->query($sql)->fetch()['mixblup_block'];
     }
 
 
@@ -1655,7 +1660,7 @@ class Mixblup
         }
 
         if($isGenerateMixblupBlockValues) {
-            MeasurementsUtil::generateAnimalIdAndDateValues($this->em, false);
+            MeasurementsUtil::generateAnimalIdAndDateValues($this->conn, false);
         }
 
     }
