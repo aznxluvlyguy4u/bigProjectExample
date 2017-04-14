@@ -271,6 +271,57 @@ class AnimalCache
      */
     private $exteriorMeasurementDate;
 
+    /**
+     * Bronstsynchronisatie/Bronstinductie
+     * 
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $pmsg;
+
+    /**
+     * Time in days the fetus has been inside the womb of the mother
+     * Dutch: draagtijd
+     * 
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true, options={"default":null})
+     * @JMS\Type("integer")
+     */
+    private $gestationPeriod;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $birthWeight;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $weightAt8Weeks;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $weightAt20Weeks;
+
+    /**
+     * Time in days between litterDate/dateOfBirth of this animal and the previous litterDate.
+     * If this is the first litter, then this birthInterval is null
+     * Dutch: tussenlamtijd
+     *
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true, options={"default":null})
+     * @JMS\Type("integer")
+     */
+    private $birthInterval;
+
 
     public function __construct()
     {
@@ -811,6 +862,114 @@ class AnimalCache
     public function setGaveBirthAsOneYearOld($gaveBirthAsOneYearOld)
     {
         $this->gaveBirthAsOneYearOld = $gaveBirthAsOneYearOld;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isPmsg()
+    {
+        return $this->pmsg;
+    }
+
+    /**
+     * @param boolean $pmsg
+     * @return AnimalCache
+     */
+    public function setPmsg($pmsg)
+    {
+        $this->pmsg = $pmsg;
+        return $this;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getGestationPeriod()
+    {
+        return $this->gestationPeriod;
+    }
+
+    /**
+     * @param int|null $gestationPeriod
+     * @return AnimalCache
+     */
+    public function setGestationPeriod($gestationPeriod)
+    {
+        $this->gestationPeriod = $gestationPeriod;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getBirthWeight()
+    {
+        return $this->birthWeight;
+    }
+
+    /**
+     * @param float $birthWeight
+     * @return AnimalCache
+     */
+    public function setBirthWeight($birthWeight)
+    {
+        $this->birthWeight = $birthWeight;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getWeightAt8Weeks()
+    {
+        return $this->weightAt8Weeks;
+    }
+
+    /**
+     * @param float $weightAt8Weeks
+     * @return AnimalCache
+     */
+    public function setWeightAt8Weeks($weightAt8Weeks)
+    {
+        $this->weightAt8Weeks = $weightAt8Weeks;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getWeightAt20Weeks()
+    {
+        return $this->weightAt20Weeks;
+    }
+
+    /**
+     * @param float $weightAt20Weeks
+     * @return AnimalCache
+     */
+    public function setWeightAt20Weeks($weightAt20Weeks)
+    {
+        $this->weightAt20Weeks = $weightAt20Weeks;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getBirthInterval()
+    {
+        return $this->birthInterval;
+    }
+
+    /**
+     * @param int $birthInterval
+     * @return AnimalCache
+     */
+    public function setBirthInterval($birthInterval)
+    {
+        $this->birthInterval = $birthInterval;
+        return $this;
     }
 
 
