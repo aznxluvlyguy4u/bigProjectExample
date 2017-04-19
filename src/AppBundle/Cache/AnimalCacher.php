@@ -4,6 +4,7 @@ namespace AppBundle\Cache;
 
 use AppBundle\Constant\BreedValueLabel;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Constant\MeasurementConstant;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalCache;
 use AppBundle\Entity\AnimalCacheRepository;
@@ -815,9 +816,22 @@ class AnimalCacher
      * @param Connection $conn
      * @param $animalIds
      * @return int
+     */
+    public static function updateWeights(Connection $conn, $animalIds){
+        return
+            self::updateLastWeights($conn, $animalIds)
+            + self::updateBirthWeights($conn, $animalIds)
+            ;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param $animalIds
+     * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    public static function updateWeights(Connection $conn, $animalIds)
+    public static function updateLastWeights(Connection $conn, $animalIds)
     {
         $updateCount = 0;
 
@@ -864,6 +878,81 @@ class AnimalCacher
                 )
                 SELECT COUNT(*) AS count FROM rows;";
         $updateCount = $conn->query($sql)->fetch()['count'];
+        return $updateCount;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param array $animalIds
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function updateBirthWeights(Connection $conn, $animalIds)
+    {
+        $updateCount = 0;
+
+        $animalIdFilterString = "";
+        if(is_array($animalIds)) {
+            if(count($animalIds) == 0) {
+                return $updateCount;
+            }
+            else {
+                $animalIdFilterString = " AND (".SqlUtil::getFilterStringByIdsArray($animalIds,'ww.animal_id').")";
+            }
+        } elseif($animalIds != null) {
+            return $updateCount;
+        }
+
+        $sqlBase = " FROM animal a
+                    INNER JOIN animal_cache c ON c.animal_id = a.id
+                    INNER JOIN weight w ON w.animal_id = a.id
+                    INNER JOIN measurement m ON w.id = m.id
+                    INNER JOIN (
+                    SELECT ww.animal_id,
+                        MIN(ABS(DATE_PART('day', mm.measurement_date - aa.date_of_birth))) as min_days,
+                        MAX(mm.log_date) as max_log_date
+                    FROM animal aa
+                    INNER JOIN weight ww ON aa.id = ww.animal_id
+                    INNER JOIN measurement mm ON ww.id = mm.id
+                    WHERE is_active AND ww.is_revoked = false AND ww.is_birth_weight
+                    AND ".MeasurementConstant::WEIGHT_AT_8_WEEKS_MIN_VALUE." <= ww.weight 
+                    AND ww.weight <= ".MeasurementConstant::WEIGHT_AT_8_WEEKS_MAX_VALUE." 
+                    AND ".MeasurementConstant::WEIGHT_AT_8_WEEKS_MIN_AGE." <= DATE_PART('day', mm.measurement_date - aa.date_of_birth)
+                    AND DATE_PART('day', mm.measurement_date - aa.date_of_birth) <= ".MeasurementConstant::WEIGHT_AT_8_WEEKS_MAX_AGE." 
+                    ".$animalIdFilterString."
+                    GROUP BY ww.animal_id
+                    )g ON g.animal_id = a.id
+                    WHERE ABS(DATE_PART('day', m.measurement_date - a.date_of_birth)) = g.min_days
+                        AND m.log_date = g.max_log_date
+                        AND m.is_active AND w.is_revoked = false AND w.is_birth_weight ";
+
+        $sqlUpdateToNonBlank = "WITH rows AS (
+                                UPDATE animal_cache SET birth_weight = v.birth_weight
+                                FROM (
+                                    SELECT w.id, w.weight, w.animal_id 
+                                    ".$sqlBase." 
+                                          AND (c.birth_weight ISNULL OR
+                                                c.birth_weight <> w.weight)
+                                ) AS v(weight_id, birth_weight, animal_id)
+                                WHERE animal_cache.animal_id = v.animal_id
+                                RETURNING 1
+                                )
+                                SELECT COUNT(*) AS count FROM rows;";
+        $updateCount = $conn->query($sqlUpdateToNonBlank)->fetch()['count'];
+
+        $sqlMakeBlank = "WITH rows AS (
+                            UPDATE animal_cache SET birth_weight = NULL
+                            WHERE animal_cache.birth_weight NOTNULL
+                            AND animal_cache.animal_id NOT IN (
+                                SELECT w.animal_id
+                                ".$sqlBase."
+                            )
+                            RETURNING 1
+                        )
+                        SELECT COUNT(*) AS count FROM rows;";
+        $updateCount += $conn->query($sqlMakeBlank)->fetch()['count'];
+
         return $updateCount;
     }
 
