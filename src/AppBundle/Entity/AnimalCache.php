@@ -301,17 +301,6 @@ class AnimalCache
      */
     private $weightAt20Weeks;
 
-    /**
-     * Time in days between litterDate/dateOfBirth of this animal and the previous litterDate.
-     * If this is the first litter, then this birthInterval is null
-     * Dutch: tussenlamtijd
-     *
-     * @var integer
-     * @ORM\Column(type="integer", nullable=true, options={"default":null})
-     * @JMS\Type("integer")
-     */
-    private $birthInterval;
-
 
     public function __construct()
     {
@@ -923,24 +912,6 @@ class AnimalCache
     public function setWeightAt20Weeks($weightAt20Weeks)
     {
         $this->weightAt20Weeks = $weightAt20Weeks;
-        return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getBirthInterval()
-    {
-        return $this->birthInterval;
-    }
-
-    /**
-     * @param int $birthInterval
-     * @return AnimalCache
-     */
-    public function setBirthInterval($birthInterval)
-    {
-        $this->birthInterval = $birthInterval;
         return $this;
     }
 

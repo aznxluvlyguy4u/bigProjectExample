@@ -142,14 +142,15 @@ class Litter extends DeclareNsfoBase
     private $gestationPeriod;
 
     /**
-     * Time in days after the previous litter. For the first litter this value should be empty.
-     * Dutch: tussenLamTijd
+     * Time in days between litterDate/dateOfBirth of this animal and the previous litterDate.
+     * If this is the first litter, then this birthInterval is null
+     * Dutch: tussenlamtijd
      *
      * @var integer
      * @ORM\Column(type="integer", nullable=true, options={"default":null})
      * @JMS\Type("integer")
      */
-    private $daysAfterPreviousLitter;
+    private $birthInterval;
 
     /**
      * Litter constructor.
@@ -556,20 +557,20 @@ class Litter extends DeclareNsfoBase
     /**
      * @return int
      */
-    public function getDaysAfterPreviousLitter()
+    public function getBirthInterval()
     {
-        return $this->daysAfterPreviousLitter;
+        return $this->birthInterval;
     }
 
     /**
-     * @param int $daysAfterPreviousLitter
-     * @return Litter
+     * @param int $birthInterval
+     * @return AnimalCache
      */
-    public function setDaysAfterPreviousLitter($daysAfterPreviousLitter)
+    public function setBirthInterval($birthInterval)
     {
-        $this->daysAfterPreviousLitter = $daysAfterPreviousLitter;
+        $this->birthInterval = $birthInterval;
         return $this;
     }
 
-    
+
 }
