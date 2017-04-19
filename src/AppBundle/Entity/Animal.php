@@ -443,6 +443,27 @@ abstract class Animal
     protected $breedCode;
 
     /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=true)
+     * @JMS\Type("boolean")
+     */
+    protected $hasCompleteBreedCode;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    protected $heterosis;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    protected $recombination;
+
+    /**
      * @ORM\ManyToOne(targetEntity="Client")
      * @ORM\JoinColumn(name="breeder_id", referencedColumnName="id")
      */
@@ -1907,6 +1928,60 @@ abstract class Animal
     public function getBreedCode()
     {
         return $this->breedCode;
+    }
+
+    /**
+     * @return boolean|null
+     */
+    public function hasCompleteBreedCode()
+    {
+        return $this->hasCompleteBreedCode;
+    }
+
+    /**
+     * @param boolean|null $hasCompleteBreedCode
+     * @return Animal
+     */
+    public function setHasCompleteBreedCode($hasCompleteBreedCode)
+    {
+        $this->hasCompleteBreedCode = $hasCompleteBreedCode;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getHeterosis()
+    {
+        return $this->heterosis;
+    }
+
+    /**
+     * @param float $heterosis
+     * @return Animal
+     */
+    public function setHeterosis($heterosis)
+    {
+        $this->heterosis = $heterosis;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getRecombination()
+    {
+        return $this->recombination;
+    }
+
+    /**
+     * @param float $recombination
+     * @return Animal
+     */
+    public function setRecombination($recombination)
+    {
+        $this->recombination = $recombination;
+        return $this;
     }
 
     /**
