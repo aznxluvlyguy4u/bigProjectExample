@@ -17,6 +17,13 @@ use JMS\Serializer\Annotation as JMS;
 class Litter extends DeclareNsfoBase
 {
     /**
+     * @ORM\OneToOne(targetEntity="Mate")
+     * @ORM\JoinColumn(name="mate_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\Mate")
+     */
+    private $mate;
+
+    /**
      * 2016-04-01T22:00:48.131Z
      *
      * @var DateTime
@@ -157,6 +164,24 @@ class Litter extends DeclareNsfoBase
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return Mate
+     */
+    public function getMate()
+    {
+        return $this->mate;
+    }
+
+    /**
+     * @param Mate $mate
+     * @return Litter
+     */
+    public function setMate($mate)
+    {
+        $this->mate = $mate;
+        return $this;
     }
 
     /**
