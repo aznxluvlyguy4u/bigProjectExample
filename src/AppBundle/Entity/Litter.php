@@ -142,6 +142,16 @@ class Litter extends DeclareNsfoBase
     private $gestationPeriod;
 
     /**
+     * Time in days after the previous litter. For the first litter this value should be empty.
+     * Dutch: tussenLamTijd
+     *
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true, options={"default":null})
+     * @JMS\Type("integer")
+     */
+    private $daysAfterPreviousLitter;
+
+    /**
      * Litter constructor.
      */
     public function __construct()
@@ -542,4 +552,24 @@ class Litter extends DeclareNsfoBase
         $this->gestationPeriod = $gestationPeriod;
         return $this;
     }
+
+    /**
+     * @return int
+     */
+    public function getDaysAfterPreviousLitter()
+    {
+        return $this->daysAfterPreviousLitter;
+    }
+
+    /**
+     * @param int $daysAfterPreviousLitter
+     * @return Litter
+     */
+    public function setDaysAfterPreviousLitter($daysAfterPreviousLitter)
+    {
+        $this->daysAfterPreviousLitter = $daysAfterPreviousLitter;
+        return $this;
+    }
+
+    
 }
