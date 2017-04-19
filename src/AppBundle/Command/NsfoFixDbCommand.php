@@ -4,6 +4,7 @@ namespace AppBundle\Command;
 
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
+use AppBundle\Util\DoctrineUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
@@ -43,6 +44,7 @@ class NsfoFixDbCommand extends ContainerAwareCommand
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
+        $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($this->em),'']);
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
