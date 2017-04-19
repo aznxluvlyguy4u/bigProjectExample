@@ -106,6 +106,25 @@ class Litter extends DeclareNsfoBase
     private $status;
 
     /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer", nullable=true, options={"default":null})
+     * @JMS\Type("integer")
+     */
+    private $suckleCount;
+
+    /**
+     * 2016-04-01T22:00:48.131Z
+     *
+     * @var DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true, options={"default":null})
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    private $suckleCountUpdateDate;
+
+    /**
      * Litter constructor.
      */
     public function __construct()
@@ -433,4 +452,43 @@ class Litter extends DeclareNsfoBase
     {
         return $this->declareBirths;
     }
+
+    /**
+     * @return int
+     */
+    public function getSuckleCount()
+    {
+        return $this->suckleCount;
+    }
+
+
+    /**
+     * @param int $suckleCount
+     * @return Litter
+     */
+    public function setSuckleCount($suckleCount)
+    {
+        $this->suckleCount = $suckleCount;
+        return $this;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getSuckleCountUpdateDate()
+    {
+        return $this->suckleCountUpdateDate;
+    }
+
+    /**
+     * @param DateTime $suckleCountUpdateDate
+     * @return Litter
+     */
+    public function setSuckleCountUpdateDate($suckleCountUpdateDate)
+    {
+        $this->suckleCountUpdateDate = $suckleCountUpdateDate;
+        return $this;
+    }
+
+
 }
