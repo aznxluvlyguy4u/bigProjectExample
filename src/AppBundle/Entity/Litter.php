@@ -125,6 +125,16 @@ class Litter extends DeclareNsfoBase
     private $suckleCountUpdateDate;
 
     /**
+     * Time in days the fetus has been inside the womb of the mother
+     * Dutch: draagtijd
+     *
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true, options={"default":null})
+     * @JMS\Type("integer")
+     */
+    private $gestationPeriod;
+
+    /**
      * Litter constructor.
      */
     public function __construct()
@@ -490,5 +500,21 @@ class Litter extends DeclareNsfoBase
         return $this;
     }
 
+    /**
+     * @return int|null
+     */
+    public function getGestationPeriod()
+    {
+        return $this->gestationPeriod;
+    }
 
+    /**
+     * @param int|null $gestationPeriod
+     * @return AnimalCache
+     */
+    public function setGestationPeriod($gestationPeriod)
+    {
+        $this->gestationPeriod = $gestationPeriod;
+        return $this;
+    }
 }

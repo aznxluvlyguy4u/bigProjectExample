@@ -281,16 +281,6 @@ class AnimalCache
     private $pmsg;
 
     /**
-     * Time in days the fetus has been inside the womb of the mother
-     * Dutch: draagtijd
-     * 
-     * @var integer
-     * @ORM\Column(type="integer", nullable=true, options={"default":null})
-     * @JMS\Type("integer")
-     */
-    private $gestationPeriod;
-
-    /**
      * @var float
      * @ORM\Column(type="float", options={"default":null}, nullable=true)
      * @JMS\Type("float")
@@ -879,24 +869,6 @@ class AnimalCache
     public function setPmsg($pmsg)
     {
         $this->pmsg = $pmsg;
-        return $this;
-    }
-
-    /**
-     * @return int|null
-     */
-    public function getGestationPeriod()
-    {
-        return $this->gestationPeriod;
-    }
-
-    /**
-     * @param int|null $gestationPeriod
-     * @return AnimalCache
-     */
-    public function setGestationPeriod($gestationPeriod)
-    {
-        $this->gestationPeriod = $gestationPeriod;
         return $this;
     }
 
