@@ -4,6 +4,7 @@ namespace AppBundle\Command;
 
 use AppBundle\Cache\AnimalCacher;
 use AppBundle\Cache\ExteriorCacher;
+use AppBundle\Cache\NLingCacher;
 use AppBundle\Cache\ProductionCacher;
 use AppBundle\Cache\WeightCacher;
 use AppBundle\Util\CommandUtil;
@@ -120,13 +121,13 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 if($updateAll) {
                     $output->writeln('Updating all records...');
                     $productionValuesUpdated = ProductionCacher::updateAllProductionValues($this->conn);
-                    $nLingValuesUpdated = AnimalCacher::updateAllNLingValues($this->conn);
+                    $nLingValuesUpdated = NLingCacher::updateAllNLingValues($this->conn);
                 } else {
                     do{
                         $animalId = $this->cmdUtil->generateQuestion('Insert one animalId (default = 0)', 0);
                     } while (!ctype_digit($animalId) && !is_int($animalId));
                     $productionValuesUpdated = ProductionCacher::updateProductionValues($this->conn, [$animalId]);
-                    $nLingValuesUpdated = AnimalCacher::updateNLingValues($this->conn, [$animalId]);
+                    $nLingValuesUpdated = NLingCacher::updateNLingValues($this->conn, [$animalId]);
                 }
                 $this->cmdUtil->writeln($productionValuesUpdated.' production values updated');
                 $this->cmdUtil->writeln($nLingValuesUpdated.' n-ling values updated');
