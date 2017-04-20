@@ -114,12 +114,14 @@ class WeightCacher
         $updateCount = 0;
 
         $animalIdFilterString = "";
+        $animalIdFilterString2 = "";
         if(is_array($animalIds)) {
             if(count($animalIds) == 0) {
                 return $updateCount;
             }
             else {
                 $animalIdFilterString = " AND (".SqlUtil::getFilterStringByIdsArray($animalIds,'ww.animal_id').")";
+                $animalIdFilterString2 = " AND (".SqlUtil::getFilterStringByIdsArray($animalIds,'animal_id').")";
             }
         } elseif($animalIds != null) {
             return $updateCount;
@@ -165,6 +167,7 @@ class WeightCacher
         $sqlMakeBlank = "WITH rows AS (
                             UPDATE animal_cache SET birth_weight = NULL
                             WHERE animal_cache.birth_weight NOTNULL
+                            ".$animalIdFilterString2."
                             AND animal_cache.animal_id NOT IN (
                                 SELECT w.animal_id
                                 ".$sqlBase."
