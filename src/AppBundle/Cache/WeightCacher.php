@@ -166,7 +166,7 @@ class WeightCacher
 
         $sqlUpdateToNonBlank = "WITH rows AS (
                                 UPDATE animal_cache SET birth_weight = v.birth_weight,
-                                log_date = '".TimeUtil::getTimeStampNow()."' 
+                                log_date = NOW() 
                                 FROM (
                                     SELECT w.id, w.weight, w.animal_id 
                                     ".$sqlBase." 
@@ -181,7 +181,7 @@ class WeightCacher
 
         $sqlMakeBlank = "WITH rows AS (
                             UPDATE animal_cache SET birth_weight = NULL,
-                            log_date = '".TimeUtil::getTimeStampNow()."' 
+                            log_date = NOW() 
                             WHERE animal_cache.birth_weight NOTNULL
                             ".$animalIdFilterString2."
                             AND animal_cache.animal_id NOT IN (
@@ -304,7 +304,7 @@ class WeightCacher
 
         $sqlUpdateToNonBlank = "WITH rows AS (
                                     UPDATE animal_cache SET $columnName = v.$columnName,
-                                    log_date = '".TimeUtil::getTimeStampNow()."' 
+                                    log_date = NOW() 
                                     FROM (
                                              SELECT w.weight as $columnName, w.animal_id
                                              ".$sqlBase."
@@ -319,7 +319,7 @@ class WeightCacher
 
         $sqlMakeBlank = "WITH rows AS (
                             UPDATE animal_cache SET $columnName = NULL,
-                            log_date = '".TimeUtil::getTimeStampNow()."' 
+                            log_date = NOW() 
                             WHERE animal_cache.$columnName NOTNULL
                                   ".$animalIdFilterString2."
                                   AND animal_cache.animal_id NOT IN (
