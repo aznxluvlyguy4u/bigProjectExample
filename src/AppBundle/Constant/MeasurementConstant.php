@@ -18,8 +18,10 @@ class MeasurementConstant
     const BIRTH_WEIGHT_MIN_AGE = 0;
     const BIRTH_WEIGHT_MAX_AGE = 3;
     const WEIGHT_AT_8_WEEKS_MIN_AGE = 42;
+    const WEIGHT_AT_8_WEEKS_MEDIAN_AGE = 56;
     const WEIGHT_AT_8_WEEKS_MAX_AGE = 70;
     const WEIGHT_AT_20_WEEKS_MIN_AGE = 98;
+    const WEIGHT_AT_20_WEEKS_MEDIAN_AGE = 140;
     const WEIGHT_AT_20_WEEKS_MAX_AGE = 168;
 
     //Weights in kg

@@ -240,6 +240,7 @@ class WeightCacher
                 $maxWeightValue = MeasurementConstant::WEIGHT_AT_8_WEEKS_MAX_VALUE;
                 $minAgeInDays = MeasurementConstant::WEIGHT_AT_8_WEEKS_MIN_AGE;
                 $maxAgeInDays = MeasurementConstant::WEIGHT_AT_8_WEEKS_MAX_AGE;
+                $medianAgeInDays = MeasurementConstant::WEIGHT_AT_8_WEEKS_MEDIAN_AGE;
                 break;
 
             case WeightType::TWENTY_WEEKS:
@@ -248,6 +249,7 @@ class WeightCacher
                 $maxWeightValue = MeasurementConstant::WEIGHT_AT_20_WEEKS_MAX_VALUE;
                 $minAgeInDays = MeasurementConstant::WEIGHT_AT_20_WEEKS_MIN_AGE;
                 $maxAgeInDays = MeasurementConstant::WEIGHT_AT_20_WEEKS_MAX_AGE;
+                $medianAgeInDays = MeasurementConstant::WEIGHT_AT_20_WEEKS_MEDIAN_AGE;
                 break;
 
             default:
@@ -269,7 +271,7 @@ class WeightCacher
                    INNER JOIN measurement m ON w.id = m.id
                    INNER JOIN (
                                 SELECT ww.animal_id,
-                                  MIN(ABS(DATE_PART('day', mm.measurement_date - aa.date_of_birth)-56)) as min_days
+                                  MIN(ABS(DATE_PART('day', mm.measurement_date - aa.date_of_birth)-$medianAgeInDays)) as min_days
                                 FROM animal aa
                                   INNER JOIN weight ww ON aa.id = ww.animal_id
                                   INNER JOIN measurement mm ON ww.id = mm.id
@@ -281,7 +283,7 @@ class WeightCacher
                                       ".$animalIdFilterString."
                                 GROUP BY ww.animal_id
                               )g ON g.animal_id = a.id
-                 WHERE ABS(DATE_PART('day', m.measurement_date - a.date_of_birth)-56) = g.min_days
+                 WHERE ABS(DATE_PART('day', m.measurement_date - a.date_of_birth)-$medianAgeInDays) = g.min_days
                        AND m.is_active AND w.is_revoked = false AND w.is_birth_weight = false
                  GROUP BY w.animal_id, min_days
                  )gg ON max_weight = w.weight AND gg.animal_id = w.animal_id";
