@@ -51,36 +51,40 @@ class WeightCacher
         $updateCount = 0;
 
         $animalIdFilterString = "";
+        $animalIdFilterString2 = "";
         if(is_array($animalIds)) {
             if(count($animalIds) == 0) {
                 return $updateCount;
             }
             else {
                 $animalIdFilterString = " AND (".SqlUtil::getFilterStringByIdsArray($animalIds,'ww.animal_id').")";
+                $animalIdFilterString2 = " AND (".SqlUtil::getFilterStringByIdsArray($animalIds,'animal_id').")";
             }
         } elseif($animalIds != null) {
             return $updateCount;
         }
 
-        $sql = "WITH rows AS (
+        $sqlBase = "FROM weight w
+                       INNER JOIN measurement m ON w.id = m.id
+                       INNER JOIN (
+                                    SELECT animal_id, MAX(measurement_date) as max_measurement_date,
+                                      MAX(log_date) as max_log_date
+                                    FROM weight ww
+                                      INNER JOIN measurement mm ON ww.id = mm.id
+                                      --Remove is_revoked if column data is moved to is_active and variable is removed
+                                    WHERE ww.is_revoked = FALSE AND mm.is_active ".$animalIdFilterString."
+                                    GROUP BY animal_id
+                   ) AS last ON last.animal_id = w.animal_id AND m.measurement_date = last.max_measurement_date
+                       AND m.log_date = last.max_log_date";
+
+        $sqlUpdateToNonBlank = "WITH rows AS (
                   UPDATE animal_cache SET
                     last_weight = v.last_weight,
                     weight_measurement_date = v.weight_measurement_date,
                     log_date = '".TimeUtil::getTimeStampNow()."'
                   FROM (
                          SELECT w.animal_id, w.weight, m.measurement_date
-                         FROM weight w
-                           INNER JOIN measurement m ON w.id = m.id
-                           INNER JOIN (
-                                        SELECT animal_id, MAX(measurement_date) as max_measurement_date,
-                                          MAX(log_date) as max_log_date
-                                        FROM weight ww
-                                          INNER JOIN measurement mm ON ww.id = mm.id
-                                          --Remove is_revoked if column data is moved to is_active and variable is removed
-                                        WHERE ww.is_revoked = FALSE".$animalIdFilterString." --AND mm.is_active = TRUE
-                                        GROUP BY animal_id
-                       ) AS last ON last.animal_id = w.animal_id AND m.measurement_date = last.max_measurement_date
-                           AND m.log_date = last.max_log_date
+                         ".$sqlBase." 
                   INNER JOIN animal_cache c ON c.animal_id = w.animal_id
                   INNER JOIN animal a ON w.animal_id = a.id
                   WHERE (
@@ -92,12 +96,22 @@ class WeightCacher
                 RETURNING 1
                 )
                 SELECT COUNT(*) AS count FROM rows;";
-        $updateCount = $conn->query($sql)->fetch()['count'];
+        $updateCount = $conn->query($sqlUpdateToNonBlank)->fetch()['count'];
 
-        /*
-         *  Note in the rare case all weights are revoked, then this will not be updated in the animal_cache table.
-         *  If this needs to be implemented, the sql queries for the other weights can be used as an example.
-         */
+        $sqlMakeBlank = "WITH rows AS (
+                            UPDATE animal_cache SET last_weight = NULL,
+                            weight_measurement_date = NULL,
+                            log_date = '".TimeUtil::getTimeStampNow()."' 
+                            WHERE (animal_cache.last_weight NOTNULL OR animal_cache.weight_measurement_date NOTNULL)
+                            ".$animalIdFilterString2."
+                            AND animal_cache.animal_id NOT IN (
+                                SELECT w.animal_id 
+                                ".$sqlBase."
+                            )
+                            RETURNING 1
+                        )
+                        SELECT COUNT(*) AS count FROM rows;";
+        $updateCount += $conn->query($sqlMakeBlank)->fetch()['count'];
 
         return $updateCount;
     }
