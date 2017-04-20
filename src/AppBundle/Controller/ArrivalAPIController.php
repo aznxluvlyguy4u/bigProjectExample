@@ -10,9 +10,11 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareArrivalRepository;
+use AppBundle\Entity\DeclareArrivalResponse;
 use AppBundle\Entity\DeclareArrivalResponseRepository;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareImport;
+use AppBundle\Entity\DeclareImportResponse;
 use AppBundle\Entity\DeclareImportResponseRepository;
 use AppBundle\Entity\LocationHealthInspection;
 use AppBundle\Entity\Message;
@@ -393,11 +395,11 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $location = $this->getSelectedLocation($request);
 
     /** @var DeclareArrivalResponseRepository $repository */  
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
+    $repository = $this->getDoctrine()->getRepository(DeclareArrivalResponse::class);
     $declareArrivals = $repository->getArrivalsWithLastErrorResponses($location);
 
     /** @var DeclareImportResponseRepository $repository */  
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_RESPONSE_REPOSITORY);
+    $repository = $this->getDoctrine()->getRepository(DeclareImportResponse::class);
     $declareImports = $repository->getImportsWithLastErrorResponses($location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('arrivals' => $declareArrivals, 'imports' => $declareImports)), 200);
@@ -433,11 +435,11 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
     $location = $this->getSelectedLocation($request);
       
     /** @var DeclareArrivalResponseRepository $repository */  
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_ARRIVAL_RESPONSE_REPOSITORY);
+    $repository = $this->getDoctrine()->getRepository(DeclareArrivalResponse::class);
     $declareArrivals = $repository->getArrivalsWithLastHistoryResponses($location);
 
     /** @var DeclareImportResponseRepository $repository */  
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_IMPORT_RESPONSE_REPOSITORY);
+    $repository = $this->getDoctrine()->getRepository(DeclareImportResponse::class);
     $declareImports = $repository->getImportsWithLastHistoryResponses($location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('arrivals' => $declareArrivals, 'imports' => $declareImports)), 200);
