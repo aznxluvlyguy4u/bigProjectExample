@@ -151,7 +151,8 @@ class WeightCacher
                         AND m.is_active AND w.is_revoked = false AND w.is_birth_weight ";
 
         $sqlUpdateToNonBlank = "WITH rows AS (
-                                UPDATE animal_cache SET birth_weight = v.birth_weight
+                                UPDATE animal_cache SET birth_weight = v.birth_weight,
+                                log_date = '".TimeUtil::getTimeStampNow()."' 
                                 FROM (
                                     SELECT w.id, w.weight, w.animal_id 
                                     ".$sqlBase." 
@@ -165,7 +166,8 @@ class WeightCacher
         $updateCount = $conn->query($sqlUpdateToNonBlank)->fetch()['count'];
 
         $sqlMakeBlank = "WITH rows AS (
-                            UPDATE animal_cache SET birth_weight = NULL
+                            UPDATE animal_cache SET birth_weight = NULL,
+                            log_date = '".TimeUtil::getTimeStampNow()."' 
                             WHERE animal_cache.birth_weight NOTNULL
                             ".$animalIdFilterString2."
                             AND animal_cache.animal_id NOT IN (
@@ -285,7 +287,8 @@ class WeightCacher
                  )gg ON max_weight = w.weight AND gg.animal_id = w.animal_id";
 
         $sqlUpdateToNonBlank = "WITH rows AS (
-                                    UPDATE animal_cache SET $columnName = v.$columnName
+                                    UPDATE animal_cache SET $columnName = v.$columnName,
+                                    log_date = '".TimeUtil::getTimeStampNow()."' 
                                     FROM (
                                              SELECT w.weight as $columnName, w.animal_id
                                              ".$sqlBase."
@@ -299,7 +302,8 @@ class WeightCacher
         $updateCount = $conn->query($sqlUpdateToNonBlank)->fetch()['count'];
 
         $sqlMakeBlank = "WITH rows AS (
-                            UPDATE animal_cache SET $columnName = NULL
+                            UPDATE animal_cache SET $columnName = NULL,
+                            log_date = '".TimeUtil::getTimeStampNow()."' 
                             WHERE animal_cache.$columnName NOTNULL
                                   ".$animalIdFilterString2."
                                   AND animal_cache.animal_id NOT IN (
