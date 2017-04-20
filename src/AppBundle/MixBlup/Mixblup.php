@@ -20,6 +20,7 @@ use AppBundle\Migration\BreedCodeReformatter;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\HeterosisAndRecombinationUtil;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\Translation;
@@ -1015,7 +1016,7 @@ class Mixblup
         $breedCode = Utils::fillNullOrEmptyString($animalData['breed_code'], self::BREED_CODE_NULL_FILLER);
         $breedType = Utils::fillNullOrEmptyString(Translation::getDutchUcFirst($animalData['breed_type']), self::BREED_TYPE_NULL_FILLER);
 
-        $geneDiversity = BreedValueUtil::getHeterosisAndRecombinationBy8Parts($this->em, $animalId, self::HETEROSIS_AND_RECOMBINATION_ROUNDING_ACCURACY);
+        $geneDiversity = HeterosisAndRecombinationUtil::getHeterosisAndRecombinationBy8Parts($this->em, $animalId, self::HETEROSIS_AND_RECOMBINATION_ROUNDING_ACCURACY);
 
         $heterosis = Utils::fillNullOrEmptyString($geneDiversity[BreedValueUtil::HETEROSIS], self::HETEROSIS_NULL_FILLER);
         $recombination = Utils::fillNullOrEmptyString($geneDiversity[BreedValueUtil::RECOMBINATION], self::RECOMBINATION_NULL_FILLER);
@@ -1095,7 +1096,7 @@ class Mixblup
         $animalUln = self::formatUln($animal, self::ULN_NULL_FILLER);
         $gender = self::formatGender($animal->getGender());
 
-        $geneDiversity = BreedValueUtil::getHeterosisAndRecombinationBy8Parts($this->em, $animal->getId(), self::HETEROSIS_AND_RECOMBINATION_ROUNDING_ACCURACY);
+        $geneDiversity = HeterosisAndRecombinationUtil::getHeterosisAndRecombinationBy8Parts($this->em, $animal->getId(), self::HETEROSIS_AND_RECOMBINATION_ROUNDING_ACCURACY);
 
         $heterosis = Utils::fillNullOrEmptyString($geneDiversity[BreedValueUtil::HETEROSIS], self::HETEROSIS_NULL_FILLER);
         $recombination = Utils::fillNullOrEmptyString($geneDiversity[BreedValueUtil::RECOMBINATION], self::RECOMBINATION_NULL_FILLER);
