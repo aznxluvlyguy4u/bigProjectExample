@@ -134,10 +134,10 @@ class WeightCacher
                     INNER JOIN weight ww ON aa.id = ww.animal_id
                     INNER JOIN measurement mm ON ww.id = mm.id
                     WHERE is_active AND ww.is_revoked = false AND ww.is_birth_weight
-                    AND ".MeasurementConstant::WEIGHT_AT_8_WEEKS_MIN_VALUE." <= ww.weight 
-                    AND ww.weight <= ".MeasurementConstant::WEIGHT_AT_8_WEEKS_MAX_VALUE." 
-                    AND ".MeasurementConstant::WEIGHT_AT_8_WEEKS_MIN_AGE." <= DATE_PART('day', mm.measurement_date - aa.date_of_birth)
-                    AND DATE_PART('day', mm.measurement_date - aa.date_of_birth) <= ".MeasurementConstant::WEIGHT_AT_8_WEEKS_MAX_AGE." 
+                    AND ".MeasurementConstant::BIRTH_WEIGHT_MIN_VALUE." <= ww.weight 
+                    AND ww.weight <= ".MeasurementConstant::BIRTH_WEIGHT_MAX_VALUE." 
+                    AND ".MeasurementConstant::BIRTH_WEIGHT_MIN_AGE." <= DATE_PART('day', mm.measurement_date - aa.date_of_birth)
+                    AND DATE_PART('day', mm.measurement_date - aa.date_of_birth) <= ".MeasurementConstant::BIRTH_WEIGHT_MAX_AGE." 
                     ".$animalIdFilterString."
                     GROUP BY ww.animal_id
                     )g ON g.animal_id = a.id
