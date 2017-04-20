@@ -3,6 +3,7 @@
 namespace AppBundle\Command;
 
 use AppBundle\Cache\AnimalCacher;
+use AppBundle\Cache\ExteriorCacher;
 use AppBundle\Cache\ProductionCacher;
 use AppBundle\Cache\WeightCacher;
 use AppBundle\Util\CommandUtil;
@@ -136,13 +137,13 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update exterior cache values of all animals? (y/n, default = no)');
                 if($updateAll) {
                     $output->writeln('Updating all records...');
-                    $updateCount = AnimalCacher::updateAllExteriors($this->conn);
+                    $updateCount = ExteriorCacher::updateAllExteriors($this->conn);
                 } else {
                     do{
                         $animalId = $this->cmdUtil->generateQuestion('Insert one animalId (default = 0)', 0);
                     } while (!ctype_digit($animalId) && !is_int($animalId));
 
-                    $updateCount = AnimalCacher::updateExteriors($this->conn, [$animalId]);
+                    $updateCount = ExteriorCacher::updateExteriors($this->conn, [$animalId]);
                 }
                 $output->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
                 break;
