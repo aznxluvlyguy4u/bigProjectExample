@@ -27,7 +27,7 @@ class WeightCacher
 
     /**
      * @param Connection $conn
-     * @param $animalIds
+     * @param array $animalIds
      * @return int
      */
     public static function updateWeights(Connection $conn, $animalIds){
@@ -42,7 +42,7 @@ class WeightCacher
 
     /**
      * @param Connection $conn
-     * @param $animalIds
+     * @param array $animalIds
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
