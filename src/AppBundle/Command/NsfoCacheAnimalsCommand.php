@@ -3,8 +3,8 @@
 namespace AppBundle\Command;
 
 use AppBundle\Cache\AnimalCacher;
-use AppBundle\Cache\AnimalProductionCacher;
-use AppBundle\Cache\AnimalWeightCacher;
+use AppBundle\Cache\ProductionCacher;
+use AppBundle\Cache\WeightCacher;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\TimeUtil;
@@ -118,13 +118,13 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update production and n-ling cache values of all animals? (y/n, default = no)');
                 if($updateAll) {
                     $output->writeln('Updating all records...');
-                    $productionValuesUpdated = AnimalProductionCacher::updateAllProductionValues($this->conn);
+                    $productionValuesUpdated = ProductionCacher::updateAllProductionValues($this->conn);
                     $nLingValuesUpdated = AnimalCacher::updateAllNLingValues($this->conn);
                 } else {
                     do{
                         $animalId = $this->cmdUtil->generateQuestion('Insert one animalId (default = 0)', 0);
                     } while (!ctype_digit($animalId) && !is_int($animalId));
-                    $productionValuesUpdated = AnimalProductionCacher::updateProductionValues($this->conn, [$animalId]);
+                    $productionValuesUpdated = ProductionCacher::updateProductionValues($this->conn, [$animalId]);
                     $nLingValuesUpdated = AnimalCacher::updateNLingValues($this->conn, [$animalId]);
                 }
                 $this->cmdUtil->writeln($productionValuesUpdated.' production values updated');
@@ -152,13 +152,13 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update weight cache values of all animals? (y/n, default = no)');
                 if($updateAll) {
                     $output->writeln('Updating all records...');
-                    $updateCount = AnimalWeightCacher::updateAllWeights($this->conn);
+                    $updateCount = WeightCacher::updateAllWeights($this->conn);
                 } else {
                     do{
                         $animalId = $this->cmdUtil->generateQuestion('Insert one animalId (default = 0)', 0);
                     } while (!ctype_digit($animalId) && !is_int($animalId));
 
-                    $updateCount = AnimalWeightCacher::updateWeights($this->conn, [$animalId]);
+                    $updateCount = WeightCacher::updateWeights($this->conn, [$animalId]);
                 }
                 $output->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
                 break;

@@ -9,7 +9,7 @@ use AppBundle\Util\SqlUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\DBAL\Connection;
 
-class AnimalProductionCacher
+class ProductionCacher
 {
     /**
      * @param Connection $conn

@@ -13,7 +13,7 @@ use Doctrine\DBAL\Connection;
  * @ORM\Entity(repositoryClass="AppBundle\Cache")
  * @package AppBundle\Cache
  */
-class AnimalWeightCacher
+class WeightCacher
 {
     /**
      * @param Connection $conn
