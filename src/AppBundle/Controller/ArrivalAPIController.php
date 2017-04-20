@@ -267,6 +267,8 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
         ActionLogWriter::completeActionLog($em, $log);
 
+        $this->clearLivestockCacheForLocation($location);
+
         return new JsonResponse(array("status"=>"ok"), 200);
     }
 
@@ -355,6 +357,8 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
 
     //log Animal location history
     $this->getAnimalLocationHistoryService()->logAnimalResidenceInEdit($messageObject);
+
+    $this->clearLivestockCacheForLocation($location);  
 
     return new JsonResponse($messageArray, 200);
   }

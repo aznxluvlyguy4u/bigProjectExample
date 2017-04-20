@@ -238,6 +238,8 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
         ActionLogWriter::completeActionLog($em, $log);
 
+        $this->clearLivestockCacheForLocation($location);
+
         return new JsonResponse($messageArray, 200);
     }
 

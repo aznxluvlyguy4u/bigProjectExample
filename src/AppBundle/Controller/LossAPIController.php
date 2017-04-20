@@ -173,6 +173,8 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
 
     $log = ActionLogWriter::completeActionLog($om, $log);
 
+    $this->clearLivestockCacheForLocation($location);
+
     return new JsonResponse($messageArray, 200);
   }
 
@@ -232,6 +234,8 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
 
     //Persist object to Database
     $this->persist($messageObject);
+
+    $this->clearLivestockCacheForLocation($location);
 
     return new JsonResponse($messageArray, 200);
   }
