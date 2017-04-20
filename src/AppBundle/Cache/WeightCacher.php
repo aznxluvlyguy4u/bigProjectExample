@@ -90,6 +90,12 @@ class WeightCacher
                 )
                 SELECT COUNT(*) AS count FROM rows;";
         $updateCount = $conn->query($sql)->fetch()['count'];
+
+        /*
+         *  Note in the rare case all weights are revoked, then this will not be updated in the animal_cache table.
+         *  If this needs to be implemented, the sql queries for the other weights can be used as an example.
+         */
+
         return $updateCount;
     }
 
