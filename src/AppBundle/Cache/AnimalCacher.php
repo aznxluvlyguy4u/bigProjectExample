@@ -627,6 +627,7 @@ class AnimalCacher
             if($flush) { $em->flush(); }
         }
 
+        WeightCacher::updateWeights($em->getConnection(), [$animalId]);
     }
 
 
