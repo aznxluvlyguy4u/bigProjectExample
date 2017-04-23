@@ -7,6 +7,9 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareDepartResponse;
+use AppBundle\Entity\DeclareExport;
+use AppBundle\Entity\DeclareExportResponse;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Message;
 use AppBundle\Enumerator\AnimalTransferStatus;
@@ -238,6 +241,8 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
 
         ActionLogWriter::completeActionLog($em, $log);
 
+        $this->clearLivestockCacheForLocation($location);
+
         return new JsonResponse($messageArray, 200);
     }
 
@@ -349,10 +354,10 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
   {
     $location = $this->getSelectedLocation($request);
 
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_DEPART_RESPONSE_REPOSITORY);
+    $repository = $this->getDoctrine()->getRepository(DeclareDepartResponse::class);
     $declareDeparts = $repository->getDeparturesWithLastErrorResponses($location);
 
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_RESPONSE_REPOSITORY);
+    $repository = $this->getDoctrine()->getRepository(DeclareExportResponse::class);
     $declareExports = $repository->getExportsWithLastErrorResponses($location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('departs' => $declareDeparts, 'exports' => $declareExports)), 200);
@@ -387,10 +392,10 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
   {
     $location = $this->getSelectedLocation($request);
 
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_DEPART_RESPONSE_REPOSITORY);
+    $repository = $this->getDoctrine()->getRepository(DeclareDepartResponse::class);
     $declareDeparts = $repository->getDeparturesWithLastHistoryResponses($location);
 
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_EXPORT_RESPONSE_REPOSITORY);
+    $repository = $this->getDoctrine()->getRepository(DeclareExportResponse::class);
     $declareExports = $repository->getExportsWithLastHistoryResponses($location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => array('departs' => $declareDeparts, 'exports' => $declareExports)), 200);

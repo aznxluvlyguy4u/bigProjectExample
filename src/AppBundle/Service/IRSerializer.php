@@ -120,19 +120,29 @@ class IRSerializer implements IRSerializerInterface
 
     /**
      * @param $object
+     * @param $type array|string
+     * @param $enableMaxDepthChecks boolean
      * @return mixed|string
      */
-    public function serializeToJSON($object, $type = 'DEFAULT')
+    public function serializeToJSON($object, $type = null, $enableMaxDepthChecks = true)
     {
-        if($type == 'DECLARE') {
-            return $this->serializer->serialize($object, Constant::jsonNamespace, SerializationContext::create()->setGroups(array('declare')));
+        if($type == '' || $type == null) {
+            if($enableMaxDepthChecks) {
+                $serializationContext = SerializationContext::create()->enableMaxDepthChecks();
+            } else {
+                $serializationContext = null;
+            }
+
+        } else {
+            $type = is_string($type) ? [$type] : $type;
+            if($enableMaxDepthChecks) {
+                $serializationContext = SerializationContext::create()->setGroups($type)->enableMaxDepthChecks();
+            } else {
+                $serializationContext = SerializationContext::create()->setGroups($type);
+            }
         }
 
-        if($type == 'DEFAULT') {
-            return $this->serializer->serialize($object, Constant::jsonNamespace, SerializationContext::create()->setGroups(array('Default')));
-        }
-
-        return $this->serializer->serialize($object, Constant::jsonNamespace, SerializationContext::create()->setGroups(array($type)));
+        return $this->serializer->serialize($object, Constant::jsonNamespace, $serializationContext);
     }
 
     /**
@@ -151,11 +161,13 @@ class IRSerializer implements IRSerializerInterface
 
     /**
      * @param $object
+     * @param $type array|string The JMS Groups
+     * @param $enableMaxDepthChecks boolean
      * @return array
      */
-    public function normalizeToArray($object)
+    public function normalizeToArray($object, $type = null, $enableMaxDepthChecks = true)
     {
-        $json = $this->serializeToJSON($object);
+        $json = $this->serializeToJSON($object, $type, $enableMaxDepthChecks);
         $array = json_decode($json, true);
 
         return $array;

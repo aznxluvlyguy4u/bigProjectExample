@@ -38,7 +38,7 @@ class Stillborn {
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"declare"})
+     * @JMS\Groups({"DECLARE"})
      */
     private $gender;
 
