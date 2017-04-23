@@ -217,6 +217,15 @@ class CommandUtil
 
 
     /**
+     * @param $heading
+     */
+    public function printTitle($heading)
+    {
+        $this->outputInterface->writeln(self::generateTitle($heading));
+    }
+
+
+    /**
      * @param $input
      */
     public function write($input)
@@ -263,15 +272,6 @@ class CommandUtil
     private function indent($indentCount = 1, $indentType = '      ')
     {
         $this->outputInterface->write(str_repeat($indentType, $indentCount));
-    }
-
-
-    /**
-     * @param $heading
-     */
-    public function printTitle($heading)
-    {
-        $this->outputInterface->writeln(self::generateTitle($heading));
     }
 
 

@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\DeclareLossResponse;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestType;
 use AppBundle\Util\ActionLogWriter;
@@ -173,6 +174,8 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
 
     $log = ActionLogWriter::completeActionLog($om, $log);
 
+    $this->clearLivestockCacheForLocation($location);
+
     return new JsonResponse($messageArray, 200);
   }
 
@@ -233,6 +236,8 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
     //Persist object to Database
     $this->persist($messageObject);
 
+    $this->clearLivestockCacheForLocation($location);
+
     return new JsonResponse($messageArray, 200);
   }
 
@@ -265,7 +270,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
   {
     $location = $this->getSelectedLocation($request);
 
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_RESPONSE_REPOSITORY);
+    $repository = $this->getDoctrine()->getRepository(DeclareLossResponse::class);
     $declareLosses = $repository->getLossesWithLastErrorResponses($location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareLosses), 200);
@@ -300,7 +305,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
   {
     $location = $this->getSelectedLocation($request);
 
-    $repository = $this->getDoctrine()->getRepository(Constant::DECLARE_LOSS_RESPONSE_REPOSITORY);
+    $repository = $this->getDoctrine()->getRepository(DeclareLossResponse::class);
     $declareLosses = $repository->getLossesWithLastHistoryResponses($location);
 
     return new JsonResponse(array(Constant::RESULT_NAMESPACE => $declareLosses),200);

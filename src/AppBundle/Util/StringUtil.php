@@ -161,6 +161,17 @@ class StringUtil
 
 
     /**
+     * @param string $string
+     * @param int $removeCharCount
+     * @return string
+     */
+    public static function removeStringEnd($string, $removeCharCount)
+    {
+        return substr($string, 0, strlen($string) - $removeCharCount);
+    }
+
+
+    /**
      * @param string $gender
      * @return string
      */

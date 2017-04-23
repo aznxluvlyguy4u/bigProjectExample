@@ -513,7 +513,7 @@ class AnimalRepository extends BaseRepository
     //Grab the animals on returned residences
     /** @var AnimalResidence $historicAnimalResidence */
     foreach ($retrievedHistoricAnimalResidences as $historicAnimalResidence) {
-      $historicLivestock[] = $historicAnimalResidence->getAnimal();
+      $historicLivestock[$historicAnimalResidence->getAnimal()->getId()] = $historicAnimalResidence->getAnimal();
     }
 
     return $historicLivestock;

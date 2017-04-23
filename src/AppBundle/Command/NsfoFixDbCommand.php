@@ -42,6 +42,7 @@ class NsfoFixDbCommand extends ContainerAwareCommand
     {
         /** @var ObjectManager $em */
         $this->em = $this->getContainer()->get('doctrine')->getManager();
+        $this->conn = $this->em->getConnection();
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
         $this->output = $output;
@@ -49,23 +50,30 @@ class NsfoFixDbCommand extends ContainerAwareCommand
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
-
         $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($this->em),'']);
         
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
-            '1: Fix incongruent animalOrderNumbers', "\n",
-            '2: Fix incongruent genders vs Ewe/Ram/Neuter records', "\n",
+            '=====================================', "\n",
+            '1: Update MaxId of all sequences', "\n",
+            '=====================================', "\n",
+            '2: Fix incongruent animalOrderNumbers', "\n",
+            '3: Fix incongruent genders vs Ewe/Ram/Neuter records', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
             case 1:
-                DatabaseDataFixer::fixIncongruentAnimalOrderNumbers($this->conn, $this->cmdUtil);
+                DatabaseDataFixer::updateMaxIdOfAllSequences($this->conn, $this->cmdUtil);
                 $output->writeln('Done!');
                 break;
 
             case 2:
+                DatabaseDataFixer::fixIncongruentAnimalOrderNumbers($this->conn, $this->cmdUtil);
+                $output->writeln('Done!');
+                break;
+
+            case 3:
                 DatabaseDataFixer::fixGenderTables($this->conn, $this->cmdUtil);
                 $output->writeln('Done!');
                 break;

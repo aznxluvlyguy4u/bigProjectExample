@@ -4,7 +4,6 @@
 namespace AppBundle\Util;
 
 
-use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -32,6 +31,33 @@ class DatabaseDataFixer
         }
 
         return $count;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param CommandUtil|null $cmdUtil
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function updateMaxIdOfAllSequences(Connection $conn, CommandUtil $cmdUtil = null)
+    {
+        $sql = "SELECT c.relname as sequence_name FROM pg_class c WHERE c.relkind = 'S';";
+        $sequenceNames = $conn->query($sql)->fetchAll();
+
+        $tableNames = [];
+        $removeCharCount = strlen('_id_seq');
+        foreach ($sequenceNames as $sequenceName) {
+            $tableNames[] = StringUtil::removeStringEnd($sequenceName['sequence_name'], $removeCharCount);
+        }
+
+        foreach ($tableNames as $tableName) {
+            $sql = "SELECT setval('".$tableName."_id_seq', (SELECT MAX(id) FROM ".$tableName."))";
+            $newMaxIdInSequence = $conn->query($sql)->fetch()['setval'];
+//            $sql = "ALTER TABLE ".$tableName." ALTER id SET DEFAULT nextval('".$tableName."_id_seq')";
+//            $newMaxIdInSequence = $conn->exec($sql);
+
+            if($cmdUtil) { $cmdUtil->writeln($tableName.' maxId sequence = '.$newMaxIdInSequence); }
+        }
     }
 
 
