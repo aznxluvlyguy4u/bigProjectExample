@@ -2,12 +2,10 @@
 
 namespace AppBundle\Command;
 
-use AppBundle\Migration\AnimalExterminator;
 use AppBundle\Migration\DuplicateAnimalsFixer;
 use AppBundle\Migration\DuplicateAnimalsFixerLegacy;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
-use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
@@ -65,8 +63,6 @@ class NsfoFixDuplicateAnimalsCommand extends ContainerAwareCommand
             '4: Merge two animals by primaryKeys', "\n",
             '5: Merge two animals where one is missing leading zeroes', "\n",
             '6: Fix duplicate animals due to tagReplace error', "\n",
-            '------------------------------------------------------------------', "\n",
-            '7: Delete animal and all related records', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -112,16 +108,6 @@ class NsfoFixDuplicateAnimalsCommand extends ContainerAwareCommand
                 $duplicateAnimalsFixer = new DuplicateAnimalsFixer($em, $output, $this->cmdUtil);
                 $duplicateAnimalsFixer->fixDuplicateDueToTagReplaceError();
                 $output->writeln('DONE');
-                break;
-
-            case 7:
-                if(StringUtil::isStringContains(strtolower($databaseName), self::BLOCKED_DATABASE_NAME_PART)) {
-                    $this->output->writeln('THIS COMMAND IS NOT ALLOWED FOR ANY DATABASE '.
-                    "WHICH NAME CONTAINS '".self::BLOCKED_DATABASE_NAME_PART."'!");
-                } else {
-                    AnimalExterminator::deleteAnimalsByCliInput($em, $this->cmdUtil);
-                    $output->writeln('DONE');
-                }
                 break;
             
             default:
