@@ -218,6 +218,19 @@ class CommandUtil
 
     /**
      * @param $input
+     */
+    public function write($input)
+    {
+        if(!is_array($input)) {
+            $this->outputInterface->write($input);
+        } else {
+            $this->writeln($input);
+        }
+    }
+
+
+    /**
+     * @param $input
      * @param int $indentLevel
      */
     public function writeln($input, $indentLevel = 0)
