@@ -226,11 +226,52 @@ class CommandUtil
 
 
     /**
-     * @param string $text
+     * @param $input
      */
-    public function writeln($text)
+    public function write($input)
     {
-        $this->outputInterface->writeln($text);
+        if(!is_array($input)) {
+            $this->outputInterface->write($input);
+        } else {
+            $this->writeln($input);
+        }
+    }
+
+
+    /**
+     * @param $input
+     * @param int $indentLevel
+     */
+    public function writeln($input, $indentLevel = 0)
+    {
+        if(!is_array($input)) {
+            $this->outputInterface->writeln($input);
+
+        } else {
+            foreach ($input as $key => $value) {
+                $this->indent($indentLevel);
+
+                if(is_array($value)) {
+                    $this->writeln($key.' : {', $indentLevel);
+                    $this->indent($indentLevel);
+                    $this->writeln($value, $indentLevel+1);
+                    $this->indent($indentLevel);
+                    $this->writeln('   }', $indentLevel);
+                } else {
+                    $this->writeln($key.' : '.$value, $indentLevel);
+                }
+            }
+        }
+    }
+
+
+    /**
+     * @param int $indentCount
+     * @param string $indentType
+     */
+    private function indent($indentCount = 1, $indentType = '      ')
+    {
+        $this->outputInterface->write(str_repeat($indentType, $indentCount));
     }
 
 
