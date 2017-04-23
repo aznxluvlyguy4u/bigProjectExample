@@ -227,26 +227,27 @@ class CommandUtil
 
     /**
      * @param $input
-     * @param int $loopLevel
-     * @param bool $printInvalidInput
+     * @param int $indentLevel
      */
-    public function writeln($input, $loopLevel = 0, $printInvalidInput = true)
+    public function writeln($input, $indentLevel = 0)
     {
         if(!is_array($input)) {
             $this->outputInterface->writeln($input);
 
-        } elseif (is_array($input)) {
-            $printInvalidInput = false;
+        } else {
             foreach ($input as $key => $value) {
-                $this->indent($loopLevel);
-                $this->writeln('key: '.$key, $loopLevel+1, $printInvalidInput);
-                $this->indent($loopLevel);
-                $this->writeln($value, $loopLevel+1, $printInvalidInput);
-            }
-        }
+                $this->indent($indentLevel);
 
-        if($printInvalidInput) {
-            $this->outputInterface->writeln('ERROR 428: INVALID INPUT');
+                if(is_array($value)) {
+                    $this->writeln($key.' : {', $indentLevel);
+                    $this->indent($indentLevel);
+                    $this->writeln($value, $indentLevel+1);
+                    $this->indent($indentLevel);
+                    $this->writeln('   }', $indentLevel);
+                } else {
+                    $this->writeln($key.' : '.$value, $indentLevel);
+                }
+            }
         }
     }
 
@@ -255,7 +256,7 @@ class CommandUtil
      * @param int $indentCount
      * @param string $indentType
      */
-    private function indent($indentCount = 1, $indentType = '   ')
+    private function indent($indentCount = 1, $indentType = '      ')
     {
         $this->outputInterface->write(str_repeat($indentType, $indentCount));
     }
