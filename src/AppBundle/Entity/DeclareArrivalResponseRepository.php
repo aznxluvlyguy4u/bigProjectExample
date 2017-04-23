@@ -44,7 +44,7 @@ class DeclareArrivalResponseRepository extends BaseRepository {
                   r.message_number
                 FROM declare_base b
                   INNER JOIN declare_arrival a ON a.id = b.id
-                  INNER JOIN (
+                  LEFT JOIN (
                     SELECT y.request_id, y.message_number
                     FROM declare_base_response y
                       INNER JOIN (
@@ -79,7 +79,7 @@ class DeclareArrivalResponseRepository extends BaseRepository {
                   r.error_code, r.error_message, r.message_number
                 FROM declare_base b
                   INNER JOIN declare_arrival a ON a.id = b.id
-                  INNER JOIN (
+                  LEFT JOIN (
                     SELECT y.request_id, y.error_code, y.error_message, y.message_number
                     FROM declare_base_response y
                       INNER JOIN (
