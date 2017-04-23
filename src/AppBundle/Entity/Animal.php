@@ -34,7 +34,7 @@ abstract class Animal
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @JMS\Groups({"declare","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
      */
     protected $id;
 
@@ -50,7 +50,7 @@ abstract class Animal
      * @Assert\Regex("/([A-Z]{2})\b/")
      * @Assert\Length(max = 2)
      * @JMS\Type("string")
-     * @JMS\Groups({"declare","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
      */
     protected $pedigreeCountryCode;
 
@@ -62,7 +62,7 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 11)
      * @JMS\Type("string")
-     * @JMS\Groups({"declare","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
      */
     protected $pedigreeNumber;
 
@@ -71,7 +71,7 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"declare"})
+     * @JMS\Groups({"DECLARE"})
      */
     protected $name;
 
@@ -81,7 +81,7 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 12)
      * @JMS\Type("string")
-     * @JMS\Groups({"declare"})
+     * @JMS\Groups({"DECLARE"})
      */
     protected $ubnOfBirth;
 
@@ -99,7 +99,7 @@ abstract class Animal
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"declare"})
+     * @JMS\Groups({"DECLARE"})
      */
     protected $dateOfBirth;
 
@@ -109,7 +109,7 @@ abstract class Animal
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"declare"})
+     * @JMS\Groups({"DECLARE"})
      */
     protected $dateOfDeath;
 
@@ -118,7 +118,7 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"declare","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
      */
     protected $gender;
 
@@ -177,7 +177,7 @@ abstract class Animal
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
      * @JMS\Type("integer")
-     * @JMS\Groups({"declare"})
+     * @JMS\Groups({"DECLARE"})
      */
     protected $animalType;
 
@@ -186,7 +186,7 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"declare"})
+     * @JMS\Groups({"DECLARE"})
      */
     protected $transferState;
 
@@ -195,7 +195,7 @@ abstract class Animal
      *
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Type("integer")
-     * @JMS\Groups({"declare"})
+     * @JMS\Groups({"DECLARE"})
      */
     protected $animalCategory;
 
@@ -204,7 +204,7 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"declare"})
+     * @JMS\Groups({"DECLARE"})
      */
     protected $animalHairColour;
 
@@ -292,7 +292,7 @@ abstract class Animal
      * @Assert\NotBlank
      * @ORM\Column(type="boolean")
      * @JMS\Type("boolean")
-     * @JMS\Groups({"declare","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
      */
     protected $isAlive;
 
@@ -301,7 +301,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @Assert\NotBlank
      * @ORM\Column(type="string", nullable=false)
-     * @JMS\Groups({"declare","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
      */
     protected $ulnNumber;
 
@@ -312,7 +312,7 @@ abstract class Animal
      * @Assert\Regex("/([A-Z]{2})\b/")
      * @Assert\Length(max = 2)
      * @ORM\Column(type="string", nullable=false)
-     * @JMS\Groups({"declare","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
      */
     protected $ulnCountryCode;
 
@@ -320,35 +320,35 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"declare"})
+     * @JMS\Groups({"DECLARE"})
      */
     protected $animalOrderNumber;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * @JMS\Groups({"declare"})
+     * @JMS\Groups({"DECLARE"})
      */
     protected $isImportAnimal;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * @JMS\Groups({"declare"})
+     * @JMS\Groups({"DECLARE"})
      */
     protected $isExportAnimal;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @JMS\Type("boolean")
-     * @JMS\Groups({"declare"})
+     * @JMS\Groups({"DECLARE"})
      */
     protected $isDepartedAnimal;
 
     /**
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"declare"})
+     * @JMS\Groups({"DECLARE"})
      */
     protected $animalCountryOrigin;
 
@@ -422,7 +422,7 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"declare","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
      */
     protected $breed;
 
@@ -430,7 +430,7 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"declare","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
      */
     protected $breedType;
 
@@ -438,7 +438,7 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"declare","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
      */
     protected $breedCode;
 
@@ -495,7 +495,7 @@ abstract class Animal
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
-     * @JMS\Groups({"declare","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
      */
     protected $scrapieGenotype;
 
@@ -543,7 +543,7 @@ abstract class Animal
      * @var PedigreeRegister
      * @ORM\ManyToOne(targetEntity="PedigreeRegister", cascade={"persist"})
      * @ORM\JoinColumn(name="pedigree_register_id", referencedColumnName="id")
-     * @JMS\Groups({"declare","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
      */
     protected $pedigreeRegister;
 
