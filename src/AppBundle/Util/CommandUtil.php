@@ -217,11 +217,38 @@ class CommandUtil
 
 
     /**
-     * @param string $text
+     * @param $input
+     * @param int $loopLevel
+     * @param bool $printInvalidInput
      */
-    public function writeln($text)
+    public function writeln($input, $loopLevel = 0, $printInvalidInput = true)
     {
-        $this->outputInterface->writeln($text);
+        if(!is_array($input)) {
+            $this->outputInterface->writeln($input);
+
+        } elseif (is_array($input)) {
+            $printInvalidInput = false;
+            foreach ($input as $key => $value) {
+                $this->indent($loopLevel);
+                $this->writeln('key: '.$key, $loopLevel+1, $printInvalidInput);
+                $this->indent($loopLevel);
+                $this->writeln($value, $loopLevel+1, $printInvalidInput);
+            }
+        }
+
+        if($printInvalidInput) {
+            $this->outputInterface->writeln('ERROR 428: INVALID INPUT');
+        }
+    }
+
+
+    /**
+     * @param int $indentCount
+     * @param string $indentType
+     */
+    private function indent($indentCount = 1, $indentType = '   ')
+    {
+        $this->outputInterface->write(str_repeat($indentType, $indentCount));
     }
 
 
