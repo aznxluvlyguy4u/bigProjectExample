@@ -8,7 +8,7 @@ use AppBundle\Component\Utils;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 
-class BreedCodeUtil
+class BreedCodeUtilForAnimalTableMigrator
 {
     const NESTING_LEVEL_LIMIT = 255;
 
@@ -104,7 +104,7 @@ class BreedCodeUtil
 
             $breedCodeString = $result['breed_code'];
             $parts = Utils::separateLettersAndNumbersOfString($breedCodeString);
-            $isValidBreedCode = BreedCodeUtil::verifySumOfBreedCodeParts($parts);
+            $isValidBreedCode = BreedCodeUtilForAnimalTableMigrator::verifySumOfBreedCodeParts($parts);
             if($isValidBreedCode) {
                 $sql = "UPDATE animal_migration_table SET is_breed_code_updated = TRUE WHERE id = ". $result['id'];
                 $this->conn->exec($sql);
