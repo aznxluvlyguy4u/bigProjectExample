@@ -422,7 +422,13 @@ class Utils
         return $combinedLocationHealthQueue;
     }
 
-    public static function setResidenceToPending(Animal $animal, Location $location)
+    /**
+     * @param Animal $animal
+     * @param Location $location
+     * @param \DateTime $alternativeStartDate
+     * @return Animal
+     */
+    public static function setResidenceToPending(Animal $animal, Location $location, \DateTime $alternativeStartDate)
     {
         $residenceList =  $animal->getAnimalResidenceHistory();
         $residenceToUpdate = $residenceList->last();
@@ -433,6 +439,7 @@ class Utils
             $residenceToUpdate = new animalResidence();
             $residenceToUpdate->setLocation($location);
             $residenceToUpdate->setAnimal($animal);
+            $residenceToUpdate->setStartDate($alternativeStartDate);
             $animal->addAnimalResidenceHistory($residenceToUpdate);
         }
 
