@@ -55,7 +55,8 @@ class DepartMessageBuilder extends MessageBuilderBase
     {
         $animal = $messageObject->getAnimal();
 
-        Utils::setResidenceToPending($animal, $location);
+        $alternativeStartDateForInitialAnimalResidence = $messageObject->getDepartDate();
+        Utils::setResidenceToPending($animal, $location, $alternativeStartDateForInitialAnimalResidence);
 
         $messageObject->setUlnCountryCode($animal->getUlnCountryCode());
         $messageObject->setUlnNumber($animal->getUlnNumber());

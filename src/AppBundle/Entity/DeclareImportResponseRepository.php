@@ -83,7 +83,7 @@ class DeclareImportResponseRepository extends BaseRepository {
                                    GROUP BY request_id
                                  ) z ON z.log_date = y.log_date
                     )r ON r.request_id = b.request_id
-                WHERE request_state = '".RequestStateType::FAILED."' AND hide_failed_message = FALSE
+                WHERE request_state = '".RequestStateType::FAILED."' 
                 AND location_id = ".$locationId." ORDER BY b.log_date DESC";
 
         return $this->getManager()->getConnection()->query($sql)->fetchAll();
