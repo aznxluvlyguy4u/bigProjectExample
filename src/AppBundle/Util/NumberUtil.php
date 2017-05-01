@@ -84,4 +84,24 @@ class NumberUtil
             return '';
         }
     }
+
+
+    /**
+     * @param $integer
+     * @return boolean
+     */
+    public static function isOdd($integer)
+    {
+        return boolval($integer & 1);
+    }
+
+
+    /**
+     * @param $integer
+     * @return bool
+     */
+    public static function isEven($integer)
+    {
+        return !self::isOdd($integer);
+    }
 }
