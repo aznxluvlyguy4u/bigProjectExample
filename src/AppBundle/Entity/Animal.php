@@ -1183,7 +1183,7 @@ abstract class Animal
      */
     public function setAnimalOrderNumber($animalOrderNumber)
     {
-        $this->animalOrderNumber = $animalOrderNumber;
+        $this->animalOrderNumber = trim($animalOrderNumber);
 
         return $this;
     }
