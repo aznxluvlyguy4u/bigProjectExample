@@ -159,7 +159,7 @@ class BreedCodeUtilForAnimalTableMigrator
             if(!self::verifySumOfBreedCodeParts($breedCodePartsOfFather)) {
                 $breedCodePartsOfFather = $this->calculateBreedCodeFromParentsAndPersistNewValue($fatherVsmId, $nestingLevel+1);
                 if($breedCodePartsOfFather != null) {
-                    $this->breedCodesByVsmId[$fatherVsmId] = self::implodeBreedCodeParts($breedCodePartsOfFather); //Update search array
+                    $this->breedCodesByVsmId[$fatherVsmId] = BreedCodeUtil::implodeBreedCodeParts($breedCodePartsOfFather); //Update search array
                 }
             }
         }
@@ -176,7 +176,7 @@ class BreedCodeUtilForAnimalTableMigrator
             if(!self::verifySumOfBreedCodeParts($breedCodePartsOfMother)) {
                 $breedCodePartsOfMother = $this->calculateBreedCodeFromParentsAndPersistNewValue($motherVsmId, $nestingLevel+1);
                 if($breedCodePartsOfMother != null) {
-                    $this->breedCodesByVsmId[$motherVsmId] = self::implodeBreedCodeParts($breedCodePartsOfMother); //Update search array
+                    $this->breedCodesByVsmId[$motherVsmId] = BreedCodeUtil::implodeBreedCodeParts($breedCodePartsOfMother); //Update search array
                 }
             }
         }
@@ -185,7 +185,7 @@ class BreedCodeUtilForAnimalTableMigrator
         if(self::verifySumOfBreedCodeParts($breedCodePartsOfFather) && self::verifySumOfBreedCodeParts($breedCodePartsOfMother)) {
 
             $newBreedCodeParts = self::divideBreedCodeValuesInHalf($breedCodePartsOfFather, $breedCodePartsOfMother);
-            $newBreedCode = self::implodeBreedCodeParts($newBreedCodeParts);
+            $newBreedCode = BreedCodeUtil::implodeBreedCodeParts($newBreedCodeParts);
             $newBreedCodeForSql = StringUtil::getNullAsStringOrWrapInQuotes($newBreedCode);
 
             $sql = "UPDATE animal_migration_table SET is_breed_code_updated = TRUE, old_breed_code = breed_code, breed_code = ".$newBreedCodeForSql." WHERE id = ". $this->migrationTableIdByVsmId[$vsmId];
@@ -239,7 +239,7 @@ class BreedCodeUtilForAnimalTableMigrator
         $roundingError = 100;
         foreach ($breedCodes as $breedCode) {
             $number = $totalParts[$breedCode];
-            $newHalvedNumber = self::divideBreedCodeNumberInHalf($number);
+            $newHalvedNumber = BreedCodeUtil::divideBreedCodeNumberInHalf($number);
             $totalParts[$breedCode] = $newHalvedNumber;
             $roundingError = $roundingError - $newHalvedNumber;
         }
@@ -253,22 +253,6 @@ class BreedCodeUtilForAnimalTableMigrator
         }
 
         return $totalParts;
-    }
-
-
-    /**
-     * @param array $totalParts
-     * @return string
-     */
-    public static function implodeBreedCodeParts($totalParts)
-    {
-        $breedCodes = array_keys($totalParts);
-        //Generate string
-        $breedCodeString = '';
-        foreach ($breedCodes as $breedCode) {
-            $breedCodeString = $breedCodeString.$breedCode.$totalParts[$breedCode];
-        }
-        return $breedCodeString;
     }
     
 
@@ -310,33 +294,4 @@ class BreedCodeUtilForAnimalTableMigrator
     }
 
 
-    /**
-     * @param $integer
-     * @param int $partsBy
-     * @return int
-     */
-    public static function divideBreedCodeNumberInHalf($integer, $partsBy = 100)
-    {
-        $halfFloat = floatval(intval($integer))/2;
-        if(!NumberUtil::hasDecimals($halfFloat)) {
-            return intval($halfFloat);
-        } else {
-            return self::roundBreedCodeNumber($halfFloat, $partsBy);
-        }
-    }
-
-
-    /**
-     * @param float|int $number
-     * @param int $partsBy
-     * @return int
-     */
-    public static function roundBreedCodeNumber($number, $partsBy = 100)
-    {
-        if($number > $partsBy/2) {
-            return intval(round($number, 0, PHP_ROUND_HALF_UP));
-        } else {
-            return intval(round($number, 0, PHP_ROUND_HALF_DOWN));
-        }
-    }
 }
