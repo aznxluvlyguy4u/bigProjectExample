@@ -27,7 +27,7 @@ class BreedCodeUtil
         }
 
         for ($i = 0; $i < $totalCount-1; $i += 2) {
-            $result[$parts[$i]] = $parts[$i+1];
+            $result[$parts[$i]] = intval($parts[$i+1]);
         }
 
         return $result;
