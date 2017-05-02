@@ -120,7 +120,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 $output->writeln('DONE!');
                 break;
 
-            case 9:
+            case 20:
                 $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update production and n-ling cache values of all animals? (y/n, default = no)');
                 if($updateAll) {
                     $output->writeln('Updating all records...');
@@ -138,7 +138,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 break;
 
             
-            case 10:
+            case 21:
                 $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update exterior cache values of all animals? (y/n, default = no)');
                 if($updateAll) {
                     $output->writeln('Updating all records...');
@@ -154,7 +154,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 break;
 
 
-            case 11:
+            case 22:
                 $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update weight cache values of all animals? (y/n, default = no)');
                 if($updateAll) {
                     $output->writeln('Updating all records...');
