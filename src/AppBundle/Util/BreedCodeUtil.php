@@ -65,13 +65,10 @@ class BreedCodeUtil
     public static function verifySumOfBreedCodeParts($breedCodeParts)
     {
         if(!is_array($breedCodeParts)) { return false; }
-
-        $count = count($breedCodeParts);
-        if($count < 2 || NumberUtil::isOdd($count)) { return false; }
+        if(count($breedCodeParts) == 0) { return false; }
 
         return array_sum($breedCodeParts) == 100;
     }
-
 
     /**
      * Both parents must have a known breedCode
