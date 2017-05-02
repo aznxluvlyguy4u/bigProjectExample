@@ -4,23 +4,32 @@
 namespace AppBundle\Cache;
 
 
+use AppBundle\Constant\ReportLabel;
+use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\HeterosisAndRecombinationUtil;
+use AppBundle\Util\NumberUtil;
 use AppBundle\Util\SqlUtil;
 use Doctrine\DBAL\Connection;
 
 class GeneDiversityUpdater
 {
-    const UPDATE_FILTER = " AND updated_gene_diversity = FALSE ";
+    const UPDATE_FILTER = "updated_gene_diversity = FALSE ";
+    const BATCH_SIZE = 100000;
 
     /**
      * @param Connection $conn
+     * @param array $animalIds
      * @param boolean $recalculateAllValues
      * @return int
      */
-    public static function update(Connection $conn, $recalculateAllValues = false)
+    public static function update(Connection $conn, array $animalIds = [], $recalculateAllValues = false)
     {
         $updateCount = 0;
-        $updateCount += self::updateAnimalsWithAMissingParent($conn, $recalculateAllValues);
-        $updateCount += self::updateAnimalsHaveBothParentsWhereBreedCodeIsMissingFromAParent($conn, $recalculateAllValues);
+        if(count($animalIds) == 0) {
+            $updateCount += self::updateAnimalsWithAMissingParent($conn, $recalculateAllValues);
+            $updateCount += self::updateAnimalsHaveBothParentsWhereBreedCodeIsMissingFromAParent($conn, $recalculateAllValues);
+        }
+        $updateCount += self::updateByAnimalIds($conn, $animalIds, $recalculateAllValues);
         return $updateCount;
     }
 
@@ -32,10 +41,10 @@ class GeneDiversityUpdater
      */
     private static function updateAnimalsWithAMissingParent(Connection $conn, $recalculateAllValues = false)
     {
-        $filter = $recalculateAllValues ? ' ' : self::UPDATE_FILTER;
-        $sql = "UPDATE animal SET updated_gene_diversity = TRUE
-                WHERE (parent_father_id ISNULL OR animal.parent_mother_id ISNULL) ".$filter;
-        return SqlUtil::updateWithCount($conn, $sql);
+        $filter = $recalculateAllValues ? ' ' : ' AND '.self::UPDATE_FILTER;
+        $sql = "UPDATE animal SET updated_gene_diversity = TRUE, heterosis = NULL, recombination = NULL
+                WHERE (parent_father_id ISNULL OR animal.parent_mother_id ISNULL) ";
+        return SqlUtil::updateWithCount($conn, $sql.$filter);
     }
 
 
@@ -46,14 +55,136 @@ class GeneDiversityUpdater
      */
     private static function updateAnimalsHaveBothParentsWhereBreedCodeIsMissingFromAParent(Connection $conn, $recalculateAllValues = false)
     {
-        $filter = $recalculateAllValues ? ' ' : self::UPDATE_FILTER;
-        $sql = "UPDATE animal SET updated_gene_diversity = TRUE
+        $filter = $recalculateAllValues ? ' ' : ' AND '.self::UPDATE_FILTER;
+        $sql = "UPDATE animal SET updated_gene_diversity = TRUE, heterosis = NULL, recombination = NULL
                 WHERE id IN (
                   SELECT c.id FROM animal c
                     INNER JOIN animal f ON f.id = c.parent_father_id
                     INNER JOIN animal m ON m.id = c.parent_mother_id
                   WHERE f.breed_code ISNULL OR m.breed_code ISNULL
-                )".$filter;
+                ) ";
+        return SqlUtil::updateWithCount($conn, $sql.$filter);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param array $animalIds
+     * @param boolean $recalculateAllValues
+     * @param int|null $roundingAccuracy
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private static function updateByAnimalIds(Connection $conn, array $animalIds = [], $recalculateAllValues = false, $roundingAccuracy = null)
+    {
+        if(count($animalIds) > 0) {
+            $animalIdFilterString = '('.SqlUtil::getFilterStringByIdsArray($animalIds, 'c.id').')';
+            if($recalculateAllValues) {
+                $filter = ' WHERE '.$animalIdFilterString;
+            } else {
+                $filter = ' WHERE c.'.self::UPDATE_FILTER.' AND '.$animalIdFilterString;
+            }
+        } else {
+            if($recalculateAllValues) {
+                $filter = '';
+            } else {
+                $filter = ' WHERE c.'.self::UPDATE_FILTER;
+            }
+        }
+
+
+        $sql = "SELECT c.id, c.heterosis, c.recombination, f.breed_code as breed_code_father, m.breed_code as breed_code_mother
+                FROM animal c
+                  LEFT JOIN animal f ON f.id = c.parent_father_id
+                  LEFT JOIN animal m ON m.id = c.parent_mother_id 
+                  ".$filter." 
+                ORDER BY c.date_of_birth ASC";
+        $results = $conn->query($sql)->fetchAll();
+
+        $updateString = '';
+        $updateStringPrefix = '';
+        $animalIdsUpdateArray = [];
+
+        $totalCount = count($results);
+        $loopCount = 0;
+        $toUpdateCount = 0;
+        $updatedCount = 0;
+        foreach ($results as $result) {
+            $loopCount++;
+            $animalId = $result['id'];
+            $breedCodeStringFather = $result['breed_code_father'];
+            $breedCodeStringMother = $result['breed_code_mother'];
+            $currentHeterosis = $result['heterosis'];
+            $currentRecombination = $result['recombination'];
+            $geneDiversityValues = HeterosisAndRecombinationUtil::getHeterosisAndRecombinationBy8Parts($breedCodeStringFather, $breedCodeStringMother, $roundingAccuracy);
+            $heterosisValue = $geneDiversityValues != null ? ArrayUtil::get(ReportLabel::HETEROSIS, $geneDiversityValues) : 'NULL';
+            $recombinationValue = $geneDiversityValues != null ? ArrayUtil::get(ReportLabel::RECOMBINATION, $geneDiversityValues) : 'NULL';
+
+            if(NumberUtil::areFloatsEqual($currentHeterosis, $heterosisValue) && NumberUtil::areFloatsEqual($currentRecombination, $recombinationValue)) {
+                $animalIdsUpdateArray[] = $animalId;
+                $toUpdateCount++;
+            } else {
+                $updateString = $updateString.$updateStringPrefix.'('.$animalId.','.$heterosisValue.','.$recombinationValue.')';
+                $updateStringPrefix = ',';
+                $toUpdateCount++;
+            }
+
+            if($toUpdateCount >= self::BATCH_SIZE || $loopCount >= $totalCount) {
+                $updatedCount += self::updateGeneticDiversityValuesByUpdateString($conn, $updateString);
+                $updatedCount += self::setGeneticDiversityIsTrueByAnimalIds($conn, $animalIdsUpdateArray);
+                //Reset values
+                $toUpdateCount = 0;
+                $updateString = '';
+                $updateStringPrefix = '';
+                $animalIdsUpdateArray = [];
+            }
+        }
+        return $updatedCount;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param $updateString
+     * @return int
+     */
+    private static function updateGeneticDiversityValuesByUpdateString(Connection $conn, $updateString)
+    {
+        if(trim($updateString) == '') { return 0; }
+        $sql = "UPDATE animal
+                    SET heterosis = v.heterosis, recombination = v.recombination,
+                        updated_gene_diversity = TRUE
+						FROM ( VALUES ".$updateString."
+							 ) as v(animal_id, heterosis, recombination) WHERE id = v.animal_id";
+        return SqlUtil::updateWithCount($conn, $sql);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param array $animalIds
+     * @return int
+     */
+    public static function setGeneticDiversityIsTrueByAnimalIds(Connection $conn, array $animalIds = [])
+    {
+        if(!is_array($animalIds)) { return 0; }
+        if(count($animalIds) == 0) { return 0; }
+        
+        $filterString = implode(',', $animalIds);
+        $sql = "UPDATE animal SET updated_gene_diversity = TRUE
+                WHERE id IN (".$filterString.")";
+        return SqlUtil::updateWithCount($conn, $sql);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     */
+    public static function setUpdatedGeneDiversityIsFalseForAnimalsHavingBothParents(Connection $conn)
+    {
+        $sql = "UPDATE animal SET updated_gene_diversity = FALSE
+                WHERE parent_father_id NOTNULL AND parent_mother_id NOTNULL";
         return SqlUtil::updateWithCount($conn, $sql);
     }
 }
