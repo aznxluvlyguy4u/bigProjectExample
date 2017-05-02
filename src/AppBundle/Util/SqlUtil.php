@@ -397,4 +397,21 @@ class SqlUtil
         $sql = "SELECT MAX(id) FROM ".$tableName;
         return $conn->query($sql)->fetch()['max'];
     }
+
+
+    /**
+     * @param Connection $conn
+     * @param string $sql
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function updateWithCount(Connection $conn, $sql)
+    {
+        $sql = "WITH rows AS (
+                  ".$sql."
+                RETURNING 1
+                )
+                SELECT COUNT(*) AS count FROM rows;";
+        return $conn->query($sql)->fetch()['count'];
+    }
 }
