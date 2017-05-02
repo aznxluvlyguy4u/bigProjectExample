@@ -463,6 +463,14 @@ abstract class Animal
      */
     protected $recombination;
 
+
+    /**
+     * @var boolean
+     * @JMS\Type("boolean")
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    protected $updatedGeneDiversity;
+
     /**
      * @ORM\ManyToOne(targetEntity="Client")
      * @ORM\JoinColumn(name="breeder_id", referencedColumnName="id")
@@ -1981,6 +1989,24 @@ abstract class Animal
     public function setRecombination($recombination)
     {
         $this->recombination = $recombination;
+        return $this;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isUpdatedGeneDiversity()
+    {
+        return $this->updatedGeneDiversity;
+    }
+
+    /**
+     * @param boolean $updatedGeneDiversity
+     * @return Animal
+     */
+    public function setUpdatedGeneDiversity($updatedGeneDiversity)
+    {
+        $this->updatedGeneDiversity = $updatedGeneDiversity;
         return $this;
     }
 
