@@ -327,4 +327,21 @@ class SqlUtil
         }
         return $groupedResults;
     }
+
+
+    /**
+     * @param Connection $conn
+     * @param string $sqlString
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function updateWithCount(Connection $conn, $sql)
+    {
+        $sql = "WITH rows AS (
+                  ".$sql."
+                RETURNING 1
+                )
+                SELECT COUNT(*) AS count FROM rows;";
+        return $conn->query($sql)->fetch()['count'];
+    }
 }
