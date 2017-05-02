@@ -12,4 +12,7 @@ class MixBlupSetting
     const DATA_FILENAME = 'databestand';
     const PEDIGREE_FILENAME = 'afstamming';
     const INSTRUCTIONS_FILENAME = 'mixblup_instructions';
+
+    const DECIMAL_SEPARATOR = '.';
+    const THOUSANDS_SEPARATOR = '';
 }

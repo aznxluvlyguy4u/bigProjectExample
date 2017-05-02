@@ -10,10 +10,21 @@ class BreedCodeUtil
 {
 
     /**
-     * @param string $breedCodeString
+     * @param $breedCodeString
      * @return array
      */
-    public static function getBreedCodePartsFromBreedCodeString($breedCodeString)
+    public static function getBreedCodeAs8PartsFromBreedCodeString($breedCodeString)
+    {
+        return self::getBreedCodePartsFromBreedCodeString($breedCodeString, true);
+    }
+
+
+    /**
+     * @param string $breedCodeString
+     * @param boolean $isBy8Parts
+     * @return array
+     */
+    public static function getBreedCodePartsFromBreedCodeString($breedCodeString, $isBy8Parts = false)
     {
         $parts = Utils::separateLettersAndNumbersOfString($breedCodeString);
         $result = [];
@@ -26,8 +37,14 @@ class BreedCodeUtil
             return $result;
         }
 
-        for ($i = 0; $i < $totalCount-1; $i += 2) {
-            $result[$parts[$i]] = intval($parts[$i+1]);
+        if($isBy8Parts) {
+            for ($i = 0; $i < $totalCount-1; $i += 2) {
+                $result[$parts[$i]] = intval(round(intval($parts[$i+1])*8.0/100.0));
+            }
+        } else {
+            for ($i = 0; $i < $totalCount-1; $i += 2) {
+                $result[$parts[$i]] = intval($parts[$i+1]);
+            }
         }
 
         return $result;
