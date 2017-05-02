@@ -4,6 +4,7 @@ namespace AppBundle\Command;
 
 use AppBundle\Cache\AnimalCacher;
 use AppBundle\Cache\ExteriorCacher;
+use AppBundle\Cache\GeneDiversityUpdater;
 use AppBundle\Cache\NLingCacher;
 use AppBundle\Cache\ProductionCacher;
 use AppBundle\Cache\WeightCacher;
@@ -61,11 +62,14 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '5: Regenerate all AnimalCache records older than given stringDateTime (YYYY-MM-DD HH:MM:SS)', "\n",
             '6: Generate all AnimalCache records for animal and ascendants (3gen) for given locationId', "\n",
             '7: Regenerate all AnimalCache records for animal and ascendants (3gen) for given locationId', "\n",
-            '8: Delete duplicate records', "\n",
+            '8: Delete duplicate records', "\n\n",
             '--- Sql Batch Queries ---', "\n",
             '20: BatchUpdate all incongruent production values and n-ling values', "\n",
             '21: BatchUpdate all Incongruent exterior values', "\n",
-            '22: BatchUpdate all Incongruent weight values', "\n",
+            '22: BatchUpdate all Incongruent weight values', "\n\n",
+            '--- Non AnimalCache Sql Batch Queries ---   ', "\n",
+            '30: BatchUpdate heterosis and recombination values, non-updated only', "\n",
+            '31: BatchUpdate heterosis and recombination values, regenerate all', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -165,6 +169,8 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 $output->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
                 break;
 
+            case 30: GeneDiversityUpdater::update($this->conn, [], false, $this->cmdUtil); break;
+            case 31: GeneDiversityUpdater::update($this->conn, [], true, $this->cmdUtil); break;
 
             default:
                 $output->writeln('ABORTED');
