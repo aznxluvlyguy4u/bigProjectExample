@@ -44,6 +44,26 @@ class GeneDiversityUpdater
 
     /**
      * @param Connection $conn
+     * @param int $parentId
+     * @param bool $recalculateAllValues
+     * @param CommandUtil $cmdUtil
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function updateByParentId(Connection $conn, $parentId, $recalculateAllValues = true, $cmdUtil = null)
+    {
+        if(!ctype_digit($parentId) && !is_int($parentId)) { return 0; }
+        $sql = "SELECT id FROM animal
+                WHERE parent_father_id = ".$parentId." OR parent_mother_id = ".$parentId;
+        $results = $conn->query($sql)->fetchAll();
+        $animalIds = SqlUtil::groupSqlResultsGroupedBySingleVariable('id', $results)['id'];
+        $animalIds[] = $parentId;
+        return self::update($conn, $animalIds, $recalculateAllValues, $cmdUtil);
+    }
+
+
+    /**
+     * @param Connection $conn
      * @param boolean $recalculateAllValues
      * @return int
      */
