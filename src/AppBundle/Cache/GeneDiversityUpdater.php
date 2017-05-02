@@ -6,6 +6,7 @@ namespace AppBundle\Cache;
 
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\CommandUtil;
 use AppBundle\Util\HeterosisAndRecombinationUtil;
 use AppBundle\Util\NumberUtil;
 use AppBundle\Util\SqlUtil;
@@ -20,16 +21,23 @@ class GeneDiversityUpdater
      * @param Connection $conn
      * @param array $animalIds
      * @param boolean $recalculateAllValues
+     * @param CommandUtil $cmdUtil
      * @return int
      */
-    public static function update(Connection $conn, array $animalIds = [], $recalculateAllValues = false)
+    public static function update(Connection $conn, array $animalIds = [], $recalculateAllValues = false, $cmdUtil = null)
     {
         $updateCount = 0;
         if(count($animalIds) == 0) {
+            if($cmdUtil) { $cmdUtil->setStartTimeAndPrintIt(3, 1, 'Updating heterosis and recombination values'); }
             $updateCount += self::updateAnimalsWithAMissingParent($conn, $recalculateAllValues);
+            if($cmdUtil) { $cmdUtil->advanceProgressBar(1, '(1/3) updated_gene_diversity = TRUE has been set'); }
             $updateCount += self::updateAnimalsHaveBothParentsWhereBreedCodeIsMissingFromAParent($conn, $recalculateAllValues);
+            if($cmdUtil) { $cmdUtil->advanceProgressBar(1, '(2/3) updated_gene_diversity = TRUE has been set'); }
+            if($cmdUtil) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
         }
-        $updateCount += self::updateByAnimalIds($conn, $animalIds, $recalculateAllValues);
+
+        $updateCount += self::updateByAnimalIds($conn, $animalIds, $recalculateAllValues, null, $cmdUtil);
+        if($cmdUtil) { $cmdUtil->writeln('Total updateCount: '.$updateCount); }
         return $updateCount;
     }
 
@@ -72,10 +80,11 @@ class GeneDiversityUpdater
      * @param array $animalIds
      * @param boolean $recalculateAllValues
      * @param int|null $roundingAccuracy
+     * @param CommandUtil $cmdUtil
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    private static function updateByAnimalIds(Connection $conn, array $animalIds = [], $recalculateAllValues = false, $roundingAccuracy = null)
+    private static function updateByAnimalIds(Connection $conn, array $animalIds = [], $recalculateAllValues = false, $roundingAccuracy = null, $cmdUtil)
     {
         if(count($animalIds) > 0) {
             $animalIdFilterString = '('.SqlUtil::getFilterStringByIdsArray($animalIds, 'c.id').')';
@@ -109,6 +118,11 @@ class GeneDiversityUpdater
         $loopCount = 0;
         $toUpdateCount = 0;
         $updatedCount = 0;
+        $newValueCount = 0;
+        $unchangedValueCount = 0;
+
+        if($cmdUtil) { $cmdUtil->setStartTimeAndPrintIt(ceil($totalCount/self::BATCH_SIZE)+1, 1); }
+
         foreach ($results as $result) {
             $loopCount++;
             $animalId = $result['id'];
@@ -123,10 +137,12 @@ class GeneDiversityUpdater
             if(NumberUtil::areFloatsEqual($currentHeterosis, $heterosisValue) && NumberUtil::areFloatsEqual($currentRecombination, $recombinationValue)) {
                 $animalIdsUpdateArray[] = $animalId;
                 $toUpdateCount++;
+                $unchangedValueCount++;
             } else {
                 $updateString = $updateString.$updateStringPrefix.'('.$animalId.','.$heterosisValue.','.$recombinationValue.')';
                 $updateStringPrefix = ',';
                 $toUpdateCount++;
+                $newValueCount++;
             }
 
             if($toUpdateCount >= self::BATCH_SIZE || $loopCount >= $totalCount) {
@@ -137,8 +153,13 @@ class GeneDiversityUpdater
                 $updateString = '';
                 $updateStringPrefix = '';
                 $animalIdsUpdateArray = [];
+
+                if($cmdUtil) { $cmdUtil->advanceProgressBar(1, $updatedCount.'/'.$totalCount.' animals have updated heterosis and recombination values, new|unchanged: '
+                    .$newValueCount.'|'.$unchangedValueCount); }
             }
         }
+        if($cmdUtil) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
+
         return $updatedCount;
     }
 
