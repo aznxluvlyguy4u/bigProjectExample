@@ -10,6 +10,7 @@ use AppBundle\Cache\ProductionCacher;
 use AppBundle\Cache\WeightCacher;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\LitterUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -69,7 +70,11 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '22: BatchUpdate all Incongruent weight values', "\n\n",
             '--- Non AnimalCache Sql Batch Queries ---   ', "\n",
             '30: BatchUpdate heterosis and recombination values, non-updated only', "\n",
-            '31: BatchUpdate heterosis and recombination values, regenerate all', "\n",
+            '31: BatchUpdate heterosis and recombination values, regenerate all', "\n\n",
+            '32: BatchUpdate match Mates and Litters, non-updated only', "\n",
+            '33: BatchUpdate match Mates and Litters, regenerate all', "\n",
+            '34: BatchUpdate remove Mates from REVOKED Litters', "\n",
+            '35: BatchUpdate count Mates and Litters to be matched', "\n\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -171,6 +176,10 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
 
             case 30: GeneDiversityUpdater::update($this->conn, [], false, $this->cmdUtil); break;
             case 31: GeneDiversityUpdater::update($this->conn, [], true, $this->cmdUtil); break;
+            case 32: $output->writeln(LitterUtil::matchMatchingMates($this->conn, false).' \'mate-litter\'s matched'); break;
+            case 33: $output->writeln(LitterUtil::matchMatchingMates($this->conn, true).' \'mate-litter\'s matched'); break;
+            case 34: $output->writeln(LitterUtil::removeMatesFromRevokedLitters($this->conn).' \'mate-litter\'s unmatched'); break;
+            case 35: $output->writeln(LitterUtil::countToBeMatchedLitters($this->conn).' \'mate-litter\'s to be matched'); break;
 
             default:
                 $output->writeln('ABORTED');
