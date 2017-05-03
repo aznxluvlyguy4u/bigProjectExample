@@ -86,7 +86,7 @@ class LitterUtil
 
         return "WHERE DATE_PART('year', l.litter_date) >= ".self::MIN_YEAR."
                 AND ".DeclareBirthRepository::MATING_CANDIDATE_START_OFFSET." <= l.litter_date::date - m.start_date::date
-                AND l.litter_date::date::date - m.end_date::date <= ".DeclareBirthRepository::MATING_CANDIDATE_END_OFFSET."
+                AND l.litter_date::date - m.end_date::date <= ".DeclareBirthRepository::MATING_CANDIDATE_END_OFFSET."
                 AND bm.is_overwritten_version = FALSE
                 AND (bm.request_state = '".RequestStateType::FINISHED."' OR bm.request_state = '".RequestStateType::FINISHED_WITH_WARNING."')
                 AND bl.is_overwritten_version = FALSE
