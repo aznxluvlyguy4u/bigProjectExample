@@ -636,6 +636,7 @@ abstract class Animal
         $this->isImportAnimal = false;
         $this->isExportAnimal = false;
         $this->isDepartedAnimal = false;
+        $this->updatedGeneDiversity = false;
     }
 
     /**
