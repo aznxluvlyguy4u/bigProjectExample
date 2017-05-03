@@ -62,11 +62,14 @@ class LitterUtil
      */
     public static function countToBeMatchedLitters(Connection $conn)
     {
-        $sql = "SELECT COUNT(*) as count FROM litter l
-                         INNER JOIN mate m ON l.animal_mother_id = m.stud_ewe_id AND l.animal_father_id = m.stud_ram_id
-                         INNER JOIN declare_nsfo_base bl ON bl.id = l.id
-                         INNER JOIN declare_nsfo_base bm ON bm.id = m.id
-                       ".self::getMatchingMatesFilter(false);
+        $sql = "SELECT COUNT(*) FROM (
+                  SELECT l.id as count FROM litter l
+                     INNER JOIN mate m ON l.animal_mother_id = m.stud_ewe_id AND l.animal_father_id = m.stud_ram_id
+                     INNER JOIN declare_nsfo_base bl ON bl.id = l.id
+                     INNER JOIN declare_nsfo_base bm ON bm.id = m.id
+                   ".self::getMatchingMatesFilter(false)."
+                   GROUP BY l.id, l.animal_mother_id, l.animal_father_id
+                ) AS a";
         return $conn->query($sql)->fetch()['count'];
     }
 
