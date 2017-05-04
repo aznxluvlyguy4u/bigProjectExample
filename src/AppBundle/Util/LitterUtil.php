@@ -96,4 +96,84 @@ class LitterUtil
     }
 
 
+    /**
+     * Ewes with abortions and pseudopregnancies cannot give milk, while an ewe with only stillborns can.
+     * Because the imported data from VSM has no registered surrogate mothers, the suckleCount will only be calculated
+     * for litters registered in this current NSFO system.
+     * 
+     * @param Connection $conn
+     * @param null $litterId
+     * @return int
+     */
+    public static function updateSuckleCount(Connection $conn, $litterId = null)
+    {
+        $litterIdFilter = ctype_digit($litterId) || is_int($litterId) ? ' AND l.id = '.$litterId.' ' : '';
+
+        $sql = "UPDATE litter SET suckle_count_update_date = NOW(), suckle_count = v.calculated_suckle_count
+                FROM(
+                  SELECT l.id, calculated_suckle_count, l.suckle_count FROM litter l
+                    INNER JOIN (
+                                 SELECT litter_id, SUM(calculated_suckle_count) as calculated_suckle_count
+                                 FROM (
+                                        SELECT litter_id, COUNT(litter_id) as calculated_suckle_count
+                                        FROM (
+                                               -- 1. Find the children in own litter without a surrogate,
+                                               -- in this part min(child_count without surrogate) = 1
+                                               SELECT child.id as suckling, l.id as litter_id
+                                               FROM litter l
+                                                 INNER JOIN animal child ON l.id = child.litter_id
+                                               WHERE child.surrogate_id ISNULL
+                                                     AND l.status = 'COMPLETED' AND l.is_abortion = FALSE AND l.is_pseudo_pregnancy = FALSE
+                                                     ".$litterIdFilter."
+                                               UNION
+                                               -- 2. Find the children from others for which the mother is a surrogate
+                                               SELECT child.id as suckling, l.id as litter_id FROM litter l
+                                                 INNER JOIN animal child ON l.animal_mother_id = child.surrogate_id
+                                               WHERE ABS(DATE(child.date_of_birth) - DATE(l.litter_date)) <= 14
+                                                     AND l.status = 'COMPLETED' AND l.is_abortion = FALSE AND l.is_pseudo_pregnancy = FALSE
+                                                     ".$litterIdFilter."
+                                             ) AS suckers_calculation_part_1
+                                        GROUP BY litter_id
+                                        UNION
+                                        -- 3. Make sure the litters with born_alive_count = 0 are included
+                                        SELECT l.id as litter_id, 0 as calculated_suckle_count FROM litter l
+                                        WHERE born_alive_count = 0
+                                              AND l.status = 'COMPLETED' AND l.is_abortion = FALSE AND l.is_pseudo_pregnancy = FALSE
+                                              ".$litterIdFilter."
+                                        UNION
+                                        -- 4. Make sure the litters where all children have surrogates are included
+                                        SELECT l.id as litter_id, 0 as calculated_suckle_count FROM litter l
+                                          INNER JOIN (
+                                                       SELECT l.id, COUNT(child.id) - SUM(CAST(child.surrogate_id NOTNULL AS INTEGER)) = 0 AS all_children_have_surrogates
+                                                       FROM litter l
+                                                         INNER JOIN animal child ON child.litter_id = l.id
+                                                       WHERE l.born_alive_count <> 0 AND l.suckle_count ISNULL
+                                                             AND l.status = 'COMPLETED' AND l.is_abortion = FALSE AND l.is_pseudo_pregnancy = FALSE
+                                                             ".$litterIdFilter."
+                                                       GROUP BY l.id
+                                                     )g ON g.id = l.id
+                                        WHERE g.all_children_have_surrogates
+                                      ) AS suckers_calculation
+                                 GROUP BY litter_id
+                               )suckers ON suckers.litter_id = l.id
+                  WHERE (l.suckle_count <> suckers.calculated_suckle_count
+                         OR l.suckle_count ISNULL AND suckers.calculated_suckle_count NOTNULL)
+                        AND l.status = 'COMPLETED' AND l.is_abortion = FALSE AND l.is_pseudo_pregnancy = FALSE
+                        ".$litterIdFilter."
+                ) AS v(litter_id, calculated_suckle_count) WHERE id = litter_id";
+        return SqlUtil::updateWithCount($conn, $sql);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     */
+    public static function removeSuckleCountFromRevokedLitters(Connection $conn)
+    {
+        $sql = "UPDATE litter SET suckle_count = NULL, suckle_count_update_date = NULL
+                WHERE status = 'REVOKED' AND (suckle_count NOTNULL OR suckle_count_update_date NOTNULL)";
+        return SqlUtil::updateWithCount($conn, $sql);
+    }
+    
 }
