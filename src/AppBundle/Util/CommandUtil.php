@@ -239,6 +239,15 @@ class CommandUtil
 
 
     /**
+     * @return OutputInterface
+     */
+    public function getOutputInterface()
+    {
+        return $this->outputInterface;
+    }
+
+
+    /**
      * @param $input
      * @param int $indentLevel
      */
