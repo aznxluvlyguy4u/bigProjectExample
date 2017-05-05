@@ -5,6 +5,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Util\AnimalArrayReader;
+use AppBundle\Util\LitterUtil;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Validator\Constraints\Collection;
@@ -16,31 +17,15 @@ use Symfony\Component\Validator\Constraints\Collection;
 class EweRepository extends AnimalRepository {
 
     /**
-     * @param Ewe $mother
-     * @param boolean $isPersist
-     * @param boolean $isFlush
+     * @param $motherId
+     * @return int
      */
-    public function generateLitterIds($mother, $isPersist = true, $isFlush = true)
+    public function generateLitterIds($motherId)
     {
-        /** @var ObjectManager $em */
-        $em = $this->getManager();
-
-        if($mother instanceof Ewe) {
-            $uln = $mother->getUln();
-
-            $litters = $mother->getLitters();
-            $litterCount = $litters->count();
-
-            for($i = 0; $i < $litterCount; $i++) {
-                /** @var Litter $litter */
-                $litter = $litters->get($i);
-                $litter->setLitterOrdinal($i+1);
-
-                if($isPersist) { $em->persist($litter); }
-            }
-            if($isPersist) { $em->persist($mother); }
-            if($isFlush) { $em->flush(); }
+        if(ctype_digit($motherId) || is_int($motherId)) {
+            return LitterUtil::updateLitterOrdinals($this->getConnection(), $motherId);
         }
+        return 0;
     }
 
 

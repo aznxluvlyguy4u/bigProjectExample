@@ -175,5 +175,44 @@ class LitterUtil
                 WHERE status = 'REVOKED' AND (suckle_count NOTNULL OR suckle_count_update_date NOTNULL)";
         return SqlUtil::updateWithCount($conn, $sql);
     }
-    
+
+
+    /**
+     * @param Connection $conn
+     * @param null $eweId
+     * @return int
+     */
+    public static function updateLitterOrdinals(Connection $conn, $eweId = null)
+    {
+        $animalMotherIdFilter = ctype_digit($eweId) || is_int($eweId) ? ' AND animal_mother_id = '.$eweId.' ' : '';
+        $sql = "UPDATE litter SET litter_ordinal = v.calc_litter_ordinal
+                FROM (
+                  SELECT l.id as litter_id,
+                    DENSE_RANK() OVER (PARTITION BY animal_mother_id ORDER BY litter_date ASC) AS calc_litter_ordinal
+                  FROM litter l
+                  WHERE animal_mother_id IN (
+                    SELECT animal_mother_id FROM litter
+                    WHERE litter_ordinal ISNULL AND
+                          (status = 'COMPLETE' OR status = 'IMPORTED')
+                    GROUP BY animal_mother_id
+                  ) AND (status = 'COMPLETE' OR status = 'IMPORTED') ".$animalMotherIdFilter."
+                  ORDER BY animal_mother_id ASC, litter_date ASC
+                ) AS v(litter_id, calc_litter_ordinal)
+                WHERE litter.id = litter_id
+                  AND (litter.litter_ordinal ISNULL OR litter.litter_ordinal <> v.calc_litter_ordinal)";
+        return SqlUtil::updateWithCount($conn, $sql);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     */
+    public static function removeLitterOrdinalFromRevokedLitters(Connection $conn)
+    {
+        $sql = "UPDATE litter SET litter_ordinal = NULL
+                WHERE (status = 'REVOKED' OR status = 'INCOMPLETE') AND litter_ordinal NOTNULL";
+        return SqlUtil::updateWithCount($conn, $sql);
+    }
+
 }

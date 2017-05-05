@@ -76,7 +76,9 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '34: BatchUpdate remove Mates from REVOKED Litters', "\n",
             '35: BatchUpdate count Mates and Litters to be matched', "\n\n",
             '36: BatchUpdate suckleCount in Litters, update all incongruous values', "\n",
-            '37: BatchUpdate remove suckleCount REVOKED in Litters', "\n\n",
+            '37: BatchUpdate remove suckleCount from REVOKED Litters', "\n\n",
+            '38: BatchUpdate litterOrdinals in Litters, update all incongruous values', "\n",
+            '39: BatchUpdate remove litterOrdinals from REVOKED Litters', "\n\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -184,6 +186,8 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             case 35: $output->writeln(LitterUtil::countToBeMatchedLitters($this->conn).' \'mate-litter\'s to be matched'); break;
             case 36: $output->writeln(LitterUtil::updateSuckleCount($this->conn).' suckleCounts updated'); break;
             case 37: $output->writeln(LitterUtil::removeSuckleCountFromRevokedLitters($this->conn).' suckleCounts removed from revoked litters'); break;
+            case 38: $output->writeln(LitterUtil::updateLitterOrdinals($this->conn).' litterOrdinals updated'); break;
+            case 39: $output->writeln(LitterUtil::removeLitterOrdinalFromRevokedLitters($this->conn).' litterOrdinals removed from revoked litters'); break;
 
             default:
                 $output->writeln('ABORTED');
