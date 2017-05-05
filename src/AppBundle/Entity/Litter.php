@@ -36,6 +36,7 @@ class Litter extends DeclareNsfoBase
     private $litterDate;
 
     /**
+     * @var Ram
      * @ORM\ManyToOne(targetEntity="Ram", inversedBy="litters")
      * @ORM\JoinColumn(name="animal_father_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Ram")
@@ -43,19 +44,12 @@ class Litter extends DeclareNsfoBase
     private $animalFather;
 
     /**
+     * @var Ewe
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy="litters")
      * @ORM\JoinColumn(name="animal_mother_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Ewe")
      */
     private $animalMother;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
-     */
-    private $litterGroup;
 
     /**
      * The number designating then place in an ordered sequence of litters for a specific ewe
@@ -394,22 +388,6 @@ class Litter extends DeclareNsfoBase
     }
 
     /**
-     * @return string
-     */
-    public function getLitterGroup()
-    {
-        return $this->litterGroup;
-    }
-
-    /**
-     * @param string $litterGroup
-     */
-    public function setLitterGroup($litterGroup)
-    {
-        $this->litterGroup = $litterGroup;
-    }
-
-    /**
      * @return mixed
      */
     public function getAbortion()
@@ -596,6 +574,22 @@ class Litter extends DeclareNsfoBase
     {
         $this->birthInterval = $birthInterval;
         return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLitterGroup()
+    {
+        $mother = $this->getAnimalMother();
+        if($mother && $this->getLitterOrdinal()) {
+            $uln = $mother->getUln();
+            if($uln) {
+                $paddedLitterOrdinal = str_pad($this->getLitterOrdinal(), 2, "0", STR_PAD_LEFT);
+                return $uln.'_'.$paddedLitterOrdinal;
+            }
+        }
+        return null;
     }
 
 
