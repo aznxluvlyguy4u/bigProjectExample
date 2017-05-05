@@ -998,7 +998,7 @@ class Mixblup
                           a.uln_country_code as uln_country_code_a, a.uln_number as uln_number_a,
                           f.uln_country_code as uln_country_code_f, f.uln_number as uln_number_f,
                           m.uln_country_code as uln_country_code_m, m.uln_number as uln_number_m,
-                          l.litter_group, l.born_alive_count, l.stillborn_count
+                          CONCAT(m.uln_number,'_',LPAD(l.litter_ordinal::text, 2, '0')) as litter_group, l.born_alive_count, l.stillborn_count
                     FROM animal a 
                         LEFT JOIN animal f ON a.parent_father_id = f.id 
                         LEFT JOIN animal m ON a.parent_mother_id = m.id
@@ -1024,7 +1024,7 @@ class Mixblup
 
         $scrapieGenotype = Utils::fillNullOrEmptyString($animalData['scrapie_genotype'], self::SCRAPIE_GENOTYPE_NULL_FILLER);
         $nLing = Utils::fillNullOrEmptyString($animalData['born_alive_count'] + $animalData['stillborn_count'], self::NLING_NULL_FILLER);
-        $litterGroup = Utils::fillNullOrEmptyString($animalData['litter_group'], self::LITTER_GROUP_NULL_FILLER);
+        $litterGroup = Utils::fillNullOrEmptyString($animalData[JsonInputConstant::LITTER_GROUP], self::LITTER_GROUP_NULL_FILLER);
 
         $breedCodeValues = $this->getMixBlupTestAttributesBreedCodeTypesById($animalData['breed_codes_id']);
         $dateOfBirthYear = explode('-', $animalData['date_of_birth'])[0];
@@ -1252,7 +1252,7 @@ class Mixblup
         if($litterSize == null || $litterSize == 0) { $litterSize = self::NLING_NULL_FILLER; }
         if($litterGroup == null || $litterGroup == 0) { $litterGroup = self::LITTER_GROUP_NULL_FILLER; }
         
-        $litterData->set(Constant::LITTER_GROUP_NAMESPACE, $litterGroup);
+        $litterData->set(JsonInputConstant::LITTER_GROUP, $litterGroup);
         $litterData->set(Constant::LITTER_SIZE_NAMESPACE, $litterSize);
 
         return $litterData;

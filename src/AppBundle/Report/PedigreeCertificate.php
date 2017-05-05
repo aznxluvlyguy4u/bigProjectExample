@@ -557,11 +557,9 @@ class PedigreeCertificate
         $litterData = $this->litterRepository->getLitterData($animalId);
         $litterSize = self::GENERAL_NULL_FILLER;
         $nLing = self::GENERAL_NULL_FILLER;
-        $litterGroup = self::GENERAL_NULL_FILLER;
         if($litterData != null) {
             $litterSize = $litterData[JsonInputConstant::SIZE];
             $nLing = $litterData[JsonInputConstant::N_LING];
-            $litterGroup = $litterData[JsonInputConstant::LITTER_GROUP];
         }
 
 

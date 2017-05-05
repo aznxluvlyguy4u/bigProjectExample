@@ -34,8 +34,7 @@ class EweRepository extends AnimalRepository {
             for($i = 0; $i < $litterCount; $i++) {
                 /** @var Litter $litter */
                 $litter = $litters->get($i);
-                $litterNumber = str_pad($i+1, 2, "0", STR_PAD_LEFT);
-                $litter->setLitterGroup($uln.'_'.$litterNumber);
+                $litter->setLitterOrdinal($i+1);
 
                 if($isPersist) { $em->persist($litter); }
             }
