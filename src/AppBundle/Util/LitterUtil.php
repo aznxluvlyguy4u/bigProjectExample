@@ -50,7 +50,7 @@ class LitterUtil
     public static function removeMatesFromRevokedLitters(Connection $conn)
     {
         $sql = "UPDATE litter SET mate_id = NULL
-                WHERE status = 'REVOKED' AND mate_id NOTNULL";
+                WHERE status = '".RequestStateType::REVOKED."' AND mate_id NOTNULL";
         return SqlUtil::updateWithCount($conn, $sql);
     }
 
@@ -123,14 +123,14 @@ class LitterUtil
                                                FROM litter l
                                                  INNER JOIN animal child ON l.id = child.litter_id
                                                WHERE child.surrogate_id ISNULL
-                                                     AND l.status = 'COMPLETED' AND l.is_abortion = FALSE AND l.is_pseudo_pregnancy = FALSE
+                                                     AND l.status = '".RequestStateType::COMPLETED."' AND l.is_abortion = FALSE AND l.is_pseudo_pregnancy = FALSE
                                                      ".$litterIdFilter."
                                                UNION
                                                -- 2. Find the children from others for which the mother is a surrogate
                                                SELECT child.id as suckling, l.id as litter_id FROM litter l
                                                  INNER JOIN animal child ON l.animal_mother_id = child.surrogate_id
                                                WHERE ABS(DATE(child.date_of_birth) - DATE(l.litter_date)) <= 14
-                                                     AND l.status = 'COMPLETED' AND l.is_abortion = FALSE AND l.is_pseudo_pregnancy = FALSE
+                                                     AND l.status = '".RequestStateType::COMPLETED."' AND l.is_abortion = FALSE AND l.is_pseudo_pregnancy = FALSE
                                                      ".$litterIdFilter."
                                              ) AS suckers_calculation_part_1
                                         GROUP BY litter_id
@@ -138,7 +138,7 @@ class LitterUtil
                                         -- 3. Make sure the litters with born_alive_count = 0 are included
                                         SELECT l.id as litter_id, 0 as calculated_suckle_count FROM litter l
                                         WHERE born_alive_count = 0
-                                              AND l.status = 'COMPLETED' AND l.is_abortion = FALSE AND l.is_pseudo_pregnancy = FALSE
+                                              AND l.status = '".RequestStateType::COMPLETED."' AND l.is_abortion = FALSE AND l.is_pseudo_pregnancy = FALSE
                                               ".$litterIdFilter."
                                         UNION
                                         -- 4. Make sure the litters where all children have surrogates are included
@@ -148,7 +148,7 @@ class LitterUtil
                                                        FROM litter l
                                                          INNER JOIN animal child ON child.litter_id = l.id
                                                        WHERE l.born_alive_count <> 0 AND l.suckle_count ISNULL
-                                                             AND l.status = 'COMPLETED' AND l.is_abortion = FALSE AND l.is_pseudo_pregnancy = FALSE
+                                                             AND l.status = '".RequestStateType::COMPLETED."' AND l.is_abortion = FALSE AND l.is_pseudo_pregnancy = FALSE
                                                              ".$litterIdFilter."
                                                        GROUP BY l.id
                                                      )g ON g.id = l.id
@@ -158,7 +158,7 @@ class LitterUtil
                                )suckers ON suckers.litter_id = l.id
                   WHERE (l.suckle_count <> suckers.calculated_suckle_count
                          OR l.suckle_count ISNULL AND suckers.calculated_suckle_count NOTNULL)
-                        AND l.status = 'COMPLETED' AND l.is_abortion = FALSE AND l.is_pseudo_pregnancy = FALSE
+                        AND l.status = '".RequestStateType::COMPLETED."' AND l.is_abortion = FALSE AND l.is_pseudo_pregnancy = FALSE
                         ".$litterIdFilter."
                 ) AS v(litter_id, calculated_suckle_count) WHERE id = litter_id";
         return SqlUtil::updateWithCount($conn, $sql);
@@ -172,7 +172,7 @@ class LitterUtil
     public static function removeSuckleCountFromRevokedLitters(Connection $conn)
     {
         $sql = "UPDATE litter SET suckle_count = NULL, suckle_count_update_date = NULL
-                WHERE status = 'REVOKED' AND (suckle_count NOTNULL OR suckle_count_update_date NOTNULL)";
+                WHERE status = '".RequestStateType::REVOKED."' AND (suckle_count NOTNULL OR suckle_count_update_date NOTNULL)";
         return SqlUtil::updateWithCount($conn, $sql);
     }
 
@@ -193,9 +193,9 @@ class LitterUtil
                   WHERE animal_mother_id IN (
                     SELECT animal_mother_id FROM litter
                     WHERE litter_ordinal ISNULL AND
-                          (status = 'COMPLETE' OR status = 'IMPORTED')
+                          (status = '".RequestStateType::COMPLETED."' OR status = '".RequestStateType::IMPORTED."')
                     GROUP BY animal_mother_id
-                  ) AND (status = 'COMPLETE' OR status = 'IMPORTED') ".$animalMotherIdFilter."
+                  ) AND (status = '".RequestStateType::COMPLETED."' OR status = '".RequestStateType::IMPORTED."') ".$animalMotherIdFilter."
                   ORDER BY animal_mother_id ASC, litter_date ASC
                 ) AS v(litter_id, calc_litter_ordinal)
                 WHERE litter.id = litter_id
@@ -211,7 +211,7 @@ class LitterUtil
     public static function removeLitterOrdinalFromRevokedLitters(Connection $conn)
     {
         $sql = "UPDATE litter SET litter_ordinal = NULL
-                WHERE (status = 'REVOKED' OR status = 'INCOMPLETE') AND litter_ordinal NOTNULL";
+                WHERE (status = '".RequestStateType::REVOKED."' OR status = '".RequestStateType::IMPORTED."') AND litter_ordinal NOTNULL";
         return SqlUtil::updateWithCount($conn, $sql);
     }
 

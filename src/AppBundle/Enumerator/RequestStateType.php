@@ -17,7 +17,7 @@ namespace AppBundle\Enumerator;
 class RequestStateType
 {
     const OPEN = "OPEN";
-    const COMPLETE = "COMPLETE";
+    const COMPLETED = "COMPLETED";
     const FINISHED = "FINISHED";
     const FINISHED_WITH_WARNING = "FINISHED_WITH_WARNING";
     const FAILED = "FAILED";
