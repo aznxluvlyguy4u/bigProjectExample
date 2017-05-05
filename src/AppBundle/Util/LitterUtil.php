@@ -219,4 +219,51 @@ class LitterUtil
         return SqlUtil::updateWithCount($conn, $sql);
     }
 
+
+    /**
+     * @param Connection $conn
+     * @param null|int $litterId
+     * @return int
+     */
+    public static function updateGestationPeriods(Connection $conn, $litterId = null)
+    {
+        $litterIdFilter = ctype_digit($litterId) || is_int($litterId) ? ' AND l.id = '.$litterId.' ' : '';
+
+        $sql = "UPDATE litter SET gestation_period = v.calc_gestation_period
+                FROM (
+                  SELECT l.id as litter_id, DATE(litter_date)-DATE(m.start_date) as calc_gestation_period
+                  FROM litter l
+                    INNER JOIN mate m ON l.mate_id = m.id
+                  WHERE DATE(m.start_date) = DATE(m.end_date)
+                        AND m.start_date NOTNULL
+                        AND (gestation_period ISNULL OR gestation_period <> (DATE(litter_date)-DATE(m.start_date)))
+                        AND l.status = 'COMPLETED' --NOTE IMPORTED litters are ignored
+                        ".$litterIdFilter."
+                ) AS v(litter_id, calc_gestation_period) WHERE litter.id = v.litter_id";
+        $updateCountNewLitterMateMatch = SqlUtil::updateWithCount($conn, $sql);
+
+
+        $litterIdFilter = ctype_digit($litterId) || is_int($litterId) ? ' AND litter.id = '.$litterId.' ' : '';
+
+        $sql = "UPDATE litter SET gestation_period = NULL
+                WHERE gestation_period NOTNULL AND
+                      (mate_id ISNULL OR status = 'INCOMPLETE' OR status = 'REVOKED'
+                      OR
+                      id NOT IN (
+                  SELECT l.id as litter_id
+                  FROM litter l
+                    INNER JOIN mate m ON l.mate_id = m.id
+                    INNER JOIN declare_nsfo_base bm ON m.id = bm.id
+                  WHERE DATE(m.start_date) = DATE(m.end_date)
+                        AND l.status = 'COMPLETED' --NOTE IMPORTED litters are ignored
+                        AND bm.request_state = 'FINISHED' OR bm.request_state = 'FINISHED_WITH_WARNING'
+                )) ".$litterIdFilter;
+        $updateCountRevokedLitterOrMate = SqlUtil::updateWithCount($conn, $sql);
+
+        return $updateCountNewLitterMateMatch + $updateCountRevokedLitterOrMate;
+    }
+    
+    
+    
+
 }
