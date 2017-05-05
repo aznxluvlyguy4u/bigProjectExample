@@ -179,12 +179,16 @@ class LitterUtil
 
     /**
      * @param Connection $conn
-     * @param null $eweId
+     * @param int|string $litterId
      * @return int
      */
-    public static function updateLitterOrdinals(Connection $conn, $eweId = null)
+    public static function updateLitterOrdinals(Connection $conn, $litterId = null)
     {
-        $animalMotherIdFilter = ctype_digit($eweId) || is_int($eweId) ? ' AND animal_mother_id = '.$eweId.' ' : '';
+        $animalMotherIdFilter = ctype_digit($litterId) || is_int($litterId) ?
+            " AND l.animal_mother_id IN (\n" +
+            "      SELECT animal_mother_id FROM litter WHERE id = ".$litterId."\n" +
+            "    ) " : '';
+
         $sql = "UPDATE litter SET litter_ordinal = v.calc_litter_ordinal
                 FROM (
                   SELECT l.id as litter_id,
