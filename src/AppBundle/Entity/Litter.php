@@ -58,6 +58,16 @@ class Litter extends DeclareNsfoBase
     private $litterGroup;
 
     /**
+     * The number designating then place in an ordered sequence of litters for a specific ewe
+     * starting at 1.
+     *
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true, options={"default":null})
+     * @JMS\Type("integer")
+     */
+    private $litterOrdinal;
+
+    /**
      * @var integer
      *
      * @ORM\Column(type="integer", options={"default":0})
@@ -241,6 +251,22 @@ class Litter extends DeclareNsfoBase
     public function getLitterDate()
     {
         return $this->litterDate;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getLitterOrdinal()
+    {
+        return $this->litterOrdinal;
+    }
+
+    /**
+     * @param integer $litterOrdinal
+     */
+    public function setLitterOrdinal($litterOrdinal)
+    {
+        $this->litterOrdinal = $litterOrdinal;
     }
 
     /**
