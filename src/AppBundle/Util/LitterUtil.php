@@ -215,7 +215,7 @@ class LitterUtil
     public static function removeLitterOrdinalFromRevokedLitters(Connection $conn)
     {
         $sql = "UPDATE litter SET litter_ordinal = NULL
-                WHERE (status = '".RequestStateType::REVOKED."' OR status = '".RequestStateType::IMPORTED."') AND litter_ordinal NOTNULL";
+                WHERE (status = '".RequestStateType::REVOKED."' OR status = '".RequestStateType::INCOMPLETE."') AND litter_ordinal NOTNULL";
         return SqlUtil::updateWithCount($conn, $sql);
     }
 
@@ -262,8 +262,41 @@ class LitterUtil
 
         return $updateCountNewLitterMateMatch + $updateCountRevokedLitterOrMate;
     }
-    
-    
+
+
+    /**
+     * NOTE! Update litterOrdinals first!
+     * 
+     * @param Connection $conn
+     * @param null $litterId
+     * @return int
+     */
+    public static function updateBirthInterVal(Connection $conn, $litterId = null)
+    {
+        $litterIdFilter = ctype_digit($litterId) || is_int($litterId) ? ' AND l.id = '.$litterId.' ' : '';
+        
+        $sql = "UPDATE litter SET birth_interval = v.calc_birth_interval
+                FROM (
+                       SELECT l.id as litter_id, DATE(l.litter_date)-DATE(previous_litter.litter_date) as calc_birth_interval
+                       FROM litter l
+                         INNER JOIN litter previous_litter ON previous_litter.animal_mother_id = l.animal_mother_id AND previous_litter.litter_ordinal = l.litter_ordinal-1
+                       WHERE l.litter_ordinal > 1
+                             AND (l.status = 'COMPLETED' OR l.status = 'IMPORTED')
+                             AND (previous_litter.status = 'COMPLETED' OR previous_litter.status = 'IMPORTED')
+                             AND (l.birth_interval ISNULL OR l.birth_interval <> (DATE(l.litter_date)-DATE(previous_litter.litter_date)))
+                             ".$litterIdFilter."
+                     ) AS v(litter_id, calc_birth_interval) WHERE litter.id = v.litter_id";
+        $updateIncongruentBirthIntervals = SqlUtil::updateWithCount($conn, $sql);
+
+
+        $litterIdFilter = ctype_digit($litterId) || is_int($litterId) ? ' AND litter.id = '.$litterId.' ' : '';
+
+        $sql = "UPDATE litter SET birth_interval = NULL
+                WHERE (litter_ordinal <= 1 OR litter_ordinal ISNULL) AND birth_interval NOTNULL ".$litterIdFilter;
+        $updateRevokedBirthIntervals = SqlUtil::updateWithCount($conn, $sql);
+        
+        return $updateIncongruentBirthIntervals + $updateRevokedBirthIntervals;
+    }
     
 
 }

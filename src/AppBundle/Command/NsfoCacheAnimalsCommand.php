@@ -79,7 +79,8 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '37: BatchUpdate remove suckleCount from REVOKED Litters', "\n\n",
             '38: BatchUpdate litterOrdinals in Litters, update all incongruous values', "\n",
             '39: BatchUpdate remove litterOrdinals from REVOKED Litters', "\n\n",
-            '40: BatchUpdate gestationPeriods in Litters, update all incongruous values (incl. revoked litters and mates)', "\n\n",
+            '40: BatchUpdate gestationPeriods in Litters, update all incongruous values (incl. revoked litters and mates)', "\n",
+            '41: BatchUpdate birthIntervals in Litters, update all incongruous values (incl. revoked litters and mates NOTE! Update litterOrdinals first!)', "\n\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -190,6 +191,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             case 38: $output->writeln(LitterUtil::updateLitterOrdinals($this->conn).' litterOrdinals updated'); break;
             case 39: $output->writeln(LitterUtil::removeLitterOrdinalFromRevokedLitters($this->conn).' litterOrdinals removed from revoked litters'); break;
             case 40: $output->writeln(LitterUtil::updateGestationPeriods($this->conn).' gestationPeriods updated'); break;
+            case 41: $output->writeln(LitterUtil::updateBirthInterVal($this->conn).' birthIntervals updated'); break;
 
             default:
                 $output->writeln('ABORTED');
