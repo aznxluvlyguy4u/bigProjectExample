@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -81,10 +82,35 @@ class InvoiceRuleTemplate
     private $type;
 
     /**
+     * @var Invoice
+     *
+     * @ORM\ManyToMany(targetEntity="Invoice", mappedBy="invoiceRules", cascade={"persist"})
+     * @JMS\Type("array")
+     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
+     */
+    private $invoices;
+
+    /**
+     * @var InvoiceRuleLocked
+     * @ORM\OneToOne(targetEntity="InvoiceRuleLocked")
+     * @ORM\JoinColumn(name="locked_id", referencedColumnName="id")
+     */
+    private $lockedVersion;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", name="is_deleted")
+     * @JMS\Type("boolean")
+     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
+     */
+    private $isDeleted = false;
+
+    /**
      * InvoiceRuleTemplate constructor.
      */
     public function __construct()
     {
+        $this->invoices = new ArrayCollection();
     }
 
     /**
@@ -198,6 +224,65 @@ class InvoiceRuleTemplate
     {
         $this->type = $type;
     }
+
+    /**
+     * @return bool
+     */
+    public function isDeleted()
+    {
+        return $this->isDeleted;
+    }
+
+    /**
+     * @param bool $isDeleted
+     */
+    public function setIsDeleted($isDeleted)
+    {
+        $this->isDeleted = $isDeleted;
+    }
+
+    /**
+     * @return Invoice
+     */
+    public function getInvoices()
+    {
+        return $this->invoices;
+    }
+
+    /**
+     * @param $invoices
+     */
+    public function setInvoices($invoices)
+    {
+        $this->invoices = $invoices;
+    }
+
+    public function addInvoice(Invoice $invoice){
+        $this->invoices[] = $invoice;
+    }
+
+    public function removeInvoice(Invoice $invoice) {
+        $this->invoices->removeElement($invoice);
+    }
+
+    /**
+     * @return InvoiceRuleLocked
+     */
+    public function getLockedVersion()
+    {
+        return $this->lockedVersion;
+    }
+
+    /**
+     * @param InvoiceRuleLocked $lockedVersion
+     */
+    public function setLockedVersion($lockedVersion)
+    {
+        $this->lockedVersion = $lockedVersion;
+    }
+
+
+
 
     /**
      * TODO Find a better way to clone values (excluding the id) than using custom getters and setters
