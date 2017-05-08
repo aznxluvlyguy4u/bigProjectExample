@@ -237,7 +237,7 @@ class LitterUtil
                   WHERE DATE(m.start_date) = DATE(m.end_date)
                         AND m.start_date NOTNULL
                         AND (gestation_period ISNULL OR gestation_period <> (DATE(litter_date)-DATE(m.start_date)))
-                        AND l.status = 'COMPLETED' --NOTE IMPORTED litters are ignored
+                        AND l.status = '".RequestStateType::COMPLETED."' --NOTE IMPORTED litters are ignored
                         ".$litterIdFilter."
                 ) AS v(litter_id, calc_gestation_period) WHERE litter.id = v.litter_id";
         $updateCountNewLitterMateMatch = SqlUtil::updateWithCount($conn, $sql);
@@ -247,7 +247,7 @@ class LitterUtil
 
         $sql = "UPDATE litter SET gestation_period = NULL
                 WHERE gestation_period NOTNULL AND
-                      (mate_id ISNULL OR status = 'INCOMPLETE' OR status = 'REVOKED'
+                      (mate_id ISNULL OR status = '".RequestStateType::INCOMPLETE."' OR status = '".RequestStateType::REVOKED."'
                       OR
                       id NOT IN (
                   SELECT l.id as litter_id
@@ -255,8 +255,8 @@ class LitterUtil
                     INNER JOIN mate m ON l.mate_id = m.id
                     INNER JOIN declare_nsfo_base bm ON m.id = bm.id
                   WHERE DATE(m.start_date) = DATE(m.end_date)
-                        AND l.status = 'COMPLETED' --NOTE IMPORTED litters are ignored
-                        AND bm.request_state = 'FINISHED' OR bm.request_state = 'FINISHED_WITH_WARNING'
+                        AND l.status = '".RequestStateType::COMPLETED."' --NOTE IMPORTED litters are ignored
+                        AND bm.request_state = '".RequestStateType::FINISHED."' OR bm.request_state = '".RequestStateType::FINISHED_WITH_WARNING."'
                 )) ".$litterIdFilter;
         $updateCountRevokedLitterOrMate = SqlUtil::updateWithCount($conn, $sql);
 
@@ -281,8 +281,8 @@ class LitterUtil
                        FROM litter l
                          INNER JOIN litter previous_litter ON previous_litter.animal_mother_id = l.animal_mother_id AND previous_litter.litter_ordinal = l.litter_ordinal-1
                        WHERE l.litter_ordinal > 1
-                             AND (l.status = 'COMPLETED' OR l.status = 'IMPORTED')
-                             AND (previous_litter.status = 'COMPLETED' OR previous_litter.status = 'IMPORTED')
+                             AND (l.status = '".RequestStateType::COMPLETED."' OR l.status = '".RequestStateType::IMPORTED."')
+                             AND (previous_litter.status = '".RequestStateType::COMPLETED."' OR previous_litter.status = '".RequestStateType::IMPORTED."')
                              AND (l.birth_interval ISNULL OR l.birth_interval <> (DATE(l.litter_date)-DATE(previous_litter.litter_date)))
                              ".$litterIdFilter."
                      ) AS v(litter_id, calc_birth_interval) WHERE litter.id = v.litter_id";
