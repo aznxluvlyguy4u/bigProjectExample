@@ -129,6 +129,9 @@ class APIController extends Controller implements APIControllerInterface
     return $this->serializer;
   }
 
+    /**
+     * @return ObjectManager|object
+     */
     protected function getManager() {
         if($this->manager == null){
             $this->manager = $this->getDoctrine()->getManager();
