@@ -15,7 +15,6 @@ use Symfony\Component\HttpFoundation\Request;
 interface InvoiceAPIControllerInterface
 {
     function getInvoices();
-    function getInvoicesBy(Request $request);
     function createInvoice(Request $request);
     function updateInvoice(Request $request, Invoice $id);
     function deleteInvoice(Request $request, Invoice $id);
