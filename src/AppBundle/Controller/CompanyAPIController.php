@@ -20,6 +20,7 @@ use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\CompanyValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -272,7 +273,7 @@ class CompanyAPIController extends APIController
         // Generate Company Details
         $result = CompanyOutput::createCompany($company);
 
-        return new \AppBundle\Component\HttpFoundation\JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
 
     /**
@@ -633,7 +634,7 @@ class CompanyAPIController extends APIController
         // Generate Company Details
         $result = CompanyOutput::createCompanyDetails($company);
 
-        return new \AppBundle\Component\HttpFoundation\JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
 
     /**
@@ -664,7 +665,7 @@ class CompanyAPIController extends APIController
         // Get Company Notes
         $result = CompanyNoteOutput::createNotes($company);
 
-        return new \AppBundle\Component\HttpFoundation\JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
 
     /**
@@ -708,4 +709,35 @@ class CompanyAPIController extends APIController
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $result), 200);
     }
 
+    /**
+     * @return JsonResponse
+     * @Route("/invoice/info")
+     * @Method("GET")
+     */
+    public function getCompanyInvoiceDetails(){
+        $em = $this->getManager();
+        $repository = $em->getRepository(Company::class);
+        $companies = $repository->findAll();
+        $companies = CompanyOutput::createCompanyInvoiceOutputList($companies);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $companies), 200);
+    }
+
+    /**
+     * @Route("/company/name")
+     * @Method("GET")
+     */
+    public function getCompaniesByName(Request $request){
+        $name = $request->query->get('company_name');
+        $em = $this->getManager();
+        $repository = $em->getRepository(Company::class);
+        /** @var QueryBuilder $qb */
+        $qb = $repository->createQueryBuilder('qb')
+            ->where('qb.companyName LIKE :company_name')
+            ->andWhere('qb.isActive = true')
+            ->setParameter('company_name', $name.'%');
+
+        $companies = $qb->getQuery()->getResult();
+        $companies = CompanyOutput::createCompanyList($companies);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $companies), 200);
+    }
 }
