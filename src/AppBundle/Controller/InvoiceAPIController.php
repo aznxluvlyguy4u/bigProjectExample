@@ -10,21 +10,29 @@ namespace AppBundle\Controller;
 
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Entity\InvoiceRuleLocked;
+use AppBundle\Entity\InvoiceRuleTemplate;
+use AppBundle\Output\InvoiceOutput;
+use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\Company;
 use AppBundle\Entity\Invoice;
+use AppBundle\Entity\InvoiceRule;
+use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use AppBundle\Util\Validator;
 use AppBundle\Enumerator\JMSGroups;
+use Doctrine\ORM\QueryBuilder;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Validation\AdminValidator;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class InvoiceAPIController
  * @package AppBundle\Controller
- * @Route("/invoices")
+ * @Route("/api/v1/invoices")
  */
 class InvoiceAPIController extends APIController implements InvoiceAPIControllerInterface
 {
@@ -38,22 +46,22 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
         if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
         $repo = $this->getManager()->getRepository(Invoice::class);
-        $invoices = $repo->findAll();
+        $invoices = $repo->findBy(array('isDeleted' => false));
         return new JsonResponse(array(Constant::RESULT_NAMESPACE =>$invoices), 200);
     }
 
     /**
-     * @param Request $request
      * @Method("GET")
-     * @Route("/by")
-     * @return JsonResponse
+     * @Route("/{id}")
+     *
      */
-    function getInvoicesBy(Request $request)
-    {
+    function getInvoice($id) {
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
-        if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
-        $repo = $this->getManager()->getRepository(Invoice::class);
-        $criteria = $request->query->all();
+        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
+        $invoice = $this->getManager()->getRepository(Invoice::class)->findOneBy(array('id' => $id));
+        /** @var Invoice $invoice */
+        $invoice = InvoiceOutput::createInvoiceOutput($invoice);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoice), 200);
     }
 
     /**
@@ -67,10 +75,69 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         // 
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
         if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
+        $invoice = new Invoice();
+        $rules = array();
+        self::setInvoiceNumber($invoice);
         $content = $this->getContentAsArray($request);
-        $invoice = $this->getObjectFromContent($content, Invoice::class);
+        $contentRules = $content['rules'];
+        $deserializedRules = new ArrayCollection();
+        $lockedRules = new ArrayCollection();
+        foreach ($contentRules as $contentRule){
+            /** @var InvoiceRuleTemplate $rule */
+            $invoiceRule = $this->getManager()->getRepository(InvoiceRuleTemplate::class)
+                ->findOneBy(array('id' => $contentRule['id']));
+            $deserializedRules->add($invoiceRule);
+            $lockedRule = $this->getManager()->getRepository(InvoiceRuleLocked::class)->findOneBy(array('id' => $invoiceRule->getLockedVersion()->getId()));
+            $lockedRules->add($lockedRule);
+        }
+        $invoice->setInvoiceRules($deserializedRules);
+        $invoice->setLockedInvoiceRules($lockedRules);
+        $invoice->setUbn($content["ubn"]);
+        $invoice->setCompanyName($content['company_name']);
+        $invoice->setCompanyVatNumber($content['company_vat_number']);
+        $invoice->setStatus($content["status"]);
+        /** @var Company $company */
+        $company = $this->getManager()->getRepository(Company::class)->findOneBy(array('companyId' => $content['company']['company_id']));
+        if ($company != null) {
+            $invoice->setCompany($company);
+            $company->addInvoice($invoice);
+        }
         $this->persistAndFlush($invoice);
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoice), 200);
+    }
+
+    /**
+     * Function to properly set the InvoiceNumber
+     * InvoiceNumber format is "CurrentYear" + a number that is 5 long (00001, 03010, etc)
+     * @param Invoice $invoice
+     */
+    private function setInvoiceNumber(Invoice $invoice) {
+        $year = new \DateTime();
+        $year = $year->format('Y');
+        $year = $year."%";
+        $year = (string)$year;
+        // This query should get The invoice with the highest invoiceNumber, by ordering the invoices based on
+        // InvoiceNumber DESC and limiting results to 1
+        $qb = $this->getManager()->getRepository(Invoice::class)->createQueryBuilder('qb')
+            ->where('qb.invoiceNumber LIKE :year')
+            ->orderBy('qb.invoiceNumber', 'DESC')
+            ->setMaxResults(1)
+            ->setParameter('year', $year)
+            ->getQuery();
+        /** @var Invoice $invoices */
+        $invoices = $qb->getResult();
+
+        if ($invoices == null){
+            $number = $year * 100000;
+            $invoice->setInvoiceNumber($number);
+        }
+        else {
+            $number = $invoices[0]->getInvoiceNumber();
+            $number = (int)$number;
+            $number++;
+            $number = (string)$number;
+            $invoice->setInvoiceNumber($number);
+        }
     }
 
     /**
@@ -101,6 +168,27 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
         if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
         $id->setIsDeleted(true);
+        $this->persistAndFlush($id);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $id), 200);
+    }
+
+    /**
+     * @Method("GET")
+     * @Route("/date")
+     */
+    function returnDate(){
+        $date = new \DateTime();
+        $year = $date->format('Y');
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $year), 200);
+    }
+
+    /**
+     * @Method("PUT")
+     * @Route("/{id}/date")
+     * @ParamConverter("id", class="")
+     */
+    function setDate(Invoice $id) {
+        $id->setInvoiceDate(new \DateTime());
         $this->persistAndFlush($id);
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $id), 200);
     }
