@@ -305,6 +305,8 @@ class AnimalCache
     public function __construct()
     {
         $this->logDate = new \DateTime();
+        $this->pmsg = false;
+        $this->gaveBirthAsOneYearOld = false;
     }
 
     /**
