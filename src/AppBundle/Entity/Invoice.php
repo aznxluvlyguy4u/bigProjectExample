@@ -25,10 +25,8 @@ class Invoice {
 
     /**
      * @var string
-     *
-     * @ORM\Column(type="string",  unique=true)
-     * @Assert\NotBlank
-     * @JMS\Type("string")
+     * @Assert\NotBlank()
+     * @ORM\Column(type="string",  unique=true, nullable=true)
      * @JMS\Groups({"INVOICE"})
      */
     private $invoiceNumber;
@@ -56,7 +54,7 @@ class Invoice {
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({"INVOICE"})
      */
@@ -65,20 +63,64 @@ class Invoice {
     /**
      * @var ArrayCollection
      *
-     * @ORM\OneToMany(targetEntity="InvoiceRule", mappedBy="invoice")
-     * @JMS\Type("array")
+     * @ORM\ManyToMany(targetEntity="InvoiceRuleTemplate", inversedBy="invoices", cascade={"persist"})
+     * @ORM\JoinTable(name="invoice_invoice_rules")
+     * @JMS\Type("ArrayCollection")
      * @JMS\Groups({"INVOICE"})
      */
     private $invoiceRules;
 
     /**
+     * @var ArrayCollection
+     * @ORM\ManyToMany(targetEntity="InvoiceRuleLocked", inversedBy="invoices", cascade={"persist"})
+     * @ORM\JoinTable(name="invoice_invoice_rules_locked")
+     * @JMS\Type("ArrayCollection")
+     * @JMS\Groups({"INVOICE"})
+     */
+    private $lockedRules;
+
+    /**
      * @var Company
      *
      * @ORM\ManyToOne(targetEntity="Company", inversedBy="invoices", cascade={"persist"})
+     * @ORM\JoinColumn(name="company_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Company")
      * @JMS\Groups({"INVOICE"})
      */
     private $company;
+
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", name="company_name")
+     * @JMS\Type("string")
+     * @JMS\Groups({"INVOICE"})
+     */
+    private $companyName;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", name="company_vat_number")
+     * @JMS\Type("string")
+     * @JMS\Groups({"INVOICE"})
+     */
+    private $companyVatNumber;
+
+    /**
+     * @var InvoiceSenderDetails
+     * @ORM\ManyToOne(targetEntity="InvoiceSenderDetails", inversedBy="invoices", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\InvoiceSenderDetails")
+     * @JMS\Groups({"INVOICE"})
+     */
+    private $senderDetails;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", name="ubn")
+     * @JMS\Type("string")
+     * @JMS\Groups({"INVOICE"})
+     */
+    private $ubn;
 
 
     /**
@@ -87,13 +129,20 @@ class Invoice {
      * @JMS\Type("boolean")
      * @JMS\Groups({"INVOICE"})
      */
-    private $isDeleted;
+    private $isDeleted = false;
 
     /**
      * Invoice constructor.
      */
     public function __construct()
     {
+        $this->invoiceDate = new DateTime();
+        $this->invoiceRules = new ArrayCollection();
+        $this->lockedRules = new ArrayCollection();
+    }
+
+    public function getId() {
+        return $this->id;
     }
 
     /**
@@ -176,6 +225,38 @@ class Invoice {
         $this->invoiceRules = $invoiceRules;
     }
 
+    public function addInvoiceRule(InvoiceRuleTemplate $invoiceRule){
+        $this->invoiceRules[] = $invoiceRule;
+    }
+
+    public function removeInvoiceRule(InvoiceRule $invoiceRule){
+        $this->invoiceRules->removeElement($invoiceRule);
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getLockedInvoiceRules()
+    {
+        return $this->lockedRules;
+    }
+
+    /**
+     * @param ArrayCollection $invoiceRules
+     */
+    public function setLockedInvoiceRules($invoiceRules)
+    {
+        $this->lockedRules = $invoiceRules;
+    }
+
+    public function addLockedInvoiceRule(InvoiceRuleLocked $invoiceRule){
+        $this->lockedRules[] = $invoiceRule;
+    }
+
+    public function removeLockedInvoiceRule(InvoiceRuleLocked $invoiceRule){
+        $this->lockedRules->removeElement($invoiceRule);
+    }
+
     /**
      * @return Company
      */
@@ -206,6 +287,70 @@ class Invoice {
     public function setIsDeleted($isDeleted)
     {
         $this->isDeleted = $isDeleted;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUbn()
+    {
+        return $this->ubn;
+    }
+
+    /**
+     * @param string $ubn
+     */
+    public function setUbn($ubn)
+    {
+        $this->ubn = $ubn;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyName()
+    {
+        return $this->companyName;
+    }
+
+    /**
+     * @param string $companyName
+     */
+    public function setCompanyName($companyName)
+    {
+        $this->companyName = $companyName;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyVatNumber()
+    {
+        return $this->companyVatNumber;
+    }
+
+    /**
+     * @param string $companyVatNumber
+     */
+    public function setCompanyVatNumber($companyVatNumber)
+    {
+        $this->companyVatNumber = $companyVatNumber;
+    }
+
+    /**
+     * @return InvoiceSenderDetails
+     */
+    public function getSenderDetails()
+    {
+        return $this->senderDetails;
+    }
+
+    /**
+     * @param InvoiceSenderDetails $senderDetails
+     */
+    public function setSenderDetails($senderDetails)
+    {
+        $this->senderDetails = $senderDetails;
     }
 
     public function copyValues(Invoice $invoice){
