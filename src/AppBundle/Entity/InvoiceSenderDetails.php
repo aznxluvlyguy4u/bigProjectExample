@@ -32,6 +32,13 @@ class InvoiceSenderDetails
 
     /**
      * @var string
+     * @ORM\Column(type="string",name="name", nullable=true)
+     * @JMS\Groups({"INVOICE_SENDER_DETAILS"})
+     */
+    private $name;
+
+    /**
+     * @var string
      * @ORM\Column(type="string", name="iban")
      * @JMS\Groups({"INVOICE_SENDER_DETAILS"})
      */
@@ -82,6 +89,22 @@ class InvoiceSenderDetails
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * @param string $name
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
     }
 
     /**
@@ -173,6 +196,7 @@ class InvoiceSenderDetails
     }
 
     public function copyValues(InvoiceSenderDetails $invoiceSenderDetails){
+        $this->setName($invoiceSenderDetails->getName());
         $this->setVatNumber($invoiceSenderDetails->getvatNumber());
         $this->setIban($invoiceSenderDetails->getIban());
         $this->setChamberOfCommerceNumber($invoiceSenderDetails->getChamberOfCommerceNumber());
