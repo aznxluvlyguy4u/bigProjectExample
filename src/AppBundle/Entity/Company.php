@@ -152,7 +152,8 @@ class Company
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="Invoice", mappedBy="company")
-     * @JMS\Type("array")
+     * @JMS\Groups({"INVOICE"})
+     * @JMS\Type("ArrayCollection")
      */
     private $invoices;
 
@@ -228,6 +229,7 @@ class Company
   public function __construct()
   {
     $this->locations = new ArrayCollection();
+    $this->invoices = new ArrayCollection();
     $this->companyUsers = new ArrayCollection();
     $this->setCompanyId(Utils::generateTokenCode());
   }
@@ -721,5 +723,12 @@ class Company
         $this->isRevealHistoricAnimals = $isRevealHistoricAnimals;
     }
 
+    public function addInvoice(Invoice $invoice){
+        $this->invoices[] = $invoice;
+    }
+
+    public function removeInvoice(Invoice $invoice){
+        $this->invoices->removeElement($invoice);
+    }
 
 }
