@@ -271,4 +271,83 @@ class CompanyOutput
 
         return $res;
     }
+
+    public static function createCompanyInvoiceOutputList($companies){
+        $results = array();
+        /** @var Company $company */
+        foreach ($companies as $company) {
+            if ($company->isActive()) {
+                $results[] = self::createCompanyInvoiceOutput($company);
+            }
+        }
+        return $results;
+    }
+
+    /**
+     * @param Company $company
+     * @return array;
+     */
+    public static function createCompanyInvoiceOutput($company){
+        return array(
+            'id' => $company->getId(),
+            'locations' => LocationOutput::generateInvoiceLocationArrayList($company->getLocations()),
+            'company_relation_number' => $company->getCompanyRelationNumber(),
+            'chamber_of_commerce_number' => $company->getChamberOfCommerceNumber(),
+            'vat_number' => $company->getVatNumber(),
+            'company_name' => $company->getCompanyName(),
+            'debtor_number' => $company->getDebtorNumber(),
+            'owner' => $company->getOwner(),
+            'company_address' => AddressOutput::createAddressOutput($company->getAddress()),
+            'invoices' => InvoiceOutput::createInvoiceOutputList($company->getInvoices()),
+        );
+    }
+
+    /**
+     * @param Company $company
+     * @return array;
+     */
+    public static function createCompanyOutputNoInvoices($company){
+        return array(
+            'id' => $company->getId(),
+            'locations' => LocationOutput::generateInvoiceLocationArrayList($company->getLocations()),
+            'company_relation_number' => $company->getCompanyRelationNumber(),
+            'chamber_of_commerce_number' => $company->getChamberOfCommerceNumber(),
+            'vat_number' => $company->getVatNumber(),
+            'company_name' => $company->getCompanyName(),
+            'debtor_number' => $company->getDebtorNumber(),
+            'owner' => $company->getOwner(),
+            'company_address' => AddressOutput::createAddressOutput($company->getAddress()),
+        );
+    }
+
+    public static function createCompanyList($companies){
+        $results = array();
+        /** @var Company $company */
+        foreach ($companies as $company) {
+            if ($company->isActive()) {
+                $results[] = self::createCompanyArrayOutput($company);
+            }
+        }
+        return $results;
+    }
+
+    /**
+     * @param Company $company
+     * @return array;
+     */
+    public static function createCompanyArrayOutput($company){
+        return array(
+            'id' => $company->getId(),
+            'company_id' => $company->getCompanyId(),
+            'locations' => [],
+            'company_relation_number' => $company->getCompanyRelationNumber(),
+            'chamber_of_commerce_number' => $company->getChamberOfCommerceNumber(),
+            'vat_number' => $company->getVatNumber(),
+            'company_name' => $company->getCompanyName(),
+            'debtor_number' => $company->getDebtorNumber(),
+            'owner' => ClientOutput::createOwnerOutput($company->getOwner()),
+            'company_address' => AddressOutput::createAddressOutput($company->getAddress()),
+            'invoices' => InvoiceOutput::createInvoiceOutputList($company->getInvoices()),
+        );
+    }
 }
