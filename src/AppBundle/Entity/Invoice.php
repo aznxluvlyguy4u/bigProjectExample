@@ -109,6 +109,7 @@ class Invoice {
     /**
      * @var InvoiceSenderDetails
      * @ORM\ManyToOne(targetEntity="InvoiceSenderDetails", inversedBy="invoices", cascade={"persist"})
+     * @ORM\JoinTable(name="invoice_invoice_sender_details")
      * @JMS\Type("AppBundle\Entity\InvoiceSenderDetails")
      * @JMS\Groups({"INVOICE"})
      */
@@ -136,7 +137,6 @@ class Invoice {
      */
     public function __construct()
     {
-        $this->invoiceDate = new DateTime();
         $this->invoiceRules = new ArrayCollection();
         $this->lockedRules = new ArrayCollection();
     }
@@ -355,10 +355,12 @@ class Invoice {
 
     public function copyValues(Invoice $invoice){
         $this->setCompany($invoice->getCompany());
+        $this->setCompanyName($invoice->getCompanyName());
+        $this->setCompanyVatNumber($invoice->getCompanyVatNumber());
+        $this->setUbn($invoice->getUbn());
         $this->setDocumentUrl($invoice->getDocumentUrl());
         $this->setInvoiceDate($invoice->getInvoiceDate());
         $this->setInvoiceNumber($invoice->getInvoiceNumber());
-        $this->setInvoiceRules($invoice->getInvoiceRules());
         $this->setStatus($invoice->getStatus());
     }
 }
