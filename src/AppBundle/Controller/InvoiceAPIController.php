@@ -79,7 +79,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $rules = array();
         self::setInvoiceNumber($invoice);
         $content = $this->getContentAsArray($request);
-        $contentRules = $content['rules'];
+        $contentRules = $content['invoice_rules'];
         $deserializedRules = new ArrayCollection();
         $lockedRules = new ArrayCollection();
         foreach ($contentRules as $contentRule){
@@ -96,6 +96,9 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $invoice->setCompanyName($content['company_name']);
         $invoice->setCompanyVatNumber($content['company_vat_number']);
         $invoice->setStatus($content["status"]);
+        if ($invoice->getStatus() == "UNPAID") {
+            $invoice->setInvoiceDate(new \DateTime());
+        }
         /** @var Company $company */
         $company = $this->getManager()->getRepository(Company::class)->findOneBy(array('companyId' => $content['company']['company_id']));
         if ($company != null) {
@@ -151,8 +154,35 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
         if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
         $content = $this->getContentAsArray($request);
-        $temporaryInvoice = $this->getObjectFromContent($content, Invoice::class);
+        $temporaryInvoice = new Invoice();
+        $contentRules = $content['invoice_rules'];
+        $deserializedRules = new ArrayCollection();
+        $lockedRules = new ArrayCollection();
+        /** @var Company $invoiceCompany */
+        $invoiceCompany = $this->getManager()->getRepository(Company::class)->findOneBy(array('id' => $content['company']['id']));
+        $id->setInvoiceRules($deserializedRules);
+        $id->setLockedInvoiceRules($lockedRules);
+        foreach ($contentRules as $contentRule){
+            /** @var InvoiceRuleTemplate $rule */
+            $invoiceRule = $this->getManager()->getRepository(InvoiceRuleTemplate::class)
+                ->findOneBy(array('id' => $contentRule['id']));
+            $deserializedRules->add($invoiceRule);
+            $lockedRule = $this->getManager()->getRepository(InvoiceRuleLocked::class)->findOneBy(array('id' => $invoiceRule->getLockedVersion()->getId()));
+            $lockedRules->add($lockedRule);
+        }
+        $id->setInvoiceRules($deserializedRules);
+        $id->setLockedInvoiceRules($lockedRules);
+        $temporaryInvoice->setCompany($invoiceCompany);
+        $temporaryInvoice->setInvoiceNumber($content['invoice_number']);
+        $temporaryInvoice->setStatus($content['status']);
+        $temporaryInvoice->setUbn($content["ubn"]);
+        $temporaryInvoice->setCompanyName($content['company_name']);
+        $temporaryInvoice->setCompanyVatNumber($content['company_vat_number']);
+        $temporaryInvoice->setStatus($content["status"]);
         $id->copyValues($temporaryInvoice);
+        if ($id->getStatus() == "UNPAID") {
+            $id->setInvoiceDate(new \DateTime());
+        }
         $this->persistAndFlush($id);
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $id), 200);
     }
