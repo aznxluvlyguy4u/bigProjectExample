@@ -92,7 +92,7 @@ class InvoiceRuleTemplate
 
     /**
      * @var InvoiceRuleLocked
-     * @ORM\OneToOne(targetEntity="InvoiceRuleLocked")
+     * @ORM\ManyToOne(targetEntity="InvoiceRuleLocked")
      * @ORM\JoinColumn(name="locked_id", referencedColumnName="id")
      */
     private $lockedVersion;
@@ -290,10 +290,8 @@ class InvoiceRuleTemplate
      */
     public function copyValues(InvoiceRuleTemplate $invoiceRuleTemplate)
     {
-        $this->setCategory($invoiceRuleTemplate->getCategory());
         $this->setDescription($invoiceRuleTemplate->getDescription());
         $this->setPriceExclVat($invoiceRuleTemplate->getPriceExclVat());
-        $this->setSortOrder($invoiceRuleTemplate->getSortOrder());
         $this->setVatPercentageRate($invoiceRuleTemplate->getVatPercentageRate());
     }
 }
