@@ -99,18 +99,21 @@ class InvoiceRuleTemplateAPIController extends APIController implements InvoiceR
         $content = $this->getContentAsArray($request);
 
         /** @var InvoiceRuleTemplate $updatedRuleTemplate */
-        $updatedRuleTemplate = $this->getObjectFromContent($content, InvoiceRuleTemplate::class);
+        $updatedRuleTemplate = new InvoiceRuleTemplate();
+        $updatedRuleTemplate->setDescription($content['description']);
+        $updatedRuleTemplate->setVatPercentageRate($content['vat_percentage_rate']);
+        $updatedRuleTemplate->setPriceExclVat($content['price_excl_vat']);
 
         $repository = $this->getDoctrine()->getRepository(InvoiceRuleTemplate::class);
         /** @var InvoiceRuleTemplate $currentRuleTemplate */
-        $currentRuleTemplate = $repository->find($updatedRuleTemplate->getId());
+        $currentRuleTemplate = $repository->findOneBy(array('id' => $content['id']));
         if(!$currentRuleTemplate) { return Validator::createJsonResponse('THE INVOICE RULE TEMPLATE IS NOT FOUND.', 428); }
         if ($currentRuleTemplate->getType() == 'standard'){
             $lockedRule = $this->getManager()->getRepository(InvoiceRuleLocked::class)
                 ->findOneBy(array(
-                    'priceExclVat' => $currentRuleTemplate->getPriceExclVat(),
-                    'vatPercentageRate' => $currentRuleTemplate->getVatPercentageRate(),
-                    'description' => $currentRuleTemplate->getDescription()
+                    'priceExclVat' => $updatedRuleTemplate->getPriceExclVat(),
+                    'vatPercentageRate' => $updatedRuleTemplate->getVatPercentageRate(),
+                    'description' => $updatedRuleTemplate->getDescription()
                 ));
             if ($lockedRule == null) {
                 $lockedRule = new InvoiceRuleLocked();
