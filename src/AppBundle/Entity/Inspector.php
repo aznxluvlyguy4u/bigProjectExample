@@ -21,6 +21,13 @@ class Inspector extends Person {
      * @JMS\Type("string")
      */
     private $objectType;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $inspectorCode;
   
     /**
      * Constructor
@@ -56,4 +63,24 @@ class Inspector extends Person {
     {
         return $this->objectType;
     }
+
+    /**
+     * @return string
+     */
+    public function getInspectorCode()
+    {
+        return $this->inspectorCode;
+    }
+
+    /**
+     * @param string $inspectorCode
+     * @return Inspector
+     */
+    public function setInspectorCode($inspectorCode)
+    {
+        $this->inspectorCode = $inspectorCode;
+        return $this;
+    }
+    
+    
 }
