@@ -49,6 +49,7 @@ use AppBundle\Worker\Task\WorkerMessageBody;
 use ClassesWithParents\E;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\LazyCriteriaCollection;
 use Doctrine\ORM\Query;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
@@ -141,12 +142,33 @@ class APIController extends Controller implements APIControllerInterface
 
   /**
    * @param $object
-   * @param $type
+   * @param array $type
+   * @param boolean $enableMaxDepthChecks
    * @return mixed|array
    */
-  public function getDecodedJson($object, $type)
+  public function getDecodedJson($object, $type = null, $enableMaxDepthChecks = true)
   {
-    $jsonMessage = $this->getSerializer()->serializeToJSON($object, $type);
+    if($object instanceof ArrayCollection || is_array($object) || $object instanceof LazyCriteriaCollection) {
+      $results = [];
+      foreach ($object as $item) {
+        $results[] = $this->getDecodedJsonSingleObject($item, $type, $enableMaxDepthChecks);
+      }
+      return $results;
+    }
+
+    return $this->getDecodedJsonSingleObject($object, $type, $enableMaxDepthChecks);
+  }
+
+
+  /**
+   * @param $object
+   * @param array $type
+   * @param boolean $enableMaxDepthChecks
+   * @return mixed|array
+   */
+  private function getDecodedJsonSingleObject($object, $type = null, $enableMaxDepthChecks = true)
+  {
+    $jsonMessage = $this->getSerializer()->serializeToJSON($object, $type, $enableMaxDepthChecks);
     return json_decode($jsonMessage, true);
   }
 
