@@ -48,6 +48,15 @@ services:
           entityManager: ['@doctrine.orm.entity_manager']
           currentEnv: %kernel.environment%
 
+    app.routine.mixblup:
+        class: AppBundle\Service\MixBlupService
+        arguments:
+          entityManager: ['@doctrine.orm.entity_manager']
+          AWSSimpleStorageService: '@app.aws.storageservice'
+          AWSQueueService: '@app.aws.queueservice'
+          currentEnv: %kernel.environment%
+          rootDir: %kernel.root_dir%
+
     app.serializer.ir:
         class: AppBundle\Service\IRSerializer
         arguments: ['@jms_serializer', '@doctrine.orm.entity_manager', '@app.doctrine.entitygetter']
