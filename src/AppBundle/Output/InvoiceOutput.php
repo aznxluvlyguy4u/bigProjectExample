@@ -34,6 +34,32 @@ class InvoiceOutput
      * @return array
      */
     public static function createInvoiceOutput($invoice){
+        $res = array(
+            'id' => $invoice->getId(),
+            'company_name' => $invoice->getCompanyName(),
+            'company_vat_number' => $invoice->getCompanyVatNumber(),
+            'ubn' => $invoice->getUbn(),
+            'status' => $invoice->getStatus(),
+            'invoice_number' => $invoice->getInvoiceNumber(),
+            'invoice_date' => $invoice->getInvoiceDate(),
+            'invoice_rules' => InvoiceRuleOutput::createInvoiceRuleOutputList($invoice->getInvoiceRules()),
+            'invoice_rules_locked' => InvoiceRuleLockedOutput::createInvoiceRuleOutputList($invoice->getLockedInvoiceRules())
+        );
+        if ($invoice->getCompany() != null){
+            $res['company'] = CompanyOutput::createCompanyOutputNoInvoices($invoice->getCompany());
+        }
+
+        if($invoice->getSenderDetails() != null){
+            $res['sender_details'] = InvoiceSenderDetailsOutput::createInvoiceSenderDetailsOutput($invoice->getSenderDetails());
+        }
+        return $res;
+    }
+
+    /**
+     * @param Invoice $invoice
+     * @return array
+     */
+    public static function createInvoiceOutputNoCompany($invoice){
         return array(
             'id' => $invoice->getId(),
             'company_name' => $invoice->getCompanyName(),
@@ -41,7 +67,6 @@ class InvoiceOutput
             'ubn' => $invoice->getUbn(),
             'invoice_number' => $invoice->getInvoiceNumber(),
             'invoice_date' => $invoice->getInvoiceDate(),
-            'company' => CompanyOutput::createCompanyOutputNoInvoices($invoice->getCompany()),
             'invoice_rules' => InvoiceRuleOutput::createInvoiceRuleOutputList($invoice->getInvoiceRules()),
             'invoice_rules_locked' => InvoiceRuleLockedOutput::createInvoiceRuleOutputList($invoice->getLockedInvoiceRules())
         );
