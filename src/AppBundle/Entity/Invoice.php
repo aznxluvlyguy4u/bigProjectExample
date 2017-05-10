@@ -92,7 +92,7 @@ class Invoice {
 
     /**
      * @var string
-     * @ORM\Column(type="string", name="company_name")
+     * @ORM\Column(type="string", name="company_name", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({"INVOICE"})
      */
@@ -100,16 +100,24 @@ class Invoice {
 
     /**
      * @var string
-     * @ORM\Column(type="string", name="company_vat_number")
+     * @ORM\Column(type="string", name="company_vat_number", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({"INVOICE"})
      */
     private $companyVatNumber;
 
     /**
+     * @var string
+     * @ORM\Column(type="string", name="company_debtor_number", nullable=true)
+     * @JMS\Type("string")
+     * @JMS\Groups({"INVOICE"})
+     */
+    private $companyDebtorNumber;
+
+    /**
      * @var InvoiceSenderDetails
      * @ORM\ManyToOne(targetEntity="InvoiceSenderDetails", inversedBy="invoices", cascade={"persist"})
-     * @ORM\JoinTable(name="invoice_invoice_sender_details")
+     * @ORM\JoinColumn(name="invoice_invoice_sender_details_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\InvoiceSenderDetails")
      * @JMS\Groups({"INVOICE"})
      */
@@ -117,7 +125,7 @@ class Invoice {
 
     /**
      * @var string
-     * @ORM\Column(type="string", name="ubn")
+     * @ORM\Column(type="string", name="ubn", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({"INVOICE"})
      */
@@ -353,10 +361,27 @@ class Invoice {
         $this->senderDetails = $senderDetails;
     }
 
+    /**
+     * @return string
+     */
+    public function getCompanyDebtorNumber()
+    {
+        return $this->companyDebtorNumber;
+    }
+
+    /**
+     * @param string $companyDebtorNumber
+     */
+    public function setCompanyDebtorNumber($companyDebtorNumber)
+    {
+        $this->companyDebtorNumber = $companyDebtorNumber;
+    }
+
     public function copyValues(Invoice $invoice){
         $this->setCompany($invoice->getCompany());
         $this->setCompanyName($invoice->getCompanyName());
         $this->setCompanyVatNumber($invoice->getCompanyVatNumber());
+        $this->setCompanyDebtorNumber($invoice->getCompanyDebtorNumber());
         $this->setUbn($invoice->getUbn());
         $this->setDocumentUrl($invoice->getDocumentUrl());
         $this->setInvoiceDate($invoice->getInvoiceDate());
