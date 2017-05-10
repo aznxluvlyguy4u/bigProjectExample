@@ -331,7 +331,7 @@ class SqlUtil
 
     /**
      * @param Connection $conn
-     * @param string $sqlString
+     * @param string $sql
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
