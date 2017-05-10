@@ -237,7 +237,7 @@ class Invoice {
         $this->invoiceRules[] = $invoiceRule;
     }
 
-    public function removeInvoiceRule(InvoiceRule $invoiceRule){
+    public function removeInvoiceRule(InvoiceRuleTemplate $invoiceRule){
         $this->invoiceRules->removeElement($invoiceRule);
     }
 
