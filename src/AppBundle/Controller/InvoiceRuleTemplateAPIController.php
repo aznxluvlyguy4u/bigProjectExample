@@ -150,6 +150,14 @@ class InvoiceRuleTemplateAPIController extends APIController implements InvoiceR
         if(!$ruleTemplate) { return Validator::createJsonResponse('THE INVOICE RULE TEMPLATE IS NOT FOUND.', 428); }
 
         $ruleTemplate->setIsDeleted(true);
+        $invoices = $ruleTemplate->getInvoices();
+        foreach ($invoices as $invoice){
+            $invoice->removeInvoiceRule($ruleTemplate);
+            if ($invoice->getStatus() == "NOT SEND" || $invoice->getStatus() == "INCOMPLETE"){
+                $invoice->removeLockedInvoiceRule($ruleTemplate->getLockedVersion());
+                $this->persistAndFlush($invoice);
+            }
+        }
         $this->persistAndFlush($ruleTemplate);
 
         $output = $this->getDecodedJson($ruleTemplate, JMSGroups::INVOICE_RULE_TEMPLATE);
