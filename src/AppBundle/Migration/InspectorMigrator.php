@@ -319,6 +319,16 @@ class InspectorMigrator
 
     /**
      * @param Connection $conn
+     * @return string
+     */
+    public static function getNewInspectorCode(Connection $conn)
+    {
+        return self::buildInspectorCode(1, self::findMaxInspectorCode($conn));
+    }
+
+
+    /**
+     * @param Connection $conn
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
