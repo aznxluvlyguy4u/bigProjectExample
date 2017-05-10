@@ -141,6 +141,16 @@ class CompanyOutput
             'country' => Utils::fillNull($company->getBillingAddress()->getCountry()),
         );
 
+        $invoices = $company->getInvoices();
+
+        $res['invoices'] = [];
+
+        foreach ($invoices as $invoice){
+            if ($invoice->isDeleted() == false){
+                $res['invoices'][] = InvoiceOutput::createInvoiceOutputNoCompany($invoice);
+            }
+        }
+
         $locations = $company->getLocations();
         $res['locations'] = [];
         foreach ($locations as $location) {
@@ -309,6 +319,7 @@ class CompanyOutput
     public static function createCompanyOutputNoInvoices($company){
         return array(
             'id' => $company->getId(),
+            'company_id' => $company->getCompanyId(),
             'locations' => LocationOutput::generateInvoiceLocationArrayList($company->getLocations()),
             'company_relation_number' => $company->getCompanyRelationNumber(),
             'chamber_of_commerce_number' => $company->getChamberOfCommerceNumber(),
