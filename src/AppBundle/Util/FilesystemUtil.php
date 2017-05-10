@@ -65,11 +65,21 @@ class FilesystemUtil
         if(!is_string($rootDir) OR !($csvOptions instanceof CsvOptions)) { return; }
 
         //removing the app at the end
-        $pathStart = substr($rootDir, 0, strlen($rootDir)-3);
+        $pathStart = self::rtrimRootDir($rootDir);
 
         /* Setup folders */
         FilesystemUtil::createFolderPathIfNull($pathStart.$csvOptions->getInputFolder());
         FilesystemUtil::createFolderPathIfNull($pathStart.$csvOptions->getOutputFolder());
+    }
+
+
+    /**
+     * @param string $rootDir
+     * @return string
+     */
+    public static function rtrimRootDir($rootDir)
+    {
+        return substr($rootDir, 0, strlen($rootDir)-3);
     }
 
 
