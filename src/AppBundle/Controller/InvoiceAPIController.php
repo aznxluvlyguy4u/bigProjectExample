@@ -232,8 +232,13 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
     {
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
         if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
+        if ($id->getStatus() == "NOT SEND" || $id->getStatus() == "INCOMPLETE"){
         $id->setIsDeleted(true);
         $this->persistAndFlush($id);
+        }
+        else {
+            return new JsonResponse(array(Constant::RESULT_NAMESPACE => "Error, you tried to remove an invoice that was already send"), 200);
+        }
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $id), 200);
     }
 
