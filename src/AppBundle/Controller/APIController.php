@@ -53,6 +53,8 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\LazyCriteriaCollection;
 use Doctrine\ORM\Query;
+use Psr\Log\LoggerInterface;
+use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -96,6 +98,21 @@ class APIController extends Controller implements APIControllerInterface
 
   /** @var  \Doctrine\Common\Persistence\ObjectManager */
   private $manager;
+
+  /** @var Logger */
+  private $logger;
+
+  /**
+   * @return Logger
+   */
+  protected function getLogger()
+  {
+    if($this->logger == null){
+      $this->logger = $this->get('logger');
+    }
+
+    return $this->logger;
+  }
 
   /**
    * @return \Redis
