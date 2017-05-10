@@ -37,5 +37,7 @@ class MeasurementConstant
     const MUSCLE_THICKNESS_MIN_VALUE = 15.0;
     const MUSCLE_THICKNESS_MAX_VALUE = 39.0;
 
+    const EXTERIOR_MAX_VALUE_LIMIT = 100.0;
+
     /* End Mixblup values */
 }
