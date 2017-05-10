@@ -16,11 +16,14 @@ use AppBundle\Entity\PedigreeRegisterRepository;
 use AppBundle\Enumerator\InspectorMeasurementType;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 
 class InspectorMigrator
 {
+    const INSPECTOR_CODE_PREFIX = 'NSFO';
+
     /**
      * @param Connection $conn
      * @param array $csv
@@ -280,4 +283,65 @@ class InspectorMigrator
         }
         return 0;
     }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function generateInspectorCodes(Connection $conn)
+    {
+        $sql = "SELECT id, RANK() OVER (ORDER BY id ASC) AS inspector_ordinal
+                FROM inspector WHERE (inspector_code ISNULL OR inspector_code = '')";
+        $inspectorRanksById = $conn->query($sql)->fetchAll();
+
+        if(count($inspectorRanksById) == 0) { return 0; }
+        
+        $maxInspectorCode = self::findMaxInspectorCode($conn);
+
+        $updateString = '';
+        $separator = '';
+        foreach ($inspectorRanksById as $inspectorRankById) {
+            $inspectorId = $inspectorRankById['id'];
+            $rank = $inspectorRankById['inspector_ordinal'];
+            $updateString = $updateString.$separator.'('.$inspectorId.",'".self::buildInspectorCode($rank, $maxInspectorCode)."')";
+            $separator = ',';
+        }
+        
+        $sql = "UPDATE inspector SET inspector_code = v.inspector_code
+                FROM (
+                  VALUES ".$updateString."
+                     ) AS v(id, inspector_code) WHERE inspector.id = v.id";
+        return SqlUtil::updateWithCount($conn, $sql);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function findMaxInspectorCode(Connection $conn)
+    {
+        $sql = "SELECT coalesce(
+                    MAX(CAST(substr(inspector_code, length(inspector_code)-2, length(inspector_code)) AS INTEGER)), 
+                    0) as max
+                FROM inspector WHERE (inspector_code NOTNULL AND inspector_code <> '')";
+        return $conn->query($sql)->fetch()['max'];
+    }
+
+
+    /**
+     * @param int $emptyRank
+     * @param int $currentMaxOrdinal
+     * @return string
+     */
+    public static function buildInspectorCode($emptyRank, $currentMaxOrdinal)
+    {
+        $inspectorCodeOrdinal = str_pad($emptyRank + $currentMaxOrdinal, 3, 0, STR_PAD_LEFT);
+        return self::INSPECTOR_CODE_PREFIX.$inspectorCodeOrdinal;
+    }
+
+
 }

@@ -74,6 +74,7 @@ class NsfoInspectorCommand extends ContainerAwareCommand
             '2: Add missing inspectors', "\n",
             '3: Fix duplicate inspectors', "\n",
             '4: Authorize inspectors', "\n",
+            '5: Generate inspectorCodes, if null', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -103,6 +104,12 @@ class NsfoInspectorCommand extends ContainerAwareCommand
                 $admin = $this->cmdUtil->questionForAdminChoice($this->em, AccessLevelType::SUPER_ADMIN, false);
                 InspectorMigrator::authorizeInspectorsForExteriorMeasurementsTexelaar($this->em, $this->cmdUtil, $csv, $admin);
                 $output->writeln('DONE');
+                break;
+            
+            case 5:
+                $updateCount = InspectorMigrator::generateInspectorCodes($this->conn);
+                $result = $updateCount == 0 ? 'No new inspectorCodes added' : $updateCount.' new inspectorCodes added!' ;
+                $output->writeln($result);
                 break;
 
             default:
