@@ -30,11 +30,14 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\DeclareBirthResponseOutput;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\ExceptionUtil;
+use AppBundle\Util\StringUtil;
 use AppBundle\Util\WorkerTaskUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\Tools\Export\ExportException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -247,138 +250,158 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
         $this->sendTaskToQueue(WorkerTaskUtil::createResultTableMessageBodyForBirthRevoke($litter));
 
         //Remove alive child animal
-        /** @var Animal $child */
-        foreach ($litter->getChildren() as $child) {
+        try {
+            /** @var Animal $child */
+            foreach ($litter->getChildren() as $child) {
 
-            $childrenToRemove[] = $child;
+                $childrenToRemove[] = $child;
 
-            //Remove animal residence
-            $residenceHistory = $child->getAnimalResidenceHistory();
-            foreach ($residenceHistory as $residence) {
-                $manager->remove($residence);
-            }
-
-            //Remove weights
-            $weights = $child->getWeightMeasurements();
-            foreach ($weights as $weight) {
-                $manager->remove($weight);
-            }
-
-            //Remove tail lengths
-            $tailLengths = $child->getTailLengthMeasurements();
-            foreach ($tailLengths as $tailLength) {
-                $manager->remove($tailLength);
-            }
-
-            //Remove bodyfats
-            $bodyFats = $child->getBodyFatMeasurements();
-            foreach ($bodyFats as $bodyFat) {
-                $manager->remove($bodyFat);
-            }
-
-            //Remove exteriors
-            $exteriors = $child->getExteriorMeasurements();
-            foreach ($exteriors as $exterior) {
-                $manager->remove($exterior);
-            }
-
-            //Remove muscleThickness
-            $muscleThicknesses = $child->getMuscleThicknessMeasurements();
-            foreach ($muscleThicknesses as $muscleThickness) {
-                $manager->remove($muscleThickness);
-            }
-
-            //Remove breedCodes
-            if ($child->getBreedCodes()) {
-                $breedCodes = $child->getBreedCodes();
-
-                foreach ($breedCodes->getCodes() as $codes) {
-                    $manager->remove($codes);
+                //Remove animal residence
+                $residenceHistory = $child->getAnimalResidenceHistory();
+                foreach ($residenceHistory as $residence) {
+                    $manager->remove($residence);
                 }
-                $child->setBreedCodes(null);
-                $manager->remove($breedCodes);
-            }
 
-            //Remove breedset values
-            $breedValues = $child->getBreedValuesSets();
-            foreach ($breedValues as $breedValue) {
-                $manager->remove($breedValue);
-            }
+                //Remove weights
+                $weights = $child->getWeightMeasurements();
+                foreach ($weights as $weight) {
+                    $manager->remove($weight);
+                }
 
-            //Remove gender change history items
-            $genderHistories = $child->getGenderHistory();
-            foreach ($genderHistories as $genderHistory) {
-                $manager->remove($genderHistory);
-            }
+                //Remove tail lengths
+                $tailLengths = $child->getTailLengthMeasurements();
+                foreach ($tailLengths as $tailLength) {
+                    $manager->remove($tailLength);
+                }
 
-            //Flush the removes separately
-            $manager->flush();
+                //Remove bodyfats
+                $bodyFats = $child->getBodyFatMeasurements();
+                foreach ($bodyFats as $bodyFat) {
+                    $manager->remove($bodyFat);
+                }
 
-            //Restore tag if it does not exist
-            /** @var Tag $tagToRestore */
-            $tagToRestore = null;
+                //Remove exteriors
+                $exteriors = $child->getExteriorMeasurements();
+                foreach ($exteriors as $exterior) {
+                    $manager->remove($exterior);
+                }
 
-            /** @var TagRepository $tagRepository */
-            $tagRepository = $manager->getRepository(Tag::getClassName());
-            $tagToRestore = $tagRepository->findByUlnNumberAndCountryCode($child->getUlnCountryCode(), $child->getUlnNumber());
+                //Remove muscleThickness
+                $muscleThicknesses = $child->getMuscleThicknessMeasurements();
+                foreach ($muscleThicknesses as $muscleThickness) {
+                    $manager->remove($muscleThickness);
+                }
 
-            if ($tagToRestore) {
-                $tagToRestore->setTagStatus(TagStateType::UNASSIGNED);
-                $manager->persist($tagToRestore);
+                //Remove breedCodes
+                if ($child->getBreedCodes()) {
+                    $breedCodes = $child->getBreedCodes();
+
+                    foreach ($breedCodes->getCodes() as $codes) {
+                        $manager->remove($codes);
+                    }
+                    $child->setBreedCodes(null);
+                    $manager->remove($breedCodes);
+                }
+
+                //Remove breedset values
+                $breedValues = $child->getBreedValuesSets();
+                foreach ($breedValues as $breedValue) {
+                    $manager->remove($breedValue);
+                }
+
+                //Remove gender change history items
+                $genderHistories = $child->getGenderHistory();
+                foreach ($genderHistories as $genderHistory) {
+                    $manager->remove($genderHistory);
+                }
+
+                //Flush the removes separately
                 $manager->flush();
-            } else {
-                $tagToRestore = $tagRepository->restoreTagWithPrimaryKeyCheck($manager, $location, $client, $child->getUlnCountryCode(), $child->getUlnNumber());
-                if($tagToRestore instanceof JsonResponse) { return $tagToRestore; }
-            }
 
-            //Remove child from location
-            if ($location->getAnimals()->contains($child)) {
-                $location->getAnimals()->removeElement($child);
-                $manager->persist($location);
-            }
+                //Restore tag if it does not exist
+                /** @var Tag $tagToRestore */
+                $tagToRestore = null;
 
-            $litter->removeChild($child);
-            $manager->persist($litter);
-            $manager->flush();
+                /** @var TagRepository $tagRepository */
+                $tagRepository = $manager->getRepository(Tag::getClassName());
+                $tagToRestore = $tagRepository->findByUlnNumberAndCountryCode($child->getUlnCountryCode(), $child->getUlnNumber());
 
-            $child->setParentFather(null);
-            $child->setParentMother(null);
-            $child->setParentNeuter(null);
-            $child->setSurrogate(null);
+                if ($tagToRestore) {
+                    $tagToRestore->setTagStatus(TagStateType::UNASSIGNED);
+                    $manager->persist($tagToRestore);
+                    $manager->flush();
+                } else {
+                    $tagToRestore = $tagRepository->restoreTagWithPrimaryKeyCheck($manager, $location, $client, $child->getUlnCountryCode(), $child->getUlnNumber());
+                    if($tagToRestore instanceof JsonResponse) { return $tagToRestore; }
+                }
 
-            $manager->persist($child);
-            $manager->flush();
+                //Remove child from location
+                if ($location->getAnimals()->contains($child)) {
+                    $location->getAnimals()->removeElement($child);
+                    $manager->persist($location);
+                }
 
-            $declareBirths = $litter->getDeclareBirths();
+                $litter->removeChild($child);
+                $manager->persist($litter);
+                $manager->flush();
 
-            foreach ($declareBirths as $declareBirth) {
-                if ($declareBirth->getAnimal() != null) {
-                    if ($declareBirth->getAnimal()->getUlnNumber() == $child->getUlnNumber()) {
-                        $declareBirthResponses = $declareBirth->getResponses();
-                        $declareBirth->setRequestState(RequestStateType::REVOKED);
+                $child->setParentFather(null);
+                $child->setParentMother(null);
+                $child->setParentNeuter(null);
+                $child->setSurrogate(null);
 
-                        /** @var DeclareBirthResponse $declareBirthResponse */
-                        foreach ($declareBirthResponses as $declareBirthResponse) {
-                            if($declareBirthResponse->getAnimal() != null) {
-                                if ($declareBirthResponse->getAnimal()->getUlnNumber() == $child->getUlnNumber()) {
-                                    $declareBirthResponse->setAnimal(null);
-                                    $manager->persist($declareBirthResponse);
+                $manager->persist($child);
+                $manager->flush();
 
+                $declareBirths = $litter->getDeclareBirths();
+
+                foreach ($declareBirths as $declareBirth) {
+                    if ($declareBirth->getAnimal() != null) {
+                        if ($declareBirth->getAnimal()->getUlnNumber() == $child->getUlnNumber()) {
+                            $declareBirthResponses = $declareBirth->getResponses();
+                            $declareBirth->setRequestState(RequestStateType::REVOKED);
+
+                            /** @var DeclareBirthResponse $declareBirthResponse */
+                            foreach ($declareBirthResponses as $declareBirthResponse) {
+                                if($declareBirthResponse->getAnimal() != null) {
+                                    if ($declareBirthResponse->getAnimal()->getUlnNumber() == $child->getUlnNumber()) {
+                                        $declareBirthResponse->setAnimal(null);
+                                        $manager->persist($declareBirthResponse);
+
+                                    }
                                 }
                             }
+                            //Remove child animal
+                            $declareBirth->setAnimal(null);
+                            $manager->persist($declareBirth);
                         }
-                        //Remove child animal
-                        $declareBirth->setAnimal(null);
-                        $manager->persist($declareBirth);
                     }
                 }
+
+                //Remove child animal
+                $manager->remove($child);
             }
 
-            //Remove child animal
-            $manager->remove($child);
+            $manager->flush();
+
+        } catch (ForeignKeyConstraintViolationException $e) {
+            $exceptionMessage = $e->getMessage();
+            $this->getLogger()->critical($exceptionMessage);
+
+            $errorMessage = "Voor de kinderen in deze worp zijn nieuwe gegevens geregistreerd, waardoor het niet mogelijk is om deze dieren via een geboortemeldingintrekking te verwijderen.";
+
+            $blockedTable = ExceptionUtil::getBlockedTableInForeignKeyConstraintViolationException($e);
+            $referenceTable = ExceptionUtil::getReferenceTableInForeignKeyConstraintViolationException($e);
+            if($blockedTable) {
+                $errorMessage = $errorMessage.' De geblokkeerde tabel = '.$blockedTable.'.';
+            }
+            if($referenceTable) {
+                $errorMessage = $errorMessage.' De referentie tabel = '.$referenceTable.'.';
+            }
+
+            return Validator::createJsonResponse($errorMessage, $statusCode);
         }
 
-        $manager->flush();
 
         //Send workerTask to update productionValues of parents
         $this->sendTaskToQueue(WorkerTaskUtil::createResultTableMessageBodyForBirthRevoke($litterClone));
