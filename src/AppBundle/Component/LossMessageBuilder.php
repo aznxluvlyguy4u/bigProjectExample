@@ -57,7 +57,8 @@ class LossMessageBuilder extends MessageBuilderBase
         $declareLoss->setAnimal($animal);
         $declareLoss->setLocation($location);
 
-        Utils::setResidenceToPending($animal, $location);
+        $alternativeStartDateForInitialAnimalResidence = $declareLoss->getDateOfDeath();
+        Utils::setResidenceToPending($animal, $location, $alternativeStartDateForInitialAnimalResidence);
         
         $declareLoss->setAnimalType(AnimalType::sheep);
 
