@@ -224,7 +224,7 @@ class Mixblup
             $this->animals = $animals;
         }
 
-        $dataFileName = MixBlupSetting::DATA_FILENAME;
+        $dataFileName = MixBlupSetting::DATA_FILENAME_PREFIX;
         $pedigreeFileName = MixBlupSetting::PEDIGREE_FILENAME;
         $instructionsFileName = MixBlupSetting::INSTRUCTIONS_FILENAME;
 
@@ -321,7 +321,7 @@ class Mixblup
     {
         return [
             'TITEL   schapen fokwaarde berekening groei, spierdikte en vetbedekking',
-            ' DATAFILE  '.MixBlupSetting::DATA_FILENAME.'_'.self::TEST_ATTRIBUTES.'.txt',
+            ' DATAFILE  '.MixBlupSetting::DATA_FILENAME_PREFIX.'_'.self::TEST_ATTRIBUTES.'.txt',
             ' animal     A !missing '.self::ULN_NULL_FILLER.' #uln',  //uln
             ' gender     A !missing '.self::GENDER_NULL_FILLER,  //ram/ooi/N_B
             ' jaarUbn    A !missing '.self::YEAR_UBN_NULL_FILLER.' #jaar en ubn van geboorte', //year and ubn of birth
@@ -377,7 +377,7 @@ class Mixblup
     {
         return [
             'TITEL   schapen fokwaarde berekening exterieur',
-            ' DATAFILE  '.MixBlupSetting::DATA_FILENAME.'_'.self::EXTERIOR_ATTRIBUTES.'.txt',
+            ' DATAFILE  '.MixBlupSetting::DATA_FILENAME_PREFIX.'_'.self::EXTERIOR_ATTRIBUTES.'.txt',
             ' animal     A !missing '.self::ULN_NULL_FILLER.' #uln',  //uln
             ' gender     A !missing '.self::GENDER_NULL_FILLER.' #sekse van dier',  //ram/ooi/0
             ' jaarUbn    A !missing '.self::YEAR_UBN_NULL_FILLER.' #jaar en ubn van geboorte', //year and ubn of birth
@@ -430,7 +430,7 @@ class Mixblup
     {
         return [
             'TITEL   schapen fokwaarde berekening vruchtbaarheid',
-            ' DATAFILE  '.MixBlupSetting::DATA_FILENAME.'_'.self::FERTILITY.'.txt',
+            ' DATAFILE  '.MixBlupSetting::DATA_FILENAME_PREFIX.'_'.self::FERTILITY.'.txt',
             ' animal     A !missing '.self::ULN_NULL_FILLER.' #uln',  //uln
             ' pariteit   A !missing '.self::DATE_OF_BIRTH_NULL_FILLER.' #Leeftijd ooi bij werpen in hele jaren',  //ram/ooi/0
             ' jaarUbn    A !missing '.self::YEAR_UBN_NULL_FILLER.' #jaar en ubn van geboorte', //year and ubn of birth
