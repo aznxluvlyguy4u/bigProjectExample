@@ -27,4 +27,22 @@ class ArrayUtil
         }
         return $nullReplacement;
     }
+
+
+    /**
+     * @param array $arrays
+     * @return array
+     */
+    public static function concatArrayValues(array $arrays)
+    {
+        $combinedArray = [];
+
+        foreach ($arrays as $array) {
+            foreach ($array as $value) {
+                $combinedArray[] = $value;
+            }
+        }
+
+        return $combinedArray;
+    }
 }
