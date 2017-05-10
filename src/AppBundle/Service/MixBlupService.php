@@ -4,6 +4,7 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Util\FilesystemUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Driver\PDOSqlsrv\Connection;
 
@@ -47,7 +48,7 @@ class MixBlupService implements MixBlupServiceInterface
         $this->s3Service = $s3Service;
         $this->queueService = $queueService;
         $this->currentEnvironment = $currentEnvironment;
-        $this->rootDir = substr($rootDir, 0, strlen($rootDir)-3);
+        $this->rootDir = FilesystemUtil::rtrimRootDir($rootDir);
     }
 
     /**
