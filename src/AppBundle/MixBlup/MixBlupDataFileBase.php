@@ -4,6 +4,7 @@
 namespace AppBundle\MixBlup;
 
 use AppBundle\Enumerator\MixBlupNullFiller;
+use AppBundle\Setting\MixBlupFolder;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -44,7 +45,7 @@ class MixBlupDataFileBase
     protected function getInstructionFileDefaultEnding()
     {
         return [
-            'PEDFILE   '.MixBlupSetting::PEDIGREE_FILENAME.'.txt',
+            'PEDFILE   '.MixBlupFolder::PEDIGREE.'.txt',
             ' animal    A !missing '.MixBlupNullFiller::ULN.' #uln',
             ' sire      A !missing '.MixBlupNullFiller::ULN.' #uln van vader',
             ' dam       A !missing '.MixBlupNullFiller::ULN.' #uln van moeder',

@@ -24,6 +24,10 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
     const START_YEAR_MEASUREMENT = null;
     const END_YEAR_MEASUREMENTS = null;
 
+    //LEGACY
+    const OUTPUT_FOLDER_PATH = '/Resources/outputs/mixblup';
+    const MUTATIONS_FOLDER_PATH = '/Resources/mutations';
+
     /** @var CommandUtil */
     private $cmdUtil;
 
@@ -65,9 +69,9 @@ class NsfoDumpMixblupCommand extends ContainerAwareCommand
         $this->conn = $this->em->getConnection();
         
         /* Setup folders */
-        $this->outputFolder = $this->rootDir.MixBlupSetting::OUTPUT_FOLDER_PATH;
+        $this->outputFolder = $this->rootDir.self::OUTPUT_FOLDER_PATH;
         NullChecker::createFolderPathIfNull($this->outputFolder);
-        $this->mutationsFolder = $this->rootDir.MixBlupSetting::MUTATIONS_FOLDER_PATH;
+        $this->mutationsFolder = $this->rootDir.self::MUTATIONS_FOLDER_PATH;
         NullChecker::createFolderPathIfNull($this->mutationsFolder);
 
 

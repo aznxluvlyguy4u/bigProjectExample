@@ -18,6 +18,7 @@ use AppBundle\Enumerator\BreedCodeType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\WeightType;
 use AppBundle\Migration\BreedCodeReformatter;
+use AppBundle\Setting\MixBlupFolder;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\BreedValueUtil;
 use AppBundle\Util\CommandUtil;
@@ -225,8 +226,8 @@ class Mixblup
         }
 
         $dataFileName = MixBlupSetting::DATA_FILENAME_PREFIX;
-        $pedigreeFileName = MixBlupSetting::PEDIGREE_FILENAME;
-        $instructionsFileName = MixBlupSetting::INSTRUCTIONS_FILENAME;
+        $pedigreeFileName = MixBlupFolder::PEDIGREE;
+        $instructionsFileName = MixBlupFolder::INSTRUCTIONS;
 
         if(substr($outputFolderPath, -1) != '/') {
             $this->dataFilePath = $outputFolderPath.'/'.$dataFileName.'.txt';
@@ -352,7 +353,7 @@ class Mixblup
             ' staartlg   T !missing '.self::TAIL_LENGTH_NULL_FILLER.' #staartlengte', //tailLength
             ' block I !BLOCK', //NOTE it is an integer here
             ' ',
-            'PEDFILE   '.MixBlupSetting::PEDIGREE_FILENAME,
+            'PEDFILE   '.MixBlupFolder::PEDIGREE,
             ' animal    A !missing '.self::ULN_NULL_FILLER.' #uln',
             ' sire      A !missing '.self::ULN_NULL_FILLER.' #uln van vader',
             ' dam       A !missing '.self::ULN_NULL_FILLER.' #uln van moeder',
@@ -404,7 +405,7 @@ class Mixblup
             ' KEN T !missing '.self::EXTERIOR_NULL_FILLER.' #kenmerken', //markings
             ' block I !BLOCK', //NOTE it is an integer here
             ' ',
-            'PEDFILE   '.MixBlupSetting::PEDIGREE_FILENAME,
+            'PEDFILE   '.MixBlupFolder::PEDIGREE,
             ' animal    A !missing '.self::ULN_NULL_FILLER.' #uln',
             ' sire      A !missing '.self::ULN_NULL_FILLER.' #uln van vader',
             ' dam       A !missing '.self::ULN_NULL_FILLER.' #uln van moeder',
@@ -456,7 +457,7 @@ class Mixblup
             ' Gebvrlp    I !missing '.self::BIRTH_PROCESS_NULL_FILLER.' #zonder=0, licht=1, normaal=2, zwaar=3, keizersnee=4',
             ' block I !BLOCK', //NOTE it is an integer here
             ' ',
-            'PEDFILE   '.MixBlupSetting::PEDIGREE_FILENAME,
+            'PEDFILE   '.MixBlupFolder::PEDIGREE,
             ' animal    A !missing '.self::ULN_NULL_FILLER.' #uln',
             ' sire      A !missing '.self::ULN_NULL_FILLER.' #uln van vader',
             ' dam       A !missing '.self::ULN_NULL_FILLER.' #uln van moeder',

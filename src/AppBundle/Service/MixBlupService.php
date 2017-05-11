@@ -4,6 +4,7 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Setting\MixBlupFolder;
 use AppBundle\Setting\MixBlupSetting;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Driver\PDOSqlsrv\Connection;
@@ -52,7 +53,7 @@ class MixBlupService implements MixBlupServiceInterface
         $this->queueService = $queueService;
         $this->currentEnvironment = $currentEnvironment;
         $this->cacheDir = $cacheDir;
-        $this->workingFolder = $cacheDir.'/'.MixBlupSetting::WORKING_FOLDER_NAME;
+        $this->workingFolder = $cacheDir.'/'.MixBlupFolder::ROOT;
     }
 
 
