@@ -38,7 +38,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
     {
         $start = [
             'TITEL   schapen fokwaarde berekening '.$titleType,
-            'DATAFILE  '.MixBlupSetting::DATA_FILENAME_PREFIX.MixBlupSetting::EXTERIOR.'.txt',
+            'DATAFILE  '.MixBlupSetting::DATA_FILENAME_PREFIX.MixBlupSetting::FERTILITY.'.txt',
             ' ID         A !missing '.MixBlupNullFiller::ULN.' #uln van ooi of moeder',  //uln
             ' Leeft      I !missing '.MixBlupNullFiller::COUNT.' #leeftijd ooi in jaren', //age of ewe in years
             ' Sekse      A !missing '.MixBlupNullFiller::GENDER,  //ram/ooi/N_B
