@@ -24,4 +24,9 @@ class MixBlupSetting
     const THOUSANDS_SEPARATOR = '';
     
     const INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS = false;
+    
+    //Reproduction
+    const LITTER_SIZE_INSTRUCTION_FILE = 'Worpgrootte';
+    const BIRTH_PROCESS_INSTRUCTION_FILE = 'Geboorteverloop';
+    const GAVE_BIRTH_AS_ONE_YEAR_OLD_INSTRUCTION_FILE = 'Vroegrijpheid';
 }

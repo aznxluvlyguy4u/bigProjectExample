@@ -7,8 +7,8 @@ namespace AppBundle\Enumerator;
 class MixBlupNullFiller
 {
     //Booleans
-    const PMSG = 'N_B';
-    const PRECOCIOUS = 'N_B'; //vroegrijp
+    const PMSG = -99;
+    const PRECOCIOUS = -99; //vroegrijp
 
     //Date
     const DATE = 'N_B';
@@ -21,7 +21,7 @@ class MixBlupNullFiller
 
     //Integers
     const AGE = -99;
-    const BIRTH_PROCESS = -99;
+    const BIRTH_PROGRESS = -99;
     const BLOCK = 3;
     const COUNT = -99;
     const UBN = 0; //Value is used as default value for !BLOCK
