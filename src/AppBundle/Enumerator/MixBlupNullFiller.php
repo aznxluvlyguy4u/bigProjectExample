@@ -18,6 +18,7 @@ class MixBlupNullFiller
     const HETEROSIS = -99;
     const MEASUREMENT_VALUE = -99;
     const RECOMBINATION = -99;
+    const COVARIABLE = -99;
 
     //Integers
     const AGE = -99;

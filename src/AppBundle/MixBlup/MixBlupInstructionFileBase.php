@@ -49,14 +49,14 @@ abstract class MixBlupInstructionFileBase
     protected static function getStandardizedBreedCodePartsAndHetRecOfInstructionFile()
     {
         return [
-            ' CovTE      I !missing '.MixBlupNullFiller::COUNT,  //TE, BT, DK are genetically all the same
-            ' CovCF      I !missing '.MixBlupNullFiller::COUNT,  //Clun Forest
-            ' CovBM      I !missing '.MixBlupNullFiller::COUNT,  //Bleu du Maine
-            ' CovSW      I !missing '.MixBlupNullFiller::COUNT,  //Swifter
-            ' CovNH      I !missing '.MixBlupNullFiller::COUNT,  //Noordhollander
-            ' CovFL      I !missing '.MixBlupNullFiller::COUNT,  //Flevolander
-            ' CovHD      I !missing '.MixBlupNullFiller::COUNT,  //Hampshire Down
-            ' CovOV      I !missing '.MixBlupNullFiller::COUNT,  //other  (NN means unknown, also include it here)
+            ' CovTE      R !missing '.MixBlupNullFiller::COVARIABLE,  //TE, BT, DK are genetically all the same
+            ' CovCF      R !missing '.MixBlupNullFiller::COVARIABLE,  //Clun Forest
+            ' CovBM      R !missing '.MixBlupNullFiller::COVARIABLE,  //Bleu du Maine
+            ' CovSW      R !missing '.MixBlupNullFiller::COVARIABLE,  //Swifter
+            ' CovNH      R !missing '.MixBlupNullFiller::COVARIABLE,  //Noordhollander
+            ' CovFL      R !missing '.MixBlupNullFiller::COVARIABLE,  //Flevolander
+            ' CovHD      R !missing '.MixBlupNullFiller::COVARIABLE,  //Hampshire Down
+            ' CovOV      R !missing '.MixBlupNullFiller::COVARIABLE,  //other  (NN means unknown, also include it here)
             ' CovHet     T !missing '.MixBlupNullFiller::HETEROSIS.' #Heterosis van het dier',
             ' CovRec     T !missing '.MixBlupNullFiller::RECOMBINATION.' #Recombinatie van het dier',
         ];

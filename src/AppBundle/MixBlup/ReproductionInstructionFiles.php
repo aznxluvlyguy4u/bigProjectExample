@@ -50,7 +50,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
             $customRecords = [
                 ' HetLam     T !missing '.MixBlupNullFiller::HETEROSIS.' #Heterosis lam of worp', //Heterosis of offspring/litter
                 ' RecLam     T !missing '.MixBlupNullFiller::RECOMBINATION.' #Recombinatie lam of worp', //Recombination of offspring/litter
-                ' CovTE_M    I !missing '.MixBlupNullFiller::COUNT.' #Rasdeel TE van moeder', //BreedCode part TE of mother //TODO definition still unclear
+                ' CovTE_M    R !missing '.MixBlupNullFiller::COVARIABLE.' #Rasdeel TE van moeder', //BreedCode part TE of mother //TODO definition still unclear
                 ' Inductie   I !missing '.MixBlupNullFiller::PMSG.' #Bronstinduction 0=Ja, 1=Nee', //pmsg value in mate 0=FALSE, 1=TRUE
                 ' PermMil    A !missing '.MixBlupNullFiller::ULN.' #Permanent milieu is identiek aan uln van ooi of moeder',
                 ' IDM        A !missing '.MixBlupNullFiller::ULN.' #Het unieke diernummer van de moeder', //TODO definition still unclear
@@ -104,7 +104,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
         $middleRecords = [
             ' HetLam     T !missing '.MixBlupNullFiller::HETEROSIS.' #Heterosis lam of worp', //Heterosis of offspring/litter
             ' RecLam     T !missing '.MixBlupNullFiller::RECOMBINATION.' #Recombinatie lam of worp', //Recombination of offspring/litter
-            ' CovTE_M    I !missing '.MixBlupNullFiller::COUNT.' #Rasdeel TE van moeder', //BreedCode part TE of mother //TODO definition still unclear
+            ' CovTE_M    R !missing '.MixBlupNullFiller::COVARIABLE.' #Rasdeel TE van moeder', //BreedCode part TE of mother //TODO definition still unclear
             ' IDM        A !missing '.MixBlupNullFiller::ULN.' #Het unieke diernummer van de moeder', //TODO definition still unclear
             ' GewGeb     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #Geboortegewicht', //birthWeight
             ' GebGemak   I !missing '.MixBlupNullFiller::BIRTH_PROGRESS.' #Geboortegemak', //birthProgress from 0 to 4
