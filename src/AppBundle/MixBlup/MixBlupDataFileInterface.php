@@ -33,6 +33,8 @@ interface MixBlupDataFileInterface
 
     /**
      * Writes the instructionFile-, dataFile- and pedigreeFile data to their respective text input files.
+     *
+     * @return boolean with true indicating if writes were successful
      */
     function write();
 
