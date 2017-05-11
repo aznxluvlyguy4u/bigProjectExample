@@ -83,6 +83,7 @@ class MixBlupService implements MixBlupServiceInterface
     private function write()
     {
         // TODO: Implement write() method. Call write() methods from MixBlupDataFile classes.
+        //Loop foreach(MixBlubDataFileInterface) { $foo->write(); }
     }
 
 
