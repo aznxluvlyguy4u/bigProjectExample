@@ -14,6 +14,15 @@ use Doctrine\Common\Persistence\ObjectManager;
  */
 class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFileInterface
 {
+    /** @var string */
+    private $litterSizeInstructionFileName;
+
+    /** @var string */
+    private $birthProgressInstructionFileName;
+
+    /** @var string */
+    private $gaveBirthAsOneYearOldInstructionFileName;
+
     /**
      * ReproductionDataFile constructor.
      * @param ObjectManager $em
@@ -22,6 +31,12 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
     public function __construct(ObjectManager $em, $outputFolderPath)
     {
         parent::__construct($em, $outputFolderPath);
+
+        //Instruction filenames
+        $instructionFileEnding = '_'.MixBlupSetting::INSTRUCTIONS_FILENAME.MixBlupSetting::INSTRUCTION_EXTENSION;
+        $this->litterSizeInstructionFileName = MixBlupSetting::LITTER_SIZE_INSTRUCTION_FILE.$instructionFileEnding;
+        $this->birthProgressInstructionFileName = MixBlupSetting::BIRTH_PROCESS_INSTRUCTION_FILE.$instructionFileEnding;
+        $this->gaveBirthAsOneYearOldInstructionFileName = MixBlupSetting::GAVE_BIRTH_AS_ONE_YEAR_OLD_INSTRUCTION_FILE.$instructionFileEnding;
     }
 
 
@@ -108,9 +123,9 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
     function generateInstructionFiles()
     {
         return [
-            MixBlupSetting::LITTER_SIZE_INSTRUCTION_FILE => $this->generateLitterSizeInstructionFile(),
-            MixBlupSetting::BIRTH_PROCESS_INSTRUCTION_FILE => $this->generateBirthProcessInstructionFile(),
-            MixBlupSetting::GAVE_BIRTH_AS_ONE_YEAR_OLD_INSTRUCTION_FILE => $this->generateGaveBirthAsOneYearOldInstructionFile(),
+            $this->litterSizeInstructionFileName => $this->generateLitterSizeInstructionFile(),
+            $this->birthProgressInstructionFileName => $this->generateBirthProcessInstructionFile(),
+            $this->gaveBirthAsOneYearOldInstructionFileName => $this->generateGaveBirthAsOneYearOldInstructionFile(),
         ];
     }
 
@@ -136,6 +151,15 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
     function write()
     {
         // TODO: Implement write() method.
+
+        $successful = true;
+
+        foreach ($this->generateInstructionFiles() as $filename => $records) {
+            $successful = $this->writeToFile($records, $filename);
+            if(!$successful) { $successful = false; }
+        }
+
+        return $successful;
     }
 
 

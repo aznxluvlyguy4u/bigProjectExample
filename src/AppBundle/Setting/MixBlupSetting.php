@@ -14,6 +14,7 @@ class MixBlupSetting
     const PARFILE_FILENAME = 'ParNSFO.txt';
     const PEDIGREE_FILENAME = 'pedigree';
     const INSTRUCTIONS_FILENAME = 'instruction';
+    const INSTRUCTION_EXTENSION = '.inp';
 
     const PEDIGREE_FILENAME_PREFIX = 'Ped';
     const DATA_FILENAME_PREFIX = 'Data';
