@@ -17,10 +17,11 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
     /**
      * LambMeatIndexDataFile constructor.
      * @param ObjectManager $em
+     * @param string $outputFolderPath
      */
-    public function __construct(ObjectManager $em)
+    public function __construct(ObjectManager $em, $outputFolderPath)
     {
-        parent::__construct($em);
+        parent::__construct($em, outputFolderPath);
     }
 
 

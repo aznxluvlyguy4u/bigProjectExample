@@ -18,10 +18,11 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
     /**
      * ExteriorDataFile constructor.
      * @param ObjectManager $em
+     * @param string $outputFolderPath
      */
-    public function __construct(ObjectManager $em)
+    public function __construct(ObjectManager $em, $outputFolderPath)
     {
-        parent::__construct($em);
+        parent::__construct($em, $outputFolderPath);
     }
 
 

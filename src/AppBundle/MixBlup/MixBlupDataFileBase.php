@@ -19,16 +19,20 @@ class MixBlupDataFileBase
 
     /** @var ObjectManager */
     protected $em;
-    
+
+    /** @var string */
+    protected $outputFolderPath;
 
     /**
      * MixBlupDataFileBase constructor.
      * @param ObjectManager $em
+     * @param string $outputFolderPath
      */
-    public function __construct(ObjectManager $em)
+    public function __construct(ObjectManager $em, $outputFolderPath)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
+        $this->outputFolderPath = $outputFolderPath;
     }
 
 
