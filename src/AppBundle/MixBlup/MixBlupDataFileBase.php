@@ -5,6 +5,7 @@ namespace AppBundle\MixBlup;
 
 use AppBundle\Enumerator\MixBlupNullFiller;
 use AppBundle\Setting\MixBlupSetting;
+use AppBundle\Util\NullChecker;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 
@@ -33,6 +34,7 @@ class MixBlupDataFileBase
         $this->em = $em;
         $this->conn = $em->getConnection();
         $this->outputFolderPath = $outputFolderPath;
+        NullChecker::createFolderPathIfNull($outputFolderPath);
     }
 
 
@@ -82,4 +84,28 @@ class MixBlupDataFileBase
             ' CovRec     T !missing '.MixBlupNullFiller::RECOMBINATION.' #Recombinatie van het dier',
         ];
     }
+
+
+    /**
+     * @param array $records
+     * @param string $filename
+     * @return bool
+     */
+    protected function writeToFile(array $records, $filename)
+    {
+        if(!is_string($filename) || $filename == '') { return false; }
+
+        $filePath = $this->outputFolderPath.'/'.$filename;
+
+        //purge current file content
+        file_put_contents($filePath, "");
+
+        foreach ($records as $record) {
+            file_put_contents($filePath, $record."\n", FILE_APPEND);
+        }
+
+        return true;
+    }
+
+
 }
