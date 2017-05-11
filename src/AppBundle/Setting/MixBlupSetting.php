@@ -6,6 +6,8 @@ namespace AppBundle\Setting;
 
 class MixBlupSetting
 {
+    const WORKING_FOLDER_NAME = 'mixblup';
+
     const OUTPUT_FOLDER_PATH = '/Resources/outputs/mixblup';
     const MUTATIONS_FOLDER_PATH = '/Resources/mutations';
 

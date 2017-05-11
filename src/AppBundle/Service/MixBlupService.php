@@ -4,7 +4,7 @@
 namespace AppBundle\Service;
 
 
-use AppBundle\Util\FilesystemUtil;
+use AppBundle\Setting\MixBlupSetting;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Driver\PDOSqlsrv\Connection;
 
@@ -30,7 +30,10 @@ class MixBlupService implements MixBlupServiceInterface
     private $currentEnvironment;
 
     /** @var string */
-    private $rootDir;
+    private $cacheDir;
+    
+    /** @var string */
+    private $workingFolder;
 
     /**
      * MixBlupService constructor.
@@ -38,18 +41,24 @@ class MixBlupService implements MixBlupServiceInterface
      * @param AWSSimpleStorageService $s3Service
      * @param AWSQueueService $queueService
      * @param string $currentEnvironment
-     * @param string $rootDir
+     * @param string $cacheDir
      */
     public function __construct(ObjectManager $em, AWSSimpleStorageService $s3Service, AWSQueueService $queueService,
-                                $currentEnvironment, $rootDir)
+                                $currentEnvironment, $cacheDir)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
         $this->s3Service = $s3Service;
         $this->queueService = $queueService;
         $this->currentEnvironment = $currentEnvironment;
-        $this->rootDir = FilesystemUtil::rtrimRootDir($rootDir);
+        $this->cacheDir = $cacheDir;
+        $this->workingFolder = $cacheDir.'/'.MixBlupSetting::WORKING_FOLDER_NAME;
     }
+
+
+    /** @return string */
+    public function getWorkingFolder() { return $this->workingFolder; }
+
 
     /**
      * @inheritDoc

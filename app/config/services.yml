@@ -55,7 +55,7 @@ services:
           AWSSimpleStorageService: '@app.aws.storageservice'
           AWSQueueService: '@app.aws.queueservice'
           currentEnv: %kernel.environment%
-          rootDir: %kernel.root_dir%
+          rootDir: %kernel.cache_dir%
 
     app.serializer.ir:
         class: AppBundle\Service\IRSerializer
