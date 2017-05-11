@@ -141,7 +141,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
         $successful = true;
 
         foreach ($this->generateInstructionFiles() as $filename => $records) {
-            $successful = $this->writeToFile($records, $filename);
+            $successful = $this->writeInstructionFile($records, $filename);
             if(!$successful) { $successful = false; }
         }
 

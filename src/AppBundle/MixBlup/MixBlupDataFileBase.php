@@ -36,6 +36,9 @@ class MixBlupDataFileBase
         $this->conn = $em->getConnection();
         $this->outputFolderPath = $outputFolderPath;
         NullChecker::createFolderPathIfNull($outputFolderPath);
+        NullChecker::createFolderPathIfNull($outputFolderPath.'/'.MixBlupFolder::INSTRUCTIONS);
+        NullChecker::createFolderPathIfNull($outputFolderPath.'/'.MixBlupFolder::DATA);
+        NullChecker::createFolderPathIfNull($outputFolderPath.'/'.MixBlupFolder::PEDIGREE);
     }
 
 
@@ -92,11 +95,49 @@ class MixBlupDataFileBase
      * @param string $filename
      * @return bool
      */
-    protected function writeToFile(array $records, $filename)
+    protected function writeInstructionFile(array $records, $filename)
+    {
+        return $this->writeToFile($records, $filename, MixBlupFolder::INSTRUCTIONS);
+    }
+
+
+    /**
+     * @param array $records
+     * @param string $filename
+     * @return bool
+     */
+    protected function writeDataFile(array $records, $filename)
+    {
+        return $this->writeToFile($records, $filename, MixBlupFolder::DATA);
+    }
+
+
+    /**
+     * @param array $records
+     * @param string $filename
+     * @return bool
+     */
+    protected function writePedigreeFile(array $records, $filename)
+    {
+        return $this->writeToFile($records, $filename, MixBlupFolder::PEDIGREE);
+    }
+
+
+    /**
+     * @param array $records
+     * @param string $filename
+     * @param string $subfolder
+     * @return bool
+     */
+    private function writeToFile(array $records, $filename, $subfolder = null)
     {
         if(!is_string($filename) || $filename == '') { return false; }
 
-        $filePath = $this->outputFolderPath.'/'.$filename;
+        if($subfolder != null) {
+            $filePath = $this->outputFolderPath.'/'.$subfolder.'/'.$filename;
+        } else {
+            $filePath = $this->outputFolderPath.'/'.$filename;
+        }
 
         //purge current file content
         file_put_contents($filePath, "");
