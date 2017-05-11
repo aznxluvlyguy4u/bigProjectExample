@@ -22,4 +22,6 @@ class MixBlupSetting
 
     const DECIMAL_SEPARATOR = '.';
     const THOUSANDS_SEPARATOR = '';
+    
+    const INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS = false;
 }
