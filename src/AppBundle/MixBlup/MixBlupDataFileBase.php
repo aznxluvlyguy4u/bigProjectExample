@@ -150,4 +150,30 @@ class MixBlupDataFileBase
     }
 
 
+    /**
+     * Overwrite this in the child classes!
+     * @return array
+     */
+    function generateInstructionFiles() {
+        return [];
+    }
+
+
+    /**
+     * @inheritDoc
+     */
+    function write()
+    {
+        // TODO: Implement write() method.
+
+        $successful = true;
+
+        foreach ($this->generateInstructionFiles() as $filename => $records) {
+            $successful = $this->writeInstructionFile($records, $filename);
+            if(!$successful) { $successful = false; }
+        }
+
+        return $successful;
+    }
+
 }

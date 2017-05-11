@@ -131,22 +131,5 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
         // TODO: Implement generatePedigreeFile() method.
     }
 
-    /**
-     * @inheritDoc
-     */
-    function write()
-    {
-        // TODO: Implement write() method.
-
-        $successful = true;
-
-        foreach ($this->generateInstructionFiles() as $filename => $records) {
-            $successful = $this->writeInstructionFile($records, $filename);
-            if(!$successful) { $successful = false; }
-        }
-
-        return $successful;
-    }
-
 
 }
