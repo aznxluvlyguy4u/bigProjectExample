@@ -9,7 +9,7 @@ use Doctrine\Common\Persistence\ObjectManager;
  * Class ReproductionDataFile
  * @package AppBundle\MixBlup
  */
-class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFileInterface
+class ReproductionProcess extends MixBlupProcessBase implements MixBlupProcessInterface
 {
     /**
      * ReproductionDataFile constructor.

@@ -12,7 +12,7 @@ use Doctrine\DBAL\Connection;
  * Class MixBlupDataFileBase
  * @package AppBundle\MixBlup
  */
-class MixBlupDataFileBase
+class MixBlupProcessBase
 {
     /** @var Connection */
     protected $conn;

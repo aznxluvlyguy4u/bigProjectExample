@@ -12,7 +12,7 @@ use Doctrine\Common\Persistence\ObjectManager;
  * Class ExteriorDataFile
  * @package AppBundle\MixBlup
  */
-class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInterface
+class ExteriorProcess extends MixBlupProcessBase implements MixBlupProcessInterface
 {
 
     /**

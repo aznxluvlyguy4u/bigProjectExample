@@ -7,7 +7,7 @@ namespace AppBundle\MixBlup;
  * Interface MixBlupDataFileInterface
  * @package AppBundle\MixBlup
  */
-interface MixBlupDataFileInterface
+interface MixBlupProcessInterface
 {
     /**
      * Multiple instruction files might use the same datafile.

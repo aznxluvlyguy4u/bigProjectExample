@@ -13,7 +13,7 @@ use Doctrine\Common\Persistence\ObjectManager;
  * Class LambMeatIndexDataFile
  * @package AppBundle\MixBlup
  */
-class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFileInterface
+class LambMeatIndexProcess extends MixBlupProcessBase implements MixBlupProcessInterface
 {
     /**
      * LambMeatIndexDataFile constructor.
