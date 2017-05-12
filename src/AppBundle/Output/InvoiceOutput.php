@@ -30,6 +30,21 @@ class InvoiceOutput
     }
 
     /**
+     * @param $invoices
+     * @return array
+     */
+    public static function createInvoiceOutputListNoCompany($invoices){
+        $results = array();
+        /** @var Invoice $invoice */
+        foreach ($invoices as $invoice) {
+            if (!$invoice->isDeleted()) {
+                $results[] = self::createInvoiceOutputNoCompany($invoice);
+            }
+        }
+        return $results;
+    }
+
+    /**
      * @param Invoice $invoice
      * @return array
      */
@@ -60,15 +75,20 @@ class InvoiceOutput
      * @return array
      */
     public static function createInvoiceOutputNoCompany($invoice){
-        return array(
-            'id' => $invoice->getId(),
+        $res = array('id' => $invoice->getId(),
+            'company_id' => $invoice->getCompanyLocalId(),
             'company_name' => $invoice->getCompanyName(),
             'company_vat_number' => $invoice->getCompanyVatNumber(),
+            'status' => $invoice->getStatus(),
             'ubn' => $invoice->getUbn(),
             'invoice_number' => $invoice->getInvoiceNumber(),
             'invoice_date' => $invoice->getInvoiceDate(),
             'invoice_rules' => InvoiceRuleOutput::createInvoiceRuleOutputList($invoice->getInvoiceRules()),
             'invoice_rules_locked' => InvoiceRuleLockedOutput::createInvoiceRuleOutputList($invoice->getLockedInvoiceRules())
         );
+        if($invoice->getSenderDetails() != null){
+            $res['sender_details'] = InvoiceSenderDetailsOutput::createInvoiceSenderDetailsOutput($invoice->getSenderDetails());
+        }
+        return $res;
     }
 }
