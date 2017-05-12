@@ -89,6 +89,13 @@ class Invoice {
      */
     private $company;
 
+    /**
+     * @var string
+     * @ORM\Column(type="string", name="company_local_id", nullable=true)
+     * @JMS\Type("string")
+     * @JMS\Groups({"INVOICE"})
+     */
+    private $companyLocalId;
 
     /**
      * @var string
@@ -322,6 +329,22 @@ class Invoice {
     }
 
     /**
+     * @return string
+     */
+    public function getCompanyLocalId()
+    {
+        return $this->companyLocalId;
+    }
+
+    /**
+     * @param string $companyLocalId
+     */
+    public function setCompanyLocalId($companyLocalId)
+    {
+        $this->companyLocalId = $companyLocalId;
+    }
+
+    /**
      * @param string $companyName
      */
     public function setCompanyName($companyName)
@@ -379,6 +402,7 @@ class Invoice {
 
     public function copyValues(Invoice $invoice){
         $this->setCompany($invoice->getCompany());
+        $this->setCompanyLocalId($invoice->getCompanyLocalId());
         $this->setCompanyName($invoice->getCompanyName());
         $this->setCompanyVatNumber($invoice->getCompanyVatNumber());
         $this->setCompanyDebtorNumber($invoice->getCompanyDebtorNumber());
