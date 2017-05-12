@@ -28,54 +28,46 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
 
 
     /**
-     * @param array $customRecords
+     * @param array $model
      * @param string $fileType
      * @return array
      */
-    private static function generateTestAttributeInstructionFile(array $customRecords = [], $fileType = 'vleeslamkenmerken')
+    private static function generateTestAttributeInstructionFile(array $model, $fileType)
     {
         $start = [
-            'TITEL   schapen fokwaarde berekening '.$fileType,
-            'DATAFILE  '.MixBlupSetting::DATA_FILENAME_PREFIX.MixBlupSetting::LAMB_MEAT_INDEX.'.txt',
-            ' ID         A !missing '.MixBlupNullFiller::ULN.' #uln',  //uln
-            ' IDM        A !missing '.MixBlupNullFiller::ULN.' #uln van moeder',  //uln of mother
-            ' JaarBedr   A !missing '.MixBlupNullFiller::GROUP.' #jaar en ubn van geboorte', //year and ubn of birth
-            ' Sekse      A !missing '.MixBlupNullFiller::GENDER,  //ram/ooi/N_B
-            ' WorpID     A !missing '.MixBlupNullFiller::GROUP.' #worpnummer',  //ulnMother._.lpad(litterOrdinal, with zeroes)
+            'TITEL '.$fileType,
+            ' ',
+            'DATAFILE  '.MixBlupSetting::DATA_FILENAME_PREFIX.MixBlupSetting::LAMB_MEAT_INDEX.'.txt !MISSING -99',
+            ' ID         A #uln',  //uln
+            ' IDM        A #uln van moeder',  //uln of mother
+            ' JaarBedr   A #jaar en ubn van geboorte', //year and ubn of birth
+            ' Sekse      A ',  //ram/ooi/N_B
+            ' WorpID     A ',  //ulnMother._.lpad(litterOrdinal, with zeroes)
         ];
 
         $middle = [
-            ' Nling      I !missing '.MixBlupNullFiller::COUNT.' #worpgrootte',
-            ' Zling      I !missing '.MixBlupNullFiller::COUNT.' #zooggrootte',
-            ' LeeftScan  I !missing '.MixBlupNullFiller::COUNT.' #op moment van meting in dagen', //age of animal on measurementDate in days
-            ' GewScan    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #gewicht bij scannen',   //weight at measurementDate
-        ];
-
-        if($customRecords == []) {
-            //Insert all records as default
-            $customRecords = [
-                ' GewGeb     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #geboortegewicht',   //weight at birth
-                ' StaartLen  T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #staartlengte', //tailLength
-                ' Gew08wk    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #8 weken gewichtmeting', //weight measurement at 8 weeks
-                ' Gew20wk    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #20 weken gewichtmeting', //weight measurement at 20 weeks
-                ' Vetd01     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE,
-                ' Vetd02     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE,
-                ' Vetd03     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE,
-                ' Spierd     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #spierdikte',
-            ];
-        }
-
-        $lastDataRecords = [
-            ' Bedrijf    I !missing '.MixBlupNullFiller::UBN.' #ubn van geboorte',
+            ' Nling      I #worpgrootte',
+            ' Zling      I #zooggrootte',
+            ' LeeftScan  R #op moment van meting in dagen', //age of animal on measurementDate in days
+            ' GewScan    R #gewicht bij scannen',   //weight at measurementDate
+            ' GewGeb     T #geboortegewicht',   //weight at birth
+            ' StaartLen  T #staartlengte', //tailLength
+            ' Gew08wk    T #8 weken gewichtmeting', //weight measurement at 8 weeks
+            ' Gew20wk    T #20 weken gewichtmeting', //weight measurement at 20 weeks
+            ' Vetd01     T',
+            ' Vetd02     T',
+            ' Vetd03     T',
+            ' Spierd     T', #spierdikte',
+            ' Bedrijf    I #ubn van geboorte',
         ];
 
         return ArrayUtil::concatArrayValues([
             $start,
             self::getStandardizedBreedCodePartsAndHetRecOfInstructionFile(),
             $middle,
-            $customRecords,
-            $lastDataRecords,
-            self::getInstructionFileDefaultEnding()
+            self::getInstructionFilePedFileToModelHeader(MixBlupSetting::LAMB_MEAT_INDEX),
+            $model,
+            self::getInstructionFileEnding(),
         ]);
     }
 
@@ -85,16 +77,16 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
      */
     public static function generateLambMeatInstructionFile()
     {
-        $customRecords = [
-            ' GewGeb     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #geboortegewicht',   //weight at birth
-            ' Gew08wk    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #8 weken gewichtmeting', //weight measurement at 8 weeks
-            ' Gew20wk    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #20 weken gewichtmeting', //weight measurement at 20 weeks
-            ' Vetd01     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE,
-            ' Vetd02     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE,
-            ' Vetd03     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE,
-            ' Spierd     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #spierdikte',
+        $model = [
+            ' GewGeb    ~ JaarBedr CovCF CovSW CovNH CovBT CovOV CovHet CovRec Sekse Nling !RANDOM WorpID G(ID,IDM)',
+            ' Gew08     ~ JaarBedr CovCF CovSW CovNH CovBT CovOV CovHet CovRec Sekse Nling LeeftScan !RANDOM WorpID G(ID)',
+            ' Gew20     ~ JaarBedr CovCF CovSW CovNH CovBT CovOV CovHet CovRec Sekse Nling LeeftScan !RANDOM WorpID G(ID)',
+            ' Vetd01    ~ JaarBedr CovCF CovSW CovNH CovBT CovOV CovHet CovRec Sekse Nling GewScan !RANDOM WorpID G(ID)',
+            ' Vetd02    ~ JaarBedr CovCF CovSW CovNH CovBT CovOV CovHet CovRec Sekse Nling GewScan !RANDOM WorpID G(ID)',
+            ' Vetd03    ~ JaarBedr CovCF CovSW CovNH CovBT CovOV CovHet CovRec Sekse Nling GewScan !RANDOM WorpID G(ID)',
+            ' Spierd    ~ JaarBedr CovCF CovSW CovNH CovBT CovOV CovHet CovRec Sekse Nling GewScan !RANDOM WorpID G(ID)',
         ];
-        return self::generateTestAttributeInstructionFile($customRecords, 'vleeslamkenmerken');
+        return self::generateTestAttributeInstructionFile($model, 'Vleeslamkenmerken');
     }
 
 
@@ -103,10 +95,10 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
      */
     public static function generateTailLengthInstructionFile()
     {
-        $customRecords = [
-            ' StaartLen  T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #staartlengte', //tailLength
+        $model = [
+            ' StaartLen ~ GewGeb JaarBedr Nling Sekse CovCF CovSW CovNH CovBT CovOV CovHet CovRec !RANDOM WorpID G(ID)',
         ];
-        return self::generateTestAttributeInstructionFile($customRecords, 'staartlengte');
+        return self::generateTestAttributeInstructionFile($model, 'Staartlengte');
     }
 
 

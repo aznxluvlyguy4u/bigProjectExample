@@ -6,6 +6,7 @@ namespace AppBundle\MixBlup;
 
 use AppBundle\Enumerator\MixBlupNullFiller;
 use AppBundle\Setting\MixBlupFolder;
+use AppBundle\Setting\MixBlupInstructionFile;
 use AppBundle\Setting\MixBlupSetting;
 
 /**
@@ -16,29 +17,34 @@ abstract class MixBlupInstructionFileBase
 {
 
     /**
+     * @param string $type
      * @return array
      */
-    protected static function getInstructionFileDefaultEnding()
+    protected static function getInstructionFilePedFileToModelHeader($type)
     {
         return [
-            'PEDFILE   '.MixBlupFolder::PEDIGREE.'.txt',
-            ' animal    A !missing '.MixBlupNullFiller::ULN.' #uln',
-            ' sire      A !missing '.MixBlupNullFiller::ULN.' #uln van vader',
-            ' dam       A !missing '.MixBlupNullFiller::ULN.' #uln van moeder',
-            ' block     I !BLOCK', //NOTE it is an integer here
-            ' gender    A !missing '.MixBlupNullFiller::GENDER,
-            ' gebjaar   A !missing '.MixBlupNullFiller::DATE.' #geboortedatum',
-            ' rascode   A !missing '.MixBlupNullFiller::CODE,
-
+            ' ',
+            'PEDFILE   '.MixBlupSetting::PEDIGREE_FILENAME_PREFIX.$type.'.txt',
+            ' ID        A ',
+            ' Vader     A ',
+            ' Moeder    A ',
+            ' Bedrijf   I ',//NOTE it is an integer here
+            ' ',
             'PARFILE  '.MixBlupSetting::PARFILE_FILENAME,
+            ' ',
+            'MODEL',
+        ];
+    }
 
-            'MODEL', //TODO check the MODEL & SOLVING settings
-            ' bw1    ~  herd sex !random comenv G(animal)',
-            ' bw2    ~  herd sex !random comenv G(animal)',
 
+    /**
+     * @return array
+     */
+    protected static function getInstructionFileEnding()
+    {
+        return [
+            ' ',
             'SOLVING',
-            'TMPDiR .',
-            'END',
         ];
     }
 
@@ -49,16 +55,16 @@ abstract class MixBlupInstructionFileBase
     protected static function getStandardizedBreedCodePartsAndHetRecOfInstructionFile()
     {
         return [
-            ' CovTE      R !missing '.MixBlupNullFiller::COVARIABLE,  //TE, BT, DK are genetically all the same
-            ' CovCF      R !missing '.MixBlupNullFiller::COVARIABLE,  //Clun Forest
-            ' CovBM      R !missing '.MixBlupNullFiller::COVARIABLE,  //Bleu du Maine
-            ' CovSW      R !missing '.MixBlupNullFiller::COVARIABLE,  //Swifter
-            ' CovNH      R !missing '.MixBlupNullFiller::COVARIABLE,  //Noordhollander
-            ' CovFL      R !missing '.MixBlupNullFiller::COVARIABLE,  //Flevolander
-            ' CovHD      R !missing '.MixBlupNullFiller::COVARIABLE,  //Hampshire Down
-            ' CovOV      R !missing '.MixBlupNullFiller::COVARIABLE,  //other  (NN means unknown, also include it here)
-            ' CovHet     T !missing '.MixBlupNullFiller::HETEROSIS.' #Heterosis van het dier',
-            ' CovRec     T !missing '.MixBlupNullFiller::RECOMBINATION.' #Recombinatie van het dier',
+            ' CovTE      R #rasdelen TE, BT en DK, ze zijn genetisch identiek',  //TE, BT, DK are genetically all the same
+            ' CovCF      R #rasdeel Clun Forest',  //Clun Forest
+            ' CovBM      R #rasdeel Bleu du Maine',  //Bleu du Maine
+            ' CovSW      R #rasdeel Swifter',  //Swifter
+            ' CovNH      R #rasdeel Noordhollander',  //Noordhollander
+            ' CovFL      R #rasdeel Flevolander',  //Flevolander
+            ' CovHD      R #rasdeel Hampshire Down',  //Hampshire Down
+            ' CovOV      R #overige rasdelen',  //other  (NN means unknown, also include it here)
+            ' CovHet     T #Heterosis van het dier',
+            ' CovRec     T #Recombinatie van het dier',
         ];
     }
     

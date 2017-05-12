@@ -31,74 +31,65 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
     }
 
     /**
-     * @param array $exteriorMeasurements
-     * @param array $exteriorLinearMeasurements
+     * @param array $model
      * @param string $fileType
      * @return array
      */
-    private static function generateExteriorInstructionFile($exteriorMeasurements = null,
-                                                     $exteriorLinearMeasurements = null, $fileType = null)
+    private static function generateExteriorInstructionFile($model, $fileType)
     {
-        $fileType = $fileType == null ? 'exterieurkenmerken' : 'exterieurkenmerk '.$fileType;
-
         $start = [
-            'TITEL   schapen fokwaarde berekening '.$fileType,
-            'DATAFILE  '.MixBlupSetting::DATA_FILENAME_PREFIX.MixBlupSetting::EXTERIOR.'.txt',
-            ' ID         A !missing '.MixBlupNullFiller::ULN.' #uln',  //uln
-            ' Sekse      A !missing '.MixBlupNullFiller::GENDER,  //ram/ooi/N_B
-            ' JaarBedr   A !missing '.MixBlupNullFiller::GROUP.' #jaar en ubn van geboorte', //year and ubn of birth
-            ' Inspectr   A !missing '.MixBlupNullFiller::CODE.' #Code van NSFO Inspecteur',  //example: NSFO001 until NSFO999
+            'TITEL   Exterieur: '.$fileType,
+            ' ',
+            'DATAFILE  '.MixBlupSetting::DATA_FILENAME_PREFIX.MixBlupSetting::EXTERIOR.'.txt !MISSING -99',
+            ' ID         A #uln',  //uln
+            ' Sekse      A',  //ram/ooi/N_B
+            ' JaarBedr   A #jaar en ubn van geboorte', //year and ubn of birth
+            ' WorpID     A ',  //ulnMother._.lpad(litterOrdinal, with zeroes)
+            ' Inspectr   A #Code van NSFO Inspecteur',  //example: NSFO001 until NSFO999
         ];
 
-        if($exteriorMeasurements == null) {
-            $exteriorMeasurements = [
-                ' BespVGv    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #BESPIERING, EXTKIND=VG en sekse dier is ooi',
-                ' KopVGm     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #KOP, EXTKIND=VG en sekse dier is ram',
-                ' OntwVGm    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #ONTWIKKELING, EXTKIND=VG en sekse dier is ram',
-                ' BespVGm    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #BESPIERING, EXTKIND=VG en sekse dier is ram',
-                ' EvenrVGm   T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #EVENREDIGHEID, EXTKIND=VG en sekse dier is ram',
-                ' TypeVGm    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #TYPE, EXTKIND=VG en sekse dier is ram',
-                ' BeenwVGm   T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #BEENWERK, EXTKIND=VG en sekse dier is ram',
-                ' VachtVGm   T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #VACHT, EXTKIND=VG en sekse dier is ram',
-                ' AlgVkVGm   T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #ALGEMEEN_VOORKOMEN, EXTKIND=VG en sekse dier is ram',
-                ' SchoftVGm  T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #SCHOFTHOOGTE, EXTKIND=VG en sekse dier is ram',
-                ' BorstdVGm  T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #BORSTDIEPTE, EXTKIND=VG en sekse dier is ram',
-                ' RomplVGm   T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #ROMPLENGTE, EXTKIND=VG en sekse dier is ram',
-                ' KopDF      T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #KOP, EXTKIND=DD/DF/HK',
-                ' OntwDF     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #ONTWIKKELING, EXTKIND=DD/DF/HK',
-                ' BespDF     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #BESPIERING, EXTKIND=DD/DF/HK',
-                ' EvenrDF    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #EVENREDIGHEID, EXTKIND=DD/DF/HK',
-                ' TypeDF     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #TYPE, EXTKIND=DD/DF/HK',
-                ' BeenwDF    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #BEENWERK, EXTKIND=DD/DF/HK',
-                ' VachtDF    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #VACHT, EXTKIND=DD/DF/HK',
-                ' AlgVkDF    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #ALGEMEEN_VOORKOMEN, EXTKIND=DD/DF/HK',
-                ' SchofthDF  T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #SCHOFTHOOGTE, EXTKIND=DD/DF/HK',
-                ' BorstdDF   T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #BORSTDIEPTE, EXTKIND=DD/DF/HK',
-                ' RomplDF    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #ROMPLENGTE, EXTKIND=DD/DF/HK',
-            ];
-        }
+        $exteriorMeasurements = [
+            ' BespVGv    T #BESPIERING, EXTKIND=VG en sekse dier is ooi',
+            ' KopVGm     T #KOP, EXTKIND=VG en sekse dier is ram',
+            ' OntwVGm    T #ONTWIKKELING, EXTKIND=VG en sekse dier is ram',
+            ' BespVGm    T #BESPIERING, EXTKIND=VG en sekse dier is ram',
+            ' EvenrVGm   T #EVENREDIGHEID, EXTKIND=VG en sekse dier is ram',
+            ' TypeVGm    T #TYPE, EXTKIND=VG en sekse dier is ram',
+            ' BeenwVGm   T #BEENWERK, EXTKIND=VG en sekse dier is ram',
+            ' VachtVGm   T #VACHT, EXTKIND=VG en sekse dier is ram',
+            ' AlgVkVGm   T #ALGEMEEN_VOORKOMEN, EXTKIND=VG en sekse dier is ram',
+            ' SchoftVGm  T #SCHOFTHOOGTE, EXTKIND=VG en sekse dier is ram',
+            ' BorstdVGm  T #BORSTDIEPTE, EXTKIND=VG en sekse dier is ram',
+            ' RomplVGm   T #ROMPLENGTE, EXTKIND=VG en sekse dier is ram',
+            ' KopDF      T #KOP, EXTKIND=DD/DF/HK',
+            ' OntwDF     T #ONTWIKKELING, EXTKIND=DD/DF/HK',
+            ' BespDF     T #BESPIERING, EXTKIND=DD/DF/HK',
+            ' EvenrDF    T #EVENREDIGHEID, EXTKIND=DD/DF/HK',
+            ' TypeDF     T #TYPE, EXTKIND=DD/DF/HK',
+            ' BeenwDF    T #BEENWERK, EXTKIND=DD/DF/HK',
+            ' VachtDF    T #VACHT, EXTKIND=DD/DF/HK',
+            ' AlgVkDF    T #ALGEMEEN_VOORKOMEN, EXTKIND=DD/DF/HK',
+            ' SchofthDF  T #SCHOFTHOOGTE, EXTKIND=DD/DF/HK',
+            ' BorstdDF   T #BORSTDIEPTE, EXTKIND=DD/DF/HK',
+            ' RomplDF    T #ROMPLENGTE, EXTKIND=DD/DF/HK',
+        ];
 
-        if($exteriorLinearMeasurements == null) {
-            $exteriorLinearMeasurements = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? [
-                ' LinKop     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #KOP_LINEAR, Lineair',
-                ' LinVoorh   T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #VOORHAND, Lineair',
-                ' LinRugLen  T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #RUGLENGTE, Lineair',
-                ' LinRugBr   T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #RUGBREEDTE, Lineair',
-                ' LinKruis   T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #KRUIS, Lineair',
-                ' LinRondBil T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #RONDING_BIL, Lineair',
-                ' LinStVb    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #STAND_VOORBENEN, Lineair',
-                ' LinZijStAb T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #STAND_ZIJAANZICHT_ACHTERBENEN, Lineair',
-                ' LinAchtStAb T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #STAND_ACHTERAANZICHT_ACHTERBENEN, Lineair',
-                ' LinPijpOmv T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #PIJP_OMVANG, Lineair',
-            ] : [];
-        }
-
-        $exteriorLinearMeasurementsInspector = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? [
-            ' InspLin    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #Code NSFO INSPECTEUR_LINEAR',
-        ] : [];
+        $exteriorLinearMeasurements = [
+            ' LinKop     T #KOP_LINEAR, Lineair',
+            ' LinVoorh   T #VOORHAND, Lineair',
+            ' LinRugLen  T #RUGLENGTE, Lineair',
+            ' LinRugBr   T #RUGBREEDTE, Lineair',
+            ' LinKruis   T #KRUIS, Lineair',
+            ' LinRondBil T #RONDING_BIL, Lineair',
+            ' LinStVb    T #STAND_VOORBENEN, Lineair',
+            ' LinZijStAb T #STAND_ZIJAANZICHT_ACHTERBENEN, Lineair',
+            ' LinAchtStAb T #STAND_ACHTERAANZICHT_ACHTERBENEN, Lineair',
+            ' LinPijpOmv T #PIJP_OMVANG, Lineair',
+            ' InspLin    A #Code NSFO INSPECTEUR_LINEAR',
+        ];
 
         $lastDataRecords = [
-            ' Bedrijf    I !missing '.MixBlupNullFiller::UBN.' #ubn van geboorte',
+            ' Bedrijf    I #ubn van geboorte',
         ];
 
         return ArrayUtil::concatArrayValues([
@@ -106,9 +97,10 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
             self::getStandardizedBreedCodePartsAndHetRecOfInstructionFile(),
             $exteriorMeasurements,
             $exteriorLinearMeasurements,
-            $exteriorLinearMeasurementsInspector,
             $lastDataRecords,
-            self::getInstructionFileDefaultEnding()
+            self::getInstructionFilePedFileToModelHeader(MixBlupSetting::EXTERIOR),
+            $model,
+            self::getInstructionFileEnding(),
         ]);
     }
 
@@ -118,19 +110,18 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
      */
     public static function generateLegWorkInstructionFile()
     {
-        $exteriorMeasurements = [
-            ' BeenwVGm   T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #BEENWERK, EXTKIND=VG en sekse dier is ram',
-            ' BeenwDF    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #BEENWERK, EXTKIND=DD/DF/HK',
+        $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
+
+            $model = [
+            ' BeenwVGm  ~ JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' BeenwDF   ~ Sekse JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' '.$commentHashTag.'LinStVb',
+            ' '.$commentHashTag.'LinZijStAb',
+            ' '.$commentHashTag.'LinAchtStAb',
+            ' '.$commentHashTag.'LinPijpOmv',
         ];
 
-        $exteriorLinearMeasurements = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? [
-            ' LinStVb    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #STAND_VOORBENEN, Lineair',
-            ' LinZijStAb T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #STAND_ZIJAANZICHT_ACHTERBENEN, Lineair',
-            ' LinAchtStAb T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #STAND_ACHTERAANZICHT_ACHTERBENEN, Lineair',
-            ' LinPijpOmv T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #PIJP_OMVANG, Lineair',
-        ] : [];
-
-        return self::generateExteriorInstructionFile($exteriorMeasurements, $exteriorLinearMeasurements, 'beenwerk');
+        return self::generateExteriorInstructionFile($model, 'Beenwerk');
     }
 
 
@@ -139,19 +130,18 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
      */
     public static function generateMuscularityInstructionFile()
     {
-        $exteriorMeasurements = [
-            ' BespVGv    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #BESPIERING, EXTKIND=VG en sekse dier is ooi',
-            ' BespVGm    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #BESPIERING, EXTKIND=VG en sekse dier is ram',
-            ' BespDF     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #BESPIERING, EXTKIND=DD/DF/HK',
+        $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
+
+        $model = [
+            ' BespVGv  ~ JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' BespVGm  ~ JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' BespDF   ~ Sekse JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' '.$commentHashTag.'LinVoorh',
+            ' '.$commentHashTag.'LinRugBr',
+            ' '.$commentHashTag.'LinRondBil',
         ];
 
-        $exteriorLinearMeasurements = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? [
-            ' LinVoorh   T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #VOORHAND, Lineair',
-            ' LinRugBr   T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #RUGBREEDTE, Lineair',
-            ' LinRondBil T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #RONDING_BIL, Lineair',
-        ] : [];
-
-        return self::generateExteriorInstructionFile($exteriorMeasurements, $exteriorLinearMeasurements, 'bespiering');
+        return self::generateExteriorInstructionFile($model, 'Bespiering');
     }
 
 
@@ -160,17 +150,16 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
      */
     public static function generateProportionInstructionFile()
     {
-        $exteriorMeasurements = [
-            ' EvenrVGm   T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #EVENREDIGHEID, EXTKIND=VG en sekse dier is ram',
-            ' EvenrDF    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #EVENREDIGHEID, EXTKIND=DD/DF/HK',
+        $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
+
+        $model = [
+            ' EvenrVGm  ~ JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' EvenrDF   ~ Sekse JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' '.$commentHashTag.'LinRugLen',
+            ' '.$commentHashTag.'LinKruis',
         ];
 
-        $exteriorLinearMeasurements = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? [
-            ' LinRugLen  T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #RUGLENGTE, Lineair',
-            ' LinKruis   T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #KRUIS, Lineair',
-        ] : [];
-
-        return self::generateExteriorInstructionFile($exteriorMeasurements, $exteriorLinearMeasurements, 'evenredigheid');
+        return self::generateExteriorInstructionFile($model, 'Evenredigheid');
     }
 
 
@@ -179,16 +168,15 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
      */
     public static function generateSkullInstructionFile()
     {
-        $exteriorMeasurements = [
-            ' KopVGm     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #KOP, EXTKIND=VG en sekse dier is ram',
-            ' KopDF      T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #KOP, EXTKIND=DD/DF/HK',
+        $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
+
+        $model = [
+            ' KopVGm  ~ JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' KopDF   ~ Sekse JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' '.$commentHashTag.'LinKop',
         ];
 
-        $exteriorLinearMeasurements = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? [
-            ' LinKop     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #KOP_LINEAR, Lineair',
-        ] : [];
-
-        return self::generateExteriorInstructionFile($exteriorMeasurements, $exteriorLinearMeasurements, 'kop');
+        return self::generateExteriorInstructionFile($model, 'Kop');
     }
 
 
@@ -197,17 +185,16 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
      */
     public static function generateProgressInstructionFile()
     {
-        $exteriorMeasurements = [
-            ' OntwVGm    T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #ONTWIKKELING, EXTKIND=VG en sekse dier is ram',
-            ' OntwDF     T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #ONTWIKKELING, EXTKIND=DD/DF/HK',
+        $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
+
+        $model = [
+            ' OntwVGm  ~ JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' OntwDF   ~ Sekse JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' '.$commentHashTag.'LinRugLen',
+            ' '.$commentHashTag.'LinKruis',
         ];
 
-        $exteriorLinearMeasurements = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? [
-            ' LinRugLen  T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #RUGLENGTE, Lineair',
-            ' LinKruis   T !missing '.MixBlupNullFiller::MEASUREMENT_VALUE.' #KRUIS, Lineair',
-        ] : [];
-
-        return self::generateExteriorInstructionFile($exteriorMeasurements, $exteriorLinearMeasurements, 'ontwikkeling');
+        return self::generateExteriorInstructionFile($model, 'Ontwikkeling');
     }
 
 
@@ -216,16 +203,12 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
      */
     public static function generateExteriorTypeInstructionFile()
     {
-        $exteriorMeasurements = [
-            ' TypeVGm    T !missing ' . MixBlupNullFiller::MEASUREMENT_VALUE . ' #TYPE, EXTKIND=VG en sekse dier is ram',
-            ' TypeDF     T !missing ' . MixBlupNullFiller::MEASUREMENT_VALUE . ' #TYPE, EXTKIND=DD/DF/HK',
+        $model = [
+            ' TypeVGm  ~ JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' TypeDF   ~ Sekse JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
         ];
 
-        $exteriorLinearMeasurements = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? [
-            //Empty
-        ] : [];
-
-        return self::generateExteriorInstructionFile($exteriorMeasurements, $exteriorLinearMeasurements, 'type');
+        return self::generateExteriorInstructionFile($model, 'Type');
     }
 
 
