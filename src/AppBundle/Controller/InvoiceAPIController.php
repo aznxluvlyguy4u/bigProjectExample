@@ -1,13 +1,6 @@
 <?php
-/**
- * Created by IntelliJ IDEA.
- * User: werner
- * Date: 5-4-17
- * Time: 13:45
- */
 
 namespace AppBundle\Controller;
-
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\InvoiceRuleLocked;
@@ -113,6 +106,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $invoice->setInvoiceRules($deserializedRules);
         $invoice->setLockedInvoiceRules($lockedRules);
         $invoice->setUbn($content["ubn"]);
+        $invoice->setCompanyLocalId($content['company_id']);
         $invoice->setCompanyName($content['company_name']);
         $invoice->setCompanyVatNumber($content['company_vat_number']);
         $invoice->setCompanyDebtorNumber($content['company_debtor_number']);
@@ -206,6 +200,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $temporaryInvoice->setInvoiceNumber($content['invoice_number']);
         $temporaryInvoice->setStatus($content['status']);
         $temporaryInvoice->setUbn($content["ubn"]);
+        $temporaryInvoice->setCompanyLocalId($content['company_id']);
         $temporaryInvoice->setCompanyName($content['company_name']);
         $temporaryInvoice->setCompanyVatNumber($content['company_vat_number']);
         $temporaryInvoice->setStatus($content["status"]);
@@ -237,7 +232,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $this->persistAndFlush($id);
         }
         else {
-            return new JsonResponse(array(Constant::RESULT_NAMESPACE => "Error, you tried to remove an invoice that was already send"), 200);
+            return new JsonResponse(array(Constant::ERRORS_NAMESPACE => "Error, you tried to remove an invoice that was already send"), 200);
         }
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $id), 200);
     }
@@ -255,7 +250,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
     /**
      * @Method("PUT")
      * @Route("/{id}/date")
-     * @ParamConverter("id", class="")
+     * @ParamConverter("id", class="Invoice")
      */
     function setDate(Invoice $id) {
         $id->setInvoiceDate(new \DateTime());
