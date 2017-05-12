@@ -308,7 +308,7 @@ class CompanyOutput
             'debtor_number' => $company->getDebtorNumber(),
             'owner' => $company->getOwner(),
             'company_address' => AddressOutput::createAddressOutput($company->getAddress()),
-            'invoices' => InvoiceOutput::createInvoiceOutputList($company->getInvoices()),
+            'invoices' => InvoiceOutput::createInvoiceOutputListNoCompany($company->getInvoices()),
         );
     }
 
