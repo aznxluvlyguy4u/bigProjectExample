@@ -25,7 +25,7 @@ security:
                     - app.authenticator.token
 
         secured_area:
-            pattern: ^(?:(?!doc|register|authorize|validate-token|password-reset|verify-ghost-token).)*$
+            pattern: ^(?:(?!doc|register|authorize|validate-token|mollie/update|password-reset|verify-ghost-token).)*$
             security: true
             stateless: true
             guard:
