@@ -58,9 +58,9 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
             ' BeenwVGm   T #BEENWERK, EXTKIND=VG en sekse dier is ram',
             ' VachtVGm   T #VACHT, EXTKIND=VG en sekse dier is ram',
             ' AlgVkVGm   T #ALGEMEEN_VOORKOMEN, EXTKIND=VG en sekse dier is ram',
-            ' SchoftVGm  T #SCHOFTHOOGTE, EXTKIND=VG en sekse dier is ram',
-            ' BorstdVGm  T #BORSTDIEPTE, EXTKIND=VG en sekse dier is ram',
-            ' RomplVGm   T #ROMPLENGTE, EXTKIND=VG en sekse dier is ram',
+            ' SchoftVGm  T #SCHOFTHOOGTE, EXTKIND=VG en sekse dier is ram, mogen decimalen bevatten',
+            ' BorstdVGm  T #BORSTDIEPTE, EXTKIND=VG en sekse dier is ram, mogen decimalen bevatten',
+            ' RomplVGm   T #ROMPLENGTE, EXTKIND=VG en sekse dier is ram, mogen decimalen bevatten',
             ' KopDF      T #KOP, EXTKIND=DD/DF/HK',
             ' OntwDF     T #ONTWIKKELING, EXTKIND=DD/DF/HK',
             ' BespDF     T #BESPIERING, EXTKIND=DD/DF/HK',
@@ -69,9 +69,9 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
             ' BeenwDF    T #BEENWERK, EXTKIND=DD/DF/HK',
             ' VachtDF    T #VACHT, EXTKIND=DD/DF/HK',
             ' AlgVkDF    T #ALGEMEEN_VOORKOMEN, EXTKIND=DD/DF/HK',
-            ' SchofthDF  T #SCHOFTHOOGTE, EXTKIND=DD/DF/HK',
-            ' BorstdDF   T #BORSTDIEPTE, EXTKIND=DD/DF/HK',
-            ' RomplDF    T #ROMPLENGTE, EXTKIND=DD/DF/HK',
+            ' SchofthDF  T #SCHOFTHOOGTE, EXTKIND=DD/DF/HK, mogen decimalen bevatten',
+            ' BorstdDF   T #BORSTDIEPTE, EXTKIND=DD/DF/HK, mogen decimalen bevatten',
+            ' RomplDF    T #ROMPLENGTE, EXTKIND=DD/DF/HK, mogen decimalen bevatten',
         ];
 
         $exteriorLinearMeasurements = [
