@@ -52,8 +52,8 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
             ' GewScan    R #gewicht bij scannen',   //weight at measurementDate
             ' GewGeb     T #geboortegewicht',   //weight at birth
             ' StaartLen  T #staartlengte', //tailLength
-            ' Gew08wk    T #8 weken gewichtmeting', //weight measurement at 8 weeks
-            ' Gew20wk    T #20 weken gewichtmeting', //weight measurement at 20 weeks
+            ' Gew08      T #8 weken gewichtmeting', //weight measurement at 8 weeks
+            ' Gew20      T #20 weken gewichtmeting', //weight measurement at 20 weeks
             ' Vetd01     T',
             ' Vetd02     T',
             ' Vetd03     T',
