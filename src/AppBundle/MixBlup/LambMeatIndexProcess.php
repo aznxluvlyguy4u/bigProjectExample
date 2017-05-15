@@ -39,7 +39,7 @@ class LambMeatIndexProcess extends MixBlupProcessBase implements MixBlupProcessI
      */
     function generateDataFile()
     {
-        // TODO: Implement generateDataFile() method.
+        return LambMeatIndexDataFile::generateDataFile($this->conn);
     }
 
     /**

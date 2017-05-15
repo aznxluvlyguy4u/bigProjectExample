@@ -35,7 +35,7 @@ class ReproductionProcess extends MixBlupProcessBase implements MixBlupProcessIn
      */
     function generateDataFile()
     {
-        // TODO: Implement generateDataFile() method.
+        return ReproductionDataFile::generateDataFile($this->conn);
     }
 
     /**

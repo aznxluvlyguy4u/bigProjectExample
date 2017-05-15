@@ -39,7 +39,7 @@ class ExteriorProcess extends MixBlupProcessBase implements MixBlupProcessInterf
      */
     function generateDataFile()
     {
-        // TODO: Implement generateDataFile() method.
+        return ExteriorDataFile::generateDataFile($this->conn);
     }
 
     /**
