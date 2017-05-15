@@ -39,7 +39,7 @@ class DeclareExportResponseRepository extends BaseRepository {
                   r.message_number
                 FROM declare_base b
                   INNER JOIN declare_export a ON a.id = b.id
-                  INNER JOIN (
+                  LEFT JOIN (
                     SELECT y.request_id, y.message_number
                     FROM declare_base_response y
                       INNER JOIN (
@@ -75,7 +75,7 @@ class DeclareExportResponseRepository extends BaseRepository {
                   r.error_code, r.error_message, r.message_number
                 FROM declare_base b
                   INNER JOIN declare_export a ON a.id = b.id
-                  INNER JOIN (
+                  LEFT JOIN (
                     SELECT y.request_id, y.error_code, y.error_message, y.message_number
                     FROM declare_base_response y
                       INNER JOIN (
@@ -84,7 +84,7 @@ class DeclareExportResponseRepository extends BaseRepository {
                                    GROUP BY request_id
                                  ) z ON z.log_date = y.log_date
                     )r ON r.request_id = b.request_id
-                WHERE request_state = '".RequestStateType::FAILED."' AND hide_failed_message = FALSE
+                WHERE request_state = '".RequestStateType::FAILED."' 
                 AND location_id = ".$locationId." ORDER BY b.log_date DESC";
 
         return $this->getManager()->getConnection()->query($sql)->fetchAll();

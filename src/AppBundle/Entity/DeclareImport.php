@@ -362,7 +362,7 @@ class DeclareImport extends DeclareBase
      */
     public function setUlnCountryCode($ulnCountryCode)
     {
-        $this->ulnCountryCode = $ulnCountryCode;
+        $this->ulnCountryCode = trim(strtoupper($ulnCountryCode));
     }
 
     /**
@@ -378,7 +378,7 @@ class DeclareImport extends DeclareBase
      */
     public function setUlnNumber($ulnNumber)
     {
-        $this->ulnNumber = $ulnNumber;
+        $this->ulnNumber = trim($ulnNumber);
     }
 
     /**
@@ -394,7 +394,7 @@ class DeclareImport extends DeclareBase
      */
     public function setPedigreeCountryCode($pedigreeCountryCode)
     {
-        $this->pedigreeCountryCode = $pedigreeCountryCode;
+        $this->pedigreeCountryCode = trim(strtoupper($pedigreeCountryCode));
     }
 
     /**
@@ -410,7 +410,7 @@ class DeclareImport extends DeclareBase
      */
     public function setPedigreeNumber($pedigreeNumber)
     {
-        $this->pedigreeNumber = $pedigreeNumber;
+        $this->pedigreeNumber = trim($pedigreeNumber);
     }
 
     /**

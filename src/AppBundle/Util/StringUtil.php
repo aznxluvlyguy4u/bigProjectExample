@@ -13,6 +13,21 @@ class StringUtil
     const ANIMAL_ORDER_NUMBER_LENGTH = 5;
     const BREEDER_NUMBER_LENGTH = 5;
 
+
+    /**
+     * @param $fullString
+     * @param $beginning
+     * @param $ending
+     * @return string
+     */
+    public static function extractSandwichedSubString($fullString, $beginning, $ending)
+    {
+        $fromBeginningToEnd = strstr($fullString, $beginning);
+        $fromEndingToEnd = strstr($fullString, $ending);
+        return strtr($fromBeginningToEnd, [$fromEndingToEnd => '', $beginning => '']);
+    }
+
+    
     /**
      * Just remove the last 5 numbers of the uln
      *
@@ -156,6 +171,17 @@ class StringUtil
         } else {
             return $string;
         }
+    }
+
+
+    /**
+     * @param string $string
+     * @param int $removeCharCount
+     * @return string
+     */
+    public static function removeStringEnd($string, $removeCharCount)
+    {
+        return substr($string, 0, strlen($string) - $removeCharCount);
     }
 
 
