@@ -48,12 +48,14 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
         $middle = [
             ' Nling      I #worpgrootte',
             ' Zling      I #zooggrootte',
-            ' LeeftScan  R #op moment van meting in dagen', //age of animal on measurementDate in days
+            ' LeeftScan  R #leeftijd op moment van scanmeting in dagen', //age of animal on measurementDate in days
             ' GewScan    R #gewicht bij scannen',   //weight at measurementDate
             ' GewGeb     T #geboortegewicht',   //weight at birth
             ' StaartLen  T #staartlengte', //tailLength
             ' Gew08      T #8 weken gewichtmeting', //weight measurement at 8 weeks
+            ' Leeft08    R #leeftijd op moment van 8 weken gewichtmeting in dagen', //age of animal on measurementDate weight 8 weeks in days
             ' Gew20      T #20 weken gewichtmeting', //weight measurement at 20 weeks
+            ' Leeft20    R #leeftijd op moment van 20 weken gewichtmeting in dagen', //age of animal on measurementDate weight 20 weeks in days
             ' Vetd01     T',
             ' Vetd02     T',
             ' Vetd03     T',
