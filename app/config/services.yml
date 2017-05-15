@@ -26,6 +26,12 @@ services:
           bucket: %aws_s3_bucket%
           currentEnv: %kernel.environment%
 
+    app.mollie.service:
+        class: AppBundle\Service\MollieService
+        arguments:
+          credentials: ['%mollie_test_api_key%', '%mollie_prod_api_key%']
+          currentEnvironment: %kernel.environment%
+
     app.doctrine.entitygetter:
         class: AppBundle\Service\EntityGetter
         arguments: ['@doctrine.orm.entity_manager']
