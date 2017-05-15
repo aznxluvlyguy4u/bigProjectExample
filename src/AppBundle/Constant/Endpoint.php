@@ -13,4 +13,5 @@ class Endpoint
     const DECLARE_TAG_REPLACE_ENDPOINT = "/api/v1/tags-replace";
 
     const REVOKE_ENDPOINT = "/api/v1/revokes";
+    const MOLLIE_ENDPOINT = "/api/v1/mollie";
 }
