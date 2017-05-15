@@ -80,6 +80,14 @@ class Invoice {
     private $lockedRules;
 
     /**
+     * @var float
+     * @ORM\Column(type="float", name="total", nullable=true)
+     * @JMS\Type("float")
+     * @JMS\Groups({"INVOICE"})
+     */
+    private $total;
+
+    /**
      * @var Company
      *
      * @ORM\ManyToOne(targetEntity="Company", inversedBy="invoices", cascade={"persist"})
@@ -120,6 +128,14 @@ class Invoice {
      * @JMS\Groups({"INVOICE"})
      */
     private $companyDebtorNumber;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", name="mollie_id", nullable=true)
+     * @JMS\Type("string")
+     * @JMS\Groups({"INVOICE"})
+     */
+    private $mollieId;
 
     /**
      * @var InvoiceSenderDetails
@@ -273,6 +289,22 @@ class Invoice {
     }
 
     /**
+     * @return float
+     */
+    public function getTotal()
+    {
+        return $this->total;
+    }
+
+    /**
+     * @param float $total
+     */
+    public function setTotal($total)
+    {
+        $this->total = $total;
+    }
+
+    /**
      * @return Company
      */
     public function getCompany()
@@ -400,6 +432,22 @@ class Invoice {
         $this->companyDebtorNumber = $companyDebtorNumber;
     }
 
+    /**
+     * @return string
+     */
+    public function getMollieId()
+    {
+        return $this->mollieId;
+    }
+
+    /**
+     * @param string $mollieId
+     */
+    public function setMollieId($mollieId)
+    {
+        $this->mollieId = $mollieId;
+    }
+
     public function copyValues(Invoice $invoice){
         $this->setCompany($invoice->getCompany());
         $this->setCompanyLocalId($invoice->getCompanyLocalId());
@@ -407,6 +455,7 @@ class Invoice {
         $this->setCompanyVatNumber($invoice->getCompanyVatNumber());
         $this->setCompanyDebtorNumber($invoice->getCompanyDebtorNumber());
         $this->setUbn($invoice->getUbn());
+        $this->setTotal($invoice->getTotal());
         $this->setDocumentUrl($invoice->getDocumentUrl());
         $this->setInvoiceDate($invoice->getInvoiceDate());
         $this->setInvoiceNumber($invoice->getInvoiceNumber());
