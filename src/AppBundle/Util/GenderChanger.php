@@ -229,6 +229,11 @@ class GenderChanger
             }
         }
 
+        //Ignore dateOfBirth for validation check if it is null
+        if($animal->getDateOfBirth() == null) {
+            return $animal;
+        }
+
         //Check if birth registration is within a time span of MAX_TIME_INTERVAL from now,
         //then, and only then, an alteration of gender for this animal is allowed
         $dateInterval = $animal->getDateOfBirth()->diff(new \DateTime());
