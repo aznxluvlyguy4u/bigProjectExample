@@ -56,10 +56,15 @@ class InvoiceOutput
             'ubn' => $invoice->getUbn(),
             'status' => $invoice->getStatus(),
             'invoice_number' => $invoice->getInvoiceNumber(),
+            'total' => $invoice->getTotal(),
             'invoice_date' => $invoice->getInvoiceDate(),
             'invoice_rules' => InvoiceRuleOutput::createInvoiceRuleOutputList($invoice->getInvoiceRules()),
             'invoice_rules_locked' => InvoiceRuleLockedOutput::createInvoiceRuleOutputList($invoice->getLockedInvoiceRules())
         );
+        if ($invoice->getMollieId() != null){
+            $res['mollie_id'] = $invoice->getMollieId();
+        }
+
         if ($invoice->getCompany() != null){
             $res['company'] = CompanyOutput::createCompanyOutputNoInvoices($invoice->getCompany());
         }
@@ -82,10 +87,14 @@ class InvoiceOutput
             'status' => $invoice->getStatus(),
             'ubn' => $invoice->getUbn(),
             'invoice_number' => $invoice->getInvoiceNumber(),
+            'total' => $invoice->getTotal(),
             'invoice_date' => $invoice->getInvoiceDate(),
             'invoice_rules' => InvoiceRuleOutput::createInvoiceRuleOutputList($invoice->getInvoiceRules()),
             'invoice_rules_locked' => InvoiceRuleLockedOutput::createInvoiceRuleOutputList($invoice->getLockedInvoiceRules())
         );
+        if ($invoice->getMollieId() != null){
+            $res['mollie_id'] = $invoice->getMollieId();
+        }
         if($invoice->getSenderDetails() != null){
             $res['sender_details'] = InvoiceSenderDetailsOutput::createInvoiceSenderDetailsOutput($invoice->getSenderDetails());
         }
