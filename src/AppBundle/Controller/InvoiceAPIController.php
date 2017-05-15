@@ -105,6 +105,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
             ->findOneBy(array('id' => $content['sender_details']['id']));
         $invoice->setInvoiceRules($deserializedRules);
         $invoice->setLockedInvoiceRules($lockedRules);
+        $invoice->setTotal($content['total']);
         $invoice->setUbn($content["ubn"]);
         $invoice->setCompanyLocalId($content['company_id']);
         $invoice->setCompanyName($content['company_name']);
@@ -198,6 +199,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         }
         $temporaryInvoice->setCompany($invoiceCompany);
         $temporaryInvoice->setInvoiceNumber($content['invoice_number']);
+        $temporaryInvoice->setTotal($content['total']);
         $temporaryInvoice->setStatus($content['status']);
         $temporaryInvoice->setUbn($content["ubn"]);
         $temporaryInvoice->setCompanyLocalId($content['company_id']);
