@@ -44,9 +44,6 @@ class ClientInvoiceAPIController extends APIController
         /** @var Location $location */
         $location = $this->getSelectedLocation($request);
 
-        /** @var Company $company */
-        $company = $location->getCompany();
-
         $invoices = $this->getManager()->getRepository(Invoice::class)
             ->findBy(array('ubn' => $location->getUbn()));
         $invoices = self::checkForPaidUnpaidInvoices($invoices);
@@ -58,7 +55,7 @@ class ClientInvoiceAPIController extends APIController
         $res = array();
         foreach ($invoices as $invoice){
             /** @var Invoice $invoice */
-            if ($invoice->getStatus() == "UNPAID" || $invoice->getStatus() == "PAID"){
+            if ($invoice->getStatus() == "UNPAID" || $invoice->getStatus() == "PAID" || $invoice->getStatus() == "CANCELLED"){
                 $res[] = $invoice;
             }
         }
