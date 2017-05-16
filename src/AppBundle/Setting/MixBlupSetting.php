@@ -20,4 +20,5 @@ class MixBlupSetting
     
     const INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS = false;
 
+    const MEASUREMENTS_FROM_LAST_AMOUNT_OF_YEARS = 15;
 }
