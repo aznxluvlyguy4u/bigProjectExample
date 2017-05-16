@@ -30,6 +30,8 @@ services:
         class: AppBundle\Service\MollieService
         arguments:
           credentials: ['%mollie_test_api_key%', '%mollie_prod_api_key%']
+          apiUrls: ['%api_local_host_url%','%api_stage_host_url%','%api_prod_host_url%']
+          webUrls: ['%web_local_host_url%','%web_stage_host_url%','%web_prod_host_url%']
           currentEnvironment: %kernel.environment%
 
     app.doctrine.entitygetter:
