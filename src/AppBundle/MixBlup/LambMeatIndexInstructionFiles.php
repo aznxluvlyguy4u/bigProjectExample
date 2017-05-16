@@ -14,6 +14,7 @@ use AppBundle\Util\ArrayUtil;
  */
 class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implements MixBlupInstructionFileInterface
 {
+    const MISSING_REPLACEMENT = '-99';
 
     /**
      * @inheritDoc
@@ -37,7 +38,7 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
         $start = [
             'TITEL '.$fileType,
             ' ',
-            'DATAFILE  '.MixBlupSetting::DATA_FILENAME_PREFIX.MixBlupSetting::LAMB_MEAT_INDEX.'.txt !MISSING -99',
+            'DATAFILE  '.MixBlupSetting::DATA_FILENAME_PREFIX.MixBlupSetting::LAMB_MEAT_INDEX.'.txt !MISSING '.self::MISSING_REPLACEMENT,
             ' ID         A #uln',  //uln
             ' IDM        A #uln van moeder',  //uln of mother
             ' JaarBedr   A #jaar en ubn van geboorte', //year and ubn of birth

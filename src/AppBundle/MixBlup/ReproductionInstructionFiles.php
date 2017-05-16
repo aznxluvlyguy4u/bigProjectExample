@@ -15,6 +15,7 @@ use AppBundle\Util\ArrayUtil;
  */
 class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements MixBlupInstructionFileInterface
 {
+    const MISSING_REPLACEMENT = '-99';
 
     /**
      * @inheritDoc
@@ -39,7 +40,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
         $start = [
             'TITEL '.$titleType,
             ' ',
-            'DATAFILE  '.MixBlupSetting::DATA_FILENAME_PREFIX.MixBlupSetting::FERTILITY.'.txt !MISSING -99',
+            'DATAFILE  '.MixBlupSetting::DATA_FILENAME_PREFIX.MixBlupSetting::FERTILITY.'.txt !MISSING '.self::MISSING_REPLACEMENT,
             ' ID         A #uln van ooi/moeder of lam',  //uln
             ' Leeft      I #leeftijd ooi in jaren', //age of ewe in years
             ' Sekse      A ',  //ram/ooi/N_B
