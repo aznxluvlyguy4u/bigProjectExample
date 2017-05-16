@@ -8,6 +8,8 @@
 
 namespace AppBundle\Service;
 
+use AppBundle\Constant\Constant;
+use AppBundle\Constant\Endpoint;
 use AppBundle\Entity\Invoice;
 use Mollie_API_Client;
 
@@ -22,29 +24,29 @@ class MollieService
     /** @var string  */
     private $webHostAddress;
 
-    public function __construct($credentials = array(), $currentEnvironment = null)
+    public function __construct($credentials = array(), $apiUrls = array(), $webUrls = array(), $currentEnvironment = null)
     {
         $this->client = new Mollie_API_Client();
         switch ($currentEnvironment) {
             case "dev":
                 $this->client->setApiKey($credentials[0]);
-                $this->webHostAddress = "http://localhost:8080";
-                $this->apiHostAddress = "http://6e853932.ngrok.io";
+                $this->webHostAddress = $webUrls[0];
+                $this->apiHostAddress = $apiUrls[0];
                 break;
             case "stage":
                 $this->client->setApiKey($credentials[0]);
-                $this->apiHostAddress = "http://nsfo-dev-api.jongensvantechniek.nl";
-                $this->webHostAddress = 'http://nsfo-dev.jongensvantechniek.nl';
+                $this->apiHostAddress = $apiUrls[1];
+                $this->webHostAddress = $webUrls[1];
                 break;
             case "prod":
                 $this->client->setApiKey($credentials[1]);
-                $this->apiHostAddress = "nsfo-api.jongensvantechniek.nl";
-                $this->webHostAddress = 'http://online.nsfo.nl';
+                $this->apiHostAddress = $apiUrls[2];
+                $this->webHostAddress = $webUrls[2];
                 break;
             case "local":
                 $this->client->setApiKey($credentials[0]);
-                $this->webHostAddress = "localhost:8080";
-                $this->apiHostAddress = "http://xxxxxxx.ngrok.io";
+                $this->webHostAddress = $webUrls[0];
+                $this->apiHostAddress = $apiUrls[0];
                 break;
         }
     }
@@ -54,8 +56,8 @@ class MollieService
                     array(
                         'description' => 'NSFO factuur',
                         'amount' => $invoice->getTotal(),
-                        'redirectUrl' => $this->webHostAddress.'/main/invoices/details/'.$invoice->getId(),
-                        'webhookUrl' => $this->apiHostAddress.'/api/v1/mollie/update/'.$invoice->getId(),
+                        'redirectUrl' => $this->webHostAddress.Endpoint::FRONTEND_INVOICE_DETAILS_ENDPOINT.'/'.$invoice->getId(),
+                        'webhookUrl' => $this->apiHostAddress.Endpoint::MOLLIE_ENDPOINT.'/update/'.$invoice->getId(),
                         'method' => 'ideal',
                         'metadata' => array(
                             'order_id' => $invoice->getInvoiceNumber()
