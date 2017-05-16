@@ -14,4 +14,6 @@ class Endpoint
 
     const REVOKE_ENDPOINT = "/api/v1/revokes";
     const MOLLIE_ENDPOINT = "/api/v1/mollie";
+
+    const FRONTEND_INVOICE_DETAILS_ENDPOINT = '/main/invoices/details';
 }
