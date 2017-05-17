@@ -14,7 +14,7 @@ use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\DBAL\Driver\PDOSqlsrv\Connection;
+use Doctrine\DBAL\Connection;
 
 /**
  * Class MixBlupService
@@ -31,7 +31,7 @@ class MixBlupService implements MixBlupServiceInterface
     /** @var AWSSimpleStorageService */
     private $s3Service;
 
-    /** @var AwsExternalQueueService */
+    /** @var MixBlupInputQueueService */
     private $queueService;
 
     /** @var string */
@@ -53,11 +53,11 @@ class MixBlupService implements MixBlupServiceInterface
      * MixBlupService constructor.
      * @param ObjectManager $em
      * @param AWSSimpleStorageService $s3Service
-     * @param AwsExternalQueueService $queueService
+     * @param MixBlupInputQueueService $queueService
      * @param string $currentEnvironment
      * @param string $cacheDir
      */
-    public function __construct(ObjectManager $em, AWSSimpleStorageService $s3Service, AwsExternalQueueService $queueService,
+    public function __construct(ObjectManager $em, AWSSimpleStorageService $s3Service, MixBlupInputQueueService $queueService,
                                 $currentEnvironment, $cacheDir)
     {
         $this->em = $em;

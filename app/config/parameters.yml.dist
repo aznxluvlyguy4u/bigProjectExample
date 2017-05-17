@@ -26,6 +26,8 @@ parameters:
     aws_sqs_version: ~
     aws_sqs_queue_exteral_prefix: ~
     aws_sqs_queue_interal_prefix: ~
+    aws_sqs_queue_mixblub_input_prefix: ~
+    aws_sqs_queue_mixblub_output_prefix: ~
 
     aws_s3_region: ~
     aws_s3_version: ~

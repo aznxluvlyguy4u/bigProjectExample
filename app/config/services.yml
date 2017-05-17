@@ -9,7 +9,7 @@ services:
         arguments: ['@validator', '@jms_serializer']
 
 
-    app.aws.queueservice.primary_workers_base:
+    app.aws.queueservice.workers_base:
         abstract: true
         arguments:
         #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
@@ -21,13 +21,23 @@ services:
 
     app.aws.queueservice.external:
         class: AppBundle\Service\AwsExternalQueueService
-        parent: app.aws.queueservice.primary_workers_base
+        parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_exteral_prefix%' }
 
     app.aws.queueservice.internal:
         class: AppBundle\Service\AwsInternalQueueService
-        parent: app.aws.queueservice.primary_workers_base
+        parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_interal_prefix%' }
+
+    app.aws.queueservice.mixblub_input:
+        class: AppBundle\Service\MixBlupInputQueueService
+        parent: app.aws.queueservice.workers_base
+        arguments: { index_0: '%%aws_sqs_queue_mixblub_input_prefix%%' }
+
+    app.aws.queueservice.mixblub_output:
+        class: AppBundle\Service\MixBlupOutputQueueService
+        parent: app.aws.queueservice.workers_base
+        arguments: { index_0: '%%aws_sqs_queue_mixblub_output_prefix%%' }
 
     app.aws.storageservice:
         class: AppBundle\Service\AWSSimpleStorageService
@@ -65,7 +75,7 @@ services:
         arguments:
           entityManager: '@doctrine.orm.entity_manager'
           AWSSimpleStorageService: '@app.aws.storageservice'
-          AWSQueueService: '@app.aws.queueservice.external'
+          MixBlupInputQueueService: '@app.aws.queueservice.mixblub_input'
           currentEnv: %kernel.environment%
           rootDir: %kernel.cache_dir%
 
