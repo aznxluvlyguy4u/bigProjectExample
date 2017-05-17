@@ -45,6 +45,17 @@ class FilesystemUtil
 
 
     /**
+     * @param array $folderPaths
+     */
+    public static function deleteAllFilesInFolders(array $folderPaths)
+    {
+        foreach ($folderPaths as $folderPath) {
+            array_map('unlink', glob(rtrim($folderPath,'/')."/*.*"));
+        }
+    }
+
+
+    /**
      * @param string $folderPath
      */
     public static function createFolderPathIfNull($folderPath)
