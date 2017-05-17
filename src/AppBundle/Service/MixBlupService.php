@@ -140,9 +140,17 @@ class MixBlupService implements MixBlupServiceInterface
     private function deleteMixBlupFilesInCache()
     {
         FilesystemUtil::deleteAllFilesInFolders([
-            $this->workingFolder."/".MixBlupFolder::DATA,
-            $this->workingFolder."/".MixBlupFolder::INSTRUCTIONS,
-            $this->workingFolder."/".MixBlupFolder::PEDIGREE,
+            $this->getDataFolder(),
+            $this->getInstructionsFolder(),
+            $this->getPedigreeFolder(),
         ]);
     }
+
+
+    /** @return string */
+    public function getDataFolder() { return $this->workingFolder."/".MixBlupFolder::DATA; }
+    /** @return string */
+    public function getInstructionsFolder() { return $this->workingFolder."/".MixBlupFolder::INSTRUCTIONS; }
+    /** @return string */
+    public function getPedigreeFolder() { return $this->workingFolder."/".MixBlupFolder::PEDIGREE; }
 }
