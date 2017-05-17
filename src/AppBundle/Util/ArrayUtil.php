@@ -23,7 +23,9 @@ class ArrayUtil
     public static function get($key, array $array, $nullReplacement = null)
     {
         if(array_key_exists($key, $array)) {
-            return $array[$key];
+            if($array[$key] !== null) {
+                return $array[$key];
+            }
         }
         return $nullReplacement;
     }
