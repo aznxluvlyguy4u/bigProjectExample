@@ -62,7 +62,7 @@ class BreedCodeUtil
         $fatherBreedCodeParts = self::getBreedCodePartsFromBreedCodeString($fatherBreedCodeString);
         $motherBreedCodeParts = self::getBreedCodePartsFromBreedCodeString($motherBreedCodeString);
 
-        if(self::verifySumOfBreedCodeParts($fatherBreedCodeParts) && self::verifySumOfBreedCodeParts($motherBreedCodeParts)) {
+        if(self::verifySumOf100PartBreedCodeParts($fatherBreedCodeParts) && self::verifySumOf100PartBreedCodeParts($motherBreedCodeParts)) {
 
             $newBreedCodeParts = self::divideBreedCodeValuesInHalf($fatherBreedCodeParts, $motherBreedCodeParts);
             $newBreedCode = self::implodeBreedCodeParts($newBreedCodeParts);
@@ -74,18 +74,40 @@ class BreedCodeUtil
         return $nullResponse;
     }
 
-
+    
     /**
      * @param array $breedCodeParts
      * @return bool
      */
-    public static function verifySumOfBreedCodeParts($breedCodeParts)
+    public static function verifySumOf8PartBreedCodeParts($breedCodeParts)
+    {
+        return self::verifySumOfBreedCodeParts($breedCodeParts, 8);
+    }
+
+    
+    /**
+     * @param array $breedCodeParts
+     * @return bool
+     */
+    public static function verifySumOf100PartBreedCodeParts($breedCodeParts)
+    {
+        return self::verifySumOfBreedCodeParts($breedCodeParts, 100);
+    }
+
+
+    /**
+     * @param array $breedCodeParts
+     * @param int $totalCorrectSum
+     * @return bool
+     */
+    private static function verifySumOfBreedCodeParts($breedCodeParts, $totalCorrectSum)
     {
         if(!is_array($breedCodeParts)) { return false; }
         if(count($breedCodeParts) == 0) { return false; }
 
-        return array_sum($breedCodeParts) == 100;
+        return array_sum($breedCodeParts) == $totalCorrectSum;
     }
+    
 
     /**
      * Both parents must have a known breedCode
