@@ -15,6 +15,7 @@ use AppBundle\Setting\MixBlupSetting;
  */
 abstract class MixBlupInstructionFileBase
 {
+    const MISSING_REPLACEMENT = '-99';
 
     /**
      * @param string $type

@@ -14,7 +14,6 @@ use AppBundle\Util\ArrayUtil;
  */
 class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implements MixBlupInstructionFileInterface
 {
-    const MISSING_REPLACEMENT = '-99';
 
     /**
      * @inheritDoc

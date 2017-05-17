@@ -15,8 +15,7 @@ use AppBundle\Util\ArrayUtil;
  */
 class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements MixBlupInstructionFileInterface
 {
-    const MISSING_REPLACEMENT = '-99';
-
+    
     /**
      * @inheritDoc
      */

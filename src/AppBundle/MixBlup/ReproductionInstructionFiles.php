@@ -15,7 +15,6 @@ use AppBundle\Util\ArrayUtil;
  */
 class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements MixBlupInstructionFileInterface
 {
-    const MISSING_REPLACEMENT = '-99';
 
     /**
      * @inheritDoc
