@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Setting\MixBlupSetting;
 use Doctrine\DBAL\Connection;
 
 class CsvWriterUtil
@@ -31,5 +32,32 @@ class CsvWriterUtil
             $flatResults[$nestedResult['type']] = $nestedResult['max_length'];
         }
         return $flatResults;
+    }
+
+
+    /**
+     * @param string $string
+     * @param int $padLength
+     * @param boolean $useColumnPadding
+     * @return string
+     */
+    public static function pad($string, $padLength, $useColumnPadding = true)
+    {
+        $paddedString = str_pad($string, $padLength, ' ', STR_PAD_RIGHT);
+        if($useColumnPadding) {
+            return $paddedString.self::spacing(MixBlupSetting::COLUMN_SPACING);
+        }
+        return str_pad($string, $padLength, ' ', STR_PAD_RIGHT);
+    }
+
+
+    /**
+     * @param int $length
+     * @param string $char
+     * @return string
+     */
+    public static function spacing($length, $char = ' ')
+    {
+        return str_repeat($char, $length);
     }
 }
