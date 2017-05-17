@@ -133,3 +133,10 @@ nelmio_cors:
            hosts: ['^api\.']
 
 nelmio_api_doc: ~
+
+monolog:
+    handlers:
+        console:
+            type: console
+            verbosity_levels:
+                VERBOSITY_NORMAL: NOTICE
