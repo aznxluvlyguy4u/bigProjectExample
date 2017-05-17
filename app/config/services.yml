@@ -32,12 +32,12 @@ services:
     app.aws.queueservice.mixblub_input:
         class: AppBundle\Service\MixBlupInputQueueService
         parent: app.aws.queueservice.workers_base
-        arguments: { index_0: '%%aws_sqs_queue_mixblub_input_prefix%%' }
+        arguments: { index_0: '%aws_sqs_queue_mixblub_input_prefix%' }
 
     app.aws.queueservice.mixblub_output:
         class: AppBundle\Service\MixBlupOutputQueueService
         parent: app.aws.queueservice.workers_base
-        arguments: { index_0: '%%aws_sqs_queue_mixblub_output_prefix%%' }
+        arguments: { index_0: '%aws_sqs_queue_mixblub_output_prefix%' }
 
     app.aws.storageservice:
         class: AppBundle\Service\AWSSimpleStorageService
