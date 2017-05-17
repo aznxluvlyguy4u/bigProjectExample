@@ -140,6 +140,7 @@ class AWSQueueService
     $this->internalQueueURL = $result->get('QueueUrl');
   }
 
+
   /**
    * Send a request message to given Queue.
    *
@@ -154,19 +155,12 @@ class AWSQueueService
       return null;
     }
 
-    $response = $this->externalQueueService->sendMessage(array (
-      'QueueUrl' => $this->externalQueueURL,
-      'MessageBody' => $messageBody,
-      'MessageAttributes' => [
-        'TaskType' => [
-          'StringValue' => $requestType,
-          'DataType' => 'String',
-        ],
-      ],
-    ));
+    $message = $this->createMessage($this->externalQueueURL, $messageBody, $requestType);
+    $response = $this->externalQueueService->sendMessage($message);
 
     return $this->responseHandler($response);
   }
+
 
   /**
    * Send a request message to given Queue.
@@ -182,19 +176,36 @@ class AWSQueueService
       return null;
     }
 
-    $response = $this->internalQueueService->sendMessage(array (
-      'QueueUrl' => $this->internalQueueURL,
-      'MessageBody' => $messageBody,
-      'MessageAttributes' => [
-        'TaskType' => [
-          'StringValue' => $requestType,
-          'DataType' => 'String',
-        ],
-      ],
-    ));
+    $message = $this->createMessage($this->internalQueueURL, $messageBody, $requestType);
+    $response = $this->internalQueueService->sendMessage($message);
 
     return $this->responseHandler($response);
   }
+
+
+  /**
+   * @param string $queueUrl
+   * @param string $messageBody
+   * @param string $requestType
+   * @param string $dataType
+   * @return array
+   */
+  private function createMessage($queueUrl, $messageBody, $requestType, $dataType = 'String')
+  {
+    return [
+        'QueueUrl' => $queueUrl,
+        'MessageBody' => $messageBody,
+        'MessageAttributes' =>
+            [
+                'TaskType' =>
+                    [
+                        'StringValue' => $requestType,
+                        'DataType' => $dataType,
+                    ],
+            ],
+    ];
+  }
+
 
   /**
    * @return \Aws\Result
@@ -225,4 +236,6 @@ class AWSQueueService
     $result = array('statusCode' => $statusCode);
     return $result;
   }
+
+
 }
