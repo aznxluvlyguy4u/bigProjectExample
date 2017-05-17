@@ -385,7 +385,7 @@ class APIController extends Controller implements APIControllerInterface
     $requestTypeNameSpace = RequestType::getRequestTypeFromObject($messageObject);
 
     $sendToQresult = $this->getQueueService()
-      ->send($requestId, $jsonMessage, $requestTypeNameSpace);
+      ->sendToExternalQueue($requestId, $jsonMessage, $requestTypeNameSpace);
 
     //If send to Queue, failed, it needs to be resend, set state to failed
     if ($sendToQresult['statusCode'] != '200') {

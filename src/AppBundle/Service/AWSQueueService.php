@@ -148,7 +148,7 @@ class AWSQueueService
    * @param string $requestType
    * @return array|null
    */
-  public function send($requestId, $messageBody, $requestType)
+  public function sendToExternalQueue($requestId, $messageBody, $requestType)
   {
     if($requestId == null && $messageBody == null){
       return null;
@@ -199,7 +199,7 @@ class AWSQueueService
   /**
    * @return \Aws\Result
    */
-  public function getNextMessage()
+  public function getNextExternalQueueMessage()
   {
     $result = $this->externalQueueService->receiveMessage(array(
       'QueueUrl' => $this->externalQueueURL
@@ -211,7 +211,7 @@ class AWSQueueService
   /**
    * @return string
    */
-  public function getQueueService()
+  public function getExternalQueueService()
   {
     return $this->externalQueueService;
   }

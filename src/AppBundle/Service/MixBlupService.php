@@ -119,7 +119,7 @@ class MixBlupService implements MixBlupServiceInterface
      */
     private function upload()
     {
-        // TODO: Implement upload() method.
+//        $this->s3Service->upload(, , )
         return false;
     }
 
