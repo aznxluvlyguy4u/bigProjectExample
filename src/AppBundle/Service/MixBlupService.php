@@ -10,6 +10,7 @@ use AppBundle\MixBlup\LambMeatIndexProcess;
 use AppBundle\MixBlup\MixBlupProcessInterface;
 use AppBundle\MixBlup\ReproductionProcess;
 use AppBundle\Setting\MixBlupFolder;
+use AppBundle\Util\FilesystemUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Driver\PDOSqlsrv\Connection;
 
@@ -81,7 +82,8 @@ class MixBlupService implements MixBlupServiceInterface
         $this->write();
         $this->upload();
         $this->sendMessage();
-        $this->deleteFilesInCache();
+        $this->deleteMixBlupFilesInCache();
+        gc_collect_cycles();
     }
 
     
@@ -120,8 +122,15 @@ class MixBlupService implements MixBlupServiceInterface
     }
 
 
-    private function deleteFilesInCache()
+    /**
+     *
+     */
+    private function deleteMixBlupFilesInCache()
     {
-        //TODO: Implement deleteFilesInCache() method.
+        FilesystemUtil::deleteAllFilesInFolders([
+            $this->workingFolder."/".MixBlupFolder::DATA,
+            $this->workingFolder."/".MixBlupFolder::INSTRUCTIONS,
+            $this->workingFolder."/".MixBlupFolder::PEDIGREE,
+        ]);
     }
 }
