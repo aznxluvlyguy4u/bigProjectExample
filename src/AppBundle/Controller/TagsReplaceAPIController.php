@@ -31,6 +31,7 @@ class TagsReplaceAPIController extends APIController {
    * Create a new DeclareTagReplace request
    *
    * @ApiDoc(
+   *   section = "Tag Replace",
    *   requirements={
    *     {
    *       "name"="AccessToken",

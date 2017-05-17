@@ -34,6 +34,7 @@ class WeightAPIController extends APIController
      * Create new weight measurements for the given animals.
      *
      * @ApiDoc(
+     *   section = "Weights",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -82,6 +83,7 @@ class WeightAPIController extends APIController
      * Edit DeclareWeight and WeightMeasurements
      *
      * @ApiDoc(
+     *   section = "Weights",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -133,6 +135,7 @@ class WeightAPIController extends APIController
      * For the history view, get DeclareWeights which have the following requestState: FINISHED or REVOKED
      *
      * @ApiDoc(
+     *   section = "Weights",
      *   requirements={
      *     {
      *       "name"="AccessToken",

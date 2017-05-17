@@ -25,6 +25,7 @@ class ComponentAPIController extends APIController {
    * Get data for menu bar at the top.
    *
    * @ApiDoc(
+   *   section = "Components",
    *   requirements={
    *     {
    *       "name"="AccessToken",

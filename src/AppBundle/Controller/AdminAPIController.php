@@ -37,6 +37,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    * Retrieve a list of all Admins
    *
    * @ApiDoc(
+   *   section = "Admins",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -75,6 +76,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    * Create new Admin
    *
    * @ApiDoc(
+   *   section = "Admins",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -149,6 +151,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    * Edit Admins.
    *
    * @ApiDoc(
+   *   section = "Admins",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -215,6 +218,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    * Deactivate a list of Admins
    *
    * @ApiDoc(
+   *   section = "Admins",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -399,6 +403,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    * Retrieve a list of all Admin access level types
    *
    * @ApiDoc(
+   *   section = "Admins",
    *   requirements={
    *     {
    *       "name"="AccessToken",

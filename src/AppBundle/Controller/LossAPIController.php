@@ -24,6 +24,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    * Get a DeclareLoss, found by it's ID.
    *
    * @ApiDoc(
+   *   section = "Losses",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -63,6 +64,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    * }
    *
    * @ApiDoc(
+   *   section = "Losses",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -124,6 +126,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    * Create a new DeclareLoss Request.
    *
    * @ApiDoc(
+   *   section = "Losses",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -181,6 +184,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    * Update existing DeclareLoss Request.
    *
    * @ApiDoc(
+   *   section = "Losses",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -241,6 +245,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    * Get DeclareLosses which have failed last responses.
    *
    * @ApiDoc(
+   *   section = "Losses",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -274,6 +279,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    * For the history view, get DeclareLosses which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED
    *
    * @ApiDoc(
+   *   section = "Losses",
    *   requirements={
    *     {
    *       "name"="AccessToken",

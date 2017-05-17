@@ -32,6 +32,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
    * Get Health status found by ubn
    *
    * @ApiDoc(
+   *   section = "Healths",
    *   requirements={
    *     {
    *       "name"="AccessToken",

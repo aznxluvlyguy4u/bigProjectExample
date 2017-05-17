@@ -23,6 +23,7 @@ class CountryAPIController extends APIController implements CountryAPIController
    * Retrieve a list of Country codes and corresponding full Country name
    *
    * @ApiDoc(
+   *   section = "Countries",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -101,6 +102,7 @@ class CountryAPIController extends APIController implements CountryAPIController
    * Get list of Dutch provinces with their full name and code.
    *
    * @ApiDoc(
+   *   section = "Countries",
    *   requirements={
    *     {
    *       "name"="AccessToken",

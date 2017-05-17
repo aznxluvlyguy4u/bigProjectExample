@@ -28,6 +28,7 @@ class HideErrorAPIController extends APIController implements HideErrorAPIContro
      * by updating the existing DeclareBase's isRemovedByUser to true.
      *
      * @ApiDoc(
+     *   section = "Errors",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -67,6 +68,7 @@ class HideErrorAPIController extends APIController implements HideErrorAPIContro
      * by updating the existing DeclareNsfoBase's isRemovedByUser to true.
      *
      * @ApiDoc(
+     *   section = "Errors",
      *   requirements={
      *     {
      *       "name"="AccessToken",

@@ -22,6 +22,7 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
    * Retrieve a DeclareExport, found by it's ID.
    *
    * @ApiDoc(
+   *   section = "Exports",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -59,6 +60,7 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
    * }
    *
    * @ApiDoc(
+   *   section = "Exports",
    *   requirements={
    *     {
    *       "name"="AccessToken",

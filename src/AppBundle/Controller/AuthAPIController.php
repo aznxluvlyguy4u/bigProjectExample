@@ -41,6 +41,7 @@ class AuthAPIController extends APIController {
    * Register a user
    *
    * @ApiDoc(
+   *   section = "Auth",
    *   requirements={
    *     {
    *       "name"="Authorization header",
@@ -110,6 +111,7 @@ class AuthAPIController extends APIController {
    * Validate whether an accesstoken is valid or not.
    *
    * @ApiDoc(
+   *   section = "Auth",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -135,6 +137,7 @@ class AuthAPIController extends APIController {
    * Retrieve a valid access token.
    *
    * @ApiDoc(
+   *   section = "Auth",
    *   requirements={
    *     {
    *       "name"="Authorization header",
@@ -209,6 +212,7 @@ class AuthAPIController extends APIController {
    * Change password when already logged in.
    *
    * @ApiDoc(
+   *   section = "Auth",
    *   requirements={
    *     {
    *       "name"="Authorization header",
@@ -306,6 +310,7 @@ class AuthAPIController extends APIController {
    * Reset password when not logged in.
    *
    * @ApiDoc(
+   *   section = "Auth",
    *   requirements={
    *     {
    *       "name"="Authorization header",
@@ -382,6 +387,7 @@ class AuthAPIController extends APIController {
    * Validate whether a ubn in the header is valid or not.
    *
    * @ApiDoc(
+   *   section = "Auth",
    *   requirements={
    *     {
    *       "name"="AccessToken",

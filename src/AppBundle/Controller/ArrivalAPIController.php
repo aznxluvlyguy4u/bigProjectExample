@@ -50,6 +50,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * Retrieve a DeclareArrival, found by it's ID.
    *
    * @ApiDoc(
+   *   section = "Arrivals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -90,6 +91,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * }
    *
    * @ApiDoc(
+   *   section = "Arrivals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -150,6 +152,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * Create a new DeclareArrival or DeclareImport request
    *
    * @ApiDoc(
+   *   section = "Arrivals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -274,6 +277,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * Update existing DeclareArrival or DeclareImport request
    *
    * @ApiDoc(
+   *   section = "Arrivals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -365,6 +369,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * Get DeclareArrivals & DeclareImports which have failed last responses.
    *
    * @ApiDoc(
+   *   section = "Arrivals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -403,6 +408,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    * For the history view, get DeclareArrivals & DeclareImports which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED.
    *
    * @ApiDoc(
+   *   section = "Arrivals",
    *   requirements={
    *     {
    *       "name"="AccessToken",

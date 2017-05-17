@@ -45,6 +45,7 @@ class ReportAPIController extends APIController {
    * Generate pedigree certificates for multiple sheep and return a download link for the pdf.
    *
    * @ApiDoc(
+   *   section = "Reports",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -112,6 +113,7 @@ class ReportAPIController extends APIController {
    * Generate inbreeding coefficient pdf report of (hypothetical) offspring of a Ram and a list of Ewes.
    *
    * @ApiDoc(
+   *   section = "Reports",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -164,6 +166,7 @@ class ReportAPIController extends APIController {
    * Generate livestock pdf report.
    *
    * @ApiDoc(
+   *   section = "Reports",
    *   requirements={
    *     {
    *       "name"="AccessToken",

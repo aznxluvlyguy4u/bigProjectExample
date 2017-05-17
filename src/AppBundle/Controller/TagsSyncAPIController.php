@@ -23,6 +23,7 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
    * Retrieve a RetrieveTags request, found by its ID.
    *
    * @ApiDoc(
+   *   section = "Tag Syncs",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -57,6 +58,7 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
    * }
    *
    * @ApiDoc(
+   *   section = "Tag Syncs",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -100,6 +102,7 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
    * Create a new RetrieveTags request
    *
    * @ApiDoc(
+   *   section = "Tag Syncs",
    *   requirements={
    *     {
    *       "name"="AccessToken",

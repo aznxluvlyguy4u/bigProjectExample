@@ -20,6 +20,7 @@ class CollarAPIController extends APIController implements CollarAPIControllerIn
    * Retrieve a list of Collar colour codes
    *
    * @ApiDoc(
+   *   section = "Collars",
    *   requirements={
    *     {
    *       "name"="AccessToken",

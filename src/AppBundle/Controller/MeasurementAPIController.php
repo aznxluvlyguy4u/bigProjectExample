@@ -44,6 +44,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      * Update an exterior measurement for a specific ULN and measurementDate. For example NL100029511721 and 2016-12-05
      *
      * @ApiDoc(
+     *   section = "Measurements",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -141,6 +142,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      * Update or Deactivate an exterior measurement for a specific ULN and measurementDate. For example NL100029511721 and 2016-12-05
      *
      * @ApiDoc(
+     *   section = "Measurements",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -270,6 +272,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      * Return the allowed exterior measurement kinds for a specific ULN and measurementDate. For example NL100029511721 and 2016-12-05
      *
      * @ApiDoc(
+     *   section = "Measurements",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -319,6 +322,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      * For edits the current kind is also allowed.
      *
      * @ApiDoc(
+     *   section = "Measurements",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -381,6 +385,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      * Return the allowed exterior measurement kinds for a specific ULN and measurementDate. For example NL100029511721 and 2016-12-05
      *
      * @ApiDoc(
+     *   section = "Measurements",
      *   requirements={
      *     {
      *       "name"="AccessToken",

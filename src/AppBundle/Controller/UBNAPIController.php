@@ -22,6 +22,7 @@ class UBNAPIController extends APIController implements UBNAPIControllerInterfac
    * Create a RetrieveUbnDetails request
    *
    * @ApiDoc(
+   *   section = "UBNs",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -64,6 +65,7 @@ class UBNAPIController extends APIController implements UBNAPIControllerInterfac
    * Get list of UBN Processors.
    *
    * @ApiDoc(
+   *   section = "UBNs",
    *   requirements={
    *     {
    *       "name"="AccessToken",

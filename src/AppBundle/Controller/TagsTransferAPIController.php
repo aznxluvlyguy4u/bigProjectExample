@@ -30,6 +30,7 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
    * Create a new DeclareTagsTransfer request for multiple Tags
    *
    * @ApiDoc(
+   *   section = "Tag Transfers",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -96,6 +97,7 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
    * Get TagTransferItemRequests which have failed last responses.
    *
    * @ApiDoc(
+   *   section = "Tag Transfers",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -132,6 +134,7 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
    * OPEN, REVOKING, REVOKED, FINISHED or FINISHED_WITH_WARNING.
    *
    * @ApiDoc(
+   *   section = "Tag Transfers",
    *   requirements={
    *     {
    *       "name"="AccessToken",

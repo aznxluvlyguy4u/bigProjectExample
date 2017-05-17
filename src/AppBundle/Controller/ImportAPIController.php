@@ -22,6 +22,7 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    * Retrieve a DeclareImport, found by it's ID.
    *
    * @ApiDoc(
+   *   section = "Imports",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -60,6 +61,7 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    * }
    *
    * @ApiDoc(
+   *   section = "Imports",
    *   requirements={
    *     {
    *       "name"="AccessToken",

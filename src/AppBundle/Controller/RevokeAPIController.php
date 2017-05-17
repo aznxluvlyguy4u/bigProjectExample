@@ -33,6 +33,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
      * Post a RevokeDeclaration request.
      *
      * @ApiDoc(
+     *   section = "Revokes",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -90,6 +91,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
      * Revoke non-IR declarations
      *
      * @ApiDoc(
+     *   section = "Revokes",
      *   requirements={
      *     {
      *       "name"="AccessToken",

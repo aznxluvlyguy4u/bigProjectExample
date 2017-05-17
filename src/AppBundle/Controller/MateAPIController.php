@@ -28,6 +28,7 @@ class MateAPIController extends APIController {
    * Create a DeclareMate Request.
    *
    * @ApiDoc(
+   *   section = "Matings",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -80,6 +81,7 @@ class MateAPIController extends APIController {
    * Edit Mate
    *
    * @ApiDoc(
+   *   section = "Matings",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -134,6 +136,7 @@ class MateAPIController extends APIController {
    * For the history view, get Mates which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED
    *
    * @ApiDoc(
+   *   section = "Matings",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -168,6 +171,7 @@ class MateAPIController extends APIController {
    * Get Mates that were rejected by the third party.
    *
    * @ApiDoc(
+   *   section = "Matings",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -202,6 +206,7 @@ class MateAPIController extends APIController {
    * Get Mates that still need to be verified by the third party.
    *
    * @ApiDoc(
+   *   section = "Matings",
    *   requirements={
    *     {
    *       "name"="AccessToken",

@@ -25,6 +25,7 @@ class ClientAPIController extends APIController {
    * Retrieve either a list of all Clients or a Client belonging to a certain UBN:
    *
    * @ApiDoc(
+   *   section = "Clients",
    *   requirements={
    *     {
    *       "name"="AccessToken",

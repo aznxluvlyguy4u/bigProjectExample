@@ -47,6 +47,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Retrieve a list of animals. Animal-types are: {ram, ewe, neuter}
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -109,6 +110,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Retrieve an animal, found by it's ULN. For example NL100029511721
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -140,6 +142,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Retrieve all alive, on-location, animals belonging to the given UBN.
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -191,6 +194,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Retrieve all alive, on-location, animals belonging to the given UBN.
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -253,6 +257,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Retrieve all historic animals,dead or alive, that ever resided on the given UBN.
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -304,6 +309,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Retrieve all alive rams in the NSFO database
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -332,6 +338,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Create a RetrieveAnimal request
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -376,6 +383,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Create RetrieveAnimal requests for all clients.
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -410,6 +418,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Create a RetrieveAnimalDetails request
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -449,6 +458,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Update animal details
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -496,6 +506,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Get Animal Details by ULN. For example NL100029511721
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -540,6 +551,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Change the gender of an Animal for a given ULN. For example NL100029511721
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",

@@ -27,6 +27,7 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
    * Retrieve a Tag by its ulnCountryCode and ulnNumber, concatenated, i.e.: NL123456789
    *
    * @ApiDoc(
+   *   section = "Tags",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -79,6 +80,7 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
    * }
    *
    * @ApiDoc(
+   *   section = "Tags",
    *   requirements={
    *     {
    *       "name"="AccessToken",

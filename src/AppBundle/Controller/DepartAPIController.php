@@ -35,6 +35,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    * Get a DeclareDepart, found by it's ID.
    *
    * @ApiDoc(
+   *   section = "Departs",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -74,6 +75,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    * }
    *
    * @ApiDoc(
+   *   section = "Departs",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -135,6 +137,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     * Create a new DeclareDepart Request.
     *
     * @ApiDoc(
+    *   section = "Departs",
     *   requirements={
     *     {
     *       "name"="AccessToken",
@@ -248,6 +251,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    * Update existing DeclareDepart Request.
    *
    * @ApiDoc(
+   *   section = "Departs",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -325,6 +329,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    * Get DeclareDeparts & DeclareExports which have failed last responses.
    *
    * @ApiDoc(
+   *   section = "Departs",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -361,6 +366,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    * For the history view, get DeclareDeparts & DeclareExports which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED
    *
    * @ApiDoc(
+   *   section = "Departs",
    *   requirements={
    *     {
    *       "name"="AccessToken",
