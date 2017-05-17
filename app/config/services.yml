@@ -8,14 +8,26 @@ services:
         class: AppBundle\Service\ValidateEntityService
         arguments: ['@validator', '@jms_serializer']
 
-    app.aws.queueservice:
-        class: AppBundle\Service\AWSQueueService
+
+    app.aws.queueservice.primary_workers_base:
+        abstract: true
         arguments:
-          credentials: ['%aws_access_key_id%', '%aws_secret_key%']
-          region: %aws_sqs_region%
-          version: %aws_sqs_version%
-          queueIds: ['%aws_sqs_queue_prod%', '%aws_sqs_queue_stage%', '%aws_sqs_queue_dev%', '%aws_sqs_queue_test%', '%aws_sqs_queue_local%']
-          currentEnv: %kernel.environment%
+        #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
+          - placeholder_to_override #queueIdPrefix
+          - ['%aws_access_key_id%', '%aws_secret_key%'] #credentials
+          - %aws_sqs_region% #region
+          - %aws_sqs_version% #version
+          - %kernel.environment% #currentEnv
+
+    app.aws.queueservice.external:
+        class: AppBundle\Service\AwsExternalQueueService
+        parent: app.aws.queueservice.primary_workers_base
+        arguments: { index_0: '%aws_sqs_queue_exteral_prefix%' }
+
+    app.aws.queueservice.internal:
+        class: AppBundle\Service\AwsInternalQueueService
+        parent: app.aws.queueservice.primary_workers_base
+        arguments: { index_0: '%aws_sqs_queue_interal_prefix%' }
 
     app.aws.storageservice:
         class: AppBundle\Service\AWSSimpleStorageService
@@ -53,7 +65,7 @@ services:
         arguments:
           entityManager: '@doctrine.orm.entity_manager'
           AWSSimpleStorageService: '@app.aws.storageservice'
-          AWSQueueService: '@app.aws.queueservice'
+          AWSQueueService: '@app.aws.queueservice.external'
           currentEnv: %kernel.environment%
           rootDir: %kernel.cache_dir%
 

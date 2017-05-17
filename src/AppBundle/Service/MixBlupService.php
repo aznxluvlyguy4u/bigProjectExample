@@ -31,7 +31,7 @@ class MixBlupService implements MixBlupServiceInterface
     /** @var AWSSimpleStorageService */
     private $s3Service;
 
-    /** @var AWSQueueService */
+    /** @var AwsExternalQueueService */
     private $queueService;
 
     /** @var string */
@@ -53,11 +53,11 @@ class MixBlupService implements MixBlupServiceInterface
      * MixBlupService constructor.
      * @param ObjectManager $em
      * @param AWSSimpleStorageService $s3Service
-     * @param AWSQueueService $queueService
+     * @param AwsExternalQueueService $queueService
      * @param string $currentEnvironment
      * @param string $cacheDir
      */
-    public function __construct(ObjectManager $em, AWSSimpleStorageService $s3Service, AWSQueueService $queueService,
+    public function __construct(ObjectManager $em, AWSSimpleStorageService $s3Service, AwsExternalQueueService $queueService,
                                 $currentEnvironment, $cacheDir)
     {
         $this->em = $em;

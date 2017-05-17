@@ -41,6 +41,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Enumerator\TokenType;
 use AppBundle\Output\RequestMessageOutputBuilder;
+use AppBundle\Service\AwsInternalQueueService;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Util\Finder;
 use AppBundle\Util\Validator;
@@ -75,8 +76,11 @@ class APIController extends Controller implements APIControllerInterface
   /** @var */
   private $serializer;
 
-  /** @var \AppBundle\Service\AWSQueueService */
-  private $queueService;
+  /** @var \AppBundle\Service\AwsExternalQueueService */
+  private $externalQueueService;
+
+  /** @var AwsInternalQueueService */
+  private $internalQueueService;
 
   /** @var \AppBundle\Service\AWSSimpleStorageService */
   private $storageService;
@@ -193,15 +197,28 @@ class APIController extends Controller implements APIControllerInterface
   }
 
   /**
-   * @return \AppBundle\Service\AWSQueueService
+   * @return \AppBundle\Service\AwsExternalQueueService
    */
-  protected function getQueueService(){
-    if($this->queueService == null){
-      $this->queueService = $this->get('app.aws.queueservice');
+  protected function getExternalQueueService(){
+    if($this->externalQueueService == null){
+      $this->externalQueueService = $this->get('app.aws.queueservice.external');
     }
 
-    return $this->queueService;
+    return $this->externalQueueService;
   }
+
+
+  /**
+   * @return \AppBundle\Service\AwsInternalQueueService
+   */
+  protected function getInternalQueueService(){
+    if($this->internalQueueService == null){
+      $this->internalQueueService = $this->get('app.aws.queueservice.internal');
+    }
+
+    return $this->internalQueueService;
+  }
+
 
   /**
    * @return \AppBundle\Service\AWSSimpleStorageService
@@ -384,8 +401,8 @@ class APIController extends Controller implements APIControllerInterface
     //Send serialized message to Queue
     $requestTypeNameSpace = RequestType::getRequestTypeFromObject($messageObject);
 
-    $sendToQresult = $this->getQueueService()
-      ->sendToExternalQueue($requestId, $jsonMessage, $requestTypeNameSpace);
+    $sendToQresult = $this->getExternalQueueService()
+      ->send($requestId, $jsonMessage, $requestTypeNameSpace);
 
     //If send to Queue, failed, it needs to be resend, set state to failed
     if ($sendToQresult['statusCode'] != '200') {
@@ -420,8 +437,8 @@ class APIController extends Controller implements APIControllerInterface
     $jsonMessage = $this->getSerializer()->serializeToJSON($workerMessageBody);
 
     //Send  message to Queue
-    $sendToQresult = $this->getQueueService()
-      ->sendToInternalQueue(1, $jsonMessage, $workerMessageBody->getTaskType());
+    $sendToQresult = $this->getInternalQueueService()
+      ->send(1, $jsonMessage, $workerMessageBody->getTaskType());
 
     //If send to Queue, failed, it needs to be resend, set state to failed
     return $sendToQresult['statusCode'] == '200';
