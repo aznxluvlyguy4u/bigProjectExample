@@ -10,7 +10,9 @@ use AppBundle\MixBlup\LambMeatIndexProcess;
 use AppBundle\MixBlup\MixBlupProcessInterface;
 use AppBundle\MixBlup\ReproductionProcess;
 use AppBundle\Setting\MixBlupFolder;
+use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\FilesystemUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Driver\PDOSqlsrv\Connection;
 
@@ -43,6 +45,9 @@ class MixBlupService implements MixBlupServiceInterface
 
     /** @var array */
     private $mixBlupProcesses;
+
+    /** @var string */
+    private $jsonUploadMessage;
 
     /**
      * MixBlupService constructor.
@@ -81,14 +86,11 @@ class MixBlupService implements MixBlupServiceInterface
     {
         $writeResult = $this->write();
         if($writeResult) {
-            $uploadResult = $this->upload();
+            $allUploadsSuccessful = $this->upload();
+            $sendMessageResult = $this->sendMessage();
 
-            if($uploadResult) {
-                $sendMessageResult = $this->sendMessage();
-
-                if($sendMessageResult) {
-                    $this->deleteMixBlupFilesInCache();
-                }
+            if($sendMessageResult) {
+                $this->deleteMixBlupFilesInCache();
             }
         }
         gc_collect_cycles();
@@ -112,15 +114,55 @@ class MixBlupService implements MixBlupServiceInterface
         }
         return true;
     }
-    
-    
+
+
     /**
      * Uploads the text files to the S3-Bucket
+     *
+     * @return boolean true is all uploads were successful
      */
     private function upload()
     {
-//        $this->s3Service->upload(, , )
-        return false;
+        $key = TimeUtil::getTimeStampNow();
+        $fileType = 'text/plain';
+
+        $filesToUpload = [];
+        $failedUploads = [];
+
+        foreach ([$this->getDataFolder(), $this->getPedigreeFolder()] as $folderPath) {
+            if ($handle = opendir($folderPath)) {
+                while (false !== ($file = readdir($handle))) {
+                    if ($file == '.' || $file == '..') {
+                        continue;
+                    }
+
+                    $currentFileLocation = $folderPath . '/' . $file;
+                    $s3FilePath = MixBlupSetting::S3_MIXBLUP_INPUT_DIRECTORY . $key . '/' . $file;
+
+                    $result = $this->s3Service->uploadFromFilePath($currentFileLocation, $s3FilePath, $fileType);
+
+                    if ($result) {
+                        $filesToUpload[] = $file;
+                    } else {
+                        $failedUploads[] = $file;
+                    }
+                }
+            }
+        }
+
+        $messageToQueue = [
+            "key" => $key,
+            "files" => $filesToUpload,
+            "failed_uploads" => $failedUploads
+        ];
+
+        if(count($failedUploads) > 0) {
+            //TODO Log failed uploads and send an email notification
+        }
+
+        $this->jsonUploadMessage = json_encode($messageToQueue);
+
+        return count($failedUploads) == 0;
     }
 
 
@@ -130,6 +172,7 @@ class MixBlupService implements MixBlupServiceInterface
     private function sendMessage()
     {
         // TODO: Implement sendMessage() method.
+        $this->jsonUploadMessage;
         return false;
     }
 
