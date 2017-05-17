@@ -15,6 +15,7 @@ use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Symfony\Bridge\Monolog\Logger;
 
 /**
  * Class MixBlupService
@@ -49,6 +50,9 @@ class MixBlupService implements MixBlupServiceInterface
     /** @var string */
     private $jsonUploadMessage;
 
+    /** @var Logger */
+    private $logger;
+
     /**
      * MixBlupService constructor.
      * @param ObjectManager $em
@@ -56,9 +60,10 @@ class MixBlupService implements MixBlupServiceInterface
      * @param MixBlupInputQueueService $queueService
      * @param string $currentEnvironment
      * @param string $cacheDir
+     * @param Logger $logger
      */
     public function __construct(ObjectManager $em, AWSSimpleStorageService $s3Service, MixBlupInputQueueService $queueService,
-                                $currentEnvironment, $cacheDir)
+                                $currentEnvironment, $cacheDir, $logger = null)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
@@ -66,6 +71,7 @@ class MixBlupService implements MixBlupServiceInterface
         $this->queueService = $queueService;
         $this->currentEnvironment = $currentEnvironment;
         $this->cacheDir = $cacheDir;
+        $this->logger = $logger;
         $this->workingFolder = $cacheDir.'/'.MixBlupFolder::ROOT;
 
         $this->mixBlupProcesses = [];
@@ -109,8 +115,12 @@ class MixBlupService implements MixBlupServiceInterface
          */
         foreach($this->mixBlupProcesses as $mixBlupType => $mixBlupProcess)
         {
+            $this->logger->notice('Writing MixBlup input files for: '.$mixBlupType);
             $writeResult = $mixBlupProcess->write();
-            if(!$writeResult) { return false; }
+            if(!$writeResult) {
+                $this->logger->critical('FAILED writing MixBlup input file for: '.$mixBlupType);
+                return false;
+            }
         }
         return true;
     }
@@ -130,6 +140,7 @@ class MixBlupService implements MixBlupServiceInterface
         $failedUploads = [];
 
         foreach ([$this->getDataFolder(), $this->getPedigreeFolder()] as $folderPath) {
+            $this->logger->notice('Uploading files to S3 bucket from folder '.$folderPath);
             if ($handle = opendir($folderPath)) {
                 while (false !== ($file = readdir($handle))) {
                     if ($file == '.' || $file == '..') {
@@ -143,8 +154,10 @@ class MixBlupService implements MixBlupServiceInterface
 
                     if ($result) {
                         $filesToUpload[] = $file;
+                        $this->logger->notice('Succesfully uploaded '.$file);
                     } else {
                         $failedUploads[] = $file;
+                        $this->logger->critical('FAILED uploading '.$file);
                     }
                 }
             }
@@ -161,6 +174,7 @@ class MixBlupService implements MixBlupServiceInterface
         }
 
         $this->jsonUploadMessage = json_encode($messageToQueue);
+        $this->logger->notice('Upload message '.$this->jsonUploadMessage);
 
         return count($failedUploads) == 0;
     }
@@ -172,7 +186,13 @@ class MixBlupService implements MixBlupServiceInterface
     private function sendMessage()
     {
         $sendToQresult = $this->queueService->send($this->jsonUploadMessage);
-        return $sendToQresult['statusCode'] == '200';
+        $isSentSuccessfully = $sendToQresult['statusCode'] == '200';
+        if($isSentSuccessfully) {
+            $this->logger->notice('Upload message successfully sent to MixBlup queue');
+        } else {
+            $this->logger->critical('FAILED sending MixBlup upload message to queue!');
+        }
+        return $isSentSuccessfully;
     }
 
 
@@ -186,6 +206,7 @@ class MixBlupService implements MixBlupServiceInterface
             $this->getInstructionsFolder(),
             $this->getPedigreeFolder(),
         ]);
+        $this->logger->notice('Generated MixBlup input files deleted from the workingfolder '.$this->workingFolder);
     }
 
 

@@ -78,6 +78,7 @@ services:
           MixBlupInputQueueService: '@app.aws.queueservice.mixblub_input'
           currentEnv: %kernel.environment%
           rootDir: %kernel.cache_dir%
+          logger: '@logger'
 
     app.serializer.ir:
         class: AppBundle\Service\IRSerializer
