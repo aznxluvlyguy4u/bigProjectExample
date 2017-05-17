@@ -51,7 +51,7 @@ services:
     app.routine.mixblup:
         class: AppBundle\Service\MixBlupService
         arguments:
-          entityManager: ['@doctrine.orm.entity_manager']
+          entityManager: '@doctrine.orm.entity_manager'
           AWSSimpleStorageService: '@app.aws.storageservice'
           AWSQueueService: '@app.aws.queueservice'
           currentEnv: %kernel.environment%
