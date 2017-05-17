@@ -24,4 +24,8 @@ class MixBlupSetting
 
     //Rounding Accuracies
     const HETEROSIS_AND_RECOMBINATION_ROUNDING_ACCURACY = 2;
+    
+    //S3 Bucket
+    const S3_MIXBLUP_INPUT_DIRECTORY = 'mixblub_input_files/';
+    const S3_MIXBLUP_OUTPUT_DIRECTORY = 'mixblub_output_files/';
 }
