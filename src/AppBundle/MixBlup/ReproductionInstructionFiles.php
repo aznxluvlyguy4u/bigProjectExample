@@ -5,6 +5,7 @@ namespace AppBundle\MixBlup;
 
 
 use AppBundle\Enumerator\MixBlupNullFiller;
+use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Setting\MixBlupInstructionFile;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\ArrayUtil;
@@ -39,7 +40,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
         $start = [
             'TITEL '.$titleType,
             ' ',
-            'DATAFILE  '.MixBlupSetting::DATA_FILENAME_PREFIX.MixBlupSetting::FERTILITY.'.txt !MISSING '.self::MISSING_REPLACEMENT,
+            'DATAFILE  '.MixBlupFileName::getFertilityDataFileName().' !MISSING '.self::MISSING_REPLACEMENT,
             ' ID         A #uln van ooi/moeder of lam',  //uln
             ' Leeft      I #leeftijd ooi in jaren', //age of ewe in years
             ' Sekse      A ',  //ram/ooi/N_B
@@ -68,7 +69,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
             $start,
             self::getStandardizedBreedCodePartsAndHetRecOfInstructionFile(),
             $middle,
-            self::getInstructionFilePedFileToModelHeader(MixBlupSetting::FERTILITY),
+            self::getInstructionFilePedFileToModelHeader(MixBlupType::FERTILITY),
             $model,
             self::getInstructionFileEnding()
         ]);

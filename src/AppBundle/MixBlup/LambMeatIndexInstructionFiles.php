@@ -4,6 +4,7 @@
 namespace AppBundle\MixBlup;
 
 use AppBundle\Enumerator\MixBlupNullFiller;
+use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Setting\MixBlupInstructionFile;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\ArrayUtil;
@@ -37,7 +38,7 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
         $start = [
             'TITEL '.$fileType,
             ' ',
-            'DATAFILE  '.MixBlupSetting::DATA_FILENAME_PREFIX.MixBlupSetting::LAMB_MEAT_INDEX.'.txt !MISSING '.self::MISSING_REPLACEMENT,
+            'DATAFILE  '.MixBlupFileName::getLambMeatIndexDataFileName().' !MISSING '.self::MISSING_REPLACEMENT,
             ' ID         A #uln',  //uln
             ' IDM        A #uln van moeder',  //uln of mother
             ' JaarBedr   A #jaar en ubn van geboorte', //year and ubn of birth
@@ -67,7 +68,7 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
             $start,
             self::getStandardizedBreedCodePartsAndHetRecOfInstructionFile(),
             $middle,
-            self::getInstructionFilePedFileToModelHeader(MixBlupSetting::LAMB_MEAT_INDEX),
+            self::getInstructionFilePedFileToModelHeader(MixBlupType::LAMB_MEAT_INDEX),
             $model,
             self::getInstructionFileEnding(),
         ]);

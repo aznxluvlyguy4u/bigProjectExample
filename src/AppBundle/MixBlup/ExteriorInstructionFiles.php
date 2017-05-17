@@ -5,6 +5,7 @@ namespace AppBundle\MixBlup;
 
 
 use AppBundle\Enumerator\MixBlupNullFiller;
+use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Setting\MixBlupInstructionFile;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\ArrayUtil;
@@ -41,7 +42,7 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
         $start = [
             'TITEL   Exterieur: '.$fileType,
             ' ',
-            'DATAFILE  '.MixBlupSetting::DATA_FILENAME_PREFIX.MixBlupSetting::EXTERIOR.'.txt !MISSING '.self::MISSING_REPLACEMENT,
+            'DATAFILE  '.MixBlupFileName::getExteriorDataFileName().' !MISSING '.self::MISSING_REPLACEMENT,
             ' ID         A #uln',  //uln
             ' Sekse      A',  //ram/ooi/N_B
             ' JaarBedr   A #jaar en ubn van geboorte', //year and ubn of birth
@@ -99,7 +100,7 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
             $exteriorMeasurements,
             $exteriorLinearMeasurements,
             $lastDataRecords,
-            self::getInstructionFilePedFileToModelHeader(MixBlupSetting::EXTERIOR),
+            self::getInstructionFilePedFileToModelHeader(MixBlupType::EXTERIOR),
             $model,
             self::getInstructionFileEnding(),
         ]);

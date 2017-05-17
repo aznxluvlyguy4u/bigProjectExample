@@ -3,17 +3,16 @@
 
 namespace AppBundle\Setting;
 
-
+/**
+ * Class MixBlupSetting
+ * @package AppBundle\Setting
+ */
 class MixBlupSetting
 {
     const PARFILE_FILENAME = 'ParNSFO.txt';
 
     const PEDIGREE_FILENAME_PREFIX = 'Ped';
     const DATA_FILENAME_PREFIX = 'Data';
-    const LAMB_MEAT_INDEX = 'Vleeslam';
-    const FERTILITY = 'Vruchtb';
-    const WORM = 'Worm';
-    const EXTERIOR = 'Exterieur';
 
     const DECIMAL_SEPARATOR = '.';
     const THOUSANDS_SEPARATOR = '';

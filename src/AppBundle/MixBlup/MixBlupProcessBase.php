@@ -23,12 +23,22 @@ class MixBlupProcessBase
     /** @var string */
     protected $outputFolderPath;
 
+    /** @var string */
+    protected $type;
+    
+    /** @var string */
+    protected $dataFileName;
+
+    /** @var string */
+    protected $pedigreeFileName;
+
     /**
      * MixBlupDataFileBase constructor.
      * @param ObjectManager $em
      * @param string $outputFolderPath
+     * @param string $mixBlupType of MixBlupType enumerator
      */
-    public function __construct(ObjectManager $em, $outputFolderPath)
+    public function __construct(ObjectManager $em, $outputFolderPath, $mixBlupType)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
@@ -37,6 +47,9 @@ class MixBlupProcessBase
         NullChecker::createFolderPathIfNull($outputFolderPath.'/'.MixBlupFolder::INSTRUCTIONS);
         NullChecker::createFolderPathIfNull($outputFolderPath.'/'.MixBlupFolder::DATA);
         NullChecker::createFolderPathIfNull($outputFolderPath.'/'.MixBlupFolder::PEDIGREE);
+        
+        $this->dataFileName = MixBlupFileName::getDataFileName($mixBlupType);
+        $this->pedigreeFileName = MixBlupFileName::getPedigreeFileName($mixBlupType);
     }
 
 
@@ -110,20 +123,42 @@ class MixBlupProcessBase
 
 
     /**
+     * Overwrite this in the child classes!
+     * @return array
+     */
+    function generateDataFile() {
+        return [];
+    }
+
+
+    /**
+     * Overwrite this in the child classes!
+     * @return array
+     */
+    function generatePedigreeFile() {
+        return [];
+    }
+
+
+    /**
      * @inheritDoc
      */
     function write()
     {
-        // TODO: Implement write() method.
-
-        $successful = true;
+        $successfulProcess = true;
 
         foreach ($this->generateInstructionFiles() as $filename => $records) {
-            $successful = $this->writeInstructionFile($records, $filename);
-            if(!$successful) { $successful = false; }
+            $successfulWrite = $this->writeInstructionFile($records, $filename);
+            if(!$successfulWrite) { $successfulProcess = false; }
         }
 
-        return $successful;
+        $successfulWrite = $this->writeDataFile($this->generateDataFile(), $this->dataFileName);
+        if(!$successfulWrite) { $successfulProcess = false; }
+
+        $successfulWrite = $this->writePedigreeFile($this->generatePedigreeFile(), $this->pedigreeFileName);
+        if(!$successfulWrite) { $successfulProcess = false; }
+
+        return $successfulProcess;
     }
 
 }

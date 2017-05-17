@@ -3,6 +3,8 @@
 
 namespace AppBundle\MixBlup;
 
+use AppBundle\Enumerator\MixBlupType;
+use AppBundle\Setting\MixBlupSetting;
 use Doctrine\Common\Persistence\ObjectManager;
 
 /**
@@ -19,7 +21,7 @@ class ExteriorProcess extends MixBlupProcessBase implements MixBlupProcessInterf
      */
     public function __construct(ObjectManager $em, $outputFolderPath)
     {
-        parent::__construct($em, $outputFolderPath);
+        parent::__construct($em, $outputFolderPath, MixBlupType::EXTERIOR);
     }
 
 
