@@ -4,8 +4,12 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Enumerator\MixBlupType;
+use AppBundle\MixBlup\ExteriorProcess;
+use AppBundle\MixBlup\LambMeatIndexProcess;
+use AppBundle\MixBlup\MixBlupProcessInterface;
+use AppBundle\MixBlup\ReproductionProcess;
 use AppBundle\Setting\MixBlupFolder;
-use AppBundle\Setting\MixBlupSetting;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Driver\PDOSqlsrv\Connection;
 
@@ -36,6 +40,9 @@ class MixBlupService implements MixBlupServiceInterface
     /** @var string */
     private $workingFolder;
 
+    /** @var array */
+    private $mixBlupProcesses;
+
     /**
      * MixBlupService constructor.
      * @param ObjectManager $em
@@ -54,6 +61,11 @@ class MixBlupService implements MixBlupServiceInterface
         $this->currentEnvironment = $currentEnvironment;
         $this->cacheDir = $cacheDir;
         $this->workingFolder = $cacheDir.'/'.MixBlupFolder::ROOT;
+
+        $this->mixBlupProcesses = [];
+        $this->mixBlupProcesses[MixBlupType::EXTERIOR] = new ExteriorProcess($em, $this->workingFolder);
+        $this->mixBlupProcesses[MixBlupType::LAMB_MEAT_INDEX] = new LambMeatIndexProcess($em, $this->workingFolder);
+        $this->mixBlupProcesses[MixBlupType::FERTILITY] = new ReproductionProcess($em, $this->workingFolder);
     }
 
 
@@ -66,9 +78,30 @@ class MixBlupService implements MixBlupServiceInterface
      */
     public function run()
     {
-        // TODO: Implement run() method.
+        $this->write();
+        $this->upload();
+        $this->sendMessage();
+        $this->deleteFilesInCache();
     }
 
+    
+    /**
+     * Writes the instructionFile-, dataFile- and pedigreeFile data to their respective text input files.
+     * Note! Old files are automatically purged.
+     */
+    private function write()
+    {
+        /**
+         * @var string $mixBlupType
+         * @var MixBlupProcessInterface $mixBlupProcess
+         */
+        foreach($this->mixBlupProcesses as $mixBlupType => $mixBlupProcess)
+        {
+            $mixBlupProcess->write();
+        }
+    }
+    
+    
     /**
      * Uploads the text files to the S3-Bucket
      */
@@ -79,13 +112,16 @@ class MixBlupService implements MixBlupServiceInterface
 
 
     /**
-     * Writes the instructionFile-, dataFile- and pedigreeFile data to their respective text input files.
+     * Send message to mixblup_input_queue to notify the cronjob to process the MixBlup input files.
      */
-    private function write()
+    private function sendMessage()
     {
-        // TODO: Implement write() method. Call write() methods from MixBlupDataFile classes.
-        //Loop foreach(MixBlubDataFileInterface) { $foo->write(); }
+        // TODO: Implement sendMessage() method.
     }
 
 
+    private function deleteFilesInCache()
+    {
+        //TODO: Implement deleteFilesInCache() method.
+    }
 }
