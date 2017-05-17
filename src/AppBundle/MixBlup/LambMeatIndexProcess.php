@@ -3,10 +3,6 @@
 
 namespace AppBundle\MixBlup;
 
-use AppBundle\Enumerator\MixBlupNullFiller;
-use AppBundle\Setting\MixBlupInstructionFile;
-use AppBundle\Setting\MixBlupSetting;
-use AppBundle\Util\ArrayUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 
 /**
@@ -47,7 +43,7 @@ class LambMeatIndexProcess extends MixBlupProcessBase implements MixBlupProcessI
      */
     function generatePedigreeFile()
     {
-        // TODO: Implement generatePedigreeFile() method.
+        return MixblupPedigreeFileGenerator::generateFullSet($this->conn);
     }
 
 

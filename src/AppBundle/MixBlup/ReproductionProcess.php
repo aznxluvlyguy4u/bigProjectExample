@@ -43,7 +43,7 @@ class ReproductionProcess extends MixBlupProcessBase implements MixBlupProcessIn
      */
     function generatePedigreeFile()
     {
-        // TODO: Implement generatePedigreeFile() method.
+        return MixblupPedigreeFileGenerator::generateFullSet($this->conn);
     }
 
 

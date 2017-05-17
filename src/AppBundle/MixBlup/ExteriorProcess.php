@@ -3,9 +3,6 @@
 
 namespace AppBundle\MixBlup;
 
-use AppBundle\Enumerator\MixBlupNullFiller;
-use AppBundle\Setting\MixBlupSetting;
-use AppBundle\Util\ArrayUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 
 /**
@@ -47,7 +44,7 @@ class ExteriorProcess extends MixBlupProcessBase implements MixBlupProcessInterf
      */
     function generatePedigreeFile()
     {
-        // TODO: Implement generatePedigreeFile() method.
+        return MixblupPedigreeFileGenerator::generateFullSet($this->conn);
     }
     
     
