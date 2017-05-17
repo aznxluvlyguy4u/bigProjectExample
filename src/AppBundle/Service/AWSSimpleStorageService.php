@@ -60,10 +60,10 @@ class AWSSimpleStorageService
          */
         switch($currentEnvironment) {
             case Environment::PROD:
-                $this->pathApppendage = "";
+                $this->pathApppendage = "production/";
                 break;
             case Environment::STAGE:
-                $this->pathApppendage = 'stage/';
+                $this->pathApppendage = 'staging/';
                 break;
             case Environment::DEV:
                 $this->pathApppendage = 'dev/';
