@@ -46,6 +46,8 @@ use AppBundle\Service\AWSSimpleStorageService;
 use AppBundle\Service\EntityGetter;
 use AppBundle\Service\HealthService;
 use AppBundle\Service\IRSerializer;
+use AppBundle\Service\MixBlupInputQueueService;
+use AppBundle\Service\MixBlupOutputQueueService;
 use AppBundle\Util\Finder;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\HeaderValidation;
@@ -79,6 +81,8 @@ class APIController extends Controller implements APIControllerInterface
       ServiceId::HEALTH_SERVICE => null,
       ServiceId::INTERNAL_QUEUE_SERVICE => null,
       ServiceId::LOGGER => null,
+      ServiceId::MIXBLUP_INPUT_QUEUE_SERVICE => null,
+      ServiceId::MIXBLUP_OUTPUT_QUEUE_SERVICE => null,
       ServiceId::REDIS_CLIENT => null,
       ServiceId::SERIALIZER => null,
       ServiceId::STORAGE_SERVICE => null,
@@ -114,6 +118,10 @@ class APIController extends Controller implements APIControllerInterface
   protected function getInternalQueueService() { return $this->getService(ServiceId::INTERNAL_QUEUE_SERVICE); }
   /** @return Logger */
   protected function getLogger() { return $this->getService(ServiceId::LOGGER); }
+  /** @return MixBlupInputQueueService */
+  protected function getMixBlupInputQueueService() { return $this->getService(ServiceId::MIXBLUP_INPUT_QUEUE_SERVICE); }
+  /** @return MixBlupOutputQueueService */
+  protected function getMixBlupOutputQueueService() { return $this->getService(ServiceId::MIXBLUP_OUTPUT_QUEUE_SERVICE); }
   /** @return \Redis */
   protected function getRedisClient() { return $this->getService(ServiceId::REDIS_CLIENT); }
   /** @return IRSerializer */
