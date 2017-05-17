@@ -24,6 +24,7 @@ class JsonInputConstant
     const PEDIGREE_COUNTRY_CODE = 'pedigree_country_code';
     const PEDIGREE_NUMBER = 'pedigree_number';
     const DATE_OF_BIRTH = 'date_of_birth';
+    const UBN_OF_BIRTH = 'ubn_of_birth';
     const GENDER = 'gender';
     const IS_REVEAL_HISTORIC_ANIMALS = 'is_reveal_historic_animals';
     const IS_HISTORIC_ANIMAL = 'is_historic_animal';
@@ -41,6 +42,8 @@ class JsonInputConstant
     const BREEDER_NUMBER = 'breeder_number';
     const ANIMAL_TYPE = 'animal_type';
     const NICKNAME = 'nickname';
+    const HETEROSIS = 'heterosis';
+    const RECOMBINATION = 'recombination';
 
     //Request & Response
     const ERROR_CODE = 'error_code';
@@ -143,6 +146,8 @@ class JsonInputConstant
 
     //Persons
     const PERSON_ID = 'person_id';
+    const INSPECTOR_CODE = 'inspector_code';
+    const LINEAR_INSPECTOR_CODE = 'linear_inspector_code';
 
     //Measurements
     const MEASUREMENT_ID = 'measurement_id';
@@ -154,6 +159,7 @@ class JsonInputConstant
     const INSPECTOR_ID = 'inspector_id';
     const INSPECTOR_FIRST_NAME = 'inspector_first_name';
     const INSPECTOR_LAST_NAME = 'inspector_last_name';
+    const YEAR_AND_UBN_OF_BIRTH = 'year_and_ubn_of_birth';
 
     //Weight measurements
     const WEIGHT_MEASUREMENTS = 'weight_measurements';
