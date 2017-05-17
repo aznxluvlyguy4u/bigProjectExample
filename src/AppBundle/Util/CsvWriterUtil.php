@@ -60,4 +60,19 @@ class CsvWriterUtil
     {
         return str_repeat($char, $length);
     }
+
+
+    /**
+     * @param array $data
+     * @param int $columnWidth
+     * @param string $key
+     * @param bool $useColumnPadding
+     * @param string $nullReplacement
+     * @return string
+     */
+    public static function getFormattedValueFromArray($data, $columnWidth, $key, $useColumnPadding = true, $nullReplacement = null)
+    {
+        $value = ArrayUtil::get($key, $data, $nullReplacement);
+        return CsvWriterUtil::pad($value, $columnWidth, $useColumnPadding);
+    }
 }

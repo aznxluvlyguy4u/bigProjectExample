@@ -122,8 +122,7 @@ class MixBlupDataFileBase
      */
     protected static function getFormattedValueFromData($data, $columnWidth, $key, $useColumnPadding = true, $nullReplacement = MixBlupInstructionFileBase::MISSING_REPLACEMENT)
     {
-        $value = ArrayUtil::get($key, $data, $nullReplacement);
-        return CsvWriterUtil::pad($value, $columnWidth, $useColumnPadding);
+        return CsvWriterUtil::getFormattedValueFromArray($data, $columnWidth, $key, $useColumnPadding, $nullReplacement);
     }
 
 
@@ -208,7 +207,7 @@ class MixBlupDataFileBase
      * @param string $key
      * @return mixed|null
      */
-    protected static function getUbnOfBirthAsLastColumnValue($data, $key = JsonInputConstant::UBN_OF_BIRTH)
+    public static function getUbnOfBirthAsLastColumnValue($data, $key = JsonInputConstant::UBN_OF_BIRTH)
     {
         return ArrayUtil::get($key, $data, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
     }
