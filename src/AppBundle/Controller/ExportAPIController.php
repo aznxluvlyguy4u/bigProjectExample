@@ -31,8 +31,7 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve a DeclareExport by given ID",
-   *   output = "AppBundle\Entity\DeclareExport"
+   *   description = "Retrieve a DeclareExport by given ID"
    * )
    * @param Request $request the request object
    * @param int $Id Id of the DeclareExport to be returned
@@ -78,8 +77,7 @@ class ExportAPIController extends APIController implements ExportAPIControllerIn
    *      }
    *   },
    *   resource = true,
-   *   description = "Retrieve a a list of DeclareExports",
-   *   output = "AppBundle\Entity\DeclareExport"
+   *   description = "Retrieve a a list of DeclareExports"
    * )
    * @param Request $request the request object
    * @return JsonResponse

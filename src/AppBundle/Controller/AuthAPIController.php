@@ -50,9 +50,7 @@ class AuthAPIController extends APIController {
    *     }
    *   },
    *   resource = true,
-   *   description = "Register a user",
-   *   input = "AppBundle\Entity\Client",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Register a user"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -121,8 +119,7 @@ class AuthAPIController extends APIController {
    *     }
    *   },
    *   resource = true,
-   *   description = "Validate whether an accesstoken is valid or not.",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Validate whether an accesstoken is valid or not."
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -148,8 +145,7 @@ class AuthAPIController extends APIController {
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve a valid access token for a registered and activated user",
-   *   output = "AppBundle\Entity\Client"
+   *   description = "Retrieve a valid access token for a registered and activated user"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -395,8 +391,7 @@ class AuthAPIController extends APIController {
    *     }
    *   },
    *   resource = true,
-   *   description = "Validate whether a ubn in the header is valid or not.",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Validate whether a ubn in the header is valid or not."
    * )
    * @param Request $request the request object
    * @return JsonResponse

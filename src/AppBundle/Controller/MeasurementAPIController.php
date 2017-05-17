@@ -53,9 +53,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      *     }
      *   },
      *   resource = true,
-     *   description = "Update an exterior measurement for a specific ULN and measurementDate",
-     *   input = "AppBundle\Entity\Exterior",
-     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     *   description = "Update an exterior measurement for a specific ULN and measurementDate"
      * )
      *
      * @param Request $request the request object
@@ -152,9 +150,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      *     }
      *   },
      *   resource = true,
-     *   description = "Update or Deactivate an exterior measurement for a specific ULN and measurementDate",
-     *   input = "AppBundle\Entity\Exterior",
-     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     *   description = "Update or Deactivate an exterior measurement for a specific ULN and measurementDate"
      * )
      *
      * @param Request $request the request object
@@ -283,9 +279,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      *     }
      *   },
      *   resource = true,
-     *   description = "Update an exterior measurement for a specific ULN and measurementDate",
-     *   input = "AppBundle\Entity\Exterior",
-     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     *   description = "Update an exterior measurement for a specific ULN and measurementDate"
      * )
      *
      * @param Request $request the request object
@@ -334,9 +328,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      *     }
      *   },
      *   resource = true,
-     *   description = "Update an exterior measurement for Edits for a specific ULN and measurementDate",
-     *   input = "AppBundle\Entity\Exterior",
-     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     *   description = "Update an exterior measurement for Edits for a specific ULN and measurementDate"
      * )
      *
      * @param Request $request the request object
@@ -398,9 +390,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      *     }
      *   },
      *   resource = true,
-     *   description = "Update an exterior measurement for a specific ULN and measurementDate",
-     *   input = "AppBundle\Entity\Exterior",
-     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     *   description = "Update an exterior measurement for a specific ULN and measurementDate"
      * )
      *
      * @param Request $request the request object

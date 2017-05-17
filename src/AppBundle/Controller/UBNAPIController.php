@@ -31,9 +31,7 @@ class UBNAPIController extends APIController implements UBNAPIControllerInterfac
    *     }
    *   },
    *   resource = true,
-   *   description = "Post a RetrieveUbnDetails request",
-   *   input = "AppBundle\Entity\RetrieveUbnDetails",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Post a RetrieveUbnDetails request"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -75,9 +73,7 @@ class UBNAPIController extends APIController implements UBNAPIControllerInterfac
    *     }
    *   },
    *   resource = true,
-   *   description = "Get list of UBN Processors",
-   *   input = "AppBundle\Entity\DeclareLosses",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Get list of UBN Processors"
    * )
    *
    * @param Request $request the request object

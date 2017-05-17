@@ -39,9 +39,7 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
    *     }
    *   },
    *   resource = true,
-   *   description = "Post a new DeclareTagsTransfer request, containing multiple Tags to be transferred",
-   *   input = "AppBundle\Entity\DeclareTagsTransfer",
-   *   output = "AppBundle\Entity\DeclareTagsTransfer"
+   *   description = "Post a new DeclareTagsTransfer request, containing multiple Tags to be transferred"
    * )
    * @param Request $request
    * @return JsonResponse
@@ -107,9 +105,7 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
    *     }
    *   },
    *   resource = true,
-   *   description = "Get TagTransferItemRequests which have failed last responses",
-   *   input = "AppBundle\Entity\TagTransferItemRequest",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Get TagTransferItemRequests which have failed last responses"
    * )
    *
    * @param Request $request the request object
@@ -145,9 +141,7 @@ class TagsTransferAPIController extends APIController implements TagsTransferAPI
    *     }
    *   },
    *   resource = true,
-   *   description = "Get TagTransferItemRequests which have the following requestState: OPEN, REVOKING, REVOKED, FINISHED or FINISHED_WITH_WARNING",
-   *   input = "AppBundle\Entity\TagTransferItemRequest",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Get TagTransferItemRequests which have the following requestState: OPEN, REVOKING, REVOKED, FINISHED or FINISHED_WITH_WARNING"
    * )
    *
    * @param Request $request the request object

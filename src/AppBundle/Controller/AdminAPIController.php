@@ -45,10 +45,8 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    *       "description"="A valid accesstoken belonging to the admin that is registered with the API"
    *     }
    *   },
-   *
    *   resource = true,
-   *   description = "Retrieve a list of all Admins",
-   *   output = "AppBundle\Entity\Employee"
+   *   description = "Retrieve a list of all Admins"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -85,10 +83,8 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    *       "description"="A valid accesstoken belonging to the admin that is registered with the API"
    *     }
    *   },
-   *
    *   resource = true,
-   *   description = "Create new Admin",
-   *   output = "AppBundle\Entity\Employee"
+   *   description = "Create new Admin"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -161,10 +157,8 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    *       "description"="A valid accesstoken belonging to the admin that is registered with the API"
    *     }
    *   },
-   *
    *   resource = true,
-   *   description = "Edit Admins",
-   *   output = "AppBundle\Entity\Employee"
+   *   description = "Edit Admins"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -229,10 +223,8 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    *       "description"="A valid accesstoken belonging to the admin that is registered with the API"
    *     }
    *   },
-   *
    *   resource = true,
-   *   description = "Deactivate a list of Admins",
-   *   output = "AppBundle\Entity\Employee"
+   *   description = "Deactivate a list of Admins"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -417,8 +409,7 @@ class AdminAPIController extends APIController implements AdminAPIControllerInte
    *   },
    *
    *   resource = true,
-   *   description = "Retrieve a list of all Admin access level types",
-   *   output = "AppBundle\Entity\Employee"
+   *   description = "Retrieve a list of all Admin access level types"
    * )
    * @param Request $request the request object
    * @return JsonResponse

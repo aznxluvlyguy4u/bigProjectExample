@@ -40,9 +40,7 @@ class TagsReplaceAPIController extends APIController {
    *     }
    *   },
    *   resource = true,
-   *   description = "Post a new DeclareTagReplace request, containing a Tag to be replaced",
-   *   input = "AppBundle\Entity\DeclareTagReplace",
-   *   output = "AppBundle\Entity\DeclareTagReplaceResponse"
+   *   description = "Post a new DeclareTagReplace request, containing a Tag to be replaced"
    * )
    * @param Request $request
    * @return JsonResponse

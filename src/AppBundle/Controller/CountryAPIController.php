@@ -41,8 +41,7 @@ class CountryAPIController extends APIController implements CountryAPIController
    *      }
    *   },
    *   resource = true,
-   *   description = "Retrieve a list of countries with ISO 3166-1 two letter codes and corresponding full country name",
-   *   output = "AppBundle\Entity\Country"
+   *   description = "Retrieve a list of countries with ISO 3166-1 two letter codes and corresponding full country name"
    * )
    * @param Request $request the request object
    * @return Response
@@ -111,8 +110,7 @@ class CountryAPIController extends APIController implements CountryAPIController
    *     }
    *   },
    *   resource = true,
-   *   description = "Get list of Dutch provinces with their full name and code",
-   *   output = "AppBundle\Entity\Province"
+   *   description = "Get list of Dutch provinces with their full name and code"
    * )
    * @param Request $request the request object
    * @return JsonResponse

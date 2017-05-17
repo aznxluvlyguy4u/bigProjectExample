@@ -33,8 +33,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve a DeclareLoss by given ID",
-   *   output = "AppBundle\Entity\DeclareLoss"
+   *   description = "Retrieve a DeclareLoss by given ID"
    * )
    * @param Request $request the request object
    * @param int $Id Id of the DeclareLoss to be returned
@@ -82,8 +81,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    *      }
    *   },
    *   resource = true,
-   *   description = "Retrieve a a list of DeclareLosses",
-   *   output = "AppBundle\Entity\DeclareLoss"
+   *   description = "Retrieve a a list of DeclareLosses"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -135,9 +133,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    *     }
    *   },
    *   resource = true,
-   *   description = "Post a DeclareLoss request",
-   *   input = "AppBundle\Entity\DeclareLoss",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Post a DeclareLoss request"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -194,9 +190,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    *     }
    *   },
    *   resource = true,
-   *   description = "Update a DeclareLoss request",
-   *   input = "AppBundle\Entity\DeclareLoss",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Update a DeclareLoss request"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -256,9 +250,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    *     }
    *   },
    *   resource = true,
-   *   description = "Get DeclareLosses which have failed last responses",
-   *   input = "AppBundle\Entity\DeclareLoss",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Get DeclareLosses which have failed last responses"
    * )
    *
    * @param Request $request the request object
@@ -291,9 +283,7 @@ class LossAPIController extends APIController implements LossAPIControllerInterf
    *     }
    *   },
    *   resource = true,
-   *   description = "Get DeclareLosses which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED",
-   *   input = "AppBundle\Entity\DeclareLosses",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Get DeclareLosses which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED"
    * )
    *
    * @param Request $request the request object

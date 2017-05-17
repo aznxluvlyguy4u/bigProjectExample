@@ -54,8 +54,7 @@ class ReportAPIController extends APIController {
    *     }
    *   },
    *   resource = true,
-   *   description = "Generate pedigree certificates for multiple sheep and return a download link for the pdf",
-   *   output = "AppBundle\Entity\Animal"
+   *   description = "Generate pedigree certificates for multiple sheep and return a download link for the pdf"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -122,8 +121,7 @@ class ReportAPIController extends APIController {
    *     }
    *   },
    *   resource = true,
-   *   description = "Generate inbreeding coefficient pdf report of (hypothetical) offspring of a Ram and a list of Ewes",
-   *   output = "AppBundle\Entity\Animal"
+   *   description = "Generate inbreeding coefficient pdf report of (hypothetical) offspring of a Ram and a list of Ewes"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -175,8 +173,7 @@ class ReportAPIController extends APIController {
    *     }
    *   },
    *   resource = true,
-   *   description = "Generate livestock pdf report",
-   *   output = "AppBundle\Entity\Animal"
+   *   description = "Generate livestock pdf report"
    * )
    * @param Request $request the request object
    * @return JsonResponse

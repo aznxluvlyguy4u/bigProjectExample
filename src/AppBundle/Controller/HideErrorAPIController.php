@@ -37,9 +37,7 @@ class HideErrorAPIController extends APIController implements HideErrorAPIContro
      *     }
      *   },
      *   resource = true,
-     *   description = "hide an error response for any IR-declaration",
-     *   input = "AppBundle\Component\HttpFoundation\JsonResponse",
-     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     *   description = "hide an error response for any IR-declaration"
      * )
      * @param Request $request the request object
      * @return JsonResponse
@@ -78,9 +76,7 @@ class HideErrorAPIController extends APIController implements HideErrorAPIContro
      *     }
      *   },
      *   resource = true,
-     *   description = "hide an error response for any non-IR-declaration",
-     *   input = "AppBundle\Component\HttpFoundation\JsonResponse",
-     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     *   description = "hide an error response for any non-IR-declaration"
      * )
      * @param Request $request the request object
      * @return JsonResponse

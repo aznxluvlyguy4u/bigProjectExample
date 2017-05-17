@@ -34,8 +34,7 @@ class ComponentAPIController extends APIController {
    *     }
    *   },
    *   resource = true,
-   *   description = "Get data for menu bar at the top.",
-   *   output = "AppBundle\Entity\Client"
+   *   description = "Get data for menu bar at the top."
    * )
    * @param Request $request
    * @return JsonResponse

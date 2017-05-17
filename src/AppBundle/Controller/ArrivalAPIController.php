@@ -59,8 +59,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve a DeclareArrival by given ID",
-   *   output = "AppBundle\Entity\DeclareArrival"
+   *   description = "Retrieve a DeclareArrival by given ID"
    * )
    * @param Request $request the request object
    * @param int $Id Id of the DeclareArrival to be returned
@@ -109,8 +108,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    *      }
    *   },
    *   resource = true,
-   *   description = "Retrieve a a list of DeclareArrivals",
-   *   output = "AppBundle\Entity\DeclareArrival"
+   *   description = "Retrieve a a list of DeclareArrivals"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -161,9 +159,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    *     }
    *   },
    *   resource = true,
-   *   description = "Post a DeclareArrival or DeclareImport request",
-   *   input = "AppBundle\Entity\DeclareArrival",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Post a DeclareArrival or DeclareImport request"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -287,9 +283,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    *     }
    *   },
    *   resource = true,
-   *   description = "Update a DeclareArrival or DeclareImport request",
-   *   input = "AppBundle\Entity\DeclareArrival",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Update a DeclareArrival or DeclareImport request"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -380,9 +374,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    *     }
    *   },
    *   resource = true,
-   *   description = "Get DeclareArrivals & DeclareImports which have failed last responses",
-   *   input = "AppBundle\Entity\DeclareArrival",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Get DeclareArrivals & DeclareImports which have failed last responses"
    * )
    *
    * @param Request $request the request object
@@ -420,9 +412,7 @@ class ArrivalAPIController extends APIController implements ArrivalAPIController
    *     }
    *   },
    *   resource = true,
-   *   description = "Get DeclareArrivals & DeclareImports which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED",
-   *   input = "AppBundle\Entity\DeclareArrival",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Get DeclareArrivals & DeclareImports which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED"
    * )
    *
    * @param Request $request the request object

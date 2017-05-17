@@ -31,8 +31,7 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve a DeclareImport by given ID",
-   *   output = "AppBundle\Entity\DeclareArrival"
+   *   description = "Retrieve a DeclareImport by given ID"
    * )
    * @param Request $request the request object
    * @param int $Id Id of the DeclareImport to be returned
@@ -79,8 +78,7 @@ class ImportAPIController extends APIController implements ImportAPIControllerIn
    *      }
    *   },
    *   resource = true,
-   *   description = "Retrieve a a list of DeclareImports",
-   *   output = "AppBundle\Entity\DeclareImport"
+   *   description = "Retrieve a a list of DeclareImports"
    * )
    * @param Request $request the request object
    * @return JsonResponse
