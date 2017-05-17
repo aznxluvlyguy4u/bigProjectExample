@@ -79,10 +79,18 @@ class MixBlupService implements MixBlupServiceInterface
      */
     public function run()
     {
-        $this->write();
-        $this->upload();
-        $this->sendMessage();
-        $this->deleteMixBlupFilesInCache();
+        $writeResult = $this->write();
+        if($writeResult) {
+            $uploadResult = $this->upload();
+
+            if($uploadResult) {
+                $sendMessageResult = $this->sendMessage();
+
+                if($sendMessageResult) {
+                    $this->deleteMixBlupFilesInCache();
+                }
+            }
+        }
         gc_collect_cycles();
     }
 
@@ -99,8 +107,10 @@ class MixBlupService implements MixBlupServiceInterface
          */
         foreach($this->mixBlupProcesses as $mixBlupType => $mixBlupProcess)
         {
-            $mixBlupProcess->write();
+            $writeResult = $mixBlupProcess->write();
+            if(!$writeResult) { return false; }
         }
+        return true;
     }
     
     
@@ -110,6 +120,7 @@ class MixBlupService implements MixBlupServiceInterface
     private function upload()
     {
         // TODO: Implement upload() method.
+        return false;
     }
 
 
@@ -119,6 +130,7 @@ class MixBlupService implements MixBlupServiceInterface
     private function sendMessage()
     {
         // TODO: Implement sendMessage() method.
+        return false;
     }
 
 
