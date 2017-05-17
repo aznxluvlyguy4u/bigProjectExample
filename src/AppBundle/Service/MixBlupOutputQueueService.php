@@ -26,10 +26,12 @@ class MixBlupOutputQueueService extends AwsQueueServiceBase
 
     /**
      * @param string $jsonMessageBody
+     * @param string $messageType
+     * @param int $requestId
      * @return array|null
      */
-    public function send($jsonMessageBody)
+    public function send($jsonMessageBody, $messageType = MixBlupMessageType::MIXBLUP_OUTPUT_FILES, $requestId = 1)
     {
-        return parent::send(1, $jsonMessageBody, MixBlupMessageType::MIXBLUP_OUTPUT_FILES);
+        return parent::send($jsonMessageBody, $messageType, $requestId);
     }
 }

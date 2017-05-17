@@ -98,7 +98,7 @@ abstract class AwsQueueServiceBase
      * @param string $requestType
      * @return array|null
      */
-    public function send($requestId, $messageBody, $requestType)
+    public function send($messageBody, $requestType, $requestId)
     {
         if($requestId == null && $messageBody == null){
             return null;

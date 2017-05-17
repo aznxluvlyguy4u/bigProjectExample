@@ -171,9 +171,8 @@ class MixBlupService implements MixBlupServiceInterface
      */
     private function sendMessage()
     {
-        // TODO: Implement sendMessage() method.
-        $this->jsonUploadMessage;
-        return false;
+        $sendToQresult = $this->queueService->send($this->jsonUploadMessage);
+        return $sendToQresult['statusCode'] == '200';
     }
 
 
