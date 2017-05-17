@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Service;
+use AppBundle\Enumerator\MixBlupMessageType;
 
 
 /**
@@ -23,4 +24,12 @@ class MixBlupInputQueueService extends AwsQueueServiceBase
     }
 
 
+    /**
+     * @param string $jsonMessageBody
+     * @return array|null
+     */
+    public function send($jsonMessageBody)
+    {
+        return parent::send(1, $jsonMessageBody, MixBlupMessageType::MIXBLUP_INPUT_FILES);
+    }
 }
