@@ -30,6 +30,8 @@ class JsonInputConstant
     const IS_HISTORIC_ANIMAL = 'is_historic_animal';
     const IS_PUBLIC = 'is_public';
     const ULN = 'uln';
+    const ULN_FATHER = 'uln_mother';
+    const ULN_MOTHER = 'uln_father';
     const STN = 'stn';
     const SCRAPIE_GENOTYPE = 'scrapie_genotype';
     const BREED = 'breed';
