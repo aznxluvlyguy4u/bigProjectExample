@@ -33,6 +33,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
      * Post a RevokeDeclaration request.
      *
      * @ApiDoc(
+     *   section = "Revokes",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -42,9 +43,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
      *     }
      *   },
      *   resource = true,
-     *   description = "Post a RevokeDeclaration request",
-     *   input = "AppBundle\Entity\RevokeDeclaration",
-     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     *   description = "Post a RevokeDeclaration request"
      * )
      *
      * @param Request $request the request object
@@ -92,6 +91,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
      * Revoke non-IR declarations
      *
      * @ApiDoc(
+     *   section = "Revokes",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -101,9 +101,7 @@ class RevokeAPIController extends APIController implements RevokeAPIControllerIn
      *     }
      *   },
      *   resource = true,
-     *   description = "Revoke Mate",
-     *   input = "AppBundle\Entity\Mate",
-     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     *   description = "Revoke Mate"
      * )
      *
      * @param Request $request the request object

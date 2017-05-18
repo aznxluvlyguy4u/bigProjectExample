@@ -35,6 +35,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    * Get a DeclareDepart, found by it's ID.
    *
    * @ApiDoc(
+   *   section = "Departs",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -44,8 +45,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve a DeclareDepart by given ID",
-   *   output = "AppBundle\Entity\DeclareDepart"
+   *   description = "Retrieve a DeclareDepart by given ID"
    * )
    * @param Request $request the request object
    * @param int $Id Id of the DeclareDepart to be returned
@@ -75,6 +75,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    * }
    *
    * @ApiDoc(
+   *   section = "Departs",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -93,8 +94,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    *      }
    *   },
    *   resource = true,
-   *   description = "Retrieve a a list of DeclareDepartures",
-   *   output = "AppBundle\Entity\DeclareDepart"
+   *   description = "Retrieve a a list of DeclareDepartures"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -137,6 +137,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     * Create a new DeclareDepart Request.
     *
     * @ApiDoc(
+    *   section = "Departs",
     *   requirements={
     *     {
     *       "name"="AccessToken",
@@ -146,9 +147,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
     *     }
     *   },
     *   resource = true,
-    *   description = "Post a DeclareDepart request",
-    *   input = "AppBundle\Entity\DeclareDepart",
-    *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+    *   description = "Post a DeclareDepart request"
     * )
     * @param Request $request the request object
     * @return JsonResponse
@@ -252,6 +251,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    * Update existing DeclareDepart Request.
    *
    * @ApiDoc(
+   *   section = "Departs",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -261,9 +261,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Update a DeclareDepart request",
-   *   input = "AppBundle\Entity\DeclareDepart",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Update a DeclareDepart request"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -331,6 +329,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    * Get DeclareDeparts & DeclareExports which have failed last responses.
    *
    * @ApiDoc(
+   *   section = "Departs",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -340,9 +339,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Get DeclareDeparts & DeclareExports which have failed last responses",
-   *   input = "AppBundle\Entity\DeclareDeparts",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Get DeclareDeparts & DeclareExports which have failed last responses"
    * )
    *
    * @param Request $request the request object
@@ -369,6 +366,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    * For the history view, get DeclareDeparts & DeclareExports which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED
    *
    * @ApiDoc(
+   *   section = "Departs",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -378,9 +376,7 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Get DeclareDeparts & DeclareExports which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED",
-   *   input = "AppBundle\Entity\DeclareDepart",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Get DeclareDeparts & DeclareExports which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED"
    * )
    *
    * @param Request $request the request object
