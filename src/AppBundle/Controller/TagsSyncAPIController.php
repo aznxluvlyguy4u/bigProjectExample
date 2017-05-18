@@ -23,6 +23,7 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
    * Retrieve a RetrieveTags request, found by its ID.
    *
    * @ApiDoc(
+   *   section = "Tag Syncs",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -32,8 +33,7 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve a RetrieveTag request, found by its ID",
-   *   output = "AppBundle\Entity\RetrieveTags"
+   *   description = "Retrieve a RetrieveTag request, found by its ID"
    * )
    * @param Request $request
    * @param int $Id Id of the RetrieveTags to be returned
@@ -58,6 +58,7 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
    * }
    *
    * @ApiDoc(
+   *   section = "Tag Syncs",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -76,8 +77,7 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
    *      }
    *   },
    *   resource = true,
-   *   description = "Retrieve a list of RetrieveTags",
-   *   output = "array"
+   *   description = "Retrieve a list of RetrieveTags"
    * )
    * @param Request $request
    * @return JsonResponse
@@ -102,6 +102,7 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
    * Create a new RetrieveTags request
    *
    * @ApiDoc(
+   *   section = "Tag Syncs",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -111,9 +112,7 @@ class TagsSyncAPIController extends APIController implements TagsSyncAPIControll
    *     }
    *   },
    *   resource = true,
-   *   description = "Create a new RetrieveTags request",
-   *   input = "AppBundle\Entity\RetrieveTags",
-   *   output = "AppBundle\Entity\RetrieveTags"
+   *   description = "Create a new RetrieveTags request"
    * )
    * @param Request $request
    * @return JsonResponse
