@@ -2,16 +2,9 @@
 
 namespace AppBundle\Command;
 
-use AppBundle\Entity\Animal;
-use AppBundle\Entity\AnimalRepository;
-use AppBundle\Entity\Location;
-use AppBundle\Entity\LocationRepository;
+use AppBundle\Service\MixBlupService;
 use AppBundle\Util\CommandUtil;
-
 use AppBundle\Util\DoctrineUtil;
-use AppBundle\Util\NullChecker;
-use AppBundle\Util\SqlUtil;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
@@ -20,9 +13,12 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Finder\Finder;
 
-class NsfoTestCommand extends ContainerAwareCommand
+/**
+ * Class NsfoMixBlupCommand
+ * @package AppBundle\Command
+ */
+class NsfoMixBlupCommand extends ContainerAwareCommand
 {
     const TITLE = 'MixBlup';
     const DEFAULT_OPTION = 0;
@@ -37,6 +33,9 @@ class NsfoTestCommand extends ContainerAwareCommand
 
     /** @var CommandUtil */
     private $cmdUtil;
+
+    /** @var MixBlupService */
+    private $mixBlupService;
 
     protected function configure()
     {
@@ -55,6 +54,7 @@ class NsfoTestCommand extends ContainerAwareCommand
         $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
+        $this->mixBlupService = $this->getContainer()->get('app.routine.mixblup');
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
@@ -64,17 +64,20 @@ class NsfoTestCommand extends ContainerAwareCommand
             'Choose option: ', "\n",
             '1: Generate & Upload MixBlupInputFiles and send message to MixBlup queue', "\n",
             '2: Download and process MixBlup output files (relani & solani)', "\n",
+            '3: Generate MixBlup instruction files only', "\n",
             'DEFAULT: Abort', "\n"
         ], self::DEFAULT_OPTION);
 
         switch ($option) {
 
             case 1:
-                $mixBlupService = $this->getContainer()->get('app.routine.mixblup');
-                $mixBlupService->run();
+                $this->mixBlupService->run();
                 break;
             case 2:
                 $output->writeln('STILL TO BE IMPLEMENTED'); //TODO
+                break;
+            case 3:
+                $this->mixBlupService->writeInstructionFiles();
                 break;
             default:
                 $output->writeln('ABORTED');
