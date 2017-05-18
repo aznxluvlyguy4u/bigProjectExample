@@ -27,6 +27,7 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
    * Retrieve a Tag by its ulnCountryCode and ulnNumber, concatenated, i.e.: NL123456789
    *
    * @ApiDoc(
+   *   section = "Tags",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -36,8 +37,7 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve a Tag by its ulnCountryCode and ulnNumber, concatenated.",
-   *   output = "AppBundle\Entity\Tag"
+   *   description = "Retrieve a Tag by its ulnCountryCode and ulnNumber, concatenated."
    * )
    * @param Request $request the request object
    * @param $Id
@@ -80,6 +80,7 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
    * }
    *
    * @ApiDoc(
+   *   section = "Tags",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -98,8 +99,7 @@ class TagsAPIController extends APIController implements TagsAPIControllerInterf
    *      }
    *   },
    *   resource = true,
-   *   description = "Retrieve a list of Tags",
-   *   output = "array"
+   *   description = "Retrieve a list of Tags"
    * )
    * @param Request $request
    * @return JsonResponse

@@ -25,6 +25,7 @@ class ClientAPIController extends APIController {
    * Retrieve either a list of all Clients or a Client belonging to a certain UBN:
    *
    * @ApiDoc(
+   *   section = "Clients",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -43,8 +44,7 @@ class ClientAPIController extends APIController {
    *      }
    *   },
    *   resource = true,
-   *   description = "Retrieve either a list of all Clients or a Client belonging to a certain UBN:",
-   *   output = "AppBundle\Entity\Client"
+   *   description = "Retrieve either a list of all Clients or a Client belonging to a certain UBN"
    * )
    * @param Request $request the request object
    * @return JsonResponse

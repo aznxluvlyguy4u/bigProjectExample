@@ -50,6 +50,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Retrieve a list of animals. Animal-types are: {ram, ewe, neuter}
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -75,8 +76,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *      },
    *   },
    *   resource = true,
-   *   description = "Retrieve a list of animals",
-   *   output = "AppBundle\Entity\Animal"
+   *   description = "Retrieve a list of animals"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -113,6 +113,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Retrieve an animal, found by it's ULN. For example NL100029511721
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -122,8 +123,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve an Animal by given ULN",
-   *   output = "AppBundle\Entity\Animal"
+   *   description = "Retrieve an Animal by given ULN"
    * )
    * @param Request $request the request object
    * @param $uln
@@ -145,6 +145,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Retrieve all alive, on-location, animals belonging to the given UBN.
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -154,8 +155,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = " Retrieve all alive, on-location, animals belonging to the given UBN",
-   *   output = "AppBundle\Entity\Animal"
+   *   description = " Retrieve all alive, on-location, animals belonging to the given UBN"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -193,10 +193,13 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
     return new JsonResponse(array (Constant::RESULT_NAMESPACE => $livestockAnimals), 200);
   }
 
+
+
   /**
    * Retrieve all historic animals,dead or alive, that ever resided on the given UBN.
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -206,8 +209,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve all historic animals,dead or alive, that ever resided on the given UBN",
-   *   output = "AppBundle\Entity\Animal"
+   *   description = "Retrieve all historic animals,dead or alive, that ever resided on the given UBN"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -243,12 +245,12 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
 
     return new JsonResponse([Constant::RESULT_NAMESPACE => $historicLivestockAnimals], 200);
   }
-
-
+  
   /**
    * Retrieve all alive rams in the NSFO database
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -258,8 +260,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve all alive rams in the NSFO database",
-   *   output = "AppBundle\Entity\Animal"
+   *   description = "Retrieve all alive rams in the NSFO database"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -278,6 +279,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Create a RetrieveAnimal request
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -287,9 +289,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Post a RetrieveAnimals request",
-   *   input = "AppBundle\Entity\RetrieveAnimals",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Post a RetrieveAnimals request"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -324,6 +324,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Create RetrieveAnimal requests for all clients.
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -333,9 +334,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Create RetrieveAnimal requests for all clients",
-   *   input = "AppBundle\Entity\RetrieveAnimals",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Create RetrieveAnimal requests for all clients"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -360,6 +359,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Create a RetrieveAnimalDetails request
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -369,9 +369,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Post a RetrieveAnimals request",
-   *   input = "AppBundle\Entity\RetrieveAnimals",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Post a RetrieveAnimals request"
    * )
    * @param Request $request the request object
    * @return JsonResponse
@@ -401,6 +399,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Update animal details
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -410,9 +409,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Update animal details",
-   *   input = "AppBundle\Entity\RetrieveAnimals",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Update animal details"
    * )
    * @param Request $request the request object
    * @param string $ulnString
@@ -473,6 +470,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Get Animal Details by ULN. For example NL100029511721
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -482,8 +480,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve an Animal by ULN",
-   *   output = "AppBundle\Entity\Animal"
+   *   description = "Retrieve an Animal by ULN"
    * )
    * @param Request $request the request object
    * @param String $ulnString
@@ -564,6 +561,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    * Change the gender of an Animal for a given ULN. For example NL100029511721
    *
    * @ApiDoc(
+   *   section = "Animals",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -573,9 +571,7 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Change the gender of an Animal for a given ULN",
-   *   input = "AppBundle\Entity\Animals",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Change the gender of an Animal for a given ULN"
    * )
    *
    * @param Request $request the request object
