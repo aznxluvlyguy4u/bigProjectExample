@@ -38,7 +38,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
     private static function reproductionInstructionFileBase(array $model = [], $titleType)
     {
         $start = [
-            'TITEL '.$titleType,
+            'TITLE '.$titleType,
             ' ',
             'DATAFILE  '.MixBlupFileName::getFertilityDataFileName().' !MISSING '.self::MISSING_REPLACEMENT,
             ' ID         A #uln van ooi/moeder of lam',  //uln

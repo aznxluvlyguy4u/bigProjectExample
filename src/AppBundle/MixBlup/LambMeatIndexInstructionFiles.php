@@ -36,7 +36,7 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
     private static function generateTestAttributeInstructionFile(array $model, $fileType)
     {
         $start = [
-            'TITEL '.$fileType,
+            'TITLE '.$fileType,
             ' ',
             'DATAFILE  '.MixBlupFileName::getLambMeatIndexDataFileName().' !MISSING '.self::MISSING_REPLACEMENT,
             ' ID         A #uln',  //uln

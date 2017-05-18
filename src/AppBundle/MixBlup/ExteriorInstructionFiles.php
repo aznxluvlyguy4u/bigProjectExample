@@ -40,7 +40,7 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
     private static function generateExteriorInstructionFile($model, $fileType)
     {
         $start = [
-            'TITEL   Exterieur: '.$fileType,
+            'TITLE   Exterieur: '.$fileType,
             ' ',
             'DATAFILE  '.MixBlupFileName::getExteriorDataFileName().' !MISSING '.self::MISSING_REPLACEMENT,
             ' ID         A #uln',  //uln
