@@ -671,7 +671,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     }
 
     /**
-     * Get a list of suggested candidate surrogates based on births done within 5,5 months from given date of birth, fand all other Ewes on current location
+     * Get a list of suggested candidate surrogates based on births done within 5,5 months from given date of birth, and all other Ewes on current location
      *
      * @ApiDoc(
      *   section = "Births",
@@ -684,7 +684,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
      *     }
      *   },
      *   resource = true,
-     *   description = "Get a list of suggested candidate surrogates based on births done within 5,5 months from given date of birth, fand all other Ewes on current location"
+     *   description = "Get a list of suggested candidate surrogates based on births done within 5,5 months from given date of birth, and all other Ewes on current location"
      * )
      * @param Request $request the request object
      * @return JsonResponse
