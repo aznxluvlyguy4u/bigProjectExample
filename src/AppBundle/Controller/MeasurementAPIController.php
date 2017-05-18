@@ -44,6 +44,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      * Update an exterior measurement for a specific ULN and measurementDate. For example NL100029511721 and 2016-12-05
      *
      * @ApiDoc(
+     *   section = "Measurements",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -53,9 +54,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      *     }
      *   },
      *   resource = true,
-     *   description = "Update an exterior measurement for a specific ULN and measurementDate",
-     *   input = "AppBundle\Entity\Exterior",
-     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     *   description = "Update an exterior measurement for a specific ULN and measurementDate"
      * )
      *
      * @param Request $request the request object
@@ -143,6 +142,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      * Update or Deactivate an exterior measurement for a specific ULN and measurementDate. For example NL100029511721 and 2016-12-05
      *
      * @ApiDoc(
+     *   section = "Measurements",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -152,9 +152,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      *     }
      *   },
      *   resource = true,
-     *   description = "Update or Deactivate an exterior measurement for a specific ULN and measurementDate",
-     *   input = "AppBundle\Entity\Exterior",
-     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     *   description = "Update or Deactivate an exterior measurement for a specific ULN and measurementDate"
      * )
      *
      * @param Request $request the request object
@@ -274,6 +272,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      * Return the allowed exterior measurement kinds for a specific ULN and measurementDate. For example NL100029511721 and 2016-12-05
      *
      * @ApiDoc(
+     *   section = "Measurements",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -283,9 +282,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      *     }
      *   },
      *   resource = true,
-     *   description = "Update an exterior measurement for a specific ULN and measurementDate",
-     *   input = "AppBundle\Entity\Exterior",
-     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     *   description = "Update an exterior measurement for a specific ULN and measurementDate"
      * )
      *
      * @param Request $request the request object
@@ -325,6 +322,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      * For edits the current kind is also allowed.
      *
      * @ApiDoc(
+     *   section = "Measurements",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -334,9 +332,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      *     }
      *   },
      *   resource = true,
-     *   description = "Update an exterior measurement for Edits for a specific ULN and measurementDate",
-     *   input = "AppBundle\Entity\Exterior",
-     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     *   description = "Update an exterior measurement for Edits for a specific ULN and measurementDate"
      * )
      *
      * @param Request $request the request object
@@ -389,6 +385,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      * Return the allowed exterior measurement kinds for a specific ULN and measurementDate. For example NL100029511721 and 2016-12-05
      *
      * @ApiDoc(
+     *   section = "Measurements",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -398,9 +395,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      *     }
      *   },
      *   resource = true,
-     *   description = "Update an exterior measurement for a specific ULN and measurementDate",
-     *   input = "AppBundle\Entity\Exterior",
-     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     *   description = "Update an exterior measurement for a specific ULN and measurementDate"
      * )
      *
      * @param Request $request the request object

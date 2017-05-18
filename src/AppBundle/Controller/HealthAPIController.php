@@ -32,6 +32,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
    * Get Health status found by ubn
    *
    * @ApiDoc(
+   *   section = "Healths",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -41,8 +42,7 @@ class HealthAPIController extends APIController implements HealthAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve a Health status for the given ubn",
-   *   output = "AppBundle\Entity\HealthOutput"
+   *   description = "Retrieve a Health status for the given ubn"
    * )
    * @param Request $request the request object
    * @param String $ubn

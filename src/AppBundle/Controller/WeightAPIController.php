@@ -34,6 +34,7 @@ class WeightAPIController extends APIController
      * Create new weight measurements for the given animals.
      *
      * @ApiDoc(
+     *   section = "Weights",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -43,9 +44,7 @@ class WeightAPIController extends APIController
      *     }
      *   },
      *   resource = true,
-     *   description = "Create new weight measurements for the given animals",
-     *   input = "AppBundle\Entity\Animals",
-     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     *   description = "Create new weight measurements for the given animals"
      * )
      *
      * @param Request $request the request object
@@ -84,6 +83,7 @@ class WeightAPIController extends APIController
      * Edit DeclareWeight and WeightMeasurements
      *
      * @ApiDoc(
+     *   section = "Weights",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -93,9 +93,7 @@ class WeightAPIController extends APIController
      *     }
      *   },
      *   resource = true,
-     *   description = "Edit Mate",
-     *   input = "AppBundle\Entity\Mate",
-     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     *   description = "Edit Mate"
      * )
      *
      * @param Request $request the request object
@@ -137,6 +135,7 @@ class WeightAPIController extends APIController
      * For the history view, get DeclareWeights which have the following requestState: FINISHED or REVOKED
      *
      * @ApiDoc(
+     *   section = "Weights",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -146,9 +145,7 @@ class WeightAPIController extends APIController
      *     }
      *   },
      *   resource = true,
-     *   description = "Get DeclareWeights which have the following requestState: FINISHED or REVOKED",
-     *   input = "AppBundle\Entity\DeclareWeight",
-     *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+     *   description = "Get DeclareWeights which have the following requestState: FINISHED or REVOKED"
      * )
      *
      * @param Request $request the request object

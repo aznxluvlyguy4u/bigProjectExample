@@ -56,6 +56,21 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     const SHOW_OTHER_SURROGATE_MOTHERS = false;
 
     /**
+     * Get all births for a given litter
+     *
+     * @ApiDoc(
+     *   section = "Births",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Get all births for a given litter"
+     * )
      * @param Request $request the request object
      * @param String $litterId
      * @return JsonResponse
@@ -88,6 +103,21 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     }
 
     /**
+    * Retrieve all births for a given location
+    *
+    * @ApiDoc(
+    *   section = "Births",
+    *   requirements={
+    *     {
+    *       "name"="AccessToken",
+    *       "dataType"="string",
+    *       "requirement"="",
+    *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+    *     }
+    *   },
+    *   resource = true,
+    *   description = "Retrieve all births for a given location"
+    * )
     * @param Request $request the request object
     * @return JsonResponse
     * @Route("")
@@ -128,6 +158,21 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     }
 
     /**
+    * Create a new birth of an animal
+    *
+    * @ApiDoc(
+    *   section = "Births",
+    *   requirements={
+    *     {
+    *       "name"="AccessToken",
+    *       "dataType"="string",
+    *       "requirement"="",
+    *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+    *     }
+    *   },
+    *   resource = true,
+    *   description = " Create a new birth of an animal"
+    * )
     * Create a new DeclareBirth request
     * @param Request $request the request object
     * @return JsonResponse
@@ -177,7 +222,21 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     }
 
     /**
-     * Revoke DeclareBirth request
+     * Revoke a birth of an animal
+     *
+     * @ApiDoc(
+     *   section = "Births",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Revoke a birth of an animal"
+     * )
      * @param Request $request the request object
      * @return JsonResponse
      * @Route("/revoke")
@@ -499,9 +558,21 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     }
 
     /**
-     * Get a list of suggested candidate fathers based on matings done in within 145 + (-12 & +12) days, from now
-     * and all other Rams on current location.
+     * Get a list of suggested candidate fathers based on matings done within 145 + (-12 & +12) days, from now, and all other Rams on current location
      *
+     * @ApiDoc(
+     *   section = "Births",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Get a list of suggested candidate fathers based on matings done within 145 + (-12 & +12) days, from now and all other Rams on current location"
+     * )
      * @param Request $request the request object
      * @return JsonResponse
      * @Route("/{uln}/candidate-fathers")
@@ -600,9 +671,21 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     }
 
     /**
-     * Get a list of suggested candidate surrogates based on births done in within 5,5 months from given date of birth
-     * and all other Ewes on current location.
+     * Get a list of suggested candidate surrogates based on births done within 5,5 months from given date of birth, and all other Ewes on current location
      *
+     * @ApiDoc(
+     *   section = "Births",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Get a list of suggested candidate surrogates based on births done within 5,5 months from given date of birth, and all other Ewes on current location"
+     * )
      * @param Request $request the request object
      * @return JsonResponse
      * @Route("/{uln}/candidate-surrogates")
@@ -739,9 +822,21 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
     }
 
     /**
-     * Get a list of suggested mothers based on matings done in within 145 days
-     * and all other Ewes on current location.
+     * Get a list of suggested mothers based on matings done within 145 days and all other Ewes on current location
      *
+     * @ApiDoc(
+     *   section = "Births",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Get a list of suggested mothers based on matings done within 145 days and all other Ewes on current location"
+     * )
      * @param Request $request the request object
      * @return JsonResponse
      * @Route("/candidate-mothers")
