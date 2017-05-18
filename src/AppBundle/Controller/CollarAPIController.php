@@ -20,6 +20,7 @@ class CollarAPIController extends APIController implements CollarAPIControllerIn
    * Retrieve a list of Collar colour codes
    *
    * @ApiDoc(
+   *   section = "Collars",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -29,8 +30,7 @@ class CollarAPIController extends APIController implements CollarAPIControllerIn
    *     }
    *   },
    *   resource = true,
-   *   description = "Retrieve a list of Collar colour codes",
-   *   output = "AppBundle\Entity\Collar"
+   *   description = "Retrieve a list of Collar colour codes"
    * )
    * @param Request $request the request object
    * @return Response
