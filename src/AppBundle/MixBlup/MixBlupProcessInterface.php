@@ -38,5 +38,10 @@ interface MixBlupProcessInterface
      */
     function write();
 
-   
+    /**
+     * Writes the instructionFile data to their respective text input files.
+     *
+     * @return boolean with true indicating if writes were successful
+     */
+    function writeInstructionFiles();
 }

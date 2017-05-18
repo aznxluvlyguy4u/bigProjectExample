@@ -147,16 +147,30 @@ class MixBlupProcessBase
     {
         $successfulProcess = true;
 
-        foreach ($this->generateInstructionFiles() as $filename => $records) {
-            $successfulWrite = $this->writeInstructionFile($records, $filename);
-            if(!$successfulWrite) { $successfulProcess = false; }
-        }
+        $successfulWrite = $this->writeInstructionFiles();
+        if(!$successfulWrite) { $successfulProcess = false; }
 
         $successfulWrite = $this->writeDataFile($this->generateDataFile(), $this->dataFileName);
         if(!$successfulWrite) { $successfulProcess = false; }
 
         $successfulWrite = $this->writePedigreeFile($this->generatePedigreeFile(), $this->pedigreeFileName);
         if(!$successfulWrite) { $successfulProcess = false; }
+
+        return $successfulProcess;
+    }
+
+
+    /**
+     * @inheritDoc
+     */
+    function writeInstructionFiles()
+    {
+        $successfulProcess = true;
+
+        foreach ($this->generateInstructionFiles() as $filename => $records) {
+            $successfulWrite = $this->writeInstructionFile($records, $filename);
+            if(!$successfulWrite) { $successfulProcess = false; }
+        }
 
         return $successfulProcess;
     }

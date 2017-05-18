@@ -86,6 +86,28 @@ class MixBlupService implements MixBlupServiceInterface
 
 
     /**
+     * @return bool
+     */
+    public function writeInstructionFiles()
+    {
+        /**
+         * @var string $mixBlupType
+         * @var MixBlupProcessInterface $mixBlupProcess
+         */
+        foreach($this->mixBlupProcesses as $mixBlupType => $mixBlupProcess)
+        {
+            $this->logger->notice('Writing MixBlup instruction files for: '.$mixBlupType);
+            $writeResult = $mixBlupProcess->writeInstructionFiles();
+            if(!$writeResult) {
+                $this->logger->critical('FAILED writing MixBlup instruction file for: '.$mixBlupType);
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    /**
      * @inheritDoc
      */
     public function run()
