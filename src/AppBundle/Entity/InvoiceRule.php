@@ -8,11 +8,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 
 /**
- * Class InvoiceRuleTemplate
+ * Class InvoiceRule
  * @ORM\Entity(repositoryClass="AppBundle\Entity\InvoiceRuleTemplateRepository")
  * @package AppBundle\Entity
  */
-class InvoiceRuleTemplate
+class InvoiceRule
 {
     /**
      * @ORM\Column(type="integer")
@@ -106,7 +106,7 @@ class InvoiceRuleTemplate
     private $isDeleted = false;
 
     /**
-     * InvoiceRuleTemplate constructor.
+     * InvoiceRule constructor.
      */
     public function __construct()
     {
@@ -286,9 +286,9 @@ class InvoiceRuleTemplate
 
     /**
      * TODO Find a better way to clone values (excluding the id) than using custom getters and setters
-     * @param InvoiceRuleTemplate $invoiceRuleTemplate
+     * @param InvoiceRule $invoiceRuleTemplate
      */
-    public function copyValues(InvoiceRuleTemplate $invoiceRuleTemplate)
+    public function copyValues(InvoiceRule $invoiceRuleTemplate)
     {
         $this->setDescription($invoiceRuleTemplate->getDescription());
         $this->setPriceExclVat($invoiceRuleTemplate->getPriceExclVat());

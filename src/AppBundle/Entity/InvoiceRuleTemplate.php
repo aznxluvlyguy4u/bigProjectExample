@@ -11,7 +11,7 @@ use JMS\Serializer\Annotation as JMS;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\InvoiceRuleRepository")
  * @package AppBundle\Entity
  */
-class InvoiceRule {
+class InvoiceRuleTemplate {
 
     /**
      * @ORM\Column(type="integer")
@@ -61,7 +61,7 @@ class InvoiceRule {
     private $invoice;
 
     /**
-     * InvoiceRule constructor.
+     * InvoiceRuleTemplate constructor.
      */
     public function __construct()
     {

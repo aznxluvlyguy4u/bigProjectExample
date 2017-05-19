@@ -139,7 +139,7 @@ class Invoice {
 
     /**
      * @var InvoiceSenderDetails
-     * @ORM\ManyToOne(targetEntity="InvoiceSenderDetails", inversedBy="invoices", cascade={"persist"})
+     * @ORM\ManyToOne(targetEntity="InvoiceSenderDetails")
      * @ORM\JoinColumn(name="invoice_invoice_sender_details_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\InvoiceSenderDetails")
      * @JMS\Groups({"INVOICE"})
@@ -256,11 +256,11 @@ class Invoice {
         $this->invoiceRules = $invoiceRules;
     }
 
-    public function addInvoiceRule(InvoiceRuleTemplate $invoiceRule){
+    public function addInvoiceRule(InvoiceRule $invoiceRule){
         $this->invoiceRules[] = $invoiceRule;
     }
 
-    public function removeInvoiceRule(InvoiceRuleTemplate $invoiceRule){
+    public function removeInvoiceRule(InvoiceRule $invoiceRule){
         $this->invoiceRules->removeElement($invoiceRule);
     }
 
