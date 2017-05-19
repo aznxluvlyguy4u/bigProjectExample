@@ -81,13 +81,13 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
     public static function generateLambMeatInstructionFile()
     {
         $model = [
-            ' GewGeb    ~ JaarBedr CovCF CovSW CovNH CovBT CovOV CovHet CovRec Sekse Nling !RANDOM WorpID G(ID,IDM)',
-            ' Gew08     ~ JaarBedr CovCF CovSW CovNH CovBT CovOV CovHet CovRec Sekse Nling LeeftScan !RANDOM WorpID G(ID)',
-            ' Gew20     ~ JaarBedr CovCF CovSW CovNH CovBT CovOV CovHet CovRec Sekse Nling LeeftScan !RANDOM WorpID G(ID)',
-            ' Vetd01    ~ JaarBedr CovCF CovSW CovNH CovBT CovOV CovHet CovRec Sekse Nling GewScan !RANDOM WorpID G(ID)',
-            ' Vetd02    ~ JaarBedr CovCF CovSW CovNH CovBT CovOV CovHet CovRec Sekse Nling GewScan !RANDOM WorpID G(ID)',
-            ' Vetd03    ~ JaarBedr CovCF CovSW CovNH CovBT CovOV CovHet CovRec Sekse Nling GewScan !RANDOM WorpID G(ID)',
-            ' Spierd    ~ JaarBedr CovCF CovSW CovNH CovBT CovOV CovHet CovRec Sekse Nling GewScan !RANDOM WorpID G(ID)',
+            ' GewGeb    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling !RANDOM WorpID G(ID,IDM)',
+            ' Gew08     ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling LeeftScan !RANDOM WorpID G(ID)',
+            ' Gew20     ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling LeeftScan !RANDOM WorpID G(ID)',
+            ' Vetd01    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling GewScan !RANDOM WorpID G(ID)',
+            ' Vetd02    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling GewScan !RANDOM WorpID G(ID)',
+            ' Vetd03    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling GewScan !RANDOM WorpID G(ID)',
+            ' Spierd    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling GewScan !RANDOM WorpID G(ID)',
         ];
         return self::generateTestAttributeInstructionFile($model, 'Vleeslamkenmerken');
     }
@@ -99,7 +99,7 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
     public static function generateTailLengthInstructionFile()
     {
         $model = [
-            ' StaartLen ~ GewGeb JaarBedr Nling Sekse CovCF CovSW CovNH CovBT CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' StaartLen ~ GewGeb JaarBedr Nling Sekse '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
         ];
         return self::generateTestAttributeInstructionFile($model, 'Staartlengte');
     }

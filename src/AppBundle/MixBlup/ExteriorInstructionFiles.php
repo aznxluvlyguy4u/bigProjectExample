@@ -115,8 +115,8 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
 
             $model = [
-            ' BeenwVGm  ~ JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
-            ' BeenwDF   ~ Sekse JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' BeenwVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            ' BeenwDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
             ' '.$commentHashTag.'LinStVb',
             ' '.$commentHashTag.'LinZijStAb',
             ' '.$commentHashTag.'LinAchtStAb',
@@ -135,9 +135,9 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
 
         $model = [
-            ' BespVGv  ~ JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
-            ' BespVGm  ~ JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
-            ' BespDF   ~ Sekse JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' BespVGv  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            ' BespVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            ' BespDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
             ' '.$commentHashTag.'LinVoorh',
             ' '.$commentHashTag.'LinRugBr',
             ' '.$commentHashTag.'LinRondBil',
@@ -155,8 +155,8 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
 
         $model = [
-            ' EvenrVGm  ~ JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
-            ' EvenrDF   ~ Sekse JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' EvenrVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            ' EvenrDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
             ' '.$commentHashTag.'LinRugLen',
             ' '.$commentHashTag.'LinKruis',
         ];
@@ -173,8 +173,8 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
 
         $model = [
-            ' KopVGm  ~ JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
-            ' KopDF   ~ Sekse JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' KopVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            ' KopDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
             ' '.$commentHashTag.'LinKop',
         ];
 
@@ -190,8 +190,8 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
 
         $model = [
-            ' OntwVGm  ~ JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
-            ' OntwDF   ~ Sekse JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' OntwVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            ' OntwDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
             ' '.$commentHashTag.'LinRugLen',
             ' '.$commentHashTag.'LinKruis',
         ];
@@ -206,8 +206,8 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
     public static function generateExteriorTypeInstructionFile()
     {
         $model = [
-            ' TypeVGm  ~ JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
-            ' TypeDF   ~ Sekse JaarBedr Inspectr CovBM CovSW CovZB CovOV CovHet CovRec !RANDOM WorpID G(ID)',
+            ' TypeVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            ' TypeDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
         ];
 
         return self::generateExteriorInstructionFile($model, 'Type');

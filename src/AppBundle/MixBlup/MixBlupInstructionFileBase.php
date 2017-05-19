@@ -68,5 +68,17 @@ abstract class MixBlupInstructionFileBase
             ' CovRec     T #Recombinatie van het dier',
         ];
     }
-    
+
+
+    /**
+     * Note! These values should match the values in getStandardizedBreedCodePartsAndHetRecOfInstructionFile()
+     * Except for CovTE which is intentionally omitted to prevent entanglement during the MixBlup analyses, which slows down the process.
+     *
+     * @return string
+     */
+    protected static function getBreedCodesModel()
+    {
+        return 'CovCF CovBM CovSW CovNH CovFL CovHD CovOV CovHet CovRec';
+    }
+
 }

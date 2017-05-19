@@ -94,7 +94,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
     public static function generateBirthProcessInstructionFile()
     {
         $model = [
-            ' GebGemak  ~ JaarBedr CovCF CovSW CovNH CovFL CovOV CovHet CovRec CovHetLam CovRecLam !RANDOM WorpID G(ID,IDM)'
+            ' GebGemak  ~ JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM WorpID G(ID,IDM)'
         ];
         return self::reproductionInstructionFileBase($model, 'Geboorteverloop');
     }
@@ -106,9 +106,9 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
     public static function generateFertilityInstructionFile()
     {
         $model = [
-            ' TotGeb  ~ Inductie Leeft JaarBedr CovCF CovSW CovNH CovFL CovOV CovHet CovRec CovHetLam CovRecLam !RANDOM PermMil G(ID)',
-            ' DoodGeb ~ Inductie Leeft JaarBedr CovCF CovSW CovNH CovFL CovOV CovHet CovRec CovHetLam CovRecLam !RANDOM PermMil G(ID)',
-            ' Vroeg   ~ JaarBedr CovCF CovSW CovNH CovFL CovOV CovHet CovRec !RANDOM G(ID)',
+            ' TotGeb  ~ Inductie Leeft JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM PermMil G(ID)',
+            ' DoodGeb ~ Inductie Leeft JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM PermMil G(ID)',
+            ' Vroeg   ~ JaarBedr '.self::getBreedCodesModel().' !RANDOM G(ID)',
             ' # TusLamT',
         ];
         return self::reproductionInstructionFileBase($model, 'Vruchtbaarheid');
