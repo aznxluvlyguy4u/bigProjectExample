@@ -4,14 +4,14 @@ namespace AppBundle\Controller;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\InvoiceRuleLocked;
-use AppBundle\Entity\InvoiceRuleTemplate;
+use AppBundle\Entity\InvoiceRule;
 use AppBundle\Entity\InvoiceSenderDetails;
 use AppBundle\Output\InvoiceOutput;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Invoice;
-use AppBundle\Entity\InvoiceRule;
+use AppBundle\Entity\InvoiceRuleTemplate;
 use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -26,7 +26,7 @@ use AppBundle\Validation\AdminValidator;
 /**
  * Class InvoiceAPIController
  * @package AppBundle\Controller
- * @Route("/api/v1/invoices")
+ * @Route("/api/v1/invoices/admin")
  */
 class InvoiceAPIController extends APIController implements InvoiceAPIControllerInterface
 {
@@ -93,8 +93,8 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $deserializedRules = new ArrayCollection();
         $lockedRules = new ArrayCollection();
         foreach ($contentRules as $contentRule){
-            /** @var InvoiceRuleTemplate $rule */
-            $invoiceRule = $this->getManager()->getRepository(InvoiceRuleTemplate::class)
+            /** @var InvoiceRule $rule */
+            $invoiceRule = $this->getManager()->getRepository(InvoiceRule::class)
                 ->findOneBy(array('id' => $contentRule['id']));
             $deserializedRules->add($invoiceRule);
             $lockedRule = $this->getManager()->getRepository(InvoiceRuleLocked::class)->findOneBy(array('id' => $invoiceRule->getLockedVersion()->getId()));
@@ -180,8 +180,8 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $id->setInvoiceRules($deserializedRules);
         $id->setLockedInvoiceRules($lockedRules);
         foreach ($contentRules as $contentRule){
-            /** @var InvoiceRuleTemplate $rule */
-            $invoiceRule = $this->getManager()->getRepository(InvoiceRuleTemplate::class)
+            /** @var InvoiceRule $rule */
+            $invoiceRule = $this->getManager()->getRepository(InvoiceRule::class)
                 ->findOneBy(array('id' => $contentRule['id']));
             $deserializedRules->add($invoiceRule);
             $lockedRule = $this->getManager()->getRepository(InvoiceRuleLocked::class)->findOneBy(array('id' => $invoiceRule->getLockedVersion()->getId()));

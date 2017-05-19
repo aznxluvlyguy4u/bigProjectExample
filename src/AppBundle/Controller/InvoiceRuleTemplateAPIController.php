@@ -24,11 +24,11 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 
 
 /**
- * Class InvoiceRuleTempAPIController
+ * Class InvoiceRuleTemplateAPIController
  * @package AppBundle\Controller
  * @Route("/invoice-rules")
  */
-class InvoiceRuleTempAPIController extends APIController implements InvoiceRuleTempAPIControllerInterface
+class InvoiceRuleTemplateAPIController extends APIController implements InvoiceRuleTemplateAPIControllerInterface
 {
     /**
      * @Route("")

@@ -4,7 +4,7 @@ namespace AppBundle\Controller;
 
 
 use AppBundle\Constant\Constant;
-use AppBundle\Entity\InvoiceRuleTemplate;
+use AppBundle\Entity\InvoiceRule;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
@@ -34,7 +34,7 @@ class SettingAPIController extends APIController implements SettingAPIController
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
         if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
 
-        $repository = $this->getDoctrine()->getRepository(InvoiceRuleTemplate::class);
+        $repository = $this->getDoctrine()->getRepository(InvoiceRule::class);
         $ruleTemplates = $repository->findAll();
         $output = $this->getDecodedJson($ruleTemplates, self::INVOICE_JMS_GROUP);
 
@@ -54,7 +54,7 @@ class SettingAPIController extends APIController implements SettingAPIController
 
         $content = $this->getContentAsArray($request);
 
-        $ruleTemplate = $this->getObjectFromContent($content, InvoiceRuleTemplate::class);
+        $ruleTemplate = $this->getObjectFromContent($content, InvoiceRule::class);
         $this->persistAndFlush($ruleTemplate);
 
         $output = $this->getDecodedJson($ruleTemplate, self::INVOICE_JMS_GROUP);
@@ -75,11 +75,11 @@ class SettingAPIController extends APIController implements SettingAPIController
 
         $content = $this->getContentAsArray($request);
 
-        /** @var InvoiceRuleTemplate $updatedRuleTemplate */
-        $updatedRuleTemplate = $this->getObjectFromContent($content, InvoiceRuleTemplate::class);
+        /** @var InvoiceRule $updatedRuleTemplate */
+        $updatedRuleTemplate = $this->getObjectFromContent($content, InvoiceRule::class);
 
-        $repository = $this->getDoctrine()->getRepository(InvoiceRuleTemplate::class);
-        /** @var InvoiceRuleTemplate $currentRuleTemplate */
+        $repository = $this->getDoctrine()->getRepository(InvoiceRule::class);
+        /** @var InvoiceRule $currentRuleTemplate */
         $currentRuleTemplate = $repository->find($updatedRuleTemplate->getId());
         if(!$currentRuleTemplate) { return Validator::createJsonResponse('THE INVOICE RULE TEMPLATE IS NOT FOUND.', 428); }
 
@@ -101,7 +101,7 @@ class SettingAPIController extends APIController implements SettingAPIController
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
         if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
 
-        $repository = $this->getDoctrine()->getRepository(InvoiceRuleTemplate::class);
+        $repository = $this->getDoctrine()->getRepository(InvoiceRule::class);
         $ruleTemplate = $repository->find($id);
 
         if(!$ruleTemplate) { return Validator::createJsonResponse('THE INVOICE RULE TEMPLATE IS NOT FOUND.', 428); }

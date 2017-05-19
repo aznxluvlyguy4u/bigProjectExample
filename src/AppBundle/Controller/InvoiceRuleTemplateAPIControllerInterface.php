@@ -13,7 +13,7 @@ use AppBundle\Entity\Invoice;
 use AppBundle\Entity\InvoiceRuleTemplate;
 use Symfony\Component\HttpFoundation\Request;
 
-interface InvoiceRuleTempAPIControllerInterface
+interface InvoiceRuleTemplateAPIControllerInterface
 {
     function getInvoiceRules(Request $request);
     function updateInvoiceRule(Request $request);

@@ -1,17 +1,11 @@
 <?php
-/**
- * Created by IntelliJ IDEA.
- * User: werner
- * Date: 6-4-17
- * Time: 10:49
- */
 
 namespace AppBundle\Controller;
 
 use AppBundle\Entity\InvoiceRule;
 use Symfony\Component\HttpFoundation\Request;
 
-interface InvoiceRuleTemplateAPIControllerInterface
+interface InvoiceRuleAPIControllerInterface
 {
     public function getInvoiceRuleTemplates(Request $request);
     public function createInvoiceRuleTemplate(Request $request);
