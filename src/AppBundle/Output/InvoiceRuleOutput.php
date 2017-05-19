@@ -9,7 +9,7 @@
 namespace AppBundle\Output;
 
 
-use AppBundle\Entity\InvoiceRuleTemplate;
+use AppBundle\Entity\InvoiceRule;
 
 class InvoiceRuleOutput
 {
@@ -22,7 +22,7 @@ class InvoiceRuleOutput
     }
 
     /**
-     * @param InvoiceRuleTemplate $invoiceRule
+     * @param InvoiceRule $invoiceRule
      * @return array
      */
     private static function createInvoiceRuleOutput($invoiceRule){
