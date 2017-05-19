@@ -22,7 +22,7 @@ class MeasurementsUtil
      */
     public static function generateAnimalIdAndDateValues(Connection $conn, $isRegenerateFilledValues = false)
     {
-        $sqlFilter = $isRegenerateFilledValues ? '' : "WHERE m.animal_id_and_date ISNULL OR m.animal_id_and_date = ''";
+        $sqlFilter = $isRegenerateFilledValues ? '' : "WHERE m.animal_id_and_date ISNULL OR m.animal_id_and_date <> CONCAT(t.animal_id,'_',DATE(measurement_date))";
 
         $tableNames = ['muscle_thickness', 'weight', 'tail_length', 'exterior', 'body_fat'];
 
