@@ -170,9 +170,10 @@ class MixBlupService implements MixBlupServiceInterface
         $fileType = 'text/plain';
 
         $filesToUpload = [];
+        $instructionFilesToUpload = [];
         $failedUploads = [];
 
-        foreach ([$this->getDataFolder(), $this->getPedigreeFolder()] as $folderPath) {
+        foreach ([$this->getDataFolder(), $this->getPedigreeFolder(), $this->getInstructionsFolder()] as $folderPath) {
             $this->logger->notice('Uploading files to S3 bucket from folder '.$folderPath);
             if ($handle = opendir($folderPath)) {
                 while (false !== ($file = readdir($handle))) {
@@ -186,7 +187,11 @@ class MixBlupService implements MixBlupServiceInterface
                     $result = $this->s3Service->uploadFromFilePath($currentFileLocation, $s3FilePath, $fileType);
 
                     if ($result) {
-                        $filesToUpload[] = $file;
+                        if($folderPath == $this->getInstructionsFolder()) {
+                            $instructionFilesToUpload[] = $file;
+                        } else {
+                            $filesToUpload[] = $file;
+                        }
                         $this->logger->notice('Succesfully uploaded '.$file);
                     } else {
                         $failedUploads[] = $file;
@@ -199,7 +204,8 @@ class MixBlupService implements MixBlupServiceInterface
         $messageToQueue = [
             "key" => $key,
             "files" => $filesToUpload,
-            "failed_uploads" => $failedUploads
+            "instruction_files" => $instructionFilesToUpload,
+            "failed_uploads" => $failedUploads,
         ];
 
         if(count($failedUploads) > 0) {
