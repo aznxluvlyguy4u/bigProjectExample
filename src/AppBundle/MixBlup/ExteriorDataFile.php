@@ -11,6 +11,7 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\CsvWriterUtil;
 use AppBundle\Util\Translation;
+use AppBundle\Validation\ExteriorValidator;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -180,6 +181,9 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
      */
     private static function getDataBySql(Connection $conn)
     {
+        $minVal = ExteriorValidator::DEFAULT_MIN_EXTERIOR_VALUE;
+        $maxVal = ExteriorValidator::DEFAULT_MAX_EXTERIOR_VALUE;
+        
         $sql = "SELECT
                   CONCAT(a.uln_country_code, a.uln_number) as uln,
                   a.type,
@@ -205,11 +209,24 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
                   AND a.breed_code NOTNULL AND m.measurement_date NOTNULL
                   --AND a.heterosis NOTNULL AND a.recombination NOTNULL --CHECK IF NULLCHECK NECESSARY OR NOT
                   AND m.measurement_date <= NOW()
+                  AND NOT(
+                          (skull < ".$minVal." OR skull > ".$maxVal.") AND
+                          (progress < ".$minVal." OR progress > ".$maxVal.") AND
+                          (muscularity < ".$minVal." OR muscularity > ".$maxVal.") AND
+                          (proportion < ".$minVal." OR proportion > ".$maxVal.") AND
+                          (exterior_type < ".$minVal." OR exterior_type > ".$maxVal.") AND
+                          (leg_work < ".$minVal." OR leg_work > ".$maxVal.") AND
+                          (fur < ".$minVal." OR fur > ".$maxVal.") AND
+                          (general_appearance < ".$minVal." OR general_appearance > ".$maxVal.") AND
+                          (height = 0 OR height > ".$maxVal.") AND
+                          (torso_length = 0 OR torso_length > ".$maxVal.") AND
+                          (breast_depth = 0 OR breast_depth > ".$maxVal.")
+                          )
                   AND (
                         -- 1 VG FEMALE
                         (
                           a.gender = '".GenderType::FEMALE."' AND x.kind = '".ExteriorKind::VG_."'
-                          AND 69 <= x.muscularity OR x.muscularity <= 99
+                          AND ".$minVal." <= x.muscularity OR x.muscularity <= ".$maxVal."
                         )
                         OR
                         -- 2 VG MALE
