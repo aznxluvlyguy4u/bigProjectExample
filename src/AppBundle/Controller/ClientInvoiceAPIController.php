@@ -4,7 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\InvoiceRuleLocked;
-use AppBundle\Entity\InvoiceRuleTemplate;
+use AppBundle\Entity\InvoiceRule;
 use AppBundle\Entity\InvoiceSenderDetails;
 use AppBundle\Output\InvoiceOutput;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,7 +13,7 @@ use AppBundle\Entity\Company;
 use AppBundle\Entity\Invoice;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
-use AppBundle\Entity\InvoiceRule;
+use AppBundle\Entity\InvoiceRuleTemplate;
 use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -28,7 +28,7 @@ use AppBundle\Validation\AdminValidator;
 /**
  * Class ClientInvoiceAPIController
  * @package AppBundle\Controller
- * @Route("/api/v1/client_invoices")
+ * @Route("/api/v1/invoices/client")
  */
 class ClientInvoiceAPIController extends APIController
 {

@@ -2,22 +2,24 @@
 
 namespace AppBundle\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 
 /**
- * Class InvoiceRules
- * @ORM\Entity(repositoryClass="AppBundle\Entity\InvoiceRuleRepository")
+ * Class InvoiceRuleTemplate
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\InvoiceRuleTemplateRepository")
  * @package AppBundle\Entity
  */
-class InvoiceRule {
-
+class InvoiceRuleTemplate
+{
     /**
      * @ORM\Column(type="integer")
      * @ORM\Id
-     * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @JMS\Groups({"INVOICE_RULE"})
+     * @ORM\GeneratedValue(strategy="AUTO")
+     * @JMS\Type("integer")
+     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
      */
     protected $id;
 
@@ -27,44 +29,104 @@ class InvoiceRule {
      * @ORM\Column(type="string")
      * @Assert\NotBlank
      * @JMS\Type("string")
-     * @JMS\Groups({"INVOICE_RULE"})
+     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
      */
     private $description;
 
     /**
-     * @var integer
+     * @var float
      *
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="float")
      * @Assert\NotBlank
-     * @JMS\Type("integer")
-     * @JMS\Groups({"INVOICE_RULE"})
+     * @JMS\Type("float")
+     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
      */
     private $vatPercentageRate;
 
     /**
+     * @var float
+     *
+     * @ORM\Column(type="float")
+     * @Assert\NotBlank
+     * @JMS\Type("float")
+     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
+     */
+    private $priceExclVat;
+
+    /**
      * @var integer
      *
      * @ORM\Column(type="integer")
      * @Assert\NotBlank
      * @JMS\Type("integer")
-     * @JMS\Groups({"INVOICE_RULE"})
+     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
      */
-    private $priceExclVat;
+    private $sortOrder;
 
     /**
-     * @var Invoice
+     * @var string
      *
-     * @ORM\ManyToOne(targetEntity="Invoice", inversedBy="invoiceRules", cascade={"persist"})
-     * @JMS\Type("array")
-     * @JMS\Groups({"INVOICE_RULE"})
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
      */
-    private $invoice;
+    private $category;
 
     /**
-     * InvoiceRule constructor.
+     * @var string
+     * @ORM\Column(type="string", name="type")
+     * @JMS\Type("string")
+     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
+     */
+    private $type;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\ManyToMany(targetEntity="Invoice", mappedBy="invoiceRules", cascade={"persist"})
+     * @JMS\Type("ArrayCollection")
+     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
+     */
+    private $invoices;
+
+    /**
+     * @var InvoiceRuleLocked
+     * @ORM\ManyToOne(targetEntity="InvoiceRuleLocked")
+     * @ORM\JoinColumn(name="locked_id", referencedColumnName="id")
+     */
+    private $lockedVersion;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", name="is_deleted")
+     * @JMS\Type("boolean")
+     * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
+     */
+    private $isDeleted = false;
+
+    /**
+     * InvoiceRuleTemplate constructor.
      */
     public function __construct()
     {
+        $this->invoices = new ArrayCollection();
+    }
+
+    /**
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * @param int $id
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
     }
 
     /**
@@ -84,7 +146,7 @@ class InvoiceRule {
     }
 
     /**
-     * @return string
+     * @return int
      */
     public function getVatPercentageRate()
     {
@@ -92,7 +154,7 @@ class InvoiceRule {
     }
 
     /**
-     * @param string $vatPercentageRate
+     * @param int $vatPercentageRate
      */
     public function setVatPercentageRate($vatPercentageRate)
     {
@@ -100,7 +162,7 @@ class InvoiceRule {
     }
 
     /**
-     * @return string
+     * @return int
      */
     public function getPriceExclVat()
     {
@@ -108,7 +170,7 @@ class InvoiceRule {
     }
 
     /**
-     * @param string $priceExclVat
+     * @param int $priceExclVat
      */
     public function setPriceExclVat($priceExclVat)
     {
@@ -116,18 +178,120 @@ class InvoiceRule {
     }
 
     /**
-     * @return Invoice
+     * @return int
      */
-    public function getInvoice()
+    public function getSortOrder()
     {
-        return $this->invoice;
+        return $this->sortOrder;
     }
 
     /**
-     * @param Invoice $invoice
+     * @param int $sortOrder
      */
-    public function setInvoice($invoice)
+    public function setSortOrder($sortOrder)
     {
-        $this->invoice = $invoice;
+        $this->sortOrder = $sortOrder;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCategory()
+    {
+        return $this->category;
+    }
+
+    /**
+     * @param string $category
+     */
+    public function setCategory($category)
+    {
+        $this->category = $category;
+    }
+
+    /**
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * @param string $type
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDeleted()
+    {
+        return $this->isDeleted;
+    }
+
+    /**
+     * @param bool $isDeleted
+     */
+    public function setIsDeleted($isDeleted)
+    {
+        $this->isDeleted = $isDeleted;
+    }
+
+    /**
+     * @return Invoice
+     */
+    public function getInvoices()
+    {
+        return $this->invoices;
+    }
+
+    /**
+     * @param $invoices
+     */
+    public function setInvoices($invoices)
+    {
+        $this->invoices = $invoices;
+    }
+
+    public function addInvoice(Invoice $invoice){
+        $this->invoices[] = $invoice;
+    }
+
+    public function removeInvoice(Invoice $invoice) {
+        $this->invoices->removeElement($invoice);
+    }
+
+    /**
+     * @return InvoiceRuleLocked
+     */
+    public function getLockedVersion()
+    {
+        return $this->lockedVersion;
+    }
+
+    /**
+     * @param InvoiceRuleLocked $lockedVersion
+     */
+    public function setLockedVersion($lockedVersion)
+    {
+        $this->lockedVersion = $lockedVersion;
+    }
+
+
+
+
+    /**
+     * TODO Find a better way to clone values (excluding the id) than using custom getters and setters
+     * @param InvoiceRuleTemplate $invoiceRuleTemplate
+     */
+    public function copyValues(InvoiceRuleTemplate $invoiceRuleTemplate)
+    {
+        $this->setDescription($invoiceRuleTemplate->getDescription());
+        $this->setPriceExclVat($invoiceRuleTemplate->getPriceExclVat());
+        $this->setVatPercentageRate($invoiceRuleTemplate->getVatPercentageRate());
     }
 }
