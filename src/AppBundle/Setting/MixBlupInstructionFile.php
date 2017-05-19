@@ -9,6 +9,8 @@ namespace AppBundle\Setting;
  */
 class MixBlupInstructionFile
 {
+    //NOTE! Instruction filenames should start with 'Inp' to make sure the mixblup worker properly parses the zipFileName
+    
     //Exterior
     const EXTERIOR_LEG_WORK = 'InpExtBeenw.txt';
     const EXTERIOR_MUSCULARITY = 'InpExtBesp.txt';
