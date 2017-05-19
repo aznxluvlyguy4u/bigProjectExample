@@ -5,6 +5,7 @@ namespace AppBundle\Command;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\MeasurementsUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
@@ -58,6 +59,7 @@ class NsfoFixDbCommand extends ContainerAwareCommand
             '=====================================', "\n",
             '2: Fill missing animalOrderNumbers', "\n",
             '3: Fix incongruent animalOrderNumbers', "\n",
+            '4: Fix incongruent animalIdAndDate values in measurement table', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -75,6 +77,15 @@ class NsfoFixDbCommand extends ContainerAwareCommand
             case 3:
                 DatabaseDataFixer::fixIncongruentAnimalOrderNumbers($this->conn, $this->cmdUtil);
                 $output->writeln('Done!');
+                break;
+
+            case 4:
+                $updateCount = MeasurementsUtil::generateAnimalIdAndDateValues($this->conn, false);
+                if($updateCount > 0) {
+                    $output->writeln($updateCount.' animalIdAndDate values in measurement table updated');
+                } else {
+                    $output->writeln('No animalIdAndDate values in measurement table needed to be updated');
+                }
                 break;
 
             default:
