@@ -28,6 +28,7 @@ class MateAPIController extends APIController {
    * Create a DeclareMate Request.
    *
    * @ApiDoc(
+   *   section = "Matings",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -37,9 +38,7 @@ class MateAPIController extends APIController {
    *     }
    *   },
    *   resource = true,
-   *   description = "Create a DeclareMate Request",
-   *   input = "AppBundle\Entity\Mate",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Create a DeclareMate Request"
    * )
    *
    * @param Request $request the request object
@@ -82,6 +81,7 @@ class MateAPIController extends APIController {
    * Edit Mate
    *
    * @ApiDoc(
+   *   section = "Matings",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -91,9 +91,7 @@ class MateAPIController extends APIController {
    *     }
    *   },
    *   resource = true,
-   *   description = "Edit Mate",
-   *   input = "AppBundle\Entity\Mate",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Edit Mate"
    * )
    *
    * @param Request $request the request object
@@ -138,6 +136,7 @@ class MateAPIController extends APIController {
    * For the history view, get Mates which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED
    *
    * @ApiDoc(
+   *   section = "Matings",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -147,9 +146,7 @@ class MateAPIController extends APIController {
    *     }
    *   },
    *   resource = true,
-   *   description = "Get Matings which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED",
-   *   input = "AppBundle\Entity\Mate",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Get Matings which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED"
    * )
    *
    * @param Request $request the request object
@@ -174,6 +171,7 @@ class MateAPIController extends APIController {
    * Get Mates that were rejected by the third party.
    *
    * @ApiDoc(
+   *   section = "Matings",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -183,9 +181,7 @@ class MateAPIController extends APIController {
    *     }
    *   },
    *   resource = true,
-   *   description = "Get Mates that were rejected by the third party",
-   *   input = "AppBundle\Entity\Mate",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Get Mates that were rejected by the third party"
    * )
    *
    * @param Request $request the request object
@@ -210,6 +206,7 @@ class MateAPIController extends APIController {
    * Get Mates that still need to be verified by the third party.
    *
    * @ApiDoc(
+   *   section = "Matings",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -219,9 +216,7 @@ class MateAPIController extends APIController {
    *     }
    *   },
    *   resource = true,
-   *   description = "Get Mates that still need to be verified by the third party",
-   *   input = "AppBundle\Entity\Mate",
-   *   output = "AppBundle\Component\HttpFoundation\JsonResponse"
+   *   description = "Get Mates that still need to be verified by the third party"
    * )
    *
    * @param Request $request the request object

@@ -23,6 +23,7 @@ class CountryAPIController extends APIController implements CountryAPIController
    * Retrieve a list of Country codes and corresponding full Country name
    *
    * @ApiDoc(
+   *   section = "Countries",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -41,8 +42,7 @@ class CountryAPIController extends APIController implements CountryAPIController
    *      }
    *   },
    *   resource = true,
-   *   description = "Retrieve a list of countries with ISO 3166-1 two letter codes and corresponding full country name",
-   *   output = "AppBundle\Entity\Country"
+   *   description = "Retrieve a list of countries with ISO 3166-1 two letter codes and corresponding full country name"
    * )
    * @param Request $request the request object
    * @return Response
@@ -102,6 +102,7 @@ class CountryAPIController extends APIController implements CountryAPIController
    * Get list of Dutch provinces with their full name and code.
    *
    * @ApiDoc(
+   *   section = "Countries",
    *   requirements={
    *     {
    *       "name"="AccessToken",
@@ -111,8 +112,7 @@ class CountryAPIController extends APIController implements CountryAPIController
    *     }
    *   },
    *   resource = true,
-   *   description = "Get list of Dutch provinces with their full name and code",
-   *   output = "AppBundle\Entity\Province"
+   *   description = "Get list of Dutch provinces with their full name and code"
    * )
    * @param Request $request the request object
    * @return JsonResponse
