@@ -12,6 +12,7 @@ use AppBundle\MixBlup\ReproductionProcess;
 use AppBundle\Setting\MixBlupFolder;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\FilesystemUtil;
+use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -112,6 +113,7 @@ class MixBlupService implements MixBlupServiceInterface
      */
     public function run()
     {
+        $this->updateAnimalIdAndDateValues();
         $writeResult = $this->write();
         if($writeResult) {
             $allUploadsSuccessful = $this->upload();
@@ -122,6 +124,15 @@ class MixBlupService implements MixBlupServiceInterface
             }
         }
         gc_collect_cycles();
+    }
+
+
+    private function updateAnimalIdAndDateValues()
+    {
+        $updateCount = MeasurementsUtil::generateAnimalIdAndDateValues($this->conn, false);
+        if($updateCount > 0) {
+            $this->logger->notice($updateCount.' animalIdAndDate values in measurement table updated');
+        }
     }
 
     
