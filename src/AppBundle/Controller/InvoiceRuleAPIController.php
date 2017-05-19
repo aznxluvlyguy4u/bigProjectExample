@@ -2,16 +2,17 @@
 /**
  * Created by IntelliJ IDEA.
  * User: werner
- * Date: 5-4-17
- * Time: 14:45
+ * Date: 6-4-17
+ * Time: 10:49
  */
 
 namespace AppBundle\Controller;
 
 
 use AppBundle\Constant\Constant;
+use AppBundle\Entity\InvoiceRuleTemplate;
+use AppBundle\Entity\InvoiceRuleLocked;
 use AppBundle\Entity\InvoiceRule;
-use AppBundle\Entity\Invoice;
 use AppBundle\Enumerator\JMSGroups;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Util\Validator;
@@ -24,26 +25,27 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 
 
 /**
- * Class InvoiceRuleAPIController
+ * Class InvoiceRuleTemplateAPIController
  * @package AppBundle\Controller
- * @Route("/invoice-rules")
+ * @Route("/api/v1/invoice_rule_templates")
  */
-class InvoiceRuleAPIController extends APIController implements InvoiceRuleAPIControllerInterface
+class InvoiceRuleTemplateAPIController extends APIController implements InvoiceRuleTemplateAPIControllerInterface
 {
+
     /**
      * @Route("")
      * @param Request $request
      * @Method("GET")
      * @return jsonResponse
      */
-    public function getInvoiceRules(Request $request)
+    public function getInvoiceRuleTemplates(Request $request)
     {
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
         if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
 
         $repository = $this->getDoctrine()->getRepository(InvoiceRule::class);
-        $rules = $repository->findAll();
-        $output = $this->getDecodedJson($rules, JMSGroups::INVOICE_RULE);
+        $ruleTemplates = $repository->findBy(array('isDeleted' => false, 'type' => 'standard'));
+        $output = $this->getDecodedJson($ruleTemplates, JMSGroups::INVOICE_RULE_TEMPLATE);
 
         return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
     }
@@ -54,17 +56,32 @@ class InvoiceRuleAPIController extends APIController implements InvoiceRuleAPICo
      * @Method("POST")
      * @return jsonResponse
      */
-    public function createInvoiceRule(Request $request)
+    public function createInvoiceRuleTemplate(Request $request)
     {
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
         if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
 
         $content = $this->getContentAsArray($request);
 
-        $rule = $this->getObjectFromContent($content, InvoiceRule::class);
-        $this->persistAndFlush($rule);
+        $ruleTemplate = $this->getObjectFromContent($content, InvoiceRule::class);
+        $lockedRule = $this->getManager()->getRepository(InvoiceRuleLocked::class)
+            ->findOneBy(array(
+                'priceExclVat' => $ruleTemplate->getPriceExclVat(),
+                'vatPercentageRate' => $ruleTemplate->getVatPercentageRate(),
+                'description' => $ruleTemplate->getDescription()
+            ));
+        if ($lockedRule == null) {
+            $lockedRule = new InvoiceRuleLocked();
+            $lockedRule->copyValues($ruleTemplate);
+            $this->persistAndFlush($lockedRule);
+            $ruleTemplate->setLockedVersion($lockedRule);
+        }
+        else {
+            $ruleTemplate->setLockedVersion($lockedRule);
+        }
+        $this->persistAndFlush($ruleTemplate);
 
-        $output = $this->getDecodedJson($rule, JMSGroups::INVOICE_RULE);
+        $output = $this->getDecodedJson($ruleTemplate, JMSGroups::INVOICE_RULE_TEMPLATE);
         return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
     }
 
@@ -74,25 +91,44 @@ class InvoiceRuleAPIController extends APIController implements InvoiceRuleAPICo
      * @Method("PUT")
      * @return jsonResponse
      */
-    public function updateInvoiceRule(Request $request)
+    public function updateInvoiceRuleTemplate(Request $request)
     {
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
         if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
 
         $content = $this->getContentAsArray($request);
 
-        /** @var InvoiceRule $updatedRule */
-        $updatedRule = $this->getObjectFromContent($content, InvoiceRule::class);
+        /** @var InvoiceRule $updatedRuleTemplate */
+        $updatedRuleTemplate = new InvoiceRule();
+        $updatedRuleTemplate->setDescription($content['description']);
+        $updatedRuleTemplate->setVatPercentageRate($content['vat_percentage_rate']);
+        $updatedRuleTemplate->setPriceExclVat($content['price_excl_vat']);
 
         $repository = $this->getDoctrine()->getRepository(InvoiceRule::class);
-        /** @var InvoiceRule $currentRule */
-        $currentRule = $repository->find($updatedRule->getId());
-        if(!$currentRule) { return Validator::createJsonResponse('THE INVOICE RULE  IS NOT FOUND.', 428); }
+        /** @var InvoiceRule $currentRuleTemplate */
+        $currentRuleTemplate = $repository->findOneBy(array('id' => $content['id']));
+        if(!$currentRuleTemplate) { return Validator::createJsonResponse('THE INVOICE RULE TEMPLATE IS NOT FOUND.', 428); }
+        if ($currentRuleTemplate->getType() == 'standard'){
+            $lockedRule = $this->getManager()->getRepository(InvoiceRuleLocked::class)
+                ->findOneBy(array(
+                    'priceExclVat' => $updatedRuleTemplate->getPriceExclVat(),
+                    'vatPercentageRate' => $updatedRuleTemplate->getVatPercentageRate(),
+                    'description' => $updatedRuleTemplate->getDescription()
+                ));
+            if ($lockedRule == null) {
+                $lockedRule = new InvoiceRuleLocked();
+                $lockedRule->copyValues($currentRuleTemplate);
+                $this->persistAndFlush($lockedRule);
+                $currentRuleTemplate->setLockedVersion($lockedRule);
+            }
+            else {
+                $currentRuleTemplate->setLockedVersion($lockedRule);
+            }
+        }
+        $currentRuleTemplate->copyValues($updatedRuleTemplate);
+        $this->persistAndFlush($currentRuleTemplate);
 
-        $currentRule->copyValues($updatedRule);
-        $this->persistAndFlush($currentRule);
-
-        $output = $this->getDecodedJson($updatedRule, JMSGroups::INVOICE_RULE);
+        $output = $this->getDecodedJson($updatedRuleTemplate, JMSGroups::INVOICE_RULE_TEMPLATE);
         return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
     }
 
@@ -102,32 +138,29 @@ class InvoiceRuleAPIController extends APIController implements InvoiceRuleAPICo
      * @Method("DELETE")
      * @return jsonResponse
      */
-    public function deleteInvoiceRule(Request $request, InvoiceRule $invoiceRule)
+    public function deleteInvoiceRuleTemplate(Request $request, InvoiceRule $invoiceRuleTemplate)
     {
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
         if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
 
         $repository = $this->getDoctrine()->getRepository(InvoiceRule::class);
-        $rule = $repository->find($invoiceRule);
+        /** @var InvoiceRule $ruleTemplate */
+        $ruleTemplate = $repository->find($invoiceRuleTemplate);
 
-        if(!$rule) { return Validator::createJsonResponse('THE INVOICE RULE  IS NOT FOUND.', 428); }
+        if(!$ruleTemplate) { return Validator::createJsonResponse('THE INVOICE RULE TEMPLATE IS NOT FOUND.', 428); }
 
-        $this->getDoctrine()->getManager()->remove($rule);
-        $this->getDoctrine()->getManager()->flush();
+        $ruleTemplate->setIsDeleted(true);
+        $invoices = $ruleTemplate->getInvoices();
+        foreach ($invoices as $invoice){
+            $invoice->removeInvoiceRule($ruleTemplate);
+            if ($invoice->getStatus() == "NOT SEND" || $invoice->getStatus() == "INCOMPLETE"){
+                $invoice->removeLockedInvoiceRule($ruleTemplate->getLockedVersion());
+                $this->persistAndFlush($invoice);
+            }
+        }
+        $this->persistAndFlush($ruleTemplate);
 
-        $output = $this->getDecodedJson($rule, JMSGroups::INVOICE_RULE);
+        $output = $this->getDecodedJson($ruleTemplate, JMSGroups::INVOICE_RULE_TEMPLATE);
         return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
     }
-
-    /**
-     * @param InvoiceRule $invoiceRule
-     * @param Invoice $invoice
-     * @Method("PUT")
-     * @Route("{invoice}/{invoiceRule}")
-     */
-    public function linkInvoiceRuleToInvoice(InvoiceRule $invoiceRule, Invoice $invoice)
-    {
-        // TODO: Implement linkInvoiceRuleToInvoice() method.
-    }
-
 }

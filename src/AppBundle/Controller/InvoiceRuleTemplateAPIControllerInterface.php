@@ -2,19 +2,23 @@
 /**
  * Created by IntelliJ IDEA.
  * User: werner
- * Date: 6-4-17
- * Time: 10:49
+ * Date: 5-4-17
+ * Time: 14:45
  */
 
 namespace AppBundle\Controller;
 
+
+use AppBundle\Entity\Invoice;
 use AppBundle\Entity\InvoiceRuleTemplate;
 use Symfony\Component\HttpFoundation\Request;
 
-interface InvoiceRuleTemplateAPIControllerInterface
+interface InvoiceRuleTempAPIControllerInterface
 {
-    public function getInvoiceRuleTemplates(Request $request);
-    public function createInvoiceRuleTemplate(Request $request);
-    public function updateInvoiceRuleTemplate(Request $request);
-    public function deleteInvoiceRuleTemplate(Request $request, InvoiceRuleTemplate $invoiceRuleTemplate);
+    function getInvoiceRules(Request $request);
+    function updateInvoiceRule(Request $request);
+    function createInvoiceRule(Request $request);
+    function deleteInvoiceRule(Request $request, InvoiceRuleTemplate $invoiceRule);
+    function linkInvoiceRuleToInvoice(InvoiceRuleTemplate $invoiceRule, Invoice $invoice);
+
 }
