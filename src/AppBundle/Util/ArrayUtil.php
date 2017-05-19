@@ -33,15 +33,20 @@ class ArrayUtil
 
     /**
      * @param array $arrays
+     * @param boolean $ignoreAllKeys This prevents overwriting values with identical keys, but you lose the keys.
      * @return array
      */
-    public static function concatArrayValues(array $arrays)
+    public static function concatArrayValues(array $arrays, $ignoreAllKeys = true)
     {
         $combinedArray = [];
 
         foreach ($arrays as $array) {
-            foreach ($array as $value) {
-                $combinedArray[] = $value;
+            foreach ($array as $key => $value) {
+                if(!is_int($key) && !$ignoreAllKeys) {
+                    $combinedArray[$key] = $value;
+                } else {
+                    $combinedArray[] = $value;
+                }
             }
         }
 
