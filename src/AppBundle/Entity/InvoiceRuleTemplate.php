@@ -52,13 +52,12 @@ class InvoiceRuleTemplate {
     private $priceExclVat;
 
     /**
-     * @var Invoice
-     *
-     * @ORM\ManyToOne(targetEntity="Invoice", inversedBy="invoiceRules", cascade={"persist"})
-     * @JMS\Type("array")
+     * @var string
+     * @ORM\Column(type="string")
+     * @JMS\Type("string")
      * @JMS\Groups({"INVOICE_RULE"})
      */
-    private $invoice;
+    private $category;
 
     /**
      * InvoiceRuleTemplate constructor.
@@ -116,18 +115,33 @@ class InvoiceRuleTemplate {
     }
 
     /**
-     * @return Invoice
+     * @return mixed
      */
-    public function getInvoice()
+    public function getId()
     {
-        return $this->invoice;
+        return $this->id;
     }
 
     /**
-     * @param Invoice $invoice
+     * @return string
      */
-    public function setInvoice($invoice)
+    public function getCategory()
     {
-        $this->invoice = $invoice;
+        return $this->category;
+    }
+
+    /**
+     * @param string $category
+     */
+    public function setCategory($category)
+    {
+        $this->category = $category;
+    }
+
+    public function copyValues(InvoiceRuleTemplate $invoiceRuleTemplate) {
+        $this->setDescription($invoiceRuleTemplate->getDescription());
+        $this->setPriceExclVat($invoiceRuleTemplate->getPriceExclVat());
+        $this->setVatPercentageRate($invoiceRuleTemplate->getVatPercentageRate());
+        $this->setCategory($invoiceRuleTemplate->getCategory());
     }
 }
