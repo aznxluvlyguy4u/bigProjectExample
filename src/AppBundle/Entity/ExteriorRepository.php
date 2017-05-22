@@ -50,7 +50,7 @@ class ExteriorRepository extends MeasurementRepository {
                   LEFT JOIN person p ON p.id = m.inspector_id
                   INNER JOIN animal a ON a.id = x.animal_id
                 WHERE x.animal_id = ".$animal->getId().$deletedFilterString." ORDER BY measurement_date DESC";
-        $retrievedMeasurementData = $this->getManager()->getConnection()->query($sql)->fetchAll();
+        $retrievedMeasurementData = $this->getConnection()->query($sql)->fetchAll();
 
         $count = 0;
         foreach ($retrievedMeasurementData as $measurementData)
@@ -132,11 +132,11 @@ class ExteriorRepository extends MeasurementRepository {
         if(is_int($animalId)) {
             $filter = "AND x.animal_id = " . $animalId;
             $sql = $sqlBase.$filter;
-            $result = $this->getManager()->getConnection()->query($sql)->fetch();
+            $result = $this->getConnection()->query($sql)->fetch();
         } else {
             $filter = "";
             $sql = $sqlBase.$filter;
-            $result = $this->getManager()->getConnection()->query($sql)->fetchAll();
+            $result = $this->getConnection()->query($sql)->fetchAll();
         }
         return $result == false ? $nullResult : $result;
     }
