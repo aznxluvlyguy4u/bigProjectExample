@@ -63,21 +63,12 @@ class Invoice {
     /**
      * @var ArrayCollection
      *
-     * @ORM\ManyToMany(targetEntity="InvoiceRuleTemplate", inversedBy="invoices", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="InvoiceRule", mappedBy="invoice", cascade={"persist"})
      * @ORM\JoinTable(name="invoice_invoice_rules")
      * @JMS\Type("ArrayCollection")
      * @JMS\Groups({"INVOICE"})
      */
     private $invoiceRules;
-
-    /**
-     * @var ArrayCollection
-     * @ORM\ManyToMany(targetEntity="InvoiceRuleLocked", inversedBy="invoices", cascade={"persist"})
-     * @ORM\JoinTable(name="invoice_invoice_rules_locked")
-     * @JMS\Type("ArrayCollection")
-     * @JMS\Groups({"INVOICE"})
-     */
-    private $lockedRules;
 
     /**
      * @var float
@@ -169,7 +160,6 @@ class Invoice {
     public function __construct()
     {
         $this->invoiceRules = new ArrayCollection();
-        $this->lockedRules = new ArrayCollection();
     }
 
     public function getId() {
@@ -262,30 +252,6 @@ class Invoice {
 
     public function removeInvoiceRule(InvoiceRule $invoiceRule){
         $this->invoiceRules->removeElement($invoiceRule);
-    }
-
-    /**
-     * @return ArrayCollection
-     */
-    public function getLockedInvoiceRules()
-    {
-        return $this->lockedRules;
-    }
-
-    /**
-     * @param ArrayCollection $invoiceRules
-     */
-    public function setLockedInvoiceRules($invoiceRules)
-    {
-        $this->lockedRules = $invoiceRules;
-    }
-
-    public function addLockedInvoiceRule(InvoiceRuleLocked $invoiceRule){
-        $this->lockedRules[] = $invoiceRule;
-    }
-
-    public function removeLockedInvoiceRule(InvoiceRuleLocked $invoiceRule){
-        $this->lockedRules->removeElement($invoiceRule);
     }
 
     /**
