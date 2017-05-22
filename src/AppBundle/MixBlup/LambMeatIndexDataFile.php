@@ -20,7 +20,15 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
         // TODO: Implement generateDataFile() method.
         return [];
     }
-    
-    
-    
+
+
+    /**
+     * @inheritDoc
+     */
+    static function getSqlQueryRelatedAnimals()
+    {
+        // TODO: Implement getSqlQueryRelatedAnimals() method.
+    }
+
+
 }

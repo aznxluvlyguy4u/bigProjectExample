@@ -181,11 +181,22 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
      */
     private static function getDataBySql(Connection $conn)
     {
+        return $conn->query(self::getSqlQuery())->fetchAll();
+    }
+
+
+    /**
+     * @param string $returnValuesString
+     * @return string
+     */
+    private static function getSqlQuery($returnValuesString = null)
+    {
         $minVal = ExteriorValidator::DEFAULT_MIN_EXTERIOR_VALUE;
         $maxVal = ExteriorValidator::DEFAULT_MAX_EXTERIOR_VALUE;
-        
-        $sql = "SELECT
-                  CONCAT(a.uln_country_code, a.uln_number) as uln,
+
+        if($returnValuesString == null) {
+            $returnValuesString =
+                "CONCAT(a.uln_country_code, a.uln_number) as uln,
                   a.type,
                   CONCAT(DATE_PART('year', a.date_of_birth),'_', a.ubn_of_birth) as year_and_ubn_of_birth,
                   CONCAT(mom.uln_country_code, mom.uln_number,'_', LPAD(CAST(l.litter_ordinal AS TEXT), 2, '0')) as litter_group,
@@ -195,7 +206,11 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
                   a.heterosis,
                   a.recombination,
                   skull, muscularity, proportion, progress, exterior_type, leg_work, fur,
-                  general_appearance, height, breast_depth, torso_length, kind
+                  general_appearance, height, breast_depth, torso_length, kind";
+        }
+
+        return "SELECT
+                  ".$returnValuesString."
                 FROM exterior x
                   INNER JOIN measurement m ON m.id = x.id
                   INNER JOIN animal a ON a.id = x.animal_id
@@ -239,7 +254,16 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
                           x.kind = '".ExteriorKind::DD_."' OR x.kind = '".ExteriorKind::DF_."' OR x.kind = '".ExteriorKind::HK_."'
                         )
                       )";
-        return $conn->query($sql)->fetchAll();
+    }
+
+
+    /**
+     * @return string
+     */
+    public static function getSqlQueryRelatedAnimals()
+    {
+        $returnValuesString = 'a.id as '.JsonInputConstant::ANIMAL_ID.', a.'.JsonInputConstant::TYPE;
+        return self::getSqlQuery($returnValuesString). ' GROUP BY a.id, a.type';
     }
 
 

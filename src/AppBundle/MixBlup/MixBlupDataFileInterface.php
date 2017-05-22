@@ -15,4 +15,13 @@ interface MixBlupDataFileInterface
      * @return array
      */
     static function generateDataFile(Connection $conn);
+
+    /**
+     * Return the string of the sqlQuery with the animal id as 'animal_id'
+     * and 'type' of the animal records included in the datafile.
+     * 
+     * @return string
+     */
+    static function getSqlQueryRelatedAnimals();
+    
 }

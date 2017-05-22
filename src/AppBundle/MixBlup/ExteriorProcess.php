@@ -46,7 +46,7 @@ class ExteriorProcess extends MixBlupProcessBase implements MixBlupProcessInterf
      */
     function generatePedigreeFile()
     {
-        return MixblupPedigreeFileGenerator::generateFullSet($this->conn);
+        return MixblupPedigreeFileGenerator::generateExteriorOptimizedSet($this->conn);
     }
     
     
