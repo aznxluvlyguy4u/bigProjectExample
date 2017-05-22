@@ -58,8 +58,7 @@ class InvoiceOutput
             'invoice_number' => $invoice->getInvoiceNumber(),
             'total' => $invoice->getTotal(),
             'invoice_date' => $invoice->getInvoiceDate(),
-            'invoice_rules' => InvoiceRuleOutput::createInvoiceRuleOutputList($invoice->getInvoiceRules()),
-            'invoice_rules_locked' => InvoiceRuleLockedOutput::createInvoiceRuleOutputList($invoice->getLockedInvoiceRules())
+            'invoice_rules' => InvoiceRuleOutput::createInvoiceRuleOutputList($invoice->getInvoiceRules())
         );
         if ($invoice->getMollieId() != null){
             $res['mollie_id'] = $invoice->getMollieId();
@@ -89,8 +88,7 @@ class InvoiceOutput
             'invoice_number' => $invoice->getInvoiceNumber(),
             'total' => $invoice->getTotal(),
             'invoice_date' => $invoice->getInvoiceDate(),
-            'invoice_rules' => InvoiceRuleOutput::createInvoiceRuleOutputList($invoice->getInvoiceRules()),
-            'invoice_rules_locked' => InvoiceRuleLockedOutput::createInvoiceRuleOutputList($invoice->getLockedInvoiceRules())
+            'invoice_rules' => InvoiceRuleOutput::createInvoiceRuleOutputList($invoice->getInvoiceRules())
         );
         if ($invoice->getMollieId() != null){
             $res['mollie_id'] = $invoice->getMollieId();

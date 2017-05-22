@@ -33,7 +33,6 @@ class InvoiceRuleOutput
             'price_excl_vat' => $invoiceRule->getPriceExclVat(),
             'sort_order' => $invoiceRule->getSortOrder(),
             'category' => $invoiceRule->getCategory(),
-            'locked_version' => $invoiceRule->getLockedVersion()->getId(),
             'type' => $invoiceRule->getType()
         );
     }
