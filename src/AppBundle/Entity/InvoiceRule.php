@@ -82,20 +82,13 @@ class InvoiceRule
     private $type;
 
     /**
-     * @var ArrayCollection
+     * @var Invoice
      *
-     * @ORM\ManyToMany(targetEntity="Invoice", mappedBy="invoiceRules", cascade={"persist"})
-     * @JMS\Type("ArrayCollection")
+     * @ORM\ManyToOne(targetEntity="Invoice", inversedBy="invoiceRules", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Invoice")
      * @JMS\Groups({"INVOICE_RULE_TEMPLATE"})
      */
-    private $invoices;
-
-    /**
-     * @var InvoiceRuleLocked
-     * @ORM\ManyToOne(targetEntity="InvoiceRuleLocked")
-     * @ORM\JoinColumn(name="locked_id", referencedColumnName="id")
-     */
-    private $lockedVersion;
+    private $invoice;
 
     /**
      * @var boolean
@@ -244,45 +237,18 @@ class InvoiceRule
     /**
      * @return Invoice
      */
-    public function getInvoices()
+    public function getInvoice()
     {
-        return $this->invoices;
+        return $this->invoice;
     }
 
     /**
-     * @param $invoices
+     * @param Invoice $invoice
      */
-    public function setInvoices($invoices)
+    public function setInvoice($invoice)
     {
-        $this->invoices = $invoices;
+        $this->invoice = $invoice;
     }
-
-    public function addInvoice(Invoice $invoice){
-        $this->invoices[] = $invoice;
-    }
-
-    public function removeInvoice(Invoice $invoice) {
-        $this->invoices->removeElement($invoice);
-    }
-
-    /**
-     * @return InvoiceRuleLocked
-     */
-    public function getLockedVersion()
-    {
-        return $this->lockedVersion;
-    }
-
-    /**
-     * @param InvoiceRuleLocked $lockedVersion
-     */
-    public function setLockedVersion($lockedVersion)
-    {
-        $this->lockedVersion = $lockedVersion;
-    }
-
-
-
 
     /**
      * TODO Find a better way to clone values (excluding the id) than using custom getters and setters
