@@ -19,6 +19,4 @@ interface InvoiceRuleTemplateAPIControllerInterface
     function updateInvoiceRule(Request $request);
     function createInvoiceRule(Request $request);
     function deleteInvoiceRule(Request $request, InvoiceRuleTemplate $invoiceRule);
-    function linkInvoiceRuleToInvoice(InvoiceRuleTemplate $invoiceRule, Invoice $invoice);
-
 }
