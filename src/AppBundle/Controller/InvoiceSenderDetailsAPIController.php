@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * Class InvoiceSenderDetailsAPIController
  * @package AppBundle\Controller
- * @Route("/api/v1/invoice_sender_details")
+ * @Route("/api/v1/invoice-sender-details")
  */
 class InvoiceSenderDetailsAPIController extends APIController implements InvoiceSenderDetailsAPIControllerInterface
 {
