@@ -126,7 +126,8 @@ class ExteriorRepository extends MeasurementRepository {
                                    SELECT animal_id, max(m.measurement_date) as measurement_date
                                    FROM exterior e
                                      INNER JOIN measurement m ON m.id = e.id
-                                   GROUP BY animal_id) y on y.animal_id = x.animal_id WHERE m.measurement_date = y.measurement_date ";
+                                   GROUP BY animal_id) y on y.animal_id = x.animal_id 
+                    WHERE m.measurement_date = y.measurement_date AND m.is_active = TRUE ";
 
         if(is_int($animalId)) {
             $filter = "AND x.animal_id = " . $animalId;
