@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Entity\InvoiceRepository;
 use AppBundle\Entity\InvoiceRuleLocked;
 use AppBundle\Entity\InvoiceRule;
 use AppBundle\Entity\InvoiceSenderDetails;
@@ -11,6 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Invoice;
+use AppBundle\Entity\Location;
 use AppBundle\Entity\InvoiceRuleTemplate;
 use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -22,30 +24,68 @@ use AppBundle\Enumerator\JMSGroups;
 use Doctrine\ORM\QueryBuilder;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Validation\AdminValidator;
+use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 
 /**
  * Class InvoiceAPIController
  * @package AppBundle\Controller
- * @Route("/api/v1/invoices/admin")
+ * @Route("/api/v1/invoices")
  */
 class InvoiceAPIController extends APIController implements InvoiceAPIControllerInterface
 {
     /**
+     *
+     * @ApiDoc(
+     *   section = "Invoices",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Retrieve all invoices"
+     * )
      * @Method("GET")
      * @Route("")
      * @return JsonResponse
      */
-    function getInvoices()
+    function getInvoices(Request $request)
     {
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
-        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
+        if (!$validationResult->isValid()) {
+            /** @var Location $location */
+            $location = $this->getSelectedLocation($request);
+            /** @var InvoiceRepository $repo */
+            $repo = $this->getManager()->getRepository(Invoice::class);
+            $invoices = $repo->findClientAvailableInvoices($location->getUbn());
+            $invoices = InvoiceOutput::createInvoiceOutputListNoCompany($invoices);
+            return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoices), 200);
+        }
         $repo = $this->getManager()->getRepository(Invoice::class);
         $invoices = $repo->findBy(array('isDeleted' => false), array('invoiceDate' => 'ASC'));
         $invoices = InvoiceOutput::createInvoiceOutputList($invoices);
+
         return new JsonResponse(array(Constant::RESULT_NAMESPACE =>$invoices), 200);
     }
 
     /**
+     * @ApiDoc(
+     *   section = "Invoices",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Retrieve all invoices"
+     * )
+     *
      * @Method("GET")
      * @Route("/incomplete")
      * @return JsonResponse
@@ -61,13 +101,33 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
     }
 
     /**
+     *
+     * @ApiDoc(
+     *   section = "Invoices",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Retrieve a specific invoice"
+     * )
+     *
      * @Method("GET")
      * @Route("/{id}")
      *
      */
     function getInvoice($id) {
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
-        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
+        if (!$validationResult->isValid()) {
+            $invoice = $this->getManager()->getRepository(Invoice::class)->findOneBy(array('id' => $id));
+            /** @var Invoice $invoice */
+            $invoice = InvoiceOutput::createInvoiceOutputNoCompany($invoice);
+            return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoice), 200);
+        }
         $invoice = $this->getManager()->getRepository(Invoice::class)->findOneBy(array('id' => $id));
         /** @var Invoice $invoice */
         $invoice = InvoiceOutput::createInvoiceOutput($invoice);
@@ -75,6 +135,20 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
     }
 
     /**
+     * @ApiDoc(
+     *   section = "Invoices",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Create an invoice"
+     * )
+     *
      * @param Request $request
      * @Method("POST")
      * @Route("")
@@ -87,24 +161,20 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
         $invoice = new Invoice();
         $rules = array();
-        self::setInvoiceNumber($invoice);
+        ($invoice);
         $content = $this->getContentAsArray($request);
         $contentRules = $content['invoice_rules'];
         $deserializedRules = new ArrayCollection();
-        $lockedRules = new ArrayCollection();
         foreach ($contentRules as $contentRule){
             /** @var InvoiceRule $rule */
             $invoiceRule = $this->getManager()->getRepository(InvoiceRule::class)
                 ->findOneBy(array('id' => $contentRule['id']));
             $deserializedRules->add($invoiceRule);
-            $lockedRule = $this->getManager()->getRepository(InvoiceRuleLocked::class)->findOneBy(array('id' => $invoiceRule->getLockedVersion()->getId()));
-            $lockedRules->add($lockedRule);
         }
         /** @var InvoiceSenderDetails $details */
         $details = $this->getManager()->getRepository(InvoiceSenderDetails::class)
             ->findOneBy(array('id' => $content['sender_details']['id']));
         $invoice->setInvoiceRules($deserializedRules);
-        $invoice->setLockedInvoiceRules($lockedRules);
         $invoice->setTotal($content['total']);
         $invoice->setUbn($content["ubn"]);
         $invoice->setCompanyLocalId($content['company_id']);
@@ -122,45 +192,40 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
             $invoice->setCompany($company);
             $company->addInvoice($invoice);
         }
+        /** @var InvoiceRepository $repo */
+        $repo = $this->getManager()->getRepository(Invoice::class);
+        $year = new \DateTime();
+        $year = $year->format('Y');
+        $number = $repo->getInvoicesOfCurrentYear($year);
+        if($number == null) {
+            $number = (int)$year * 10000;
+            $invoice->setInvoiceNumber($number);
+        }
+        else {
+            $number = $number[0]->getInvoiceNumber();
+            $number++;
+            $invoice->setInvoiceNumber($number);
+        }
         $this->persistAndFlush($invoice);
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoice), 200);
     }
 
     /**
-     * Function to properly set the InvoiceNumber
-     * InvoiceNumber format is "CurrentYear" + a number that is 5 long (00001, 03010, etc)
-     * @param Invoice $invoice
-     */
-    private function setInvoiceNumber(Invoice $invoice) {
-        $year = new \DateTime();
-        $year = $year->format('Y');
-        $year = $year."%";
-        $year = (string)$year;
-        // This query should get The invoice with the highest invoiceNumber, by ordering the invoices based on
-        // InvoiceNumber DESC and limiting results to 1
-        $qb = $this->getManager()->getRepository(Invoice::class)->createQueryBuilder('qb')
-            ->where('qb.invoiceNumber LIKE :year')
-            ->orderBy('qb.invoiceNumber', 'DESC')
-            ->setMaxResults(1)
-            ->setParameter('year', $year)
-            ->getQuery();
-        /** @var Invoice $invoices */
-        $invoices = $qb->getResult();
-
-        if ($invoices == null){
-            $number = $year * 100000;
-            $invoice->setInvoiceNumber($number);
-        }
-        else {
-            $number = $invoices[0]->getInvoiceNumber();
-            $number = (int)$number;
-            $number++;
-            $number = (string)$number;
-            $invoice->setInvoiceNumber($number);
-        }
-    }
-
-    /**
+     *
+     * @ApiDoc(
+     *   section = "Invoices",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Update an invoice"
+     * )
+     *
      * @param Request $request
      * @Method("PUT")
      * @Route("/{id}")
@@ -174,21 +239,16 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $temporaryInvoice = new Invoice();
         $contentRules = $content['invoice_rules'];
         $deserializedRules = new ArrayCollection();
-        $lockedRules = new ArrayCollection();
         /** @var Company $invoiceCompany */
         $invoiceCompany = $this->getManager()->getRepository(Company::class)->findOneBy(array('companyId' => $content['company']['company_id']));
         $id->setInvoiceRules($deserializedRules);
-        $id->setLockedInvoiceRules($lockedRules);
         foreach ($contentRules as $contentRule){
             /** @var InvoiceRule $rule */
             $invoiceRule = $this->getManager()->getRepository(InvoiceRule::class)
                 ->findOneBy(array('id' => $contentRule['id']));
             $deserializedRules->add($invoiceRule);
-            $lockedRule = $this->getManager()->getRepository(InvoiceRuleLocked::class)->findOneBy(array('id' => $invoiceRule->getLockedVersion()->getId()));
-            $lockedRules->add($lockedRule);
         }
         $id->setInvoiceRules($deserializedRules);
-        $id->setLockedInvoiceRules($lockedRules);
         if ($id->getCompany() != null && $id->getCompany()->getId() != $invoiceCompany->getId()){
             /** @var Company $oldCompany */
             $oldCompany = $this->getManager()->getRepository(Company::class)->findOneBy(array('id' => $id->getCompany()->getId()));
@@ -258,6 +318,106 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $id->setInvoiceDate(new \DateTime());
         $this->persistAndFlush($id);
         return new JsonResponse(array(Constant::RESULT_NAMESPACE => $id), 200);
+    }
+
+    /**
+     * @Route("/invoice-rules")
+     * @param Request $request
+     * @Method("GET")
+     * @return jsonResponse
+     */
+    public function getInvoiceRuleTemplates(Request $request)
+    {
+        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
+        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
+
+        $repository = $this->getDoctrine()->getRepository(InvoiceRule::class);
+        $ruleTemplates = $repository->findBy(array('isDeleted' => false, 'type' => 'standard'));
+        $output = $this->getDecodedJson($ruleTemplates, JMSGroups::INVOICE_RULE_TEMPLATE);
+
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+    }
+
+    /**
+     * @Route("/{invoice}/invoice-rules")
+     * @param Request $request
+     * @Method("POST")
+     * @return jsonResponse
+     */
+    public function createInvoiceRuleTemplate(Request $request, Invoice $invoice)
+    {
+        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
+        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
+
+        $content = $this->getContentAsArray($request);
+        /** @var InvoiceRule $ruleTemplate */
+        $ruleTemplate = $this->getObjectFromContent($content, InvoiceRule::class);
+
+        $ruleTemplate->setInvoice($invoice);
+        $this->persistAndFlush($ruleTemplate);
+
+        $invoice->addInvoiceRule($ruleTemplate);
+        $this->persistAndFlush($invoice);
+
+        $output = $this->getDecodedJson($ruleTemplate, JMSGroups::INVOICE_RULE_TEMPLATE);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+    }
+
+    /**
+     * @Route("/invoice-rules")
+     * @param Request $request
+     * @Method("PUT")
+     * @return jsonResponse
+     */
+    public function updateInvoiceRuleTemplate(Request $request)
+    {
+        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
+        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
+
+        $content = $this->getContentAsArray($request);
+
+        /** @var InvoiceRule $updatedRuleTemplate */
+        $updatedRuleTemplate = new InvoiceRule();
+        $updatedRuleTemplate->setDescription($content['description']);
+        $updatedRuleTemplate->setVatPercentageRate($content['vat_percentage_rate']);
+        $updatedRuleTemplate->setPriceExclVat($content['price_excl_vat']);
+
+        $repository = $this->getDoctrine()->getRepository(InvoiceRule::class);
+        /** @var InvoiceRule $currentRuleTemplate */
+        $currentRuleTemplate = $repository->findOneBy(array('id' => $content['id']));
+        if(!$currentRuleTemplate) { return Validator::createJsonResponse('THE INVOICE RULE TEMPLATE IS NOT FOUND.', 428); }
+
+        $currentRuleTemplate->copyValues($updatedRuleTemplate);
+        $this->persistAndFlush($currentRuleTemplate);
+
+        $output = $this->getDecodedJson($updatedRuleTemplate, JMSGroups::INVOICE_RULE_TEMPLATE);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+    }
+
+    /**
+     * @Route("/{invoice}/invoice-rules/{id}")
+     * @param Request $request
+     * @Method("DELETE")
+     * @return jsonResponse
+     */
+    public function deleteInvoiceRuleTemplate(Request $request, InvoiceRule $invoiceRuleTemplate, Invoice $invoice)
+    {
+        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
+        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
+
+        $repository = $this->getDoctrine()->getRepository(InvoiceRule::class);
+        /** @var InvoiceRule $ruleTemplate */
+        $ruleTemplate = $repository->find($invoiceRuleTemplate);
+
+        if(!$ruleTemplate) { return Validator::createJsonResponse('THE INVOICE RULE TEMPLATE IS NOT FOUND.', 428); }
+        $invoice->removeInvoiceRule($ruleTemplate);
+        $ruleTemplate->setIsDeleted(true);
+        $ruleTemplate->setInvoice(null);
+        $this->persistAndFlush($invoice);
+        $this->persistAndFlush($ruleTemplate);
+
+        $output = $this->getDecodedJson($ruleTemplate, JMSGroups::INVOICE_RULE_TEMPLATE);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
     }
 
 }
