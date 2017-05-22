@@ -26,7 +26,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 /**
  * Class InvoiceRuleTemplateAPIController
  * @package AppBundle\Controller
- * @Route("/invoice-rules")
+ * @Route("api/v1/invoice-rule-templates")
  */
 class InvoiceRuleTemplateAPIController extends APIController implements InvoiceRuleTemplateAPIControllerInterface
 {
@@ -42,7 +42,13 @@ class InvoiceRuleTemplateAPIController extends APIController implements InvoiceR
         if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
 
         $repository = $this->getDoctrine()->getRepository(InvoiceRuleTemplate::class);
-        $rules = $repository->findAll();
+        $category = $request->get('category');
+        if ($category != null) {
+            $rules = $repository->findBy(array('category' => $category));
+        }
+        else{
+            $rules = $repository->findAll();
+        }
         $output = $this->getDecodedJson($rules, JMSGroups::INVOICE_RULE);
 
         return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
@@ -83,10 +89,9 @@ class InvoiceRuleTemplateAPIController extends APIController implements InvoiceR
 
         /** @var InvoiceRuleTemplate $updatedRule */
         $updatedRule = $this->getObjectFromContent($content, InvoiceRuleTemplate::class);
-
         $repository = $this->getDoctrine()->getRepository(InvoiceRuleTemplate::class);
         /** @var InvoiceRuleTemplate $currentRule */
-        $currentRule = $repository->find($updatedRule->getId());
+        $currentRule = $repository->find($content['id']);
         if(!$currentRule) { return Validator::createJsonResponse('THE INVOICE RULE  IS NOT FOUND.', 428); }
 
         $currentRule->copyValues($updatedRule);
@@ -117,17 +122,6 @@ class InvoiceRuleTemplateAPIController extends APIController implements InvoiceR
 
         $output = $this->getDecodedJson($rule, JMSGroups::INVOICE_RULE);
         return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
-    }
-
-    /**
-     * @param InvoiceRuleTemplate $invoiceRule
-     * @param Invoice $invoice
-     * @Method("PUT")
-     * @Route("{invoice}/{invoiceRule}")
-     */
-    public function linkInvoiceRuleToInvoice(InvoiceRuleTemplate $invoiceRule, Invoice $invoice)
-    {
-        // TODO: Implement linkInvoiceRuleToInvoice() method.
     }
 
 }
