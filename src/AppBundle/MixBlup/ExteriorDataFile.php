@@ -8,6 +8,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\MaxLength;
 use AppBundle\Enumerator\ExteriorKind;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\TexelaarPedigreeRegisterAbbreviation;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\CsvWriterUtil;
 use AppBundle\Util\Translation;
@@ -206,10 +207,11 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
                   a.heterosis,
                   a.recombination,
                   skull, muscularity, proportion, progress, exterior_type, leg_work, fur,
-                  general_appearance, height, breast_depth, torso_length, kind";
+                  general_appearance, height, breast_depth, torso_length, kind,
+                  r.abbreviation as pedigree_register";
         }
 
-        return "SELECT
+        $sqlBase = "SELECT
                   ".$returnValuesString."
                 FROM exterior x
                   INNER JOIN measurement m ON m.id = x.id
@@ -217,6 +219,7 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
                   INNER JOIN animal mom ON mom.id = a.parent_mother_id
                   LEFT JOIN inspector i ON i.id = m.inspector_id
                   INNER JOIN litter l ON l.id = a.litter_id
+                  LEFT JOIN pedigree_register r ON r.id = a.pedigree_register_id
                 WHERE m.is_active AND DATE_PART('year', NOW()) - DATE_PART('year', measurement_date) <= 
                   ".MixBlupSetting::MEASUREMENTS_FROM_LAST_AMOUNT_OF_YEARS."
                   AND a.gender <> '".GenderType::NEUTER."'
@@ -254,6 +257,15 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
                           x.kind = '".ExteriorKind::DD_."' OR x.kind = '".ExteriorKind::DF_."' OR x.kind = '".ExteriorKind::HK_."'
                         )
                       )";
+        
+        $sql = $sqlBase."
+            ".self::generateNonTexelaarFilter().
+            "
+            UNION
+            ".$sqlBase."
+            ".self::generateTexelaarFilter();
+
+        return $sql;
     }
 
 
@@ -325,5 +337,44 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
     private static function formattedNullExteriorDecimalValue()
     {
         return self::formattedNullExteriorValue(MaxLength::EXTERIOR_DECIMAL_VALUE);
+    }
+
+
+    /**
+     * @return string
+     */
+    private static function generateNonTexelaarFilter()
+    {
+        $filterString = 'AND ((';
+        $prefix = '';
+        foreach (TexelaarPedigreeRegisterAbbreviation::getAll() as $abbreviation) {
+            $filterString = $filterString.$prefix."r.abbreviation <> '".$abbreviation."'";
+            $prefix = ' AND ';
+        }
+        $filterString = $filterString.") OR r.abbreviation ISNULL)";
+
+        return $filterString;
+    }
+
+
+    /**
+     * For 'Texelaars' and 'Blauwe Texelaars' the exterior measurements MUST be from NSFO inspectors.
+     * Measurements from other non-NSFO inspectors for those pedigrees are not consistent enough in the NSFO context.
+     * For other pedigrees the inspector type is not relevant in the NSFO context.
+     *
+     * @return string
+     */
+    private static function generateTexelaarFilter()
+    {
+        $filterString = 'AND (';
+        $prefix = '';
+        foreach (TexelaarPedigreeRegisterAbbreviation::getAll() as $abbreviation) {
+            $filterString = $filterString.$prefix."r.abbreviation = '".$abbreviation."'";
+            $prefix = ' OR ';
+        }
+        $filterString = $filterString.") AND m.inspector_id NOTNULL";
+        //TODO include a way to filter for only NSFO inspectors
+
+        return $filterString;
     }
 }
