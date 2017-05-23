@@ -390,7 +390,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $repository = $this->getDoctrine()->getRepository(InvoiceRule::class);
         /** @var InvoiceRule $currentRuleTemplate */
         $currentRuleTemplate = $repository->findOneBy(array('id' => $content['id']));
-        if(!$currentRuleTemplate) { return Validator::createJsonResponse('THE INVOICE RULE TEMPLATE IS NOT FOUND.', 428); }
+        if(!$currentRuleTemplate) { return Validator::createJsonResponse('THE INVOICE RULE TEMPLATE IS NOT FOUND.', Response::HTTP_PRECONDITION_REQUIRED); }
 
         $currentRuleTemplate->copyValues($updatedRuleTemplate);
         $this->persistAndFlush($currentRuleTemplate);
@@ -428,7 +428,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         /** @var InvoiceRule $ruleTemplate */
         $ruleTemplate = $repository->find($invoiceRuleTemplate);
 
-        if(!$ruleTemplate) { return Validator::createJsonResponse('THE INVOICE RULE TEMPLATE IS NOT FOUND.', 428); }
+        if(!$ruleTemplate) { return Validator::createJsonResponse('THE INVOICE RULE TEMPLATE IS NOT FOUND.', Response::HTTP_PRECONDITION_REQUIRED); }
         $invoice->removeInvoiceRule($ruleTemplate);
         $ruleTemplate->setIsDeleted(true);
         $ruleTemplate->setInvoice(null);
@@ -436,7 +436,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $this->persistAndFlush($ruleTemplate);
 
         $output = $this->getDecodedJson($ruleTemplate, JMSGroups::INVOICE_RULE_TEMPLATE);
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], Response::HTTP_OK);
     }
 
 }
