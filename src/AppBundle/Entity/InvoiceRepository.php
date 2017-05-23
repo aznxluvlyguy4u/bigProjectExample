@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Enumerator\InvoiceStatus;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\QueryBuilder;
 
@@ -22,9 +23,9 @@ class InvoiceRepository extends BaseRepository
                     ->where($qb->expr()->andX(
                         $qb->expr()->eq('i.ubn', ':ubn'),
                         $qb->expr()->orX(
-                            $qb->expr()->eq('i.status', "'UNPAID'"),
-                            $qb->expr()->eq('i.status', "'PAID'"),
-                            $qb->expr()->eq('i.status', "'CANCELLED'")
+                            $qb->expr()->eq('i.status', InvoiceStatus::UNPAID),
+                            $qb->expr()->eq('i.status', InvoiceStatus::PAID),
+                            $qb->expr()->eq('i.status', InvoiceStatus::CANCELLED)
                             )
                     ))
                     ->setParameter('ubn', $ubn);
