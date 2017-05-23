@@ -141,7 +141,7 @@ abstract class AwsQueueServiceBase
     /**
      * @return \Aws\Result
      */
-    public function getNextExternalQueueMessage()
+    public function getNextMessage()
     {
         $result = $this->queueService->receiveMessage(array(
             'QueueUrl' => $this->queueUrl
@@ -154,7 +154,7 @@ abstract class AwsQueueServiceBase
     /**
      * @return string
      */
-    public function getExternalQueueService()
+    public function getQueueService()
     {
         return $this->queueService;
     }
