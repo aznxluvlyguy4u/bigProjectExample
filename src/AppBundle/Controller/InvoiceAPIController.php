@@ -7,21 +7,19 @@ use AppBundle\Entity\InvoiceRepository;
 use AppBundle\Entity\InvoiceRuleLocked;
 use AppBundle\Entity\InvoiceRule;
 use AppBundle\Entity\InvoiceSenderDetails;
+use AppBundle\Enumerator\InvoiceStatus;
 use AppBundle\Output\InvoiceOutput;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Invoice;
 use AppBundle\Entity\Location;
-use AppBundle\Entity\InvoiceRuleTemplate;
 use Doctrine\Common\Collections\ArrayCollection;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use AppBundle\Util\Validator;
 use AppBundle\Enumerator\JMSGroups;
-use Doctrine\ORM\QueryBuilder;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Validation\AdminValidator;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
@@ -65,38 +63,10 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
             return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoices), 200);
         }
         $repo = $this->getManager()->getRepository(Invoice::class);
+        $status = $request->get('status');
         $invoices = $repo->findBy(array('isDeleted' => false), array('invoiceDate' => 'ASC'));
         $invoices = InvoiceOutput::createInvoiceOutputList($invoices);
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE =>$invoices), 200);
-    }
-
-    /**
-     * @ApiDoc(
-     *   section = "Invoices",
-     *   requirements={
-     *     {
-     *       "name"="AccessToken",
-     *       "dataType"="string",
-     *       "requirement"="",
-     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-     *     }
-     *   },
-     *   resource = true,
-     *   description = "Retrieve all invoices"
-     * )
-     *
-     * @Method("GET")
-     * @Route("/incomplete")
-     * @return JsonResponse
-     */
-    function getIncompleteInvoices()
-    {
-        $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
-        if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
-        $repo = $this->getManager()->getRepository(Invoice::class);
-        $invoices = $repo->findBy(array('isDeleted' => false, 'status' => 'UNPAID'), array('invoiceDate' => 'ASC'));
-        $invoices = InvoiceOutput::createInvoiceOutputList($invoices);
         return new JsonResponse(array(Constant::RESULT_NAMESPACE =>$invoices), 200);
     }
 
@@ -183,7 +153,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $invoice->setCompanyDebtorNumber($content['company_debtor_number']);
         $invoice->setStatus($content["status"]);
         $invoice->setSenderDetails($details);
-        if ($invoice->getStatus() == "UNPAID") {
+        if ($invoice->getStatus() == InvoiceStatus::UNPAID) {
             $invoice->setInvoiceDate(new \DateTime());
         }
         /** @var Company $company */
@@ -280,6 +250,20 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
     }
 
     /**
+     * @ApiDoc(
+     *   section = "Invoices",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Delete an invoice"
+     * )
+     *
      * @param Request $request
      * @Method("DELETE")
      * @Route("/{id}")
@@ -289,7 +273,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
     {
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
         if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
-        if ($id->getStatus() == "NOT SEND" || $id->getStatus() == "INCOMPLETE"){
+        if ($id->getStatus() == InvoiceStatus::NOT_SEND || $id->getStatus() == InvoiceStatus::INCOMPLETE){
         $id->setIsDeleted(true);
         $this->persistAndFlush($id);
         }
@@ -300,33 +284,26 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
     }
 
     /**
-     * @Method("GET")
-     * @Route("/date")
-     */
-    function returnDate(){
-        $date = new \DateTime();
-        $year = $date->format('Y');
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $year), 200);
-    }
-
-    /**
-     * @Method("PUT")
-     * @Route("/{id}/date")
-     * @ParamConverter("id", class="Invoice")
-     */
-    function setDate(Invoice $id) {
-        $id->setInvoiceDate(new \DateTime());
-        $this->persistAndFlush($id);
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $id), 200);
-    }
-
-    /**
+     * @ApiDoc(
+     *   section = "Invoices",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Get all existing invoice rules"
+     * )
+     *
      * @Route("/invoice-rules")
      * @param Request $request
      * @Method("GET")
      * @return jsonResponse
      */
-    public function getInvoiceRuleTemplates(Request $request)
+    public function getInvoiceRules(Request $request)
     {
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
         if (!$validationResult->isValid()) { return $validationResult->getJsonResponse(); }
@@ -339,6 +316,20 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
     }
 
     /**
+     * @ApiDoc(
+     *   section = "Invoices",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Create an invoice rule for an invoice"
+     * )
+     *
      * @Route("/{invoice}/invoice-rules")
      * @param Request $request
      * @Method("POST")
@@ -364,6 +355,20 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
     }
 
     /**
+     * @ApiDoc(
+     *   section = "Invoices",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Update an invoice rule"
+     * )
+     *
      * @Route("/invoice-rules")
      * @param Request $request
      * @Method("PUT")
@@ -395,6 +400,20 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
     }
 
     /**
+     * @ApiDoc(
+     *   section = "Invoices",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Delete an invoice rule belonging to an invoice"
+     * )
+     *
      * @Route("/{invoice}/invoice-rules/{id}")
      * @param Request $request
      * @Method("DELETE")
