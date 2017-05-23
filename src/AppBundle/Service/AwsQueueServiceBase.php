@@ -2,8 +2,11 @@
 
 namespace AppBundle\Service;
 
+use AppBundle\Constant\AwsSqs;
 use AppBundle\Constant\Environment;
 use AppBundle\Enumerator\QueueSuffix;
+use AppBundle\Util\ArrayUtil;
+use Aws\Api\AbstractModel;
 use Aws\Sqs\SqsClient;
 use Aws\Credentials\Credentials;
 
@@ -177,5 +180,33 @@ abstract class AwsQueueServiceBase
             'QueueUrl' => $this->queueUrl, // REQUIRED
             'ReceiptHandle' => $ReceiptHandle, // REQUIRED
         ]);
+    }
+
+
+    /**
+     * WARNING!
+     * If this function is used in a while loop to continuously poll for messages in a queue
+     * at least include a wait of 1 second within the loop.
+     * Otherwise you will get a huge bill from Amazon.
+     *
+     * @return int
+     */
+    public function getSizeOfQueue()
+    {
+        /** @var AbstractModel $result */
+        $result = $this->queueService->getQueueAttributes([
+            'QueueUrl' => $this->queueUrl,
+            'AttributeNames' => [
+                AwsSqs::APPROXIMATE_MESSAGE_NAMESPACE
+            ],
+        ]);
+
+        $attributes = ArrayUtil::get(AwsSqs::ATTRIBUTES, $result->toArray());
+        if(is_array($attributes)) {
+            $approxNumberOfMessages = ArrayUtil::get(AwsSqs::APPROXIMATE_MESSAGE_NAMESPACE, $attributes);
+            return intval($approxNumberOfMessages);
+        }
+
+        return 0;
     }
 }
