@@ -30,7 +30,7 @@ class InvoiceSenderDetailsAPIController extends APIController implements Invoice
 {
     /**
      * @ApiDoc(
-     *   section = "Invoices",
+     *   section = "Invoice sender details",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -63,7 +63,7 @@ class InvoiceSenderDetailsAPIController extends APIController implements Invoice
 
     /**
      * @ApiDoc(
-     *   section = "Invoices",
+     *   section = "Invoice sender details",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -111,7 +111,7 @@ class InvoiceSenderDetailsAPIController extends APIController implements Invoice
 
     /**
      * @ApiDoc(
-     *   section = "Invoices",
+     *   section = "Invoice sender details",
      *   requirements={
      *     {
      *       "name"="AccessToken",
@@ -160,7 +160,7 @@ class InvoiceSenderDetailsAPIController extends APIController implements Invoice
 
     /**
      * @ApiDoc(
-     *   section = "Invoices",
+     *   section = "Invoice sender details",
      *   requirements={
      *     {
      *       "name"="AccessToken",
