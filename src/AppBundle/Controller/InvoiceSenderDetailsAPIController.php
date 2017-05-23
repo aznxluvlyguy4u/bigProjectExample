@@ -18,6 +18,8 @@ use AppBundle\Validation\AdminValidator;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
+use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class InvoiceSenderDetailsAPIController
@@ -27,6 +29,20 @@ use Symfony\Component\HttpFoundation\Request;
 class InvoiceSenderDetailsAPIController extends APIController implements InvoiceSenderDetailsAPIControllerInterface
 {
     /**
+     * @ApiDoc(
+     *   section = "Invoices",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Retrieve invoice sender details"
+     * )
+     *
      * @return JsonResponse
      * @Route("")
      * @Method("GET")
@@ -42,10 +58,24 @@ class InvoiceSenderDetailsAPIController extends APIController implements Invoice
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $details), 200);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $details), Response::HTTP_OK);
     }
 
     /**
+     * @ApiDoc(
+     *   section = "Invoices",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Create new invoice sender details"
+     * )
+     *
      * @param Request $request
      * @return mixed
      * @Method("POST")
@@ -76,10 +106,24 @@ class InvoiceSenderDetailsAPIController extends APIController implements Invoice
         $details->setIban($content->get('iban'));
         $details->setAddress($address);
         $this->persistAndFlush($details);
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $details), 200);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $details), Response::HTTP_OK);
     }
 
     /**
+     * @ApiDoc(
+     *   section = "Invoices",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Update existing invoice sender details"
+     * )
+     *
      * @param Request $request, InvoiceSenderDetails $invoiceSenderDetails
      * @return mixed
      * @Method("PUT")
@@ -111,10 +155,24 @@ class InvoiceSenderDetailsAPIController extends APIController implements Invoice
         $temporaryInvoiceSenderDetails->setAddress($temporaryAddress);
         $invoiceSenderDetails->copyValues($temporaryInvoiceSenderDetails);
         $this->persistAndFlush($invoiceSenderDetails);
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoiceSenderDetails), 200);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoiceSenderDetails), Response::HTTP_OK);
     }
 
     /**
+     * @ApiDoc(
+     *   section = "Invoices",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Delete invoice sender details"
+     * )
+     *
      * @param InvoiceSenderDetails $invoiceSenderDetails
      * @return mixed
      * @Method("DELETE")
@@ -125,7 +183,7 @@ class InvoiceSenderDetailsAPIController extends APIController implements Invoice
         $validationResult = AdminValidator::validate($this->getUser(), AccessLevelType::ADMIN);
         if (!$validationResult->isValid()) {return $validationResult->getJsonResponse();}
         $invoiceSenderDetails->setIsDeleted(true);
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoiceSenderDetails), 200);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoiceSenderDetails), Response::HTTP_OK);
     }
 
 }
