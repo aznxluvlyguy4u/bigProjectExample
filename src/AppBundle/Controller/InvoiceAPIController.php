@@ -4,7 +4,6 @@ namespace AppBundle\Controller;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\InvoiceRepository;
-use AppBundle\Entity\InvoiceRuleLocked;
 use AppBundle\Entity\InvoiceRule;
 use AppBundle\Entity\InvoiceSenderDetails;
 use AppBundle\Enumerator\InvoiceStatus;
@@ -23,6 +22,7 @@ use AppBundle\Enumerator\JMSGroups;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Validation\AdminValidator;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class InvoiceAPIController
@@ -60,14 +60,14 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
             $repo = $this->getManager()->getRepository(Invoice::class);
             $invoices = $repo->findClientAvailableInvoices($location->getUbn());
             $invoices = InvoiceOutput::createInvoiceOutputListNoCompany($invoices);
-            return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoices), 200);
+            return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoices), Response::HTTP_OK);
         }
         $repo = $this->getManager()->getRepository(Invoice::class);
         $status = $request->get('status');
         $invoices = $repo->findBy(array('isDeleted' => false), array('invoiceDate' => 'ASC'));
         $invoices = InvoiceOutput::createInvoiceOutputList($invoices);
 
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE =>$invoices), 200);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE =>$invoices), Response::HTTP_OK);
     }
 
     /**
@@ -96,12 +96,12 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
             $invoice = $this->getManager()->getRepository(Invoice::class)->findOneBy(array('id' => $id));
             /** @var Invoice $invoice */
             $invoice = InvoiceOutput::createInvoiceOutputNoCompany($invoice);
-            return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoice), 200);
+            return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoice), Response::HTTP_OK);
         }
         $invoice = $this->getManager()->getRepository(Invoice::class)->findOneBy(array('id' => $id));
         /** @var Invoice $invoice */
         $invoice = InvoiceOutput::createInvoiceOutput($invoice);
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoice), 200);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoice), Response::HTTP_OK);
     }
 
     /**
@@ -177,7 +177,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
             $invoice->setInvoiceNumber($number);
         }
         $this->persistAndFlush($invoice);
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoice), 200);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $invoice), Response::HTTP_OK);
     }
 
     /**
@@ -246,7 +246,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
             $id->setSenderDetails($details);
         }
         $this->persistAndFlush($id);
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $id), 200);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $id), Response::HTTP_OK);
     }
 
     /**
@@ -278,9 +278,9 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $this->persistAndFlush($id);
         }
         else {
-            return new JsonResponse(array(Constant::ERRORS_NAMESPACE => "Error, you tried to remove an invoice that was already send"), 200);
+            return new JsonResponse(array(Constant::ERRORS_NAMESPACE => "Error, you tried to remove an invoice that was already send"), Response::HTTP_OK);
         }
-        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $id), 200);
+        return new JsonResponse(array(Constant::RESULT_NAMESPACE => $id), Response::HTTP_OK);
     }
 
     /**
@@ -312,7 +312,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $ruleTemplates = $repository->findBy(array('isDeleted' => false, 'type' => 'standard'));
         $output = $this->getDecodedJson($ruleTemplates, JMSGroups::INVOICE_RULE_TEMPLATE);
 
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], Response::HTTP_OK);
     }
 
     /**
@@ -351,7 +351,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $this->persistAndFlush($invoice);
 
         $output = $this->getDecodedJson($ruleTemplate, JMSGroups::INVOICE_RULE_TEMPLATE);
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], Response::HTTP_OK);
     }
 
     /**
@@ -396,7 +396,7 @@ class InvoiceAPIController extends APIController implements InvoiceAPIController
         $this->persistAndFlush($currentRuleTemplate);
 
         $output = $this->getDecodedJson($updatedRuleTemplate, JMSGroups::INVOICE_RULE_TEMPLATE);
-        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], 200);
+        return new JsonResponse([Constant::RESULT_NAMESPACE => $output], Response::HTTP_OK);
     }
 
     /**
