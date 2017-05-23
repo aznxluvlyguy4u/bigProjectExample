@@ -114,6 +114,7 @@ class MixBlupService implements MixBlupServiceInterface
     public function run()
     {
         $this->updateAnimalIdAndDateValues();
+        $this->deleteMixBlupFilesInCache();
         $writeResult = $this->write();
         if($writeResult) {
             $allUploadsSuccessful = $this->upload();
