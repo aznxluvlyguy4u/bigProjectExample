@@ -536,7 +536,7 @@ class BirthAPIController extends APIController implements BirthAPIControllerInte
             if ($declareBirthCount > $declareBirthResponseCount) {
                 $message = 'There are '.$declareBirthCount.' declareBirths found for the litter, which are missing '.$missingMessages.' responses';
                 $statusCode = 428;
-            } elseif($declareBirthCount == 0) {
+            } elseif($declareBirthCount == 0 && $litter->getBornAliveCount() != 0) {
                 $message = 'The litter does not contain any declareBirths';
                 $statusCode = 428;
             }
