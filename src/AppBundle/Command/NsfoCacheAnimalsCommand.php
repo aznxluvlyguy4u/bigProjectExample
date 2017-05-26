@@ -7,6 +7,7 @@ use AppBundle\Cache\ExteriorCacher;
 use AppBundle\Cache\GeneDiversityUpdater;
 use AppBundle\Cache\NLingCacher;
 use AppBundle\Cache\ProductionCacher;
+use AppBundle\Cache\TailLengthCacher;
 use AppBundle\Cache\WeightCacher;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
@@ -68,6 +69,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '20: BatchUpdate all incongruent production values and n-ling values', "\n",
             '21: BatchUpdate all Incongruent exterior values', "\n",
             '22: BatchUpdate all Incongruent weight values', "\n\n",
+            '23: BatchUpdate all Incongruent tailLength values', "\n\n",
             '--- Non AnimalCache Sql Batch Queries ---   ', "\n",
             '30: BatchUpdate heterosis and recombination values, non-updated only', "\n",
             '31: BatchUpdate heterosis and recombination values, regenerate all', "\n\n",
@@ -176,6 +178,21 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                     } while (!ctype_digit($animalId) && !is_int($animalId));
 
                     $updateCount = WeightCacher::updateWeights($this->conn, [$animalId]);
+                }
+                $output->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
+                break;
+
+            case 23:
+                $updateAll = $this->cmdUtil->generateConfirmationQuestion('Update tailLength cache values of all animals? (y/n, default = no)');
+                if($updateAll) {
+                    $output->writeln('Updating all records...');
+                    $updateCount = TailLengthCacher::updateAll($this->conn);
+                } else {
+                    do{
+                        $animalId = $this->cmdUtil->generateQuestion('Insert one animalId (default = 0)', 0);
+                    } while (!ctype_digit($animalId) && !is_int($animalId));
+
+                    $updateCount = TailLengthCacher::update($this->conn, [$animalId]);
                 }
                 $output->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
                 break;
