@@ -302,6 +302,14 @@ class AnimalCache
     private $weightAt20Weeks;
 
 
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $tailLength;
+
+
     public function __construct()
     {
         $this->logDate = new \DateTime();
@@ -914,6 +922,24 @@ class AnimalCache
     public function setWeightAt20Weeks($weightAt20Weeks)
     {
         $this->weightAt20Weeks = $weightAt20Weeks;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getTailLength()
+    {
+        return $this->tailLength;
+    }
+
+    /**
+     * @param float $tailLength
+     * @return AnimalCache
+     */
+    public function setTailLength($tailLength)
+    {
+        $this->tailLength = $tailLength;
         return $this;
     }
 
