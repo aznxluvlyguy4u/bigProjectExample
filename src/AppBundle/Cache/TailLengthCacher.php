@@ -52,7 +52,6 @@ class TailLengthCacher
                                SELECT animal_id, MAX(log_date) as max_log_date
                                FROM tail_length tt
                                  INNER JOIN measurement mm ON tt.id = mm.id
-                               --Remove is_revoked if column data is moved to is_active and variable is removed
                                WHERE mm.is_active ".$animalIdFilterString."
                                GROUP BY tt.animal_id
                    ) AS last ON last.animal_id = t.animal_id AND m.log_date = last.max_log_date";
