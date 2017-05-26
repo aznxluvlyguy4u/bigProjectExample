@@ -10,8 +10,6 @@ use Doctrine\DBAL\Connection;
 
 /**
  * Class AnimalWeightCacher
- *
- * @ORM\Entity(repositoryClass="AppBundle\Cache")
  * @package AppBundle\Cache
  */
 class WeightCacher
