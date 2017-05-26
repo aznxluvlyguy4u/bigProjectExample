@@ -56,36 +56,28 @@ class TailLengthCacher
                                GROUP BY tt.animal_id
                    ) AS last ON last.animal_id = t.animal_id AND m.log_date = last.max_log_date";
 
-        $sqlUpdateToNonBlank = "WITH rows AS (
-                  UPDATE animal_cache SET
+        $sqlUpdateToNonBlank = "UPDATE animal_cache SET
                         tail_length = v.tail_length,
                         log_date = NOW()
-                  FROM (
-                        SELECT t.animal_id, t.length
-                        ".$sqlBase."
-                        INNER JOIN animal_cache c ON c.animal_id = t.animal_id
-                        INNER JOIN animal a ON t.animal_id = a.id
-                        WHERE c.tail_length ISNULL OR c.tail_length <> t.length
-                        -- AND a.location_id = 00000 < filter location_id here when necessary
-                ) AS v(animal_id, tail_length) WHERE animal_cache.animal_id = v.animal_id
-                RETURNING 1
-                )
-                SELECT COUNT(*) AS count FROM rows;";
-        $updateCount = $conn->query($sqlUpdateToNonBlank)->fetch()['count'];
+                          FROM (
+                                SELECT t.animal_id, t.length
+                                ".$sqlBase."
+                                INNER JOIN animal_cache c ON c.animal_id = t.animal_id
+                                INNER JOIN animal a ON t.animal_id = a.id
+                                WHERE c.tail_length ISNULL OR c.tail_length <> t.length
+                                -- AND a.location_id = 00000 < filter location_id here when necessary
+                        ) AS v(animal_id, tail_length) WHERE animal_cache.animal_id = v.animal_id";
+        $updateCount = SqlUtil::updateWithCount($conn, $sqlUpdateToNonBlank);
 
-        $sqlMakeBlank = "WITH rows AS (
-                  UPDATE animal_cache SET tail_length = NULL,
-                    log_date = NOW()
-                  WHERE animal_cache.tail_length NOTNULL
-                  ".$animalIdFilterString2."
-                  AND animal_cache.animal_id NOT IN (
-                  SELECT t.animal_id
-                    ".$sqlBase."
-                  )
-                  RETURNING 1
-                )
-                SELECT COUNT(*) AS count FROM rows;";
-        $updateCount += $conn->query($sqlMakeBlank)->fetch()['count'];
+        $sqlMakeBlank = "UPDATE animal_cache SET tail_length = NULL,
+                            log_date = NOW()
+                          WHERE animal_cache.tail_length NOTNULL
+                          ".$animalIdFilterString2."
+                          AND animal_cache.animal_id NOT IN (
+                          SELECT t.animal_id
+                            ".$sqlBase."
+                          )";
+        $updateCount += SqlUtil::updateWithCount($conn, $sqlMakeBlank);
 
         return $updateCount;
     }

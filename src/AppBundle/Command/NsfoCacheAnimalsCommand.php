@@ -68,7 +68,7 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
             '--- Sql Batch Queries ---', "\n",
             '20: BatchUpdate all incongruent production values and n-ling values', "\n",
             '21: BatchUpdate all Incongruent exterior values', "\n",
-            '22: BatchUpdate all Incongruent weight values', "\n\n",
+            '22: BatchUpdate all Incongruent weight values', "\n",
             '23: BatchUpdate all Incongruent tailLength values', "\n\n",
             '--- Non AnimalCache Sql Batch Queries ---   ', "\n",
             '30: BatchUpdate heterosis and recombination values, non-updated only', "\n",
