@@ -309,19 +309,33 @@ class WeightCacher
                                     UPDATE animal_cache SET $weightColumnName = v.$weightColumnName, $dateColumnName = v.measurement_date,
                                     log_date = NOW(), $ageColumnName = DATE_PART('day', v.measurement_date - v.date_of_birth)
                                     FROM (
-                                             SELECT w.weight as $weightColumnName, w.animal_id, m.measurement_date, a.date_of_birth
-                                             ".$sqlBase."
-                                             WHERE (c.$weightColumnName ISNULL OR
-                                                    c.$weightColumnName <> $weightColumnName OR
-                                                    c.$dateColumnName ISNULL OR
-                                                    c.$dateColumnName <> m.measurement_date OR
-                                                    c.$ageColumnName ISNULL OR
-                                                    c.$ageColumnName <> DATE_PART('day', m.measurement_date - a.date_of_birth))
+                                            -- select the measurement with the lowest measurement_date if all else is equal
+                                            SELECT
+                                               w.weight AS $weightColumnName,
+                                               w.animal_id,
+                                               m.measurement_date,
+                                               a.date_of_birth
+                                             FROM weight w
+                                               INNER JOIN animal_cache c ON c.animal_id = w.animal_id
+                                               INNER JOIN measurement m ON m.id = w.id
+                                               INNER JOIN animal a ON a.id = w.animal_id
+                                               INNER JOIN (
+                                                 SELECT
+                                                   w.weight,
+                                                   w.animal_id,
+                                                   MIN(m.measurement_date) as min_measurement_date,
+                                                   a.date_of_birth
+                                                 ".$sqlBase."
+                                                 GROUP BY w.animal_id, w.weight, a.date_of_birth, days_deviation_from_target_days
+                                             )ggg ON w.weight = ggg.weight AND w.animal_id = ggg.animal_id AND m.measurement_date = ggg.min_measurement_date
                                          ) AS v($weightColumnName, animal_id, measurement_date, date_of_birth)
                                     WHERE animal_cache.animal_id = v.animal_id AND
                                         (
+                                            animal_cache.$weightColumnName ISNULL OR
                                             animal_cache.$weightColumnName <> v.$weightColumnName OR
+                                            animal_cache.$dateColumnName ISNULL OR
                                             animal_cache.$dateColumnName <> v.measurement_date OR
+                                            animal_cache.$ageColumnName ISNULL OR
                                             animal_cache.$ageColumnName <> DATE_PART('day', v.measurement_date - v.date_of_birth)
                                         )
                                     RETURNING 1
