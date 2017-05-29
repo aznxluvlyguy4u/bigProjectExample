@@ -165,14 +165,20 @@ class MixBlupPedigreeUtil
 
             if($animalDataArray) {
                 $fatherId = $animalDataArray['parent_father_id'];
+                $motherId = $animalDataArray['parent_mother_id'];
+
+                if($fatherId && $motherId) {
+                    if(key_exists($fatherId, $this->animalIdsToInclude)
+                        && key_exists($motherId, $this->animalIdsToInclude)
+                    ) { return; }
+                }
+
                 if($fatherId) {
-                    if(key_exists($fatherId, $this->animalIdsToInclude)) { return; }
                     $fatherDataArray = ArrayUtil::get($fatherId, $this->malePedigreeSearchArray);
                     $this->includeAnimalIdByDataArray($fatherDataArray);
                 }
-                $motherId = $animalDataArray['parent_mother_id'];
+
                 if($motherId) {
-                    if(key_exists($motherId, $this->animalIdsToInclude)) { return; }
                     $motherDataArray = ArrayUtil::get($motherId, $this->femalePedigreeSearchArray);
                     $this->includeAnimalIdByDataArray($motherDataArray);
                 }
