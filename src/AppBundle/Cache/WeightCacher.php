@@ -247,7 +247,7 @@ class WeightCacher
 
         switch ($weightType) {
             case WeightType::EIGHT_WEEKS:
-                $columnName = 'weight_at8weeks';
+                $weightColumnName = 'weight_at8weeks';
                 $minWeightValue = MeasurementConstant::WEIGHT_AT_8_WEEKS_MIN_VALUE;
                 $maxWeightValue = MeasurementConstant::WEIGHT_AT_8_WEEKS_MAX_VALUE;
                 $minAgeInDays = MeasurementConstant::WEIGHT_AT_8_WEEKS_MIN_AGE;
@@ -256,7 +256,7 @@ class WeightCacher
                 break;
 
             case WeightType::TWENTY_WEEKS:
-                $columnName = 'weight_at20weeks';
+                $weightColumnName = 'weight_at20weeks';
                 $minWeightValue = MeasurementConstant::WEIGHT_AT_20_WEEKS_MIN_VALUE;
                 $maxWeightValue = MeasurementConstant::WEIGHT_AT_20_WEEKS_MAX_VALUE;
                 $minAgeInDays = MeasurementConstant::WEIGHT_AT_20_WEEKS_MIN_AGE;
@@ -268,9 +268,13 @@ class WeightCacher
                 return $updateCount;
         }
 
+        $ageColumnName = 'age_'.$weightColumnName;
+        $dateColumnName = $weightColumnName.'_measurement_date';
 
         $sqlBase = "FROM weight w
              INNER JOIN animal_cache c ON c.animal_id = w.animal_id
+             INNER JOIN measurement m ON m.id = w.id
+             INNER JOIN animal a ON a.id = w.animal_id
              INNER JOIN (
                  -- A double GROUP BY + INNER JOIN is used here because there are cases where
                  -- two weights have equal ABS(measurementDate-targetDate) values.
@@ -298,27 +302,39 @@ class WeightCacher
                  WHERE ABS(DATE_PART('day', m.measurement_date - a.date_of_birth)-$medianAgeInDays) = g.min_days
                        AND m.is_active AND w.is_revoked = false AND w.is_birth_weight = false
                  GROUP BY w.animal_id, min_days
-                 )gg ON max_weight = w.weight AND gg.animal_id = w.animal_id";
+                 )gg ON max_weight = w.weight AND gg.animal_id = w.animal_id
+                 AND ABS(DATE_PART('day', m.measurement_date - a.date_of_birth)-$medianAgeInDays) = days_deviation_from_target_days";
 
         $sqlUpdateToNonBlank = "WITH rows AS (
-                                    UPDATE animal_cache SET $columnName = v.$columnName,
-                                    log_date = NOW() 
+                                    UPDATE animal_cache SET $weightColumnName = v.$weightColumnName, $dateColumnName = v.measurement_date,
+                                    log_date = NOW(), $ageColumnName = DATE_PART('day', v.measurement_date - v.date_of_birth)
                                     FROM (
-                                             SELECT w.weight as $columnName, w.animal_id
+                                             SELECT w.weight as $weightColumnName, w.animal_id, m.measurement_date, a.date_of_birth
                                              ".$sqlBase."
-                                                 WHERE (c.$columnName ISNULL OR
-                                                        c.$columnName <> $columnName)
-                                         ) AS v($columnName, animal_id)
-                                    WHERE animal_cache.animal_id = v.animal_id
+                                             WHERE (c.$weightColumnName ISNULL OR
+                                                    c.$weightColumnName <> $weightColumnName OR
+                                                    c.$dateColumnName ISNULL OR
+                                                    c.$dateColumnName <> m.measurement_date OR
+                                                    c.$ageColumnName ISNULL OR
+                                                    c.$ageColumnName <> DATE_PART('day', m.measurement_date - a.date_of_birth))
+                                         ) AS v($weightColumnName, animal_id, measurement_date, date_of_birth)
+                                    WHERE animal_cache.animal_id = v.animal_id AND
+                                        (
+                                            animal_cache.$weightColumnName <> v.$weightColumnName OR
+                                            animal_cache.$dateColumnName <> v.measurement_date OR
+                                            animal_cache.$ageColumnName <> DATE_PART('day', v.measurement_date - v.date_of_birth)
+                                        )
                                     RETURNING 1
                                 )
                                 SELECT COUNT(*) AS count FROM rows;";
-        $updateCount = $conn->query($sqlUpdateToNonBlank)->fetch()['count'];
+        $updateCountNonBlank = $conn->query($sqlUpdateToNonBlank)->fetch()['count'];
+        $updateCount += $updateCountNonBlank;
 
         $sqlMakeBlank = "WITH rows AS (
-                            UPDATE animal_cache SET $columnName = NULL,
+                            UPDATE animal_cache SET $weightColumnName = NULL, $dateColumnName = NULL, $ageColumnName = NULL,
                             log_date = NOW() 
-                            WHERE animal_cache.$columnName NOTNULL
+                            WHERE (animal_cache.$weightColumnName NOTNULL OR animal_cache.$dateColumnName NOTNULL OR 
+                                  animal_cache.$ageColumnName NOTNULL)
                                   ".$animalIdFilterString2."
                                   AND animal_cache.animal_id NOT IN (
                                   SELECT w.animal_id
@@ -327,7 +343,8 @@ class WeightCacher
                             RETURNING 1
                         )
                         SELECT COUNT(*) AS count FROM rows;";
-        $updateCount += $conn->query($sqlMakeBlank)->fetch()['count'];
+        $updateCountBlank = $conn->query($sqlMakeBlank)->fetch()['count'];
+        $updateCount += $updateCountBlank;
 
         return $updateCount;
     }
