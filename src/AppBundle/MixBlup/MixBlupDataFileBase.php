@@ -10,6 +10,7 @@ use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\CsvWriterUtil;
 use AppBundle\Util\Translation;
+use Doctrine\DBAL\Connection;
 
 /**
  * Class MixBlupDataFileBase
@@ -165,6 +166,20 @@ class MixBlupDataFileBase
 
 
     /**
+     * Input should already be null checked
+     *
+     * @param $data
+     * @param string $key
+     * @param boolean $useColumnPadding
+     * @return string
+     */
+    protected static function getFormattedUlnMother($data, $key = JsonInputConstant::ULN_MOTHER, $useColumnPadding = true)
+    {
+        return self::getFormattedValueFromData($data, MaxLength::ULN, $key, $useColumnPadding);
+    }
+
+
+    /**
      * @param array $data
      * @param int $columnWidth
      * @param string $key
@@ -199,6 +214,28 @@ class MixBlupDataFileBase
     protected static function getFormattedLitterGroup($data, $key = JsonInputConstant::LITTER_GROUP)
     {
         return self::getFormattedValueFromData($data, MaxLength::LITTER_GROUP, $key, true);
+    }
+
+
+    /**
+     * @param array $data
+     * @param string $key
+     * @return string
+     */
+    protected static function getFormattedNLing($data, $key = JsonInputConstant::N_LING)
+    {
+        return self::getFormattedValueFromData($data, MaxLength::N_LING, $key, true);
+    }
+
+
+    /**
+     * @param array $data
+     * @param string $key
+     * @return string
+     */
+    protected static function getFormattedSuckleCount($data, $key = JsonInputConstant::SUCKLE_COUNT)
+    {
+        return self::getFormattedValueFromData($data, MaxLength::SUCKLE_COUNT, $key, true);
     }
 
 
@@ -249,5 +286,22 @@ class MixBlupDataFileBase
     {
         return self::getFormattedGeneVarianceFromData($data, MaxLength::HETEROSIS_AND_RECOMBINATION, JsonInputConstant::RECOMBINATION);
     }
-    
+
+
+    /**
+     * @param Connection $conn
+     * @return array
+     */
+    protected static function dynamicColumnWidths(Connection $conn)
+    {
+        $columns = [
+            'ubn' => 'location',
+        ];
+
+        $maxColumnWidths = CsvWriterUtil::maxStringLenghts($conn, $columns);
+
+        return [
+            "year_and_ubn_of_birth" => MaxLength::YEAR+strlen('_')+$maxColumnWidths['ubn'],
+        ];
+    }
 }

@@ -280,24 +280,6 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
 
 
     /**
-     * @param Connection $conn
-     * @return array
-     */
-    public static function dynamicColumnWidths(Connection $conn)
-    {
-        $columns = [
-            'ubn' => 'location',
-        ];
-
-        $maxColumnWidths = CsvWriterUtil::maxStringLenghts($conn, $columns);
-        
-        return [
-                  "year_and_ubn_of_birth" => MaxLength::YEAR+strlen('_')+$maxColumnWidths['ubn'],
-        ];
-    }
-
-
-    /**
      * @param $array
      * @param $key
      * @param int $maxLength
