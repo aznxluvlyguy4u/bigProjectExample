@@ -19,10 +19,10 @@ use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
 
 /**
- * Class MixBlupService
+ * Class MixBlupInputFilesService
  * @package AppBundle\Service
  */
-class MixBlupService implements MixBlupServiceInterface
+class MixBlupInputFilesService implements MixBlupServiceInterface
 {
     /** @var Connection */
     private $conn;
@@ -55,7 +55,7 @@ class MixBlupService implements MixBlupServiceInterface
     private $logger;
 
     /**
-     * MixBlupService constructor.
+     * MixBlupInputFilesService constructor.
      * @param ObjectManager $em
      * @param AWSSimpleStorageService $s3Service
      * @param MixBlupInputQueueService $queueService
@@ -109,7 +109,10 @@ class MixBlupService implements MixBlupServiceInterface
 
 
     /**
-     * @inheritDoc
+     * Generates the data for all the files,
+     * writes the data to the text input files,
+     * uploads the text files to the S3-Bucket,
+     * and sends a message to sqs queue with the overview data of the uploaded files.
      */
     public function run()
     {

@@ -2,7 +2,7 @@
 
 namespace AppBundle\Command;
 
-use AppBundle\Service\MixBlupService;
+use AppBundle\Service\MixBlupInputFilesService;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -34,8 +34,8 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
     /** @var CommandUtil */
     private $cmdUtil;
 
-    /** @var MixBlupService */
-    private $mixBlupService;
+    /** @var MixBlupInputFilesService */
+    private $mixBlupInputFilesService;
 
     protected function configure()
     {
@@ -54,7 +54,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
         $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
-        $this->mixBlupService = $this->getContainer()->get('app.routine.mixblup');
+        $this->mixBlupInputFilesService = $this->getContainer()->get('app.routine.mixblup');
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
@@ -71,13 +71,13 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
         switch ($option) {
 
             case 1:
-                $this->mixBlupService->run();
+                $this->mixBlupInputFilesService->run();
                 break;
             case 2:
                 $output->writeln('STILL TO BE IMPLEMENTED'); //TODO
                 break;
             case 3:
-                $this->mixBlupService->writeInstructionFiles();
+                $this->mixBlupInputFilesService->writeInstructionFiles();
                 break;
             default:
                 $output->writeln('ABORTED');

@@ -71,7 +71,7 @@ services:
           currentEnv: %kernel.environment%
 
     app.routine.mixblup:
-        class: AppBundle\Service\MixBlupService
+        class: AppBundle\Service\MixBlupInputFilesService
         arguments:
           entityManager: '@doctrine.orm.entity_manager'
           AWSSimpleStorageService: '@app.aws.storageservice'
