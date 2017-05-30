@@ -9,10 +9,10 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 
 /**
- * Class MixBlupDataFileBase
+ * Class MixBlupInputProcessBase
  * @package AppBundle\MixBlup
  */
-class MixBlupProcessBase
+class MixBlupInputProcessBase
 {
     /** @var Connection */
     protected $conn;
@@ -33,7 +33,7 @@ class MixBlupProcessBase
     protected $pedigreeFileName;
 
     /**
-     * MixBlupDataFileBase constructor.
+     * MixBlupInputProcessBase constructor.
      * @param ObjectManager $em
      * @param string $outputFolderPath
      * @param string $mixBlupType of MixBlupType enumerator

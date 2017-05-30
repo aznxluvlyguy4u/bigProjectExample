@@ -4,18 +4,17 @@
 namespace AppBundle\MixBlup;
 
 use AppBundle\Enumerator\MixBlupType;
-use AppBundle\Setting\MixBlupSetting;
 use Doctrine\Common\Persistence\ObjectManager;
 
 /**
- * Class ExteriorDataFile
+ * Class ExteriorInputProcess
  * @package AppBundle\MixBlup
  */
-class ExteriorProcess extends MixBlupProcessBase implements MixBlupProcessInterface
+class ExteriorInputProcess extends MixBlupInputProcessBase implements MixBlupInputProcessInterface
 {
 
     /**
-     * ExteriorDataFile constructor.
+     * ExteriorInputProcess constructor.
      * @param ObjectManager $em
      * @param string $outputFolderPath
      */

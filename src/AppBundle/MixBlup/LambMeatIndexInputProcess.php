@@ -4,17 +4,16 @@
 namespace AppBundle\MixBlup;
 
 use AppBundle\Enumerator\MixBlupType;
-use AppBundle\Setting\MixBlupSetting;
 use Doctrine\Common\Persistence\ObjectManager;
 
 /**
- * Class LambMeatIndexDataFile
+ * Class LambMeatIndexInputProcess
  * @package AppBundle\MixBlup
  */
-class LambMeatIndexProcess extends MixBlupProcessBase implements MixBlupProcessInterface
+class LambMeatIndexInputProcess extends MixBlupInputProcessBase implements MixBlupInputProcessInterface
 {
     /**
-     * LambMeatIndexDataFile constructor.
+     * LambMeatIndexInputProcess constructor.
      * @param ObjectManager $em
      * @param string $outputFolderPath
      */

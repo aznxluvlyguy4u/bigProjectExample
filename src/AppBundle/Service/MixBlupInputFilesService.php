@@ -5,10 +5,10 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Enumerator\MixBlupType;
-use AppBundle\MixBlup\ExteriorProcess;
-use AppBundle\MixBlup\LambMeatIndexProcess;
-use AppBundle\MixBlup\MixBlupProcessInterface;
-use AppBundle\MixBlup\ReproductionProcess;
+use AppBundle\MixBlup\ExteriorInputProcess;
+use AppBundle\MixBlup\LambMeatIndexInputProcess;
+use AppBundle\MixBlup\MixBlupInputProcessInterface;
+use AppBundle\MixBlup\ReproductionInputProcess;
 use AppBundle\Setting\MixBlupFolder;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\FilesystemUtil;
@@ -76,9 +76,9 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
         $this->workingFolder = $cacheDir.'/'.MixBlupFolder::ROOT;
 
         $this->mixBlupProcesses = [];
-        $this->mixBlupProcesses[MixBlupType::EXTERIOR] = new ExteriorProcess($em, $this->workingFolder);
-        $this->mixBlupProcesses[MixBlupType::LAMB_MEAT_INDEX] = new LambMeatIndexProcess($em, $this->workingFolder);
-        $this->mixBlupProcesses[MixBlupType::FERTILITY] = new ReproductionProcess($em, $this->workingFolder);
+        $this->mixBlupProcesses[MixBlupType::EXTERIOR] = new ExteriorInputProcess($em, $this->workingFolder);
+        $this->mixBlupProcesses[MixBlupType::LAMB_MEAT_INDEX] = new LambMeatIndexInputProcess($em, $this->workingFolder);
+        $this->mixBlupProcesses[MixBlupType::FERTILITY] = new ReproductionInputProcess($em, $this->workingFolder);
     }
 
 
@@ -93,7 +93,7 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
     {
         /**
          * @var string $mixBlupType
-         * @var MixBlupProcessInterface $mixBlupProcess
+         * @var MixBlupInputProcessInterface $mixBlupProcess
          */
         foreach($this->mixBlupProcesses as $mixBlupType => $mixBlupProcess)
         {
@@ -148,7 +148,7 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
     {
         /**
          * @var string $mixBlupType
-         * @var MixBlupProcessInterface $mixBlupProcess
+         * @var MixBlupInputProcessInterface $mixBlupProcess
          */
         foreach($this->mixBlupProcesses as $mixBlupType => $mixBlupProcess)
         {
