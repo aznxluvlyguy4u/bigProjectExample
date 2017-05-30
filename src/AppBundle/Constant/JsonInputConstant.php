@@ -201,6 +201,7 @@ class JsonInputConstant
     //Litter
     const SIZE = 'size';
     const N_LING = 'n_ling';
+    const SUCKLE_COUNT = 'suckle_count';
     const LITTER_GROUP = 'litter_group';
     const LITTER_COUNT = 'litter_count';
     const TOTAL_BORN_ALIVE_COUNT = 'total_born_alive_count';

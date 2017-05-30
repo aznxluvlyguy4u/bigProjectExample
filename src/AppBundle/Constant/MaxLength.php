@@ -16,4 +16,6 @@ class MaxLength
     const LITTER_GROUP = 17;
     const YEAR = 4;
     const VALID_GENDER = 3; //Ram/Ewe
+    const N_LING = 2;
+    const SUCKLE_COUNT = 2;
 }
