@@ -4,8 +4,9 @@
 namespace AppBundle\Service;
 
 
-use AppBundle\Enumerator\MixBlupType;
+use AppBundle\Enumerator\BreedValueType;
 use AppBundle\Setting\MixBlupFolder;
+use AppBundle\Setting\MixBlupInstructionFile;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\FilesystemUtil;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -57,6 +58,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     private $downloadedFileNames;
     /** @var array */
     private $failedDownloads;
+    /** @var string */
+    private $currentBreedType;
 
     /**
      * MixBlupOutputFilesService constructor.
@@ -85,15 +88,23 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $this->zip = new \ZipArchive();
         
         $this->mixBlupProcesses = [];
-//        $this->mixBlupProcesses[MixBlupType::EXTERIOR] = new ExteriorProcess($em, $this->workingFolder);
-//        $this->mixBlupProcesses[MixBlupType::LAMB_MEAT_INDEX] = new LambMeatIndexProcess($em, $this->workingFolder);
-//        $this->mixBlupProcesses[MixBlupType::FERTILITY] = new ReproductionProcess($em, $this->workingFolder);
+        //TODO include actual processes
+        $this->mixBlupProcesses[BreedValueType::BIRTH] = null;
+        $this->mixBlupProcesses[BreedValueType::EXTERIOR_LEG_WORK] = null;
+        $this->mixBlupProcesses[BreedValueType::EXTERIOR_MUSCULARITY] = null;
+        $this->mixBlupProcesses[BreedValueType::EXTERIOR_PROGRESS] = null;
+        $this->mixBlupProcesses[BreedValueType::EXTERIOR_PROPORTION] = null;
+        $this->mixBlupProcesses[BreedValueType::EXTERIOR_SKULL] = null;
+        $this->mixBlupProcesses[BreedValueType::EXTERIOR_TYPE] = null;
+        $this->mixBlupProcesses[BreedValueType::FERTILITY] = null;
+        $this->mixBlupProcesses[BreedValueType::LAMB_MEAT] = null;
+        $this->mixBlupProcesses[BreedValueType::TAIL_LENGTH] = null;
+        $this->mixBlupProcesses[BreedValueType::WORM] = null;
     }
 
 
     public function run()
     {
-        // TODO: Implement run() method.
         $this->processNextMessage();
     }
 
@@ -124,6 +135,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
                     $this->purgeResultsFolder();
                     $successfulUnzip = $this->unzipResultFiles($zipFileName);
+                    $this->currentBreedType = self::getBreedTypeByInstructionFileName($zipFileName);
 
                     if($successfulUnzip) {
 
@@ -227,19 +239,25 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     
     private function parseSolaniFiles()
     {
-        //TODO
+        switch ($this->currentBreedType) {
+            //TODO
+        }
     }
     
     
     private function parseRelaniFiles()
     {
-        //TODO
+        switch ($this->currentBreedType) {
+            //TODO
+        }
     }
 
 
     private function processBreedValues()
     {
-        //TODO
+        switch ($this->currentBreedType) {
+            //TODO
+        }
     }
 
 
@@ -261,4 +279,26 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     public function getZipFolder() { return $this->workingFolder.'/'.MixBlupFolder::ZIPS.'/'; }
     /** @return string */
     public function getResultsFolder() { return $this->workingFolder.'/'.MixBlupFolder::RESULTS.'/'; }
+
+
+    /**
+     * @param string $instructionFileName
+     * @return string
+     */
+    public static function getBreedTypeByInstructionFileName($instructionFileName)
+    {
+        switch ($instructionFileName) {
+            case MixBlupInstructionFile::BIRTH_PROGRESS: return BreedValueType::BIRTH;
+            case MixBlupInstructionFile::EXTERIOR_LEG_WORK: return BreedValueType::EXTERIOR_LEG_WORK;
+            case MixBlupInstructionFile::EXTERIOR_MUSCULARITY: return BreedValueType::EXTERIOR_MUSCULARITY;
+            case MixBlupInstructionFile::EXTERIOR_PROPORTION: return BreedValueType::EXTERIOR_PROPORTION;
+            case MixBlupInstructionFile::EXTERIOR_SKULL: return BreedValueType::EXTERIOR_SKULL;
+            case MixBlupInstructionFile::EXTERIOR_PROGRESS: return BreedValueType::EXTERIOR_PROGRESS;
+            case MixBlupInstructionFile::EXTERIOR_TYPE: return BreedValueType::EXTERIOR_TYPE;
+            case MixBlupInstructionFile::FERTILITY: return BreedValueType::FERTILITY;
+            case MixBlupInstructionFile::LAMB_MEAT: return BreedValueType::LAMB_MEAT;
+            case MixBlupInstructionFile::TAIL_LENGTH: return BreedValueType::TAIL_LENGTH;
+            case MixBlupInstructionFile::WORM_RESISTANCE: return BreedValueType::WORM;
+        }
+    }
 }
