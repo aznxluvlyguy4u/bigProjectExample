@@ -209,4 +209,18 @@ abstract class AwsQueueServiceBase
 
         return 0;
     }
+
+
+    /**
+     * @param \Aws\Result $response
+     * @return mixed
+     */
+    public static function getMessageBodyFromResponse($response)
+    {
+        $jsonBody = $response['Messages'][0]['Body'];
+        if($jsonBody) {
+            return json_decode($jsonBody);
+        }
+        return null;
+    }
 }
