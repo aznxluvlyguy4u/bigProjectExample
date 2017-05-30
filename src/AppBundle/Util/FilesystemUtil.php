@@ -6,6 +6,7 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Component\Builder\CsvOptions;
+use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\Filesystem\Filesystem;
 
 class FilesystemUtil
@@ -56,13 +57,39 @@ class FilesystemUtil
 
 
     /**
-     * @param string $folderPath
+     * @param string|array $folderPath
+     * @param Filesystem|null $fs
+     * @param Logger|null $logger
      */
-    public static function createFolderPathIfNull($folderPath)
+    public static function createFolderPathIfNull($folderPath, $fs = null, $logger = null)
     {
-        $fs = new Filesystem();
+        $createNewFileSystem = $fs == null;
+        if($createNewFileSystem) { $fs = new Filesystem(); }
+
+        if(is_array($folderPath)) {
+            foreach ($folderPath as $path) {
+                self::createFolderIfNullByFolderPathString($path, $fs, $logger);
+            }
+        } else {
+            self::createFolderIfNullByFolderPathString($folderPath, $fs, $logger);
+        }
+
+        if($createNewFileSystem) { $fs = null; }
+    }
+
+
+    /**
+     * @param string $folderPath
+     * @param Filesystem $fs
+     * @param Logger|null $logger
+     */
+    private static function createFolderIfNullByFolderPathString($folderPath, Filesystem $fs, $logger = null)
+    {
         if(!$fs->exists($folderPath)) {
             $fs->mkdir($folderPath);
+            if($logger) {
+                $logger->notice('CREATED DIR ' . $folderPath);
+            }
         }
     }
 
