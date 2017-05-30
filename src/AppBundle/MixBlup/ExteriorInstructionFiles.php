@@ -115,7 +115,7 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
 
             $model = [
-            ' BeenwVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            ' BeenwVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
             ' BeenwDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
             ' '.$commentHashTag.'LinStVb',
             ' '.$commentHashTag.'LinZijStAb',
@@ -136,8 +136,8 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
 
         $model = [
             ' BespVGv  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
-            ' BespVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
-            ' BespDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            ' BespVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
+            ' BespDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
             ' '.$commentHashTag.'LinVoorh',
             ' '.$commentHashTag.'LinRugBr',
             ' '.$commentHashTag.'LinRondBil',
@@ -155,7 +155,7 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
 
         $model = [
-            ' EvenrVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            ' EvenrVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
             ' EvenrDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
             ' '.$commentHashTag.'LinRugLen',
             ' '.$commentHashTag.'LinKruis',
@@ -190,7 +190,7 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
 
         $model = [
-            ' OntwVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            ' OntwVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
             ' OntwDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
             ' '.$commentHashTag.'LinRugLen',
             ' '.$commentHashTag.'LinKruis',
@@ -206,7 +206,7 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
     public static function generateExteriorTypeInstructionFile()
     {
         $model = [
-            ' TypeVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            ' TypeVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
             ' TypeDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
         ];
 
