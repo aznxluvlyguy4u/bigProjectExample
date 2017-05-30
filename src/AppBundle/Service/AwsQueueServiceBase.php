@@ -172,13 +172,17 @@ abstract class AwsQueueServiceBase
 
 
     /**
-     * @param string $ReceiptHandle
+     * @param string $receiptHandleOrAwsResult
      * @return \Aws\Result
      */
-    public function deleteMessage($ReceiptHandle){
+    public function deleteMessage($receiptHandleOrAwsResult){
+        if($receiptHandleOrAwsResult instanceof \Aws\Result) {
+            $receiptHandleOrAwsResult = $receiptHandleOrAwsResult['Messages'][0]['ReceiptHandle'];
+        }
+
         return $this->queueService->deleteMessage([
             'QueueUrl' => $this->queueUrl, // REQUIRED
-            'ReceiptHandle' => $ReceiptHandle, // REQUIRED
+            'ReceiptHandle' => $receiptHandleOrAwsResult, // REQUIRED
         ]);
     }
 
