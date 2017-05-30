@@ -70,12 +70,22 @@ services:
           entityManager: ['@doctrine.orm.entity_manager']
           currentEnv: %kernel.environment%
 
-    app.routine.mixblup:
+    app.mixblup.input:
         class: AppBundle\Service\MixBlupInputFilesService
         arguments:
           entityManager: '@doctrine.orm.entity_manager'
           AWSSimpleStorageService: '@app.aws.storageservice'
           MixBlupInputQueueService: '@app.aws.queueservice.mixblub_input'
+          currentEnv: %kernel.environment%
+          rootDir: %kernel.cache_dir%
+          logger: '@logger'
+
+    app.mixblup.output:
+        class: AppBundle\Service\MixBlupOutputFilesService
+        arguments:
+          entityManager: '@doctrine.orm.entity_manager'
+          AWSSimpleStorageService: '@app.aws.storageservice'
+          MixBlupOutputQueueService: '@app.aws.queueservice.mixblub_output'
           currentEnv: %kernel.environment%
           rootDir: %kernel.cache_dir%
           logger: '@logger'

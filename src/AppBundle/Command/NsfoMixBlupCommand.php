@@ -54,7 +54,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
         $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
-        $this->mixBlupInputFilesService = $this->getContainer()->get('app.routine.mixblup');
+        $this->mixBlupInputFilesService = $this->getContainer()->get('app.mixblup.input');
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));

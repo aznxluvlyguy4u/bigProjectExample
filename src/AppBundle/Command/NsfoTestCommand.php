@@ -88,7 +88,7 @@ class NsfoTestCommand extends ContainerAwareCommand
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
-            '1: Generate & Upload MixBlupInputFiles and send message to MixBlup queue', "\n",
+            '1: Custom test', "\n",
             '2: Custom test', "\n",
             'DEFAULT: Custom test', "\n"
         ], self::DEFAULT_OPTION);
@@ -96,8 +96,8 @@ class NsfoTestCommand extends ContainerAwareCommand
         switch ($option) {
 
             case 1:
-                $mixBlupService = $this->getContainer()->get('app.routine.mixblup');
-                $mixBlupService->run();
+                //PLACEHOLDER
+                $this->customTest();
                 break;
             case 2:
                 //PLACEHOLDER
