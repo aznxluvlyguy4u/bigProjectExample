@@ -21,6 +21,7 @@ use Symfony\Component\Filesystem\Filesystem;
 class MixBlupOutputFilesService implements MixBlupServiceInterface
 {
     const TEST_WITH_DOWNLOADED_ZIPS = false;
+    const ONLY_UNZIP_SOLANI_AND_RELANI = false;
 
     /** @var Filesystem */
     private $fs;
@@ -228,8 +229,13 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     {
         $this->logger->notice('Unzipping file: '.$this->getZipFolder().$zipFileName);
         if ($this->zip->open($this->getZipFolder().$zipFileName) === TRUE) {
-            //TODO only unzip relevant files
-            $this->zip->extractTo($this->getResultsFolder());
+
+            if(self::ONLY_UNZIP_SOLANI_AND_RELANI) {
+                $this->zip->extractTo($this->getResultsFolder(), ['Solani.out', 'Relani.out']);
+            } else {
+                $this->zip->extractTo($this->getResultsFolder());
+            }
+            
             $this->zip->close();
             return true;
         }
