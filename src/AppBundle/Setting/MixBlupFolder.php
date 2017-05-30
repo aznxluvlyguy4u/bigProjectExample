@@ -10,4 +10,6 @@ class MixBlupFolder
     const INSTRUCTIONS = 'instructions';
     const DATA = 'data';
     const PEDIGREE = 'pedigree';
+    const RESULTS = 'results';
+    const ZIPS = 'zips';
 }
