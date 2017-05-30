@@ -511,6 +511,7 @@ class IRSerializer implements IRSerializerInterface
 
         if ($isAborted || $isPseudoPregnancy || $litterSize == $stillbornCount) {
             $litter->setStatus('COMPLETED');
+            $litter->setRequestState('FINISHED');
         } else {
             $litter->setStatus('INCOMPLETE');
         }
