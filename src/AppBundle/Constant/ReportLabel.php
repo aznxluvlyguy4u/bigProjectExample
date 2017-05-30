@@ -118,4 +118,8 @@ class ReportLabel
     const MALE_SYMBOL = 'male_symbol';
     const MALE_AND_FEMALE_SYMBOL = 'male_and_female_symbol';
     const NEUTER_SYMBOL = 'neuter_symbol';
+
+    //Position
+    const START = 'START';
+    const END = 'END';
 }
