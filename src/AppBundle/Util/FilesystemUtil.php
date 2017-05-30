@@ -57,6 +57,64 @@ class FilesystemUtil
 
 
     /**
+     * Copy the contents of a directory to another directory
+     * @param $src
+     * @param $dst
+     * @param $fs
+     * @param $logger
+     */
+    public static function recurseCopy($src, $dst, Filesystem $fs = null, Logger $logger = null){
+        if($logger != null) { $logger->notice('RECURSIVE COPY SRC = ' . $src . ' DEST = ' . $dst); }
+
+        $useTempFs = $fs == null;
+        if($useTempFs) { $fs = new Filesystem(); }
+
+        $dir = opendir($src);
+        while(false !== ( $file = readdir($dir)) ) {
+            if (( $file != '.' ) && ( $file != '..' )) {
+                if ( is_dir($src . '/' . $file) ) {
+                    self::recurseCopy($src . '/' . $file,$dst . '/' . $file, $fs, $logger);
+                }
+                else {
+                    $fs->copy($src . '/' . $file,$dst . '/' . $file);
+                }
+            }
+        }
+        closedir($dir);
+
+        if($useTempFs) { $fs = null; }
+    }
+
+    /**
+     * @param $src
+     * @param $fs
+     * @param $logger
+     */
+    public static function recurseRemove($src, Filesystem $fs = null, Logger $logger = null) {
+        $useTempFs = $fs == null;
+        if($useTempFs) { $fs = new Filesystem(); }
+
+        if($logger != null) { $logger->notice('RECURSIVE REMOVE SRC = ' . $src); }
+
+        $dir = opendir($src);
+        while(false !== ( $obj = readdir($dir)) ) {
+            if($logger != null) { $logger->notice($obj); }
+            if (( $obj != '.' ) && ( $obj != '..' )) {
+                if ( is_dir($src . '/' . $obj) ) {
+                    self::recurseRemove($src . '/' . $obj);
+                }
+                else {
+                    $fs->remove($src . '/' . $obj);
+                }
+            }
+        }
+        closedir($dir);
+
+        if($useTempFs) { $fs = null; }
+    }
+
+
+    /**
      * @param string|array $folderPath
      * @param Filesystem|null $fs
      * @param Logger|null $logger
