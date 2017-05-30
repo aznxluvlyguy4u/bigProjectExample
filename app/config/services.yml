@@ -29,15 +29,15 @@ services:
         parent: app.aws.queueservice.workers_base
         arguments: { index_0: '%aws_sqs_queue_interal_prefix%' }
 
-    app.aws.queueservice.mixblub_input:
+    app.aws.queueservice.mixblup_input:
         class: AppBundle\Service\MixBlupInputQueueService
         parent: app.aws.queueservice.workers_base
-        arguments: { index_0: '%aws_sqs_queue_mixblub_input_prefix%' }
+        arguments: { index_0: '%aws_sqs_queue_mixblup_input_prefix%' }
 
-    app.aws.queueservice.mixblub_output:
+    app.aws.queueservice.mixblup_output:
         class: AppBundle\Service\MixBlupOutputQueueService
         parent: app.aws.queueservice.workers_base
-        arguments: { index_0: '%aws_sqs_queue_mixblub_output_prefix%' }
+        arguments: { index_0: '%aws_sqs_queue_mixblup_output_prefix%' }
 
     app.aws.storageservice:
         class: AppBundle\Service\AWSSimpleStorageService
@@ -75,7 +75,7 @@ services:
         arguments:
           entityManager: '@doctrine.orm.entity_manager'
           AWSSimpleStorageService: '@app.aws.storageservice'
-          MixBlupInputQueueService: '@app.aws.queueservice.mixblub_input'
+          MixBlupInputQueueService: '@app.aws.queueservice.mixblup_input'
           currentEnv: %kernel.environment%
           rootDir: %kernel.cache_dir%
           logger: '@logger'
@@ -85,7 +85,7 @@ services:
         arguments:
           entityManager: '@doctrine.orm.entity_manager'
           AWSSimpleStorageService: '@app.aws.storageservice'
-          MixBlupOutputQueueService: '@app.aws.queueservice.mixblub_output'
+          MixBlupOutputQueueService: '@app.aws.queueservice.mixblup_output'
           currentEnv: %kernel.environment%
           rootDir: %kernel.cache_dir%
           logger: '@logger'
