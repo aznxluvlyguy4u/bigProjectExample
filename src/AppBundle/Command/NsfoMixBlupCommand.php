@@ -3,6 +3,7 @@
 namespace AppBundle\Command;
 
 use AppBundle\Service\MixBlupInputFilesService;
+use AppBundle\Service\MixBlupOutputFilesService;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -36,6 +37,8 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
 
     /** @var MixBlupInputFilesService */
     private $mixBlupInputFilesService;
+    /** @var MixBlupOutputFilesService */
+    private $mixBlupOutputFilesService;
 
     protected function configure()
     {
@@ -55,6 +58,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
         $this->mixBlupInputFilesService = $this->getContainer()->get('app.mixblup.input');
+        $this->mixBlupOutputFilesService = $this->getContainer()->get('app.mixblup.output');
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
@@ -74,7 +78,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
                 $this->mixBlupInputFilesService->run();
                 break;
             case 2:
-                $output->writeln('STILL TO BE IMPLEMENTED'); //TODO
+                $this->mixBlupOutputFilesService->run();
                 break;
             case 3:
                 $this->mixBlupInputFilesService->writeInstructionFiles();
