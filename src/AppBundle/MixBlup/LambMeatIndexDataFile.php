@@ -111,7 +111,7 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
         return "SELECT
                   ".$returnValuesString."
                 FROM measurement m
-                  INNER JOIN animal a ON a.id = x.animal_id
+                  INNER JOIN animal a ON a.id = CAST(substring(m.animal_id_and_date FROM '([0-9]+)(_)') AS INTEGER)
                   INNER JOIN animal mom ON mom.id = a.parent_mother_id
                   LEFT JOIN animal dad ON dad.id = a.parent_father_id
                   INNER JOIN litter l ON l.id = a.litter_id
