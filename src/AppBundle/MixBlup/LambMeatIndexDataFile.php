@@ -4,12 +4,10 @@
 namespace AppBundle\MixBlup;
 
 use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Constant\MaxLength;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\MeasurementType;
 use AppBundle\Setting\MixBlupSetting;
-use AppBundle\Util\CsvWriterUtil;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -117,25 +115,162 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
                   INNER JOIN litter l ON l.id = a.litter_id
                   LEFT JOIN animal_cache c ON c.animal_id = a.id
                 WHERE 
-                  ".self::getSqlBaseFilter();
-    }
-
-
-    /**
-     * @return string
-     */
-    private static function getSqlBaseFilter()
-    {
-        return "m.is_active AND DATE_PART('year', NOW()) - DATE_PART('year', measurement_date) <= ".MixBlupSetting::MEASUREMENTS_FROM_LAST_AMOUNT_OF_YEARS."
-                  AND a.gender <> '".GenderType::NEUTER."'
-                  AND a.date_of_birth NOTNULL AND a.ubn_of_birth NOTNULL
-                  AND m.measurement_date <= NOW()
+                  ".self::getSqlBaseFilter()."
                   AND (
                         m.type = '".MeasurementType::BODY_FAT."' OR
                         m.type = '".MeasurementType::MUSCLE_THICKNESS."' OR
                         m.type = '".MeasurementType::TAIL_LENGTH."' OR
                         m.type = '".MeasurementType::WEIGHT."'
                       )";
+    }
+
+
+    /**
+     * @param string $date
+     * @return string
+     */
+    private static function getSqlBaseFilter($date = 'm.measurement_date')
+    {
+        return "m.is_active AND DATE_PART('year', NOW()) - DATE_PART('year', $date) <= ".MixBlupSetting::MEASUREMENTS_FROM_LAST_AMOUNT_OF_YEARS."
+                  AND a.gender <> '".GenderType::NEUTER."'
+                  AND a.date_of_birth NOTNULL AND a.ubn_of_birth NOTNULL
+                  AND $date <= NOW()
+                  AND a.litter_id NOTNULL";
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private static function getBirthData(Connection $conn)
+    {
+        $animalId = JsonInputConstant::ANIMAL_ID;
+        $sql = "SELECT a.id as $animalId,
+                  c.tail_length, c.birth_weight
+                FROM animal_cache c
+                INNER JOIN animal a ON a.id = c.animal_id
+                WHERE
+                  ".self::getSqlBaseFilter('date_of_birth')."
+                  AND (c.tail_length NOTNULL OR c.birth_weight NOTNULL)";
+        $results = $conn->query($sql)->fetchAll();
+        return $results;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private static function getScanData(Connection $conn)
+    {
+        $animalId = JsonInputConstant::ANIMAL_ID;
+        $measurementAgeFromAnimalIdAndDate = "DATE_PART('day', DATE(substring(animal_id_and_date FROM '([0-9]{4}[-][0-9]{2}[-][0-9]{2})')) - a.date_of_birth)";
+        $nullReplacement = MixBlupInstructionFileBase::MISSING_REPLACEMENT;
+        
+        $sql = "
+        SELECT
+          a.id as animal_id as $animalId,
+          animal_id_and_date,
+          substring(animal_id_and_date FROM '([0-9]{4}[-][0-9]{2}[-][0-9]{2})') as measurement_date,
+          $measurementAgeFromAnimalIdAndDate as measurement_age,
+          COALESCE(NULLIF(g.weight,0), $nullReplacement) as weight,
+          COALESCE(NULLIF(g.muscle_thickness,0), $nullReplacement) as muscle_thickness,
+          COALESCE(NULLIF(g.fat1,0), $nullReplacement) as fat1,
+          COALESCE(NULLIF(g.fat2,0), $nullReplacement) as fat2,
+          COALESCE(NULLIF(g.fat3,0), $nullReplacement) as fat3,
+          COALESCE(
+              $measurementAgeFromAnimalIdAndDate = c.age_weight_at8weeks
+              AND g.weight = c.weight_at8weeks, FALSE) as is_8weeks_weight,
+          COALESCE(
+              $measurementAgeFromAnimalIdAndDate = c.age_weight_at20weeks
+              AND g.weight = c.weight_at20weeks, FALSE) as is_20weeks_weight
+        FROM animal a
+          INNER JOIN animal_cache c ON c.animal_id = a.id
+          INNER JOIN (
+                SELECT animal_id_and_date, animal_id,
+                  SUM(weight) as weight,
+                  SUM(muscle_thickness) as muscle_thickness,
+                  SUM(fat1) as fat1,
+                  SUM(fat2) as fat2,
+                  SUM(fat3) as fat3
+                FROM (
+                          SELECT
+                            wx.animal_id_and_date, animal_id, weight, muscle_thickness, fat1, fat2, fat3
+                          FROM(
+                          --The nested DISTINCT is necessary to only select the largest weight
+                          --if there is a duplicate weight set by animal_id_and_date
+                            SELECT
+                              DISTINCT ON (m.animal_id_and_date) animal_id_and_date,
+                              a.id AS animal_id,
+                              w.weight,
+                              0 as muscle_thickness,
+                              0 as fat1,
+                              0 as fat2,
+                              0 as fat3
+                            FROM measurement m
+                              INNER JOIN weight w ON m.id = w.id
+                              INNER JOIN animal a ON a.id = w.animal_id
+                            WHERE ".self::getSqlBaseFilter()."
+                                  AND w.is_revoked = FALSE
+                                  AND w.is_birth_weight = FALSE
+                            ORDER BY m.animal_id_and_date DESC, weight DESC
+                          ) wx
+                
+                          UNION
+                
+                          SELECT
+                            mx.animal_id_and_date, animal_id, weight, muscle_thickness, fat1, fat2, fat3
+                          FROM (
+                          --The nested DISTINCT is necessary to only select the largest muscle_thickness
+                          --if there is a duplicate muscle_thickness set by animal_id_and_date
+                            SELECT
+                              DISTINCT ON (m.animal_id_and_date) animal_id_and_date,
+                              a.id AS animal_id,
+                              0 as weight,
+                              t.muscle_thickness as muscle_thickness,
+                              0 as fat1,
+                              0 as fat2,
+                              0 as fat3
+                            FROM measurement m
+                              INNER JOIN muscle_thickness t ON m.id = t.id
+                              INNER JOIN animal a ON a.id = t.animal_id
+                            WHERE ".self::getSqlBaseFilter()."
+                            ORDER BY m.animal_id_and_date DESC, muscle_thickness DESC
+                          ) mx
+          
+                          UNION
+                
+                          SELECT
+                            bx.animal_id_and_date, animal_id, weight, muscle_thickness, fat1, fat2, fat3
+                          FROM (
+                          --The nested DISTINCT is necessary to only select the body_fat set with the largest fat3
+                          --if there is a duplicate body_fat set by animal_id_and_date
+                            SELECT
+                              DISTINCT ON (m.animal_id_and_date) animal_id_and_date,
+                              a.id AS animal_id,
+                              0 as weight,
+                              0 as muscle_thickness,
+                              fat1.fat as fat1,
+                              fat2.fat as fat2,
+                              fat3.fat as fat3
+                            FROM measurement m
+                              INNER JOIN body_fat b ON m.id = b.id
+                              INNER JOIN animal a ON a.id = b.animal_id
+                              INNER JOIN fat1 ON b.fat1_id = fat1.id
+                              INNER JOIN fat2 ON b.fat2_id = fat2.id
+                              INNER JOIN fat3 ON b.fat3_id = fat3.id
+                            WHERE ".self::getSqlBaseFilter()."
+                            ORDER BY m.animal_id_and_date DESC, fat3 DESC
+                          ) bx
+                          
+                ) x GROUP BY animal_id_and_date, animal_id
+                ) g ON g.animal_id = a.id";
+        
+        $scanResults = $conn->query($sql)->fetchAll();
+        return $scanResults;
     }
 
 
