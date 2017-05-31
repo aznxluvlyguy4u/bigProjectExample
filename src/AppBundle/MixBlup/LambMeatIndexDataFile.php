@@ -8,6 +8,7 @@ use AppBundle\Constant\ReportLabel;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\MeasurementType;
 use AppBundle\Setting\MixBlupSetting;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\SqlUtil;
 use Doctrine\DBAL\Connection;
 
@@ -17,22 +18,68 @@ use Doctrine\DBAL\Connection;
  */
 class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFileInterface
 {
+    const INCLUDE_TIMED_WEIGHTS_WITH_THE_SCAN_DATA = false;
 
     /**
      * @inheritDoc
      */
     static function generateDataFile(Connection $conn)
     {
-        // TODO: Implement generateDataFile() method.
-
         $baseValuesSearchArray = self::createBaseValuesSearchArray($conn);
+        $timedWeightDataByAnimalId = self::getTimedWeightDataByAnimalId($conn);
+        $getBirthDataByAnimalId = self::getBirthDataByAnimalId($conn);
 
-        $animalId = 270893; //TODO remove PLACEHOLDER
-        $baseRecordValues = $baseValuesSearchArray[$animalId];
-        $recordBase = $baseRecordValues[ReportLabel::START];
-        $recordEnding = $baseRecordValues[ReportLabel::END];
+        $records = [];
 
-        return [];
+
+        //1. Add weight at 8 weeks and 20 weeks data
+        foreach ($timedWeightDataByAnimalId as $animalId => $timedWeightData)
+        {
+            $baseRecordValues = ArrayUtil::get($animalId, $baseValuesSearchArray);
+            if($baseRecordValues == null) { continue; }
+
+            $records[] =
+                $baseRecordValues[ReportLabel::START]
+                .self::getFormattedTimedWeightDataRecord($timedWeightData)
+                .$baseRecordValues[ReportLabel::END]
+            ;
+        }
+
+
+        //2. Add birth data
+        foreach ($getBirthDataByAnimalId as $animalId => $birthData)
+        {
+            $baseRecordValues = ArrayUtil::get($animalId, $baseValuesSearchArray);
+            if($baseRecordValues == null) { continue; }
+
+            $records[] =
+                $baseRecordValues[ReportLabel::START]
+                .self::getFormattedBirthDataRecord($birthData)
+                .$baseRecordValues[ReportLabel::END]
+            ;
+        }
+
+
+        //3. Add scan data
+        foreach (self::getScanData($conn) as $scanData)
+        {
+            $animalId = $scanData[JsonInputConstant::ANIMAL_ID];
+            $baseRecordValues = ArrayUtil::get($animalId, $baseValuesSearchArray);
+            if($baseRecordValues == null) { continue; }
+
+            $timedWeightData = ArrayUtil::get($animalId, $timedWeightDataByAnimalId);
+
+            $scanRecordPart = self::getFormattedScanDataRecord($scanData, $timedWeightData);
+            if($scanRecordPart) {
+                $records[] =
+                    $baseRecordValues[ReportLabel::START]
+                    .$scanRecordPart
+                    .$baseRecordValues[ReportLabel::END]
+                ;
+            }
+        }
+
+        return $records;
     }
 
 
@@ -59,25 +106,27 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
         foreach ($conn->query(self::getSqlQueryForBaseValues())->fetchAll() as $data) {
             $parsedBreedCode = self::parseBreedCode($data);
 
-            $recordBase =
-                self::getFormattedUln($data).
-                self::getFormattedUlnMother($data).
-                self::getFormattedYearAndUbnOfBirth($data, $dynamicColumnWidths[JsonInputConstant::YEAR_AND_UBN_OF_BIRTH]).
-                self::getFormattedGenderFromType($data).
-                self::getFormattedLitterGroup($data).
-                $parsedBreedCode.
-                self::getFormattedHeterosis($data).
-                self::getFormattedRecombination($data).
-                self::getFormattedNLing($data).
-                self::getFormattedSuckleCount($data);
+            if($parsedBreedCode) {
+                $recordBase =
+                    self::getFormattedUln($data).
+                    self::getFormattedUlnMother($data).
+                    self::getFormattedYearAndUbnOfBirth($data, $dynamicColumnWidths[JsonInputConstant::YEAR_AND_UBN_OF_BIRTH]).
+                    self::getFormattedGenderFromType($data).
+                    self::getFormattedLitterGroup($data).
+                    $parsedBreedCode.
+                    self::getFormattedHeterosis($data).
+                    self::getFormattedRecombination($data).
+                    self::getFormattedNLing($data).
+                    self::getFormattedSuckleCount($data);
 
-            $recordEnding =
-                self::getUbnOfBirthAsLastColumnValue($data);
+                $recordEnding =
+                    self::getUbnOfBirthAsLastColumnValue($data);
 
-            $results[$data[JsonInputConstant::ANIMAL_ID]] = [
-                ReportLabel::START => $recordBase,
-                ReportLabel::END => $recordEnding,
-            ];
+                $results[$data[JsonInputConstant::ANIMAL_ID]] = [
+                    ReportLabel::START => $recordBase,
+                    ReportLabel::END => $recordEnding,
+                ];
+            }
         }
         return $results;
     }
@@ -128,13 +177,20 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
 
     /**
      * @param string $date
+     * @param bool $includeIsActiveMeasurement
      * @return string
      */
-    private static function getSqlBaseFilter($date = 'm.measurement_date')
+    private static function getSqlBaseFilter($date = 'm.measurement_date', $includeIsActiveMeasurement = true)
     {
-        return "m.is_active AND DATE_PART('year', NOW()) - DATE_PART('year', $date) <= ".MixBlupSetting::MEASUREMENTS_FROM_LAST_AMOUNT_OF_YEARS."
+        $filterString = '';
+        if($includeIsActiveMeasurement) {
+            $filterString = $filterString.'m.is_active AND ';
+        }
+
+        return $filterString."DATE_PART('year', NOW()) - DATE_PART('year', $date) <= ".MixBlupSetting::MEASUREMENTS_FROM_LAST_AMOUNT_OF_YEARS."
                   AND a.gender <> '".GenderType::NEUTER."'
                   AND a.date_of_birth NOTNULL AND a.ubn_of_birth NOTNULL
+                  AND a.breed_code NOTNULL
                   AND $date <= NOW()
                   AND a.litter_id NOTNULL";
     }
@@ -145,7 +201,7 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
      * @return array
      * @throws \Doctrine\DBAL\DBALException
      */
-    private static function getBirthData(Connection $conn)
+    private static function getBirthDataByAnimalId(Connection $conn)
     {
         $animalId = JsonInputConstant::ANIMAL_ID;
         $sql = "SELECT a.id as $animalId,
@@ -153,10 +209,32 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
                 FROM animal_cache c
                 INNER JOIN animal a ON a.id = c.animal_id
                 WHERE
-                  ".self::getSqlBaseFilter('date_of_birth')."
+                  ".self::getSqlBaseFilter('date_of_birth', false)."
                   AND (c.tail_length NOTNULL OR c.birth_weight NOTNULL)";
         $results = $conn->query($sql)->fetchAll();
-        return $results;
+        return SqlUtil::createSearchArrayByKey('animal_id', $results);
+    }
+
+
+    /**
+     * @param array $birthData
+     * @return string
+     */
+    private static function getFormattedBirthDataRecord(array $birthData)
+    {
+        return
+            self::getFormattedBlankAge(). //Scan age
+            self::getFormattedBlankWeight(). //Scan weight
+            self::getFormattedWeight($birthData, 'birth_weight'). //Birth weight
+            self::getFormattedTailLength($birthData). //TailLength
+            self::getFormattedBlankWeight(). //weight_at8weeks
+            self::getFormattedBlankAge(). //age_weight_at8weeks
+            self::getFormattedBlankWeight(). //weight_at20weeks
+            self::getFormattedBlankAge(). //age_weight_at20weeks
+            self::getFormattedBlankFat(). //fat1
+            self::getFormattedBlankFat(). //fat2
+            self::getFormattedBlankFat(). //fat3
+            self::getFormattedBlankMuscleThickness();
     }
 
 
@@ -173,7 +251,7 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
         
         $sql = "
         SELECT
-          a.id as animal_id as $animalId,
+          a.id as $animalId,
           animal_id_and_date,
           substring(animal_id_and_date FROM '([0-9]{4}[-][0-9]{2}[-][0-9]{2})') as measurement_date,
           $measurementAgeFromAnimalIdAndDate as measurement_age,
@@ -283,12 +361,113 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
     private static function getTimedWeightDataByAnimalId(Connection $conn)
     {
         $sql = "SELECT animal_id, weight_at8weeks, age_weight_at8weeks, weight_at20weeks, age_weight_at20weeks
-                FROM animal_cache
-                WHERE (weight_at8weeks NOTNULL AND age_weight_at8weeks NOTNULL)
-                OR (weight_at20weeks NOTNULL AND age_weight_at20weeks NOTNULL);";
+                FROM animal_cache c
+                INNER JOIN animal a ON a.id = c.animal_id
+                WHERE
+                  ".self::getSqlBaseFilter('date_of_birth', false)."
+                  AND (
+                    (weight_at8weeks NOTNULL AND age_weight_at8weeks NOTNULL) OR
+                    (weight_at20weeks NOTNULL AND age_weight_at20weeks NOTNULL)
+                  )";
         $results = $conn->query($sql)->fetchAll();
         return SqlUtil::createSearchArrayByKey('animal_id', $results);
     }
+
+
+    /**
+     * @param array $timedWeightData
+     * @return string
+     */
+    private static function getFormattedTimedWeightDataRecord(array $timedWeightData)
+    {     
+        return
+            self::getFormattedBlankAge(). //Scan age
+            self::getFormattedBlankWeight(). //Scan weight
+            self::getFormattedBlankWeight(). //Birth weight
+            self::getFormattedBlankTailLength(). //TailLength
+            self::getFormattedWeight($timedWeightData, 'weight_at8weeks').
+            self::getFormattedAge($timedWeightData, 'age_weight_at8weeks').
+            self::getFormattedWeight($timedWeightData, 'weight_at20weeks').
+            self::getFormattedAge($timedWeightData, 'age_weight_at20weeks').
+            self::getFormattedBlankFat(). //fat1
+            self::getFormattedBlankFat(). //fat2
+            self::getFormattedBlankFat(). //fat3
+            self::getFormattedBlankMuscleThickness();
+    }
+
+
+    /**
+     * @param array $scanData
+     * @param array $timedWeightData
+     * @return string
+     */
+    private static function getFormattedScanDataRecord(array $scanData, $timedWeightData)
+    {
+        $nullReplacement = MixBlupInstructionFileBase::MISSING_REPLACEMENT;
+
+        //$animalIdAndDate = $scanData['animal_id_and_date'];
+        //$measurementDateString = $scanData['measurement_date'];
+
+        $formattedAge = self::getFormattedAge($scanData, 'measurement_age');
+        $formattedWeight = self::getFormattedWeight($scanData, JsonInputConstant::WEIGHT);
+
+        $muscleThickness = $scanData[JsonInputConstant::MUSCLE_THICKNESS];
+        $fat1 = $scanData[JsonInputConstant::FAT1];
+        $fat2 = $scanData[JsonInputConstant::FAT2];
+        $fat3 = $scanData[JsonInputConstant::FAT3];
+        $is8WeeksWeight = $scanData['is_8weeks_weight'];
+        $is20WeeksWeight = $scanData['is_20weeks_weight'];
+
+        $areNonWeightValuesBlank =
+            $fat1 == $nullReplacement &&
+            $fat2 == $nullReplacement &&
+            $fat3 == $nullReplacement &&
+            $muscleThickness == $nullReplacement;
+
+        if( $is8WeeksWeight && $areNonWeightValuesBlank ||
+            $is20WeeksWeight && $areNonWeightValuesBlank)
+        {
+            //This weight value is already when including the timedWeightData
+            return null;
+        }
+
+        //Set timedWeightRecord blank by default
+        $timedWeightRecord =
+            self::getFormattedBlankWeight(). //weight_at8weeks
+            self::getFormattedBlankAge(). //age_weight_at8weeks
+            self::getFormattedBlankWeight(). //weight_at20weeks
+            self::getFormattedBlankAge(); //age_weight_at20weeks
+
+        if(self::INCLUDE_TIMED_WEIGHTS_WITH_THE_SCAN_DATA)
+        {
+            if($is8WeeksWeight) {
+                $timedWeightRecord =
+                    $formattedWeight. //weight_at8weeks
+                    $formattedAge. //age_weight_at8weeks
+                    self::getFormattedBlankWeight(). //weight_at20weeks
+                    self::getFormattedBlankAge(); //age_weight_at20weeks
+
+            } elseif($is20WeeksWeight) {
+                $timedWeightRecord =
+                    self::getFormattedBlankWeight(). //weight_at8weeks
+                    self::getFormattedBlankAge(). //age_weight_at8weeks
+                    $formattedWeight. //weight_at20weeks
+                    $formattedAge; //age_weight_at20weeks
+            }
+        }
+
+        return
+            $formattedAge. //Scan age
+            $formattedWeight. //Scan weight
+            self::getFormattedBlankWeight(). //Birth weight
+            self::getFormattedBlankTailLength(). //TailLength
+            $timedWeightRecord.
+            self::getFormattedFat($scanData, JsonInputConstant::FAT1). //fat1
+            self::getFormattedFat($scanData, JsonInputConstant::FAT2). //fat2
+            self::getFormattedFat($scanData, JsonInputConstant::FAT3). //fat3
+            self::getFormattedMuscleThickness($scanData, JsonInputConstant::MUSCLE_THICKNESS);
+    }
+
     
-    
+
 }

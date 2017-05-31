@@ -44,7 +44,7 @@ class LambMeatIndexInputProcess extends MixBlupInputProcessBase implements MixBl
      */
     function generatePedigreeFile()
     {
-        return MixblupPedigreeFileGenerator::generateFullSet($this->conn);
+        return MixblupPedigreeFileGenerator::generateLambMeatIndexOptimizedSet($this->conn);
     }
 
 
