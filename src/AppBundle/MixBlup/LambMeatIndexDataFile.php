@@ -8,6 +8,7 @@ use AppBundle\Constant\ReportLabel;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\MeasurementType;
 use AppBundle\Setting\MixBlupSetting;
+use AppBundle\Util\SqlUtil;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -274,5 +275,20 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
     }
 
 
-
+    /**
+     * @param Connection $conn
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private static function getTimedWeightDataByAnimalId(Connection $conn)
+    {
+        $sql = "SELECT animal_id, weight_at8weeks, age_weight_at8weeks, weight_at20weeks, age_weight_at20weeks
+                FROM animal_cache
+                WHERE (weight_at8weeks NOTNULL AND age_weight_at8weeks NOTNULL)
+                OR (weight_at20weeks NOTNULL AND age_weight_at20weeks NOTNULL);";
+        $results = $conn->query($sql)->fetchAll();
+        return SqlUtil::createSearchArrayByKey('animal_id', $results);
+    }
+    
+    
 }
