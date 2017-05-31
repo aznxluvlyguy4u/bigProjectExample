@@ -330,6 +330,21 @@ class SqlUtil
 
 
     /**
+     * @param string|int $key
+     * @param array $results
+     * @return array
+     */
+    public static function createSearchArrayByKey($key, $results)
+    {
+        $searchArray = [];
+        foreach ($results as $result) {
+            $searchArray[$result[$key]] = $result;
+        }
+        return $searchArray;
+    }
+
+
+    /**
      * @param Connection $conn
      * @param string $sql
      * @return int
