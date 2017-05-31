@@ -6,16 +6,18 @@ namespace AppBundle\Constant;
 
 class MaxLength
 {
-    const ULN = 14;
-    const DATE = 10;
-    const EXTERIOR_VALUE = 3; //includes null value
-    const EXTERIOR_DECIMAL_VALUE = 4; //includes comma and one decimal
+    const AGE = 5;
     const BREED_CODE_PART_BY_8_PARTS = 1;
+    const DATE = 10;
+    const EXTERIOR_DECIMAL_VALUE = 4; //includes comma and one decimal
+    const EXTERIOR_VALUE = 3; //includes null value
     const HETEROSIS_AND_RECOMBINATION = 5;
-    const NSFO_INSPECTOR = 7;
     const LITTER_GROUP = 17;
-    const YEAR = 4;
-    const VALID_GENDER = 3; //Ram/Ewe
     const N_LING = 2;
+    const NSFO_INSPECTOR = 7;
     const SUCKLE_COUNT = 2;
+    const ULN = 14;
+    const VALID_GENDER = 3; //Ram/Ewe
+    const WEIGHT = 5;
+    const YEAR = 4;
 }
