@@ -108,6 +108,12 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     {
         $this->processNextMessage();
     }
+    
+    
+    public function test()
+    {
+        $this->purgeResultsFolder();
+    }
 
 
     private function processNextMessage()
@@ -273,7 +279,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     private function purgeFolder($filepath)
     {
         $this->logger->notice('Purging MixBlup '.basename($filepath).' folder in cache...');
-        FilesystemUtil::recurseRemove($filepath, $this->fs, $this->logger);
+        FilesystemUtil::purgeFolder($filepath, $this->fs, $this->logger);
     }
 
     private function purgeZipFolder() { $this->purgeFolder($this->getZipFolder()); }

@@ -6,6 +6,7 @@ namespace AppBundle\Util;
 
 
 use AppBundle\Component\Builder\CsvOptions;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\Filesystem\Filesystem;
 
@@ -85,23 +86,24 @@ class FilesystemUtil
         if($useTempFs) { $fs = null; }
     }
 
+    
     /**
      * @param $src
      * @param $fs
      * @param $logger
      */
-    public static function recurseRemove($src, Filesystem $fs = null, Logger $logger = null) {
+    public static function purgeFolder($src, Filesystem $fs = null, Logger $logger = null) {
         $useTempFs = $fs == null;
         if($useTempFs) { $fs = new Filesystem(); }
 
-        if($logger != null) { $logger->notice('RECURSIVE REMOVE SRC = ' . $src); }
+        if($logger != null) { $logger->notice('PURGE SRC = ' . $src); }
 
         $dir = opendir($src);
         while(false !== ( $obj = readdir($dir)) ) {
             if($logger != null) { $logger->notice($obj); }
             if (( $obj != '.' ) && ( $obj != '..' )) {
                 if ( is_dir($src . '/' . $obj) ) {
-                    self::recurseRemove($src . '/' . $obj);
+                    self::recursiveRemoveDirectory($src . '/' . $obj, $logger);
                 }
                 else {
                     $fs->remove($src . '/' . $obj);
@@ -111,6 +113,49 @@ class FilesystemUtil
         closedir($dir);
 
         if($useTempFs) { $fs = null; }
+    }
+
+
+    /**
+     * @param string|array $directory
+     * @param Logger $logger
+     */
+    public static function recursiveRemoveDirectory($directory, $logger = null)
+    {
+        if(is_array($directory) || $directory instanceof ArrayCollection) {
+            foreach ($directory as $dir) {
+                self::recursiveRemoveSingleDirectory($dir, $logger);
+            }
+        } else {
+            self::recursiveRemoveSingleDirectory($directory, $logger);
+        }
+    }
+
+
+    /**
+     * @param string $directory
+     * @param Logger $logger
+     */
+    private static function recursiveRemoveSingleDirectory($directory, $logger = null)
+    {
+        if(is_dir($directory))
+        {
+            if($logger != null) { $logger->notice('PURGING DIR: '.$directory); }
+            foreach(glob("{$directory}/*") as $file)
+            {
+                if(is_dir($file)) {
+                    self::recursiveRemoveDirectory($file);
+                } else {
+                    if($logger != null) { $logger->notice('REMOVING FILE: '.basename($file)); }
+                    unlink($file);
+                }
+            }
+            rmdir($directory);
+            if($logger != null) { $logger->notice('REMOVED DIR: '.$directory); }
+
+        } else {
+            if($logger != null) { $logger->notice('DIR DOES NOT EXIST: '.$directory); }
+        }
     }
 
 
