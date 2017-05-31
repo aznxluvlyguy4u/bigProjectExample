@@ -192,6 +192,73 @@ class MixBlupDataFileBase
 
 
     /**
+     * @param array $data
+     * @param string $ageKey
+     * @return string
+     */
+    protected static function getFormattedAge($data, $ageKey)
+    {
+        return self::getFormattedValueFromData($data, MaxLength::AGE, $ageKey, true);
+    }
+
+
+    /**
+     * @param array $data
+     * @param string $key
+     * @return string
+     */
+    protected static function getFormattedFat($data, $key)
+    {
+        return self::getFormattedValueFromData($data, MaxLength::FAT, $key, true);
+    }
+
+
+    /**
+     * @param array $data
+     * @param string $key
+     * @return string
+     */
+    protected static function getFormattedMuscleThickness($data, $key = JsonInputConstant::MUSCLE_THICKNESS)
+    {
+        return self::getFormattedValueFromData($data, MaxLength::MUSCLE_THICKNESS, $key, true);
+    }
+
+
+    /**
+     * @param array $data
+     * @param string $key
+     * @return string
+     */
+    protected static function getFormattedTailLength($data, $key = JsonInputConstant::TAIL_LENGTH)
+    {
+        return self::getFormattedValueFromData($data, MaxLength::TAIL_LENGTH, $key, true);
+    }
+
+
+    /**
+     * @param array $data
+     * @param string $key
+     * @return string
+     */
+    protected static function getFormattedWeight($data, $key = JsonInputConstant::WEIGHT)
+    {
+        return self::getFormattedValueFromData($data, MaxLength::WEIGHT, $key, true);
+    }
+
+
+    /** @return string */
+    protected static function getFormattedBlankAge() { return self::getFormattedAge([null], 0); }
+    /** @return string */
+    protected static function getFormattedBlankFat() { return self::getFormattedFat([null], 0); }
+    /** @return string */
+    protected static function getFormattedBlankMuscleThickness() { return self::getFormattedMuscleThickness([null], 0); }
+    /** @return string */
+    protected static function getFormattedBlankTailLength() { return self::getFormattedTailLength([null], 0); }
+    /** @return string */
+    protected static function getFormattedBlankWeight() { return self::getFormattedWeight([null], 0); }
+
+
+    /**
      * Note! Gender/Type should already be filtered to only contain 'Ram' or 'Ewe'
      *
      * @param $data
