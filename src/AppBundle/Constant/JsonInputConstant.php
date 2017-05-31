@@ -197,6 +197,7 @@ class JsonInputConstant
 
     //TailLength
     const LENGTH = 'length';
+    const TAIL_LENGTH = 'tail_length';
 
     //Litter
     const SIZE = 'size';
