@@ -3,6 +3,7 @@
 namespace AppBundle\Service;
 
 use AppBundle\Cache\AnimalCacher;
+use AppBundle\Cache\GeneDiversityUpdater;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Component\Utils;
@@ -751,6 +752,9 @@ class IRSerializer implements IRSerializerInterface
 
         try {
             $this->entityManager->flush();
+
+            //Update recombination and heterosis values in new litters
+            GeneDiversityUpdater::updateByParentId($this->conn, $litter->getId(), false);
         } catch (UniqueConstraintViolationException $exception) {
             //Reset tags to UNASSIGNED
             $areAllTagsReset = $tagRepository->unassignTags($tags);
