@@ -26,10 +26,10 @@ abstract class MixBlupInstructionFileBase
         return [
             ' ',
             'PEDFILE   '.MixBlupSetting::PEDIGREE_FILENAME_PREFIX.$type.'.txt',
-            ' ID        A ',
-            ' Vader     A ',
-            ' Moeder    A ',
-            ' Bedrijf   I ',//NOTE it is an integer here
+            ' ID        I ', //PrimaryKey
+            ' Vader     I ', //PrimaryKey Father
+            ' Moeder    I ', //PrimaryKey Mother
+            ' Bedrijf   I ',//ubn of birth, NOTE it is an integer here
             ' ',
             'PARFILE  '.MixBlupSetting::PARFILE_FILENAME,
             ' ',

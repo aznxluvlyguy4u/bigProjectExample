@@ -39,8 +39,9 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
             'TITLE '.$fileType,
             ' ',
             'DATAFILE  '.MixBlupFileName::getLambMeatIndexDataFileName().' !MISSING '.self::MISSING_REPLACEMENT,
-            ' ID         A #uln',  //uln
-            ' IDM        A #uln van moeder',  //uln of mother
+            ' ULN        A #', //uln
+            ' ID         I #', //primaryKey
+            ' IDM        I #id of mother',  //primaryKey of mother
             ' JaarBedr   A #jaar en ubn van geboorte', //year and ubn of birth
             ' Sekse      A ',  //ram/ooi/N_B
             ' WorpID     A ',  //ulnMother._.lpad(litterOrdinal, with zeroes)
@@ -61,7 +62,7 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
             ' Vetd02     T',
             ' Vetd03     T',
             ' Spierd     T', #spierdikte',
-            ' Bedrijf    I #ubn van geboorte',
+            ' Bedrijf    I #ubn van geboorte', //ubn of birth
         ];
 
         return ArrayUtil::concatArrayValues([

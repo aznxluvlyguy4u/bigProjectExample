@@ -41,7 +41,8 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
             'TITLE '.$titleType,
             ' ',
             'DATAFILE  '.MixBlupFileName::getFertilityDataFileName().' !MISSING '.self::MISSING_REPLACEMENT,
-            ' ID         A #uln van ooi/moeder of lam',  //uln
+            ' ULN        A #uln van ooi/moeder of lam',  //uln of Ewe/Mother or lamb
+            ' ID         I #id van ooi/moeder of lam',  //primaryKey of Ewe/Mother or lamb
             ' Leeft      I #leeftijd ooi in jaren', //age of ewe in years
             ' Sekse      A ',  //ram/ooi/N_B
             ' JaarBedr   A #jaar en ubn van geboorte', //year and ubn of birth
@@ -62,7 +63,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
             ' GebGemak   T #Geboortegemak', //birthProgress from 0 to 4
             ' DrTijd     R #Draagtijd', //gestationPeriod in litter
             ' TusLamT    T #Tussenlamtijd', //birthInterval in litter
-            ' Bedrijf    I #ubn van geboorte',
+            ' Bedrijf    I #ubn van geboorte',  //ubn of birth
         ];
 
         return ArrayUtil::concatArrayValues([

@@ -43,7 +43,8 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
             'TITLE   Exterieur: '.$fileType,
             ' ',
             'DATAFILE  '.MixBlupFileName::getExteriorDataFileName().' !MISSING '.self::MISSING_REPLACEMENT,
-            ' ID         A #uln',  //uln
+            ' ULN        A',  //uln
+            ' ID         I',  //primaryKey
             ' Sekse      A',  //ram/ooi/N_B
             ' JaarBedr   A #jaar en ubn van geboorte', //year and ubn of birth
             ' WorpID     A ',  //ulnMother._.lpad(litterOrdinal, with zeroes)
@@ -91,7 +92,7 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
         ];
 
         $lastDataRecords = [
-            ' Bedrijf    I #ubn van geboorte',
+            ' Bedrijf    I #ubn van geboorte', //ubn of birth
         ];
 
         return ArrayUtil::concatArrayValues([
