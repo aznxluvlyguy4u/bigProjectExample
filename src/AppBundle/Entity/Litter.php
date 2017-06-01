@@ -157,6 +157,27 @@ class Litter extends DeclareNsfoBase
     private $birthInterval;
 
     /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $heterosis;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $recombination;
+
+    /**
+     * @var boolean
+     * @JMS\Type("boolean")
+     * @ORM\Column(type="boolean", options={"default":false}, nullable=false)
+     */
+    private $updatedGeneDiversity;
+
+    /**
      * Litter constructor.
      */
     public function __construct()
@@ -169,6 +190,7 @@ class Litter extends DeclareNsfoBase
         $this->stillbornCount = 0;
         $this->bornAliveCount = 0;
         $this->declareBirths = new ArrayCollection();
+        $this->updatedGeneDiversity = false;
     }
 
     /**
@@ -575,6 +597,61 @@ class Litter extends DeclareNsfoBase
         $this->birthInterval = $birthInterval;
         return $this;
     }
+
+    /**
+     * @return float
+     */
+    public function getHeterosis()
+    {
+        return $this->heterosis;
+    }
+
+    /**
+     * @param float $heterosis
+     * @return Litter
+     */
+    public function setHeterosis($heterosis)
+    {
+        $this->heterosis = $heterosis;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getRecombination()
+    {
+        return $this->recombination;
+    }
+
+    /**
+     * @param float $recombination
+     * @return Litter
+     */
+    public function setRecombination($recombination)
+    {
+        $this->recombination = $recombination;
+        return $this;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isUpdatedGeneDiversity()
+    {
+        return $this->updatedGeneDiversity;
+    }
+
+    /**
+     * @param boolean $updatedGeneDiversity
+     * @return Litter
+     */
+    public function setUpdatedGeneDiversity($updatedGeneDiversity)
+    {
+        $this->updatedGeneDiversity = $updatedGeneDiversity;
+        return $this;
+    }
+    
 
     /**
      * @return string
