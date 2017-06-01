@@ -197,8 +197,8 @@ class NsfoCacheAnimalsCommand extends ContainerAwareCommand
                 $output->writeln([$updateCount.' animalCache records updated' ,'DONE!']);
                 break;
 
-            case 30: GeneDiversityUpdater::update($this->conn, [], false, $this->cmdUtil); break;
-            case 31: GeneDiversityUpdater::update($this->conn, [], true, $this->cmdUtil); break;
+            case 30: GeneDiversityUpdater::updateAll($this->conn, false, $this->cmdUtil); break;
+            case 31: GeneDiversityUpdater::updateAll($this->conn, true, $this->cmdUtil); break;
             case 32: $output->writeln(LitterUtil::matchMatchingMates($this->conn, false).' \'mate-litter\'s matched'); break;
             case 33: $output->writeln(LitterUtil::matchMatchingMates($this->conn, true).' \'mate-litter\'s matched'); break;
             case 34: $output->writeln(LitterUtil::removeMatesFromRevokedLitters($this->conn).' \'mate-litter\'s unmatched'); break;

@@ -19,25 +19,21 @@ class GeneDiversityUpdater
 
     /**
      * @param Connection $conn
-     * @param array $animalIds
      * @param boolean $recalculateAllValues
      * @param CommandUtil $cmdUtil
      * @return int
      */
-    public static function update(Connection $conn, array $animalIds = [], $recalculateAllValues = false, $cmdUtil = null)
+    public static function updateAll(Connection $conn, $recalculateAllValues = false, $cmdUtil = null)
     {
         $updateCount = 0;
-        if(count($animalIds) == 0) {
-            if($cmdUtil) { $cmdUtil->setStartTimeAndPrintIt(3, 1, 'Updating heterosis and recombination values'); }
-            $updateCount += self::updateAnimalsAndLittersWithAMissingParent($conn, $recalculateAllValues);
-            if($cmdUtil) { $cmdUtil->advanceProgressBar(1, '(1/3) updated_gene_diversity = TRUE has been set'); }
-            $updateCount += self::updateAnimalsAndLittersHaveBothParentsWhereBreedCodeIsMissingFromAParent($conn, $recalculateAllValues);
-            if($cmdUtil) { $cmdUtil->advanceProgressBar(1, '(2/3) updated_gene_diversity = TRUE has been set'); }
-            if($cmdUtil) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
-        }
 
-        $updateCount += self::updateByAnimalIds($conn, $animalIds, $recalculateAllValues, null, $cmdUtil);
-        if($cmdUtil) { $cmdUtil->writeln('Total updateCount: '.$updateCount); }
+        $updateCount += self::updateAnimalsAndLittersWithAMissingParent($conn, $recalculateAllValues);
+        $updateCount += self::updateAnimalsAndLittersHaveBothParentsWhereBreedCodeIsMissingFromAParent($conn, $recalculateAllValues);
+
+        $updateCount += self::updateAllInAnimal($conn, $recalculateAllValues, null, $cmdUtil, false);
+        $updateCount += self::updateAllInLitter($conn, $recalculateAllValues, null, $cmdUtil, false);
+        
+        if($cmdUtil) { $cmdUtil->writeln('UpdateCount: '.$updateCount); }
         return $updateCount;
     }
 
@@ -53,12 +49,28 @@ class GeneDiversityUpdater
     public static function updateByParentId(Connection $conn, $parentId, $recalculateAllValues = true, $cmdUtil = null)
     {
         if(!ctype_digit($parentId) && !is_int($parentId)) { return 0; }
+
+        $updateCount = 0;
+
+        $updateCount += self::updateAnimalsAndLittersWithAMissingParent($conn, $recalculateAllValues);
+        $updateCount += self::updateAnimalsAndLittersHaveBothParentsWhereBreedCodeIsMissingFromAParent($conn, $recalculateAllValues);
+
         $sql = "SELECT id FROM animal
                 WHERE parent_father_id = ".$parentId." OR parent_mother_id = ".$parentId;
         $results = $conn->query($sql)->fetchAll();
         $animalIds = SqlUtil::groupSqlResultsGroupedBySingleVariable('id', $results)['id'];
         $animalIds[] = $parentId;
-        return self::update($conn, $animalIds, $recalculateAllValues, $cmdUtil);
+        $updateCount += self::updateByAnimalIds($conn, $animalIds, $recalculateAllValues, null, $cmdUtil, false);
+
+        $sql = "SELECT id FROM litter
+                WHERE animal_father_id = ".$parentId." OR animal_mother_id = ".$parentId;
+        $results = $conn->query($sql)->fetchAll();
+        $litterIds = SqlUtil::groupSqlResultsGroupedBySingleVariable('id', $results)['id'];
+        $updateCount += self::updateByLitterIds($conn, $litterIds, $recalculateAllValues, null, $cmdUtil, false);
+
+        if($cmdUtil) { $cmdUtil->writeln('UpdateCount: '.$updateCount); }
+
+        return $updateCount;
     }
 
 
@@ -119,20 +131,89 @@ class GeneDiversityUpdater
     /**
      * @param Connection $conn
      * @param array $animalIds
+     * @param bool $recalculateAllValues
+     * @param int|null $roundingAccuracy
+     * @param CommandUtil $cmdUtil
+     * @param boolean $markBlanks
+     * @return int
+     */
+    public static function updateByAnimalIds(Connection $conn, array $animalIds = [], $recalculateAllValues = false, $roundingAccuracy = null, $cmdUtil = null, $markBlanks = true)
+    {
+        return self::updateByIds('animal', $conn, $animalIds, $recalculateAllValues, $roundingAccuracy, $cmdUtil, $markBlanks);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param array $litterIds
+     * @param bool $recalculateAllValues
+     * @param int|null $roundingAccuracy
+     * @param CommandUtil $cmdUtil
+     * @param boolean $markBlanks
+     * @return int
+     */
+    public static function updateByLitterIds(Connection $conn, array $litterIds = [], $recalculateAllValues = false, $roundingAccuracy = null, $cmdUtil = null, $markBlanks = true)
+    {
+        return self::updateByIds('litter', $conn, $litterIds, $recalculateAllValues, $roundingAccuracy, $cmdUtil, $markBlanks);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param bool $recalculateAllValues
+     * @param int|null $roundingAccuracy
+     * @param CommandUtil $cmdUtil
+     * @param boolean $markBlanks
+     * @return int
+     */
+    public static function updateAllInAnimal(Connection $conn, $recalculateAllValues = false, $roundingAccuracy = null, $cmdUtil = null, $markBlanks = true)
+    {
+        return self::updateByAnimalIds($conn, [], $recalculateAllValues, $roundingAccuracy, $cmdUtil, $markBlanks);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param bool $recalculateAllValues
+     * @param int|null $roundingAccuracy
+     * @param CommandUtil $cmdUtil
+     * @param boolean $markBlanks
+     * @return int
+     */
+    public static function updateAllInLitter(Connection $conn, $recalculateAllValues = false, $roundingAccuracy = null, $cmdUtil = null, $markBlanks = true)
+    {
+        return self::updateByLitterIds($conn, [], $recalculateAllValues, $roundingAccuracy, $cmdUtil, $markBlanks);
+    }
+
+
+
+    /**
+     * @param string $tableName
+     * @param Connection $conn
+     * @param array $ids
      * @param boolean $recalculateAllValues
      * @param int|null $roundingAccuracy
      * @param CommandUtil $cmdUtil
+     * @param boolean $markBlanks
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    private static function updateByAnimalIds(Connection $conn, array $animalIds = [], $recalculateAllValues = false, $roundingAccuracy = null, $cmdUtil)
+    private static function updateByIds($tableName, Connection $conn, array $ids = [], $recalculateAllValues = false, $roundingAccuracy = null, $cmdUtil, $markBlanks = true)
     {
-        if(count($animalIds) > 0) {
-            $animalIdFilterString = '('.SqlUtil::getFilterStringByIdsArray($animalIds, 'c.id').')';
+        $markedBlanksUpdateCount = 0;
+        if($markBlanks) {
+            $markedBlanksUpdateCount += self::updateAnimalsAndLittersWithAMissingParent($conn, $recalculateAllValues);
+            $markedBlanksUpdateCount += self::updateAnimalsAndLittersHaveBothParentsWhereBreedCodeIsMissingFromAParent($conn, $recalculateAllValues);
+            if($cmdUtil) { $cmdUtil->writeln($markedBlanksUpdateCount.' blanks marked/updated'); }
+        }
+
+
+        if(count($ids) > 0) {
+            $idFilterString = '('.SqlUtil::getFilterStringByIdsArray($ids, 'c.id').')';
             if($recalculateAllValues) {
-                $filter = ' WHERE '.$animalIdFilterString;
+                $filter = ' WHERE '.$idFilterString;
             } else {
-                $filter = ' WHERE c.'.self::UPDATE_FILTER.' AND '.$animalIdFilterString;
+                $filter = ' WHERE c.'.self::UPDATE_FILTER.' AND '.$idFilterString;
             }
         } else {
             if($recalculateAllValues) {
@@ -142,18 +223,35 @@ class GeneDiversityUpdater
             }
         }
 
-
-        $sql = "SELECT c.id, c.heterosis, c.recombination, f.breed_code as breed_code_father, m.breed_code as breed_code_mother
+        switch ($tableName) {
+            case 'animal':
+                $sql = "SELECT c.id, c.heterosis, c.recombination, f.breed_code as breed_code_father, m.breed_code as breed_code_mother
                 FROM animal c
                   LEFT JOIN animal f ON f.id = c.parent_father_id
                   LEFT JOIN animal m ON m.id = c.parent_mother_id 
                   ".$filter." 
                 ORDER BY c.date_of_birth ASC";
+                break;
+
+            case 'litter':
+                $sql = "SELECT c.id, c.heterosis, c.recombination, f.breed_code as breed_code_father, m.breed_code as breed_code_mother
+                FROM litter c
+                  LEFT JOIN animal f ON f.id = c.animal_father_id
+                  LEFT JOIN animal m ON m.id = c.animal_mother_id 
+                  ".$filter." 
+                ORDER BY c.litter_date ASC";
+                break;
+
+            default:
+                if($cmdUtil) { $cmdUtil->writeln('Invalid table name used for updating gene diversity'); }
+                return 0;
+        }
+
         $results = $conn->query($sql)->fetchAll();
 
         $updateString = '';
         $updateStringPrefix = '';
-        $animalIdsUpdateArray = [];
+        $idsUpdateArray = [];
 
         $totalCount = count($results);
         $loopCount = 0;
@@ -166,7 +264,7 @@ class GeneDiversityUpdater
 
         foreach ($results as $result) {
             $loopCount++;
-            $animalId = $result['id'];
+            $id = $result['id'];
             $breedCodeStringFather = $result['breed_code_father'];
             $breedCodeStringMother = $result['breed_code_mother'];
             $currentHeterosis = $result['heterosis'];
@@ -176,67 +274,72 @@ class GeneDiversityUpdater
             $recombinationValue = $geneDiversityValues != null ? ArrayUtil::get(ReportLabel::RECOMBINATION, $geneDiversityValues) : 'NULL';
 
             if(NumberUtil::areFloatsEqual($currentHeterosis, $heterosisValue) && NumberUtil::areFloatsEqual($currentRecombination, $recombinationValue)) {
-                $animalIdsUpdateArray[] = $animalId;
+                $idsUpdateArray[] = $id;
                 $toUpdateCount++;
                 $unchangedValueCount++;
             } else {
-                $updateString = $updateString.$updateStringPrefix.'('.$animalId.','.$heterosisValue.','.$recombinationValue.')';
+                $updateString = $updateString.$updateStringPrefix.'('.$id.','.$heterosisValue.','.$recombinationValue.')';
                 $updateStringPrefix = ',';
                 $toUpdateCount++;
                 $newValueCount++;
             }
 
             if($toUpdateCount >= self::BATCH_SIZE || $loopCount >= $totalCount) {
-                $updatedCount += self::updateGeneticDiversityValuesByUpdateString($conn, $updateString);
-                $updatedCount += self::setGeneticDiversityIsTrueByAnimalIds($conn, $animalIdsUpdateArray);
+                $updatedCount += self::updateGeneticDiversityValuesByUpdateString($conn, $tableName, $updateString);
+                $updatedCount += self::setGeneticDiversityIsTrueByAnimalIds($conn, $tableName, $idsUpdateArray);
                 //Reset values
                 $toUpdateCount = 0;
                 $updateString = '';
                 $updateStringPrefix = '';
-                $animalIdsUpdateArray = [];
+                $idsUpdateArray = [];
 
-                if($cmdUtil) { $cmdUtil->advanceProgressBar(1, $updatedCount.'/'.$totalCount.' animals have updated heterosis and recombination values, new|unchanged: '
+                if($cmdUtil) { $cmdUtil->advanceProgressBar(1, $updatedCount.'/'.$totalCount.' '.$tableName.'s have updated heterosis and recombination values, new|unchanged: '
                     .$newValueCount.'|'.$unchangedValueCount); }
             }
         }
         if($cmdUtil) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
 
-        return $updatedCount;
+        return $updatedCount + $markedBlanksUpdateCount;
     }
 
 
     /**
      * @param Connection $conn
-     * @param $updateString
+     * @param string $tableName
+     * @param string $updateString
      * @return int
      */
-    private static function updateGeneticDiversityValuesByUpdateString(Connection $conn, $updateString)
+    private static function updateGeneticDiversityValuesByUpdateString(Connection $conn, $tableName, $updateString)
     {
         if(trim($updateString) == '') { return 0; }
-        $sql = "UPDATE animal
+        if(!is_string($tableName)) { return 0; }
+
+        $sql = "UPDATE $tableName
                     SET heterosis = v.heterosis, recombination = v.recombination,
                         updated_gene_diversity = TRUE
 						FROM ( VALUES ".$updateString."
-							 ) as v(animal_id, heterosis, recombination) WHERE id = v.animal_id";
+							 ) as v(id, heterosis, recombination) WHERE $tableName.id = v.id";
         return SqlUtil::updateWithCount($conn, $sql);
     }
 
 
     /**
      * @param Connection $conn
-     * @param array $animalIds
+     * @param string $tableName
+     * @param array $ids
      * @return int
      */
-    public static function setGeneticDiversityIsTrueByAnimalIds(Connection $conn, array $animalIds = [])
+    public static function setGeneticDiversityIsTrueByAnimalIds(Connection $conn, $tableName, array $ids = [])
     {
-        if(!is_array($animalIds)) { return 0; }
-        if(count($animalIds) == 0) { return 0; }
+        if(!is_array($ids)) { return 0; }
+        if(count($ids) == 0) { return 0; }
+        if(!is_string($tableName)) { return 0; }
         
-        $filterString = implode(',', $animalIds);
-        $sql = "UPDATE animal SET updated_gene_diversity = TRUE
+        $filterString = implode(',', $ids);
+        $sql = "UPDATE $tableName SET updated_gene_diversity = TRUE
                 WHERE id IN (".$filterString.")";
         return SqlUtil::updateWithCount($conn, $sql);
     }
 
-    
+
 }
