@@ -10,6 +10,7 @@ use AppBundle\MixBlup\LambMeatIndexDataFile;
 use AppBundle\MixBlup\MixBlupInstructionFileBase;
 use AppBundle\MixBlup\ReproductionDataFile;
 use Doctrine\DBAL\Connection;
+use Symfony\Bridge\Monolog\Logger;
 
 /**
  * Class MixBlupPedigreeUtil
@@ -19,18 +20,21 @@ class MixBlupPedigreeUtil
 {
     /** @var Connection */
     private $conn;
-
     /** @var CommandUtil */
     private $cmdUtil;
+    /** @var Logger */
+    private $logger;
 
     /** @var array */
     private $animalIdsToInclude;
-
     /** @var array */
     private $femalePedigreeSearchArray;
-
     /** @var array */
     private $malePedigreeSearchArray;
+    /** @var array */
+    private $duplicateUlnByAnimalIds;
+    /** @var array */
+    private $foundDuplicateUlnsInPedigree;
 
     /** @var string */
     private $initializedAnimalIdsFilterArrayType;
@@ -38,13 +42,16 @@ class MixBlupPedigreeUtil
     /**
      * MixBlupPedigreeUtil constructor.
      * @param Connection $conn
+     * @param Logger $logger
      * @param CommandUtil $cmdUtil
      */
-    public function __construct(Connection $conn, $cmdUtil = null)
+    public function __construct(Connection $conn, Logger $logger, $cmdUtil = null)
     {
         $this->conn = $conn;
         $this->cmdUtil = $cmdUtil;
+        $this->logger = $logger;
         $this->animalIdsToInclude = [];
+        $this->foundDuplicateUlnsInPedigree = [];
         $this->initializedAnimalIdsFilterArrayType = null;
 
         $this->initialize();
@@ -55,6 +62,7 @@ class MixBlupPedigreeUtil
     {
         $this->writeln('Initialize search arrays ...');
         $this->setupPedigreeSearchArrays();
+        $this->setupDuplicateUlnByAnimalIdSearchArray();
     }
 
 
@@ -156,6 +164,11 @@ class MixBlupPedigreeUtil
             $this->animalIdsToInclude[$animalId] = $animalId;
             $type = $animalDataArray[JsonInputConstant::TYPE];
 
+            if(key_exists($animalId, $this->duplicateUlnByAnimalIds)) {
+                $uln = $this->duplicateUlnByAnimalIds[$animalId];
+                $this->foundDuplicateUlnsInPedigree[$animalId] = $uln;
+            }
+
             $animalDataArray = null;
             if($type == AnimalObjectType::Ram) {
                 $animalDataArray = ArrayUtil::get($animalId, $this->malePedigreeSearchArray);
@@ -246,6 +259,8 @@ class MixBlupPedigreeUtil
         $this->writeln('Get '.$mixBlupType.' Pedigree DATA by optimized sql query...');
         $filteredResults = [];
 
+        $this->printOutDuplicateUlnCheck();
+
         /*
          * Instead of filtering a huge amount of ids directly in the sql query,
          * it is much quicker to just retrieve the whole sets and filter them in memory.
@@ -284,6 +299,68 @@ class MixBlupPedigreeUtil
     {
         if($this->cmdUtil) {
             $this->cmdUtil->writeln($string);
+        } elseif ($this->logger) {
+            $this->logger->notice($string);
+        }
+    }
+
+
+    private function setupDuplicateUlnByAnimalIdSearchArray()
+    {
+        $this->duplicateUlnByAnimalIds = self::getDuplicateUlnByAnimalIds($this->conn);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function getDuplicateUlnByAnimalIds(Connection $conn)
+    {
+        $sql = "SELECT
+                  a.id,
+                  COALESCE(NULLIF(CONCAT(a.uln_country_code, a.uln_number), ''), NULL) as uln
+                FROM animal a
+                WHERE COALESCE(NULLIF(CONCAT(a.uln_country_code, a.uln_number), ''), NULL) IN (
+                  SELECT COALESCE(NULLIF(CONCAT(uln_country_code, uln_number), ''), NULL) as uln
+                  FROM animal
+                  GROUP BY uln_country_code, uln_number HAVING COUNT(*) > 1
+                )
+                ORDER BY a.uln_number, a.date_of_birth";
+        $results = $conn->query($sql)->fetchAll();
+
+        $searchArray = [];
+        foreach ($results as $result) {
+            $animalId = $result['id'];
+            $uln = $result['uln'];
+            $searchArray[$animalId] = $uln;
+        }
+        return $searchArray;
+    }
+
+
+    private function printOutDuplicateUlnCheck()
+    {
+        if(count($this->foundDuplicateUlnsInPedigree) > 0) {
+            $warningMessage = 'WARNING THE PEDIGREE CONTAINS THESE DUPLICATE ULNS: ';
+
+            $ulnPrinted = [];
+            $queryString = '';
+            $queryPrefix = '';
+            $this->logger->warning($warningMessage);
+            foreach ($this->foundDuplicateUlnsInPedigree as $animalId => $uln) {
+                if(!key_exists($uln, $ulnPrinted)) {
+                    $this->logger->warning($uln);
+                    $ulnPrinted[$uln] = $uln;
+                    $ulnNumber = substr($uln, 2);
+
+                    $queryString = $queryString . $queryPrefix  . "uln_number = '".$ulnNumber."'";
+                    $queryPrefix = ' OR ';
+                }
+            }
+
+            $this->logger->warning($queryString);
         }
     }
 }

@@ -7,6 +7,7 @@ use AppBundle\Setting\MixBlupFolder;
 use AppBundle\Util\NullChecker;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Symfony\Bridge\Monolog\Logger;
 
 /**
  * Class MixBlupInputProcessBase
@@ -16,19 +17,17 @@ class MixBlupInputProcessBase
 {
     /** @var Connection */
     protected $conn;
-
     /** @var ObjectManager */
     protected $em;
+    /** @var Logger */
+    protected $logger;
 
     /** @var string */
     protected $outputFolderPath;
-
     /** @var string */
     protected $type;
-    
     /** @var string */
     protected $dataFileName;
-
     /** @var string */
     protected $pedigreeFileName;
 
@@ -36,13 +35,15 @@ class MixBlupInputProcessBase
      * MixBlupInputProcessBase constructor.
      * @param ObjectManager $em
      * @param string $outputFolderPath
+     * @param Logger $logger
      * @param string $mixBlupType of MixBlupType enumerator
      */
-    public function __construct(ObjectManager $em, $outputFolderPath, $mixBlupType)
+    public function __construct(ObjectManager $em, $outputFolderPath, $logger, $mixBlupType)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
         $this->outputFolderPath = $outputFolderPath;
+        $this->logger = $logger;
         NullChecker::createFolderPathIfNull($outputFolderPath);
         NullChecker::createFolderPathIfNull($outputFolderPath.'/'.MixBlupFolder::INSTRUCTIONS);
         NullChecker::createFolderPathIfNull($outputFolderPath.'/'.MixBlupFolder::DATA);

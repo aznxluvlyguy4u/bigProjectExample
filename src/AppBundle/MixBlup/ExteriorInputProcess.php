@@ -5,6 +5,7 @@ namespace AppBundle\MixBlup;
 
 use AppBundle\Enumerator\MixBlupType;
 use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Bridge\Monolog\Logger;
 
 /**
  * Class ExteriorInputProcess
@@ -17,10 +18,11 @@ class ExteriorInputProcess extends MixBlupInputProcessBase implements MixBlupInp
      * ExteriorInputProcess constructor.
      * @param ObjectManager $em
      * @param string $outputFolderPath
+     * @param Logger $logger
      */
-    public function __construct(ObjectManager $em, $outputFolderPath)
+    public function __construct(ObjectManager $em, $outputFolderPath, Logger $logger)
     {
-        parent::__construct($em, $outputFolderPath, MixBlupType::EXTERIOR);
+        parent::__construct($em, $outputFolderPath, $logger, MixBlupType::EXTERIOR);
     }
 
 
@@ -45,7 +47,7 @@ class ExteriorInputProcess extends MixBlupInputProcessBase implements MixBlupInp
      */
     function generatePedigreeFile()
     {
-        return MixblupPedigreeFileGenerator::generateExteriorOptimizedSet($this->conn);
+        return MixblupPedigreeFileGenerator::generateExteriorOptimizedSet($this->conn, $this->logger);
     }
     
     

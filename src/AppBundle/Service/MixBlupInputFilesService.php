@@ -64,7 +64,7 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
      * @param Logger $logger
      */
     public function __construct(ObjectManager $em, AWSSimpleStorageService $s3Service, MixBlupInputQueueService $queueService,
-                                $currentEnvironment, $cacheDir, $logger = null)
+                                $currentEnvironment, $cacheDir, $logger)
     {
         $this->em = $em;
         $this->conn = $em->getConnection();
@@ -76,9 +76,9 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
         $this->workingFolder = $cacheDir.'/'.MixBlupFolder::ROOT;
 
         $this->mixBlupProcesses = [];
-        $this->mixBlupProcesses[MixBlupType::EXTERIOR] = new ExteriorInputProcess($em, $this->workingFolder);
-        $this->mixBlupProcesses[MixBlupType::LAMB_MEAT_INDEX] = new LambMeatIndexInputProcess($em, $this->workingFolder);
-        $this->mixBlupProcesses[MixBlupType::FERTILITY] = new ReproductionInputProcess($em, $this->workingFolder);
+        $this->mixBlupProcesses[MixBlupType::EXTERIOR] = new ExteriorInputProcess($em, $this->workingFolder, $this->logger);
+        $this->mixBlupProcesses[MixBlupType::LAMB_MEAT_INDEX] = new LambMeatIndexInputProcess($em, $this->workingFolder, $this->logger);
+        $this->mixBlupProcesses[MixBlupType::FERTILITY] = new ReproductionInputProcess($em, $this->workingFolder, $this->logger);
     }
 
 

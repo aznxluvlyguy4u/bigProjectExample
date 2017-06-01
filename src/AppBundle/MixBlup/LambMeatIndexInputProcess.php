@@ -5,6 +5,7 @@ namespace AppBundle\MixBlup;
 
 use AppBundle\Enumerator\MixBlupType;
 use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Bridge\Monolog\Logger;
 
 /**
  * Class LambMeatIndexInputProcess
@@ -16,10 +17,11 @@ class LambMeatIndexInputProcess extends MixBlupInputProcessBase implements MixBl
      * LambMeatIndexInputProcess constructor.
      * @param ObjectManager $em
      * @param string $outputFolderPath
+     * @param Logger $logger
      */
-    public function __construct(ObjectManager $em, $outputFolderPath)
+    public function __construct(ObjectManager $em, $outputFolderPath, Logger $logger)
     {
-        parent::__construct($em, $outputFolderPath, MixBlupType::LAMB_MEAT_INDEX);
+        parent::__construct($em, $outputFolderPath, $logger, MixBlupType::LAMB_MEAT_INDEX);
     }
     
     
@@ -44,7 +46,7 @@ class LambMeatIndexInputProcess extends MixBlupInputProcessBase implements MixBl
      */
     function generatePedigreeFile()
     {
-        return MixblupPedigreeFileGenerator::generateLambMeatIndexOptimizedSet($this->conn);
+        return MixblupPedigreeFileGenerator::generateLambMeatIndexOptimizedSet($this->conn, $this->logger);
     }
 
 

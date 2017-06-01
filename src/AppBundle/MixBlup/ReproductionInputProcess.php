@@ -5,6 +5,7 @@ namespace AppBundle\MixBlup;
 
 use AppBundle\Enumerator\MixBlupType;
 use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Bridge\Monolog\Logger;
 
 /**
  * Class ReproductionInputProcess
@@ -16,10 +17,11 @@ class ReproductionInputProcess extends MixBlupInputProcessBase implements MixBlu
      * ReproductionInputProcess constructor.
      * @param ObjectManager $em
      * @param string $outputFolderPath
+     * @param Logger $logger
      */
-    public function __construct(ObjectManager $em, $outputFolderPath)
+    public function __construct(ObjectManager $em, $outputFolderPath, Logger $logger)
     {
-        parent::__construct($em, $outputFolderPath, MixBlupType::FERTILITY);
+        parent::__construct($em, $outputFolderPath, $logger, MixBlupType::FERTILITY);
     }
 
 
@@ -44,7 +46,7 @@ class ReproductionInputProcess extends MixBlupInputProcessBase implements MixBlu
      */
     function generatePedigreeFile()
     {
-        return MixblupPedigreeFileGenerator::generateFullSet($this->conn);
+        return MixblupPedigreeFileGenerator::generateFullSet($this->conn, $this->logger);
     }
 
 

@@ -10,6 +10,7 @@ use AppBundle\Util\CommandUtil;
 use AppBundle\Util\CsvWriterUtil;
 use AppBundle\Util\MixBlupPedigreeUtil;
 use Doctrine\DBAL\Connection;
+use Symfony\Bridge\Monolog\Logger;
 
 /**
  * Class MixblupPedigreeFileGenerator
@@ -21,45 +22,49 @@ class MixblupPedigreeFileGenerator
     
     /**
      * @param Connection $conn
+     * @param Logger $logger
      * @param CommandUtil|null $cmdUtil
      * @return array
      */
-    public static function generateExteriorOptimizedSet(Connection $conn, $cmdUtil = null)
+    public static function generateExteriorOptimizedSet(Connection $conn, Logger $logger, $cmdUtil = null)
     {
-        return self::generateSet($conn, $cmdUtil, MixBlupType::EXTERIOR);
+        return self::generateSet($conn, $logger, MixBlupType::EXTERIOR, $cmdUtil);
     }
 
 
     /**
      * @param Connection $conn
+     * @param Logger $logger
      * @param CommandUtil|null $cmdUtil
      * @return array
      */
-    public static function generateFertilityOptimizedSet(Connection $conn, $cmdUtil = null)
+    public static function generateFertilityOptimizedSet(Connection $conn, Logger $logger, $cmdUtil = null)
     {
-        return self::generateSet($conn, $cmdUtil, MixBlupType::FERTILITY);
+        return self::generateSet($conn, $logger, MixBlupType::FERTILITY, $cmdUtil);
     }
 
 
     /**
      * @param Connection $conn
+     * @param Logger $logger
      * @param CommandUtil|null $cmdUtil
      * @return array
      */
-    public static function generateLambMeatIndexOptimizedSet(Connection $conn, $cmdUtil = null)
+    public static function generateLambMeatIndexOptimizedSet(Connection $conn, Logger $logger, $cmdUtil = null)
     {
-        return self::generateSet($conn, $cmdUtil, MixBlupType::LAMB_MEAT_INDEX);
+        return self::generateSet($conn, $logger, MixBlupType::LAMB_MEAT_INDEX, $cmdUtil);
     }
 
 
     /**
      * @param Connection $conn
+     * @param Logger $logger
      * @param CommandUtil|null $cmdUtil
      * @return array
      */
-    public static function generateFullSet(Connection $conn, $cmdUtil = null)
+    public static function generateFullSet(Connection $conn, Logger $logger, $cmdUtil = null)
     {
-        return self::generateSet($conn, $cmdUtil);
+        return self::generateSet($conn, $logger, null, $cmdUtil);
     }
     
 
@@ -67,11 +72,12 @@ class MixblupPedigreeFileGenerator
      * @param Connection $conn
      * @param string $getOptimizedSet
      * @param CommandUtil|null $cmdUtil
+     * @param Logger $logger
      * @return array
      */
-    private static function generateSet(Connection $conn, $cmdUtil = null, $getOptimizedSet = null)
+    private static function generateSet(Connection $conn, Logger $logger, $getOptimizedSet = null, $cmdUtil = null)
     {
-        $mixBlupPedigreeUtil = new MixBlupPedigreeUtil($conn, $cmdUtil);
+        $mixBlupPedigreeUtil = new MixBlupPedigreeUtil($conn, $logger, $cmdUtil);
 
         switch ($getOptimizedSet) {
             case MixBlupType::EXTERIOR:
