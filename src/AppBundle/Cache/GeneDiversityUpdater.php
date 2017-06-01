@@ -238,15 +238,5 @@ class GeneDiversityUpdater
         return SqlUtil::updateWithCount($conn, $sql);
     }
 
-
-    /**
-     * @param Connection $conn
-     * @return int
-     */
-    public static function setUpdatedGeneDiversityIsFalseForAnimalsHavingBothParents(Connection $conn)
-    {
-        $sql = "UPDATE animal SET updated_gene_diversity = FALSE
-                WHERE parent_father_id NOTNULL AND parent_mother_id NOTNULL";
-        return SqlUtil::updateWithCount($conn, $sql);
-    }
+    
 }
