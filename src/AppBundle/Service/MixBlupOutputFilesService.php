@@ -21,6 +21,7 @@ use Symfony\Component\Filesystem\Filesystem;
 class MixBlupOutputFilesService implements MixBlupServiceInterface
 {
     const TEST_WITH_DOWNLOADED_ZIPS = false;
+    const PURGE_ZIP_FOLDER_AFTER_SUCCESSFUL_RUN = false;
     const ONLY_UNZIP_SOLANI_AND_RELANI = false;
 
     /** @var Filesystem */
@@ -162,7 +163,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                 if(count($unsuccessfulUnzips) == 0) {
                     $this->logger->notice('All breedValues processed successfully!');
 
-                    if(!self::TEST_WITH_DOWNLOADED_ZIPS) {
+                    if(self::PURGE_ZIP_FOLDER_AFTER_SUCCESSFUL_RUN) {
                         $this->queueService->deleteMessage($response);
                         $this->purgeZipFolder();
                     }
