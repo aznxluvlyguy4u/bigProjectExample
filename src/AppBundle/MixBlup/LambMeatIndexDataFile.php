@@ -109,7 +109,8 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
             if($parsedBreedCode) {
                 $recordBase =
                     self::getFormattedUln($data).
-                    self::getFormattedUlnMother($data).
+                    self::getFormattedAnimalId($data).
+                    self::getFormattedMotherId($data).
                     self::getFormattedYearAndUbnOfBirth($data, $dynamicColumnWidths[JsonInputConstant::YEAR_AND_UBN_OF_BIRTH]).
                     self::getFormattedGenderFromType($data).
                     self::getFormattedLitterGroup($data).
@@ -142,6 +143,7 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
             $returnValuesString =
                 "a.id as ".JsonInputConstant::ANIMAL_ID.",
                  CONCAT(a.uln_country_code, a.uln_number) as ".JsonInputConstant::ULN.", a.".JsonInputConstant::TYPE.",
+                 mom.id as ".JsonInputConstant::MOTHER_ID.",
                  CONCAT(mom.uln_country_code, mom.uln_number) as ".JsonInputConstant::ULN_MOTHER.",
                  CONCAT(DATE_PART('year', a.date_of_birth),'_', a.ubn_of_birth) as ".JsonInputConstant::YEAR_AND_UBN_OF_BIRTH.",
                  CONCAT(mom.uln_country_code, mom.uln_number,'_', LPAD(CAST(l.litter_ordinal AS TEXT), 2, '0')) as ".JsonInputConstant::LITTER_GROUP.",

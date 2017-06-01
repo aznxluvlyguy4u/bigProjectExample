@@ -48,6 +48,7 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
 
             $record =
             self::getFormattedUln($data).
+            self::getFormattedAnimalId($data).
             self::getFormattedGenderFromType($data).
             self::getFormattedYearAndUbnOfBirth($data, $dynamicColumnWidths[JsonInputConstant::YEAR_AND_UBN_OF_BIRTH]).
             self::getFormattedLitterGroup($data).
@@ -197,7 +198,8 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
 
         if($returnValuesString == null) {
             $returnValuesString =
-                "CONCAT(a.uln_country_code, a.uln_number) as uln,
+                " a.id as animal_id,
+                  CONCAT(a.uln_country_code, a.uln_number) as uln,
                   a.type,
                   CONCAT(DATE_PART('year', a.date_of_birth),'_', a.ubn_of_birth) as year_and_ubn_of_birth,
                   CONCAT(mom.uln_country_code, mom.uln_number,'_', LPAD(CAST(l.litter_ordinal AS TEXT), 2, '0')) as litter_group,

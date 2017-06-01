@@ -159,6 +159,48 @@ class MixBlupDataFileBase
      * @param boolean $useColumnPadding
      * @return string
      */
+    protected static function getFormattedAnimalId($data, $key = JsonInputConstant::ANIMAL_ID, $useColumnPadding = true)
+    {
+        return self::getFormattedValueFromData($data, MaxLength::ANIMAL_ID, $key, $useColumnPadding);
+    }
+
+
+    /**
+     * Input should already be null checked
+     * 
+     * @param $data
+     * @param string $key
+     * @param boolean $useColumnPadding
+     * @return string
+     */
+    protected static function getFormattedMotherId($data, $key = JsonInputConstant::MOTHER_ID, $useColumnPadding = true)
+    {
+        return self::getFormattedValueFromData($data, MaxLength::ANIMAL_ID, $key, $useColumnPadding);
+    }
+
+
+    /**
+     * Input should already be null checked
+     * 
+     * @param $data
+     * @param string $key
+     * @param boolean $useColumnPadding
+     * @return string
+     */
+    protected static function getFormattedFatherId($data, $key = JsonInputConstant::FATHER_ID, $useColumnPadding = true)
+    {
+        return self::getFormattedValueFromData($data, MaxLength::ANIMAL_ID, $key, $useColumnPadding);
+    }
+    
+    
+    /**
+     * Input should already be null checked
+     *
+     * @param $data
+     * @param string $key
+     * @param boolean $useColumnPadding
+     * @return string
+     */
     protected static function getFormattedUln($data, $key = JsonInputConstant::ULN, $useColumnPadding = true)
     {
         return self::getFormattedValueFromData($data, MaxLength::ULN, $key, $useColumnPadding);

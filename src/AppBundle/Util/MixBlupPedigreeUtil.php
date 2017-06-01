@@ -284,6 +284,8 @@ class MixBlupPedigreeUtil
 
         return "SELECT
                   a.id as ".JsonInputConstant::ANIMAL_ID.",
+                  COALESCE(f.id, '".$nullReplacement."') as ".JsonInputConstant::FATHER_ID.",
+                  COALESCE(m.id, '".$nullReplacement."') as ".JsonInputConstant::MOTHER_ID.",
                   CONCAT(a.uln_country_code, a.uln_number) AS ".JsonInputConstant::ULN.",
                   COALESCE(NULLIF(CONCAT(f.uln_country_code, f.uln_number),''), '".$nullReplacement."') AS ".JsonInputConstant::ULN_FATHER.",
                   COALESCE(NULLIF(CONCAT(m.uln_country_code, m.uln_number),''), '".$nullReplacement."') AS ".JsonInputConstant::ULN_MOTHER.",

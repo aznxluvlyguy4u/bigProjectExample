@@ -122,9 +122,9 @@ class MixblupPedigreeFileGenerator
     private static function getFormattedPedigreeRecord($recordArray)
     {
         return
-            self::getFormattedUlnFromRecord(JsonInputConstant::ULN, $recordArray).
-            self::getFormattedUlnFromRecord(JsonInputConstant::ULN_FATHER, $recordArray).
-            self::getFormattedUlnFromRecord(JsonInputConstant::ULN_MOTHER, $recordArray).
+            self::getFormattedIdFromRecord(JsonInputConstant::ANIMAL_ID, $recordArray).
+            self::getFormattedIdFromRecord(JsonInputConstant::FATHER_ID, $recordArray).
+            self::getFormattedIdFromRecord(JsonInputConstant::MOTHER_ID, $recordArray).
             MixBlupDataFileBase::getUbnOfBirthAsLastColumnValue($recordArray);
     }
 
@@ -134,9 +134,9 @@ class MixblupPedigreeFileGenerator
      * @param array $recordArray
      * @return string
      */
-    private static function getFormattedUlnFromRecord($key, $recordArray)
+    private static function getFormattedIdFromRecord($key, $recordArray)
     {
-        return CsvWriterUtil::getFormattedValueFromArray($recordArray, MaxLength::ULN, $key, true, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
+        return CsvWriterUtil::getFormattedValueFromArray($recordArray, MaxLength::ANIMAL_ID, $key, true, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
     }
 
 }
