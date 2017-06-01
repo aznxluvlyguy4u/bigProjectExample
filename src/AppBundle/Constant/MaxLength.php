@@ -7,6 +7,7 @@ namespace AppBundle\Constant;
 class MaxLength
 {
     const AGE = 5;
+    const ANIMAL_ID = 8;
     const BREED_CODE_PART_BY_8_PARTS = 1;
     const DATE = 10;
     const EXTERIOR_DECIMAL_VALUE = 4; //includes comma and one decimal
