@@ -77,6 +77,26 @@ class MixBlupDataFileBase
 
 
     /**
+     * @return string
+     */
+    protected static function getBlankBreedCodes()
+    {
+        $fullBreedCodeBy8Parts = CsvWriterUtil::pad(8, MaxLength::BREED_CODE_PART_BY_8_PARTS);
+        $blankBreedCode = CsvWriterUtil::pad(0, MaxLength::BREED_CODE_PART_BY_8_PARTS);
+
+        return
+            $blankBreedCode. //TE
+            $blankBreedCode. //CF
+            $blankBreedCode. //BM
+            $blankBreedCode. //SW
+            $blankBreedCode. //NH
+            $blankBreedCode. //FL
+            $blankBreedCode. //HD
+            $fullBreedCodeBy8Parts; //OV
+    }
+
+
+    /**
      * @param string $breedCodeType
      * @param array $breedCodeParts
      * @return string
