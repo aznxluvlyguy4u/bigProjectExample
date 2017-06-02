@@ -113,7 +113,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
      */
     private static function getSqlEarlyFertilityRecords()
     {
-        $nullReplacement = MixBlupInstructionFileBase::MISSING_REPLACEMENT;
+        $nullReplacement = "'".MixBlupInstructionFileBase::MISSING_REPLACEMENT."'";
         return "SELECT
                   3 as record_type_ordination,
                   'early_fertility' as record_type,
@@ -156,7 +156,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
      */
     private static function getSqlBirthProgressRecords()
     {
-        $nullReplacement = MixBlupInstructionFileBase::MISSING_REPLACEMENT;
+        $nullReplacement = "'".MixBlupInstructionFileBase::MISSING_REPLACEMENT."'";
         return "SELECT
                   2 as record_type_ordination,
                   'birth_progress' as record_type,
@@ -203,7 +203,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
      */
     private static function getSqlLitterSizeRecords()
     {
-        $nullReplacement = MixBlupInstructionFileBase::MISSING_REPLACEMENT;
+        $nullReplacement = "'".MixBlupInstructionFileBase::MISSING_REPLACEMENT."'";
         return "SELECT
                   1 as record_type_ordination,
                   'litter_size' as record_type,
@@ -252,7 +252,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   AND (request_state = '".RequestStateType::COMPLETED."' OR 
                        request_state = '".RequestStateType::FINISHED."' OR
                        request_state = '".RequestStateType::FINISHED_WITH_WARNING."' OR
-                       request_state = '".RequestStateType::IMPORTED."' OR
+                       request_state = '".RequestStateType::IMPORTED."'
                        )";
     }
 
