@@ -16,6 +16,7 @@ class JsonInputConstant
     const IS_ALIVE = 'is_alive';
     const ANIMAL = 'animal';
     const ANIMAL_ID = 'animal_id';
+    const BIRTH_PROGRESS = 'birth_progress';
     const RAM = 'ram';
     const EWE = 'ewe';
     const EWES = 'ewes';
@@ -38,6 +39,7 @@ class JsonInputConstant
     const SCRAPIE_GENOTYPE = 'scrapie_genotype';
     const BREED = 'breed';
     const BREED_CODE = 'breed_code';
+    const BREED_CODE_MOTHER = 'breed_code_mother';
     const BREED_TYPE = 'breed_type';
     const BLINDNESS_FACTOR = 'blindness_factor';
     const PREDICATE = 'predicate';
@@ -206,6 +208,8 @@ class JsonInputConstant
     const TAIL_LENGTH = 'tail_length';
 
     //Litter
+    const BIRTH_INTERVAL = 'birth_interval';
+    const GESTATION_PERIOD = 'gestation_period';
     const SIZE = 'size';
     const N_LING = 'n_ling';
     const SUCKLE_COUNT = 'suckle_count';
@@ -216,6 +220,7 @@ class JsonInputConstant
     const EARLIEST_LITTER_DATE = 'earliest_litter_date';
     const LATEST_LITTER_DATE = 'latest_litter_date';
     const PRODUCTION = 'production';
+    const GAVE_BIRTH_AS_ONE_YEAR_OLD = 'gave_birth_as_one_year_old';
 
     //BreedValues
     const BREED_VALUE_LITTER_SIZE = "breed_value_litter_size";
@@ -224,4 +229,7 @@ class JsonInputConstant
     const BREED_VALUE_FAT = "breed_value_fat";
     const LAMB_MEAT_INDEX = "lamb_meat_index";
     const LAMB_MEAT_INDEX_WITHOUT_ACCURACY = "lamb_meat_index_without_accuracy";
+
+    //MiXBLUP
+    const PERM_MIL = 'perm_mil';
 }
