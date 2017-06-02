@@ -206,15 +206,16 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
     private static function getBirthDataByAnimalId(Connection $conn)
     {
         $animalId = JsonInputConstant::ANIMAL_ID;
+        $birthWeight = JsonInputConstant::BIRTH_WEIGHT;
         $sql = "SELECT a.id as $animalId,
-                  c.tail_length, c.birth_weight
+                  c.tail_length, c.birth_weight as $birthWeight
                 FROM animal_cache c
                 INNER JOIN animal a ON a.id = c.animal_id
                 WHERE
                   ".self::getSqlBaseFilter('date_of_birth', false)."
                   AND (c.tail_length NOTNULL OR c.birth_weight NOTNULL)";
         $results = $conn->query($sql)->fetchAll();
-        return SqlUtil::createSearchArrayByKey('animal_id', $results);
+        return SqlUtil::createSearchArrayByKey(JsonInputConstant::ANIMAL_ID, $results);
     }
 
 
@@ -227,7 +228,7 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
         return
             self::getFormattedBlankAge(). //Scan age
             self::getFormattedBlankWeight(). //Scan weight
-            self::getFormattedWeight($birthData, 'birth_weight'). //Birth weight
+            self::getFormattedWeight($birthData, JsonInputConstant::BIRTH_WEIGHT). //Birth weight
             self::getFormattedTailLength($birthData). //TailLength
             self::getFormattedBlankWeight(). //weight_at8weeks
             self::getFormattedBlankAge(). //age_weight_at8weeks
