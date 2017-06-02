@@ -48,6 +48,9 @@ class JsonInputConstant
     const NICKNAME = 'nickname';
     const HETEROSIS = 'heterosis';
     const RECOMBINATION = 'recombination';
+    const HETEROSIS_LAMB = 'heterosis_lamb';
+    const RECOMBINATION_LAMB = 'recombination_lamb';
+    const AGE = 'age';
 
     //Request & Response
     const ERROR_CODE = 'error_code';
@@ -169,6 +172,7 @@ class JsonInputConstant
     const WEIGHT_MEASUREMENTS = 'weight_measurements';
     const WEIGHT = 'weight';
     const IS_BIRTH_WEIGHT = 'is_birth_weight';
+    const BIRTH_WEIGHT = 'birth_weight';
     const IS_VALID_20WEEK_WEIGHT_MEASUREMENT = 'is_valid_20_week_weight_measurement';
     const IS_REVOKED = 'is_revoked';
 
