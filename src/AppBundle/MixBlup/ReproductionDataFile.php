@@ -5,9 +5,13 @@ namespace AppBundle\MixBlup;
 
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\MaxLength;
+use AppBundle\Enumerator\BreedCodeType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Setting\MixBlupSetting;
+use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\BreedCodeUtil;
+use AppBundle\Util\CsvWriterUtil;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -46,13 +50,13 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                 self::getFormattedHeterosisLamb($data).
                 self::getFormattedRecombinationLamb($data).
                 self::getTeBreedCodepartOfMother($data). //TODO
-                self::getFormattedPmsg($data). //TODO
-                self::getFormattedPermMil($data). //TODO
-                self::getFormattedNullableMotherId($data). //TODO
+                self::getFormattedPmsg($data). //TODO Check null replacement desirability
+                self::getFormattedPermMil($data).
+                self::getFormattedNullableMotherId($data).
                 self::getFormattedLitterGroup($data).
                 self::getFormattedNLing($data).
-                self::getFormattedStillbornCount($data). //TODO
-                self::getFormattedEarlyFertility($data). //TODO
+                self::getFormattedStillbornCount($data).
+                self::getFormattedEarlyFertility($data).
                 self::getFormattedWeight($data, JsonInputConstant::BIRTH_WEIGHT).
                 self::getFormattedBirthProgress($data).
                 self::getFormattedGestationPeriod($data).
@@ -113,18 +117,18 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   COALESCE(mom.recombination, $nullReplacement) as ".JsonInputConstant::RECOMBINATION.",
                   $nullReplacement as ".JsonInputConstant::HETEROSIS_LAMB.",
                   $nullReplacement as ".JsonInputConstant::RECOMBINATION_LAMB.",
-                  NULL as breed_code_mother,
-                  NULL as pmsg,
-                  $nullReplacement as perm_mil,
+                  NULL as ".JsonInputConstant::BREED_CODE_MOTHER.",
+                  NULL as ".JsonInputConstant::PMSG.",
+                  $nullReplacement as ".JsonInputConstant::PERM_MIL.",
                   $nullReplacement as ".JsonInputConstant::MOTHER_ID.",
                   $nullReplacement as ".JsonInputConstant::LITTER_GROUP.",
                   $nullReplacement as ".JsonInputConstant::N_LING.",
-                  $nullReplacement as stillborn_count,
-                  c.gave_birth_as_one_year_old as gave_birth_as_one_year_old,
+                  $nullReplacement as ".JsonInputConstant::TOTAL_STILLBORN_COUNT.",
+                  c.gave_birth_as_one_year_old as ".JsonInputConstant::GAVE_BIRTH_AS_ONE_YEAR_OLD.",
                   $nullReplacement as ".JsonInputConstant::BIRTH_WEIGHT.",
-                  $nullReplacement as birth_progress,
-                  $nullReplacement as gestation_period,
-                  $nullReplacement as birth_interval,
+                  $nullReplacement as ".JsonInputConstant::BIRTH_PROGRESS.",
+                  $nullReplacement as ".JsonInputConstant::GESTATION_PERIOD.",
+                  $nullReplacement as ".JsonInputConstant::BIRTH_INTERVAL.",
                   mom.".JsonInputConstant::UBN_OF_BIRTH."
                 FROM animal mom
                   INNER JOIN animal_cache c ON c.animal_id = mom.id
@@ -156,18 +160,18 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   COALESCE(mom.recombination, $nullReplacement) as ".JsonInputConstant::RECOMBINATION.",
                   COALESCE(lamb.heterosis, $nullReplacement) as ".JsonInputConstant::HETEROSIS_LAMB.",
                   COALESCE(lamb.recombination, $nullReplacement) as ".JsonInputConstant::RECOMBINATION_LAMB.",
-                  mom.breed_code as breed_code_mother,
-                  NULL as pmsg,
-                  $nullReplacement as perm_mil,
+                  mom.breed_code as ".JsonInputConstant::BREED_CODE_MOTHER.",
+                  NULL as ".JsonInputConstant::PMSG.",
+                  $nullReplacement as ".JsonInputConstant::PERM_MIL.",
                   mom.id as ".JsonInputConstant::MOTHER_ID.",
                   CONCAT(mom.uln_country_code, mom.uln_number,'_', LPAD(CAST(l.litter_ordinal AS TEXT), 2, '0')) as ".JsonInputConstant::LITTER_GROUP.",
                   $nullReplacement as ".JsonInputConstant::N_LING.",
-                  $nullReplacement as stillborn_count,
-                  FALSE as gave_birth_as_one_year_old,
+                  $nullReplacement as ".JsonInputConstant::TOTAL_STILLBORN_COUNT.",
+                  FALSE as ".JsonInputConstant::GAVE_BIRTH_AS_ONE_YEAR_OLD.",
                   COALESCE(c.birth_weight, $nullReplacement) as ".JsonInputConstant::BIRTH_WEIGHT.",
-                  COALESCE(birth_progress.mix_blup_score, $nullReplacement) as birth_progress,
-                  COALESCE(l.gestation_period, $nullReplacement) as gestation_period,
-                  COALESCE(l.birth_interval, $nullReplacement) as birth_interval,
+                  COALESCE(birth_progress.mix_blup_score, $nullReplacement) as ".JsonInputConstant::BIRTH_PROGRESS.",
+                  COALESCE(l.gestation_period, $nullReplacement) as ".JsonInputConstant::GESTATION_PERIOD.",
+                  COALESCE(l.birth_interval, $nullReplacement) as ".JsonInputConstant::BIRTH_INTERVAL.",
                   lamb.".JsonInputConstant::UBN_OF_BIRTH."
                 FROM animal lamb
                   LEFT JOIN animal_cache c ON c.animal_id = lamb.id
@@ -203,18 +207,18 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   COALESCE(mom.recombination, $nullReplacement) as ".JsonInputConstant::RECOMBINATION.",
                   COALESCE(l.heterosis, $nullReplacement) as ".JsonInputConstant::HETEROSIS_LAMB.",
                   COALESCE(l.recombination, $nullReplacement) as ".JsonInputConstant::RECOMBINATION_LAMB.",
-                  NULL as breed_code_mother,
-                  m.pmsg,
-                  mom.id as perm_mil,
+                  NULL as ".JsonInputConstant::BREED_CODE_MOTHER.",
+                  m.pmsg as ".JsonInputConstant::PMSG.",
+                  mom.id as ".JsonInputConstant::PERM_MIL.",
                   $nullReplacement as ".JsonInputConstant::MOTHER_ID.",
                   CONCAT(mom.uln_country_code, mom.uln_number,'_', LPAD(CAST(l.litter_ordinal AS TEXT), 2, '0')) as ".JsonInputConstant::LITTER_GROUP.",
                   born_alive_count + l.stillborn_count as ".JsonInputConstant::N_LING.",
-                  stillborn_count,
-                  FALSE as gave_birth_as_one_year_old,
+                  stillborn_count as ".JsonInputConstant::TOTAL_STILLBORN_COUNT.",
+                  FALSE as ".JsonInputConstant::GAVE_BIRTH_AS_ONE_YEAR_OLD.",
                   $nullReplacement as ".JsonInputConstant::BIRTH_WEIGHT.",
-                  $nullReplacement as birth_progress,
-                  $nullReplacement as gestation_period,
-                  $nullReplacement as birth_interval,
+                  $nullReplacement as ".JsonInputConstant::BIRTH_PROGRESS.",
+                  $nullReplacement as ".JsonInputConstant::GESTATION_PERIOD.",
+                  $nullReplacement as ".JsonInputConstant::BIRTH_INTERVAL.",
                   mom.".JsonInputConstant::UBN_OF_BIRTH."
                 FROM litter l
                   INNER JOIN declare_nsfo_base b ON l.id = b.id
@@ -269,11 +273,16 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
      */
     protected static function getTeBreedCodepartOfMother($data)
     {
-        $breedCodeMother = $data['breed_code_mother'];
+        $breedCodeMother = $data[JsonInputConstant::BREED_CODE_MOTHER];
 
-        //TODO GET TE PART FROM BREEDCODE
-        
-        return 99999999999999999999999;
+        $breedCodeParts = BreedCodeUtil::getBreedCodeAs8PartsFromBreedCodeString($breedCodeMother);
+        $isValidBreedCode = BreedCodeUtil::verifySumOf8PartBreedCodeParts($breedCodeParts);
+
+        if(!$isValidBreedCode) {
+            CsvWriterUtil::pad(MixBlupInstructionFileBase::MISSING_REPLACEMENT, MaxLength::BREED_CODE_PART_BY_8_PARTS, true);;
+        }
+
+        return self::formatBreedCodePart(BreedCodeType::TE, $breedCodeParts);
     }
 
 
@@ -283,7 +292,12 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
      */
     protected static function getFormattedPmsg($data)
     {
-        return 99999999999999999999999;
+        $pmsg = ArrayUtil::get(JsonInputConstant::PMSG, $data);
+        if(!is_bool($pmsg)) {
+            //TODO Check with NSFO if this is desired or not.
+            return CsvWriterUtil::pad(MixBlupInstructionFileBase::MISSING_REPLACEMENT, MaxLength::BOOL_AS_INT, true);
+        }
+        return self::formatMixBlupBoolean($pmsg);
     }
 
 
@@ -293,7 +307,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
      */
     protected static function getFormattedPermMil($data)
     {
-        return 99999999999999999999999;
+        return self::getFormattedUln($data, JsonInputConstant::PERM_MIL);
     }
 
 
@@ -303,7 +317,8 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
      */
     protected static function getFormattedNullableMotherId($data)
     {
-        return 99999999999999999999999;
+        $motherId = ArrayUtil::get(JsonInputConstant::MOTHER_ID, $data, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
+        return CsvWriterUtil::pad($motherId, MaxLength::ANIMAL_ID, true);
     }
 
 
@@ -313,7 +328,8 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
      */
     protected static function getFormattedStillbornCount($data)
     {
-        return 99999999999999999999999;
+        $stillBornCount = ArrayUtil::get(JsonInputConstant::TOTAL_STILLBORN_COUNT, $data, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
+        return CsvWriterUtil::pad($stillBornCount, MaxLength::N_LING, true);
     }
 
 
@@ -323,7 +339,11 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
      */
     protected static function getFormattedEarlyFertility($data)
     {
-        return 99999999999999999999999;
+        $gaveBirthAsOneYearOld = ArrayUtil::get(JsonInputConstant::GAVE_BIRTH_AS_ONE_YEAR_OLD, $data, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
+        if(!is_bool($gaveBirthAsOneYearOld)) {
+            return CsvWriterUtil::pad(MixBlupInstructionFileBase::MISSING_REPLACEMENT, MaxLength::BOOL_AS_INT, true);
+        }
+        return self::formatMixBlupBoolean($gaveBirthAsOneYearOld);
     }
 
 
@@ -333,7 +353,8 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
      */
     protected static function getFormattedBirthProgress($data)
     {
-        return 99999999999999999999999;
+        $birthProgressInt = ArrayUtil::get(JsonInputConstant::BIRTH_PROGRESS, $data, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
+        return CsvWriterUtil::pad($birthProgressInt, MaxLength::BIRTH_PROGRESS, true);
     }
 
 
@@ -343,7 +364,8 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
      */
     protected static function getFormattedGestationPeriod($data)
     {
-        return 99999999999999999999999;
+        $gestationPeriod = ArrayUtil::get(JsonInputConstant::GESTATION_PERIOD, $data, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
+        return CsvWriterUtil::pad($gestationPeriod, MaxLength::GESTATION_PERIOD, true);
     }
 
 
@@ -353,6 +375,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
      */
     protected static function getFormattedBirthInterval($data)
     {
-        return 99999999999999999999999;
+        $birthInterval = ArrayUtil::get(JsonInputConstant::BIRTH_INTERVAL, $data, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
+        return CsvWriterUtil::pad($birthInterval, MaxLength::BIRTH_INTERVAL, true);
     }
 }
