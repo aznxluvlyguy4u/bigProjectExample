@@ -28,4 +28,7 @@ class MixBlupSetting
     //S3 Bucket
     const S3_MIXBLUP_INPUT_DIRECTORY = 'mixblub_input_files/';
     const S3_MIXBLUP_OUTPUT_DIRECTORY = 'mixblub_output_files/';
+
+    const FALSE_RECORD_VALUE = 0;
+    const TRUE_RECORD_VALUE = 1;
 }
