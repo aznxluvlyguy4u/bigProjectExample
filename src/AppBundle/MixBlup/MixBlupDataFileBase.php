@@ -101,7 +101,7 @@ class MixBlupDataFileBase
      * @param array $breedCodeParts
      * @return string
      */
-    private static function formatBreedCodePart($breedCodeType, $breedCodeParts)
+    protected static function formatBreedCodePart($breedCodeType, $breedCodeParts)
     {
         $breedCodeValueToWrite = ArrayUtil::get($breedCodeType, $breedCodeParts, 0);
         return CsvWriterUtil::pad($breedCodeValueToWrite, MaxLength::BREED_CODE_PART_BY_8_PARTS);
@@ -414,6 +414,17 @@ class MixBlupDataFileBase
     protected static function getFormattedRecombination($data)
     {
         return self::getFormattedGeneVarianceFromData($data, MaxLength::HETEROSIS_AND_RECOMBINATION, JsonInputConstant::RECOMBINATION);
+    }
+
+
+    /**
+     * @param boolean $value
+     * @return int
+     */
+    protected static function formatMixBlupBoolean($value)
+    {
+        $formattedValue = $value ? MixBlupSetting::TRUE_RECORD_VALUE : MixBlupSetting::FALSE_RECORD_VALUE;
+        return CsvWriterUtil::pad($formattedValue, MaxLength::BOOL_AS_INT, true);
     }
 
 
