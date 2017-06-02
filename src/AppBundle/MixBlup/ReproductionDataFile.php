@@ -75,7 +75,17 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
      */
     static function getSqlQueryRelatedAnimals()
     {
-        // TODO: Implement getSqlQueryRelatedAnimals() method.
+        return "SELECT animal_mother_id as ".JsonInputConstant::ANIMAL_ID.", mom.type as ".JsonInputConstant::TYPE."
+                FROM litter l
+                  INNER JOIN animal mom ON mom.id = l.animal_mother_id
+                  INNER JOIN declare_nsfo_base b ON l.id = b.id
+                WHERE ".self::getSqlBaseFilter()."
+                UNION
+                SELECT lamb.id as ".JsonInputConstant::ANIMAL_ID.", lamb.type as ".JsonInputConstant::TYPE."
+                FROM litter l
+                  INNER JOIN declare_nsfo_base b ON l.id = b.id
+                  INNER JOIN animal lamb ON lamb.litter_id = l.id
+                WHERE ".self::getSqlBaseFilter();
     }
 
 
@@ -86,7 +96,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
      */
     private static function getDataBySql(Connection $conn)
     {
-        $sql = 
+        $sql =
             self::getSqlLitterSizeRecords().'
             UNION
             '.self::getSqlBirthProgressRecords().'
