@@ -23,7 +23,6 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
     static function generateInstructionFiles()
     {
         return [
-//            MixBlupInstructionFile::LITTER_SIZE => self::generateLitterSizeInstructionFile(), //NOT USED AT THE MOMENT
             MixBlupInstructionFile::BIRTH_PROGRESS => self::generateBirthProgressInstructionFile(),
             //FERTILITY exceeds 1 million calculations, so we split it up in 3 parts.
             MixBlupInstructionFile::FERTILITY_1 => self::generateFertilityInstructionFile(1),
@@ -77,18 +76,6 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
             $model,
             self::getInstructionFileEnding()
         ]);
-    }
-
-
-    /**
-     * @return array
-     */
-    public static function generateLitterSizeInstructionFile()
-    {
-        $model = [
-            //NOT USED AT THE MOMENT
-        ];
-        return self::reproductionInstructionFileBase($model, 'Worpgrootte');
     }
 
 

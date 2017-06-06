@@ -29,7 +29,6 @@ class MixBlupInstructionFile
     const FERTILITY_1 = 'InpVruchtb1.txt';
     const FERTILITY_2 = 'InpVruchtb2.txt';
     const FERTILITY_3 = 'InpVruchtb3.txt';
-    const LITTER_SIZE = 'InpWorpGrootte.txt'; //Still to be checked
 
     //Worm Resistance
     const WORM_RESISTANCE = 'InpWormRes.txt';
