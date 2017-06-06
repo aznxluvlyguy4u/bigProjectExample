@@ -5,6 +5,7 @@ namespace AppBundle\Command;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\LitterUtil;
 use AppBundle\Util\MeasurementsUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -60,6 +61,7 @@ class NsfoFixDbCommand extends ContainerAwareCommand
             '2: Fill missing animalOrderNumbers', "\n",
             '3: Fix incongruent animalOrderNumbers', "\n",
             '4: Fix incongruent animalIdAndDate values in measurement table', "\n",
+            '5: Fix duplicate litters only containing stillborns', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -86,6 +88,12 @@ class NsfoFixDbCommand extends ContainerAwareCommand
                 } else {
                     $output->writeln('No animalIdAndDate values in measurement table needed to be updated');
                 }
+                break;
+
+            case 5:
+                $littersDeleted = LitterUtil::deleteDuplicateLittersWithoutBornAlive($this->conn);
+                $output->writeln($littersDeleted . ' litters deleted');
+                $output->writeln('Done!');
                 break;
 
             default:

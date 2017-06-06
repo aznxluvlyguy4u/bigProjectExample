@@ -305,6 +305,9 @@ class LitterUtil
      */
     public static function deleteDuplicateLittersWithoutBornAlive(Connection $conn)
     {
+        $littersDeleted = 0;
+
+        //1. First delete duplicate litters with exactly the same values and litterDate
         $sql = "SELECT
                   l.id as litter_id,
                 --   l.animal_mother_id, l.animal_father_id, DATE(l.litter_date) as worpdatum, b.log_date,
@@ -331,6 +334,72 @@ class LitterUtil
                 ORDER BY l.animal_mother_id, l.animal_father_id, l.litter_date, b.log_date";
         $results = $conn->query($sql)->fetchAll();
 
+        $littersDeleted += self::deleteStillBornsAndLitters($conn, $results);
+
+        //2. Delete duplicate litters with not exactly the same litterDate
+        $sql = "SELECT
+                  l.id as litter_id,
+                --   l.animal_mother_id, l.animal_father_id, DATE(l.litter_date) as worpdatum, b.log_date,
+                --   l.stillborn_count, l.born_alive_count, l.is_abortion, l.is_pseudo_pregnancy as gust, l.mate_id, l.status,
+                --   b.action_by_id, CONCAT(p.first_name,' ',p.last_name) as action_by_fullname, b.ubn,
+                  s.id as stillborn_id
+                FROM litter l
+                  INNER JOIN declare_nsfo_base b ON l.id = b.id
+                  LEFT JOIN person p ON b.action_by_id = p.id
+                  LEFT JOIN stillborn s ON s.litter_id = l.id
+                  LEFT JOIN animal mom ON mom.id = animal_mother_id
+                  LEFT JOIN animal dad ON dad.id = animal_father_id
+                  INNER JOIN (
+                               SELECT animal_father_id, animal_mother_id, stillborn_count, MIN(log_date) as min_log_date
+                               FROM litter l
+                                 INNER JOIN declare_nsfo_base b ON l.id = b.id
+                               WHERE status = 'COMPLETED' AND request_state = 'FINISHED' AND is_overwritten_version = FALSE
+                               AND born_alive_count = 0
+                               GROUP BY animal_mother_id, animal_father_id, stillborn_count, DATE_PART('year', litter_date)
+                               HAVING COUNT (*) > 1
+                             )g ON g.animal_father_id = l.animal_father_id AND g.animal_mother_id = l.animal_mother_id AND g.stillborn_count = l.stillborn_count
+                AND b.log_date <> min_log_date
+                ORDER BY l.animal_mother_id, l.animal_father_id, l.stillborn_count, b.log_date";
+        $results = $conn->query($sql)->fetchAll();
+
+        $littersDeleted += self::deleteStillBornsAndLitters($conn, $results);
+
+
+        // 3. Now only duplicates containing at least one litter with bornAlives are left.
+        // In those sets delete the one with only stillborns
+        $sql = "SELECT
+                  l.id as litter_id, s.id as stillborn_id
+                FROM litter l
+                  INNER JOIN declare_nsfo_base b ON l.id = b.id
+                  LEFT JOIN stillborn s ON s.litter_id = l.id
+                  LEFT JOIN person p ON b.action_by_id = p.id
+                  LEFT JOIN animal mom ON mom.id = animal_mother_id
+                  LEFT JOIN animal dad ON dad.id = animal_father_id
+                  INNER JOIN (
+                               SELECT animal_father_id, animal_mother_id, MIN(log_date) as min_log_date
+                               FROM litter l
+                                 INNER JOIN declare_nsfo_base b ON l.id = b.id
+                               WHERE status = 'COMPLETED' AND request_state = 'FINISHED' AND is_overwritten_version = FALSE
+                               GROUP BY animal_mother_id, animal_father_id, DATE_PART('year', litter_date)
+                               HAVING COUNT (*) = 2
+                             )g ON g.animal_father_id = l.animal_father_id AND g.animal_mother_id = l.animal_mother_id
+                WHERE born_alive_count = 0
+                ORDER BY l.animal_mother_id, l.animal_father_id, l.litter_date, b.log_date";
+        $results = $conn->query($sql)->fetchAll();
+
+        $littersDeleted += self::deleteStillBornsAndLitters($conn, $results);
+
+        return $littersDeleted;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param array $results
+     * @return int
+     */
+    private static function deleteStillBornsAndLitters(Connection $conn, array $results)
+    {
         $litterIds = [];
         $stillbornIds = [];
         foreach ($results as $result) {
@@ -341,11 +410,17 @@ class LitterUtil
             }
         }
 
-        $sql = "DELETE FROM stillborn WHERE id IN (".implode(', ', $stillbornIds).")";
-        $stillbornsDeleted = SqlUtil::updateWithCount($conn, $sql);
+        $stillbornsDeleted = 0;
+        if(count($stillbornIds) > 0) {
+            $sql = "DELETE FROM stillborn WHERE id IN (".implode(', ', $stillbornIds).")";
+            $stillbornsDeleted += SqlUtil::updateWithCount($conn, $sql);
+        }
 
-        $sql = "DELETE FROM litter WHERE id IN (".implode(', ', $litterIds).")";
-        $littersDeleted = SqlUtil::updateWithCount($conn, $sql);
+        $littersDeleted = 0;
+        if(count($litterIds) > 0) {
+            $sql = "DELETE FROM litter WHERE id IN (".implode(', ', $litterIds).")";
+            $littersDeleted += SqlUtil::updateWithCount($conn, $sql);
+        }
 
         return $littersDeleted;
     }
