@@ -24,7 +24,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
     {
         return [
 //            MixBlupInstructionFile::LITTER_SIZE => self::generateLitterSizeInstructionFile(), //NOT USED AT THE MOMENT
-            MixBlupInstructionFile::BIRTH_PROGRESS => self::generateBirthProcessInstructionFile(),
+            MixBlupInstructionFile::BIRTH_PROGRESS => self::generateBirthProgressInstructionFile(),
             MixBlupInstructionFile::FERTILITY => self::generateFertilityInstructionFile(),
         ];
     }
@@ -92,7 +92,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
     /**
      * @return array
      */
-    public static function generateBirthProcessInstructionFile()
+    public static function generateBirthProgressInstructionFile()
     {
         $model = [
             ' GebGemak  ~ JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM G(ID,IDM)'
