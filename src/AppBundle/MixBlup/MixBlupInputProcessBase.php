@@ -106,8 +106,15 @@ class MixBlupInputProcessBase
         //purge current file content
         file_put_contents($filePath, "");
 
-        foreach ($records as $record) {
-            file_put_contents($filePath, $record."\n", FILE_APPEND);
+        end($records); //Move pointer to last element
+        $lastKey = key($records);
+        //reset($records); //Move pointer to first element;
+        //$firstKey = key($records);
+
+        $newLine = "\n";
+        foreach ($records as $key => $record) {
+            if($key === $lastKey) { $newLine = ''; }
+            file_put_contents($filePath, $record.$newLine, FILE_APPEND);
         }
 
         return true;
