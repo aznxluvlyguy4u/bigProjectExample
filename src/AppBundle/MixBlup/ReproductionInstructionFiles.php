@@ -95,7 +95,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
     public static function generateBirthProcessInstructionFile()
     {
         $model = [
-            ' GebGemak  ~ JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM WorpID G(ID,IDM)'
+            ' GebGemak  ~ JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM G(ID,IDM)'
         ];
         return self::reproductionInstructionFileBase($model, 'Geboorteverloop');
     }
