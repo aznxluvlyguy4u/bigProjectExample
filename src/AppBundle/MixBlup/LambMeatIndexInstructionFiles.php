@@ -83,7 +83,7 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
     {
         $model = [
             ' GewGeb    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling !RANDOM WorpID G(ID,IDM)',
-            ' Gew08     ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling LeeftScan !RANDOM WorpID G(ID)',
+            '# Gew08     ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling LeeftScan !RANDOM WorpID G(ID)',
             ' Gew20     ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling LeeftScan !RANDOM WorpID G(ID)',
             ' Vetd01    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling GewScan !RANDOM WorpID G(ID)',
             ' Vetd02    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling GewScan !RANDOM WorpID G(ID)',
