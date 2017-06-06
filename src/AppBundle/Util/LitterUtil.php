@@ -297,6 +297,56 @@ class LitterUtil
         
         return $updateIncongruentBirthIntervals + $updateRevokedBirthIntervals;
     }
-    
 
+
+    /**
+     * @param Connection $conn
+     * @return int
+     */
+    public static function deleteDuplicateLittersWithoutBornAlive(Connection $conn)
+    {
+        $sql = "SELECT
+                  l.id as litter_id,
+                --   l.animal_mother_id, l.animal_father_id, DATE(l.litter_date) as worpdatum, b.log_date,
+                --   l.stillborn_count, l.born_alive_count, l.is_abortion, l.is_pseudo_pregnancy as gust, l.mate_id, l.status,
+                --   b.action_by_id, CONCAT(p.first_name,' ',p.last_name) as action_by_fullname, b.ubn,
+                  s.id as stillborn_id
+                FROM litter l
+                  INNER JOIN declare_nsfo_base b ON l.id = b.id
+                  LEFT JOIN person p ON b.action_by_id = p.id
+                  LEFT JOIN stillborn s ON s.litter_id = l.id
+                  LEFT JOIN animal mom ON mom.id = animal_mother_id
+                  LEFT JOIN animal dad ON dad.id = animal_father_id
+                  INNER JOIN (
+                               SELECT animal_father_id, animal_mother_id, litter_date, MIN(log_date) as min_log_date
+                               FROM litter l
+                                 INNER JOIN declare_nsfo_base b ON l.id = b.id
+                               WHERE status = 'COMPLETED' AND request_state = 'FINISHED' AND is_overwritten_version = FALSE
+                               AND born_alive_count = 0
+                               GROUP BY animal_mother_id, animal_father_id, litter_date
+                                     , stillborn_count
+                               HAVING COUNT (*) > 1
+                             )g ON g.animal_father_id = l.animal_father_id AND g.animal_mother_id = l.animal_mother_id AND g.litter_date = l.litter_date
+                AND b.log_date <> min_log_date
+                ORDER BY l.animal_mother_id, l.animal_father_id, l.litter_date, b.log_date";
+        $results = $conn->query($sql)->fetchAll();
+
+        $litterIds = [];
+        $stillbornIds = [];
+        foreach ($results as $result) {
+            $litterIds[] = $result['litter_id'];
+            $stillbornId = $result['stillborn_id'];
+            if(is_int($stillbornId)) {
+                $stillbornIds[] = $result['stillborn_id'];
+            }
+        }
+
+        $sql = "DELETE FROM stillborn WHERE id IN (".implode(', ', $stillbornIds).")";
+        $stillbornsDeleted = SqlUtil::updateWithCount($conn, $sql);
+
+        $sql = "DELETE FROM litter WHERE id IN (".implode(', ', $litterIds).")";
+        $littersDeleted = SqlUtil::updateWithCount($conn, $sql);
+
+        return $littersDeleted;
+    }
 }
