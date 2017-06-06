@@ -19,5 +19,8 @@ class BreedValueType
     const TAIL_LENGTH = 'TAIL_LENGTH';
     const LAMB_MEAT = 'LAMB_MEAT';
     const FERTILITY = 'FERTILITY';
+    const FERTILITY_1 = 'FERTILITY_1';
+    const FERTILITY_2 = 'FERTILITY_2';
+    const FERTILITY_3 = 'FERTILITY_3';
     const WORM = 'WORM';
 }

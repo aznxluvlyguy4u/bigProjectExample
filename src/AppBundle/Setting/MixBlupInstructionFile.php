@@ -26,6 +26,9 @@ class MixBlupInstructionFile
     //Reproduction
     const BIRTH_PROGRESS = 'InpGeboorte.txt';
     const FERTILITY = 'InpVruchtb.txt';
+    const FERTILITY_1 = 'InpVruchtb1.txt';
+    const FERTILITY_2 = 'InpVruchtb2.txt';
+    const FERTILITY_3 = 'InpVruchtb3.txt';
     const LITTER_SIZE = 'InpWorpGrootte.txt'; //Still to be checked
 
     //Worm Resistance

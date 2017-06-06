@@ -98,7 +98,9 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $this->mixBlupProcesses[BreedValueType::EXTERIOR_PROPORTION] = null;
         $this->mixBlupProcesses[BreedValueType::EXTERIOR_SKULL] = null;
         $this->mixBlupProcesses[BreedValueType::EXTERIOR_TYPE] = null;
-        $this->mixBlupProcesses[BreedValueType::FERTILITY] = null;
+        $this->mixBlupProcesses[BreedValueType::FERTILITY_1] = null;
+        $this->mixBlupProcesses[BreedValueType::FERTILITY_2] = null;
+        $this->mixBlupProcesses[BreedValueType::FERTILITY_3] = null;
         $this->mixBlupProcesses[BreedValueType::LAMB_MEAT] = null;
         $this->mixBlupProcesses[BreedValueType::TAIL_LENGTH] = null;
         $this->mixBlupProcesses[BreedValueType::WORM] = null;
@@ -309,6 +311,9 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             case MixBlupInstructionFile::EXTERIOR_PROGRESS: return BreedValueType::EXTERIOR_PROGRESS;
             case MixBlupInstructionFile::EXTERIOR_TYPE: return BreedValueType::EXTERIOR_TYPE;
             case MixBlupInstructionFile::FERTILITY: return BreedValueType::FERTILITY;
+            case MixBlupInstructionFile::FERTILITY_1: return BreedValueType::FERTILITY_1;
+            case MixBlupInstructionFile::FERTILITY_2: return BreedValueType::FERTILITY_2;
+            case MixBlupInstructionFile::FERTILITY_3: return BreedValueType::FERTILITY_3;
             case MixBlupInstructionFile::LAMB_MEAT: return BreedValueType::LAMB_MEAT;
             case MixBlupInstructionFile::TAIL_LENGTH: return BreedValueType::TAIL_LENGTH;
             case MixBlupInstructionFile::WORM_RESISTANCE: return BreedValueType::WORM;

@@ -25,7 +25,10 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
         return [
 //            MixBlupInstructionFile::LITTER_SIZE => self::generateLitterSizeInstructionFile(), //NOT USED AT THE MOMENT
             MixBlupInstructionFile::BIRTH_PROGRESS => self::generateBirthProgressInstructionFile(),
-            MixBlupInstructionFile::FERTILITY => self::generateFertilityInstructionFile(),
+            //FERTILITY exceeds 1 million calculations, so we split it up in 3 parts.
+            MixBlupInstructionFile::FERTILITY_1 => self::generateFertilityInstructionFile(1),
+            MixBlupInstructionFile::FERTILITY_2 => self::generateFertilityInstructionFile(2),
+            MixBlupInstructionFile::FERTILITY_3 => self::generateFertilityInstructionFile(3),
         ];
     }
 
@@ -102,14 +105,19 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
 
 
     /**
+     * @param int $part
      * @return array
      */
-    public static function generateFertilityInstructionFile()
+    public static function generateFertilityInstructionFile($part = null)
     {
+        $includeTotalBirths = $part == 1 || $part == null ? '' : ' #';
+        $includeStillBirths = $part == 2 || $part == null ? '' : ' #';
+        $includeEarlyFertility = $part == 3 || $part == null ? '' : ' #';
+
         $model = [
-            ' TotGeb  ~ Inductie Leeft JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM PermMil G(ID)',
-            ' DoodGeb ~ Inductie Leeft JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM PermMil G(ID)',
-            ' Vroeg   ~ JaarBedr '.self::getBreedCodesModel().' !RANDOM G(ID)',
+            $includeTotalBirths.' TotGeb  ~ Inductie Leeft JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM PermMil G(ID)',
+            $includeStillBirths.' DoodGeb ~ Inductie Leeft JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM PermMil G(ID)',
+            $includeEarlyFertility.' Vroeg   ~ JaarBedr '.self::getBreedCodesModel().' !RANDOM G(ID)',
             ' # TusLamT',
         ];
         return self::reproductionInstructionFileBase($model, 'Vruchtbaarheid');
