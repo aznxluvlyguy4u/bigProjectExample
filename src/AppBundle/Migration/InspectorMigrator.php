@@ -205,7 +205,7 @@ class InspectorMigrator
      */
     public static function authorizeInspectorsForExteriorMeasurementsTexelaar(ObjectManager $em, CommandUtil $cmdUtil, array $csv, $admin)
     {
-        self::authorizeInspectorsForExteriorMeasurements($em, $cmdUtil, $csv, $admin, PedigreeAbbreviation::TES);
+        self::authorizeInspectorsForExteriorMeasurements($em, $cmdUtil, $csv, $admin, PedigreeAbbreviation::NTS);
     }
 
 
@@ -238,6 +238,16 @@ class InspectorMigrator
             $admin = $employeeRepository->find($admin);
         }
 
+        switch ($pedigreeAbbreviation) {
+            case PedigreeAbbreviation::BdM:
+                self::removeExteriorAuthorizations($em, $cmdUtil, $pedigreeAbbreviation, $csv);
+                break;
+            case PedigreeAbbreviation::NTS:
+                self::removeExteriorAuthorizations($em, $cmdUtil, PedigreeAbbreviation::NTS, $csv);
+                self::removeExteriorAuthorizations($em, $cmdUtil, PedigreeAbbreviation::TSNH, $csv);
+                break;
+        }
+
         $cmdUtil->setStartTimeAndPrintIt(count($csv) * 2, 1, 'Authorize inspectors for '.$pedigreeAbbreviation);
 
         $authorizations = 0;
@@ -250,7 +260,7 @@ class InspectorMigrator
                 case PedigreeAbbreviation::BdM:
                     $authorizations += self::authorizeInspectorForExteriorMeasurementsBdM($em, $admin, $firstName, $lastName);
                     break;
-                case PedigreeAbbreviation::TES:
+                case PedigreeAbbreviation::NTS:
                     $authorizations += self::authorizeInspectorForExteriorMeasurementsTexelaar($em, $admin, $firstName, $lastName);
                     break;
             }
@@ -343,6 +353,52 @@ class InspectorMigrator
             return 1;
         }
         return 0;
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param CommandUtil $cmdUtil
+     * @param $pedigreeAbbreviation
+     * @param $csv
+     * @return int
+     */
+    private static function removeExteriorAuthorizations(ObjectManager $em, CommandUtil $cmdUtil, $pedigreeAbbreviation, $csv)
+    {
+        $fullNames = [];
+        foreach ($csv as $row) {
+            $firstName = $row[0];
+            $lastName = $row[1];
+            $fullName = trim($firstName . ' ' . $lastName);
+            $fullNames[$fullName] = $fullName;
+        }
+
+        /** @var PedigreeRegisterRepository $inspectorAuthorizationRepository */
+        $pedigreeRegisterRepository = $em->getRepository(PedigreeRegister::class);
+        $pedigreeRegister = $pedigreeRegisterRepository->findOneBy(['abbreviation' => $pedigreeAbbreviation]);
+
+        /** @var InspectorAuthorizationRepository $inspectorAuthorizationRepository */
+        $inspectorAuthorizationRepository = $em->getRepository(InspectorAuthorization::class);
+
+        $currentAuthorizations = $inspectorAuthorizationRepository->findBy(['pedigreeRegister' => $pedigreeRegister, 'measurementType' => InspectorMeasurementType::EXTERIOR]);
+
+        $removeCount= 0;
+        /** @var InspectorAuthorization $currentAuthorization */
+        foreach ($currentAuthorizations as $currentAuthorization)
+        {
+            $inspector = $currentAuthorization->getInspector();
+            $fullNameCurrentInspector = $inspector->getFullName();
+
+            if(!key_exists($fullNameCurrentInspector, $fullNames)) {
+                $em->remove($currentAuthorization);
+                $removeCount++;
+            }
+        }
+        $em->flush();
+        $cmdUtil->writeln('=================');
+        $cmdUtil->writeln($removeCount . ' InspectorAuthorizations deleted for Exterior/'.$pedigreeAbbreviation);
+        $cmdUtil->writeln('=================');
+        return $removeCount;
     }
 
 
