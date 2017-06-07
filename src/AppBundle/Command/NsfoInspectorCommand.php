@@ -77,6 +77,7 @@ class NsfoInspectorCommand extends ContainerAwareCommand
             '3: Fix duplicate inspectors', "\n",
             '4: Authorize inspectors', "\n",
             '5: Set and Remove isAuthorizedNsfoInspector status by NTS authorization', "\n",
+            '   (inspectors with updated isAuthorizedNsfoInspector will have inspectorCode set to NULL)', "\n",
             '6: Generate inspectorCodes, if null', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);

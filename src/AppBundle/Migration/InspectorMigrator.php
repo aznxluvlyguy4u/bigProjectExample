@@ -410,7 +410,7 @@ class InspectorMigrator
     public static function generateInspectorCodes(Connection $conn)
     {
         $sql = "SELECT id, RANK() OVER (ORDER BY id ASC) AS inspector_ordinal
-                FROM inspector WHERE (inspector_code ISNULL OR inspector_code = '')";
+                FROM inspector WHERE is_authorized_nsfo_inspector AND (inspector_code ISNULL OR inspector_code = '')";
         $inspectorRanksById = $conn->query($sql)->fetchAll();
 
         if(count($inspectorRanksById) == 0) { return 0; }
@@ -481,7 +481,7 @@ class InspectorMigrator
         $nts = "'".PedigreeAbbreviation::NTS."'";
         $tsnh = "'".PedigreeAbbreviation::TSNH."'";
 
-        $sql = "UPDATE inspector SET is_authorized_nsfo_inspector = TRUE
+        $sql = "UPDATE inspector SET is_authorized_nsfo_inspector = TRUE, inspector_code = NULL
                 WHERE id IN (
                   SELECT i.id
                   FROM inspector i
@@ -492,7 +492,7 @@ class InspectorMigrator
                 )";
         $newAuthorizationCount = SqlUtil::updateWithCount($conn, $sql);
 
-        $sql = "UPDATE inspector SET is_authorized_nsfo_inspector = FALSE
+        $sql = "UPDATE inspector SET is_authorized_nsfo_inspector = FALSE, inspector_code = NULL
                 WHERE id IN (
                   SELECT i.id
                   FROM inspector i
