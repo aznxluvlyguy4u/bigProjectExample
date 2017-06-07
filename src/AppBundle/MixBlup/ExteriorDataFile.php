@@ -221,7 +221,7 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
                   INNER JOIN measurement m ON m.id = x.id
                   INNER JOIN animal a ON a.id = x.animal_id
                   INNER JOIN animal mom ON mom.id = a.parent_mother_id
-                  LEFT JOIN inspector i ON i.id = m.inspector_id
+                  INNER JOIN inspector i ON i.id = m.inspector_id
                   INNER JOIN litter l ON l.id = a.litter_id
                   LEFT JOIN pedigree_register r ON r.id = a.pedigree_register_id
                 WHERE m.is_active AND DATE_PART('year', NOW()) - DATE_PART('year', measurement_date) <= 
