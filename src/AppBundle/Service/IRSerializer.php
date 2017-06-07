@@ -511,10 +511,12 @@ class IRSerializer implements IRSerializerInterface
 
         if ($isAborted || $isPseudoPregnancy || $litterSize == $stillbornCount) {
             $litter->setStatus('COMPLETED');
+            $litter->setRequestState(RequestStateType::FINISHED);
         } else {
             $litter->setStatus('INCOMPLETE');
+            $litter->setRequestState(RequestStateType::OPEN);
         }
-        $litter->setRequestState(RequestStateType::OPEN);
+
         $litter->setActionBy($loggedInUser);
         $litter->setRelationNumberKeeper($location->getCompany()->getOwner()->getRelationNumberKeeper());
         $litter->setUbn($location->getUbn());
