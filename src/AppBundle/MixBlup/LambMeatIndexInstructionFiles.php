@@ -39,13 +39,18 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
             'TITLE '.$fileType,
             ' ',
             'DATAFILE  '.MixBlupFileName::getLambMeatIndexDataFileName().' !MISSING '.self::MISSING_REPLACEMENT,
-            ' ULN        A #', //uln
-            ' ID         I #', //primaryKey
-            ' IDM        I #id of mother',  //primaryKey of mother
-            ' JaarBedr   A #jaar en ubn van geboorte', //year and ubn of birth
-            ' Sekse      A ',  //ram/ooi/N_B
-            ' WorpID     A ',  //ulnMother._.lpad(litterOrdinal, with zeroes)
         ];
+
+        if(MixBlupSetting::INCLUDE_ULNS) {
+            $start[] = ' ULN        A';  //uln
+        }
+
+        $start[] = ' ID         I';  //primaryKey
+        $start[] = ' IDM        I #id of mother';  //primaryKey of mother
+        $start[] = ' JaarBedr   A #jaar en ubn van geboorte'; //year and ubn of birth
+        $start[] = ' Sekse      A ';  //ram/ooi/N_B
+        $start[] = ' WorpID     A ';  //ulnMother._.lpad(litterOrdinal, with zeroes)
+
 
         $middle = [
             ' Nling      I #worpgrootte',

@@ -22,6 +22,8 @@ class MixBlupSetting
     const MEASUREMENTS_FROM_LAST_AMOUNT_OF_YEARS = 15;
     const COLUMN_SPACING = 1;
 
+    const INCLUDE_ULNS = false;
+
     //Rounding Accuracies
     const HETEROSIS_AND_RECOMBINATION_ROUNDING_ACCURACY = 2;
     

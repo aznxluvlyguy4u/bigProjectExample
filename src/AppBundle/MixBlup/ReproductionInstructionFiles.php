@@ -43,12 +43,17 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
             'TITLE '.$titleType,
             ' ',
             'DATAFILE  '.MixBlupFileName::getFertilityDataFileName().' !MISSING '.self::MISSING_REPLACEMENT,
-            ' ULN        A #uln van ooi/moeder of lam',  //uln of Ewe/Mother or lamb
-            ' ID         I #id van ooi/moeder of lam',  //primaryKey of Ewe/Mother or lamb
-            ' Leeft      I #leeftijd ooi in jaren', //age of ewe in years
-            ' Sekse      A ',  //ram/ooi/N_B
-            ' JaarBedr   A #jaar en ubn van geboorte', //year and ubn of birth
         ];
+
+        if(MixBlupSetting::INCLUDE_ULNS) {
+            $start[] = ' ULN        A';  //uln of Ewe/Mother or lamb
+        }
+
+        $start[] = ' ID         I #id van ooi/moeder of lam';  //primaryKey of Ewe/Mother or lamb
+        $start[] = ' Leeft      I #leeftijd ooi in jaren'; //age of ewe in years
+        $start[] = ' Sekse      A';  //ram/ooi/N_B
+        $start[] = ' JaarBedr   A #jaar en ubn van geboorte'; //year and ubn of birth
+
 
         $middle = [
             ' CovHetLam  R #Heterosis lam of worp', //Heterosis of offspring/litter

@@ -43,13 +43,18 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
             'TITLE   Exterieur: '.$fileType,
             ' ',
             'DATAFILE  '.MixBlupFileName::getExteriorDataFileName().' !MISSING '.self::MISSING_REPLACEMENT,
-            ' ULN        A',  //uln
-            ' ID         I',  //primaryKey
-            ' Sekse      A',  //ram/ooi/N_B
-            ' JaarBedr   A #jaar en ubn van geboorte', //year and ubn of birth
-            ' WorpID     A ',  //ulnMother._.lpad(litterOrdinal, with zeroes)
-            ' Inspectr   A #Code van NSFO Inspecteur',  //example: NSFO001 until NSFO999
         ];
+        
+        if(MixBlupSetting::INCLUDE_ULNS) {
+            $start[] = ' ULN        A';  //uln
+        }
+
+        $start[] = ' ID         I';  //primaryKey
+        $start[] = ' Sekse      A';  //ram/ooi/N_B
+        $start[] = ' JaarBedr   A #jaar en ubn van geboorte'; //year and ubn of birth
+        $start[] = ' WorpID     A ';  //ulnMother._.lpad(litterOrdinal, with zeroes)
+        $start[] = ' Inspectr   A #Code van NSFO Inspecteur';  //example: NSFO001 until NSFO999
+
 
         $exteriorMeasurements = [
             ' BespVGv    T #BESPIERING, EXTKIND=VG en sekse dier is ooi',
