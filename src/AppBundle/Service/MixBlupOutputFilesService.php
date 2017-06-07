@@ -166,9 +166,9 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $this->logger->notice('All breedValues processed successfully!');
 
                     if(self::PURGE_ZIP_FOLDER_AFTER_SUCCESSFUL_RUN) {
-                        $this->queueService->deleteMessage($response);
                         $this->purgeZipFolder();
                     }
+                    $this->queueService->deleteMessage($response);
 
                 } else {
                     $this->logger->error('The following unzips failed: '.implode(', ', $unsuccessfulUnzips));
