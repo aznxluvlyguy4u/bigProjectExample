@@ -14,6 +14,7 @@ use AppBundle\Entity\InspectorRepository;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\PedigreeRegisterRepository;
 use AppBundle\Enumerator\InspectorMeasurementType;
+use AppBundle\Enumerator\PedigreeAbbreviation;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\SqlUtil;
@@ -204,6 +205,31 @@ class InspectorMigrator
      */
     public static function authorizeInspectorsForExteriorMeasurementsTexelaar(ObjectManager $em, CommandUtil $cmdUtil, array $csv, $admin)
     {
+        self::authorizeInspectorsForExteriorMeasurements($em, $cmdUtil, $csv, $admin, PedigreeAbbreviation::TES);
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param array $csv
+     * @param $admin
+     * @param CommandUtil $cmdUtil
+     */
+    public static function authorizeInspectorsForExteriorMeasurementsBdm(ObjectManager $em, CommandUtil $cmdUtil, array $csv, $admin)
+    {
+        self::authorizeInspectorsForExteriorMeasurements($em, $cmdUtil, $csv, $admin, PedigreeAbbreviation::BdM);
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param array $csv
+     * @param $admin
+     * @param CommandUtil $cmdUtil
+     * @param string $pedigreeAbbreviation
+     */
+    private static function authorizeInspectorsForExteriorMeasurements(ObjectManager $em, CommandUtil $cmdUtil, array $csv, $admin, $pedigreeAbbreviation)
+    {
         if(is_int($admin)) {
             /** @var EmployeeRepository $employeeRepository */
             $employeeRepository = $em->getRepository(Employee::class);
@@ -212,7 +238,7 @@ class InspectorMigrator
             $admin = $employeeRepository->find($admin);
         }
 
-        $cmdUtil->setStartTimeAndPrintIt(count($csv) * 2, 1, 'Authorize inspectors for Texelaars');
+        $cmdUtil->setStartTimeAndPrintIt(count($csv) * 2, 1, 'Authorize inspectors for '.$pedigreeAbbreviation);
 
         $authorizations = 0;
         $inspectorCount = 0;
@@ -220,7 +246,14 @@ class InspectorMigrator
             $firstName = $row[0];
             $lastName = $row[1];
 
-            $authorizations += self::authorizeInspectorForExteriorMeasurementsTexelaar($em, $admin, $firstName, $lastName);
+            switch ($pedigreeAbbreviation) {
+                case PedigreeAbbreviation::BdM:
+                    $authorizations += self::authorizeInspectorForExteriorMeasurementsBdM($em, $admin, $firstName, $lastName);
+                    break;
+                case PedigreeAbbreviation::TES:
+                    $authorizations += self::authorizeInspectorForExteriorMeasurementsTexelaar($em, $admin, $firstName, $lastName);
+                    break;
+            }
             $inspectorCount++;
             $cmdUtil->advanceProgressBar(1, 'NewAuthorizations|InspectorsChecked: '.$authorizations.'|'.$inspectorCount);
         }
@@ -236,13 +269,41 @@ class InspectorMigrator
      * @param string $lastName
      * @return int
      */
+    private static function authorizeInspectorForExteriorMeasurementsBdM(ObjectManager $em, Employee $admin, $firstName, $lastName)
+    {
+        /** @var PedigreeRegisterRepository $inspectorAuthorizationRepository */
+        $pedigreeRegisterRepository = $em->getRepository(PedigreeRegister::class);
+
+        $pedigreeRegisterBdM = $pedigreeRegisterRepository->findOneBy(['abbreviation' => PedigreeAbbreviation::BdM]);
+
+        /** @var InspectorRepository $inspectorRepository */
+        $inspectorRepository = $em->getRepository(Inspector::class);
+
+        $count = 0;
+        /** @var Inspector $inspector */
+        $inspector = $inspectorRepository->findOneBy(['firstName' => $firstName, 'lastName' => $lastName]);
+        if($inspector != null) {
+            $count += self::authorizeInspector($em, $admin, $inspector, InspectorMeasurementType::EXTERIOR, $pedigreeRegisterBdM);
+            return $count;
+        }
+        return $count;
+    }
+
+
+    /**
+     * @param ObjectManager $em
+     * @param Employee $admin
+     * @param string $firstName
+     * @param string $lastName
+     * @return int
+     */
     private static function authorizeInspectorForExteriorMeasurementsTexelaar(ObjectManager $em, Employee $admin, $firstName, $lastName)
     {
         /** @var PedigreeRegisterRepository $inspectorAuthorizationRepository */
         $pedigreeRegisterRepository = $em->getRepository(PedigreeRegister::class);
 
-        $pedigreeRegisterTexelaarNTS = $pedigreeRegisterRepository->findOneBy(['abbreviation' => 'NTS']);
-        $pedigreeRegisterTexelaarTSNH = $pedigreeRegisterRepository->findOneBy(['abbreviation' => 'TSNH']);
+        $pedigreeRegisterTexelaarNTS = $pedigreeRegisterRepository->findOneBy(['abbreviation' => PedigreeAbbreviation::NTS]);
+        $pedigreeRegisterTexelaarTSNH = $pedigreeRegisterRepository->findOneBy(['abbreviation' => PedigreeAbbreviation::TSNH]);
 
         /** @var InspectorRepository $inspectorRepository */
         $inspectorRepository = $em->getRepository(Inspector::class);

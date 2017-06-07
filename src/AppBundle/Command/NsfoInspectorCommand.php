@@ -23,6 +23,7 @@ class NsfoInspectorCommand extends ContainerAwareCommand
     CONST NAME_CORRECTIONS = 'finder_name_corrections';
     CONST NEW_NAMES = 'finder_name_new';
     CONST AUTHORIZE_TEXELAAR = 'finder_authorize_texelaar';
+    CONST AUTHORIZE_BDM = 'finder_authorize_bdm';
 
     private $csvParsingOptions = array(
         'finder_in' => 'app/Resources/imports/',
@@ -30,6 +31,7 @@ class NsfoInspectorCommand extends ContainerAwareCommand
         'finder_name_corrections' => 'inspector_name_corrections.csv',
         'finder_name_new' => 'inspector_new_names.csv',
         'finder_authorize_texelaar' => 'authorize_inspectors_texelaar.csv',
+        'finder_authorize_bdm' => 'authorize_inspectors_bdm.csv',
         'ignoreFirstLine' => true
     );
 
@@ -100,9 +102,8 @@ class NsfoInspectorCommand extends ContainerAwareCommand
                 break;
 
             case 4:
-                $csv = $this->parseCSV(self::AUTHORIZE_TEXELAAR);
-                $admin = $this->cmdUtil->questionForAdminChoice($this->em, AccessLevelType::SUPER_ADMIN, false);
-                InspectorMigrator::authorizeInspectorsForExteriorMeasurementsTexelaar($this->em, $this->cmdUtil, $csv, $admin);
+                $this->authorizeTexelaarInspectors();
+                $this->authorizeBdmInspectors();
                 $output->writeln('DONE');
                 break;
             
@@ -118,6 +119,23 @@ class NsfoInspectorCommand extends ContainerAwareCommand
         }
 
     }
+
+
+    private function authorizeTexelaarInspectors()
+    {
+        $csv = $this->parseCSV(self::AUTHORIZE_TEXELAAR);
+        $admin = $this->cmdUtil->questionForAdminChoice($this->em, AccessLevelType::SUPER_ADMIN, false);
+        InspectorMigrator::authorizeInspectorsForExteriorMeasurementsTexelaar($this->em, $this->cmdUtil, $csv, $admin);
+    }
+
+
+    private function authorizeBdmInspectors()
+    {
+        $csv = $this->parseCSV(self::AUTHORIZE_BDM);
+        $admin = $this->cmdUtil->questionForAdminChoice($this->em, AccessLevelType::SUPER_ADMIN, false);
+        InspectorMigrator::authorizeInspectorsForExteriorMeasurementsBdm($this->em, $this->cmdUtil, $csv, $admin);
+    }
+
 
 
     /**
