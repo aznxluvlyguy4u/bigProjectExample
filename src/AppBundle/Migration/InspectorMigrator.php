@@ -471,4 +471,42 @@ class InspectorMigrator
     }
 
 
+    /**
+     * @param Connection $conn
+     * @param CommandUtil $cmdUtil
+     * @return int
+     */
+    public static function setIsAuthorizedNsfoInspectorByNTSAuthorization(Connection $conn, CommandUtil $cmdUtil)
+    {
+        $nts = "'".PedigreeAbbreviation::NTS."'";
+        $tsnh = "'".PedigreeAbbreviation::TSNH."'";
+
+        $sql = "UPDATE inspector SET is_authorized_nsfo_inspector = TRUE
+                WHERE id IN (
+                  SELECT i.id
+                  FROM inspector i
+                    INNER JOIN person p ON p.id = i.id
+                    INNER JOIN inspector_authorization auth ON i.id = auth.inspector_id
+                    INNER JOIN pedigree_register r ON r.id = auth.pedigree_register_id
+                  WHERE r.abbreviation = $nts AND i.is_authorized_nsfo_inspector = FALSE
+                )";
+        $newAuthorizationCount = SqlUtil::updateWithCount($conn, $sql);
+
+        $sql = "UPDATE inspector SET is_authorized_nsfo_inspector = FALSE
+                WHERE id IN (
+                  SELECT i.id
+                  FROM inspector i
+                    INNER JOIN person p ON p.id = i.id
+                    LEFT JOIN inspector_authorization auth ON i.id = auth.inspector_id
+                    LEFT JOIN pedigree_register r ON r.id = auth.pedigree_register_id
+                  WHERE
+                    ((r.abbreviation <> $nts AND r.abbreviation <> $tsnh) OR r.abbreviation ISNULL)
+                    AND i.is_authorized_nsfo_inspector = TRUE
+                )";
+        $removedAuthorizationCount = SqlUtil::updateWithCount($conn, $sql);
+
+        $cmdUtil->writeln('InspectorAuthorizations new|removed: '.$newAuthorizationCount.'|'.$removedAuthorizationCount);
+
+        return $removedAuthorizationCount + $newAuthorizationCount;
+    }
 }

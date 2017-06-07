@@ -76,7 +76,8 @@ class NsfoInspectorCommand extends ContainerAwareCommand
             '2: Add missing inspectors', "\n",
             '3: Fix duplicate inspectors', "\n",
             '4: Authorize inspectors', "\n",
-            '5: Generate inspectorCodes, if null', "\n",
+            '5: Set and Remove isAuthorizedNsfoInspector status by NTS authorization', "\n",
+            '6: Generate inspectorCodes, if null', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -106,8 +107,13 @@ class NsfoInspectorCommand extends ContainerAwareCommand
                 $this->authorizeBdmInspectors();
                 $output->writeln('DONE');
                 break;
-            
+
             case 5:
+                $updateCount = InspectorMigrator::setIsAuthorizedNsfoInspectorByNTSAuthorization($this->conn, $this->cmdUtil);
+                $output->writeln('DONE');
+                break;
+
+            case 6:
                 $updateCount = InspectorMigrator::generateInspectorCodes($this->conn);
                 $result = $updateCount == 0 ? 'No new inspectorCodes added' : $updateCount.' new inspectorCodes added!' ;
                 $output->writeln($result);
