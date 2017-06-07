@@ -38,8 +38,10 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                 $parsedBreedCode = self::getBlankBreedCodes();
             }
 
+            $formattedUln = MixBlupSetting::INCLUDE_ULNS ? self::getFormattedUln($data) : '';
+
             $record =
-                self::getFormattedUln($data).
+                $formattedUln.
                 self::getFormattedAnimalId($data).
                 self::getFormattedAge($data, JsonInputConstant::AGE).
                 self::getFormattedGenderFromType($data).

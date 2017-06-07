@@ -46,8 +46,10 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
                 //TODO
             }
 
+            $formattedUln = MixBlupSetting::INCLUDE_ULNS ? self::getFormattedUln($data) : '';
+
             $record =
-            self::getFormattedUln($data).
+            $formattedUln.
             self::getFormattedAnimalId($data).
             self::getFormattedGenderFromType($data).
             self::getFormattedYearAndUbnOfBirth($data, $dynamicColumnWidths[JsonInputConstant::YEAR_AND_UBN_OF_BIRTH]).

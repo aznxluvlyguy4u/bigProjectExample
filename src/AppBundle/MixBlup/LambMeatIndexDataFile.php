@@ -107,8 +107,11 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
             $parsedBreedCode = self::parseBreedCode($data);
 
             if($parsedBreedCode) {
+
+                $formattedUln = MixBlupSetting::INCLUDE_ULNS ? self::getFormattedUln($data) : '';
+
                 $recordBase =
-                    self::getFormattedUln($data).
+                    $formattedUln.
                     self::getFormattedAnimalId($data).
                     self::getFormattedMotherId($data).
                     self::getFormattedYearAndUbnOfBirth($data, $dynamicColumnWidths[JsonInputConstant::YEAR_AND_UBN_OF_BIRTH]).
