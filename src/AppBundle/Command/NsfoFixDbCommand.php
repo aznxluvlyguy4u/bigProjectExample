@@ -59,6 +59,7 @@ class NsfoFixDbCommand extends ContainerAwareCommand
             '=====================================', "\n",
             '2: Fix incongruent animalOrderNumbers', "\n",
             '3: Fix incongruent genders vs Ewe/Ram/Neuter records', "\n",
+            '4: Fix incorrect neuters with ulns matching unassigned tags for given locationId (NOTE! tagsync first!)', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -76,6 +77,18 @@ class NsfoFixDbCommand extends ContainerAwareCommand
             case 3:
                 DatabaseDataFixer::fixGenderTables($this->conn, $this->cmdUtil);
                 $output->writeln('Done!');
+                break;
+
+            case 4:
+                do {
+                    $locationId = $this->cmdUtil->generateQuestion('Insert locationId', null);
+                    if(ctype_digit($locationId)) {
+                        $locationId = intval($locationId);
+                    }
+                } while (!is_int($locationId));
+
+                $animalsDeleted = DatabaseDataFixer::deleteIncorrectNeutersFromRevokedBirths($this->conn, $locationId);
+                $output->writeln('Done! ' . $animalsDeleted . ' animals deleted');
                 break;
 
             default:

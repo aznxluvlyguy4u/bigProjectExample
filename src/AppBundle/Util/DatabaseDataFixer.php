@@ -174,4 +174,41 @@ class DatabaseDataFixer
 
         $cmdUtilOrOutput->writeln('-------------------------');
     }
+
+
+    /**
+     * @param Connection $conn
+     * @param int $locationId
+     * @return int
+     */
+    public static function deleteIncorrectNeutersFromRevokedBirths(Connection $conn, $locationId)
+    {
+        if(!is_int($locationId) || !ctype_digit($locationId)) { return null; }
+
+        $sql = "DELETE FROM animal_residence
+                WHERE animal_id IN (
+                  SELECT id
+                  FROM animal
+                  WHERE CONCAT(uln_country_code, uln_number) IN (
+                    SELECT CONCAT(uln_country_code, uln_number) FROM tag t
+                    WHERE tag_status = 'UNASSIGNED' AND location_id = $locationId
+                  ) AND location_id = $locationId
+                        AND name ISNULL
+                        AND pedigree_number ISNULL
+                        AND type = 'Neuter'
+                )";
+        $animalResidencesDeleted = SqlUtil::updateWithCount($conn, $sql);
+
+        $sql = "DELETE FROM animal
+                WHERE CONCAT(uln_country_code, uln_number) IN (
+                  SELECT CONCAT(uln_country_code, uln_number) FROM tag t
+                  WHERE tag_status = 'UNASSIGNED' AND location_id = $locationId
+                ) AND location_id = $locationId
+                AND name ISNULL
+                AND pedigree_number ISNULL
+                AND type = 'Neuter'";
+        $animalsDeleted = SqlUtil::updateWithCount($conn, $sql);
+
+        return $animalsDeleted;
+    }
 }
