@@ -2,9 +2,12 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Entity\TagSyncErrorLog;
+use AppBundle\Entity\TagSyncErrorLogRepository;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -12,10 +15,20 @@ use Symfony\Component\Console\Output\OutputInterface;
 class NsfoDbInfoCommand extends ContainerAwareCommand
 {
     const TITLE = 'Info on current connected database';
+    const DEFAULT_OPTION = 0;
 
-    /** @var ObjectManager $em */
+    /** @var CommandUtil */
+    private $cmdUtil;
+    /** @var OutputInterface */
+    private $output;
+    /** @var ObjectManager */
     private $em;
-    
+    /** @var Connection */
+    private $conn;
+
+    /** @var TagSyncErrorLogRepository */
+    private $tagSyncErrorLogRepository;
+
     protected function configure()
     {
         $this
@@ -27,15 +40,62 @@ class NsfoDbInfoCommand extends ContainerAwareCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         /** @var ObjectManager $em */
-        $em = $this->getContainer()->get('doctrine')->getManager();
-        $this->em = $em;
+        $this->em = $this->getContainer()->get('doctrine')->getManager();
+        $this->conn = $this->em->getConnection();
+        $helper = $this->getHelper('question');
+        $this->cmdUtil = new CommandUtil($input, $output, $helper);
+        $this->output = $output;
+        $this->tagSyncErrorLogRepository = $this->em->getRepository(TagSyncErrorLog::class);
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
-        
-        $output->writeln(DoctrineUtil::getDatabaseHostAndNameString($em));
+        $output->writeln(DoctrineUtil::getDatabaseHostAndNameString($this->em));
 
+        $option = $this->cmdUtil->generateMultiLineQuestion([
+            'Choose option: ', "\n",
+            '1: List animalSyncs with tags blocked by existing animals', "\n",
+            '2: Get sql filter query by RetrieveAnimalId', "\n",
+            'abort (other)', "\n"
+        ], self::DEFAULT_OPTION);
+
+        switch ($option) {
+            case 1:
+                $this->cmdUtil->writeln(['retrieveAnimalsId' => 'blockingAnimalsCount']);
+                $this->cmdUtil->writeln($this->tagSyncErrorLogRepository->listRetrieveAnimalIds());
+                $output->writeln('Done!');
+                break;
+
+            case 2:
+                $retrieveAnimalsId = $this->requestRetrieveAnimalsId();
+                $this->cmdUtil->writeln($this->tagSyncErrorLogRepository->getQueryFilterByRetrieveAnimalIds($retrieveAnimalsId));
+                $output->writeln('Done!');
+                break;
+
+            default:
+                $output->writeln('ABORTED');
+                break;
+        }
     }
-    
 
+
+    /**
+     * @return string
+     */
+    private function requestRetrieveAnimalsId()
+    {
+        $listRetrieveAnimalsId = $this->tagSyncErrorLogRepository->listRetrieveAnimalIds();
+        do {
+            $this->cmdUtil->writeln('Valid RetrieveAnimalsIds by blockingAnimalsCount:');
+            $this->cmdUtil->writeln($listRetrieveAnimalsId);
+            $this->cmdUtil->writeln('-------------');
+            $retrieveAnimalsId = $this->cmdUtil->generateQuestion('Insert RetrieveAnimalsId', 0);
+
+            $isInvalidRetrieveAnimalsId = !key_exists($retrieveAnimalsId, $listRetrieveAnimalsId);
+            if($isInvalidRetrieveAnimalsId) {
+                $this->cmdUtil->writeln('Inserted RetrieveAnimalsId is invalid!');
+            }
+
+        } while($isInvalidRetrieveAnimalsId);
+        return $retrieveAnimalsId;
+    }
 }
