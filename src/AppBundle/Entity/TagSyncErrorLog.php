@@ -70,6 +70,14 @@ class TagSyncErrorLog
      */
     private $isBlankNeuter;
 
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $isFixed;
+
 
     /**
      * TagSyncErrorLog constructor.
@@ -81,6 +89,7 @@ class TagSyncErrorLog
         $this->logDate = new \DateTime();
         $this->retrieveTags = $retrieveTags;
         $this->setBlockingAnimal($animal);
+        $this->isFixed = false;
     }
 
     /**
@@ -208,6 +217,24 @@ class TagSyncErrorLog
     public function setIsBlankNeuter($isBlankNeuter)
     {
         $this->isBlankNeuter = $isBlankNeuter;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFixed()
+    {
+        return $this->isFixed;
+    }
+
+    /**
+     * @param bool $isFixed
+     * @return TagSyncErrorLog
+     */
+    public function setIsFixed($isFixed)
+    {
+        $this->isFixed = $isFixed;
         return $this;
     }
 
