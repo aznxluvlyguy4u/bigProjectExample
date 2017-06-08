@@ -5,14 +5,13 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\GenderType;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\DependencyInjection\Tests\Compiler\A;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class TagSyncErrorLog
  *
- * @ORM\Entity(repositoryClass="AppBundle\Entity")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\TagSyncErrorLogRepository")
  * @package AppBundle\Entity
  */
 class TagSyncErrorLog
