@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\ColumnType;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -413,5 +414,26 @@ class SqlUtil
                 )
                 SELECT COUNT(*) AS count FROM rows;";
         return $conn->query($sql)->fetch()['count'];
+    }
+
+
+    /**
+     * @param array $results
+     * @return string
+     */
+    public static function getUlnQueryFilter(array $results)
+    {
+        $filterString = '';
+        $prefix = '';
+        foreach ($results as $result)
+        {
+            $ulnCountryCode = $result[JsonInputConstant::ULN_COUNTRY_CODE];
+            $ulnNumber = $result[JsonInputConstant::ULN_NUMBER];
+
+            $filterString = $filterString . $prefix . '(uln_country_code = \''.$ulnCountryCode
+                                                    .'\' AND uln_number = \''.$ulnNumber.'\')';
+            $prefix = ' OR ';
+        }
+        return $filterString;
     }
 }
