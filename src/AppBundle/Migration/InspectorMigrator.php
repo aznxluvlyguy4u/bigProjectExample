@@ -23,7 +23,9 @@ use Doctrine\DBAL\Connection;
 
 class InspectorMigrator
 {
-    const INSPECTOR_CODE_PREFIX = 'NSFO';
+    //Inspectors prefixes should be 4 chars length
+    const NSFO_INSPECTOR_CODE_PREFIX = 'NSFO';
+    const EXTERNAL_INSPECTOR_CODE_PREFIX = 'EXT0';
 
     /**
      * @param Connection $conn
@@ -409,23 +411,74 @@ class InspectorMigrator
      */
     public static function generateInspectorCodes(Connection $conn)
     {
+        $updateCount = self::generateNsfoInspectorCodes($conn);
+        $updateCount += self::generateExternalInspectorCodes($conn);
+
+        return $updateCount;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     */
+    private static function generateNsfoInspectorCodes(Connection $conn)
+    {
         $sql = "SELECT id, RANK() OVER (ORDER BY id ASC) AS inspector_ordinal
                 FROM inspector WHERE is_authorized_nsfo_inspector AND (inspector_code ISNULL OR inspector_code = '')";
         $inspectorRanksById = $conn->query($sql)->fetchAll();
 
         if(count($inspectorRanksById) == 0) { return 0; }
-        
-        $maxInspectorCode = self::findMaxInspectorCode($conn);
+
+        $maxInspectorCode = self::findMaxNsfoInspectorCode($conn);
 
         $updateString = '';
         $separator = '';
         foreach ($inspectorRanksById as $inspectorRankById) {
             $inspectorId = $inspectorRankById['id'];
             $rank = $inspectorRankById['inspector_ordinal'];
-            $updateString = $updateString.$separator.'('.$inspectorId.",'".self::buildInspectorCode($rank, $maxInspectorCode)."')";
+            $updateString = $updateString.$separator.'('.$inspectorId.",'".self::buildNsfoInspectorCode($rank, $maxInspectorCode)."')";
             $separator = ',';
         }
-        
+
+        $sql = "UPDATE inspector SET inspector_code = v.inspector_code
+                FROM (
+                  VALUES ".$updateString."
+                     ) AS v(id, inspector_code) WHERE inspector.id = v.id";
+        return SqlUtil::updateWithCount($conn, $sql);
+    }
+
+
+    /**
+     * NOTE! Only external inspectors for which the exterior measurements should be included in the MiXBLUP process,
+     * should get an inspector code.
+     * 
+     * @param Connection $conn
+     * @return int
+     */
+    private static function generateExternalInspectorCodes(Connection $conn)
+    {
+        $sql = "SELECT i.id, RANK() OVER (ORDER BY i.id ASC) AS inspector_ordinal
+                FROM inspector i
+                  INNER JOIN inspector_authorization auth ON auth.inspector_id = i.id
+                  INNER JOIN pedigree_register r ON r.id = auth.pedigree_register_id
+                WHERE i.is_authorized_nsfo_inspector = FALSE AND (i.inspector_code ISNULL OR i.inspector_code = '')
+                  AND r.abbreviation = '".PedigreeAbbreviation::BdM."'";
+        $inspectorRanksById = $conn->query($sql)->fetchAll();
+
+        if(count($inspectorRanksById) == 0) { return 0; }
+
+        $maxInspectorCode = self::findMaxExternalInspectorCode($conn);
+
+        $updateString = '';
+        $separator = '';
+        foreach ($inspectorRanksById as $inspectorRankById) {
+            $inspectorId = $inspectorRankById['id'];
+            $rank = $inspectorRankById['inspector_ordinal'];
+            $updateString = $updateString.$separator.'('.$inspectorId.",'".self::buildExternalInspectorCode($rank, $maxInspectorCode)."')";
+            $separator = ',';
+        }
+
         $sql = "UPDATE inspector SET inspector_code = v.inspector_code
                 FROM (
                   VALUES ".$updateString."
@@ -438,9 +491,9 @@ class InspectorMigrator
      * @param Connection $conn
      * @return string
      */
-    public static function getNewInspectorCode(Connection $conn)
+    public static function getNewNsfoInspectorCode(Connection $conn)
     {
-        return self::buildInspectorCode(1, self::findMaxInspectorCode($conn));
+        return self::buildNsfoInspectorCode(1, self::findMaxNsfoInspectorCode($conn));
     }
 
 
@@ -449,25 +502,72 @@ class InspectorMigrator
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    public static function findMaxInspectorCode(Connection $conn)
+    public static function findMaxNsfoInspectorCode(Connection $conn)
     {
+        return self::findMaxInspectorCode($conn, true);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public static function findMaxExternalInspectorCode(Connection $conn)
+    {
+        return self::findMaxInspectorCode($conn, false);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param bool $isAuthorizedNsfoInspector
+     * @return mixed
+     */
+    private static function findMaxInspectorCode(Connection $conn, $isAuthorizedNsfoInspector = true)
+    {
+        $filter = $isAuthorizedNsfoInspector ? '' : ' = FALSE';
+
         $sql = "SELECT coalesce(
                     MAX(CAST(substr(inspector_code, length(inspector_code)-2, length(inspector_code)) AS INTEGER)), 
                     0) as max
-                FROM inspector WHERE (inspector_code NOTNULL AND inspector_code <> '')";
+                FROM inspector WHERE (inspector_code NOTNULL AND inspector_code <> '') AND is_authorized_nsfo_inspector".$filter;
         return $conn->query($sql)->fetch()['max'];
     }
 
 
     /**
-     * @param int $emptyRank
-     * @param int $currentMaxOrdinal
+     * @param $emptyRank
+     * @param $currentMaxOrdinal
      * @return string
      */
-    public static function buildInspectorCode($emptyRank, $currentMaxOrdinal)
+    public static function buildNsfoInspectorCode($emptyRank, $currentMaxOrdinal)
+    {
+        return self::buildInspectorCode(self::NSFO_INSPECTOR_CODE_PREFIX, $emptyRank, $currentMaxOrdinal);
+    }
+
+
+    /**
+     * @param $emptyRank
+     * @param $currentMaxOrdinal
+     * @return string
+     */
+    public static function buildExternalInspectorCode($emptyRank, $currentMaxOrdinal)
+    {
+        return self::buildInspectorCode(self::EXTERNAL_INSPECTOR_CODE_PREFIX, $emptyRank, $currentMaxOrdinal);
+    }
+
+
+    /**
+     * @param $prefix
+     * @param $emptyRank
+     * @param $currentMaxOrdinal
+     * @return string
+     */
+    public static function buildInspectorCode($prefix, $emptyRank, $currentMaxOrdinal)
     {
         $inspectorCodeOrdinal = str_pad($emptyRank + $currentMaxOrdinal, 3, 0, STR_PAD_LEFT);
-        return self::INSPECTOR_CODE_PREFIX.$inspectorCodeOrdinal;
+        return $prefix.$inspectorCodeOrdinal;
     }
 
 
