@@ -64,8 +64,8 @@ abstract class MixBlupInstructionFileBase
             ' CovFL      R #rasdeel Flevolander',  //Flevolander
             ' CovHD      R #rasdeel Hampshire Down',  //Hampshire Down
             ' CovOV      R #overige rasdelen',  //other  (NN means unknown, also include it here)
-            ' CovHet     T #Heterosis van het dier',
-            ' CovRec     T #Recombinatie van het dier',
+            ' CovHet     R #Heterosis van het dier',
+            ' CovRec     R #Recombinatie van het dier',
         ];
     }
 
