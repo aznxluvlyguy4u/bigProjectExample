@@ -14,7 +14,6 @@ use Doctrine\DBAL\Connection;
 
 class GeneDiversityUpdater
 {
-    const UPDATE_FILTER = "updated_gene_diversity = FALSE ";
     const BATCH_SIZE = 100000;
 
     /**
@@ -27,11 +26,18 @@ class GeneDiversityUpdater
     {
         $updateCount = 0;
 
-        $updateCount += self::updateAnimalsAndLittersWithAMissingParent($conn, $recalculateAllValues);
-        $updateCount += self::updateAnimalsAndLittersHaveBothParentsWhereBreedCodeIsMissingFromAParent($conn, $recalculateAllValues);
+        if($recalculateAllValues) {
+            $conn->exec("UPDATE litter SET updated_gene_diversity = FALSE WHERE updated_gene_diversity = TRUE");
+            $conn->exec("UPDATE animal SET updated_gene_diversity = FALSE WHERE updated_gene_diversity = TRUE");
+        }
+
+        $updateCount += self::updateAnimalsAndLittersWithAMissingParent($conn);
+        $updateCount += self::updateAnimalsAndLittersHaveBothParentsWhereBreedCodeIsMissingFromAParent($conn);
 
         $updateCount += self::updateAllInAnimal($conn, $recalculateAllValues, null, $cmdUtil, false);
         $updateCount += self::updateAllInLitter($conn, $recalculateAllValues, null, $cmdUtil, false);
+
+        $updateCount += self::updateLittersWithPureBredOffspring($conn, false);
         
         if($cmdUtil) { $cmdUtil->writeln('UpdateCount: '.$updateCount); }
         return $updateCount;
@@ -52,8 +58,8 @@ class GeneDiversityUpdater
 
         $updateCount = 0;
 
-        $updateCount += self::updateAnimalsAndLittersWithAMissingParent($conn, $recalculateAllValues);
-        $updateCount += self::updateAnimalsAndLittersHaveBothParentsWhereBreedCodeIsMissingFromAParent($conn, $recalculateAllValues);
+        $updateCount += self::updateAnimalsAndLittersWithAMissingParent($conn);
+        $updateCount += self::updateAnimalsAndLittersHaveBothParentsWhereBreedCodeIsMissingFromAParent($conn);
 
         $sql = "SELECT id FROM animal
                 WHERE parent_father_id = ".$parentId." OR parent_mother_id = ".$parentId;
@@ -68,6 +74,8 @@ class GeneDiversityUpdater
         $litterIds = SqlUtil::groupSqlResultsGroupedBySingleVariable('id', $results)['id'];
         $updateCount += self::updateByLitterIds($conn, $litterIds, $recalculateAllValues, null, $cmdUtil, false);
 
+        $updateCount += self::updateLittersWithPureBredOffspring($conn, false);
+
         if($cmdUtil) { $cmdUtil->writeln('UpdateCount: '.$updateCount); }
 
         return $updateCount;
@@ -76,16 +84,25 @@ class GeneDiversityUpdater
 
     /**
      * @param Connection $conn
-     * @param boolean $recalculateAllValues
      * @return int
      */
-    private static function updateAnimalsAndLittersWithAMissingParent(Connection $conn, $recalculateAllValues = false)
+    private static function updateAnimalsAndLittersWithAMissingParent(Connection $conn)
     {
-        $filter = $recalculateAllValues ? ' ' : ' AND '.self::UPDATE_FILTER;
+        $filter = ' AND updated_gene_diversity = FALSE ';
         $updateCount = 0;
 
+        //First update values of PURE BRED animals indicated by a 100% breed part in animal and litter
+        $sql = "UPDATE animal SET heterosis = 0, recombination = 0, updated_gene_diversity = TRUE
+                WHERE substr(breed_code, 3, 3) = '100' AND length(breed_code) = 5
+                    AND (parent_father_id ISNULL OR parent_mother_id ISNULL) ";
+        $updateCount += SqlUtil::updateWithCount($conn, $sql.$filter);
+
+        $updateCount += self::updateLittersWithPureBredOffspring($conn, true);
+
+        //Then update the values for animals with missing breedcode data
         $sql = "UPDATE animal SET updated_gene_diversity = TRUE, heterosis = NULL, recombination = NULL
-                WHERE (parent_father_id ISNULL OR parent_mother_id ISNULL) ";
+                WHERE (NOT(substr(breed_code, 3, 3) = '100' AND length(breed_code) = 5) OR breed_code ISNULL)
+                    AND (parent_father_id ISNULL OR parent_mother_id ISNULL) ";
         $updateCount += SqlUtil::updateWithCount($conn, $sql.$filter);
 
         $sql = "UPDATE litter SET updated_gene_diversity = TRUE, heterosis = NULL, recombination = NULL
@@ -98,12 +115,33 @@ class GeneDiversityUpdater
 
     /**
      * @param Connection $conn
-     * @param boolean $recalculateAllValues
+     * @param bool $onlyIfAParentIsMissing
      * @return int
      */
-    private static function updateAnimalsAndLittersHaveBothParentsWhereBreedCodeIsMissingFromAParent(Connection $conn, $recalculateAllValues = false)
+    private static function updateLittersWithPureBredOffspring(Connection $conn, $onlyIfAParentIsMissing = true)
     {
-        $filter = $recalculateAllValues ? ' ' : ' AND '.self::UPDATE_FILTER;
+        $parentFilter = $onlyIfAParentIsMissing ? '' : ' AND (l.animal_mother_id ISNULL OR l.animal_father_id ISNULL) ';
+
+        $sql = "UPDATE litter SET heterosis = 0, recombination = 0, updated_gene_diversity = TRUE
+                WHERE id IN (
+                  SELECT a.litter_id
+                  FROM animal a
+                    LEFT JOIN litter l ON l.id = a.litter_id
+                  WHERE substr(breed_code, 3, 3) = '100' AND length(a.breed_code) = 5 $parentFilter
+                        AND l.heterosis ISNULL OR l.recombination ISNULL AND l.updated_gene_diversity = FALSE 
+                  GROUP BY litter_id
+                )";
+        return SqlUtil::updateWithCount($conn, $sql);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @return int
+     */
+    private static function updateAnimalsAndLittersHaveBothParentsWhereBreedCodeIsMissingFromAParent(Connection $conn)
+    {
+        $filter = ' AND updated_gene_diversity = FALSE ';
         $updateCount = 0;
 
         $sql = "UPDATE animal SET updated_gene_diversity = TRUE, heterosis = NULL, recombination = NULL
@@ -202,8 +240,8 @@ class GeneDiversityUpdater
     {
         $markedBlanksUpdateCount = 0;
         if($markBlanks) {
-            $markedBlanksUpdateCount += self::updateAnimalsAndLittersWithAMissingParent($conn, $recalculateAllValues);
-            $markedBlanksUpdateCount += self::updateAnimalsAndLittersHaveBothParentsWhereBreedCodeIsMissingFromAParent($conn, $recalculateAllValues);
+            $markedBlanksUpdateCount += self::updateAnimalsAndLittersWithAMissingParent($conn);
+            $markedBlanksUpdateCount += self::updateAnimalsAndLittersHaveBothParentsWhereBreedCodeIsMissingFromAParent($conn);
             if($cmdUtil) { $cmdUtil->writeln($markedBlanksUpdateCount.' blanks marked/updated'); }
         }
 
@@ -213,19 +251,20 @@ class GeneDiversityUpdater
             if($recalculateAllValues) {
                 $filter = ' WHERE '.$idFilterString;
             } else {
-                $filter = ' WHERE c.'.self::UPDATE_FILTER.' AND '.$idFilterString;
+                $filter = ' WHERE c.updated_gene_diversity = FALSE AND '.$idFilterString;
             }
         } else {
             if($recalculateAllValues) {
                 $filter = '';
             } else {
-                $filter = ' WHERE c.'.self::UPDATE_FILTER;
+                $filter = ' WHERE c.updated_gene_diversity = FALSE ';
             }
         }
 
         switch ($tableName) {
             case 'animal':
-                $sql = "SELECT c.id, c.heterosis, c.recombination, f.breed_code as breed_code_father, m.breed_code as breed_code_mother
+                $sql = "SELECT c.id, c.heterosis, c.recombination, f.breed_code as breed_code_father, m.breed_code as breed_code_mother,
+                                substr(c.breed_code, 3, 3) = '100' AND length(c.breed_code) = 5 as is_pure_bred
                 FROM animal c
                   LEFT JOIN animal f ON f.id = c.parent_father_id
                   LEFT JOIN animal m ON m.id = c.parent_mother_id 
@@ -234,10 +273,17 @@ class GeneDiversityUpdater
                 break;
 
             case 'litter':
-                $sql = "SELECT c.id, c.heterosis, c.recombination, f.breed_code as breed_code_father, m.breed_code as breed_code_mother
+                $sql = "SELECT c.id, c.heterosis, c.recombination, f.breed_code as breed_code_father,
+                                m.breed_code as breed_code_mother, is_pure_bred
                 FROM litter c
                   LEFT JOIN animal f ON f.id = c.animal_father_id
                   LEFT JOIN animal m ON m.id = c.animal_mother_id 
+                  LEFT JOIN (
+                      SELECT a.litter_id, substr(min(a.breed_code), 3, 3) = '100' AND length(min(a.breed_code)) = 5 as is_pure_bred
+                        FROM animal a
+                          LEFT JOIN litter l ON l.id = a.litter_id
+                        GROUP BY litter_id
+                  )offspring ON offspring.litter_id = c.id
                   ".$filter." 
                 ORDER BY c.litter_date ASC";
                 break;
@@ -269,9 +315,19 @@ class GeneDiversityUpdater
             $breedCodeStringMother = $result['breed_code_mother'];
             $currentHeterosis = $result['heterosis'];
             $currentRecombination = $result['recombination'];
+            $isPureBred = $result['is_pure_bred'];
             $geneDiversityValues = HeterosisAndRecombinationUtil::getHeterosisAndRecombinationBy8Parts($breedCodeStringFather, $breedCodeStringMother, $roundingAccuracy);
-            $heterosisValue = $geneDiversityValues != null ? ArrayUtil::get(ReportLabel::HETEROSIS, $geneDiversityValues) : 'NULL';
-            $recombinationValue = $geneDiversityValues != null ? ArrayUtil::get(ReportLabel::RECOMBINATION, $geneDiversityValues) : 'NULL';
+
+            if($geneDiversityValues != null) {
+                $heterosisValue = ArrayUtil::get(ReportLabel::HETEROSIS, $geneDiversityValues);
+                $recombinationValue = ArrayUtil::get(ReportLabel::RECOMBINATION, $geneDiversityValues);
+            } elseif($isPureBred) {
+                $heterosisValue = 0;
+                $recombinationValue = 0;
+            } else {
+                $heterosisValue = 'NULL';
+                $recombinationValue = 'NULL';
+            }
 
             if(NumberUtil::areFloatsEqual($currentHeterosis, $heterosisValue) && NumberUtil::areFloatsEqual($currentRecombination, $recombinationValue)) {
                 $idsUpdateArray[] = $id;
@@ -298,6 +354,11 @@ class GeneDiversityUpdater
             }
         }
         if($cmdUtil) { $cmdUtil->setEndTimeAndPrintFinalOverview(); }
+
+        if($markBlanks) {
+            $markedBlanksUpdateCount += self::updateLittersWithPureBredOffspring($conn, false);
+            if($cmdUtil) { $cmdUtil->writeln($markedBlanksUpdateCount.' blanks marked/updated'); }
+        }
 
         return $updatedCount + $markedBlanksUpdateCount;
     }
