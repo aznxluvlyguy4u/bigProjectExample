@@ -4,12 +4,17 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Component\Builder\CsvOptions;
 use AppBundle\Constant\Filename;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\BreedValueType;
 use AppBundle\Enumerator\MixBlupBreedValueType;
 use AppBundle\Setting\MixBlupFolder;
 use AppBundle\Setting\MixBlupInstructionFile;
+use AppBundle\Setting\MixBlupParseInstruction;
 use AppBundle\Setting\MixBlupSetting;
+use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\CsvParser;
 use AppBundle\Util\FilesystemUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
@@ -25,6 +30,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     const TEST_WITH_DOWNLOADED_ZIPS = false;
     const PURGE_ZIP_FOLDER_AFTER_SUCCESSFUL_RUN = false;
     const ONLY_UNZIP_SOLANI_AND_RELANI = false;
+
+    const BATCH_SIZE = 10000;
 
     /** @var Filesystem */
     private $fs;
@@ -60,6 +67,24 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     /** @var array */
     private $errors;
 
+    /** @var array */
+    private $solani1;
+    /** @var array */
+    private $solani2;
+    /** @var array */
+    private $solani3;
+    /** @var array */
+    private $relani1;
+    /** @var array */
+    private $relani2;
+    /** @var array */
+    private $relani3;
+
+    /** @var boolean */
+    private $useSolani2;
+    /** @var boolean */
+    private $useSolani3;
+
     /** @var int */
     private $totalFilesToDownload;
     /** @var array */
@@ -94,7 +119,9 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
         $this->fs = new Filesystem();
         $this->zip = new \ZipArchive();
-        
+
+        $this->resetSolaniAndRelaniArrays();
+
         $this->mixBlupProcesses = [];
         //TODO include actual processes
         $this->mixBlupProcesses[BreedValueType::BIRTH] = null;
@@ -110,6 +137,19 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $this->mixBlupProcesses[BreedValueType::LAMB_MEAT] = null;
         $this->mixBlupProcesses[BreedValueType::TAIL_LENGTH] = null;
         $this->mixBlupProcesses[BreedValueType::WORM] = null;
+    }
+
+
+    private function resetSolaniAndRelaniArrays()
+    {
+        $this->solani1 = [];
+        $this->solani2 = [];
+        $this->solani3 = [];
+        $this->relani1 = [];
+        $this->relani2 = [];
+        $this->relani3 = [];
+        $this->useSolani2 = false;
+        $this->useSolani3 = false;
     }
 
 
@@ -160,6 +200,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                                     && file_exists($this->getResultsFolder() . Filename::RELANI);
 
                     if($successfulUnzip) {
+
+                        $this->resetSolaniAndRelaniArrays();
 
                         //TODO
                         $this->parseSolaniFiles();
@@ -276,25 +318,112 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     
     private function parseSolaniFiles()
     {
-        switch ($this->currentBreedType) {
-            //TODO
+        $ssv = CsvParser::parseSpaceSeparatedFile($this->getResultsFolder(), Filename::SOLANI);
+
+        $setting = MixBlupParseInstruction::get($this->currentBreedType);
+        //NOTE! Atleast $animalIdRow and $solani
+        $animalIdRow = ArrayUtil::get(JsonInputConstant::ANIMAL_ID, $setting);
+        $solani1Row = ArrayUtil::get(JsonInputConstant::SOLANI_1, $setting);
+        $solani2Row = ArrayUtil::get(JsonInputConstant::SOLANI_2, $setting);
+        $solani3Row = ArrayUtil::get(JsonInputConstant::SOLANI_3, $setting);
+
+        foreach ($ssv as $row) {
+
+            $animalId = $row[$animalIdRow];
+
+            $this->solani1[$animalId] = $row[$solani1Row];
+
+            if(is_int($solani2Row)) {
+                $this->solani2[$animalId] = $row[$solani2Row];
+            }
+
+            if(is_int($solani3Row)) {
+                $this->solani3[$animalId] = $row[$solani3Row];
+            }
         }
     }
     
     
     private function parseRelaniFiles()
     {
-        switch ($this->currentBreedType) {
-            //TODO
+        $ssv = CsvParser::parseSpaceSeparatedFile($this->getResultsFolder(), Filename::RELANI);
+
+        $setting = MixBlupParseInstruction::get($this->currentBreedType);
+        //NOTE! Atleast $animalIdRow and $solani
+        $animalIdRow = ArrayUtil::get(JsonInputConstant::ANIMAL_ID, $setting);
+        $relani1Row = ArrayUtil::get(JsonInputConstant::RELANI_1, $setting);
+        $relani2Row = ArrayUtil::get(JsonInputConstant::RELANI_2, $setting);
+        $relani3Row = ArrayUtil::get(JsonInputConstant::RELANI_3, $setting);
+
+        foreach ($ssv as $row) {
+
+            $animalId = $row[$animalIdRow];
+
+            $this->relani1[$animalId] = $row[$relani1Row];
+
+            if(is_int($relani2Row)) {
+                $this->relani2[$animalId] = $row[$relani2Row];
+            }
+
+            if(is_int($relani3Row)) {
+                $this->relani3[$animalId] = $row[$relani3Row];
+            }
         }
     }
 
 
     private function processBreedValues()
     {
-        switch ($this->currentBreedType) {
-            //TODO
+        $animalIds = array_keys($this->solani1);
+
+        $this->useSolani2 = count($this->solani2) > 0;
+        $this->useSolani3 = count($this->solani3) > 0;
+
+        $sqlBatchString = '';
+        $counter = 0;
+        $batchCounter = 0;
+        foreach ($animalIds as $animalId) {
+            $breedValueInsertString = $this->processBreedValue($animalId);
+            if($breedValueInsertString != null) {
+                $sqlBatchString = $sqlBatchString . $breedValueInsertString;
+                $counter++;
+                $batchCounter++;
+            }
+
+            if($counter%self::BATCH_SIZE == 0 && $counter != 0) {
+                //TODO persist per batchsize
+                $sqlBatchString = '';
+                $batchCounter = 0;
+            }
         }
+
+        //TODO persist
+    }
+
+
+    /**
+     * TODO Use values to calculate the breedValue for the specific animal and create an sql insert query for it.
+     *
+     * @param $animalId
+     * @return string
+     */
+    private function processBreedValue($animalId)
+    {
+        $this->currentBreedType;
+        $solani1 = ArrayUtil::get($animalId, $this->solani1);
+        $relani1 = ArrayUtil::get($animalId, $this->relani1);
+
+        if($this->useSolani2) {
+            $solani2 = ArrayUtil::get($animalId, $this->solani2);
+            $relani2 = ArrayUtil::get($animalId, $this->relani2);
+        }
+
+        if($this->useSolani3) {
+            $solani3 = ArrayUtil::get($animalId, $this->solani3);
+            $relani3 = ArrayUtil::get($animalId, $this->relani3);
+        }
+
+        return '';//TODO sqlBatchInsertString
     }
 
 
