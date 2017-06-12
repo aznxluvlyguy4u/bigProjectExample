@@ -75,4 +75,33 @@ class CsvParser
         return $data;
     }
 
+
+    /**
+     * @param string $inputFolder
+     * @param string $fileName
+     * @return array
+     */
+    public static function parseSpaceSeparatedFile($inputFolder, $fileName)
+    {
+        $csvOption = (new CsvOptions())
+            ->setPipeSeparator()
+            ->includeFirstLine()
+            ->setInputFolder($inputFolder)
+            ->setFileName($fileName)
+        ;
+
+        $encapsulatedRows = self::parse($csvOption);
+
+        $results = [];
+        foreach ($encapsulatedRows as $encapsulatedRow) {
+            $row = ArrayUtil::get(0, $encapsulatedRow);
+            if($row) {
+                $values = preg_split("/ +/", $row);
+                $results[] = $values;
+            }
+        }
+
+        return $results;
+    }
+
 }
