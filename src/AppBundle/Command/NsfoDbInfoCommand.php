@@ -15,7 +15,7 @@ class NsfoDbInfoCommand extends ContainerAwareCommand
 
     /** @var ObjectManager $em */
     private $em;
-    
+
     protected function configure()
     {
         $this
@@ -32,10 +32,10 @@ class NsfoDbInfoCommand extends ContainerAwareCommand
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
-        
+
         $output->writeln(DoctrineUtil::getDatabaseHostAndNameString($em));
 
     }
-    
+
 
 }
