@@ -556,13 +556,6 @@ abstract class Animal
     protected $pedigreeRegister;
 
     /**
-     * @var integer
-     * @JMS\Type("integer")
-     * @ORM\Column(type="integer", nullable=true)
-     */
-    protected $mixblupBlock;
-
-    /**
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
@@ -2330,23 +2323,6 @@ abstract class Animal
     public function setPedigreeRegister($pedigreeRegister)
     {
         $this->pedigreeRegister = $pedigreeRegister;
-    }
-
-    
-    /**
-     * @return integer
-     */
-    public function getMixblupBlock()
-    {
-        return $this->mixblupBlock;
-    }
-
-    /**
-     * @param integer $mixblupBlock
-     */
-    public function setMixblupBlock($mixblupBlock)
-    {
-        $this->mixblupBlock = $mixblupBlock;
     }
 
 
