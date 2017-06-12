@@ -4,7 +4,9 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Constant\Filename;
 use AppBundle\Enumerator\BreedValueType;
+use AppBundle\Enumerator\MixBlupBreedValueType;
 use AppBundle\Setting\MixBlupFolder;
 use AppBundle\Setting\MixBlupInstructionFile;
 use AppBundle\Setting\MixBlupSetting;
@@ -52,7 +54,11 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     /** @var string */
     private $key;
     /** @var array */
-    private $files;
+    private $bulkFiles;
+    /** @var array */
+    private $relsol;
+    /** @var array */
+    private $errors;
 
     /** @var int */
     private $totalFilesToDownload;
@@ -125,7 +131,10 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $messageBody = AwsQueueServiceBase::getMessageBodyFromResponse($response);
         if ($messageBody) {
             $this->key = $messageBody->key;
-            $this->files = $messageBody->files;
+            $this->bulkFiles = $messageBody->files;
+            $this->relsol = $messageBody->relsol;
+            $this->errors = $messageBody->errors;
+            $blankBreedValueTypes = $this->errors;
 
             if(self::TEST_WITH_DOWNLOADED_ZIPS) {
                 $downloadSuccessful = true;
@@ -141,11 +150,14 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                 $unsuccessfulUnzips = [];
                 $successfulUnzips = [];
 
-                foreach($this->files as $zipFileName){
+                foreach($this->relsol as $zipFileName){
 
                     $this->purgeResultsFolder();
-                    $successfulUnzip = $this->unzipResultFiles($zipFileName);
-                    $this->currentBreedType = self::getBreedTypeByInstructionFileName($zipFileName);
+                    $this->unzipResultFiles($zipFileName);
+                    $this->currentBreedType = self::getBreedValueTypeByRelSolZipName($zipFileName);
+
+                    $successfulUnzip = file_exists($this->getResultsFolder() . Filename::SOLANI)
+                                    && file_exists($this->getResultsFolder() . Filename::RELANI);
 
                     if($successfulUnzip) {
 
@@ -159,10 +171,12 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                         $successfulUnzips[] = $zipFileName;
                     } else {
                         $unsuccessfulUnzips[] = $zipFileName;
+                        $this->errors[] = $this->currentBreedType;
                     }
                 }
 
-                if(count($unsuccessfulUnzips) == 0) {
+                //TODO figure out how to deal with errors
+                if(count($this->errors) == 0) {
                     $this->logger->notice('All breedValues processed successfully!');
 
                     if(self::PURGE_ZIP_FOLDER_AFTER_SUCCESSFUL_RUN) {
@@ -171,6 +185,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $this->queueService->deleteMessage($response);
 
                 } else {
+                    $this->logger->error('The following breedValues had no relani nor solani file: '.implode(', ', $blankBreedValueTypes));
                     $this->logger->error('The following unzips failed: '.implode(', ', $unsuccessfulUnzips));
                     $this->logger->notice('The following unzips succeeded: '.implode(', ', $successfulUnzips));
                 }
@@ -195,12 +210,19 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     private function downloadZips()
     {
         //Reset counters
-        $this->totalFilesToDownload = count($this->files);
         $this->downloadedFileNames = [];
         $this->failedDownloads = [];
 
-        // download all files
-        foreach($this->files as $file){
+        $this->totalFilesToDownload = self::ONLY_UNZIP_SOLANI_AND_RELANI ? count($this->relsol) : count($this->bulkFiles) + count($this->relsol);
+
+        if(!self::ONLY_UNZIP_SOLANI_AND_RELANI) {
+            // download all files
+            foreach ($this->bulkFiles as $file) {
+                $this->downloadZipFile($file);
+            }
+        }
+
+        foreach($this->relsol as $file){
             $this->downloadZipFile($file);
         }
 
@@ -240,7 +262,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         if ($this->zip->open($this->getZipFolder().$zipFileName) === TRUE) {
 
             if(self::ONLY_UNZIP_SOLANI_AND_RELANI) {
-                $this->zip->extractTo($this->getResultsFolder(), ['Solani.out', 'Relani.out']);
+                $this->zip->extractTo($this->getResultsFolder(), [Filename::SOLANI, Filename::RELANI]);
             } else {
                 $this->zip->extractTo($this->getResultsFolder());
             }
@@ -297,12 +319,14 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
 
     /**
-     * @param string $instructionFileName
+     * @param string $relsolZipname
      * @return string
      */
-    public static function getBreedTypeByInstructionFileName($instructionFileName)
+    public static function getBreedTypeByRelSolZipName($relsolZipname)
     {
-        switch ($instructionFileName) {
+
+
+        switch ($relsolZipname) {
             case MixBlupInstructionFile::BIRTH_PROGRESS: return BreedValueType::BIRTH;
             case MixBlupInstructionFile::EXTERIOR_LEG_WORK: return BreedValueType::EXTERIOR_LEG_WORK;
             case MixBlupInstructionFile::EXTERIOR_MUSCULARITY: return BreedValueType::EXTERIOR_MUSCULARITY;
@@ -318,5 +342,15 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             case MixBlupInstructionFile::TAIL_LENGTH: return BreedValueType::TAIL_LENGTH;
             case MixBlupInstructionFile::WORM_RESISTANCE: return BreedValueType::WORM;
         }
+    }
+
+
+    /**
+     * @param $zipFileName
+     * @return string
+     */
+    public static function getBreedValueTypeByRelSolZipName($zipFileName)
+    {
+        return rtrim($zipFileName,'RelSol.zip');
     }
 }
