@@ -241,4 +241,26 @@ class FilesystemUtil
      * @return string
      */
     public static function getImagesDirectory($rootDir) { return self::getAssetsDirectory($rootDir).'/images'; }
+
+
+    /**
+     * Get filename without extension
+     *
+     * @param $path
+     * @return mixed
+     */
+    public static function filename($path)
+    {
+        return pathinfo($path,PATHINFO_FILENAME);
+    }
+
+
+    /**
+     * @param $path
+     * @return mixed
+     */
+    public static function extension($path)
+    {
+        return pathinfo($path,PATHINFO_EXTENSION);
+    }
 }
