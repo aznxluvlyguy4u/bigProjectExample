@@ -232,4 +232,10 @@ class JsonInputConstant
 
     //MiXBLUP
     const PERM_MIL = 'perm_mil';
+    const RELANI_1 = 'relani_1';
+    const RELANI_2 = 'relani_2';
+    const RELANI_3 = 'relani_3';
+    const SOLANI_1 = 'solani_1';
+    const SOLANI_2 = 'solani_2';
+    const SOLANI_3 = 'solani_3';
 }
