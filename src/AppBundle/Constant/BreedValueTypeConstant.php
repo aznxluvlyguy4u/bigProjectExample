@@ -42,4 +42,13 @@ class BreedValueTypeConstant
     const PROGRESS_DF = 'OntwDF';
     const EXTERIOR_TYPE_VG_M = 'TypeVGm';
     const EXTERIOR_TYPE_DF = 'TypeDF';
+
+
+    /**
+     * @return array
+     */
+    static function getConstants() {
+        $oClass = new \ReflectionClass(__CLASS__);
+        return $oClass->getConstants();
+    }
 }
