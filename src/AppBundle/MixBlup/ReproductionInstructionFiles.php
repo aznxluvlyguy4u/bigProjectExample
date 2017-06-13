@@ -35,9 +35,10 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
     /**
      * @param array $model
      * @param string $titleType
+     * @param boolean $isRelani
      * @return array
      */
-    private static function reproductionInstructionFileBase(array $model = [], $titleType)
+    private static function reproductionInstructionFileBase(array $model = [], $titleType, $isRelani = false)
     {
         $start = [
             'TITLE '.$titleType,
@@ -70,16 +71,16 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
             ' GebGemak   T #Geboortegemak', //birthProgress from 0 to 4
             ' DrTijd     R #Draagtijd', //gestationPeriod in litter
             ' TusLamT    T #Tussenlamtijd', //birthInterval in litter
-            ' Bedrijf    I #ubn van geboorte',  //ubn of birth
+            ' Bedrijf    I '.self::getBlockString($isRelani).'#ubn van geboorte',  //ubn of birth
         ];
 
         return ArrayUtil::concatArrayValues([
             $start,
             self::getStandardizedBreedCodePartsAndHetRecOfInstructionFile(),
             $middle,
-            self::getInstructionFilePedFileToModelHeader(MixBlupType::FERTILITY),
+            self::getInstructionFilePedFileToModelHeader(MixBlupType::FERTILITY, $isRelani),
             $model,
-            self::getInstructionFileEnding()
+            self::getInstructionFileEnding($isRelani)
         ]);
     }
 

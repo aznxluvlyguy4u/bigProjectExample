@@ -31,9 +31,10 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
     /**
      * @param array $model
      * @param string $fileType
+     * @param boolean $isRelani
      * @return array
      */
-    private static function generateTestAttributeInstructionFile(array $model, $fileType)
+    private static function generateTestAttributeInstructionFile(array $model, $fileType, $isRelani = false)
     {
         $start = [
             'TITLE '.$fileType,
@@ -67,16 +68,16 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
             ' Vetd02     T',
             ' Vetd03     T',
             ' Spierd     T', #spierdikte',
-            ' Bedrijf    I #ubn van geboorte', //ubn of birth
+            ' Bedrijf    I '.self::getBlockString($isRelani).'#ubn van geboorte', //ubn of birth
         ];
 
         return ArrayUtil::concatArrayValues([
             $start,
             self::getStandardizedBreedCodePartsAndHetRecOfInstructionFile(),
             $middle,
-            self::getInstructionFilePedFileToModelHeader(MixBlupType::LAMB_MEAT_INDEX),
+            self::getInstructionFilePedFileToModelHeader(MixBlupType::LAMB_MEAT_INDEX, $isRelani),
             $model,
-            self::getInstructionFileEnding(),
+            self::getInstructionFileEnding($isRelani),
         ]);
     }
 

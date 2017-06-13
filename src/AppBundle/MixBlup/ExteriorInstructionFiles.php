@@ -35,9 +35,10 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
     /**
      * @param array $model
      * @param string $fileType
+     * @param boolean $isRelani
      * @return array
      */
-    private static function generateExteriorInstructionFile($model, $fileType)
+    private static function generateExteriorInstructionFile($model, $fileType, $isRelani = false)
     {
         $start = [
             'TITLE   Exterieur: '.$fileType,
@@ -97,7 +98,7 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
         ];
 
         $lastDataRecords = [
-            ' Bedrijf    I #ubn van geboorte', //ubn of birth
+            ' Bedrijf    I '.self::getBlockString($isRelani).'#ubn van geboorte', //ubn of birth
         ];
 
         return ArrayUtil::concatArrayValues([
@@ -106,9 +107,9 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
             $exteriorMeasurements,
             $exteriorLinearMeasurements,
             $lastDataRecords,
-            self::getInstructionFilePedFileToModelHeader(MixBlupType::EXTERIOR),
+            self::getInstructionFilePedFileToModelHeader(MixBlupType::EXTERIOR, $isRelani),
             $model,
-            self::getInstructionFileEnding(),
+            self::getInstructionFileEnding($isRelani),
         ]);
     }
 

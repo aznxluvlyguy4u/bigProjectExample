@@ -18,11 +18,22 @@ abstract class MixBlupInstructionFileBase
 {
     const MISSING_REPLACEMENT = '-99';
 
+
+    /**
+     * @param bool $isRelani
+     * @return string
+     */
+    protected static function getBlockString($isRelani = false)
+    {
+        return $isRelani ? '!BLOCK ' : '';
+    }
+
     /**
      * @param string $type
+     * @param boolean $isRelani
      * @return array
      */
-    protected static function getInstructionFilePedFileToModelHeader($type)
+    protected static function getInstructionFilePedFileToModelHeader($type, $isRelani = false)
     {
         return [
             ' ',
@@ -30,7 +41,7 @@ abstract class MixBlupInstructionFileBase
             ' ID        I ', //PrimaryKey
             ' Vader     I ', //PrimaryKey Father
             ' Moeder    I ', //PrimaryKey Mother
-            ' Bedrijf   I ',//ubn of birth, NOTE it is an integer here
+            ' Bedrijf   I '.self::getBlockString($isRelani),//ubn of birth, NOTE it is an integer here
             ' ',
             'PARFILE  '.MixBlupSetting::PARFILE_FILENAME,
             ' ',
@@ -40,13 +51,17 @@ abstract class MixBlupInstructionFileBase
 
 
     /**
+     * @param boolean $isRelani
      * @return array
      */
-    protected static function getInstructionFileEnding()
+    protected static function getInstructionFileEnding($isRelani = false)
     {
+        $reliabilityString = $isRelani ? '!RELIABILITY' : '';
+
         return [
             ' ',
             'SOLVING',
+            $reliabilityString,
         ];
     }
 
