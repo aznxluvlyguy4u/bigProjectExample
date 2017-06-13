@@ -77,7 +77,7 @@ services:
           AWSSimpleStorageService: '@app.aws.storageservice'
           MixBlupInputQueueService: '@app.aws.queueservice.mixblup_input'
           currentEnv: %kernel.environment%
-          rootDir: %kernel.cache_dir%
+          cacheDir: %kernel.cache_dir%
           logger: '@logger'
 
     app.mixblup.output:
@@ -87,7 +87,7 @@ services:
           AWSSimpleStorageService: '@app.aws.storageservice'
           MixBlupOutputQueueService: '@app.aws.queueservice.mixblup_output'
           currentEnv: %kernel.environment%
-          rootDir: %kernel.cache_dir%
+          cacheDir: %kernel.cache_dir%
           logger: '@logger'
 
     app.breed.index:
