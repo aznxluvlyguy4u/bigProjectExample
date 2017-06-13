@@ -34,7 +34,7 @@ abstract class Animal
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      */
     protected $id;
 
@@ -50,7 +50,7 @@ abstract class Animal
      * @Assert\Regex("/([A-Z]{2})\b/")
      * @Assert\Length(max = 2)
      * @JMS\Type("string")
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      */
     protected $pedigreeCountryCode;
 
@@ -62,7 +62,7 @@ abstract class Animal
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 11)
      * @JMS\Type("string")
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      */
     protected $pedigreeNumber;
 
@@ -99,7 +99,7 @@ abstract class Animal
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
-     * @JMS\Groups({"DECLARE"})
+     * @JMS\Groups({"DECLARE","MIXBLUP"})
      */
     protected $dateOfBirth;
 
@@ -118,7 +118,7 @@ abstract class Animal
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      */
     protected $gender;
 
@@ -292,7 +292,7 @@ abstract class Animal
      * @Assert\NotBlank
      * @ORM\Column(type="boolean")
      * @JMS\Type("boolean")
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      */
     protected $isAlive;
 
@@ -301,7 +301,7 @@ abstract class Animal
      * @JMS\Type("string")
      * @Assert\NotBlank
      * @ORM\Column(type="string", nullable=false)
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      */
     protected $ulnNumber;
 
@@ -312,7 +312,7 @@ abstract class Animal
      * @Assert\Regex("/([A-Z]{2})\b/")
      * @Assert\Length(max = 2)
      * @ORM\Column(type="string", nullable=false)
-     * @JMS\Groups({"DECLARE","USER_MEASUREMENT"})
+     * @JMS\Groups({"DECLARE","USER_MEASUREMENT","MIXBLUP"})
      */
     protected $ulnCountryCode;
 

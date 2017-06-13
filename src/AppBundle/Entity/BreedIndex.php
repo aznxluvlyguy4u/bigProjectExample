@@ -9,8 +9,20 @@ use JMS\Serializer\Annotation as JMS;
 /**
  * Class BreedIndex
  *
- * @ORM\Entity(repositoryClass="AppBundle\Entity")
  * @package AppBundle\Entity
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\BreedIndexRepository")
+ * @ORM\InheritanceType("JOINED")
+ * @ORM\DiscriminatorColumn(name="type", type="string")
+ * @ORM\DiscriminatorMap({"Exterior" = "ExteriorBreedIndex",
+ *                       "Fertility" = "FertilityBreedIndex",
+ *                        "LambMeat" = "LambMeatBreedIndex",
+ *                  "WormResistance" = "WormResistanceBreedIndex"})
+ * @JMS\Discriminator(field = "type", disabled=false, map = {
+ *                        "Exterior" : "AppBundle\Entity\ExteriorBreedIndex",
+ *                       "Fertility" : "AppBundle\Entity\FertilityBreedIndex",
+ *                        "LambMeat" : "AppBundle\Entity\LambMeatBreedIndex",
+ *                  "WormResistance" : "AppBundle\Entity\WormResistanceBreedIndex"},
+ *     groups = {"MIXBLUP"})
  */
 abstract class BreedIndex
 {
@@ -20,13 +32,16 @@ abstract class BreedIndex
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Groups({"MIXBLUP"})
      */
     private $id;
 
     /**
+     * @var Animal
      * @ORM\ManyToOne(targetEntity="Animal")
      * @ORM\JoinColumn(name="animal_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Animal")
+     * @JMS\Groups({"MIXBLUP"})
      */
     private $animal;
 
@@ -37,6 +52,7 @@ abstract class BreedIndex
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({"MIXBLUP"})
      */
     private $logDate;
 
@@ -47,6 +63,7 @@ abstract class BreedIndex
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({"MIXBLUP"})
      */
     private $generationDate;
 
@@ -56,6 +73,7 @@ abstract class BreedIndex
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
+     * @JMS\Groups({"MIXBLUP"})
      */
     private $index;
 
@@ -65,6 +83,7 @@ abstract class BreedIndex
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @Assert\NotBlank
+     * @JMS\Groups({"MIXBLUP"})
      */
     private $accuracy;
 
@@ -74,6 +93,7 @@ abstract class BreedIndex
      * @ORM\Column(type="integer", options={"default":0})
      * @JMS\Type("integer")
      * @Assert\NotBlank
+     * @JMS\Groups({"MIXBLUP"})
      */
     private $ranking;
 
@@ -101,7 +121,7 @@ abstract class BreedIndex
     }
 
     /**
-     * @return mixed
+     * @return Animal
      */
     public function getAnimal()
     {
@@ -109,7 +129,7 @@ abstract class BreedIndex
     }
 
     /**
-     * @param mixed $animal
+     * @param Animal $animal
      * @return BreedIndex
      */
     public function setAnimal($animal)

@@ -9,7 +9,7 @@ use JMS\Serializer\Annotation as JMS;
 /**
  * Class FertilityBreedIndex
  *
- * @ORM\Entity(repositoryClass="AppBundle\Entity")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\FertilityBreedIndexRepository")
  * @package AppBundle\Entity
  */
 class FertilityBreedIndex extends BreedIndex
