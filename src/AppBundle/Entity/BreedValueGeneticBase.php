@@ -2,16 +2,12 @@
 
 namespace AppBundle\Entity;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use JMS\Serializer\Annotation\ExclusionPolicy;
-use JMS\Serializer\Annotation\Expose;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\DependencyInjection\Tests\Compiler\A;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 
 /**
- * Class GeneticBase
+ * Class BreedValueGeneticBase
  *
  * Once a year in June, the average breedvalue for each trait in the solani file is calculated.
  * Include only breedvalues of the following animals:
@@ -21,10 +17,10 @@ use JMS\Serializer\Annotation as JMS;
  *   X = $geneticBaseYear
  * Both $minAccuracy and $geneticBaseYear are found in the BreedIndexCalculationTerms class.
  *
- * @ORM\Entity(repositoryClass="AppBundle\Entity\GeneticBaseRepository")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity")
  * @package AppBundle\Entity
  */
-class GeneticBase
+class BreedValueGeneticBase
 {
     /**
      * @var integer
@@ -54,7 +50,6 @@ class GeneticBase
      */
     private $year;
 
-
     /**
      * @var float
      *
@@ -62,35 +57,23 @@ class GeneticBase
      * @JMS\Type("float")
      * @Assert\NotBlank
      */
-    private $muscleThickness;
-
-
-    /**
-     * @var float
-     *
-     * @ORM\Column(type="float", options={"default":0})
-     * @JMS\Type("float")
-     * @Assert\NotBlank
-     */
-    private $growth;
+    private $value;
 
     /**
-     * @var float
-     *
-     * @ORM\Column(type="float", options={"default":0})
-     * @JMS\Type("float")
-     * @Assert\NotBlank
+     * @var BreedValueType
+     * @ORM\ManyToOne(targetEntity="BreedValueType")
+     * @ORM\JoinColumn(name="breed_value_type_id", referencedColumnName="id")
+     * @JMS\Type("AppBundle\Entity\BreedValueType")
+     * @JMS\Groups({"MIXBLUP"})
      */
-    private $fat;
-    
+    private $breedValueType;
 
-    public function __construct($year = null, $muscleThickness = null, $growth = null, $fat = null)
+    /**
+     * BreedValueGeneticBase constructor.
+     */
+    public function __construct()
     {
         $this->logDate = new \DateTime();
-        $this->year = $year;
-        $this->muscleThickness = $muscleThickness;
-        $this->growth = $growth;
-        $this->fat = $fat;
     }
 
     /**
@@ -100,8 +83,17 @@ class GeneticBase
     {
         return $this->id;
     }
-    
-    
+
+    /**
+     * @param int $id
+     * @return BreedValueGeneticBase
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+        return $this;
+    }
+
     /**
      * @return \DateTime
      */
@@ -112,12 +104,13 @@ class GeneticBase
 
     /**
      * @param \DateTime $logDate
+     * @return BreedValueGeneticBase
      */
     public function setLogDate($logDate)
     {
         $this->logDate = $logDate;
+        return $this;
     }
-
 
     /**
      * @return int
@@ -129,61 +122,49 @@ class GeneticBase
 
     /**
      * @param int $year
+     * @return BreedValueGeneticBase
      */
     public function setYear($year)
     {
         $this->year = $year;
-    }
-
-
-    /**
-     * @return float
-     */
-    public function getMuscleThickness()
-    {
-        return $this->muscleThickness;
-    }
-
-    /**
-     * @param float $muscleThickness
-     */
-    public function setMuscleThickness($muscleThickness)
-    {
-        $this->muscleThickness = $muscleThickness;
+        return $this;
     }
 
     /**
      * @return float
      */
-    public function getGrowth()
+    public function getValue()
     {
-        return $this->growth;
+        return $this->value;
     }
 
     /**
-     * @param float $growth
+     * @param float $value
+     * @return BreedValueGeneticBase
      */
-    public function setGrowth($growth)
+    public function setValue($value)
     {
-        $this->growth = $growth;
+        $this->value = $value;
+        return $this;
     }
 
     /**
-     * @return float
+     * @return BreedValueType
      */
-    public function getFat()
+    public function getBreedValueType()
     {
-        return $this->fat;
+        return $this->breedValueType;
     }
 
     /**
-     * @param float $fat
+     * @param BreedValueType $breedValueType
+     * @return BreedValueGeneticBase
      */
-    public function setFat($fat)
+    public function setBreedValueType($breedValueType)
     {
-        $this->fat = $fat;
+        $this->breedValueType = $breedValueType;
+        return $this;
     }
-    
-    
-    
+
+
 }
