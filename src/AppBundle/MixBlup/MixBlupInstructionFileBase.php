@@ -8,6 +8,7 @@ use AppBundle\Enumerator\MixBlupNullFiller;
 use AppBundle\Setting\MixBlupFolder;
 use AppBundle\Setting\MixBlupInstructionFile;
 use AppBundle\Setting\MixBlupSetting;
+use AppBundle\Util\ArrayUtil;
 
 /**
  * Class MixBlupInstructionFileBase
@@ -80,5 +81,27 @@ abstract class MixBlupInstructionFileBase
     {
         return 'CovCF CovBM CovSW CovNH CovFL CovHD CovOV CovHet CovRec';
     }
+
+
+
+    /**
+     * @param array $baseModel
+     * @param array $extraModel
+     * @param bool $includeCommentedOutBreedValues
+     * @return array
+     */
+    protected static function getModel($baseModel, $extraModel, $includeCommentedOutBreedValues = true)
+    {
+        if ($includeCommentedOutBreedValues) {
+            return ArrayUtil::concatArrayValues([
+                $baseModel,
+                $extraModel,
+            ], false);
+
+        } else {
+            return $baseModel;
+        }
+    }
+
 
 }

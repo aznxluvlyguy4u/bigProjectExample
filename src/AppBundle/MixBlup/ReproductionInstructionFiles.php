@@ -85,14 +85,58 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
 
 
     /**
+     * @param bool $includeCommentedOutBreedValues variable is included to match structure of other get...Model functions
+     * @return array
+     */
+    public static function getBirthProgressModel($includeCommentedOutBreedValues = true)
+    {
+        return $baseModel = [
+            'GebGemak' =>   ' GebGemak  ~ JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM G(ID,IDM)'
+        ];
+    }
+
+
+    /**
      * @return array
      */
     public static function generateBirthProgressInstructionFile()
     {
-        $model = [
-            ' GebGemak  ~ JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM G(ID,IDM)'
-        ];
-        return self::reproductionInstructionFileBase($model, 'Geboorteverloop');
+        return self::reproductionInstructionFileBase(self::getBirthProgressModel(), 'Geboorteverloop');
+    }
+
+
+    /**
+     * @param int $part
+     * @param bool $includeCommentedOutBreedValues
+     * @return array
+     */
+    public static function getFertilityModel($part, $includeCommentedOutBreedValues = true)
+    {
+        $includeTotalBirths = $part == 1 || $part == null ? '' : ' #';
+        $includeStillBirths = $part == 2 || $part == null ? '' : ' #';
+        $includeEarlyFertility = $part == 3 || $part == null ? '' : ' #';
+
+        $totGebModel =  ' TotGeb  ~ Inductie Leeft JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM PermMil G(ID)';
+        $doodGebModel = ' DoodGeb ~ Inductie Leeft JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM PermMil G(ID)';
+        $vroegModel =   ' Vroeg   ~ JaarBedr '.self::getBreedCodesModel().' !RANDOM G(ID)';
+        $tusLamTModel = ' # TusLamT';
+
+        if($includeCommentedOutBreedValues) {
+            return [
+                'TotGeb' =>     $includeTotalBirths.$totGebModel,
+                'DoodGeb' =>    $includeStillBirths.$doodGebModel,
+                'Vroeg' =>      $includeEarlyFertility.$vroegModel,
+                'TusLamT' =>    $tusLamTModel,
+            ];
+
+        } else {
+            switch ($part) {
+                case 1: return ['TotGeb' => $totGebModel];
+                case 2: return ['DoodGeb' => $doodGebModel];
+                case 3: return ['Vroeg' => $vroegModel];
+                default: return [];
+            }
+        }
     }
 
 
@@ -102,17 +146,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
      */
     public static function generateFertilityInstructionFile($part = null)
     {
-        $includeTotalBirths = $part == 1 || $part == null ? '' : ' #';
-        $includeStillBirths = $part == 2 || $part == null ? '' : ' #';
-        $includeEarlyFertility = $part == 3 || $part == null ? '' : ' #';
-
-        $model = [
-            $includeTotalBirths.' TotGeb  ~ Inductie Leeft JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM PermMil G(ID)',
-            $includeStillBirths.' DoodGeb ~ Inductie Leeft JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM PermMil G(ID)',
-            $includeEarlyFertility.' Vroeg   ~ JaarBedr '.self::getBreedCodesModel().' !RANDOM G(ID)',
-            ' # TusLamT',
-        ];
-        return self::reproductionInstructionFileBase($model, 'Vruchtbaarheid');
+        return self::reproductionInstructionFileBase(self::getFertilityModel($part), 'Vruchtbaarheid');
     }
 
 

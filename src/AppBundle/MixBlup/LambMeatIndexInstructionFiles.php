@@ -82,20 +82,72 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
 
 
     /**
+     * @param bool $includeCommentedOutBreedValues
+     * @return array
+     */
+    public static function getLambMeatModel($includeCommentedOutBreedValues = true)
+    {
+        $base1 = [
+            'GewGeb' => ' GewGeb    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling !RANDOM WorpID G(ID,IDM)',
+        ];
+
+        $commentedOut1 = [
+            'Gew08' =>  '# Gew08     ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling LeeftScan !RANDOM WorpID G(ID)',
+        ];
+
+        $base2 = [
+            'Gew20' =>  ' Gew20     ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling LeeftScan !RANDOM WorpID G(ID)',
+            'Vetd01' => ' Vetd01    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling GewScan !RANDOM WorpID G(ID)',
+        ];
+
+        $commentedOut2 = [
+            'Vetd02' => '# Vetd02    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling GewScan !RANDOM WorpID G(ID)',
+        ];
+
+        $base3 = [
+            'Vetd03' => ' Vetd03    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling GewScan !RANDOM WorpID G(ID)',
+            'Spierd' => ' Spierd    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling GewScan !RANDOM WorpID G(ID)',
+        ];
+
+
+        if ($includeCommentedOutBreedValues) {
+            $models = [
+                $base1,
+                $commentedOut1,
+                $base2,
+                $commentedOut2,
+                $base3,
+            ];
+        } else {
+            $models = [
+                $base1,
+                $base2,
+                $base3,
+            ];
+        }
+
+        return ArrayUtil::concatArrayValues($models, false);
+    }
+
+
+    /**
      * @return array
      */
     public static function generateLambMeatInstructionFile()
     {
-        $model = [
-            ' GewGeb    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling !RANDOM WorpID G(ID,IDM)',
-            '# Gew08     ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling LeeftScan !RANDOM WorpID G(ID)',
-            ' Gew20     ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling LeeftScan !RANDOM WorpID G(ID)',
-            ' Vetd01    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling GewScan !RANDOM WorpID G(ID)',
-            '# Vetd02    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling GewScan !RANDOM WorpID G(ID)',
-            ' Vetd03    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling GewScan !RANDOM WorpID G(ID)',
-            ' Spierd    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling GewScan !RANDOM WorpID G(ID)',
+        return self::generateTestAttributeInstructionFile(self::getLambMeatModel(), 'Vleeslamkenmerken');
+    }
+
+
+    /**
+     * @param bool $includeCommentedOutBreedValues variable is included to match structure of other get...Model functions
+     * @return array
+     */
+    public static function getTailLengthModel($includeCommentedOutBreedValues = true)
+    {
+        return $baseModel = [
+            'StaartLen' => ' StaartLen ~ GewGeb JaarBedr Nling Sekse '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
         ];
-        return self::generateTestAttributeInstructionFile($model, 'Vleeslamkenmerken');
     }
 
 
@@ -104,10 +156,7 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
      */
     public static function generateTailLengthInstructionFile()
     {
-        $model = [
-            ' StaartLen ~ GewGeb JaarBedr Nling Sekse '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
-        ];
-        return self::generateTestAttributeInstructionFile($model, 'Staartlengte');
+        return self::generateTestAttributeInstructionFile(self::getTailLengthModel(), 'Staartlengte');
     }
 
 

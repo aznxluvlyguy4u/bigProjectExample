@@ -114,22 +114,59 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
 
 
     /**
+     * @param bool $includeCommentedOutBreedValues
+     * @return array
+     */
+    public static function getLegWorkModel($includeCommentedOutBreedValues = true)
+    {
+        $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
+
+        $baseModel = [
+            'BeenwVGm' =>   ' BeenwVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
+            'BeenwDF' =>    ' BeenwDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+        ];
+
+        $extraModel = [
+            'LinStVb' =>    ' '.$commentHashTag.'LinStVb',
+            'LinZijStAb' => ' '.$commentHashTag.'LinZijStAb',
+            'LinAchtStAb' => ' '.$commentHashTag.'LinAchtStAb',
+            'LinPijpOmv' => ' '.$commentHashTag.'LinPijpOmv',
+        ];
+
+        return self::getModel($baseModel, $extraModel, $includeCommentedOutBreedValues);
+    }
+
+
+    /**
      * @return array
      */
     public static function generateLegWorkInstructionFile()
     {
+        return self::generateExteriorInstructionFile(self::getLegWorkModel(), 'Beenwerk');
+    }
+
+
+    /**
+     * @param bool $includeCommentedOutBreedValues
+     * @return array
+     */
+    public static function getMuscularityModel($includeCommentedOutBreedValues = true)
+    {
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
 
-            $model = [
-            ' BeenwVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
-            ' BeenwDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
-            ' '.$commentHashTag.'LinStVb',
-            ' '.$commentHashTag.'LinZijStAb',
-            ' '.$commentHashTag.'LinAchtStAb',
-            ' '.$commentHashTag.'LinPijpOmv',
+        $baseModel = [
+            'BespVGv' =>    ' BespVGv  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            'BespVGm' =>    ' BespVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
+            'BespDF'  =>    ' BespDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
         ];
 
-        return self::generateExteriorInstructionFile($model, 'Beenwerk');
+        $extraModel = [
+            'LinVoorh' =>   ' '.$commentHashTag.'LinVoorh',
+            'LinRugBr' =>   ' '.$commentHashTag.'LinRugBr',
+            'LinRondBil' => ' '.$commentHashTag.'LinRondBil',
+        ];
+
+        return self::getModel($baseModel, $extraModel, $includeCommentedOutBreedValues);
     }
 
 
@@ -138,18 +175,29 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
      */
     public static function generateMuscularityInstructionFile()
     {
+        return self::generateExteriorInstructionFile(self::getMuscularityModel(), 'Bespiering');
+    }
+
+
+    /**
+     * @param bool $includeCommentedOutBreedValues
+     * @return array
+     */
+    public static function getProportionModel($includeCommentedOutBreedValues = true)
+    {
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
 
-        $model = [
-            ' BespVGv  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
-            ' BespVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
-            ' BespDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
-            ' '.$commentHashTag.'LinVoorh',
-            ' '.$commentHashTag.'LinRugBr',
-            ' '.$commentHashTag.'LinRondBil',
+        $baseModel = [
+            'EvenrVGm' =>   ' EvenrVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
+            'EvenrDF'  =>   ' EvenrDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
         ];
 
-        return self::generateExteriorInstructionFile($model, 'Bespiering');
+        $extraModel = [
+            'LinRugLen' =>  ' '.$commentHashTag.'LinRugLen',
+            'LinKruis'  =>  ' '.$commentHashTag.'LinKruis',
+        ];
+
+        return self::getModel($baseModel, $extraModel, $includeCommentedOutBreedValues);
     }
 
 
@@ -158,16 +206,28 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
      */
     public static function generateProportionInstructionFile()
     {
+        return self::generateExteriorInstructionFile(self::getProportionModel(), 'Evenredigheid');
+    }
+
+
+    /**
+     * @param bool $includeCommentedOutBreedValues
+     * @return array
+     */
+    public static function getSkullModel($includeCommentedOutBreedValues = true)
+    {
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
 
-        $model = [
-            ' EvenrVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
-            ' EvenrDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
-            ' '.$commentHashTag.'LinRugLen',
-            ' '.$commentHashTag.'LinKruis',
+        $baseModel = [
+            'KopVGm' => ' KopVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            'KopDF' =>  ' KopDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
         ];
 
-        return self::generateExteriorInstructionFile($model, 'Evenredigheid');
+        $extraModel = [
+            'LinKop' => ' '.$commentHashTag.'LinKop',
+        ];
+
+        return self::getModel($baseModel, $extraModel, $includeCommentedOutBreedValues);
     }
 
 
@@ -176,15 +236,29 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
      */
     public static function generateSkullInstructionFile()
     {
+        return self::generateExteriorInstructionFile(self::getSkullModel(), 'Kop');
+    }
+
+
+    /**
+     * @param bool $includeCommentedOutBreedValues
+     * @return array
+     */
+    public static function getProgressModel($includeCommentedOutBreedValues = true)
+    {
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
 
-        $model = [
-            ' KopVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
-            ' KopDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
-            ' '.$commentHashTag.'LinKop',
+        $baseModel = [
+            'OntwVGm' =>    ' OntwVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
+            'OntwDF' =>     ' OntwDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
         ];
 
-        return self::generateExteriorInstructionFile($model, 'Kop');
+        $extraModel = [
+            'LinRugLen' =>  ' '.$commentHashTag.'LinRugLen',
+            'LinKruis' =>   ' '.$commentHashTag.'LinKruis',
+        ];
+
+        return self::getModel($baseModel, $extraModel, $includeCommentedOutBreedValues);
     }
 
 
@@ -193,16 +267,27 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
      */
     public static function generateProgressInstructionFile()
     {
+        return self::generateExteriorInstructionFile(self::getProgressModel(), 'Ontwikkeling');
+    }
+
+
+    /**
+     * @param bool $includeCommentedOutBreedValues
+     * @return array
+     */
+    public static function getExteriorTypeModel($includeCommentedOutBreedValues = true)
+    {
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
 
-        $model = [
-            ' OntwVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
-            ' OntwDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
-            ' '.$commentHashTag.'LinRugLen',
-            ' '.$commentHashTag.'LinKruis',
+        $baseModel = [
+            'TypeVGm' =>    ' TypeVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
+            'TypeDF' =>     ' TypeDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
         ];
 
-        return self::generateExteriorInstructionFile($model, 'Ontwikkeling');
+        $extraModel = [
+        ];
+
+        return self::getModel($baseModel, $extraModel, $includeCommentedOutBreedValues);
     }
 
 
@@ -211,12 +296,7 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
      */
     public static function generateExteriorTypeInstructionFile()
     {
-        $model = [
-            ' TypeVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
-            ' TypeDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
-        ];
-
-        return self::generateExteriorInstructionFile($model, 'Type');
+        return self::generateExteriorInstructionFile(self::getExteriorTypeModel(), 'Type');
     }
 
 
