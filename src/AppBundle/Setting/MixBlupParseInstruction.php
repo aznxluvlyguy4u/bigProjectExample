@@ -5,7 +5,7 @@ namespace AppBundle\Setting;
 
 
 use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Enumerator\MixBlupBreedValueType;
+use AppBundle\Constant\MixBlupAnalysis;
 
 
 /**
@@ -29,22 +29,22 @@ class MixBlupParseInstruction
     {
         switch ($breedValueType)
         {
-            case MixBlupBreedValueType::EXTERIOR_MUSCULARITY:
+            case MixBlupAnalysis::EXTERIOR_MUSCULARITY:
                 return self::tripleSolaniAndRelaniColumn();
 
-            case MixBlupBreedValueType::FERTILITY_1:
+            case MixBlupAnalysis::FERTILITY_1:
                 return self::singleSolaniAndRelaniColumn();
 
-            case MixBlupBreedValueType::FERTILITY_2:
+            case MixBlupAnalysis::FERTILITY_2:
                 return self::singleSolaniAndRelaniColumn();
 
-            case MixBlupBreedValueType::FERTILITY_3:
+            case MixBlupAnalysis::FERTILITY_3:
                 return self::singleSolaniAndRelaniColumn();
 
-            case MixBlupBreedValueType::LAMB_MEAT: //TODO
+            case MixBlupAnalysis::LAMB_MEAT: //TODO
                 return self::singleSolaniAndRelaniColumn();
 
-            case MixBlupBreedValueType::TAIL_LENGTH:
+            case MixBlupAnalysis::TAIL_LENGTH:
                 return self::singleSolaniAndRelaniColumn();
 
             default:

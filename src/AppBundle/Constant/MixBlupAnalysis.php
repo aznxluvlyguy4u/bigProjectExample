@@ -1,13 +1,13 @@
 <?php
 
 
-namespace AppBundle\Enumerator;
+namespace AppBundle\Constant;
 
 /**
  * Class MixBlupBreedValueType
  * @package AppBundle\Enumerator
  */
-class MixBlupBreedValueType
+class MixBlupAnalysis
 {
     //Exterior
     const EXTERIOR_LEG_WORK = 'ExtBeenw';

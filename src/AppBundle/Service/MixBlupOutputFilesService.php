@@ -6,7 +6,7 @@ namespace AppBundle\Service;
 
 use AppBundle\Constant\Filename;
 use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Enumerator\MixBlupBreedValueType;
+use AppBundle\Constant\MixBlupAnalysis;
 use AppBundle\Setting\MixBlupFolder;
 use AppBundle\Setting\MixBlupParseInstruction;
 use AppBundle\Setting\MixBlupSetting;
@@ -121,19 +121,19 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
         $this->mixBlupProcesses = [];
         //TODO include actual processes
-        $this->mixBlupProcesses[MixBlupBreedValueType::BIRTH_PROGRESS] = null;
-        $this->mixBlupProcesses[MixBlupBreedValueType::EXTERIOR_LEG_WORK] = null;
-        $this->mixBlupProcesses[MixBlupBreedValueType::EXTERIOR_MUSCULARITY] = null;
-        $this->mixBlupProcesses[MixBlupBreedValueType::EXTERIOR_PROGRESS] = null;
-        $this->mixBlupProcesses[MixBlupBreedValueType::EXTERIOR_PROPORTION] = null;
-        $this->mixBlupProcesses[MixBlupBreedValueType::EXTERIOR_SKULL] = null;
-        $this->mixBlupProcesses[MixBlupBreedValueType::EXTERIOR_TYPE] = null;
-        $this->mixBlupProcesses[MixBlupBreedValueType::FERTILITY_1] = null;
-        $this->mixBlupProcesses[MixBlupBreedValueType::FERTILITY_2] = null;
-        $this->mixBlupProcesses[MixBlupBreedValueType::FERTILITY_3] = null;
-        $this->mixBlupProcesses[MixBlupBreedValueType::LAMB_MEAT] = null;
-        $this->mixBlupProcesses[MixBlupBreedValueType::TAIL_LENGTH] = null;
-        $this->mixBlupProcesses[MixBlupBreedValueType::WORM_RESISTANCE] = null;
+        $this->mixBlupProcesses[MixBlupAnalysis::BIRTH_PROGRESS] = null;
+        $this->mixBlupProcesses[MixBlupAnalysis::EXTERIOR_LEG_WORK] = null;
+        $this->mixBlupProcesses[MixBlupAnalysis::EXTERIOR_MUSCULARITY] = null;
+        $this->mixBlupProcesses[MixBlupAnalysis::EXTERIOR_PROGRESS] = null;
+        $this->mixBlupProcesses[MixBlupAnalysis::EXTERIOR_PROPORTION] = null;
+        $this->mixBlupProcesses[MixBlupAnalysis::EXTERIOR_SKULL] = null;
+        $this->mixBlupProcesses[MixBlupAnalysis::EXTERIOR_TYPE] = null;
+        $this->mixBlupProcesses[MixBlupAnalysis::FERTILITY_1] = null;
+        $this->mixBlupProcesses[MixBlupAnalysis::FERTILITY_2] = null;
+        $this->mixBlupProcesses[MixBlupAnalysis::FERTILITY_3] = null;
+        $this->mixBlupProcesses[MixBlupAnalysis::LAMB_MEAT] = null;
+        $this->mixBlupProcesses[MixBlupAnalysis::TAIL_LENGTH] = null;
+        $this->mixBlupProcesses[MixBlupAnalysis::WORM_RESISTANCE] = null;
     }
 
 
