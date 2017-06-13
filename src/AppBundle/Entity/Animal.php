@@ -579,6 +579,13 @@ abstract class Animal
     protected $breedValuesSets;
 
     /**
+     * @var ResultTableBreedIndex
+     * @ORM\OneToOne(targetEntity="ResultTableBreedIndex", mappedBy="animal", cascade={"persist", "remove"})
+     * @JMS\Type("AppBundle\Entity\ResultTableBreedIndex")
+     */
+    protected $latestBreedIndices;
+
+    /**
      * @var string
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
@@ -2405,6 +2412,25 @@ abstract class Animal
             return null;
         }
     }
+
+    /**
+     * @return ResultTableBreedIndex
+     */
+    public function getLatestBreedIndices()
+    {
+        return $this->latestBreedIndices;
+    }
+
+    /**
+     * @param ResultTableBreedIndex $latestBreedIndices
+     * @return Animal
+     */
+    public function setLatestBreedIndices($latestBreedIndices)
+    {
+        $this->latestBreedIndices = $latestBreedIndices;
+        return $this;
+    }
+
 
     /**
      * @return string
