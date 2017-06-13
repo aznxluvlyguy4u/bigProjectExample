@@ -69,6 +69,8 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
             '1: Generate & Upload MixBlupInputFiles and send message to MixBlup queue', "\n",
             '2: Download and process MixBlup output files (relani & solani)', "\n",
             '3: Generate MixBlup instruction files only', "\n",
+            '========================================================================', "\n",
+            '10: Initialize BreedIndexType and BreedValueType', "\n",
             'DEFAULT: Abort', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -83,6 +85,12 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
             case 3:
                 $this->mixBlupInputFilesService->writeInstructionFiles();
                 break;
+
+            case 10:
+                $this->mixBlupOutputFilesService->initializeBreedIndexType();
+                $this->mixBlupOutputFilesService->initializeBreedValueType();
+                break;
+
             default:
                 $output->writeln('ABORTED');
                 break;
