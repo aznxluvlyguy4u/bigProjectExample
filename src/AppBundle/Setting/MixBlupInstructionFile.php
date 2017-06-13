@@ -32,4 +32,14 @@ class MixBlupInstructionFile
 
     //Worm Resistance
     const WORM_RESISTANCE = 'InpWormRes.txt';
+
+
+    /**
+     * @param $instructionFilename
+     * @return string
+     */
+    public static function relani($instructionFilename)
+    {
+        return rtrim($instructionFilename, '.txt') . MixBlupSetting::RELANI_SUFFIX . '.txt';
+    }
 }

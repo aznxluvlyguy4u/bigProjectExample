@@ -13,6 +13,7 @@ class MixBlupSetting
 
     const PEDIGREE_FILENAME_PREFIX = 'Ped';
     const DATA_FILENAME_PREFIX = 'Data';
+    const RELANI_SUFFIX = 'Relani';
 
     const DECIMAL_SEPARATOR = '.';
     const THOUSANDS_SEPARATOR = '';
