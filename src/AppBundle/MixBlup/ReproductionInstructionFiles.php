@@ -28,6 +28,10 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
             MixBlupInstructionFile::FERTILITY_1 => self::generateFertilityInstructionFile(1),
             MixBlupInstructionFile::FERTILITY_2 => self::generateFertilityInstructionFile(2),
             MixBlupInstructionFile::FERTILITY_3 => self::generateFertilityInstructionFile(3),
+            MixBlupInstructionFile::relani(MixBlupInstructionFile::BIRTH_PROGRESS) => self::generateBirthProgressRelaniInstructionFile(),
+            MixBlupInstructionFile::relani(MixBlupInstructionFile::FERTILITY_1) => self::generateFertilityRelaniInstructionFile(1),
+            MixBlupInstructionFile::relani(MixBlupInstructionFile::FERTILITY_2) => self::generateFertilityRelaniInstructionFile(2),
+            MixBlupInstructionFile::relani(MixBlupInstructionFile::FERTILITY_3) => self::generateFertilityRelaniInstructionFile(3),
         ];
     }
 
@@ -105,7 +109,20 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
      */
     public static function generateBirthProgressInstructionFile()
     {
-        return self::reproductionInstructionFileBase(self::getBirthProgressModel(), 'Geboorteverloop');
+        return self::reproductionInstructionFileBase(
+            self::getBirthProgressModel(self::INCLUDE_COMMENTED_OUT_TRAITS),
+            'Geboorteverloop');
+    }
+
+
+    /**
+     * @return array
+     */
+    public static function generateBirthProgressRelaniInstructionFile()
+    {
+        return self::reproductionInstructionFileBase(
+            self::getBirthProgressModel(self::INCLUDE_COMMENTED_OUT_TRAITS, true),
+            'Geboorteverloop', true);
     }
 
 
@@ -157,7 +174,21 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
      */
     public static function generateFertilityInstructionFile($part = null)
     {
-        return self::reproductionInstructionFileBase(self::getFertilityModel($part), 'Vruchtbaarheid');
+        return self::reproductionInstructionFileBase(
+            self::getFertilityModel($part,self::INCLUDE_COMMENTED_OUT_TRAITS),
+            'Vruchtbaarheid');
+    }
+
+
+    /**
+     * @param int $part
+     * @return array
+     */
+    public static function generateFertilityRelaniInstructionFile($part = null)
+    {
+        return self::reproductionInstructionFileBase(
+            self::getFertilityModel($part,self::INCLUDE_COMMENTED_OUT_TRAITS, true),
+            'Vruchtbaarheid', true);
     }
 
 

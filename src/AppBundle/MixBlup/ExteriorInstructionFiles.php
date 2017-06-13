@@ -29,6 +29,12 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
             MixBlupInstructionFile::EXTERIOR_SKULL => self::generateSkullInstructionFile(),
             MixBlupInstructionFile::EXTERIOR_PROGRESS => self::generateProgressInstructionFile(),
             MixBlupInstructionFile::EXTERIOR_TYPE => self::generateExteriorTypeInstructionFile(),
+            MixBlupInstructionFile::relani(MixBlupInstructionFile::EXTERIOR_LEG_WORK) => self::generateLegWorkRelaniInstructionFile(),
+            MixBlupInstructionFile::relani(MixBlupInstructionFile::EXTERIOR_MUSCULARITY) => self::generateMuscularityRelaniInstructionFile(),
+            MixBlupInstructionFile::relani(MixBlupInstructionFile::EXTERIOR_PROPORTION) => self::generateProportionRelaniInstructionFile(),
+            MixBlupInstructionFile::relani(MixBlupInstructionFile::EXTERIOR_SKULL) => self::generateSkullRelaniInstructionFile(),
+            MixBlupInstructionFile::relani(MixBlupInstructionFile::EXTERIOR_PROGRESS) => self::generateProgressRelaniInstructionFile(),
+            MixBlupInstructionFile::relani(MixBlupInstructionFile::EXTERIOR_TYPE) => self::generateExteriorTypeRelaniInstructionFile(),
         ];
     }
 
@@ -148,7 +154,19 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
      */
     public static function generateLegWorkInstructionFile()
     {
-        return self::generateExteriorInstructionFile(self::getLegWorkModel(), 'Beenwerk');
+        return self::generateExteriorInstructionFile(
+            self::getLegWorkModel(self::INCLUDE_COMMENTED_OUT_TRAITS), 'Beenwerk');
+    }
+
+
+    /**
+     * @return array
+     */
+    public static function generateLegWorkRelaniInstructionFile()
+    {
+        return self::generateExteriorInstructionFile(
+            self::getLegWorkModel(self::INCLUDE_COMMENTED_OUT_TRAITS, true),
+            'Beenwerk', true);
     }
 
 
@@ -187,7 +205,19 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
      */
     public static function generateMuscularityInstructionFile()
     {
-        return self::generateExteriorInstructionFile(self::getMuscularityModel(), 'Bespiering');
+        return self::generateExteriorInstructionFile(
+            self::getMuscularityModel(self::INCLUDE_COMMENTED_OUT_TRAITS), 'Bespiering');
+    }
+
+
+    /**
+     * @return array
+     */
+    public static function generateMuscularityRelaniInstructionFile()
+    {
+        return self::generateExteriorInstructionFile(
+            self::getMuscularityModel(self::INCLUDE_COMMENTED_OUT_TRAITS, true),
+            'Bespiering', true);
     }
 
 
@@ -223,7 +253,18 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
      */
     public static function generateProportionInstructionFile()
     {
-        return self::generateExteriorInstructionFile(self::getProportionModel(), 'Evenredigheid');
+        return self::generateExteriorInstructionFile(
+            self::getProportionModel(self::INCLUDE_COMMENTED_OUT_TRAITS), 'Evenredigheid');
+    }
+
+
+    /**
+     * @return array
+     */
+    public static function generateProportionRelaniInstructionFile()
+    {
+        return self::generateExteriorInstructionFile(
+            self::getProportionModel(self::INCLUDE_COMMENTED_OUT_TRAITS, true), 'Evenredigheid', true);
     }
 
 
@@ -258,7 +299,19 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
      */
     public static function generateSkullInstructionFile()
     {
-        return self::generateExteriorInstructionFile(self::getSkullModel(), 'Kop');
+        return self::generateExteriorInstructionFile(
+            self::getSkullModel(self::INCLUDE_COMMENTED_OUT_TRAITS), 'Kop');
+    }
+
+
+    /**
+     * @return array
+     */
+    public static function generateSkullRelaniInstructionFile()
+    {
+        return self::generateExteriorInstructionFile(
+            self::getSkullModel(self::INCLUDE_COMMENTED_OUT_TRAITS, true),
+            'Kop', true);
     }
 
 
@@ -294,7 +347,19 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
      */
     public static function generateProgressInstructionFile()
     {
-        return self::generateExteriorInstructionFile(self::getProgressModel(), 'Ontwikkeling');
+        return self::generateExteriorInstructionFile(
+            self::getProgressModel(self::INCLUDE_COMMENTED_OUT_TRAITS), 'Ontwikkeling');
+    }
+
+
+    /**
+     * @return array
+     */
+    public static function generateProgressRelaniInstructionFile()
+    {
+        return self::generateExteriorInstructionFile(
+            self::getProgressModel(self::INCLUDE_COMMENTED_OUT_TRAITS, true),
+            'Ontwikkeling', true);
     }
 
 
@@ -328,8 +393,18 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
      */
     public static function generateExteriorTypeInstructionFile()
     {
-        return self::generateExteriorInstructionFile(self::getExteriorTypeModel(), 'Type');
+        return self::generateExteriorInstructionFile(
+            self::getExteriorTypeModel(self::INCLUDE_COMMENTED_OUT_TRAITS), 'Type');
     }
 
 
+    /**
+     * @return array
+     */
+    public static function generateExteriorTypeRelaniInstructionFile()
+    {
+        return self::generateExteriorInstructionFile(
+            self::getExteriorTypeModel(self::INCLUDE_COMMENTED_OUT_TRAITS, true),
+            'Type', true);
+    }
 }

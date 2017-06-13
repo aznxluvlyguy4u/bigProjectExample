@@ -24,6 +24,8 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
         return [
             MixBlupInstructionFile::LAMB_MEAT => self::generateLambMeatInstructionFile(),
             MixBlupInstructionFile::TAIL_LENGTH => self::generateTailLengthInstructionFile(),
+            MixBlupInstructionFile::relani(MixBlupInstructionFile::LAMB_MEAT) => self::generateLambMeatRelaniInstructionFile(),
+            MixBlupInstructionFile::relani(MixBlupInstructionFile::TAIL_LENGTH) => self::generateTailLengthRelaniInstructionFile(),
         ];
     }
 
@@ -147,7 +149,18 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
      */
     public static function generateLambMeatInstructionFile()
     {
-        return self::generateTestAttributeInstructionFile(self::getLambMeatModel(), 'Vleeslamkenmerken');
+        return self::generateTestAttributeInstructionFile(
+            self::getLambMeatModel(self::INCLUDE_COMMENTED_OUT_TRAITS), 'Vleeslamkenmerken');
+    }
+
+
+    /**
+     * @return array
+     */
+    public static function generateLambMeatRelaniInstructionFile()
+    {
+        return self::generateTestAttributeInstructionFile(
+            self::getLambMeatModel(self::INCLUDE_COMMENTED_OUT_TRAITS, true), 'Vleeslamkenmerken', true);
     }
 
 
@@ -171,7 +184,18 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
      */
     public static function generateTailLengthInstructionFile()
     {
-        return self::generateTestAttributeInstructionFile(self::getTailLengthModel(), 'Staartlengte');
+        return self::generateTestAttributeInstructionFile(
+            self::getTailLengthModel(self::INCLUDE_COMMENTED_OUT_TRAITS), 'Staartlengte');
+    }
+
+
+    /**
+     * @return array
+     */
+    public static function generateTailLengthRelaniInstructionFile()
+    {
+        return self::generateTestAttributeInstructionFile(
+            self::getTailLengthModel(self::INCLUDE_COMMENTED_OUT_TRAITS, true), 'Staartlengte', true);
     }
 
 
