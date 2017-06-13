@@ -140,12 +140,12 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
         $includeStillBirths = $part == 2 || $part == null ? '' : ' #';
         $includeEarlyFertility = $part == 3 || $part == null ? '' : ' #';
 
-        $totGebModelSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' CovHetLam CovRecLam';
-        $doodGebModelSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' CovHetLam CovRecLam';
+        $totGebModelSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Inductie Leeft CovHetLam CovRecLam';
+        $doodGebModelSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Inductie Leeft CovHetLam CovRecLam';
         $vroegModelSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel();
 
-        $totGebModel =  ' TotGeb  ~ Inductie Leeft '.$jaarBedr.$totGebModelSolaniTraits.' !RANDOM PermMil G(ID)';
-        $doodGebModel = ' DoodGeb ~ Inductie Leeft '.$jaarBedr.$doodGebModelSolaniTraits.' !RANDOM PermMil G(ID)';
+        $totGebModel =  ' TotGeb  ~ '.$jaarBedr.$totGebModelSolaniTraits.' !RANDOM PermMil G(ID)';
+        $doodGebModel = ' DoodGeb ~ '.$jaarBedr.$doodGebModelSolaniTraits.' !RANDOM PermMil G(ID)';
         $vroegModel =   ' Vroeg   ~ '.$jaarBedr.$vroegModelSolaniTraits.' !RANDOM G(ID)';
         $tusLamTModel = ' # TusLamT';
 
