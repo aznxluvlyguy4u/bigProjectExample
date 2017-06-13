@@ -90,6 +90,12 @@ services:
           rootDir: %kernel.cache_dir%
           logger: '@logger'
 
+    app.breed.index:
+        class: AppBundle\Service\BreedIndexService
+        arguments:
+          entityManager: '@doctrine.orm.entity_manager'
+          logger: '@logger'
+
     app.serializer.ir:
         class: AppBundle\Service\IRSerializer
         arguments: ['@jms_serializer', '@doctrine.orm.entity_manager', '@app.doctrine.entitygetter']

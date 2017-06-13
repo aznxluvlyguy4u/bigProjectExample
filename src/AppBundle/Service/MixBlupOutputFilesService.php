@@ -4,8 +4,6 @@
 namespace AppBundle\Service;
 
 
-use AppBundle\Constant\BreedIndexTypeConstant;
-use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Constant\Filename;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\MixBlupAnalysis;
@@ -102,6 +100,11 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     /** @var BreedValueTypeRepository */
     private $breedValueTypeRepository;
 
+    /** @var array */
+    private $breedValueTypesByDutchDescription;
+    /** @var array */
+    private $breedIndexTypesByDutchDescription;
+
     /**
      * MixBlupOutputFilesService constructor.
      * @param ObjectManager $em
@@ -132,6 +135,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $this->zip = new \ZipArchive();
 
         $this->resetSolaniAndRelaniArrays();
+        $this->setSearchArrays();
 
         $this->mixBlupProcesses = [];
         //TODO include actual processes
@@ -148,6 +152,23 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $this->mixBlupProcesses[MixBlupAnalysis::LAMB_MEAT] = null;
         $this->mixBlupProcesses[MixBlupAnalysis::TAIL_LENGTH] = null;
         $this->mixBlupProcesses[MixBlupAnalysis::WORM_RESISTANCE] = null;
+    }
+
+
+
+    private function setSearchArrays()
+    {
+        $breedValueTypes = $this->breedValueTypeRepository->findAll();
+        /** @var BreedValueType $breedValueType */
+        foreach ($breedValueTypes as $breedValueType) {
+            $this->breedValueTypesByDutchDescription[$breedValueType->getNl()] = $breedValueType;
+        }
+
+        $breedIndexTypes = $this->breedIndexTypeRepository->findAll();
+        /** @var BreedIndexType $breedIndexType */
+        foreach ($breedIndexTypes as $breedIndexType) {
+            $this->breedIndexTypesByDutchDescription[$breedValueType->getNl()] = $breedValueType;
+        }
     }
 
 
@@ -468,69 +489,4 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     }
 
 
-    /**
-     * @return bool
-     */
-    public function initializeBreedIndexType()
-    {
-        $breedIndexTypeEntities = $this->breedIndexTypeRepository->findAll();
-        $searchArray = [];
-
-        /** @var BreedIndexType $breedIndexTypeEntity */
-        foreach ($breedIndexTypeEntities as $breedIndexTypeEntity) {
-            $searchArray[$breedIndexTypeEntity->getEn()] = $breedIndexTypeEntity->getNl();
-        }
-
-        $breedIndexTypeValues = BreedIndexTypeConstant::getConstants();
-        $newCount = 0;
-        foreach ($breedIndexTypeValues as $english => $dutch) {
-            if(!key_exists($english, $searchArray)) {
-                $breedIndexType = new BreedIndexType($english, $dutch);
-                $this->em->persist($breedIndexType);
-                $newCount++;
-            }
-        }
-
-        if($newCount > 0) {
-            $this->em->flush();
-            $this->logger->notice($newCount . ' new BreedIndexType records persisted');   
-        } else {
-            $this->logger->notice('No new BreedIndexType records persisted');
-        }
-
-        return $newCount > 0;
-    }
-
-
-    /**
-     * @return bool
-     */
-    public function initializeBreedValueType()
-    {
-        $breedValueTypeEntities = $this->breedValueTypeRepository->findAll();
-        $searchArray = [];
-
-        /** @var BreedValueType $breedValueTypeEntity */
-        foreach ($breedValueTypeEntities as $breedValueTypeEntity) {
-            $searchArray[$breedValueTypeEntity->getEn()] = $breedValueTypeEntity->getNl();
-        }
-
-        $breedValueTypeValues = BreedValueTypeConstant::getConstants();
-        $newCount = 0;
-        foreach ($breedValueTypeValues as $english => $dutch) {
-            if(!key_exists($english, $searchArray)) {
-                $breedValueType = new BreedValueType($english, $dutch);
-                $this->em->persist($breedValueType);
-                $newCount++;
-            }
-        }
-        if($newCount > 0) {
-            $this->em->flush();
-            $this->logger->notice($newCount . ' new BreedValueType records persisted');
-        } else {
-            $this->logger->notice('No new BreedValueType records persisted');
-        }
-
-        return $newCount > 0;
-    }
 }
