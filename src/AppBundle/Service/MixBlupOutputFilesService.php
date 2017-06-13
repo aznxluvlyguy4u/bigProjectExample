@@ -9,6 +9,8 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\MixBlupAnalysis;
 use AppBundle\Entity\BreedIndexType;
 use AppBundle\Entity\BreedIndexTypeRepository;
+use AppBundle\Entity\BreedValue;
+use AppBundle\Entity\BreedValueRepository;
 use AppBundle\Entity\BreedValueType;
 use AppBundle\Entity\BreedValueTypeRepository;
 use AppBundle\Setting\MixBlupFolder;
@@ -17,6 +19,9 @@ use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CsvParser;
 use AppBundle\Util\FilesystemUtil;
+use AppBundle\Util\NumberUtil;
+use AppBundle\Util\SqlUtil;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
@@ -69,22 +74,11 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     private $errors;
 
     /** @var array */
-    private $solani1;
+    private $solani;
     /** @var array */
-    private $solani2;
+    private $relani;
     /** @var array */
-    private $solani3;
-    /** @var array */
-    private $relani1;
-    /** @var array */
-    private $relani2;
-    /** @var array */
-    private $relani3;
-
-    /** @var boolean */
-    private $useSolani2;
-    /** @var boolean */
-    private $useSolani3;
+    private $currentBreedValuesByAnimalIdForGenerationDate;
 
     /** @var int */
     private $totalFilesToDownload;
@@ -99,11 +93,17 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     private $breedIndexTypeRepository;
     /** @var BreedValueTypeRepository */
     private $breedValueTypeRepository;
+    /** @var BreedValueRepository */
+    private $breedValueRepository;
 
     /** @var array */
     private $breedValueTypesByDutchDescription;
     /** @var array */
     private $breedIndexTypesByDutchDescription;
+    /** @var array */
+    private $breedValueTypeIdsByDutchDescription;
+    /** @var array */
+    private $breedIndexTypeIdsByDutchDescription;
 
     /**
      * MixBlupOutputFilesService constructor.
@@ -127,6 +127,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
         $this->breedIndexTypeRepository = $this->em->getRepository(BreedIndexType::class);
         $this->breedValueTypeRepository = $this->em->getRepository(BreedValueType::class);
+        $this->breedValueRepository = $this->em->getRepository(BreedValue::class);
 
         $this->workingFolder = $cacheDir.'/'.MixBlupFolder::ROOT;
         FilesystemUtil::createFolderPathIfNull([$this->getZipFolder(), $this->getResultsFolder()]);
@@ -134,7 +135,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $this->fs = new Filesystem();
         $this->zip = new \ZipArchive();
 
-        $this->resetSolaniAndRelaniArrays();
+        $this->resetSearchArrays();
         $this->setSearchArrays();
 
         $this->mixBlupProcesses = [];
@@ -162,26 +163,34 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         /** @var BreedValueType $breedValueType */
         foreach ($breedValueTypes as $breedValueType) {
             $this->breedValueTypesByDutchDescription[$breedValueType->getNl()] = $breedValueType;
+            $this->breedValueTypeIdsByDutchDescription[$breedValueType->getNl()] = $breedValueType->getId();
         }
 
         $breedIndexTypes = $this->breedIndexTypeRepository->findAll();
         /** @var BreedIndexType $breedIndexType */
         foreach ($breedIndexTypes as $breedIndexType) {
             $this->breedIndexTypesByDutchDescription[$breedValueType->getNl()] = $breedValueType;
+            $this->breedIndexTypeIdsByDutchDescription[$breedValueType->getNl()] = $breedValueType->getId();
         }
     }
 
 
-    private function resetSolaniAndRelaniArrays()
+    private function resetSearchArrays()
     {
-        $this->solani1 = [];
-        $this->solani2 = [];
-        $this->solani3 = [];
-        $this->relani1 = [];
-        $this->relani2 = [];
-        $this->relani3 = [];
-        $this->useSolani2 = false;
-        $this->useSolani3 = false;
+        $this->solani = [];
+        $this->relani = [];
+
+        if($this->key == null) {
+            $this->currentBreedValuesByAnimalIdForGenerationDate = [];
+        } else {
+            //TODO get datetime from $this->key
+            $generationDate = $this->key;
+            $breedValues = $this->breedValueRepository->findBy(['generation_date' => $generationDate]);
+            //TODO or use sql to create this searchArray. This search array is necessary to prevent duplicate entries!
+            $dutchBreedValueType = '';
+            $animalId = '';
+            $this->currentBreedValuesByAnimalIdForGenerationDate[$dutchBreedValueType][$animalId] = [];
+        }
     }
 
 
@@ -233,7 +242,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
                     if($successfulUnzip) {
 
-                        $this->resetSolaniAndRelaniArrays();
+                        $this->resetSearchArrays();
 
                         //TODO
                         $this->parseSolaniFiles();
@@ -346,59 +355,50 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         }
         return false;
     }
-    
-    
+
+
+    /**
+     * Dynamically fill the solani search array
+     */
     private function parseSolaniFiles()
     {
         $ssv = CsvParser::parseSpaceSeparatedFile($this->getResultsFolder(), Filename::SOLANI);
 
-        $setting = MixBlupParseInstruction::get($this->currentBreedType);
-        //NOTE! Atleast $animalIdRow and $solani
-        $animalIdRow = ArrayUtil::get(JsonInputConstant::ANIMAL_ID, $setting);
-        $solani1Row = ArrayUtil::get(JsonInputConstant::SOLANI_1, $setting);
-        $solani2Row = ArrayUtil::get(JsonInputConstant::SOLANI_2, $setting);
-        $solani3Row = ArrayUtil::get(JsonInputConstant::SOLANI_3, $setting);
+        $dutchBreedValueTypes = MixBlupParseInstruction::get($this->currentBreedType);
 
         foreach ($ssv as $row) {
 
-            $animalId = $row[$animalIdRow];
+            $animalId = $row[0];
+            foreach ($dutchBreedValueTypes as $ordinal => $dutchBreedValueType) {
+                $solaniBreedValue = ArrayUtil::get($dutchBreedValueType, $this->solani, []);
 
-            $this->solani1[$animalId] = $row[$solani1Row];
-
-            if(is_int($solani2Row)) {
-                $this->solani2[$animalId] = $row[$solani2Row];
+                //0-indexed solani column n starts at 0-indexed $ssv row[n+3] / column 4 in the file
+                $solaniBreedValue[$animalId] = $row[$ordinal+3];
+                $this->solani[$dutchBreedValueType] = $solaniBreedValue;
             }
 
-            if(is_int($solani3Row)) {
-                $this->solani3[$animalId] = $row[$solani3Row];
-            }
         }
     }
-    
-    
+
+
+    /**
+     * Dynamically fill the relani search array
+     */
     private function parseRelaniFiles()
     {
         $ssv = CsvParser::parseSpaceSeparatedFile($this->getResultsFolder(), Filename::RELANI);
 
-        $setting = MixBlupParseInstruction::get($this->currentBreedType);
-        //NOTE! Atleast $animalIdRow and $solani
-        $animalIdRow = ArrayUtil::get(JsonInputConstant::ANIMAL_ID, $setting);
-        $relani1Row = ArrayUtil::get(JsonInputConstant::RELANI_1, $setting);
-        $relani2Row = ArrayUtil::get(JsonInputConstant::RELANI_2, $setting);
-        $relani3Row = ArrayUtil::get(JsonInputConstant::RELANI_3, $setting);
+        $dutchBreedValueTypes = MixBlupParseInstruction::get($this->currentBreedType);
 
         foreach ($ssv as $row) {
 
-            $animalId = $row[$animalIdRow];
+            $animalId = $row[0];
+            foreach ($dutchBreedValueTypes as $ordinal => $dutchBreedValueType) {
+                $relaniBreedValue = ArrayUtil::get($dutchBreedValueType, $this->relani, []);
 
-            $this->relani1[$animalId] = $row[$relani1Row];
-
-            if(is_int($relani2Row)) {
-                $this->relani2[$animalId] = $row[$relani2Row];
-            }
-
-            if(is_int($relani3Row)) {
-                $this->relani3[$animalId] = $row[$relani3Row];
+                //0-indexed relani column n starts at 0-indexed $ssv row[n+3] / column 4 in the file
+                $relaniBreedValue[$animalId] = $row[$ordinal+3];
+                $this->relani[$dutchBreedValueType] = $relaniBreedValue;
             }
         }
     }
@@ -406,56 +406,95 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
     private function processBreedValues()
     {
-        $animalIds = array_keys($this->solani1);
-
-        $this->useSolani2 = count($this->solani2) > 0;
-        $this->useSolani3 = count($this->solani3) > 0;
-
         $sqlBatchString = '';
-        $counter = 0;
-        $batchCounter = 0;
-        foreach ($animalIds as $animalId) {
-            $breedValueInsertString = $this->processBreedValue($animalId);
-            if($breedValueInsertString != null) {
-                $sqlBatchString = $sqlBatchString . $breedValueInsertString;
-                $counter++;
-                $batchCounter++;
-            }
+        $prefix = '';
+        $totalCount = 0;
+        $batchCount = 0;
+        $valueAlreadyExistsCount = 0;
+        $nullAccuracyCount = 0;
 
-            if($counter%self::BATCH_SIZE == 0 && $counter != 0) {
-                //TODO persist per batchsize
-                $sqlBatchString = '';
-                $batchCounter = 0;
+        //TODO add a $cmdUtil counter
+        foreach ($this->relani as $dutchBreedValueType => $relaniValues) {
+
+            $breedValueId = $this->breedValueTypeIdsByDutchDescription[$dutchBreedValueType];
+
+            foreach ($relaniValues as $animalId => $relaniValue) {
+
+                //TODO check if the breedValue already exists for the given generationDate and dutchBreedValueType
+                $alreadyExists = $this->currentBreedValuesByAnimalIdForGenerationDate[$dutchBreedValueType][$animalId];
+                if($alreadyExists) {
+                    $valueAlreadyExistsCount++;
+                    continue;
+                }
+
+                //Note! a 0.000 value in the relani file refers to a null/missing value.
+                //Do not persist these in the database.
+                //TODO verify if floatval actually works and if the value type correct
+                $relani = floatval($relaniValue);
+                if(NumberUtil::isFloatZero($relani)) {
+                    $nullAccuracyCount++;
+                    continue;
+                }
+
+                $solaniValues = ArrayUtil::get($dutchBreedValueType, $this->solani);
+                $solaniValue = ArrayUtil::get($animalId, $solaniValues);
+
+                if($solaniValue != null) {
+
+                    $solani = floatval($solaniValue);
+                    //TODO add $breedValueId,  animalId, solani, relani to sqlInsertString
+                    $breedValueInsertString = $this->writeBreedValueInsertString($prefix, $breedValueId, $animalId, $solani, $relani); //TODO
+
+                    $sqlBatchString = $sqlBatchString . $breedValueInsertString;
+                    $totalCount++;
+                    $batchCount++;
+                    $prefix = ',';
+
+                    if($totalCount%self::BATCH_SIZE == 0 && $totalCount != 0) {
+                        $this->persistBreedValueBySql($sqlBatchString); //TODO
+                        $sqlBatchString = '';
+                        $prefix = '';
+                        $batchCount = 0;
+                    }
+                }
+
             }
         }
 
-        //TODO persist
+        if($sqlBatchString != '') {
+            $this->persistBreedValueBySql($sqlBatchString); //TODO
+            $sqlBatchString = '';
+            $prefix = '';
+            $batchCount = 0;
+        }
     }
 
 
     /**
-     * TODO Use values to calculate the breedValue for the specific animal and create an sql insert query for it.
-     *
-     * @param $animalId
+     * @param string $prefix
+     * @param int $breedValueId
+     * @param int $animalId
+     * @param float $solani
+     * @param float $relani
      * @return string
      */
-    private function processBreedValue($animalId)
+    private function writeBreedValueInsertString($prefix, $breedValueId, $animalId, $solani, $relani)
     {
-        $this->currentBreedType;
-        $solani1 = ArrayUtil::get($animalId, $this->solani1);
-        $relani1 = ArrayUtil::get($animalId, $this->relani1);
+        return ''; //TODO
+    }
 
-        if($this->useSolani2) {
-            $solani2 = ArrayUtil::get($animalId, $this->solani2);
-            $relani2 = ArrayUtil::get($animalId, $this->relani2);
-        }
 
-        if($this->useSolani3) {
-            $solani3 = ArrayUtil::get($animalId, $this->solani3);
-            $relani3 = ArrayUtil::get($animalId, $this->relani3);
-        }
-
-        return '';//TODO sqlBatchInsertString
+    /**
+     * TODO
+     *
+     * @param string $sqlBatchString
+     * @return integer
+     */
+    private function persistBreedValueBySql($sqlBatchString)
+    {
+        if($sqlBatchString == '') { return 0; }
+        $sql = '';
+        return SqlUtil::updateWithCount($this->conn, $sql);
     }
 
 
