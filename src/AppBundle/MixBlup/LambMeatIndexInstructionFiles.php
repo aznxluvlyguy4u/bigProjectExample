@@ -84,30 +84,41 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
 
     /**
      * @param bool $includeCommentedOutBreedValues
+     * @param bool $isRelani
      * @return array
      */
-    public static function getLambMeatModel($includeCommentedOutBreedValues = true)
+    public static function getLambMeatModel($includeCommentedOutBreedValues = true, $isRelani = false)
     {
+        $jaarBedr = self::jaarBedrijf($isRelani);
+
+        $gewGebSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling';
+        $gew08SolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling LeeftScan';
+        $gew20SolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling LeeftScan';
+        $vetd01SolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling GewScan';
+        $vetd02SolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling GewScan';
+        $vetd03SolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling GewScan';
+        $spierdSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling GewScan';
+
         $base1 = [
-            'GewGeb' => ' GewGeb    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling !RANDOM WorpID G(ID,IDM)',
+            'GewGeb' => ' GewGeb    ~ '.$jaarBedr.$gewGebSolaniTraits.' !RANDOM WorpID G(ID,IDM)',
         ];
 
         $commentedOut1 = [
-            'Gew08' =>  '# Gew08     ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling LeeftScan !RANDOM WorpID G(ID)',
+            'Gew08' =>  '# Gew08     ~ '.$jaarBedr.$gew08SolaniTraits.' !RANDOM WorpID G(ID)',
         ];
 
         $base2 = [
-            'Gew20' =>  ' Gew20     ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling LeeftScan !RANDOM WorpID G(ID)',
-            'Vetd01' => ' Vetd01    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling GewScan !RANDOM WorpID G(ID)',
+            'Gew20' =>  ' Gew20     ~ '.$jaarBedr.$gew20SolaniTraits.' !RANDOM WorpID G(ID)',
+            'Vetd01' => ' Vetd01    ~ '.$jaarBedr.$vetd01SolaniTraits.' !RANDOM WorpID G(ID)',
         ];
 
         $commentedOut2 = [
-            'Vetd02' => '# Vetd02    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling GewScan !RANDOM WorpID G(ID)',
+            'Vetd02' => '# Vetd02    ~ '.$jaarBedr.$vetd02SolaniTraits.' !RANDOM WorpID G(ID)',
         ];
 
         $base3 = [
-            'Vetd03' => ' Vetd03    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling GewScan !RANDOM WorpID G(ID)',
-            'Spierd' => ' Spierd    ~ JaarBedr '.self::getBreedCodesModel().' Sekse Nling GewScan !RANDOM WorpID G(ID)',
+            'Vetd03' => ' Vetd03    ~ '.$jaarBedr.$vetd03SolaniTraits.' !RANDOM WorpID G(ID)',
+            'Spierd' => ' Spierd    ~ '.$jaarBedr.$spierdSolaniTraits.' !RANDOM WorpID G(ID)',
         ];
 
 
@@ -142,12 +153,15 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
 
     /**
      * @param bool $includeCommentedOutBreedValues variable is included to match structure of other get...Model functions
+     * @param bool $isRelani
      * @return array
      */
-    public static function getTailLengthModel($includeCommentedOutBreedValues = true)
+    public static function getTailLengthModel($includeCommentedOutBreedValues = true, $isRelani = false)
     {
+        $staartLenSolaniTraits = $isRelani ? '' : ' GewGeb Nling Sekse '.self::getBreedCodesModel();
+
         return $baseModel = [
-            'StaartLen' => ' StaartLen ~ GewGeb JaarBedr Nling Sekse '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            'StaartLen' => ' StaartLen ~ '.self::jaarBedrijf($isRelani).$staartLenSolaniTraits.' !RANDOM WorpID G(ID)',
         ];
     }
 

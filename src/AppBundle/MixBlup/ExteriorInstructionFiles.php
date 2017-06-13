@@ -116,15 +116,20 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
 
     /**
      * @param bool $includeCommentedOutBreedValues
+     * @param bool $isRelani
      * @return array
      */
-    public static function getLegWorkModel($includeCommentedOutBreedValues = true)
+    public static function getLegWorkModel($includeCommentedOutBreedValues = true, $isRelani = false)
     {
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
+        $jaarBedr = self::jaarBedrijf($isRelani);
+
+        $beenwVGmSolaniTraits = $isRelani ? '' : ' Inspectr '.self::getBreedCodesModel();
+        $beenwDFSolaniTraits = $isRelani ? '' : ' Inspectr Sekse '.self::getBreedCodesModel();
 
         $baseModel = [
-            'BeenwVGm' =>   ' BeenwVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
-            'BeenwDF' =>    ' BeenwDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            'BeenwVGm' =>   ' BeenwVGm  ~ '.$jaarBedr.$beenwVGmSolaniTraits.' !RANDOM G(ID)',
+            'BeenwDF' =>    ' BeenwDF   ~ '.$jaarBedr.$beenwDFSolaniTraits.' !RANDOM WorpID G(ID)',
         ];
 
         $extraModel = [
@@ -149,16 +154,22 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
 
     /**
      * @param bool $includeCommentedOutBreedValues
+     * @param bool $isRelani
      * @return array
      */
-    public static function getMuscularityModel($includeCommentedOutBreedValues = true)
+    public static function getMuscularityModel($includeCommentedOutBreedValues = true, $isRelani = false)
     {
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
+        $jaarBedr = self::jaarBedrijf($isRelani);
+
+        $bespVGvSolaniTraits = $isRelani ? '' : ' Inspectr '.self::getBreedCodesModel();
+        $bespVGmSolaniTraits = $isRelani ? '' : ' Inspectr '.self::getBreedCodesModel();
+        $bespDFSolaniTraits = $isRelani ? '' : ' Inspectr Sekse '.self::getBreedCodesModel();
 
         $baseModel = [
-            'BespVGv' =>    ' BespVGv  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
-            'BespVGm' =>    ' BespVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
-            'BespDF'  =>    ' BespDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
+            'BespVGv' =>    ' BespVGv  ~ '.$jaarBedr.$bespVGvSolaniTraits.' !RANDOM WorpID G(ID)',
+            'BespVGm' =>    ' BespVGm  ~ '.$jaarBedr.$bespVGmSolaniTraits.' !RANDOM G(ID)',
+            'BespDF'  =>    ' BespDF   ~ '.$jaarBedr.$bespDFSolaniTraits.' !RANDOM G(ID)',
         ];
 
         $extraModel = [
@@ -182,15 +193,20 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
 
     /**
      * @param bool $includeCommentedOutBreedValues
+     * @param bool $isRelani
      * @return array
      */
-    public static function getProportionModel($includeCommentedOutBreedValues = true)
+    public static function getProportionModel($includeCommentedOutBreedValues = true, $isRelani = false)
     {
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
+        $jaarBedr = self::jaarBedrijf($isRelani);
+
+        $evenrVGmSolaniTraits = $isRelani ? '' : ' Inspectr '.self::getBreedCodesModel();
+        $evenrDFSolaniTraits = $isRelani ? '' : ' Inspectr Sekse '.self::getBreedCodesModel();
 
         $baseModel = [
-            'EvenrVGm' =>   ' EvenrVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
-            'EvenrDF'  =>   ' EvenrDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            'EvenrVGm' =>   ' EvenrVGm  ~ '.$jaarBedr.$evenrVGmSolaniTraits.' !RANDOM G(ID)',
+            'EvenrDF'  =>   ' EvenrDF   ~ '.$jaarBedr.$evenrDFSolaniTraits.' !RANDOM WorpID G(ID)',
         ];
 
         $extraModel = [
@@ -213,15 +229,20 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
 
     /**
      * @param bool $includeCommentedOutBreedValues
+     * @param bool $isRelani
      * @return array
      */
-    public static function getSkullModel($includeCommentedOutBreedValues = true)
+    public static function getSkullModel($includeCommentedOutBreedValues = true, $isRelani = false)
     {
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
+        $jaarBedr = self::jaarBedrijf($isRelani);
+
+        $kopVGmSolaniTraits = $isRelani ? '' : ' Inspectr '.self::getBreedCodesModel();
+        $kopDFSolaniTraits = $isRelani ? '' : ' Inspectr Sekse '.self::getBreedCodesModel();
 
         $baseModel = [
-            'KopVGm' => ' KopVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
-            'KopDF' =>  ' KopDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            'KopVGm' => ' KopVGm  ~ '.$jaarBedr.$kopVGmSolaniTraits.' !RANDOM WorpID G(ID)',
+            'KopDF' =>  ' KopDF   ~ '.$jaarBedr.$kopDFSolaniTraits.' !RANDOM WorpID G(ID)',
         ];
 
         $extraModel = [
@@ -243,15 +264,20 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
 
     /**
      * @param bool $includeCommentedOutBreedValues
+     * @param bool $isRelani
      * @return array
      */
-    public static function getProgressModel($includeCommentedOutBreedValues = true)
+    public static function getProgressModel($includeCommentedOutBreedValues = true, $isRelani = false)
     {
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
+        $jaarBedr = self::jaarBedrijf($isRelani);
+
+        $ontwVGmSolaniTraits = $isRelani ? '' : ' Inspectr '.self::getBreedCodesModel();
+        $ontwDFSolaniTraits = $isRelani ? '' : ' Inspectr Sekse '.self::getBreedCodesModel();
 
         $baseModel = [
-            'OntwVGm' =>    ' OntwVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
-            'OntwDF' =>     ' OntwDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            'OntwVGm' =>    ' OntwVGm  ~ '.$jaarBedr.$ontwVGmSolaniTraits.' !RANDOM G(ID)',
+            'OntwDF' =>     ' OntwDF   ~ '.$jaarBedr.$ontwDFSolaniTraits.' !RANDOM WorpID G(ID)',
         ];
 
         $extraModel = [
@@ -274,15 +300,20 @@ class ExteriorInstructionFiles extends MixBlupInstructionFileBase implements Mix
 
     /**
      * @param bool $includeCommentedOutBreedValues
+     * @param bool $isRelani
      * @return array
      */
-    public static function getExteriorTypeModel($includeCommentedOutBreedValues = true)
+    public static function getExteriorTypeModel($includeCommentedOutBreedValues = true, $isRelani = false)
     {
         $commentHashTag = MixBlupSetting::INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS ? '' : '# ';
+        $jaarBedr = self::jaarBedrijf($isRelani);
+
+        $typeVGmSolaniTraits = $isRelani ? '' : ' Inspectr '.self::getBreedCodesModel();
+        $typeDFSolaniTraits = $isRelani ? '' : ' Inspectr Sekse '.self::getBreedCodesModel();
 
         $baseModel = [
-            'TypeVGm' =>    ' TypeVGm  ~ JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM G(ID)',
-            'TypeDF' =>     ' TypeDF   ~ Sekse JaarBedr Inspectr '.self::getBreedCodesModel().' !RANDOM WorpID G(ID)',
+            'TypeVGm' =>    ' TypeVGm  ~ '.$jaarBedr.$typeVGmSolaniTraits.' !RANDOM G(ID)',
+            'TypeDF' =>     ' TypeDF   ~ '.$jaarBedr.$typeDFSolaniTraits.' !RANDOM WorpID G(ID)',
         ];
 
         $extraModel = [

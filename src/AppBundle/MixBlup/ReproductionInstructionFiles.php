@@ -87,12 +87,15 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
 
     /**
      * @param bool $includeCommentedOutBreedValues variable is included to match structure of other get...Model functions
+     * @param bool $isRelani
      * @return array
      */
-    public static function getBirthProgressModel($includeCommentedOutBreedValues = true)
+    public static function getBirthProgressModel($includeCommentedOutBreedValues = true, $isRelani = false)
     {
+        $gebGemakSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' CovHetLam CovRecLam';
+
         return $baseModel = [
-            'GebGemak' =>   ' GebGemak  ~ JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM G(ID,IDM)'
+            'GebGemak' =>   ' GebGemak  ~ '.self::jaarBedrijf($isRelani).$gebGemakSolaniTraits.' !RANDOM G(ID,IDM)'
         ];
     }
 
@@ -109,17 +112,24 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
     /**
      * @param int $part
      * @param bool $includeCommentedOutBreedValues
+     * @param bool $isRelani
      * @return array
      */
-    public static function getFertilityModel($part, $includeCommentedOutBreedValues = true)
+    public static function getFertilityModel($part, $includeCommentedOutBreedValues = true, $isRelani = false)
     {
+        $jaarBedr = self::jaarBedrijf($isRelani);
+
         $includeTotalBirths = $part == 1 || $part == null ? '' : ' #';
         $includeStillBirths = $part == 2 || $part == null ? '' : ' #';
         $includeEarlyFertility = $part == 3 || $part == null ? '' : ' #';
 
-        $totGebModel =  ' TotGeb  ~ Inductie Leeft JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM PermMil G(ID)';
-        $doodGebModel = ' DoodGeb ~ Inductie Leeft JaarBedr '.self::getBreedCodesModel().' CovHetLam CovRecLam !RANDOM PermMil G(ID)';
-        $vroegModel =   ' Vroeg   ~ JaarBedr '.self::getBreedCodesModel().' !RANDOM G(ID)';
+        $totGebModelSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' CovHetLam CovRecLam';
+        $doodGebModelSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' CovHetLam CovRecLam';
+        $vroegModelSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel();
+
+        $totGebModel =  ' TotGeb  ~ Inductie Leeft '.$jaarBedr.$totGebModelSolaniTraits.' !RANDOM PermMil G(ID)';
+        $doodGebModel = ' DoodGeb ~ Inductie Leeft '.$jaarBedr.$doodGebModelSolaniTraits.' !RANDOM PermMil G(ID)';
+        $vroegModel =   ' Vroeg   ~ '.$jaarBedr.$vroegModelSolaniTraits.' !RANDOM G(ID)';
         $tusLamTModel = ' # TusLamT';
 
         if($includeCommentedOutBreedValues) {

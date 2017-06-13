@@ -28,6 +28,16 @@ abstract class MixBlupInstructionFileBase
         return $isRelani ? '!BLOCK ' : '';
     }
 
+
+    /**
+     * @param bool $isRelani
+     * @return string
+     */
+    protected static function jaarBedrijf($isRelani = false)
+    {
+        return $isRelani ? 'BL(JaarBedr)' : 'JaarBedr';
+    }
+
     /**
      * @param string $type
      * @param boolean $isRelani
