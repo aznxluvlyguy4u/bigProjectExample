@@ -17,7 +17,8 @@ class MixBlupSetting
 
     const DECIMAL_SEPARATOR = '.';
     const THOUSANDS_SEPARATOR = '';
-    
+    const FLOAT_ACCURACY = 0.00000000001;
+
     const INCLUDE_EXTERIOR_LINEAR_MEASUREMENTS = false;
 
     const MEASUREMENTS_FROM_LAST_AMOUNT_OF_YEARS = 15;

@@ -100,6 +100,9 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     /** @var array */
     private $breedIndexTypeIdsByDutchDescription;
 
+    /** @var array */
+    private $minReliabilityByBreedValueTypeDutchDescription;
+
     /**
      * MixBlupOutputFilesService constructor.
      * @param ObjectManager $em
@@ -143,6 +146,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         foreach ($breedValueTypes as $breedValueType) {
             $this->breedValueTypesByDutchDescription[$breedValueType->getNl()] = $breedValueType;
             $this->breedValueTypeIdsByDutchDescription[$breedValueType->getNl()] = $breedValueType->getId();
+            $this->minReliabilityByBreedValueTypeDutchDescription[$breedValueType->getNl()] = $breedValueType->getMinReliability();
         }
 
         $breedIndexTypes = $this->breedIndexTypeRepository->findAll();
@@ -369,18 +373,24 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
             $animalId = $row[0];
             foreach ($dutchBreedValueTypes as $ordinal => $dutchBreedValueType) {
-                $solaniBreedValue = ArrayUtil::get($dutchBreedValueType, $this->solani, []);
+                $solaniBreedValueGroup = ArrayUtil::get($dutchBreedValueType, $this->solani, []);
 
                 //0-indexed solani column n starts at 0-indexed $ssv row[n+3] / column 4 in the file
-                $solaniBreedValue[$animalId] = $row[$ordinal+3];
-                $this->solani[$dutchBreedValueType] = $solaniBreedValue;
+                $value = $row[$ordinal+3];
+                if($value != null && $value != '') {
+                    $floatValue = floatval($value);
+                    //NOTE! Zero and negative Solani values are valid!
+                    $solaniBreedValueGroup[$animalId] = $floatValue;
+                    $this->solani[$dutchBreedValueType] = $solaniBreedValueGroup;
+                }
             }
-
         }
     }
 
 
     /**
+     * NOTE! Null Relani values are already filtered out. So the Relani array will be smaller than the Solani array!
+     *
      * Dynamically fill the relani search array
      */
     private function parseRelaniFiles()
@@ -393,11 +403,18 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
             $animalId = $row[0];
             foreach ($dutchBreedValueTypes as $ordinal => $dutchBreedValueType) {
-                $relaniBreedValue = ArrayUtil::get($dutchBreedValueType, $this->relani, []);
+                $relaniBreedValueGroup = ArrayUtil::get($dutchBreedValueType, $this->relani, []);
 
                 //0-indexed relani column n starts at 0-indexed $ssv row[n+3] / column 4 in the file
-                $relaniBreedValue[$animalId] = $row[$ordinal+3];
-                $this->relani[$dutchBreedValueType] = $relaniBreedValue;
+                $value = $row[$ordinal+3];
+                if($value != null && $value != '') {
+                    $floatValue = floatval($value);
+
+                    if(!NumberUtil::isFloatZero($floatValue, MixBlupSetting::FLOAT_ACCURACY)) {
+                        $relaniBreedValueGroup[$animalId] = $floatValue;
+                        $this->relani[$dutchBreedValueType] = $relaniBreedValueGroup;
+                    }
+                }
             }
         }
     }
@@ -433,12 +450,12 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
         DoctrineUtil::updateTableSequence($this->conn, [BreedValue::TABLE_NAME]);
 
-        //TODO add a $cmdUtil counter
         foreach ($this->relani as $dutchBreedValueType => $relaniValues) {
 
             $breedValueTypeId = $this->breedValueTypeIdsByDutchDescription[$dutchBreedValueType];
 
-            foreach ($relaniValues as $animalId => $relaniValue) {
+            //NOTE! Null Relani values are already filtered out. So the Relani array will be smaller than the Solani array!
+            foreach ($relaniValues as $animalId => $relani) {
 
                 if($this->breedValueAlreadyExists($dutchBreedValueType, $animalId)) {
                     $valueAlreadyExistsCount++;
@@ -447,21 +464,17 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
                 //Note! a 0.000 value in the relani file refers to a null/missing value.
                 //Do not persist these in the database.
-                //TODO verify if floatval actually works and if the value type correct
-                $relani = floatval($relaniValue);
-                if(NumberUtil::isFloatZero($relani)) {
+                if(NumberUtil::isFloatZero($relani, MixBlupSetting::FLOAT_ACCURACY)) {
                     $nullAccuracyCount++;
                     continue;
                 }
 
                 $solaniValues = ArrayUtil::get($dutchBreedValueType, $this->solani);
-                $solaniValue = ArrayUtil::get($animalId, $solaniValues);
+                $solani = ArrayUtil::get($animalId, $solaniValues);
 
-                if($solaniValue != null) {
+                if($solani != null) {
 
-                    $solani = floatval($solaniValue);
-                    //TODO add $breedValueId,  animalId, solani, relani to sqlInsertString
-                    $breedValueInsertString = $this->writeBreedValueInsertString($prefix, $breedValueTypeId, $animalId, $solani, $relani); //TODO
+                    $breedValueInsertString = $this->writeBreedValueInsertValuesString($prefix, $breedValueTypeId, $animalId, $solani, $relani);
 
                     $sqlBatchString = $sqlBatchString . $breedValueInsertString;
                     $totalCount++;
@@ -471,7 +484,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $this->addToCurrentBreedValueExistsByAnimalIdForGenerationDate($dutchBreedValueType, $animalId);
 
                     if($totalCount%self::BATCH_SIZE == 0 && $totalCount != 0) {
-                        $this->persistBreedValueBySql($sqlBatchString); //TODO
+                        $this->persistBreedValueBySql($sqlBatchString);
                         $sqlBatchString = '';
                         $prefix = '';
                         $batchCount = 0;
@@ -498,22 +511,23 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
      * @param float $relani
      * @return string
      */
-    private function writeBreedValueInsertString($prefix, $breedValueTypeId, $animalId, $solani, $relani)
+    private function writeBreedValueInsertValuesString($prefix, $breedValueTypeId, $animalId, $solani, $relani)
     {
-        return ''; //TODO
+        return $prefix."(nextval('breed_value_id_seq'),".$animalId.",".$breedValueTypeId.",NOW(),'".$this->key."','". $solani."','".$relani."')";
     }
 
 
     /**
-     * TODO
-     *
      * @param string $sqlBatchString
      * @return integer
      */
     private function persistBreedValueBySql($sqlBatchString)
     {
         if($sqlBatchString == '') { return 0; }
-        $sql = '';
+
+        $sql = "INSERT INTO breed_value (id, animal_id, type_id, log_date, generation_date, value, reliability) VALUES ".$sqlBatchString;
+        $this->conn->exec($sql);
+
         return SqlUtil::updateWithCount($this->conn, $sql);
     }
 
