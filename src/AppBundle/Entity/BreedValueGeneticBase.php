@@ -17,7 +17,7 @@ use JMS\Serializer\Annotation as JMS;
  *   X = $geneticBaseYear
  * Both $minAccuracy and $geneticBaseYear are found in the BreedIndexCalculationTerms class.
  *
- * @ORM\Entity(repositoryClass="AppBundle\Entity")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\BreedValueGeneticBaseRepository")
  * @package AppBundle\Entity
  */
 class BreedValueGeneticBase
