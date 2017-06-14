@@ -14,6 +14,8 @@ use JMS\Serializer\Annotation as JMS;
  */
 class BreedValue
 {
+    const TABLE_NAME = 'breed_value';
+
     /**
      * @var integer
      *

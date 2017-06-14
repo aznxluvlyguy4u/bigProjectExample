@@ -16,6 +16,7 @@ use AppBundle\Setting\MixBlupParseInstruction;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CsvParser;
+use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\NumberUtil;
 use AppBundle\Util\SqlUtil;
@@ -429,6 +430,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $batchCount = 0;
         $valueAlreadyExistsCount = 0;
         $nullAccuracyCount = 0;
+
+        DoctrineUtil::updateTableSequence($this->conn, [BreedValue::TABLE_NAME]);
 
         //TODO add a $cmdUtil counter
         foreach ($this->relani as $dutchBreedValueType => $relaniValues) {
