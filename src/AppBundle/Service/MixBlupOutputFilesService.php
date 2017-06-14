@@ -72,7 +72,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     /** @var array */
     private $relani;
     /** @var array */
-    private $currentBreedValueIdsByAnimalIdForGenerationDate;
+    private $currentBreedValueExistsByAnimalIdForGenerationDate;
 
     /** @var int */
     private $totalFilesToDownload;
@@ -158,7 +158,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $this->solani = [];
         $this->relani = [];
 
-        $this->currentBreedValueIdsByAnimalIdForGenerationDate = [];
+        $this->currentBreedValueExistsByAnimalIdForGenerationDate = [];
 
         if($this->key != null) {
 
@@ -171,15 +171,24 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             foreach ($results as $result) {
                 $dutchBreedValueType = $result['dutch_breed_value_type'];
                 $animalId = $result['animal_id'];
-                $breedValueId = $result['id'];
-
-                if(!key_exists($dutchBreedValueType, $this->currentBreedValueIdsByAnimalIdForGenerationDate)) {
-                    $this->currentBreedValueIdsByAnimalIdForGenerationDate[$dutchBreedValueType] = [];
-                }
-
-                $this->currentBreedValueIdsByAnimalIdForGenerationDate[$dutchBreedValueType][$animalId] = $breedValueId;
+                //$breedValueId = $result['id'];
+                $this->addToCurrentBreedValueExistsByAnimalIdForGenerationDate($dutchBreedValueType, $animalId);
             }
         }
+    }
+
+
+    /**
+     * @param string $dutchBreedValueType
+     * @param integer $animalId
+     */
+    private function addToCurrentBreedValueExistsByAnimalIdForGenerationDate($dutchBreedValueType, $animalId)
+    {
+        if(!key_exists($dutchBreedValueType, $this->currentBreedValueExistsByAnimalIdForGenerationDate)) {
+            $this->currentBreedValueExistsByAnimalIdForGenerationDate[$dutchBreedValueType] = [];
+        }
+
+        $this->currentBreedValueExistsByAnimalIdForGenerationDate[$dutchBreedValueType][$animalId] = true;
     }
 
 
@@ -393,6 +402,25 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     }
 
 
+    /**
+     * Check if the breedValue already exists for the given dutchBreedValueType and generationDateString = $this->key.
+     *
+     * @param string $dutchBreedValueType
+     * @param int $animalId
+     * @return bool
+     */
+    private function breedValueAlreadyExists($dutchBreedValueType, $animalId)
+    {
+        //
+        $dutchBreedValueTypeGroup = ArrayUtil::get($dutchBreedValueType, $this->currentBreedValueExistsByAnimalIdForGenerationDate);
+        if($dutchBreedValueTypeGroup != null) {
+            $animalId = ArrayUtil::get($animalId, $dutchBreedValueTypeGroup);
+            return key_exists($animalId, $dutchBreedValueTypeGroup);
+        }
+        return false;
+    }
+
+
     private function processBreedValues()
     {
         $sqlBatchString = '';
@@ -405,13 +433,11 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         //TODO add a $cmdUtil counter
         foreach ($this->relani as $dutchBreedValueType => $relaniValues) {
 
-            $breedValueId = $this->breedValueTypeIdsByDutchDescription[$dutchBreedValueType];
+            $breedValueTypeId = $this->breedValueTypeIdsByDutchDescription[$dutchBreedValueType];
 
             foreach ($relaniValues as $animalId => $relaniValue) {
 
-                //TODO check if the breedValue already exists for the given generationDate and dutchBreedValueType
-                $alreadyExists = $this->currentBreedValueIdsByAnimalIdForGenerationDate[$dutchBreedValueType][$animalId];
-                if($alreadyExists) {
+                if($this->breedValueAlreadyExists($dutchBreedValueType, $animalId)) {
                     $valueAlreadyExistsCount++;
                     continue;
                 }
@@ -432,12 +458,14 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
                     $solani = floatval($solaniValue);
                     //TODO add $breedValueId,  animalId, solani, relani to sqlInsertString
-                    $breedValueInsertString = $this->writeBreedValueInsertString($prefix, $breedValueId, $animalId, $solani, $relani); //TODO
+                    $breedValueInsertString = $this->writeBreedValueInsertString($prefix, $breedValueTypeId, $animalId, $solani, $relani); //TODO
 
                     $sqlBatchString = $sqlBatchString . $breedValueInsertString;
                     $totalCount++;
                     $batchCount++;
                     $prefix = ',';
+
+                    $this->addToCurrentBreedValueExistsByAnimalIdForGenerationDate($dutchBreedValueType, $animalId);
 
                     if($totalCount%self::BATCH_SIZE == 0 && $totalCount != 0) {
                         $this->persistBreedValueBySql($sqlBatchString); //TODO
@@ -461,13 +489,13 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
     /**
      * @param string $prefix
-     * @param int $breedValueId
+     * @param int $breedValueTypeId
      * @param int $animalId
      * @param float $solani
      * @param float $relani
      * @return string
      */
-    private function writeBreedValueInsertString($prefix, $breedValueId, $animalId, $solani, $relani)
+    private function writeBreedValueInsertString($prefix, $breedValueTypeId, $animalId, $solani, $relani)
     {
         return ''; //TODO
     }
