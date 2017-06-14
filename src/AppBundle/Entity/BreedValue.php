@@ -216,5 +216,19 @@ class BreedValue
     }
 
 
+    /**
+     * @return null|string
+     */
+    public function getBreedValueTypeEn()
+    {
+        return $this->type != null ? $this->type->getEn() : null;
+    }
 
+    /**
+     * @return null|string
+     */
+    public function getBreedValueTypeNl()
+    {
+        return $this->type != null ? $this->type->getNl() : null;
+    }
 }

@@ -197,5 +197,19 @@ class BreedValueGeneticBase
         return $this;
     }
 
+    /**
+     * @return null|string
+     */
+    public function getBreedValueTypeEn()
+    {
+        return $this->breedValueType != null ? $this->breedValueType->getEn() : null;
+    }
 
+    /**
+     * @return null|string
+     */
+    public function getBreedValueTypeNl()
+    {
+        return $this->breedValueType != null ? $this->breedValueType->getNl() : null;
+    }
 }
