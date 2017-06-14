@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Setting\BreedGradingSetting;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -42,6 +43,16 @@ class BreedValueType
     private $nl;
 
     /**
+     * BreedValues for this BreedIndex should have an accuracy that is at least equal to this minAccuracy.
+     *
+     * @var float
+     * @ORM\Column(type="float", options={"default":AppBundle\Setting\BreedGradingSetting::MIN_RELIABILITY_FOR_GENETIC_BASE})
+     * @JMS\Type("float")
+     * @Assert\NotBlank
+     */
+    private $minReliability;
+
+    /**
      * BreedValueType constructor.
      * @param string $en
      * @param string $nl
@@ -50,6 +61,7 @@ class BreedValueType
     {
         $this->en = $en;
         $this->nl = $nl;
+        $this->minReliability = BreedGradingSetting::MIN_RELIABILITY_FOR_GENETIC_BASE;
     }
 
     /**
@@ -103,6 +115,24 @@ class BreedValueType
     public function setNl($nl)
     {
         $this->nl = $nl;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getMinReliability()
+    {
+        return $this->minReliability;
+    }
+
+    /**
+     * @param float $minReliability
+     * @return BreedValueType
+     */
+    public function setMinReliability($minReliability)
+    {
+        $this->minReliability = $minReliability;
         return $this;
     }
 

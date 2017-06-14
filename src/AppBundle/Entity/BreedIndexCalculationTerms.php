@@ -56,27 +56,6 @@ class BreedIndexCalculationTerms
     private $breedValueTypes;
 
     /**
-     * BreedValues for this BreedIndex should have an accuracy that is at least equal to this minAccuracy.
-     *
-     * @var float
-     * @ORM\Column(type="float", options={"default":0.4})
-     * @JMS\Type("float")
-     * @Assert\NotBlank
-     */
-    private $minAccuracy;
-
-    /**
-     * Animals included for the GeneticBase must have a year of birth that is X years before the year of the current breed values. (round by year, not by date)
-     * X = $geneticBaseYear in this class
-     *
-     * @var integer
-     * @ORM\Column(type="integer", options={"default":3})
-     * @JMS\Type("integer")
-     * @Assert\NotBlank
-     */
-    private $geneticBaseYear;
-
-    /**
      * @var \DateTime
      *
      * @Assert\Date
@@ -187,42 +166,6 @@ class BreedIndexCalculationTerms
     public function removeBreedValueType($breedValueType)
     {
         $this->breedValueTypes->removeElement($breedValueType);
-        return $this;
-    }
-
-    /**
-     * @return float
-     */
-    public function getMinAccuracy()
-    {
-        return $this->minAccuracy;
-    }
-
-    /**
-     * @param float $minAccuracy
-     * @return BreedIndexCalculationTerms
-     */
-    public function setMinAccuracy($minAccuracy)
-    {
-        $this->minAccuracy = $minAccuracy;
-        return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getGeneticBaseYear()
-    {
-        return $this->geneticBaseYear;
-    }
-
-    /**
-     * @param int $geneticBaseYear
-     * @return BreedIndexCalculationTerms
-     */
-    public function setGeneticBaseYear($geneticBaseYear)
-    {
-        $this->geneticBaseYear = $geneticBaseYear;
         return $this;
     }
 
