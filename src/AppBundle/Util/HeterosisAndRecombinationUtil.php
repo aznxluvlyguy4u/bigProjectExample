@@ -7,7 +7,6 @@ namespace AppBundle\Util;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Enumerator\BreedCodeType;
-use AppBundle\MixBlup\Mixblup;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -28,7 +27,7 @@ class HeterosisAndRecombinationUtil
      * @param Connection $conn
      * @param int $animalId
      * @param int $roundingAccuracy
-     * @return float
+     * @return array|null
      */
     public static function getHeterosisAndRecombinationByAnimalId(Connection $conn, $animalId, $roundingAccuracy = null)
     {
@@ -88,8 +87,8 @@ class HeterosisAndRecombinationUtil
 
         if($roundingAccuracy != null) {
             if($returnWithTrailingZeroes) {
-                $heterosisValue = Mixblup::round($heterosisValue, $roundingAccuracy);
-                $recombinationValue = Mixblup::round($recombinationValue, $roundingAccuracy);
+                $heterosisValue = round($heterosisValue, $roundingAccuracy);
+                $recombinationValue = round($recombinationValue, $roundingAccuracy);
             } else {
                 $heterosisValue = round($heterosisValue, $roundingAccuracy);
                 $recombinationValue = round($recombinationValue, $roundingAccuracy);   
