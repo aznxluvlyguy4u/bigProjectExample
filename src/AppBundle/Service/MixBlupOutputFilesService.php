@@ -201,12 +201,6 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     {
         $this->processNextMessage();
     }
-    
-    
-    public function test()
-    {
-        $this->purgeResultsFolder();
-    }
 
 
     private function processNextMessage()
