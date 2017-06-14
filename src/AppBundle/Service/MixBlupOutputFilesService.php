@@ -18,6 +18,7 @@ use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CsvParser;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\FilesystemUtil;
+use AppBundle\Util\LoggerUtil;
 use AppBundle\Util\NumberUtil;
 use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -33,7 +34,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 {
     const TEST_WITH_DOWNLOADED_ZIPS = false;
     const PURGE_ZIP_FOLDER_AFTER_SUCCESSFUL_RUN = false;
-    const ONLY_UNZIP_SOLANI_AND_RELANI = false;
+    const ONLY_UNZIP_SOLANI_AND_RELANI = true;
 
     const BATCH_SIZE = 10000;
 
@@ -241,11 +242,9 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
                         $this->resetSearchArrays();
 
-                        //TODO
                         $this->parseSolaniFiles();
                         $this->parseRelaniFiles();
                         $this->processBreedValues();
-                        //TODO
 
                         $this->purgeResultsFolder();
                         $successfulUnzips[] = $zipFileName;
@@ -266,7 +265,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
                 } else {
                     $this->logger->error('The following breedValues had no relani nor solani file: '.implode(', ', $blankBreedValueTypes));
-                    $this->logger->error('The following unzips failed: '.implode(', ', $unsuccessfulUnzips));
+                    $this->logger->error('The following unzips failed (relani or solani file likely missing): '.implode(', ', $unsuccessfulUnzips));
                     $this->logger->notice('The following unzips succeeded: '.implode(', ', $successfulUnzips));
                 }
 
@@ -363,6 +362,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
         $dutchBreedValueTypes = MixBlupParseInstruction::get($this->currentBreedType);
 
+        $recordsStoredCount = 0;
+        $recordsSkippedCOunt = 0;
         foreach ($ssv as $row) {
 
             $animalId = $row[0];
@@ -376,9 +377,14 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     //NOTE! Zero and negative Solani values are valid!
                     $solaniBreedValueGroup[$animalId] = $floatValue;
                     $this->solani[$dutchBreedValueType] = $solaniBreedValueGroup;
+                    $recordsStoredCount++;
+                } else {
+                    $recordsSkippedCOunt++;
                 }
             }
         }
+
+        $this->logger->notice('Solani records stored|skipped: '.$recordsStoredCount.'|'.$recordsSkippedCOunt);
     }
 
 
@@ -393,6 +399,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
         $dutchBreedValueTypes = MixBlupParseInstruction::get($this->currentBreedType);
 
+        $recordsStoredCount = 0;
+        $recordsSkippedCOunt = 0;
         foreach ($ssv as $row) {
 
             $animalId = $row[0];
@@ -407,10 +415,17 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     if(!NumberUtil::isFloatZero($floatValue, MixBlupSetting::FLOAT_ACCURACY)) {
                         $relaniBreedValueGroup[$animalId] = $floatValue;
                         $this->relani[$dutchBreedValueType] = $relaniBreedValueGroup;
+                        $recordsStoredCount++;
+                    } else {
+                        $recordsSkippedCOunt++;
                     }
+                } else {
+                    $recordsSkippedCOunt++;
                 }
             }
         }
+
+        $this->logger->notice('Relani records stored|skipped: '.$recordsStoredCount.'|'.$recordsSkippedCOunt);
     }
 
 
@@ -444,6 +459,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
         DoctrineUtil::updateTableSequence($this->conn, [BreedValue::TABLE_NAME]);
 
+        $this->logger->notice('Processing breedValues ...');
         foreach ($this->relani as $dutchBreedValueType => $relaniValues) {
 
             $breedValueTypeId = $this->breedValueTypeIdsByDutchDescription[$dutchBreedValueType];
@@ -485,6 +501,9 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     }
                 }
 
+                $message = 'Processing '.$dutchBreedValueType.' breedValues count total|batch: '.$totalCount.'|'.$batchCount;
+                $this->overwriteNotice($message);
+
             }
         }
 
@@ -493,7 +512,11 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             $sqlBatchString = '';
             $prefix = '';
             $batchCount = 0;
+
+            $message = 'Processing breedValues count total|batch: '.$totalCount.'|'.$batchCount;
+            $this->overwriteNotice($message);
         }
+        $this->logger->notice('Finished processing breedvalues!');
     }
 
 
@@ -566,4 +589,11 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     }
 
 
+    /**
+     * @param $line
+     */
+    private function overwriteNotice($line)
+    {
+        LoggerUtil::overwriteNotice($this->logger, $line);
+    }
 }
