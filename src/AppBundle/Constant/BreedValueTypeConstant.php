@@ -11,8 +11,8 @@ class BreedValueTypeConstant
 {
     //LambMeatIndex
     const BIRTH_WEIGHT = 'GewGeb';
-    const WEIGHT_AT_8_WEEKS = 'Geb08';
-    const WEIGHT_AT_20_WEEKS = 'Geb20';
+    const WEIGHT_AT_8_WEEKS = 'Gew08';
+    const WEIGHT_AT_20_WEEKS = 'Gew20';
     const FAT_THICKNESS_1 = 'Vetd01';
     const FAT_THICKNESS_2 = 'Vetd02';
     const FAT_THICKNESS_3 = 'Vetd03';
