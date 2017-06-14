@@ -5,10 +5,10 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\MixBlupType;
-use AppBundle\MixBlup\ExteriorDataFile;
-use AppBundle\MixBlup\LambMeatIndexDataFile;
-use AppBundle\MixBlup\MixBlupInstructionFileBase;
-use AppBundle\MixBlup\ReproductionDataFile;
+use AppBundle\Component\MixBlup\ExteriorDataFile;
+use AppBundle\Component\MixBlup\LambMeatIndexDataFile;
+use AppBundle\Component\MixBlup\MixBlupInstructionFileBase;
+use AppBundle\Component\MixBlup\ReproductionDataFile;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
 

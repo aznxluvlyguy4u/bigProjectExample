@@ -1,7 +1,7 @@
 <?php
 
 
-namespace AppBundle\MixBlup;
+namespace AppBundle\Component\MixBlup;
 
 
 interface MixBlupInstructionFileInterface

@@ -1,28 +1,27 @@
 <?php
 
 
-namespace AppBundle\MixBlup;
+namespace AppBundle\Component\MixBlup;
 
 use AppBundle\Enumerator\MixBlupType;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bridge\Monolog\Logger;
 
 /**
- * Class ExteriorInputProcess
+ * Class ReproductionInputProcess
  * @package AppBundle\MixBlup
  */
-class ExteriorInputProcess extends MixBlupInputProcessBase implements MixBlupInputProcessInterface
+class ReproductionInputProcess extends MixBlupInputProcessBase implements MixBlupInputProcessInterface
 {
-
     /**
-     * ExteriorInputProcess constructor.
+     * ReproductionInputProcess constructor.
      * @param ObjectManager $em
      * @param string $outputFolderPath
      * @param Logger $logger
      */
     public function __construct(ObjectManager $em, $outputFolderPath, Logger $logger)
     {
-        parent::__construct($em, $outputFolderPath, $logger, MixBlupType::EXTERIOR);
+        parent::__construct($em, $outputFolderPath, $logger, MixBlupType::FERTILITY);
     }
 
 
@@ -31,7 +30,7 @@ class ExteriorInputProcess extends MixBlupInputProcessBase implements MixBlupInp
      */
     function generateInstructionFiles()
     {
-        return ExteriorInstructionFiles::generateInstructionFiles();
+        return ReproductionInstructionFiles::generateInstructionFiles();
     }
 
     /**
@@ -39,7 +38,7 @@ class ExteriorInputProcess extends MixBlupInputProcessBase implements MixBlupInp
      */
     function generateDataFile()
     {
-        return ExteriorDataFile::generateDataFile($this->conn);
+        return ReproductionDataFile::generateDataFile($this->conn);
     }
 
     /**
@@ -47,8 +46,8 @@ class ExteriorInputProcess extends MixBlupInputProcessBase implements MixBlupInp
      */
     function generatePedigreeFile()
     {
-        return MixblupPedigreeFileGenerator::generateExteriorOptimizedSet($this->conn, $this->logger);
+        return MixblupPedigreeFileGenerator::generateFullSet($this->conn, $this->logger);
     }
-    
-    
+
+
 }

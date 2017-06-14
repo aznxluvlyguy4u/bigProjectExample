@@ -5,10 +5,10 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Enumerator\MixBlupType;
-use AppBundle\MixBlup\ExteriorInputProcess;
-use AppBundle\MixBlup\LambMeatIndexInputProcess;
-use AppBundle\MixBlup\MixBlupInputProcessInterface;
-use AppBundle\MixBlup\ReproductionInputProcess;
+use AppBundle\Component\MixBlup\ExteriorInputProcess;
+use AppBundle\Component\MixBlup\LambMeatIndexInputProcess;
+use AppBundle\Component\MixBlup\MixBlupInputProcessInterface;
+use AppBundle\Component\MixBlup\ReproductionInputProcess;
 use AppBundle\Setting\MixBlupFolder;
 use AppBundle\Setting\MixBlupSetting;
 use AppBundle\Util\FilesystemUtil;

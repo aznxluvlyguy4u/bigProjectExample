@@ -1,7 +1,7 @@
 <?php
 
 
-namespace AppBundle\MixBlup;
+namespace AppBundle\Component\MixBlup;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\MaxLength;
 use AppBundle\Enumerator\BreedCodeType;
