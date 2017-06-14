@@ -5,8 +5,6 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Constant\Filename;
-use AppBundle\Constant\JsonInputConstant;
-use AppBundle\Constant\MixBlupAnalysis;
 use AppBundle\Entity\BreedIndexType;
 use AppBundle\Entity\BreedIndexTypeRepository;
 use AppBundle\Entity\BreedValue;
@@ -21,7 +19,6 @@ use AppBundle\Util\CsvParser;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\NumberUtil;
 use AppBundle\Util\SqlUtil;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
@@ -60,9 +57,6 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     private $cacheDir;
     /** @var string */
     private $workingFolder;
-
-    /** @var array */
-    private $mixBlupProcesses;
 
     /** @var string */
     private $key;
@@ -137,22 +131,6 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
         $this->resetSearchArrays();
         $this->setSearchArrays();
-
-        $this->mixBlupProcesses = [];
-        //TODO include actual processes
-        $this->mixBlupProcesses[MixBlupAnalysis::BIRTH_PROGRESS] = null;
-        $this->mixBlupProcesses[MixBlupAnalysis::EXTERIOR_LEG_WORK] = null;
-        $this->mixBlupProcesses[MixBlupAnalysis::EXTERIOR_MUSCULARITY] = null;
-        $this->mixBlupProcesses[MixBlupAnalysis::EXTERIOR_PROGRESS] = null;
-        $this->mixBlupProcesses[MixBlupAnalysis::EXTERIOR_PROPORTION] = null;
-        $this->mixBlupProcesses[MixBlupAnalysis::EXTERIOR_SKULL] = null;
-        $this->mixBlupProcesses[MixBlupAnalysis::EXTERIOR_TYPE] = null;
-        $this->mixBlupProcesses[MixBlupAnalysis::FERTILITY_1] = null;
-        $this->mixBlupProcesses[MixBlupAnalysis::FERTILITY_2] = null;
-        $this->mixBlupProcesses[MixBlupAnalysis::FERTILITY_3] = null;
-        $this->mixBlupProcesses[MixBlupAnalysis::LAMB_MEAT] = null;
-        $this->mixBlupProcesses[MixBlupAnalysis::TAIL_LENGTH] = null;
-        $this->mixBlupProcesses[MixBlupAnalysis::WORM_RESISTANCE] = null;
     }
 
 
