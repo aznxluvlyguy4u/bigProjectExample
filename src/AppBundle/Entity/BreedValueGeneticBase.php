@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Setting\BreedGradingSetting;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -42,6 +43,8 @@ class BreedValueGeneticBase
     private $logDate;
 
     /**
+     * The year in which the breedValues were generated.
+     *
      * @var integer
      *
      * @ORM\Column(type="integer")
@@ -69,11 +72,21 @@ class BreedValueGeneticBase
     private $breedValueType;
 
     /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":AppBundle\Setting\BreedGradingSetting::GENETIC_BASE_YEAR_OFFSET})
+     * @Assert\NotBlank
+     * @JMS\Type("integer")
+     */
+    private $offsetYears;
+
+    /**
      * BreedValueGeneticBase constructor.
      */
     public function __construct()
     {
         $this->logDate = new \DateTime();
+        $this->offsetYears = BreedGradingSetting::GENETIC_BASE_YEAR_OFFSET;
     }
 
     /**
@@ -163,6 +176,24 @@ class BreedValueGeneticBase
     public function setBreedValueType($breedValueType)
     {
         $this->breedValueType = $breedValueType;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getOffsetYears()
+    {
+        return $this->offsetYears;
+    }
+
+    /**
+     * @param int $offsetYears
+     * @return BreedValueGeneticBase
+     */
+    public function setOffsetYears($offsetYears)
+    {
+        $this->offsetYears = $offsetYears;
         return $this;
     }
 
