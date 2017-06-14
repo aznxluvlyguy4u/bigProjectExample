@@ -15,10 +15,10 @@ use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
 
 /**
- * Class BreedIndexService
+ * Class BreedValueService
  * @package AppBundle\Service
  */
-class BreedIndexService
+class BreedValueService
 {
 
     /** @var Connection */
@@ -34,7 +34,7 @@ class BreedIndexService
     private $breedValueTypeRepository;
 
     /**
-     * BreedIndexService constructor.
+     * BreedValueService constructor.
      * @param ObjectManager $em
      * @param Logger $logger
      */
@@ -54,43 +54,40 @@ class BreedIndexService
      */
     public function initialize()
     {
-        $updatedAnyBreedIndexType = $this->initializeBreedIndexType();
-        return $updatedAnyBreedIndexType;
+        $updatedAnyBreedValueType = $this->initializeBreedValueType();
+        return $updatedAnyBreedValueType;
     }
 
 
     /**
      * @return bool
      */
-    public function initializeBreedIndexType()
+    public function initializeBreedValueType()
     {
-        $breedIndexTypeEntities = $this->breedIndexTypeRepository->findAll();
+        $breedValueTypeEntities = $this->breedValueTypeRepository->findAll();
         $searchArray = [];
 
-        /** @var BreedIndexType $breedIndexTypeEntity */
-        foreach ($breedIndexTypeEntities as $breedIndexTypeEntity) {
-            $searchArray[$breedIndexTypeEntity->getEn()] = $breedIndexTypeEntity->getNl();
+        /** @var BreedValueType $breedValueTypeEntity */
+        foreach ($breedValueTypeEntities as $breedValueTypeEntity) {
+            $searchArray[$breedValueTypeEntity->getEn()] = $breedValueTypeEntity->getNl();
         }
 
-        $breedIndexTypeValues = BreedIndexTypeConstant::getConstants();
+        $breedValueTypeValues = BreedValueTypeConstant::getConstants();
         $newCount = 0;
-        foreach ($breedIndexTypeValues as $english => $dutch) {
+        foreach ($breedValueTypeValues as $english => $dutch) {
             if(!key_exists($english, $searchArray)) {
-                $breedIndexType = new BreedIndexType($english, $dutch);
-                $this->em->persist($breedIndexType);
+                $breedValueType = new BreedValueType($english, $dutch);
+                $this->em->persist($breedValueType);
                 $newCount++;
             }
         }
-
         if($newCount > 0) {
             $this->em->flush();
-            $this->logger->notice($newCount . ' new BreedIndexType records persisted');
+            $this->logger->notice($newCount . ' new BreedValueType records persisted');
         } else {
-            $this->logger->notice('No new BreedIndexType records persisted');
+            $this->logger->notice('No new BreedValueType records persisted');
         }
 
         return $newCount > 0;
     }
-
-
 }

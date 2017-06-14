@@ -2,7 +2,9 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Entity\BreedValue;
 use AppBundle\Service\BreedIndexService;
+use AppBundle\Service\BreedValueService;
 use AppBundle\Service\MixBlupInputFilesService;
 use AppBundle\Service\MixBlupOutputFilesService;
 use AppBundle\Util\CommandUtil;
@@ -42,6 +44,8 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
     private $mixBlupOutputFilesService;
     /** @var BreedIndexService */
     private $breedIndexService;
+    /** @var BreedValueService */
+    private $breedValueService;
 
     protected function configure()
     {
@@ -63,6 +67,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
         $this->mixBlupInputFilesService = $this->getContainer()->get('app.mixblup.input');
         $this->mixBlupOutputFilesService = $this->getContainer()->get('app.mixblup.output');
         $this->breedIndexService = $this->getContainer()->get('app.breed.index');
+        $this->breedValueService = $this->getContainer()->get('app.breed.value');
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
@@ -92,7 +97,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
 
             case 10:
                 $this->breedIndexService->initializeBreedIndexType();
-                $this->breedIndexService->initializeBreedValueType();
+                $this->breedValueService->initializeBreedValueType();
                 break;
 
             default:
