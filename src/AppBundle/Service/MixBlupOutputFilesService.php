@@ -72,7 +72,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     /** @var array */
     private $relani;
     /** @var array */
-    private $currentBreedValuesByAnimalIdForGenerationDate;
+    private $currentBreedValueIdsByAnimalIdForGenerationDate;
 
     /** @var int */
     private $totalFilesToDownload;
@@ -158,16 +158,27 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $this->solani = [];
         $this->relani = [];
 
-        if($this->key == null) {
-            $this->currentBreedValuesByAnimalIdForGenerationDate = [];
-        } else {
-            //TODO get datetime from $this->key
-            $generationDate = $this->key;
-            $breedValues = $this->breedValueRepository->findBy(['generation_date' => $generationDate]);
-            //TODO or use sql to create this searchArray. This search array is necessary to prevent duplicate entries!
-            $dutchBreedValueType = '';
-            $animalId = '';
-            $this->currentBreedValuesByAnimalIdForGenerationDate[$dutchBreedValueType][$animalId] = [];
+        $this->currentBreedValueIdsByAnimalIdForGenerationDate = [];
+
+        if($this->key != null) {
+
+            $sql = "SELECT b.id, animal_id, t.nl as dutch_breed_value_type
+                    FROM breed_value b
+                      INNER JOIN breed_value_type t ON b.type_id = t.id
+                    WHERE generation_date = '".$this->key."'";
+            $results = $this->conn->query($sql)->fetchAll();
+
+            foreach ($results as $result) {
+                $dutchBreedValueType = $result['dutch_breed_value_type'];
+                $animalId = $result['animal_id'];
+                $breedValueId = $result['id'];
+
+                if(!key_exists($dutchBreedValueType, $this->currentBreedValueIdsByAnimalIdForGenerationDate)) {
+                    $this->currentBreedValueIdsByAnimalIdForGenerationDate[$dutchBreedValueType] = [];
+                }
+
+                $this->currentBreedValueIdsByAnimalIdForGenerationDate[$dutchBreedValueType][$animalId] = $breedValueId;
+            }
         }
     }
 
@@ -399,7 +410,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             foreach ($relaniValues as $animalId => $relaniValue) {
 
                 //TODO check if the breedValue already exists for the given generationDate and dutchBreedValueType
-                $alreadyExists = $this->currentBreedValuesByAnimalIdForGenerationDate[$dutchBreedValueType][$animalId];
+                $alreadyExists = $this->currentBreedValueIdsByAnimalIdForGenerationDate[$dutchBreedValueType][$animalId];
                 if($alreadyExists) {
                     $valueAlreadyExistsCount++;
                     continue;
@@ -495,6 +506,16 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     /** @return string */
     public function getResultsFolder() { return $this->workingFolder.'/'.MixBlupFolder::RESULTS.'/'; }
 
+    /**
+     * @return \DateTime|null
+     */
+    private function getDateTimeFromKey()
+    {
+        if($this->key != null) {
+            return new \DateTime(strtr($this->key, ['_' => ' ']));
+        }
+        return null;
+    }
 
     /**
      * @param $zipFileName
