@@ -34,6 +34,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 {
     const TEST_WITH_DOWNLOADED_ZIPS = false;
     const PURGE_ZIP_FOLDER_AFTER_SUCCESSFUL_RUN = false;
+    const ONLY_DOWNLOAD_SOLANI_AND_RELANI = false;
     const ONLY_UNZIP_SOLANI_AND_RELANI = true;
 
     const BATCH_SIZE = 10000;
@@ -292,9 +293,9 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $this->downloadedFileNames = [];
         $this->failedDownloads = [];
 
-        $this->totalFilesToDownload = self::ONLY_UNZIP_SOLANI_AND_RELANI ? count($this->relsol) : count($this->bulkFiles) + count($this->relsol);
+        $this->totalFilesToDownload = self::ONLY_DOWNLOAD_SOLANI_AND_RELANI ? count($this->relsol) : count($this->bulkFiles) + count($this->relsol);
 
-        if(!self::ONLY_UNZIP_SOLANI_AND_RELANI) {
+        if(!self::ONLY_DOWNLOAD_SOLANI_AND_RELANI) {
             // download all files
             foreach ($this->bulkFiles as $file) {
                 $this->downloadZipFile($file);
