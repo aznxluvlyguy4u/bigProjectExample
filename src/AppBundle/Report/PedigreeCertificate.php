@@ -557,11 +557,11 @@ class PedigreeCertificate
         $litterData = $this->litterRepository->getLitterData($animalId);
         $litterSize = self::GENERAL_NULL_FILLER;
         $nLing = self::GENERAL_NULL_FILLER;
-        $litterGroup = self::GENERAL_NULL_FILLER;
+        //$litterGroup = self::GENERAL_NULL_FILLER;
         if($litterData != null) {
             $litterSize = $litterData[JsonInputConstant::SIZE];
             $nLing = $litterData[JsonInputConstant::N_LING];
-            $litterGroup = $litterData[JsonInputConstant::LITTER_GROUP];
+            //$litterGroup = $litterData[JsonInputConstant::LITTER_GROUP];
         }
 
 
@@ -666,7 +666,7 @@ class PedigreeCertificate
         $inspectionDateDateTime = null;
         if($latestExteriorArray[JsonInputConstant::MEASUREMENT_DATE] != null && $latestExteriorArray[JsonInputConstant::MEASUREMENT_DATE] != $exteriorReplacementString) {
             $inspectionDateDateTime = new \DateTime($latestExteriorArray[JsonInputConstant::MEASUREMENT_DATE]);
-            $inspectionDateString = $inspectionDateDateTime->format('d-m-Y');
+            //$inspectionDateString = $inspectionDateDateTime->format('d-m-Y');
         }
 
         $production = DisplayUtil::parseProductionStringFromGivenParts($productionAge, $litterCount, $totalOffSpringCount, $bornAliveOffspringCount, $addProductionAsterisk);
