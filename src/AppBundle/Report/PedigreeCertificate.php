@@ -567,13 +567,16 @@ class PedigreeCertificate
 
         if($animalId != null) {
             $sql = "SELECT a.id, CONCAT(a.uln_country_code, a.uln_number) as uln, CONCAT(a.pedigree_country_code, a.pedigree_number) as stn,
-                    scrapie_genotype, breed, breed_type, breed_code, date_of_birth, gender, predicate, predicate_score,
-                    parent_father_id as father_id, parent_mother_id as mother_id, blindness_factor, c.company_name, d.city,
-                    a.nickname
+                    a.scrapie_genotype, a.breed, a.breed_type, a.breed_code, a.date_of_birth, a.gender, a.predicate, a.predicate_score,
+                    a.parent_father_id as father_id, a.parent_mother_id as mother_id, a.blindness_factor, c.company_name, d.city,
+                    a.nickname,
+                    cache.production_age, cache.litter_count, cache.total_offspring_count,
+                    cache.born_alive_offspring_count, cache.gave_birth_as_one_year_old
                 FROM animal a
                     LEFT JOIN location l ON a.location_of_birth_id = l.id
                     LEFT JOIN company c ON l.company_id = c.id
                     LEFT JOIN address d ON d.id = c.address_id
+                    LEFT JOIN animal_cache cache ON a.id = cache.animal_id
                 WHERE a.id = ".$animalId;
             $animalData = $this->em->getConnection()->query($sql)->fetch();
 
@@ -614,6 +617,13 @@ class PedigreeCertificate
             $city = $animalData[JsonInputConstant::CITY];
             $city = StringUtil::trimStringWithAddedEllipsis($city, self::MAX_LENGTH_CITY_NAME);
 
+            //ProductionValues
+            $productionAge = intval($animalData['production_age']);
+            $litterCount = intval($animalData['litter_count']);
+            $totalOffSpringCount = intval($animalData['total_offspring_count']);
+            $bornAliveOffspringCount = intval($animalData['born_alive_offspring_count']);
+            $addProductionAsterisk = boolval($animalData['gave_birth_as_one_year_old']);
+
             //These ids are only used only inside this class and not in the twig file
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MOTHER_ID] = $animalData[ReportLabel::MOTHER_ID];
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::FATHER_ID] = $animalData[ReportLabel::FATHER_ID];
@@ -636,6 +646,12 @@ class PedigreeCertificate
             $companyName = null;
             $city = null;
 
+            $productionAge = null;
+            $litterCount = null;
+            $totalOffSpringCount = null;
+            $bornAliveOffspringCount = null;
+            $addProductionAsterisk = null;
+
             //These ids are only used only inside this class and not in the twig file
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::MOTHER_ID] = null;
             $this->data[ReportLabel::ANIMALS][$key][ReportLabel::FATHER_ID] = null;
@@ -653,20 +669,8 @@ class PedigreeCertificate
             $inspectionDateString = $inspectionDateDateTime->format('d-m-Y');
         }
 
-        //Litters of offspring, data for production string
-        $offspringLitterData = $this->litterRepository->getAggregatedLitterDataOfOffspring($animalId); //data from the litter table
+        $production = DisplayUtil::parseProductionStringFromGivenParts($productionAge, $litterCount, $totalOffSpringCount, $bornAliveOffspringCount, $addProductionAsterisk);
 
-        $litterCount = $offspringLitterData[JsonInputConstant::LITTER_COUNT];
-        $totalStillbornCount = $offspringLitterData[JsonInputConstant::TOTAL_STILLBORN_COUNT];
-        $totalBornAliveCount = $offspringLitterData[JsonInputConstant::TOTAL_BORN_ALIVE_COUNT];
-        $totalOffSpringCountByLitterData = $totalBornAliveCount + $totalStillbornCount;
-
-        $earliestLitterDate = $offspringLitterData[JsonInputConstant::EARLIEST_LITTER_DATE];
-        $latestLitterDate = $offspringLitterData[JsonInputConstant::LATEST_LITTER_DATE];
-        if($earliestLitterDate != null) { $earliestLitterDate = new \DateTime($earliestLitterDate); }
-        if($latestLitterDate != null) { $latestLitterDate = new \DateTime($latestLitterDate); }
-
-        
         /* Set values into array */
         //Note the BreedValues and LambMeatIndex values are already set above
 
@@ -688,6 +692,9 @@ class PedigreeCertificate
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_SIZE] = $litterSize;
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::N_LING] = $nLing;
 
+        //Production
+        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PRODUCTION] = $production;
+
         //Offspring
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::LITTER_COUNT] = Utils::fillZero($litterCount);
 
@@ -706,8 +713,6 @@ class PedigreeCertificate
 
         /* variables translated to Dutch */
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::GENDER] = Translation::getGenderInDutch($gender);
-
-        $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PRODUCTION] = DisplayUtil::parseProductionString($dateOfBirthDateTime, $earliestLitterDate, $latestLitterDate, $litterCount, $totalOffSpringCountByLitterData, $totalBornAliveCount, $gender);
 
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::BLINDNESS_FACTOR] = $blindnessFactor;
         $this->data[ReportLabel::ANIMALS][$key][ReportLabel::PREDICATE] = $predicate;
