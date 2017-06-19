@@ -16,6 +16,7 @@ use AppBundle\Util\ArrayUtil;
  */
 abstract class MixBlupInstructionFileBase
 {
+    const MISSING_BLOCK_REPLACEMENT = 1;
     const MISSING_REPLACEMENT = '-99';
     const INCLUDE_COMMENTED_OUT_TRAITS = true;
 
