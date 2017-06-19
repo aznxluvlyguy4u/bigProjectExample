@@ -579,11 +579,11 @@ abstract class Animal
     protected $breedValuesSets;
 
     /**
-     * @var ResultTableBreedIndex
-     * @ORM\OneToOne(targetEntity="ResultTableBreedIndex", mappedBy="animal", cascade={"persist", "remove"})
-     * @JMS\Type("AppBundle\Entity\ResultTableBreedIndex")
+     * @var ResultTableBreedGrades
+     * @ORM\OneToOne(targetEntity="ResultTableBreedGrades", mappedBy="animal", cascade={"persist", "remove"})
+     * @JMS\Type("AppBundle\Entity\ResultTableBreedGrades")
      */
-    protected $latestBreedIndices;
+    protected $latestBreedGrades;
 
     /**
      * @var string
@@ -2414,20 +2414,20 @@ abstract class Animal
     }
 
     /**
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
-    public function getLatestBreedIndices()
+    public function getLatestBreedGrades()
     {
-        return $this->latestBreedIndices;
+        return $this->latestBreedGrades;
     }
 
     /**
-     * @param ResultTableBreedIndex $latestBreedIndices
+     * @param ResultTableBreedGrades $latestBreedGrades
      * @return Animal
      */
-    public function setLatestBreedIndices($latestBreedIndices)
+    public function setLatestBreedGrades($latestBreedGrades)
     {
-        $this->latestBreedIndices = $latestBreedIndices;
+        $this->latestBreedGrades = $latestBreedGrades;
         return $this;
     }
 

@@ -7,14 +7,14 @@ use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
 
 /**
- * Class ResultTableBreedIndex
+ * Class ResultTableBreedGrades
  *
- * Table saving the latest BreedIndexValues
+ * Table saving the latest BreedIndexValues and BreedValues
  *
- * @ORM\Entity(repositoryClass="AppBundle\Entity")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\ResultTableBreedGradesRepository")
  * @package AppBundle\Entity
  */
-class ResultTableBreedIndex
+class ResultTableBreedGrades
 {
     /**
      * @var integer
@@ -341,7 +341,7 @@ class ResultTableBreedIndex
 
     /**
      * @param int $id
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setId($id)
     {
@@ -359,7 +359,7 @@ class ResultTableBreedIndex
 
     /**
      * @param \DateTime $logDate
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setLogDate($logDate)
     {
@@ -377,7 +377,7 @@ class ResultTableBreedIndex
 
     /**
      * @param Animal $animal
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setAnimal($animal)
     {
@@ -395,7 +395,7 @@ class ResultTableBreedIndex
 
     /**
      * @param float $lambMeatIndex
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setLambMeatIndex($lambMeatIndex)
     {
@@ -413,7 +413,7 @@ class ResultTableBreedIndex
 
     /**
      * @param float $lambMeatAccuracy
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setLambMeatAccuracy($lambMeatAccuracy)
     {
@@ -431,7 +431,7 @@ class ResultTableBreedIndex
 
     /**
      * @param float $exteriorIndex
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setExteriorIndex($exteriorIndex)
     {
@@ -449,7 +449,7 @@ class ResultTableBreedIndex
 
     /**
      * @param float $exteriorAccuracy
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setExteriorAccuracy($exteriorAccuracy)
     {
@@ -467,7 +467,7 @@ class ResultTableBreedIndex
 
     /**
      * @param float $fertilityIndex
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setFertilityIndex($fertilityIndex)
     {
@@ -485,7 +485,7 @@ class ResultTableBreedIndex
 
     /**
      * @param float $fertilityAccuracy
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setFertilityAccuracy($fertilityAccuracy)
     {
@@ -503,7 +503,7 @@ class ResultTableBreedIndex
 
     /**
      * @param float $wormResistanceIndex
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setWormResistanceIndex($wormResistanceIndex)
     {
@@ -521,7 +521,7 @@ class ResultTableBreedIndex
 
     /**
      * @param float $wormResistanceAccuracy
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setWormResistanceAccuracy($wormResistanceAccuracy)
     {
@@ -539,7 +539,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $birthWeight
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setBirthWeight($birthWeight)
     {
@@ -557,7 +557,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $fatThickness1
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setFatThickness1($fatThickness1)
     {
@@ -575,7 +575,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $fatThickness2
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setFatThickness2($fatThickness2)
     {
@@ -593,7 +593,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $fatThickness3
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setFatThickness3($fatThickness3)
     {
@@ -611,7 +611,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $muscleThickness
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setMuscleThickness($muscleThickness)
     {
@@ -629,7 +629,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $tailLength
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setTailLength($tailLength)
     {
@@ -647,7 +647,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $birthProgress
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setBirthProgress($birthProgress)
     {
@@ -665,7 +665,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $totalBorn
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setTotalBorn($totalBorn)
     {
@@ -683,7 +683,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $stillBorn
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setStillBorn($stillBorn)
     {
@@ -701,7 +701,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $earlyFertility
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setEarlyFertility($earlyFertility)
     {
@@ -719,7 +719,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $birthInterval
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setBirthInterval($birthInterval)
     {
@@ -737,7 +737,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $legWorkVgM
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setLegWorkVgM($legWorkVgM)
     {
@@ -755,7 +755,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $legWorkDf
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setLegWorkDf($legWorkDf)
     {
@@ -773,7 +773,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $muscularityVgV
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setMuscularityVgV($muscularityVgV)
     {
@@ -791,7 +791,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $muscularityVgM
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setMuscularityVgM($muscularityVgM)
     {
@@ -809,7 +809,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $muscularityDf
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setMuscularityDf($muscularityDf)
     {
@@ -827,7 +827,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $proportionVgM
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setProportionVgM($proportionVgM)
     {
@@ -845,7 +845,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $proportionDf
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setProportionDf($proportionDf)
     {
@@ -863,7 +863,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $skullVgM
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setSkullVgM($skullVgM)
     {
@@ -881,7 +881,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $skullDf
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setSkullDf($skullDf)
     {
@@ -899,7 +899,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $progressVgM
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setProgressVgM($progressVgM)
     {
@@ -917,7 +917,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $progressDf
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setProgressDf($progressDf)
     {
@@ -935,7 +935,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $exteriorTypeVgM
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setExteriorTypeVgM($exteriorTypeVgM)
     {
@@ -953,7 +953,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $exteriorTypeDf
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setExteriorTypeDf($exteriorTypeDf)
     {
@@ -971,7 +971,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $weightAt8Weeks
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setWeightAt8Weeks($weightAt8Weeks)
     {
@@ -989,7 +989,7 @@ class ResultTableBreedIndex
 
     /**
      * @param BreedValue $weightAt20Weeks
-     * @return ResultTableBreedIndex
+     * @return ResultTableBreedGrades
      */
     public function setWeightAt20Weeks($weightAt20Weeks)
     {
@@ -998,5 +998,5 @@ class ResultTableBreedIndex
     }
 
 
-    
+
 }
