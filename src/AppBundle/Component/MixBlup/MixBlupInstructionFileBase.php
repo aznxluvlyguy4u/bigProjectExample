@@ -18,6 +18,7 @@ abstract class MixBlupInstructionFileBase
 {
     const MISSING_BLOCK_REPLACEMENT = 1;
     const MISSING_REPLACEMENT = '-99';
+    const CONSTANT_MISSING_PARENT_REPLACEMENT = 0;
     const INCLUDE_COMMENTED_OUT_TRAITS = true;
 
 

@@ -136,7 +136,7 @@ class MixblupPedigreeFileGenerator
      */
     private static function getFormattedIdFromRecord($key, $recordArray)
     {
-        return CsvWriterUtil::getFormattedValueFromArray($recordArray, MaxLength::ANIMAL_ID, $key, true, MixBlupInstructionFileBase::MISSING_REPLACEMENT);
+        return CsvWriterUtil::getFormattedValueFromArray($recordArray, MaxLength::ANIMAL_ID, $key, true, MixBlupInstructionFileBase::CONSTANT_MISSING_PARENT_REPLACEMENT);
     }
 
 }
