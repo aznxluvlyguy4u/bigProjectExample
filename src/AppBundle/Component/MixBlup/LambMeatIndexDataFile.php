@@ -105,10 +105,12 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
         $results = [];
         foreach ($conn->query(self::getSqlQueryForBaseValues())->fetchAll() as $data) {
             $parsedBreedCode = self::parseBreedCode($data);
+            $formattedMotherId = self::getFormattedMotherId($data);
             $formattedNling = self::getFormattedNLing($data);
             $formattedSuckleCount = self::getFormattedSuckleCount($data);
 
             if($parsedBreedCode != null
+            && $formattedMotherId != MixBlupInstructionFileBase::CONSTANT_MISSING_PARENT_REPLACEMENT
             && $formattedNling != MixBlupInstructionFileBase::MISSING_REPLACEMENT
             && $formattedSuckleCount != MixBlupInstructionFileBase::MISSING_REPLACEMENT) {
 
@@ -117,7 +119,7 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
                 $recordBase =
                     $formattedUln.
                     self::getFormattedAnimalId($data).
-                    self::getFormattedMotherId($data).
+                    $formattedMotherId.
                     self::getFormattedYearAndUbnOfBirth($data, $dynamicColumnWidths[JsonInputConstant::YEAR_AND_UBN_OF_BIRTH]).
                     self::getFormattedGenderFromType($data).
                     self::getFormattedLitterGroup($data).

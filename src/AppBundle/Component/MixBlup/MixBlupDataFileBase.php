@@ -195,7 +195,7 @@ class MixBlupDataFileBase
      */
     protected static function getFormattedMotherId($data, $key = JsonInputConstant::MOTHER_ID, $useColumnPadding = true)
     {
-        return self::getFormattedValueFromData($data, MaxLength::ANIMAL_ID, $key, $useColumnPadding);
+        return self::getFormattedValueFromData($data, MaxLength::ANIMAL_ID, $key, $useColumnPadding, MixBlupInstructionFileBase::CONSTANT_MISSING_PARENT_REPLACEMENT);
     }
 
 
