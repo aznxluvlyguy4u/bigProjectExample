@@ -7,8 +7,10 @@ use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\LitterUtil;
 use AppBundle\Util\MeasurementsUtil;
+use AppBundle\Validation\AscendantValidator;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -22,15 +24,14 @@ class NsfoFixDbCommand extends ContainerAwareCommand
     
     /** @var CommandUtil */
     private $cmdUtil;
-
     /** @var OutputInterface */
     private $output;
-
     /** @var ObjectManager */
     private $em;
-
     /** @var Connection */
     private $conn;
+    /** @var Logger */
+    private $logger;
     
     protected function configure()
     {
@@ -48,6 +49,7 @@ class NsfoFixDbCommand extends ContainerAwareCommand
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
         $this->output = $output;
+        $this->logger = $this->getContainer()->get('logger');
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
@@ -62,6 +64,7 @@ class NsfoFixDbCommand extends ContainerAwareCommand
             '3: Fix incongruent animalOrderNumbers', "\n",
             '4: Fix incongruent animalIdAndDate values in measurement table', "\n",
             '5: Fix duplicate litters only containing stillborns', "\n",
+            '6: Find animals with themselves being their own ascendant', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -93,6 +96,12 @@ class NsfoFixDbCommand extends ContainerAwareCommand
             case 5:
                 $littersDeleted = LitterUtil::deleteDuplicateLittersWithoutBornAlive($this->conn);
                 $output->writeln($littersDeleted . ' litters deleted');
+                $output->writeln('Done!');
+                break;
+
+            case 6:
+                $ascendantValidator = new AscendantValidator($this->em, $this->cmdUtil, $this->logger);
+                $ascendantValidator->run();
                 $output->writeln('Done!');
                 break;
 
