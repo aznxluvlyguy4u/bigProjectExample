@@ -280,7 +280,7 @@ class MixBlupPedigreeUtil
      */
     private function getSqlQuery()
     {
-        $nullReplacement = MixBlupInstructionFileBase::MISSING_REPLACEMENT;
+        $nullReplacement = MixBlupInstructionFileBase::CONSTANT_MISSING_PARENT_REPLACEMENT;
 
         return "SELECT
                   a.id as ".JsonInputConstant::ANIMAL_ID.",
