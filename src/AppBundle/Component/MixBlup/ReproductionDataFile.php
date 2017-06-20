@@ -20,6 +20,7 @@ use Doctrine\DBAL\Connection;
  */
 class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFileInterface
 {
+    const DEFAULT_PMSG_VALUE = false;
 
     /**
      * @inheritDoc
@@ -52,7 +53,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                 self::getFormattedHeterosisLamb($data).
                 self::getFormattedRecombinationLamb($data).
                 self::getTeBreedCodepartOfMother($data). //TODO
-                self::getFormattedPmsg($data). //TODO Check null replacement desirability
+                self::getFormattedPmsg($data).
                 self::getFormattedPermMil($data).
                 self::getFormattedNullableMotherId($data).
                 self::getFormattedLitterGroup($data).
@@ -306,8 +307,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
     {
         $pmsg = ArrayUtil::get(JsonInputConstant::PMSG, $data);
         if(!is_bool($pmsg)) {
-            //TODO Check with NSFO if this is desired or not.
-            return CsvWriterUtil::pad(MixBlupInstructionFileBase::MISSING_REPLACEMENT, MaxLength::BOOL_AS_INT, true);
+            $pmsg = self::DEFAULT_PMSG_VALUE;
         }
         return self::formatMixBlupBoolean($pmsg);
     }
