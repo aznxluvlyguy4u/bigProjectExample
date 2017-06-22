@@ -4,13 +4,12 @@
 namespace AppBundle\Validation;
 
 
-use AppBundle\Entity\Animal;
-use AppBundle\Entity\Ewe;
-use AppBundle\Entity\Ram;
+use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\ErrorLogAnimalPedigree;
+use AppBundle\Entity\ErrorLogAnimalPedigreeRepository;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
-use AppBundle\Util\LoggerUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
@@ -31,6 +30,9 @@ class AscendantValidator
     private $cmdUtil;
     /** @var Logger */
     private $logger;
+
+    /** @var ErrorLogAnimalPedigreeRepository */
+    private $errorLogAnimalPedigreeRepository;
 
     /** @var array */
     private $femalePedigreeSearchArray;
@@ -53,15 +55,8 @@ class AscendantValidator
         $this->conn = $em->getConnection();
         $this->logger = $logger;
         $this->cmdUtil = $cmdUtil;
-    }
 
-
-    public function run()
-    {
-        $this->initializePrivateValues();
-        $this->findDirectParents();
-        $this->findAscendants();
-        $this->persistIncorrectPedigrees();
+        $this->errorLogAnimalPedigreeRepository = $this->em->getRepository(ErrorLogAnimalPedigree::class);
     }
 
 
@@ -72,6 +67,15 @@ class AscendantValidator
         $this->femalePedigreeSearchArray = [];
         $this->ascendantsSearchArray = [];
         $this->incorrectPedigrees = [];
+    }
+
+
+    public function run()
+    {
+        $this->initializePrivateValues();
+        $this->findDirectParents();
+        $this->findAscendants();
+        $this->syncIncorrectPedigreesWithDatabase();
     }
 
 
@@ -129,12 +133,6 @@ class AscendantValidator
                 $this->cmdUtil->advanceProgressBar(1, $message);
 
                 $counter++;
-
-                //TODO REMOVE AFTER TESTING
-                if($counter > 50000) {
-                    $this->persistIncorrectPedigrees();
-                    die;
-                }
             }
         }
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
@@ -231,9 +229,9 @@ class AscendantValidator
             $chains = $this->parseChains($parentId, $animalIdByTypeChain);
             $this->incorrectPedigrees[$parentId] =
                 [
-                    'animal_id' => $parentId,
-                    'parent_ids' => $chains['parent_ids'],
-                    'parent_types' => $chains['parent_types'],
+                    JsonInputConstant::ANIMAL_ID => $parentId,
+                    JsonInputConstant::PARENT_IDS => $chains['parent_ids'],
+                    JsonInputConstant::PARENT_TYPES => $chains['parent_types'],
                 ];
             return true;
 
@@ -275,15 +273,54 @@ class AscendantValidator
         }
 
         return [
-            'parent_ids' => '['.$animalIdChain.']',
-            'parent_types' => '['.$parentTypes.']',
+            JsonInputConstant::PARENT_IDS => '['.$animalIdChain.']',
+            JsonInputConstant::PARENT_TYPES => '['.$parentTypes.']',
         ];
     }
 
 
-    private function persistIncorrectPedigrees()
+    private function syncIncorrectPedigreesWithDatabase()
     {
-        //TODO
+        $deleteByAnimalIds = [];
+        $updateByAnimalIds = [];
+        $insertByAnimalIds = [];
+
+        $currentErrorLogAnimalPedigreesInDatabase = $this->errorLogAnimalPedigreeRepository->findAllAsSearchArray();
+
+        //Delete from database, if animalId is not in new set anymore
+        foreach ($currentErrorLogAnimalPedigreesInDatabase as $animalIdInDatabase => $valuesInDatabase)
+        {
+            if(!key_exists($animalIdInDatabase, $this->incorrectPedigrees)) {
+                $deleteByAnimalIds[] = $animalIdInDatabase;
+            }
+        }
+
+
+        foreach ($this->incorrectPedigrees as $animalId => $values)
+        {
+            if(key_exists($animalId,$currentErrorLogAnimalPedigreesInDatabase)) {
+
+                $valuesInDatabase = $currentErrorLogAnimalPedigreesInDatabase[$animalId];
+
+                //If animalId exists in database, but values are different update the values
+                if($values[JsonInputConstant::PARENT_TYPES] != $valuesInDatabase[JsonInputConstant::PARENT_TYPES]
+                || $values[JsonInputConstant::PARENT_IDS] != $valuesInDatabase[JsonInputConstant::PARENT_IDS]
+                ) {
+                    $updateByAnimalIds[$animalId] = $values;
+                }
+
+            } else {
+                //Insert into database
+                $insertByAnimalIds[$animalId] = $values;
+            }
+        }
+
+        $deleteCount = $this->errorLogAnimalPedigreeRepository->removeByAnimalIds($deleteByAnimalIds);
+        $updateCount = $this->errorLogAnimalPedigreeRepository->updateByAnimalIdArrays($updateByAnimalIds);
+        $insertCount = $this->errorLogAnimalPedigreeRepository->insertByAnimalIdArrays($insertByAnimalIds);
+
+        $this->writeln('ErrorLogAnimalPedigree sync with database delete|update|insert: '
+            .$deleteCount.'|'.$updateCount.'|'.$insertCount);
     }
 
 
