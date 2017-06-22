@@ -53,6 +53,8 @@ class JsonInputConstant
     const HETEROSIS_LAMB = 'heterosis_lamb';
     const RECOMBINATION_LAMB = 'recombination_lamb';
     const AGE = 'age';
+    const PARENT_IDS = 'parent_ids';
+    const PARENT_TYPES = 'parent_types';
 
     //Request & Response
     const ERROR_CODE = 'error_code';
