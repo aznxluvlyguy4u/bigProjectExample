@@ -275,8 +275,8 @@ class AscendantValidator
         }
 
         return [
-            'parent_ids' => '{'.$animalIdChain.'}',
-            'parent_types' => '{'.$parentTypes.'}',
+            'parent_ids' => '['.$animalIdChain.']',
+            'parent_types' => '['.$parentTypes.']',
         ];
     }
 
