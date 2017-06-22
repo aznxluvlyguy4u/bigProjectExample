@@ -449,4 +449,22 @@ class SqlUtil
         }
         return $filterString;
     }
+
+
+    /**
+     * @param array $values
+     * @param string $key
+     * @param boolean $valueIsBetweenSingleQuotationMarks
+     * @return null|string
+     */
+    public static function filterString($values = [], $key, $valueIsBetweenSingleQuotationMarks)
+    {
+        if(count($values) === 0) { return null; }
+
+        if($valueIsBetweenSingleQuotationMarks) {
+            return "(".$key." = '". implode("' OR ".$key." = '", $values) . "')";
+        } else {
+            return "(".$key." = ". implode(" OR ".$key." = ", $values) . ")";
+        }
+    }
 }
