@@ -18,7 +18,7 @@ class ErrorLogAnimalPedigreeRepository extends BaseRepository
      */
     public function findAllAsSearchArray($returnChainsAsArray = false)
     {
-        $sql = "SELECT * FROM error_log_animal_pedigree";
+        $sql = "SELECT * FROM error_log_animal_pedigree ORDER BY animal_id";
         $results = $this->getConnection()->query($sql)->fetchAll();
 
         $searchArray = [];
