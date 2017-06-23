@@ -2,14 +2,12 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Component\Utils;
 use AppBundle\Entity\DeclareTagsTransfer;
 use AppBundle\Entity\DeclareTagsTransferRepository;
 use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\Output\DeclareReplaceTagsOutput;
-use AppBundle\Output\DeclareTagsTransferResponseOutput;
 use AppBundle\Util\ActionLogWriter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -51,7 +49,6 @@ class TagsReplaceAPIController extends APIController {
   public function createTagReplaceRequest(Request $request)
   {
     $om = $this->getDoctrine()->getManager();
-    
     $content = $this->getContentAsArray($request);
     $client = $this->getAuthenticatedUser($request);
     $loggedInUser = $this->getLoggedInUser($request);
