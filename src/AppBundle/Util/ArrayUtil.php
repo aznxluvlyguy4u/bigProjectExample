@@ -52,4 +52,15 @@ class ArrayUtil
 
         return $combinedArray;
     }
+
+
+    /**
+     * @param $key
+     * @param array $array
+     * @return int
+     */
+    public static function keyPosition($key, $array)
+    {
+        return array_search($key, array_keys($array));
+    }
 }
