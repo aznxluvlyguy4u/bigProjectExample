@@ -13,6 +13,17 @@ class ErrorLogAnimalPedigreeRepository extends BaseRepository
 {
 
     /**
+     * Finds all entities in the repository.
+     *
+     * @return array The entities.
+     */
+    public function findAll()
+    {
+        return $this->findBy([], ['animal' => 'ASC']);
+    }
+
+
+    /**
      * @param bool $returnChainsAsArray
      * @return array
      */
