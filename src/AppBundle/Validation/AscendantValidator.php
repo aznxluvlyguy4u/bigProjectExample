@@ -22,6 +22,9 @@ use Symfony\Bridge\Monolog\Logger;
  */
 class AscendantValidator
 {
+    const DEFAULT_BATCH_SIZE = 50000;
+    const DEFAULT_START_ANIMAL_ID = 0;
+
     /** @var ObjectManager */
     private $em;
     /** @var Connection */
@@ -35,6 +38,8 @@ class AscendantValidator
     private $errorLogAnimalPedigreeRepository;
 
     /** @var array */
+    private $pedigreeSearchArray;
+    /** @var array */
     private $femalePedigreeSearchArray;
     /** @var array */
     private $malePedigreeSearchArray;
@@ -42,6 +47,21 @@ class AscendantValidator
     private $ascendantsSearchArray;
     /** @var array */
     private $incorrectPedigrees;
+    /** @var array */
+    private $toProcess;
+
+    /** @var int */
+    private $deleteCount;
+    /** @var int */
+    private $updateCount;
+    /** @var int */
+    private $insertCount;
+    /** @var int */
+    private $startAnimalId;
+    /** @var int */
+    private $lastSyncedAnimalId;
+    /** @var int */
+    private $batchSize;
 
     /**
      * AscendantValidator constructor.
@@ -67,15 +87,31 @@ class AscendantValidator
         $this->femalePedigreeSearchArray = [];
         $this->ascendantsSearchArray = [];
         $this->incorrectPedigrees = [];
+
+        $this->deleteCount = 0;
+        $this->updateCount = 0;
+        $this->insertCount = 0;
+        $this->lastSyncedAnimalId = 0;
+        $this->startAnimalId = self::DEFAULT_START_ANIMAL_ID;
     }
 
 
     public function run()
     {
         $this->initializePrivateValues();
+        $this->chooseStartValues();
         $this->findDirectParents();
         $this->findAscendants();
-        $this->syncIncorrectPedigreesWithDatabase();
+        $this->syncIncorrectPedigreesWithDatabase(true);
+    }
+
+
+    private function chooseStartValues()
+    {
+        $this->startAnimalId = $this->cmdUtil->generateQuestion('Start animalId (default = '.self::DEFAULT_START_ANIMAL_ID.')', self::DEFAULT_START_ANIMAL_ID, $isCleanupString = true);
+        $this->batchSize = $this->cmdUtil->generateQuestion('BatchSize (default = '.self::DEFAULT_BATCH_SIZE.')', self::DEFAULT_BATCH_SIZE, $isCleanupString = true);
+
+        $this->writeln('startAnimalId: '.$this->startAnimalId.'  batchSize: '.$this->batchSize);
     }
 
 
@@ -85,7 +121,7 @@ class AscendantValidator
         $sql = "SELECT a.id as animal_id, a.parent_mother_id, a.parent_father_id, type
                 FROM animal a
                 WHERE type <> 'Neuter'
-                ORDER BY date_of_birth ASC";
+                ORDER BY a.id ASC";
         $fullPedigreeData = $this->conn->query($sql)->fetchAll();
 
         $this->writeln('Creating pedigree search arrays ...');
@@ -97,6 +133,7 @@ class AscendantValidator
             $type = $pedigreeRecord['type'];
 
             if($fatherId != null || $motherId != null) {
+                $this->pedigreeSearchArray[$animalId] = $pedigreeRecord;
                 if($type == AnimalObjectType::Ram) {
                     $this->malePedigreeSearchArray[$animalId] = $pedigreeRecord;
                 } elseif($type == AnimalObjectType::Ewe) {
@@ -109,14 +146,37 @@ class AscendantValidator
 
     private function findAscendants()
     {
-        $this->writeln('Find ascendants ... ');
+        $this->writeln('=== Check for animals being their own ascendants | ErrorLogAnimalPedigree sync  with database ===');
 
-        $totalCount = count($this->malePedigreeSearchArray) + count($this->femalePedigreeSearchArray);
+        //Prepare arrays
+        $parentSearchArray = $this->pedigreeSearchArray;
+        if($this->startAnimalId > 0) {
+            $startPosition = ArrayUtil::keyPosition($this->startAnimalId, $parentSearchArray);
+            $parentSearchArray = array_slice($parentSearchArray, $startPosition, null, true);
+        }
+
+        $currentErrorLogAnimalPedigreesInDatabase = $this->errorLogAnimalPedigreeRepository->findAllAsSearchArray();
+        foreach ($currentErrorLogAnimalPedigreesInDatabase as $animalId => $values)
+        {
+            if($animalId <= $this->startAnimalId) {
+                $this->incorrectPedigrees[$animalId] = $values;
+            }
+        }
+
+
+        $totalCount = count($parentSearchArray);
+        $message = $this->getProgressBarMessage();
         $counter = 0;
+        $lastCheckedAnimalId = $this->startAnimalId;
+        $checkForDeletes = true;
+
         $this->cmdUtil->setStartTimeAndPrintIt($totalCount, 1);
-        foreach (['male' => $this->malePedigreeSearchArray, 'female' => $this->femalePedigreeSearchArray]
-                as $type => $parentSearchArray) {
-            foreach ($parentSearchArray as $animalId => $parents)
+
+        for($i = 0;  $i < $totalCount; $i += $this->batchSize) {
+
+            $slicedParentSearchArray = array_slice($parentSearchArray, $i, $this->batchSize, true);
+
+            foreach ($slicedParentSearchArray as $animalId => $parents)
             {
                 $this->ascendantsSearchArray = [];
 
@@ -125,17 +185,33 @@ class AscendantValidator
                 $animalIdByTypeChain = [];
                 $animalIdByTypeChain[] = [
                     'animal_id' => $animalId,
-                    'type' => $type,
+                    'type' => 'child',
                 ];
 
                 $this->addParentsToAscendants($animalId, $parents, $ascendants, $animalIdByTypeChain);
-                $message = 'Animals being their own ascendants found: ' . count($this->incorrectPedigrees);
-                $this->cmdUtil->advanceProgressBar(1, $message);
 
                 $counter++;
+                $lastCheckedAnimalId = $animalId;
+                $this->cmdUtil->advanceProgressBar(1, $message);
             }
+
+            //At end of each batch
+            $this->syncIncorrectPedigreesWithDatabase($checkForDeletes);
+            $this->lastSyncedAnimalId = $lastCheckedAnimalId;
+            $message = $this->getProgressBarMessage(); //update message
+            gc_collect_cycles();
+            $checkForDeletes = false;
         }
+
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
+    }
+
+
+    private function getProgressBarMessage()
+    {
+        return 'Sync with db toProcess||delete|update|insert: '
+            . count($this->toProcess).'||'.$this->deleteCount.'|'.$this->updateCount.'|'.$this->insertCount
+            .'  lastSynced animalId: '.$this->lastSyncedAnimalId;
     }
 
 
@@ -164,7 +240,7 @@ class AscendantValidator
 
             $animalIdByTypeChainFather[] = [
                 'animal_id' => $fatherId,
-                'type' => 'father',
+                'type' => "\"father\"",
             ];
 
             $ascendantsFather = $this->checkAscendants($fatherId, $ascendantsFather, $animalIdByTypeChainFather);
@@ -177,20 +253,13 @@ class AscendantValidator
 
             $animalIdByTypeChainMother[] = [
                 'animal_id' => $motherId,
-                'type' => 'mother',
+                'type' => "\"mother\"",
             ];
 
             $ascendantsMother = $this->checkAscendants($motherId, $ascendantsMother, $animalIdByTypeChainMother);
             if(!is_array($ascendantsMother)) { $breakOutOfMotherLoop = true; } //break out of infinite loop!
 
             $group[$motherId] = $motherId;
-        }
-
-
-        if($fatherId != null && $motherId != null) {
-            if(key_exists($fatherId, $this->incorrectPedigrees) && key_exists($motherId, $this->incorrectPedigrees)) {
-                return;
-            }
         }
 
 
@@ -220,19 +289,24 @@ class AscendantValidator
      */
     private function checkAscendants($parentId, $ascendants, $animalIdByTypeChain)
     {
-        if(key_exists($parentId, $this->incorrectPedigrees)) {
-            return true;
-        }
-
         if(key_exists($parentId, $ascendants)) {
 
             $chains = $this->parseChains($parentId, $animalIdByTypeChain);
+
             $this->incorrectPedigrees[$parentId] =
                 [
                     JsonInputConstant::ANIMAL_ID => $parentId,
                     JsonInputConstant::PARENT_IDS => $chains['parent_ids'],
                     JsonInputConstant::PARENT_TYPES => $chains['parent_types'],
                 ];
+
+            $this->toProcess[$parentId] =
+                [
+                    JsonInputConstant::ANIMAL_ID => $parentId,
+                    JsonInputConstant::PARENT_IDS => $chains['parent_ids'],
+                    JsonInputConstant::PARENT_TYPES => $chains['parent_types'],
+                ];
+
             return true;
 
         }
@@ -279,7 +353,7 @@ class AscendantValidator
     }
 
 
-    private function syncIncorrectPedigreesWithDatabase()
+    private function syncIncorrectPedigreesWithDatabase($checkForDeletes = false)
     {
         $deleteByAnimalIds = [];
         $updateByAnimalIds = [];
@@ -287,16 +361,18 @@ class AscendantValidator
 
         $currentErrorLogAnimalPedigreesInDatabase = $this->errorLogAnimalPedigreeRepository->findAllAsSearchArray();
 
-        //Delete from database, if animalId is not in new set anymore
-        foreach ($currentErrorLogAnimalPedigreesInDatabase as $animalIdInDatabase => $valuesInDatabase)
-        {
-            if(!key_exists($animalIdInDatabase, $this->incorrectPedigrees)) {
-                $deleteByAnimalIds[] = $animalIdInDatabase;
+        if($checkForDeletes) {
+            //Delete from database, if animalId is not in new set anymore
+            foreach ($currentErrorLogAnimalPedigreesInDatabase as $animalIdInDatabase => $valuesInDatabase)
+            {
+                if(!key_exists($animalIdInDatabase, $this->incorrectPedigrees)) {
+                    $deleteByAnimalIds[] = $animalIdInDatabase;
+                }
             }
+
         }
 
-
-        foreach ($this->incorrectPedigrees as $animalId => $values)
+        foreach ($this->toProcess as $animalId => $values)
         {
             if(key_exists($animalId,$currentErrorLogAnimalPedigreesInDatabase)) {
 
@@ -315,12 +391,12 @@ class AscendantValidator
             }
         }
 
-        $deleteCount = $this->errorLogAnimalPedigreeRepository->removeByAnimalIds($deleteByAnimalIds);
-        $updateCount = $this->errorLogAnimalPedigreeRepository->updateByAnimalIdArrays($updateByAnimalIds);
-        $insertCount = $this->errorLogAnimalPedigreeRepository->insertByAnimalIdArrays($insertByAnimalIds);
+        $this->deleteCount += $this->errorLogAnimalPedigreeRepository->removeByAnimalIds($deleteByAnimalIds);
+        $this->updateCount += $this->errorLogAnimalPedigreeRepository->updateByAnimalIdArrays($updateByAnimalIds);
+        $this->insertCount += $this->errorLogAnimalPedigreeRepository->insertByAnimalIdArrays($insertByAnimalIds);
 
-        $this->writeln('ErrorLogAnimalPedigree sync with database delete|update|insert: '
-            .$deleteCount.'|'.$updateCount.'|'.$insertCount);
+        //Reset toProcess
+        $this->toProcess = [];
     }
 
 
