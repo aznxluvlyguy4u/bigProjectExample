@@ -125,5 +125,20 @@ class ErrorLogAnimalPedigree
     }
 
 
+    /**
+     * @return array
+     */
+    public function getParentTypesAsArray()
+    {
+        return json_decode($this->parentTypes);
+    }
 
+
+    /**
+     * @return array
+     */
+    public function getParentIdsAsArray()
+    {
+        return json_decode($this->parentIds);
+    }
 }
