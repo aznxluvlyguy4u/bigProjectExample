@@ -65,8 +65,11 @@ class NsfoFixDbCommand extends ContainerAwareCommand
             '4: Fix incongruent animalIdAndDate values in measurement table', "\n",
             '5: Fix duplicate litters only containing stillborns', "\n",
             '6: Find animals with themselves being their own ascendant', "\n",
+            '7: Print from database, animals with themselves being their own ascendant', "\n",
             'abort (other)', "\n"
         ], self::DEFAULT_OPTION);
+
+        $ascendantValidator = new AscendantValidator($this->em, $this->cmdUtil, $this->logger);
 
         switch ($option) {
             case 1:
@@ -100,8 +103,12 @@ class NsfoFixDbCommand extends ContainerAwareCommand
                 break;
 
             case 6:
-                $ascendantValidator = new AscendantValidator($this->em, $this->cmdUtil, $this->logger);
                 $ascendantValidator->run();
+                $output->writeln('Done!');
+                break;
+
+            case 7:
+                $ascendantValidator->printOverview();
                 $output->writeln('Done!');
                 break;
 

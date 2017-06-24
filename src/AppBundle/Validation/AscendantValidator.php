@@ -102,6 +102,41 @@ class AscendantValidator
     }
 
 
+    public function printOverview()
+    {
+        /** @var ErrorLogAnimalPedigree $errorLogAnimalPedigree */
+        foreach ($this->errorLogAnimalPedigreeRepository->findAll() as $errorLogAnimalPedigree)
+        {
+            $types = $errorLogAnimalPedigree->getParentTypesAsArray();
+
+            foreach ($errorLogAnimalPedigree->getParentIdsAsArray() as $key => $parentId) {
+                $sql = "SELECT
+                          CONCAT(a.uln_country_code,a.uln_number) as uln, CONCAT(a.pedigree_country_code,a.pedigree_number) as stn,
+                          DATE(a.date_of_birth) as date_of_birth, a.name,
+                          CONCAT(mom.uln_country_code,mom.uln_number) as uln_mother, CONCAT(mom.pedigree_country_code,mom.pedigree_number) as stn_mother,
+                          CONCAT(dad.uln_country_code,dad.uln_number) as uln_father, CONCAT(dad.pedigree_country_code,dad.pedigree_number) as stn_father
+                        FROM animal a
+                          LEFT JOIN animal mom ON mom.id = a.parent_mother_id
+                          LEFT JOIN animal dad ON dad.id = a.parent_father_id
+                        WHERE a.id = $parentId";
+                $result = $this->conn->query($sql)->fetch();
+
+                $this->writeln(['uln' => $result['uln'],
+                    'stn' => $result['stn'],
+                    'dateOfBirth' => $result['date_of_birth'],
+                    'vsmId' => $result['name']]);
+
+                if($key < count($types) - 1) {
+                    $this->writeln(' ');
+                    $this->writeln(' --- ' . ArrayUtil::get($key + 1, $types) . ' --- ');
+                }
+            }
+            $this->writeln('=============');
+
+        }
+    }
+
+
     public function run()
     {
         $this->initializePrivateValues();
@@ -462,11 +497,47 @@ class AscendantValidator
     }
 
 
+    /**
+     * @param string|array $input
+     * @param int $indentLevel
+     */
+    private function writeln($input, $indentLevel = 0)
+    {
+        if(!is_array($input)) {
+            $this->writelnString($input);
+
+        } else {
+            foreach ($input as $key => $value) {
+                $this->indent($indentLevel);
+
+                if(is_array($value)) {
+                    $this->writeln($key.' : {', $indentLevel);
+                    $this->indent($indentLevel);
+                    $this->writeln($value, $indentLevel+1);
+                    $this->indent($indentLevel);
+                    $this->writeln('   }', $indentLevel);
+                } else {
+                    $this->writeln($key.' : '.$value, $indentLevel);
+                }
+            }
+        }
+    }
+
+
+    /**
+     * @param int $indentCount
+     * @param string $indentType
+     */
+    private function indent($indentCount = 1, $indentType = '      ')
+    {
+        $this->writelnString(str_repeat($indentType, $indentCount));
+    }
+
 
     /**
      * @param $string
      */
-    private function writeln($string)
+    private function writelnString($string)
     {
         if ($this->logger) {
             $this->logger->notice($string);
