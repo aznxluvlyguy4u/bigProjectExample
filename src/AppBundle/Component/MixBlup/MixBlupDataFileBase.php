@@ -19,6 +19,16 @@ use Doctrine\DBAL\Connection;
 class MixBlupDataFileBase
 {
     /**
+     * @param string $animalIdKey
+     * @return string
+     */
+    protected static function getErrorLogAnimalPedigreeFilter($animalIdKey)
+    {
+        return MixBlupSetting::FILTER_OUT_ANIMALS_WHO_ARE_THEIR_OWN_ASCENDANTS ? " AND $animalIdKey NOT IN (SELECT animal_id FROM error_log_animal_pedigree) " : " ";
+    }
+
+
+    /**
      * @param $gender
      * @return string
      */

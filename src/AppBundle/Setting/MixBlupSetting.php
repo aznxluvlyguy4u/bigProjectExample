@@ -35,4 +35,7 @@ class MixBlupSetting
 
     const FALSE_RECORD_VALUE = 0;
     const TRUE_RECORD_VALUE = 1;
+
+    //Filtering out animals who are their own ascendants
+    const FILTER_OUT_ANIMALS_WHO_ARE_THEIR_OWN_ASCENDANTS = true;
 }

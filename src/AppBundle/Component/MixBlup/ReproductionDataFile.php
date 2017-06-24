@@ -88,7 +88,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                 FROM litter l
                   INNER JOIN declare_nsfo_base b ON l.id = b.id
                   INNER JOIN animal lamb ON lamb.litter_id = l.id
-                WHERE ".self::getSqlBaseFilter();
+                WHERE ".self::getSqlBaseFilter().self::getErrorLogAnimalPedigreeFilter('mom.id');
     }
 
 
@@ -150,7 +150,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                 WHERE
                   ".self::getSqlBaseFilter()."
                   AND mom.ubn_of_birth NOTNULL
-                  AND c.gave_birth_as_one_year_old";
+                  AND c.gave_birth_as_one_year_old".self::getErrorLogAnimalPedigreeFilter('mom.id');
     }
     
     
@@ -197,7 +197,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   ".self::getSqlBaseFilter()."
                   AND lamb.gender <> '".GenderType::NEUTER."'
                   AND lamb.date_of_birth NOTNULL AND lamb.ubn_of_birth NOTNULL
-                  --   AND mom.recombination NOTNULL AND mom.heterosis NOTNULL";
+                  --   AND mom.recombination NOTNULL AND mom.heterosis NOTNULL".self::getErrorLogAnimalPedigreeFilter('lamb.id');
     }
 
 
@@ -242,7 +242,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   --AND mom.recombination NOTNULL AND mom.heterosis NOTNULL
                   --AND m.pmsg NOTNULL --NULLABLE?
                   --AND mom.breed_code NOTNULL --NULLABLE?
-                  AND mom.ubn_of_birth NOTNULL";
+                  AND mom.ubn_of_birth NOTNULL".self::getErrorLogAnimalPedigreeFilter('mom.id');;
     }
 
 

@@ -260,7 +260,7 @@ class ExteriorDataFile extends MixBlupDataFileBase implements MixBlupDataFileInt
                         (
                           x.kind = '".ExteriorKind::DD_."' OR x.kind = '".ExteriorKind::DF_."' OR x.kind = '".ExteriorKind::HK_."'
                         )
-                      )";
+                      )".self::getErrorLogAnimalPedigreeFilter('a.id');
         
         $sql = $sqlBase."
             ".self::generateNonTexelaarFilter().
