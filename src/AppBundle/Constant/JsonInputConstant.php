@@ -55,6 +55,8 @@ class JsonInputConstant
     const AGE = 'age';
     const PARENT_IDS = 'parent_ids';
     const PARENT_TYPES = 'parent_types';
+    const EXCLUDE_MOTHER = 'exclude_mother';
+    const EXCLUDE_FATHER = 'exclude_father';
 
     //Request & Response
     const ERROR_CODE = 'error_code';

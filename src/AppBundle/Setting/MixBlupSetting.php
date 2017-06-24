@@ -38,4 +38,5 @@ class MixBlupSetting
 
     //Filtering out animals who are their own ascendants
     const FILTER_OUT_ANIMALS_WHO_ARE_THEIR_OWN_ASCENDANTS = true;
+    const FILTER_OUT_FROM_PEDIDGREE_FILE_DAYS_DIFFERENCE_BETWEEN_CHILD_AND_PARENT = 0;
 }

@@ -6,6 +6,7 @@ namespace AppBundle\Component\MixBlup;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\MaxLength;
 use AppBundle\Enumerator\MixBlupType;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\CsvWriterUtil;
 use AppBundle\Util\MixBlupPedigreeUtil;
@@ -123,9 +124,26 @@ class MixblupPedigreeFileGenerator
     {
         return
             self::getFormattedIdFromRecord(JsonInputConstant::ANIMAL_ID, $recordArray).
-            self::getFormattedIdFromRecord(JsonInputConstant::FATHER_ID, $recordArray).
-            self::getFormattedIdFromRecord(JsonInputConstant::MOTHER_ID, $recordArray).
+            self::getFormattedParentIdFromRecord(JsonInputConstant::FATHER_ID, $recordArray).
+            self::getFormattedParentIdFromRecord(JsonInputConstant::MOTHER_ID, $recordArray).
             MixBlupDataFileBase::getUbnOfBirthAsLastColumnValue($recordArray);
+    }
+
+
+    /**
+     * @param $key 'father_id' or 'mother_id'
+     * @param $recordArray
+     * @return string
+     */
+    private static function getFormattedParentIdFromRecord($key, $recordArray)
+    {
+        $excludeKey = $key === JsonInputConstant::FATHER_ID  ? JsonInputConstant::EXCLUDE_FATHER : JsonInputConstant::EXCLUDE_MOTHER;
+        $excludeParent = ArrayUtil::get($excludeKey, $recordArray, false);
+        if($excludeParent) {
+            $recordArray[$key] = MixBlupInstructionFileBase::CONSTANT_MISSING_PARENT_REPLACEMENT;
+        }
+
+        return self::getFormattedIdFromRecord($key, $recordArray);
     }
 
 

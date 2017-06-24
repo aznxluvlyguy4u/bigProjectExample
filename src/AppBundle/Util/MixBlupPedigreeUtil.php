@@ -9,6 +9,7 @@ use AppBundle\Component\MixBlup\ExteriorDataFile;
 use AppBundle\Component\MixBlup\LambMeatIndexDataFile;
 use AppBundle\Component\MixBlup\MixBlupInstructionFileBase;
 use AppBundle\Component\MixBlup\ReproductionDataFile;
+use AppBundle\Setting\MixBlupSetting;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
 
@@ -281,6 +282,7 @@ class MixBlupPedigreeUtil
     private function getSqlQuery()
     {
         $nullReplacement = MixBlupInstructionFileBase::CONSTANT_MISSING_PARENT_REPLACEMENT;
+        $daysDiff = MixBlupSetting::FILTER_OUT_FROM_PEDIDGREE_FILE_DAYS_DIFFERENCE_BETWEEN_CHILD_AND_PARENT;
 
         return "SELECT
                   a.id as ".JsonInputConstant::ANIMAL_ID.",
@@ -289,7 +291,9 @@ class MixBlupPedigreeUtil
                   CONCAT(a.uln_country_code, a.uln_number) AS ".JsonInputConstant::ULN.",
                   COALESCE(NULLIF(CONCAT(f.uln_country_code, f.uln_number),''), '".$nullReplacement."') AS ".JsonInputConstant::ULN_FATHER.",
                   COALESCE(NULLIF(CONCAT(m.uln_country_code, m.uln_number),''), '".$nullReplacement."') AS ".JsonInputConstant::ULN_MOTHER.",
-                  a.ubn_of_birth AS ".JsonInputConstant::UBN_OF_BIRTH."
+                  a.ubn_of_birth AS ".JsonInputConstant::UBN_OF_BIRTH.",
+                  DATE_PART('days', a.date_of_birth - m.date_of_birth) <= $daysDiff AND m.date_of_birth NOTNULL AND a.date_of_birth NOTNULL as ".JsonInputConstant::EXCLUDE_MOTHER.",
+                  DATE_PART('days', a.date_of_birth - f.date_of_birth) <= $daysDiff AND f.date_of_birth NOTNULL AND a.date_of_birth NOTNULL as ".JsonInputConstant::EXCLUDE_FATHER."
                 FROM animal a
                   LEFT JOIN animal f ON f.id = a.parent_father_id
                   LEFT JOIN animal m ON m.id = a.parent_mother_id
