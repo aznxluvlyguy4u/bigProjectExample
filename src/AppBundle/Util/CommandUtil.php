@@ -9,7 +9,6 @@ use AppBundle\Entity\Employee;
 use AppBundle\Entity\EmployeeRepository;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\GenderType;
-use AppBundle\Report\Mixblup;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -340,7 +339,7 @@ class CommandUtil
             $parent = $parents->get($parentLabel);
 
             if($parent instanceof Animal) {
-                $uln = Mixblup::formatUln($parent, $nullFiller);
+                $uln = $parent->getUln();
                 $parents->set($parentLabel, $uln);
             }
         }
