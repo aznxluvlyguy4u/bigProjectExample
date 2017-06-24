@@ -22,8 +22,10 @@ use Symfony\Bridge\Monolog\Logger;
  */
 class AscendantValidator
 {
-    const DEFAULT_BATCH_SIZE = 50000;
+    const DEFAULT_BATCH_SIZE = 500;
     const DEFAULT_START_ANIMAL_ID = 0;
+    const DEFAULT_MAX_DAYS_DIFFERENCE_BETWEEN_PARENT_AND_CHILD = 350;
+    const DELETE_DURING_SYNC = false;
 
     /** @var ObjectManager */
     private $em;
@@ -62,6 +64,8 @@ class AscendantValidator
     private $lastSyncedAnimalId;
     /** @var int */
     private $batchSize;
+    /** @var int */
+    private $maxDaysDifferenceBetweenParentAndChild;
 
     /**
      * AscendantValidator constructor.
@@ -85,8 +89,10 @@ class AscendantValidator
         $this->writeln('Initialize empty private arrays ...');
         $this->malePedigreeSearchArray = [];
         $this->femalePedigreeSearchArray = [];
+        $this->pedigreeSearchArray = [];
         $this->ascendantsSearchArray = [];
         $this->incorrectPedigrees = [];
+        $this->toProcess = [];
 
         $this->deleteCount = 0;
         $this->updateCount = 0;
@@ -100,6 +106,7 @@ class AscendantValidator
     {
         $this->initializePrivateValues();
         $this->chooseStartValues();
+        $this->createSearchArray();
         $this->findDirectParents();
         $this->findAscendants();
         $this->syncIncorrectPedigreesWithDatabase(true);
@@ -108,10 +115,68 @@ class AscendantValidator
 
     private function chooseStartValues()
     {
+        $this->maxDaysDifferenceBetweenParentAndChild = $this->cmdUtil->generateQuestion('maxDaysDifferenceParentAndChild (default = '.self::DEFAULT_MAX_DAYS_DIFFERENCE_BETWEEN_PARENT_AND_CHILD.')', self::DEFAULT_MAX_DAYS_DIFFERENCE_BETWEEN_PARENT_AND_CHILD, $isCleanupString = true);
         $this->startAnimalId = $this->cmdUtil->generateQuestion('Start animalId (default = '.self::DEFAULT_START_ANIMAL_ID.')', self::DEFAULT_START_ANIMAL_ID, $isCleanupString = true);
         $this->batchSize = $this->cmdUtil->generateQuestion('BatchSize (default = '.self::DEFAULT_BATCH_SIZE.')', self::DEFAULT_BATCH_SIZE, $isCleanupString = true);
 
-        $this->writeln('startAnimalId: '.$this->startAnimalId.'  batchSize: '.$this->batchSize);
+        $this->writeln('maxDaysDifferenceBetweenParentAndChild: '.$this->maxDaysDifferenceBetweenParentAndChild.'  startAnimalId: '.$this->startAnimalId.'  batchSize: '.$this->batchSize);
+    }
+
+
+    private function createSearchArray()
+    {
+        $sql = "SELECT
+                  a.id as animal_id, a.parent_mother_id, a.parent_father_id, a.type,
+                  dad.id as parent_id, dad.parent_mother_id as parent_parent_mother_id, dad.parent_father_id as parent_parent_father_id, dad.type as parent_type
+                FROM animal a
+                  INNER JOIN animal dad ON dad.id = a.parent_father_id
+                WHERE DATE_PART('days', a.date_of_birth - dad.date_of_birth) < ".$this->maxDaysDifferenceBetweenParentAndChild." AND a.type <> 'Neuter'
+                ORDER BY a.id ASC";
+        $fatherResults = $this->conn->query($sql)->fetchAll();
+
+        $sql = "SELECT
+                  a.id as animal_id, a.parent_mother_id, a.parent_father_id, a.type,
+                  mom.id as parent_id, mom.parent_mother_id as parent_parent_mother_id, mom.parent_father_id as parent_parent_father_id, mom.type as parent_type
+                FROM animal a
+                  INNER JOIN animal mom ON mom.id = a.parent_mother_id
+                WHERE DATE_PART('days', a.date_of_birth - mom.date_of_birth) < ".$this->maxDaysDifferenceBetweenParentAndChild." AND a.type <> 'Neuter'
+                ORDER BY a.id ASC";
+        $motherResults = $this->conn->query($sql)->fetchAll();
+
+        foreach ([$fatherResults, $motherResults] as $parentResults) {
+            foreach ($parentResults as $parentResult) {
+                $animalId = $parentResult['animal_id'];
+                $fatherId = $parentResult['parent_father_id'];
+                $motherId = $parentResult['parent_mother_id'];
+                $type = $parentResult['type'];
+
+                $pedigreeRecord = [
+                    'animal_id' => $animalId,
+                    'parent_father_id' => $fatherId,
+                    'parent_mother_id' => $motherId,
+                    'type' => $type,
+                ];
+
+                $this->pedigreeSearchArray[$animalId] = $pedigreeRecord;
+
+                $parentId = $parentResult['parent_id'];
+                $parentFatherId = $parentResult['parent_parent_mother_id'];
+                $parentMotherId = $parentResult['parent_parent_mother_id'];
+                $parentType = $parentResult['parent_type'];
+
+                $parentPedigreeRecord = [
+                    'animal_id' => $parentId,
+                    'parent_father_id' => $parentFatherId,
+                    'parent_mother_id' => $parentMotherId,
+                    'type' => $parentType,
+                ];
+
+                $this->pedigreeSearchArray[$parentId] = $parentPedigreeRecord;
+            }
+        }
+
+        ksort($this->pedigreeSearchArray, SORT_NUMERIC);
+
     }
 
 
@@ -133,7 +198,6 @@ class AscendantValidator
             $type = $pedigreeRecord['type'];
 
             if($fatherId != null || $motherId != null) {
-                $this->pedigreeSearchArray[$animalId] = $pedigreeRecord;
                 if($type == AnimalObjectType::Ram) {
                     $this->malePedigreeSearchArray[$animalId] = $pedigreeRecord;
                 } elseif($type == AnimalObjectType::Ewe) {
@@ -168,7 +232,6 @@ class AscendantValidator
         $message = $this->getProgressBarMessage();
         $counter = 0;
         $lastCheckedAnimalId = $this->startAnimalId;
-        $checkForDeletes = true;
 
         $this->cmdUtil->setStartTimeAndPrintIt($totalCount, 1);
 
@@ -196,11 +259,10 @@ class AscendantValidator
             }
 
             //At end of each batch
-            $this->syncIncorrectPedigreesWithDatabase($checkForDeletes);
+            $this->syncIncorrectPedigreesWithDatabase();
             $this->lastSyncedAnimalId = $lastCheckedAnimalId;
             $message = $this->getProgressBarMessage(); //update message
             gc_collect_cycles();
-            $checkForDeletes = false;
         }
 
         $this->cmdUtil->setEndTimeAndPrintFinalOverview();
@@ -361,7 +423,7 @@ class AscendantValidator
 
         $currentErrorLogAnimalPedigreesInDatabase = $this->errorLogAnimalPedigreeRepository->findAllAsSearchArray();
 
-        if($checkForDeletes) {
+        if($checkForDeletes && self::DELETE_DURING_SYNC) {
             //Delete from database, if animalId is not in new set anymore
             foreach ($currentErrorLogAnimalPedigreesInDatabase as $animalIdInDatabase => $valuesInDatabase)
             {
