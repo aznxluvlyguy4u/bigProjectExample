@@ -97,7 +97,7 @@ class TagsReplaceAPIController extends APIController {
         }
     }
 
-    //Set animal in mutating state, so a sync a sync will not add animal
+    //Set animal in mutating state, so a sync will not add animal
 
     //Convert the array into an object and add the mandatory values retrieved from the database
     $declareTagReplace = $this->buildMessageObject(RequestType::DECLARE_TAG_REPLACE, $content, $client, $loggedInUser, $location);
