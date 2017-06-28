@@ -11,6 +11,10 @@ use JMS\Serializer\Annotation as JMS;
  *
  * Table saving the latest BreedIndexValues and BreedValues
  *
+ * @ORM\Table(name="result_table_breed_grades",indexes={
+ *     @ORM\Index(name="result_table_breed_grades_idx", columns={"animal_id"}),
+ * })
+ *
  * @ORM\Entity(repositoryClass="AppBundle\Entity\ResultTableBreedGradesRepository")
  * @package AppBundle\Entity
  */

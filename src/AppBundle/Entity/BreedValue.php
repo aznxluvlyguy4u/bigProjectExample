@@ -9,6 +9,11 @@ use JMS\Serializer\Annotation as JMS;
 /**
  * Class BreedValue
  *
+ *
+ * @ORM\Table(name="breed_value",indexes={
+ *     @ORM\Index(name="breed_value_idx", columns={"animal_id", "generation_date", "type_id"}),
+ * })
+ *
  * @ORM\Entity(repositoryClass="AppBundle\Entity\BreedValueRepository")
  * @package AppBundle\Entity
  */
