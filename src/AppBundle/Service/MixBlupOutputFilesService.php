@@ -120,6 +120,23 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     /** @var array */
     private $minReliabilityByBreedValueTypeDutchDescription;
 
+
+
+    /** @var string */
+    private $sqlBatchString;
+    /** @var string */
+    private $prefix;
+    /** @var int */
+    private $totalSavedCount;
+    /** @var int */
+    private $toSaveBatchCount;
+    /** @var int */
+    private $valueAlreadyExistsCount;
+    /** @var int */
+    private $nullAccuracyCount;
+    /** @var boolean */
+    private $processScanCount;
+
     /**
      * MixBlupOutputFilesService constructor.
      * @param ObjectManager $em
@@ -435,21 +452,24 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $recordsSkippedCount = 0;
         $rowCount = 0;
         $foundValue = false;
+
+
+        //Initialize solani groups
+        foreach ($dutchBreedValueTypes as $ordinal => $dutchBreedValueType) {
+            $this->solani[$dutchBreedValueType] = [];
+        }
+
         foreach ($ssv as $row) {
 
             $rowCount++;
             $animalId = $row[$firstColumnIndex];
             foreach ($dutchBreedValueTypes as $ordinal => $dutchBreedValueType) {
-                $solaniBreedValueGroup = ArrayUtil::get($dutchBreedValueType, $this->solani, []);
-
                 //0-indexed solani column n starts at 0-indexed $ssv row[n+3] / column 4 in the file
                 $key = $ordinal+self::ZERO_INDEXED_SOLANI_COLUMN+$firstColumnIndex;
                 $value = $row[$key];
                 if($value !== null && $value !== '') {
-                    $floatValue = floatval($value);
                     //NOTE! Zero and negative Solani values are valid!
-                    $solaniBreedValueGroup[$animalId] = $floatValue;
-                    $this->solani[$dutchBreedValueType] = $solaniBreedValueGroup;
+                    $this->solani[$dutchBreedValueType][$animalId] = floatval($value);
                     $recordsStoredCount++;
 
                     if(self::TEST_COLUMN_ALIGNMENT) {
@@ -543,25 +563,29 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             ]);
         }
 
+        //Initialize relani groups
+        foreach ($dutchBreedValueTypes as $ordinal => $dutchBreedValueType) {
+            switch ($filename)
+            {
+                case Filename::RELANI_DIRECT:
+                    $this->relaniDirect[$dutchBreedValueType] = [];
+                    break;
+
+                case Filename::RELANI_INDIRECT:
+                    $this->relaniIndirect[$dutchBreedValueType] = [];
+                    break;
+
+                default:
+                    $this->relani[$dutchBreedValueType] = [];
+                    break;
+            }
+        }
+
         foreach ($ssv as $row) {
 
             $rowCount++;
             $animalId = $row[$firstColumnIndex];
             foreach ($dutchBreedValueTypes as $ordinal => $dutchBreedValueType) {
-                switch ($filename)
-                {
-                    case Filename::RELANI_DIRECT:
-                        $relaniBreedValueGroup = ArrayUtil::get($dutchBreedValueType, $this->relaniDirect, []);
-                        break;
-
-                    case Filename::RELANI_INDIRECT:
-                        $relaniBreedValueGroup = ArrayUtil::get($dutchBreedValueType, $this->relaniIndirect, []);
-                        break;
-
-                    default:
-                        $relaniBreedValueGroup = ArrayUtil::get($dutchBreedValueType, $this->relani, []);
-                        break;
-                }
 
                 //0-indexed relani column n starts at 0-indexed $ssv row[n+3] / column 4 in the file
                 $key = $ordinal+self::ZERO_INDEXED_RELANI_COLUMN+$firstColumnIndex;
@@ -570,19 +594,18 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $floatValue = floatval($value);
 
                     if(!NumberUtil::isFloatZero($floatValue, MixBlupSetting::FLOAT_ACCURACY)) {
-                        $relaniBreedValueGroup[$animalId] = $floatValue;
                         switch ($filename)
                         {
                             case Filename::RELANI_DIRECT:
-                                $this->relaniDirect[$dutchBreedValueType] = $relaniBreedValueGroup;
+                                $this->relaniDirect[$dutchBreedValueType][$animalId] = $floatValue;
                                 break;
 
                             case Filename::RELANI_INDIRECT:
-                                $this->relaniIndirect[$dutchBreedValueType] = $relaniBreedValueGroup;
+                                $this->relaniIndirect[$dutchBreedValueType][$animalId] = $floatValue;
                                 break;
 
                             default:
-                                $this->relani[$dutchBreedValueType] = $relaniBreedValueGroup;
+                                $this->relani[$dutchBreedValueType][$animalId] = $floatValue;
                                 break;
                         }
                         $recordsStoredCount++;
@@ -643,11 +666,10 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
      */
     private function breedValueAlreadyExists($dutchBreedValueType, $animalId)
     {
-        //
-        $dutchBreedValueTypeGroup = ArrayUtil::get($dutchBreedValueType, $this->currentBreedValueExistsByAnimalIdForGenerationDate);
-        if($dutchBreedValueTypeGroup != null) {
-            $animalId = ArrayUtil::get($animalId, $dutchBreedValueTypeGroup);
-            return key_exists($animalId, $dutchBreedValueTypeGroup);
+        if(key_exists($dutchBreedValueType, $this->currentBreedValueExistsByAnimalIdForGenerationDate)) {
+            if($this->currentBreedValueExistsByAnimalIdForGenerationDate[$dutchBreedValueType]) {
+                return key_exists($animalId, $this->currentBreedValueExistsByAnimalIdForGenerationDate[$dutchBreedValueType]);
+            }
         }
         return false;
     }
@@ -655,128 +677,212 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
     private function processBreedValues()
     {
-        $this->processBreedValuesBase($this->relani);
+        $this->processBreedValuesBase(Filename::RELANI);
     }
 
 
     private function processDirectBreedValues()
     {
-        $this->processBreedValuesBase($this->relaniDirect);
+        $this->logger->notice('Processing DIRECT breedValues ...');
+        $this->processBreedValuesBase(Filename::RELANI_DIRECT);
     }
 
 
     private function processIndirectBreedValues()
     {
-        $this->processBreedValuesBase($this->relaniIndirect, true);
+        $this->logger->notice('Processing INDIRECT breedValues ...');
+        $this->processBreedValuesBase(Filename::RELANI_INDIRECT, true);
     }
 
 
-    private function processBreedValuesBase($relani, $hasIndirectSuffix = false)
+    private function processBreedValuesBase($relaniType, $hasIndirectSuffix = false)
     {
-        $sqlBatchString = '';
-        $prefix = '';
-        $totalCount = 0;
-        $batchCount = 0;
-        $valueAlreadyExistsCount = 0;
-        $nullAccuracyCount = 0;
+        $this->sqlBatchString = '';
+        $this->prefix = '';
+        $this->totalSavedCount = 0;
+        $this->toSaveBatchCount = 0;
+        $this->valueAlreadyExistsCount = 0;
+        $this->nullAccuracyCount = 0;
+        $this->processScanCount = 0;
 
         DoctrineUtil::updateTableSequence($this->conn, [BreedValue::TABLE_NAME]);
 
-        foreach ($relani as $dutchBreedValueTypeKeyInSolaniArray => $relaniValues) {
-            $dutchBreedValueTypeForDatabase = $dutchBreedValueTypeKeyInSolaniArray;
-            if($hasIndirectSuffix) {
-                $dutchBreedValueTypeForDatabase = $this->removeIndirectSuffix($dutchBreedValueTypeKeyInSolaniArray);
-            }
+        switch ($relaniType) {
 
-            $this->logger->notice('Processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues ...');
-            $this->logger->notice(' ... '); //Line to overwrite
+            case Filename::RELANI_DIRECT:
 
-            $breedValueTypeId = $this->breedValueTypeIdsByDutchDescription[$dutchBreedValueTypeForDatabase];
+                foreach ($this->relaniDirect as $dutchBreedValueTypeKeyInSolaniArray => $relaniValues) {
+                    $this->processScanCount++;
+                    $dutchBreedValueTypeForDatabase = $dutchBreedValueTypeKeyInSolaniArray;
 
-            //NOTE! Null Relani values are already filtered out. So the Relani array will be smaller than the Solani array!
-            foreach ($relaniValues as $animalId => $relani) {
+                    $this->logger->notice('Processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues ...');
+                    $this->logger->notice(' ... '); //Line to overwrite
+                    $this->logger->notice(' ... '); //Line to overwrite
 
-                if($this->breedValueAlreadyExists($dutchBreedValueTypeForDatabase, $animalId)) {
-                    $valueAlreadyExistsCount++;
-                    continue;
-                }
+                    $breedValueTypeId = $this->breedValueTypeIdsByDutchDescription[$dutchBreedValueTypeForDatabase];
 
-                //Note! a 0.000 value in the relani file refers to a null/missing value.
-                //Do not persist these in the database.
-                if(NumberUtil::isFloatZero($relani, MixBlupSetting::FLOAT_ACCURACY)) {
-                    $nullAccuracyCount++;
-                    continue;
-                }
-
-                $solaniValues = ArrayUtil::get($dutchBreedValueTypeKeyInSolaniArray, $this->solani);
-                $solani = $solaniValues != null ? ArrayUtil::get($animalId, $solaniValues) : null;
-
-                if($solani != null) {
-
-                    $breedValueInsertString = $this->writeBreedValueInsertValuesString($prefix, $breedValueTypeId, $animalId, $solani, $relani);
-
-                    $sqlBatchString = $sqlBatchString . $breedValueInsertString;
-                    $totalCount++;
-                    $batchCount++;
-                    $prefix = ',';
-
-                    $this->addToCurrentBreedValueExistsByAnimalIdForGenerationDate($dutchBreedValueTypeForDatabase, $animalId);
-
-                    if($totalCount%self::BATCH_SIZE == 0 && $totalCount != 0) {
-                        $this->persistBreedValueBySql($sqlBatchString);
-                        $sqlBatchString = '';
-                        $prefix = '';
-                        $batchCount = 0;
+                    $this->printBreedValueProcessMessage($dutchBreedValueTypeKeyInSolaniArray);
+                    //NOTE! Null Relani values are already filtered out. So the Relani array will be smaller than the Solani array!
+                    foreach ($relaniValues as $animalId => $relani) {
+                        $this->processBreedValue($dutchBreedValueTypeKeyInSolaniArray, $dutchBreedValueTypeForDatabase, $animalId, $relani, $breedValueTypeId);
                     }
+
+                    if($this->sqlBatchString != '') { $this->persistBreedValueBySql(); }
+                    $this->logger->notice('Finished processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues.');
                 }
 
-                $message = 'Processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues count total|batch: '.$totalCount.'|'.$batchCount;
-                $this->overwriteNotice($message);
+                break;
 
-            }
+            case Filename::RELANI_INDIRECT:
 
-            if($sqlBatchString != '') {
-                $this->persistBreedValueBySql($sqlBatchString);
-                $sqlBatchString = '';
-                $prefix = '';
-                $batchCount = 0;
+                foreach ($this->relaniIndirect as $dutchBreedValueTypeKeyInSolaniArray => $relaniValues) {
+                    $this->processScanCount++;
+                    $dutchBreedValueTypeForDatabase = $dutchBreedValueTypeKeyInSolaniArray;
+                    if($hasIndirectSuffix) {
+                        $dutchBreedValueTypeForDatabase = $this->removeIndirectSuffix($dutchBreedValueTypeKeyInSolaniArray);
+                    }
 
-                $message = 'Processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues count total|batch: '.$totalCount.'|'.$batchCount;
-                $this->overwriteNotice($message);
-            }
-            $this->logger->notice('Finished processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues.');
+                    $this->logger->notice('Processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues ...');
+                    $this->logger->notice(' ... '); //Line to overwrite
+                    $this->logger->notice(' ... '); //Line to overwrite
+
+                    $breedValueTypeId = $this->breedValueTypeIdsByDutchDescription[$dutchBreedValueTypeForDatabase];
+
+                    $this->printBreedValueProcessMessage($dutchBreedValueTypeKeyInSolaniArray);
+                    //NOTE! Null Relani values are already filtered out. So the Relani array will be smaller than the Solani array!
+                    foreach ($relaniValues as $animalId => $relani) {
+                        $this->processBreedValue($dutchBreedValueTypeKeyInSolaniArray, $dutchBreedValueTypeForDatabase, $animalId, $relani, $breedValueTypeId);
+                    }
+
+                    if($this->sqlBatchString != '') { $this->persistBreedValueBySql(); }
+                    $this->logger->notice('Finished processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues.');
+                }
+
+                break;
+
+            default:
+
+                foreach ($this->relani as $dutchBreedValueTypeKeyInSolaniArray => $relaniValues) {
+                    $this->processScanCount++;
+                    $dutchBreedValueTypeForDatabase = $dutchBreedValueTypeKeyInSolaniArray;
+
+                    $this->logger->notice('Processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues ...');
+                    $this->logger->notice(' ... '); //Line to overwrite
+                    $this->logger->notice(' ... '); //Line to overwrite
+
+                    $breedValueTypeId = $this->breedValueTypeIdsByDutchDescription[$dutchBreedValueTypeForDatabase];
+
+                    $this->printBreedValueProcessMessage($dutchBreedValueTypeKeyInSolaniArray);
+                    //NOTE! Null Relani values are already filtered out. So the Relani array will be smaller than the Solani array!
+                    foreach ($relaniValues as $animalId => $relani) {
+                        $this->processBreedValue($dutchBreedValueTypeKeyInSolaniArray, $dutchBreedValueTypeForDatabase, $animalId, $relani, $breedValueTypeId);
+                    }
+
+                    if($this->sqlBatchString != '') { $this->persistBreedValueBySql(); }
+                    $this->logger->notice('Finished processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues.');
+                }
+
+                break;
         }
+
 
         $this->logger->notice('Finished processing breedvalues set!');
     }
 
 
+    private function processBreedValue($dutchBreedValueTypeKeyInSolaniArray, $dutchBreedValueTypeForDatabase, $animalId, $relani, $breedValueTypeId)
+    {
+        if($this->breedValueAlreadyExists($dutchBreedValueTypeForDatabase, $animalId)) {
+            $this->valueAlreadyExistsCount++;
+            if($this->processScanCount%self::PRINT_BATCH_SIZE === 0) {
+                $this->printBreedValueProcessMessage($dutchBreedValueTypeKeyInSolaniArray);
+            }
+            return;
+        }
+
+        //Note! a 0.000 value in the relani file refers to a null/missing value.
+        //Do not persist these in the database.
+        if(NumberUtil::isFloatZero($relani, MixBlupSetting::FLOAT_ACCURACY)) {
+            if($this->processScanCount%self::PRINT_BATCH_SIZE === 0) {
+                $this->printBreedValueProcessMessage($dutchBreedValueTypeKeyInSolaniArray);
+            }
+            $this->nullAccuracyCount++;
+            return;
+        }
+
+        $solani = null;
+        if(key_exists($dutchBreedValueTypeKeyInSolaniArray, $this->solani)) {
+            if($this->solani[$dutchBreedValueTypeKeyInSolaniArray]) {
+                if(key_exists($animalId, $this->solani[$dutchBreedValueTypeKeyInSolaniArray]))
+                    $solani = $this->solani[$dutchBreedValueTypeKeyInSolaniArray][$animalId];
+
+                $breedValueInsertString = $this->writeBreedValueInsertValuesString($breedValueTypeId, $animalId, $solani, $relani);
+
+                $this->sqlBatchString = $this->sqlBatchString . $breedValueInsertString;
+                $this->totalSavedCount++;
+                $this->toSaveBatchCount++;
+                $this->prefix = ',';
+
+                $this->addToCurrentBreedValueExistsByAnimalIdForGenerationDate($dutchBreedValueTypeForDatabase, $animalId);
+
+                if($this->totalSavedCount%self::BATCH_SIZE === 0) {
+                    $this->persistBreedValueBySql();
+                    $this->sqlBatchString = '';
+                    $this->prefix = '';
+                    $this->toSaveBatchCount = 0;
+
+                    $this->printBreedValueProcessMessage($dutchBreedValueTypeKeyInSolaniArray);
+                }
+            }
+        }
+
+        if($this->processScanCount%self::PRINT_BATCH_SIZE === 0) {
+            $this->printBreedValueProcessMessage($dutchBreedValueTypeKeyInSolaniArray);
+        }
+    }
+
+
     /**
-     * @param string $prefix
+     * @param $dutchBreedValueTypeKeyInSolaniArray
+     * @return string
+     */
+    private function printBreedValueProcessMessage($dutchBreedValueTypeKeyInSolaniArray)
+    {
+        $this->overwriteNotice('Processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues count saved|toSave|alreadyExists|null: '.$this->totalSavedCount.'|'.$this->toSaveBatchCount.'|'.$this->valueAlreadyExistsCount.'|'.$this->nullAccuracyCount);
+    }
+
+
+    /**
      * @param int $breedValueTypeId
      * @param int $animalId
      * @param float $solani
      * @param float $relani
      * @return string
      */
-    private function writeBreedValueInsertValuesString($prefix, $breedValueTypeId, $animalId, $solani, $relani)
+    private function writeBreedValueInsertValuesString($breedValueTypeId, $animalId, $solani, $relani)
     {
-        return $prefix."(nextval('breed_value_id_seq'),".$animalId.",".$breedValueTypeId.",NOW(),'".$this->key."','". $solani."','".$relani."')";
+        return $this->prefix."(nextval('breed_value_id_seq'),".$animalId.",".$breedValueTypeId.",NOW(),'".$this->key."','". $solani."','".$relani."')";
     }
 
 
     /**
-     * @param string $sqlBatchString
      * @return integer
      */
-    private function persistBreedValueBySql($sqlBatchString)
+    private function persistBreedValueBySql()
     {
-        if($sqlBatchString == '') { return 0; }
+        if($this->sqlBatchString == '') { return 0; }
 
-        $sql = "INSERT INTO breed_value (id, animal_id, type_id, log_date, generation_date, value, reliability) VALUES ".$sqlBatchString;
+        $sql = "INSERT INTO breed_value (id, animal_id, type_id, log_date, generation_date, value, reliability) VALUES ".$this->sqlBatchString;
         $this->conn->exec($sql);
 
-        return SqlUtil::updateWithCount($this->conn, $sql);
+        $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
+
+        $this->sqlBatchString = '';
+        $this->prefix = '';
+        $this->toSaveBatchCount = 0;
+        $this->totalSavedCount += $updateCount;
+
+        return $updateCount;
     }
 
 
