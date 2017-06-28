@@ -37,12 +37,13 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     const TEST_WITH_DOWNLOADED_ZIPS = true;
     const PURGE_ZIP_FOLDER_AFTER_SUCCESSFUL_RUN = false;
     const DELETE_QUEUE_MESSAGE_AFTER_SUCCESSFUL_RUN = false;
-    const ONLY_DOWNLOAD_SOLANI_AND_RELANI = false;
+    const ONLY_DOWNLOAD_SOLANI_AND_RELANI = true;
     const ONLY_UNZIP_SOLANI_AND_RELANI = true;
 
-    const TEST_COLUMN_ALIGNMENT = true;
+    const TEST_COLUMN_ALIGNMENT = false;
 
     const BATCH_SIZE = 10000;
+    const PRINT_BATCH_SIZE = 1000;
 
     const ZERO_INDEXED_SOLANI_COLUMN = 3;
     const ZERO_INDEXED_RELANI_COLUMN = 3;
@@ -260,12 +261,14 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $successfulUnzip = $solaniExists && ($relaniExists || $this->relaniDirectAndIndirectExists);
 
                     if($successfulUnzip) {
+                        $this->logger->notice('Unzip was successful!');
 
                         $this->resetSearchArrays();
 
                         $this->parseSolaniFiles();
 
                         if($this->relaniDirectAndIndirectExists) {
+                            $this->logger->notice('Found separate direct and indirect Relani files');
                             $this->parseRelaniDirectFiles();
                             $this->parseRelaniIndirectFiles();
                             $this->processDirectBreedValues();
@@ -278,6 +281,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                         $this->purgeResultsFolder();
                         $successfulUnzips[] = $zipFileName;
                     } else {
+                        $this->logger->notice('Unzip failed');
                         $unsuccessfulUnzips[] = $zipFileName;
                         $this->errors[] = $this->currentBreedType;
                     }
@@ -397,7 +401,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     {
         $ssv = CsvParser::parseSpaceSeparatedFile($this->getResultsFolder(), Filename::SOLANI);
 
-        if(count($ssv) === 0) {
+        $totalRowCount = count($ssv);
+        if($totalRowCount === 0) {
             $this->logger->notice(Filename::SOLANI . ' is empty');
             return;
         }
@@ -422,11 +427,17 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             ]);
         }
 
+        $this->logger->notice('Parsing '.Filename::SOLANI.' file for '.$this->currentBreedType. ' ... ');
+        $this->logger->notice(' ... '); //Line to overwrite
+        $this->logger->notice(' ... '); //Line to overwrite
+
         $recordsStoredCount = 0;
         $recordsSkippedCount = 0;
+        $rowCount = 0;
         $foundValue = false;
         foreach ($ssv as $row) {
 
+            $rowCount++;
             $animalId = $row[$firstColumnIndex];
             foreach ($dutchBreedValueTypes as $ordinal => $dutchBreedValueType) {
                 $solaniBreedValueGroup = ArrayUtil::get($dutchBreedValueType, $this->solani, []);
@@ -449,7 +460,12 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $recordsSkippedCount++;
                 }
             }
+
             if(self::TEST_COLUMN_ALIGNMENT && $foundValue) { break; }
+
+            if($rowCount%self::PRINT_BATCH_SIZE === 0) {
+                $this->overwriteNotice('Solani records stored|skipped: '.$recordsStoredCount.'|'.$recordsSkippedCount .'   row: '.$rowCount.'|'.$totalRowCount);
+            }
         }
         if(self::TEST_COLUMN_ALIGNMENT) { dump($this->solani); }
 
@@ -491,7 +507,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     {
         $ssv = CsvParser::parseSpaceSeparatedFile($this->getResultsFolder(), $filename);
 
-        if(count($ssv) === 0) {
+        $totalRowCount = count($ssv);
+        if($totalRowCount === 0) {
             $this->logger->notice($filename . ' is empty');
             return;
         }
@@ -503,8 +520,13 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             return;
         }
 
+        $this->logger->notice('Parsing '.$filename.' file for '.$this->currentBreedType. ' ... ');
+        $this->logger->notice(' ... '); //Line to overwrite
+        $this->logger->notice(' ... '); //Line to overwrite
+
         $recordsStoredCount = 0;
         $recordsSkippedCount = 0;
+        $rowCount = 0;
         $foundValue = false;
 
         $firstRow = $ssv[0];
@@ -523,6 +545,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
         foreach ($ssv as $row) {
 
+            $rowCount++;
             $animalId = $row[$firstColumnIndex];
             foreach ($dutchBreedValueTypes as $ordinal => $dutchBreedValueType) {
                 switch ($filename)
@@ -579,6 +602,9 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                 }
             }
             if(self::TEST_COLUMN_ALIGNMENT && $foundValue) { break; }
+            if($rowCount%self::PRINT_BATCH_SIZE === 0) {
+                $this->overwriteNotice($filename . ' records stored|skipped: '.$recordsStoredCount.'|'.$recordsSkippedCount . '   row: '.$rowCount.'|'.$totalRowCount);
+            }
         }
         if(self::TEST_COLUMN_ALIGNMENT) {
             switch ($filename)
@@ -663,6 +689,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             }
 
             $this->logger->notice('Processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues ...');
+            $this->logger->notice(' ... '); //Line to overwrite
 
             $breedValueTypeId = $this->breedValueTypeIdsByDutchDescription[$dutchBreedValueTypeForDatabase];
 
