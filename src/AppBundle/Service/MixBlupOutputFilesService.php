@@ -4,6 +4,7 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Component\MixBlup\MixBlupInstructionFileBase;
 use AppBundle\Constant\Filename;
 use AppBundle\Entity\BreedIndexType;
 use AppBundle\Entity\BreedIndexTypeRepository;
@@ -21,6 +22,7 @@ use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\LoggerUtil;
 use AppBundle\Util\NumberUtil;
 use AppBundle\Util\SqlUtil;
+use AppBundle\Util\StringUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Monolog\Logger;
@@ -81,7 +83,13 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     /** @var array */
     private $relani;
     /** @var array */
+    private $relaniDirect;
+    /** @var array */
+    private $relaniIndirect;
+    /** @var array */
     private $currentBreedValueExistsByAnimalIdForGenerationDate;
+    /** @var boolean */
+    private $relaniDirectAndIndirectExists;
 
     /** @var int */
     private $totalFilesToDownload;
@@ -170,6 +178,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     {
         $this->solani = [];
         $this->relani = [];
+        $this->relaniDirect = [];
+        $this->relaniIndirect = [];
 
         $this->currentBreedValueExistsByAnimalIdForGenerationDate = [];
 
@@ -242,16 +252,28 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $this->unzipResultFiles($zipFileName);
                     $this->currentBreedType = self::getBreedValueTypeByRelSolZipName($zipFileName);
 
-                    $successfulUnzip = file_exists($this->getResultsFolder() . Filename::SOLANI)
-                                    && file_exists($this->getResultsFolder() . Filename::RELANI);
+                    $solaniExists = file_exists($this->getResultsFolder() . Filename::SOLANI);
+                    $relaniExists = file_exists($this->getResultsFolder() . Filename::RELANI);
+                    $this->relaniDirectAndIndirectExists =
+                        file_exists($this->getResultsFolder() . Filename::RELANI_DIRECT) &&
+                        file_exists($this->getResultsFolder() . Filename::RELANI_INDIRECT);
+                    $successfulUnzip = $solaniExists && ($relaniExists || $this->relaniDirectAndIndirectExists);
 
                     if($successfulUnzip) {
 
                         $this->resetSearchArrays();
 
                         $this->parseSolaniFiles();
-                        $this->parseRelaniFiles();
-                        $this->processBreedValues();
+
+                        if($this->relaniDirectAndIndirectExists) {
+                            $this->parseRelaniDirectFiles();
+                            $this->parseRelaniIndirectFiles();
+                            $this->processDirectBreedValues();
+                            $this->processIndirectBreedValues();
+                        } else {
+                            $this->parseRelaniFiles();
+                            $this->processBreedValues();
+                        }
 
                         $this->purgeResultsFolder();
                         $successfulUnzips[] = $zipFileName;
@@ -350,6 +372,12 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         if ($this->zip->open($this->getZipFolder().$zipFileName) === TRUE) {
 
             if(self::ONLY_UNZIP_SOLANI_AND_RELANI) {
+                /*
+                 * For some reason the Relani_direct and Relani_indirect filenames
+                 * cannot be in the same array as Solani and Relani,
+                 * or else the zip extraction won't work properly.
+                 */
+                $this->zip->extractTo($this->getResultsFolder(), [Filename::RELANI_DIRECT, Filename::RELANI_INDIRECT]);
                 $this->zip->extractTo($this->getResultsFolder(), [Filename::SOLANI, Filename::RELANI]);
             } else {
                 $this->zip->extractTo($this->getResultsFolder());
@@ -374,7 +402,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             return;
         }
 
-        $dutchBreedValueTypes = MixBlupParseInstruction::get($this->currentBreedType);
+        $dutchBreedValueTypes = MixBlupParseInstruction::get($this->currentBreedType, true);
         if(count($dutchBreedValueTypes) === 0) {
             $this->logger->error($this->currentBreedType . ' extracted currentBreedType is not a valid MixBlupAnalysis type');
             return;
@@ -430,20 +458,46 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
 
     /**
+     * NOTE! Null Relani values are already filtered out. So the Relani_direct array will be smaller than the Solani array!
+     *
+     * Dynamically fill the relaniDirect search array
+     */
+    private function parseRelaniDirectFiles()
+    {
+        $this->parseRelaniFiles(Filename::RELANI_DIRECT);
+    }
+
+
+    /**
+     * NOTE! Null Relani values are already filtered out. So the Relani_indirect array will be smaller than the Solani array!
+     *
+     * Dynamically fill the relaniIndirect search array
+     */
+    private function parseRelaniIndirectFiles()
+    {
+        $indirectDutchBreedValueTypes = MixBlupParseInstruction::getIndirect($this->currentBreedType, false);
+        $this->parseRelaniFiles(Filename::RELANI_INDIRECT, $indirectDutchBreedValueTypes);
+    }
+
+
+    /**
      * NOTE! Null Relani values are already filtered out. So the Relani array will be smaller than the Solani array!
      *
      * Dynamically fill the relani search array
+     * @param $filename
+     * @param $indirectDutchBreedValueTypes
      */
-    private function parseRelaniFiles()
+    private function parseRelaniFiles($filename = Filename::RELANI, $indirectDutchBreedValueTypes = [])
     {
-        $ssv = CsvParser::parseSpaceSeparatedFile($this->getResultsFolder(), Filename::RELANI);
+        $ssv = CsvParser::parseSpaceSeparatedFile($this->getResultsFolder(), $filename);
 
         if(count($ssv) === 0) {
-            $this->logger->notice(Filename::RELANI . ' is empty');
+            $this->logger->notice($filename . ' is empty');
             return;
         }
 
-        $dutchBreedValueTypes = MixBlupParseInstruction::get($this->currentBreedType);
+        $dutchBreedValueTypes = $filename === Filename::RELANI_INDIRECT ? MixBlupParseInstruction::getIndirect($this->currentBreedType) :
+            MixBlupParseInstruction::get($this->currentBreedType, false);
         if(count($dutchBreedValueTypes) === 0) {
             $this->logger->error($this->currentBreedType . ' extracted currentBreedType is not a valid MixBlupAnalysis type');
             return;
@@ -471,7 +525,20 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
             $animalId = $row[$firstColumnIndex];
             foreach ($dutchBreedValueTypes as $ordinal => $dutchBreedValueType) {
-                $relaniBreedValueGroup = ArrayUtil::get($dutchBreedValueType, $this->relani, []);
+                switch ($filename)
+                {
+                    case Filename::RELANI_DIRECT:
+                        $relaniBreedValueGroup = ArrayUtil::get($dutchBreedValueType, $this->relaniDirect, []);
+                        break;
+
+                    case Filename::RELANI_INDIRECT:
+                        $relaniBreedValueGroup = ArrayUtil::get($dutchBreedValueType, $this->relaniIndirect, []);
+                        break;
+
+                    default:
+                        $relaniBreedValueGroup = ArrayUtil::get($dutchBreedValueType, $this->relani, []);
+                        break;
+                }
 
                 //0-indexed relani column n starts at 0-indexed $ssv row[n+3] / column 4 in the file
                 $key = $ordinal+self::ZERO_INDEXED_RELANI_COLUMN+$firstColumnIndex;
@@ -481,7 +548,20 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
                     if(!NumberUtil::isFloatZero($floatValue, MixBlupSetting::FLOAT_ACCURACY)) {
                         $relaniBreedValueGroup[$animalId] = $floatValue;
-                        $this->relani[$dutchBreedValueType] = $relaniBreedValueGroup;
+                        switch ($filename)
+                        {
+                            case Filename::RELANI_DIRECT:
+                                $this->relaniDirect[$dutchBreedValueType] = $relaniBreedValueGroup;
+                                break;
+
+                            case Filename::RELANI_INDIRECT:
+                                $this->relaniIndirect[$dutchBreedValueType] = $relaniBreedValueGroup;
+                                break;
+
+                            default:
+                                $this->relani[$dutchBreedValueType] = $relaniBreedValueGroup;
+                                break;
+                        }
                         $recordsStoredCount++;
 
                         if(self::TEST_COLUMN_ALIGNMENT) {
@@ -500,9 +580,16 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             }
             if(self::TEST_COLUMN_ALIGNMENT && $foundValue) { break; }
         }
-        if(self::TEST_COLUMN_ALIGNMENT) { dump($this->relani); }
+        if(self::TEST_COLUMN_ALIGNMENT) {
+            switch ($filename)
+            {
+                case Filename::RELANI_DIRECT: dump($this->relaniDirect); break;
+                case Filename::RELANI_INDIRECT: dump($this->relaniIndirect); break;
+                default: dump($this->relani); break;
+            }
+        }
 
-        $this->logger->notice('Relani records stored|skipped: '.$recordsStoredCount.'|'.$recordsSkippedCount);
+        $this->logger->notice($filename . ' records stored|skipped: '.$recordsStoredCount.'|'.$recordsSkippedCount);
     }
 
 
@@ -542,6 +629,24 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
     private function processBreedValues()
     {
+        $this->processBreedValuesBase($this->relani);
+    }
+
+
+    private function processDirectBreedValues()
+    {
+        $this->processBreedValuesBase($this->relaniDirect);
+    }
+
+
+    private function processIndirectBreedValues()
+    {
+        $this->processBreedValuesBase($this->relaniIndirect, true);
+    }
+
+
+    private function processBreedValuesBase($relani, $hasIndirectSuffix = false)
+    {
         $sqlBatchString = '';
         $prefix = '';
         $totalCount = 0;
@@ -551,15 +656,20 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
         DoctrineUtil::updateTableSequence($this->conn, [BreedValue::TABLE_NAME]);
 
-        foreach ($this->relani as $dutchBreedValueType => $relaniValues) {
-            $this->logger->notice('Processing '.$dutchBreedValueType.' breedValues ...');
+        foreach ($relani as $dutchBreedValueTypeKeyInSolaniArray => $relaniValues) {
+            $dutchBreedValueTypeForDatabase = $dutchBreedValueTypeKeyInSolaniArray;
+            if($hasIndirectSuffix) {
+                $dutchBreedValueTypeForDatabase = $this->removeIndirectSuffix($dutchBreedValueTypeKeyInSolaniArray);
+            }
 
-            $breedValueTypeId = $this->breedValueTypeIdsByDutchDescription[$dutchBreedValueType];
+            $this->logger->notice('Processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues ...');
+
+            $breedValueTypeId = $this->breedValueTypeIdsByDutchDescription[$dutchBreedValueTypeForDatabase];
 
             //NOTE! Null Relani values are already filtered out. So the Relani array will be smaller than the Solani array!
             foreach ($relaniValues as $animalId => $relani) {
 
-                if($this->breedValueAlreadyExists($dutchBreedValueType, $animalId)) {
+                if($this->breedValueAlreadyExists($dutchBreedValueTypeForDatabase, $animalId)) {
                     $valueAlreadyExistsCount++;
                     continue;
                 }
@@ -571,8 +681,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     continue;
                 }
 
-                $solaniValues = ArrayUtil::get($dutchBreedValueType, $this->solani);
-                $solani = ArrayUtil::get($animalId, $solaniValues);
+                $solaniValues = ArrayUtil::get($dutchBreedValueTypeKeyInSolaniArray, $this->solani);
+                $solani = $solaniValues != null ? ArrayUtil::get($animalId, $solaniValues) : null;
 
                 if($solani != null) {
 
@@ -583,7 +693,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $batchCount++;
                     $prefix = ',';
 
-                    $this->addToCurrentBreedValueExistsByAnimalIdForGenerationDate($dutchBreedValueType, $animalId);
+                    $this->addToCurrentBreedValueExistsByAnimalIdForGenerationDate($dutchBreedValueTypeForDatabase, $animalId);
 
                     if($totalCount%self::BATCH_SIZE == 0 && $totalCount != 0) {
                         $this->persistBreedValueBySql($sqlBatchString);
@@ -593,7 +703,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     }
                 }
 
-                $message = 'Processing '.$dutchBreedValueType.' breedValues count total|batch: '.$totalCount.'|'.$batchCount;
+                $message = 'Processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues count total|batch: '.$totalCount.'|'.$batchCount;
                 $this->overwriteNotice($message);
 
             }
@@ -604,10 +714,10 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                 $prefix = '';
                 $batchCount = 0;
 
-                $message = 'Processing '.$dutchBreedValueType.' breedValues count total|batch: '.$totalCount.'|'.$batchCount;
+                $message = 'Processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues count total|batch: '.$totalCount.'|'.$batchCount;
                 $this->overwriteNotice($message);
             }
-            $this->logger->notice('Finished processing '.$dutchBreedValueType.' breedValues.');
+            $this->logger->notice('Finished processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues.');
         }
 
         $this->logger->notice('Finished processing breedvalues set!');
@@ -681,7 +791,17 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
      */
     public static function getBreedValueTypeByRelSolZipName($zipFileName)
     {
-        return preg_replace('/RelSol.zip$/s', '', $zipFileName);
+        return StringUtil::removeSuffix($zipFileName, 'RelSol.zip');
+    }
+
+
+    /**
+     * @param $breedValueType
+     * @return string
+     */
+    private function removeIndirectSuffix($breedValueType)
+    {
+        return StringUtil::removeSuffix($breedValueType, MixBlupInstructionFileBase::INDIRECT_SUFFIX);
     }
 
 
