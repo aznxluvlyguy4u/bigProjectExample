@@ -26,9 +26,10 @@ class MixBlupParseInstruction
      * must be included!
      *
      * @param string $breedValueType
+     * @param boolean $appendIdmBreedValues
      * @return array
      */
-    public static function get($breedValueType)
+    public static function get($breedValueType, $appendIdmBreedValues = false)
     {
         switch ($breedValueType)
         {
@@ -58,7 +59,7 @@ class MixBlupParseInstruction
 
 
             case MixBlupAnalysis::BIRTH_PROGRESS:
-                $model = ReproductionInstructionFiles::getBirthProgressModel(false);
+                $model = ReproductionInstructionFiles::getBirthProgressModel(false, false, $appendIdmBreedValues);
                 break;
 
             case MixBlupAnalysis::FERTILITY_1:
@@ -75,7 +76,7 @@ class MixBlupParseInstruction
 
 
             case MixBlupAnalysis::LAMB_MEAT:
-                $model = LambMeatIndexInstructionFiles::getLambMeatModel(false);
+                $model = LambMeatIndexInstructionFiles::getLambMeatModel(false, false, $appendIdmBreedValues);
                 break;
 
             case MixBlupAnalysis::TAIL_LENGTH:
@@ -89,5 +90,35 @@ class MixBlupParseInstruction
 
     }
 
+
+    /**
+     * NOTE! At least
+     *    JsonInputConstant::ANIMAL_ID
+     * && JsonInputConstant::SOLANI_1
+     * && JsonInputConstant::RELANI_1
+     * must be included!
+     *
+     * @param string $breedValueType
+     * @param boolean $isRelani
+     * @return array
+     */
+    public static function getIndirect($breedValueType, $isRelani = true)
+    {
+        switch ($breedValueType)
+        {
+            case MixBlupAnalysis::BIRTH_PROGRESS:
+                $model = ReproductionInstructionFiles::getIndirectProgressModel($isRelani);
+                break;
+
+            case MixBlupAnalysis::LAMB_MEAT:
+                $model = LambMeatIndexInstructionFiles::getIndirectLambMeatModel($isRelani);
+                break;
+
+            default:
+                $model = [];
+        }
+        return array_keys($model);
+
+    }
 
 }

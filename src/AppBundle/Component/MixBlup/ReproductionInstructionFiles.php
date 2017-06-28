@@ -92,15 +92,36 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
     /**
      * @param bool $includeCommentedOutBreedValues variable is included to match structure of other get...Model functions
      * @param bool $isRelani
+     * @param bool $appendIdmBreedValues
      * @return array
      */
-    public static function getBirthProgressModel($includeCommentedOutBreedValues = true, $isRelani = false)
+    public static function getBirthProgressModel($includeCommentedOutBreedValues = true, $isRelani = false, $appendIdmBreedValues = false)
     {
         $gebGemakSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' CovHetLam CovRecLam';
 
-        return $baseModel = [
+        $baseModel = [
             'GebGemak' =>   ' GebGemak  ~ '.self::jaarBedrijf($isRelani).$gebGemakSolaniTraits.' !RANDOM G(ID,IDM)'
         ];
+
+        if($appendIdmBreedValues) {
+            $appendedModel = [
+                'GebGemak'.self::INDIRECT_SUFFIX =>   ' GebGemak  ~ '.self::jaarBedrijf($isRelani).$gebGemakSolaniTraits.' !RANDOM G(ID,IDM)'
+            ];
+            return ArrayUtil::concatArrayValues([$baseModel, $appendedModel]);
+        }
+
+        return $baseModel;
+    }
+
+
+    /**
+     * @param bool $isRelani
+     * @return array
+     */
+    public static function getIndirectProgressModel($isRelani = true)
+    {
+        $gebGemakSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' CovHetLam CovRecLam';
+        return ['GebGemak'.self::INDIRECT_SUFFIX =>   ' GebGemak  ~ '.self::jaarBedrijf($isRelani).$gebGemakSolaniTraits.' !RANDOM G(ID,IDM)'];
     }
 
 

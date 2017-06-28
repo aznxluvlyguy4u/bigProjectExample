@@ -87,9 +87,10 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
     /**
      * @param bool $includeCommentedOutBreedValues
      * @param bool $isRelani
+     * @param bool $appendIdmBreedValues
      * @return array
      */
-    public static function getLambMeatModel($includeCommentedOutBreedValues = true, $isRelani = false)
+    public static function getLambMeatModel($includeCommentedOutBreedValues = true, $isRelani = false, $appendIdmBreedValues = false)
     {
         $jaarBedr = self::jaarBedrijf($isRelani);
 
@@ -103,6 +104,11 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
 
         $base1 = [
             'GewGeb' => ' GewGeb    ~ '.$jaarBedr.$gewGebSolaniTraits.' !RANDOM WorpID G(ID,IDM)',
+        ];
+
+
+        $appendedBase1 = [
+            'GewGeb'.self::INDIRECT_SUFFIX => ' GewGeb    ~ '.$jaarBedr.$gewGebSolaniTraits.' !RANDOM WorpID G(ID,IDM)',
         ];
 
         $commentedOut1 = [
@@ -125,22 +131,57 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
 
 
         if ($includeCommentedOutBreedValues) {
-            $models = [
-                $base1,
-                $commentedOut1,
-                $base2,
-                $commentedOut2,
-                $base3,
-            ];
+            if($appendIdmBreedValues) {
+                $models = [
+                    $base1,
+                    $commentedOut1,
+                    $base2,
+                    $commentedOut2,
+                    $base3,
+                    $appendedBase1,
+                ];
+            } else {
+                $models = [
+                    $base1,
+                    $commentedOut1,
+                    $base2,
+                    $commentedOut2,
+                    $base3,
+                ];
+            }
         } else {
-            $models = [
-                $base1,
-                $base2,
-                $base3,
-            ];
+            if($appendIdmBreedValues) {
+                $models = [
+                    $base1,
+                    $base2,
+                    $base3,
+                    $appendedBase1,
+                ];
+            } else {
+                $models = [
+                    $base1,
+                    $base2,
+                    $base3,
+                ];
+            }
         }
 
         return ArrayUtil::concatArrayValues($models, false);
+    }
+
+
+    /**
+     * @param bool $isRelani
+     * @return array
+     */
+    public static function getIndirectLambMeatModel($isRelani = true)
+    {
+        $jaarBedr = self::jaarBedrijf($isRelani);
+        $gewGebSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling';
+
+        return [
+            'GewGeb'.self::INDIRECT_SUFFIX => ' GewGeb    ~ '.$jaarBedr.$gewGebSolaniTraits.' !RANDOM WorpID G(ID,IDM)',
+        ];
     }
 
 
