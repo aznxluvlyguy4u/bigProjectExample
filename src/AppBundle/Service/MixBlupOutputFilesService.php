@@ -32,11 +32,13 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 class MixBlupOutputFilesService implements MixBlupServiceInterface
 {
-    const TEST_WITH_DOWNLOADED_ZIPS = false;
+    const TEST_WITH_DOWNLOADED_ZIPS = true;
     const PURGE_ZIP_FOLDER_AFTER_SUCCESSFUL_RUN = false;
-    const DELETE_QUEUE_MESSAGE_AFTER_SUCCESSFUL_RUN = true;
+    const DELETE_QUEUE_MESSAGE_AFTER_SUCCESSFUL_RUN = false;
     const ONLY_DOWNLOAD_SOLANI_AND_RELANI = false;
     const ONLY_UNZIP_SOLANI_AND_RELANI = true;
+
+    const TEST_COLUMN_ALIGNMENT = true;
 
     const BATCH_SIZE = 10000;
 
@@ -367,37 +369,54 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     {
         $ssv = CsvParser::parseSpaceSeparatedFile($this->getResultsFolder(), Filename::SOLANI);
 
+        if(count($ssv) === 0) {
+            $this->logger->notice(Filename::SOLANI . ' is empty');
+            return;
+        }
+
         $dutchBreedValueTypes = MixBlupParseInstruction::get($this->currentBreedType);
+        if(count($dutchBreedValueTypes) === 0) {
+            $this->logger->error($this->currentBreedType . ' extracted currentBreedType is not a valid MixBlupAnalysis type');
+            return;
+        }
+
+        $firstRow = $ssv[0];
+        $firstColumnIndex = $this->getFirstColumnIndex($ssv[0]);
+        if($firstColumnIndex === null) {
+            $this->logger->error($this->currentBreedType . ' first record is blank');
+            return;
+        }
+
+        if(self::TEST_COLUMN_ALIGNMENT) { dump($dutchBreedValueTypes, $firstRow, $firstColumnIndex); }
 
         $recordsStoredCount = 0;
-        $recordsSkippedCOunt = 0;
+        $recordsSkippedCount = 0;
         foreach ($ssv as $row) {
 
-            $animalId = $row[0];
-            $bumpKey = 0;
-            //Check for spacing before first column
-            if($animalId === '') {
-                $bumpKey = 1;
-                $animalId = $row[$bumpKey];
-            }
+            $animalId = $row[$firstColumnIndex];
             foreach ($dutchBreedValueTypes as $ordinal => $dutchBreedValueType) {
                 $solaniBreedValueGroup = ArrayUtil::get($dutchBreedValueType, $this->solani, []);
 
                 //0-indexed solani column n starts at 0-indexed $ssv row[n+3] / column 4 in the file
-                $value = $row[$ordinal+self::ZERO_INDEXED_SOLANI_COLUMN+$bumpKey];
-                if($value != null && $value != '') {
+                $key = $ordinal+self::ZERO_INDEXED_SOLANI_COLUMN+$firstColumnIndex;
+                $value = $row[$key];
+                if($value !== null && $value !== '') {
                     $floatValue = floatval($value);
                     //NOTE! Zero and negative Solani values are valid!
                     $solaniBreedValueGroup[$animalId] = $floatValue;
                     $this->solani[$dutchBreedValueType] = $solaniBreedValueGroup;
                     $recordsStoredCount++;
+
+                    if(self::TEST_COLUMN_ALIGNMENT) { dump([$key => $value]); }
                 } else {
-                    $recordsSkippedCOunt++;
+                    $recordsSkippedCount++;
                 }
             }
+            if(self::TEST_COLUMN_ALIGNMENT) { break; }
         }
+        if(self::TEST_COLUMN_ALIGNMENT) { dump($this->solani); }
 
-        $this->logger->notice('Solani records stored|skipped: '.$recordsStoredCount.'|'.$recordsSkippedCOunt);
+        $this->logger->notice('Solani records stored|skipped: '.$recordsStoredCount.'|'.$recordsSkippedCount);
     }
 
 
@@ -410,41 +429,74 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     {
         $ssv = CsvParser::parseSpaceSeparatedFile($this->getResultsFolder(), Filename::RELANI);
 
+        if(count($ssv) === 0) {
+            $this->logger->notice(Filename::RELANI . ' is empty');
+            return;
+        }
+
         $dutchBreedValueTypes = MixBlupParseInstruction::get($this->currentBreedType);
+        if(count($dutchBreedValueTypes) === 0) {
+            $this->logger->error($this->currentBreedType . ' extracted currentBreedType is not a valid MixBlupAnalysis type');
+            return;
+        }
 
         $recordsStoredCount = 0;
-        $recordsSkippedCOunt = 0;
+        $recordsSkippedCount = 0;
+
+        $firstRow = $ssv[0];
+        $firstColumnIndex = $this->getFirstColumnIndex($ssv[0]);
+        if($firstColumnIndex === null) {
+            $this->logger->error($this->currentBreedType . ' first record is blank');
+            return;
+        }
+
+        if(self::TEST_COLUMN_ALIGNMENT) { dump($dutchBreedValueTypes, $firstRow, $firstColumnIndex); }
+
         foreach ($ssv as $row) {
 
-            $animalId = $row[0];
-            $bumpKey = 0;
-            //Check for spacing before first column
-            if($animalId === '') {
-                $bumpKey = 1;
-                $animalId = $row[$bumpKey];
-            }
+            $animalId = $row[$firstColumnIndex];
             foreach ($dutchBreedValueTypes as $ordinal => $dutchBreedValueType) {
                 $relaniBreedValueGroup = ArrayUtil::get($dutchBreedValueType, $this->relani, []);
 
                 //0-indexed relani column n starts at 0-indexed $ssv row[n+3] / column 4 in the file
-                $value = $row[$ordinal+self::ZERO_INDEXED_RELANI_COLUMN+$bumpKey];
-                if($value != null && $value != '') {
+                $key = $ordinal+self::ZERO_INDEXED_RELANI_COLUMN+$firstColumnIndex;
+                $value = $row[$key];
+                if($value !== null && $value !== '') {
                     $floatValue = floatval($value);
 
                     if(!NumberUtil::isFloatZero($floatValue, MixBlupSetting::FLOAT_ACCURACY)) {
                         $relaniBreedValueGroup[$animalId] = $floatValue;
                         $this->relani[$dutchBreedValueType] = $relaniBreedValueGroup;
                         $recordsStoredCount++;
+
+                        if(self::TEST_COLUMN_ALIGNMENT) { dump([$key => $value]); }
                     } else {
-                        $recordsSkippedCOunt++;
+                        $recordsSkippedCount++;
                     }
                 } else {
-                    $recordsSkippedCOunt++;
+                    $recordsSkippedCount++;
                 }
             }
+            if(self::TEST_COLUMN_ALIGNMENT) { break; }
         }
+        if(self::TEST_COLUMN_ALIGNMENT) { dump($this->relani); }
 
-        $this->logger->notice('Relani records stored|skipped: '.$recordsStoredCount.'|'.$recordsSkippedCOunt);
+        $this->logger->notice('Relani records stored|skipped: '.$recordsStoredCount.'|'.$recordsSkippedCount);
+    }
+
+
+    /**
+     * @param array $row
+     * @return int|null|string
+     */
+    private function getFirstColumnIndex($row)
+    {
+        foreach ($row as $key => $value) {
+            if($value !== '') {
+                return $key;
+            }
+        }
+        return null;
     }
 
 
