@@ -81,6 +81,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
             '4: Initialize blank genetic bases', "\n",
             '========================================================================', "\n",
             '10: Initialize BreedIndexType and BreedValueType', "\n",
+            '11: Delete all duplicate breedValues', "\n",
             'DEFAULT: Abort', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -103,6 +104,11 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
             case 10:
                 $this->breedIndexService->initializeBreedIndexType();
                 $this->breedValueService->initializeBreedValueType();
+                break;
+            case 11:
+                $deleteCount = MixBlupOutputFilesService::deleteDuplicateBreedValues($this->conn);
+                $message = $deleteCount > 0 ? $deleteCount . ' duplicate breedValues were deleted' : 'No duplicate breedValues found';
+                $this->cmdUtil->writeln($message);
                 break;
 
             default:
