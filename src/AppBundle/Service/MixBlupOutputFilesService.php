@@ -304,6 +304,9 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     }
                 }
 
+
+                $this->removeDuplicateBreedValues();
+
                 //TODO figure out how to deal with errors
                 if(count($this->errors) == 0) {
                     $this->logger->notice('All breedValues processed successfully!');
@@ -944,5 +947,44 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     private function overwriteNotice($line)
     {
         LoggerUtil::overwriteNotice($this->logger, $line);
+    }
+
+
+    /**
+     * @return int
+     */
+    public function removeDuplicateBreedValues()
+    {
+        $this->logger->notice('Deleting duplicate breedValues ...');
+        $deleteCount = self::deleteDuplicateBreedValues($this->conn, $this->key);
+        $message = $deleteCount > 0 ? $deleteCount . ' duplicate breedValues deleted' : 'No duplicate breedValues were found';
+        $this->logger->notice($message);
+        return $deleteCount;
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param string $dateString
+     * @return int
+     */
+    public static function deleteDuplicateBreedValues(Connection $conn, $dateString = null)
+    {
+        $dateFilter = is_string($dateString) ? "a.generation_date = '".$dateString."' AND " : '';
+
+        $sql = "DELETE FROM breed_value a USING (
+                    SELECT MIN(id) as id, animal_id, type_id, generation_date, value as value, reliability
+                    FROM breed_value
+                    GROUP BY animal_id, type_id, generation_date, value, reliability HAVING COUNT(*) > 1
+                ) b
+                WHERE
+                  a.animal_id = b.animal_id AND
+                  a.type_id = b.type_id AND
+                  a.generation_date = b.generation_date AND
+                  $dateFilter
+                  a.value = b.value AND
+                  a.reliability = b.reliability AND
+                  a.id <> b.id";
+        return SqlUtil::updateWithCount($conn, $sql);
     }
 }
