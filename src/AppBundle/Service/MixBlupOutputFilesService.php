@@ -653,12 +653,14 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     }
 
     /**
+     * Removes RelSol.zip if it exists in the string.
+     *
      * @param $zipFileName
      * @return string
      */
     public static function getBreedValueTypeByRelSolZipName($zipFileName)
     {
-        return rtrim($zipFileName,'RelSol.zip');
+        return preg_replace('/RelSol.zip$/s', '', $zipFileName);
     }
 
 
