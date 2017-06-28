@@ -124,9 +124,7 @@ class BreedValueService
 
 
     /**
-     * TODO test and validate this function
-     *
-     * @return bool
+     * @return int
      * @throws \Exception
      */
     public function initializeBlankGeneticBases()
@@ -141,11 +139,11 @@ class BreedValueService
                   LEFT JOIN breed_value_genetic_base g ON t.id = g.breed_value_type_id
                     AND g.year = b.measurement_year
                 WHERE g.id ISNULL";
-        $blankGeneticBases = $this->conn->query($sql)->fetchAll();
+        $blankGeneticBasesResults = $this->conn->query($sql)->fetchAll();
 
         $updateCount = 0;
         $blankGeneticBases = [];
-        foreach ($blankGeneticBases as $result) {
+        foreach ($blankGeneticBasesResults as $result) {
             $typeId = $result['breed_value_type_id'];
             $measurementYear = $result['measurement_year'];
             $dutchBreedValueName = $result['dutch_breed_value_name'];
@@ -185,7 +183,13 @@ class BreedValueService
             throw new \Exception($message, 500);
         }
 
-        return $updateCount > 0;
+        if($updateCount > 0) {
+            $this->logger->notice($updateCount . ' genetic bases updated');
+        } else {
+            $this->logger->notice('No genetic bases were updated');
+        }
+
+        return $updateCount;
     }
 
 
@@ -205,7 +209,7 @@ class BreedValueService
                   INNER JOIN animal a ON b.animal_id = a.id
                 WHERE EXTRACT(YEAR FROM date_of_birth) = $geneticBaseYear
                       AND b.reliability >= t.min_reliability
-                      AND t.nl = $dutchBreedValueTypeName
+                      AND t.nl = '$dutchBreedValueTypeName'
                 GROUP BY EXTRACT(YEAR FROM date_of_birth)";
         $results = $this->conn->query($sql)->fetch();
 
