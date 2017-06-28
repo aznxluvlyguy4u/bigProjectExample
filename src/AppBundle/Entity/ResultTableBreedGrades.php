@@ -309,7 +309,7 @@ class ResultTableBreedGrades
     /**
      * @var BreedValue
      * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="weigth_at8weeks_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="weight_at8weeks_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\BreedValue")
      */
     private $weightAt8Weeks;
@@ -317,7 +317,7 @@ class ResultTableBreedGrades
     /**
      * @var BreedValue
      * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="weigth_at20weeks_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="weight_at20weeks_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\BreedValue")
      */
     private $weightAt20Weeks;
