@@ -387,10 +387,16 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             return;
         }
 
-        if(self::TEST_COLUMN_ALIGNMENT) { dump($dutchBreedValueTypes, $firstRow, $firstColumnIndex); }
+        if(self::TEST_COLUMN_ALIGNMENT) {
+            dump([  'dutch_breed_value_types' => $dutchBreedValueTypes,
+                'first_row' => $firstRow,
+                'first_column_index' => $firstColumnIndex
+            ]);
+        }
 
         $recordsStoredCount = 0;
         $recordsSkippedCount = 0;
+        $foundValue = false;
         foreach ($ssv as $row) {
 
             $animalId = $row[$firstColumnIndex];
@@ -407,12 +413,15 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $this->solani[$dutchBreedValueType] = $solaniBreedValueGroup;
                     $recordsStoredCount++;
 
-                    if(self::TEST_COLUMN_ALIGNMENT) { dump([$key => $value]); }
+                    if(self::TEST_COLUMN_ALIGNMENT) {
+                        dump([$key => $value]);
+                        $foundValue = true;
+                    }
                 } else {
                     $recordsSkippedCount++;
                 }
             }
-            if(self::TEST_COLUMN_ALIGNMENT) { break; }
+            if(self::TEST_COLUMN_ALIGNMENT && $foundValue) { break; }
         }
         if(self::TEST_COLUMN_ALIGNMENT) { dump($this->solani); }
 
@@ -442,6 +451,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
         $recordsStoredCount = 0;
         $recordsSkippedCount = 0;
+        $foundValue = false;
 
         $firstRow = $ssv[0];
         $firstColumnIndex = $this->getFirstColumnIndex($ssv[0]);
@@ -450,7 +460,12 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
             return;
         }
 
-        if(self::TEST_COLUMN_ALIGNMENT) { dump($dutchBreedValueTypes, $firstRow, $firstColumnIndex); }
+        if(self::TEST_COLUMN_ALIGNMENT) {
+            dump([  'dutch_breed_value_types' => $dutchBreedValueTypes,
+                'first_row' => $firstRow,
+                'first_column_index' => $firstColumnIndex
+            ]);
+        }
 
         foreach ($ssv as $row) {
 
@@ -469,7 +484,13 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                         $this->relani[$dutchBreedValueType] = $relaniBreedValueGroup;
                         $recordsStoredCount++;
 
-                        if(self::TEST_COLUMN_ALIGNMENT) { dump([$key => $value]); }
+                        if(self::TEST_COLUMN_ALIGNMENT) {
+                            dump([
+                                'first_non_zero...' => 'key => value',
+                                $key => $value
+                            ]);
+                            $foundValue = true;
+                        }
                     } else {
                         $recordsSkippedCount++;
                     }
@@ -477,7 +498,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $recordsSkippedCount++;
                 }
             }
-            if(self::TEST_COLUMN_ALIGNMENT) { break; }
+            if(self::TEST_COLUMN_ALIGNMENT && $foundValue) { break; }
         }
         if(self::TEST_COLUMN_ALIGNMENT) { dump($this->relani); }
 
