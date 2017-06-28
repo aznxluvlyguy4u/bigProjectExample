@@ -34,10 +34,14 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 {
     const TEST_WITH_DOWNLOADED_ZIPS = false;
     const PURGE_ZIP_FOLDER_AFTER_SUCCESSFUL_RUN = false;
+    const DELETE_QUEUE_MESSAGE_AFTER_SUCCESSFUL_RUN = true;
     const ONLY_DOWNLOAD_SOLANI_AND_RELANI = false;
     const ONLY_UNZIP_SOLANI_AND_RELANI = true;
 
     const BATCH_SIZE = 10000;
+
+    const ZERO_INDEXED_SOLANI_COLUMN = 3;
+    const ZERO_INDEXED_RELANI_COLUMN = 3;
 
     /** @var Filesystem */
     private $fs;
@@ -262,7 +266,9 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     if(self::PURGE_ZIP_FOLDER_AFTER_SUCCESSFUL_RUN) {
                         $this->purgeZipFolder();
                     }
-                    $this->queueService->deleteMessage($response);
+                    if(self::DELETE_QUEUE_MESSAGE_AFTER_SUCCESSFUL_RUN) {
+                        $this->queueService->deleteMessage($response);
+                    }
 
                 } else {
                     $this->logger->error('The following breedValues had no relani nor solani file: '.implode(', ', $blankBreedValueTypes));
@@ -368,11 +374,17 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         foreach ($ssv as $row) {
 
             $animalId = $row[0];
+            $bumpKey = 0;
+            //Check for spacing before first column
+            if($animalId === '') {
+                $bumpKey = 1;
+                $animalId = $row[$bumpKey];
+            }
             foreach ($dutchBreedValueTypes as $ordinal => $dutchBreedValueType) {
                 $solaniBreedValueGroup = ArrayUtil::get($dutchBreedValueType, $this->solani, []);
 
                 //0-indexed solani column n starts at 0-indexed $ssv row[n+3] / column 4 in the file
-                $value = $row[$ordinal+3];
+                $value = $row[$ordinal+self::ZERO_INDEXED_SOLANI_COLUMN+$bumpKey];
                 if($value != null && $value != '') {
                     $floatValue = floatval($value);
                     //NOTE! Zero and negative Solani values are valid!
@@ -405,11 +417,17 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         foreach ($ssv as $row) {
 
             $animalId = $row[0];
+            $bumpKey = 0;
+            //Check for spacing before first column
+            if($animalId === '') {
+                $bumpKey = 1;
+                $animalId = $row[$bumpKey];
+            }
             foreach ($dutchBreedValueTypes as $ordinal => $dutchBreedValueType) {
                 $relaniBreedValueGroup = ArrayUtil::get($dutchBreedValueType, $this->relani, []);
 
                 //0-indexed relani column n starts at 0-indexed $ssv row[n+3] / column 4 in the file
-                $value = $row[$ordinal+3];
+                $value = $row[$ordinal+self::ZERO_INDEXED_RELANI_COLUMN+$bumpKey];
                 if($value != null && $value != '') {
                     $floatValue = floatval($value);
 
@@ -460,8 +478,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
 
         DoctrineUtil::updateTableSequence($this->conn, [BreedValue::TABLE_NAME]);
 
-        $this->logger->notice('Processing breedValues ...');
         foreach ($this->relani as $dutchBreedValueType => $relaniValues) {
+            $this->logger->notice('Processing '.$dutchBreedValueType.' breedValues ...');
 
             $breedValueTypeId = $this->breedValueTypeIdsByDutchDescription[$dutchBreedValueType];
 
@@ -506,18 +524,20 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                 $this->overwriteNotice($message);
 
             }
+
+            if($sqlBatchString != '') {
+                $this->persistBreedValueBySql($sqlBatchString);
+                $sqlBatchString = '';
+                $prefix = '';
+                $batchCount = 0;
+
+                $message = 'Processing '.$dutchBreedValueType.' breedValues count total|batch: '.$totalCount.'|'.$batchCount;
+                $this->overwriteNotice($message);
+            }
+            $this->logger->notice('Finished processing '.$dutchBreedValueType.' breedValues.');
         }
 
-        if($sqlBatchString != '') {
-            $this->persistBreedValueBySql($sqlBatchString); //TODO
-            $sqlBatchString = '';
-            $prefix = '';
-            $batchCount = 0;
-
-            $message = 'Processing breedValues count total|batch: '.$totalCount.'|'.$batchCount;
-            $this->overwriteNotice($message);
-        }
-        $this->logger->notice('Finished processing breedvalues!');
+        $this->logger->notice('Finished processing breedvalues set!');
     }
 
 
