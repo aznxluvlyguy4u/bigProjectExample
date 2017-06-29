@@ -48,283 +48,424 @@ class ResultTableBreedGrades
 
     /**
      * @var float
-     *
-     * @ORM\Column(type="float", options={"default":0})
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
      * @JMS\Type("float")
-     * @Assert\NotBlank
      */
     private $lambMeatIndex;
 
     /**
      * @var float
-     *
-     * @ORM\Column(type="float", options={"default":0})
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
      * @JMS\Type("float")
-     * @Assert\NotBlank
      */
     private $lambMeatAccuracy;
 
     /**
      * @var float
-     *
-     * @ORM\Column(type="float", options={"default":0})
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
      * @JMS\Type("float")
-     * @Assert\NotBlank
      */
     private $exteriorIndex;
 
     /**
      * @var float
-     *
-     * @ORM\Column(type="float", options={"default":0})
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
      * @JMS\Type("float")
-     * @Assert\NotBlank
      */
     private $exteriorAccuracy;
 
     /**
      * @var float
-     *
-     * @ORM\Column(type="float", options={"default":0})
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
      * @JMS\Type("float")
-     * @Assert\NotBlank
      */
     private $fertilityIndex;
 
     /**
      * @var float
-     *
-     * @ORM\Column(type="float", options={"default":0})
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
      * @JMS\Type("float")
-     * @Assert\NotBlank
      */
     private $fertilityAccuracy;
 
     /**
      * @var float
-     *
-     * @ORM\Column(type="float", options={"default":0})
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
      * @JMS\Type("float")
-     * @Assert\NotBlank
      */
     private $wormResistanceIndex;
 
     /**
      * @var float
-     *
-     * @ORM\Column(type="float", options={"default":0})
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
      * @JMS\Type("float")
-     * @Assert\NotBlank
      */
     private $wormResistanceAccuracy;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="birth_weight_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $birthWeight;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="fat_thickness_1_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $birthWeightAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $fatThickness1;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="fat_thickness_2_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $fatThickness1Accuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $fatThickness2;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="fat_thickness_3_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $fatThickness2Accuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $fatThickness3;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="muscle_thickness_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $fatThickness3Accuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $muscleThickness;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="tail_length_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $muscleThicknessAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $tailLength;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="birth_progress_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $tailLengthAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $birthProgress;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="total_born_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $birthProgressAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $totalBorn;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="still_born_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $totalBornAccuracy;
+
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $stillBorn;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="early_fertility_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $stillBornAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $earlyFertility;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="birth_interval_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $earlyFertilityAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $birthInterval;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="leg_work_vg_m_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $birthIntervalAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $legWorkVgM;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="leg_work_df_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $legWorkVgMAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $legWorkDf;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="muscularity_vg_v_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $legWorkDfAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $muscularityVgV;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="muscularity_vg_m_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $muscularityVgVAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $muscularityVgM;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="muscularity_df_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $muscularityVgMAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $muscularityDf;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="proportion_vg_m_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $muscularityDfAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $proportionVgM;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="proportion_df_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $proportionVgMAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $proportionDf;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="skull_vg_m_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $proportionDfAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $skullVgM;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="skull_df_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $skullVgMAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $skullDf;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="progress_vg_m_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $skullDfAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $progressVgM;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="progress_df_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $progressVgMAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $progressDf;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="exterior_type_vg_m_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $progressDfAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $exteriorTypeVgM;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="exterior_type_df_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $exteriorTypeVgMAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $exteriorTypeDf;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="weight_at8weeks_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $exteriorTypeDfAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $weightAt8Weeks;
 
     /**
-     * @var BreedValue
-     * @ORM\ManyToOne(targetEntity="BreedValue")
-     * @ORM\JoinColumn(name="weight_at20weeks_id", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\BreedValue")
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $weightAt8WeeksAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
      */
     private $weightAt20Weeks;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $weightAt20WeeksAccuracy;
 
 
 
@@ -534,7 +675,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
      */
     public function getBirthWeight()
     {
@@ -542,7 +683,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $birthWeight
+     * @param float $birthWeight
      * @return ResultTableBreedGrades
      */
     public function setBirthWeight($birthWeight)
@@ -552,7 +693,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getBirthWeightAccuracy()
+    {
+        return $this->birthWeightAccuracy;
+    }
+
+    /**
+     * @param float $birthWeightAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setBirthWeightAccuracy($birthWeightAccuracy)
+    {
+        $this->birthWeightAccuracy = $birthWeightAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getFatThickness1()
     {
@@ -560,7 +719,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $fatThickness1
+     * @param float $fatThickness1
      * @return ResultTableBreedGrades
      */
     public function setFatThickness1($fatThickness1)
@@ -570,7 +729,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getFatThickness1Accuracy()
+    {
+        return $this->fatThickness1Accuracy;
+    }
+
+    /**
+     * @param float $fatThickness1Accuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setFatThickness1Accuracy($fatThickness1Accuracy)
+    {
+        $this->fatThickness1Accuracy = $fatThickness1Accuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getFatThickness2()
     {
@@ -578,7 +755,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $fatThickness2
+     * @param float $fatThickness2
      * @return ResultTableBreedGrades
      */
     public function setFatThickness2($fatThickness2)
@@ -588,7 +765,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getFatThickness2Accuracy()
+    {
+        return $this->fatThickness2Accuracy;
+    }
+
+    /**
+     * @param float $fatThickness2Accuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setFatThickness2Accuracy($fatThickness2Accuracy)
+    {
+        $this->fatThickness2Accuracy = $fatThickness2Accuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getFatThickness3()
     {
@@ -596,7 +791,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $fatThickness3
+     * @param float $fatThickness3
      * @return ResultTableBreedGrades
      */
     public function setFatThickness3($fatThickness3)
@@ -606,7 +801,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getFatThickness3Accuracy()
+    {
+        return $this->fatThickness3Accuracy;
+    }
+
+    /**
+     * @param float $fatThickness3Accuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setFatThickness3Accuracy($fatThickness3Accuracy)
+    {
+        $this->fatThickness3Accuracy = $fatThickness3Accuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getMuscleThickness()
     {
@@ -614,7 +827,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $muscleThickness
+     * @param float $muscleThickness
      * @return ResultTableBreedGrades
      */
     public function setMuscleThickness($muscleThickness)
@@ -624,7 +837,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getMuscleThicknessAccuracy()
+    {
+        return $this->muscleThicknessAccuracy;
+    }
+
+    /**
+     * @param float $muscleThicknessAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setMuscleThicknessAccuracy($muscleThicknessAccuracy)
+    {
+        $this->muscleThicknessAccuracy = $muscleThicknessAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getTailLength()
     {
@@ -632,7 +863,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $tailLength
+     * @param float $tailLength
      * @return ResultTableBreedGrades
      */
     public function setTailLength($tailLength)
@@ -642,7 +873,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getTailLengthAccuracy()
+    {
+        return $this->tailLengthAccuracy;
+    }
+
+    /**
+     * @param float $tailLengthAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setTailLengthAccuracy($tailLengthAccuracy)
+    {
+        $this->tailLengthAccuracy = $tailLengthAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getBirthProgress()
     {
@@ -650,7 +899,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $birthProgress
+     * @param float $birthProgress
      * @return ResultTableBreedGrades
      */
     public function setBirthProgress($birthProgress)
@@ -660,7 +909,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getBirthProgressAccuracy()
+    {
+        return $this->birthProgressAccuracy;
+    }
+
+    /**
+     * @param float $birthProgressAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setBirthProgressAccuracy($birthProgressAccuracy)
+    {
+        $this->birthProgressAccuracy = $birthProgressAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getTotalBorn()
     {
@@ -668,7 +935,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $totalBorn
+     * @param float $totalBorn
      * @return ResultTableBreedGrades
      */
     public function setTotalBorn($totalBorn)
@@ -678,7 +945,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getTotalBornAccuracy()
+    {
+        return $this->totalBornAccuracy;
+    }
+
+    /**
+     * @param float $totalBornAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setTotalBornAccuracy($totalBornAccuracy)
+    {
+        $this->totalBornAccuracy = $totalBornAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getStillBorn()
     {
@@ -686,7 +971,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $stillBorn
+     * @param float $stillBorn
      * @return ResultTableBreedGrades
      */
     public function setStillBorn($stillBorn)
@@ -696,7 +981,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getStillBornAccuracy()
+    {
+        return $this->stillBornAccuracy;
+    }
+
+    /**
+     * @param float $stillBornAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setStillBornAccuracy($stillBornAccuracy)
+    {
+        $this->stillBornAccuracy = $stillBornAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getEarlyFertility()
     {
@@ -704,7 +1007,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $earlyFertility
+     * @param float $earlyFertility
      * @return ResultTableBreedGrades
      */
     public function setEarlyFertility($earlyFertility)
@@ -714,7 +1017,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getEarlyFertilityAccuracy()
+    {
+        return $this->earlyFertilityAccuracy;
+    }
+
+    /**
+     * @param float $earlyFertilityAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setEarlyFertilityAccuracy($earlyFertilityAccuracy)
+    {
+        $this->earlyFertilityAccuracy = $earlyFertilityAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getBirthInterval()
     {
@@ -722,7 +1043,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $birthInterval
+     * @param float $birthInterval
      * @return ResultTableBreedGrades
      */
     public function setBirthInterval($birthInterval)
@@ -732,7 +1053,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getBirthIntervalAccuracy()
+    {
+        return $this->birthIntervalAccuracy;
+    }
+
+    /**
+     * @param float $birthIntervalAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setBirthIntervalAccuracy($birthIntervalAccuracy)
+    {
+        $this->birthIntervalAccuracy = $birthIntervalAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getLegWorkVgM()
     {
@@ -740,7 +1079,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $legWorkVgM
+     * @param float $legWorkVgM
      * @return ResultTableBreedGrades
      */
     public function setLegWorkVgM($legWorkVgM)
@@ -750,7 +1089,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getLegWorkVgMAccuracy()
+    {
+        return $this->legWorkVgMAccuracy;
+    }
+
+    /**
+     * @param float $legWorkVgMAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setLegWorkVgMAccuracy($legWorkVgMAccuracy)
+    {
+        $this->legWorkVgMAccuracy = $legWorkVgMAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getLegWorkDf()
     {
@@ -758,7 +1115,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $legWorkDf
+     * @param float $legWorkDf
      * @return ResultTableBreedGrades
      */
     public function setLegWorkDf($legWorkDf)
@@ -768,7 +1125,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getLegWorkDfAccuracy()
+    {
+        return $this->legWorkDfAccuracy;
+    }
+
+    /**
+     * @param float $legWorkDfAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setLegWorkDfAccuracy($legWorkDfAccuracy)
+    {
+        $this->legWorkDfAccuracy = $legWorkDfAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getMuscularityVgV()
     {
@@ -776,7 +1151,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $muscularityVgV
+     * @param float $muscularityVgV
      * @return ResultTableBreedGrades
      */
     public function setMuscularityVgV($muscularityVgV)
@@ -786,7 +1161,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getMuscularityVgVAccuracy()
+    {
+        return $this->muscularityVgVAccuracy;
+    }
+
+    /**
+     * @param float $muscularityVgVAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setMuscularityVgVAccuracy($muscularityVgVAccuracy)
+    {
+        $this->muscularityVgVAccuracy = $muscularityVgVAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getMuscularityVgM()
     {
@@ -794,7 +1187,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $muscularityVgM
+     * @param float $muscularityVgM
      * @return ResultTableBreedGrades
      */
     public function setMuscularityVgM($muscularityVgM)
@@ -804,7 +1197,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getMuscularityVgMAccuracy()
+    {
+        return $this->muscularityVgMAccuracy;
+    }
+
+    /**
+     * @param float $muscularityVgMAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setMuscularityVgMAccuracy($muscularityVgMAccuracy)
+    {
+        $this->muscularityVgMAccuracy = $muscularityVgMAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getMuscularityDf()
     {
@@ -812,7 +1223,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $muscularityDf
+     * @param float $muscularityDf
      * @return ResultTableBreedGrades
      */
     public function setMuscularityDf($muscularityDf)
@@ -822,7 +1233,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getMuscularityDfAccuracy()
+    {
+        return $this->muscularityDfAccuracy;
+    }
+
+    /**
+     * @param float $muscularityDfAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setMuscularityDfAccuracy($muscularityDfAccuracy)
+    {
+        $this->muscularityDfAccuracy = $muscularityDfAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getProportionVgM()
     {
@@ -830,7 +1259,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $proportionVgM
+     * @param float $proportionVgM
      * @return ResultTableBreedGrades
      */
     public function setProportionVgM($proportionVgM)
@@ -840,7 +1269,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getProportionVgMAccuracy()
+    {
+        return $this->proportionVgMAccuracy;
+    }
+
+    /**
+     * @param float $proportionVgMAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setProportionVgMAccuracy($proportionVgMAccuracy)
+    {
+        $this->proportionVgMAccuracy = $proportionVgMAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getProportionDf()
     {
@@ -848,7 +1295,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $proportionDf
+     * @param float $proportionDf
      * @return ResultTableBreedGrades
      */
     public function setProportionDf($proportionDf)
@@ -858,7 +1305,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getProportionDfAccuracy()
+    {
+        return $this->proportionDfAccuracy;
+    }
+
+    /**
+     * @param float $proportionDfAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setProportionDfAccuracy($proportionDfAccuracy)
+    {
+        $this->proportionDfAccuracy = $proportionDfAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getSkullVgM()
     {
@@ -866,7 +1331,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $skullVgM
+     * @param float $skullVgM
      * @return ResultTableBreedGrades
      */
     public function setSkullVgM($skullVgM)
@@ -876,7 +1341,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getSkullVgMAccuracy()
+    {
+        return $this->skullVgMAccuracy;
+    }
+
+    /**
+     * @param float $skullVgMAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setSkullVgMAccuracy($skullVgMAccuracy)
+    {
+        $this->skullVgMAccuracy = $skullVgMAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getSkullDf()
     {
@@ -884,7 +1367,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $skullDf
+     * @param float $skullDf
      * @return ResultTableBreedGrades
      */
     public function setSkullDf($skullDf)
@@ -894,7 +1377,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getSkullDfAccuracy()
+    {
+        return $this->skullDfAccuracy;
+    }
+
+    /**
+     * @param float $skullDfAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setSkullDfAccuracy($skullDfAccuracy)
+    {
+        $this->skullDfAccuracy = $skullDfAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getProgressVgM()
     {
@@ -902,7 +1403,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $progressVgM
+     * @param float $progressVgM
      * @return ResultTableBreedGrades
      */
     public function setProgressVgM($progressVgM)
@@ -912,7 +1413,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getProgressVgMAccuracy()
+    {
+        return $this->progressVgMAccuracy;
+    }
+
+    /**
+     * @param float $progressVgMAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setProgressVgMAccuracy($progressVgMAccuracy)
+    {
+        $this->progressVgMAccuracy = $progressVgMAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getProgressDf()
     {
@@ -920,7 +1439,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $progressDf
+     * @param float $progressDf
      * @return ResultTableBreedGrades
      */
     public function setProgressDf($progressDf)
@@ -930,7 +1449,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getProgressDfAccuracy()
+    {
+        return $this->progressDfAccuracy;
+    }
+
+    /**
+     * @param float $progressDfAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setProgressDfAccuracy($progressDfAccuracy)
+    {
+        $this->progressDfAccuracy = $progressDfAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getExteriorTypeVgM()
     {
@@ -938,7 +1475,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $exteriorTypeVgM
+     * @param float $exteriorTypeVgM
      * @return ResultTableBreedGrades
      */
     public function setExteriorTypeVgM($exteriorTypeVgM)
@@ -948,7 +1485,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getExteriorTypeVgMAccuracy()
+    {
+        return $this->exteriorTypeVgMAccuracy;
+    }
+
+    /**
+     * @param float $exteriorTypeVgMAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setExteriorTypeVgMAccuracy($exteriorTypeVgMAccuracy)
+    {
+        $this->exteriorTypeVgMAccuracy = $exteriorTypeVgMAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getExteriorTypeDf()
     {
@@ -956,7 +1511,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $exteriorTypeDf
+     * @param float $exteriorTypeDf
      * @return ResultTableBreedGrades
      */
     public function setExteriorTypeDf($exteriorTypeDf)
@@ -966,7 +1521,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getExteriorTypeDfAccuracy()
+    {
+        return $this->exteriorTypeDfAccuracy;
+    }
+
+    /**
+     * @param float $exteriorTypeDfAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setExteriorTypeDfAccuracy($exteriorTypeDfAccuracy)
+    {
+        $this->exteriorTypeDfAccuracy = $exteriorTypeDfAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getWeightAt8Weeks()
     {
@@ -974,7 +1547,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $weightAt8Weeks
+     * @param float $weightAt8Weeks
      * @return ResultTableBreedGrades
      */
     public function setWeightAt8Weeks($weightAt8Weeks)
@@ -984,7 +1557,25 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @return BreedValue
+     * @return float
+     */
+    public function getWeightAt8WeeksAccuracy()
+    {
+        return $this->weightAt8WeeksAccuracy;
+    }
+
+    /**
+     * @param float $weightAt8WeeksAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setWeightAt8WeeksAccuracy($weightAt8WeeksAccuracy)
+    {
+        $this->weightAt8WeeksAccuracy = $weightAt8WeeksAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
      */
     public function getWeightAt20Weeks()
     {
@@ -992,7 +1583,7 @@ class ResultTableBreedGrades
     }
 
     /**
-     * @param BreedValue $weightAt20Weeks
+     * @param float $weightAt20Weeks
      * @return ResultTableBreedGrades
      */
     public function setWeightAt20Weeks($weightAt20Weeks)
@@ -1000,6 +1591,25 @@ class ResultTableBreedGrades
         $this->weightAt20Weeks = $weightAt20Weeks;
         return $this;
     }
+
+    /**
+     * @return float
+     */
+    public function getWeightAt20WeeksAccuracy()
+    {
+        return $this->weightAt20WeeksAccuracy;
+    }
+
+    /**
+     * @param float $weightAt20WeeksAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setWeightAt20WeeksAccuracy($weightAt20WeeksAccuracy)
+    {
+        $this->weightAt20WeeksAccuracy = $weightAt20WeeksAccuracy;
+        return $this;
+    }
+
 
 
 
