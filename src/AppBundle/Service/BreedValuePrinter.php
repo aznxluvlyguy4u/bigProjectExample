@@ -129,7 +129,7 @@ class BreedValuePrinter
                   CONCAT(mom.pedigree_country_code, mom.pedigree_number) as stn_moeder,
                   t.nl as fokwaarde_type,
                   ROUND(CAST(b.value - g.value AS NUMERIC),4) as gecorrigeerde_fokwaarde,
-                  ROUND(CAST(b.reliability * b.reliability AS NUMERIC), 2) as nauwkeurigheid,
+                  ROUND(CAST(SQRT(b.reliability) AS NUMERIC), 2) as nauwkeurigheid,
                   DATE(generation_date) as fokwaarde_berekening_datum,
                   a.name as aiind
                 FROM breed_value b
