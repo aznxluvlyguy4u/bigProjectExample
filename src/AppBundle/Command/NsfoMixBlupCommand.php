@@ -4,6 +4,7 @@ namespace AppBundle\Command;
 
 use AppBundle\Entity\BreedValue;
 use AppBundle\Service\BreedIndexService;
+use AppBundle\Service\BreedValuePrinter;
 use AppBundle\Service\BreedValueService;
 use AppBundle\Service\MixBlupInputFilesService;
 use AppBundle\Service\MixBlupOutputFilesService;
@@ -26,6 +27,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
 {
     const TITLE = 'MixBlup';
     const DEFAULT_OPTION = 0;
+    const DEFAULT_UBN = 1674459;
 
     const CREATE_TEST_FOLDER_IF_NULL = true;
 
@@ -46,6 +48,8 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
     private $breedIndexService;
     /** @var BreedValueService */
     private $breedValueService;
+    /** @var BreedValuePrinter */
+    private $breedValuePrinter;
 
     protected function configure()
     {
@@ -68,6 +72,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
         $this->mixBlupOutputFilesService = $this->getContainer()->get('app.mixblup.output');
         $this->breedIndexService = $this->getContainer()->get('app.breed.index');
         $this->breedValueService = $this->getContainer()->get('app.breed.value');
+        $this->breedValuePrinter = $this->getContainer()->get('app.breed.valueprinter');
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
@@ -82,6 +87,9 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
             '========================================================================', "\n",
             '10: Initialize BreedIndexType and BreedValueType', "\n",
             '11: Delete all duplicate breedValues', "\n",
+            '========================================================================', "\n",
+            '30: Print separate csv files of latest breedValues for all ubns', "\n",
+            '31: Print separate csv files of latest breedValues for chosen ubn', "\n",
             'DEFAULT: Abort', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -111,6 +119,13 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
                 $this->cmdUtil->writeln($message);
                 break;
 
+            case 30:
+                $this->breedValuePrinter->printBreedValuesAllUbns();
+                break;
+            case 31:
+                $this->printBreedValuesByUbn();
+                break;
+
             default:
                 $output->writeln('ABORTED');
                 break;
@@ -118,6 +133,17 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
         $output->writeln('DONE');
 
 
+    }
+
+
+    private function printBreedValuesByUbn()
+    {
+        do {
+            $ubn = $this->cmdUtil->generateQuestion('insert ubn (default: '.self::DEFAULT_UBN.')', self::DEFAULT_UBN);
+        } while(!ctype_digit($ubn) && !is_int($ubn));
+        $this->cmdUtil->writeln('Generating breedValues csv file for UBN: '.$ubn.' ...');
+        $this->breedValuePrinter->printBreedValuesByUbn($ubn);
+        $this->cmdUtil->writeln('BreedValues csv file generated for UBN: '.$ubn);
     }
 
 

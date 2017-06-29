@@ -102,6 +102,13 @@ services:
           entityManager: '@doctrine.orm.entity_manager'
           logger: '@logger'
 
+    app.breed.valueprinter:
+        class: AppBundle\Service\BreedValuePrinter
+        arguments:
+          entityManager: '@doctrine.orm.entity_manager'
+          logger: '@logger'
+          cacheDir: %kernel.cache_dir%
+
     app.serializer.ir:
         class: AppBundle\Service\IRSerializer
         arguments: ['@jms_serializer', '@doctrine.orm.entity_manager', '@app.doctrine.entitygetter']

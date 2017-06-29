@@ -25,9 +25,10 @@ class FilesystemUtil
     /**
      * @param string $rootFolder
      * @param array|string $fileNames
+     * @param Filesystem $fs
      * @return bool
      */
-    public static function filesExist($rootFolder, $fileNames)
+    public static function filesExist($rootFolder, $fileNames, $fs)
     {
         $fullPathFileNames = [];
         if(is_array($fileNames)) {
@@ -41,8 +42,16 @@ class FilesystemUtil
         } else {
             return false;
         }
+
+        if($fs instanceof Filesystem) {
+            return $fs->exists($fullPathFileNames);
+        }
+
         $fs = new Filesystem();
-        return $fs->exists($fullPathFileNames);
+        $filesExist = $fs->exists($fullPathFileNames);
+        $fs = null;
+
+        return $filesExist;
     }
 
 
