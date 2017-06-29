@@ -167,24 +167,18 @@ class BreedValuePrinter
     {
         $filename = $this->getFilename($ubn);
 
-        if($this->skipExistingFiles){
-            $fileExists = FilesystemUtil::filesExist($this->outputDir, $filename, $this->fs);
-            if($fileExists) { return; }
+        if($this->skipExistingFiles && $this->fileExists($filename)){
+            return;
         }
 
         $results = $this->getBreedValues(true, $ubn);
         if(count($results) === 0) { return; }
 
-        //Clear file
-        file_put_contents($this->outputDir.$filename, '');
-
-        $columnHeaders = array_keys($results[0]);
-        $headerRecord = implode($this->columnSeparator, $columnHeaders);
-        file_put_contents($this->outputDir.$filename, $headerRecord.$this->rowSeparator, FILE_APPEND);
+        $this->clearFile($filename);
+        $this->printColumnHeaders($results, $filename);
 
         foreach ($results as $values) {
-            $record = implode($this->columnSeparator, $values);
-            file_put_contents($this->outputDir.$filename, $record.$this->rowSeparator, FILE_APPEND);
+            $this->printDataRecord($values, $filename);
         }
     }
 
@@ -201,20 +195,88 @@ class BreedValuePrinter
     }
 
 
-    public function printBreedValuesAllUbns($ubn = null)
+    /**
+     * @param $minimumUbn
+     */
+    public function printBreedValuesAllUbns($minimumUbn = null)
     {
-        $this->getUbns($ubn);
+        $this->getUbns($minimumUbn);
         $this->notice('Printing separate breedValue csv files for all ubns to '.$this->outputDir);
+
+        $this->notice('Getting all sorted breedValues for searchArray ...');
+        $results = $this->getBreedValues(true, null);
+
         $this->overwritePadding();
+
         $ubnCount = count($this->ubns);
         $loopCount = 0;
         foreach ($this->ubns as $ubn)
         {
-            $this->printBreedValuesByUbn($ubn);
+            $ubn = strval($ubn);
+
+            $filename = $this->getFilename($ubn);
+
+            if($this->skipExistingFiles && $this->fileExists($filename)){
+                continue;
+            }
+
+            $this->clearFile($filename);
+            $this->printColumnHeaders($results, $filename);
+
+            foreach ($results as $values) {
+                $ubnOfBirth = strval($values['fokkerubn']);
+                $currentUbn = strval($values['huidig_ubn']);
+                if($ubnOfBirth === $ubn || $currentUbn === $ubn) {
+                    $this->printDataRecord($values, $filename);
+                }
+            }
+
             $loopCount++;
             $this->overwriteNotice('BreedValue csv file ('.$loopCount.'/'.$ubnCount.')  last ubn: '.$ubn);
         }
         $this->notice('Done!');
+    }
+
+
+    /**
+     * @param string $filename
+     * @return bool
+     */
+    private function fileExists($filename)
+    {
+        return FilesystemUtil::filesExist($this->outputDir, $filename, $this->fs);
+    }
+
+
+    /**
+     * @param string $filename
+     */
+    private function clearFile($filename)
+    {
+        file_put_contents($this->outputDir.$filename, '');
+    }
+
+
+    /**
+     * @param array $results
+     * @param string $filename
+     */
+    private function printColumnHeaders($results, $filename)
+    {
+        $columnHeaders = array_keys($results[0]);
+        $headerRecord = implode($this->columnSeparator, $columnHeaders);
+        file_put_contents($this->outputDir.$filename, $headerRecord.$this->rowSeparator, FILE_APPEND);
+    }
+
+
+    /**
+     * @param array $values
+     * @param string $filename
+     */
+    private function printDataRecord($values, $filename)
+    {
+        $record = implode($this->columnSeparator, $values);
+        file_put_contents($this->outputDir.$filename, $record.$this->rowSeparator, FILE_APPEND);
     }
 
 
