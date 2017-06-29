@@ -59,14 +59,20 @@ class BreedValuePrinter
     }
 
 
-
-    private function getUbns()
+    /**
+     * @param null $lowerUbnLimit
+     */
+    private function getUbns($lowerUbnLimit = null)
     {
+        $ubnFilter1 = $lowerUbnLimit != null ? "WHERE a.ubn_of_birth >= '$lowerUbnLimit'" : '';
+        $ubnFilter2 = $lowerUbnLimit != null ? "WHERE l.ubn >= '$lowerUbnLimit'" : '';
+
         $this->notice('Get ubns ...');
         $sql = "SELECT
                   ubn_of_birth as ubn
                 FROM breed_value b
                   INNER JOIN animal a ON b.animal_id = a.id
+                $ubnFilter1
                 GROUP BY ubn_of_birth
                 UNION DISTINCT
                 SELECT
@@ -74,6 +80,7 @@ class BreedValuePrinter
                 FROM breed_value b
                   INNER JOIN animal a ON b.animal_id = a.id
                   LEFT JOIN location l ON a.location_id = l.id
+                $ubnFilter2
                 GROUP BY l.ubn
                 ORDER BY ubn";
         $results = $this->conn->query($sql)->fetchAll();
@@ -194,9 +201,9 @@ class BreedValuePrinter
     }
 
 
-    public function printBreedValuesAllUbns()
+    public function printBreedValuesAllUbns($ubn = null)
     {
-        $this->getUbns();
+        $this->getUbns($ubn);
         $this->notice('Printing separate breedValue csv files for all ubns to '.$this->outputDir);
         $this->overwritePadding();
         $ubnCount = count($this->ubns);

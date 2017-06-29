@@ -28,6 +28,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
     const TITLE = 'MixBlup';
     const DEFAULT_OPTION = 0;
     const DEFAULT_UBN = 1674459;
+    const DEFAULT_MIN_UBN = 0;
 
     const CREATE_TEST_FOLDER_IF_NULL = true;
 
@@ -120,7 +121,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
                 break;
 
             case 30:
-                $this->breedValuePrinter->printBreedValuesAllUbns();
+                $this->printBreedValuesAllUbns();
                 break;
             case 31:
                 $this->printBreedValuesByUbn();
@@ -133,6 +134,17 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
         $output->writeln('DONE');
 
 
+    }
+
+
+    private function printBreedValuesAllUbns()
+    {
+        do {
+            $ubn = $this->cmdUtil->generateQuestion('insert minimum ubn (default: '.self::DEFAULT_MIN_UBN.')', self::DEFAULT_MIN_UBN);
+        } while(!ctype_digit($ubn) && !is_int($ubn));
+        $this->cmdUtil->writeln('Generating breedValues csv file with minimum UBN of: '.$ubn.' ...');
+        $this->breedValuePrinter->printBreedValuesAllUbns($ubn);
+        $this->cmdUtil->writeln('Generated breedValues csv file with minimum UBN of: '.$ubn.' ...');
     }
 
 
