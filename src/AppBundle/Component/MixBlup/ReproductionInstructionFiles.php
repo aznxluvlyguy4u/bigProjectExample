@@ -107,7 +107,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
             $appendedModel = [
                 'GebGemak'.self::INDIRECT_SUFFIX =>   ' GebGemak  ~ '.self::jaarBedrijf($isRelani).$gebGemakSolaniTraits.' !RANDOM G(ID,IDM)'
             ];
-            return ArrayUtil::concatArrayValues([$baseModel, $appendedModel]);
+            return ArrayUtil::concatArrayValues([$baseModel, $appendedModel], false);
         }
 
         return $baseModel;
