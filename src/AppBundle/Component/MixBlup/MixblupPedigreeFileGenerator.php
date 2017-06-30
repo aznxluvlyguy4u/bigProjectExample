@@ -126,7 +126,11 @@ class MixblupPedigreeFileGenerator
             self::getFormattedIdFromRecord(JsonInputConstant::ANIMAL_ID, $recordArray).
             self::getFormattedParentIdFromRecord(JsonInputConstant::FATHER_ID, $recordArray).
             self::getFormattedParentIdFromRecord(JsonInputConstant::MOTHER_ID, $recordArray).
-            MixBlupDataFileBase::getUbnOfBirthAsLastColumnValue($recordArray);
+            self::getFormattedUbnOfBirthFromRecord($recordArray).
+            self::getFormattedGenderFromType($recordArray).
+            self::getFormattedDateOfBirthFromRecord($recordArray).
+            self::getFormattedUlnFromRecord($recordArray)
+            ;
     }
 
 
@@ -155,6 +159,52 @@ class MixblupPedigreeFileGenerator
     private static function getFormattedIdFromRecord($key, $recordArray)
     {
         return CsvWriterUtil::getFormattedValueFromArray($recordArray, MaxLength::ANIMAL_ID, $key, true, MixBlupInstructionFileBase::CONSTANT_MISSING_PARENT_REPLACEMENT);
+    }
+
+
+    /**
+     * @param array $recordArray
+     * @return string
+     */
+    private static function getFormattedUbnOfBirthFromRecord($recordArray)
+    {
+        return CsvWriterUtil::getFormattedValueFromArray($recordArray, MaxLength::UBN, JsonInputConstant::UBN_OF_BIRTH, true, MixBlupInstructionFileBase::MISSING_BLOCK_REPLACEMENT);
+    }
+
+
+    /**
+     * Note! Gender/Type should already be filtered to only contain 'Ram' or 'Ewe'
+     *
+     * @param $data
+     * @param string $key
+     * @param bool $useColumnPadding
+     * @return string
+     */
+    protected static function getFormattedGenderFromType($data, $key = JsonInputConstant::TYPE, $useColumnPadding = true)
+    {
+        $gender = MixBlupDataFileBase::translateGender($data[$key]);
+        return CsvWriterUtil::pad($gender, MaxLength::VALID_GENDER, $useColumnPadding);
+    }
+
+
+
+    /**
+     * @param array $recordArray
+     * @return string
+     */
+    private static function getFormattedDateOfBirthFromRecord($recordArray)
+    {
+        return CsvWriterUtil::getFormattedValueFromArray($recordArray, MaxLength::DATE, JsonInputConstant::DATE_OF_BIRTH, true, MixBlupInstructionFileBase::PEDIGREE_FILE_DATE_OF_BIRTH_NULL_REPLACEMENT);
+    }
+
+
+    /**
+     * @param array $recordArray
+     * @return string
+     */
+    private static function getFormattedUlnFromRecord($recordArray)
+    {
+        return CsvWriterUtil::getFormattedValueFromArray($recordArray, MaxLength::ULN, JsonInputConstant::ULN, true);
     }
 
 }

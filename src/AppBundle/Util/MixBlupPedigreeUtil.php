@@ -289,12 +289,15 @@ class MixBlupPedigreeUtil
                   COALESCE(f.id, '".$nullReplacement."') as ".JsonInputConstant::FATHER_ID.",
                   COALESCE(m.id, '".$nullReplacement."') as ".JsonInputConstant::MOTHER_ID.",
                   CONCAT(a.uln_country_code, a.uln_number) AS ".JsonInputConstant::ULN.",
+                  a.type,
+                  DATE(a.date_of_birth) AS ".JsonInputConstant::DATE_OF_BIRTH.",
                   COALESCE(NULLIF(CONCAT(f.uln_country_code, f.uln_number),''), '".$nullReplacement."') AS ".JsonInputConstant::ULN_FATHER.",
                   COALESCE(NULLIF(CONCAT(m.uln_country_code, m.uln_number),''), '".$nullReplacement."') AS ".JsonInputConstant::ULN_MOTHER.",
                   a.ubn_of_birth AS ".JsonInputConstant::UBN_OF_BIRTH.",
                   DATE_PART('days', a.date_of_birth - m.date_of_birth) <= $daysDiff AND m.date_of_birth NOTNULL AND a.date_of_birth NOTNULL as ".JsonInputConstant::EXCLUDE_MOTHER.",
                   DATE_PART('days', a.date_of_birth - f.date_of_birth) <= $daysDiff AND f.date_of_birth NOTNULL AND a.date_of_birth NOTNULL as ".JsonInputConstant::EXCLUDE_FATHER."
                 FROM animal a
+                  INNER JOIN (VALUES ('Ram', 'Ram'),('Ewe', 'Ooi'),('Neuter', 'Onbekend')) AS gender(english, dutch) ON a.type = gender.english
                   LEFT JOIN animal f ON f.id = a.parent_father_id
                   LEFT JOIN animal m ON m.id = a.parent_mother_id
                 WHERE a.type <> 'Neuter'";

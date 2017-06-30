@@ -25,6 +25,7 @@ class MaxLength
     const PMSG = 3; //0/1 includes -99
     const SUCKLE_COUNT = 3; //includes -99
     const TAIL_LENGTH = 5; //99.99
+    const UBN = 9;
     const ULN = 14;
     const VALID_GENDER = 3; //Ram/Ewe
     const WEIGHT = 5;

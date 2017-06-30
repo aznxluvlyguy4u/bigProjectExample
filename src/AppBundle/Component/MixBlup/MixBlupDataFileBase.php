@@ -32,7 +32,7 @@ class MixBlupDataFileBase
      * @param $gender
      * @return string
      */
-    protected static function translateGender($gender)
+    public static function translateGender($gender)
     {
         return Translation::getGenderInDutch($gender);
     }
@@ -338,7 +338,7 @@ class MixBlupDataFileBase
      * @param bool $useColumnPadding
      * @return string
      */
-    protected static function getFormattedGenderFromType($data, $key = JsonInputConstant::TYPE, $useColumnPadding = true)
+    public static function getFormattedGenderFromType($data, $key = JsonInputConstant::TYPE, $useColumnPadding = true)
     {
         $gender = self::translateGender($data[$key]);
         return CsvWriterUtil::pad($gender, MaxLength::VALID_GENDER, $useColumnPadding);

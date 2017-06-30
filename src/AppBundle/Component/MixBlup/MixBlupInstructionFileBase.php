@@ -19,6 +19,7 @@ abstract class MixBlupInstructionFileBase
     const MISSING_BLOCK_REPLACEMENT = 1;
     const MISSING_REPLACEMENT = '-99';
     const CONSTANT_MISSING_PARENT_REPLACEMENT = 0;
+    const PEDIGREE_FILE_DATE_OF_BIRTH_NULL_REPLACEMENT = '1950-01-01'; //As long as the date is not included in the last 5 years.
     const INCLUDE_COMMENTED_OUT_TRAITS = true;
     const INDIRECT_SUFFIX = '_INDIRECT';
 
@@ -56,6 +57,9 @@ abstract class MixBlupInstructionFileBase
             ' Vader     I ', //PrimaryKey Father
             ' Moeder    I ', //PrimaryKey Mother
             ' Bedrijf   I '.self::getBlockString($isRelani),//ubn of birth, NOTE it is an integer here
+            ' Sekse     A'. //ram/ooi/N_B
+            ' GebDatum  A'. //dateOfBirth
+            ' Uln       A'. //ULN
             ' ',
             'PARFILE  '.MixBlupSetting::PARFILE_FILENAME,
             ' ',
