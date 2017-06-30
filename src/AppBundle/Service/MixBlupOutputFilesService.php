@@ -6,6 +6,7 @@ namespace AppBundle\Service;
 
 use AppBundle\Cache\BreedValuesResultTableUpdater;
 use AppBundle\Component\MixBlup\MixBlupInstructionFileBase;
+use AppBundle\Constant\BreedValueTypeConstant;
 use AppBundle\Constant\Filename;
 use AppBundle\Entity\BreedIndexType;
 use AppBundle\Entity\BreedIndexTypeRepository;
@@ -750,6 +751,10 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $dutchBreedValueTypeForDatabase = $dutchBreedValueTypeKeyInSolaniArray;
                     if($hasIndirectSuffix) {
                         $dutchBreedValueTypeForDatabase = $this->removeIndirectSuffix($dutchBreedValueTypeKeyInSolaniArray);
+                        if($dutchBreedValueTypeForDatabase === BreedValueTypeConstant::BIRTH_PROGRESS) {
+                            //The indirect birthProgress value for IDM is actually the birthDeliveryProgress value
+                            $dutchBreedValueTypeForDatabase = BreedValueTypeConstant::BIRTH_DELIVERY_PROGRESS;
+                        }
                     }
 
                     $this->logger->notice('Processing '.$dutchBreedValueTypeKeyInSolaniArray.' breedValues ...');
