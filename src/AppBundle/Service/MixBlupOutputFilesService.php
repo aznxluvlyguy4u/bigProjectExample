@@ -4,6 +4,7 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Cache\BreedValuesResultTableUpdater;
 use AppBundle\Component\MixBlup\MixBlupInstructionFileBase;
 use AppBundle\Constant\Filename;
 use AppBundle\Entity\BreedIndexType;
@@ -62,6 +63,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
     private $queueService;
     /** @var Logger */
     private $logger;
+    /** @var BreedValuesResultTableUpdater */
+    private $breedValuesResultTableUpdater;
 
     /** @var string */
     private $currentEnvironment;
@@ -156,6 +159,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
         $this->currentEnvironment = $currentEnvironment;
         $this->cacheDir = $cacheDir;
         $this->logger = $logger;
+
+        $this->breedValuesResultTableUpdater = new BreedValuesResultTableUpdater($this->em, $logger);
 
         $this->breedIndexTypeRepository = $this->em->getRepository(BreedIndexType::class);
         $this->breedValueTypeRepository = $this->em->getRepository(BreedValueType::class);
@@ -323,6 +328,8 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                     $this->logger->error('The following unzips failed (relani or solani file likely missing): '.implode(', ', $unsuccessfulUnzips));
                     $this->logger->notice('The following unzips succeeded: '.implode(', ', $successfulUnzips));
                 }
+
+                $this->breedValuesResultTableUpdater->update();
 
             } else {
                 // Handle unsuccessful download

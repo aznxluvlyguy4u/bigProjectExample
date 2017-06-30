@@ -21,6 +21,8 @@ use JMS\Serializer\Annotation as JMS;
  */
 class ResultTableBreedGrades
 {
+    const TABLE_NAME = 'result_table_breed_grades';
+
     /**
      * @var integer
      *

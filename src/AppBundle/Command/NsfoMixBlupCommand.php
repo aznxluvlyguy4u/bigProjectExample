@@ -2,6 +2,7 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Cache\BreedValuesResultTableUpdater;
 use AppBundle\Entity\BreedValue;
 use AppBundle\Service\BreedIndexService;
 use AppBundle\Service\BreedValuePrinter;
@@ -12,6 +13,7 @@ use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
+use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
@@ -34,12 +36,12 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
 
     /** @var ObjectManager $em */
     private $em;
-
     /** @var Connection $conn */
     private $conn;
-
     /** @var CommandUtil */
     private $cmdUtil;
+    /** @var Logger */
+    private $logger;
 
     /** @var MixBlupInputFilesService */
     private $mixBlupInputFilesService;
@@ -51,6 +53,8 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
     private $breedValueService;
     /** @var BreedValuePrinter */
     private $breedValuePrinter;
+    /** @var BreedValuesResultTableUpdater */
+    private $breedValuesResultTableUpdater;
 
     protected function configure()
     {
@@ -66,6 +70,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
         $em = $this->getContainer()->get('doctrine')->getManager();
         $this->em = $em;
         $this->conn = $em->getConnection();
+        $this->logger = $this->getContainer()->get('logger');
         $this->rootDir = $this->getContainer()->get('kernel')->getRootDir();
         $helper = $this->getHelper('question');
         $this->cmdUtil = new CommandUtil($input, $output, $helper);
@@ -74,6 +79,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
         $this->breedIndexService = $this->getContainer()->get('app.breed.index');
         $this->breedValueService = $this->getContainer()->get('app.breed.value');
         $this->breedValuePrinter = $this->getContainer()->get('app.breed.valueprinter');
+        $this->breedValuesResultTableUpdater = new BreedValuesResultTableUpdater($this->em, $this->logger);
 
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
@@ -88,6 +94,7 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
             '========================================================================', "\n",
             '10: Initialize BreedIndexType and BreedValueType', "\n",
             '11: Delete all duplicate breedValues', "\n",
+            '12: Update result_table_breed_grades values and accuracies for all breedValue and breedIndex types', "\n",
             '========================================================================', "\n",
             '30: Print separate csv files of latest breedValues for all ubns', "\n",
             '31: Print separate csv files of latest breedValues for chosen ubn', "\n",
@@ -118,6 +125,10 @@ class NsfoMixBlupCommand extends ContainerAwareCommand
                 $deleteCount = MixBlupOutputFilesService::deleteDuplicateBreedValues($this->conn);
                 $message = $deleteCount > 0 ? $deleteCount . ' duplicate breedValues were deleted' : 'No duplicate breedValues found';
                 $this->cmdUtil->writeln($message);
+                break;
+
+            case 12:
+                $this->breedValuesResultTableUpdater->update();
                 break;
 
             case 30:
