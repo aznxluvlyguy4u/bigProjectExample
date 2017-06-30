@@ -24,6 +24,7 @@ class BreedValueTypeConstant
 
     //FertilityIndex
     const BIRTH_PROGRESS = 'GebGemak';
+    const BIRTH_DELIVERY_PROGRESS = 'AflamGemak';
     const TOTAL_BORN = 'TotGeb';
     const STILL_BORN = 'DoodGeb';
     const EARLY_FERTILITY = 'Vroeg';

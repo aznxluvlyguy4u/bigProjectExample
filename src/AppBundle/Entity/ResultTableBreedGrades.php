@@ -222,6 +222,20 @@ class ResultTableBreedGrades
      * @ORM\Column(type="float", options={"default":null}, nullable=true)
      * @JMS\Type("float")
      */
+    private $birthDeliveryProgress;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $birthDeliveryProgressAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
     private $totalBorn;
 
     /**
@@ -976,6 +990,42 @@ class ResultTableBreedGrades
     public function setBirthProgressAccuracy($birthProgressAccuracy)
     {
         $this->birthProgressAccuracy = $birthProgressAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getBirthDeliveryProgress()
+    {
+        return $this->birthDeliveryProgress;
+    }
+
+    /**
+     * @param float $birthDeliveryProgress
+     * @return ResultTableBreedGrades
+     */
+    public function setBirthDeliveryProgress($birthDeliveryProgress)
+    {
+        $this->birthDeliveryProgress = $birthDeliveryProgress;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getBirthDeliveryProgressAccuracy()
+    {
+        return $this->birthDeliveryProgressAccuracy;
+    }
+
+    /**
+     * @param float $birthDeliveryProgressAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setBirthDeliveryProgressAccuracy($birthDeliveryProgressAccuracy)
+    {
+        $this->birthDeliveryProgressAccuracy = $birthDeliveryProgressAccuracy;
         return $this;
     }
 
