@@ -318,6 +318,7 @@ class GeneDiversityUpdater
             $isPureBred = $result['is_pure_bred'];
             $geneDiversityValues = HeterosisAndRecombinationUtil::getHeterosisAndRecombinationBy8Parts($breedCodeStringFather, $breedCodeStringMother, $roundingAccuracy);
 
+            $currentAndNewAreAllNull = false;
             if($geneDiversityValues != null) {
                 $heterosisValue = ArrayUtil::get(ReportLabel::HETEROSIS, $geneDiversityValues);
                 $recombinationValue = ArrayUtil::get(ReportLabel::RECOMBINATION, $geneDiversityValues);
@@ -327,9 +328,12 @@ class GeneDiversityUpdater
             } else {
                 $heterosisValue = 'NULL';
                 $recombinationValue = 'NULL';
+                $currentAndNewAreAllNull = $currentHeterosis === null && $currentRecombination === null;
             }
 
-            if(NumberUtil::areFloatsEqual($currentHeterosis, $heterosisValue) && NumberUtil::areFloatsEqual($currentRecombination, $recombinationValue)) {
+            $numbersAreEqual = NumberUtil::areFloatsEqual($currentHeterosis, $heterosisValue) && NumberUtil::areFloatsEqual($currentRecombination, $recombinationValue);
+
+            if($numbersAreEqual || $currentAndNewAreAllNull) {
                 $idsUpdateArray[] = $id;
                 $toUpdateCount++;
                 $unchangedValueCount++;
