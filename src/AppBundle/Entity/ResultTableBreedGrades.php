@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Util\ArrayUtil;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as JMS;
@@ -1661,6 +1662,98 @@ class ResultTableBreedGrades
     }
 
 
+    /**
+     * @param $breedIndexTypeEnglish
+     * @return string
+     */
+    public static function getValueVariableByBreedIndexType($breedIndexTypeEnglish)
+    {
+        return strtolower($breedIndexTypeEnglish);
+    }
+
+
+    /**
+     * @param $breedIndexTypeEnglish
+     * @return string
+     */
+    public static function getAccuracyVariableByBreedIndexType($breedIndexTypeEnglish)
+    {
+        return self::getValueVariableByBreedIndexType($breedIndexTypeEnglish).'_accuracy';
+    }
+
+
+    /**
+     * @param string $breedValueTypeEnglish
+     * @return array
+     */
+    public static function getValueVariableByBreedValueType($breedValueTypeEnglish)
+    {
+        switch ($breedValueTypeEnglish) {
+            case 'FAT_THICKNESS_1':
+                return strtolower('FAT_THICKNESS1');
+            case 'FAT_THICKNESS_2':
+                return strtolower('FAT_THICKNESS2');
+            case 'FAT_THICKNESS_3':
+                return strtolower('FAT_THICKNESS3');
+
+            case 'WEIGHT_AT_8_WEEKS':
+                return strtolower('WEIGHT_AT8WEEKS');
+            case 'WEIGHT_AT_20_WEEKS':
+                return strtolower('WEIGHT_AT20WEEKS');
+            default:
+                return strtolower($breedValueTypeEnglish);
+        }
+    }
+
+
+    /**
+     * @param string $breedValueTypeEnglish
+     * @return string
+     */
+    public static function getAccuracyVariableByBreedValueType($breedValueTypeEnglish)
+    {
+        switch ($breedValueTypeEnglish) {
+            case 'FAT_THICKNESS_1':
+                return strtolower('FAT_THICKNESS1').'_accuracy';
+            case 'FAT_THICKNESS_2':
+                return strtolower('FAT_THICKNESS2').'_accuracy';
+            case 'FAT_THICKNESS_3':
+                return strtolower('FAT_THICKNESS3').'_accuracy';
+
+            case 'WEIGHT_AT_8_WEEKS':
+                return strtolower('WEIGHT_AT8WEEKS').'_accuracy';
+            case 'WEIGHT_AT_20_WEEKS':
+                return strtolower('WEIGHT_AT20WEEKS').'_accuracy';
+
+            case 'EXTERIOR_TYPE_VG_M':
+                return self::getAccuracyVariableByExteriorType($breedValueTypeEnglish);
+            case 'MUSCULARITY_VG_M':
+                return self::getAccuracyVariableByExteriorType($breedValueTypeEnglish);
+            case 'MUSCULARITY_VG_V':
+                return self::getAccuracyVariableByExteriorType($breedValueTypeEnglish);
+            case 'LEG_WORK_VG_M':
+                return self::getAccuracyVariableByExteriorType($breedValueTypeEnglish);
+            case 'PROGRESS_VG_M':
+                return self::getAccuracyVariableByExteriorType($breedValueTypeEnglish);
+            case 'PROPORTION_VG_M':
+                return self::getAccuracyVariableByExteriorType($breedValueTypeEnglish);
+            case 'SKULL_VG_M':
+                return self::getAccuracyVariableByExteriorType($breedValueTypeEnglish);
+
+            default:
+                return strtolower($breedValueTypeEnglish).'_accuracy';
+        }
+    }
+
+
+    /**
+     * @param $breedValueTypeEnglish
+     * @return string
+     */
+    private function getAccuracyVariableByExteriorType($breedValueTypeEnglish)
+    {
+        return strtolower($breedValueTypeEnglish).'accuracy';
+    }
 
 
 }

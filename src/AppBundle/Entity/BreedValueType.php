@@ -53,6 +53,25 @@ class BreedValueType
     private $minReliability;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    private $resultTableValueVariable;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    private $resultTableAccuracyVariable;
+
+
+    /**
      * BreedValueType constructor.
      * @param string $en
      * @param string $nl
@@ -62,6 +81,8 @@ class BreedValueType
         $this->en = $en;
         $this->nl = $nl;
         $this->minReliability = BreedGradingSetting::MIN_RELIABILITY_FOR_GENETIC_BASE;
+        $this->resultTableValueVariable = ResultTableBreedGrades::getValueVariableByBreedValueType($en);
+        $this->resultTableAccuracyVariable = ResultTableBreedGrades::getAccuracyVariableByBreedValueType($en);
     }
 
     /**
@@ -133,6 +154,42 @@ class BreedValueType
     public function setMinReliability($minReliability)
     {
         $this->minReliability = $minReliability;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getResultTableValueVariable()
+    {
+        return $this->resultTableValueVariable;
+    }
+
+    /**
+     * @param string $resultTableValueVariable
+     * @return BreedValueType
+     */
+    public function setResultTableValueVariable($resultTableValueVariable)
+    {
+        $this->resultTableValueVariable = $resultTableValueVariable;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getResultTableAccuracyVariable()
+    {
+        return $this->resultTableAccuracyVariable;
+    }
+
+    /**
+     * @param string $resultTableAccuracyVariable
+     * @return BreedValueType
+     */
+    public function setResultTableAccuracyVariable($resultTableAccuracyVariable)
+    {
+        $this->resultTableAccuracyVariable = $resultTableAccuracyVariable;
         return $this;
     }
 

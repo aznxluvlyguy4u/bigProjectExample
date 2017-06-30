@@ -42,6 +42,24 @@ class BreedIndexType
     private $nl;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    private $resultTableValueVariable;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     */
+    private $resultTableAccuracyVariable;
+
+    /**
      * BreedValueType constructor.
      * @param string $en
      * @param string $nl
@@ -50,6 +68,8 @@ class BreedIndexType
     {
         $this->en = $en;
         $this->nl = $nl;
+        $this->resultTableValueVariable = ResultTableBreedGrades::getValueVariableByBreedIndexType($en);
+        $this->resultTableAccuracyVariable = ResultTableBreedGrades::getAccuracyVariableByBreedIndexType($en);
     }
 
     /**
@@ -103,6 +123,42 @@ class BreedIndexType
     public function setNl($nl)
     {
         $this->nl = $nl;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getResultTableValueVariable()
+    {
+        return $this->resultTableValueVariable;
+    }
+
+    /**
+     * @param string $resultTableValueVariable
+     * @return BreedIndexType
+     */
+    public function setResultTableValueVariable($resultTableValueVariable)
+    {
+        $this->resultTableValueVariable = $resultTableValueVariable;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getResultTableAccuracyVariable()
+    {
+        return $this->resultTableAccuracyVariable;
+    }
+
+    /**
+     * @param string $resultTableAccuracyVariable
+     * @return BreedIndexType
+     */
+    public function setResultTableAccuracyVariable($resultTableAccuracyVariable)
+    {
+        $this->resultTableAccuracyVariable = $resultTableAccuracyVariable;
         return $this;
     }
 
