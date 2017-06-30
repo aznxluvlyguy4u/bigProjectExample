@@ -14,6 +14,8 @@ use JMS\Serializer\Annotation as JMS;
  */
 class BreedIndexCoefficient
 {
+    const TABLE_NAME = 'breed_index_coefficient';
+
     /**
      * @var integer
      *
@@ -101,7 +103,7 @@ class BreedIndexCoefficient
      * @var \DateTime
      *
      * @Assert\Date
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", nullable=true)
      * @JMS\Type("DateTime")
      * @JMS\Groups({"MIXBLUP"})
      */
