@@ -121,6 +121,20 @@ class ResultTableBreedGrades
      * @ORM\Column(type="float", options={"default":null}, nullable=true)
      * @JMS\Type("float")
      */
+    private $growth;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
+    private $growthAccuracy;
+
+    /**
+     * @var float
+     * @ORM\Column(type="float", options={"default":null}, nullable=true)
+     * @JMS\Type("float")
+     */
     private $fatThickness1;
 
     /**
@@ -707,6 +721,42 @@ class ResultTableBreedGrades
     public function setBirthWeightAccuracy($birthWeightAccuracy)
     {
         $this->birthWeightAccuracy = $birthWeightAccuracy;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getGrowth()
+    {
+        return $this->growth;
+    }
+
+    /**
+     * @param float $growth
+     * @return ResultTableBreedGrades
+     */
+    public function setGrowth($growth)
+    {
+        $this->growth = $growth;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getGrowthAccuracy()
+    {
+        return $this->growthAccuracy;
+    }
+
+    /**
+     * @param float $growthAccuracy
+     * @return ResultTableBreedGrades
+     */
+    public function setGrowthAccuracy($growthAccuracy)
+    {
+        $this->growthAccuracy = $growthAccuracy;
         return $this;
     }
 
