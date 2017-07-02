@@ -118,6 +118,8 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
     {
         $nullReplacement = "'".MixBlupInstructionFileBase::MISSING_REPLACEMENT."'";
         $geneDiversityNullReplacement = "'".MixBlupInstructionFileBase::GENE_DIVERSITY_MISSING_REPLACEMENT."'";
+        $trueRecordValue = "'".MixBlupSetting::TRUE_RECORD_VALUE."'";
+        $falseRecordValue = "'".MixBlupSetting::FALSE_RECORD_VALUE."'";
 
         return "SELECT
                   3 as record_type_ordination,
@@ -139,7 +141,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   $nullReplacement as ".JsonInputConstant::LITTER_GROUP.",
                   $nullReplacement as ".JsonInputConstant::N_LING.",
                   $nullReplacement as ".JsonInputConstant::TOTAL_STILLBORN_COUNT.",
-                  c.gave_birth_as_one_year_old as ".JsonInputConstant::GAVE_BIRTH_AS_ONE_YEAR_OLD.",
+                  early_fertility.int_val as ".JsonInputConstant::GAVE_BIRTH_AS_ONE_YEAR_OLD.",
                   $nullReplacement as ".JsonInputConstant::BIRTH_WEIGHT.",
                   $nullReplacement as ".JsonInputConstant::BIRTH_PROGRESS.",
                   $nullReplacement as ".JsonInputConstant::GESTATION_PERIOD.",
@@ -149,6 +151,8 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   INNER JOIN animal_cache c ON c.animal_id = mom.id
                   INNER JOIN litter l ON l.animal_mother_id = mom.id
                   INNER JOIN declare_nsfo_base b ON l.id = b.id
+                  INNER JOIN (VALUES (true, $trueRecordValue),(false, $falseRecordValue)) 
+                    AS early_fertility(bool_val, int_val) ON c.gave_birth_as_one_year_old = early_fertility.bool_val
                 WHERE
                   ".self::getSqlBaseFilter()."
                   AND mom.ubn_of_birth NOTNULL
