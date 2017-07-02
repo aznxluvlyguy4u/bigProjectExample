@@ -150,7 +150,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                 WHERE
                   ".self::getSqlBaseFilter()."
                   AND mom.ubn_of_birth NOTNULL
-                  AND c.gave_birth_as_one_year_old".self::getErrorLogAnimalPedigreeFilter('mom.id');
+                  ".self::getErrorLogAnimalPedigreeFilter('mom.id');
     }
     
     
